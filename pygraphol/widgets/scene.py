@@ -1,0 +1,537 @@
+# -*- coding: utf-8 -*-
+
+##########################################################################
+#                                                                        #
+#  pyGraphol: a python design tool for the Graphol language.             #
+#  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
+#                                                                        #
+#  This program is free software: you can redistribute it and/or modify  #
+#  it under the terms of the GNU General Public License as published by  #
+#  the Free Software Foundation, either version 3 of the License, or     #
+#  (at your option) any later version.                                   #
+#                                                                        #
+#  This program is distributed in the hope that it will be useful,       #
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          #
+#  GNU General Public License for more details.                          #
+#                                                                        #
+#  You should have received a copy of the GNU General Public License     #
+#  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
+#                                                                        #
+##########################################################################
+#                                                                        #
+#  Graphol is developed by members of the DASI-lab group of the          #
+#  Dipartimento di Informatica e Sistemistica "A.Ruberti" at Sapienza    #
+#  University of Rome: http://www.dis.uniroma1.it/~graphol/:             #
+#                                                                        #
+#     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
+#     - Marco Console <console@dis.uniroma1.it>                          #
+#     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
+#     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
+#                                                                        #
+##########################################################################
+
+import os
+
+from operator import attrgetter
+
+from pygraphol import __appname__ as appname, __organization__ as organization
+from pygraphol.commands import CommandEdgeAdd
+from pygraphol.commands import CommandNodeAdd, CommandNodeRemoveSelected, CommandNodeSetZValue
+from pygraphol.commands import CommandEdgeRemoveSelected
+from pygraphol.functions import rangeF, snapPointToGrid
+from pygraphol.datatypes import DistinctList
+from pygraphol.items.nodes import Node
+from pygraphol.items.edges import Edge
+from pygraphol.items.nodes.shapes.common import Label as NodeLabel
+from pygraphol.items.edges.shapes.common import Label as EdgeLabel
+from pygraphol.tools import UniqueID
+
+from PyQt5.QtCore import Qt, pyqtSignal, QPointF, pyqtSlot, QSettings
+from PyQt5.QtGui import QPen, QColor
+from PyQt5.QtPrintSupport import QPrinter
+from PyQt5.QtWidgets import QGraphicsScene, QUndoStack, QMenu
+from PyQt5.QtXml import QDomDocument
+
+
+class GraphicsScene(QGraphicsScene):
+    """
+    This class implements the main Graphics scene.
+    """
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SCENE DOCUMENT                                                                                                 #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    class Document(object):
+        """
+        This class is used to hold scene saved file data (filepath, filename etc).
+        """
+        def __init__(self):
+            """
+            Initialize the scene document.
+            """
+            self.filepath = None
+
+        @property
+        def name(self):
+            """
+            Returns the name of the saved file.
+            :rtype: str
+            """
+            if not self.filepath:
+                return 'Untitled'
+            return os.path.basename(os.path.normpath(self.filepath))
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SCENE IMPLEMENTATION                                                                                           #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    InsertNode = 1
+    InsertEdge = 2
+    MoveItem = 3
+
+    GridPen = QPen(QColor(80, 80, 80), 0, Qt.SolidLine)
+    GridSize = 20
+
+    nodeInsertEnd = pyqtSignal(Node)
+    edgeInsertEnd = pyqtSignal(Edge)
+
+    def __init__(self, mainwindow, parent=None):
+        """
+        Initialize the graphic scene.
+        :param mainwindow: the reference to the main window.
+        :param parent: the parent widget.
+        """
+        super().__init__(parent)
+        self.clipboard = DistinctList() ## used to store copy of scene nodes
+        self.document = GraphicsScene.Document()  ## will contain the filepath of the graphol document
+        self.itemList = DistinctList()  ## list of nodes (not shapes)
+        self.settings = QSettings(organization, appname)  ## application settings
+        self.uniqueID = UniqueID()  ## used to generate unique incrementsl ids
+        self.undoStack = QUndoStack(self)  ## use to push actions and keep history for undo/redo
+        self.undoStack.setUndoLimit(50)
+        self.mode = self.MoveItem ## operation mode
+        self.modeParam = None  ## extra parameter for the operation mode (see setMode())
+        self.command = None  ## the undo/redo command to be added in the stack (for commands which requires multiple actions)
+
+        ################################################# ACTIONS ######################################################
+
+        self.actionItemCut = mainwindow.actionItemCut
+        self.actionItemCopy = mainwindow.actionItemCopy
+        self.actionItemPaste = mainwindow.actionItemPaste
+        self.actionItemDelete = mainwindow.actionItemDelete
+        self.actionBringToFront = mainwindow.actionBringToFront
+        self.actionSendToBack = mainwindow.actionSendToBack
+        self.actionSelectAll = mainwindow.actionSelectAll
+
+        ################################################# SIGNALS ######################################################
+
+        self.nodeInsertEnd.connect(self.handleNodeInsertEnd)
+        self.edgeInsertEnd.connect(self.handleEdgeInsertEnd)
+        self.selectionChanged.connect(self.handleSelectionChanged)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   ACTION HANDLERS                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def handleItemCut(self):
+        """
+        Cut selected items from the scene.
+        """
+        selected = self.selectedNodeShapes()
+        if selected:
+            self.clipboard.clear()
+            for shape in selected:
+                self.clipboard.append(shape.node.copy(scene=self))
+            # remove the nodes from the scene
+            self.undoStack.push(CommandNodeRemoveSelected(scene=self))
+        # if we have some elements in the clipboard enable the paste
+        self.actionItemPaste.setEnabled(len(self.clipboard) != 0)
+
+    def handleItemCopy(self):
+        """
+        Make a copy of selected items.
+        """
+        selected = self.selectedNodeShapes()
+        if selected:
+            self.clipboard.clear()
+            for shape in selected:
+                self.clipboard.append(shape.node.copy(scene=self))
+        # if we have some elements in the clipboard enable the paste
+        self.actionItemPaste.setEnabled(len(self.clipboard) != 0)
+
+    def handleItemPaste(self):
+        """
+        Paste previously copied selected items.
+        """
+        offsetX = 20
+        offsetY = 10
+        for node in self.clipboard:
+            item = node.copy(scene=self)
+            item.id = self.uniqueID.next('n')
+            item.shape.setPos(QPointF(node.shape.scenePos().x() + offsetX, node.shape.scenePos().y() + offsetY))
+            node.shape.setPos(item.shape.pos())
+            self.undoStack.push(CommandNodeAdd(scene=self, node=item))
+
+    def handleItemDelete(self):
+        """
+        Delete the currently selected items from the graphic scene.
+        """
+        if len(self.selectedNodeShapes()) > 0:
+            self.undoStack.push(CommandNodeRemoveSelected(scene=self))
+        if len(self.selectedEdgeShapes()) > 0:
+            self.undoStack.push(CommandEdgeRemoveSelected(scene=self))
+
+    def handleBringToFront(self):
+        """
+        Bring the selected item to the top of the scene.
+        """
+        for selected in self.selectedNodeShapes():
+            colliding = selected.collidingItems()
+            for item in filter(lambda x: not isinstance(x, NodeLabel) and not isinstance(x, EdgeLabel), colliding):
+                if item.zValue() >= zValue:
+                    zValue = item.zValue() + 0.1
+            if zValue != selected.zValue():
+                self.undoStack.push(CommandNodeSetZValue(scene=self, node=selected.node, zValue=zValue))
+
+    def handleSendToBack(self):
+        """
+        Send the selected item to the back of the scene.
+        """
+        for selected in self.selectedNodeShapes():
+            zValue = 0
+            colliding = selected.collidingItems()
+            for item in filter(lambda x: not isinstance(x, NodeLabel) and not isinstance(x, EdgeLabel), colliding):
+                if item.zValue() >= zValue:
+                    zValue = item.zValue() - 0.1
+            if zValue != selected.zValue():
+                self.undoStack.push(CommandNodeSetZValue(scene=self, node=selected.node, zValue=zValue))
+
+    def handleSelectAll(self):
+        """
+        Select all the items in the scene.
+        """
+        self.clearSelection()
+        for item in self.nodes() + self.edges():
+            item.shape.setSelected(True)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SIGNAL HANDLERS                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @pyqtSlot(Node)
+    def handleNodeInsertEnd(self, node):
+        """
+        Triggered after a node insertion process ends.
+        :param node: the inserted node.
+        """
+        self.setMode(GraphicsScene.MoveItem)
+
+    @pyqtSlot(Edge)
+    def handleEdgeInsertEnd(self, edge):
+        """
+        Triggered after a edge insertion process ends.
+        :param edge: the inserted edge.
+        """
+        self.setMode(GraphicsScene.MoveItem)
+        self.command = None
+
+    @pyqtSlot()
+    def handleSelectionChanged(self):
+        """
+        Executed when the scene selection changes.
+        """
+        self.updateActions()
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   EVENT HANDLERS                                                                                                 #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def contextMenuEvent(self, menuEvent):
+        """
+        Bring up the context menu if necessary.
+        :param menuEvent: the context menu event instance.
+        """
+        if not self.items(menuEvent.scenePos()):
+            # handle the event here in case there is no shape on the clicked point
+            contextMenu = QMenu()
+            contextMenu.addAction(self.actionSelectAll)
+            if self.clipboard:
+                contextMenu.addSeparator()
+                contextMenu.addAction(self.actionItemPaste)
+            contextMenu.exec_(menuEvent.screenPos())
+        else:
+            super().contextMenuEvent(menuEvent)
+
+    def keyPressEvent(self, keyEvent):
+        """
+        Executed when a keyboard button is pressed on the scene.
+        :param keyEvent: the keyboard event instance.
+        """
+        if keyEvent.key() in (Qt.Key_Delete, Qt.Key_Backspace):
+            # handle this here and not using a shortcut otherwise we won't be able
+            # to delete elements on systems not having the CANC button on the keyboard
+            self.handleItemDelete()
+        super().keyPressEvent(keyEvent)
+
+    def mousePressEvent(self, mouseEvent):
+        """
+        Executed when a mouse button is clicked on the scene.
+        :param mouseEvent: the mouse event instance.
+        """
+        if self.mode == GraphicsScene.InsertNode:
+
+            snap = self.settings.value('scene/snap_to_grid', False, bool)
+            newX = snapPointToGrid(value=mouseEvent.scenePos().x(), gridsize=self.GridSize, snap=snap)
+            newY = snapPointToGrid(value=mouseEvent.scenePos().y(), gridsize=self.GridSize, snap=snap)
+            node = self.modeParam(scene=self)
+            node.shape.setPos(QPointF(newX, newY))
+
+            # push the command in the undo stack so we can revert the action
+            self.undoStack.push(CommandNodeAdd(scene=self, node=node))
+            self.nodeInsertEnd.emit(node)
+
+        elif self.mode == GraphicsScene.InsertEdge:
+
+            shape = self.shapeOnTopOf(mouseEvent.scenePos(), edges=False)
+            if shape:
+                edge = self.modeParam(scene=self, source=shape.item)
+                edge.shape.updateEdge(target=mouseEvent.scenePos())
+
+                # put the command on hold since we don't know if the edge will be truly inserted or the
+                # insertion will be aborted (case when the user fails to release the edge arrow on top of a node)
+                self.command = CommandEdgeAdd(scene=self, edge=edge)
+                self.command.redo()
+
+        super().mousePressEvent(mouseEvent)
+
+    def mouseMoveEvent(self, mouseEvent):
+        """
+        Executed when then mouse is moved on the scene.
+        :param mouseEvent: the mouse event instance.
+        """
+        if self.mode == GraphicsScene.InsertEdge and self.command and self.command.edge:
+            self.command.edge.shape.updateEdge(target=mouseEvent.scenePos())
+        elif self.mode == GraphicsScene.MoveItem:
+            super().mouseMoveEvent(mouseEvent)
+
+    def mouseReleaseEvent(self, mouseEvent):
+        """
+        Executed when the mouse is released from the scene.
+        :param mouseEvent: the mouse event instance.
+        """
+        if self.mode == GraphicsScene.InsertEdge and self.command and self.command.edge:
+
+            # keep the edge only if it's overlapping a node in the scene
+            shape = self.shapeOnTopOf(mouseEvent.scenePos(), edges=False)
+
+            if shape:
+
+                self.command.edge.target = shape.node
+                self.command.edge.source.addEdge(self.command.edge)
+                self.command.edge.target.addEdge(self.command.edge)
+                self.command.edge.shape.updateEdge()
+
+                # undo the command and push it on the stack
+                # right after so redo will be executed
+                self.command.undo()
+                self.undoStack.push(self.command)
+
+            else:
+
+                # just undo the command without pushing it on the stack
+                self.command.undo()
+
+            self.edgeInsertEnd.emit(self.command.edge)
+            self.clearSelection()
+
+        super().mouseReleaseEvent(mouseEvent)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SCENE DRAWING                                                                                                  #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def drawBackground(self, painter, rect):
+        """
+        Draw the scene background.
+        :param painter: the current active painter.
+        :param rect: the exposed rectangle.
+        """
+        # do not draw the background grid if we are printing the scene
+        if self.settings.value('scene/snap_to_grid', False, bool) and not isinstance(painter.device(), QPrinter):
+            painter.setPen(GraphicsScene.GridPen)
+            startX = int(rect.left()) - (int(rect.left()) % self.GridSize)
+            startY = int(rect.top()) - (int(rect.top()) % self.GridSize)
+            points = [QPointF(x, y) for x in rangeF(startX, rect.right(), self.GridSize) \
+                                        for y in rangeF(startY, rect.bottom(), self.GridSize)]
+            painter.drawPoints(*points)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SCENE EXPORT                                                                                                   #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def exportToGraphol(self):
+        """
+        Export the current node in Graphol format.
+        :rtype: QDomDocument
+        """
+        document = QDomDocument()
+        document.appendChild(document.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8" standalone="no"') )
+
+        root = document.createElement('graphol')
+        root.setAttribute('xmlns', 'http://www.dis.uniroma1.it/~graphol/schema')
+        root.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+        root.setAttribute('xmlns:line', 'http://www.dis.uniroma1.it/~graphol/schema/line')
+        root.setAttribute('xmlns:shape', 'http://www.dis.uniroma1.it/~graphol/schema/shape')
+        root.setAttribute('xsi:schemaLocation', 'http://www.dis.uniroma1.it/~graphol/schema http://www.dis.uniroma1.it/~graphol/schema/graphol.xsd')
+
+        document.appendChild(root)
+
+        graph = document.createElement('graph')
+        graph.setAttribute('width', self.sceneRect().width())
+        graph.setAttribute('height', self.sceneRect().height())
+
+        for node in self.nodes():
+            # append all the nodes to the graph element
+            graph.appendChild(node.exportToGraphol(document))
+
+        for edge in self.edges():
+            # append all the edges to the graph element
+            graph.appendChild(edge.exportToGraphol(document))
+
+        # append the whole graph to the root
+        root.appendChild(graph)
+
+        return document
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def clear(self):
+        """
+        Clear the graphics scene by removing all the elements.
+        """
+        self.clipboard.clear()
+        self.undoStack.clear()
+        self.itemList.clear()
+        super().clear()
+
+    def edge(self, eid):
+        """
+        Returns a reference to the edge (not the shape) matching the given node id.
+        :param eid: the edge id
+        :raise KeyError: if there is no such edge in our scene
+        """
+        # iterating over the whole item list is not actually very performant but currently
+        # this method is used only when we have to generate a GraphicsScene by loading a Graphol
+        # document so it won't any real time performance impact once the document is loaded.
+        for item in self.itemList:
+            if item.isEdge() and item.id == eid:
+                return item
+        raise KeyError('no edge found with id <%s>' % eid)
+
+    def edges(self):
+        """
+        Returns all the edges of the scene (not the shapes).
+        :rtype: list
+        """
+        return [x for x in self.itemList if x.isEdge()]
+
+    def node(self, nid):
+        """
+        Returns a reference to the node (not the shape) matching the given node id.
+        :param nid: the node id
+        :raise KeyError: if there is no such node in our scene
+        """
+        # iterating over the whole item list is not actually very performant but currently
+        # this method is used only when we have to generate a GraphicsScene by loading a Graphol
+        # document so it won't any real time performance impact once the document is loaded.
+        for item in self.itemList:
+            if item.isNode() and item.id == nid:
+                return item
+        raise KeyError('no node found with id <%s>' % nid)
+
+    def nodes(self):
+        """
+        Returns all the nodes of the scene (not the shapes).
+        :rtype: list
+        """
+        return [x for x in self.itemList if x.isNode()]
+
+    def selectedEdgeShapes(self):
+        """
+        Returns the edge shapes selected in the scene.
+        :rtype: list
+        """
+        return [x for x in self.selectedItemShapes() if hasattr(x, 'item') and x.item.isEdge()]
+
+    def selectedItemShapes(self):
+        """
+        Returns the shapes selected in the scene.
+        :rtype: list
+        """
+        return [x for x in self.selectedItems() if hasattr(x, 'item') and \
+                                                    not isinstance(x, NodeLabel) and \
+                                                        not isinstance(x, EdgeLabel)]
+
+    def selectedNodeShapes(self):
+        """
+        Returns the node shapes selected in the scene.
+        :rtype: list
+        """
+        return [x for x in self.selectedItemShapes() if hasattr(x, 'item') and x.item.isNode()]
+
+    def setMode(self, mode, param=None):
+        """
+        Set the operation mode.
+        :param mode: the operation mode.
+        :param param: the mode parameter (if any).
+        """
+        self.mode = mode
+        self.modeParam = param
+
+    def shapeOnTopOf(self, point, nodes=True, edges=True):
+        """
+        Returns the shape which is on top of the given point.
+        :type point: QPointF
+        :type nodes: bool
+        :type edges: bool
+        :param point: the graphic point of the scene from where to pick items.
+        :param nodes: whether to include nodes in our search.
+        :param edges: whether to include edges in our search.
+        """
+        collection = [x for x in self.items(point) if not isinstance(x, NodeLabel) and not isinstance(x, EdgeLabel)]
+        collection = [x for x in collection if nodes and x.item.isNode() or edges and x.item.isEdge()]
+        return max(collection, key=attrgetter('zValue')) if collection else None
+
+    def updateActions(self):
+        """
+        Update scene specific actions enabling/disabling them according to the scene state.
+        """
+        n = len(self.selectedNodeShapes()) != 0
+        e = len(self.selectedEdgeShapes()) != 0
+        c = len(self.clipboard) != 0
+        self.actionItemCut.setEnabled(n)
+        self.actionItemCopy.setEnabled(n)
+        self.actionItemPaste.setEnabled(c)
+        self.actionBringToFront.setEnabled(n)
+        self.actionSendToBack.setEnabled(n)
+        self.actionItemDelete.setEnabled(n or e)
