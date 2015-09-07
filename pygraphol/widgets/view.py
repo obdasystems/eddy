@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QEvent, pyqtSlot, QPointF
+from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QEvent, pyqtSlot
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 from PyQt5.QtWidgets import QGraphicsView, QWidget, QLabel, QHBoxLayout, QStyleOption, QStyle, QVBoxLayout
 

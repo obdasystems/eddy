@@ -32,7 +32,6 @@
 ##########################################################################
 
 
-import copy
 import os
 
 from operator import attrgetter
