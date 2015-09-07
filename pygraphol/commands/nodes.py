@@ -73,7 +73,7 @@ class CommandNodeRemoveSelected(QUndoCommand):
         Initialize the command.
         :param scene: the graphic scene where this command is being performed.
         """
-        selected = scene.selectedNodeShapes()
+        selected = scene.selectedNodes()
         params = 'remove %s nodes' % len(selected) if len(selected) != 1 else 'remove %s node' % selected[0].node.name
         super().__init__(params)
         self.scene = scene
@@ -176,33 +176,41 @@ class CommandNodeMove(QUndoCommand):
     """
     This command is used to move nodes (1 or more).
     """
-    def __init__(self, scene):
+    def __init__(self, old, new):
         """
         Initialize the command
-        :param scene: the scene where the moving is happening.
+        :param old: a dictionary containing shapes old position data.
+        :param new: a dictionary containing shapes new position data.
         """
-        selected = scene.selectedNodeShapes()
-        params = 'move %s nodes' % len(selected) if len(selected) != 1 else 'move %s node' % selected[0].node.name
-        super().__init__(params)
-        self.old = {shape:shape.pos() for shape in selected}
-        self.new = None
+        self.old = old
+        self.new = new
 
-    def end(self):
-        """
-        End the command by collecting new pos data.
-        """
-        self.new = {shape:shape.pos() for shape in self.old.keys()}
+        if len(old['nodes']) != 1:
+            params = 'move %s nodes' % len(old['nodes'])
+        else:
+            params = 'move %s node' % next(iter(old['nodes'].keys())).node.name
+
+        super().__init__(params)
 
     def redo(self):
         """redo the command"""
-        if self.new:
-            for shape, pos in self.new.items():
-                shape.setPos(pos)
-                shape.updateEdges()
+        # update edges breakpoints
+        for edge, breakpoints in self.new['edges'].items():
+            for i in range(len(breakpoints)):
+                edge.breakpoints[i] = breakpoints[i]
+        # update nodes positions
+        for shape, pos in self.new['nodes'].items():
+            shape.setPos(pos)
+            shape.updateEdges()
 
     def undo(self):
         """undo the command"""
-        for shape, pos in self.old.items():
+        # update edges breakpoints
+        for edge, breakpoints in self.old['edges'].items():
+            for i in range(len(breakpoints)):
+                edge.breakpoints[i] = breakpoints[i]
+        # update nodes positions
+        for shape, pos in self.old['nodes'].items():
             shape.setPos(pos)
             shape.updateEdges()
 

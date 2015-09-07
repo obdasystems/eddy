@@ -69,7 +69,7 @@ class CommandEdgeRemoveSelected(QUndoCommand):
         Initialize the command.
         :param scene: the graphic scene where this command is being performed.
         """
-        selected = scene.selectedEdgeShapes()
+        selected = scene.selectedEdges()
         params = 'remove %s edges' % len(selected) if len(selected) != 1 else 'remove %s edge' % selected[0].edge.name
         super().__init__(params)
         self.scene = scene

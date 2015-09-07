@@ -36,7 +36,6 @@ import math
 
 from functools import partial
 from pygraphol.commands import CommandEdgeAddBreakPoint, CommandEdgeMoveBreakPoint, CommandEdgeRemoveBreakPoint
-from pygraphol.functions import snapPointToGrid
 from PyQt5.QtCore import QPointF, Qt, QLineF, QRectF
 from PyQt5.QtGui import QPolygonF, QPainter, QPen, QColor, QPainterPath, QIcon
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsPolygonItem, QMenu, QAction
@@ -52,6 +51,8 @@ class SubPath(object):
     def __init__(self, source, target):
         """
         Initialize the edge subpath.
+        :type source: QPointF
+        :type target: QPointF
         :param source: the source point.
         :param target: the end point.
         """
@@ -106,10 +107,10 @@ class EdgeShape(QGraphicsItem):
     tailPen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     tailBrush = QColor(0, 0, 0)
 
+    linePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+
     selectionPen = QPen(QColor(251, 255, 148), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     selectionBrush = QColor(251, 255, 148)
-
-    linePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
 
     def __init__(self, item, **kwargs):
         """
@@ -206,17 +207,15 @@ class EdgeShape(QGraphicsItem):
             self.mousePressPos = None
 
         if not self.command:
-            # if there is no command create a new one which will collect the breakpoint initial position
-            # the command will be later updated with the new breakpoint value
+            scene.clearSelection()
+            self.setSelected(True)
+            # if there is no command create a new one which will
+            # collect the breakpoint initial position the command
+            # will be later updated with the new breakpoint value
             self.command = CommandEdgeMoveBreakPoint(edge=self.edge, index=index)
 
-        snap = scene.settings.value('scene/snap_to_grid', False, bool)
-        size = scene.GridSize
-        posX = snapPointToGrid(mouseEvent.pos().x(), gridsize=size, snap=snap)
-        posY = snapPointToGrid(mouseEvent.pos().y(), gridsize=size, snap=snap)
-
         # show the visual move
-        self.breakpoints[index] = QPointF(posX, posY)
+        self.breakpoints[index] = scene.snapToGrid(mouseEvent.pos())
         self.updateEdge()
 
     def mouseReleaseEvent(self, mouseEvent):
@@ -230,11 +229,7 @@ class EdgeShape(QGraphicsItem):
             # to be completed. Will this is not 'correct' it doesn't introduce any trouble so
             # i'll leave it here as it simplifies a lot the new command push in the undo stack.
             scene = self.scene()
-            snap = scene.settings.value('scene/snap_to_grid', False, bool)
-            size = scene.GridSize
-            posX = snapPointToGrid(mouseEvent.pos().x(), gridsize=size, snap=snap)
-            posY = snapPointToGrid(mouseEvent.pos().y(), gridsize=size, snap=snap)
-            self.command.new = QPointF(posX, posY)
+            self.command.new = scene.snapToGrid(mouseEvent.pos())
             scene.undoStack.push(self.command)
 
         self.selectedBreakPointIndex = None

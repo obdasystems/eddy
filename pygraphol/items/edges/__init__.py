@@ -54,6 +54,21 @@ class Edge(Item):
         self.source = source
         self.target = target
 
+    ############################################### AUXILIARY METHODS ##################################################
+
+    def other(self, node):
+        """
+        Returns the opposite endpoint of the given node.
+        :raise AttributeError: if the given node is not an endpoint of this edge.
+        :param node: the node we want to find the opposite endpoint.
+        :rtype: Edge
+        """
+        if node == self.source:
+            return self.target
+        elif node == self.target:
+            return self.source
+        raise AttributeError('node %r is not attached to edge %r' % (node, self))
+
     ################################################## ITEM EXPORT #####################################################
 
     def exportToGraphol(self, document):

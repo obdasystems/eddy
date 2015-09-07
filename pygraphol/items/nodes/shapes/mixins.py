@@ -33,8 +33,7 @@
 
 
 from copy import deepcopy
-from pygraphol.commands import CommandNodeMove, CommandNodeRezize
-from pygraphol.functions import snapPointToGrid
+from pygraphol.commands import CommandNodeRezize
 from PyQt5.QtCore import Qt, QPointF, QRectF
 from PyQt5.QtGui import QColor, QPen, QPolygonF
 from PyQt5.QtWidgets import QGraphicsItem, QMenu
@@ -84,16 +83,6 @@ class ShapeMixin(QGraphicsItem):
 
     ################################################# EVENT HANDLERS ###################################################
 
-    def itemChange(self, change, value):
-        """
-        Executed when the item changes.
-        :param change: the parameter of the item that is changing.
-        :param value: the new value (the type of the value depends on change).
-        """
-        if change == QGraphicsItem.ItemPositionChange and self.scene():
-            return self.snapToGrid(value)
-        return super().itemChange(change, value)
-
     def mousePressEvent(self, mouseEvent):
         """
         Executed when the mouse is pressed on the item.
@@ -105,7 +94,7 @@ class ShapeMixin(QGraphicsItem):
             # if the control modifier is being held switch the selection flag
             self.setSelected(not self.isSelected())
         else:
-            if len(self.scene().selectedItemShapes()) > 0:
+            if len(self.scene().selectedItems()) > 0:
                 # some elements are already selected (previoust mouse press event)
                 if not self.isSelected():
                     # there are some items selected but we clicked on a node
@@ -126,24 +115,14 @@ class ShapeMixin(QGraphicsItem):
         Executed when the mouse is being moved over the item while being pressed.
         :param mouseEvent: the mouse move event instance.
         """
-        if not self.command:
-            scene = self.scene()
-            self.command = CommandNodeMove(scene=scene)
-        super().mouseMoveEvent(mouseEvent)
-        self.updateEdges()
+        pass
 
     def mouseReleaseEvent(self, mouseEvent):
         """
         Executed when the mouse is released from the item.
         :param mouseEvent: the mouse event instance.
         """
-        if self.command:
-            self.command.end()
-            scene = self.scene()
-            scene.undoStack.push(self.command)
-        super().mouseReleaseEvent(mouseEvent)
-        self.command = None
-        self.updateEdges()
+        pass
 
     ################################################ AUXILIARY METHODS #################################################
 
@@ -221,22 +200,6 @@ class ShapeMixin(QGraphicsItem):
         """
         self.label.setText(text)
 
-    def snapToGrid(self, point):
-        """
-        Snap the shape position to the grid.
-        :type point: QPointF
-        :param point: the position of the shape.
-        :return: the position of the shape snapped to the grid if the feature is enabled.
-        :rtype: QPointF
-        """
-        scene = self.scene()
-        if scene.mode == scene.MoveItem and scene.settings.value('scene/snap_to_grid', False, bool):
-            newX = snapPointToGrid(point.x(), scene.GridSize)
-            newY = snapPointToGrid(point.y(), scene.GridSize)
-            return QPointF(newX, newY)
-        else:
-            return point
-    
     def updateEdges(self):
         """
         Update all the edges attached to the node.
@@ -245,7 +208,7 @@ class ShapeMixin(QGraphicsItem):
             # update it for all the selected nodes in case we are
             # moving multiple nodes across the whole scene
             scene = self.scene()
-            for shape in scene.selectedNodeShapes():
+            for shape in scene.selectedNodes():
                 for edge in shape.node.edges:
                     edge.shape.updateEdge()
         except AttributeError:
@@ -336,10 +299,16 @@ class ShapeResizableMixin(ShapeMixin):
         """
         self.selectedHandle = self.getHandleAt(mouseEvent.pos())
         if self.selectedHandle:
+            scene = self.scene()
+            scene.resizing = True
+            scene.clearSelection()
+            self.setSelected(True)
             self.mousePressPos = mouseEvent.pos()
             self.mousePressRect = deepcopy(self.rect()) if hasattr(self, 'rect') else self.boundingRect()
+
         super().mousePressEvent(mouseEvent)
 
+    # noinspection PyTypeChecker
     def mouseMoveEvent(self, mouseEvent):
         """
         Executed when the mouse is being moved over the item while being pressed.
@@ -350,8 +319,8 @@ class ShapeResizableMixin(ShapeMixin):
                 self.command = CommandNodeRezize(self.node)
             self.interactiveResize(self.selectedHandle, self.mousePressRect, self.mousePressPos, mouseEvent.pos())
             self.updateEdges()
-        else:
-            super().mouseMoveEvent(mouseEvent)
+
+        super().mouseMoveEvent(mouseEvent)
 
     def mouseReleaseEvent(self, mouseEvent):
         """
@@ -361,16 +330,17 @@ class ShapeResizableMixin(ShapeMixin):
         if self.selectedHandle and self.command:
             # resizing operation: push the command in the stack
             self.command.new = deepcopy(self.rect()) if hasattr(self, 'rect') else QPolygonF(self.polygon())
-            self.scene().undoStack.push(self.command)
-            self.updateEdges()
-        elif not self.selectedHandle and self.command:
-            # updated edges is already called in super method
-            super().mouseReleaseEvent(mouseEvent)
+            scene = self.scene()
+            scene.resizing = False
+            scene.undoStack.push(self.command)
+
+        super().mouseReleaseEvent(mouseEvent)
 
         self.command = None
         self.mousePressPos = None
         self.mousePressRect = None
         self.selectedHandle = None
+        self.updateEdges()
         self.update()
 
     ################################################ AUXILIARY METHODS #################################################

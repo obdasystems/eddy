@@ -31,13 +31,15 @@
 #                                                                        #
 ##########################################################################
 
+
+import copy
 import os
 
 from operator import attrgetter
 
 from pygraphol import __appname__ as appname, __organization__ as organization
 from pygraphol.commands import CommandEdgeAdd
-from pygraphol.commands import CommandNodeAdd, CommandNodeRemoveSelected, CommandNodeSetZValue
+from pygraphol.commands import CommandNodeAdd, CommandNodeRemoveSelected, CommandNodeSetZValue, CommandNodeMove
 from pygraphol.commands import CommandEdgeRemoveSelected
 from pygraphol.functions import rangeF, snapPointToGrid
 from pygraphol.datatypes import DistinctList
@@ -108,6 +110,7 @@ class GraphicsScene(QGraphicsScene):
         :param parent: the parent widget.
         """
         super().__init__(parent)
+        self.command = None  ## undo/redo command to be added in the stack
         self.clipboard = DistinctList() ## used to store copy of scene nodes
         self.document = GraphicsScene.Document()  ## will contain the filepath of the graphol document
         self.itemList = DistinctList()  ## list of nodes (not shapes)
@@ -117,7 +120,12 @@ class GraphicsScene(QGraphicsScene):
         self.undoStack.setUndoLimit(50)
         self.mode = self.MoveItem ## operation mode
         self.modeParam = None  ## extra parameter for the operation mode (see setMode())
-        self.command = None  ## the undo/redo command to be added in the stack (for commands which requires multiple actions)
+        self.mousePressPos = None  ## scene position where the mouse has been pressed
+        self.mousePressShape = None  ## shape acting as mouse grabber during mouse move events
+        self.mousePressShapePos = None  ## position of the shape acting as mouse grabber during mouse move events
+        self.mousePressData = None  ## extra data needed to process item interactive movements
+        self.mouseMoved = False  ## will be set to true whenever nodes will be moved using the mouse
+        self.resizing = False  ## will be set to true when interactive resize is triggered
 
         ################################################# ACTIONS ######################################################
 
@@ -145,7 +153,7 @@ class GraphicsScene(QGraphicsScene):
         """
         Cut selected items from the scene.
         """
-        selected = self.selectedNodeShapes()
+        selected = self.selectedNodes()
         if selected:
             self.clipboard.clear()
             for shape in selected:
@@ -159,7 +167,7 @@ class GraphicsScene(QGraphicsScene):
         """
         Make a copy of selected items.
         """
-        selected = self.selectedNodeShapes()
+        selected = self.selectedNodes()
         if selected:
             self.clipboard.clear()
             for shape in selected:
@@ -184,16 +192,16 @@ class GraphicsScene(QGraphicsScene):
         """
         Delete the currently selected items from the graphic scene.
         """
-        if len(self.selectedNodeShapes()) > 0:
+        if len(self.selectedNodes()) > 0:
             self.undoStack.push(CommandNodeRemoveSelected(scene=self))
-        if len(self.selectedEdgeShapes()) > 0:
+        if len(self.selectedEdges()) > 0:
             self.undoStack.push(CommandEdgeRemoveSelected(scene=self))
 
     def handleBringToFront(self):
         """
         Bring the selected item to the top of the scene.
         """
-        for selected in self.selectedNodeShapes():
+        for selected in self.selectedNodes():
             colliding = selected.collidingItems()
             for item in filter(lambda x: not isinstance(x, NodeLabel) and not isinstance(x, EdgeLabel), colliding):
                 if item.zValue() >= zValue:
@@ -205,7 +213,7 @@ class GraphicsScene(QGraphicsScene):
         """
         Send the selected item to the back of the scene.
         """
-        for selected in self.selectedNodeShapes():
+        for selected in self.selectedNodes():
             zValue = 0
             colliding = selected.collidingItems()
             for item in filter(lambda x: not isinstance(x, NodeLabel) and not isinstance(x, EdgeLabel), colliding):
@@ -264,7 +272,6 @@ class GraphicsScene(QGraphicsScene):
         :param menuEvent: the context menu event instance.
         """
         if not self.items(menuEvent.scenePos()):
-            # handle the event here in case there is no shape on the clicked point
             contextMenu = QMenu()
             contextMenu.addAction(self.actionSelectAll)
             if self.clipboard:
@@ -292,21 +299,24 @@ class GraphicsScene(QGraphicsScene):
         """
         if self.mode == GraphicsScene.InsertNode:
 
-            snap = self.settings.value('scene/snap_to_grid', False, bool)
-            newX = snapPointToGrid(value=mouseEvent.scenePos().x(), gridsize=self.GridSize, snap=snap)
-            newY = snapPointToGrid(value=mouseEvent.scenePos().y(), gridsize=self.GridSize, snap=snap)
-            node = self.modeParam(scene=self)
-            node.shape.setPos(QPointF(newX, newY))
+            # create a new node and place it under the mouse position
+            func = self.modeParam
+            node = func(scene=self)
+            node.shape.setPos(self.snapToGrid(mouseEvent.scenePos()))
 
             # push the command in the undo stack so we can revert the action
             self.undoStack.push(CommandNodeAdd(scene=self, node=node))
             self.nodeInsertEnd.emit(node)
 
+            super().mousePressEvent(mouseEvent)
+
         elif self.mode == GraphicsScene.InsertEdge:
 
+            # see if we are pressing the mouse of a shape and if so set the edge add command
             shape = self.shapeOnTopOf(mouseEvent.scenePos(), edges=False)
             if shape:
-                edge = self.modeParam(scene=self, source=shape.item)
+                func = self.modeParam
+                edge = func(scene=self, source=shape.item)
                 edge.shape.updateEdge(target=mouseEvent.scenePos())
 
                 # put the command on hold since we don't know if the edge will be truly inserted or the
@@ -314,7 +324,39 @@ class GraphicsScene(QGraphicsScene):
                 self.command = CommandEdgeAdd(scene=self, edge=edge)
                 self.command.redo()
 
-        super().mousePressEvent(mouseEvent)
+            super().mousePressEvent(mouseEvent)
+
+        elif self.mode == GraphicsScene.MoveItem:
+
+            # execute the mouse press event first: this is needed before we prepare data for the move event because
+            # we may select another node (eventually using the control modifier) or init a shape interactive resize
+            # that will clear the selection hence bypass the interactive move.
+            super().mousePressEvent(mouseEvent)
+
+            if not self.resizing and mouseEvent.buttons() & Qt.LeftButton:
+
+                # prepare data for mouse move event
+                self.mousePressShape = self.shapeOnTopOf(mouseEvent.scenePos(), edges=False)
+
+                if self.mousePressShape:
+
+                    # execute only if there is at least one item selected
+                    self.mousePressShapePos = self.mousePressShape.pos()
+                    self.mousePressPos = mouseEvent.scenePos()
+                    self.mousePressData = {
+                        'nodes': {x: x.pos() for x in self.selectedNodes()},    # shape: pos
+                        'edges': {}                                             # shape: [list_of_breakpoints]
+                    }
+
+                    # figure out if the nodes we are moving are sharing edges: if so, move the edge
+                    # together with the nodes (which actually means moving the edge breakpoints)
+                    for shape in self.mousePressData['nodes']:
+                        for edge in shape.node.edges:
+                            # exclude edges which have been already added
+                            if edge.shape not in self.mousePressData['edges']:
+                                if edge.other(shape.node).shape.isSelected():
+                                    # add this edge to our collection
+                                    self.mousePressData['edges'][edge.shape] = edge.shape.breakpoints[:]
 
     def mouseMoveEvent(self, mouseEvent):
         """
@@ -322,9 +364,36 @@ class GraphicsScene(QGraphicsScene):
         :param mouseEvent: the mouse event instance.
         """
         if self.mode == GraphicsScene.InsertEdge and self.command and self.command.edge:
+
+            # update the edge position so that it will follow the mouse cursor
             self.command.edge.shape.updateEdge(target=mouseEvent.scenePos())
+
         elif self.mode == GraphicsScene.MoveItem:
-            super().mouseMoveEvent(mouseEvent)
+
+            if not self.resizing and self.mousePressShape and mouseEvent.buttons() & Qt.LeftButton:
+
+                # calculate the delta and adjust the value if the snap to grid feature is
+                # enabled: we'll use the position of the shape acting as mouse grabber to
+                # determine the new delta value and move other items accordingly
+                snapped = self.snapToGrid(self.mousePressShapePos + mouseEvent.scenePos() - self.mousePressPos)
+                delta = snapped - self.mousePressShapePos
+
+                # update all the breakpoints positions: updating breakpoints before nodes shows less artifacts
+                for edge, breakpoints in self.mousePressData['edges'].items():
+                    for i in range(len(breakpoints)):
+                        edge.breakpoints[i] = breakpoints[i] + delta
+
+                # move all the selected nodes
+                for shape, pos in self.mousePressData['nodes'].items():
+                    shape.setPos(pos + delta)
+                    shape.updateEdges()
+
+                # mark mouse move has happened so we can push
+                # the undo command in the stack on mouse release
+                self.mouseMoved = True
+
+        # always call super for this event since it will also trigger hover events on shapes
+        super().mouseMoveEvent(mouseEvent)
 
     def mouseReleaseEvent(self, mouseEvent):
         """
@@ -355,6 +424,23 @@ class GraphicsScene(QGraphicsScene):
 
             self.edgeInsertEnd.emit(self.command.edge)
             self.clearSelection()
+
+        elif self.mode == GraphicsScene.MoveItem:
+
+            if self.mouseMoved:
+
+                # collect new positions for the undo command
+                data = {'nodes': {x: x.pos() for x in self.mousePressData['nodes']},
+                        'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}}
+
+                # push the command in the stack so we can revert the moving operation
+                self.undoStack.push(CommandNodeMove(old=self.mousePressData, new=data))
+
+            self.mousePressPos = None
+            self.mousePressShape = None
+            self.mousePressShapePos = None
+            self.mousePressData = None
+            self.mouseMoved = False
 
         super().mouseReleaseEvent(mouseEvent)
 
@@ -391,14 +477,15 @@ class GraphicsScene(QGraphicsScene):
         :rtype: QDomDocument
         """
         document = QDomDocument()
-        document.appendChild(document.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8" standalone="no"') )
+        document.appendChild(document.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8" standalone="no"'))
 
         root = document.createElement('graphol')
         root.setAttribute('xmlns', 'http://www.dis.uniroma1.it/~graphol/schema')
         root.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
         root.setAttribute('xmlns:line', 'http://www.dis.uniroma1.it/~graphol/schema/line')
         root.setAttribute('xmlns:shape', 'http://www.dis.uniroma1.it/~graphol/schema/shape')
-        root.setAttribute('xsi:schemaLocation', 'http://www.dis.uniroma1.it/~graphol/schema http://www.dis.uniroma1.it/~graphol/schema/graphol.xsd')
+        root.setAttribute('xsi:schemaLocation', 'http://www.dis.uniroma1.it/~graphol/schema '
+                                                'http://www.dis.uniroma1.it/~graphol/schema/graphol.xsd')
 
         document.appendChild(root)
 
@@ -437,8 +524,8 @@ class GraphicsScene(QGraphicsScene):
     def edge(self, eid):
         """
         Returns a reference to the edge (not the shape) matching the given node id.
-        :param eid: the edge id
-        :raise KeyError: if there is no such edge in our scene
+        :param eid: the edge id.
+        :raise KeyError: if there is no such edge in our scene.
         """
         # iterating over the whole item list is not actually very performant but currently
         # this method is used only when we have to generate a GraphicsScene by loading a Graphol
@@ -458,8 +545,8 @@ class GraphicsScene(QGraphicsScene):
     def node(self, nid):
         """
         Returns a reference to the node (not the shape) matching the given node id.
-        :param nid: the node id
-        :raise KeyError: if there is no such node in our scene
+        :param nid: the node id.
+        :raise KeyError: if there is no such node in our scene.
         """
         # iterating over the whole item list is not actually very performant but currently
         # this method is used only when we have to generate a GraphicsScene by loading a Graphol
@@ -476,28 +563,28 @@ class GraphicsScene(QGraphicsScene):
         """
         return [x for x in self.itemList if x.isNode()]
 
-    def selectedEdgeShapes(self):
+    def selectedEdges(self):
         """
         Returns the edge shapes selected in the scene.
         :rtype: list
         """
-        return [x for x in self.selectedItemShapes() if hasattr(x, 'item') and x.item.isEdge()]
+        return [x for x in self.selectedItems() if hasattr(x, 'item') and x.item.isEdge()]
 
-    def selectedItemShapes(self):
+    def selectedItems(self):
         """
-        Returns the shapes selected in the scene.
+        Returns the shapes selected in the scene (will filter out labels since we don't need them).
         :rtype: list
         """
-        return [x for x in self.selectedItems() if hasattr(x, 'item') and \
-                                                    not isinstance(x, NodeLabel) and \
-                                                        not isinstance(x, EdgeLabel)]
+        return [x for x in super().selectedItems() if hasattr(x, 'item') and \
+                                                       not isinstance(x, NodeLabel) and \
+                                                           not isinstance(x, EdgeLabel)]
 
-    def selectedNodeShapes(self):
+    def selectedNodes(self):
         """
         Returns the node shapes selected in the scene.
         :rtype: list
         """
-        return [x for x in self.selectedItemShapes() if hasattr(x, 'item') and x.item.isNode()]
+        return [x for x in self.selectedItems() if hasattr(x, 'item') and x.item.isNode()]
 
     def setMode(self, mode, param=None):
         """
@@ -522,12 +609,27 @@ class GraphicsScene(QGraphicsScene):
         collection = [x for x in collection if nodes and x.item.isNode() or edges and x.item.isEdge()]
         return max(collection, key=attrgetter('zValue')) if collection else None
 
+    def snapToGrid(self, point):
+        """
+        Snap the shape position to the grid.
+        :type point: QPointF
+        :param point: the position of the shape.
+        :return: the position of the shape snapped to the grid if the feature is enabled.
+        :rtype: QPointF
+        """
+        if self.settings.value('scene/snap_to_grid', False, bool):
+            newX = snapPointToGrid(point.x(), GraphicsScene.GridSize)
+            newY = snapPointToGrid(point.y(), GraphicsScene.GridSize)
+            return QPointF(newX, newY)
+        else:
+            return point
+
     def updateActions(self):
         """
         Update scene specific actions enabling/disabling them according to the scene state.
         """
-        n = len(self.selectedNodeShapes()) != 0
-        e = len(self.selectedEdgeShapes()) != 0
+        n = len(self.selectedNodes()) != 0
+        e = len(self.selectedEdges()) != 0
         c = len(self.clipboard) != 0
         self.actionItemCut.setEnabled(n)
         self.actionItemCopy.setEnabled(n)
