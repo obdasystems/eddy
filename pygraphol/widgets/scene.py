@@ -34,8 +34,6 @@
 
 import os
 
-from operator import attrgetter
-
 from pygraphol import __appname__ as appname, __organization__ as organization
 from pygraphol.commands import CommandItemsMultiAdd, CommandItemsMultiRemove
 from pygraphol.commands import CommandNodeAdd, CommandNodeSetZValue, CommandNodeMove
@@ -673,12 +671,9 @@ class GraphicsScene(QGraphicsScene):
         :param nodes: whether to include nodes in our search.
         :param edges: whether to include edges in our search.
         """
-        try:
-            collection = [x for x in self.items(point) if not isinstance(x, NodeLabel) and not isinstance(x, EdgeLabel)]
-            collection = [x for x in collection if nodes and x.item.isNode() or edges and x.item.isEdge()]
-            return max(collection, key=attrgetter('zValue')) if collection else None
-        except (TypeError, AttributeError):
-            return None
+        collection = [x for x in self.items(point) if not isinstance(x, NodeLabel) and not isinstance(x, EdgeLabel)]
+        collection = [x for x in collection if nodes and x.item.isNode() or edges and x.item.isEdge()]
+        return max(collection, key=lambda x: x.zValue()) if collection else None
 
     def snapToGrid(self, point):
         """
