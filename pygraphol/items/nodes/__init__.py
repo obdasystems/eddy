@@ -50,8 +50,14 @@ class Node(Item):
         :param scene: the GraphicScene instance where this node is being added.
         """
         super().__init__()
-        self.id = kwargs.pop('id', scene.uniqueID.next('n'))
         self.edges = DistinctList()
+
+        try:
+            # get the id from kwargs if supplied
+            self.id = kwargs.pop('id')
+        except KeyError:
+            # generate a new id for this node
+            self.id = scene.uniqueID.next('n')
 
     ################################################ AUXILIARY METHODS #################################################
 
@@ -60,7 +66,7 @@ class Node(Item):
         Create a copy of the current item (connected edges won't be copied).
         :param scene: a reference to the scene where this item is being copied.
         """
-        node = self.__class__(scene=scene, width=self.shape.width(), height=self.shape.height())
+        node = self.__class__(scene=scene, id=self.id, width=self.shape.width(), height=self.shape.height())
         node.shape.setLabelText(self.shape.labelText())
         node.shape.setLabelPos(self.shape.labelPos())
         node.shape.setPos(self.shape.pos())

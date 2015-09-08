@@ -50,11 +50,26 @@ class Edge(Item):
         :param target: the edge target node (if any).
         """
         super(Edge, self).__init__()
-        self.id = kwargs.pop('id', scene.uniqueID.next('e'))
         self.source = source
         self.target = target
 
+        try:
+            # get the id from kwargs if supplied
+            self.id = kwargs.pop('id')
+        except KeyError:
+            # generate a new id for this edge
+            self.id = scene.uniqueID.next('e')
+
     ############################################### AUXILIARY METHODS ##################################################
+
+    def copy(self, scene):
+        """
+        Create a copy of the current edge.
+        :param scene: a reference to the scene where this item is being copied.
+        """
+        edge = self.__class__(scene=scene, id=self.id, source=self.source, target=self.target)
+        edge.shape.breakpoints = self.shape.breakpoints[:]
+        return edge
 
     def other(self, node):
         """
