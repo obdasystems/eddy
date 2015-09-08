@@ -70,18 +70,26 @@ class UniqueID(object):
         finally:
             return '%s%s' % (prefix, self.ids[prefix])
 
+    @staticmethod
+    def parse(unique_id):
+        """
+        Parse the given unique id returning a tuple in the format (prefix, value).
+        :raise ValueError: if the given value has an invalid format.
+        :param unique_id: the unique id to parse.
+        :rtype: tuple
+        """
+        match = RE_PARSE.match(unique_id)
+        if not match:
+            raise ValueError('invalid id supplied (%s)' % unique_id)
+        return match.group('prefix'), int(match.group('value'))
+
     def update(self, unique_id):
         """
         Update the last incremental value according to the given id.
         :raise ValueError: if the given value has an invalid format.
         :param unique_id: the for incremental adjustment.
         """
-        match = RE_PARSE.match(unique_id)
-        if not match:
-            raise ValueError('invalid id supplied (%s)' % unique_id)
-
-        prefix = match.group('prefix')
-        value = int(match.group('value'))
+        prefix, value = self.parse(unique_id)
 
         try:
             last = self.ids[prefix]
