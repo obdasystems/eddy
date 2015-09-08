@@ -33,7 +33,6 @@
 
 
 from pygraphol.commands.nodes import CommandNodeAdd
-from pygraphol.commands.nodes import CommandNodeRemoveSelected
 from pygraphol.commands.nodes import CommandNodeSetZValue
 from pygraphol.commands.nodes import CommandNodeRezize
 from pygraphol.commands.nodes import CommandNodeMove
@@ -42,9 +41,12 @@ from pygraphol.commands.nodes import CommandNodeLabelEdit
 from pygraphol.commands.nodes import CommandNodeValueDomainSelectDatatype
 from pygraphol.commands.nodes import CommandNodeHexagonSwitchTo
 from pygraphol.commands.nodes import CommandNodeSquareChangeRestriction
+
 from pygraphol.commands.edges import CommandEdgeAdd
-from pygraphol.commands.edges import CommandEdgeRemoveSelected
 from pygraphol.commands.edges import CommandEdgeAddBreakPoint
 from pygraphol.commands.edges import CommandEdgeMoveBreakPoint
 from pygraphol.commands.edges import CommandEdgeRemoveBreakPoint
 from pygraphol.commands.edges import CommandEdgeLabelMove
+
+from pygraphol.commands.common import CommandItemsMultiAdd
+from pygraphol.commands.common import CommandItemsMultiRemove

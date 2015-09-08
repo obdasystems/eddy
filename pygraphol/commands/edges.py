@@ -60,40 +60,6 @@ class CommandEdgeAdd(QUndoCommand):
         self.scene.removeItem(self.edge.shape)
 
 
-class CommandEdgeRemoveSelected(QUndoCommand):
-    """
-    This command is used to remove selected edge(s) from the graphic scene.
-    """
-    def __init__(self, scene):
-        """
-        Initialize the command.
-        :param scene: the graphic scene where this command is being performed.
-        """
-        selected = scene.selectedEdges()
-        params = 'remove %s edges' % len(selected) if len(selected) != 1 else 'remove %s edge' % selected[0].edge.name
-        super().__init__(params)
-        self.scene = scene
-        self.edges = [shape.edge for shape in selected]
-
-    def redo(self):
-        """redo the command"""
-        for edge in self.edges:
-            if edge in self.scene.itemList:
-                edge.source.removeEdge(edge)
-                edge.target.removeEdge(edge)
-                self.scene.itemList.remove(edge)
-                self.scene.removeItem(edge.shape)
-
-    def undo(self):
-        """undo the command"""
-        for edge in self.edges:
-            if not edge in self.scene.itemList:
-                edge.source.addEdge(edge)
-                edge.target.addEdge(edge)
-                self.scene.itemList.append(edge)
-                self.scene.addItem(edge.shape)
-
-
 class CommandEdgeAddBreakPoint(QUndoCommand):
     """
     This command is used to add a breakpoint on the given edge.
@@ -184,7 +150,7 @@ class CommandEdgeLabelMove(QUndoCommand):
     def __init__(self, edge, moved):
         """
         Initialize the command
-        :param node: the edge whose label is being moved.
+        :param edge: the edge whose label is being moved.
         :param moved: whether the label was moved already or not
         """
         super().__init__('move %s edge label' % edge.name)

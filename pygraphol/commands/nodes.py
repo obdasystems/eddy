@@ -64,50 +64,6 @@ class CommandNodeAdd(QUndoCommand):
         self.scene.removeItem(self.node.shape)
 
 
-class CommandNodeRemoveSelected(QUndoCommand):
-    """
-    This command is used to remove selected node(s) from the graphic scene.
-    """
-    def __init__(self, scene):
-        """
-        Initialize the command.
-        :param scene: the graphic scene where this command is being performed.
-        """
-        selected = scene.selectedNodes()
-        params = 'remove %s nodes' % len(selected) if len(selected) != 1 else 'remove %s node' % selected[0].node.name
-        super().__init__(params)
-        self.scene = scene
-        self.nodes = {shape.node:shape.node.edges[:] for shape in selected}
-
-    def redo(self):
-        """redo the command"""
-        for node in self.nodes:
-            # do not use the value associated to the key here since it's a
-            # copy of the list of edges connected to this node, and because of the
-            # 'copy' the scene is NoneType which results in removeItem raising a warning
-            for edge in node.edges:
-                edge.source.removeEdge(edge)
-                edge.target.removeEdge(edge)
-                self.scene.itemList.remove(edge)
-                self.scene.removeItem(edge.shape)
-            self.scene.itemList.remove(node)
-            self.scene.removeItem(node.shape)
-
-    def undo(self):
-        """undo the command"""
-        for node, edges in self.nodes.items():
-            for edge in edges:
-                edge.source.addEdge(edge)
-                edge.target.addEdge(edge)
-                # this is just to remove a warning caused by addItem when
-                # trying to insert an edge which is already in the scene.
-                if not edge in self.scene.itemList:
-                    self.scene.itemList.append(edge)
-                    self.scene.addItem(edge.shape)
-            self.scene.itemList.append(node)
-            self.scene.addItem(node.shape)
-
-
 class CommandNodeSetZValue(QUndoCommand):
     """
     This command is used to change the Z value of the graphic scene nodes.

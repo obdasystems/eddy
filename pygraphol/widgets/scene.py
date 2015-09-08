@@ -37,9 +37,9 @@ import os
 from operator import attrgetter
 
 from pygraphol import __appname__ as appname, __organization__ as organization
+from pygraphol.commands import CommandItemsMultiAdd, CommandItemsMultiRemove
+from pygraphol.commands import CommandNodeAdd, CommandNodeSetZValue, CommandNodeMove
 from pygraphol.commands import CommandEdgeAdd
-from pygraphol.commands import CommandNodeAdd, CommandNodeRemoveSelected, CommandNodeSetZValue, CommandNodeMove
-from pygraphol.commands import CommandEdgeRemoveSelected
 from pygraphol.functions import rangeF, snapPointToGrid
 from pygraphol.datatypes import DistinctList
 from pygraphol.items.nodes import Node
@@ -59,6 +59,20 @@ class GraphicsScene(QGraphicsScene):
     """
     This class implements the main Graphics scene.
     """
+    ## OPERATION MODE
+    InsertNode = 1
+    InsertEdge = 2
+    MoveItem = 3
+
+    ## CONTANTS
+    GridPen = QPen(QColor(80, 80, 80), 0, Qt.SolidLine)
+    GridSize = 20
+    PasteOffsetX = 20
+    PasteOffsetY = 10
+
+    ## SIGNALS
+    nodeInsertEnd = pyqtSignal(Node)
+    edgeInsertEnd = pyqtSignal(Edge)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -92,16 +106,6 @@ class GraphicsScene(QGraphicsScene):
     #                                                                                                                  #
     ####################################################################################################################
 
-    InsertNode = 1
-    InsertEdge = 2
-    MoveItem = 3
-
-    GridPen = QPen(QColor(80, 80, 80), 0, Qt.SolidLine)
-    GridSize = 20
-
-    nodeInsertEnd = pyqtSignal(Node)
-    edgeInsertEnd = pyqtSignal(Edge)
-
     def __init__(self, mainwindow, parent=None):
         """
         Initialize the graphic scene.
@@ -110,7 +114,9 @@ class GraphicsScene(QGraphicsScene):
         """
         super().__init__(parent)
         self.command = None  ## undo/redo command to be added in the stack
-        self.clipboard = DistinctList() ## used to store copy of scene nodes
+        self.clipboard = {}  ## used to store copy of scene nodes/edges
+        self.clipboardPasteOffsetX = GraphicsScene.PasteOffsetX  ## X offset to be added to item position upon paste
+        self.clipboardPasteOffsetY = GraphicsScene.PasteOffsetY  ## Y offset to be added to item position upon paste
         self.document = GraphicsScene.Document()  ## will contain the filepath of the graphol document
         self.itemList = DistinctList()  ## list of nodes (not shapes)
         self.settings = QSettings(organization, appname)  ## application settings
@@ -122,7 +128,7 @@ class GraphicsScene(QGraphicsScene):
         self.mousePressPos = None  ## scene position where the mouse has been pressed
         self.mousePressShape = None  ## shape acting as mouse grabber during mouse move events
         self.mousePressShapePos = None  ## position of the shape acting as mouse grabber during mouse move events
-        self.mousePressData = None  ## extra data needed to process item interactive movements
+        self.mousePressData = {}  ## extra data needed to process item interactive movements
         self.mouseMoved = False  ## will be set to true whenever nodes will be moved using the mouse
         self.resizing = False  ## will be set to true when interactive resize is triggered
 
@@ -152,49 +158,91 @@ class GraphicsScene(QGraphicsScene):
         """
         Cut selected items from the scene.
         """
-        selected = self.selectedNodes()
-        if selected:
-            self.clipboard.clear()
-            for shape in selected:
-                self.clipboard.append(shape.node.copy(scene=self))
-            # remove the nodes from the scene
-            self.undoStack.push(CommandNodeRemoveSelected(scene=self))
-        # if we have some elements in the clipboard enable the paste
-        self.actionItemPaste.setEnabled(len(self.clipboard) != 0)
+        self.updateClipboard()
+        self.updateActions()
+
+        selection = self.selectedItems()
+        if selection:
+            collection = [x.item for x in self.addHangingEdges(selection)]
+            self.undoStack.push(CommandItemsMultiRemove(scene=self, collection=collection))
+
+        # set the offset to 0 so we can paste in the same position
+        self.clipboardPasteOffsetX = 0
+        self.clipboardPasteOffsetY = 0
 
     def handleItemCopy(self):
         """
         Make a copy of selected items.
         """
-        selected = self.selectedNodes()
-        if selected:
-            self.clipboard.clear()
-            for shape in selected:
-                self.clipboard.append(shape.node.copy(scene=self))
-        # if we have some elements in the clipboard enable the paste
-        self.actionItemPaste.setEnabled(len(self.clipboard) != 0)
+        self.updateClipboard()
+        self.updateActions()
 
     def handleItemPaste(self):
         """
-        Paste previously copied selected items.
+        Paste previously copied items.
         """
-        offsetX = 20
-        offsetY = 10
-        for node in self.clipboard:
-            item = node.copy(scene=self)
-            item.id = self.uniqueID.next('n')
-            item.shape.setPos(QPointF(node.shape.scenePos().x() + offsetX, node.shape.scenePos().y() + offsetY))
-            node.shape.setPos(item.shape.pos())
-            self.undoStack.push(CommandNodeAdd(scene=self, node=item))
+        def ncopy(node):
+            """
+            Create a copy of the given node generating a new id.
+            Will also adjust the node position according to the incremental offset.
+            :param node: the node to copy.
+            """
+            copy = node.copy(self)
+            copy.id = self.uniqueID.next(self.uniqueID.parse(node.id)[0])
+            copy.shape.setPos(copy.shape.pos() + QPointF(self.clipboardPasteOffsetX, self.clipboardPasteOffsetY))
+            return copy
+
+        # create a copy of all the nodes in the clipboard and store them in a dict using the old
+        # node id: this is needed later when we add edges since we need to attach the copied edge
+        # to a new source/target so we need a mapping between the old id and the new id
+        nodes = {x:ncopy(n) for x, n in self.clipboard['nodes'].items()}
+
+        def ecopy(edge):
+            """
+            Create a copy of the given edge generating a new id and performing the following actions:
+                - adjust edge breakpoints positions according to the incremental offset
+                - attach the copied edge to the correspondend previously copied nodes
+                - copy the edge reference into source and target nodes.
+            :param edge: the edge to copy.
+            """
+            copy = edge.copy(self)
+
+            # adjust edge data for the copied item
+            copy.id = self.uniqueID.next(self.uniqueID.parse(edge.id)[0])
+            copy.source = nodes[edge.source.id]
+            copy.target = nodes[edge.target.id]
+
+            # copy breakpoints moving them according to the offsets
+            copy.shape.breakpoints = [x + QPointF(self.clipboardPasteOffsetX,
+                                                  self.clipboardPasteOffsetY) for x in copy.shape.breakpoints]
+
+            # map the copied edge over source and target nodes
+            nodes[edge.source.id].addEdge(copy)
+            nodes[edge.target.id].addEdge(copy)
+
+            # update the edge to generate internal stuff
+            copy.shape.updateEdge()
+            return copy
+
+        # copy all the needed edges
+        edges = {x:ecopy(e) for x, e in self.clipboard['edges'].items()}
+
+        # push the command in the stack: note that python3 returns an object view when values() is called on a dict
+        # and views are not joinable using the + operator (this is not thread safe it should be OK doing this w/o locks)
+        self.undoStack.push(CommandItemsMultiAdd(scene=self, collection=list(nodes.values()) + list(edges.values())))
+
+        # increase paste offsets for the next paste
+        self.clipboardPasteOffsetX += GraphicsScene.PasteOffsetX
+        self.clipboardPasteOffsetY += GraphicsScene.PasteOffsetY
 
     def handleItemDelete(self):
         """
         Delete the currently selected items from the graphic scene.
         """
-        if len(self.selectedNodes()) > 0:
-            self.undoStack.push(CommandNodeRemoveSelected(scene=self))
-        if len(self.selectedEdges()) > 0:
-            self.undoStack.push(CommandEdgeRemoveSelected(scene=self))
+        selection = self.selectedItems()
+        if selection:
+            collection = [x.item for x in self.addHangingEdges(selection)]
+            self.undoStack.push(CommandItemsMultiRemove(scene=self, collection=collection))
 
     def handleBringToFront(self):
         """
@@ -351,10 +399,8 @@ class GraphicsScene(QGraphicsScene):
                     # together with the nodes (which actually means moving the edge breakpoints)
                     for shape in self.mousePressData['nodes']:
                         for edge in shape.node.edges:
-                            # exclude edges which have been already added
                             if edge.shape not in self.mousePressData['edges']:
                                 if edge.other(shape.node).shape.isSelected():
-                                    # add this edge to our collection
                                     self.mousePressData['edges'][edge.shape] = edge.shape.breakpoints[:]
 
     def mouseMoveEvent(self, mouseEvent):
@@ -429,8 +475,10 @@ class GraphicsScene(QGraphicsScene):
             if self.mouseMoved:
 
                 # collect new positions for the undo command
-                data = {'nodes': {x: x.pos() for x in self.mousePressData['nodes']},
-                        'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}}
+                data = {
+                    'nodes': {x: x.pos() for x in self.mousePressData['nodes']},
+                    'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}
+                }
 
                 # push the command in the stack so we can revert the moving operation
                 self.undoStack.push(CommandNodeMove(old=self.mousePressData, new=data))
@@ -510,6 +558,18 @@ class GraphicsScene(QGraphicsScene):
     #   AUXILIARY METHODS                                                                                              #
     #                                                                                                                  #
     ####################################################################################################################
+
+    @staticmethod
+    def addHangingEdges(collection):
+        """
+        Extend the given selection of items adding missing edges which are connected to the nodes in the selection.
+        This is mostly used to add to the collections all the edges which will be hanging in the scene (being attached
+        only to one node) after a items removal operation.
+        :param collection: the collection of items to extend.
+        :rtype: list
+        """
+        return collection + [edge.shape for shape in collection if shape.item.isNode() \
+                                        for edge in shape.item.edges if edge.shape not in collection]
 
     def clear(self):
         """
@@ -604,9 +664,12 @@ class GraphicsScene(QGraphicsScene):
         :param nodes: whether to include nodes in our search.
         :param edges: whether to include edges in our search.
         """
-        collection = [x for x in self.items(point) if not isinstance(x, NodeLabel) and not isinstance(x, EdgeLabel)]
-        collection = [x for x in collection if nodes and x.item.isNode() or edges and x.item.isEdge()]
-        return max(collection, key=attrgetter('zValue')) if collection else None
+        try:
+            collection = [x for x in self.items(point) if not isinstance(x, NodeLabel) and not isinstance(x, EdgeLabel)]
+            collection = [x for x in collection if nodes and x.item.isNode() or edges and x.item.isEdge()]
+            return max(collection, key=attrgetter('zValue')) if collection else None
+        except (TypeError, AttributeError):
+            return None
 
     def snapToGrid(self, point):
         """
@@ -627,12 +690,41 @@ class GraphicsScene(QGraphicsScene):
         """
         Update scene specific actions enabling/disabling them according to the scene state.
         """
-        n = len(self.selectedNodes()) != 0
-        e = len(self.selectedEdges()) != 0
-        c = len(self.clipboard) != 0
-        self.actionItemCut.setEnabled(n)
-        self.actionItemCopy.setEnabled(n)
-        self.actionItemPaste.setEnabled(c)
-        self.actionBringToFront.setEnabled(n)
-        self.actionSendToBack.setEnabled(n)
-        self.actionItemDelete.setEnabled(n or e)
+        isNode = len(self.selectedNodes()) != 0
+        isEdge = len(self.selectedEdges()) != 0
+        isClip = len(self.clipboard) != 0 and len(self.clipboard['nodes']) != 0
+        self.actionItemCut.setEnabled(isNode)
+        self.actionItemCopy.setEnabled(isNode)
+        self.actionItemPaste.setEnabled(isClip)
+        self.actionBringToFront.setEnabled(isNode)
+        self.actionSendToBack.setEnabled(isNode)
+        self.actionItemDelete.setEnabled(isNode or isEdge)
+
+    def updateClipboard(self):
+        """
+        Update the clipboard collecting nodes and edges which needs to be copied.
+        """
+        nodes = self.selectedNodes()
+
+        # since we are creating a copy of the node (which doesn't carry all the edges with it)
+        # we can't iterate over the copy 'edges': because of this we store the original selection
+        # locally and we iterate over it matching nodes id to re-attach edge copies.
+        self.clipboard = {
+            'nodes': {x.node.id: x.node.copy(self) for x in nodes},
+            'edges': {},
+        }
+
+        # figure out if the nodes we are copying are sharing edges:
+        # if that's the case, copy the edge together with the nodes
+        for shape in nodes:
+            for edge in shape.node.edges:
+                if edge.id not in self.clipboard['edges']:
+                    if edge.other(shape.node).shape.isSelected():
+                        copy = edge.copy(self)
+                        copy.source = self.clipboard['nodes'][edge.source.id]
+                        copy.target = self.clipboard['nodes'][edge.target.id]
+                        self.clipboard['edges'][edge.id] = copy
+
+        # reset paste offset for next paste
+        self.clipboardPasteOffsetX = GraphicsScene.PasteOffsetX
+        self.clipboardPasteOffsetY = GraphicsScene.PasteOffsetY
