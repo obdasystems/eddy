@@ -367,7 +367,7 @@ class Note(QGraphicsPolygonItem, ShapeResizableMixin):
         painter.drawPolygon(fold)
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial Narrow', 11, QFont.Light))
+        painter.setFont(QFont('Arial', 10, QFont.Light))
         painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'value\nrestriction')
 
         return pixmap

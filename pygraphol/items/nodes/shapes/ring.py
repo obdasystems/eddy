@@ -117,7 +117,7 @@ class Ring(QGraphicsEllipseItem, ShapeMixin):
         painter.drawEllipse(QRectF(-shape_w / 2, -shape_h / 2 + 8, shape_w, shape_h))
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial Narrow', 12, QFont.Light))
+        painter.setFont(QFont('Arial', 10, QFont.Light))
         painter.drawText(-18, -6, 'attribute')
 
         return pixmap

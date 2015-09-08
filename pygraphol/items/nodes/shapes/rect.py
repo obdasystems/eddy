@@ -242,7 +242,7 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
         painter.drawRect(rect)
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial Narrow', 13, QFont.Light))
+        painter.setFont(QFont('Arial', 11, QFont.Light))
         painter.drawText(rect, Qt.AlignCenter, 'concept')
 
         return pixmap

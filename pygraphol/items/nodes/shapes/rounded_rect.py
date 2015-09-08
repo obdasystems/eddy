@@ -186,8 +186,7 @@ class RoundedRect(QGraphicsRectItem, ShapeMixin):
         painter.drawRoundedRect(rect, 6.0, 6.0)
 
         # Draw the text within the rectangle
-        painter.setRenderHint(QPainter.Antialiasing, False)
-        painter.setFont(QFont('Arial Narrow', 12, QFont.Light))
+        painter.setFont(QFont('Arial', 10, QFont.Light))
         painter.setBrush(QColor(0, 0, 0))
         painter.drawText(rect, Qt.AlignCenter, 'xsd:string')
 

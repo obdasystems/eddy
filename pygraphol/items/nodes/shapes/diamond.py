@@ -348,7 +348,7 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
         painter.drawPolygon(polygon)
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial Narrow', 12, QFont.Light))
+        painter.setFont(QFont('Arial', 11, QFont.Light))
         painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'role')
 
         return pixmap

@@ -181,7 +181,7 @@ class Square(QGraphicsRectItem, ShapeMixin):
         painter.drawRect(QRectF(-shape_w / 2, -shape_h / 2 + 8, shape_w, shape_h))
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial Narrow', 11, QFont.Light))
+        painter.setFont(QFont('Arial', 9, QFont.Light))
         painter.drawText(-28, -6, 'restriction type')
 
         return pixmap

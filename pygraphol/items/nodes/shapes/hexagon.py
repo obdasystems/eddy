@@ -46,7 +46,7 @@ class Hexagon(QGraphicsPolygonItem, ShapeMixin):
     """
     This class implements an irregolar hexagon which is used to render some 'Construct' nodes.
     """
-    HSpan = 80.0
+    HSpan = 70.0
     VSpan = 40.0
     DSize = 10.0
 
@@ -196,7 +196,7 @@ class Hexagon(QGraphicsPolygonItem, ShapeMixin):
 
         # Draw the text within the polygon
         if 'text' in kwargs:
-            painter.setFont(QFont('Arial Narrow', 13, QFont.Light))
+            painter.setFont(QFont('Arial', 11, QFont.Light))
             painter.drawText(polygon.boundingRect(), Qt.AlignCenter, kwargs['text'])
 
         return pixmap

@@ -411,8 +411,8 @@ class Octagon(QGraphicsPolygonItem, ShapeResizableMixin):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        shape_w = 38
-        shape_h = 38
+        shape_w = 40
+        shape_h = 40
 
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
@@ -429,8 +429,8 @@ class Octagon(QGraphicsPolygonItem, ShapeResizableMixin):
         painter.drawPolygon(polygon)
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial Narrow', 10, QFont.Light))
-        painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'individual')
+        painter.setFont(QFont('Arial', 9, QFont.Light))
+        painter.drawText(-18, 4, 'individual')
 
         return pixmap
 

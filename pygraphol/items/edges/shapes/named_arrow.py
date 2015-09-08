@@ -140,7 +140,7 @@ class NamedArrow(EdgeShape):
         painter.drawPolygon(head)
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial Narrow', 11, QFont.Light))
+        painter.setFont(QFont('Arial', 9, QFont.Light))
         painter.drawText(line_p1.x() + 2,  (kwargs['h'] / 2) - 4, kwargs['name'])
 
         return pixmap
