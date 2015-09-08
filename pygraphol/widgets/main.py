@@ -522,6 +522,43 @@ class MainWindow(QMainWindow):
     #                                                                                                                  #
     ####################################################################################################################
 
+    @pyqtSlot('QMdiSubWindow')
+    def handleDocumentSavedSignal(self, subwindow):
+        """
+        Executed when the document in a subwindow is saved.
+        :param subwindow: the subwindow containing the saved document.
+        """
+        mainview = subwindow.widget()
+        scene = mainview.scene()
+        self.setWindowTitle(scene.document.name)
+
+    @pyqtSlot(Edge)
+    def handleEdgeInsertEnd(self, edge):
+        """
+        Triggered after a edge insertion process ends.
+        :param edge: the inserted edge.
+        """
+        self.paletteItems[edge.type].setChecked(False)
+
+    @pyqtSlot(Node)
+    def handleNodeInsertEnd(self, node):
+        """
+        Triggered after a node insertion process ends.
+        :param node:the inserted node.
+        """
+        self.paletteItems[node.type].setChecked(False)
+
+    @pyqtSlot(int)
+    def handleSceneModeChanged(self, mode):
+        """
+        Triggered when the scene operation mode changes.
+        :param mode: the scene operation mode.
+        """
+        if mode == GraphicsScene.MoveItem:
+            # if we are moving items clear the palette selection
+            for btn in self.paletteItems.values():
+                btn.setChecked(False)
+
     @pyqtSlot(int)
     def handleToolBoxButtonClickedSignal(self, button_id):
         """
@@ -547,30 +584,6 @@ class MainWindow(QMainWindow):
                     currentscene.setMode(GraphicsScene.InsertNode, button.property('item'))
                 elif button_id in self.paletteEdges:
                     currentscene.setMode(GraphicsScene.InsertEdge, button.property('item'))
-
-    @pyqtSlot(bool)
-    def handleUndoGroupChangedSignal(self, clean):
-        """
-        Executed when the clean state of the active undoStack changes.
-        :param clean: the clean state.
-        """
-        self.actionSaveDocument.setEnabled(not clean)
-
-    @pyqtSlot(Node)
-    def handleNodeInsertEnd(self, node):
-        """
-        Triggered after a node insertion process ends.
-        :param node:the inserted node.
-        """
-        self.paletteItems[node.type].setChecked(False)
-
-    @pyqtSlot(Edge)
-    def handleEdgeInsertEnd(self, edge):
-        """
-        Triggered after a edge insertion process ends.
-        :param edge: the inserted edge.
-        """
-        self.paletteItems[edge.type].setChecked(False)
 
     @pyqtSlot('QMdiSubWindow')
     def handleSubWindowActivatedSignal(self, subwindow):
@@ -651,15 +664,13 @@ class MainWindow(QMainWindow):
                 self.zoomctl.setEnabled(False)
                 self.setWindowTitle()
 
-    @pyqtSlot('QMdiSubWindow')
-    def handleDocumentSavedSignal(self, subwindow):
+    @pyqtSlot(bool)
+    def handleUndoGroupChangedSignal(self, clean):
         """
-        Executed when the document in a subwindow is saved.
-        :param subwindow: the subwindow containing the saved document.
+        Executed when the clean state of the active undoStack changes.
+        :param clean: the clean state.
         """
-        mainview = subwindow.widget()
-        scene = mainview.scene()
-        self.setWindowTitle(scene.document.name)
+        self.actionSaveDocument.setEnabled(not clean)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -730,6 +741,7 @@ class MainWindow(QMainWindow):
         scene.setSceneRect(QRectF(0, 0, size, size))
         scene.nodeInsertEnd.connect(self.handleNodeInsertEnd)
         scene.edgeInsertEnd.connect(self.handleEdgeInsertEnd)
+        scene.modeChanged.connect(self.handleSceneModeChanged)
 
         # connect the undostack to the undogroup
         self.undoGroup.addStack(scene.undoStack)
@@ -772,6 +784,7 @@ class MainWindow(QMainWindow):
             scene.setSceneRect(QRectF(0, 0, w, h))
             scene.nodeInsertEnd.connect(self.handleNodeInsertEnd)
             scene.edgeInsertEnd.connect(self.handleEdgeInsertEnd)
+            scene.modeChanged.connect(self.handleSceneModeChanged)
 
             # add the nodes
             xmlnodes = graph.elementsByTagName('node')

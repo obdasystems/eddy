@@ -73,6 +73,7 @@ class GraphicsScene(QGraphicsScene):
     ## SIGNALS
     nodeInsertEnd = pyqtSignal(Node)
     edgeInsertEnd = pyqtSignal(Edge)
+    modeChanged = pyqtSignal(int)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -158,6 +159,7 @@ class GraphicsScene(QGraphicsScene):
         """
         Cut selected items from the scene.
         """
+        self.setMode(GraphicsScene.MoveItem)
         self.updateClipboard()
         self.updateActions()
 
@@ -174,6 +176,7 @@ class GraphicsScene(QGraphicsScene):
         """
         Make a copy of selected items.
         """
+        self.setMode(GraphicsScene.MoveItem)
         self.updateClipboard()
         self.updateActions()
 
@@ -181,6 +184,8 @@ class GraphicsScene(QGraphicsScene):
         """
         Paste previously copied items.
         """
+        self.setMode(GraphicsScene.MoveItem)
+
         def ncopy(node):
             """
             Create a copy of the given node generating a new id.
@@ -239,6 +244,8 @@ class GraphicsScene(QGraphicsScene):
         """
         Delete the currently selected items from the graphic scene.
         """
+        self.setMode(GraphicsScene.MoveItem)
+
         selection = self.selectedItems()
         if selection:
             collection = [x.item for x in self.addHangingEdges(selection)]
@@ -273,6 +280,7 @@ class GraphicsScene(QGraphicsScene):
         """
         Select all the items in the scene.
         """
+        self.setMode(GraphicsScene.MoveItem)
         self.clearSelection()
         for item in self.nodes() + self.edges():
             item.shape.setSelected(True)
@@ -653,6 +661,7 @@ class GraphicsScene(QGraphicsScene):
         """
         self.mode = mode
         self.modeParam = param
+        self.modeChanged.emit(mode)
 
     def shapeOnTopOf(self, point, nodes=True, edges=True):
         """
