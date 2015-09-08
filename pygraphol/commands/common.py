@@ -48,18 +48,24 @@ class CommandItemsMultiAdd(QUndoCommand):
         super().__init__('add %s items' % len(collection))
         self.scene = scene
         self.collection = collection
+        self.selected = scene.selectedItems()
 
     def redo(self):
         """redo the command"""
+        self.scene.clearSelection()
         for item in self.collection:
             self.scene.itemList.append(item)
             self.scene.addItem(item.shape)
+            item.shape.setSelected(True)
 
     def undo(self):
         """undo the command"""
+        self.scene.clearSelection()
         for item in self.collection:
             self.scene.itemList.remove(item)
             self.scene.removeItem(item.shape)
+        for shape in self.selected:
+            shape.setSelected(True)
 
 
 class CommandItemsMultiRemove(QUndoCommand):
