@@ -38,8 +38,8 @@ from pygraphol.datatypes import XsdDatatype
 from pygraphol.exceptions import ParseError
 from pygraphol.items.nodes.shapes.common import Label
 from pygraphol.items.nodes.shapes.mixins import ShapeMixin
-from PyQt5.QtCore import QRectF, Qt
-from PyQt5.QtGui import QPainter, QPainterPath, QIcon, QPixmap, QFont, QColor, QPen
+from PyQt5.QtCore import QRectF, Qt, QPointF, QLineF
+from PyQt5.QtGui import QPainter, QPainterPath, QIcon, QPixmap, QFont, QColor, QPen, QPolygonF
 from PyQt5.QtWidgets import QGraphicsRectItem, QAction
 
 
@@ -116,6 +116,22 @@ class RoundedRect(QGraphicsRectItem, ShapeMixin):
         :rtype: int
         """
         return self.rect().height()
+
+    def intersection(self, line):
+        """
+        Returns the intersection of the shape with the given line (in scene coordinates).
+        :param line: the line whose intersection needs to be calculated (in scene coordinates).
+        :rtype: QPointF
+        """
+        intersection = QPointF()
+        polygon = self.mapToScene(QPolygonF(self.rect()))
+
+        for i in range(0, polygon.size() - 1):
+            polyline = QLineF(polygon[i], polygon[i + 1])
+            if polyline.intersect(line, intersection) == QLineF.BoundedIntersection:
+                return intersection
+
+        return None
 
     def setLabelText(self, text):
         """

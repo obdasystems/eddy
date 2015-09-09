@@ -38,7 +38,7 @@ from functools import partial
 from pygraphol.commands import CommandEdgeAddBreakPoint, CommandEdgeMoveBreakPoint, CommandEdgeRemoveBreakPoint
 from PyQt5.QtCore import QPointF, Qt, QLineF, QRectF
 from PyQt5.QtGui import QPolygonF, QPainter, QPen, QColor, QPainterPath, QIcon
-from PyQt5.QtWidgets import QGraphicsItem, QGraphicsPolygonItem, QMenu, QAction
+from PyQt5.QtWidgets import QGraphicsItem, QMenu, QAction
 
 
 class SubPath(object):
@@ -341,20 +341,14 @@ class EdgeShape(QGraphicsItem):
         :param shape: the shape whose intersection needs to be calculated.
         :rtype: tuple
         """
-        intersection = QPointF()
-        polygon = shape.polygon() if isinstance(shape, QGraphicsPolygonItem) else QPolygonF(shape.rect())
-
         # iterate starting from the ending path since this function will be mostly used
         # to compute the edge head position/direction and we can save some computation
-        for x in range(len(self.path) - 1, -1, -1):
-            line = self.path[x].line
-            p1 = polygon.first() + shape.pos()
-            for i in polygon:
-                p2 = i + shape.pos()
-                polyline = QLineF(p1, p2)
-                if polyline.intersect(line, intersection) == QLineF.BoundedIntersection:
-                    return x, intersection
-                p1 = p2
+        for i in range(len(self.path) - 1, -1, -1):
+            subpath = self.path[i]
+            subline = subpath.line
+            intersection = shape.intersection(subline)
+            if intersection:
+                return i, intersection
         return None
 
     def removeBreakPoint(self, breakpoint):

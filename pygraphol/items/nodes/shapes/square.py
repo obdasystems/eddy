@@ -40,8 +40,8 @@ from pygraphol.exceptions import ParseError
 from pygraphol.items.nodes.shapes.common import Label
 from pygraphol.items.nodes.shapes.mixins import ShapeMixin
 from pygraphol.dialogs import CardinalityRestrictionForm
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap, QPen, QFont
+from PyQt5.QtCore import Qt, QRectF, QPointF, QLineF
+from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap, QPen, QFont, QPolygonF
 from PyQt5.QtWidgets import QGraphicsRectItem, QAction, QDialog
 
 
@@ -110,6 +110,22 @@ class Square(QGraphicsRectItem, ShapeMixin):
         :rtype: int
         """
         return self.rect().height()
+
+    def intersection(self, line):
+        """
+        Returns the intersection of the shape with the given line (in scene coordinates).
+        :param line: the line whose intersection needs to be calculated (in scene coordinates).
+        :rtype: QPointF
+        """
+        intersection = QPointF()
+        polygon = self.mapToScene(QPolygonF(self.rect()))
+
+        for i in range(0, polygon.size() - 1):
+            polyline = QLineF(polygon[i], polygon[i + 1])
+            if polyline.intersect(line, intersection) == QLineF.BoundedIntersection:
+                return intersection
+
+        return None
 
     def setLabelText(self, text):
         """
