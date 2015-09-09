@@ -76,25 +76,35 @@ class MainView(QGraphicsView):
             self.navUpdate.emit()
         return super().viewportEvent(event)
 
-    def wheelEvent(self, event):
+    def wheelEvent(self, wheelEvent):
         """
         Executed when the mouse wheel is moved on the scene.
-        :param event: the mouse wheel event.
+        :param wheelEvent: the mouse wheel event.
         """
-        if event.modifiers() & Qt.ControlModifier:
+        if wheelEvent.modifiers() & Qt.ControlModifier:
 
+            # allow zooming with the mouse wheel
             zoom = self.zoom
-            zoom += +(1 / ZoomControl.Step) if event.angleDelta().y() > 0 else -(1 / ZoomControl.Step)
+            zoom += +(1 / ZoomControl.Step) if wheelEvent.angleDelta().y() > 0 else -(1 / ZoomControl.Step)
             zoom = clamp(zoom, ZoomControl.MinScale, ZoomControl.MaxScale)
-            print(zoom)
 
             if zoom != self.zoom:
+                # set transformations anchors
+                self.setTransformationAnchor(QGraphicsView.NoAnchor)
+                self.setResizeAnchor(QGraphicsView.NoAnchor)
+                # save the old position
+                old = self.mapToScene(wheelEvent.pos())
+                # change the zoom level
                 self.scaleView(zoom)
                 self.zoomChanged.emit(zoom)
-
+                # get the new position
+                new = self.mapToScene(wheelEvent.pos())
+                # move the scene so the mouse is centered
+                move = new - old
+                self.translate(move.x(), move.y())
         else:
-            # handle default behavior (view move)
-            super().wheelEvent(event)
+            # handle default behavior (view scrolling)
+            super().wheelEvent(wheelEvent)
 
     ############################################# AUXILIARY METHODS ####################################################
 
