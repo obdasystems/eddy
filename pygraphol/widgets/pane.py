@@ -32,13 +32,14 @@
 ##########################################################################
 
 from pygraphol.functions import itemsInLayout
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QScrollArea, QVBoxLayout, QSizePolicy, QWidget, QFrame
+from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtWidgets import QScrollArea, QVBoxLayout, QSizePolicy, QWidget, QFrame, QScrollBar
 
 
 class Pane(QScrollArea):
 
     MinWidth = 216
+    MaxWidth = 234
 
     def __init__(self, alignment=0, parent=None):
         """
@@ -60,6 +61,7 @@ class Pane(QScrollArea):
         self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Ignored)
         self.setWidgetResizable(True)
         self.setWidget(self.mainWidget)
+        self.verticalScrollBar().installEventFilter(self)
 
     ################################################# SHORTCUTS ########################################################
 
@@ -76,6 +78,21 @@ class Pane(QScrollArea):
         :param widget: the widget to remove.
         """
         self.mainLayout.removeWidget(widget)
+
+    ############################################## EVENT HANDLERS ######################################################
+
+    def eventFilter(self, source, event):
+        """
+        Filters events if this object has been installed as an event filter for the watched object.
+        :param source: the watched object.
+        :param event: the event instance.
+        """
+        if isinstance(source, QScrollBar):
+            if event.type() == QEvent.Show:
+                self.setFixedWidth(Pane.MaxWidth)
+            elif event.type() == QEvent.Hide:
+                self.setFixedWidth(Pane.MinWidth)
+        return super().eventFilter(source, event)
 
     ################################################### UPDATE #########################################################
 
