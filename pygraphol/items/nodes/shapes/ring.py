@@ -31,7 +31,6 @@
 #                                                                        #
 ##########################################################################
 
-
 from pygraphol.items.nodes.shapes.common import Label
 from pygraphol.items.nodes.shapes.mixins import ShapeMixin
 from PyQt5.QtCore import Qt, QRectF, QPointF, QLineF
@@ -51,7 +50,7 @@ class Ring(QGraphicsEllipseItem, ShapeMixin):
         Initialize the ring shape.
         """
         super().__init__(**kwargs)
-        self.setRect(-self.shapeRadius, -self.shapeRadius, self.shapeRadius * 2, self.shapeRadius * 2)
+        self.setRect(Ring.getRect(self.shapeRadius * 2, self.shapeRadius * 2))
         self.label = Label(self.node.name, centered=False, parent=self)
         self.label.updatePos()
 
@@ -78,6 +77,16 @@ class Ring(QGraphicsEllipseItem, ShapeMixin):
         contextMenu.exec_(menuEvent.screenPos())
 
     ################################################ AUXILIARY METHODS #################################################
+
+    @staticmethod
+    def getRect(shape_w, shape_h):
+        """
+        Returns the initialized rect according to the given width/height.
+        :param shape_w: the shape width.
+        :param shape_h: the shape height.
+        :rtype: QRectF
+        """
+        return QRectF(-shape_w / 2, -shape_h / 2, shape_w, shape_h)
 
     def height(self):
         """
