@@ -42,6 +42,10 @@ class ZoomControl(QWidget):
     """
     This class implements the Zoom control which is used to Zoom the graphics scene.
     """
+    MinScale = 0.25 # the minimum scale value
+    MaxScale = 5.00 # the maximum scale value
+    Step = 4 # scale tick step
+
     signalScaleChanged = pyqtSignal(float)
 
     def __init__(self, parent=None):
@@ -54,7 +58,9 @@ class ZoomControl(QWidget):
         # This is a bit ugly but prevents the user from selecting values which do not match the set step (which
         # in this case is 1 / 4 = 0.25 = 25%. If we set the min size and max size on the slider and set
         # the single step the user is still able to select values which are not multiple of step.
-        self.zoom = {v[0]:v[1] for v in enumerate(map(lambda x: x / 4, range(1, 21, 1)), start=1)}
+        self.zoom = {v[0]:v[1] for v in enumerate(map(lambda x: x / ZoomControl.Step,
+                                                  range(int(ZoomControl.MinScale * ZoomControl.Step),
+                                                        int(ZoomControl.MaxScale * ZoomControl.Step + 1), 1)), start=1)}
 
         self.slider = QSlider(Qt.Horizontal, self)
         self.slider.setEnabled(False)
@@ -88,6 +94,16 @@ class ZoomControl(QWidget):
         """
         if self.isEnabled():
             self.signalScaleChanged.emit(self.zoom[self.slider.value()])
+            self.setZoomText(self.slider.value())
+
+    @pyqtSlot(float)
+    def handleMainViewZoomChanged(self, zoom):
+        """
+        Executed when the main view zoom value changes.
+        :param zoom: the zoom value.
+        """
+        if self.isEnabled():
+            self.slider.setValue(self.index(zoom))
             self.setZoomText(self.slider.value())
 
     ################################################# OVERRIDES ########################################################

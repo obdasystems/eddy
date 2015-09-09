@@ -32,6 +32,8 @@
 ##########################################################################
 
 
+from pygraphol.functions import clamp
+from pygraphol.widgets import ZoomControl
 from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QEvent, pyqtSlot
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 from PyQt5.QtWidgets import QGraphicsView, QWidget, QLabel, QHBoxLayout, QStyleOption, QStyle, QVBoxLayout
@@ -41,7 +43,8 @@ class MainView(QGraphicsView):
     """
     This class implements the main view displayed in the MDI area.
     """
-    signalNavUpdate = pyqtSignal()
+    navUpdate = pyqtSignal()
+    zoomChanged = pyqtSignal(float)
 
     def __init__(self, scene):
         """
@@ -58,11 +61,7 @@ class MainView(QGraphicsView):
         Executed when the scale factor changes (triggered by the Main Slider in the Toolbar)
         :param zoom: the scale factor.
         """
-        transform = self.transform()
-        self.resetTransform()
-        self.translate(transform.dx(), transform.dy())
-        self.scale(zoom, zoom)
-        self.zoom = zoom
+        self.scaleView(zoom)
 
     ############################################### EVENT HANDLERS #####################################################
 
@@ -74,10 +73,41 @@ class MainView(QGraphicsView):
         # if the main view has been repainted, emit a
         # signal so that also the navigator can update
         if event.type() == QEvent.Paint:
-            self.signalNavUpdate.emit()
+            self.navUpdate.emit()
         return super().viewportEvent(event)
 
+    def wheelEvent(self, event):
+        """
+        Executed when the mouse wheel is moved on the scene.
+        :param event: the mouse wheel event.
+        """
+        if event.modifiers() & Qt.ControlModifier:
+
+            zoom = self.zoom
+            zoom += +(1 / ZoomControl.Step) if event.angleDelta().y() > 0 else -(1 / ZoomControl.Step)
+            zoom = clamp(zoom, ZoomControl.MinScale, ZoomControl.MaxScale)
+            print(zoom)
+
+            if zoom != self.zoom:
+                self.scaleView(zoom)
+                self.zoomChanged.emit(zoom)
+
+        else:
+            # handle default behavior (view move)
+            super().wheelEvent(event)
+
     ############################################# AUXILIARY METHODS ####################################################
+
+    def scaleView(self, zoom):
+        """
+        Scale the Main View according to the given zoom.
+        :param zoom: the zoom factor.
+        """
+        transform = self.transform()
+        self.resetTransform()
+        self.translate(transform.dx(), transform.dy())
+        self.scale(zoom, zoom)
+        self.zoom = zoom
 
     def visibleRect(self):
         """
@@ -181,7 +211,7 @@ class Navigator(QWidget):
             if self.mainview:
 
                 try:
-                    self.mainview.signalNavUpdate.disconnect()
+                    self.mainview.navUpdate.disconnect()
                 except RuntimeError:
                     # which happens when the subwindow containing the view is closed
                     pass
@@ -191,7 +221,7 @@ class Navigator(QWidget):
             if self.mainview:
                 self.setScene(self.mainview.scene())
                 self.fitInView(self.mainview.sceneRect(), Qt.KeepAspectRatio)
-                self.mainview.signalNavUpdate.connect(self.handleNavUpdateSignal)
+                self.mainview.navUpdate.connect(self.handleNavUpdateSignal)
             else:
                 # all subwindow closed => refresh so the foreground disappears
                 self.viewport().update()

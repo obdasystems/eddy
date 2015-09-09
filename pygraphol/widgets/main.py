@@ -604,7 +604,7 @@ class MainWindow(QMainWindow):
 
             try:
 
-                # detach signals from the old scene: will raise an exception if the scene got closed
+                # detach signals from the old view/scene: will raise an exception if the scene got closed
                 # since the action reference has been destroyed and we don't need to detach anything
                 self.actionItemCut.disconnect()
                 self.actionItemCopy.disconnect()
@@ -616,6 +616,8 @@ class MainWindow(QMainWindow):
 
                 self.zoomctl.signalScaleChanged.disconnect()
 
+                mainview.zoomChanged.disconnect()
+
             except (RuntimeError, TypeError):
 
                 # just do nothing since we do not have the reference to the subwindow anymore so
@@ -625,7 +627,7 @@ class MainWindow(QMainWindow):
 
             finally:
 
-                # attach signals to the new active scene
+                # attach signals to the new active view/scene
                 self.actionItemCut.triggered.connect(scene.handleItemCut)
                 self.actionItemCopy.triggered.connect(scene.handleItemCopy)
                 self.actionItemPaste.triggered.connect(scene.handleItemPaste)
@@ -638,6 +640,8 @@ class MainWindow(QMainWindow):
                 self.zoomctl.setZoomLevel(self.zoomctl.index(mainview.zoom))
                 self.zoomctl.signalScaleChanged.connect(mainview.handleScaleChangedSignal)
                 self.zoomctl.setEnabled(True)
+
+                mainview.zoomChanged.connect(self.zoomctl.handleMainViewZoomChanged)
 
                 # update scene specific actions
                 scene.updateActions()
