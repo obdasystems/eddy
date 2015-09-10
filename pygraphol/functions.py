@@ -32,11 +32,12 @@
 ##########################################################################
 
 
+import math
 import os
 import sys
 
 from pygraphol.exceptions import ProgrammingError
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter
 from PyQt5.QtWidgets import QLayout
 
@@ -124,6 +125,30 @@ def shaded(pixmap, opacity=0.5):
 #   GEOMETRY                                                                                                           #
 #                                                                                                                      #
 ########################################################################################################################
+
+
+def distance(p1, p2):
+    """
+    Calculate the distance between the given points.
+    :type p1: QPointF
+    :type p2: QPointF
+    :param p1: the first point.
+    :param p2: the second point.
+    :rtype: float
+    """
+    return math.sqrt(math.pow(p2.x() - p1.x(), 2) + math.pow(p2.y() - p1.y(), 2))
+
+
+def midpoint(p1, p2):
+    """
+    Calculate the midpoint between the given points.
+    :type p1: QPointF
+    :type p2: QPointF
+    :param p1: the first point.
+    :param p2: the second point.
+    :rtype: QPointF
+    """
+    return QPointF((p1.x() + p2.x() / 2), (p1.y() + p2.y() / 2))
 
 
 def snapPointToGrid(value, gridsize, offset=0, snap=True):
