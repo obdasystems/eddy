@@ -123,8 +123,11 @@ class RoundedRect(QGraphicsRectItem, ShapeMixin):
         :param line: the line whose intersection needs to be calculated (in scene coordinates).
         :rtype: QPointF
         """
+        path = QPainterPath()
+        path.addRoundedRect(self.rect(), self.BorderRadius, self.BorderRadius)
+        polygon = self.mapToScene(path.toFillPolygon(self.transform()))
+
         intersection = QPointF()
-        polygon = self.mapToScene(QPolygonF(self.rect()))
 
         for i in range(0, polygon.size() - 1):
             polyline = QLineF(polygon[i], polygon[i + 1])
