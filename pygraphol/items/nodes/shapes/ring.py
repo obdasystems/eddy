@@ -31,10 +31,14 @@
 #                                                                        #
 ##########################################################################
 
+
+import math
+
+from pygraphol.functions import distance, midpoint
 from pygraphol.items.nodes.shapes.common import Label
 from pygraphol.items.nodes.shapes.mixins import ShapeMixin
 from PyQt5.QtCore import Qt, QRectF, QPointF, QLineF
-from PyQt5.QtGui import QColor, QPen, QPainter, QPixmap, QFont, QPolygonF
+from PyQt5.QtGui import QColor, QPen, QPainter, QPixmap, QFont, QPainterPath, QPolygonF, QBrush
 from PyQt5.QtWidgets import QGraphicsEllipseItem
 
 
@@ -101,8 +105,11 @@ class Ring(QGraphicsEllipseItem, ShapeMixin):
         :param line: the line whose intersection needs to be calculated (in scene coordinates).
         :rtype: QPointF
         """
+        path = QPainterPath()
+        path.addEllipse(self.center(), self.width() / 2, self.height() / 2)
+        polygon = self.mapToScene(path.toFillPolygon(self.transform()))
+
         intersection = QPointF()
-        polygon = self.mapToScene(QPolygonF(self.rect()))
 
         for i in range(0, polygon.size() - 1):
             polyline = QLineF(polygon[i], polygon[i + 1])
