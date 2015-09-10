@@ -671,7 +671,7 @@ class GraphicsScene(QGraphicsScene):
         :param nodes: whether to include nodes in our search.
         :param edges: whether to include edges in our search.
         """
-        collection = [x for x in self.items(point) if not isinstance(x, NodeLabel) and not isinstance(x, EdgeLabel)]
+        collection = [x for x in self.items(point) if hasattr(x, 'item')]
         collection = [x for x in collection if nodes and x.item.isNode() or edges and x.item.isEdge()]
         return max(collection, key=lambda x: x.zValue()) if collection else None
 
