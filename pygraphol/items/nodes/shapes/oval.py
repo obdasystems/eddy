@@ -164,3 +164,6 @@ class Oval(QGraphicsRectItem, ShapeMixin):
         painter.setBrush(self.shapeSelectedBrush if self.isSelected() else self.shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawRoundedRect(self.rect(), self.BorderRadius, self.BorderRadius)
+
+        # Draw controls
+        self.paintAnchors(painter, option, widget)

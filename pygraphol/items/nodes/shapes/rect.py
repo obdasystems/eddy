@@ -328,3 +328,12 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
             for handle, rect in self.handles.items():
                 if self.selectedHandle is None or handle == self.selectedHandle:
                     painter.drawEllipse(rect)
+
+        # For all the connected edges, draw the anchors if the edge is selected
+        for edge in self.node.edges:
+            if edge.shape.isSelected():
+                rect = self.mapRectFromScene(edge.shape.anchors[self])
+                painter.setRenderHint(QPainter.Antialiasing)
+                painter.setBrush(edge.shape.handleBrush)
+                painter.setPen(edge.shape.handlePen)
+                painter.drawEllipse(rect)

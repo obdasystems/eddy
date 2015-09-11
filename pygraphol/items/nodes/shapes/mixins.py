@@ -36,7 +36,7 @@ from copy import deepcopy
 from pygraphol.commands import CommandNodeRezize
 from pygraphol.items.edges import Edge
 from PyQt5.QtCore import Qt, QPointF, QRectF
-from PyQt5.QtGui import QColor, QPen
+from PyQt5.QtGui import QColor, QPen, QPainter
 from PyQt5.QtWidgets import QGraphicsItem, QMenu
 
 
@@ -262,6 +262,24 @@ class ShapeMixin(QGraphicsItem):
         """
         raise NotImplementedError('method `width` must be implemented in inherited class')
 
+    ################################################### ITEM DRAWING ###################################################
+
+    def paintAnchors(self, painter, option, widget=None):
+        """
+        Paint attached edges anchors.
+        :param painter: the active painter.
+        :param option: the style option for this item.
+        :param widget: the widget that is being painted on.
+        """
+        # For all the connected edges, draw the anchors if the edge is selected
+        for edge in self.node.edges:
+            if edge.shape.isSelected():
+                rect = self.mapRectFromScene(edge.shape.anchors[self])
+                painter.setRenderHint(QPainter.Antialiasing)
+                painter.setBrush(edge.shape.handleBrush)
+                painter.setPen(edge.shape.handlePen)
+                painter.drawEllipse(rect)
+
 
 class ShapeResizableMixin(ShapeMixin):
     """
@@ -435,3 +453,21 @@ class ShapeResizableMixin(ShapeMixin):
         :rtype: int
         """
         raise NotImplementedError('method `width` must be implemented in inherited class')
+
+    ################################################### ITEM DRAWING ###################################################
+
+    def paintHandles(self, painter, option, widget=None):
+        """
+        Paint node resizing handles.
+        :param painter: the active painter.
+        :param option: the style option for this item.
+        :param widget: the widget that is being painted on.
+        """
+        if self.isSelected():
+            # Draw resize handles only if the shape is selected
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setBrush(self.handleBrush)
+            painter.setPen(self.handlePen)
+            for handle, rect in self.handles.items():
+                if self.selectedHandle is None or handle == self.selectedHandle:
+                    painter.drawEllipse(rect)

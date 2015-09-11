@@ -88,6 +88,7 @@ class NamedArrow(EdgeShape):
         :type target: QPointF
         :param target: the Edge new end point (when there is no endNode attached yet).
         """
+        self.updateAnchors()
         self.updateHandles()
         self.updatePath(target)
         self.updateZValue()

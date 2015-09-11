@@ -444,10 +444,6 @@ class Note(QGraphicsPolygonItem, ShapeResizableMixin):
         painter.setPen(self.shapePen)
         painter.drawPolygon(Note.getFold(self.polygon(), Note.FoldSize))
 
-        if self.isSelected():
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setBrush(self.handleBrush)
-            painter.setPen(self.handlePen)
-            for handle, rect in self.handles.items():
-                if self.selectedHandle is None or handle == self.selectedHandle:
-                    painter.drawEllipse(rect)
+        # Draw controls
+        self.paintHandles(painter, option, widget)
+        self.paintAnchors(painter, option, widget)

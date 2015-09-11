@@ -209,9 +209,12 @@ class Square(QGraphicsRectItem, ShapeMixin):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        ## DRAW THE POLYGON
         shapeBrush = self.shapeSelectedBrush if self.isSelected() else self.shapeBrush
 
+        # Draw the polygon
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawRect(self.rect())
+
+        # Draw controls
+        self.paintAnchors(painter, option, widget)

@@ -413,16 +413,12 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
         # Select the correct brush for the shape
         shapeBrush = self.shapeSelectedBrush if self.isSelected() else self.shapeBrush
 
-        # # Draw the polygon
+        # Draw the polygon
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawPolygon(self.polygon())
 
-        if self.isSelected():
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setBrush(self.handleBrush)
-            painter.setPen(self.handlePen)
-            for handle, rect in self.handles.items():
-                if self.selectedHandle is None or handle == self.selectedHandle:
-                    painter.drawEllipse(rect)
+        # Draw controls
+        self.paintHandles(painter, option, widget)
+        self.paintAnchors(painter, option, widget)

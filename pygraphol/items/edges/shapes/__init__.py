@@ -121,7 +121,8 @@ class EdgeShape(QGraphicsItem):
         self.head = QPolygonF()
         self.tail = None
         self.breakpoints = kwargs.pop('breakpoints', [])
-        self.handles = dict()
+        self.handles = {}
+        self.anchors = {}
         self.path = []
 
         self.command = None
@@ -393,6 +394,17 @@ class EdgeShape(QGraphicsItem):
         :param target: the Edge new end point (when there is no endNode attached yet).
         """
         raise NotImplementedError('method `updateEdge` must be implemented in inherited class')
+
+    def updateAnchors(self):
+        """
+        Update edge anchors (update only the polygon: the real anchor point is in the node).
+        """
+        size = self.handleSize
+        if self.edge.source and self.edge.target:
+            p = self.edge.source.shape.anchor(self)
+            self.anchors[self.edge.source.shape] = QRectF(p.x() - size / 2, p.y() - size / 2, size, size)
+            p = self.edge.target.shape.anchor(self)
+            self.anchors[self.edge.target.shape] = QRectF(p.x() - size / 2, p.y() - size / 2, size, size)
 
     def updateHandles(self):
         """

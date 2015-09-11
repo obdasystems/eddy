@@ -120,6 +120,7 @@ class Arrow(EdgeShape):
         :type target: QPointF
         :param target: the Edge new end point (when there is no endNode attached yet).
         """
+        self.updateAnchors()
         self.updateHandles()
         self.updatePath(target)
         self.updateZValue()
@@ -182,7 +183,6 @@ class Arrow(EdgeShape):
         """
         if self.canDraw():
             super().paint(painter, option, widget)
-
             if self.tail:
                 painter.setRenderHint(QPainter.Antialiasing)
                 painter.setPen(self.tailPen)
