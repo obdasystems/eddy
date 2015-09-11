@@ -211,10 +211,8 @@ class Square(QGraphicsRectItem, ShapeMixin):
         """
         shapeBrush = self.shapeSelectedBrush if self.isSelected() else self.shapeBrush
 
-        # Draw the polygon
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawRect(self.rect())
 
-        # Draw controls
         self.paintAnchors(painter, option, widget)

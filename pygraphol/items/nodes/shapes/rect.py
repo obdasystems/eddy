@@ -311,29 +311,12 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        # Select the correct brush for the shape
         shapeBrush = self.shapeSelectedBrush if self.isSelected() else self.shapeBrush
 
-        # Draw the polygon
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawRect(self.rect())
 
-        if self.isSelected():
-            # Draw resize handles only if the shape is selected
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setBrush(self.handleBrush)
-            painter.setPen(self.handlePen)
-            for handle, rect in self.handles.items():
-                if self.selectedHandle is None or handle == self.selectedHandle:
-                    painter.drawEllipse(rect)
-
-        # For all the connected edges, draw the anchors if the edge is selected
-        for edge in self.node.edges:
-            if edge.shape.isSelected():
-                rect = self.mapRectFromScene(edge.shape.anchors[self])
-                painter.setRenderHint(QPainter.Antialiasing)
-                painter.setBrush(edge.shape.handleBrush)
-                painter.setPen(edge.shape.handlePen)
-                painter.drawEllipse(rect)
+        self.paintHandles(painter, option, widget)
+        self.paintAnchors(painter, option, widget)

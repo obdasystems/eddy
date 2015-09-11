@@ -224,11 +224,11 @@ class Hexagon(QGraphicsPolygonItem, ShapeMixin):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        # Draw the polygon
+        shapeBrush = self.shapeSelectedBrush if self.isSelected() else self.shapeBrush
+
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(self.shapeSelectedBrush if self.isSelected() else self.shapeBrush)
+        painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawPolygon(self.polygon())
 
-        # Draw controls
         self.paintAnchors(painter, option, widget)

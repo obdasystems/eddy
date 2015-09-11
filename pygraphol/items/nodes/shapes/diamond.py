@@ -410,15 +410,12 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        # Select the correct brush for the shape
         shapeBrush = self.shapeSelectedBrush if self.isSelected() else self.shapeBrush
 
-        # Draw the polygon
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawPolygon(self.polygon())
 
-        # Draw controls
         self.paintHandles(painter, option, widget)
         self.paintAnchors(painter, option, widget)
