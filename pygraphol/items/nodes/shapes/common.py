@@ -153,7 +153,7 @@ class Label(QGraphicsTextItem):
         """
         scene = self.scene()
         if scene.mode == scene.MoveItem:
-            # this is needed to the label outline will
+            # this is needed so the label outline will
             # not appear when adding edges between nodes
             super().mousePressEvent(mouseEvent)
 
@@ -162,11 +162,13 @@ class Label(QGraphicsTextItem):
         Executed when the text is moved with the mouse.
         :param mouseEvent: the mouse event instance.
         """
-        super().mouseMoveEvent(mouseEvent)
-        if not self.commandMove:
-            parent = self.parentItem()
-            self.commandMove = CommandNodeLabelMove(parent.node, self.moved)
-        self.moved = True
+        scene = self.scene()
+        if scene.mode == scene.MoveItem:
+            super().mouseMoveEvent(mouseEvent)
+            if not self.commandMove:
+                parent = self.parentItem()
+                self.commandMove = CommandNodeLabelMove(parent.node, self.moved)
+            self.moved = True
 
     def mouseReleaseEvent(self, mouseEvent):
         """
@@ -174,10 +176,11 @@ class Label(QGraphicsTextItem):
         :param mouseEvent: the mouse event instance.
         """
         super().mouseReleaseEvent(mouseEvent)
-        if self.commandMove:
-            self.commandMove.new = self.pos()
-            scene = self.scene()
-            scene.undoStack.push(self.commandMove)
+        scene = self.scene()
+        if scene.mode == scene.MoveItem:
+            if self.commandMove:
+                self.commandMove.end()
+                scene.undoStack.push(self.commandMove)
         self.commandMove = None
 
     ################################################ AUXILIARY METHODS #################################################

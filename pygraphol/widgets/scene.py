@@ -365,9 +365,10 @@ class GraphicsScene(QGraphicsScene):
 
         elif self.mode == GraphicsScene.InsertEdge:
 
-            # see if we are pressing the mouse of a shape and if so set the edge add command
+            # see if we are pressing the mouse on a shape and if so set the edge add command
             shape = self.shapeOnTopOf(mouseEvent.scenePos(), edges=False)
             if shape:
+
                 func = self.modeParam
                 edge = func(scene=self, source=shape.item)
                 edge.shape.updateEdge(target=mouseEvent.scenePos())
@@ -396,9 +397,15 @@ class GraphicsScene(QGraphicsScene):
                     # execute only if there is at least one item selected
                     self.mousePressShapePos = self.mousePressShape.pos()
                     self.mousePressPos = mouseEvent.scenePos()
+
+                    # initialize data
                     self.mousePressData = {
-                        'nodes': {x: x.pos() for x in self.selectedNodes()},    # shape: pos
-                        'edges': {}                                             # shape: [list_of_breakpoints]
+                        'nodes': {
+                            shape: {
+                                'anchors': {k: v for k, v in shape.anchors.items()},
+                                'pos': shape.pos(),
+                            } for shape in self.selectedNodes()},
+                        'edges': {}
                     }
 
                     # figure out if the nodes we are moving are sharing edges: if so, move the edge
@@ -430,14 +437,18 @@ class GraphicsScene(QGraphicsScene):
                 delta = snapped - self.mousePressShapePos
 
                 # update all the breakpoints positions: updating breakpoints before nodes shows less artifacts
-                for edge, breakpoints in self.mousePressData['edges'].items():
+                for shape, breakpoints in self.mousePressData['edges'].items():
                     for i in range(len(breakpoints)):
-                        edge.breakpoints[i] = breakpoints[i] + delta
+                        shape.breakpoints[i] = breakpoints[i] + delta
 
                 # move all the selected nodes
-                for shape, pos in self.mousePressData['nodes'].items():
-                    shape.setPos(pos + delta)
+                for shape, data in self.mousePressData['nodes'].items():
+                    # update node position and attached edges
+                    shape.setPos(data['pos'] + delta)
                     shape.updateEdges()
+                    # update anchors points
+                    for edge, pos in data['anchors'].items():
+                        shape.setAnchor(edge, pos + delta)
 
                 # mark mouse move has happened so we can push
                 # the undo command in the stack on mouse release
@@ -482,7 +493,11 @@ class GraphicsScene(QGraphicsScene):
 
                 # collect new positions for the undo command
                 data = {
-                    'nodes': {x: x.pos() for x in self.mousePressData['nodes']},
+                    'nodes': {
+                        shape: {
+                            'anchors': {k: v for k, v in shape.anchors.items()},
+                            'pos': shape.pos(),
+                        } for shape in self.mousePressData['nodes']},
                     'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}
                 }
 

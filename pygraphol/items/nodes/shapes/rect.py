@@ -98,87 +98,128 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
         offset = self.handleSize + self.handleSpan
         return self.rect().adjusted(-offset, -offset, offset, offset)
 
-    def interactiveResize(self, handle, fromRect, mousePressedPos, mousePos):
+    def interactiveResize(self, mousePos):
         """
         Handle the interactive resize of the shape.
-        :type handle: int
-        :type fromRect: QRectF
-        :type mousePressedPos: QPointF
-        :type mousePos: QPointF
-        :param handle: the currently selected resizing handle.
-        :param fromRect: the rect before the resizing operation started.
-        :param mousePressedPos: the position where the mouse has been pressed.
         :param mousePos: the current mouse position.
         """
         scene = self.scene()
-        toRect = self.rect()
-        doSnap = scene.settings.value('scene/snap_to_grid', False, bool)
+        snap = scene.settings.value('scene/snap_to_grid', False, bool)
+        rect = self.rect()
+        diff = QPointF(0, 0)
 
-        if handle == self.handleTL:
-            newX = fromRect.left() + mousePos.x() - mousePressedPos.x()
-            newY = fromRect.top() + mousePos.y() - mousePressedPos.y()
-            newX = snapPointToGrid(newX, scene.GridSize, snap=doSnap)
-            newY = snapPointToGrid(newY, scene.GridSize, snap=doSnap)
-            toRect.setLeft(newX)
-            toRect.setTop(newY)
-        elif handle == self.handleTM:
-            newY = fromRect.top() + mousePos.y() - mousePressedPos.y()
-            newY = snapPointToGrid(newY, scene.GridSize, snap=doSnap)
-            toRect.setTop(newY)
-        elif handle == self.handleTR:
-            newX = fromRect.right() + mousePos.x() - mousePressedPos.x()
-            newY = fromRect.top() + mousePos.y() - mousePressedPos.y()
-            newX = snapPointToGrid(newX, scene.GridSize, snap=doSnap)
-            newY = snapPointToGrid(newY, scene.GridSize, snap=doSnap)
-            toRect.setRight(newX)
-            toRect.setTop(newY)
-        elif handle == self.handleML:
-            newX = fromRect.left() + mousePos.x() - mousePressedPos.x()
-            newX = snapPointToGrid(newX, scene.GridSize, snap=doSnap)
-            toRect.setLeft(newX)
-        elif handle == self.handleMR:
-            newX = fromRect.right() + mousePos.x() - mousePressedPos.x()
-            newX = snapPointToGrid(newX, scene.GridSize, snap=doSnap)
-            toRect.setRight(newX)
-        elif handle == self.handleBL:
-            newX = fromRect.left() + mousePos.x() - mousePressedPos.x()
-            newY = fromRect.bottom() + mousePos.y() - mousePressedPos.y()
-            newX = snapPointToGrid(newX, scene.GridSize, snap=doSnap)
-            newY = snapPointToGrid(newY, scene.GridSize, snap=doSnap)
-            toRect.setLeft(newX)
-            toRect.setBottom(newY)
-        elif handle == self.handleBM:
-            newY = fromRect.bottom() + mousePos.y() - mousePressedPos.y()
-            newY = snapPointToGrid(newY, scene.GridSize, snap=doSnap)
-            toRect.setBottom(newY)
-        elif handle == self.handleBR:
-            newX = fromRect.right() + mousePos.x() - mousePressedPos.x()
-            newY = fromRect.bottom() + mousePos.y() - mousePressedPos.y()
-            newX = snapPointToGrid(newX, scene.GridSize, snap=doSnap)
-            newY = snapPointToGrid(newY, scene.GridSize, snap=doSnap)
-            toRect.setRight(newX)
-            toRect.setBottom(newY)
+        if self.selectedHandle == self.handleTL:
+
+            fromX = self.mousePressRect.left()
+            fromY = self.mousePressRect.top()
+            toX = fromX + mousePos.x() - self.mousePressPos.x()
+            toY = fromY + mousePos.y() - self.mousePressPos.y()
+            toX = snapPointToGrid(toX, scene.GridSize, snap=snap)
+            toY = snapPointToGrid(toY, scene.GridSize, snap=snap)
+            diff.setX(toX - fromX)
+            diff.setY(toY - fromY)
+            rect.setLeft(toX)
+            rect.setTop(toY)
+
+        elif self.selectedHandle == self.handleTM:
+
+            fromY = self.mousePressRect.top()
+            toY = fromY + mousePos.y() - self.mousePressPos.y()
+            toY = snapPointToGrid(toY, scene.GridSize, snap=snap)
+            diff.setY(toY - fromY)
+            rect.setTop(toY)
+
+        elif self.selectedHandle == self.handleTR:
+
+            fromX = self.mousePressRect.right()
+            fromY = self.mousePressRect.top()
+            toX = fromX + mousePos.x() - self.mousePressPos.x()
+            toY = fromY + mousePos.y() - self.mousePressPos.y()
+            toX = snapPointToGrid(toX, scene.GridSize, snap=snap)
+            toY = snapPointToGrid(toY, scene.GridSize, snap=snap)
+            diff.setX(toX - fromX)
+            diff.setY(toY - fromY)
+            rect.setRight(toX)
+            rect.setTop(toY)
+
+        elif self.selectedHandle == self.handleML:
+
+            fromX = self.mousePressRect.left()
+            toX = fromX + mousePos.x() - self.mousePressPos.x()
+            toX = snapPointToGrid(toX, scene.GridSize, snap=snap)
+            diff.setX(toX - fromX)
+            rect.setLeft(toX)
+
+        elif self.selectedHandle == self.handleMR:
+
+            fromX = self.mousePressRect.right()
+            toX = fromX + mousePos.x() - self.mousePressPos.x()
+            toX = snapPointToGrid(toX, scene.GridSize, snap=snap)
+            diff.setX(toX - fromX)
+            rect.setRight(toX)
+
+        elif self.selectedHandle == self.handleBL:
+
+            fromX = self.mousePressRect.left()
+            fromY = self.mousePressRect.bottom()
+            toX = fromX + mousePos.x() - self.mousePressPos.x()
+            toY = fromY + mousePos.y() - self.mousePressPos.y()
+            toX = snapPointToGrid(toX, scene.GridSize, snap=snap)
+            toY = snapPointToGrid(toY, scene.GridSize, snap=snap)
+            diff.setX(toX - fromX)
+            diff.setY(toY - fromY)
+            rect.setLeft(toX)
+            rect.setBottom(toY)
+
+        elif self.selectedHandle == self.handleBM:
+
+            fromY = self.mousePressRect.bottom()
+            toY = fromY + mousePos.y() - self.mousePressPos.y()
+            toY = snapPointToGrid(toY, scene.GridSize, snap=snap)
+            diff.setY(toY - fromY)
+            rect.setBottom(toY)
+
+        elif self.selectedHandle == self.handleBR:
+
+            fromX = self.mousePressRect.right()
+            fromY = self.mousePressRect.bottom()
+            toX = fromX + mousePos.x() - self.mousePressPos.x()
+            toY = fromY + mousePos.y() - self.mousePressPos.y()
+            toX = snapPointToGrid(toX, scene.GridSize, snap=snap)
+            toY = snapPointToGrid(toY, scene.GridSize, snap=snap)
+            diff.setX(toX - fromX)
+            diff.setY(toY - fromY)
+            rect.setRight(toX)
+            rect.setBottom(toY)
 
         ## CLAMP WIDTH
-        if handle in (self.handleTL, self.handleML, self.handleBL):
-            if toRect.width() < self.MinWidth:
-                toRect.setLeft(toRect.left() - self.MinWidth + toRect.width())
-        elif handle in (self.handleTR, self.handleMR, self.handleBR):
-            if toRect.width() < self.MinWidth:
-                toRect.setRight(toRect.right() + self.MinWidth - toRect.width())
+        if self.selectedHandle in (self.handleTL, self.handleML, self.handleBL):
+            if rect.width() < self.MinWidth:
+                diff.setX(diff.x() - self.MinWidth + rect.width())
+                rect.setLeft(rect.left() - self.MinWidth + rect.width())
+        elif self.selectedHandle in (self.handleTR, self.handleMR, self.handleBR):
+            if rect.width() < self.MinWidth:
+                diff.setX(diff.x() + self.MinWidth - rect.width())
+                rect.setRight(rect.right() + self.MinWidth - rect.width())
 
         ## CLAMP HEIGHT
-        if handle in (self.handleTL, self.handleTM, self.handleTR):
-            if toRect.height() < self.MinHeight:
-                toRect.setTop(toRect.top() - self.MinHeight + toRect.height())
-        elif handle in (self.handleBL, self.handleBM, self.handleBR):
-            if toRect.height() < self.MinHeight:
-                toRect.setBottom(toRect.bottom() + self.MinHeight - toRect.height())
+        if self.selectedHandle in (self.handleTL, self.handleTM, self.handleTR):
+            if rect.height() < self.MinHeight:
+                diff.setY(diff.y() - self.MinHeight + rect.height())
+                rect.setTop(rect.top() - self.MinHeight + rect.height())
+        elif self.selectedHandle in (self.handleBL, self.handleBM, self.handleBR):
+            if rect.height() < self.MinHeight:
+                diff.setY(diff.y() + self.MinHeight - rect.height())
+                rect.setBottom(rect.bottom() + self.MinHeight - rect.height())
 
         self.prepareGeometryChange()
-        self.setRect(toRect)
+        self.setRect(rect)
         self.updateHandlesPos()
         self.updateLabelPos()
+
+        # update edge anchors
+        for edge, pos in self.mousePressData.items():
+            self.setAnchor(edge, pos + diff)
 
     def shape(self):
         """

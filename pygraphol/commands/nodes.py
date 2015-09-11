@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from copy import deepcopy
+from PyQt5.QtCore import QRectF
 from pygraphol.datatypes import RestrictionType
 from pygraphol.functions import isEmpty
 from PyQt5.QtGui import QPolygonF
@@ -101,16 +101,34 @@ class CommandNodeRezize(QUndoCommand):
         """
         super().__init__('resize %s node' % node.name)
         self.node = node
-        self.old = deepcopy(node.shape.rect()) if hasattr(node.shape, 'rect') else QPolygonF(node.shape.polygon())
         self.new = None
+        self.old = {
+            'shape': QRectF(self.node.shape.rect()) if hasattr(self.node.shape, 'rect') else QPolygonF(self.node.shape.polygon()),
+            'anchors': {edge: pos for edge, pos in node.shape.anchors.items()}
+        }
+
+    def end(self):
+        """
+        End the command collecting new information.
+        """
+        self.new = {
+            'shape': QRectF(self.node.shape.rect()) if hasattr(self.node.shape, 'rect') else QPolygonF(self.node.shape.polygon()),
+            'anchors': {edge: pos for edge, pos in self.node.shape.anchors.items()}
+        }
 
     def redo(self):
         """redo the command"""
         if self.new:
+
             try:
-                self.node.shape.setRect(self.new)
+                self.node.shape.setRect(self.new['shape'])
             except AttributeError:
-                self.node.shape.setPolygon(self.new)
+                self.node.shape.setPolygon(self.new['shape'])
+
+            # update edge anchors
+            for edge, pos in self.new['anchors'].items():
+                self.node.shape.setAnchor(edge, pos)
+
             self.node.shape.updateHandlesPos()
             self.node.shape.updateLabelPos()
             self.node.shape.updateEdges()
@@ -119,9 +137,14 @@ class CommandNodeRezize(QUndoCommand):
     def undo(self):
         """undo the command"""
         try:
-            self.node.shape.setRect(self.old)
+            self.node.shape.setRect(self.old['shape'])
         except AttributeError:
-            self.node.shape.setPolygon(self.old)
+            self.node.shape.setPolygon(self.old['shape'])
+
+        # update edge anchors
+        for edge, pos in self.old['anchors'].items():
+            self.node.shape.setAnchor(edge, pos)
+
         self.node.shape.updateHandlesPos()
         self.node.shape.updateLabelPos()
         self.node.shape.updateEdges()
@@ -155,9 +178,13 @@ class CommandNodeMove(QUndoCommand):
             for i in range(len(breakpoints)):
                 edge.breakpoints[i] = breakpoints[i]
         # update nodes positions
-        for shape, pos in self.new['nodes'].items():
-            shape.setPos(pos)
+        for shape, data in self.new['nodes'].items():
+            shape.setPos(data['pos'])
+            # update edge anchors
+            for edge, pos in data['anchors'].items():
+                shape.setAnchor(edge, pos)
             shape.updateEdges()
+            shape.update()
 
     def undo(self):
         """undo the command"""
@@ -166,9 +193,13 @@ class CommandNodeMove(QUndoCommand):
             for i in range(len(breakpoints)):
                 edge.breakpoints[i] = breakpoints[i]
         # update nodes positions
-        for shape, pos in self.old['nodes'].items():
-            shape.setPos(pos)
+        for shape, data in self.old['nodes'].items():
+            shape.setPos(data['pos'])
+            # update edge anchors
+            for edge, pos in data['anchors'].items():
+                shape.setAnchor(edge, pos)
             shape.updateEdges()
+            shape.update()
 
 
 class CommandNodeLabelMove(QUndoCommand):
@@ -179,13 +210,19 @@ class CommandNodeLabelMove(QUndoCommand):
         """
         Initialize the command
         :param node: the node whose label is being moved.
-        :param moved: whether the label was moved already or not
+        :param moved: whether the label was moved already or not.
         """
         super().__init__('move %s node label' % node.name)
         self.moved = moved
         self.node = node
         self.old = node.shape.label.pos()
         self.new = None
+
+    def end(self):
+        """
+        End the command collecting new data.
+        """
+        self.new = self.node.shape.label.pos()
 
     def redo(self):
         """redo the command"""

@@ -34,8 +34,9 @@
 
 from copy import deepcopy
 from pygraphol.commands import CommandNodeRezize
+from pygraphol.items.edges import Edge
 from PyQt5.QtCore import Qt, QPointF, QRectF
-from PyQt5.QtGui import QColor, QPen, QPolygonF
+from PyQt5.QtGui import QColor, QPen
 from PyQt5.QtWidgets import QGraphicsItem, QMenu
 
 
@@ -43,7 +44,6 @@ class ShapeMixin(QGraphicsItem):
     """
     This class holds properties which are shared by all the shapes (all shapes must inherit from this class).
     """
-
     shapeBrush = QColor(252, 252, 252)
     shapeSelectedBrush = QColor(251, 255, 148)
     shapePen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
@@ -53,9 +53,9 @@ class ShapeMixin(QGraphicsItem):
         Initialize basic shape attributes.
         :param item: the item this shape is attached to
         """
-        self.item = item
-        self.command = None
-        self.label = None
+        self.item = item  # reference of the item this shape is attached to
+        self.anchors = {}  # edges anchor points indexed by edge
+        self.label = None  # label attached to this shape
 
         # some nodes do not enforce customizable geometry so we might have some
         # argument keywords left in that will mess up QGraphicsItem.__init__().
@@ -126,6 +126,20 @@ class ShapeMixin(QGraphicsItem):
 
     ################################################ AUXILIARY METHODS #################################################
 
+    def anchor(self, edge):
+        """
+        Returns the anchor point of the given edge (shape) in scene coordinates.
+        :rtype: QPointF
+        """
+        # make sure we index by shape only
+        if isinstance(edge, Edge):
+            edge = edge.shape
+        try:
+            return self.anchors[edge]
+        except KeyError:
+            self.anchors[edge] = self.mapToScene(self.center())
+            return self.anchors[edge]
+
     def center(self):
         """
         Returns the point at the center of the shape.
@@ -178,6 +192,16 @@ class ShapeMixin(QGraphicsItem):
         """
         return self.label.text()
 
+    def setAnchor(self, edge, pos):
+        """
+        Set the given position as anchor for the given edge.
+        :param edge: the edge used to index the new position.
+        :param pos: the anchor position.
+        """
+        if isinstance(edge, Edge):
+            edge = edge.shape
+        self.anchors[edge] = pos
+
     def setLabelPos(self, pos):
         """
         Set the label position updating the 'moved' flag accordingly.
@@ -186,7 +210,7 @@ class ShapeMixin(QGraphicsItem):
         # sometime it happens that when the graphol document is saved on file, the saved label position differs
         # from the real position by 1px (usually only on height). This is due to the fact that by default the text
         # item bounding rect heigh is 13px and to compute the correct position of the text item we use to subtract
-        # width / 2 and height / 2 from the text item center position which results in a .5 float automaticall rounded
+        # width / 2 and height / 2 from the text item center position which results in a .5 float automatically rounded
         # by QT. To fix this issue we'll simply try to see if the difference between the given position and the default
         # one is 1px and set the label moved flag accordingly.
         moved_X = True
@@ -275,6 +299,7 @@ class ShapeResizableMixin(ShapeMixin):
         """
         self.command = None
         self.handles = dict()
+        self.mousePressData = {}
         self.mousePressPos = None
         self.mousePressRect = None
         self.selectedHandle = None
@@ -313,19 +338,20 @@ class ShapeResizableMixin(ShapeMixin):
             self.setSelected(True)
             self.mousePressPos = mouseEvent.pos()
             self.mousePressRect = deepcopy(self.rect()) if hasattr(self, 'rect') else self.boundingRect()
+            self.mousePressData = {edge: pos for edge, pos in self.anchors.items()}
 
         super().mousePressEvent(mouseEvent)
 
-    # noinspection PyTypeChecker
     def mouseMoveEvent(self, mouseEvent):
         """
         Executed when the mouse is being moved over the item while being pressed.
         :param mouseEvent: the mouse move event instance.
         """
         if self.selectedHandle:
+
             if not self.command:
                 self.command = CommandNodeRezize(self.node)
-            self.interactiveResize(self.selectedHandle, self.mousePressRect, self.mousePressPos, mouseEvent.pos())
+            self.interactiveResize(mouseEvent.pos())
             self.updateEdges()
 
         super().mouseMoveEvent(mouseEvent)
@@ -336,8 +362,7 @@ class ShapeResizableMixin(ShapeMixin):
         :param mouseEvent: the mouse event instance.
         """
         if self.selectedHandle and self.command:
-            # resizing operation: push the command in the stack
-            self.command.new = deepcopy(self.rect()) if hasattr(self, 'rect') else QPolygonF(self.polygon())
+            self.command.end()
             scene = self.scene()
             scene.resizing = False
             scene.undoStack.push(self.command)
@@ -345,6 +370,7 @@ class ShapeResizableMixin(ShapeMixin):
         super().mouseReleaseEvent(mouseEvent)
 
         self.command = None
+        self.mousePressData = {}
         self.mousePressPos = None
         self.mousePressRect = None
         self.selectedHandle = None
@@ -373,16 +399,9 @@ class ShapeResizableMixin(ShapeMixin):
         """
         raise NotImplementedError('method `height` must be implemented in inherited class')
 
-    def interactiveResize(self, handle, fromRect, mousePressedPos, mousePos):
+    def interactiveResize(self, mousePos):
         """
         Handle the interactive resize of the shape.
-        :type handle: int
-        :type fromRect: QRectF
-        :type mousePressedPos: QPointF
-        :type mousePos: QPointF
-        :param handle: the currently selected resizing handle.
-        :param fromRect: the rect before the resizing operation started.
-        :param mousePressedPos: the position where the mouse has been pressed.
         :param mousePos: the current mouse position.
         """
         raise NotImplementedError('method `interactiveResize` must be implemented in inherited class')

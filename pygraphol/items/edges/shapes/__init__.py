@@ -101,13 +101,13 @@ class EdgeShape(QGraphicsItem):
     handleBrush = QColor(79, 195, 247, 255)
     handlePen = QPen(QColor(0, 0, 0, 255), 1.0, Qt.SolidLine)
 
+    linePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+
     headPen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     headBrush = QColor(0, 0, 0)
 
     tailPen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     tailBrush = QColor(0, 0, 0)
-
-    linePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
 
     selectionPen = QPen(QColor(251, 255, 148), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     selectionBrush = QColor(251, 255, 148)
@@ -414,8 +414,8 @@ class EdgeShape(QGraphicsItem):
         :type target: QPointF
         :param target: the endpoint of this edge.
         """
-        source = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.center())
-        target = target or self.mapFromItem(self.edge.target.shape, self.edge.target.shape.center())
+        source = self.edge.source.shape.anchor(self)
+        target = target or self.edge.target.shape.anchor(self)
         points = [source] + self.breakpoints + [target]
         self.path = [SubPath(points[i], points[i + 1]) for i in range(len(points) - 1)]
 

@@ -117,246 +117,280 @@ class Octagon(QGraphicsPolygonItem, ShapeResizableMixin):
         h = polygon[self.indexBL].y() - y
         return QRectF(x - offset, y - offset, w + offset * 2, h + offset * 2)
 
-    def interactiveResize(self, handle, fromRect, mousePressedPos, mousePos):
+    def interactiveResize(self, mousePos):
         """
         Handle the interactive resize of the shape.
-        :type handle: int
-        :type fromRect: QRectF
-        :type mousePressedPos: QPointF
-        :type mousePos: QPointF
-        :param handle: the currently selected resizing handle.
-        :param fromRect: the bouding rect before the resizing operation started.
-        :param mousePressedPos: the position where the mouse has been pressed.
         :param mousePos: the current mouse position.
         """
         scene = self.scene()
-        toPoly = self.polygon()
-        toRect = self.boundingRect()
-        doSnap = scene.settings.value('scene/snap_to_grid', False, bool)
         offset = self.handleSize + self.handleSpan
-
+        snap = scene.settings.value('scene/snap_to_grid', False, bool)
+        poly = self.polygon()
+        rect = self.boundingRect()
+        diff = QPointF(0, 0)
+    
         minBoundingRectWidth = self.MinWidth + (self.handleSize + self.handleSpan) * 2
         minBoundingRectHeight = self.MinHeight + (self.handleSize + self.handleSpan) * 2
 
-        if handle == self.handleTL:
+        if self.selectedHandle == self.handleTL:
 
-            newX = fromRect.left() + mousePos.x() - mousePressedPos.x()
-            newY = fromRect.top() + mousePos.y() - mousePressedPos.y()
-            newX = snapPointToGrid(newX, scene.GridSize, -offset, doSnap)
-            newY = snapPointToGrid(newY, scene.GridSize, -offset, doSnap)
-            toRect.setLeft(newX)
-            toRect.setTop(newY)
-
-            ## CLAMP SIZE
-            if toRect.width() < minBoundingRectWidth:
-                toRect.setLeft(toRect.left() - minBoundingRectWidth + toRect.width())
-            if toRect.height() < minBoundingRectHeight:
-                toRect.setTop(toRect.top() - minBoundingRectHeight + toRect.height())
-
-            newSideY = (toRect.height() - offset * 2) / (1 + math.sqrt(2))
-            newSideX = (toRect.width() - offset * 2) / (1 + math.sqrt(2))
-            newLeftRightBottomY = (toRect.y() + toRect.height() / 2) + newSideY / 2
-            newLeftRightTopY = (toRect.y() + toRect.height() / 2) - newSideY / 2
-            newTopBottomLeftX = (toRect.x() + toRect.width() / 2) - newSideX / 2
-            newTopBottomRightX = (toRect.x() + toRect.width() / 2) + newSideX / 2
-
-            toPoly[self.indexLT] = QPointF(toRect.left() + offset, newLeftRightTopY)
-            toPoly[self.indexLB] = QPointF(toRect.left() + offset, newLeftRightBottomY)
-            toPoly[self.indexRT] = QPointF(toRect.right() - offset, newLeftRightTopY)
-            toPoly[self.indexRB] = QPointF(toRect.right() - offset, newLeftRightBottomY)
-            toPoly[self.indexTL] = QPointF(newTopBottomLeftX, toRect.top() + offset)
-            toPoly[self.indexTR] = QPointF(newTopBottomRightX, toRect.top() + offset)
-            toPoly[self.indexBL] = QPointF(newTopBottomLeftX, toRect.bottom() - offset)
-            toPoly[self.indexBR] = QPointF(newTopBottomRightX, toRect.bottom() - offset)
-            toPoly[self.indexEE] = QPointF(toRect.left() + offset, newLeftRightTopY)
-
-        elif handle == self.handleTM:
-
-            newY = fromRect.top() + mousePos.y() - mousePressedPos.y()
-            newY = snapPointToGrid(newY, scene.GridSize, -offset, doSnap)
-            toRect.setTop(newY)
+            fromX = self.mousePressRect.left()
+            fromY = self.mousePressRect.top()
+            toX = fromX + mousePos.x() - self.mousePressPos.x()
+            toY = fromY + mousePos.y() - self.mousePressPos.y()
+            toX = snapPointToGrid(toX, scene.GridSize, -offset, snap)
+            toY = snapPointToGrid(toY, scene.GridSize, -offset, snap)
+            diff.setX(toX - fromX)
+            diff.setY(toY - fromY)
+            rect.setLeft(toX)
+            rect.setTop(toY)
 
             ## CLAMP SIZE
-            if toRect.height() < minBoundingRectHeight:
-                toRect.setTop(toRect.top() - minBoundingRectHeight + toRect.height())
+            if rect.width() < minBoundingRectWidth:
+                diff.setX(diff.x() - minBoundingRectWidth + rect.width())
+                rect.setLeft(rect.left() - minBoundingRectWidth + rect.width())
+            if rect.height() < minBoundingRectHeight:
+                diff.setY(diff.y() - minBoundingRectHeight + rect.height())
+                rect.setTop(rect.top() - minBoundingRectHeight + rect.height())
 
-            newSide = (toRect.height() - offset * 2) / (1 + math.sqrt(2))
-            newLeftRightBottomY = (toRect.y() + toRect.height() / 2) + newSide / 2
-            newLeftRightTopY = (toRect.y() + toRect.height() / 2) - newSide / 2
+            newSideY = (rect.height() - offset * 2) / (1 + math.sqrt(2))
+            newSideX = (rect.width() - offset * 2) / (1 + math.sqrt(2))
+            newLeftRightBottomY = (rect.y() + rect.height() / 2) + newSideY / 2
+            newLeftRightTopY = (rect.y() + rect.height() / 2) - newSideY / 2
+            newTopBottomLeftX = (rect.x() + rect.width() / 2) - newSideX / 2
+            newTopBottomRightX = (rect.x() + rect.width() / 2) + newSideX / 2
 
-            toPoly[self.indexTL] = QPointF(toPoly[self.indexTL].x(), toRect.top() + offset)
-            toPoly[self.indexTR] = QPointF(toPoly[self.indexTR].x(), toRect.top() + offset)
-            toPoly[self.indexLB] = QPointF(toPoly[self.indexLB].x(), newLeftRightBottomY)
-            toPoly[self.indexRB] = QPointF(toPoly[self.indexRB].x(), newLeftRightBottomY)
-            toPoly[self.indexLT] = QPointF(toPoly[self.indexLT].x(), newLeftRightTopY)
-            toPoly[self.indexRT] = QPointF(toPoly[self.indexRT].x(), newLeftRightTopY)
-            toPoly[self.indexEE] = QPointF(toPoly[self.indexEE].x(), newLeftRightTopY)
+            poly[self.indexLT] = QPointF(rect.left() + offset, newLeftRightTopY)
+            poly[self.indexLB] = QPointF(rect.left() + offset, newLeftRightBottomY)
+            poly[self.indexRT] = QPointF(rect.right() - offset, newLeftRightTopY)
+            poly[self.indexRB] = QPointF(rect.right() - offset, newLeftRightBottomY)
+            poly[self.indexTL] = QPointF(newTopBottomLeftX, rect.top() + offset)
+            poly[self.indexTR] = QPointF(newTopBottomRightX, rect.top() + offset)
+            poly[self.indexBL] = QPointF(newTopBottomLeftX, rect.bottom() - offset)
+            poly[self.indexBR] = QPointF(newTopBottomRightX, rect.bottom() - offset)
+            poly[self.indexEE] = QPointF(rect.left() + offset, newLeftRightTopY)
 
-        elif handle == self.handleTR:
+        elif self.selectedHandle == self.handleTM:
 
-            newX = fromRect.right() + mousePos.x() - mousePressedPos.x()
-            newY = fromRect.top() + mousePos.y() - mousePressedPos.y()
-            newX = snapPointToGrid(newX, scene.GridSize, +offset, doSnap)
-            newY = snapPointToGrid(newY, scene.GridSize, -offset, doSnap)
-            toRect.setRight(newX)
-            toRect.setTop(newY)
-
-            ## CLAMP SIZE
-            if toRect.width() < minBoundingRectWidth:
-                toRect.setRight(toRect.right() + minBoundingRectWidth - toRect.width())
-            if toRect.height() < minBoundingRectHeight:
-                toRect.setTop(toRect.top() - minBoundingRectHeight + toRect.height())
-
-            newSideY = (toRect.height() - offset * 2) / (1 + math.sqrt(2))
-            newSideX = (toRect.width() - offset * 2) / (1 + math.sqrt(2))
-            newLeftRightBottomY = (toRect.y() + toRect.height() / 2) + newSideY / 2
-            newLeftRightTopY = (toRect.y() + toRect.height() / 2) - newSideY / 2
-            newTopBottomLeftX = (toRect.x() + toRect.width() / 2) - newSideX / 2
-            newTopBottomRightX = (toRect.x() + toRect.width() / 2) + newSideX / 2
-
-            toPoly[self.indexLT] = QPointF(toRect.left() + offset, newLeftRightTopY)
-            toPoly[self.indexLB] = QPointF(toRect.left() + offset, newLeftRightBottomY)
-            toPoly[self.indexRT] = QPointF(toRect.right() - offset, newLeftRightTopY)
-            toPoly[self.indexRB] = QPointF(toRect.right() - offset, newLeftRightBottomY)
-            toPoly[self.indexTL] = QPointF(newTopBottomLeftX, toRect.top() + offset)
-            toPoly[self.indexTR] = QPointF(newTopBottomRightX, toRect.top() + offset)
-            toPoly[self.indexBL] = QPointF(newTopBottomLeftX, toRect.bottom() - offset)
-            toPoly[self.indexBR] = QPointF(newTopBottomRightX, toRect.bottom() - offset)
-            toPoly[self.indexEE] = QPointF(toRect.left() + offset, newLeftRightTopY)
-
-        elif handle == self.handleML:
-
-            newX = fromRect.left() + mousePos.x() - mousePressedPos.x()
-            newX = snapPointToGrid(newX, scene.GridSize, -offset, doSnap)
-            toRect.setLeft(newX)
+            fromY = self.mousePressRect.top()
+            toY = fromY + mousePos.y() - self.mousePressPos.y()
+            toY = snapPointToGrid(toY, scene.GridSize, -offset, snap)
+            diff.setY(toY - fromY)
+            rect.setTop(toY)
 
             ## CLAMP SIZE
-            if toRect.width() < minBoundingRectWidth:
-                toRect.setLeft(toRect.left() - minBoundingRectWidth + toRect.width())
+            if rect.height() < minBoundingRectHeight:
+                diff.setY(diff.y() - minBoundingRectHeight + rect.height())
+                rect.setTop(rect.top() - minBoundingRectHeight + rect.height())
 
-            newSide = (toRect.width() - offset * 2) / (1 + math.sqrt(2))
-            newTopBottomLeftX = (toRect.x() + toRect.width() / 2) - newSide / 2
-            newTopBottomRightX = (toRect.x() + toRect.width() / 2) + newSide / 2
+            newSide = (rect.height() - offset * 2) / (1 + math.sqrt(2))
+            newLeftRightBottomY = (rect.y() + rect.height() / 2) + newSide / 2
+            newLeftRightTopY = (rect.y() + rect.height() / 2) - newSide / 2
 
-            toPoly[self.indexLT] = QPointF(toRect.left() + offset, toPoly[self.indexLT].y())
-            toPoly[self.indexLB] = QPointF(toRect.left() + offset, toPoly[self.indexLB].y())
-            toPoly[self.indexEE] = QPointF(toRect.left() + offset, toPoly[self.indexEE].y())
-            toPoly[self.indexTL] = QPointF(newTopBottomLeftX, toPoly[self.indexTL].y())
-            toPoly[self.indexTR] = QPointF(newTopBottomRightX, toPoly[self.indexTR].y())
-            toPoly[self.indexBL] = QPointF(newTopBottomLeftX, toPoly[self.indexBL].y())
-            toPoly[self.indexBR] = QPointF(newTopBottomRightX, toPoly[self.indexBR].y())
+            poly[self.indexTL] = QPointF(poly[self.indexTL].x(), rect.top() + offset)
+            poly[self.indexTR] = QPointF(poly[self.indexTR].x(), rect.top() + offset)
+            poly[self.indexLB] = QPointF(poly[self.indexLB].x(), newLeftRightBottomY)
+            poly[self.indexRB] = QPointF(poly[self.indexRB].x(), newLeftRightBottomY)
+            poly[self.indexLT] = QPointF(poly[self.indexLT].x(), newLeftRightTopY)
+            poly[self.indexRT] = QPointF(poly[self.indexRT].x(), newLeftRightTopY)
+            poly[self.indexEE] = QPointF(poly[self.indexEE].x(), newLeftRightTopY)
 
-        elif handle == self.handleMR:
+        elif self.selectedHandle == self.handleTR:
 
-            newX = fromRect.right() + mousePos.x() - mousePressedPos.x()
-            newX = snapPointToGrid(newX, scene.GridSize, +offset, doSnap)
-            toRect.setRight(newX)
-
-            ## CLAMP SIZE
-            if toRect.width() < minBoundingRectWidth:
-                toRect.setRight(toRect.right() + minBoundingRectWidth - toRect.width())
-
-            newSide = (toRect.width() - offset * 2) / (1 + math.sqrt(2))
-            newTopBottomRightX = (toRect.x() + toRect.width() / 2) + newSide / 2
-            newTopBottomLeftX = (toRect.x() + toRect.width() / 2) - newSide / 2
-
-            toPoly[self.indexRT] = QPointF(toRect.right() - offset, toPoly[self.indexRT].y())
-            toPoly[self.indexRB] = QPointF(toRect.right() - offset, toPoly[self.indexRB].y())
-            toPoly[self.indexTL] = QPointF(newTopBottomLeftX, toPoly[self.indexTL].y())
-            toPoly[self.indexTR] = QPointF(newTopBottomRightX, toPoly[self.indexTR].y())
-            toPoly[self.indexBL] = QPointF(newTopBottomLeftX, toPoly[self.indexBL].y())
-            toPoly[self.indexBR] = QPointF(newTopBottomRightX, toPoly[self.indexBR].y())
-
-        elif handle == self.handleBL:
-
-            newX = fromRect.left() + mousePos.x() - mousePressedPos.x()
-            newY = fromRect.bottom() + mousePos.y() - mousePressedPos.y()
-            newX = snapPointToGrid(newX, scene.GridSize, -offset, doSnap)
-            newY = snapPointToGrid(newY, scene.GridSize, +offset, doSnap)
-            toRect.setLeft(newX)
-            toRect.setBottom(newY)
+            fromX = self.mousePressRect.right()
+            fromY = self.mousePressRect.top()
+            toX = fromX + mousePos.x() - self.mousePressPos.x()
+            toY = fromY + mousePos.y() - self.mousePressPos.y()
+            toX = snapPointToGrid(toX, scene.GridSize, +offset, snap)
+            toY = snapPointToGrid(toY, scene.GridSize, -offset, snap)
+            diff.setX(toX - fromX)
+            diff.setY(toY - fromY)
+            rect.setRight(toX)
+            rect.setTop(toY)
 
             ## CLAMP SIZE
-            if toRect.width() < minBoundingRectWidth:
-                toRect.setLeft(toRect.left() - minBoundingRectWidth + toRect.width())
-            if toRect.height() < minBoundingRectHeight:
-                toRect.setBottom(toRect.bottom() + minBoundingRectHeight - toRect.height())
+            if rect.width() < minBoundingRectWidth:
+                diff.setX(diff.x() + minBoundingRectWidth - rect.width())
+                rect.setRight(rect.right() + minBoundingRectWidth - rect.width())
+            if rect.height() < minBoundingRectHeight:
+                diff.setY(diff.y() - minBoundingRectHeight + rect.height())
+                rect.setTop(rect.top() - minBoundingRectHeight + rect.height())
 
-            newSideY = (toRect.height() - offset * 2) / (1 + math.sqrt(2))
-            newSideX = (toRect.width() - offset * 2) / (1 + math.sqrt(2))
-            newLeftRightBottomY = (toRect.y() + toRect.height() / 2) + newSideY / 2
-            newLeftRightTopY = (toRect.y() + toRect.height() / 2) - newSideY / 2
-            newTopBottomLeftX = (toRect.x() + toRect.width() / 2) - newSideX / 2
-            newTopBottomRightX = (toRect.x() + toRect.width() / 2) + newSideX / 2
+            newSideY = (rect.height() - offset * 2) / (1 + math.sqrt(2))
+            newSideX = (rect.width() - offset * 2) / (1 + math.sqrt(2))
+            newLeftRightBottomY = (rect.y() + rect.height() / 2) + newSideY / 2
+            newLeftRightTopY = (rect.y() + rect.height() / 2) - newSideY / 2
+            newTopBottomLeftX = (rect.x() + rect.width() / 2) - newSideX / 2
+            newTopBottomRightX = (rect.x() + rect.width() / 2) + newSideX / 2
 
-            toPoly[self.indexLT] = QPointF(toRect.left() + offset, newLeftRightTopY)
-            toPoly[self.indexLB] = QPointF(toRect.left() + offset, newLeftRightBottomY)
-            toPoly[self.indexRT] = QPointF(toRect.right() - offset, newLeftRightTopY)
-            toPoly[self.indexRB] = QPointF(toRect.right() - offset, newLeftRightBottomY)
-            toPoly[self.indexTL] = QPointF(newTopBottomLeftX, toRect.top() + offset)
-            toPoly[self.indexTR] = QPointF(newTopBottomRightX, toRect.top() + offset)
-            toPoly[self.indexBL] = QPointF(newTopBottomLeftX, toRect.bottom() - offset)
-            toPoly[self.indexBR] = QPointF(newTopBottomRightX, toRect.bottom() - offset)
-            toPoly[self.indexEE] = QPointF(toRect.left() + offset, newLeftRightTopY)
+            poly[self.indexLT] = QPointF(rect.left() + offset, newLeftRightTopY)
+            poly[self.indexLB] = QPointF(rect.left() + offset, newLeftRightBottomY)
+            poly[self.indexRT] = QPointF(rect.right() - offset, newLeftRightTopY)
+            poly[self.indexRB] = QPointF(rect.right() - offset, newLeftRightBottomY)
+            poly[self.indexTL] = QPointF(newTopBottomLeftX, rect.top() + offset)
+            poly[self.indexTR] = QPointF(newTopBottomRightX, rect.top() + offset)
+            poly[self.indexBL] = QPointF(newTopBottomLeftX, rect.bottom() - offset)
+            poly[self.indexBR] = QPointF(newTopBottomRightX, rect.bottom() - offset)
+            poly[self.indexEE] = QPointF(rect.left() + offset, newLeftRightTopY)
 
-        elif handle == self.handleBM:
+        elif self.selectedHandle == self.handleML:
 
-            newY = fromRect.bottom() + mousePos.y() - mousePressedPos.y()
-            newY = snapPointToGrid(newY, scene.GridSize, +offset, doSnap)
-            toRect.setBottom(newY)
-
-            ## CLAMP SIZE
-            if toRect.height() < minBoundingRectHeight:
-                toRect.setBottom(toRect.bottom() + minBoundingRectHeight - toRect.height())
-
-            newSide = (toRect.height() - offset * 2) / (1 + math.sqrt(2))
-            newLeftRightTopY = (toRect.y() + toRect.height() / 2) - newSide / 2
-            newLeftRightBottomY = (toRect.y() + toRect.height() / 2) + newSide / 2
-
-            toPoly[self.indexBL] = QPointF(toPoly[self.indexBL].x(), toRect.bottom() - offset)
-            toPoly[self.indexBR] = QPointF(toPoly[self.indexBR].x(), toRect.bottom() - offset)
-            toPoly[self.indexLB] = QPointF(toPoly[self.indexLB].x(), newLeftRightBottomY)
-            toPoly[self.indexRB] = QPointF(toPoly[self.indexRB].x(), newLeftRightBottomY)
-            toPoly[self.indexLT] = QPointF(toPoly[self.indexLT].x(), newLeftRightTopY)
-            toPoly[self.indexRT] = QPointF(toPoly[self.indexRT].x(), newLeftRightTopY)
-            toPoly[self.indexEE] = QPointF(toPoly[self.indexEE].x(), newLeftRightTopY)
-
-        elif handle == self.handleBR:
-
-            newX = fromRect.right() + mousePos.x() - mousePressedPos.x()
-            newY = fromRect.bottom() + mousePos.y() - mousePressedPos.y()
-            newX = snapPointToGrid(newX, scene.GridSize, +offset, doSnap)
-            newY = snapPointToGrid(newY, scene.GridSize, +offset, doSnap)
-            toRect.setRight(newX)
-            toRect.setBottom(newY)
+            fromX = self.mousePressRect.left()
+            toX = fromX + mousePos.x() - self.mousePressPos.x()
+            toX = snapPointToGrid(toX, scene.GridSize, -offset, snap)
+            diff.setX(toX - fromX)
+            rect.setLeft(toX)
 
             ## CLAMP SIZE
-            if toRect.width() < minBoundingRectWidth:
-                toRect.setRight(toRect.right() + minBoundingRectWidth - toRect.width())
-            if toRect.height() < minBoundingRectHeight:
-                toRect.setBottom(toRect.bottom() + minBoundingRectHeight - toRect.height())
+            if rect.width() < minBoundingRectWidth:
+                diff.setX(diff.x() - minBoundingRectWidth + rect.width())
+                rect.setLeft(rect.left() - minBoundingRectWidth + rect.width())
 
-            newSideY = (toRect.height() - offset * 2) / (1 + math.sqrt(2))
-            newSideX = (toRect.width() - offset * 2) / (1 + math.sqrt(2))
-            newLeftRightBottomY = (toRect.y() + toRect.height() / 2) + newSideY / 2
-            newLeftRightTopY = (toRect.y() + toRect.height() / 2) - newSideY / 2
-            newTopBottomLeftX = (toRect.x() + toRect.width() / 2) - newSideX / 2
-            newTopBottomRightX = (toRect.x() + toRect.width() / 2) + newSideX / 2
+            newSide = (rect.width() - offset * 2) / (1 + math.sqrt(2))
+            newTopBottomLeftX = (rect.x() + rect.width() / 2) - newSide / 2
+            newTopBottomRightX = (rect.x() + rect.width() / 2) + newSide / 2
 
-            toPoly[self.indexLT] = QPointF(toRect.left() + offset, newLeftRightTopY)
-            toPoly[self.indexLB] = QPointF(toRect.left() + offset, newLeftRightBottomY)
-            toPoly[self.indexRT] = QPointF(toRect.right() - offset, newLeftRightTopY)
-            toPoly[self.indexRB] = QPointF(toRect.right() - offset, newLeftRightBottomY)
-            toPoly[self.indexTL] = QPointF(newTopBottomLeftX, toRect.top() + offset)
-            toPoly[self.indexTR] = QPointF(newTopBottomRightX, toRect.top() + offset)
-            toPoly[self.indexBL] = QPointF(newTopBottomLeftX, toRect.bottom() - offset)
-            toPoly[self.indexBR] = QPointF(newTopBottomRightX, toRect.bottom() - offset)
-            toPoly[self.indexEE] = QPointF(toRect.left() + offset, newLeftRightTopY)
+            poly[self.indexLT] = QPointF(rect.left() + offset, poly[self.indexLT].y())
+            poly[self.indexLB] = QPointF(rect.left() + offset, poly[self.indexLB].y())
+            poly[self.indexEE] = QPointF(rect.left() + offset, poly[self.indexEE].y())
+            poly[self.indexTL] = QPointF(newTopBottomLeftX, poly[self.indexTL].y())
+            poly[self.indexTR] = QPointF(newTopBottomRightX, poly[self.indexTR].y())
+            poly[self.indexBL] = QPointF(newTopBottomLeftX, poly[self.indexBL].y())
+            poly[self.indexBR] = QPointF(newTopBottomRightX, poly[self.indexBR].y())
+
+        elif self.selectedHandle == self.handleMR:
+
+            fromX = self.mousePressRect.right()
+            toX = fromX + mousePos.x() - self.mousePressPos.x()
+            toX = snapPointToGrid(toX, scene.GridSize, +offset, snap)
+            diff.setX(toX - fromX)
+            rect.setRight(toX)
+
+            ## CLAMP SIZE
+            if rect.width() < minBoundingRectWidth:
+                diff.setX(diff.x() + minBoundingRectWidth - rect.width())
+                rect.setRight(rect.right() + minBoundingRectWidth - rect.width())
+
+            newSide = (rect.width() - offset * 2) / (1 + math.sqrt(2))
+            newTopBottomRightX = (rect.x() + rect.width() / 2) + newSide / 2
+            newTopBottomLeftX = (rect.x() + rect.width() / 2) - newSide / 2
+
+            poly[self.indexRT] = QPointF(rect.right() - offset, poly[self.indexRT].y())
+            poly[self.indexRB] = QPointF(rect.right() - offset, poly[self.indexRB].y())
+            poly[self.indexTL] = QPointF(newTopBottomLeftX, poly[self.indexTL].y())
+            poly[self.indexTR] = QPointF(newTopBottomRightX, poly[self.indexTR].y())
+            poly[self.indexBL] = QPointF(newTopBottomLeftX, poly[self.indexBL].y())
+            poly[self.indexBR] = QPointF(newTopBottomRightX, poly[self.indexBR].y())
+
+        elif self.selectedHandle == self.handleBL:
+
+            fromX = self.mousePressRect.left()
+            fromY = self.mousePressRect.bottom()
+            toX = fromX + mousePos.x() - self.mousePressPos.x()
+            toY = fromY + mousePos.y() - self.mousePressPos.y()
+            toX = snapPointToGrid(toX, scene.GridSize, -offset, snap)
+            toY = snapPointToGrid(toY, scene.GridSize, +offset, snap)
+            diff.setX(toX - fromX)
+            diff.setY(toY - fromY)
+            rect.setLeft(toX)
+            rect.setBottom(toY)
+
+            ## CLAMP SIZE
+            if rect.width() < minBoundingRectWidth:
+                diff.setX(diff.x() - minBoundingRectWidth + rect.width())
+                rect.setLeft(rect.left() - minBoundingRectWidth + rect.width())
+            if rect.height() < minBoundingRectHeight:
+                diff.setY(diff.y() + minBoundingRectHeight - rect.height())
+                rect.setBottom(rect.bottom() + minBoundingRectHeight - rect.height())
+
+            newSideY = (rect.height() - offset * 2) / (1 + math.sqrt(2))
+            newSideX = (rect.width() - offset * 2) / (1 + math.sqrt(2))
+            newLeftRightBottomY = (rect.y() + rect.height() / 2) + newSideY / 2
+            newLeftRightTopY = (rect.y() + rect.height() / 2) - newSideY / 2
+            newTopBottomLeftX = (rect.x() + rect.width() / 2) - newSideX / 2
+            newTopBottomRightX = (rect.x() + rect.width() / 2) + newSideX / 2
+
+            poly[self.indexLT] = QPointF(rect.left() + offset, newLeftRightTopY)
+            poly[self.indexLB] = QPointF(rect.left() + offset, newLeftRightBottomY)
+            poly[self.indexRT] = QPointF(rect.right() - offset, newLeftRightTopY)
+            poly[self.indexRB] = QPointF(rect.right() - offset, newLeftRightBottomY)
+            poly[self.indexTL] = QPointF(newTopBottomLeftX, rect.top() + offset)
+            poly[self.indexTR] = QPointF(newTopBottomRightX, rect.top() + offset)
+            poly[self.indexBL] = QPointF(newTopBottomLeftX, rect.bottom() - offset)
+            poly[self.indexBR] = QPointF(newTopBottomRightX, rect.bottom() - offset)
+            poly[self.indexEE] = QPointF(rect.left() + offset, newLeftRightTopY)
+
+        elif self.selectedHandle == self.handleBM:
+
+            fromY = self.mousePressRect.bottom()
+            toY = fromY + mousePos.y() - self.mousePressPos.y()
+            toY = snapPointToGrid(toY, scene.GridSize, +offset, snap)
+            diff.setY(toY - fromY)
+            rect.setBottom(toY)
+
+            ## CLAMP SIZE
+            if rect.height() < minBoundingRectHeight:
+                diff.setY(diff.y() + minBoundingRectHeight - rect.height())
+                rect.setBottom(rect.bottom() + minBoundingRectHeight - rect.height())
+
+            newSide = (rect.height() - offset * 2) / (1 + math.sqrt(2))
+            newLeftRightTopY = (rect.y() + rect.height() / 2) - newSide / 2
+            newLeftRightBottomY = (rect.y() + rect.height() / 2) + newSide / 2
+
+            poly[self.indexBL] = QPointF(poly[self.indexBL].x(), rect.bottom() - offset)
+            poly[self.indexBR] = QPointF(poly[self.indexBR].x(), rect.bottom() - offset)
+            poly[self.indexLB] = QPointF(poly[self.indexLB].x(), newLeftRightBottomY)
+            poly[self.indexRB] = QPointF(poly[self.indexRB].x(), newLeftRightBottomY)
+            poly[self.indexLT] = QPointF(poly[self.indexLT].x(), newLeftRightTopY)
+            poly[self.indexRT] = QPointF(poly[self.indexRT].x(), newLeftRightTopY)
+            poly[self.indexEE] = QPointF(poly[self.indexEE].x(), newLeftRightTopY)
+
+        elif self.selectedHandle == self.handleBR:
+
+            fromX = self.mousePressRect.right()
+            fromY = self.mousePressRect.bottom()
+            toX = fromX + mousePos.x() - self.mousePressPos.x()
+            toY = fromY + mousePos.y() - self.mousePressPos.y()
+            toX = snapPointToGrid(toX, scene.GridSize, +offset, snap)
+            toY = snapPointToGrid(toY, scene.GridSize, +offset, snap)
+            diff.setX(toX - fromX)
+            diff.setY(toY - fromY)
+            rect.setRight(toX)
+            rect.setBottom(toY)
+
+            ## CLAMP SIZE
+            if rect.width() < minBoundingRectWidth:
+                diff.setX(diff.x() + minBoundingRectWidth - rect.width())
+                rect.setRight(rect.right() + minBoundingRectWidth - rect.width())
+            if rect.height() < minBoundingRectHeight:
+                diff.setY(diff.y() + minBoundingRectHeight - rect.height())
+                rect.setBottom(rect.bottom() + minBoundingRectHeight - rect.height())
+
+            newSideY = (rect.height() - offset * 2) / (1 + math.sqrt(2))
+            newSideX = (rect.width() - offset * 2) / (1 + math.sqrt(2))
+            newLeftRightBottomY = (rect.y() + rect.height() / 2) + newSideY / 2
+            newLeftRightTopY = (rect.y() + rect.height() / 2) - newSideY / 2
+            newTopBottomLeftX = (rect.x() + rect.width() / 2) - newSideX / 2
+            newTopBottomRightX = (rect.x() + rect.width() / 2) + newSideX / 2
+
+            poly[self.indexLT] = QPointF(rect.left() + offset, newLeftRightTopY)
+            poly[self.indexLB] = QPointF(rect.left() + offset, newLeftRightBottomY)
+            poly[self.indexRT] = QPointF(rect.right() - offset, newLeftRightTopY)
+            poly[self.indexRB] = QPointF(rect.right() - offset, newLeftRightBottomY)
+            poly[self.indexTL] = QPointF(newTopBottomLeftX, rect.top() + offset)
+            poly[self.indexTR] = QPointF(newTopBottomRightX, rect.top() + offset)
+            poly[self.indexBL] = QPointF(newTopBottomLeftX, rect.bottom() - offset)
+            poly[self.indexBR] = QPointF(newTopBottomRightX, rect.bottom() - offset)
+            poly[self.indexEE] = QPointF(rect.left() + offset, newLeftRightTopY)
 
         self.prepareGeometryChange()
-        self.setPolygon(toPoly)
+        self.setPolygon(poly)
         self.updateHandlesPos()
         self.updateLabelPos()
+
+        # update edge anchors
+        for edge, pos in self.mousePressData.items():
+            self.setAnchor(edge, pos + diff)
 
     def shape(self):
         """
