@@ -219,7 +219,7 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
 
         # update edge anchors
         for edge, pos in self.mousePressData.items():
-            self.setAnchor(edge, pos + diff)
+            self.setAnchor(edge, pos + diff * 0.5)
 
     def shape(self):
         """
