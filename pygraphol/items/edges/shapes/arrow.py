@@ -37,13 +37,25 @@ from math import sin, cos, radians, pi as M_PI
 from pygraphol.items.edges.shapes import EdgeShape
 from PyQt5.QtWidgets import QAction, QMenu
 from PyQt5.QtCore import QPointF, Qt, QLineF
-from PyQt5.QtGui import QPolygonF, QPixmap, QPainter, QPen, QColor, QIcon
+from PyQt5.QtGui import QPolygonF, QPixmap, QPainter, QPen, QColor, QIcon, QPainterPath
 
 
 class Arrow(EdgeShape):
     """
     This class implements a arrow which is used to render the inclusion edge.
     """
+
+    ##################################################### GEOMETRY #####################################################
+
+    def shape(self):
+        """
+        Return the shape of the Edge.
+        :rtype: QPainterPath
+        """
+        path = super().shape()
+        if self.tail:
+            path.addPolygon(self.tail)
+        return path
 
     ################################################ AUXILIARY METHODS #################################################
 

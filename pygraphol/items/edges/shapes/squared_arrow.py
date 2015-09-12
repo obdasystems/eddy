@@ -52,6 +52,19 @@ class SquaredArrow(EdgeShape):
     linePen = QPen(QColor(0, 0, 0), 1.1, Qt.CustomDashLine, Qt.RoundCap, Qt.RoundJoin)
     linePen.setDashPattern([5, 5])
 
+    ##################################################### GEOMETRY #####################################################
+
+    def shape(self):
+        """
+        Return the shape of the Edge.
+        :rtype: QPainterPath
+        """
+        path = super().shape()
+        if self.tail:
+            path.moveTo(self.tail.p1())
+            path.lineTo(self.tail.p2())
+        return path
+
     ################################################ AUXILIARY METHODS #################################################
 
     def contextMenu(self, pos):
