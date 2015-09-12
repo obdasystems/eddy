@@ -35,7 +35,8 @@
 import math
 
 from functools import partial
-from pygraphol.commands import CommandEdgeAddBreakPoint, CommandEdgeMoveBreakPoint, CommandEdgeRemoveBreakPoint
+from pygraphol.commands import CommandEdgeBreakpointAdd, CommandEdgeBreakpointMove, CommandEdgeBreakpointDel
+from pygraphol.functions import distance
 from PyQt5.QtCore import QPointF, Qt, QLineF, QRectF
 from PyQt5.QtGui import QPolygonF, QPainter, QPen, QColor, QPainterPath, QIcon
 from PyQt5.QtWidgets import QGraphicsItem, QMenu, QAction
@@ -70,9 +71,9 @@ class SubPath(object):
         p2 = QPointF(-dx, -dy)
         self.selection = QPolygonF([self.line.p1() + p1, self.line.p1() + p2, self.line.p2() + p2, self.line.p2() + p1])
 
-    def getDistanceTo(self, point):
+    def distance(self, point):
         """
-        Returns a tuple containing the distance between the subpath line and the given point, and the intersection point.
+        Returns a tuple containing the distance between the subpath and the given point, and the intersection point.
         :type point: QPointF
         :param point: the point from which to compute the distance/intersection.
         :rtype: tuple
@@ -88,7 +89,7 @@ class SubPath(object):
         x4 = x3 - kk * (y2 - y1)
         y4 = y3 + kk * (x2 - x1)
 
-        return math.sqrt(math.pow(x4 - x3, 2) + math.pow(y4 - y3, 2)), QPointF(x4, y4)
+        return distance(QPointF(x4, y4), QPointF(x3, y3)), QPointF(x4, y4)
 
 
 class EdgeShape(QGraphicsItem):
@@ -191,7 +192,7 @@ class EdgeShape(QGraphicsItem):
         Executed when the mouse is pressed on the selection box.
         :param mouseEvent: the mouse event instance.
         """
-        self.selectedBreakPointIndex = self.getBreakPointIndex(mouseEvent.pos())
+        self.selectedBreakPointIndex = self.breakpointIndex(mouseEvent.pos())
         self.mousePressPos = mouseEvent.pos()
         super().mousePressEvent(mouseEvent)
 
@@ -204,7 +205,7 @@ class EdgeShape(QGraphicsItem):
         index = self.selectedBreakPointIndex
 
         if index is None:
-            self.selectedBreakPointIndex = index = self.addBreakPoint(self.mousePressPos)
+            self.selectedBreakPointIndex = index = self.breakpointAdd(self.mousePressPos)
             self.mousePressPos = None
 
         if not self.command:
@@ -213,7 +214,7 @@ class EdgeShape(QGraphicsItem):
             # if there is no command create a new one which will
             # collect the breakpoint initial position the command
             # will be later updated with the new breakpoint value
-            self.command = CommandEdgeMoveBreakPoint(edge=self.edge, index=index)
+            self.command = CommandEdgeBreakpointMove(edge=self.edge, index=index)
 
         # show the visual move
         self.breakpoints[index] = scene.snapToGrid(mouseEvent.pos())
@@ -242,10 +243,10 @@ class EdgeShape(QGraphicsItem):
 
     ################################################ AUXILIARY METHODS #################################################
 
-    def addBreakPoint(self, click):
+    def breakpointAdd(self, pos):
         """
         Create a new breakpoint from the given mouse position.
-        :param click: the mouse position from where to create the breakpoint.
+        :param pos: the position from where to create the breakpoint.
         :return: the index of the new breakpoint
         """
         index = 0
@@ -257,10 +258,10 @@ class EdgeShape(QGraphicsItem):
         # and all the subpaths od the edge in order to estimate
         # which subpath needs to be splitted by the new breakpoint
         for subpath in self.path:
-            distance, point = subpath.getDistanceTo(click)
-            if distance < shortest:
-                shortest = distance
-                intersection = point
+            dis, pos = subpath.distance(pos)
+            if dis < shortest:
+                shortest = dis
+                intersection = pos
                 between = subpath.source, subpath.target
 
         # if there is no breakpoint the new one will be appended
@@ -278,11 +279,31 @@ class EdgeShape(QGraphicsItem):
                 index = i + 1
                 break
 
-        # push the command on the scene undo stack so we can revert the action
         scene = self.scene()
-        scene.undoStack.push(CommandEdgeAddBreakPoint(edge=self.edge, index=index, point=intersection))
-
+        scene.undoStack.push(CommandEdgeBreakpointAdd(edge=self.edge, index=index, point=intersection))
         return index
+
+    def breakpointDel(self, breakpoint):
+        """
+        Remove the given breakpoint from the edge.
+        :param breakpoint: the breakpoint index.
+        """
+        if 0 <= breakpoint < len(self.breakpoints):
+            scene = self.scene()
+            scene.undoStack.push(CommandEdgeBreakpointDel(self.edge, breakpoint))
+
+    def breakpointIndex(self, point):
+        """
+        Returns the index of the breakpoint whose handle is being pressed.
+        Will return None if the mouse is not being pressed on a handle.
+        :type point: QPointF
+        :param point: the point where to look for a handle.
+        :rtype: int
+        """
+        for k, v, in self.handles.items():
+            if v.contains(point):
+                return k
+        return None
 
     def canDraw(self):
         """
@@ -313,29 +334,16 @@ class EdgeShape(QGraphicsItem):
         :rtype: QMenu
         """
         menu = QMenu()
-        breakpoint = self.getBreakPointIndex(pos)
+        breakpoint = self.breakpointIndex(pos)
         if breakpoint is not None:
             action = QAction(QIcon(':/icons/delete'), 'Remove breakpoint', self.scene())
-            action.triggered.connect(partial(self.removeBreakPoint, breakpoint=breakpoint))
+            action.triggered.connect(partial(self.breakpointDel, breakpoint=breakpoint))
             menu.addAction(action)
         else:
             menu.addAction(self.scene().actionItemDelete)
         return menu
 
-    def getBreakPointIndex(self, point):
-        """
-        Returns the index of the breakpoint whose handle is being pressed.
-        Will return None if the mouse is not being pressed on a handle.
-        :type point: QPointF
-        :param point: the point where to look for a handle.
-        :rtype: int
-        """
-        for k, v, in self.handles.items():
-            if v.contains(point):
-                return k
-        return None
-
-    def getIntersectionWithShape(self, shape):
+    def intersection(self, shape):
         """
         Returns the intersection with the given shape in the form tuple(int, QPointF): index of the intersecting subpath
         and the intersection point. Will return None in case there is no intersection between the edge and the shape.
@@ -351,15 +359,6 @@ class EdgeShape(QGraphicsItem):
             if intersection:
                 return i, intersection
         return None
-
-    def removeBreakPoint(self, breakpoint):
-        """
-        Remove the given breakpoint from the edge.
-        :param breakpoint: the breakpoint index.
-        """
-        if 0 <= breakpoint < len(self.breakpoints):
-            scene = self.scene()
-            scene.undoStack.push(CommandEdgeRemoveBreakPoint(self.edge, breakpoint))
 
     ##################################################### GEOMETRY #####################################################
 

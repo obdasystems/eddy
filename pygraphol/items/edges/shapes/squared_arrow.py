@@ -60,10 +60,10 @@ class SquaredArrow(EdgeShape):
         :rtype: QMenu
         """
         menu = QMenu()
-        breakpoint = self.getBreakPointIndex(pos)
+        breakpoint = self.breakpointIndex(pos)
         if breakpoint is not None:
             action = QAction(QIcon(':/icons/delete'), 'Remove breakpoint', self.scene())
-            action.triggered.connect(partial(self.removeBreakPoint, breakpoint=breakpoint))
+            action.triggered.connect(partial(self.breakpointDel, breakpoint=breakpoint))
             menu.addAction(action)
         else:
             functionality = QAction('Functionality', self.scene())
@@ -90,7 +90,7 @@ class SquaredArrow(EdgeShape):
             ending = self.path[0].line
             p1 = ending.p2()
         else:
-            intersection = self.getIntersectionWithShape(self.edge.target.shape)
+            intersection = self.intersection(self.edge.target.shape)
             if intersection:
                 ending = self.path[intersection[0]].line
                 p1 = intersection[1]
@@ -111,7 +111,7 @@ class SquaredArrow(EdgeShape):
         Update the Edge tail line.
         """
         if self.edge.functionality:
-            intersection = self.getIntersectionWithShape(self.edge.source.shape)
+            intersection = self.intersection(self.edge.source.shape)
             starting = self.path[intersection[0]].line
             tail = intersection[1]
 

@@ -43,9 +43,9 @@ from pygraphol.commands.nodes import CommandNodeHexagonSwitchTo
 from pygraphol.commands.nodes import CommandNodeSquareChangeRestriction
 
 from pygraphol.commands.edges import CommandEdgeAdd
-from pygraphol.commands.edges import CommandEdgeAddBreakPoint
-from pygraphol.commands.edges import CommandEdgeMoveBreakPoint
-from pygraphol.commands.edges import CommandEdgeRemoveBreakPoint
+from pygraphol.commands.edges import CommandEdgeBreakpointAdd
+from pygraphol.commands.edges import CommandEdgeBreakpointMove
+from pygraphol.commands.edges import CommandEdgeBreakpointDel
 from pygraphol.commands.edges import CommandEdgeLabelMove
 
 from pygraphol.commands.common import CommandItemsMultiAdd

@@ -61,7 +61,7 @@ class NamedArrow(EdgeShape):
             ending = self.path[0].line
             head = ending.p2()
         else:
-            intersection = self.getIntersectionWithShape(self.edge.target.shape)
+            intersection = self.intersection(self.edge.target.shape)
             if intersection:
                 ending = self.path[intersection[0]].line
                 head = intersection[1]

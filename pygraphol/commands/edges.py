@@ -60,7 +60,7 @@ class CommandEdgeAdd(QUndoCommand):
         self.scene.removeItem(self.edge.shape)
 
 
-class CommandEdgeAddBreakPoint(QUndoCommand):
+class CommandEdgeBreakpointAdd(QUndoCommand):
     """
     This command is used to add a breakpoint on the given edge.
     """
@@ -87,7 +87,7 @@ class CommandEdgeAddBreakPoint(QUndoCommand):
         self.edge.shape.updateEdge()
 
 
-class CommandEdgeMoveBreakPoint(QUndoCommand):
+class CommandEdgeBreakpointMove(QUndoCommand):
     """
     This command is used to move edge breakpoints.
     """
@@ -117,7 +117,7 @@ class CommandEdgeMoveBreakPoint(QUndoCommand):
         self.edge.shape.updateEdge()
 
 
-class CommandEdgeRemoveBreakPoint(QUndoCommand):
+class CommandEdgeBreakpointDel(QUndoCommand):
     """
     This command is used to delete edge breakpoints.
     """
