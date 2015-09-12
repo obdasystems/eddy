@@ -430,21 +430,22 @@ class Octagon(QGraphicsPolygonItem, ShapeResizableMixin):
         """
         return self.boundingRect().height() - 2 * (self.handleSize + self.handleSpan)
 
-    def intersection(self, line):
+    def intersections(self, line):
         """
-        Returns the intersection of the shape with the given line (in scene coordinates).
-        :param line: the line whose intersection needs to be calculated (in scene coordinates).
-        :rtype: QPointF
+        Returns the intersections of the shape with the given line (in scene coordinates).
+        :param line: the line whose intersections needs to be calculated (in scene coordinates).
+        :rtype: list
         """
-        intersection = QPointF()
+        collection = []
         polygon = self.mapToScene(self.polygon())
 
         for i in range(0, polygon.size() - 1):
+            point = QPointF()
             polyline = QLineF(polygon[i], polygon[i + 1])
-            if polyline.intersect(line, intersection) == QLineF.BoundedIntersection:
-                return intersection
+            if polyline.intersect(line, point) == QLineF.BoundedIntersection:
+                collection.append(point)
 
-        return None
+        return collection
 
     def painterPath(self):
         """

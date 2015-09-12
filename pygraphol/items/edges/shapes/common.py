@@ -115,7 +115,9 @@ class Label(QGraphicsTextItem):
                 # the subpath with the source shape to better approximate the label position
                 if parent.path.index(subpath) != 0:
                     raise IndexError
-                sourceP = parent.intersection(parent.edge.source.shape)[1]
+                collection = parent.intersections(parent.edge.source.shape)
+                intersection = collection[-1]
+                sourceP = intersection['pos']
             except (TypeError, IndexError, AttributeError):
                 # use the default breakpoint position
                 sourceP = subpath.source
@@ -125,7 +127,9 @@ class Label(QGraphicsTextItem):
                 # the subpath with the target shape to better approximate the label position
                 if parent.path.index(subpath) != len(parent.path) - 1:
                     raise IndexError
-                targetP = parent.intersection(parent.edge.target.shape)[1]
+                collection = parent.intersections(parent.edge.target.shape)
+                intersection = collection[-1]
+                targetP = intersection['pos']
             except (TypeError, IndexError, AttributeError):
                 # use the default breakpoint position
                 targetP = subpath.target

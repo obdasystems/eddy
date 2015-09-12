@@ -58,23 +58,27 @@ class NamedArrow(EdgeShape):
         Update the Edge head polygon.
         """
         if not self.edge.target:
-            ending = self.path[0].line
-            head = ending.p2()
+            subpath = self.path[0]
+            ending = subpath.line
+            p1 = ending.p2()
         else:
-            intersection = self.intersection(self.edge.target.shape)
-            if intersection:
-                ending = self.path[intersection[0]].line
-                head = intersection[1]
+            collection = self.intersections(self.edge.target.shape)
+            if collection:
+                index = collection[-1][0]
+                subpath = self.path[index]
+                ending = subpath.line
+                p1 = collection[-1][1]
             else:
-                ending = self.path[-1].line
-                head = ending.p2()
+                subpath = self.path[-1]
+                ending = subpath.line
+                p1 = ending.p2()
 
         angle = radians(ending.angle())
 
-        p1 = head - QPointF(sin(angle + M_PI / 3.0) * self.size, cos(angle + M_PI / 3.0) * self.size)
-        p2 = head - QPointF(sin(angle + M_PI - M_PI / 3.0) * self.size, cos(angle + M_PI - M_PI / 3.0) * self.size)
+        p2 = p1 - QPointF(sin(angle + M_PI / 3.0) * self.size, cos(angle + M_PI / 3.0) * self.size)
+        p3 = p1 - QPointF(sin(angle + M_PI - M_PI / 3.0) * self.size, cos(angle + M_PI - M_PI / 3.0) * self.size)
 
-        self.head = QPolygonF([head, p1, p2])
+        self.head = QPolygonF([p1, p2, p3])
 
     def updateLabelPos(self):
         """

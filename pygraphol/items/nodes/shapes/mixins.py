@@ -196,10 +196,10 @@ class ShapeMixin(QGraphicsItem):
         """
         raise NotImplementedError('method `height` must be implemented in inherited class')
 
-    def intersection(self, line):
+    def intersections(self, line):
         """
         Returns the intersection of the shape with the given line (in scene coordinates).
-        :param line: the line whose intersection needs to be calculated (in scene coordinates).
+        :param line: the line whose intersections needs to be calculated (in scene coordinates).
         :rtype: QPointF
         """
         raise NotImplementedError('method `intersection` must be implemented in inherited class')
@@ -439,11 +439,11 @@ class ShapeResizableMixin(ShapeMixin):
         """
         raise NotImplementedError('method `interactiveResize` must be implemented in inherited class')
 
-    def intersection(self, line):
+    def intersections(self, line):
         """
-        Returns the intersection of the shape with the given line (in scene coordinates).
-        :param line: the line whose intersection needs to be calculated (in scene coordinates).
-        :rtype: QPointF
+        Returns the intersections of the shape with the given line (in scene coordinates).
+        :param line: the line whose intersections needs to be calculated (in scene coordinates).
+        :rtype: list
         """
         raise NotImplementedError('method `intersection` must be implemented in inherited class')
 

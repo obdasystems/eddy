@@ -89,7 +89,10 @@ class SubPath(object):
         x4 = x3 - kk * (y2 - y1)
         y4 = y3 + kk * (x2 - x1)
 
-        return distance(QPointF(x4, y4), QPointF(x3, y3)), QPointF(x4, y4)
+        p1 = QPointF(x3, y3)
+        p2 = QPointF(x4, y4)
+
+        return distance(p1, p2), p2
 
 
 class EdgeShape(QGraphicsItem):
@@ -102,16 +105,16 @@ class EdgeShape(QGraphicsItem):
     handleBrush = QColor(79, 195, 247, 255)
     handlePen = QPen(QColor(0, 0, 0, 255), 1.0, Qt.SolidLine)
 
-    linePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-
     headPen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     headBrush = QColor(0, 0, 0)
 
-    tailPen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-    tailBrush = QColor(0, 0, 0)
+    linePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
 
     selectionPen = QPen(QColor(251, 255, 148), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     selectionBrush = QColor(251, 255, 148)
+
+    tailPen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+    tailBrush = QColor(0, 0, 0)
 
     def __init__(self, item, **kwargs):
         """
@@ -128,7 +131,7 @@ class EdgeShape(QGraphicsItem):
 
         self.command = None
         self.mousePressPos = None
-        self.selectedBreakPointIndex = None
+        self.selectedBreakpointIndex = None
 
         kwargs.pop('id', None)
         kwargs.pop('source', None)
@@ -192,7 +195,7 @@ class EdgeShape(QGraphicsItem):
         Executed when the mouse is pressed on the selection box.
         :param mouseEvent: the mouse event instance.
         """
-        self.selectedBreakPointIndex = self.breakpointIndex(mouseEvent.pos())
+        self.selectedBreakpointIndex = self.breakpointIndex(mouseEvent.pos())
         self.mousePressPos = mouseEvent.pos()
         super().mousePressEvent(mouseEvent)
 
@@ -202,20 +205,18 @@ class EdgeShape(QGraphicsItem):
         :param mouseEvent: the mouse move event instance.
         """
         scene = self.scene()
-        index = self.selectedBreakPointIndex
+        index = self.selectedBreakpointIndex
 
         if scene.mode == scene.MoveItem:
 
             if index is None:
-                self.selectedBreakPointIndex = index = self.breakpointAdd(self.mousePressPos)
+                index = self.breakpointAdd(self.mousePressPos)
+                self.selectedBreakpointIndex = index
                 self.mousePressPos = None
 
             if not self.command:
                 scene.clearSelection()
                 self.setSelected(True)
-                # if there is no command create a new one which will
-                # collect the breakpoint initial position the command
-                # will be later updated with the new breakpoint value
                 self.command = CommandEdgeBreakpointMove(edge=self.edge, index=index)
 
             # show the visual move
@@ -233,7 +234,7 @@ class EdgeShape(QGraphicsItem):
                 self.command.end(scene.snapToGrid(mouseEvent.pos()))
                 scene.undoStack.push(self.command)
 
-        self.selectedBreakPointIndex = None
+        self.selectedBreakpointIndex = None
         self.mousePressPos = None
         self.command = None
         self.updateEdge()
@@ -242,25 +243,25 @@ class EdgeShape(QGraphicsItem):
 
     ################################################ AUXILIARY METHODS #################################################
 
-    def breakpointAdd(self, pos):
+    def breakpointAdd(self, mousePos):
         """
         Create a new breakpoint from the given mouse position.
-        :param pos: the position from where to create the breakpoint.
+        :param mousePos: the position from where to create the breakpoint.
         :return: the index of the new breakpoint
         """
         index = 0
+        point = None
         between = None
-        intersection = None
         shortest = SubPath.size
 
         # calculate the shortest distance between the click point
         # and all the subpaths od the edge in order to estimate
         # which subpath needs to be splitted by the new breakpoint
         for subpath in self.path:
-            dis, pos = subpath.distance(pos)
+            dis, pos = subpath.distance(mousePos)
             if dis < shortest:
+                point = pos
                 shortest = dis
-                intersection = pos
                 between = subpath.source, subpath.target
 
         # if there is no breakpoint the new one will be appended
@@ -279,7 +280,7 @@ class EdgeShape(QGraphicsItem):
                 break
 
         scene = self.scene()
-        scene.undoStack.push(CommandEdgeBreakpointAdd(edge=self.edge, index=index, point=intersection))
+        scene.undoStack.push(CommandEdgeBreakpointAdd(edge=self.edge, index=index, point=point))
         return index
 
     def breakpointDel(self, breakpoint):
@@ -342,22 +343,22 @@ class EdgeShape(QGraphicsItem):
             menu.addAction(self.scene().actionItemDelete)
         return menu
 
-    def intersection(self, shape):
+    def intersections(self, shape):
         """
-        Returns the intersection with the given shape in the form tuple(int, QPointF): index of the intersecting subpath
-        and the intersection point. Will return None in case there is no intersection between the edge and the shape.
+        Returns the intersections with the given shape: the return value is a list of tuples where
+        the first element of each tuple represents the index of the subpath where the intersection
+        happened and the second point is the intersected point in scene coordinates.
         :param shape: the shape whose intersection needs to be calculated.
-        :rtype: tuple
+        :rtype: list
         """
-        # iterate starting from the ending path since this function will be mostly used
-        # to compute the edge head position/direction and we can save some computation
-        for i in range(len(self.path) - 1, -1, -1):
+        collection = []
+        for i in range(len(self.path)):
             subpath = self.path[i]
             subline = subpath.line
-            intersection = shape.intersection(subline)
-            if intersection:
-                return i, intersection
-        return None
+            intersections = shape.intersections(subline)
+            for pos in intersections:
+                collection.append((i, pos))
+        return collection
 
     def painterPath(self):
         """
