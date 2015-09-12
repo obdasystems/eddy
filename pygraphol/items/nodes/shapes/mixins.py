@@ -262,24 +262,6 @@ class ShapeMixin(QGraphicsItem):
         """
         raise NotImplementedError('method `width` must be implemented in inherited class')
 
-    ################################################### ITEM DRAWING ###################################################
-
-    def paintAnchors(self, painter, option, widget=None):
-        """
-        Paint attached edges anchors.
-        :param painter: the active painter.
-        :param option: the style option for this item.
-        :param widget: the widget that is being painted on.
-        """
-        # For all the connected edges, draw the anchors if the edge is selected
-        for edge in self.node.edges:
-            if edge.shape.isSelected():
-                rect = self.mapRectFromScene(edge.shape.anchors[self])
-                painter.setRenderHint(QPainter.Antialiasing)
-                painter.setBrush(edge.shape.handleBrush)
-                painter.setPen(edge.shape.handlePen)
-                painter.drawEllipse(rect)
-
 
 class ShapeResizableMixin(ShapeMixin):
     """

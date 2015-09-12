@@ -224,5 +224,3 @@ class RoundedRect(QGraphicsRectItem, ShapeMixin):
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawRoundedRect(self.rect(), self.BorderRadius, self.BorderRadius)
-
-        self.paintAnchors(painter, option, widget)

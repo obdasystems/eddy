@@ -214,5 +214,3 @@ class Square(QGraphicsRectItem, ShapeMixin):
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawRect(self.rect())
-
-        self.paintAnchors(painter, option, widget)

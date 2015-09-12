@@ -167,5 +167,3 @@ class Ring(QGraphicsEllipseItem, ShapeMixin):
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawEllipse(self.rect())
-
-        self.paintAnchors(painter, option, widget)

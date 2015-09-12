@@ -319,4 +319,3 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
         painter.drawRect(self.rect())
 
         self.paintHandles(painter, option, widget)
-        self.paintAnchors(painter, option, widget)

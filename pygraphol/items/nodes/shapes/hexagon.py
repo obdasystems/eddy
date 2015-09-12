@@ -230,5 +230,3 @@ class Hexagon(QGraphicsPolygonItem, ShapeMixin):
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawPolygon(self.polygon())
-
-        self.paintAnchors(painter, option, widget)

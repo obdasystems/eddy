@@ -444,4 +444,3 @@ class Note(QGraphicsPolygonItem, ShapeResizableMixin):
         painter.drawPolygon(Note.getFold(self.polygon(), Note.FoldSize))
 
         self.paintHandles(painter, option, widget)
-        self.paintAnchors(painter, option, widget)

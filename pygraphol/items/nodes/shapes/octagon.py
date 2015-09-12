@@ -499,4 +499,3 @@ class Octagon(QGraphicsPolygonItem, ShapeResizableMixin):
         painter.drawPolygon(self.polygon())
 
         self.paintHandles(painter, option, widget)
-        self.paintAnchors(painter, option, widget)
