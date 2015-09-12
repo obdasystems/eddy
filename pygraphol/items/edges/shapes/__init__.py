@@ -360,6 +360,20 @@ class EdgeShape(QGraphicsItem):
                 return i, intersection
         return None
 
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        if self.path:
+            subpath = self.path[0]
+            path.moveTo(subpath.line.p1())
+            for subpath in self.path:
+                path.lineTo(subpath.line.p2())
+        path.addPolygon(self.head)
+        return path
+
     ##################################################### GEOMETRY #####################################################
 
     def shape(self):

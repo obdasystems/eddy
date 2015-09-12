@@ -38,7 +38,7 @@ from pygraphol.commands import CommandNodeHexagonSwitchTo
 from pygraphol.items.nodes.shapes.common import Label
 from pygraphol.items.nodes.shapes.mixins import ShapeMixin
 from PyQt5.QtCore import QPointF, Qt, QLineF
-from PyQt5.QtGui import QColor, QPen, QPolygonF, QPainter, QIcon, QPixmap, QFont
+from PyQt5.QtGui import QColor, QPen, QPolygonF, QPainter, QIcon, QPixmap, QFont, QPainterPath
 from PyQt5.QtWidgets import QGraphicsPolygonItem, QAction
 
 
@@ -175,6 +175,15 @@ class Hexagon(QGraphicsPolygonItem, ShapeMixin):
                 return intersection
 
         return None
+
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addPolygon(self.polygon())
+        return path
 
     def width(self):
         """

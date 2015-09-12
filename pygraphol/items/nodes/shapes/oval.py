@@ -102,8 +102,7 @@ class Oval(QGraphicsRectItem, ShapeMixin):
         :param line: the line whose intersection needs to be calculated (in scene coordinates).
         :rtype: QPointF
         """
-        path = QPainterPath()
-        path.addRoundedRect(self.rect(), self.BorderRadius, self.BorderRadius)
+        path = self.painterPath()
         polygon = self.mapToScene(path.toFillPolygon(self.transform()))
 
         intersection = QPointF()
@@ -114,6 +113,15 @@ class Oval(QGraphicsRectItem, ShapeMixin):
                 return intersection
 
         return None
+
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRoundedRect(self.rect(), self.BorderRadius, self.BorderRadius)
+        return path
 
     def width(self):
         """

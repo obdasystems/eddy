@@ -95,6 +95,17 @@ class SquaredArrow(EdgeShape):
         self.edge.functionality = not self.edge.functionality
         self.updateEdge()
 
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
+        :rtype: QPainterPath
+        """
+        path = super().painterPath()
+        if self.tail:
+            path.moveTo(self.tail.p1())
+            path.lineTo(self.tail.p2())
+        return path
+
     def updateHead(self):
         """
         Update the Edge head polygon.

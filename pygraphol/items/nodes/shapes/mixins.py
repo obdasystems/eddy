@@ -36,7 +36,7 @@ from copy import deepcopy
 from pygraphol.commands import CommandNodeRezize
 from pygraphol.items.edges import Edge
 from PyQt5.QtCore import Qt, QPointF, QRectF
-from PyQt5.QtGui import QColor, QPen, QPainter
+from PyQt5.QtGui import QColor, QPen, QPainter, QPainterPath
 from PyQt5.QtWidgets import QGraphicsItem, QMenu
 
 
@@ -191,6 +191,13 @@ class ShapeMixin(QGraphicsItem):
         :rtype: str
         """
         return self.label.text()
+
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
+        :rtype: QPainterPath
+        """
+        raise NotImplementedError('method `painterPath` must be implemented in inherited class')
 
     def setAnchor(self, edge, pos):
         """

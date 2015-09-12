@@ -446,6 +446,15 @@ class Octagon(QGraphicsPolygonItem, ShapeResizableMixin):
 
         return None
 
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addPolygon(self.polygon())
+        return path
+
     def width(self):
         """
         Returns the width of the shape.

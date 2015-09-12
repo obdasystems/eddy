@@ -87,6 +87,16 @@ class Arrow(EdgeShape):
         self.edge.complete = not self.edge.complete
         self.updateEdge()
 
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
+        :rtype: QPainterPath
+        """
+        path = super().painterPath()
+        if self.tail:
+            path.addPolygon(self.tail)
+        return path
+
     def updateHead(self):
         """
         Update the Edge head polygon.

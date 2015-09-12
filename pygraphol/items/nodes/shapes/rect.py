@@ -265,6 +265,15 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
 
         return None
 
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRect(self.rect())
+        return path
+
     def width(self):
         """
         Returns the width of the shape.

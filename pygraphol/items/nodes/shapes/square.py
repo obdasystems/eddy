@@ -31,6 +31,7 @@
 #                                                                        #
 ##########################################################################
 
+
 import re
 
 from functools import partial
@@ -41,7 +42,7 @@ from pygraphol.items.nodes.shapes.common import Label
 from pygraphol.items.nodes.shapes.mixins import ShapeMixin
 from pygraphol.dialogs import CardinalityRestrictionForm
 from PyQt5.QtCore import Qt, QRectF, QPointF, QLineF
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap, QPen, QFont, QPolygonF
+from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap, QPen, QFont, QPolygonF, QPainterPath
 from PyQt5.QtWidgets import QGraphicsRectItem, QAction, QDialog
 
 
@@ -126,6 +127,15 @@ class Square(QGraphicsRectItem, ShapeMixin):
                 return intersection
 
         return None
+
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRect(self.rect())
+        return path
 
     def setLabelText(self, text):
         """
