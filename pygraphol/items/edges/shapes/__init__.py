@@ -499,13 +499,22 @@ class EdgeShape(QGraphicsItem):
         painter.setBrush(self.headBrush)
         painter.drawPolygon(self.head)
 
-        # Draw breakpoint handles
         if self.isSelected():
+
+            # Draw breakpoint handles
             painter.setRenderHint(QPainter.Antialiasing)
             painter.setPen(self.handlePen)
             painter.setBrush(self.handleBrush)
             for rect in self.handles.values():
                 painter.drawEllipse(rect)
+
+            # Draw anchor points
+            if self.edge.target:
+                painter.setRenderHint(QPainter.Antialiasing)
+                painter.setPen(self.handlePen)
+                painter.setBrush(self.handleBrush)
+                for rect in self.anchors.values():
+                    painter.drawEllipse(rect)
 
 
 from pygraphol.items.edges.shapes.arrow import Arrow
