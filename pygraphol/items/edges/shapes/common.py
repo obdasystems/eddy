@@ -34,7 +34,7 @@
 
 from math import sin, cos, radians, pi as M_PI
 from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QFont, QColor
+from PyQt5.QtGui import QFont, QColor, QPainterPath
 from PyQt5.QtWidgets import QGraphicsTextItem
 
 
@@ -148,6 +148,15 @@ class Label(QGraphicsTextItem):
         :rtype: int
         """
         return self.boundingRect().height()
+
+    def painterPath(self):
+        """
+        Returns the current label as QPainterPath (used to detect the collision between items in the graphics scene).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRect(self.boundingRect())
+        return path
 
     def setText(self, text):
         """

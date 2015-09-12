@@ -35,7 +35,7 @@
 from pygraphol.commands import CommandNodeLabelMove, CommandNodeLabelEdit
 from pygraphol.functions import isEmpty
 from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QFont, QColor, QTextCursor, QIcon
+from PyQt5.QtGui import QFont, QColor, QTextCursor, QIcon, QPainterPath
 from PyQt5.QtWidgets import QGraphicsTextItem, QGraphicsItem, QAction
 
 
@@ -227,6 +227,15 @@ class Label(QGraphicsTextItem):
         :rtype: int
         """
         return self.boundingRect().height()
+
+    def painterPath(self):
+        """
+        Returns the current label as QPainterPath (used to detect the collision between items in the graphics scene).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRect(self.boundingRect())
+        return path
 
     def setText(self, text):
         """
