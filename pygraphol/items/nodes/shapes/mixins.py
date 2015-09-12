@@ -81,32 +81,6 @@ class ShapeMixin(QGraphicsItem):
         """
         return self.item
 
-    ############################################## COLLISION DETECTION #################################################
-
-    def collidesWithItem(self, other, mode=Qt.IntersectsItemShape):
-        """
-        Detects collision with another item.
-        Reimplementing this method is due to the fact that the original method calls shape() and computes the
-        intersection. Due to shape() method overriding to include resizing handles and labels, shape() can't be trusted
-        since it will return false positives (it mostly detects bounding rects collisions)
-        :param other: the other shape
-        :param mode: the intersection mode (discared in the current implementation)
-        :rtype: bool
-        """
-        return self.collidesWithPath(self.mapFromItem(other, other.painterPath()), mode)
-
-    def collidesWithPath(self, other, mode=Qt.IntersectsItemShape):
-        """
-        Detects collision with another painter path.
-        Reimplementing this method is due to the fact that the original method calls shape() and computes the
-        intersection. Due to shape() method overriding to include resizing handles and labels, shape() can't be trusted
-        since it will return false positives (it mostly detects bounding rects collisions)
-        :param other: the other shape painter path.
-        :param mode: the intersection mode (discared in the current implementation)
-        :rtype: bool
-        """
-        return other.intersects(self.painterPath())
-
     ################################################# EVENT HANDLERS ###################################################
 
     def mousePressEvent(self, mouseEvent):
