@@ -204,35 +204,34 @@ class EdgeShape(QGraphicsItem):
         scene = self.scene()
         index = self.selectedBreakPointIndex
 
-        if index is None:
-            self.selectedBreakPointIndex = index = self.breakpointAdd(self.mousePressPos)
-            self.mousePressPos = None
+        if scene.mode == scene.MoveItem:
 
-        if not self.command:
-            scene.clearSelection()
-            self.setSelected(True)
-            # if there is no command create a new one which will
-            # collect the breakpoint initial position the command
-            # will be later updated with the new breakpoint value
-            self.command = CommandEdgeBreakpointMove(edge=self.edge, index=index)
+            if index is None:
+                self.selectedBreakPointIndex = index = self.breakpointAdd(self.mousePressPos)
+                self.mousePressPos = None
 
-        # show the visual move
-        self.breakpoints[index] = scene.snapToGrid(mouseEvent.pos())
-        self.updateEdge()
+            if not self.command:
+                scene.clearSelection()
+                self.setSelected(True)
+                # if there is no command create a new one which will
+                # collect the breakpoint initial position the command
+                # will be later updated with the new breakpoint value
+                self.command = CommandEdgeBreakpointMove(edge=self.edge, index=index)
+
+            # show the visual move
+            self.breakpoints[index] = scene.snapToGrid(mouseEvent.pos())
+            self.updateEdge()
 
     def mouseReleaseEvent(self, mouseEvent):
         """
         Executed when the mouse is released from the selection box.
         :param mouseEvent: the mouse event instance.
         """
-        if self.command:
-            # the push in the undo stack will trigger redo() and perform one more move to the
-            # same position (so if a move is composed of N steps, it requires N + 1 assignments
-            # to be completed. Will this is not 'correct' it doesn't introduce any trouble so
-            # i'll leave it here as it simplifies a lot the new command push in the undo stack.
-            scene = self.scene()
-            self.command.new = scene.snapToGrid(mouseEvent.pos())
-            scene.undoStack.push(self.command)
+        scene = self.scene()
+        if scene.mode == scene.MoveItem:
+            if self.command:
+                self.command.end(scene.snapToGrid(mouseEvent.pos()))
+                scene.undoStack.push(self.command)
 
         self.selectedBreakPointIndex = None
         self.mousePressPos = None
@@ -446,11 +445,19 @@ class EdgeShape(QGraphicsItem):
 
     def updateZValue(self):
         """
-        Update the edge Z value making sure it stays below source and target shapes..
+        Update the edge Z value making sure it stays above source and target shapes (and respective labels).
         """
-        zValue = self.edge.source.shape.zValue() - 0.1
+        source = self.edge.source.shape
+        zValue = source.zValue() + 0.1
+        if source.label:
+            zValue = max(zValue, source.label.zValue())
+
         if self.edge.target:
-            zValue = min(zValue, self.edge.target.shape.zValue() - 0.1) if self.edge.target.shape else zValue
+            target = self.edge.target.shape
+            zValue = max(zValue, target.zValue())
+            if target.label:
+                zValue = max(zValue, target.label.zValue())
+
         self.setZValue(zValue)
 
     ################################################### ITEM DRAWING ###################################################
@@ -481,27 +488,30 @@ class EdgeShape(QGraphicsItem):
             if not draw:
                 return
 
-        ## DRAW THE SELECTION POLYGON
-        if self.isSelected():
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(self.selectionPen)
-            painter.setBrush(self.selectionBrush)
-            for subpath in self.path:
+        scene = self.scene()
+
+        # Draw the line
+        for subpath in self.path:
+
+            # Draw the selection polygon if needed
+            if scene.mode == scene.MoveItem and self.isSelected():
+                painter.setRenderHint(QPainter.Antialiasing)
+                painter.setPen(self.selectionPen)
+                painter.setBrush(self.selectionBrush)
                 painter.drawPolygon(subpath.selection)
 
-        ## DRAW THE EDGE
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(self.linePen)
-        for subpath in self.path:
+            # Draw the edge line
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setPen(self.linePen)
             painter.drawLine(subpath.line)
 
-        ## DRAW THE HEAD
+        # Draw the head polygon
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(self.headPen)
         painter.setBrush(self.headBrush)
         painter.drawPolygon(self.head)
 
-        ## DRAW THE HANDLES
+        # Draw breakpoint handles
         if self.isSelected():
             painter.setRenderHint(QPainter.Antialiasing)
             painter.setPen(self.handlePen)

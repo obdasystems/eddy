@@ -103,6 +103,13 @@ class CommandEdgeBreakpointMove(QUndoCommand):
         self.old = edge.shape.breakpoints[self.index]
         self.new = None
 
+    def end(self, pos):
+        """
+        Complete the command collecting new data.
+        :param pos: the new position of the breakpoint.
+        """
+        self.new = pos
+
     def redo(self):
         """redo the command"""
         if self.new:
