@@ -310,21 +310,27 @@ class EdgeShape(QGraphicsItem):
         Check whether we have to draw the edge or not.
         :return: True if we need to draw the edge, False otherwise.
         """
-        # if items are overlapping, estimate whether the edge needs to be drawn or not
-        if self.edge.target and self.edge.source.shape.collidesWithItem(self.edge.target.shape):
+        if self.edge.target:
 
-            if not self.breakpoints:
-                # if there is no breakpoint then the edge
-                # line won't be visible so skip the drawing
+            sourcePath = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.painterPath())
+            targetPath = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.painterPath())
+
+            if sourcePath.intersects(targetPath):
+
+                # shapes are colliding: estimate whether the edge needs to be drawn or not
+                if not self.breakpoints:
+                    # if there is no breakpoint then the edge
+                    # line won't be visible so skip the drawing
+                    return False
+
+                for point in self.breakpoints:
+                    # loop through all the breakpoints: if there is at least one breakpoint
+                    # which is not inside the connected shapes then draw the edges
+                    if not self.edge.source.shape.contains(self.mapToItem(self.edge.source.shape, point)) and \
+                       not self.edge.target.shape.contains(self.mapToItem(self.edge.target.shape, point)):
+                        return True
+
                 return False
-
-            for point in self.breakpoints:
-                # loop through all the breakpoints: if there is at least one breakpoint
-                # which is not inside the connected shapes then draw the edges
-                if not self.edge.source.shape.contains(point) and not self.edge.target.shape.contains(point):
-                    return True
-
-            return False
 
         return True
 
@@ -470,25 +476,6 @@ class EdgeShape(QGraphicsItem):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        # if items are overlapping, estimate whether the edge needs to be drawn or not
-        if self.edge.target and self.edge.source.shape.collidesWithItem(self.edge.target.shape):
-
-            if not self.breakpoints:
-                # if there is no breakpoint then the edge
-                # line won't be visible so skip the drawing
-                return
-
-            draw = False
-            for point in self.breakpoints:
-                # loop through all the breakpoints: if there is at least one breakpoint
-                # which is not inside the connected shapes then draw the edges
-                if not self.edge.source.shape.contains(point) and not self.edge.target.shape.contains(point):
-                    draw = True
-                    break
-
-            if not draw:
-                return
-
         scene = self.scene()
 
         # Draw the line
