@@ -96,6 +96,16 @@ class SubPath(object):
 
         return distance(p1, p2), p2
 
+    def painterPath(self):
+        """
+        Returns the current subpath as QPainterPath.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.moveTo(self.p1())
+        path.lineTo(self.p2())
+        return path
+
     def p1(self):
         """
         Convenience method which returns the source point of the subpath.
@@ -468,30 +478,62 @@ class BaseEdge(QGraphicsItem):
         :type target: QPointF
         :param target: the endpoint of this edge.
         """
-        sourceP = self.edge.source.shape.anchor(self)
-        targetP = target or self.edge.target.shape.anchor(self)
+        source = self.edge.source.shape.anchor(self)
+        target = target or self.edge.target.shape.anchor(self)
+        points = [source] + self.breakpoints + [target]
 
+        # get the source node painter path (the source node is always available
+        sourcePP = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.painterPath())
+
+        targetPP = None
+        if self.edge.target:
+            # get the target node painter path (not always available)
+            targetPP = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.painterPath())
+
+        # will contain a list of subpaths which needs to be drawn
+        cleanpath = []
+
+        # iterate over the edge raw path exclusing subpaths which are not visible
+        for subpath in [SubPath(points[i], points[i + 1]) for i in range(len(points) - 1)]:
+            subpathPP = subpath.painterPath()
+            if not sourcePP.contains(subpathPP):
+                if not targetPP or not targetPP.contains(targetPP):
+                    cleanpath.append(subpath)
+
+        # clear current path
         self.path = []
 
-        if not self.breakpoints:
-            subline = QLineF(sourceP, targetP)
-            points = self.edge.source.shape.intersections(subline)
-            if points:
-                # if we have an intersection with the source shape then
-                # we have something visible, else the edge won't be drawn
-                p1 = points[0]
-                if target:
-                    # use given target as endpoint of the subpath
-                    p2 = targetP
-                else:
-                    # calculate the intersection point with the target shape
-                    points = self.edge.target.shape.intersections(subline)
-                    p2 = points[0]
+        if len(cleanpath) == 1:
+            # we have only one subpath visible which is connecting source and target nodes (target node
+            # is actually optional since we may be in the situation when we are first drawing the edge)
+            subpath = cleanpath[0]
+            collection = self.edge.source.shape.intersections(subpath.line)
+            p1 = collection[0]
+            if self.edge.target:
+                # calculate the intersection point with the target shape
+                collection = self.edge.target.shape.intersections(subpath.line)
+                p2 = collection[0]
+            else:
+                # use subpath endpoint
+                p2 = subpath.p2()
 
-                self.path.append(SubPath(p1, p2))
+            self.path.append(SubPath(p1, p2))
 
+        elif len(cleanpath) > 1:
 
-        #self.path = [SubPath(points[i], points[i + 1]) for i in range(len(points) - 1)]
+            # compute the path from the source node
+            subpath1 = cleanpath[0]
+            collection = self.edge.source.shape.intersections(subpath1.line)
+            self.path.append(SubPath(collection[0], subpath1.p2()))
+
+            # add middle paths
+            for subpath in cleanpath[1:-1]:
+                self.path.append(subpath)
+
+            # compute the path from the target node
+            subpathN = cleanpath[-1]
+            collection = self.edge.target.shape.intersections(subpathN.line)
+            self.path.append(SubPath(subpathN.p1(), collection[-1]))
 
     def updateZValue(self):
         """
