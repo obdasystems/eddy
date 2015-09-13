@@ -101,28 +101,30 @@ class Arrow(EdgeShape):
         """
         Update the Edge head polygon.
         """
-        if not self.edge.target:
-            subpath = self.path[0]
-            ending = subpath.line
-            p1 = ending.p2()
-        else:
-            collection = self.intersections(self.edge.target.shape)
-            if collection:
-                index = collection[-1][0]
-                subpath = self.path[index]
-                ending = subpath.line
-                p1 = collection[-1][1]
-            else:
-                subpath = self.path[-1]
+        if self.path:
+
+            if not self.edge.target:
+                subpath = self.path[0]
                 ending = subpath.line
                 p1 = ending.p2()
+            else:
+                collection = self.intersections(self.edge.target.shape)
+                if collection:
+                    index = collection[-1][0]
+                    subpath = self.path[index]
+                    ending = subpath.line
+                    p1 = collection[-1][1]
+                else:
+                    subpath = self.path[-1]
+                    ending = subpath.line
+                    p1 = ending.p2()
 
-        angle = radians(ending.angle())
+            angle = radians(ending.angle())
 
-        p2 = p1 - QPointF(sin(angle + M_PI / 3.0) * self.size, cos(angle + M_PI / 3.0) * self.size)
-        p3 = p1 - QPointF(sin(angle + M_PI - M_PI / 3.0) * self.size, cos(angle + M_PI - M_PI / 3.0) * self.size)
+            p2 = p1 - QPointF(sin(angle + M_PI / 3.0) * self.size, cos(angle + M_PI / 3.0) * self.size)
+            p3 = p1 - QPointF(sin(angle + M_PI - M_PI / 3.0) * self.size, cos(angle + M_PI - M_PI / 3.0) * self.size)
 
-        self.head = QPolygonF([p1, p2, p3])
+            self.head = QPolygonF([p1, p2, p3])
 
     def updateTail(self):
         """

@@ -57,6 +57,7 @@ class SubPath(object):
         :param source: the source point.
         :param target: the end point.
         """
+        # store locally source and target points
         self.source = source
         self.target = target
 
@@ -398,11 +399,18 @@ class EdgeShape(QGraphicsItem):
         Returns the shape bounding rect.
         :rtype: QRectF
         """
-        listX = [point.x() for subpath in self.path for point in subpath.selection]
-        listY = [point.y() for subpath in self.path for point in subpath.selection]
-        x1, x2 = min(listX), max(listX)
-        y1, y2 = min(listY), max(listY)
-        return QRectF(QPointF(x1, y1), QPointF(x2, y2))
+        p1 = QPointF(0, 0)
+        p2 = QPointF(0, 0)
+
+        if self.path:
+            listX = [point.x() for subpath in self.path for point in subpath.selection]
+            listY = [point.y() for subpath in self.path for point in subpath.selection]
+            p1.setX(min(listX))
+            p1.setY(min(listY))
+            p2.setX(max(listX))
+            p2.setY(max(listY))
+
+        return QRectF(p1, p2)
 
     ################################################# GEOMETRY UPDATE ##################################################
 
@@ -445,10 +453,30 @@ class EdgeShape(QGraphicsItem):
         :type target: QPointF
         :param target: the endpoint of this edge.
         """
-        source = self.edge.source.shape.anchor(self)
-        target = target or self.edge.target.shape.anchor(self)
-        points = [source] + self.breakpoints + [target]
-        self.path = [SubPath(points[i], points[i + 1]) for i in range(len(points) - 1)]
+        sourceP = self.edge.source.shape.anchor(self)
+        targetP = target or self.edge.target.shape.anchor(self)
+
+        self.path = []
+
+        if not self.breakpoints:
+            subline = QLineF(sourceP, targetP)
+            points = self.edge.source.shape.intersections(subline)
+            if points:
+                # if we have an intersection with the source shape then
+                # we have something visible, else the edge won't be drawn
+                p1 = points[0]
+                if target:
+                    # use given target as endpoint of the subpath
+                    p2 = targetP
+                else:
+                    # calculate the intersection point with the target shape
+                    points = self.edge.target.shape.intersections(subline)
+                    p2 = points[0]
+
+                self.path.append(SubPath(p1, p2))
+
+
+        #self.path = [SubPath(points[i], points[i + 1]) for i in range(len(points) - 1)]
 
     def updateZValue(self):
         """
