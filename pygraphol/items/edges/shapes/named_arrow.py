@@ -33,13 +33,13 @@
 
 
 from math import sin, cos, radians, pi as M_PI
-from pygraphol.items.edges.shapes import EdgeShape
+from pygraphol.items.edges.shapes.base import BaseEdge
 from pygraphol.items.edges.shapes.common import Label
 from PyQt5.QtCore import QPointF, Qt, QLineF
 from PyQt5.QtGui import QPolygonF, QPixmap, QPainter, QPen, QColor, QFont
 
 
-class NamedArrow(EdgeShape):
+class NamedArrow(BaseEdge):
     """
     This class implements a arrow which is used to render the instanceOf edge.
     """

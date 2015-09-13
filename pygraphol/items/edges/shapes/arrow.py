@@ -34,13 +34,13 @@
 
 from functools import partial
 from math import sin, cos, radians, pi as M_PI
-from pygraphol.items.edges.shapes import EdgeShape
+from pygraphol.items.edges.shapes.base import BaseEdge
 from PyQt5.QtWidgets import QAction, QMenu
 from PyQt5.QtCore import QPointF, Qt, QLineF
 from PyQt5.QtGui import QPolygonF, QPixmap, QPainter, QPen, QColor, QIcon, QPainterPath
 
 
-class Arrow(EdgeShape):
+class Arrow(BaseEdge):
     """
     This class implements a arrow which is used to render the inclusion edge.
     """
