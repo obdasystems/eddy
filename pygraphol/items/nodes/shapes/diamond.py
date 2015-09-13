@@ -372,6 +372,12 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
         """
         path = QPainterPath()
         path.addPolygon(self.polygon())
+
+        # add resizing handles if they are visible
+        if self.isSelected():
+            for handle in self.handles.values():
+                path.addEllipse(handle)
+
         return path
 
     def width(self):

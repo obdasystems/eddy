@@ -398,11 +398,23 @@ class BaseEdge(QGraphicsItem):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        if self.path:
-            subpath = self.path[0]
-            path.moveTo(subpath.line.p1())
-            for subpath in self.path:
-                path.lineTo(subpath.line.p2())
+
+        # add the edge line
+        for subpath in self.path:
+            path.moveTo(subpath.p1())
+            path.lineTo(subpath.p2())
+
+        if self.isSelected():
+
+            # add breakpoints handles
+            for handle in self.handles.values():
+                path.addEllipse(handle)
+
+            # add anchor points
+            for handle in self.anchors.values():
+                path.addEllipse(handle)
+
+        # add the head
         path.addPolygon(self.head)
         return path
 
@@ -414,8 +426,22 @@ class BaseEdge(QGraphicsItem):
         :rtype: QPainterPath
         """
         path = QPainterPath()
+
+        # add the selection polygon
         for subpath in self.path:
             path.addPolygon(subpath.selection)
+
+        if self.isSelected():
+
+            # add breakpoints handles
+            for handle in self.handles.values():
+                path.addEllipse(handle)
+
+            # add anchor points
+            for handle in self.anchors.values():
+                path.addEllipse(handle)
+
+        # add the head
         path.addPolygon(self.head)
         return path
 
