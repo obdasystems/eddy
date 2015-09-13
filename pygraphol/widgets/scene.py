@@ -254,6 +254,7 @@ class GraphicsScene(QGraphicsScene):
         Bring the selected item to the top of the scene.
         """
         for selected in self.selectedNodes():
+            zValue = 0
             colliding = selected.collidingItems()
             for item in filter(lambda x: not isinstance(x, NodeLabel) and not isinstance(x, EdgeLabel), colliding):
                 if item.zValue() >= zValue:
