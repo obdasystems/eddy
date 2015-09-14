@@ -375,22 +375,20 @@ class BaseEdge(QGraphicsItem):
             menu.addAction(self.scene().actionItemDelete)
         return menu
 
-    def intersections(self, shape):
+    def intersection(self, shape):
         """
-        Returns the intersections with the given shape: the return value is a list of tuples where
-        the first element of each tuple represents the index of the subpath where the intersection
-        happened and the second point is the intersected point in scene coordinates.
+        Returns the intersection with the given shape in the form tuple(int, QPointF): index of the intersecting subpath
+        and the intersection point. Will return None in case there is no intersection between the edge and the shape.
         :param shape: the shape whose intersection needs to be calculated.
-        :rtype: list
+        :rtype: tuple
         """
-        collection = []
         for i in range(len(self.path)):
             subpath = self.path[i]
             subline = subpath.line
-            intersections = shape.intersections(subline)
-            for pos in intersections:
-                collection.append((i, pos))
-        return collection
+            intersection = shape.intersection(subline)
+            if intersection:
+                return i, intersection
+        return None
 
     def painterPath(self):
         """
@@ -519,7 +517,7 @@ class BaseEdge(QGraphicsItem):
         # will contain a list of subpaths which needs to be drawn
         cleanpath = []
 
-        # iterate over the edge raw path exclusing subpaths which are not visible
+        # iterate over the edge raw path excluding subpaths which are not visible
         for subpath in [SubPath(points[i], points[i + 1]) for i in range(len(points) - 1)]:
             subpathPP = subpath.painterPath()
             if not sourcePP.contains(subpathPP):
@@ -533,33 +531,37 @@ class BaseEdge(QGraphicsItem):
             # we have only one subpath visible which is connecting source and target nodes (target node
             # is actually optional since we may be in the situation when we are first drawing the edge)
             subpath = cleanpath[0]
-            collection = self.edge.source.shape.intersections(subpath.line)
-            p1 = collection[0]
-            if self.edge.target:
-                # calculate the intersection point with the target shape
-                collection = self.edge.target.shape.intersections(subpath.line)
-                p2 = collection[0]
-            else:
-                # use subpath endpoint
-                p2 = subpath.p2()
-
-            self.path.append(SubPath(p1, p2))
+            intersection = self.edge.source.shape.intersection(subpath.line)
+            if intersection is not None:
+                p1 = intersection
+                if self.edge.target:
+                    # calculate the intersection point with the target shape
+                    intersection = self.edge.target.shape.intersection(subpath.line)
+                    if intersection is not None:
+                        self.path.append(SubPath(p1, intersection))
+                else:
+                    # use subpath endpoint
+                    self.path.append(SubPath(p1, subpath.p2()))
 
         elif len(cleanpath) > 1:
 
             # compute the path from the source node
             subpath1 = cleanpath[0]
-            collection = self.edge.source.shape.intersections(subpath1.line)
-            self.path.append(SubPath(collection[0], subpath1.p2()))
+            intersection = self.edge.source.shape.intersection(subpath1.line)
+            if intersection is not None:
+                # add the path from the source node to the first breakpoint
+                self.path.append(SubPath(intersection, subpath1.p2()))
 
-            # add middle paths
-            for subpath in cleanpath[1:-1]:
-                self.path.append(subpath)
+                # add middle paths
+                for subpath in cleanpath[1:-1]:
+                    self.path.append(subpath)
 
-            # compute the path from the target node
-            subpathN = cleanpath[-1]
-            collection = self.edge.target.shape.intersections(subpathN.line)
-            self.path.append(SubPath(subpathN.p1(), collection[-1]))
+                # compute the path from the target node
+                subpathN = cleanpath[-1]
+                intersection = self.edge.target.shape.intersection(subpathN.line)
+                if intersection is not None:
+                    # add the path from the last breakpoint to the target node
+                    self.path.append(SubPath(subpathN.p1(), intersection))
 
     def updateZValue(self):
         """

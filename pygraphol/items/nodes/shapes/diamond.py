@@ -348,22 +348,21 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
         """
         return self.boundingRect().height() - 2 * (self.handleSize + self.handleSpan)
 
-    def intersections(self, line):
+    def intersection(self, line):
         """
-        Returns the intersections of the shape with the given line (in scene coordinates).
-        :param line: the line whose intersections needs to be calculated (in scene coordinates).
-        :rtype: list
+        Returns the intersection of the shape with the given line (in scene coordinates).
+        :param line: the line whose intersection needs to be calculated (in scene coordinates).
+        :rtype: QPointF
         """
-        collection = []
+        intersection = QPointF()
         polygon = self.mapToScene(self.polygon())
 
         for i in range(0, polygon.size() - 1):
-            point = QPointF()
             polyline = QLineF(polygon[i], polygon[i + 1])
-            if polyline.intersect(line, point) == QLineF.BoundedIntersection:
-                collection.append(point)
+            if polyline.intersect(line, intersection) == QLineF.BoundedIntersection:
+                return intersection
 
-        return collection
+        return None
 
     def painterPath(self):
         """
@@ -372,12 +371,6 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
         """
         path = QPainterPath()
         path.addPolygon(self.polygon())
-
-        # add resizing handles if they are visible
-        if self.isSelected():
-            for handle in self.handles.values():
-                path.addEllipse(handle)
-
         return path
 
     def width(self):

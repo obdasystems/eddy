@@ -33,6 +33,7 @@
 
 
 from math import sin, cos, radians, pi as M_PI
+from pygraphol.functions import midpoint
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QFont, QColor, QPainterPath
 from PyQt5.QtWidgets import QGraphicsTextItem
@@ -109,38 +110,13 @@ class Label(QGraphicsTextItem):
             # according to the center point of the subpath in the middle (eventually
             # adjusting the distance of the label form the subpath not to overlap text)
             subpath = parent.path[int(len(parent.path) / 2)]
-
-            try:
-                # if the subpath is the first one, use as source point the intersection if
-                # the subpath with the source shape to better approximate the label position
-                if parent.path.index(subpath) != 0:
-                    raise IndexError
-                collection = parent.intersections(parent.edge.source.shape)
-                intersection = collection[-1]
-                sourceP = intersection['pos']
-            except (TypeError, IndexError, AttributeError):
-                # use the default breakpoint position
-                sourceP = subpath.source
-
-            try:
-                # if the subpath is the last one, use as source point the intersection if
-                # the subpath with the target shape to better approximate the label position
-                if parent.path.index(subpath) != len(parent.path) - 1:
-                    raise IndexError
-                collection = parent.intersections(parent.edge.target.shape)
-                intersection = collection[-1]
-                targetP = intersection['pos']
-            except (TypeError, IndexError, AttributeError):
-                # use the default breakpoint position
-                targetP = subpath.target
+            sourceP = subpath.p1()
+            targetP = subpath.p2()
+            middleP = midpoint(sourceP, targetP)
 
             # spaces to be added to the position of the label according the the subpath angle
             spaceX = -40
             spaceY = -16
-
-            # calculate the center of the label, which is moved from the center of the subpath
-            middleP = QPointF(((sourceP.x() + targetP.x()) / 2) - (self.width() / 2),
-                              ((sourceP.y() + targetP.y()) / 2) - (self.height() / 2))
 
             # increment the distance from the edge subpath according the angle
             return QPointF(middleP.x() + spaceX * sin(radians(subpath.line.angle())),

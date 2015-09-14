@@ -102,44 +102,24 @@ class Arrow(BaseEdge):
         Update the Edge head polygon.
         """
         if self.path:
-
-            if not self.edge.target:
-                subpath = self.path[0]
-                ending = subpath.line
-                p1 = ending.p2()
-            else:
-                collection = self.intersections(self.edge.target.shape)
-                if collection:
-                    index = collection[-1][0]
-                    subpath = self.path[index]
-                    ending = subpath.line
-                    p1 = collection[-1][1]
-                else:
-                    subpath = self.path[-1]
-                    ending = subpath.line
-                    p1 = ending.p2()
-
-            angle = radians(ending.angle())
-
+            subpath = self.path[0] if not self.edge.target else self.path[-1]
+            angle = radians(subpath.line.angle())
+            p1 = subpath.p2()
             p2 = p1 - QPointF(sin(angle + M_PI / 3.0) * self.size, cos(angle + M_PI / 3.0) * self.size)
             p3 = p1 - QPointF(sin(angle + M_PI - M_PI / 3.0) * self.size, cos(angle + M_PI - M_PI / 3.0) * self.size)
-
             self.head = QPolygonF([p1, p2, p3])
 
     def updateTail(self):
         """
         Update the Edge tail line.
         """
-        if self.edge.complete:
-            collection = self.intersections(self.edge.source.shape)
-            if collection:
-                index = collection[0][0]
-                starting = self.path[index].line
-                angle = radians(starting.angle())
-                p1 = collection[0][1]
-                p2 = p1 + QPointF(sin(angle + M_PI / 3.0) * self.size, cos(angle + M_PI / 3.0) * self.size)
-                p3 = p1 + QPointF(sin(angle + M_PI - M_PI / 3.0) * self.size, cos(angle + M_PI - M_PI / 3.0) * self.size)
-                self.tail = QPolygonF([p1, p2, p3])
+        if self.edge.complete and self.path:
+            subpath = self.path[0]
+            angle = radians(subpath.line.angle())
+            p1 = subpath.p1()
+            p2 = p1 + QPointF(sin(angle + M_PI / 3.0) * self.size, cos(angle + M_PI / 3.0) * self.size)
+            p3 = p1 + QPointF(sin(angle + M_PI - M_PI / 3.0) * self.size, cos(angle + M_PI - M_PI / 3.0) * self.size)
+            self.tail = QPolygonF([p1, p2, p3])
         else:
             self.tail = None
 

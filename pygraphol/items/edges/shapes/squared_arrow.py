@@ -111,45 +111,25 @@ class SquaredArrow(BaseEdge):
         Update the Edge head polygon.
         """
         if self.path:
-
-            if not self.edge.target:
-                subpath = self.path[0]
-                ending = subpath.line
-                p1 = ending.p2()
-            else:
-                collection = self.intersections(self.edge.target.shape)
-                if collection:
-                    index = collection[-1][0]
-                    subpath = self.path[index]
-                    ending = subpath.line
-                    p1 = collection[-1][1]
-                else:
-                    subpath = self.path[-1]
-                    ending = subpath.line
-                    p1 = ending.p2()
-
-            angle = radians(ending.angle())
-
+            subpath = self.path[0] if not self.edge.target else self.path[-1]
+            angle = radians(subpath.line.angle())
+            p1 = subpath.p2()
             p2 = p1 - QPointF(sin(angle + M_PI / 4.0) * self.size, cos(angle + M_PI / 4.0) * self.size)
             p3 = p2 - QPointF(sin(angle + 3.0 / 4.0 * M_PI) * self.size, cos(angle + 3.0 / 4.0 * M_PI) * self.size)
             p4 = p3 - QPointF(sin(angle - 3.0 / 4.0 * M_PI) * self.size, cos(angle - 3.0 / 4.0 * M_PI) * self.size)
-
             self.head = QPolygonF([p1, p2, p3, p4])
 
     def updateTail(self):
         """
         Update the Edge tail line.
         """
-        if self.edge.functionality:
-            collection = self.intersections(self.edge.source.shape)
-            if collection:
-                index = collection[0][0]
-                starting = self.path[index].line
-                angle = radians(starting.angle())
-                p0 = collection[0][1]
-                p1 = p0 + QPointF(sin(angle + M_PI / 3.0) * self.size, cos(angle + M_PI / 3.0) * self.size)
-                p2 = p0 + QPointF(sin(angle + M_PI - M_PI / 3.0) * self.size, cos(angle + M_PI - M_PI / 3.0) * self.size)
-                self.tail = QLineF(p1, p2)
+        if self.edge.functionality and self.path:
+            subpath = self.path[0]
+            angle = radians(subpath.line.angle())
+            p0 = subpath.p1()
+            p1 = p0 + QPointF(sin(angle + M_PI / 3.0) * self.size, cos(angle + M_PI / 3.0) * self.size)
+            p2 = p0 + QPointF(sin(angle + M_PI - M_PI / 3.0) * self.size, cos(angle + M_PI - M_PI / 3.0) * self.size)
+            self.tail = QLineF(p1, p2)
         else:
             self.tail = None
 

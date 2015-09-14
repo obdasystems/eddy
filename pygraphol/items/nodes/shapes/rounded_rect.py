@@ -117,23 +117,22 @@ class RoundedRect(QGraphicsRectItem, ShapeMixin):
         """
         return self.rect().height()
 
-    def intersections(self, line):
+    def intersection(self, line):
         """
-        Returns the intersections of the shape with the given line (in scene coordinates).
-        :param line: the line whose intersections needs to be calculated (in scene coordinates).
-        :rtype: list
+        Returns the intersection of the shape with the given line (in scene coordinates).
+        :param line: the line whose intersection needs to be calculated (in scene coordinates).
+        :rtype: QPointF
         """
-        collection = []
+        intersection = QPointF()
         path = self.painterPath()
         polygon = self.mapToScene(path.toFillPolygon(self.transform()))
 
         for i in range(0, polygon.size() - 1):
-            point = QPointF()
             polyline = QLineF(polygon[i], polygon[i + 1])
-            if polyline.intersect(line, point) == QLineF.BoundedIntersection:
-                collection.append(point)
+            if polyline.intersect(line, intersection) == QLineF.BoundedIntersection:
+                return intersection
 
-        return collection
+        return None
 
     def painterPath(self):
         """

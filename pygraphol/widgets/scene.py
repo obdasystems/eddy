@@ -437,7 +437,7 @@ class GraphicsScene(QGraphicsScene):
                 snapped = self.snapToGrid(self.mousePressShapePos + mouseEvent.scenePos() - self.mousePressPos)
                 delta = snapped - self.mousePressShapePos
 
-                # update all the breakpoints positions: updating breakpoints before nodes shows less artifacts
+                # update all the breakpoints positions
                 for shape, breakpoints in self.mousePressData['edges'].items():
                     for i in range(len(breakpoints)):
                         shape.breakpoints[i] = breakpoints[i] + delta
