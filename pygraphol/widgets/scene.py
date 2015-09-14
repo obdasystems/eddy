@@ -446,10 +446,11 @@ class GraphicsScene(QGraphicsScene):
                 for shape, data in self.mousePressData['nodes'].items():
                     # update node position and attached edges
                     shape.setPos(data['pos'] + delta)
-                    shape.updateEdges()
                     # update anchors points
                     for edge, pos in data['anchors'].items():
                         shape.setAnchor(edge, pos + delta)
+                    # update the edges connected to the shape
+                    shape.updateEdges()
 
                 # mark mouse move has happened so we can push
                 # the undo command in the stack on mouse release
