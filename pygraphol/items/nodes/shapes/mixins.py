@@ -421,6 +421,13 @@ class ShapeResizableMixin(ShapeMixin):
         """
         raise NotImplementedError('method `intersection` must be implemented in inherited class')
 
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
+        :rtype: QPainterPath
+        """
+        raise NotImplementedError('method `painterPath` must be implemented in inherited class')
+
     def updateHandlesPos(self):
         """
         Update current resize handles according to the shape size and position.

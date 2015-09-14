@@ -451,9 +451,21 @@ class BaseEdge(QGraphicsItem):
         p1 = QPointF(0, 0)
         p2 = QPointF(0, 0)
 
-        if self.path:
-            listX = [point.x() for subpath in self.path for point in subpath.selection]
-            listY = [point.y() for subpath in self.path for point in subpath.selection]
+        listX = []
+        listY = []
+
+        for subpath in self.path:
+            for point in subpath.selection:
+                listX.append(point.x())
+                listY.append(point.y())
+
+        for rect in self.anchors.values():
+            listX.append(rect.left())
+            listX.append(rect.right())
+            listY.append(rect.top())
+            listY.append(rect.bottom())
+
+        if listX and listY:
             p1.setX(min(listX))
             p1.setY(min(listY))
             p2.setX(max(listX))
