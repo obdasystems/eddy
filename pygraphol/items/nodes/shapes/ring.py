@@ -99,29 +99,12 @@ class Ring(QGraphicsEllipseItem, ShapeMixin):
         """
         return self.rect().height()
 
-    def intersection(self, line):
-        """
-        Returns the intersection of the shape with the given line (in scene coordinates).
-        :param line: the line whose intersection needs to be calculated (in scene coordinates).
-        :rtype: QPointF
-        """
-        intersection = QPointF()
-        path = self.painterPath()
-        polygon = self.mapToScene(path.toFillPolygon(self.transform()))
-
-        for i in range(0, polygon.size() - 1):
-            polyline = QLineF(polygon[i], polygon[i + 1])
-            if polyline.intersect(line, intersection) == QLineF.BoundedIntersection:
-                return intersection
-
-        return None
-
     def painterPath(self):
         """
         Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = super().painterPath()
         path.addEllipse(self.center(), self.width() / 2, self.height() / 2)
         return path
 

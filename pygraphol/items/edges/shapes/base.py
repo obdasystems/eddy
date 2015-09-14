@@ -375,20 +375,21 @@ class BaseEdge(QGraphicsItem):
             menu.addAction(self.scene().actionItemDelete)
         return menu
 
-    def intersection(self, shape):
+    def intersections(self, shape):
         """
-        Returns the intersection with the given shape in the form tuple(int, QPointF): index of the intersecting subpath
-        and the intersection point. Will return None in case there is no intersection between the edge and the shape.
+        Returns the intersections with the given shape: the return value is a list of tuples where
+        the first element of each tuple represents the index of the subpath where the intersection
+        happened and the second point is the intersected point in scene coordinates.
         :param shape: the shape whose intersection needs to be calculated.
-        :rtype: tuple
+        :rtype: list
         """
+        collection = []
         for i in range(len(self.path)):
             subpath = self.path[i]
             subline = subpath.line
-            intersection = shape.intersection(subline)
-            if intersection:
-                return i, intersection
-        return None
+            for pos in shape.intersections(subline):
+                collection.append((i, pos))
+        return collection
 
     def painterPath(self):
         """
@@ -518,7 +519,7 @@ class BaseEdge(QGraphicsItem):
         target = target or self.edge.target.shape.anchor(self)
         points = [source] + self.breakpoints + [target]
 
-        # get the source node painter path (the source node is always available
+        # get the source node painter path (the source node is always available)
         sourcePP = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.painterPath())
 
         targetPP = None
@@ -540,17 +541,21 @@ class BaseEdge(QGraphicsItem):
         self.path = []
 
         if len(cleanpath) == 1:
+
             # we have only one subpath visible which is connecting source and target nodes (target node
             # is actually optional since we may be in the situation when we are first drawing the edge)
             subpath = cleanpath[0]
-            intersection = self.edge.source.shape.intersection(subpath.line)
-            if intersection is not None:
-                p1 = intersection
+            collection = self.edge.source.shape.intersections(subpath.line)
+            if collection:
+                distanceTo = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.center())
+                p1 = max(collection, key=lambda x: distance(x, distanceTo))
                 if self.edge.target:
                     # calculate the intersection point with the target shape
-                    intersection = self.edge.target.shape.intersection(subpath.line)
-                    if intersection is not None:
-                        self.path.append(SubPath(p1, intersection))
+                    collection = self.edge.target.shape.intersections(subpath.line)
+                    if collection:
+                        distanceTo = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.center())
+                        p2 = max(collection, key=lambda x: distance(x, distanceTo))
+                        self.path.append(SubPath(p1, p2))
                 else:
                     # use subpath endpoint
                     self.path.append(SubPath(p1, subpath.p2()))
@@ -559,10 +564,11 @@ class BaseEdge(QGraphicsItem):
 
             # compute the path from the source node
             subpath1 = cleanpath[0]
-            intersection = self.edge.source.shape.intersection(subpath1.line)
-            if intersection is not None:
-                # add the path from the source node to the first breakpoint
-                self.path.append(SubPath(intersection, subpath1.p2()))
+            collection = self.edge.source.shape.intersections(subpath1.line)
+            if collection:
+                distanceTo = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.center())
+                p1 = max(collection, key=lambda x: distance(x, distanceTo))
+                self.path.append(SubPath(p1, subpath1.p2()))
 
                 # add middle paths
                 for subpath in cleanpath[1:-1]:
@@ -570,10 +576,11 @@ class BaseEdge(QGraphicsItem):
 
                 # compute the path from the target node
                 subpathN = cleanpath[-1]
-                intersection = self.edge.target.shape.intersection(subpathN.line)
-                if intersection is not None:
-                    # add the path from the last breakpoint to the target node
-                    self.path.append(SubPath(subpathN.p1(), intersection))
+                collection = self.edge.target.shape.intersections(subpathN.line)
+                if collection:
+                    distanceTo = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.center())
+                    p2 = max(collection, key=lambda x: distance(x, distanceTo))
+                    self.path.append(SubPath(subpathN.p1(), p2))
 
     def updateZValue(self):
         """

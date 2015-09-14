@@ -35,7 +35,7 @@
 from copy import deepcopy
 from pygraphol.commands import CommandNodeRezize
 from pygraphol.items.edges import Edge
-from PyQt5.QtCore import Qt, QPointF, QRectF
+from PyQt5.QtCore import Qt, QPointF, QRectF, QLineF
 from PyQt5.QtGui import QColor, QPen, QPainter, QPainterPath
 from PyQt5.QtWidgets import QGraphicsItem, QMenu
 
@@ -170,13 +170,23 @@ class ShapeMixin(QGraphicsItem):
         """
         raise NotImplementedError('method `height` must be implemented in inherited class')
 
-    def intersection(self, line):
+    def intersections(self, line):
         """
         Returns the intersection of the shape with the given line (in scene coordinates).
         :param line: the line whose intersection needs to be calculated (in scene coordinates).
-        :rtype: QPointF
+        :rtype: tuple
         """
-        raise NotImplementedError('method `intersection` must be implemented in inherited class')
+        collection = []
+        path = self.painterPath()
+        polygon = self.mapToScene(path.toFillPolygon(self.transform()))
+
+        for i in range(0, polygon.size() - 1):
+            point = QPointF()
+            polyline = QLineF(polygon[i], polygon[i + 1])
+            if polyline.intersect(line, point) == QLineF.BoundedIntersection:
+                collection.append(point)
+
+        return collection
 
     def labelPos(self):
         """
@@ -197,7 +207,7 @@ class ShapeMixin(QGraphicsItem):
         Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
         :rtype: QPainterPath
         """
-        raise NotImplementedError('method `painterPath` must be implemented in inherited class')
+        return QPainterPath()
 
     def setAnchor(self, edge, pos):
         """
@@ -413,20 +423,16 @@ class ShapeResizableMixin(ShapeMixin):
         """
         raise NotImplementedError('method `interactiveResize` must be implemented in inherited class')
 
-    def intersection(self, line):
-        """
-        Returns the intersection of the shape with the given line (in scene coordinates).
-        :param line: the line whose intersection needs to be calculated (in scene coordinates).
-        :rtype: QPointF
-        """
-        raise NotImplementedError('method `intersection` must be implemented in inherited class')
-
     def painterPath(self):
         """
         Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
         :rtype: QPainterPath
         """
-        raise NotImplementedError('method `painterPath` must be implemented in inherited class')
+        path = super().painterPath()
+        if self.isSelected():
+            for handle in self.handles.values():
+                path.addEllipse(handle)
+        return path
 
     def updateHandlesPos(self):
         """
