@@ -152,7 +152,7 @@ class Oval(QGraphicsRectItem, ShapeMixin):
 
         # Draw the rectangle
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin))
         painter.setBrush(QColor(252, 252, 252))
         painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
         painter.drawRoundedRect(rect, radius, radius)

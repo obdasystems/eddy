@@ -452,7 +452,7 @@ class GraphicsScene(QGraphicsScene):
                     # update the edges connected to the shape
                     shape.updateEdges()
 
-                # mark mouse move has happened so we can push
+                # mark mouse move as happened so we can push
                 # the undo command in the stack on mouse release
                 self.mouseMoved = True
 
