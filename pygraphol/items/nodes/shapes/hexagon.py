@@ -160,12 +160,13 @@ class Hexagon(QGraphicsPolygonItem, ShapeMixin):
         """
         return self.boundingRect().height()
 
-    def painterPath(self):
+    def painterPath(self, controls=True):
         """
         Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
+        :param controls: whether or not to include shape controls in the painter path.
         :rtype: QPainterPath
         """
-        path = super().painterPath()
+        path = super().painterPath(controls)
         path.addPolygon(self.polygon())
         return path
 

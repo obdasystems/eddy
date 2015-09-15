@@ -73,7 +73,7 @@ class SquaredArrow(BaseEdge):
         :rtype: QMenu
         """
         menu = QMenu()
-        breakpoint = self.breakpointIndex(pos)
+        breakpoint = self.breakpointAt(pos)
         if breakpoint is not None:
             action = QAction(QIcon(':/icons/delete'), 'Remove breakpoint', self.scene())
             action.triggered.connect(partial(self.breakpointDel, breakpoint=breakpoint))

@@ -202,9 +202,10 @@ class ShapeMixin(QGraphicsItem):
         """
         return self.label.text()
 
-    def painterPath(self):
+    def painterPath(self, controls=True):
         """
         Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
+        :param controls: whether or not to include shape controls in the painter path.
         :rtype: QPainterPath
         """
         return QPainterPath()
@@ -316,7 +317,7 @@ class ShapeResizableMixin(ShapeMixin):
         """
         self.command = None
         self.handles = dict()
-        self.mousePressData = {}
+        self.mousePressData = None
         self.mousePressPos = None
         self.mousePressRect = None
         self.selectedHandle = None
@@ -330,7 +331,7 @@ class ShapeResizableMixin(ShapeMixin):
         :param moveEvent: the move event.
         """
         if self.isSelected():
-            handle = self.getHandleAt(moveEvent.pos())
+            handle = self.handleAt(moveEvent.pos())
             self.setCursor(Qt.ArrowCursor if handle is None else self.cursors[handle])
         super().hoverMoveEvent(moveEvent)
 
@@ -360,7 +361,7 @@ class ShapeResizableMixin(ShapeMixin):
         Executed when the mouse is pressed on the item.
         :param mouseEvent: the mouse event instance.
         """
-        self.selectedHandle = self.getHandleAt(mouseEvent.pos())
+        self.selectedHandle = self.handleAt(mouseEvent.pos())
         if self.selectedHandle:
             scene = self.scene()
             scene.resizing = True
@@ -400,7 +401,7 @@ class ShapeResizableMixin(ShapeMixin):
         super().mouseReleaseEvent(mouseEvent)
 
         self.command = None
-        self.mousePressData = {}
+        self.mousePressData = None
         self.mousePressPos = None
         self.mousePressRect = None
         self.selectedHandle = None
@@ -409,7 +410,7 @@ class ShapeResizableMixin(ShapeMixin):
 
     ################################################ AUXILIARY METHODS #################################################
 
-    def getHandleAt(self, point):
+    def handleAt(self, point):
         """
         Returns the resize handle below the given point.
         Will return None if the mouse is not over a resizing handle.
@@ -436,13 +437,14 @@ class ShapeResizableMixin(ShapeMixin):
         """
         raise NotImplementedError('method `interactiveResize` must be implemented in inherited class')
 
-    def painterPath(self):
+    def painterPath(self, controls=True):
         """
         Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
+        :param controls: whether or not to include shape controls in the painter path.
         :rtype: QPainterPath
         """
-        path = super().painterPath()
-        if self.isSelected():
+        path = super().painterPath(controls)
+        if controls and self.isSelected():
             for handle in self.handles.values():
                 path.addEllipse(handle)
         return path

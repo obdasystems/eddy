@@ -35,6 +35,7 @@
 import math
 
 from functools import partial
+from pygraphol.commands import CommandEdgeAnchorMove
 from pygraphol.commands import CommandEdgeBreakpointAdd, CommandEdgeBreakpointMove, CommandEdgeBreakpointDel
 from pygraphol.functions import distance
 from PyQt5.QtCore import QPointF, Qt, QLineF, QRectF
@@ -157,7 +158,8 @@ class BaseEdge(QGraphicsItem):
 
         self.command = None
         self.mousePressPos = None
-        self.selectedBreakpointIndex = None
+        self.selectedAP = None  # will hold the selected anchor point key (if any) [key is a reference to a node shape]
+        self.selectedBP = None  # will hold the selected breakpoint index (if any) [key is an integer]
 
         kwargs.pop('id', None)
         kwargs.pop('source', None)
@@ -221,33 +223,27 @@ class BaseEdge(QGraphicsItem):
         Executed when the mouse is pressed on the selection box.
         :param mouseEvent: the mouse event instance.
         """
-        self.selectedBreakpointIndex = self.breakpointIndex(mouseEvent.pos())
+        self.selectedAP = self.anchorAt(mouseEvent.pos())
+        self.selectedBP = self.breakpointAt(mouseEvent.pos())
         self.mousePressPos = mouseEvent.pos()
         super().mousePressEvent(mouseEvent)
 
+    # noinspection PyTypeChecker
     def mouseMoveEvent(self, mouseEvent):
         """
         Executed when the mouse is being moved over the item while being pressed.
         :param mouseEvent: the mouse move event instance.
         """
         scene = self.scene()
-        index = self.selectedBreakpointIndex
 
         if scene.mode == scene.MoveItem:
 
-            if index is None:
-                index = self.breakpointAdd(self.mousePressPos)
-                self.selectedBreakpointIndex = index
-                self.mousePressPos = None
-
-            if not self.command:
-                scene.clearSelection()
-                self.setSelected(True)
-                self.command = CommandEdgeBreakpointMove(edge=self.edge, index=index)
-
-            # show the visual move
-            self.breakpoints[index] = scene.snapToGrid(mouseEvent.pos())
-            self.updateEdge()
+            if self.selectedAP is not None:
+                self.anchorMove(self.selectedAP, mouseEvent.pos())
+            else:
+                if self.selectedBP is None:
+                    self.selectedBP = self.breakpointAdd(self.mousePressPos)
+                self.breakpointMove(self.selectedBP, mouseEvent.pos())
 
     def mouseReleaseEvent(self, mouseEvent):
         """
@@ -256,18 +252,75 @@ class BaseEdge(QGraphicsItem):
         """
         scene = self.scene()
         if scene.mode == scene.MoveItem:
-            if self.command:
-                self.command.end(scene.snapToGrid(mouseEvent.pos()))
-                scene.undoStack.push(self.command)
 
-        self.selectedBreakpointIndex = None
+            if self.selectedAP is not None:
+                if self.command:
+                    self.command.end()
+                    scene.undoStack.push(self.command)
+
+            if self.selectedBP is not None:
+                if self.command:
+                    self.command.end(scene.snapToGrid(mouseEvent.pos()))
+                    scene.undoStack.push(self.command)
+
+        self.selectedAP = None
+        self.selectedBP = None
         self.mousePressPos = None
+        self.command = None
         self.command = None
         self.updateEdge()
 
         super().mouseReleaseEvent(mouseEvent)
 
     ################################################ AUXILIARY METHODS #################################################
+
+    def anchorAt(self, point):
+        """
+        Returns the key of the anchor whose handle is being pressed.
+        Will return None if the mouse is not being pressed on an anchor.
+        :param point: the point where to look for an anchor.
+        """
+        for k, v, in self.anchors.items():
+            if v.contains(point):
+                return k
+        return None
+
+    def anchorMove(self, shape, mousePos):
+        """
+        Move the selected anchor point.
+        :param shape: the shape whose anchor point is being move
+        :param mousePos: the current mouse position.
+        """
+        scene = self.scene()
+
+        if not self.command:
+            scene.clearSelection()
+            self.setSelected(True)
+            self.command = CommandEdgeAnchorMove(edge=self.edge, shape=shape)
+        
+        pos = None
+        scene = self.scene()
+        path = self.mapFromItem(shape, shape.painterPath(controls=False))
+        mousePos = scene.snapToGrid(mousePos)
+        if path.contains(mousePos):
+            epsilon = 10.0
+            magnet = self.mapFromItem(shape, shape.center())
+            pos = magnet if distance(mousePos, magnet) < epsilon else mousePos
+        else:
+            # still move the anchor but make sure it stays on the border of the shape
+            p1 = QPointF(mousePos.x(), self.mousePressPos.y())
+            p2 = QPointF(self.mousePressPos.x(), mousePos.y())
+            p3 = QPointF(self.mousePressPos)
+
+            for p in (p1, p2, p3):
+                if path.contains(p):
+                    pos = p
+                    break
+
+        if pos:
+            shape.setAnchor(self, pos)
+            self.mousePressPos = pos
+            self.updateEdge()
 
     def breakpointAdd(self, mousePos):
         """
@@ -309,6 +362,18 @@ class BaseEdge(QGraphicsItem):
         scene.undoStack.push(CommandEdgeBreakpointAdd(edge=self.edge, index=index, point=point))
         return index
 
+    def breakpointAt(self, point):
+        """
+        Returns the index of the breakpoint whose handle is being pressed.
+        Will return None if the mouse is not being pressed on a handle.
+        :param point: the point where to look for a handle.
+        :rtype: int
+        """
+        for k, v, in self.handles.items():
+            if v.contains(point):
+                return k
+        return None
+
     def breakpointDel(self, breakpoint):
         """
         Remove the given breakpoint from the edge.
@@ -318,18 +383,21 @@ class BaseEdge(QGraphicsItem):
             scene = self.scene()
             scene.undoStack.push(CommandEdgeBreakpointDel(self.edge, breakpoint))
 
-    def breakpointIndex(self, point):
+    def breakpointMove(self, breakpoint, mousePos):
         """
-        Returns the index of the breakpoint whose handle is being pressed.
-        Will return None if the mouse is not being pressed on a handle.
-        :type point: QPointF
-        :param point: the point where to look for a handle.
-        :rtype: int
+        Move the selected breakpoint.
+        :param breakpoint: the index of the breakpoint to move.
+        :param mousePos: the current mouse position.
         """
-        for k, v, in self.handles.items():
-            if v.contains(point):
-                return k
-        return None
+        scene = self.scene()
+
+        if not self.command:
+            scene.clearSelection()
+            self.setSelected(True)
+            self.command = CommandEdgeBreakpointMove(edge=self.edge, index=breakpoint)
+
+        self.breakpoints[breakpoint] = scene.snapToGrid(mousePos)
+        self.updateEdge()
 
     def canDraw(self):
         """
@@ -366,7 +434,7 @@ class BaseEdge(QGraphicsItem):
         :rtype: QMenu
         """
         menu = QMenu()
-        breakpoint = self.breakpointIndex(pos)
+        breakpoint = self.breakpointAt(pos)
         if breakpoint is not None:
             action = QAction(QIcon(':/icons/delete'), 'Remove breakpoint', self.scene())
             action.triggered.connect(partial(self.breakpointDel, breakpoint=breakpoint))

@@ -87,6 +87,40 @@ class CommandEdgeBreakpointAdd(QUndoCommand):
         self.edge.shape.updateEdge()
 
 
+class CommandEdgeAnchorMove(QUndoCommand):
+    """
+    This command is used to move edge anchor points.
+    """
+    def __init__(self, edge, shape):
+        """
+        Initialize the command.
+        :param edge: the edge whose anchor point is being moved.
+        :param shape: the shape on which the moving is happening.
+        """
+        super().__init__('move %s anchor point' % edge.name)
+        self.edge = edge
+        self.shape = shape
+        self.old = shape.anchor(edge.shape)
+        self.new = None
+
+    def end(self):
+        """
+        Complete the command collecting new data.
+        """
+        self.new = self.shape.anchor(self.edge.shape)
+
+    def redo(self):
+        """redo the command"""
+        if self.new:
+            self.shape.setAnchor(self.edge.shape, self.new)
+            self.edge.shape.updateEdge()
+
+    def undo(self):
+        """undo the command"""
+        self.shape.setAnchor(self.edge.shape, self.old)
+        self.edge.shape.updateEdge()
+
+
 class CommandEdgeBreakpointMove(QUndoCommand):
     """
     This command is used to move edge breakpoints.
@@ -114,12 +148,10 @@ class CommandEdgeBreakpointMove(QUndoCommand):
         """redo the command"""
         if self.new:
             self.edge.shape.breakpoints[self.index] = self.new
-            self.edge.shape.breakpoints[self.index] = self.new
             self.edge.shape.updateEdge()
 
     def undo(self):
         """undo the command"""
-        self.edge.shape.breakpoints[self.index] = self.old
         self.edge.shape.breakpoints[self.index] = self.old
         self.edge.shape.updateEdge()
 
