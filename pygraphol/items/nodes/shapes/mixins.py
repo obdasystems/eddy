@@ -342,6 +342,19 @@ class ShapeResizableMixin(ShapeMixin):
         self.setCursor(Qt.ArrowCursor)
         super().hoverLeaveEvent(moveEvent)
 
+    def itemChange(self, change, value):
+        """
+        Executed whenever the status of the item changes.
+        :param change: the change happened
+        :param value: the value of the change
+        """
+        if change == QGraphicsItem.ItemSelectedHasChanged:
+            for edge in self.node.edges:
+                edge.shape.updatePath()
+                edge.shape.updateHead()
+                edge.shape.updateTail()
+        return super().itemChange(change, value)
+
     def mousePressEvent(self, mouseEvent):
         """
         Executed when the mouse is pressed on the item.

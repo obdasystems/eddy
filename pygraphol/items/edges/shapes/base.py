@@ -582,6 +582,12 @@ class BaseEdge(QGraphicsItem):
                     p2 = max(collection, key=lambda x: distance(x, distanceTo))
                     self.path.append(SubPath(subpathN.p1(), p2))
 
+    def updateTail(self):
+        """
+        Update the Edge tail line.
+        """
+        pass
+
     def updateZValue(self):
         """
         Update the edge Z value making sure it stays above source and target shapes (and respective labels).
