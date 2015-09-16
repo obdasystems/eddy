@@ -42,14 +42,6 @@ from PyQt5.QtGui import QPixmap, QPainter
 from PyQt5.QtWidgets import QLayout
 
 
-def main_is_frozen():
-    """
-    Detects whether we are running a Frozen application.
-    :rtype: bool
-    """
-    return hasattr(sys, 'frozen')
-
-
 def clamp(val, minval=None, maxval=None):
     """
     Returns a copy of val making sure it fits the bound.
@@ -66,67 +58,6 @@ def clamp(val, minval=None, maxval=None):
     return val
 
 
-########################################################################################################################
-#                                                                                                                      #
-#   GENERATORS                                                                                                         #
-#                                                                                                                      #
-########################################################################################################################
-
-
-def itemsInLayout(layout):
-    """
-    Returns all the widgets in the given layout.
-    :param layout: the layout from where to pick widgets
-    :rtype: tuple
-    """
-    if not isinstance(layout, QLayout):
-        raise ProgrammingError('invalid argument specified (%s): expecting QLayout' % layout.__class__.__name__)
-    return (layout.itemAt(i) for i in range(layout.count()))
-
-
-def rangeF(start, stop, step):
-    """
-    Generator which can be used to generate lists of float values.
-    It works like the python built-in range function but accepts a floating point number as incremental step.
-    :param start: the start value
-    :param stop: the end value
-    :param step: the incremental step
-    """
-    x = start
-    while x < stop:
-        yield x
-        x += step
-
-########################################################################################################################
-#                                                                                                                      #
-#   IMAGES MANIPULATION                                                                                                #
-#                                                                                                                      #
-########################################################################################################################
-
-
-def shaded(pixmap, opacity=0.5):
-    """
-    Constructs a copy of the given pixmap using the specified opacity.
-    :param pixmap: the pixmap to shade.
-    :param opacity: the opacity to use for the shade.
-    :rtype: QPixmap
-    """
-    o = QPixmap(pixmap.size())
-    o.fill(Qt.transparent)
-    p = QPainter(o)
-    p.setOpacity(clamp(opacity, 0.0, 1.0))
-    p.drawPixmap(0, 0, pixmap)
-    p.end()
-    return o
-
-
-########################################################################################################################
-#                                                                                                                      #
-#   GEOMETRY                                                                                                           #
-#                                                                                                                      #
-########################################################################################################################
-
-
 def distance(p1, p2):
     """
     Calculate the distance between the given points.
@@ -137,55 +68,6 @@ def distance(p1, p2):
     :rtype: float
     """
     return math.sqrt(math.pow(p2.x() - p1.x(), 2) + math.pow(p2.y() - p1.y(), 2))
-
-
-def midpoint(p1, p2):
-    """
-    Calculate the midpoint between the given points.
-    :type p1: QPointF
-    :type p2: QPointF
-    :param p1: the first point.
-    :param p2: the second point.
-    :rtype: QPointF
-    """
-    return QPointF((p1.x() + p2.x() / 2), (p1.y() + p2.y() / 2))
-
-
-def snapPointToGrid(value, gridsize, offset=0, snap=True):
-    """
-    Snap the given point according to the given grid size.
-    :param value: the value to snap.
-    :param gridsize: the size of the grid.
-    :param offset: an offset valut to add to the result of the snap.
-    :param snap: whether or not to perform the snap.
-    :rtype: float
-    """
-    if snap:
-        return float(round(value / gridsize) * gridsize) + offset
-    return value
-
-
-########################################################################################################################
-#                                                                                                                      #
-#   STRING MANIPULATION                                                                                                #
-#                                                                                                                      #
-########################################################################################################################
-
-
-def isEmpty(text):
-    """
-    Safely detect whether the given string is empty.
-    :param text: the text to check for emptiness.
-    :rtype: bool
-    """
-    return not text or str(text).strip() == ''
-
-
-########################################################################################################################
-#                                                                                                                      #
-#   FILESYSTEM                                                                                                         #
-#                                                                                                                      #
-########################################################################################################################
 
 
 def getHomePath():
@@ -230,11 +112,88 @@ def getPath(path):
     return os.path.normpath(os.path.expanduser(path))
 
 
-########################################################################################################################
-#                                                                                                                      #
-#   RESOURCES LOADING                                                                                                  #
-#                                                                                                                      #
-########################################################################################################################
+def isEmpty(text):
+    """
+    Safely detect whether the given string is empty.
+    :param text: the text to check for emptiness.
+    :rtype: bool
+    """
+    return not text or str(text).strip() == ''
+
+
+def itemsInLayout(layout):
+    """
+    Returns all the widgets in the given layout.
+    :param layout: the layout from where to pick widgets
+    :rtype: tuple
+    """
+    if not isinstance(layout, QLayout):
+        raise ProgrammingError('invalid argument specified (%s): expecting QLayout' % layout.__class__.__name__)
+    return (layout.itemAt(i) for i in range(layout.count()))
+
+
+def main_is_frozen():
+    """
+    Detects whether we are running a Frozen application.
+    :rtype: bool
+    """
+    return hasattr(sys, 'frozen')
+
+
+def midpoint(p1, p2):
+    """
+    Calculate the midpoint between the given points.
+    :type p1: QPointF
+    :type p2: QPointF
+    :param p1: the first point.
+    :param p2: the second point.
+    :rtype: QPointF
+    """
+    return QPointF((p1.x() + p2.x() / 2), (p1.y() + p2.y() / 2))
+
+
+def rangeF(start, stop, step):
+    """
+    Generator which can be used to generate lists of float values.
+    It works like the python built-in range function but accepts a floating point number as incremental step.
+    :param start: the start value
+    :param stop: the end value
+    :param step: the incremental step
+    """
+    x = start
+    while x < stop:
+        yield x
+        x += step
+
+
+def shaded(pixmap, opacity=0.5):
+    """
+    Constructs a copy of the given pixmap using the specified opacity.
+    :param pixmap: the pixmap to shade.
+    :param opacity: the opacity to use for the shade.
+    :rtype: QPixmap
+    """
+    o = QPixmap(pixmap.size())
+    o.fill(Qt.transparent)
+    p = QPainter(o)
+    p.setOpacity(clamp(opacity, 0.0, 1.0))
+    p.drawPixmap(0, 0, pixmap)
+    p.end()
+    return o
+
+
+def snapPointToGrid(value, gridsize, offset=0, snap=True):
+    """
+    Snap the given point according to the given grid size.
+    :param value: the value to snap.
+    :param gridsize: the size of the grid.
+    :param offset: an offset valut to add to the result of the snap.
+    :param snap: whether or not to perform the snap.
+    :rtype: float
+    """
+    if snap:
+        return float(round(value / gridsize) * gridsize) + offset
+    return value
 
 
 def QSS(path):
