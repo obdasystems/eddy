@@ -32,6 +32,7 @@
 #                                                                        #
 ##########################################################################
 
+
 __author__ = 'Daniele Pantaleone'
 __email__ = 'danielepantaleone@me.com'
 __copyright__ = 'Copyright 2015, Daniele Pantaleone'
@@ -40,7 +41,6 @@ __appname__ = 'pyGraphol'
 __version__ = '0.1'
 __status__ = 'Development'
 __license__ = 'GPL'
-
 
 
 import sys
