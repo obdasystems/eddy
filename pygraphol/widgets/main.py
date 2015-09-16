@@ -846,19 +846,23 @@ class MainWindow(QMainWindow):
                 source = scene.node(E.attribute('source'))
                 target = scene.node(E.attribute('target'))
 
-                breakpoints = []
+                points = []
 
                 # extract all the breakpoints from the edge children
                 xmlchildren = E.elementsByTagName('line:point')
                 for j in range(0, xmlchildren.count()):
                     P = xmlchildren.at(j).toElement()
-                    breakpoints.append(QPointF(int(P.attribute('x')), int(P.attribute('y'))))
+                    points.append(QPointF(int(P.attribute('x')), int(P.attribute('y'))))
 
                 # remove the first and last breakpoint since we don't need them
-                breakpoints = breakpoints[1:-1]
+                sourceP = points[0]
+                targetP = points[-1]
+                breakpoints = points[1:-1]
 
                 # create the edge
                 edge = __mapping__[etype](scene=scene, source=source, target=target, breakpoints=breakpoints, id=eid)
+                edge.source.shape.setAnchor(edge.shape, sourceP)
+                edge.target.shape.setAnchor(edge.shape, targetP)
                 edge.shape.updateEdge()
 
                 # map the edge over the source and target nodes

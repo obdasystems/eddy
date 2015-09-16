@@ -101,11 +101,10 @@ class Edge(Item):
         edge.setAttribute('type', self.xmlname)
 
         ## LINE GEOMETRY
-        source = self.shape.mapFromItem(self.source.shape, self.source.shape.center())
-        target = self.shape.mapFromItem(self.target.shape, self.target.shape.center())
-        points = [source] + self.shape.breakpoints + [target]
+        source = self.source.shape.anchor(self.shape)
+        target = self.target.shape.anchor(self.shape)
 
-        for p in points:
+        for p in [source] + self.shape.breakpoints + [target]:
             point = document.createElement('line:point')
             point.setAttribute('x', p.x())
             point.setAttribute('y', p.y())
