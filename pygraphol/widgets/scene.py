@@ -210,14 +210,20 @@ class GraphicsScene(QGraphicsScene):
             """
             copy = edge.copy(self)
 
-            # adjust edge data for the copied item
+            # calculate the offset to be added to every position
+            offset = QPointF(self.clipboardPasteOffsetX, self.clipboardPasteOffsetY)
+
+            # generate a new id for this edge
             copy.id = self.uniqueID.next(self.uniqueID.parse(edge.id)[0])
+            # attach the edge to the copy of source and target nodes
             copy.source = nodes[edge.source.id]
             copy.target = nodes[edge.target.id]
+            # copy source and target anchor points moving them according to the offsets
+            copy.source.shape.setAnchor(copy.shape, edge.source.shape.anchor(edge.shape) + offset)
+            copy.target.shape.setAnchor(copy.shape, edge.target.shape.anchor(edge.shape) + offset)
 
             # copy breakpoints moving them according to the offsets
-            copy.shape.breakpoints = [x + QPointF(self.clipboardPasteOffsetX,
-                                                  self.clipboardPasteOffsetY) for x in copy.shape.breakpoints]
+            copy.shape.breakpoints = [x + offset for x in copy.shape.breakpoints]
 
             # map the copied edge over source and target nodes
             nodes[edge.source.id].addEdge(copy)
@@ -742,8 +748,13 @@ class GraphicsScene(QGraphicsScene):
                 if edge.id not in self.clipboard['edges']:
                     if edge.other(shape.node).shape.isSelected():
                         copy = edge.copy(self)
+                        # attach source and target nodes
                         copy.source = self.clipboard['nodes'][edge.source.id]
                         copy.target = self.clipboard['nodes'][edge.target.id]
+                        # copy source and target nodes anchor points
+                        copy.source.shape.setAnchor(copy.shape, edge.source.shape.anchor(edge.shape))
+                        copy.target.shape.setAnchor(copy.shape, edge.target.shape.anchor(edge.shape))
+                        # add the copy of the edge to the collection
                         self.clipboard['edges'][edge.id] = copy
 
         # reset paste offset for next paste
