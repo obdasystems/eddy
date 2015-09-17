@@ -38,11 +38,12 @@ from functools import partial
 from pygraphol.commands import CommandNodeSquareChangeRestriction
 from pygraphol.datatypes import RestrictionType
 from pygraphol.exceptions import ParseError
+from pygraphol.functions import scaleFont
 from pygraphol.items.nodes.shapes.common import Label
 from pygraphol.items.nodes.shapes.mixins import ShapeMixin
 from pygraphol.dialogs import CardinalityRestrictionForm
-from PyQt5.QtCore import Qt, QRectF, QPointF, QLineF
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap, QPen, QFont, QPolygonF, QPainterPath
+from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap, QPen, QFont, QPainterPath
 from PyQt5.QtWidgets import QGraphicsRectItem, QAction, QDialog
 
 
@@ -180,6 +181,10 @@ class Square(QGraphicsRectItem, ShapeMixin):
         shape_w = 18
         shape_h = 18
 
+        font = QFont('Arial')
+        font.setPixelSize(scaleFont(6))
+        font.setWeight(QFont.Light)
+
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
@@ -192,7 +197,7 @@ class Square(QGraphicsRectItem, ShapeMixin):
         painter.drawRect(QRectF(-shape_w / 2, -shape_h / 2 + 6, shape_w, shape_h))
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial', 9, QFont.Light))
+        painter.setFont(font)
         painter.drawText(-28, -8, 'restriction type')
 
         return pixmap

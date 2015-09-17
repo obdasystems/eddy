@@ -33,7 +33,7 @@
 
 
 from math import sin, cos, radians, pi as M_PI
-from pygraphol.functions import midpoint
+from pygraphol.functions import midpoint, scaleFont
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QFont, QColor, QPainterPath
 from PyQt5.QtWidgets import QGraphicsTextItem
@@ -43,9 +43,6 @@ class Label(QGraphicsTextItem):
     """
     This class implements the label to be attached to the graph edges.
     """
-    textBrush = QColor(0, 0, 0, 255)
-    textFont = QFont('Arial', 9, QFont.Light)
-
     def __init__(self, text='', parent=None):
         """
         Initialize the label.
@@ -54,6 +51,12 @@ class Label(QGraphicsTextItem):
         super().__init__(parent)
         self.moved = False
         self.command = None
+
+        self.textBrush = QColor(0, 0, 0, 255)
+        self.textFont = QFont('Arial')
+        self.textFont.setPixelSize(scaleFont(8))
+        self.textFont.setWeight(QFont.Light)
+
         self.setDefaultTextColor(self.textBrush)
         self.setFont(self.textFont)
         self.setText(text)

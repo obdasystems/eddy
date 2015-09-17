@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from pygraphol.functions import snapPointToGrid
+from pygraphol.functions import scaleFont, snapPointToGrid
 from pygraphol.items.nodes.shapes.common import Label
 from pygraphol.items.nodes.shapes.mixins import ShapeResizableMixin
 from PyQt5.QtCore import QPointF, Qt, QRectF
@@ -376,9 +376,14 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
         shape_w = 46
         shape_h = 34
 
+        font = QFont('Arial')
+        font.setPixelSize(scaleFont(7))
+        font.setWeight(QFont.Light)
+
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
+
         painter = QPainter(pixmap)
 
         # Initialize the shape
@@ -392,7 +397,7 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
         painter.drawPolygon(polygon)
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial', 11, QFont.Light))
+        painter.setFont(font)
         painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'role')
 
         return pixmap

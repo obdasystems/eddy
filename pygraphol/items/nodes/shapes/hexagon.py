@@ -35,6 +35,7 @@
 from collections import OrderedDict
 from functools import partial
 from pygraphol.commands import CommandNodeHexagonSwitchTo
+from pygraphol.functions import scaleFont
 from pygraphol.items.nodes.shapes.common import Label
 from pygraphol.items.nodes.shapes.mixins import ShapeMixin
 from PyQt5.QtCore import QPointF, Qt
@@ -204,9 +205,12 @@ class Hexagon(QGraphicsPolygonItem, ShapeMixin):
         painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
         painter.drawPolygon(polygon)
 
-        # Draw the text within the polygon
         if 'text' in kwargs:
-            painter.setFont(QFont('Arial', 11, QFont.Light))
+            font = QFont('Arial')
+            font.setPixelSize(scaleFont(8))
+            font.setWeight(QFont.Light)
+            # Draw the text within the polygon
+            painter.setFont(font)
             painter.drawText(polygon.boundingRect(), Qt.AlignCenter, kwargs['text'])
 
         return pixmap

@@ -33,7 +33,7 @@
 
 
 from pygraphol.commands import CommandNodeLabelMove, CommandNodeLabelEdit
-from pygraphol.functions import isEmpty
+from pygraphol.functions import isEmpty, scaleFont
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QFont, QColor, QTextCursor, QIcon, QPainterPath
 from PyQt5.QtWidgets import QGraphicsTextItem, QGraphicsItem, QAction
@@ -43,10 +43,6 @@ class Label(QGraphicsTextItem):
     """
     This class implements the label to be attached to the graph shapes.
     """
-
-    textBrush = QColor(0, 0, 0, 255)
-    textFont = QFont('Arial', 9, QFont.Light)
-
     def __init__(self, default='', centered=True, movable=True, editable=True, parent=None):
         """
         Initialize the label.
@@ -57,6 +53,7 @@ class Label(QGraphicsTextItem):
         :param parent: the parent node.
         """
         super().__init__(parent)
+
         self.defaultText = default
         self.centered = centered
         self.editable = editable
@@ -64,6 +61,12 @@ class Label(QGraphicsTextItem):
         self.moved = False
         self.commandEdit = None
         self.commandMove = None
+
+        self.textBrush = QColor(0, 0, 0, 255)
+        self.textFont = QFont('Arial')
+        self.textFont.setPixelSize(scaleFont(8))
+        self.textFont.setWeight(QFont.Light)
+
         self.setFlag(QGraphicsItem.ItemIsMovable, self.movable)
         self.setFlag(QGraphicsItem.ItemIsSelectable, self.movable)
         self.setFlag(QGraphicsItem.ItemIsFocusable, self.editable)
