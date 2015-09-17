@@ -108,14 +108,13 @@ class Label(QGraphicsTextItem):
             return QPointF(middleP.x() + spaceX1 + spaceX2, middleP.y() + spaceY)
 
         else:
-
             # if we have an odd number of subpaths compute the position of the label
             # according to the center point of the subpath in the middle (eventually
             # adjusting the distance of the label form the subpath not to overlap text)
             subpath = parent.path[int(len(parent.path) / 2)]
             sourceP = subpath.p1()
             targetP = subpath.p2()
-            middleP = midpoint(sourceP, targetP)
+            middleP = midpoint(sourceP, targetP) - QPointF((self.width() / 2), (self.height() / 2))
 
             # spaces to be added to the position of the label according the the subpath angle
             spaceX = -40
