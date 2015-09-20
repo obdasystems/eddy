@@ -39,7 +39,7 @@ import sys
 from pygraphol.exceptions import ProgrammingError
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter
-from PyQt5.QtWidgets import QLayout, QApplication
+from PyQt5.QtWidgets import QLayout
 
 
 def clamp(val, minval=None, maxval=None):
@@ -164,18 +164,6 @@ def rangeF(start, stop, step):
     while x < stop:
         yield x
         x += step
-
-
-def scaleFont(pixels):
-    """
-    Scale the given font size so it looks good on different platforms.
-    :param pixels: the amount of pixels to scale
-    :rtype: int
-    """
-    # noinspection PyArgumentList
-    SCREEN_DPI = QApplication.primaryScreen().physicalDotsPerInch()
-    RENDER_DPI = 96 if sys.platform.startswith('win32') else 72
-    return int(float(pixels) * SCREEN_DPI / RENDER_DPI)
 
 
 def shaded(pixmap, opacity=0.5):
