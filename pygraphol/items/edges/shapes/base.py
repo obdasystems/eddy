@@ -406,8 +406,8 @@ class BaseEdge(QGraphicsItem):
         """
         if self.edge.target:
 
-            sourcePath = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.shape())
-            targetPath = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.shape())
+            sourcePath = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.shape(controls=False))
+            targetPath = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.shape(controls=False))
 
             if sourcePath.intersects(targetPath):
 
