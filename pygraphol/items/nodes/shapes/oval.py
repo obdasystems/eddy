@@ -51,7 +51,7 @@ class Oval(QGraphicsRectItem, ShapeMixin):
         Initialize the rounded rectangle shape.
         """
         super().__init__(**kwargs)
-        self.setRect(Oval.getRect(Oval.MinWidth, Oval.MinHeight))
+        self.setRect(Oval.createRect(Oval.MinWidth, Oval.MinHeight))
 
     ################################################## EVENT HANDLERS ##################################################
 
@@ -80,7 +80,7 @@ class Oval(QGraphicsRectItem, ShapeMixin):
     ################################################## AUXILIARY METHODS ###############################################
 
     @staticmethod
-    def getRect(shape_w, shape_h):
+    def createRect(shape_w, shape_h):
         """
         Returns the initialized rect according to the given width/height.
         :param shape_w: the shape width
@@ -122,7 +122,7 @@ class Oval(QGraphicsRectItem, ShapeMixin):
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        rect = Oval.getRect(shape_w, shape_h)
+        rect = Oval.createRect(shape_w, shape_h)
 
         # Draw the rectangle
         painter.setRenderHint(QPainter.Antialiasing)

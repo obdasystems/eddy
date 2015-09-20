@@ -71,7 +71,7 @@ class Octagon(QGraphicsPolygonItem, ShapeResizableMixin):
         super().__init__(**kwargs)
 
         # initialize the polygon
-        self.setPolygon(Octagon.getPolygon(shape_w, shape_h))
+        self.setPolygon(Octagon.createPolygon(shape_w, shape_h))
 
         # initialize shape label with default text
         self.label = Label(self.node.name, parent=self)
@@ -411,7 +411,7 @@ class Octagon(QGraphicsPolygonItem, ShapeResizableMixin):
     ################################################ AUXILIARY METHODS #################################################
 
     @staticmethod
-    def getPolygon(shape_w, shape_h):
+    def createPolygon(shape_w, shape_h):
         """
         Returns the initialized polygon according to the given width/height.
         :param shape_w: the shape width
@@ -461,7 +461,7 @@ class Octagon(QGraphicsPolygonItem, ShapeResizableMixin):
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        polygon = Octagon.getPolygon(shape_w, shape_h)
+        polygon = Octagon.createPolygon(shape_w, shape_h)
 
         # Draw the polygon
         painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))

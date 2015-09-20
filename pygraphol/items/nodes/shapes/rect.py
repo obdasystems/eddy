@@ -57,7 +57,7 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
         super().__init__(**kwargs)
 
         # initialize shape rectangle
-        self.setRect(Rect.getRect(shape_w, shape_h))
+        self.setRect(Rect.createRect(shape_w, shape_h))
 
         # initialize shape label with default text
         self.label = Label(self.node.name, parent=self)
@@ -242,7 +242,7 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
     ################################################ AUXILIARY METHODS #################################################
 
     @staticmethod
-    def getRect(shape_w, shape_h):
+    def createRect(shape_w, shape_h):
         """
         Returns the initialized rect according to the given width/height.
         :param shape_w: the shape width
@@ -283,7 +283,7 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        rect = Rect.getRect(shape_w, shape_h)
+        rect = Rect.createRect(shape_w, shape_h)
 
         # Draw the rectangle
         painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))

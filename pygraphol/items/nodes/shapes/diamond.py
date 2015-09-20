@@ -65,7 +65,7 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
         super().__init__(**kwargs)
 
         # initialize the polygon
-        self.setPolygon(Diamond.getPolygon(shape_w, shape_h))
+        self.setPolygon(Diamond.createPolygon(shape_w, shape_h))
 
         # initialize shape label with default text
         self.label = Label(self.node.name, parent=self)
@@ -333,7 +333,7 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
     ################################################ AUXILIARY METHODS #################################################
 
     @staticmethod
-    def getPolygon(shape_w, shape_h):
+    def createPolygon(shape_w, shape_h):
         """
         Returns the initialized polygon according to the given width/height.
         :param shape_w: the shape width
@@ -379,7 +379,7 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        polygon = Diamond.getPolygon(shape_w, shape_h)
+        polygon = Diamond.createPolygon(shape_w, shape_h)
 
         # Draw the polygon
         painter.setRenderHint(QPainter.Antialiasing)

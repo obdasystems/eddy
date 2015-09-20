@@ -54,7 +54,7 @@ class Ring(QGraphicsEllipseItem, ShapeMixin):
         Initialize the ring shape.
         """
         super().__init__(**kwargs)
-        self.setRect(Ring.getRect(self.shapeRadius * 2, self.shapeRadius * 2))
+        self.setRect(Ring.createRect(self.shapeRadius * 2, self.shapeRadius * 2))
         self.label = Label(self.node.name, centered=False, parent=self)
         self.label.updatePos()
 
@@ -94,7 +94,7 @@ class Ring(QGraphicsEllipseItem, ShapeMixin):
     ################################################ AUXILIARY METHODS #################################################
 
     @staticmethod
-    def getRect(shape_w, shape_h):
+    def createRect(shape_w, shape_h):
         """
         Returns the initialized rect according to the given width/height.
         :param shape_w: the shape width.

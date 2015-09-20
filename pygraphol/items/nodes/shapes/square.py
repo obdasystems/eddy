@@ -64,7 +64,7 @@ class Square(QGraphicsRectItem, ShapeMixin):
         self.shapeBrush = brush
 
         # intialize shape rectangle
-        self.setRect(-self.shapeSide / 2, -self.shapeSide / 2, self.shapeSide, self.shapeSide)
+        self.setRect(self.setRect(Square.createRect(self.shapeSide, self.shapeSide)))
 
         # initialize node label with default text (default restriction)
         self.label = Label(self.node.restriction.label, centered=False, editable=False, parent=self)
@@ -115,6 +115,16 @@ class Square(QGraphicsRectItem, ShapeMixin):
         return path
 
     ################################################# AUXILIARY METHODS ################################################
+
+    @staticmethod
+    def createRect(shape_w, shape_h):
+        """
+        Returns the initialized rect according to the given width/height.
+        :param shape_w: the shape width
+        :param shape_h: the shape height
+        :rtype: QRectF
+        """
+        return QRectF(-shape_w / 2, -shape_h / 2, shape_w, shape_h)
 
     def height(self):
         """

@@ -72,7 +72,7 @@ class Hexagon(QGraphicsPolygonItem, ShapeMixin):
         self.shapeBrush = brush
 
         # initialize the polygon
-        self.setPolygon(Hexagon.getPolygon(Hexagon.HSpan, Hexagon.VSpan, Hexagon.DSize))
+        self.setPolygon(Hexagon.createPolygon(Hexagon.HSpan, Hexagon.VSpan, Hexagon.DSize))
 
         # initialize shape label with default text
         self.label = Label(label, movable=False, editable=False, parent=self)
@@ -145,7 +145,7 @@ class Hexagon(QGraphicsPolygonItem, ShapeMixin):
     ################################################ AUXILIARY METHODS #################################################
 
     @staticmethod
-    def getPolygon(shape_w, shape_h, oblique):
+    def createPolygon(shape_w, shape_h, oblique):
         """
         Returns the initialized polygon according to the given width/height.
         :param shape_w: the shape width.
@@ -195,7 +195,7 @@ class Hexagon(QGraphicsPolygonItem, ShapeMixin):
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        polygon = Hexagon.getPolygon(shape_w, shape_h, oblique)
+        polygon = Hexagon.createPolygon(shape_w, shape_h, oblique)
 
         # Draw the polygon
         painter.setRenderHint(QPainter.Antialiasing)

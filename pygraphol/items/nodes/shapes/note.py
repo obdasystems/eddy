@@ -67,7 +67,7 @@ class Note(QGraphicsPolygonItem, ShapeResizableMixin):
         super().__init__(**kwargs)
 
         # initialize the polygon
-        self.setPolygon(Note.getPolygon(shape_w, shape_h, Note.FoldSize))
+        self.setPolygon(Note.createPolygon(shape_w, shape_h, Note.FoldSize))
 
         # initialize shape label with default text
         self.label = Label(self.node.name, parent=self)
@@ -331,7 +331,7 @@ class Note(QGraphicsPolygonItem, ShapeResizableMixin):
     ################################################ AUXILIARY METHODS #################################################
 
     @staticmethod
-    def getPolygon(shape_w, shape_h, fold_size):
+    def createPolygon(shape_w, shape_h, fold_size):
         """
         Returns the initialized polygon according to the given width/height.
         :param shape_w: the shape width.
@@ -349,7 +349,7 @@ class Note(QGraphicsPolygonItem, ShapeResizableMixin):
         ])
 
     @staticmethod
-    def getFold(polygon, fold_size):
+    def createFold(polygon, fold_size):
         """
         Returns the initialized fold polygon.
         :param polygon: the initialize shape polygon.
@@ -395,10 +395,10 @@ class Note(QGraphicsPolygonItem, ShapeResizableMixin):
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        polygon = Note.getPolygon(shape_w, shape_h, fold_size)
+        polygon = Note.createPolygon(shape_w, shape_h, fold_size)
 
         # Initialize the fold
-        fold = Note.getFold(polygon, fold_size)
+        fold = Note.createFold(polygon, fold_size)
 
         # Draw the polygon
         painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
@@ -432,6 +432,6 @@ class Note(QGraphicsPolygonItem, ShapeResizableMixin):
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
-        painter.drawPolygon(Note.getFold(self.polygon(), Note.FoldSize))
+        painter.drawPolygon(Note.createFold(self.polygon(), Note.FoldSize))
 
         self.paintHandles(painter, option, widget)

@@ -101,7 +101,7 @@ class RoundedRect(QGraphicsRectItem, ShapeMixin):
     ################################################## AUXILIARY METHODS ###############################################
 
     @staticmethod
-    def getRect(shape_w, shape_h):
+    def createRect(shape_w, shape_h):
         """
         Returns the initialized rect according to the given width/height.
         :param shape_w: the shape width
@@ -148,7 +148,7 @@ class RoundedRect(QGraphicsRectItem, ShapeMixin):
         Will also center the shape text after the width adjustment.
         """
         shape_w = max(self.label.width() + RoundedRect.ShapePadding, RoundedRect.MinWidth)
-        self.setRect(RoundedRect.getRect(shape_w, RoundedRect.MinHeight))
+        self.setRect(RoundedRect.createRect(shape_w, RoundedRect.MinHeight))
         self.updateLabelPos()
 
     def width(self):
@@ -176,7 +176,7 @@ class RoundedRect(QGraphicsRectItem, ShapeMixin):
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        rect = RoundedRect.getRect(shape_w, shape_h)
+        rect = RoundedRect.createRect(shape_w, shape_h)
 
         # Draw the rectangle
         painter.setRenderHint(QPainter.Antialiasing)
