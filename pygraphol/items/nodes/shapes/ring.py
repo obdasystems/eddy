@@ -32,11 +32,13 @@
 ##########################################################################
 
 
-from pygraphol.functions import scaleFont
+import math
+
+from pygraphol.functions import distance, midpoint
 from pygraphol.items.nodes.shapes.common import Label
 from pygraphol.items.nodes.shapes.mixins import ShapeMixin
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QColor, QPen, QPainter, QPixmap, QFont, QPainterPath
+from PyQt5.QtCore import Qt, QRectF, QPointF, QLineF
+from PyQt5.QtGui import QColor, QPen, QPainter, QPixmap, QFont, QPainterPath, QPolygonF, QBrush
 from PyQt5.QtWidgets import QGraphicsEllipseItem
 
 
@@ -125,10 +127,6 @@ class Ring(QGraphicsEllipseItem, ShapeMixin):
         shape_w = 18
         shape_h = 18
 
-        font = QFont('Arial')
-        font.setPixelSize(scaleFont(7))
-        font.setWeight(QFont.Light)
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
@@ -142,8 +140,8 @@ class Ring(QGraphicsEllipseItem, ShapeMixin):
         painter.drawEllipse(QRectF(-shape_w / 2, -shape_h / 2 + 8, shape_w, shape_h))
 
         # Draw the text within the rectangle
-        painter.setFont(font)
-        painter.drawText(-19, -6, 'attribute')
+        painter.setFont(QFont('Arial', 10, QFont.Light))
+        painter.drawText(-18, -6, 'attribute')
 
         return pixmap
 

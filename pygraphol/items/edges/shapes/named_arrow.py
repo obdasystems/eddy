@@ -33,7 +33,6 @@
 
 
 from math import sin, cos, radians, pi as M_PI
-from pygraphol.functions import scaleFont
 from pygraphol.items.edges.shapes.base import BaseEdge
 from pygraphol.items.edges.shapes.common import Label
 from PyQt5.QtCore import QPointF, Qt, QLineF
@@ -99,10 +98,6 @@ class NamedArrow(BaseEdge):
         head_span = 4  # offset between line end and head end (this is needed
                        # to prevent artifacts to be visible on low res screens)
 
-        font = QFont('Arial')
-        font.setPixelSize(scaleFont(6))
-        font.setWeight(QFont.Light)
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
@@ -135,7 +130,7 @@ class NamedArrow(BaseEdge):
         painter.drawPolygon(head)
 
         # Draw the text within the rectangle
-        painter.setFont(font)
+        painter.setFont(QFont('Arial', 9, QFont.Light))
         painter.drawText(line_p1.x() + 2,  (kwargs['h'] / 2) - 4, kwargs['name'])
 
         return pixmap

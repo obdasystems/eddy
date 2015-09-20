@@ -36,11 +36,10 @@ from functools import partial
 from pygraphol.commands import CommandNodeValueDomainSelectDatatype
 from pygraphol.datatypes import XsdDatatype
 from pygraphol.exceptions import ParseError
-from pygraphol.functions import scaleFont
 from pygraphol.items.nodes.shapes.common import Label
 from pygraphol.items.nodes.shapes.mixins import ShapeMixin
-from PyQt5.QtCore import QRectF, Qt
-from PyQt5.QtGui import QPainter, QPainterPath, QIcon, QPixmap, QFont, QColor, QPen
+from PyQt5.QtCore import QRectF, Qt, QPointF, QLineF
+from PyQt5.QtGui import QPainter, QPainterPath, QIcon, QPixmap, QFont, QColor, QPen, QPolygonF
 from PyQt5.QtWidgets import QGraphicsRectItem, QAction
 
 
@@ -180,10 +179,6 @@ class RoundedRect(QGraphicsRectItem, ShapeMixin):
         shape_w = 54
         shape_h = 32
 
-        font = QFont('Arial')
-        font.setPixelSize(scaleFont(6))
-        font.setWeight(QFont.Light)
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
@@ -201,7 +196,7 @@ class RoundedRect(QGraphicsRectItem, ShapeMixin):
         painter.drawRoundedRect(rect, 6.0, 6.0)
 
         # Draw the text within the rectangle
-        painter.setFont(font)
+        painter.setFont(QFont('Arial', 10, QFont.Light))
         painter.setBrush(QColor(0, 0, 0))
         painter.drawText(rect, Qt.AlignCenter, 'xsd:string')
 

@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from pygraphol.functions import snapPointToGrid, scaleFont
+from pygraphol.functions import snapPointToGrid
 from pygraphol.items.nodes.shapes.common import Label
 from pygraphol.items.nodes.shapes.mixins import ShapeResizableMixin
 from PyQt5.QtCore import QPointF, Qt, QRectF
@@ -392,10 +392,6 @@ class Note(QGraphicsPolygonItem, ShapeResizableMixin):
         shape_h = 34
         fold_size = 10
 
-        font = QFont('Arial')
-        font.setPixelSize(scaleFont(6))
-        font.setWeight(QFont.Light)
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
@@ -415,7 +411,7 @@ class Note(QGraphicsPolygonItem, ShapeResizableMixin):
         painter.drawPolygon(fold)
 
         # Draw the text within the rectangle
-        painter.setFont(font)
+        painter.setFont(QFont('Arial', 10, QFont.Light))
         painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'value\nrestriction')
 
         return pixmap

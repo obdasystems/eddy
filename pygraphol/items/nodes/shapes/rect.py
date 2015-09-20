@@ -32,10 +32,10 @@
 ##########################################################################
 
 
-from pygraphol.functions import scaleFont, snapPointToGrid
+from pygraphol.functions import snapPointToGrid
 from pygraphol.items.nodes.shapes.common import Label
 from pygraphol.items.nodes.shapes.mixins import ShapeResizableMixin
-from PyQt5.QtCore import QPointF, QRectF, Qt
+from PyQt5.QtCore import QPointF, QRectF, Qt, QLineF
 from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QPen, QColor, QFont
 from PyQt5.QtWidgets import QGraphicsRectItem
 
@@ -277,10 +277,6 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
         shape_w = 54
         shape_h = 34
 
-        font = QFont('Arial')
-        font.setPixelSize(scaleFont(7))
-        font.setWeight(QFont.Light)
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
@@ -297,7 +293,7 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
         painter.drawRect(rect)
 
         # Draw the text within the rectangle
-        painter.setFont(font)
+        painter.setFont(QFont('Arial', 11, QFont.Light))
         painter.drawText(rect, Qt.AlignCenter, 'concept')
 
         return pixmap

@@ -34,10 +34,10 @@
 
 import math
 
-from pygraphol.functions import snapPointToGrid, scaleFont
+from pygraphol.functions import snapPointToGrid
 from pygraphol.items.nodes.shapes.common import Label
 from pygraphol.items.nodes.shapes.mixins import ShapeResizableMixin
-from PyQt5.QtCore import QPointF, Qt, QRectF
+from PyQt5.QtCore import QPointF, Qt, QRectF, QLineF
 from PyQt5.QtGui import QColor, QPen,  QPainterPath, QPolygonF, QPainter, QPixmap, QFont
 from PyQt5.QtWidgets import QGraphicsPolygonItem
 
@@ -458,10 +458,6 @@ class Octagon(QGraphicsPolygonItem, ShapeResizableMixin):
         shape_w = 40
         shape_h = 40
 
-        font = QFont('Arial')
-        font.setPixelSize(scaleFont(6))
-        font.setWeight(QFont.Light)
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
@@ -477,7 +473,7 @@ class Octagon(QGraphicsPolygonItem, ShapeResizableMixin):
         painter.drawPolygon(polygon)
 
         # Draw the text within the rectangle
-        painter.setFont(font)
+        painter.setFont(QFont('Arial', 9, QFont.Light))
         painter.drawText(-18, 4, 'individual')
 
         return pixmap
