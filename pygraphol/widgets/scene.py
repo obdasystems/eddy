@@ -116,6 +116,7 @@ class GraphicsScene(QGraphicsScene):
         self.clipboard = {}  ## used to store copy of scene nodes/edges
         self.clipboardPasteOffsetX = GraphicsScene.PasteOffsetX  ## X offset to be added to item position upon paste
         self.clipboardPasteOffsetY = GraphicsScene.PasteOffsetY  ## Y offset to be added to item position upon paste
+        self.clipboardPasteOffsetZ = 0  ## > offset to be added to item zValue upon paste
         self.document = GraphicsScene.Document()  ## will contain the filepath of the graphol document
         self.itemList = DistinctList()  ## list of nodes (not shapes)
         self.settings = QSettings(organization, appname)  ## application settings
@@ -169,6 +170,7 @@ class GraphicsScene(QGraphicsScene):
         # set the offset to 0 so we can paste in the same position
         self.clipboardPasteOffsetX = 0
         self.clipboardPasteOffsetY = 0
+        self.clipboardPasteOffsetZ = 0
 
     def handleItemCopy(self):
         """
@@ -193,6 +195,7 @@ class GraphicsScene(QGraphicsScene):
             copy = node.copy(self)
             copy.id = self.uniqueID.next(self.uniqueID.parse(node.id)[0])
             copy.shape.setPos(copy.shape.pos() + QPointF(self.clipboardPasteOffsetX, self.clipboardPasteOffsetY))
+            copy.shape.setZValue(self.clipboardPasteOffsetZ + 0.1)
             return copy
 
         # create a copy of all the nodes in the clipboard and store them in a dict using the old
@@ -243,6 +246,7 @@ class GraphicsScene(QGraphicsScene):
         # increase paste offsets for the next paste
         self.clipboardPasteOffsetX += GraphicsScene.PasteOffsetX
         self.clipboardPasteOffsetY += GraphicsScene.PasteOffsetY
+        self.clipboardPasteOffsetZ += 0.1 * len(nodes)
 
     def handleItemDelete(self):
         """
@@ -731,15 +735,24 @@ class GraphicsScene(QGraphicsScene):
         """
         Update the clipboard collecting nodes and edges which needs to be copied.
         """
-        nodes = self.selectedNodes()
+        # reset paste offset for next paste
+        self.clipboardPasteOffsetX = GraphicsScene.PasteOffsetX
+        self.clipboardPasteOffsetY = GraphicsScene.PasteOffsetY
+        self.clipboardPasteOffsetZ = 0
+
+        self.clipboard = {
+            'nodes': {},
+            'edges': {},
+        }
 
         # since we are creating a copy of the node (which doesn't carry all the edges with it)
         # we can't iterate over the copy 'edges': because of this we store the original selection
         # locally and we iterate over it matching nodes id to re-attach edge copies.
-        self.clipboard = {
-            'nodes': {x.node.id: x.node.copy(self) for x in nodes},
-            'edges': {},
-        }
+        nodes = self.selectedNodes()
+
+        for shape in nodes:
+            self.clipboard['nodes'][shape.node.id] = shape.node.copy(self)
+            self.clipboardPasteOffsetZ = max(self.clipboardPasteOffsetZ, shape.zValue())
 
         # figure out if the nodes we are copying are sharing edges:
         # if that's the case, copy the edge together with the nodes
@@ -756,7 +769,4 @@ class GraphicsScene(QGraphicsScene):
                         copy.target.shape.setAnchor(copy.shape, edge.target.shape.anchor(edge.shape))
                         # add the copy of the edge to the collection
                         self.clipboard['edges'][edge.id] = copy
-
-        # reset paste offset for next paste
-        self.clipboardPasteOffsetX = GraphicsScene.PasteOffsetX
-        self.clipboardPasteOffsetY = GraphicsScene.PasteOffsetY
+                        self.clipboardPasteOffsetZ = max(self.clipboardPasteOffsetZ, edge.shape.zValue())
