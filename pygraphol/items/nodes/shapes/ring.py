@@ -80,6 +80,17 @@ class Ring(QGraphicsEllipseItem, ShapeMixin):
 
         contextMenu.exec_(menuEvent.screenPos())
 
+    ##################################################### GEOMETRY #####################################################
+
+    def shape(self, *args, **kwargs):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRect(self.rect())
+        return path
+
     ################################################ AUXILIARY METHODS #################################################
 
     @staticmethod
@@ -98,16 +109,6 @@ class Ring(QGraphicsEllipseItem, ShapeMixin):
         :rtype: int
         """
         return self.rect().height()
-
-    def painterPath(self, controls=True):
-        """
-        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
-        :param controls: whether or not to include shape controls in the painter path.
-        :rtype: QPainterPath
-        """
-        path = super().painterPath(controls)
-        path.addEllipse(self.center(), self.width() / 2, self.height() / 2)
-        return path
 
     def width(self):
         """

@@ -47,14 +47,34 @@ class Arrow(BaseEdge):
 
     ##################################################### GEOMETRY #####################################################
 
-    def shape(self):
+    def shape(self, controls=True):
         """
-        Return the shape of the Edge.
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :param controls: whether or not to include shape controls in the shape.
         :rtype: QPainterPath
         """
-        path = super().shape()
+        path = QPainterPath()
+
+        for subpath in self.path:
+            path.moveTo(subpath.p1())
+            path.lineTo(subpath.p2())
+
+        if controls:
+
+            for subpath in self.path:
+                path.addPolygon(subpath.selection)
+
+            if self.isSelected():
+                for handle in self.handles.values():
+                    path.addEllipse(handle)
+                for handle in self.anchors.values():
+                    path.addEllipse(handle)
+
+        path.addPolygon(self.head)
+
         if self.tail:
             path.addPolygon(self.tail)
+
         return path
 
     ################################################ AUXILIARY METHODS #################################################
@@ -86,16 +106,6 @@ class Arrow(BaseEdge):
         """
         self.edge.complete = not self.edge.complete
         self.updateEdge()
-
-    def painterPath(self):
-        """
-        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
-        :rtype: QPainterPath
-        """
-        path = super().painterPath()
-        if self.tail:
-            path.addPolygon(self.tail)
-        return path
 
     def updateHead(self):
         """

@@ -30,11 +30,12 @@
 #     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
 #                                                                        #
 ##########################################################################
-from PyQt5.QtCore import QPointF
+
 
 from pygraphol.datatypes import DistinctList
 from pygraphol.items import Item
 from pygraphol.items.edges import Edge
+from PyQt5.QtCore import QPointF
 
 
 class Node(Item):

@@ -132,6 +132,16 @@ class Hexagon(QGraphicsPolygonItem, ShapeMixin):
         xnode.shape.setPos(self.pos())
         scene.undoStack.push(CommandNodeHexagonSwitchTo(scene, self.node, xnode))
 
+    def shape(self, controls=True):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :param controls: whether or not to include shape controls in the shape.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addPolygon(self.polygon())
+        return path
+
     ################################################ AUXILIARY METHODS #################################################
 
     @staticmethod
@@ -159,16 +169,6 @@ class Hexagon(QGraphicsPolygonItem, ShapeMixin):
         :rtype: int
         """
         return self.boundingRect().height()
-
-    def painterPath(self, controls=True):
-        """
-        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
-        :param controls: whether or not to include shape controls in the painter path.
-        :rtype: QPainterPath
-        """
-        path = super().painterPath(controls)
-        path.addPolygon(self.polygon())
-        return path
 
     def width(self):
         """

@@ -177,7 +177,7 @@ class ShapeMixin(QGraphicsItem):
         :rtype: tuple
         """
         collection = []
-        path = self.painterPath()
+        path = self.shape()
         polygon = self.mapToScene(path.toFillPolygon(self.transform()))
 
         for i in range(0, polygon.size() - 1):
@@ -202,14 +202,6 @@ class ShapeMixin(QGraphicsItem):
         """
         return self.label.text()
 
-    def painterPath(self, controls=True):
-        """
-        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
-        :param controls: whether or not to include shape controls in the painter path.
-        :rtype: QPainterPath
-        """
-        return QPainterPath()
-
     def setAnchor(self, edge, pos):
         """
         Set the given position as anchor for the given edge.
@@ -228,9 +220,9 @@ class ShapeMixin(QGraphicsItem):
         # sometime it happens that when the graphol document is saved on file, the saved label position differs
         # from the real position by 1px (usually only on height). This is due to the fact that by default the text
         # item bounding rect heigh is 13px and to compute the correct position of the text item we use to subtract
-        # width / 2 and height / 2 from the text item center position which results in a .5 float automatically rounded
-        # by QT. To fix this issue we'll simply try to see if the difference between the given position and the default
-        # one is 1px and set the label moved flag accordingly.
+        # width / 2 and height / 2 from the text item center position which results in a .5 float automatically
+        # rounded by QT. To fix this issue we'll simply try to see if the difference between the given position and
+        # the default one is 1px and set the label moved flag accordingly.
         moved_X = True
         moved_Y = True
         defaultPos = self.label.defaultPos()
@@ -436,18 +428,6 @@ class ShapeResizableMixin(ShapeMixin):
         :param mousePos: the current mouse position.
         """
         raise NotImplementedError('method `interactiveResize` must be implemented in inherited class')
-
-    def painterPath(self, controls=True):
-        """
-        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
-        :param controls: whether or not to include shape controls in the painter path.
-        :rtype: QPainterPath
-        """
-        path = super().painterPath(controls)
-        if controls and self.isSelected():
-            for handle in self.handles.values():
-                path.addEllipse(handle)
-        return path
 
     def updateHandlesPos(self):
         """

@@ -221,13 +221,22 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
         for edge, pos in self.mousePressData.items():
             self.setAnchor(edge, pos + diff * 0.5)
 
-    def shape(self):
+    ##################################################### GEOMETRY #####################################################
+
+    def shape(self, controls=True):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
+        :param controls: whether or not to include shape controls in the shape.
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRect(self.boundingRect())
+        path.addRect(self.rect())
+
+        # add resizing handles if necessary
+        if controls and self.isSelected():
+            for handle in self.handles.values():
+                path.addEllipse(handle)
+
         return path
 
     ################################################ AUXILIARY METHODS #################################################
@@ -248,16 +257,6 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
         :rtype: int
         """
         return self.rect().height()
-
-    def painterPath(self, controls=True):
-        """
-        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
-        :param controls: whether or not to include shape controls in the painter path.
-        :rtype: QPainterPath
-        """
-        path = super().painterPath(controls)
-        path.addRect(self.rect())
-        return path
 
     def width(self):
         """

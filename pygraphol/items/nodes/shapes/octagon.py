@@ -37,7 +37,7 @@ import math
 from pygraphol.functions import snapPointToGrid
 from pygraphol.items.nodes.shapes.common import Label
 from pygraphol.items.nodes.shapes.mixins import ShapeResizableMixin
-from PyQt5.QtCore import QPointF, Qt, QRectF, QLineF
+from PyQt5.QtCore import QPointF, Qt, QRectF
 from PyQt5.QtGui import QColor, QPen,  QPainterPath, QPolygonF, QPainter, QPixmap, QFont
 from PyQt5.QtWidgets import QGraphicsPolygonItem
 
@@ -392,13 +392,20 @@ class Octagon(QGraphicsPolygonItem, ShapeResizableMixin):
         for edge, pos in self.mousePressData.items():
             self.setAnchor(edge, pos + diff * 0.5)
 
-    def shape(self):
+    def shape(self, controls=True):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
+        :param controls: whether or not to include shape controls in the shape.
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRect(self.boundingRect())
+        path.addPolygon(self.polygon())
+
+        # add resizing handles if necessary
+        if controls and self.isSelected():
+            for handle in self.handles.values():
+                path.addEllipse(handle)
+
         return path
 
     ################################################ AUXILIARY METHODS #################################################
@@ -429,16 +436,6 @@ class Octagon(QGraphicsPolygonItem, ShapeResizableMixin):
         :rtype: int
         """
         return self.boundingRect().height() - 2 * (self.handleSize + self.handleSpan)
-
-    def painterPath(self, controls=True):
-        """
-        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
-        :param controls: whether or not to include shape controls in the painter path.
-        :rtype: QPainterPath
-        """
-        path = super().painterPath(controls)
-        path.addPolygon(self.polygon())
-        return path
 
     def width(self):
         """

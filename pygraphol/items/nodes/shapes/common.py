@@ -183,6 +183,17 @@ class Label(QGraphicsTextItem):
                 scene.undoStack.push(self.commandMove)
         self.commandMove = None
 
+    ##################################################### GEOMETRY #####################################################
+
+    def shape(self, *args, **kwargs):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRect(self.boundingRect())
+        return path
+
     ################################################ AUXILIARY METHODS #################################################
 
     def center(self):
@@ -227,15 +238,6 @@ class Label(QGraphicsTextItem):
         :rtype: int
         """
         return self.boundingRect().height()
-
-    def painterPath(self):
-        """
-        Returns the current label as QPainterPath (used to detect the collision between items in the graphics scene).
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addRect(self.boundingRect())
-        return path
 
     def setText(self, text):
         """

@@ -36,7 +36,7 @@ from math import sin, cos, radians, pi as M_PI
 from pygraphol.items.edges.shapes.base import BaseEdge
 from pygraphol.items.edges.shapes.common import Label
 from PyQt5.QtCore import QPointF, Qt, QLineF
-from PyQt5.QtGui import QPolygonF, QPixmap, QPainter, QPen, QColor, QFont
+from PyQt5.QtGui import QPolygonF, QPixmap, QPainter, QPen, QColor, QFont, QPainterPath
 
 
 class NamedArrow(BaseEdge):
@@ -50,6 +50,35 @@ class NamedArrow(BaseEdge):
         """
         super().__init__(item, **kwargs)
         self.label = Label(name, parent=self)
+
+    ##################################################### GEOMETRY #####################################################
+
+    def shape(self, controls=True):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :param controls: whether or not to include shape controls in the shape.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+
+        for subpath in self.path:
+            path.moveTo(subpath.p1())
+            path.lineTo(subpath.p2())
+
+        if controls:
+
+            for subpath in self.path:
+                path.addPolygon(subpath.selection)
+
+            if self.isSelected():
+                for handle in self.handles.values():
+                    path.addEllipse(handle)
+                for handle in self.anchors.values():
+                    path.addEllipse(handle)
+
+        path.addPolygon(self.head)
+
+        return path
 
     ################################################ AUXILIARY METHODS #################################################
 

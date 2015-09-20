@@ -87,9 +87,9 @@ class RoundedRect(QGraphicsRectItem, ShapeMixin):
 
         contextMenu.exec_(menuEvent.screenPos())
 
-    ###################################################### GEOMETRY ####################################################
+    ##################################################### GEOMETRY #####################################################
 
-    def shape(self):
+    def shape(self, *args, **kwargs):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
         :rtype: QPainterPath
@@ -116,16 +116,6 @@ class RoundedRect(QGraphicsRectItem, ShapeMixin):
         :rtype: int
         """
         return self.rect().height()
-
-    def painterPath(self, controls=True):
-        """
-        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
-        :param controls: whether or not to include shape controls in the painter path.
-        :rtype: QPainterPath
-        """
-        path = super().painterPath(controls)
-        path.addRoundedRect(self.rect(), self.BorderRadius, self.BorderRadius)
-        return path
 
     def setLabelText(self, text):
         """

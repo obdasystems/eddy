@@ -37,7 +37,7 @@ from math import sin, cos, radians, pi as M_PI
 from pygraphol.items.edges.shapes.base import BaseEdge
 from PyQt5.QtWidgets import QMenu, QAction
 from PyQt5.QtCore import QPointF, Qt, QLineF
-from PyQt5.QtGui import QPolygonF, QPen, QColor, QIcon, QPainter, QPixmap
+from PyQt5.QtGui import QPolygonF, QPen, QColor, QIcon, QPainter, QPixmap, QPainterPath
 
 
 class SquaredArrow(BaseEdge):
@@ -54,15 +54,35 @@ class SquaredArrow(BaseEdge):
 
     ##################################################### GEOMETRY #####################################################
 
-    def shape(self):
+    def shape(self, controls=True):
         """
-        Return the shape of the Edge.
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :param controls: whether or not to include shape controls in the shape.
         :rtype: QPainterPath
         """
-        path = super().shape()
+        path = QPainterPath()
+
+        for subpath in self.path:
+            path.moveTo(subpath.p1())
+            path.lineTo(subpath.p2())
+
+        if controls:
+
+            for subpath in self.path:
+                path.addPolygon(subpath.selection)
+
+            if self.isSelected():
+                for handle in self.handles.values():
+                    path.addEllipse(handle)
+                for handle in self.anchors.values():
+                    path.addEllipse(handle)
+
+        path.addPolygon(self.head)
+
         if self.tail:
             path.moveTo(self.tail.p1())
             path.lineTo(self.tail.p2())
+
         return path
 
     ################################################ AUXILIARY METHODS #################################################
@@ -94,17 +114,6 @@ class SquaredArrow(BaseEdge):
         """
         self.edge.functionality = not self.edge.functionality
         self.updateEdge()
-
-    def painterPath(self):
-        """
-        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
-        :rtype: QPainterPath
-        """
-        path = super().painterPath()
-        if self.tail:
-            path.moveTo(self.tail.p1())
-            path.lineTo(self.tail.p2())
-        return path
 
     def updateHead(self):
         """

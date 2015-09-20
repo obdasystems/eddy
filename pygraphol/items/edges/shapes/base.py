@@ -97,16 +97,6 @@ class SubPath(object):
 
         return distance(p1, p2), p2
 
-    def painterPath(self):
-        """
-        Returns the current subpath as QPainterPath.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.moveTo(self.p1())
-        path.lineTo(self.p2())
-        return path
-
     def p1(self):
         """
         Convenience method which returns the source point of the subpath.
@@ -120,6 +110,16 @@ class SubPath(object):
         :rtype: QPointF
         """
         return self.target
+
+    def shape(self, *args, **kwargs):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.moveTo(self.p1())
+        path.lineTo(self.p2())
+        return path
 
 
 class BaseEdge(QGraphicsItem):
@@ -288,7 +288,7 @@ class BaseEdge(QGraphicsItem):
     def anchorMove(self, shape, mousePos):
         """
         Move the selected anchor point.
-        :param shape: the shape whose anchor point is being move
+        :param shape: the shape whose anchor point is being moved.
         :param mousePos: the current mouse position.
         """
         scene = self.scene()
@@ -300,7 +300,7 @@ class BaseEdge(QGraphicsItem):
         
         pos = None
         scene = self.scene()
-        path = self.mapFromItem(shape, shape.painterPath(controls=False))
+        path = self.mapFromItem(shape, shape.shape(controls=False))
         mousePos = scene.snapToGrid(mousePos)
         if path.contains(mousePos):
             epsilon = 10.0
@@ -406,8 +406,8 @@ class BaseEdge(QGraphicsItem):
         """
         if self.edge.target:
 
-            sourcePath = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.painterPath())
-            targetPath = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.painterPath())
+            sourcePath = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.shape())
+            targetPath = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.shape())
 
             if sourcePath.intersects(targetPath):
 
@@ -459,58 +459,7 @@ class BaseEdge(QGraphicsItem):
                 collection.append((i, pos))
         return collection
 
-    def painterPath(self):
-        """
-        Returns the current shape as QPainterPath (used to detect the collision between items in the graphics scene).
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-
-        # add the edge line
-        for subpath in self.path:
-            path.moveTo(subpath.p1())
-            path.lineTo(subpath.p2())
-
-        if self.isSelected():
-
-            # add breakpoints handles
-            for handle in self.handles.values():
-                path.addEllipse(handle)
-
-            # add anchor points
-            for handle in self.anchors.values():
-                path.addEllipse(handle)
-
-        # add the head
-        path.addPolygon(self.head)
-        return path
-
     ##################################################### GEOMETRY #####################################################
-
-    def shape(self):
-        """
-        Return the shape of the Edge.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-
-        # add the selection polygon
-        for subpath in self.path:
-            path.addPolygon(subpath.selection)
-
-        if self.isSelected():
-
-            # add breakpoints handles
-            for handle in self.handles.values():
-                path.addEllipse(handle)
-
-            # add anchor points
-            for handle in self.anchors.values():
-                path.addEllipse(handle)
-
-        # add the head
-        path.addPolygon(self.head)
-        return path
 
     def boundingRect(self):
         """
@@ -588,19 +537,19 @@ class BaseEdge(QGraphicsItem):
         points = [source] + self.breakpoints + [target]
 
         # get the source node painter path (the source node is always available)
-        sourcePP = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.painterPath())
+        sourcePP = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.shape())
 
         targetPP = None
         if self.edge.target:
             # get the target node painter path (not always available)
-            targetPP = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.painterPath())
+            targetPP = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.shape())
 
         # will contain a list of subpaths which needs to be drawn
         cleanpath = []
 
         # iterate over the edge raw path excluding subpaths which are not visible
         for subpath in [SubPath(points[i], points[i + 1]) for i in range(len(points) - 1)]:
-            subpathPP = subpath.painterPath()
+            subpathPP = subpath.shape()
             if not sourcePP.contains(subpathPP):
                 if not targetPP or not targetPP.contains(targetPP):
                     cleanpath.append(subpath)
