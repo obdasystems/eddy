@@ -30,7 +30,7 @@
 #     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
 #                                                                        #
 ##########################################################################
-
+from PyQt5.QtCore import QPointF
 
 from pygraphol.datatypes import DistinctList
 from pygraphol.items import Item
@@ -66,10 +66,15 @@ class Node(Item):
         Create a copy of the current item (connected edges won't be copied).
         :param scene: a reference to the scene where this item is being copied.
         """
+        shapePos = self.shape.mapToScene(self.shape.center())
+        labelPos = self.shape.mapToScene(self.shape.label.mapToItem(self.shape, self.shape.label.center()))
+        labelPos -= QPointF(self.shape.label.width() / 2, self.shape.label.height() / 2)
+
         node = self.__class__(scene=scene, id=self.id, width=self.shape.width(), height=self.shape.height())
+        node.shape.setPos(shapePos)
         node.shape.setLabelText(self.shape.labelText())
-        node.shape.setLabelPos(self.shape.labelPos())
-        node.shape.setPos(self.shape.pos())
+        node.shape.setLabelPos(node.shape.mapFromScene(labelPos))
+
         return node
 
     def addEdge(self, edge):

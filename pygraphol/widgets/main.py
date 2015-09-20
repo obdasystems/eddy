@@ -854,7 +854,7 @@ class MainWindow(QMainWindow):
                     P = xmlchildren.at(j).toElement()
                     points.append(QPointF(int(P.attribute('x')), int(P.attribute('y'))))
 
-                # remove the first and last breakpoint since we don't need them
+                # remove the first and last breakpoints since we handle the anchors differently
                 sourceP = points[0]
                 targetP = points[-1]
                 breakpoints = points[1:-1]
