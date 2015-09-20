@@ -36,8 +36,22 @@ from copy import deepcopy
 from pygraphol.commands import CommandNodeRezize
 from pygraphol.items.edges import Edge
 from PyQt5.QtCore import Qt, QPointF, QRectF, QLineF
-from PyQt5.QtGui import QColor, QPen, QPainter, QPainterPath
+from PyQt5.QtGui import QColor, QPen, QPainter
 from PyQt5.QtWidgets import QGraphicsItem, QMenu
+
+
+class Handle(object):
+    """
+    This class is used to hash resize handle in resizable shapes.
+    """
+    TL = 0b00000001
+    TM = 0b00000010
+    TR = 0b00000100
+    ML = 0b00001000
+    MR = 0b00010000
+    BL = 0b00100000
+    BM = 0b01000000
+    BR = 0b10000000
 
 
 class ShapeMixin(QGraphicsItem):
@@ -273,6 +287,9 @@ class ShapeMixin(QGraphicsItem):
         raise NotImplementedError('method `width` must be implemented in inherited class')
 
 
+
+
+
 class ShapeResizableMixin(ShapeMixin):
     """
     This class holds properties which are shared by resizable shapes.
@@ -281,25 +298,18 @@ class ShapeResizableMixin(ShapeMixin):
     handleSpan = -4.0
     handleBrush = QColor(79, 195, 247, 255)
     handlePen = QPen(QColor(0, 0, 0, 255), 1.0, Qt.SolidLine)
+    
 
-    handleTL = 1
-    handleTM = 2
-    handleTR = 3
-    handleML = 4
-    handleMR = 5
-    handleBL = 6
-    handleBM = 7
-    handleBR = 8
 
     cursors = {
-        handleTL: Qt.SizeFDiagCursor,
-        handleTM: Qt.SizeVerCursor,
-        handleTR: Qt.SizeBDiagCursor,
-        handleML: Qt.SizeHorCursor,
-        handleMR: Qt.SizeHorCursor,
-        handleBL: Qt.SizeBDiagCursor,
-        handleBM: Qt.SizeVerCursor,
-        handleBR: Qt.SizeFDiagCursor,
+        Handle.TL: Qt.SizeFDiagCursor,
+        Handle.TM: Qt.SizeVerCursor,
+        Handle.TR: Qt.SizeBDiagCursor,
+        Handle.ML: Qt.SizeHorCursor,
+        Handle.MR: Qt.SizeHorCursor,
+        Handle.BL: Qt.SizeBDiagCursor,
+        Handle.BM: Qt.SizeVerCursor,
+        Handle.BR: Qt.SizeFDiagCursor,
     }
 
     def __init__(self, **kwargs):
@@ -435,14 +445,14 @@ class ShapeResizableMixin(ShapeMixin):
         """
         s = self.handleSize
         b = self.boundingRect()
-        self.handles[self.handleTL] = QRectF(b.left(), b.top(), s, s)
-        self.handles[self.handleTM] = QRectF(b.center().x() - s / 2, b.top(), s, s)
-        self.handles[self.handleTR] = QRectF(b.right() - s, b.top(), s, s)
-        self.handles[self.handleML] = QRectF(b.left(), b.center().y() - s / 2, s, s)
-        self.handles[self.handleMR] = QRectF(b.right() - s, b.center().y() - s / 2, s, s)
-        self.handles[self.handleBL] = QRectF(b.left(), b.bottom() - s, s, s)
-        self.handles[self.handleBM] = QRectF(b.center().x() - s / 2, b.bottom() - s, s, s)
-        self.handles[self.handleBR] = QRectF(b.right() - s, b.bottom() - s, s, s)
+        self.handles[Handle.TL] = QRectF(b.left(), b.top(), s, s)
+        self.handles[Handle.TM] = QRectF(b.center().x() - s / 2, b.top(), s, s)
+        self.handles[Handle.TR] = QRectF(b.right() - s, b.top(), s, s)
+        self.handles[Handle.ML] = QRectF(b.left(), b.center().y() - s / 2, s, s)
+        self.handles[Handle.MR] = QRectF(b.right() - s, b.center().y() - s / 2, s, s)
+        self.handles[Handle.BL] = QRectF(b.left(), b.bottom() - s, s, s)
+        self.handles[Handle.BM] = QRectF(b.center().x() - s / 2, b.bottom() - s, s, s)
+        self.handles[Handle.BR] = QRectF(b.right() - s, b.bottom() - s, s, s)
 
     def width(self):
         """

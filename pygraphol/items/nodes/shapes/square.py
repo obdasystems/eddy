@@ -64,7 +64,7 @@ class Square(QGraphicsRectItem, ShapeMixin):
         self.shapeBrush = brush
 
         # intialize shape rectangle
-        self.setRect(self.setRect(Square.createRect(self.shapeSide, self.shapeSide)))
+        self.setRect(Square.createRect(self.shapeSide, self.shapeSide))
 
         # initialize node label with default text (default restriction)
         self.label = Label(self.node.restriction.label, centered=False, editable=False, parent=self)

@@ -47,28 +47,23 @@ class Arrow(BaseEdge):
 
     ##################################################### GEOMETRY #####################################################
 
-    def shape(self, controls=True):
+    def shape(self, *args, **kwargs):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
-        :param controls: whether or not to include shape controls in the shape.
         :rtype: QPainterPath
         """
         path = QPainterPath()
 
         for subpath in self.path:
+            path.addPolygon(subpath.selection)
             path.moveTo(subpath.p1())
             path.lineTo(subpath.p2())
 
-        if controls:
-
-            for subpath in self.path:
-                path.addPolygon(subpath.selection)
-
-            if self.isSelected():
-                for handle in self.handles.values():
-                    path.addEllipse(handle)
-                for handle in self.anchors.values():
-                    path.addEllipse(handle)
+        if self.isSelected():
+            for handle in self.handles.values():
+                path.addEllipse(handle)
+            for handle in self.anchors.values():
+                path.addEllipse(handle)
 
         path.addPolygon(self.head)
 

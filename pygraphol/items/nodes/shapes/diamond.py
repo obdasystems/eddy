@@ -34,8 +34,8 @@
 
 from pygraphol.functions import snapPointToGrid
 from pygraphol.items.nodes.shapes.common import Label
-from pygraphol.items.nodes.shapes.mixins import ShapeResizableMixin
-from PyQt5.QtCore import QPointF, Qt, QRectF
+from pygraphol.items.nodes.shapes.mixins import ShapeResizableMixin, Handle
+from PyQt5.QtCore import QPointF, Qt, QRectF, QLineF
 from PyQt5.QtGui import QColor, QPen,  QPainterPath, QPolygonF, QPainter, QFont, QPixmap
 from PyQt5.QtWidgets import QGraphicsPolygonItem
 
@@ -126,7 +126,7 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
         minBoundingRectWidth = self.MinWidth + (self.handleSize + self.handleSpan) * 2
         minBoundingRectHeight = self.MinHeight + (self.handleSize + self.handleSpan) * 2
 
-        if self.selectedHandle == self.handleTL:
+        if self.selectedHandle == Handle.TL:
 
             fromX = self.mousePressRect.left()
             fromY = self.mousePressRect.top()
@@ -153,7 +153,7 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
             poly[self.indexE] = QPointF(rect.left() + offset, rect.top() + rect.height() / 2)
             poly[self.indexR] = QPointF(poly[self.indexR].x(), rect.top() + rect.height() / 2)
 
-        elif self.selectedHandle == self.handleTM:
+        elif self.selectedHandle == Handle.TM:
 
             fromY = self.mousePressRect.top()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
@@ -171,7 +171,7 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
             poly[self.indexE] = QPointF(poly[self.indexE].x(), rect.top() + rect.height() / 2)
             poly[self.indexR] = QPointF(poly[self.indexR].x(), rect.top() + rect.height() / 2)
 
-        elif self.selectedHandle == self.handleTR:
+        elif self.selectedHandle == Handle.TR:
 
             fromX = self.mousePressRect.right()
             fromY = self.mousePressRect.top()
@@ -198,7 +198,7 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
             poly[self.indexE] = QPointF(poly[self.indexE].x(), rect.top() + rect.height() / 2)
             poly[self.indexR] = QPointF(rect.right() - offset, rect.top() + rect.height() / 2)
 
-        elif self.selectedHandle == self.handleML:
+        elif self.selectedHandle == Handle.ML:
 
             fromX = self.mousePressRect.left()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
@@ -216,7 +216,7 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
             poly[self.indexT] = QPointF(rect.left() + rect.width() / 2, poly[self.indexT].y())
             poly[self.indexB] = QPointF(rect.left() + rect.width() / 2, poly[self.indexB].y())
 
-        elif self.selectedHandle == self.handleMR:
+        elif self.selectedHandle == Handle.MR:
 
             fromX = self.mousePressRect.right()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
@@ -233,7 +233,7 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
             poly[self.indexT] = QPointF(rect.right() - rect.width() / 2, poly[self.indexT].y())
             poly[self.indexB] = QPointF(rect.right() - rect.width() / 2, poly[self.indexB].y())
 
-        elif self.selectedHandle == self.handleBL:
+        elif self.selectedHandle == Handle.BL:
 
             fromX = self.mousePressRect.left()
             fromY = self.mousePressRect.bottom()
@@ -260,7 +260,7 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
             poly[self.indexE] = QPointF(rect.left() + offset, rect.bottom() - rect.height() / 2)
             poly[self.indexR] = QPointF(poly[self.indexR].x(), rect.bottom() - rect.height() / 2)
 
-        elif self.selectedHandle == self.handleBM:
+        elif self.selectedHandle == Handle.BM:
 
             fromY = self.mousePressRect.bottom()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
@@ -278,7 +278,7 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
             poly[self.indexE] = QPointF(poly[self.indexE].x(), rect.top() + rect.height() / 2)
             poly[self.indexR] = QPointF(poly[self.indexR].x(), rect.top() + rect.height() / 2)
 
-        elif self.selectedHandle == self.handleBR:
+        elif self.selectedHandle == Handle.BR:
 
             fromX = self.mousePressRect.right()
             fromY = self.mousePressRect.bottom()
@@ -314,10 +314,10 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
         for edge, pos in self.mousePressData.items():
             self.setAnchor(edge, pos + diff * 0.5)
 
-    def shape(self, controls=True):
+    def shape(self, controls=Handle.TL|Handle.TM|Handle.TR|Handle.ML|Handle.MR|Handle.BL|Handle.BM|Handle.BR):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
-        :param controls: whether or not to include shape controls in the shape.
+        :param controls: bitflag describing which controls to add to the shape.
         :rtype: QPainterPath
         """
         path = QPainterPath()
@@ -325,8 +325,9 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
 
         # add resizing handles if necessary
         if controls and self.isSelected():
-            for handle in self.handles.values():
-                path.addEllipse(handle)
+            for handle, shape in self.handles.items():
+                if controls & handle:
+                    path.addEllipse(shape)
 
         return path
 
@@ -354,6 +355,24 @@ class Diamond(QGraphicsPolygonItem, ShapeResizableMixin):
         :rtype: int
         """
         return self.boundingRect().height() - 2 * (self.handleSize + self.handleSpan)
+
+    def intersections(self, line):
+        """
+        Returns the intersection of the shape with the given line (in scene coordinates).
+        :param line: the line whose intersection needs to be calculated (in scene coordinates).
+        :rtype: tuple
+        """
+        collection = []
+        path = self.shape(Handle.TM|Handle.BM|Handle.ML|Handle.MR)
+        polygon = self.mapToScene(path.toFillPolygon(self.transform()))
+
+        for i in range(0, polygon.size() - 1):
+            point = QPointF()
+            polyline = QLineF(polygon[i], polygon[i + 1])
+            if polyline.intersect(line, point) == QLineF.BoundedIntersection:
+                collection.append(point)
+
+        return collection
 
     def width(self):
         """

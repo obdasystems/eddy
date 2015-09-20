@@ -34,7 +34,7 @@
 
 from pygraphol.functions import snapPointToGrid
 from pygraphol.items.nodes.shapes.common import Label
-from pygraphol.items.nodes.shapes.mixins import ShapeResizableMixin
+from pygraphol.items.nodes.shapes.mixins import ShapeResizableMixin, Handle
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QPen, QColor, QFont
 from PyQt5.QtWidgets import QGraphicsRectItem
@@ -108,7 +108,7 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
         rect = self.rect()
         diff = QPointF(0, 0)
 
-        if self.selectedHandle == self.handleTL:
+        if self.selectedHandle == Handle.TL:
 
             fromX = self.mousePressRect.left()
             fromY = self.mousePressRect.top()
@@ -121,7 +121,7 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
             rect.setLeft(toX)
             rect.setTop(toY)
 
-        elif self.selectedHandle == self.handleTM:
+        elif self.selectedHandle == Handle.TM:
 
             fromY = self.mousePressRect.top()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
@@ -129,7 +129,7 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
             diff.setY(toY - fromY)
             rect.setTop(toY)
 
-        elif self.selectedHandle == self.handleTR:
+        elif self.selectedHandle == Handle.TR:
 
             fromX = self.mousePressRect.right()
             fromY = self.mousePressRect.top()
@@ -142,7 +142,7 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
             rect.setRight(toX)
             rect.setTop(toY)
 
-        elif self.selectedHandle == self.handleML:
+        elif self.selectedHandle == Handle.ML:
 
             fromX = self.mousePressRect.left()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
@@ -150,7 +150,7 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
             diff.setX(toX - fromX)
             rect.setLeft(toX)
 
-        elif self.selectedHandle == self.handleMR:
+        elif self.selectedHandle == Handle.MR:
 
             fromX = self.mousePressRect.right()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
@@ -158,7 +158,7 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
             diff.setX(toX - fromX)
             rect.setRight(toX)
 
-        elif self.selectedHandle == self.handleBL:
+        elif self.selectedHandle == Handle.BL:
 
             fromX = self.mousePressRect.left()
             fromY = self.mousePressRect.bottom()
@@ -171,7 +171,7 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
             rect.setLeft(toX)
             rect.setBottom(toY)
 
-        elif self.selectedHandle == self.handleBM:
+        elif self.selectedHandle == Handle.BM:
 
             fromY = self.mousePressRect.bottom()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
@@ -179,7 +179,7 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
             diff.setY(toY - fromY)
             rect.setBottom(toY)
 
-        elif self.selectedHandle == self.handleBR:
+        elif self.selectedHandle == Handle.BR:
 
             fromX = self.mousePressRect.right()
             fromY = self.mousePressRect.bottom()
@@ -193,21 +193,21 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
             rect.setBottom(toY)
 
         ## CLAMP WIDTH
-        if self.selectedHandle in (self.handleTL, self.handleML, self.handleBL):
+        if self.selectedHandle in (Handle.TL, Handle.ML, Handle.BL):
             if rect.width() < self.MinWidth:
                 diff.setX(diff.x() - self.MinWidth + rect.width())
                 rect.setLeft(rect.left() - self.MinWidth + rect.width())
-        elif self.selectedHandle in (self.handleTR, self.handleMR, self.handleBR):
+        elif self.selectedHandle in (Handle.TR, Handle.MR, Handle.BR):
             if rect.width() < self.MinWidth:
                 diff.setX(diff.x() + self.MinWidth - rect.width())
                 rect.setRight(rect.right() + self.MinWidth - rect.width())
 
         ## CLAMP HEIGHT
-        if self.selectedHandle in (self.handleTL, self.handleTM, self.handleTR):
+        if self.selectedHandle in (Handle.TL, Handle.TM, Handle.TR):
             if rect.height() < self.MinHeight:
                 diff.setY(diff.y() - self.MinHeight + rect.height())
                 rect.setTop(rect.top() - self.MinHeight + rect.height())
-        elif self.selectedHandle in (self.handleBL, self.handleBM, self.handleBR):
+        elif self.selectedHandle in (Handle.BL, Handle.BM, Handle.BR):
             if rect.height() < self.MinHeight:
                 diff.setY(diff.y() + self.MinHeight - rect.height())
                 rect.setBottom(rect.bottom() + self.MinHeight - rect.height())
@@ -223,10 +223,10 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
 
     ##################################################### GEOMETRY #####################################################
 
-    def shape(self, controls=True):
+    def shape(self, controls=Handle.TL|Handle.TM|Handle.TR|Handle.ML|Handle.MR|Handle.BL|Handle.BM|Handle.BR):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
-        :param controls: whether or not to include shape controls in the shape.
+        :param controls: bitflag describing which controls to add to the shape.
         :rtype: QPainterPath
         """
         path = QPainterPath()
@@ -234,8 +234,9 @@ class Rect(QGraphicsRectItem, ShapeResizableMixin):
 
         # add resizing handles if necessary
         if controls and self.isSelected():
-            for handle in self.handles.values():
-                path.addEllipse(handle)
+            for handle, shape in self.handles.items():
+                if controls & handle:
+                    path.addEllipse(shape)
 
         return path
 

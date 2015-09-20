@@ -132,10 +132,9 @@ class Hexagon(QGraphicsPolygonItem, ShapeMixin):
         xnode.shape.setPos(self.pos())
         scene.undoStack.push(CommandNodeHexagonSwitchTo(scene, self.node, xnode))
 
-    def shape(self, controls=True):
+    def shape(self, *args, **kwargs):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
-        :param controls: whether or not to include shape controls in the shape.
         :rtype: QPainterPath
         """
         path = QPainterPath()
