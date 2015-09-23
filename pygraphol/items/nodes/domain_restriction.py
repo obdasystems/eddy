@@ -34,7 +34,7 @@
 
 from pygraphol.datatypes import RestrictionType
 from pygraphol.items.nodes import Node
-from pygraphol.items.nodes.shapes import Square
+from pygraphol.items.nodes.shapes import DomainRestrictionNodeShape
 
 
 class DomainRestrictionNode(Node):
@@ -51,10 +51,9 @@ class DomainRestrictionNode(Node):
         :param scene: the scene where this node is being added.
         """
         super().__init__(scene, **kwargs)
-        from pygraphol.items.nodes.shapes import Square
         self.cardinality = dict(min=None, max=None)
         self.restriction = RestrictionType.exists
-        self.shape = Square(item=self, rgb=(252, 252, 252), **kwargs)
+        self.shape = DomainRestrictionNodeShape(item=self, **kwargs)
 
     ############################################ NODE REPRESENTATION ###################################################
 
@@ -64,4 +63,4 @@ class DomainRestrictionNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return Square.image(rgb=(252, 252, 252), **kwargs)
+        return DomainRestrictionNodeShape.image(**kwargs)

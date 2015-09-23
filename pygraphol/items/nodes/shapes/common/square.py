@@ -32,55 +32,47 @@
 ##########################################################################
 
 
-import math
+from pygraphol.items.nodes.shapes.common.base import AbstractNodeShape
 
-from pygraphol.functions import distance, midpoint
-from pygraphol.items.nodes.shapes.common import Label
-from pygraphol.items.nodes.shapes.mixins import ShapeMixin
-from PyQt5.QtCore import Qt, QRectF, QPointF, QLineF
-from PyQt5.QtGui import QColor, QPen, QPainter, QPixmap, QFont, QPainterPath, QPolygonF, QBrush
-from PyQt5.QtWidgets import QGraphicsEllipseItem
+from PyQt5.QtCore import QRectF
+from PyQt5.QtGui import QPainterPath, QColor
 
 
-class Ring(QGraphicsEllipseItem, ShapeMixin):
+class Square(AbstractNodeShape):
     """
-    This class implements a ring which is used to render the 'Attribute' node.
+    This class implements a square.
     """
-    shapeRadius = 10.0
-    shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
+    minW = 20
+    minH = 20
 
-    def __init__(self, **kwargs):
+    def __init__(self, width=minW, height=minH, brush=(252, 252, 252), **kwargs):
         """
-        Initialize the ring shape.
+        Initialize the square.
+        :param width: the shape width (unused in current implementation).
+        :param height: the shape height (unused in current implementation).
+        :param brush: the brush to use as shape background
         """
         super().__init__(**kwargs)
-        self.setRect(Ring.createRect(self.shapeRadius * 2, self.shapeRadius * 2))
-        self.label = Label(self.node.name, centered=False, parent=self)
-        self.label.updatePos()
-
-    ################################################## EVENT HANDLERS ##################################################
-
-    def contextMenuEvent(self, menuEvent):
-        """
-        Bring up the context menu for the given node.
-        :param menuEvent: the context menu event instance.
-        """
-        scene = self.scene()
-        scene.clearSelection()
-
-        self.setSelected(True)
-
-        contextMenu = self.contextMenu()
-
-        collection = self.label.contextMenuAdd()
-        if collection:
-            contextMenu.addSeparator()
-            for action in collection:
-                contextMenu.addAction(action)
-
-        contextMenu.exec_(menuEvent.screenPos())
+        self.shapeBrush = QColor(*brush)
+        self.rect = Square.createRect(self.minW, self.minH)
 
     ##################################################### GEOMETRY #####################################################
+
+    def boundingRect(self):
+        """
+        Returns the shape bounding rectangle.
+        :rtype: QRectF
+        """
+        return self.rect
+
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used for collision detection).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRect(self.rect)
+        return path
 
     def shape(self, *args, **kwargs):
         """
@@ -88,7 +80,7 @@ class Ring(QGraphicsEllipseItem, ShapeMixin):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRect(self.rect())
+        path.addRect(self.rect)
         return path
 
     ################################################ AUXILIARY METHODS #################################################
@@ -108,43 +100,52 @@ class Ring(QGraphicsEllipseItem, ShapeMixin):
         Returns the height of the shape.
         :rtype: int
         """
-        return self.rect().height()
+        return self.rect.height()
 
     def width(self):
         """
         Returns the width of the shape.
         :rtype: int
         """
-        return self.rect().width()
+        return self.rect.width()
+
+    ################################################# LABEL SHORTCUTS ##################################################
+
+    def labelPos(self):
+        """
+        Returns the current label position.
+        :rtype: QPointF
+        """
+        raise NotImplementedError('method `labelPos` must be implemented in inherited class')
+
+    def labelText(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        raise NotImplementedError('method `labelText` must be implemented in inherited class')
+
+    def setLabelPos(self, pos):
+        """
+        Set the label position updating the 'moved' flag accordingly.
+        :param pos: the node position.
+        """
+        raise NotImplementedError('method `setLabelPos` must be implemented in inherited class')
+
+    def setLabelText(self, text):
+        """
+        Set the label text.
+        :param text: the text value to set.
+        """
+        raise NotImplementedError('method `setLabelText` must be implemented in inherited class')
+
+    def updateLabelPos(self):
+        """
+        Update the label text position.
+        """
+        raise NotImplementedError('method `updateLabelPos` must be implemented in inherited class')
 
     ################################################### ITEM DRAWING ###################################################
-
-    @classmethod
-    def image(cls, **kwargs):
-        """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
-        """
-        shape_w = 18
-        shape_h = 18
-
-        # Initialize the pixmap
-        pixmap = QPixmap(kwargs['w'], kwargs['h'])
-        pixmap.fill(Qt.transparent)
-        painter = QPainter(pixmap)
-
-        # Draw the rectangle
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine))
-        painter.setBrush(QColor(252, 252, 252))
-        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
-        painter.drawEllipse(QRectF(-shape_w / 2, -shape_h / 2 + 8, shape_w, shape_h))
-
-        # Draw the text within the rectangle
-        painter.setFont(QFont('Arial', 10, QFont.Light))
-        painter.drawText(-18, -6, 'attribute')
-
-        return pixmap
 
     def paint(self, painter, option, widget=None):
         """
@@ -153,9 +154,8 @@ class Ring(QGraphicsEllipseItem, ShapeMixin):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        shapeBrush = self.shapeSelectedBrush if self.isSelected() else self.shapeBrush
+        shapeBrush = self.shapeBrushSelected if self.isSelected() else self.shapeBrush
 
-        painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
-        painter.drawEllipse(self.rect())
+        painter.drawRect(self.rect)

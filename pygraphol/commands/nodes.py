@@ -34,7 +34,6 @@
 
 from PyQt5.QtCore import QRectF
 from pygraphol.datatypes import RestrictionType
-from pygraphol.functions import isEmpty
 from PyQt5.QtGui import QPolygonF
 from PyQt5.QtWidgets import QUndoCommand
 
@@ -101,9 +100,9 @@ class CommandNodeRezize(QUndoCommand):
         """
         super().__init__('resize %s node' % node.name)
         self.node = node
-        self.new = None
-        self.old = {
-            'shape': QRectF(self.node.shape.rect()) if hasattr(self.node.shape, 'rect') else QPolygonF(self.node.shape.polygon()),
+        self.data2 = None
+        self.data1 = {
+            'shape': QRectF(self.node.shape.rect) if hasattr(self.node.shape, 'rect') else QPolygonF(self.node.shape.polygon),
             'anchors': {edge: pos for edge, pos in node.shape.anchors.items()}
         }
 
@@ -111,22 +110,20 @@ class CommandNodeRezize(QUndoCommand):
         """
         End the command collecting new information.
         """
-        self.new = {
-            'shape': QRectF(self.node.shape.rect()) if hasattr(self.node.shape, 'rect') else QPolygonF(self.node.shape.polygon()),
+        self.data2 = {
+            'shape': QRectF(self.node.shape.rect) if hasattr(self.node.shape, 'rect') else QPolygonF(self.node.shape.polygon),
             'anchors': {edge: pos for edge, pos in self.node.shape.anchors.items()}
         }
 
     def redo(self):
         """redo the command"""
-        if self.new:
+        if self.data2:
+            if hasattr(self.node.shape, 'rect'):
+                self.node.shape.rect = self.data2['shape']
+            else:
+                self.node.shape.polygon = self.data2['shape']
 
-            try:
-                self.node.shape.setRect(self.new['shape'])
-            except AttributeError:
-                self.node.shape.setPolygon(self.new['shape'])
-
-            # update edge anchors
-            for edge, pos in self.new['anchors'].items():
+            for edge, pos in self.data2['anchors'].items():
                 self.node.shape.setAnchor(edge, pos)
 
             self.node.shape.updateHandlesPos()
@@ -136,13 +133,12 @@ class CommandNodeRezize(QUndoCommand):
 
     def undo(self):
         """undo the command"""
-        try:
-            self.node.shape.setRect(self.old['shape'])
-        except AttributeError:
-            self.node.shape.setPolygon(self.old['shape'])
+        if hasattr(self.node.shape, 'rect'):
+            self.node.shape.rect = self.data1['shape']
+        else:
+            self.node.shape.polygon = self.data1['shape']
 
-        # update edge anchors
-        for edge, pos in self.old['anchors'].items():
+        for edge, pos in self.data1['anchors'].items():
             self.node.shape.setAnchor(edge, pos)
 
         self.node.shape.updateHandlesPos()
@@ -206,60 +202,76 @@ class CommandNodeLabelMove(QUndoCommand):
     """
     This command is used to move nodes labels.
     """
-    def __init__(self, node, moved):
+    def __init__(self, node, label, moved):
         """
         Initialize the command
         :param node: the node whose label is being moved.
+        :param label: the label that is being moved.
         :param moved: whether the label was moved already or not.
         """
         super().__init__('move %s node label' % node.name)
+        self.label = label
         self.moved = moved
-        self.node = node
-        self.old = node.shape.label.pos()
-        self.new = None
+        self.pos1 = node.shape.label.pos()
+        self.pos2 = None
 
-    def end(self):
+    def end(self, pos):
         """
         End the command collecting new data.
+        :param pos: the new position of the label.
         """
-        self.new = self.node.shape.label.pos()
+        self.pos2 = pos
 
     def redo(self):
         """redo the command"""
-        if self.new:
-            self.node.shape.label.setPos(self.new)
-            self.node.shape.label.moved = not self.moved
+        if self.pos2:
+            self.label.setPos(self.pos2)
+            self.label.moved = not self.moved
 
     def undo(self):
         """undo the command"""
-        self.node.shape.label.setPos(self.old)
-        self.node.shape.label.moved = self.moved
+        self.label.setPos(self.pos1)
+        self.label.moved = self.moved
 
 
 class CommandNodeLabelEdit(QUndoCommand):
     """
     This command is used to edit nodes labels.
     """
-    def __init__(self, node):
+    def __init__(self, node, label, text):
         """
-        Initialize the command
-        :param node: the node whose label is being moved.
+        Initialize the command.
+        :param node: the node whose label is being edited.
+        :param label: the label whose text is being edited.
+        :param text: the text of the label before the edit.
         """
         super().__init__('edit %s node label' % node.name)
-        self.node = node
-        self.old = node.shape.labelText()
-        self.new = None
+        self.label = label
+        self.text1 = text
+        self.text2 = None
+
+    def end(self, text):
+        """
+        End the command collecting new data.
+        :param text: the new label text.
+        """
+        self.text2 = text
+
+    def isTextChanged(self, text):
+        """
+        Checks whether the given text is different from the old value.
+        :param text: the text to compare with the old value.
+        """
+        return self.text1 != text
 
     def redo(self):
         """redo the command"""
-        if self.new:
-            text = self.node.shape.label.defaultText if isEmpty(self.new) else self.new
-            self.node.shape.setLabelText(text)
+        if self.text2:
+            self.label.setText(self.text2)
 
     def undo(self):
         """undo the command"""
-        text = self.node.shape.label.defaultText if isEmpty(self.old) else self.old
-        self.node.shape.setLabelText(text)
+        self.label.setText(self.text1)
 
 
 class CommandNodeValueDomainSelectDatatype(QUndoCommand):

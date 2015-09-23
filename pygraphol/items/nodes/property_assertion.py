@@ -33,7 +33,7 @@
 
 
 from pygraphol.items.nodes import Node
-from pygraphol.items.nodes.shapes import Oval
+from pygraphol.items.nodes.shapes import PropertyAssertionNodeShape
 
 
 class PropertyAssertionNode(Node):
@@ -50,7 +50,7 @@ class PropertyAssertionNode(Node):
         :param scene: the scene where this node is being added.
         """
         super().__init__(scene, **kwargs)
-        self.shape = Oval(item=self, **kwargs)
+        self.shape = PropertyAssertionNodeShape(item=self, **kwargs)
 
     ############################################ NODE REPRESENTATION ###################################################
 
@@ -60,4 +60,4 @@ class PropertyAssertionNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return Oval.image(**kwargs)
+        return PropertyAssertionNodeShape.image(**kwargs)

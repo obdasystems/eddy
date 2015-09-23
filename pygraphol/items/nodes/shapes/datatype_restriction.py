@@ -32,76 +32,60 @@
 ##########################################################################
 
 
-from pygraphol.items.nodes.shapes.mixins import ShapeMixin
-from PyQt5.QtCore import QRectF, Qt
-from PyQt5.QtGui import QPainter, QPainterPath, QPixmap, QColor, QPen
-from PyQt5.QtWidgets import QGraphicsRectItem
+from pygraphol.items.nodes.shapes.common.label import Label
+from pygraphol.items.nodes.shapes.common.hexagon import Hexagon
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QPainter, QFont, QColor, QPen
 
 
-class Oval(QGraphicsRectItem, ShapeMixin):
+class DatatypeRestrictionNodeShape(Hexagon):
     """
-    This class implements an oval which is used to render the 'PropertyAssertion' node.
+    This class implements the 'Datatype Restriction' node shape.
     """
-    BorderRadius = 20
-    MinWidth = 80
-    MinHeight = 40
 
     def __init__(self, **kwargs):
         """
-        Initialize the rounded rectangle shape.
+        Initialize the Datatype Restriction node shape.
         """
-        super().__init__(**kwargs)
-        self.setRect(Oval.createRect(Oval.MinWidth, Oval.MinHeight))
+        super().__init__(brush=(252, 252, 252), **kwargs)
+        self.label = Label('data', movable=False, editable=False, parent=self)
+        self.label.updatePos()
 
-    ################################################## EVENT HANDLERS ##################################################
+    ################################################# LABEL SHORTCUTS ##################################################
 
-    def contextMenuEvent(self, menuEvent):
+    def labelPos(self):
         """
-        Bring up the context menu for the given node.
-        :param menuEvent: the context menu event instance.
+        Returns the current label position.
+        :rtype: QPointF
         """
-        scene = self.scene()
-        scene.clearSelection()
-        self.setSelected(True)
-        contextMenu = self.contextMenu()
-        contextMenu.exec_(menuEvent.screenPos())
+        return self.label.pos()
 
-    ##################################################### GEOMETRY #####################################################
+    def labelText(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        return self.label.text()
 
-    def shape(self, *args, **kwargs):
+    def setLabelPos(self, pos):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
+        Set the label position.
+        :param pos: the node position.
         """
-        path = QPainterPath()
-        path.addRoundedRect(self.rect(), self.BorderRadius, self.BorderRadius)
-        return path
+        self.label.setPos(pos)
 
-    ################################################## AUXILIARY METHODS ###############################################
+    def setLabelText(self, text):
+        """
+        Set the label text.
+        :param text: the text value to set.
+        """
+        pass
 
-    @staticmethod
-    def createRect(shape_w, shape_h):
+    def updateLabelPos(self):
         """
-        Returns the initialized rect according to the given width/height.
-        :param shape_w: the shape width
-        :param shape_h: the shape height
-        :rtype: QRectF
+        Update the label text position.
         """
-        return QRectF(-shape_w / 2, -shape_h / 2, shape_w, shape_h)
-
-    def height(self):
-        """
-        Returns the height of the shape.
-        :rtype: int
-        """
-        return self.rect().height()
-
-    def width(self):
-        """
-        Returns the width of the shape.
-        :rtype: int
-        """
-        return self.rect().width()
+        self.label.updatePos()
 
     ################################################### ITEM DRAWING ###################################################
 
@@ -111,38 +95,27 @@ class Oval(QGraphicsRectItem, ShapeMixin):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        shape_w = 50
+        shape_w = 48
         shape_h = 30
-        radius = 14
+        oblique = 6
 
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
-
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        rect = Oval.createRect(shape_w, shape_h)
+        polygon = Hexagon.createPolygon(shape_w, shape_h, oblique)
 
-        # Draw the rectangle
+        # Draw the polygon
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin))
+        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
         painter.setBrush(QColor(252, 252, 252))
         painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
-        painter.drawRoundedRect(rect, radius, radius)
+        painter.drawPolygon(polygon)
+
+        # Draw the text within the polygon
+        painter.setFont(QFont('Arial', 11, QFont.Light))
+        painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'data')
 
         return pixmap
-
-    def paint(self, painter, option, widget=None):
-        """
-        Paint the node in the graphic view.
-        :param painter: the active painter.
-        :param option: the style option for this item.
-        :param widget: the widget that is being painted on.
-        """
-        shapeBrush = self.shapeSelectedBrush if self.isSelected() else self.shapeBrush
-
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(shapeBrush)
-        painter.setPen(self.shapePen)
-        painter.drawRoundedRect(self.rect(), self.BorderRadius, self.BorderRadius)

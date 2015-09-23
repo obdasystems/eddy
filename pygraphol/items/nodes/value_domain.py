@@ -34,7 +34,7 @@
 
 from pygraphol.datatypes import XsdDatatype
 from pygraphol.items.nodes import Node
-from pygraphol.items.nodes.shapes import RoundedRect
+from pygraphol.items.nodes.shapes import ValueDomainNodeShape
 
 
 class ValueDomainNode(Node):
@@ -52,7 +52,7 @@ class ValueDomainNode(Node):
         """
         super().__init__(scene, **kwargs)
         self.datatype = XsdDatatype.string
-        self.shape = RoundedRect(item=self, **kwargs)
+        self.shape = ValueDomainNodeShape(item=self, **kwargs)
 
     ############################################ NODE REPRESENTATION ###################################################
 
@@ -62,4 +62,4 @@ class ValueDomainNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return RoundedRect.image(**kwargs)
+        return ValueDomainNodeShape.image(**kwargs)

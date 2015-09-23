@@ -33,7 +33,7 @@
 
 
 from pygraphol.items.nodes import Node
-from pygraphol.items.nodes.shapes import Hexagon
+from pygraphol.items.nodes.shapes import RoleInverseNodeShape
 
 
 class RoleInverseNode(Node):
@@ -50,7 +50,7 @@ class RoleInverseNode(Node):
         :param scene: the scene where this node is being added.
         """
         super().__init__(scene, **kwargs)
-        self.shape = Hexagon(item=self, rgb=(252, 252, 252), text='inv', **kwargs)
+        self.shape = RoleInverseNodeShape(item=self, **kwargs)
 
     ############################################ NODE REPRESENTATION ###################################################
 
@@ -60,4 +60,4 @@ class RoleInverseNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return Hexagon.image(rgb=(252, 252, 252), text='inv', **kwargs)
+        return RoleInverseNodeShape.image(**kwargs)

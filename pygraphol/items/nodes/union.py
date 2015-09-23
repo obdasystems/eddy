@@ -33,7 +33,7 @@
 
 
 from pygraphol.items.nodes import Node
-from pygraphol.items.nodes.shapes import Hexagon
+from pygraphol.items.nodes.shapes import UnionNodeShape
 
 
 class UnionNode(Node):
@@ -50,7 +50,7 @@ class UnionNode(Node):
         :param scene: the scene where this node is being added.
         """
         super().__init__(scene, **kwargs)
-        self.shape = Hexagon(item=self, rgb=(252, 252, 252), text='or', **kwargs)
+        self.shape = UnionNodeShape(item=self, **kwargs)
 
     ############################################ NODE REPRESENTATION ###################################################
 
@@ -60,4 +60,4 @@ class UnionNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return Hexagon.image(rgb=(252, 252, 252), text='or', **kwargs)
+        return UnionNodeShape.image(**kwargs)

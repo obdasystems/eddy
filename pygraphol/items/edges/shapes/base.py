@@ -300,7 +300,7 @@ class BaseEdge(QGraphicsItem):
         
         pos = None
         scene = self.scene()
-        path = self.mapFromItem(shape, shape.shape(controls=0))
+        path = self.mapFromItem(shape, shape.painterPath())
         mousePos = scene.snapToGrid(mousePos)
         if path.contains(mousePos):
             epsilon = 10.0
@@ -406,8 +406,8 @@ class BaseEdge(QGraphicsItem):
         """
         if self.edge.target:
 
-            sourcePath = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.shape(controls=0))
-            targetPath = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.shape(controls=0))
+            sourcePath = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.painterPath())
+            targetPath = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.painterPath())
 
             if sourcePath.intersects(targetPath):
 

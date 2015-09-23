@@ -33,7 +33,7 @@
 
 
 from pygraphol.items.nodes import Node
-from pygraphol.items.nodes.shapes import Note
+from pygraphol.items.nodes.shapes import ValueRestrictionNodeShape
 
 
 class ValueRestrictionNode(Node):
@@ -50,7 +50,7 @@ class ValueRestrictionNode(Node):
         :param scene: the scene where this node is being added.
         """
         super().__init__(scene, **kwargs)
-        self.shape = Note(item=self, **kwargs)
+        self.shape = ValueRestrictionNodeShape(item=self, **kwargs)
 
     ############################################ NODE REPRESENTATION ###################################################
 
@@ -60,4 +60,4 @@ class ValueRestrictionNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return Note.image(**kwargs)
+        return ValueRestrictionNodeShape.image(**kwargs)

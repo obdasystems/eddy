@@ -32,27 +32,59 @@
 ##########################################################################
 
 
-from pygraphol.items.nodes import Node
-from pygraphol.items.nodes.shapes import ConceptNodeShape
+from pygraphol.items.nodes.shapes.common.hexagon import Hexagon
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QPainter, QColor, QPen
 
 
-class ConceptNode(Node):
+class DisjointUnionNodeShape(Hexagon):
     """
-    This class implements the 'Concept' node.
+    This class implements the 'Disjoint Union' node shape.
     """
-    name = 'concept'
-    xmlname = 'concept'
-    type = Node.ConceptNode
-
-    def __init__(self, scene, **kwargs):
+    
+    def __init__(self, **kwargs):
         """
-        Initialize the 'Concept' node.
-        :param scene: the scene where this node is being added.
+        Initialize the Disjoint Union node shape.
         """
-        super().__init__(scene, **kwargs)
-        self.shape = ConceptNodeShape(item=self, **kwargs)
+        super().__init__(brush=(0, 0, 0), **kwargs)
 
-    ############################################ NODE REPRESENTATION ###################################################
+    ################################################# LABEL SHORTCUTS ##################################################
+
+    def labelPos(self):
+        """
+        Returns the current label position.
+        :rtype: QPointF
+        """
+        pass
+
+    def labelText(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        pass
+
+    def setLabelPos(self, pos):
+        """
+        Set the label position.
+        :param pos: the node position.
+        """
+        pass
+
+    def setLabelText(self, text):
+        """
+        Set the label text.
+        :param text: the text value to set.
+        """
+        pass
+
+    def updateLabelPos(self):
+        """
+        Update the label text position.
+        """
+        pass
+
+    ################################################### ITEM DRAWING ###################################################
 
     @classmethod
     def image(cls, **kwargs):
@@ -60,4 +92,23 @@ class ConceptNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return ConceptNodeShape.image(**kwargs)
+        shape_w = 48
+        shape_h = 30
+        oblique = 6
+
+        # Initialize the pixmap
+        pixmap = QPixmap(kwargs['w'], kwargs['h'])
+        pixmap.fill(Qt.transparent)
+        painter = QPainter(pixmap)
+
+        # Initialize the shape
+        polygon = Hexagon.createPolygon(shape_w, shape_h, oblique)
+
+        # Draw the polygon
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+        painter.setBrush(QColor(0, 0, 0))
+        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
+        painter.drawPolygon(polygon)
+
+        return pixmap

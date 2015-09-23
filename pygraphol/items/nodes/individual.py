@@ -33,7 +33,7 @@
 
 
 from pygraphol.items.nodes import Node
-from pygraphol.items.nodes.shapes import Octagon
+from pygraphol.items.nodes.shapes import IndividualNodeShape
 
 
 class IndividualNode(Node):
@@ -50,7 +50,7 @@ class IndividualNode(Node):
         :param scene: the scene where this node is being added.
         """
         super().__init__(scene, **kwargs)
-        self.shape = Octagon(item=self, **kwargs)
+        self.shape = IndividualNodeShape(item=self, **kwargs)
 
     ############################################ NODE REPRESENTATION ###################################################
 
@@ -60,4 +60,4 @@ class IndividualNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return Octagon.image(**kwargs)
+        return IndividualNodeShape.image(**kwargs)

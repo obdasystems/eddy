@@ -34,7 +34,7 @@
 
 from pygraphol.datatypes import RestrictionType
 from pygraphol.items.nodes import Node
-from pygraphol.items.nodes.shapes import Square
+from pygraphol.items.nodes.shapes import RangeRestrictionNodeShape
 
 
 class RangeRestrictionNode(Node):
@@ -53,7 +53,7 @@ class RangeRestrictionNode(Node):
         super().__init__(scene, **kwargs)
         self.cardinality = dict(min=None, max=None)
         self.restriction = RestrictionType.exists
-        self.shape = Square(item=self, rgb=(0, 0, 0), **kwargs)
+        self.shape = RangeRestrictionNodeShape(item=self, **kwargs)
 
     ############################################ NODE REPRESENTATION ###################################################
 
@@ -63,4 +63,4 @@ class RangeRestrictionNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return Square.image(rgb=(0, 0, 0), **kwargs)
+        return RangeRestrictionNodeShape.image(**kwargs)

@@ -33,7 +33,7 @@
 
 
 from pygraphol.items.nodes import Node
-from pygraphol.items.nodes.shapes import Ring
+from pygraphol.items.nodes.shapes import AttributeNodeShape
 
 
 class AttributeNode(Node):
@@ -50,7 +50,7 @@ class AttributeNode(Node):
         :param scene: the scene where this node is being added.
         """
         super().__init__(scene, **kwargs)
-        self.shape = Ring(item=self, **kwargs)
+        self.shape = AttributeNodeShape(item=self, **kwargs)
 
     ############################################ NODE REPRESENTATION ###################################################
 
@@ -60,4 +60,4 @@ class AttributeNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return Ring.image(**kwargs)
+        return AttributeNodeShape.image(**kwargs)

@@ -33,50 +33,44 @@
 
 
 from functools import partial
+from PyQt5.QtWidgets import QAction
 from pygraphol.commands import CommandNodeValueDomainSelectDatatype
 from pygraphol.datatypes import XsdDatatype
 from pygraphol.exceptions import ParseError
-from pygraphol.items.nodes.shapes.common import Label
-from pygraphol.items.nodes.shapes.mixins import ShapeMixin
-from PyQt5.QtCore import QRectF, Qt, QPointF, QLineF
-from PyQt5.QtGui import QPainter, QPainterPath, QIcon, QPixmap, QFont, QColor, QPen, QPolygonF
-from PyQt5.QtWidgets import QGraphicsRectItem, QAction
+from pygraphol.items.nodes.shapes.common.label import Label
+from pygraphol.items.nodes.shapes.common.rounded_rect import RoundedRect
+
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QPainter, QFont, QIcon, QColor, QPen
 
 
-class RoundedRect(QGraphicsRectItem, ShapeMixin):
+class ValueDomainNodeShape(RoundedRect):
     """
-    This class implements a rounded rectangle which is used to render the 'Domain' node.
+    This class implements the 'Value-Domain' node shape.
     """
-    BorderRadius = 8
-    MinWidth = 100
-    MinHeight = 50
-    ShapePadding = 16
 
     def __init__(self, **kwargs):
         """
-        Initialize the rounded rectangle shape.
+        Initialize the Value-Domain node shape.
         """
         super().__init__(**kwargs)
         self.label = Label(self.node.datatype.value, movable=False, editable=False, parent=self)
         self.updateShape()
 
-    ################################################## EVENT HANDLERS ##################################################
+    ################################################ AUXILIARY METHODS #################################################
 
-    def contextMenuEvent(self, menuEvent):
+    def contextMenu(self):
         """
-        Bring up the context menu for the given node.
-        :param menuEvent: the context menu event instance.
+        Returns the basic nodes context menu.
+        :rtype: QMenu
         """
-        scene = self.scene()
-        scene.clearSelection()
+        menu = super().contextMenu()
+        menu.addSeparator()
 
-        self.setSelected(True)
-
-        contextMenu = self.contextMenu()
-        contextMenu.addSeparator()
-
-        subMenu = contextMenu.addMenu('Select type')
+        subMenu = menu.addMenu('Select type')
         subMenu.setIcon(QIcon(':/icons/refresh'))
+
+        scene = self.scene()
 
         for datatype in XsdDatatype:
             action = QAction(datatype.value, scene)
@@ -85,54 +79,7 @@ class RoundedRect(QGraphicsRectItem, ShapeMixin):
             action.triggered.connect(partial(self.updateDatatype, datatype=datatype))
             subMenu.addAction(action)
 
-        contextMenu.exec_(menuEvent.screenPos())
-
-    ##################################################### GEOMETRY #####################################################
-
-    def shape(self, *args, **kwargs):
-        """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addRoundedRect(self.rect(), self.BorderRadius, self.BorderRadius)
-        return path
-
-    ################################################## AUXILIARY METHODS ###############################################
-
-    @staticmethod
-    def createRect(shape_w, shape_h):
-        """
-        Returns the initialized rect according to the given width/height.
-        :param shape_w: the shape width
-        :param shape_h: the shape height
-        :rtype: QRectF
-        """
-        return QRectF(-shape_w / 2, -shape_h / 2, shape_w, shape_h)
-
-    def height(self):
-        """
-        Returns the height of the shape.
-        :rtype: int
-        """
-        return self.rect().height()
-
-    def setLabelText(self, text):
-        """
-        Set the label text (shortcut for self.label.setText).
-        :param text: the text value to set.
-        """
-        text = text.strip()
-        for datatype in XsdDatatype:
-            if datatype.value == text:
-                self.node.datatype = datatype
-                self.label.setText(datatype.value)
-                self.updateShape()
-                self.updateEdges()
-                return
-
-        # raise an error in case the given text doesn't match any XsdDatatype value
-        raise ParseError('invalid datatype supplied: %s' % text)
+        return menu
 
     def updateDatatype(self, datatype):
         """
@@ -147,16 +94,56 @@ class RoundedRect(QGraphicsRectItem, ShapeMixin):
         Update current shape geometry according to the selected datatype.
         Will also center the shape text after the width adjustment.
         """
-        shape_w = max(self.label.width() + RoundedRect.ShapePadding, RoundedRect.MinWidth)
-        self.setRect(RoundedRect.createRect(shape_w, RoundedRect.MinHeight))
+        shape_w = max(self.label.width() + self.padding, self.minW)
+        self.rect = RoundedRect.createRect(shape_w, RoundedRect.minH)
         self.updateLabelPos()
 
-    def width(self):
+    ################################################# LABEL SHORTCUTS ##################################################
+
+    def labelPos(self):
         """
-        Returns the width of the shape.
-        :rtype: int
+        Returns the current label position.
+        :rtype: QPointF
         """
-        return self.rect().width()
+        return self.label.pos()
+
+    def labelText(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        return self.label.text()
+
+    def setLabelPos(self, pos):
+        """
+        Set the label position.
+        :param pos: the node position.
+        """
+        self.label.setPos(pos)
+
+    def setLabelText(self, text):
+        """
+        Set the label text.
+        :raise ParseError: if an invalid datatype is given.
+        :param text: the text value to set.
+        """
+        text = text.strip()
+        for datatype in XsdDatatype:
+            if datatype.value == text:
+                self.node.datatype = datatype
+                self.label.setText(datatype.value)
+                self.updateShape()
+                self.updateEdges()
+                return
+
+        # raise an error in case the given text doesn't match any XsdDatatype value
+        raise ParseError('invalid datatype supplied: %s' % text)
+
+    def updateLabelPos(self):
+        """
+        Update the label text position.
+        """
+        self.label.updatePos()
 
     ################################################### ITEM DRAWING ###################################################
 
@@ -187,21 +174,6 @@ class RoundedRect(QGraphicsRectItem, ShapeMixin):
 
         # Draw the text within the rectangle
         painter.setFont(QFont('Arial', 10, QFont.Light))
-        painter.setBrush(QColor(0, 0, 0))
         painter.drawText(rect, Qt.AlignCenter, 'xsd:string')
 
         return pixmap
-
-    def paint(self, painter, option, widget=None):
-        """
-        Paint the node in the graphic view.
-        :param painter: the active painter.
-        :param option: the style option for this item.
-        :param widget: the widget that is being painted on.
-        """
-        shapeBrush = self.shapeSelectedBrush if self.isSelected() else self.shapeBrush
-
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(shapeBrush)
-        painter.setPen(self.shapePen)
-        painter.drawRoundedRect(self.rect(), self.BorderRadius, self.BorderRadius)

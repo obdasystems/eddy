@@ -42,7 +42,7 @@ from pygraphol.functions import rangeF, snapPointToGrid
 from pygraphol.datatypes import DistinctList
 from pygraphol.items.nodes import Node
 from pygraphol.items.edges import Edge
-from pygraphol.items.nodes.shapes.common import Label as NodeLabel
+from pygraphol.items.nodes.shapes.common.label import Label as NodeLabel
 from pygraphol.items.edges.shapes.common import Label as EdgeLabel
 from pygraphol.tools import UniqueID
 

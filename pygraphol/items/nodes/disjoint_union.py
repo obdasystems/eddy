@@ -33,7 +33,7 @@
 
 
 from pygraphol.items.nodes import Node
-from pygraphol.items.nodes.shapes import Hexagon
+from pygraphol.items.nodes.shapes import DisjointUnionNodeShape
 
 
 class DisjointUnionNode(Node):
@@ -50,7 +50,7 @@ class DisjointUnionNode(Node):
         :param scene: the scene where this node is being added.
         """
         super().__init__(scene, **kwargs)
-        self.shape = Hexagon(item=self, rgb=(0, 0, 0), **kwargs)
+        self.shape = DisjointUnionNodeShape(item=self, **kwargs)
 
     ############################################ NODE REPRESENTATION ###################################################
 
@@ -60,4 +60,4 @@ class DisjointUnionNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return Hexagon.image(rgb=(0, 0, 0), **kwargs)
+        return DisjointUnionNodeShape.image(**kwargs)

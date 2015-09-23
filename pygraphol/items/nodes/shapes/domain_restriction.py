@@ -22,7 +22,7 @@
 #                                                                        #
 #  Graphol is developed by members of the DASI-lab group of the          #
 #  Dipartimento di Informatica e Sistemistica "A.Ruberti" at Sapienza    #
-#  University of Rome: http://www.dis.uniroma116t/~graphol/:             #
+#  University of Rome: http://www.dis.uniroma1.it/~graphol/:             #
 #                                                                        #
 #     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
 #     - Marco Console <console@dis.uniroma1.it>                          #
@@ -32,61 +32,45 @@
 ##########################################################################
 
 
-import re
-
 from functools import partial
 from pygraphol.commands import CommandNodeSquareChangeRestriction
 from pygraphol.datatypes import RestrictionType
-from pygraphol.exceptions import ParseError
-from pygraphol.items.nodes.shapes.common import Label
-from pygraphol.items.nodes.shapes.mixins import ShapeMixin
 from pygraphol.dialogs import CardinalityRestrictionForm
-from PyQt5.QtCore import Qt, QRectF, QPointF, QLineF
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap, QPen, QFont, QPolygonF, QPainterPath
-from PyQt5.QtWidgets import QGraphicsRectItem, QAction, QDialog
+from pygraphol.exceptions import ParseError
+from pygraphol.items.nodes.shapes.common.label import Label
+from pygraphol.items.nodes.shapes.common.square import Square
+from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtGui import QPixmap, QPainter, QFont, QColor, QIcon
+from PyQt5.QtWidgets import QAction, QDialog
 
 
-class Square(QGraphicsRectItem, ShapeMixin):
+class DomainRestrictionNodeShape(Square):
     """
-    This class implements a square which is used to render 'Domain' and 'Range' restriction nodes.
+    This class implements the 'Domain Restriction' node shape.
     """
-    shapeSide = 20.0
 
     def __init__(self, **kwargs):
         """
-        Initialize the square shape.
+        Initialize the Domain Restriction node shape.
         """
-         # remove some data from kwargs so the super() constructor doesn't complain
-        brush = QColor(*kwargs.pop('rgb', (252, 252, 252)))
-
-        super().__init__(**kwargs)
-
-        self.shapeBrush = brush
-
-        # intialize shape rectangle
-        self.setRect(Square.createRect(self.shapeSide, self.shapeSide))
-
-        # initialize node label with default text (default restriction)
+        super().__init__(brush=(252, 252, 252), **kwargs)
         self.label = Label(self.node.restriction.label, centered=False, editable=False, parent=self)
         self.label.updatePos()
 
-    ################################################## EVENT HANDLERS ##################################################
+    ################################################ AUXILIARY METHODS #################################################
 
-    def contextMenuEvent(self, menuEvent):
+    def contextMenu(self):
         """
-        Bring up the context menu for the given node.
-        :param menuEvent: the context menu event instance.
+        Returns the basic nodes context menu.
+        :rtype: QMenu
         """
-        scene = self.scene()
-        scene.clearSelection()
+        menu = super().contextMenu()
+        menu.addSeparator()
 
-        self.setSelected(True)
-
-        contextMenu = self.contextMenu()
-        contextMenu.addSeparator()
-
-        subMenu = contextMenu.addMenu('Select restriction')
+        subMenu = menu.addMenu('Select restriction')
         subMenu.setIcon(QIcon(':/icons/refresh'))
+
+        scene = self.scene()
 
         for restriction in RestrictionType:
             action = QAction(restriction.value, scene)
@@ -95,47 +79,51 @@ class Square(QGraphicsRectItem, ShapeMixin):
             action.triggered.connect(partial(self.updateRestriction, restriction=restriction))
             subMenu.addAction(action)
 
-        collection = self.label.contextMenuAdd()
-        if collection:
-            contextMenu.addSeparator()
-            for action in collection:
-                contextMenu.addAction(action)
+        return menu
 
-        contextMenu.exec_(menuEvent.screenPos())
+    ################################################## ACTION HANDLERS #################################################
 
-    ##################################################### GEOMETRY #####################################################
+    def updateRestriction(self, restriction):
+        """
+        Update the node restriction.
+        :param restriction: the restriction type.
+        """
+        scene = self.scene()
+        if restriction == RestrictionType.cardinality:
+            form = CardinalityRestrictionForm()
+            if form.exec_() == QDialog.Accepted:
+                cardinality = dict(min=form.minCardinalityValue, max=form.maxCardinalityValue)
+                scene.undoStack.push(CommandNodeSquareChangeRestriction(self.node, restriction, cardinality))
+        else:
+            scene.undoStack.push(CommandNodeSquareChangeRestriction(self.node, restriction))
 
-    def shape(self, *args, **kwargs):
-        """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addRect(self.rect())
-        return path
+    ################################################# LABEL SHORTCUTS ##################################################
 
-    ################################################# AUXILIARY METHODS ################################################
+    def labelPos(self):
+        """
+        Returns the current label position.
+        :rtype: QPointF
+        """
+        return self.label.pos()
 
-    @staticmethod
-    def createRect(shape_w, shape_h):
+    def labelText(self):
         """
-        Returns the initialized rect according to the given width/height.
-        :param shape_w: the shape width
-        :param shape_h: the shape height
-        :rtype: QRectF
+        Returns the label text.
+        :rtype: str
         """
-        return QRectF(-shape_w / 2, -shape_h / 2, shape_w, shape_h)
+        return self.label.text()
 
-    def height(self):
+    def setLabelPos(self, pos):
         """
-        Returns the height of the shape.
-        :rtype: int
+        Set the label position.
+        :param pos: the node position.
         """
-        return self.rect().height()
+        self.label.setPos(pos)
 
     def setLabelText(self, text):
         """
-        Set the label text (shortcut for self.label.setText).
+        Set the label text: will additionally parse the text value and set the restriction type accordingly.
+        :raise ParseError: if an invalid text value is supplied.
         :param text: the text value to set.
         """
         text = text.strip()
@@ -159,26 +147,11 @@ class Square(QGraphicsRectItem, ShapeMixin):
             else:
                 raise ParseError('invalid restriction supplied: %s' % text)
 
-    def updateRestriction(self, restriction):
+    def updateLabelPos(self):
         """
-        Update the node restriction.
-        :param restriction: the restriction type.
+        Update the label text position.
         """
-        scene = self.scene()
-        if restriction == RestrictionType.cardinality:
-            form = CardinalityRestrictionForm()
-            if form.exec_() == QDialog.Accepted:
-                cardinality = dict(min=form.minCardinalityValue, max=form.maxCardinalityValue)
-                scene.undoStack.push(CommandNodeSquareChangeRestriction(self.node, restriction, cardinality))
-        else:
-            scene.undoStack.push(CommandNodeSquareChangeRestriction(self.node, restriction))
-
-    def width(self):
-        """
-        Returns the width of the shape.
-        :rtype: int
-        """
-        return self.rect().width()
+        self.label.updatePos()
 
     ################################################### ITEM DRAWING ###################################################
 
@@ -197,8 +170,8 @@ class Square(QGraphicsRectItem, ShapeMixin):
         painter = QPainter(pixmap)
 
         # Draw the rectangle
-        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-        painter.setBrush(QColor(*kwargs['rgb']))
+        painter.setPen(Square.shapePen)
+        painter.setBrush(QColor(252, 252, 252))
         painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
         painter.drawRect(QRectF(-shape_w / 2, -shape_h / 2 + 6, shape_w, shape_h))
 
@@ -207,16 +180,3 @@ class Square(QGraphicsRectItem, ShapeMixin):
         painter.drawText(-28, -8, 'restriction type')
 
         return pixmap
-
-    def paint(self, painter, option, widget=None):
-        """
-        Paint the node in the graphic view.
-        :param painter: the active painter.
-        :param option: the style option for this item.
-        :param widget: the widget that is being painted on.
-        """
-        shapeBrush = self.shapeSelectedBrush if self.isSelected() else self.shapeBrush
-
-        painter.setBrush(shapeBrush)
-        painter.setPen(self.shapePen)
-        painter.drawRect(self.rect())

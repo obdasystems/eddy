@@ -359,11 +359,11 @@ class MainWindow(QMainWindow):
 
         pItem = Palette.Item('Predicate nodes', collapsed=False)
         pItem.addWidget(_w(ConceptNode, self.pGroup, nodes))
-        pItem.addWidget(_w(ValueDomainNode, self.pGroup, nodes))
         pItem.addWidget(_w(RoleNode, self.pGroup, nodes))
+        pItem.addWidget(_w(ValueDomainNode, self.pGroup, nodes))
         pItem.addWidget(_w(IndividualNode, self.pGroup, nodes))
-        pItem.addWidget(_w(AttributeNode, self.pGroup, nodes))
         pItem.addWidget(_w(ValueRestrictionNode, self.pGroup, nodes))
+        pItem.addWidget(_w(AttributeNode, self.pGroup, nodes))
 
         cItem = Palette.Item('Constructor nodes', collapsed=False)
         cItem.addWidget(_w(DomainRestrictionNode, self.cGroup, nodes))

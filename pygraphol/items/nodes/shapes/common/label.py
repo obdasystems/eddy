@@ -83,8 +83,9 @@ class Label(QGraphicsTextItem):
         cursor.select(QTextCursor.BlockUnderCursor)
         self.setTextCursor(cursor)
         if not self.commandEdit:
+            text = self.text()
             parent = self.parentItem()
-            self.commandEdit = CommandNodeLabelEdit(parent.node)
+            self.commandEdit = CommandNodeLabelEdit(node=parent.node, label=self, text=text)
         super().focusInEvent(focusEvent)
 
     def focusOutEvent(self, focusEvent):
@@ -93,17 +94,16 @@ class Label(QGraphicsTextItem):
         :param focusEvent: the focus event instance.
         """
         # make sure we have something in the label
-        if isEmpty(self.text()) or self.text() == self.defaultText:
+        if isEmpty(self.text()):
             self.setText(self.defaultText)
             self.updatePos()
 
         # push the edit command in the stack only if the label actually changed
-        if self.commandEdit and self.text() != self.commandEdit.old:
-            self.commandEdit.new = self.text()
+        if self.commandEdit and self.commandEdit.isTextChanged(self.text()):
+            self.commandEdit.end(self.text())
             scene = self.scene()
             scene.undoStack.push(self.commandEdit)
 
-        # clear label state
         self.commandEdit = None
         cursor = self.textCursor()
         cursor.clearSelection()
@@ -153,8 +153,6 @@ class Label(QGraphicsTextItem):
         """
         scene = self.scene()
         if scene.mode == scene.MoveItem:
-            # this is needed so the label outline will
-            # not appear when adding edges between nodes
             super().mousePressEvent(mouseEvent)
 
     def mouseMoveEvent(self, mouseEvent):
@@ -162,12 +160,12 @@ class Label(QGraphicsTextItem):
         Executed when the text is moved with the mouse.
         :param mouseEvent: the mouse event instance.
         """
+        parent = self.parentItem()
         scene = self.scene()
         if scene.mode == scene.MoveItem:
             super().mouseMoveEvent(mouseEvent)
             if not self.commandMove:
-                parent = self.parentItem()
-                self.commandMove = CommandNodeLabelMove(parent.node, self.moved)
+                self.commandMove = CommandNodeLabelMove(node=parent.node, label=self, moved=self.moved)
             self.moved = True
 
     def mouseReleaseEvent(self, mouseEvent):
@@ -179,13 +177,13 @@ class Label(QGraphicsTextItem):
         scene = self.scene()
         if scene.mode == scene.MoveItem:
             if self.commandMove:
-                self.commandMove.end()
+                self.commandMove.end(pos=self.pos())
                 scene.undoStack.push(self.commandMove)
         self.commandMove = None
 
-    ##################################################### GEOMETRY #####################################################
+    #################################################### GEOMETRY ######################################################
 
-    def shape(self, *args, **kwargs):
+    def shape(self):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
         :rtype: QPainterPath
@@ -224,12 +222,10 @@ class Label(QGraphicsTextItem):
         """
         b1 = self.boundingRect()
         b2 = self.parentItem().boundingRect()
-        # default to the center of the shape
         x = b2.center().x() - b1.width() / 2
         y = b2.center().y() - b1.height() / 2
         if not self.centered:
-            # move above the shape if that's the case
-            y -= b1.height() + 1.0
+            y -= b1.height() / 2 + 10
         return QPointF(x, y)
 
     def height(self):
@@ -238,6 +234,23 @@ class Label(QGraphicsTextItem):
         :rtype: int
         """
         return self.boundingRect().height()
+
+    def setPos(self, pos):
+        """
+        Set the label position updating the 'moved' flag accordingly.
+        :param pos: the node position.
+        """
+        moved_X = True
+        moved_Y = True
+        defaultPos = self.defaultPos()
+        if abs(pos.x() - defaultPos.x()) <= 1:
+            moved_X = False
+            pos.setX(defaultPos.x())
+        if abs(pos.y() - defaultPos.y()) <= 1:
+            moved_Y = False
+            pos.setY(defaultPos.y())
+        self.moved = moved_X or moved_Y
+        super().setPos(pos)
 
     def setText(self, text):
         """
@@ -275,9 +288,9 @@ class Label(QGraphicsTextItem):
         Reset the text position to the default value.
         """
         if self.flags() & QGraphicsItem.ItemIsMovable:
-            parent = self.parentItem()
-            command = CommandNodeLabelMove(parent.node, self.moved)
-            command.new = self.defaultPos()
             scene = self.scene()
+            parent = self.parentItem()
+            command = CommandNodeLabelMove(node=parent.node, label=self, moved=self.moved)
+            command.end(pos=self.defaultPos())
             scene.undoStack.push(command)
             self.updatePos()

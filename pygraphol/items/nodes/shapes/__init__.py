@@ -32,25 +32,40 @@
 ##########################################################################
 
 
-from pygraphol.items.nodes.shapes.diamond import Diamond
-from pygraphol.items.nodes.shapes.hexagon import Hexagon
-from pygraphol.items.nodes.shapes.octagon import Octagon
-from pygraphol.items.nodes.shapes.oval import Oval
-from pygraphol.items.nodes.shapes.rect import Rect
-from pygraphol.items.nodes.shapes.ring import Ring
-from pygraphol.items.nodes.shapes.rounded_rect import RoundedRect
-from pygraphol.items.nodes.shapes.square import Square
-from pygraphol.items.nodes.shapes.note import Note
+from pygraphol.items.nodes.shapes.attribute import AttributeNodeShape
+from pygraphol.items.nodes.shapes.complement import ComplementNodeShape
+from pygraphol.items.nodes.shapes.concept import ConceptNodeShape
+from pygraphol.items.nodes.shapes.datatype_restriction import DatatypeRestrictionNodeShape
+from pygraphol.items.nodes.shapes.disjoint_union import DisjointUnionNodeShape
+from pygraphol.items.nodes.shapes.domain_restriction import DomainRestrictionNodeShape
+from pygraphol.items.nodes.shapes.enumeration import EnumerationNodeShape
+from pygraphol.items.nodes.shapes.individual import IndividualNodeShape
+from pygraphol.items.nodes.shapes.intersection import IntersectionNodeShape
+from pygraphol.items.nodes.shapes.property_assertion import PropertyAssertionNodeShape
+from pygraphol.items.nodes.shapes.range_restriction import RangeRestrictionNodeShape
+from pygraphol.items.nodes.shapes.role import RoleNodeShape
+from pygraphol.items.nodes.shapes.role_chain import RoleChainNodeShape
+from pygraphol.items.nodes.shapes.role_inverse import RoleInverseNodeShape
+from pygraphol.items.nodes.shapes.union import UnionNodeShape
+from pygraphol.items.nodes.shapes.value_domain import ValueDomainNodeShape
+from pygraphol.items.nodes.shapes.value_restriction import ValueRestrictionNodeShape
 
 
 __all__ = [
-    'Diamond',
-    'Hexagon',
-    'Octagon',
-    'Oval',
-    'Rect',
-    'Ring',
-    'RoundedRect',
-    'Square',
-    'Note'
+    'AttributeNodeShape',
+    'ComplementNodeShape',
+    'ConceptNodeShape',
+    'DatatypeRestrictionNodeShape',
+    'DisjointUnionNodeShape',
+    'DomainRestrictionNodeShape',
+    'EnumerationNodeShape',
+    'IndividualNodeShape',
+    'IntersectionNodeShape',
+    'PropertyAssertionNodeShape',
+    'RoleInverseNodeShape',
+    'RoleNodeShape',
+    'RoleChainNodeShape',
+    'UnionNodeShape',
+    'ValueDomainNodeShape',
+    'ValueRestrictionNodeShape',
 ]

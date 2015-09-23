@@ -33,7 +33,7 @@
 
 
 from pygraphol.items.nodes import Node
-from pygraphol.items.nodes.shapes import Diamond
+from pygraphol.items.nodes.shapes import RoleNodeShape
 
 
 class RoleNode(Node):
@@ -50,7 +50,7 @@ class RoleNode(Node):
         :param scene: the scene where this node is being added.
         """
         super().__init__(scene, **kwargs)
-        self.shape = Diamond(item=self, **kwargs)
+        self.shape = RoleNodeShape(item=self, **kwargs)
 
     ############################################ NODE REPRESENTATION ###################################################
 
@@ -60,4 +60,4 @@ class RoleNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return Diamond.image(**kwargs)
+        return RoleNodeShape.image(**kwargs)

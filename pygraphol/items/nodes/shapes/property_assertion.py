@@ -32,27 +32,53 @@
 ##########################################################################
 
 
-from pygraphol.items.nodes import Node
-from pygraphol.items.nodes.shapes import ConceptNodeShape
+from pygraphol.items.nodes.shapes.common.oval import Oval
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
 
-class ConceptNode(Node):
+class PropertyAssertionNodeShape(Oval):
     """
-    This class implements the 'Concept' node.
+    This class implements the 'Property Assertion' node shape.
     """
-    name = 'concept'
-    xmlname = 'concept'
-    type = Node.ConceptNode
 
-    def __init__(self, scene, **kwargs):
-        """
-        Initialize the 'Concept' node.
-        :param scene: the scene where this node is being added.
-        """
-        super().__init__(scene, **kwargs)
-        self.shape = ConceptNodeShape(item=self, **kwargs)
+    ################################################# LABEL SHORTCUTS ##################################################
 
-    ############################################ NODE REPRESENTATION ###################################################
+    def labelPos(self):
+        """
+        Returns the current label position.
+        :rtype: QPointF
+        """
+        pass
+
+    def labelText(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        pass
+
+    def setLabelPos(self, pos):
+        """
+        Set the label position.
+        :param pos: the node position.
+        """
+        pass
+
+    def setLabelText(self, text):
+        """
+        Set the label text.
+        :param text: the text value to set.
+        """
+        pass
+
+    def updateLabelPos(self):
+        """
+        Update the label text position.
+        """
+        pass
+
+    ################################################### ITEM DRAWING ###################################################
 
     @classmethod
     def image(cls, **kwargs):
@@ -60,4 +86,24 @@ class ConceptNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return ConceptNodeShape.image(**kwargs)
+        shape_w = 50
+        shape_h = 30
+        bRadius = 14
+
+        # Initialize the pixmap
+        pixmap = QPixmap(kwargs['w'], kwargs['h'])
+        pixmap.fill(Qt.transparent)
+
+        painter = QPainter(pixmap)
+
+        # Initialize the shape
+        rect = Oval.createRect(shape_w, shape_h)
+
+        # Draw the rectangle
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin))
+        painter.setBrush(QColor(252, 252, 252))
+        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
+        painter.drawRoundedRect(rect, bRadius, bRadius)
+
+        return pixmap

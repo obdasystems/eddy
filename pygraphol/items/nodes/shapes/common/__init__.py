@@ -30,34 +30,3 @@
 #     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
 #                                                                        #
 ##########################################################################
-
-
-from pygraphol.items.nodes import Node
-from pygraphol.items.nodes.shapes import ConceptNodeShape
-
-
-class ConceptNode(Node):
-    """
-    This class implements the 'Concept' node.
-    """
-    name = 'concept'
-    xmlname = 'concept'
-    type = Node.ConceptNode
-
-    def __init__(self, scene, **kwargs):
-        """
-        Initialize the 'Concept' node.
-        :param scene: the scene where this node is being added.
-        """
-        super().__init__(scene, **kwargs)
-        self.shape = ConceptNodeShape(item=self, **kwargs)
-
-    ############################################ NODE REPRESENTATION ###################################################
-
-    @classmethod
-    def image(cls, **kwargs):
-        """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
-        """
-        return ConceptNodeShape.image(**kwargs)
