@@ -64,7 +64,7 @@ class Note(AbstractResizableNodeShape):
         :param height: the shape height.
         """
         super().__init__(**kwargs)
-        self.polygon = Note.createPolygon(max(width, self.minW), max(height, self.minH))
+        self.polygon = Note.createPolygon(max(width, self.minW), max(height, self.minH), self.foldSize)
         self.updateHandlesPos()
 
     ##################################################### GEOMETRY #####################################################
