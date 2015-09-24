@@ -43,10 +43,6 @@ class Label(QGraphicsTextItem):
     """
     This class implements the label to be attached to the graph shapes.
     """
-
-    textBrush = QColor(0, 0, 0, 255)
-    textFont = QFont('Arial', 9, QFont.Light)
-
     def __init__(self, default='', centered=True, movable=True, editable=True, parent=None):
         """
         Initialize the label.
@@ -67,8 +63,8 @@ class Label(QGraphicsTextItem):
         self.setFlag(QGraphicsItem.ItemIsMovable, self.movable)
         self.setFlag(QGraphicsItem.ItemIsSelectable, self.movable)
         self.setFlag(QGraphicsItem.ItemIsFocusable, self.editable)
-        self.setDefaultTextColor(self.textBrush)
-        self.setFont(self.textFont)
+        self.setDefaultTextColor(QColor(0, 0, 0, 255))
+        self.setFont(QFont('Arial', 12, QFont.Light))
         self.setText(self.defaultText)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
 
