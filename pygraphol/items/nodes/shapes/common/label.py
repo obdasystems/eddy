@@ -129,7 +129,17 @@ class Label(QGraphicsTextItem):
         Executed when a key is pressed.
         :param keyEvent: the key press event.
         """
-        super().keyPressEvent(keyEvent)
+        if keyEvent.key() in {Qt.Key_Enter, Qt.Key_Return}:
+            # enter has been pressed: allow insertion of a newline
+            # character only if the shift modifier is being held
+            if keyEvent.modifiers() & Qt.ShiftModifier:
+                super().keyPressEvent(keyEvent)
+            else:
+                self.setSelected(False)
+                self.clearFocus()
+        else:
+            # normal key press so allow insertion
+            super().keyPressEvent(keyEvent)
         self.updatePos()
 
     def mouseDoubleClickEvent(self, mouseEvent):
