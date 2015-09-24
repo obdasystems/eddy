@@ -41,7 +41,7 @@ from PyQt5.QtWidgets import QGraphicsItem, QMenu
 
 class AbstractNodeShape(QGraphicsItem):
     """
-    This is the base class for all the shape nodes.
+    This is the base class for all the node shapes.
     """
     shapeBrush = QColor(252, 252, 252)
     shapeBrushSelected = QColor(251, 255, 148)
@@ -182,23 +182,22 @@ class AbstractNodeShape(QGraphicsItem):
         """
         raise NotImplementedError('method `height` must be implemented in inherited class')
 
-    def intersections(self, line):
+    def intersection(self, line):
         """
-        Returns the intersections of the shape with the given line (in scene coordinates).
+        Returns the intersection of the shape with the given line (in scene coordinates).
         :param line: the line whose intersection needs to be calculated (in scene coordinates).
-        :rtype: tuple
+        :rtype: QPointF
         """
+        intersection = QPointF()
         path = self.painterPath()
         polygon = self.mapToScene(path.toFillPolygon(self.transform()))
-        collection = []
 
         for i in range(0, polygon.size() - 1):
-            point = QPointF()
             polyline = QLineF(polygon[i], polygon[i + 1])
-            if polyline.intersect(line, point) == QLineF.BoundedIntersection:
-                collection.append(point)
+            if polyline.intersect(line, intersection) == QLineF.BoundedIntersection:
+                return intersection
 
-        return collection
+        return None
 
     def setAnchor(self, edge, pos):
         """
