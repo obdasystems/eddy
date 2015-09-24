@@ -55,15 +55,11 @@ Pane Head.normal {
     color: #000000;
     background: #B0BEC5;
     border: 1px solid #263238;
-    border-radius: 2px;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
 }
 Pane Head.collapsed {
     color: #000000;
     background: #B0BEC5;
     border: 1px solid #263238;
-    border-radius: 2px;
 }
 Pane Body {
     background: #FFFFFF;
@@ -100,18 +96,14 @@ QTabBar::tab:top {
     color: #000000;
     background: #B0BEC5;
     border: 1px solid #263238;
-    border-radius: 2px;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+    border-radius: 0;
     padding: 2px;
 }
 QTabBar::tab:top:!selected {
     color: #000000;
     background: transparent;
     border: 1px solid #263238;
-    border-radius: 2px;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+    border-radius: 0;
     padding: 2px;
 }
 
