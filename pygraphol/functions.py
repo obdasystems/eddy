@@ -42,6 +42,17 @@ from PyQt5.QtGui import QPixmap, QPainter
 from PyQt5.QtWidgets import QLayout
 
 
+def angleP(p1, p2):
+    """
+    Returns the angle of the line connecting the given points.
+    NOTE: the Y axis on Qt is inverted (increas down, decrease up)
+    :param p1: the first point.
+    :param p2: the second point.
+    :rtype: float
+    """
+    return math.atan2(p1.y() - p2.y(), p2.x() - p1.x())
+
+
 def clamp(val, minval=None, maxval=None):
     """
     Returns a copy of val making sure it fits the bound.

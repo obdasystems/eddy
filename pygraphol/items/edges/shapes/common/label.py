@@ -32,8 +32,8 @@
 ##########################################################################
 
 
-from math import sin, cos, radians, pi as M_PI
-from pygraphol.functions import midpoint
+from math import sin, cos, pi as M_PI
+from pygraphol.functions import midpoint, angleP
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QFont, QColor, QPainterPath
 from PyQt5.QtWidgets import QGraphicsTextItem
@@ -43,25 +43,23 @@ class Label(QGraphicsTextItem):
     """
     This class implements the label to be attached to the graph edges.
     """
-    textBrush = QColor(0, 0, 0, 255)
-    textFont = QFont('Arial', 9, QFont.Light)
-
     def __init__(self, text='', parent=None):
         """
         Initialize the label.
+        :param text: the text to be rendered on the label.
         :param parent: the parent node.
         """
         super().__init__(parent)
         self.moved = False
         self.command = None
-        self.setDefaultTextColor(self.textBrush)
-        self.setFont(self.textFont)
+        self.setDefaultTextColor(QColor(0, 0, 0, 255))
+        self.setFont(QFont('Arial', 12, QFont.Light))
         self.setText(text)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
 
     ##################################################### GEOMETRY #####################################################
 
-    def shape(self, *args, **kwargs):
+    def shape(self):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
         :rtype: QPainterPath
@@ -79,59 +77,6 @@ class Label(QGraphicsTextItem):
         """
         return self.boundingRect().center()
 
-    def defaultPos(self):
-        """
-        Returns the label default position.
-        :rtype: QPointF
-        """
-        parent = self.parentItem()
-        if not parent.path:
-            # which happens when the Edge is first created before updateEdge is called
-            return None
-
-        if len(parent.path) % 2 == 0:
-
-            # if we have an even number of subpaths compute the position
-            # of the label according the breakpoint in the middle (eventually
-            # adjusting the distance of the label form the subpath not to overlap text)
-            middleP = parent.breakpoints[int(len(parent.breakpoints) / 2)]
-            middleP = QPointF(middleP.x() - (self.width() / 2), middleP.y() - (self.height() / 2))
-
-            # get the subpaths which have the selected breakpoint in common
-            subpath1 = parent.path[int(len(parent.path) / 2) - 1]
-            subpath2 = parent.path[int(len(parent.path) / 2)]
-
-            spaceX1 = 0
-            spaceX2 = 0
-            spaceY = -16
-
-            # compute the required space factors
-            angle = radians(subpath1.line.angleTo(subpath2.line))
-            if angle < M_PI:
-                # FIXME: THIS NEEDS SEVERAL IMPROVEMENTS!!
-                spaceX1 = -80 * sin(radians(subpath1.line.angle()))
-                spaceX2 = -80 * sin(radians(subpath2.line.angle()))
-                spaceY += spaceY * sin(angle) * 1.8
-
-            return QPointF(middleP.x() + spaceX1 + spaceX2, middleP.y() + spaceY)
-
-        else:
-            # if we have an odd number of subpaths compute the position of the label
-            # according to the center point of the subpath in the middle (eventually
-            # adjusting the distance of the label form the subpath not to overlap text)
-            subpath = parent.path[int(len(parent.path) / 2)]
-            sourceP = subpath.p1()
-            targetP = subpath.p2()
-            middleP = midpoint(sourceP, targetP) - QPointF((self.width() / 2), (self.height() / 2))
-
-            # spaces to be added to the position of the label according the the subpath angle
-            spaceX = -40
-            spaceY = -16
-
-            # increment the distance from the edge subpath according the angle
-            return QPointF(middleP.x() + spaceX * sin(radians(subpath.line.angle())),
-                           middleP.y() + spaceY * cos(radians(subpath.line.angle())))
-
     def height(self):
         """
         Returns the height of the text label.
@@ -145,7 +90,6 @@ class Label(QGraphicsTextItem):
         :param text: the text value to set.
         """
         self.setPlainText(text)
-        self.updatePos()
 
     def text(self):
         """
@@ -154,11 +98,50 @@ class Label(QGraphicsTextItem):
         """
         return self.toPlainText()
 
-    def updatePos(self):
+    def updatePos(self, points):
         """
         Update the current text position with respect to the shape.
+        :param points: a list of points defining the edge of this label.
         """
-        self.setPos(self.defaultPos() or self.pos())
+        if not points:
+            return
+
+        if len(points) % 2 == 0:
+
+            # if we have an even number of points, compute the position of the label
+            # according to the middle point of the subpath connecting the middle points
+            p1 = points[int(len(points) / 2) - 1]
+            p2 = points[int(len(points) / 2)]
+
+            mid = midpoint(p1, p2) - QPointF((self.width() / 2), (self.height() / 2))
+            rad = angleP(p1, p2)
+
+            spaceX = -40
+            spaceY = -16
+
+            self.setPos(QPointF(mid.x() + spaceX * sin(rad), mid.y() + spaceY * cos(rad)))
+
+        else:
+
+            # if we have an even number of points compute the
+            # position of the label according the point in the middle
+            mid1 = points[int(len(points) / 2)] # without adding the width/height offset
+            mid2 = mid1 - QPointF((self.width() / 2), (self.height() / 2)) # used for the final positioning
+
+            rad1 = angleP(points[int(len(points) / 2) - 1], mid1)
+            rad2 = angleP(mid1, points[int(len(points) / 2) + 1])
+            diff = rad2 - rad1
+
+            spaceX1 = 0
+            spaceX2 = 0
+            spaceY = -16
+
+            if 0 < diff < M_PI:
+                spaceX1 = -80 * sin(rad1)
+                spaceX2 = -80 * sin(rad2)
+                spaceY += spaceY * sin(diff) * 1.8
+
+            self.setPos(QPointF(mid2.x() + spaceX1 + spaceX2, mid2.y() + spaceY))
 
     def width(self):
         """

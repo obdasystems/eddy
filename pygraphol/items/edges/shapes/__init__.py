@@ -32,13 +32,12 @@
 ##########################################################################
 
 
-from pygraphol.items.edges.shapes.arrow import Arrow
-from pygraphol.items.edges.shapes.squared_arrow import SquaredArrow
-from pygraphol.items.edges.shapes.named_arrow import NamedArrow
-
+from pygraphol.items.edges.shapes.inclusion import InclusionEdgeShape
+from pygraphol.items.edges.shapes.input import InputEdgeShape
+from pygraphol.items.edges.shapes.instance_of import InstanceOfEdgeShape
 
 __all__ = [
-    'Arrow',
-    'SquaredArrow',
-    'NamedArrow'
+    'InclusionEdgeShape',
+    'InputEdgeShape',
+    'InstanceOfEdgeShape',
 ]

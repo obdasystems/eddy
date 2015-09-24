@@ -33,7 +33,7 @@
 
 
 from pygraphol.items.edges import Edge
-from pygraphol.items.edges.shapes import NamedArrow
+from pygraphol.items.edges.shapes import InstanceOfEdgeShape
 
 
 class InstanceOfEdge(Edge):
@@ -44,13 +44,15 @@ class InstanceOfEdge(Edge):
     xmlname = 'instance-of'
     type = Edge.InstanceOfEdge
 
-    def __init__(self, scene, **kwargs):
+    def __init__(self, scene, source, target=None, **kwargs):
         """
-        Initialize the instanceOf edge.
+        Initialize the node.
         :param scene: the scene where this edge is being added.
+        :param source: the edge source node.
+        :param target: the edge target node (if any).
         """
-        super().__init__(scene, **kwargs)
-        self.shape = NamedArrow(item=self, name='instanceOf', **kwargs)
+        super().__init__(scene, source, target, **kwargs)
+        self.shape = InstanceOfEdgeShape(item=self, name='instanceOf', **kwargs)
 
     ############################################ EDGE REPRESENTATION ###################################################
 
@@ -60,4 +62,4 @@ class InstanceOfEdge(Edge):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return NamedArrow.image(name='instanceOf', **kwargs)
+        return InstanceOfEdgeShape.image(name='instanceOf', **kwargs)

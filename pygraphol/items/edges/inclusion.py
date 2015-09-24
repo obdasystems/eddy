@@ -33,7 +33,7 @@
 
 
 from pygraphol.items.edges import Edge
-from pygraphol.items.edges.shapes import Arrow
+from pygraphol.items.edges.shapes import InclusionEdgeShape
 
 
 class InclusionEdge(Edge):
@@ -44,13 +44,15 @@ class InclusionEdge(Edge):
     xmlname = 'inclusion'
     type = Edge.InclusionEdge
 
-    def __init__(self, scene, **kwargs):
+    def __init__(self, scene, source, target=None, **kwargs):
         """
-        Initialize the inclusion edge.
+        Initialize the node.
         :param scene: the scene where this edge is being added.
+        :param source: the edge source node.
+        :param target: the edge target node (if any).
         """
-        super().__init__(scene, **kwargs)
-        self.shape = Arrow(item=self, **kwargs)
+        super().__init__(scene, source, target, **kwargs)
+        self.shape = InclusionEdgeShape(item=self, **kwargs)
         self.complete = False
 
     ############################################ EDGE REPRESENTATION ###################################################
@@ -61,4 +63,4 @@ class InclusionEdge(Edge):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return Arrow.image(**kwargs)
+        return InclusionEdgeShape.image(**kwargs)

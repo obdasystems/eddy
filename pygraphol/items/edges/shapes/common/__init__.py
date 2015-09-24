@@ -30,37 +30,3 @@
 #     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
 #                                                                        #
 ##########################################################################
-
-
-from pygraphol.items.edges import Edge
-from pygraphol.items.edges.shapes import InputEdgeShape
-
-
-class InputEdge(Edge):
-    """
-    This class implements the Input node.
-    """
-    name = 'input'
-    xmlname = 'input'
-    type = Edge.InputEdge
-
-    def __init__(self, scene, source, target=None, **kwargs):
-        """
-        Initialize the node.
-        :param scene: the scene where this edge is being added.
-        :param source: the edge source node.
-        :param target: the edge target node (if any).
-        """
-        super().__init__(scene, source, target, **kwargs)
-        self.shape = InputEdgeShape(item=self, **kwargs)
-        self.functionality = False
-
-    ############################################ EDGE REPRESENTATION ###################################################
-
-    @classmethod
-    def image(cls, **kwargs):
-        """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
-        """
-        return InputEdgeShape.image(**kwargs)

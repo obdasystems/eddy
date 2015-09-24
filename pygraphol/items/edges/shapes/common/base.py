@@ -32,138 +32,49 @@
 ##########################################################################
 
 
-import math
-
 from functools import partial
 from pygraphol.commands import CommandEdgeAnchorMove
 from pygraphol.commands import CommandEdgeBreakpointAdd, CommandEdgeBreakpointMove, CommandEdgeBreakpointDel
-from pygraphol.functions import distance
+from pygraphol.functions import distanceP, distanceL
 from PyQt5.QtCore import QPointF, Qt, QLineF, QRectF
-from PyQt5.QtGui import QPolygonF, QPainter, QPen, QColor, QPainterPath, QIcon
+from PyQt5.QtGui import QPolygonF, QPen, QColor, QIcon, QPainterPath
 from PyQt5.QtWidgets import QGraphicsItem, QMenu, QAction
 
 
-class SubPath(object):
+class AbstractEdgeShape(QGraphicsItem):
     """
-    This class is used to store edge subpath data.
+    This is the base class for all the edge shapes.
     """
-    # selection box size
-    size = 6.0
-
-    def __init__(self, source, target):
-        """
-        Initialize the edge subpath.
-        :type source: QPointF
-        :type target: QPointF
-        :param source: the source point.
-        :param target: the end point.
-        """
-        # store locally source and target points
-        self.source = source
-        self.target = target
-
-        # create the edge subpath line
-        self.line = QLineF(self.source, self.target)
-
-        aa = self.line.angle() * math.pi / 180
-        dx = self.size / 2 * math.sin(aa)
-        dy = self.size / 2 * math.cos(aa)
-        p1 = QPointF(+dx, +dy)
-        p2 = QPointF(-dx, -dy)
-
-        # create the edge subpath selection box
-        self.selection = QPolygonF([self.p1() + p1, self.p1() + p2, self.p2() + p2, self.p2() + p1])
-
-    def distance(self, point):
-        """
-        Returns a tuple containing the distance between the subpath and the given point, and the intersection point.
-        :type point: QPointF
-        :param point: the point from which to compute the distance/intersection.
-        :rtype: tuple
-        """
-        x1 = self.line.x1()
-        y1 = self.line.y1()
-        x2 = self.line.x2()
-        y2 = self.line.y2()
-        x3 = point.x()
-        y3 = point.y()
-
-        kk = ((y2 - y1) * (x3 - x1) - (x2 - x1) * (y3 - y1)) / (math.pow(y2 - y1, 2) + math.pow(x2 - x1, 2))
-        x4 = x3 - kk * (y2 - y1)
-        y4 = y3 + kk * (x2 - x1)
-
-        p1 = QPointF(x3, y3)
-        p2 = QPointF(x4, y4)
-
-        return distance(p1, p2), p2
-
-    def p1(self):
-        """
-        Convenience method which returns the source point of the subpath.
-        :rtype: QPointF
-        """
-        return self.source
-
-    def p2(self):
-        """
-        Convenience method which returns the target point of the subpath.
-        :rtype: QPointF
-        """
-        return self.target
-
-    def shape(self, *args, **kwargs):
-        """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.moveTo(self.p1())
-        path.lineTo(self.p2())
-        return path
-
-
-class BaseEdge(QGraphicsItem):
-    """
-    Base class for all the Edge shapes.
-    """
-    size = 12.0
-
-    handleSize = +8.0
     handleBrush = QColor(79, 195, 247, 255)
     handlePen = QPen(QColor(0, 0, 0, 255), 1.0, Qt.SolidLine)
+    handleSize = 8
 
-    headPen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-    headBrush = QColor(0, 0, 0)
+    edgePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
 
-    linePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-
-    selectionPen = QPen(QColor(251, 255, 148), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     selectionBrush = QColor(251, 255, 148)
+    selectionSize = 6
 
-    tailPen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-    tailBrush = QColor(0, 0, 0)
-
-    def __init__(self, item, **kwargs):
+    def __init__(self, item, breakpoints=None, **kwargs):
         """
-        Initialize the arrow shape.
+        Initialize the shape.
         :param item: the edge attached to this shape.
+        :param breakpoints: the breakpoints of this edge.
         """
         self.item = item
         self.head = QPolygonF()
-        self.tail = None
-        self.breakpoints = kwargs.pop('breakpoints', [])
+        self.breakpoints = breakpoints or []
         self.handles = {}
         self.anchors = {}
-        self.path = []
+
+        self.path = QPainterPath()
+        self.selection = QPainterPath()
 
         self.command = None
         self.mousePressPos = None
-        self.selectedAP = None  # will hold the selected anchor point key (if any) [key is a reference to a node shape]
-        self.selectedBP = None  # will hold the selected breakpoint index (if any) [key is an integer]
+        self.selectedAP = None
+        self.selectedBP = None
 
         kwargs.pop('id', None)
-        kwargs.pop('source', None)
-        kwargs.pop('target', None)
 
         super().__init__(**kwargs)
 
@@ -189,8 +100,11 @@ class BaseEdge(QGraphicsItem):
         Bring up the context menu for the given node.
         :param menuEvent: the context menu event instance.
         """
-        self.scene().clearSelection()
+        scene = self.scene()
+        scene.clearSelection()
+
         self.setSelected(True)
+
         contextMenu = self.contextMenu(menuEvent.pos())
         contextMenu.exec_(menuEvent.screenPos())
 
@@ -299,13 +213,13 @@ class BaseEdge(QGraphicsItem):
             self.command = CommandEdgeAnchorMove(edge=self.edge, shape=shape)
         
         pos = None
-        scene = self.scene()
         path = self.mapFromItem(shape, shape.painterPath())
+        scene = self.scene()
         mousePos = scene.snapToGrid(mousePos)
         if path.contains(mousePos):
             epsilon = 10.0
             magnet = self.mapFromItem(shape, shape.center())
-            pos = magnet if distance(mousePos, magnet) < epsilon else mousePos
+            pos = magnet if distanceP(mousePos, magnet) < epsilon else mousePos
         else:
             # still move the anchor but make sure it stays on the border of the shape
             p1 = QPointF(mousePos.x(), self.mousePressPos.y())
@@ -325,23 +239,26 @@ class BaseEdge(QGraphicsItem):
     def breakpointAdd(self, mousePos):
         """
         Create a new breakpoint from the given mouse position.
-        :param mousePos: the position from where to create the breakpoint.
-        :return: the index of the new breakpoint
+        :param mousePos: the position where to create the breakpoint.
+        :return: the index of the new breakpoint.
+        :rtype: int
         """
         index = 0
         point = None
         between = None
-        shortest = SubPath.size
+        shortest = self.selectionSize
 
-        # calculate the shortest distance between the click point
-        # and all the subpaths od the edge in order to estimate
-        # which subpath needs to be splitted by the new breakpoint
-        for subpath in self.path:
-            dis, pos = subpath.distance(mousePos)
+        source = self.edge.source.shape.anchor(self)
+        target = self.edge.target.shape.anchor(self)
+        points = [source] + self.breakpoints + [target]
+
+        # estimate between which breakpoints the new one is being added
+        for subpath in (QLineF(points[i], points[i + 1]) for i in range(len(points) - 1)):
+            dis, pos = distanceL(subpath, mousePos)
             if dis < shortest:
                 point = pos
                 shortest = dis
-                between = subpath.source, subpath.target
+                between = subpath.p1(), subpath.p2()
 
         # if there is no breakpoint the new one will be appended
         for i in range(len(self.breakpoints)):
@@ -406,8 +323,10 @@ class BaseEdge(QGraphicsItem):
         """
         if self.edge.target:
 
-            sourcePath = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.painterPath())
-            targetPath = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.painterPath())
+            sourceNode = self.edge.source.shape
+            sourcePath = self.mapFromItem(sourceNode, sourceNode.painterPath())
+            targetNode = self.edge.target.shape
+            targetPath = self.mapFromItem(targetNode, targetNode.painterPath())
 
             if sourcePath.intersects(targetPath):
 
@@ -420,13 +339,31 @@ class BaseEdge(QGraphicsItem):
                 for point in self.breakpoints:
                     # loop through all the breakpoints: if there is at least one breakpoint
                     # which is not inside the connected shapes then draw the edges
-                    if not self.edge.source.shape.contains(self.mapToItem(self.edge.source.shape, point)) and \
-                       not self.edge.target.shape.contains(self.mapToItem(self.edge.target.shape, point)):
+                    if not sourceNode.contains(self.mapToItem(sourceNode, point)) and \
+                       not targetNode.contains(self.mapToItem(targetNode, point)):
                         return True
 
                 return False
 
         return True
+
+    def computePath(self, sourceNode, targetNode, points):
+        """
+        Returns a list of QLineF instance representing all the visible edge pieces.
+        Subpaths which are obscured by the source or target shape are excluded by this method.
+        :param sourceNode: the source node shape.
+        :param targetNode: the target node shape.
+        :param points: a list of points composing the edge path.
+        :rtype: list
+        """
+        # get the source node painter path (the source node is always available)
+        sourcePP = self.mapFromItem(sourceNode, sourceNode.painterPath())
+        targetPP = self.mapFromItem(targetNode, targetNode.painterPath()) if targetNode else None
+
+        # exclude all the "subpaths" which are not visible (obscured by the shapes)
+        return [x for x in (QLineF(points[i], points[i + 1]) for i in range(len(points) - 1)) \
+                    if (not sourcePP.contains(x.p1()) or not sourcePP.contains(x.p2())) and \
+                       (not targetPP or (not targetPP.contains(x.p1()) or not targetPP.contains(x.p2())))]
 
     def contextMenu(self, pos):
         """
@@ -443,63 +380,7 @@ class BaseEdge(QGraphicsItem):
             menu.addAction(self.scene().actionItemDelete)
         return menu
 
-    def intersections(self, shape):
-        """
-        Returns the intersections with the given shape: the return value is a list of tuples where
-        the first element of each tuple represents the index of the subpath where the intersection
-        happened and the second point is the intersected point in scene coordinates.
-        :param shape: the shape whose intersection needs to be calculated.
-        :rtype: list
-        """
-        collection = []
-        for i in range(len(self.path)):
-            subpath = self.path[i]
-            subline = subpath.line
-            for pos in shape.intersections(subline):
-                collection.append((i, pos))
-        return collection
-
-    ##################################################### GEOMETRY #####################################################
-
-    def boundingRect(self):
-        """
-        Returns the shape bounding rect.
-        :rtype: QRectF
-        """
-        p1 = QPointF(0, 0)
-        p2 = QPointF(0, 0)
-
-        listX = []
-        listY = []
-
-        for subpath in self.path:
-            for point in subpath.selection:
-                listX.append(point.x())
-                listY.append(point.y())
-
-        for rect in self.anchors.values():
-            listX.append(rect.left())
-            listX.append(rect.right())
-            listY.append(rect.top())
-            listY.append(rect.bottom())
-
-        if listX and listY:
-            p1.setX(min(listX))
-            p1.setY(min(listY))
-            p2.setX(max(listX))
-            p2.setY(max(listY))
-
-        return QRectF(p1, p2)
-
     ################################################# GEOMETRY UPDATE ##################################################
-
-    def updateEdge(self, target=None):
-        """
-        Update the Edge line.
-        :type target: QPointF
-        :param target: the Edge new end point (when there is no endNode attached yet).
-        """
-        raise NotImplementedError('method `updateEdge` must be implemented in inherited class')
 
     def updateAnchors(self):
         """
@@ -520,153 +401,26 @@ class BaseEdge(QGraphicsItem):
         points = self.breakpoints
         self.handles = {points.index(p): QRectF(p.x() - size / 2, p.y() - size / 2, size, size) for p in points}
 
-    def updateHead(self):
-        """
-        Update the Edge head polygon.
-        """
-        raise NotImplementedError('method `updateHead` must be implemented in inherited class')
-
-    def updatePath(self, target=None):
-        """
-        Update edge path according to the source/target nodes and breakpoints.
-        :type target: QPointF
-        :param target: the endpoint of this edge.
-        """
-        source = self.edge.source.shape.anchor(self)
-        target = target or self.edge.target.shape.anchor(self)
-        points = [source] + self.breakpoints + [target]
-
-        # get the source node painter path (the source node is always available)
-        sourcePP = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.shape())
-
-        targetPP = None
-        if self.edge.target:
-            # get the target node painter path (not always available)
-            targetPP = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.shape())
-
-        # will contain a list of subpaths which needs to be drawn
-        cleanpath = []
-
-        # iterate over the edge raw path excluding subpaths which are not visible
-        for subpath in [SubPath(points[i], points[i + 1]) for i in range(len(points) - 1)]:
-            subpathPP = subpath.shape()
-            if not sourcePP.contains(subpathPP):
-                if not targetPP or not targetPP.contains(targetPP):
-                    cleanpath.append(subpath)
-
-        # clear current path
-        self.path = []
-
-        if len(cleanpath) == 1:
-
-            # we have only one subpath visible which is connecting source and target nodes (target node
-            # is actually optional since we may be in the situation when we are first drawing the edge)
-            subpath = cleanpath[0]
-            collection = self.edge.source.shape.intersections(subpath.line)
-            if collection:
-                distanceTo = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.center())
-                p1 = max(collection, key=lambda x: distance(x, distanceTo))
-                if self.edge.target:
-                    # calculate the intersection point with the target shape
-                    collection = self.edge.target.shape.intersections(subpath.line)
-                    if collection:
-                        distanceTo = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.center())
-                        p2 = max(collection, key=lambda x: distance(x, distanceTo))
-                        self.path.append(SubPath(p1, p2))
-                else:
-                    # use subpath endpoint
-                    self.path.append(SubPath(p1, subpath.p2()))
-
-        elif len(cleanpath) > 1:
-
-            # compute the path from the source node
-            subpath1 = cleanpath[0]
-            collection = self.edge.source.shape.intersections(subpath1.line)
-            if collection:
-                distanceTo = self.mapFromItem(self.edge.source.shape, self.edge.source.shape.center())
-                p1 = max(collection, key=lambda x: distance(x, distanceTo))
-                self.path.append(SubPath(p1, subpath1.p2()))
-
-                # add middle paths
-                for subpath in cleanpath[1:-1]:
-                    self.path.append(subpath)
-
-                # compute the path from the target node
-                subpathN = cleanpath[-1]
-                collection = self.edge.target.shape.intersections(subpathN.line)
-                if collection:
-                    distanceTo = self.mapFromItem(self.edge.target.shape, self.edge.target.shape.center())
-                    p2 = max(collection, key=lambda x: distance(x, distanceTo))
-                    self.path.append(SubPath(subpathN.p1(), p2))
-
-    def updateTail(self):
-        """
-        Update the Edge tail line.
-        """
-        pass
-
     def updateZValue(self):
         """
         Update the edge Z value making sure it stays above source and target shapes (and respective labels).
         """
         source = self.edge.source.shape
         zValue = source.zValue() + 0.1
-        if source.label:
+        if hasattr(source, 'label'):
             zValue = max(zValue, source.label.zValue())
 
         if self.edge.target:
             target = self.edge.target.shape
             zValue = max(zValue, target.zValue())
-            if target.label:
+            if hasattr(target, 'label'):
                 zValue = max(zValue, target.label.zValue())
 
         self.setZValue(zValue)
 
-    ################################################### ITEM DRAWING ###################################################
-
-    def paint(self, painter, option, widget=None):
+    def updateEdge(self, target=None):
         """
-        Paint the node in the graphic view.
-        :param painter: the active painter.
-        :param option: the style option for this item.
-        :param widget: the widget that is being painted on.
+        Update the edge painter path and the selection polygon.
+        :param target: the endpoint of this edge.
         """
-        scene = self.scene()
-
-        # Draw the line
-        for subpath in self.path:
-
-            # Draw the selection polygon if needed
-            if scene.mode == scene.MoveItem and self.isSelected():
-                painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(self.selectionPen)
-                painter.setBrush(self.selectionBrush)
-                painter.drawPolygon(subpath.selection)
-
-            # Draw the edge line
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(self.linePen)
-            painter.drawLine(subpath.line)
-
-        # Draw the head polygon
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(self.headPen)
-        painter.setBrush(self.headBrush)
-        painter.drawPolygon(self.head)
-
-        if self.isSelected():
-
-            # Draw breakpoint handles
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(self.handlePen)
-            painter.setBrush(self.handleBrush)
-            for rect in self.handles.values():
-                painter.drawEllipse(rect)
-
-            # Draw anchor points
-            if self.edge.target:
-                painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(self.handlePen)
-                painter.setBrush(self.handleBrush)
-                for rect in self.anchors.values():
-                    painter.drawEllipse(rect)
+        raise NotImplementedError('method `updateEdge` must be implemented in inherited class')
