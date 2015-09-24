@@ -514,7 +514,7 @@ class GraphicsScene(QGraphicsScene):
                 }
 
                 # push the command in the stack so we can revert the moving operation
-                self.undoStack.push(CommandNodeMove(old=self.mousePressData, new=data))
+                self.undoStack.push(CommandNodeMove(pos1=self.mousePressData, pos2=data))
 
             self.mousePressPos = None
             self.mousePressShape = None

@@ -77,16 +77,16 @@ class CommandNodeSetZValue(QUndoCommand):
         super().__init__('change %s node Z value' % node.name)
         self.scene = scene
         self.node = node
-        self.old = node.shape.zValue()
-        self.new = zValue
+        self.zvalue1 = node.shape.zValue()
+        self.zvalue2 = zValue
 
     def redo(self):
         """redo the command"""
-        self.node.shape.setZValue(self.new)
+        self.node.shape.setZValue(self.zvalue2)
 
     def undo(self):
         """undo the command"""
-        self.node.shape.setZValue(self.old)
+        self.node.shape.setZValue(self.zvalue1)
 
 
 class CommandNodeRezize(QUndoCommand):
@@ -151,30 +151,30 @@ class CommandNodeMove(QUndoCommand):
     """
     This command is used to move nodes (1 or more).
     """
-    def __init__(self, old, new):
+    def __init__(self, pos1, pos2):
         """
         Initialize the command
-        :param old: a dictionary containing shapes old position data.
-        :param new: a dictionary containing shapes new position data.
+        :param pos1: a dictionary containing shapes old position data.
+        :param pos2: a dictionary containing shapes new position data.
         """
-        self.old = old
-        self.new = new
+        self.pos1 = pos1
+        self.pos2 = pos2
 
-        if len(old['nodes']) != 1:
-            params = 'move %s nodes' % len(old['nodes'])
+        if len(pos1['nodes']) != 1:
+            params = 'move %s nodes' % len(pos1['nodes'])
         else:
-            params = 'move %s node' % next(iter(old['nodes'].keys())).node.name
+            params = 'move %s node' % next(iter(pos1['nodes'].keys())).node.name
 
         super().__init__(params)
 
     def redo(self):
         """redo the command"""
         # update edges breakpoints
-        for edge, breakpoints in self.new['edges'].items():
+        for edge, breakpoints in self.pos2['edges'].items():
             for i in range(len(breakpoints)):
                 edge.breakpoints[i] = breakpoints[i]
         # update nodes positions
-        for shape, data in self.new['nodes'].items():
+        for shape, data in self.pos2['nodes'].items():
             shape.setPos(data['pos'])
             # update edge anchors
             for edge, pos in data['anchors'].items():
@@ -185,11 +185,11 @@ class CommandNodeMove(QUndoCommand):
     def undo(self):
         """undo the command"""
         # update edges breakpoints
-        for edge, breakpoints in self.old['edges'].items():
+        for edge, breakpoints in self.pos1['edges'].items():
             for i in range(len(breakpoints)):
                 edge.breakpoints[i] = breakpoints[i]
         # update nodes positions
-        for shape, data in self.old['nodes'].items():
+        for shape, data in self.pos1['nodes'].items():
             shape.setPos(data['pos'])
             # update edge anchors
             for edge, pos in data['anchors'].items():
@@ -286,19 +286,19 @@ class CommandNodeValueDomainSelectDatatype(QUndoCommand):
         """
         super().__init__('change %s datatype' % node.name)
         self.node = node
-        self.old = node.datatype
-        self.new = datatype
+        self.data1 = node.datatype
+        self.data2 = datatype
 
     def redo(self):
         """redo the command"""
-        self.node.datatype = self.new
+        self.node.datatype = self.data2
         self.node.shape.label.setText(self.node.datatype.value)
         self.node.shape.updateShape()
         self.node.shape.updateEdges()
 
     def undo(self):
         """undo the command"""
-        self.node.datatype = self.old
+        self.node.datatype = self.data1
         self.node.shape.label.setText(self.node.datatype.value)
         self.node.shape.updateShape()
         self.node.shape.updateEdges()
@@ -308,44 +308,44 @@ class CommandNodeHexagonSwitchTo(QUndoCommand):
     """
     This command is used to change the class of hexagon based constructor nodes.
     """
-    def __init__(self, scene, old, new):
+    def __init__(self, scene, node1, node2):
         """
         Initialize the command
         :param scene: the scene where this command is being executed.
-        :param old: the node being replaced.
-        :param new: the replacement node.
+        :param node1: the node being replaced.
+        :param node2: the replacement node.
         """
-        super().__init__('switch %s to %s' % (old.name, new.name))
+        super().__init__('switch %s to %s' % (node1.name, node2.name))
         self.scene = scene
-        self.old = old
-        self.new = new
+        self.node1 = node1
+        self.node2 = node2
 
     def redo(self):
         """redo the command"""
-        for edge in self.old.edges:
-            if edge.source == self.old:
-                edge.source = self.new
+        for edge in self.node1.edges:
+            if edge.source == self.node1:
+                edge.source = self.node2
             else:
-                edge.target = self.new
-            self.new.addEdge(edge)
+                edge.target = self.node2
+            self.node2.addEdge(edge)
 
-        self.scene.itemList.append(self.new)
-        self.scene.addItem(self.new.shape)
-        self.scene.itemList.remove(self.old)
-        self.scene.removeItem(self.old.shape)
+        self.scene.itemList.append(self.node2)
+        self.scene.addItem(self.node2.shape)
+        self.scene.itemList.remove(self.node1)
+        self.scene.removeItem(self.node1.shape)
 
     def undo(self):
         """undo the command"""
-        for edge in self.new.edges:
-            if edge.source == self.new:
-                edge.source = self.old
+        for edge in self.node2.edges:
+            if edge.source == self.node2:
+                edge.source = self.node1
             else:
-                edge.target = self.old
-            self.old.addEdge(edge)
-        self.scene.itemList.append(self.old)
-        self.scene.addItem(self.old.shape)
-        self.scene.itemList.remove(self.new)
-        self.scene.removeItem(self.new.shape)
+                edge.target = self.node1
+            self.node1.addEdge(edge)
+        self.scene.itemList.append(self.node1)
+        self.scene.addItem(self.node1.shape)
+        self.scene.itemList.remove(self.node2)
+        self.scene.removeItem(self.node2.shape)
 
 
 class CommandNodeSquareChangeRestriction(QUndoCommand):
@@ -359,10 +359,10 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
         :param restriction: the new restriction type.
         """
         self.node = node
-        self.old_restriction = self.node.restriction
-        self.old_cardinality = self.node.cardinality
-        self.new_restriction = restriction
-        self.new_cardinality = dict(min=None, max=None) if not cardinality else cardinality
+        self.restriction1 = self.node.restriction
+        self.cardinality1 = self.node.cardinality
+        self.restriction2 = restriction
+        self.cardinality2 = dict(min=None, max=None) if not cardinality else cardinality
 
         label = restriction.label
         if restriction is RestrictionType.cardinality:
@@ -380,24 +380,24 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        if self.new_restriction is RestrictionType.cardinality:
-            self.node.restriction = self.new_restriction
-            self.node.cardinality = self.new_cardinality
+        if self.restriction2 is RestrictionType.cardinality:
+            self.node.restriction = self.restriction2
+            self.node.cardinality = self.cardinality2
             self.node.shape.label.setText(self.node.restriction.label % (self.s(self.node.cardinality['min']),
                                                                          self.s(self.node.cardinality['max'])))
         else:
-            self.node.restriction = self.new_restriction
+            self.node.restriction = self.restriction2
             self.node.cardinality = dict(min=None, max=None)
             self.node.shape.label.setText(self.node.restriction.label)
 
     def undo(self):
         """undo the command"""
-        if self.old_restriction is RestrictionType.cardinality:
-            self.node.restriction = self.old_restriction
-            self.node.cardinality = self.old_cardinality
+        if self.restriction1 is RestrictionType.cardinality:
+            self.node.restriction = self.restriction1
+            self.node.cardinality = self.cardinality1
             self.node.shape.label.setText(self.node.restriction.label % (self.s(self.node.cardinality['min']),
                                                                          self.s(self.node.cardinality['max'])))
         else:
-            self.node.restriction = self.old_restriction
+            self.node.restriction = self.restriction1
             self.node.cardinality = dict(min=None, max=None)
             self.node.shape.label.setText(self.node.restriction.label)
