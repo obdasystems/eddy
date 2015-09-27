@@ -31,6 +31,7 @@
 #                                                                        #
 ##########################################################################
 
+import sys
 
 from math import sin, cos, radians, pi as M_PI
 from pygraphol.datatypes import Font
@@ -262,9 +263,10 @@ class InstanceOfEdgeShape(AbstractEdgeShape):
         painter.setBrush(QColor(0, 0, 0))
         painter.drawPolygon(head)
 
-        # Draw the text within the rectangle
+        # Draw the text on top of the edge
+        space = 2 if sys.platform.startswith('darwin') else 0
         painter.setFont(Font('Arial', 9, Font.Light))
-        painter.drawText(line_p1.x(),  (kwargs['h'] / 2) - 4, kwargs['name'])
+        painter.drawText(line_p1.x() + space, (kwargs['h'] / 2) - 4, kwargs['name'])
 
         return pixmap
 
