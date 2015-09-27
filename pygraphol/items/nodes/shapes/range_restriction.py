@@ -38,6 +38,7 @@ from functools import partial
 from pygraphol.commands import CommandNodeSquareChangeRestriction
 from pygraphol.datatypes import RestrictionType, Font
 from pygraphol.dialogs import CardinalityRestrictionForm
+from pygraphol.exceptions import ParseError
 from pygraphol.items.nodes.shapes.common.label import Label
 from pygraphol.items.nodes.shapes.common.square import Square
 from PyQt5.QtCore import Qt, QRectF
@@ -178,6 +179,6 @@ class RangeRestrictionNodeShape(Square):
 
         # Draw the text within the rectangle
         painter.setFont(Font('Arial', 9, Font.Light))
-        painter.drawText(-28, -8, 'restriction type')
+        painter.drawText(-21, -8, 'restriction')
 
         return pixmap

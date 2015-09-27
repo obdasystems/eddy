@@ -179,6 +179,6 @@ class DomainRestrictionNodeShape(Square):
 
         # Draw the text within the rectangle
         painter.setFont(Font('Arial', 9, Font.Light))
-        painter.drawText(-28, -8, 'restriction type')
+        painter.drawText(-21, -8, 'restriction')
 
         return pixmap

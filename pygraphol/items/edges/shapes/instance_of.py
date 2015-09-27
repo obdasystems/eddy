@@ -264,7 +264,7 @@ class InstanceOfEdgeShape(AbstractEdgeShape):
 
         # Draw the text within the rectangle
         painter.setFont(Font('Arial', 9, Font.Light))
-        painter.drawText(line_p1.x() + 2,  (kwargs['h'] / 2) - 4, kwargs['name'])
+        painter.drawText(line_p1.x(),  (kwargs['h'] / 2) - 4, kwargs['name'])
 
         return pixmap
 
