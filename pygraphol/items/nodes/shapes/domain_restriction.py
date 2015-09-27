@@ -171,14 +171,15 @@ class DomainRestrictionNodeShape(Square):
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
 
+        # Draw the text above the shape
+        painter.setFont(Font('Arial', 9, Font.Light))
+        painter.translate(0, 0)
+        painter.drawText(QRectF(0, 0, kwargs['w'], kwargs['h'] / 2), Qt.AlignCenter, 'restriction')
+
         # Draw the rectangle
         painter.setPen(Square.shapePen)
         painter.setBrush(QColor(252, 252, 252))
         painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
         painter.drawRect(QRectF(-shape_w / 2, -shape_h / 2 + 6, shape_w, shape_h))
-
-        # Draw the text within the rectangle
-        painter.setFont(Font('Arial', 9, Font.Light))
-        painter.drawText(-21, -8, 'restriction')
 
         return pixmap

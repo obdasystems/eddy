@@ -35,7 +35,7 @@
 from pygraphol.datatypes import Font
 from pygraphol.items.nodes.shapes.common.ellipse import Ellipse
 from pygraphol.items.nodes.shapes.common.label import Label
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QPen
 
 
@@ -121,15 +121,16 @@ class AttributeNodeShape(Ellipse):
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
 
+        # Draw the text above the shape
+        painter.setFont(Font('Arial', 9, Font.Light))
+        painter.translate(0, 0)
+        painter.drawText(QRectF(0, 0, kwargs['w'], kwargs['h'] / 2), Qt.AlignCenter, 'attribute')
+
         # Draw the ellipse
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine))
         painter.setBrush(QColor(252, 252, 252))
         painter.translate(kwargs['w'] / 2, kwargs['h'] / 2 + 6)
         painter.drawEllipse(Ellipse.createRect(shape_w, shape_h))
-
-        # Draw the text within the rectangle
-        painter.setFont(Font('Arial', 10, Font.Light))
-        painter.drawText(-18, -14, 'attribute')
 
         return pixmap
