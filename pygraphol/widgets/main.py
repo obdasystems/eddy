@@ -73,7 +73,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.settings = QSettings(organization, appname)
         self.undoGroup = QUndoGroup()
-        self.undoGroup.cleanChanged.connect(self.handleUndoGroupChangedSignal)
+        self.undoGroup.cleanChanged.connect(self.handleUndoGroupChanged)
 
         ############################################ EXTRA WIDGETS #####################################################
 
@@ -317,15 +317,15 @@ class MainWindow(QMainWindow):
 
         self.pGroup = QButtonGroup()
         self.pGroup.setExclusive(False)
-        self.pGroup.buttonClicked[int].connect(self.handleToolBoxButtonClickedSignal)
+        self.pGroup.buttonClicked[int].connect(self.handleToolBoxButtonClicked)
 
         self.cGroup = QButtonGroup()
         self.cGroup.setExclusive(False)
-        self.cGroup.buttonClicked[int].connect(self.handleToolBoxButtonClickedSignal)
+        self.cGroup.buttonClicked[int].connect(self.handleToolBoxButtonClicked)
 
         self.eGroup = QButtonGroup()
         self.eGroup.setExclusive(False)
-        self.eGroup.buttonClicked[int].connect(self.handleToolBoxButtonClickedSignal)
+        self.eGroup.buttonClicked[int].connect(self.handleToolBoxButtonClicked)
 
         nodes = [self.paletteItems, self.paletteNodes]
         edges = [self.paletteItems, self.paletteEdges]
@@ -391,7 +391,7 @@ class MainWindow(QMainWindow):
         ############################################### MDI AREA #######################################################
 
         self.mdiArea = MdiArea(self.nav)
-        self.mdiArea.subWindowActivated.connect(self.handleSubWindowActivatedSignal)
+        self.mdiArea.subWindowActivated.connect(self.handleSubWindowActivated)
 
         ############################################## LEFT PANE #######################################################
 
@@ -523,7 +523,7 @@ class MainWindow(QMainWindow):
     ####################################################################################################################
 
     @pyqtSlot('QMdiSubWindow')
-    def handleDocumentSavedSignal(self, subwindow):
+    def handleDocumentSaved(self, subwindow):
         """
         Executed when the document in a subwindow is saved.
         :param subwindow: the subwindow containing the saved document.
@@ -560,7 +560,7 @@ class MainWindow(QMainWindow):
                 btn.setChecked(False)
 
     @pyqtSlot(int)
-    def handleToolBoxButtonClickedSignal(self, button_id):
+    def handleToolBoxButtonClicked(self, button_id):
         """
         Executed whenever a node QToolButton in a QButtonGroup is clicked.
         :param button_id: the button id.
@@ -586,7 +586,7 @@ class MainWindow(QMainWindow):
                     currentscene.setMode(GraphicsScene.InsertEdge, button.property('item'))
 
     @pyqtSlot('QMdiSubWindow')
-    def handleSubWindowActivatedSignal(self, subwindow):
+    def handleSubWindowActivated(self, subwindow):
         """
         Executed when the active subwindow changes.
         :param subwindow: the subwindow which got the focus (0 if there is no subwindow).
@@ -638,7 +638,7 @@ class MainWindow(QMainWindow):
 
                 self.zoomctl.setEnabled(False)
                 self.zoomctl.setZoomLevel(self.zoomctl.index(mainview.zoom))
-                self.zoomctl.signalScaleChanged.connect(mainview.handleScaleChangedSignal)
+                self.zoomctl.signalScaleChanged.connect(mainview.handleScaleChanged)
                 self.zoomctl.setEnabled(True)
 
                 mainview.zoomChanged.connect(self.zoomctl.handleMainViewZoomChanged)
@@ -669,7 +669,7 @@ class MainWindow(QMainWindow):
                 self.setWindowTitle()
 
     @pyqtSlot(bool)
-    def handleUndoGroupChangedSignal(self, clean):
+    def handleUndoGroupChanged(self, clean):
         """
         Executed when the clean state of the active undoStack changes.
         :param clean: the clean state.
@@ -724,8 +724,8 @@ class MainWindow(QMainWindow):
         :rtype: MdiSubWindow
         """
         subwindow = self.mdiArea.addSubWindow(MdiSubWindow(mainview))
-        subwindow.widget().scene().undoStack.cleanChanged.connect(subwindow.handleUndoStackCleanChangedSignal)
-        subwindow.signalDocumentSaved.connect(self.handleDocumentSavedSignal)
+        subwindow.widget().scene().undoStack.cleanChanged.connect(subwindow.handleUndoStackCleanChanged)
+        subwindow.signalDocumentSaved.connect(self.handleDocumentSaved)
         if subwindow.widget().scene().document.filepath:
             # set the title in case the scene we are rendering is saved already somewhere (used when opening documents)
             subwindow.setWindowTitle(subwindow.widget().scene().document.name)
@@ -801,30 +801,30 @@ class MainWindow(QMainWindow):
                 nid = E.attribute('id')
                 ntype = E.attribute('type')
 
-                shape_x = int(G.attribute('x'))
-                shape_y = int(G.attribute('y'))
-                shape_w = int(G.attribute('width'))
-                shape_h = int(G.attribute('height'))
+                shapeX = int(G.attribute('x'))
+                shapeY = int(G.attribute('y'))
+                shapeW = int(G.attribute('width'))
+                shapeH = int(G.attribute('height'))
 
-                label_v = L.text()
-                label_x = int(L.attribute('x'))
-                label_y = int(L.attribute('y'))
-                label_w = int(L.attribute('width'))
-                label_h = int(L.attribute('height'))
+                labelV = L.text()
+                labelX = int(L.attribute('x'))
+                labelY = int(L.attribute('y'))
+                labelW = int(L.attribute('width'))
+                labelH = int(L.attribute('height'))
 
                 # create the node: this will set the position of the node matching the center of the shape.
                 # the might have been not true when the scene has been exported but we don't record such info
                 # in the graphol XML document in order to make the document format indipendent from the tool.
-                node = __mapping__[ntype](scene=scene, id=nid, width=shape_w, height=shape_h)
-                node.shape.setPos(QPointF(shape_x, shape_y))
+                node = __mapping__[ntype](scene=scene, id=nid, width=shapeW, height=shapeH)
+                node.shape.setPos(QPointF(shapeX, shapeY))
 
                 # add the node label: the node label position stored in the graphol document is in scene coordinates,
                 # and the position matches the center of the bounding rect of the text item: we need to adapt this data
                 # to fix our needs (QT uses top left corner as (0,0) position instead of the bounding rect center).
-                label_pos = node.shape.mapFromScene(QPointF(label_x, label_y))
-                label_pos = QPointF(label_pos.x() - label_w / 2, label_pos.y() - label_h / 2)
-                node.shape.setLabelPos(label_pos)
-                node.shape.setLabelText(label_v)
+                labelPos = node.shape.mapFromScene(QPointF(labelX, labelY))
+                labelPos = QPointF(labelPos.x() - labelW / 2, labelPos.y() - labelH / 2)
+                node.shape.setLabelPos(labelPos)
+                node.shape.setLabelText(labelV)
 
                 # append the element to the scene
                 scene.itemList.append(node)

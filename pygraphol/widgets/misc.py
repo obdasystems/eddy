@@ -69,7 +69,7 @@ class ZoomControl(QWidget):
         self.slider.setSingleStep(1)
         self.slider.setTickPosition(QSlider.NoTicks)
         self.slider.setTickInterval(1)
-        self.slider.valueChanged.connect(self.handleSliderValueChangedSignal)
+        self.slider.valueChanged.connect(self.handleSliderValueChanged)
 
         self.label = QLineEdit(self)
         self.label.setAttribute(Qt.WA_MacShowFocusRect, 0)
@@ -88,7 +88,7 @@ class ZoomControl(QWidget):
     ############################################## SIGNAL HANDLERS #####################################################
 
     @pyqtSlot()
-    def handleSliderValueChangedSignal(self):
+    def handleSliderValueChanged(self):
         """
         Executed when the value of the slider changes.
         """

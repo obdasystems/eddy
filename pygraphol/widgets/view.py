@@ -56,7 +56,7 @@ class MainView(QGraphicsView):
 
     ############################################### SIGNAL HANDLERS ####################################################
 
-    def handleScaleChangedSignal(self, zoom):
+    def handleScaleChanged(self, zoom):
         """
         Executed when the scale factor changes (triggered by the Main Slider in the Toolbar)
         :param zoom: the scale factor.
@@ -205,7 +205,7 @@ class Navigator(QWidget):
         ############################################ SIGNAL HANDLERS ###################################################
 
         @pyqtSlot()
-        def handleNavUpdateSignal(self):
+        def handleNavUpdate(self):
             """
             Triggered whenever the navigator view needs to be updated.
             """
@@ -231,7 +231,7 @@ class Navigator(QWidget):
             if self.mainview:
                 self.setScene(self.mainview.scene())
                 self.fitInView(self.mainview.sceneRect(), Qt.KeepAspectRatio)
-                self.mainview.navUpdate.connect(self.handleNavUpdateSignal)
+                self.mainview.navUpdate.connect(self.handleNavUpdate)
             else:
                 # all subwindow closed => refresh so the foreground disappears
                 self.viewport().update()

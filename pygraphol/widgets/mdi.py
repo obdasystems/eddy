@@ -57,13 +57,13 @@ class MdiArea(QMdiArea):
         self.setTabsClosable(True)
         self.setTabsMovable(True)
         self.setContentsMargins(0, 0, 0, 0)
-        self.subWindowActivated.connect(self.handleSubWindowActivatedSignal)
+        self.subWindowActivated.connect(self.handleSubWindowActivated)
         self.nav = nav
 
     ############################################# SIGNALS HANDLERS #####################################################
 
     @pyqtSlot('QMdiSubWindow')
-    def handleSubWindowActivatedSignal(self, subwindow):
+    def handleSubWindowActivated(self, subwindow):
         """
         Executed when the active subwindow changes.
         :param subwindow: the subwindow which got the focus (0 if there is no subwindow).
@@ -137,7 +137,7 @@ class MdiSubWindow(QMdiSubWindow):
     ############################################# SIGNALS HANDLERS #####################################################
 
     @pyqtSlot(bool)
-    def handleUndoStackCleanChangedSignal(self, clean):
+    def handleUndoStackCleanChanged(self, clean):
         """
         Executed when the clean state of undoStack of the scene displayed in the MDI subwindow changes.
         :param clean: the clean state.
