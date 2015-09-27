@@ -32,11 +32,12 @@
 ##########################################################################
 
 
+from pygraphol.datatypes import Font
 from pygraphol.items.nodes.shapes.common.label import Label
 from pygraphol.items.nodes.shapes.common.note import Note
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QPainter, QFont, QColor, QPen
+from PyQt5.QtGui import QPixmap, QPainter, QColor, QPen
 
 
 class ValueRestrictionNodeShape(Note):
@@ -136,7 +137,7 @@ class ValueRestrictionNodeShape(Note):
         painter.drawPolygon(fold)
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial', 10, QFont.Light))
+        painter.setFont(Font('Arial', 10, Font.Light))
         painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'value\nrestriction')
 
         return pixmap

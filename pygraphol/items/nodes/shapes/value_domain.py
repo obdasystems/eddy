@@ -35,13 +35,13 @@
 from functools import partial
 from PyQt5.QtWidgets import QAction
 from pygraphol.commands import CommandNodeValueDomainSelectDatatype
-from pygraphol.datatypes import XsdDatatype
+from pygraphol.datatypes import XsdDatatype, Font
 from pygraphol.exceptions import ParseError
 from pygraphol.items.nodes.shapes.common.label import Label
 from pygraphol.items.nodes.shapes.common.rounded_rect import RoundedRect
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QPainter, QFont, QIcon, QColor, QPen
+from PyQt5.QtGui import QPixmap, QPainter, QIcon, QColor, QPen
 
 
 class ValueDomainNodeShape(RoundedRect):
@@ -173,7 +173,7 @@ class ValueDomainNodeShape(RoundedRect):
         painter.drawRoundedRect(rect, 6.0, 6.0)
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial', 10, QFont.Light))
+        painter.setFont(Font('Arial', 10, Font.Light))
         painter.drawText(rect, Qt.AlignCenter, 'xsd:string')
 
         return pixmap

@@ -32,10 +32,11 @@
 ##########################################################################
 
 
+from pygraphol.datatypes import Font
 from pygraphol.items.nodes.shapes.common.label import Label
 from pygraphol.items.nodes.shapes.common.octagon import Octagon
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QPainter, QFont, QPen, QColor
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
 
 class IndividualNodeShape(Octagon):
@@ -130,7 +131,7 @@ class IndividualNodeShape(Octagon):
         painter.drawPolygon(polygon)
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial', 9, QFont.Light))
+        painter.setFont(Font('Arial', 9, Font.Light))
         painter.drawText(-18, 4, 'individual')
 
         return pixmap

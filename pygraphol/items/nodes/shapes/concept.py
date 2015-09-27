@@ -32,10 +32,11 @@
 ##########################################################################
 
 
+from pygraphol.datatypes import Font
 from pygraphol.items.nodes.shapes.common.label import Label
 from pygraphol.items.nodes.shapes.common.rect import Rect
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QPainter, QFont, QColor, QPen
+from PyQt5.QtGui import QPixmap, QPainter, QColor, QPen
 
 
 class ConceptNodeShape(Rect):
@@ -131,7 +132,7 @@ class ConceptNodeShape(Rect):
         painter.drawRect(rect)
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial', 11, QFont.Light))
+        painter.setFont(Font('Arial', 11, Font.Light))
         painter.drawText(rect, Qt.AlignCenter, 'concept')
 
         return pixmap

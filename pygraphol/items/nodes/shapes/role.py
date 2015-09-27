@@ -32,10 +32,11 @@
 ##########################################################################
 
 
+from pygraphol.datatypes import Font
 from pygraphol.items.nodes.shapes.common.label import Label
 from pygraphol.items.nodes.shapes.common.diamond import Diamond
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QPainter, QFont, QPen, QColor
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
 
 class RoleNodeShape(Diamond):
@@ -131,7 +132,7 @@ class RoleNodeShape(Diamond):
         painter.drawPolygon(polygon)
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial', 11, QFont.Light))
+        painter.setFont(Font('Arial', 11, Font.Light))
         painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'role')
 
         return pixmap

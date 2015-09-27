@@ -33,10 +33,11 @@
 
 
 from math import sin, cos, radians, pi as M_PI
+from pygraphol.datatypes import Font
 from pygraphol.items.edges.shapes.common.base import AbstractEdgeShape
 from pygraphol.items.edges.shapes.common.label import Label
 from PyQt5.QtCore import QPointF, Qt, QLineF, QRectF
-from PyQt5.QtGui import QPolygonF, QPen, QColor, QPainterPath, QPixmap, QPainter, QFont
+from PyQt5.QtGui import QPolygonF, QPen, QColor, QPainterPath, QPixmap, QPainter
 
 
 class InstanceOfEdgeShape(AbstractEdgeShape):
@@ -262,7 +263,7 @@ class InstanceOfEdgeShape(AbstractEdgeShape):
         painter.drawPolygon(head)
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial', 9, QFont.Light))
+        painter.setFont(Font('Arial', 9, Font.Light))
         painter.drawText(line_p1.x() + 2,  (kwargs['h'] / 2) - 4, kwargs['name'])
 
         return pixmap

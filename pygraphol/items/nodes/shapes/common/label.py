@@ -33,9 +33,10 @@
 
 
 from pygraphol.commands import CommandNodeLabelMove, CommandNodeLabelEdit
+from pygraphol.datatypes import Font
 from pygraphol.functions import isEmpty
 from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QFont, QColor, QTextCursor, QIcon, QPainterPath
+from PyQt5.QtGui import QColor, QTextCursor, QIcon, QPainterPath
 from PyQt5.QtWidgets import QGraphicsTextItem, QGraphicsItem, QAction
 
 
@@ -64,7 +65,7 @@ class Label(QGraphicsTextItem):
         self.setFlag(QGraphicsItem.ItemIsSelectable, self.movable)
         self.setFlag(QGraphicsItem.ItemIsFocusable, self.editable)
         self.setDefaultTextColor(QColor(0, 0, 0, 255))
-        self.setFont(QFont('Arial', 12, QFont.Light))
+        self.setFont(Font('Arial', 12, Font.Light))
         self.setText(self.defaultText)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
 

@@ -32,10 +32,11 @@
 ##########################################################################
 
 
+from pygraphol.datatypes import Font
 from pygraphol.items.nodes.shapes.common.label import Label
 from pygraphol.items.nodes.shapes.common.hexagon import Hexagon
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QPainter, QFont, QColor, QPen
+from PyQt5.QtGui import QPixmap, QPainter, QColor, QPen
 
 
 class RoleInverseNodeShape(Hexagon):
@@ -115,7 +116,7 @@ class RoleInverseNodeShape(Hexagon):
         painter.drawPolygon(polygon)
 
         # Draw the text within the polygon
-        painter.setFont(QFont('Arial', 11, QFont.Light))
+        painter.setFont(Font('Arial', 11, Font.Light))
         painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'inv')
 
         return pixmap

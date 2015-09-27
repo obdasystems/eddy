@@ -32,7 +32,10 @@
 ##########################################################################
 
 
+import sys
+
 from enum import Enum, unique
+from PyQt5.QtGui import QFont
 
 
 class DistinctList(list):
@@ -172,6 +175,24 @@ class FileType(Enum):
             FileType.pdf: '.pdf'
         }
         return __mapping__[self]
+
+
+class Font(QFont):
+    """
+    This class extends PyQt5.QtGui.QFont providing better font rendering on different platforms.
+    """
+
+    def __init__(self, family, pointSize=12, weight=-1, italic=False):
+        """
+        Contruct a new Font instance using the given parameters.
+        :param family: the font family.
+        :param pointSize: the font size in pts.
+        :param weight: the font weight.
+        :param italic: whether the font should be rendered as italic.
+        """
+        if sys.platform.startswith('win32'):
+            pointSize = int(round(pointSize * 0.75))
+        super().__init__(family, pointSize, weight, italic)
 
 
 @unique

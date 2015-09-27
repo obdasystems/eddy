@@ -32,15 +32,17 @@
 ##########################################################################
 
 
+import re
+
 from functools import partial
 from pygraphol.commands import CommandNodeSquareChangeRestriction
-from pygraphol.datatypes import RestrictionType
+from pygraphol.datatypes import RestrictionType, Font
 from pygraphol.dialogs import CardinalityRestrictionForm
 from pygraphol.exceptions import ParseError
 from pygraphol.items.nodes.shapes.common.label import Label
 from pygraphol.items.nodes.shapes.common.square import Square
 from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainter, QFont, QColor, QIcon
+from PyQt5.QtGui import QPixmap, QPainter, QColor, QIcon
 from PyQt5.QtWidgets import QAction, QDialog
 
 
@@ -176,7 +178,7 @@ class DomainRestrictionNodeShape(Square):
         painter.drawRect(QRectF(-shape_w / 2, -shape_h / 2 + 6, shape_w, shape_h))
 
         # Draw the text within the rectangle
-        painter.setFont(QFont('Arial', 9, QFont.Light))
+        painter.setFont(Font('Arial', 9, Font.Light))
         painter.drawText(-28, -8, 'restriction type')
 
         return pixmap

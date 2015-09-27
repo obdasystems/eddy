@@ -33,9 +33,10 @@
 
 
 from math import sin, cos, pi as M_PI
+from pygraphol.datatypes import Font
 from pygraphol.functions import midpoint, angleP
 from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QFont, QColor, QPainterPath
+from PyQt5.QtGui import QColor, QPainterPath
 from PyQt5.QtWidgets import QGraphicsTextItem
 
 
@@ -53,7 +54,7 @@ class Label(QGraphicsTextItem):
         self.moved = False
         self.command = None
         self.setDefaultTextColor(QColor(0, 0, 0, 255))
-        self.setFont(QFont('Arial', 12, QFont.Light))
+        self.setFont(Font('Arial', 12, Font.Light))
         self.setText(text)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
 
