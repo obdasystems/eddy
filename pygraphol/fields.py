@@ -32,63 +32,32 @@
 ##########################################################################
 
 
-from pygraphol.fields import IntEditField
-from pygraphol.functions import isEmpty
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QDialog, QFormLayout, QDialogButtonBox, QMessageBox
+from PyQt5.QtGui import QIntValidator, QDoubleValidator
+from PyQt5.QtWidgets import QLineEdit
 
 
-class CardinalityRestrictionForm(QDialog):
+class DoubleEditField(QLineEdit):
     """
-    This class implements the form used to input domain/range restriction cardinalities.
+    This class implements an input field where the user can enter float values.
     """
-
-    ############################################ FORM DIALOG IMPLEMENTATION ############################################
-
     def __init__(self, parent=None):
         """
-        Initialize the form dialog.
-        :param parent: the parent widget.
+        Initialize the float input field.
         """
         super().__init__(parent)
-        self.minCardinalityValue = None
-        self.maxCardinalityValue = None
-        self.minCardinalityField = IntEditField(self)
-        self.maxCardinalityField = IntEditField(self)
-        self.minCardinalityField.setFixedWidth(80)
-        self.maxCardinalityField.setFixedWidth(80)
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
-        self.buttonBox.accepted.connect(self.validate)
-        self.buttonBox.rejected.connect(self.reject)
-        self.mainLayout = QFormLayout(self)
-        self.mainLayout.addRow('Min. cardinality', self.minCardinalityField)
-        self.mainLayout.addRow('Max. cardinality', self.maxCardinalityField)
-        self.mainLayout.addRow(self.buttonBox)
-        self.setWindowTitle('Insert cardinality range')
-        self.setFixedSize(self.sizeHint())
+        self.setAttribute(Qt.WA_MacShowFocusRect, 0)
+        self.setValidator(QDoubleValidator (self))
 
-    def validate(self):
+
+class IntEditField(QLineEdit):
         """
-        Validate the form and trigger accept() if the form is valid.
+        This class implements an input field where the user can enter only integer values.
         """
-        if not isEmpty(self.minCardinalityField.text()) and not isEmpty(self.maxCardinalityField.text()):
-
-            v1 = int(self.minCardinalityField.text())
-            v2 = int(self.maxCardinalityField.text())
-
-            if v1 > v2:
-                msgbox = QMessageBox(self)
-                msgbox.setIconPixmap(QPixmap(':/icons/warning'))
-                msgbox.setWindowTitle('Invalid range specified')
-                msgbox.setText('Min. cardinality (%s) must be lower or equal than Max. cardinality (%s)' % (v1, v2))
-                msgbox.setStandardButtons(QMessageBox.Ok)
-                msgbox.exec_()
-                return
-
-        if not isEmpty(self.minCardinalityField.text()):
-            self.minCardinalityValue = int(self.minCardinalityField.text())
-        if not isEmpty(self.maxCardinalityField.text()):
-            self.maxCardinalityValue = int(self.maxCardinalityField.text())
-
-        self.accept()
+        def __init__(self, parent=None):
+            """
+            Initialize the integer input field.
+            """
+            super().__init__(parent)
+            self.setAttribute(Qt.WA_MacShowFocusRect, 0)
+            self.setValidator(QIntValidator(self))
