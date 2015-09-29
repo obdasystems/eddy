@@ -32,9 +32,11 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout, QSizePolicy
-from pygraphol.fields import StringEditField, TextEditField, IntEditField
+from PyQt5.QtCore import Qt, QPointF
+from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
+from pygraphol.commands import CommandNodeMove, CommandNodeSetURL, CommandNodeSetDescription
+from pygraphol.fields import StringEditField, TextEditField, SpinBox
+from pygraphol.functions import clamp
 
 
 class NodePropertiesDialog(QDialog):
@@ -63,20 +65,20 @@ class NodePropertiesDialog(QDialog):
         self.idF = StringEditField(self.generalWidget)
         self.idF.setEnabled(False)
         self.idF.setFixedWidth(300)
-        self.idF.setText(self.node.id)
+        self.idF.setValue(self.node.id)
 
         self.nameF = StringEditField(self.generalWidget)
         self.nameF.setEnabled(False)
         self.nameF.setFixedWidth(300)
-        self.nameF.setText(self.node.name)
+        self.nameF.setValue(self.node.name)
 
         self.urlF = StringEditField(self.generalWidget)
         self.urlF.setFixedWidth(300)
-        self.urlF.setText(self.node.url)
+        self.urlF.setValue(self.node.url)
 
         self.descriptionF = TextEditField(self.generalWidget)
         self.descriptionF.setFixedSize(300, 160)
-        self.descriptionF.setText(self.node.description)
+        self.descriptionF.setValue(self.node.description)
 
         self.generalLayout.addRow('ID', self.idF)
         self.generalLayout.addRow('Node', self.nameF)
@@ -88,25 +90,30 @@ class NodePropertiesDialog(QDialog):
         self.geometryWidget = QWidget()
         self.geometryLayout = QFormLayout(self.geometryWidget)
 
-        pos = self.node.shape.mapToScene(self.node.shape.center())
+        p = self.node.shape.mapToScene(self.node.shape.center())
+        r = self.scene.sceneRect()
 
-        self.xField = IntEditField(self.geometryWidget)
+        self.xField = SpinBox(self.geometryWidget)
         self.xField.setFixedWidth(60)
-        self.xField.setText(str(int(pos.x())))
+        self.xField.setRange(0, r.width())
+        self.xField.setValue(int(p.x()))
 
-        self.yField = IntEditField(self.geometryWidget)
+        self.yField = SpinBox(self.geometryWidget)
         self.yField.setFixedWidth(60)
-        self.yField.setText(str(int(pos.y())))
+        self.yField.setRange(0, r.height())
+        self.yField.setValue(int(p.y()))
 
-        self.wField = IntEditField(self.geometryWidget)
-        self.wField.setEnabled(self.node.shape.resizable)
+        # TODO: allow to modify shape width from properties dialog
+        self.wField = SpinBox(self.geometryWidget)
+        self.wField.setEnabled(False)
         self.wField.setFixedWidth(60)
-        self.wField.setText(str(int(self.node.shape.width())))
+        self.wField.setValue(int(self.node.shape.width()))
 
-        self.hField = IntEditField(self.geometryWidget)
-        self.hField.setEnabled(self.node.shape.resizable)
+        # TODO: allow to modify shape height from properties dialog
+        self.hField = SpinBox(self.geometryWidget)
+        self.hField.setEnabled(False)
         self.hField.setFixedWidth(60)
-        self.hField.setText(str(int(self.node.shape.height())))
+        self.hField.setValue(int(self.node.shape.height()))
 
         self.geometryLayout.addRow('X', self.xField)
         self.geometryLayout.addRow('Y', self.yField)
@@ -141,4 +148,64 @@ class NodePropertiesDialog(QDialog):
         Executed when the dialog is terminated.
         :param code: the result code.
         """
-        pass
+        if code == QDialog.Accepted:
+            self.handlePositionChanged()
+            self.handleURLChanged()
+            self.handleDescriptionChanged()
+
+    ################################################ AUXILIARY METHODS #################################################
+
+    def handleURLChanged(self):
+        """
+        Change the url property of the node.
+        """
+        url = self.urlF.value()
+        if self.node.url != url:
+            self.scene.undoStack.push(CommandNodeSetURL(self.node, url))
+
+    def handleDescriptionChanged(self):
+        """
+        Change the url property of the node.
+        """
+        description = self.descriptionF.value()
+        if self.node.description != description:
+            self.scene.undoStack.push(CommandNodeSetDescription(self.node, description))
+
+    def handlePositionChanged(self):
+        """
+        Move the node properly if the position has been changed.
+        """
+        x = clamp(self.xField.value(), 0, self.scene.sceneRect().width())
+        y = clamp(self.yField.value(), 0, self.scene.sceneRect().height())
+        pos1 = self.node.shape.mapToScene(self.node.shape.center())
+        pos2 = QPointF(x, y)
+
+        if pos1 != pos2:
+
+            # calculate the correct position: for simplicity we show the center
+            # of the node as the position, but this is actually not always true
+            diff = pos2 - pos1
+            pos3 = self.node.shape.pos()
+            pos4 = pos3 + diff
+
+            data1 = {
+                'nodes': {
+                    self.node.shape: {
+                        'anchors': {k: v for k, v in self.node.shape.anchors.items()},
+                        'pos': pos3,
+                    }
+                },
+                'edges': {}
+            }
+
+            data2 = {
+                'nodes': {
+                    self.node.shape: {
+                        'anchors': {k: v + diff for k, v in self.node.shape.anchors.items()},
+                        'pos': pos4,
+                    }
+                },
+                'edges': {}
+            }
+
+            self.scene.undoStack.push(CommandNodeMove(data1, data2))
