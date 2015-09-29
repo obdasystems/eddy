@@ -796,6 +796,8 @@ class MainWindow(QMainWindow):
             for i in range(0, xmlnodes.count()):
 
                 E = xmlnodes.at(i).toElement()
+                U = E.elementsByTagName('data:url').at(0).toElement()
+                D = E.elementsByTagName('data:description').at(0).toElement()
                 G = E.elementsByTagName('shape:geometry').at(0).toElement()
                 L = E.elementsByTagName('shape:label').at(0).toElement()
 
@@ -816,7 +818,7 @@ class MainWindow(QMainWindow):
                 # create the node: this will set the position of the node matching the center of the shape.
                 # the might have been not true when the scene has been exported but we don't record such info
                 # in the graphol XML document in order to make the document format indipendent from the tool.
-                node = __mapping__[ntype](scene=scene, id=nid, width=shapeW, height=shapeH)
+                node = __mapping__[ntype](scene=scene, id=nid, url=U.text(), description=D.text(), width=shapeW, height=shapeH)
                 node.shape.setPos(QPointF(shapeX, shapeY))
 
                 # add the node label: the node label position stored in the graphol document is in scene coordinates,
