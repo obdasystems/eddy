@@ -39,7 +39,6 @@ import sys
 from pygraphol.exceptions import ProgrammingError
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter
-from PyQt5.QtWidgets import QLayout
 
 
 def angleP(p1, p2):
