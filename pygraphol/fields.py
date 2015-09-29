@@ -34,7 +34,7 @@
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIntValidator, QDoubleValidator
-from PyQt5.QtWidgets import QLineEdit
+from PyQt5.QtWidgets import QLineEdit, QTextEdit
 
 
 class DoubleEditField(QLineEdit):
@@ -47,7 +47,7 @@ class DoubleEditField(QLineEdit):
         """
         super().__init__(parent)
         self.setAttribute(Qt.WA_MacShowFocusRect, 0)
-        self.setValidator(QDoubleValidator (self))
+        self.setValidator(QDoubleValidator(self))
 
 
 class IntEditField(QLineEdit):
@@ -61,3 +61,28 @@ class IntEditField(QLineEdit):
             super().__init__(parent)
             self.setAttribute(Qt.WA_MacShowFocusRect, 0)
             self.setValidator(QIntValidator(self))
+
+
+class StringEditField(QLineEdit):
+    """
+    This class implements an input field where the user can enter strings.
+    """
+    def __init__(self, parent=None):
+        """
+        Initialize the string input field.
+        """
+        super().__init__(parent)
+        self.setAttribute(Qt.WA_MacShowFocusRect, 0)
+
+
+class TextEditField(QTextEdit):
+    """
+    This class implements a textarea field where the user can enter strings.
+    """
+    def __init__(self, parent=None):
+        """
+        Initialize the string input field.
+        """
+        super().__init__(parent)
+        self.setAttribute(Qt.WA_MacShowFocusRect, 0)
+        self.setAcceptRichText(False)
