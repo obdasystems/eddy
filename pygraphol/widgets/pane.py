@@ -31,7 +31,6 @@
 #                                                                        #
 ##########################################################################
 
-from pygraphol.functions import itemsInLayout
 from PyQt5.QtCore import Qt, QEvent
 from PyQt5.QtWidgets import QScrollArea, QVBoxLayout, QSizePolicy, QWidget, QFrame, QScrollBar
 
@@ -100,6 +99,6 @@ class Pane(QScrollArea):
         """
         Update the widget refreshing all the children.
         """
-        for item in itemsInLayout(self.mainLayout):
+        for item in (self.mainLayout.itemAt(i) for i in range(self.mainLayout.count())):
             item.widget().update()
         super().update(*__args)

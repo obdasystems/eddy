@@ -157,18 +157,6 @@ def isEmpty(text):
     """
     return not text or str(text).strip() == ''
 
-
-def itemsInLayout(layout):
-    """
-    Returns all the widgets in the given layout.
-    :param layout: the layout from where to pick widgets
-    :rtype: tuple
-    """
-    if not isinstance(layout, QLayout):
-        raise ProgrammingError('invalid argument specified (%s): expecting QLayout' % layout.__class__.__name__)
-    return (layout.itemAt(i) for i in range(layout.count()))
-
-
 def main_is_frozen():
     """
     Detects whether we are running a Frozen application.
