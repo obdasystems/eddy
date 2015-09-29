@@ -50,15 +50,29 @@ class Edge(Item):
         :param target: the edge target node (if any).
         """
         super(Edge, self).__init__()
+
+        self._id = kwargs.get('id') if 'id' in kwargs else scene.uniqueID.next('e')
+
         self.source = source
         self.target = target
 
-        try:
-            # get the id from kwargs if supplied
-            self.id = kwargs.pop('id')
-        except KeyError:
-            # generate a new id for this edge
-            self.id = scene.uniqueID.next('e')
+    ################################################### PROPERTIES #####################################################
+
+    @property
+    def id(self):
+        """
+        Returns the edge id.
+        :rtype: str
+        """
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        """
+        Set the edge id.
+        :param value: the new edge id.
+        """
+        self._id = value
 
     ############################################### AUXILIARY METHODS ##################################################
 

@@ -45,12 +45,14 @@ class ValueDomainNode(Node):
     xmlname = 'value-domain'
     type = Node.ValueDomainNode
 
-    def __init__(self, scene, **kwargs):
+    def __init__(self, scene, description='', url='', **kwargs):
         """
-        Initialize the Value-Domain node.
+        Initialize the node.
         :param scene: the scene where this node is being added.
+        :param description: the description of this node.
+        :param url: the url this node is referencing.
         """
-        super().__init__(scene, **kwargs)
+        super().__init__(scene, description, url, **kwargs)
         self.datatype = XsdDatatype.string
         self.shape = ValueDomainNodeShape(item=self, **kwargs)
 

@@ -41,6 +41,8 @@ from pygraphol.commands.nodes import CommandNodeLabelEdit
 from pygraphol.commands.nodes import CommandNodeValueDomainSelectDatatype
 from pygraphol.commands.nodes import CommandNodeHexagonSwitchTo
 from pygraphol.commands.nodes import CommandNodeSquareChangeRestriction
+from pygraphol.commands.nodes import CommandNodeSetURL
+from pygraphol.commands.nodes import CommandNodeSetDescription
 
 from pygraphol.commands.edges import CommandEdgeAdd
 from pygraphol.commands.edges import CommandEdgeAnchorMove

@@ -45,12 +45,14 @@ class DomainRestrictionNode(Node):
     xmlname = 'domain-restriction'
     type = Node.DomainRestrictionNode
 
-    def __init__(self, scene, **kwargs):
+    def __init__(self, scene, description='', url='', **kwargs):
         """
-        Initialize the 'Domain restriction' node.
+        Initialize the node.
         :param scene: the scene where this node is being added.
+        :param description: the description of this node.
+        :param url: the url this node is referencing.
         """
-        super().__init__(scene, **kwargs)
+        super().__init__(scene, description, url, **kwargs)
         self.cardinality = dict(min=None, max=None)
         self.restriction = RestrictionType.exists
         self.shape = DomainRestrictionNodeShape(item=self, **kwargs)

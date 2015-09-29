@@ -45,12 +45,14 @@ class RangeRestrictionNode(Node):
     xmlname = 'range-restriction'
     type = Node.RangeRestrictionNode
 
-    def __init__(self, scene, **kwargs):
+    def __init__(self, scene, description='', url='', **kwargs):
         """
-        Initialize the 'Range restriction' node.
+        Initialize the node.
         :param scene: the scene where this node is being added.
+        :param description: the description of this node.
+        :param url: the url this node is referencing.
         """
-        super().__init__(scene, **kwargs)
+        super().__init__(scene, description, url, **kwargs)
         self.cardinality = dict(min=None, max=None)
         self.restriction = RestrictionType.exists
         self.shape = RangeRestrictionNodeShape(item=self, **kwargs)

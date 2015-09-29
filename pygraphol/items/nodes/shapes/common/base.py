@@ -289,7 +289,7 @@ class AbstractNodeShape(QGraphicsItem):
         """
         Executed when node properties needs to be diplayed.
         """
-        prop = NodePropertiesDialog(scene=self.scene, node=self.node)
+        prop = NodePropertiesDialog(scene=self.scene(), node=self.node)
         prop.exec_()
 
 

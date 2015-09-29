@@ -65,10 +65,18 @@ class Node(Item):
     @property
     def id(self):
         """
-        Returns the node id
+        Returns the node id.
         :rtype: str
         """
         return self._id
+
+    @id.setter
+    def id(self, value):
+        """
+        Set the node id.
+        :param value: the new node id.
+        """
+        self._id = value
 
     @property
     def description(self):
