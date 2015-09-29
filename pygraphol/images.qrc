@@ -1,6 +1,7 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
 <qresource prefix="/icons">
+    <file alias="add">images/icons/add.png</file>
     <file alias="appearance">images/icons/appearance.png</file>
     <file alias="arrow-down">images/icons/arrow-down.png</file>
     <file alias="arrow-up">images/icons/arrow-up.png</file>
@@ -26,6 +27,7 @@
     <file alias="send-to-back">images/icons/send-to-back.png</file>
     <file alias="undo">images/icons/undo.png</file>
     <file alias="warning">images/icons/warning.png</file>
+    <file alias="zoom">images/icons/zoom.png</file>
 </qresource>
 <qresource prefix="/images">
     <file alias="pygraphol">images/pygraphol.png</file>

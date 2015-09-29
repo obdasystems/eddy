@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from pygraphol.functions import clamp
+from pygraphol.functions import clamp, shaded
 from pygraphol.widgets import ZoomControl
 from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QEvent, pyqtSlot
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
@@ -254,16 +254,20 @@ class Navigator(QWidget):
             self.body = body
             self.iconUp = QPixmap(':/icons/arrow-up')
             self.iconDown = QPixmap(':/icons/arrow-down')
-            self.headLabel = QLabel('Navigator')
-            self.headImage = QLabel()
+            self.iconZoom = shaded(QPixmap(':/icons/zoom'), 0.7)
+            self.headText = QLabel('Navigator')
+            self.headImg1 = QLabel()
+            self.headImg1.setPixmap(self.iconZoom)
+            self.headImg2 = QLabel()
 
             self.headLayout = QHBoxLayout(self)
-            self.headLayout.addWidget(self.headLabel, 1, Qt.AlignLeft)
-            self.headLayout.addWidget(self.headImage, 0, Qt.AlignRight)
+            self.headLayout.addWidget(self.headImg1, 0, Qt.AlignLeft)
+            self.headLayout.addWidget(self.headText, 1, Qt.AlignLeft)
+            self.headLayout.addWidget(self.headImg2, 0, Qt.AlignRight)
             self.headLayout.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
             self.headLayout.setContentsMargins(5, 4, 5, 4)
 
-            self.setFixedSize(216, 26)
+            self.setFixedSize(216, 30)
             self.setContentsMargins(0, 0, 0, 0)
 
         ############################################## EVENT HANDLERS ##################################################
@@ -297,14 +301,14 @@ class Navigator(QWidget):
             :param collapsed: True if the body attached to the header should be collapsed, False otherwise.
             """
             self.body.setVisible(not collapsed)
-            self.headImage.setPixmap(self.iconDown if collapsed else self.iconUp)
+            self.headImg2.setPixmap(self.iconDown if collapsed else self.iconUp)
             self.setProperty('class', 'collapsed' if collapsed else 'normal')
             # refresh the widget stylesheet
             self.style().unpolish(self)
             self.style().polish(self)
             # refresh the label stylesheet
-            self.headLabel.style().unpolish(self.headLabel)
-            self.headLabel.style().polish(self.headLabel)
+            self.headText.style().unpolish(self.headText)
+            self.headText.style().polish(self.headText)
             self.update()
 
         ############################################## LAYOUT UPDATE ###################################################
@@ -313,8 +317,8 @@ class Navigator(QWidget):
             """
             Update the widget refreshing all the children.
             """
-            self.headLabel.update()
-            self.headImage.update()
+            self.headText.update()
+            self.headImg1.update()
             super().update(*__args)
 
         ############################################## ITEM PAINTING ###################################################

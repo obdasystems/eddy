@@ -33,7 +33,7 @@
 
 
 from pygraphol.exceptions import ProgrammingError
-from pygraphol.functions import itemsInLayout
+from pygraphol.functions import itemsInLayout, shaded
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QPixmap
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QLabel, QStyleOption, QStyle, QHBoxLayout
@@ -66,17 +66,21 @@ class Palette(QWidget):
                 self.body = body
                 self.iconUp = QPixmap(':/icons/arrow-up')
                 self.iconDown = QPixmap(':/icons/arrow-down')
-                self.headLabel = QLabel(title)
-                self.headImage = QLabel()
+                self.iconAdd = shaded(QPixmap(':/icons/add'), 0.7)
+                self.headText = QLabel(title)
+                self.headImg1 = QLabel()
+                self.headImg1.setPixmap(self.iconAdd)
+                self.headImg2 = QLabel()
 
                 self.headLayout = QHBoxLayout(self)
-                self.headLayout.addWidget(self.headLabel, 1, Qt.AlignLeft)
-                self.headLayout.addWidget(self.headImage, 0, Qt.AlignRight)
+                self.headLayout.addWidget(self.headImg1, 0, Qt.AlignLeft)
+                self.headLayout.addWidget(self.headText, 1, Qt.AlignLeft)
+                self.headLayout.addWidget(self.headImg2, 0, Qt.AlignRight)
                 self.headLayout.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
                 self.headLayout.setContentsMargins(5, 4, 5, 4)
 
                 self.setContentsMargins(0, 0, 0, 0)
-                self.setFixedSize(216, 26)
+                self.setFixedSize(216, 30)
 
             ########################################## EVENT HANDLERS ##################################################
 
@@ -109,14 +113,14 @@ class Palette(QWidget):
                 :param collapsed: True if the body attached to the header should be collapsed, False otherwise.
                 """
                 self.body.setVisible(not collapsed)
-                self.headImage.setPixmap(self.iconDown if collapsed else self.iconUp)
+                self.headImg2.setPixmap(self.iconDown if collapsed else self.iconUp)
                 self.setProperty('class', 'collapsed' if collapsed else 'normal')
                 # refresh the widget stylesheet
                 self.style().unpolish(self)
                 self.style().polish(self)
                 # refresh the label stylesheet
-                self.headLabel.style().unpolish(self.headLabel)
-                self.headLabel.style().polish(self.headLabel)
+                self.headText.style().unpolish(self.headText)
+                self.headText.style().polish(self.headText)
                 self.update()
 
             ############################################## LAYOUT UPDATE ###################################################
@@ -125,8 +129,8 @@ class Palette(QWidget):
                 """
                 Update the widget refreshing all the children.
                 """
-                self.headLabel.update()
-                self.headImage.update()
+                self.headText.update()
+                self.headImg2.update()
                 super().update(*__args)
 
             ########################################### ITEM PAINTING ##################################################
