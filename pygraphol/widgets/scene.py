@@ -350,7 +350,7 @@ class GraphicsScene(QGraphicsScene):
         Executed when a keyboard button is pressed on the scene.
         :param keyEvent: the keyboard event instance.
         """
-        if keyEvent.key() in (Qt.Key_Delete, Qt.Key_Backspace):
+        if keyEvent.key() in {Qt.Key_Delete, Qt.Key_Backspace}:
             # handle this here and not using a shortcut otherwise we won't be able
             # to delete elements on systems not having the CANC button on the keyboard
             self.handleItemDelete()
