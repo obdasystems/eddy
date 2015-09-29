@@ -34,7 +34,7 @@
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIntValidator, QDoubleValidator
-from PyQt5.QtWidgets import QLineEdit, QTextEdit
+from PyQt5.QtWidgets import QLineEdit, QPlainTextEdit, QSpinBox
 
 
 class DoubleEditField(QLineEdit):
@@ -49,6 +49,20 @@ class DoubleEditField(QLineEdit):
         self.setAttribute(Qt.WA_MacShowFocusRect, 0)
         self.setValidator(QDoubleValidator(self))
 
+    def setValue(self, value):
+        """
+        Set the value of the field.
+        :param value: the value to set.
+        """
+        self.setText(str(value).strip())
+
+    def value(self):
+        """
+        Returns the value of the field.
+        :rtype: float
+        """
+        return float(self.text())
+
 
 class IntEditField(QLineEdit):
         """
@@ -62,6 +76,20 @@ class IntEditField(QLineEdit):
             self.setAttribute(Qt.WA_MacShowFocusRect, 0)
             self.setValidator(QIntValidator(self))
 
+        def setValue(self, value):
+            """
+            Set the value of the field.
+            :param value: the value to set.
+            """
+            self.setText(str(value).strip())
+
+        def value(self):
+            """
+            Returns the value of the field.
+            :rtype: int
+            """
+            return int(self.text())
+
 
 class StringEditField(QLineEdit):
     """
@@ -74,8 +102,22 @@ class StringEditField(QLineEdit):
         super().__init__(parent)
         self.setAttribute(Qt.WA_MacShowFocusRect, 0)
 
+    def setValue(self, value):
+        """
+        Set the value of the field.
+        :param value: the value to set.
+        """
+        self.setText(value.strip())
 
-class TextEditField(QTextEdit):
+    def value(self):
+        """
+        Returns the value of the field.
+        :rtype: str
+        """
+        return self.text().strip()
+
+
+class TextEditField(QPlainTextEdit):
     """
     This class implements a textarea field where the user can enter strings.
     """
@@ -85,4 +127,29 @@ class TextEditField(QTextEdit):
         """
         super().__init__(parent)
         self.setAttribute(Qt.WA_MacShowFocusRect, 0)
-        self.setAcceptRichText(False)
+
+    def setValue(self, value):
+        """
+        Set the value of the field.
+        :param value: the value to set.
+        """
+        self.setPlainText(value.strip())
+
+    def value(self):
+        """
+        Returns the value of the field.
+        :rtype: str
+        """
+        return self.toPlainText().strip()
+
+
+class SpinBox(QSpinBox):
+    """
+    This class implements a SpinBox.
+    """
+    def __init__(self, parent=None):
+        """
+        Initialize the spin box.
+        """
+        super().__init__(parent)
+        self.setAttribute(Qt.WA_MacShowFocusRect, 0)
