@@ -154,7 +154,7 @@ class ValueDomainNodeShape(RoundedRect):
         :rtype: QPixmap
         """
         shape_w = 54
-        shape_h = 32
+        shape_h = 34
 
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
