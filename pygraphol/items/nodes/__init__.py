@@ -113,7 +113,13 @@ class Node(Item):
         labelPos = self.shape.mapToScene(self.shape.label.mapToItem(self.shape, self.shape.label.center()))
         labelPos -= QPointF(self.shape.label.width() / 2, self.shape.label.height() / 2)
 
-        node = self.__class__(scene=scene, id=self.id, width=self.shape.width(), height=self.shape.height())
+        node = self.__class__(scene=scene,
+                              id=self.id,
+                              description=self.description,
+                              url=self.url,
+                              width=self.shape.width(),
+                              height=self.shape.height())
+
         node.shape.setPos(shapePos)
         node.shape.setLabelText(self.shape.labelText())
         node.shape.setLabelPos(node.shape.mapFromScene(labelPos))
