@@ -48,21 +48,59 @@ class Node(Item):
     def __init__(self, scene, description='', url='', **kwargs):
         """
         Initialize the node.
-        :param scene: the GraphicScene instance where this node is being added.
+        :param scene: the scene where this node is being added.
         :param description: the description of this node.
         :param url: the url this node is referencing.
         """
         super().__init__()
-        self.edges = DistinctList()
-        self.description = description
-        self.url = url
 
-        try:
-            # get the id from kwargs if supplied
-            self.id = kwargs.pop('id')
-        except KeyError:
-            # generate a new id for this node
-            self.id = scene.uniqueID.next('n')
+        self._id = kwargs.get('id') if 'id' in kwargs else scene.uniqueID.next('n')
+        self._description = description
+        self._url = url
+
+        self.edges = DistinctList()
+
+    ################################################### PROPERTIES #####################################################
+
+    @property
+    def id(self):
+        """
+        Returns the node id
+        :rtype: str
+        """
+        return self._id
+
+    @property
+    def description(self):
+        """
+        Returns the description of the node.
+        :rtype: str
+        """
+        return self._description.strip()
+
+    @description.setter
+    def description(self, value):
+        """
+        Set the description of the node.
+        :param value: the description of the node.
+        """
+        self._description = value.strip()
+
+    @property
+    def url(self):
+        """
+        Returns the url attached to the  node.
+        :rtype: str
+        """
+        return self._url.strip()
+
+    @url.setter
+    def url(self, value):
+        """
+        Set the url attached to the node.
+        :param value: the url to attach to the node.
+        """
+        self._url = value.strip()
 
     ################################################ AUXILIARY METHODS #################################################
 
