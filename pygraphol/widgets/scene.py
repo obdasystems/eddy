@@ -562,6 +562,7 @@ class GraphicsScene(QGraphicsScene):
         root = document.createElement('graphol')
         root.setAttribute('xmlns', 'http://www.dis.uniroma1.it/~graphol/schema')
         root.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+        root.setAttribute('xmlns:data', 'http://www.dis.uniroma1.it/~graphol/schema/data')
         root.setAttribute('xmlns:line', 'http://www.dis.uniroma1.it/~graphol/schema/line')
         root.setAttribute('xmlns:shape', 'http://www.dis.uniroma1.it/~graphol/schema/shape')
         root.setAttribute('xsi:schemaLocation', 'http://www.dis.uniroma1.it/~graphol/schema '

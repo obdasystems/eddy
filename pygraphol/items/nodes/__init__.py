@@ -164,19 +164,25 @@ class Node(Item):
         shape_pos = self.shape.mapToScene(self.shape.center())
         label_pos = self.shape.mapToScene(self.shape.label.mapToItem(self.shape, self.shape.label.center()))
 
-        ## ROOT ELEMENT
+        # create the root element for this node
         node = document.createElement('node')
         node.setAttribute('id', self.id)
         node.setAttribute('type', self.xmlname)
 
-        ## SHAPE GEOMETRY
+        # add node attributes
+        url = document.createElement('data:url')
+        url.appendChild(document.createTextNode(self.url))
+        description = document.createElement('data:description')
+        description.appendChild(document.createTextNode(self.description))
+
+        # add the shape geometry
         geometry = document.createElement('shape:geometry')
         geometry.setAttribute('height', self.shape.height())
         geometry.setAttribute('width', self.shape.width())
         geometry.setAttribute('x', shape_pos.x())
         geometry.setAttribute('y', shape_pos.y())
 
-        ## SHAPE LABEL
+        # add the shape label
         label = document.createElement('shape:label')
         label.setAttribute('height', self.shape.label.height())
         label.setAttribute('width', self.shape.label.width())
@@ -184,8 +190,11 @@ class Node(Item):
         label.setAttribute('y', label_pos.y())
         label.appendChild(document.createTextNode(self.shape.label.text()))
 
+        node.appendChild(url)
+        node.appendChild(description)
         node.appendChild(geometry)
         node.appendChild(label)
+
         return node
 
     ################################################## ITEM DRAWING ####################################################
