@@ -48,6 +48,8 @@ class PreferencesDialog(QDialog):
         :param parent: the parent widget.
         """
         super().__init__(parent)
+
+        self.finished.connect(self.handleFinished)
         self.settings = QSettings(organization, appname)
 
         ############################################### APPEARANCE TAB #################################################
@@ -70,8 +72,8 @@ class PreferencesDialog(QDialog):
         ################################################# BUTTON BOX ###################################################
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Close, Qt.Horizontal, self)
-        self.buttonBox.accepted.connect(self.save)
-        self.buttonBox.rejected.connect(self.close)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
 
         ################################################ MAIN LAYOUT ###################################################
 
@@ -79,9 +81,15 @@ class PreferencesDialog(QDialog):
         self.mainLayout.addWidget(self.mainWidget)
         self.mainLayout.addWidget(self.buttonBox, 0, Qt.AlignRight)
 
-    def save(self):
+        self.setFixedSize(self.sizeHint())
+        self.setWindowTitle('Preferences')
+
+    ################################################# SIGNAL HANDLERS ##################################################
+
+    def handleFinished(self, code):
         """
-        Save application preferences.
+        Executed when the dialog is terminated.
+        :param code: the result code.
         """
-        self.settings.setValue('scene/size', self.sceneSizeField.value())
-        self.close()
+        if code == QDialog.Accepted:
+            self.settings.setValue('scene/size', self.sceneSizeField.value())
