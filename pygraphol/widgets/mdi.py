@@ -60,6 +60,19 @@ class MdiArea(QMdiArea):
         self.subWindowActivated.connect(self.handleSubWindowActivated)
         self.nav = nav
 
+    ################################################ PROPERTIES ########################################################
+
+    @property
+    def activeView(self):
+        """
+        Returns active MainView.
+        :rtype: MainView
+        """
+        activeSubWindow = self.activeSubWindow()
+        if activeSubWindow:
+            return activeSubWindow.widget()
+        return None
+
     ############################################# SIGNALS HANDLERS #####################################################
 
     @pyqtSlot('QMdiSubWindow')

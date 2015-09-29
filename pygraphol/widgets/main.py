@@ -565,11 +565,12 @@ class MainWindow(QMainWindow):
         Executed whenever a node QToolButton in a QButtonGroup is clicked.
         :param button_id: the button id.
         """
-        if not self.mdiArea.activeSubWindow():
+        mainview = self.mdiArea.activeView
+        if not mainview:
             for btn in self.paletteItems.values():
                 btn.setChecked(False)
         else:
-            currentscene = self.mdiArea.currentSubWindow().widget().scene()
+            currentscene = mainview.scene()
             currentscene.clearSelection()
             button = self.paletteItems[button_id]
 
