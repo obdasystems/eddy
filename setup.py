@@ -98,7 +98,7 @@ else:
         """
         dist_dir = None
         user_options = build_exe.user_options
-        user_options.extend([('dist-dir=', 'd', "directory to put final built distributions in [default: dist]")])
+        user_options.extend([('dist-dir=', 'd', "directory where to put final distributions in [default: dist]")])
 
         def initialize_options(self):
             """Initialize command options"""
@@ -160,7 +160,6 @@ else:
             """Create a ZIP distribution"""
             zip_file = os.path.join(self.dist_dir, '%s.zip' % release_name)
             log.info(">>> create zip %s from content of %s" % (zip_file, self.build_exe))
-            log.info('creating zip distribution: %s' % zip_file)
             zipf = zipfile.ZipFile(zip_file, 'w', zipfile.ZIP_DEFLATED)
             for root, dirs, files in os.walk(self.build_exe):
                 for filename in files:
@@ -302,7 +301,7 @@ else:
             """
             dist_dir = None
             user_options = bdist_dmg.user_options
-            user_options.extend([('dist-dir=', 'd', "directory to put final built distributions in [default: dist]")])
+            user_options.extend([('dist-dir=', 'd', "directory where to put final distributions in [default: dist]")])
 
             def initialize_options(self):
                 self.dist_dir = None
