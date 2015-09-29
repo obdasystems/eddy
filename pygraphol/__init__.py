@@ -42,10 +42,8 @@ __status__ = 'Development'
 __license__ = 'GPL'
 
 
-
 import sys
 
-from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication
 from pygraphol import images_rc ## DO NOT REMOVE
 from pygraphol.functions import QSS, getPath
