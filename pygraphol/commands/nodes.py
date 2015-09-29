@@ -401,3 +401,51 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
             self.node.restriction = self.restriction1
             self.node.cardinality = dict(min=None, max=None)
             self.node.shape.label.setText(self.node.restriction.label)
+
+
+class CommandNodeSetURL(QUndoCommand):
+    """
+    This command is used to change the url attached to a node.
+    """
+    def __init__(self, node, url):
+        """
+        Initialize the command.
+        :param node: the node whose url is changing.
+        :param url: the new url.
+        """
+        super().__init__('change %s node URL' % node.name)
+        self.node = node
+        self.url1 = node.url
+        self.url2 = url
+
+    def redo(self):
+        """redo the command"""
+        self.node.url = self.url2
+
+    def undo(self):
+        """undo the command"""
+        self.node.url = self.url1
+
+
+class CommandNodeSetDescription(QUndoCommand):
+    """
+    This command is used to change the description attached to a node.
+    """
+    def __init__(self, node, description):
+        """
+        Initialize the command.
+        :param node: the node whose description is changing.
+        :param description: the new description.
+        """
+        super().__init__('change %s node description' % node.name)
+        self.node = node
+        self.description1 = node.description
+        self.description2 = description
+
+    def redo(self):
+        """redo the command"""
+        self.node.description = self.description2
+
+    def undo(self):
+        """undo the command"""
+        self.node.description = self.description1
