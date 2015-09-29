@@ -505,7 +505,7 @@ class MainWindow(QMainWindow):
         Open the preferences dialog.
         """
         preferences = PreferencesDialog(self.centralWidget())
-        preferences.show()
+        preferences.exec_()
 
     def handleSnapToGrid(self):
         """

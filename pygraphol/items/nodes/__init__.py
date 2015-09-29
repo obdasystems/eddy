@@ -45,13 +45,17 @@ class Node(Item):
     name = 'node'
     xmlname = 'node'
 
-    def __init__(self, scene, **kwargs):
+    def __init__(self, scene, description='', url='', **kwargs):
         """
         Initialize the node.
         :param scene: the GraphicScene instance where this node is being added.
+        :param description: the description of this node.
+        :param url: the url this node is referencing.
         """
         super().__init__()
         self.edges = DistinctList()
+        self.description = description
+        self.url = url
 
         try:
             # get the id from kwargs if supplied

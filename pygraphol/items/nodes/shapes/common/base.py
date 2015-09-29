@@ -34,8 +34,9 @@
 
 from copy import deepcopy
 from pygraphol.commands import CommandNodeRezize
+from pygraphol.dialogs.properties import NodePropertiesDialog
 from PyQt5.QtCore import Qt, QPointF, QRectF, QLineF
-from PyQt5.QtGui import QColor, QPen, QPainter
+from PyQt5.QtGui import QColor, QPen, QPainter, QIcon
 from PyQt5.QtWidgets import QGraphicsItem, QMenu
 
 
@@ -74,6 +75,14 @@ class AbstractNodeShape(QGraphicsItem):
         :rtype: Node
         """
         return self.item
+
+    @property
+    def resizable(self):
+        """
+        Tells whether the shape can be resized or not.
+        :rtype: bool
+        """
+        return False
 
     ################################################# EVENT HANDLERS ###################################################
 
@@ -165,14 +174,21 @@ class AbstractNodeShape(QGraphicsItem):
         :rtype: QMenu
         """
         menu = QMenu()
-        menu.addAction(self.scene().actionItemDelete)
+        scene = self.scene()
+
+        menu.addAction(scene.actionItemDelete)
         menu.addSeparator()
-        menu.addAction(self.scene().actionItemCut)
-        menu.addAction(self.scene().actionItemCopy)
-        menu.addAction(self.scene().actionItemPaste)
+        menu.addAction(scene.actionItemCut)
+        menu.addAction(scene.actionItemCopy)
+        menu.addAction(scene.actionItemPaste)
         menu.addSeparator()
-        menu.addAction(self.scene().actionBringToFront)
-        menu.addAction(self.scene().actionSendToBack)
+        menu.addAction(scene.actionBringToFront)
+        menu.addAction(scene.actionSendToBack)
+        menu.addSeparator()
+
+        prop = menu.addAction(QIcon(':/icons/preferences'), 'Properties...')
+        prop.triggered.connect(self.handleNodeProperties)
+
         return menu
 
     def height(self):
@@ -267,6 +283,15 @@ class AbstractNodeShape(QGraphicsItem):
         """
         raise NotImplementedError('method `updateLabelPos` must be implemented in inherited class')
 
+    ################################################## ACTION HANDLERS #################################################
+
+    def handleNodeProperties(self):
+        """
+        Executed when node properties needs to be diplayed.
+        """
+        prop = NodePropertiesDialog(scene=self.scene, node=self.node)
+        prop.exec_()
+
 
 class AbstractResizableNodeShape(AbstractNodeShape):
     """
@@ -308,6 +333,16 @@ class AbstractResizableNodeShape(AbstractNodeShape):
         self.mousePressPos = None
         self.mousePressRect = None
         super().__init__(**kwargs)
+
+    ################################################### PROPERTIES #####################################################
+
+    @property
+    def resizable(self):
+        """
+        Tells whether the shape can be resized or not.
+        :rtype: bool
+        """
+        return True
 
     ################################################# EVENT HANDLERS ###################################################
 
