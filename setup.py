@@ -31,6 +31,7 @@
 #                                                                        #
 ##########################################################################
 
+
 import os
 import re
 import setuptools
@@ -456,6 +457,9 @@ setup(
             ],
             'include_files': [
                 ('pygraphol/qss', 'qss'),
+                ('LICENSE', 'LICENSE'),
+                ('PACKAGING.md', 'PACKAGING.md'),
+                ('README.md', 'README.md'),
             ],
         }
     },
