@@ -75,7 +75,8 @@ class CleanCommand(setuptools.Command):
         """Command execution"""
         if os.path.isdir(BUILD_DIR):
             dir_util.remove_tree(BUILD_DIR, verbose=1)
-
+        if os.path.isdir('pyGraphol.egg-info'):
+            dir_util.remove_tree('pyGraphol.egg-info', verbose=1)
 
 cmdclass = {
     'clean': CleanCommand

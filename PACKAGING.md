@@ -17,6 +17,14 @@ to have installed [GIT](http://git-scm.com/) on your system and make sure that t
 is in your PATH environment. Once the building process is completed you will find the built package(s) 
 inside the  *dist* directory.
 
+## Source and wheel distribution
+
+Bring up a terminal window (or command prompt if on win32 platform) and type the following:
+    
+    >>> git clone https://github.com/danielepantaleone/pygraphol.git
+    >>> cd pygraphol
+    >>> python setup.py release
+
 ## Windows
 
 Install [Qt 5.5](http://download.qt.io/official_releases/qt/5.5/5.5.0/qt-opensource-windows-x86-mingw492-5.5.0.exe).  
