@@ -33,6 +33,7 @@
 
 
 import os
+import platform
 import re
 import setuptools
 import stat
@@ -46,17 +47,23 @@ from pygraphol import __appname__, __license__, __version__
 PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))  # directory where this file is in
 BUILD_DIR = os.path.join(PROJECT_DIR, 'build')  # directory where all work will be done
 DIST_DIR = os.path.join(PROJECT_DIR, 'dist')  # directory where all the final builds will be found
-BUILD_PATH = os.path.join(BUILD_DIR, '%s-%s-%s-%s' % (__appname__, __version__, __license__.lower(), sys.platform))
+
 
 if sys.platform.startswith('darwin'):
     EXECUTABLE_NAME = __appname__
     EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'pygraphol', 'images', 'pygraphol.icns')
+    RELEASE_NAME = '%s-%s-%s-darwin' % (__appname__, __version__, __license__.lower())
 elif sys.platform.startswith('win32'):
     EXECUTABLE_NAME = '%s.exe' % __appname__
     EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'pygraphol', 'images', 'pygraphol.ico')
+    RELEASE_NAME = '%s-%s-%s-win%s' % (__appname__, __version__, __license__.lower(), platform.architecture()[0][:-3])
 else:
     EXECUTABLE_NAME = __appname__
     EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'pygraphol', 'images', 'pygraphol.png')
+    RELEASE_NAME = '%s-%s-%s-linux%s' % (__appname__, __version__, __license__.lower(), platform.architecture()[0][:-3])
+
+
+BUILD_PATH = os.path.join(BUILD_DIR, RELEASE_NAME)
 
 
 class CleanCommand(setuptools.Command):
@@ -124,7 +131,7 @@ else:
             self.chmod_exec()
             self.unix2dos()
 
-            self.make_zip('%s-%s' % (__appname__, __version__))
+            self.make_zip(RELEASE_NAME)
 
         def clean_compiled_files(self):
             """Remove python compiled files (if any got left in)"""
@@ -153,10 +160,10 @@ else:
                         if not os.path.isdir(path) and path.rsplit('.', 1)[-1] in ('txt', 'md'):
                             with open(path, mode='rb') as f:
                                 data = f.read()
-                            new_data = re.sub("\r?\n", "\r\n", data)
+                            new_data = re.sub("\r?\n", "\r\n", data.decode(encoding='UTF-8'))
                             if new_data != data:
                                 with open(path, mode='wb') as f:
-                                    f.write(new_data)
+                                    f.write(new_data.encode(encoding='UTF-8'))
 
         def make_zip(self, release_name):
             """Create a ZIP distribution"""
