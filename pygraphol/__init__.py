@@ -37,7 +37,7 @@ __email__ = 'danielepantaleone@me.com'
 __copyright__ = 'Copyright 2015, Daniele Pantaleone'
 __organization__ = 'Sapienza - University Of Rome'
 __appname__ = 'pyGraphol'
-__version__ = '0.2'
+__version__ = '0.1'
 __status__ = 'Development'
 __license__ = 'GPL'
 
