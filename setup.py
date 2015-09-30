@@ -312,6 +312,10 @@ else:
             user_options = bdist_dmg.user_options
             user_options.extend([('dist-dir=', 'd', "directory where to put final distributions in [default: dist]")])
 
+            bundleDir = None
+            buildDir = None
+            dmgName = None
+
             def initialize_options(self):
                 self.dist_dir = None
                 bdist_dmg.initialize_options(self)
@@ -329,6 +333,7 @@ else:
                 tmpDir = os.path.join(self.buildDir, 'tmp')
                 if os.path.exists(tmpDir):
                     dir_util.remove_tree(tmpDir, verbose=1)
+
                 self.mkpath(tmpDir)
 
                 # move the app bundle into a separate folder since hdutil copies in the dmg
@@ -356,10 +361,22 @@ else:
                 dir_util.remove_tree(tmpDir, verbose=1)
 
             def run(self):
+                # create dist directory if needed
                 if not os.path.isdir(self.dist_dir):
                     os.mkdir(self.dist_dir)
-                # call original run method
-                bdist_dmg.run(self)
+
+                # create the application bundle
+                self.run_command('bdist_mac')
+
+                # find the location of the application bundle and the build dir
+                self.bundleDir = self.get_finalized_command('bdist_mac').bundleDir
+                self.buildDir = self.get_finalized_command('build').build_base
+
+                # set the file name of the DMG to be built
+                self.dmgName = os.path.join(self.buildDir, RELEASE_NAME + '.dmg')
+
+                self.execute(self.buildDMG, ())
+
                 # move the file into the dist directory
                 self.move_file(self.dmgName, self.dist_dir)
 
