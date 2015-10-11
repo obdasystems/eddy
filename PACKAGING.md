@@ -1,6 +1,6 @@
-## pyGraphol packaging documentation
+## Grapholed packaging documentation
 
-pyGraphol is distributed as different packages:
+Grapholed is distributed as different packages:
 
 * Python sources package as a zip file
 * Python wheel package
@@ -21,8 +21,8 @@ inside the  *dist* directory.
 
 Bring up a terminal window (or command prompt if on win32 platform) and type the following:
     
-    >>> git clone https://github.com/danielepantaleone/pygraphol.git
-    >>> cd pygraphol
+    >>> git clone https://github.com/danielepantaleone/grapholed.git
+    >>> cd grapholed
     >>> python setup.py release
 
 ## Windows
@@ -32,8 +32,8 @@ Install [PyQt 5.5](http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5/PyQ
 Install [cx_Freeze](https://pypi.python.org/pypi/cx_Freeze/4.3.4).  
 Bring up command prompt window and type the following:
 
-    >>> git clone https://github.com/danielepantaleone/pygraphol.git
-    >>> cd pygraphol
+    >>> git clone https://github.com/danielepantaleone/grapholed.git
+    >>> cd grapholed
     >>> python setup.py build_exe
     
 ## Mac OS
@@ -56,7 +56,7 @@ Bring up a terminal window and type the following:
     >>> python3 configure.py --confirm-license
     >>> make -j 5 && make install
     >>> cd ~/Downloads
-    >>> git clone https://github.com/danielepantaleone/pygraphol.git
-    >>> cd ~/Downloads/pygraphol
+    >>> git clone https://github.com/danielepantaleone/grapholed.git
+    >>> cd ~/Downloads/grapholed
     >>> pip install -r build-requirements.txt
     >>> python setup.py bdist_dmg

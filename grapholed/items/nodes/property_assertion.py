@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -32,41 +31,35 @@
 #                                                                        #
 ##########################################################################
 
-import sys
-import traceback
 
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QMessageBox, QSpacerItem, QSizePolicy
-from grapholed import images_rc ## DO NOT REMOVE
-from grapholed import Grapholed
-from grapholed.widgets import SplashScreen
+from grapholed.items.nodes import Node
+from grapholed.items.nodes.shapes import PropertyAssertionNodeShape
 
 
-def main():
+class PropertyAssertionNode(Node):
     """
-    Application main execution.
+    This class implements the 'PropertyAssertion' node.
     """
-    try:
-        app = Grapholed(sys.argv)
-        with SplashScreen(min_splash_time=2):
-            mainwindow = app.init()
-    except Exception as e:
-        box = QMessageBox()
-        box.setIconPixmap(QPixmap(':/icons/error'))
-        box.setWindowTitle('FATAL')
-        box.setText('Grapholed failed to start!')
-        box.setInformativeText('ERROR: %s' % e)
-        box.setDetailedText(traceback.format_exc())
-        box.setStandardButtons(QMessageBox.Ok)
-        # this will trick Qt and resize a bit the QMessageBox so the exception stack trace is printed nice
-        foo = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        box.layout().addItem(foo, box.layout().rowCount(), 0, 1, box.layout().columnCount())
-        box.exec_()
-        sys.exit(127)
-    else:
-        mainwindow.show()
-        sys.exit(app.exec_())
+    name = 'property assertion'
+    xmlname = 'property-assertion'
+    type = Node.PropertyAssertionNode
 
+    def __init__(self, scene, description='', url='', **kwargs):
+        """
+        Initialize the node.
+        :param scene: the scene where this node is being added.
+        :param description: the description of this node.
+        :param url: the url this node is referencing.
+        """
+        super().__init__(scene, description, url, **kwargs)
+        self.shape = PropertyAssertionNodeShape(item=self, **kwargs)
 
-if __name__ == '__main__':
-    main()
+    ############################################ NODE REPRESENTATION ###################################################
+
+    @classmethod
+    def image(cls, **kwargs):
+        """
+        Returns an image suitable for the palette.
+        :rtype: QPixmap
+        """
+        return PropertyAssertionNodeShape.image(**kwargs)

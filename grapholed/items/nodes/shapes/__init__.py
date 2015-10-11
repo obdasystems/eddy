@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -32,41 +31,41 @@
 #                                                                        #
 ##########################################################################
 
-import sys
-import traceback
 
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QMessageBox, QSpacerItem, QSizePolicy
-from grapholed import images_rc ## DO NOT REMOVE
-from grapholed import Grapholed
-from grapholed.widgets import SplashScreen
-
-
-def main():
-    """
-    Application main execution.
-    """
-    try:
-        app = Grapholed(sys.argv)
-        with SplashScreen(min_splash_time=2):
-            mainwindow = app.init()
-    except Exception as e:
-        box = QMessageBox()
-        box.setIconPixmap(QPixmap(':/icons/error'))
-        box.setWindowTitle('FATAL')
-        box.setText('Grapholed failed to start!')
-        box.setInformativeText('ERROR: %s' % e)
-        box.setDetailedText(traceback.format_exc())
-        box.setStandardButtons(QMessageBox.Ok)
-        # this will trick Qt and resize a bit the QMessageBox so the exception stack trace is printed nice
-        foo = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        box.layout().addItem(foo, box.layout().rowCount(), 0, 1, box.layout().columnCount())
-        box.exec_()
-        sys.exit(127)
-    else:
-        mainwindow.show()
-        sys.exit(app.exec_())
+from grapholed.items.nodes.shapes.attribute import AttributeNodeShape
+from grapholed.items.nodes.shapes.complement import ComplementNodeShape
+from grapholed.items.nodes.shapes.concept import ConceptNodeShape
+from grapholed.items.nodes.shapes.datatype_restriction import DatatypeRestrictionNodeShape
+from grapholed.items.nodes.shapes.disjoint_union import DisjointUnionNodeShape
+from grapholed.items.nodes.shapes.domain_restriction import DomainRestrictionNodeShape
+from grapholed.items.nodes.shapes.enumeration import EnumerationNodeShape
+from grapholed.items.nodes.shapes.individual import IndividualNodeShape
+from grapholed.items.nodes.shapes.intersection import IntersectionNodeShape
+from grapholed.items.nodes.shapes.property_assertion import PropertyAssertionNodeShape
+from grapholed.items.nodes.shapes.range_restriction import RangeRestrictionNodeShape
+from grapholed.items.nodes.shapes.role import RoleNodeShape
+from grapholed.items.nodes.shapes.role_chain import RoleChainNodeShape
+from grapholed.items.nodes.shapes.role_inverse import RoleInverseNodeShape
+from grapholed.items.nodes.shapes.union import UnionNodeShape
+from grapholed.items.nodes.shapes.value_domain import ValueDomainNodeShape
+from grapholed.items.nodes.shapes.value_restriction import ValueRestrictionNodeShape
 
 
-if __name__ == '__main__':
-    main()
+__all__ = [
+    'AttributeNodeShape',
+    'ComplementNodeShape',
+    'ConceptNodeShape',
+    'DatatypeRestrictionNodeShape',
+    'DisjointUnionNodeShape',
+    'DomainRestrictionNodeShape',
+    'EnumerationNodeShape',
+    'IndividualNodeShape',
+    'IntersectionNodeShape',
+    'PropertyAssertionNodeShape',
+    'RoleInverseNodeShape',
+    'RoleNodeShape',
+    'RoleChainNodeShape',
+    'UnionNodeShape',
+    'ValueDomainNodeShape',
+    'ValueRestrictionNodeShape',
+]

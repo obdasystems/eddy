@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -32,41 +31,71 @@
 #                                                                        #
 ##########################################################################
 
-import sys
-import traceback
 
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QMessageBox, QSpacerItem, QSizePolicy
-from grapholed import images_rc ## DO NOT REMOVE
-from grapholed import Grapholed
-from grapholed.widgets import SplashScreen
+from functools import partial
 
 
-def main():
+# noinspection PyCallByClass
+# noinspection PyUnresolvedReferences
+class memoized(object):
     """
-    Application main execution.
+    Cache the return value of a method/function.
+    This class is meant to be used as a decorator of methods. The return value from a given method invocation
+    will be cached on the instance whose method was invoked. All arguments passed to a method decorated with
+    memoize must be hashable.
+    If a memoized method is invoked directly on its class the result will not be cached.
+    Instead the method will be invoked like a static method:
+
+    >>>class Obj(object):
+    >>>    @memoized
+    >>>    def add_to(self, arg):
+    >>>        return self + arg
+    >>>Obj.add_to(1) # not enough arguments
+    >>>Obj.add_to(1, 2) # returns 3, result is not cached
+
+    See http://code.activestate.com/recipes/577452-a-memoize-decorator-for-instance-methods/
     """
-    try:
-        app = Grapholed(sys.argv)
-        with SplashScreen(min_splash_time=2):
-            mainwindow = app.init()
-    except Exception as e:
-        box = QMessageBox()
-        box.setIconPixmap(QPixmap(':/icons/error'))
-        box.setWindowTitle('FATAL')
-        box.setText('Grapholed failed to start!')
-        box.setInformativeText('ERROR: %s' % e)
-        box.setDetailedText(traceback.format_exc())
-        box.setStandardButtons(QMessageBox.Ok)
-        # this will trick Qt and resize a bit the QMessageBox so the exception stack trace is printed nice
-        foo = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        box.layout().addItem(foo, box.layout().rowCount(), 0, 1, box.layout().columnCount())
-        box.exec_()
-        sys.exit(127)
-    else:
-        mainwindow.show()
-        sys.exit(app.exec_())
+    def __init__(self, func):
+        """
+        Object constructor.
+        :param func: The decorated callable
+        """
+        self.func = func
+
+    def __get__(self, obj, _):
+        """
+        Return cached result (if already computed) or the result returned by the cached function.
+        """
+        if obj is None:
+            return self.func
+        return partial(self, obj)
+
+    def __call__(self, *args, **kw):
+        """
+        Cache function return value.
+        """
+        obj = args[0]
+        try:
+            cache = obj.__cache
+        except AttributeError:
+            cache = obj.__cache = {}
+        key = (self.func, args[1:], frozenset(kw.items()))
+        try:
+            res = cache[key]
+        except KeyError:
+            res = cache[key] = self.func(*args, **kw)
+        return res
+
+    def __repr__(self):
+         """
+         Return the function's docstring.
+         """
+         return self.func.__doc__
 
 
-if __name__ == '__main__':
-    main()
+class classproperty(property):
+    """
+    Property to be used with class methods (SET IS NOT SUPPORTED).
+    """
+    def __get__(self, cls, owner):
+        return self.fget.__get__(None, owner)()

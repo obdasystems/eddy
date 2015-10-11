@@ -32,40 +32,56 @@
 #                                                                        #
 ##########################################################################
 
-import sys
-import traceback
+__author__ = 'Daniele Pantaleone'
+__email__ = 'danielepantaleone@me.com'
+__copyright__ = 'Copyright 2015, Daniele Pantaleone'
+__organization__ = 'Sapienza - University Of Rome'
+__appname__ = 'Grapholed'
+__version__ = '0.1'
+__status__ = 'Development'
+__license__ = 'GPL'
 
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QMessageBox, QSpacerItem, QSizePolicy
+
+import sys
+
+from PyQt5.QtWidgets import QApplication
 from grapholed import images_rc ## DO NOT REMOVE
-from grapholed import Grapholed
-from grapholed.widgets import SplashScreen
+from grapholed.functions import QSS, getPath
+from grapholed.style import DefaultStyle
+from grapholed.widgets import MainWindow, SplashScreen
+
+
+class Grapholed(QApplication):
+    """
+    This class implements the main Qt application.
+    """
+    mainWindow = None
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize Grapholed.
+        """
+        super().__init__(*args, **kwargs)
+
+    def init(self):
+        """
+        Run initialization tasks for Grapholed (i.e: initialize the Style, Main Window...).
+        :return: the application MainWindow (:type: MainWindow)
+        """
+        self.setStyle(DefaultStyle())
+        self.setStyleSheet(QSS(getPath('@grapholed/stylesheets/default.qss')))
+        self.mainWindow = MainWindow()
+        return self.mainWindow
 
 
 def main():
     """
-    Application main execution.
+    Application main execution (without splashscreen).
     """
-    try:
-        app = Grapholed(sys.argv)
-        with SplashScreen(min_splash_time=2):
-            mainwindow = app.init()
-    except Exception as e:
-        box = QMessageBox()
-        box.setIconPixmap(QPixmap(':/icons/error'))
-        box.setWindowTitle('FATAL')
-        box.setText('Grapholed failed to start!')
-        box.setInformativeText('ERROR: %s' % e)
-        box.setDetailedText(traceback.format_exc())
-        box.setStandardButtons(QMessageBox.Ok)
-        # this will trick Qt and resize a bit the QMessageBox so the exception stack trace is printed nice
-        foo = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        box.layout().addItem(foo, box.layout().rowCount(), 0, 1, box.layout().columnCount())
-        box.exec_()
-        sys.exit(127)
-    else:
-        mainwindow.show()
-        sys.exit(app.exec_())
+    app = Grapholed(sys.argv)
+    mainwindow = app.init()
+    mainwindow.show()
+    sys.exit(app.exec_())
 
 
 if __name__ == '__main__':

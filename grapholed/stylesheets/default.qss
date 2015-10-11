@@ -1,0 +1,253 @@
+/**************************************************************************/
+/*                                                                        */
+/*  Grapholed: a python design tool for the Graphol language.             */
+/*  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      */
+/*                                                                        */
+/*  This program is free software: you can redistribute it and/or modify  */
+/*  it under the terms of the GNU General Public License as published by  */
+/*  the Free Software Foundation, either version 3 of the License, or     */
+/*  (at your option) any later version.                                   */
+/*                                                                        */
+/*  This program is distributed in the hope that it will be useful,       */
+/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
+/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          */
+/*  GNU General Public License for more details.                          */
+/*                                                                        */
+/*  You should have received a copy of the GNU General Public License     */
+/*  along with this program. If not, see <http://www.gnu.org/licenses/>.  */
+/*                                                                        */
+/**************************************************************************/
+/*                                                                        */
+/*  Graphol is developed by members of the DASI-lab group of the          */
+/*  Dipartimento di Informatica e Sistemistica "A.Ruberti" at Sapienza    */
+/*  University of Rome: http://www.dis.uniroma1.it/~graphol/:             */
+/*                                                                        */
+/*     - Domenico Lembo <lembo@dis.uniroma1.it>                           */
+/*     - Marco Console <console@dis.uniroma1.it>                          */
+/*     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  */
+/*     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       */
+/*                                                                        */
+/**************************************************************************/
+
+
+/******************************* TOOLBAR **********************************/
+
+QToolBar {
+    padding: 4px;
+    spacing: 2px;
+}
+QToolBar QToolButton {
+    border: 1px solid transparent;
+}
+QToolBar QToolButton:hover {
+    background: #CFD8DC;
+    border: 1px solid #90A4AE;
+}
+QToolBar QToolButton:checked,
+QToolBar QToolButton:pressed {
+    background: #B0BEC5;
+    border: 1px solid #607D8B;
+}
+
+/******************** LEFT/RIGHT PANE WIDGETS LAYOUT **********************/
+
+Pane Head {
+    color: #000000;
+    border: 1px solid #A9A9A9;
+    border-radius: 2px;
+}
+Pane Head.normal {
+    border-color: #A9A9A9;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #F8F8F8, stop: 0.3 #F4F4F4,
+                                                            stop: 0.7 #F0F0F0, stop: 1.0 #EDEDED);
+}
+Pane Head.collapsed {
+    border-color: #BABABA;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #E0E0E0, stop: 0.3 #DCDCDC,
+                                                            stop: 0.7 #DBDBDB, stop: 1.0 #D3D3D3);
+}
+Pane Body {
+    background: #FFFFFF;
+    border: 1px solid #A9A9A9;
+    border-top: 0;
+}
+Palette QToolButton {
+    background: #E0E0E0;
+    border: 1px solid #BABABA;
+}
+Palette QToolButton:checked {
+    background: #4FC3F7;
+    border: 1px solid #455A64;
+}
+Navigator,
+Navigator Overview {
+    background: transparent;
+    border: 0;
+}
+
+/******************************* TAB BAR **********************************/
+
+QTabBar {
+    qproperty-drawBase: 0;
+}
+QTabBar:focus {
+    border: 0;
+}
+QTabBar::close-button  {
+    image: url(:/icons/close);
+    background: transparent;
+}
+QTabBar::tab:top {
+    padding: 2px 10px;
+    border: 1px solid #A9A9A9;
+    border-bottom: 0;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    min-width: 80px;
+}
+QTabBar::tab:top:selected {
+    height: 24px;
+    margin-top: 0;
+    margin-left: -4px;
+    margin-right: -4px;
+    border-color: #A9A9A9;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #F8F8F8, stop: 0.3 #F4F4F4,
+                                                            stop: 0.7 #F0F0F0, stop: 1.0 #EDEDED);
+}
+QTabBar::tab:top:!selected {
+    height: 22px;
+    margin-top: 2px;
+    border-color: #BABABA;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #E0E0E0, stop: 0.3 #DCDCDC,
+                                                            stop: 0.7 #DBDBDB, stop: 1.0 #D3D3D3);
+}
+QTabBar::tab:top:first:selected {
+    margin-left: 0;
+}
+QTabBar::tab:top:last:selected {
+    margin-right: 0;
+}
+QTabBar::tab:top:only-one {
+    margin: 0;
+}
+
+/****************************** TAB WIDGET ********************************/
+
+QTabWidget::pane {
+    border: 1px solid #A9A9A9;
+}
+
+/****************************** MAIN VIEW *********************************/
+
+QGraphicsView {
+    border: 1px solid #A9A9A9;
+}
+
+/****************************** SCROLL BAR ********************************/
+
+QScrollBar {
+    background: transparent;
+    margin: 0;
+    height: 12px;
+    width: 12px;
+}
+QScrollBar::handle {
+    border: 1px solid #555555;
+    border-radius: 4px;
+    margin: 1px;
+}
+QScrollBar::handle:vertical {
+    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop:0 #5C5C5C, stop:1 #515151);
+    min-height: 20px;
+    min-width: 8px;
+}
+QScrollBar::handle:vertical:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop:0 #666666, stop:1 #5B5B5B);
+}
+QScrollBar::handle:horizontal {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop:0 #5C5C5C, stop:1 #515151);
+    min-height: 8px;
+    min-width: 20px;
+}
+QScrollBar::handle:horizontal:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop:0 #666666, stop:1 #5B5B5B);
+}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical,
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+    background: transparent;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    height: 0;
+    width: 0;
+}
+
+/******************************** SLIDER ***********************************/
+
+QSlider::groove:horizontal {
+    border: 1px solid #555555;
+    height: 6px;
+    background: #CFD8DC;
+    margin: 2px 0;
+    border-radius: 2px;
+}
+
+QSlider::handle:horizontal {
+    background: #37474F;
+    border: 1px solid #263238;
+    width: 12px;
+    height: 12px;
+    margin: -4px 0;
+    border-radius: 2px;
+}
+
+/********************************* MENU ***********************************/
+
+QMenu {
+    border: 1px solid #A9A9A9;
+    background: #EDEDED;
+    margin: 4px;
+}
+QMenu::icon {
+    margin: 5px;
+}
+QMenu::indicator {
+    width: 18px;
+    height: 18px;
+}
+QMenu::item  {
+    border: 1px solid transparent;
+    color: #6A6A6A;
+    font-size: 12px;
+    margin-left: 5px;
+    padding: 5px 30px 5px 30px;
+}
+QMenu::item:selected {
+    color: #000000;
+}
+QMenu::separator {
+    height: 1px;
+    background: #A9A9A9;
+    margin-left: 8px;
+    margin-right: 4px;
+}
+
+/******************************** POPUPS **********************************/
+
+QMessageBox QLabel {
+    font-weight: normal;
+}
+
+/******************************** FIELDS **********************************/
+
+QLineEdit {
+    background: #FFFFFF;
+}
+
+/***************************** STARTUS BAR ********************************/
+
+QStatusBar {
+    background: #BBBBBB;
+}

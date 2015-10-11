@@ -2,7 +2,7 @@
 
 ##########################################################################
 #                                                                        #
-#  pyGraphol: a python design tool for the Graphol language.             #
+#  Grapholed: a diagramming software for the Graphol language.           #
 #  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
@@ -41,7 +41,7 @@ import sys
 import zipfile
 
 from distutils import dir_util, log
-from pygraphol import __appname__, __license__, __version__
+from grapholed import __appname__, __license__, __version__
 
 
 PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))  # directory where this file is in
@@ -51,15 +51,15 @@ DIST_DIR = os.path.join(PROJECT_DIR, 'dist')  # directory where all the final bu
 
 if sys.platform.startswith('darwin'):
     EXECUTABLE_NAME = __appname__
-    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'pygraphol', 'images', 'grapholed.icns')
+    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'grapholed', 'images', 'grapholed.icns')
     RELEASE_NAME = '%s-%s-%s-darwin' % (__appname__, __version__, __license__.lower())
 elif sys.platform.startswith('win32'):
     EXECUTABLE_NAME = '%s.exe' % __appname__
-    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'pygraphol', 'images', 'grapholed.ico')
+    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'grapholed', 'images', 'grapholed.ico')
     RELEASE_NAME = '%s-%s-%s-win%s' % (__appname__, __version__, __license__.lower(), platform.architecture()[0][:-3])
 else:
     EXECUTABLE_NAME = __appname__
-    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'pygraphol', 'images', 'grapholed.png')
+    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'grapholed', 'images', 'grapholed.png')
     RELEASE_NAME = '%s-%s-%s-linux%s' % (__appname__, __version__, __license__.lower(), platform.architecture()[0][:-3])
 
 
@@ -82,8 +82,8 @@ class CleanCommand(setuptools.Command):
         """Command execution"""
         if os.path.isdir(BUILD_DIR):
             dir_util.remove_tree(BUILD_DIR, verbose=1)
-        if os.path.isdir('pyGraphol.egg-info'):
-            dir_util.remove_tree('pyGraphol.egg-info', verbose=1)
+        if os.path.isdir('Grapholed.egg-info'):
+            dir_util.remove_tree('Grapholed.egg-info', verbose=1)
 
 cmdclass = {
     'clean': CleanCommand
@@ -408,16 +408,17 @@ setup(
     version=__version__,
     author='Daniele Pantaleone',
     author_email="danielepantaleone@me.com",
-    description="pyGraphol is a python design tool for the Graphol language.",
-    long_description="pyGraphol is a python design tool for the Graphol language. Graphol is developed by members of "
-                     "the DASI-lab group of the Dipartimento di Informatica e Sistemistica \"A.Ruberti\" at Sapienza "
-                     "University of Rome. Graphol offers a completely visual representation of ontologies to users, "
-                     "in order to help understanding by people who are not skilled in logic. Graphol provides designers "
-                     "with simple graphical primitives for ontology editing, avoiding complex textual syntax. Graphol's "
-                     "basic components are inspired by Entity Relationship(ER) diagrams, thus ontologies that can be "
-                     "rendered as ER diagrams have in Graphol a similar diagrammatic shape.",
+    description="Grapholed is diagramming software for the Graphol language written in python.",
+    long_description="Grapholed is diagramming software for the Graphol language written in python. Graphol is "
+                     "developed by members of the DASI-lab group of the Dipartimento di Informatica e Sistemistica "
+                     "\"A.Ruberti\" at Sapienza University of Rome. Graphol offers a completely visual representation "
+                     "of ontologies to users, in order to help understanding by people who are not skilled in logic. "
+                     "Graphol provides designers with simple graphical primitives for ontology editing, avoiding "
+                     "complex textual syntax. Graphol's basic components are inspired by Entity Relationship(ER) "
+                     "diagrams, thus ontologies that can be rendered as ER diagrams have in Graphol a similar "
+                     "diagrammatic shape.",
     license=__license__,
-    url="https://github.com/danielepantaleone/pygraphol",
+    url="https://github.com/danielepantaleone/grapholed",
     classifiers=[
         'Development Status :: 1 - Planning',
         'Development Status :: 2 - Pre-Alpha',
@@ -434,7 +435,7 @@ setup(
     ],
     packages=setuptools.find_packages(),
     package_data={'': [
-            'qss/*.qss',
+            'stylesheets/*.qss',
         ]
     },
     entry_points={
@@ -467,10 +468,10 @@ setup(
             'create_shared_zip': False,
             'append_script_to_exe': True,
             'packages': [
-                'pygraphol.commands',
-                'pygraphol.dialogs',
-                'pygraphol.items',
-                'pygraphol.widgets',
+                'grapholed.commands',
+                'grapholed.dialogs',
+                'grapholed.items',
+                'grapholed.widgets',
             ],
             'excludes': ['tcl', 'ttk', 'tkinter', 'Tkinter'],
             'includes': [
@@ -481,7 +482,7 @@ setup(
                 'PyQt5.QtXml',
             ],
             'include_files': [
-                ('pygraphol/qss', 'qss'),
+                ('grapholed/stylesheets', 'stylesheets'),
                 ('LICENSE', 'LICENSE'),
                 ('PACKAGING.md', 'PACKAGING.md'),
                 ('README.md', 'README.md'),

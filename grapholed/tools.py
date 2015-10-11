@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -32,41 +31,69 @@
 #                                                                        #
 ##########################################################################
 
-import sys
-import traceback
 
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QMessageBox, QSpacerItem, QSizePolicy
-from grapholed import images_rc ## DO NOT REMOVE
-from grapholed import Grapholed
-from grapholed.widgets import SplashScreen
+import re
 
 
-def main():
+RE_DIGIT = re.compile("""\d""")
+RE_PARSE = re.compile("""^(?P<prefix>[^\d])(?P<value>\d+)$""")
+
+
+class UniqueID(object):
     """
-    Application main execution.
+    Helper class used to generate sequential IDs for GraphicScene items.
     """
-    try:
-        app = Grapholed(sys.argv)
-        with SplashScreen(min_splash_time=2):
-            mainwindow = app.init()
-    except Exception as e:
-        box = QMessageBox()
-        box.setIconPixmap(QPixmap(':/icons/error'))
-        box.setWindowTitle('FATAL')
-        box.setText('Grapholed failed to start!')
-        box.setInformativeText('ERROR: %s' % e)
-        box.setDetailedText(traceback.format_exc())
-        box.setStandardButtons(QMessageBox.Ok)
-        # this will trick Qt and resize a bit the QMessageBox so the exception stack trace is printed nice
-        foo = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        box.layout().addItem(foo, box.layout().rowCount(), 0, 1, box.layout().columnCount())
-        box.exec_()
-        sys.exit(127)
-    else:
-        mainwindow.show()
-        sys.exit(app.exec_())
+    start = 0 # the initial id number
+    step = 1 # incremental step
 
+    def __init__(self):
+        """
+        Initialize the UniqueID generator.
+        """
+        self.ids = dict()
 
-if __name__ == '__main__':
-    main()
+    def next(self, prefix):
+        """
+        Returns the next id available prepending the given prefix.
+        :param prefix: the prefix to be added before the node (usually 'n' for nodes and 'e' for edges).
+        :raise ValueError: if the given prefix contains digits.
+        :rtype: str
+        """
+        if RE_DIGIT.search(prefix):
+            raise ValueError('invalid prefix supplied (%s): id prefix MUST not contain any digit' % prefix)
+        try:
+            last = self.ids[prefix]
+        except KeyError:
+            self.ids[prefix] = UniqueID.start
+        else:
+            self.ids[prefix] = last + UniqueID.step
+        finally:
+            return '%s%s' % (prefix, self.ids[prefix])
+
+    @staticmethod
+    def parse(unique_id):
+        """
+        Parse the given unique id returning a tuple in the format (prefix, value).
+        :raise ValueError: if the given value has an invalid format.
+        :param unique_id: the unique id to parse.
+        :rtype: tuple
+        """
+        match = RE_PARSE.match(unique_id)
+        if not match:
+            raise ValueError('invalid id supplied (%s)' % unique_id)
+        return match.group('prefix'), int(match.group('value'))
+
+    def update(self, unique_id):
+        """
+        Update the last incremental value according to the given id.
+        :raise ValueError: if the given value has an invalid format.
+        :param unique_id: the for incremental adjustment.
+        """
+        prefix, value = self.parse(unique_id)
+
+        try:
+            last = self.ids[prefix]
+        except KeyError:
+            self.ids[prefix] = value
+        else:
+            self.ids[prefix] = max(last, value)

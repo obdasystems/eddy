@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -32,41 +31,25 @@
 #                                                                        #
 ##########################################################################
 
-import sys
-import traceback
 
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QMessageBox, QSpacerItem, QSizePolicy
-from grapholed import images_rc ## DO NOT REMOVE
-from grapholed import Grapholed
-from grapholed.widgets import SplashScreen
+from grapholed.commands.nodes import CommandNodeAdd
+from grapholed.commands.nodes import CommandNodeSetZValue
+from grapholed.commands.nodes import CommandNodeRezize
+from grapholed.commands.nodes import CommandNodeMove
+from grapholed.commands.nodes import CommandNodeLabelMove
+from grapholed.commands.nodes import CommandNodeLabelEdit
+from grapholed.commands.nodes import CommandNodeValueDomainSelectDatatype
+from grapholed.commands.nodes import CommandNodeHexagonSwitchTo
+from grapholed.commands.nodes import CommandNodeSquareChangeRestriction
+from grapholed.commands.nodes import CommandNodeSetURL
+from grapholed.commands.nodes import CommandNodeSetDescription
 
+from grapholed.commands.edges import CommandEdgeAdd
+from grapholed.commands.edges import CommandEdgeAnchorMove
+from grapholed.commands.edges import CommandEdgeBreakpointAdd
+from grapholed.commands.edges import CommandEdgeBreakpointMove
+from grapholed.commands.edges import CommandEdgeBreakpointDel
+from grapholed.commands.edges import CommandEdgeLabelMove
 
-def main():
-    """
-    Application main execution.
-    """
-    try:
-        app = Grapholed(sys.argv)
-        with SplashScreen(min_splash_time=2):
-            mainwindow = app.init()
-    except Exception as e:
-        box = QMessageBox()
-        box.setIconPixmap(QPixmap(':/icons/error'))
-        box.setWindowTitle('FATAL')
-        box.setText('Grapholed failed to start!')
-        box.setInformativeText('ERROR: %s' % e)
-        box.setDetailedText(traceback.format_exc())
-        box.setStandardButtons(QMessageBox.Ok)
-        # this will trick Qt and resize a bit the QMessageBox so the exception stack trace is printed nice
-        foo = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        box.layout().addItem(foo, box.layout().rowCount(), 0, 1, box.layout().columnCount())
-        box.exec_()
-        sys.exit(127)
-    else:
-        mainwindow.show()
-        sys.exit(app.exec_())
-
-
-if __name__ == '__main__':
-    main()
+from grapholed.commands.common import CommandItemsMultiAdd
+from grapholed.commands.common import CommandItemsMultiRemove

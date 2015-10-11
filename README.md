@@ -1,8 +1,8 @@
-## pyGraphol
+## Grapholed
 
 ### Description
 
-pyGraphol is design tool for the Graphol language written in python. [Graphol] is developed by members 
+Grapholed is a diagramming software for the Graphol language. [Graphol] is developed by members 
 of the DASI-lab group  of the [Dipartimento di Informatica e Sistemistica "A.Ruberti"] at [Sapienza] 
 University of Rome. Graphol offers a  completely visual representation of ontologies to users, in 
 order to help understanding by people who are not skilled in logic. Graphol provides designers with 
@@ -16,8 +16,8 @@ See the LICENSE file included with the distribution.
 
 ### Resources
 
-* [Source code](https://github.com/danielepantaleone/pygraphol)
-* [Bug tracker](https://github.com/danielepantaleone/pygraphol/issues)
+* [Source code](https://github.com/danielepantaleone/grapholed)
+* [Bug tracker](https://github.com/danielepantaleone/grapholed/issues)
 * [Graphol website](http://www.dis.uniroma1.it/~graphol/)
 * [Dipartimento di Informatica e Sistemistica "A.Ruberti"](http://www.dis.uniroma1.it/en)
 * [Sapienza University](http://en.uniroma1.it/)

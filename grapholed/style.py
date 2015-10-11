@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -32,41 +31,27 @@
 #                                                                        #
 ##########################################################################
 
-import sys
-import traceback
 
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QMessageBox, QSpacerItem, QSizePolicy
-from grapholed import images_rc ## DO NOT REMOVE
-from grapholed import Grapholed
-from grapholed.widgets import SplashScreen
+from PyQt5.QtWidgets import QProxyStyle, QStyle
 
 
-def main():
-    """
-    Application main execution.
-    """
-    try:
-        app = Grapholed(sys.argv)
-        with SplashScreen(min_splash_time=2):
-            mainwindow = app.init()
-    except Exception as e:
-        box = QMessageBox()
-        box.setIconPixmap(QPixmap(':/icons/error'))
-        box.setWindowTitle('FATAL')
-        box.setText('Grapholed failed to start!')
-        box.setInformativeText('ERROR: %s' % e)
-        box.setDetailedText(traceback.format_exc())
-        box.setStandardButtons(QMessageBox.Ok)
-        # this will trick Qt and resize a bit the QMessageBox so the exception stack trace is printed nice
-        foo = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        box.layout().addItem(foo, box.layout().rowCount(), 0, 1, box.layout().columnCount())
-        box.exec_()
-        sys.exit(127)
-    else:
-        mainwindow.show()
-        sys.exit(app.exec_())
+class DefaultStyle(QProxyStyle):
 
+    def __init__(self):
+        """
+        Initialize the Default style (using Fusion as base).
+        """
+        super().__init__('Fusion')
 
-if __name__ == '__main__':
-    main()
+    def pixelMetric(self, metric, option=None, widget=None):
+        """
+        Returns the value for the given pixel metric.
+        :rtype: int
+        """
+        if metric == QStyle.PM_SmallIconSize:
+            return 18
+        elif metric == QStyle.PM_TabBarIconSize:
+            return 18
+        elif metric == QStyle.PM_ToolBarIconSize:
+            return 24
+        return super().pixelMetric(metric, option, widget)

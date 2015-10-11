@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -32,41 +31,84 @@
 #                                                                        #
 ##########################################################################
 
-import sys
-import traceback
 
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QMessageBox, QSpacerItem, QSizePolicy
-from grapholed import images_rc ## DO NOT REMOVE
-from grapholed import Grapholed
-from grapholed.widgets import SplashScreen
+from grapholed.items.nodes.shapes.common.hexagon import Hexagon
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QPainter, QColor, QPen
 
 
-def main():
+class DisjointUnionNodeShape(Hexagon):
     """
-    Application main execution.
+    This class implements the 'Disjoint Union' node shape.
     """
-    try:
-        app = Grapholed(sys.argv)
-        with SplashScreen(min_splash_time=2):
-            mainwindow = app.init()
-    except Exception as e:
-        box = QMessageBox()
-        box.setIconPixmap(QPixmap(':/icons/error'))
-        box.setWindowTitle('FATAL')
-        box.setText('Grapholed failed to start!')
-        box.setInformativeText('ERROR: %s' % e)
-        box.setDetailedText(traceback.format_exc())
-        box.setStandardButtons(QMessageBox.Ok)
-        # this will trick Qt and resize a bit the QMessageBox so the exception stack trace is printed nice
-        foo = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        box.layout().addItem(foo, box.layout().rowCount(), 0, 1, box.layout().columnCount())
-        box.exec_()
-        sys.exit(127)
-    else:
-        mainwindow.show()
-        sys.exit(app.exec_())
+    
+    def __init__(self, **kwargs):
+        """
+        Initialize the Disjoint Union node shape.
+        """
+        super().__init__(brush=(0, 0, 0), **kwargs)
 
+    ################################################# LABEL SHORTCUTS ##################################################
 
-if __name__ == '__main__':
-    main()
+    def labelPos(self):
+        """
+        Returns the current label position.
+        :rtype: QPointF
+        """
+        pass
+
+    def labelText(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        pass
+
+    def setLabelPos(self, pos):
+        """
+        Set the label position.
+        :param pos: the node position.
+        """
+        pass
+
+    def setLabelText(self, text):
+        """
+        Set the label text.
+        :param text: the text value to set.
+        """
+        pass
+
+    def updateLabelPos(self):
+        """
+        Update the label text position.
+        """
+        pass
+
+    ################################################### ITEM DRAWING ###################################################
+
+    @classmethod
+    def image(cls, **kwargs):
+        """
+        Returns an image suitable for the palette.
+        :rtype: QPixmap
+        """
+        shape_w = 48
+        shape_h = 30
+        oblique = 6
+
+        # Initialize the pixmap
+        pixmap = QPixmap(kwargs['w'], kwargs['h'])
+        pixmap.fill(Qt.transparent)
+        painter = QPainter(pixmap)
+
+        # Initialize the shape
+        polygon = Hexagon.createPolygon(shape_w, shape_h, oblique)
+
+        # Draw the polygon
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+        painter.setBrush(QColor(0, 0, 0))
+        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
+        painter.drawPolygon(polygon)
+
+        return pixmap

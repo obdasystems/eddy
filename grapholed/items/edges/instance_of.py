@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -32,41 +31,35 @@
 #                                                                        #
 ##########################################################################
 
-import sys
-import traceback
 
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QMessageBox, QSpacerItem, QSizePolicy
-from grapholed import images_rc ## DO NOT REMOVE
-from grapholed import Grapholed
-from grapholed.widgets import SplashScreen
+from grapholed.items.edges import Edge
+from grapholed.items.edges.shapes import InstanceOfEdgeShape
 
 
-def main():
+class InstanceOfEdge(Edge):
     """
-    Application main execution.
+    This class implements the Inclusion node.
     """
-    try:
-        app = Grapholed(sys.argv)
-        with SplashScreen(min_splash_time=2):
-            mainwindow = app.init()
-    except Exception as e:
-        box = QMessageBox()
-        box.setIconPixmap(QPixmap(':/icons/error'))
-        box.setWindowTitle('FATAL')
-        box.setText('Grapholed failed to start!')
-        box.setInformativeText('ERROR: %s' % e)
-        box.setDetailedText(traceback.format_exc())
-        box.setStandardButtons(QMessageBox.Ok)
-        # this will trick Qt and resize a bit the QMessageBox so the exception stack trace is printed nice
-        foo = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        box.layout().addItem(foo, box.layout().rowCount(), 0, 1, box.layout().columnCount())
-        box.exec_()
-        sys.exit(127)
-    else:
-        mainwindow.show()
-        sys.exit(app.exec_())
+    name = 'instanceOf'
+    xmlname = 'instance-of'
+    type = Edge.InstanceOfEdge
 
+    def __init__(self, scene, source, target=None, **kwargs):
+        """
+        Initialize the node.
+        :param scene: the scene where this edge is being added.
+        :param source: the edge source node.
+        :param target: the edge target node (if any).
+        """
+        super().__init__(scene, source, target, **kwargs)
+        self.shape = InstanceOfEdgeShape(item=self, name='instanceOf', **kwargs)
 
-if __name__ == '__main__':
-    main()
+    ############################################ EDGE REPRESENTATION ###################################################
+
+    @classmethod
+    def image(cls, **kwargs):
+        """
+        Returns an image suitable for the palette.
+        :rtype: QPixmap
+        """
+        return InstanceOfEdgeShape.image(name='instanceOf', **kwargs)

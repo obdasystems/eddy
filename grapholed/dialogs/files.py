@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -32,41 +31,40 @@
 #                                                                        #
 ##########################################################################
 
-import sys
-import traceback
 
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QMessageBox, QSpacerItem, QSizePolicy
-from grapholed import images_rc ## DO NOT REMOVE
-from grapholed import Grapholed
-from grapholed.widgets import SplashScreen
+from grapholed.functions import getPath
+from PyQt5.QtWidgets import QFileDialog
 
 
-def main():
+class SaveFileDialog(QFileDialog):
     """
-    Application main execution.
+    This class is used to bring up the save file dialog modal window.
     """
-    try:
-        app = Grapholed(sys.argv)
-        with SplashScreen(min_splash_time=2):
-            mainwindow = app.init()
-    except Exception as e:
-        box = QMessageBox()
-        box.setIconPixmap(QPixmap(':/icons/error'))
-        box.setWindowTitle('FATAL')
-        box.setText('Grapholed failed to start!')
-        box.setInformativeText('ERROR: %s' % e)
-        box.setDetailedText(traceback.format_exc())
-        box.setStandardButtons(QMessageBox.Ok)
-        # this will trick Qt and resize a bit the QMessageBox so the exception stack trace is printed nice
-        foo = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        box.layout().addItem(foo, box.layout().rowCount(), 0, 1, box.layout().columnCount())
-        box.exec_()
-        sys.exit(127)
-    else:
-        mainwindow.show()
-        sys.exit(app.exec_())
+    def __init__(self, path, parent=None):
+        """
+        Initialize the save file dialog.
+        :param path: the start path where to open the file dialog.
+        :param parent: the parent widget.
+        """
+        super().__init__(parent)
+        self.setAcceptMode(QFileDialog.AcceptSave)
+        self.setDirectory(getPath('~') if not path else getPath(path))
+        self.setFileMode(QFileDialog.AnyFile)
+        self.setViewMode(QFileDialog.Detail)
 
 
-if __name__ == '__main__':
-    main()
+class OpenFileDialog(QFileDialog):
+    """
+    This class is used to bring up the open file dialog modal window.
+    """
+    def __init__(self, path, parent=None):
+        """
+        Initialize the open file dialog.
+        :param path: the start path where to open the file dialog.
+        :param parent: the parent widget.
+        """
+        super().__init__(parent)
+        self.setAcceptMode(QFileDialog.AcceptOpen)
+        self.setDirectory(getPath('~') if not path else getPath(path))
+        self.setFileMode(QFileDialog.AnyFile)
+        self.setViewMode(QFileDialog.Detail)
