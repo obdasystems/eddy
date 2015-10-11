@@ -30,7 +30,7 @@
     <file alias="zoom">images/icons/zoom.png</file>
 </qresource>
 <qresource prefix="/images">
-    <file alias="pygraphol">images/pygraphol.png</file>
+    <file alias="grapholed">images/grapholed.png</file>
     <file alias="splash">images/splash.png</file>
 </qresource>
 </RCC>

@@ -51,15 +51,15 @@ DIST_DIR = os.path.join(PROJECT_DIR, 'dist')  # directory where all the final bu
 
 if sys.platform.startswith('darwin'):
     EXECUTABLE_NAME = __appname__
-    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'pygraphol', 'images', 'pygraphol.icns')
+    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'pygraphol', 'images', 'grapholed.icns')
     RELEASE_NAME = '%s-%s-%s-darwin' % (__appname__, __version__, __license__.lower())
 elif sys.platform.startswith('win32'):
     EXECUTABLE_NAME = '%s.exe' % __appname__
-    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'pygraphol', 'images', 'pygraphol.ico')
+    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'pygraphol', 'images', 'grapholed.ico')
     RELEASE_NAME = '%s-%s-%s-win%s' % (__appname__, __version__, __license__.lower(), platform.architecture()[0][:-3])
 else:
     EXECUTABLE_NAME = __appname__
-    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'pygraphol', 'images', 'pygraphol.png')
+    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'pygraphol', 'images', 'grapholed.png')
     RELEASE_NAME = '%s-%s-%s-linux%s' % (__appname__, __version__, __license__.lower(), platform.architecture()[0][:-3])
 
 

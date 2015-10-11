@@ -412,7 +412,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.mdiArea)
         layout.addWidget(self.rightPane)
         self.setCentralWidget(widget)
-        self.setWindowIcon(QIcon(':/images/pygraphol'))
+        self.setWindowIcon(QIcon(':/images/grapholed'))
         self.setWindowTitle()
 
         ############################################### GEOMETRY #######################################################
