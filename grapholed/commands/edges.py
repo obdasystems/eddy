@@ -37,27 +37,25 @@ from PyQt5.QtWidgets import QUndoCommand
 
 class CommandEdgeAdd(QUndoCommand):
     """
-    This command is used to add edges to the graphic scene.
+    This command is used to add edges to the scene.
     """
     def __init__(self, scene, edge):
         """
         Initialize the command.
-        :param scene: the graphic scene where this command is being performed.
+        :param scene: the scene where this command is being performed.
         :param edge: the edge being added.
         """
-        super().__init__('add %s edge' % edge.name)
+        super().__init__('add {0} edge'.format(edge.name))
         self.scene = scene
         self.edge = edge
 
     def redo(self):
         """redo the command"""
-        self.scene.itemList.append(self.edge)
-        self.scene.addItem(self.edge.shape)
+        self.scene.addItem(self.edge)
 
     def undo(self):
         """undo the command"""
-        self.scene.itemList.remove(self.edge)
-        self.scene.removeItem(self.edge.shape)
+        self.scene.removeItem(self.edge)
 
 
 class CommandEdgeBreakpointAdd(QUndoCommand):
@@ -71,54 +69,54 @@ class CommandEdgeBreakpointAdd(QUndoCommand):
         :param index: the index of the new breakpoint.
         :param point: the breakpoint.
         """
-        super().__init__('add %s edge breakpoint' % edge.name)
+        super().__init__('add {0} edge breakpoint'.format(edge.name))
         self.edge = edge
         self.index = index
         self.point = point
 
     def redo(self):
         """redo the command"""
-        self.edge.shape.breakpoints.insert(self.index, self.point)
-        self.edge.shape.updateEdge()
+        self.edge.breakpoints.insert(self.index, self.point)
+        self.edge.updateEdge()
 
     def undo(self):
         """undo the command"""
-        self.edge.shape.breakpoints.pop(self.index)
-        self.edge.shape.updateEdge()
+        self.edge.breakpoints.pop(self.index)
+        self.edge.updateEdge()
 
 
 class CommandEdgeAnchorMove(QUndoCommand):
     """
     This command is used to move edge anchor points.
     """
-    def __init__(self, edge, shape):
+    def __init__(self, edge, node):
         """
         Initialize the command.
         :param edge: the edge whose anchor point is being moved.
-        :param shape: the shape on which the moving is happening.
+        :param node: the shape on which the moving is happening.
         """
-        super().__init__('move %s anchor point' % edge.name)
+        super().__init__('move {0} anchor point'.format(edge.name))
         self.edge = edge
-        self.shape = shape
-        self.pos1 = shape.anchor(edge.shape)
+        self.node = node
+        self.pos1 = node.anchor(edge)
         self.pos2 = None
 
     def end(self):
         """
         Complete the command collecting new data.
         """
-        self.pos2 = self.shape.anchor(self.edge.shape)
+        self.pos2 = self.node.anchor(self.edge)
 
     def redo(self):
         """redo the command"""
         if self.pos2:
-            self.shape.setAnchor(self.edge.shape, self.pos2)
-            self.edge.shape.updateEdge()
+            self.node.setAnchor(self.edge, self.pos2)
+            self.edge.updateEdge()
 
     def undo(self):
         """undo the command"""
-        self.shape.setAnchor(self.edge.shape, self.pos1)
-        self.edge.shape.updateEdge()
+        self.node.setAnchor(self.edge, self.pos1)
+        self.edge.updateEdge()
 
 
 class CommandEdgeBreakpointMove(QUndoCommand):
@@ -131,10 +129,10 @@ class CommandEdgeBreakpointMove(QUndoCommand):
         :param edge: the edge whose breakpoint is being moved.
         :param index: the index of the breakpoint.
         """
-        super().__init__('move %s edge breakpoint' % edge.name)
+        super().__init__('move {0} edge breakpoint'.format(edge.name))
         self.edge = edge
         self.index = index
-        self.pos1 = edge.shape.breakpoints[self.index]
+        self.pos1 = edge.breakpoints[self.index]
         self.pos2 = None
 
     def end(self, pos):
@@ -147,13 +145,13 @@ class CommandEdgeBreakpointMove(QUndoCommand):
     def redo(self):
         """redo the command"""
         if self.pos2:
-            self.edge.shape.breakpoints[self.index] = self.pos2
-            self.edge.shape.updateEdge()
+            self.edge.breakpoints[self.index] = self.pos2
+            self.edge.updateEdge()
 
     def undo(self):
         """undo the command"""
-        self.edge.shape.breakpoints[self.index] = self.pos1
-        self.edge.shape.updateEdge()
+        self.edge.breakpoints[self.index] = self.pos1
+        self.edge.updateEdge()
 
 
 class CommandEdgeBreakpointDel(QUndoCommand):
@@ -166,45 +164,17 @@ class CommandEdgeBreakpointDel(QUndoCommand):
         :param edge: the edge whose breakpoint is being deleted.
         :param index: the index of the breakpoint.
         """
-        super().__init__('remove %s edge breakpoint' % edge.name)
+        super().__init__('remove {0} edge breakpoint'.format(edge.name))
         self.edge = edge
         self.index = index
-        self.point = edge.shape.breakpoints[self.index]
+        self.point = edge.breakpoints[self.index]
 
     def redo(self):
         """redo the command"""
-        self.edge.shape.breakpoints.pop(self.index)
-        self.edge.shape.updateEdge()
+        self.edge.breakpoints.pop(self.index)
+        self.edge.updateEdge()
 
     def undo(self):
         """undo the command"""
-        self.edge.shape.breakpoints.insert(self.index, self.point)
-        self.edge.shape.updateEdge()
-
-
-class CommandEdgeLabelMove(QUndoCommand):
-    """
-    This command is used to move edge labels.
-    """
-    def __init__(self, edge, moved):
-        """
-        Initialize the command
-        :param edge: the edge whose label is being moved.
-        :param moved: whether the label was moved already or not
-        """
-        super().__init__('move %s edge label' % edge.name)
-        self.moved = moved
-        self.edge = edge
-        self.pos1 = edge.shape.label.pos()
-        self.pos2 = None
-
-    def redo(self):
-        """redo the command"""
-        if self.pos2:
-            self.edge.shape.label.setPos(self.pos2)
-            self.edge.shape.label.moved = not self.moved
-
-    def undo(self):
-        """undo the command"""
-        self.edge.shape.label.setPos(self.pos1)
-        self.edge.shape.label.moved = self.moved
+        self.edge.breakpoints.insert(self.index, self.point)
+        self.edge.updateEdge()

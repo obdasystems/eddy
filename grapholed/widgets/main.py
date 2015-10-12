@@ -49,12 +49,12 @@ from grapholed.dialogs import OpenFileDialog
 from grapholed.dialogs import PreferencesDialog
 from grapholed.exceptions import ParseError
 from grapholed.functions import getPath, shaded
-from grapholed.items.nodes import Node
-from grapholed.items.edges import Edge
+from grapholed.items.nodes.common.base import Node
+from grapholed.items.edges.common.base import Edge
 from grapholed.items import __mapping__
 from grapholed.items import *
 from grapholed.widgets import MdiArea, MdiSubWindow
-from grapholed.widgets import GraphicsScene
+from grapholed.widgets import DiagramScene
 from grapholed.widgets import Palette, Pane
 from grapholed.widgets import MainView, Navigator
 from grapholed.widgets import ZoomControl
@@ -74,7 +74,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.settings = QSettings(organization, appname)
         self.undoGroup = QUndoGroup()
-        self.undoGroup.cleanChanged.connect(self.handleUndoGroupChanged)
+        self.undoGroup.cleanChanged.connect(self.handleUndoGroupCleanChanged)
 
         ############################################ EXTRA WIDGETS #####################################################
 
@@ -343,19 +343,14 @@ class MainWindow(QMainWindow):
             :rtype: QToolButton
             """
             button = QToolButton()
-            if not isinstance(item.image, str):
-                icon = item.image(w=60, h=44)
-            else:
-                icon = item.image
-
-            button.setIcon(QIcon(icon))
+            button.setIcon(QIcon(item.image(w=60, h=44)))
             button.setIconSize(QSize(60, 44))
             button.setCheckable(True)
             button.setContentsMargins(0, 0, 0, 0)
             button.setProperty('item', item)
-            bgroup.addButton(button, item.type)
+            bgroup.addButton(button, item.itemtype)
             for collection in groups:
-                collection[item.type] = button
+                collection[item.itemtype] = button
             return button
 
         pItem = Palette.Item('Predicate nodes', collapsed=False)
@@ -540,7 +535,7 @@ class MainWindow(QMainWindow):
         Triggered after a edge insertion process ends.
         :param edge: the inserted edge.
         """
-        self.paletteItems[edge.type].setChecked(False)
+        self.paletteItems[edge.itemtype].setChecked(False)
 
     @pyqtSlot(Node)
     def handleNodeInsertEnd(self, node):
@@ -548,7 +543,7 @@ class MainWindow(QMainWindow):
         Triggered after a node insertion process ends.
         :param node:the inserted node.
         """
-        self.paletteItems[node.type].setChecked(False)
+        self.paletteItems[node.itemtype].setChecked(False)
 
     @pyqtSlot(int)
     def handleSceneModeChanged(self, mode):
@@ -556,8 +551,7 @@ class MainWindow(QMainWindow):
         Triggered when the scene operation mode changes.
         :param mode: the scene operation mode.
         """
-        if mode == GraphicsScene.MoveItem:
-            # if we are moving items clear the palette selection
+        if mode == DiagramScene.MoveItem:
             for btn in self.paletteItems.values():
                 btn.setChecked(False)
 
@@ -572,8 +566,8 @@ class MainWindow(QMainWindow):
             for btn in self.paletteItems.values():
                 btn.setChecked(False)
         else:
-            currentscene = mainview.scene()
-            currentscene.clearSelection()
+            scene = mainview.scene()
+            scene.clearSelection()
             button = self.paletteItems[button_id]
 
             for btn in self.paletteItems.values():
@@ -581,12 +575,12 @@ class MainWindow(QMainWindow):
                     btn.setChecked(False)
 
             if not button.isChecked():
-                currentscene.setMode(GraphicsScene.MoveItem)
+                scene.setMode(DiagramScene.MoveItem)
             else:
                 if button_id in self.paletteNodes:
-                    currentscene.setMode(GraphicsScene.InsertNode, button.property('item'))
+                    scene.setMode(DiagramScene.InsertNode, button.property('item'))
                 elif button_id in self.paletteEdges:
-                    currentscene.setMode(GraphicsScene.InsertEdge, button.property('item'))
+                    scene.setMode(DiagramScene.InsertEdge, button.property('item'))
 
     @pyqtSlot('QMdiSubWindow')
     def handleSubWindowActivated(self, subwindow):
@@ -672,7 +666,7 @@ class MainWindow(QMainWindow):
                 self.setWindowTitle()
 
     @pyqtSlot(bool)
-    def handleUndoGroupChanged(self, clean):
+    def handleUndoGroupCleanChanged(self, clean):
         """
         Executed when the clean state of the active undoStack changes.
         :param clean: the clean state.
@@ -727,24 +721,28 @@ class MainWindow(QMainWindow):
         :rtype: MdiSubWindow
         """
         subwindow = self.mdiArea.addSubWindow(MdiSubWindow(mainview))
-        subwindow.widget().scene().undoStack.cleanChanged.connect(subwindow.handleUndoStackCleanChanged)
+        scene = mainview.scene()
+        scene.undoStack.cleanChanged.connect(subwindow.handleUndoStackCleanChanged)
         subwindow.signalDocumentSaved.connect(self.handleDocumentSaved)
-        if subwindow.widget().scene().document.filepath:
-            # set the title in case the scene we are rendering is saved already somewhere (used when opening documents)
-            subwindow.setWindowTitle(subwindow.widget().scene().document.name)
+
+        if scene.document.filepath:
+            # set the title in case the scene we are rendering
+            # is saved already somewhere (used when opening documents)
+            subwindow.setWindowTitle(scene.document.name)
+
         return subwindow
 
     def getScene(self):
         """
         Create and return an empty scene.
         :return: the initialized GraphicScene.
-        :rtype: GraphicsScene
+        :rtype: DiagramScene
         """
         # get the size of the document from the preferences
         size = self.settings.value('scene/size', 5000, int)
 
         # create the new scene
-        scene = GraphicsScene(self)
+        scene = DiagramScene(self)
         scene.setSceneRect(QRectF(0, 0, size, size))
         scene.nodeInsertEnd.connect(self.handleNodeInsertEnd)
         scene.edgeInsertEnd.connect(self.handleEdgeInsertEnd)
@@ -760,14 +758,14 @@ class MainWindow(QMainWindow):
         Create a new scene by loading the given graphol file.
         :param filepath: the path of the file to be loaded.
         :return: the initialized GraphicScene, or None if the load fails.
-        :rtype: GraphicsScene
+        :rtype: DiagramScene
         """
         file = QFile(filepath)
         if not file.open(QIODevice.ReadOnly):
             box = QMessageBox()
             box.setIconPixmap(QPixmap(':/icons/warning'))
             box.setWindowTitle('WARNING')
-            box.setText('Unable to open Graphol document %s!' % filepath)
+            box.setText('Unable to open Graphol document {0}!'.format(filepath))
             box.setDetailedText(file.errorString())
             box.setStandardButtons(QMessageBox.Ok)
             box.exec_()
@@ -786,7 +784,7 @@ class MainWindow(QMainWindow):
             h = int(graph.attribute('height', '5000'))
 
             # create the scene
-            scene = GraphicsScene(self)
+            scene = DiagramScene(self)
             scene.document.filepath = filepath
             scene.setSceneRect(QRectF(0, 0, w, h))
             scene.nodeInsertEnd.connect(self.handleNodeInsertEnd)
@@ -814,26 +812,24 @@ class MainWindow(QMainWindow):
                 labelV = L.text()
                 labelX = int(L.attribute('x'))
                 labelY = int(L.attribute('y'))
-                labelW = int(L.attribute('width'))
-                labelH = int(L.attribute('height'))
+                #labelW = int(L.attribute('width'))
+                #labelH = int(L.attribute('height'))
 
                 # create the node: this will set the position of the node matching the center of the shape.
                 # the might have been not true when the scene has been exported but we don't record such info
                 # in the graphol XML document in order to make the document format indipendent from the tool.
                 node = __mapping__[ntype](scene=scene, id=nid, url=U.text(), description=D.text(), width=shapeW, height=shapeH)
-                node.shape.setPos(QPointF(shapeX, shapeY))
+                node.setPos(QPointF(shapeX, shapeY))
 
                 # add the node label: the node label position stored in the graphol document is in scene coordinates,
-                # and the position matches the center of the bounding rect of the text item: we need to adapt this data
-                # to fix our needs (QT uses top left corner as (0,0) position instead of the bounding rect center).
-                labelPos = node.shape.mapFromScene(QPointF(labelX, labelY))
-                labelPos = QPointF(labelPos.x() - labelW / 2, labelPos.y() - labelH / 2)
-                node.shape.setLabelPos(labelPos)
-                node.shape.setLabelText(labelV)
+                # and the position matches the center of the bounding rect of the text item: the translation to Qt
+                # position (0,0) is handled inside the label
+
+                node.setLabelText(labelV)
+                node.setLabelPos(node.mapFromScene(QPointF(labelX, labelY)))
 
                 # append the element to the scene
-                scene.itemList.append(node)
-                scene.addItem(node.shape)
+                scene.addItem(node)
 
                 # adjust the scene node id
                 scene.uniqueID.update(nid)
@@ -866,17 +862,16 @@ class MainWindow(QMainWindow):
 
                 # create the edge
                 edge = __mapping__[etype](scene=scene, source=source, target=target, breakpoints=breakpoints, id=eid)
-                edge.source.shape.setAnchor(edge.shape, sourceP)
-                edge.target.shape.setAnchor(edge.shape, targetP)
-                edge.shape.updateEdge()
+                edge.source.setAnchor(edge, sourceP)
+                edge.target.setAnchor(edge, targetP)
+                edge.updateEdge()
 
                 # map the edge over the source and target nodes
                 edge.source.edges.append(edge)
                 edge.target.edges.append(edge)
 
                 # append the element to the scene
-                scene.itemList.append(edge)
-                scene.addItem(edge.shape)
+                scene.addItem(edge)
 
                 # adjust the scene edge id
                 scene.uniqueID.update(eid)

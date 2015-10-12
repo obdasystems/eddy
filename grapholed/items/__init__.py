@@ -32,12 +32,17 @@
 ##########################################################################
 
 
-class Item(object):
+from abc import ABCMeta, abstractmethod
+from enum import IntEnum, unique
+from PyQt5.QtWidgets import QGraphicsItem
+
+
+@unique
+class ItemType(IntEnum):
     """
-    Base class for all the graph elements.
-    NOTE: node types MUST be lower than edge type!!!
+    This class defines all the available Graphol items.
     """
-    ## NODES TYPES
+    ## NODES
     ConceptNode = 1
     AttributeNode = 2
     RoleNode = 3
@@ -56,27 +61,104 @@ class Item(object):
     DisjointUnionNode = 16
     PropertyAssertionNode = 17
 
-    ## EDGES TYPES
+    ## EDGES
     InclusionEdge = 18
     InputEdge = 19
     InstanceOfEdge = 20
 
-    ################### !!! THE FOLLOWING ATTRIBUTES MUST BE INITIALIZED IN INHERITED CLASSES !!! ######################
 
-    id = None # the item id (generated using grapholed.tools.UniqueID()
-    shape = None # the shape implementing this item
-    type = None # the item type
+class Item(QGraphicsItem):
+    """
+    Base class for all the diagram elements.
+    """
+    __metaclass__ = ABCMeta
 
-    name = 'item' # a lowercase name which identifies this object
-    xmlname = 'item' # a lowercase identifier used to identify this node in XML related documents
+    itemtype = 0  # an integer identifying this node as unique type
+    name = 'item' # a lowercase word which identifies this object
+    prefix = 'i' # a prefix character to be prepended to the unique id
+    xmlname = 'item' # a lowercase word used to identify this node in XML related documents
 
-    ############################################# BASIC ITEM INTERFACE #################################################
-
-    def __init__(self):
+    def __init__(self, scene, id=None, description='', url='', **kwargs):
         """
         Initialize the item.
+        :param scene: the scene where this item is being added.
+        :param id: the id of this item.
+        :param description: the description of this item.
+        :param url: the url this item is referencing.
         """
-        super().__init__()
+        self._id = id or scene.uniqueID.next(self.prefix)
+        self._description = description
+        self._url = url
+
+        super().__init__(**kwargs)
+
+    ################################################### PROPERTIES #####################################################
+
+    @property
+    def id(self):
+        """
+        Returns the node id.
+        :rtype: str
+        """
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        """
+        Set the node id.
+        :param value: the new node id.
+        """
+        self._id = value
+
+    @property
+    def description(self):
+        """
+        Returns the description of the node.
+        :rtype: str
+        """
+        return self._description.strip()
+
+    @description.setter
+    def description(self, value):
+        """
+        Set the description of the node.
+        :param value: the description of the node.
+        """
+        self._description = value.strip()
+
+    @property
+    def url(self):
+        """
+        Returns the url attached to the  node.
+        :rtype: str
+        """
+        return self._url.strip()
+
+    @url.setter
+    def url(self, value):
+        """
+        Set the url attached to the node.
+        :param value: the url to attach to the node.
+        """
+        self._url = value.strip()
+
+    ################################################ ITEM INTERFACE ####################################################
+
+    @abstractmethod
+    def contextMenu(self, *args, **kwargs):
+        """
+        Returns the basic nodes context menu.
+        :rtype: QMenu
+        """
+        pass
+
+    @abstractmethod
+    def copy(self, scene):
+        """
+        Create a copy of the current item .
+        :param scene: a reference to the scene where this item is being copied from.
+        """
+        pass
 
     def isEdge(self):
         """
@@ -84,7 +166,7 @@ class Item(object):
         :return: True if the item is an edge, False otherwise.
         :rtype: bool
         """
-        return Item.InclusionEdge <= self.type <= Item.InstanceOfEdge
+        return ItemType.InclusionEdge <= self.itemtype <= ItemType.InstanceOfEdge
 
     def isNode(self):
         """
@@ -92,36 +174,47 @@ class Item(object):
         :return: True if the item is a node, False otherwise.
         :rtype: bool
         """
-        return Item.ConceptNode <= self.type <= Item.PropertyAssertionNode
+        return ItemType.ConceptNode <= self.itemtype <= ItemType.PropertyAssertionNode
 
     ################################################## ITEM EXPORT #####################################################
 
-    def exportToGraphol(self, document):
+    @abstractmethod
+    def asGraphol(self, document):
         """
-        Export the current node in Graphol format.
-        :type document: QDomDocument
-        :param document: the XML document where this item will be inserted
+        Export the current item in Graphol format.
+        :param document: the XML document where this item will be inserted.
         :rtype: QDomElement
         """
-        raise NotImplementedError('method `exportToGraphol` must be implemented in inherited class')
+        pass
 
     ################################################## ITEM DRAWING ####################################################
 
     @classmethod
+    @abstractmethod
     def image(cls, **kwargs):
         """
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        raise NotImplementedError('method `image` must be implemented in inherited class')
+        pass
 
-    ############################################# STRING REPRESENTATION ################################################
+    #################################################### GEOMETRY ######################################################
+
+    @abstractmethod
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used for collision detection).
+        :rtype: QPainterPath
+        """
+        pass
+
+    ############################################## STRING REPRESENTATION ###############################################
 
     def __repr__(self):
         """
         Object representaton.
         """
-        return '%s:%s' % (self.__class__.__name__, self.id)
+        return '{0}:{1}'.format(self.__class__.__name__, self.id)
 
 
 from grapholed.items.nodes import *

@@ -32,21 +32,24 @@
 ##########################################################################
 
 
+from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
 from functools import partial
 
 from grapholed.commands import CommandNodeHexagonSwitchTo
-from grapholed.items.nodes.shapes.common.base import AbstractNodeShape
+from grapholed.items.nodes.common.base import Node
 
-from PyQt5.QtCore import QPointF, QRectF, Qt
-from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QIcon
+from PyQt5.QtCore import Qt, QRectF, QPointF
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QIcon, QPolygonF
 from PyQt5.QtWidgets import QAction
 
 
-class Hexagon(AbstractNodeShape):
+class HexagonNode(Node):
     """
-    This class implements an hexagon.
+    This is the base class for all the Hexagon shaped nodes.
     """
+    __metaclass__ = ABCMeta
+
     indexML = 0
     indexBL = 1
     indexBR = 2
@@ -55,56 +58,23 @@ class Hexagon(AbstractNodeShape):
     indexTL = 5
     indexEE = 6
 
-    minW = 70
-    minH = 40
-
-    dSize = 10
-
+    diagonalSize = 10
+    minHeight = 40
+    minWidth = 70
     shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
 
-    def __init__(self, width=minW, height=minH, brush=(252, 252, 252), **kwargs):
+    def __init__(self, width=minWidth, height=minHeight, brush=(252, 252, 252), **kwargs):
         """
-        Initialize the hexagon.
+        Initialize the Hexagon shaped node.
         :param width: the shape width (unused in current implementation).
         :param height: the shape height (unused in current implementation).
         :param brush: the brush to use as shape background
         """
         super().__init__(**kwargs)
         self.shapeBrush = QColor(*brush)
-        self.polygon = Hexagon.createPolygon(self.minW, self.minH, self.dSize)
+        self.polygon = self.createPolygon(self.minWidth, self.minHeight, self.diagonalSize)
 
-    ##################################################### GEOMETRY #####################################################
-
-    def boundingRect(self):
-        """
-        Returns the shape bounding rectangle.
-        :rtype: QRectF
-        """
-        x = self.polygon[self.indexML].x()
-        y = self.polygon[self.indexTL].y()
-        w = self.polygon[self.indexMR].x() - x
-        h = self.polygon[self.indexBL].y() - y
-        return QRectF(x, y, w, h)
-
-    def painterPath(self):
-        """
-        Returns the current shape as QPainterPath (used for collision detection).
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addPolygon(self.polygon)
-        return path
-
-    def shape(self):
-        """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addPolygon(self.polygon)
-        return path
-
-    ################################################ AUXILIARY METHODS #################################################
+    ################################################ ITEM INTERFACE ####################################################
 
     def contextMenu(self):
         """
@@ -135,12 +105,46 @@ class Hexagon(AbstractNodeShape):
         scene = self.scene()
 
         for k, v in data.items():
-            if not isinstance(self.node, k):
+            if not isinstance(self, k):
                 action = QAction(v, scene)
-                action.triggered.connect(partial(self.handleSwitchTo, clazz=k))
+                action.triggered.connect(partial(self.switchTo, clazz=k))
                 subMenu.addAction(action)
 
         return menu
+
+    @abstractmethod
+    def copy(self, scene):
+        """
+        Create a copy of the current item .
+        :param scene: a reference to the scene where this item is being copied from.
+        """
+        pass
+
+    def height(self):
+        """
+        Returns the height of the shape.
+        :rtype: int
+        """
+        return self.polygon[self.indexBL].y() - self.polygon[self.indexTL].y()
+
+    def switchTo(self, clazz):
+        """
+        Switch the current node to a different type.
+        :param clazz: the class implementing the new node type.
+        """
+        scene = self.scene()
+        xnode = clazz(scene)
+        xnode.setPos(self.pos())
+        scene.undoStack.push(CommandNodeHexagonSwitchTo(scene, self, xnode))
+
+    def width(self):
+        """
+        Returns the width of the shape.
+        :rtype: int
+        """
+        return self.polygon[self.indexMR].x() - self.polygon[self.indexML].x()
+
+    ############################################### AUXILIARY METHODS ##################################################
 
     @staticmethod
     def createPolygon(shape_w, shape_h, oblique):
@@ -161,55 +165,85 @@ class Hexagon(AbstractNodeShape):
             QPointF(-shape_w / 2, 0)                        # 6
         ])
 
-    ################################################## ACTION HANDLERS #################################################
+    ################################################## ITEM EXPORT #####################################################
 
-    def handleSwitchTo(self, clazz):
+    @abstractmethod
+    def asGraphol(self, document):
         """
-        Switch the current node to a different type.
-        :param clazz: the class implementing the new node type.
+        Export the current item in Graphol format.
+        :param document: the XML document where this item will be inserted.
+        :rtype: QDomElement
         """
-        scene = self.scene()
-        xnode = clazz(scene)
-        xnode.shape.setPos(self.pos())
-        scene.undoStack.push(CommandNodeHexagonSwitchTo(scene, self.node, xnode))
+        pass
+
+    #################################################### GEOMETRY ######################################################
+
+    def boundingRect(self):
+        """
+        Returns the shape bounding rectangle.
+        :rtype: QRectF
+        """
+        x = self.polygon[self.indexML].x()
+        y = self.polygon[self.indexTL].y()
+        w = self.polygon[self.indexMR].x() - x
+        h = self.polygon[self.indexBL].y() - y
+        return QRectF(x, y, w, h)
+
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used for collision detection).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addPolygon(self.polygon)
+        return path
+
+    def shape(self):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addPolygon(self.polygon)
+        return path
 
     ################################################# LABEL SHORTCUTS ##################################################
 
     def labelPos(self):
         """
-        Returns the current label position.
+        Returns the current label position in item coordinates.
         :rtype: QPointF
         """
-        raise NotImplementedError('method `labelPos` must be implemented in inherited class')
+        pass
 
     def labelText(self):
         """
         Returns the label text.
         :rtype: str
         """
-        raise NotImplementedError('method `labelText` must be implemented in inherited class')
+        pass
 
     def setLabelPos(self, pos):
         """
-        Set the label position updating the 'moved' flag accordingly.
-        :param pos: the node position.
+        Set the label position.
+        :param pos: the node position in item coordinates.
         """
-        raise NotImplementedError('method `setLabelPos` must be implemented in inherited class')
+        pass
 
     def setLabelText(self, text):
         """
         Set the label text.
         :param text: the text value to set.
         """
-        raise NotImplementedError('method `setLabelText` must be implemented in inherited class')
+        pass
 
     def updateLabelPos(self):
         """
-        Update the label text position.
+        Update the label position.
         """
-        raise NotImplementedError('method `updateLabelPos` must be implemented in inherited class')
+        pass
 
-    ################################################### ITEM DRAWING ###################################################
+    ################################################## ITEM DRAWING ####################################################
 
     def paint(self, painter, option, widget=None):
         """
@@ -224,3 +258,12 @@ class Hexagon(AbstractNodeShape):
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawPolygon(self.polygon)
+
+    @classmethod
+    @abstractmethod
+    def image(cls, **kwargs):
+        """
+        Returns an image suitable for the palette.
+        :rtype: QPixmap
+        """
+        pass

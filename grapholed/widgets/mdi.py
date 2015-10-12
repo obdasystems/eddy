@@ -118,7 +118,7 @@ class MdiSubWindow(QMdiSubWindow):
         """
         scene = self.widget().scene()
 
-        if (scene.itemList and not scene.document.filepath) or (not scene.undoStack.isClean()):
+        if (scene.items() and not scene.document.filepath) or (not scene.undoStack.isClean()):
             # ask the user if he wants to save unsaved changes to disk
             box = QMessageBox()
             box.setIconPixmap(QPixmap(':/icons/info'))
@@ -309,7 +309,7 @@ class MdiSubWindow(QMdiSubWindow):
             return False
 
         stream = QTextStream(file)
-        document = scene.exportToGraphol()
+        document = scene.asGraphol()
         document.save(stream, 2)
         file.close()
         return True

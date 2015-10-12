@@ -32,43 +32,46 @@
 ##########################################################################
 
 
+import re
+
+from abc import ABCMeta, abstractmethod
 from functools import partial
 
-from grapholed.commands import CommandNodeValueDomainSelectDatatype
-from grapholed.datatypes import Font, XsdDatatype
+from grapholed.commands import CommandNodeSquareChangeRestriction
+from grapholed.datatypes import RestrictionType
+from grapholed.dialogs import CardinalityRestrictionForm
 from grapholed.exceptions import ParseError
-from grapholed.items import ItemType
 from grapholed.items.nodes.common.base import Node
 from grapholed.items.nodes.common.label import Label
 
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QIcon
-from PyQt5.QtWidgets import QAction
+from PyQt5.QtCore import QRectF, QPointF
+from PyQt5.QtGui import QPixmap, QColor, QPainterPath, QIcon
+from PyQt5.QtWidgets import QAction, QDialog
 
 
-class ValueDomainNode(Node):
+class SquaredNode(Node):
     """
-    This class implements the 'Value-Domain' node.
+    This is the base class for all the Squared shaped nodes.
     """
-    itemtype = ItemType.ValueDomainNode
-    minHeight = 50
-    minWidth = 100
-    name = 'value domain'
-    padding = 16
-    radius = 8
-    xmlname = 'value-domain'
+    __metaclass__ = ABCMeta
 
-    def __init__(self, width=minWidth, height=minHeight, **kwargs):
+    minHeight = 20
+    minWidth = 20
+
+    def __init__(self, width=minWidth, height=minHeight, brush=(252, 252, 252), **kwargs):
         """
-        Initialize the Value-Domain node.
+        Initialize the Squared shaped node.
         :param width: the shape width (unused in current implementation).
         :param height: the shape height (unused in current implementation).
+        :param brush: the brush to use as shape background
         """
         super().__init__(**kwargs)
-        self.datatype = XsdDatatype.string
+        self.shapeBrush = QColor(*brush)
+        self.cardinality = dict(min=None, max=None)
+        self.restriction = RestrictionType.exists
         self.rect = self.createRect(self.minWidth, self.minHeight)
-        self.label = Label(self.datatype.value, movable=False, editable=False, parent=self)
-        self.updateShape()
+        self.label = Label(self.restriction.label, centered=False, editable=False, parent=self)
+        self.label.updatePos()
 
     ################################################ ITEM INTERFACE ####################################################
 
@@ -80,16 +83,16 @@ class ValueDomainNode(Node):
         menu = super().contextMenu()
         menu.addSeparator()
 
-        subMenu = menu.addMenu('Select type')
+        subMenu = menu.addMenu('Select restriction')
         subMenu.setIcon(QIcon(':/icons/refresh'))
 
         scene = self.scene()
 
-        for datatype in XsdDatatype:
-            action = QAction(datatype.value, scene)
+        for restriction in RestrictionType:
+            action = QAction(restriction.value, scene)
             action.setCheckable(True)
-            action.setChecked(datatype == self.datatype)
-            action.triggered.connect(partial(self.updateDatatype, datatype=datatype))
+            action.setChecked(restriction is self.restriction)
+            action.triggered.connect(partial(self.updateRestriction, restriction=restriction))
             subMenu.addAction(action)
 
         return menu
@@ -119,22 +122,19 @@ class ValueDomainNode(Node):
         """
         return self.rect.height()
 
-    def updateDatatype(self, datatype):
+    def updateRestriction(self, restriction):
         """
-        Switch the selected domain node datatype.
-        :param datatype: the datatype to select.
+        Update the node restriction.
+        :param restriction: the restriction type.
         """
         scene = self.scene()
-        scene.undoStack.push(CommandNodeValueDomainSelectDatatype(node=self, datatype=datatype))
-
-    def updateShape(self):
-        """
-        Update current shape geometry according to the selected datatype.
-        Will also center the shape text after the width adjustment.
-        """
-        shape_w = max(self.label.width() + self.padding, self.minWidth)
-        self.rect = self.createRect(shape_w, self.minHeight)
-        self.updateLabelPos()
+        if restriction == RestrictionType.cardinality:
+            form = CardinalityRestrictionForm()
+            if form.exec_() == QDialog.Accepted:
+                cardinality = dict(min=form.minCardinalityValue, max=form.maxCardinalityValue)
+                scene.undoStack.push(CommandNodeSquareChangeRestriction(self, restriction, cardinality))
+        else:
+            scene.undoStack.push(CommandNodeSquareChangeRestriction(self, restriction))
 
     def width(self):
         """
@@ -199,7 +199,7 @@ class ValueDomainNode(Node):
 
         return node
 
-    #################################################### GEOMETRY ######################################################
+    ##################################################### GEOMETRY #####################################################
 
     def boundingRect(self):
         """
@@ -214,23 +214,23 @@ class ValueDomainNode(Node):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRoundedRect(self.rect, self.radius, self.radius)
+        path.addRect(self.rect)
         return path
 
-    def shape(self):
+    def shape(self, *args, **kwargs):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRoundedRect(self.rect, self.radius, self.radius)
+        path.addRect(self.rect)
         return path
 
     ################################################# LABEL SHORTCUTS ##################################################
 
     def labelPos(self):
         """
-        Returns the current label position in item coordinates.
+        Returns the current label position.
         :rtype: QPointF
         """
         return self.label.pos()
@@ -245,27 +245,36 @@ class ValueDomainNode(Node):
     def setLabelPos(self, pos):
         """
         Set the label position.
-        :param pos: the node position in item coordinates.
+        :param pos: the node position.
         """
         self.label.setPos(pos)
 
     def setLabelText(self, text):
         """
-        Set the label text.
-        :raise ParseError: if an invalid datatype is given.
+        Set the label text: will additionally parse the text value and set the restriction type accordingly.
+        :raise ParseError: if an invalid text value is supplied.
         :param text: the text value to set.
         """
         text = text.strip()
-        for datatype in XsdDatatype:
-            if datatype.value == text:
-                self.datatype = datatype
-                self.label.setText(datatype.value)
-                self.updateShape()
-                self.updateEdges()
-                return
-
-        # raise an error in case the given text doesn't match any XsdDatatype value
-        raise ParseError('invalid datatype supplied: {0}'.format(text))
+        if text == RestrictionType.exists.label:
+            self.restriction = RestrictionType.exists
+            self.label.setText(text)
+        elif text == RestrictionType.forall.label:
+            self.restriction = RestrictionType.forall
+            self.label.setText(text)
+        elif text == RestrictionType.self.label:
+            self.restriction = RestrictionType.self
+            self.label.setText(text)
+        else:
+            RE_PARSE = re.compile("""^\(\s*(?P<min>[\d-]+)\s*,\s*(?P<max>[\d-]+)\s*\)$""")
+            match = RE_PARSE.match(text)
+            if match:
+                self.restriction = RestrictionType.cardinality
+                self.cardinality['min'] = None if match.group('min') == '-' else int(match.group('min'))
+                self.cardinality['max'] = None if match.group('max') == '-' else int(match.group('max'))
+                self.label.setText(text)
+            else:
+                raise ParseError('invalid restriction supplied: {0}'.format(text))
 
     def updateLabelPos(self):
         """
@@ -284,38 +293,15 @@ class ValueDomainNode(Node):
         """
         shapeBrush = self.shapeBrushSelected if self.isSelected() else self.shapeBrush
 
-        painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
-        painter.drawRoundedRect(self.rect, self.radius, self.radius)
+        painter.drawRect(self.rect)
 
     @classmethod
+    @abstractmethod
     def image(cls, **kwargs):
         """
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        shape_w = 54
-        shape_h = 34
-
-        # Initialize the pixmap
-        pixmap = QPixmap(kwargs['w'], kwargs['h'])
-        pixmap.fill(Qt.transparent)
-
-        painter = QPainter(pixmap)
-
-        # Initialize the shape
-        rect = cls.createRect(shape_w, shape_h)
-
-        # Draw the rectangle
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin))
-        painter.setBrush(QColor(252, 252, 252))
-        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
-        painter.drawRoundedRect(rect, 6.0, 6.0)
-
-        # Draw the text within the rectangle
-        painter.setFont(Font('Arial', 10, Font.Light))
-        painter.drawText(rect, Qt.AlignCenter, 'xsd:string')
-
-        return pixmap
+        pass

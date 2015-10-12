@@ -32,33 +32,40 @@
 ##########################################################################
 
 
+from abc import ABCMeta, abstractmethod
 from copy import deepcopy
+
 from grapholed.commands import CommandNodeRezize
+from grapholed.datatypes import DistinctList
 from grapholed.dialogs.properties import NodePropertiesDialog
-from PyQt5.QtCore import Qt, QPointF, QRectF, QLineF
-from PyQt5.QtGui import QColor, QPen, QPainter, QIcon
-from PyQt5.QtWidgets import QGraphicsItem, QMenu
+from grapholed.items import Item
+
+from PyQt5.QtCore import QPointF, QLineF, Qt, QRectF, pyqtSlot
+from PyQt5.QtGui import QIcon, QColor, QPen, QPainter
+from PyQt5.QtWidgets import QMenu, QGraphicsItem
 
 
-class AbstractNodeShape(QGraphicsItem):
+class Node(Item):
     """
-    This is the base class for all the node shapes.
+    Base class for all the diagram nodes.
     """
+    __metaclass__ = ABCMeta
+
+    name = 'node'
+    prefix = 'n'
     shapeBrush = QColor(252, 252, 252)
     shapeBrushSelected = QColor(251, 255, 148)
     shapePen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
+    xmlname = 'node'
 
-    def __init__(self, item, **kwargs):
+    def __init__(self, **kwargs):
         """
-        Initialize basic shape attributes.
-        :param item: the item this shape is attached to
+        Initialize the node.
         """
-        self.item = item
-        self.anchors = {}
-
-        kwargs.pop('id', None)
-
         super().__init__(**kwargs)
+
+        self.anchors = {}
+        self.edges = DistinctList()
 
         self.setAcceptHoverEvents(True)
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
@@ -66,15 +73,7 @@ class AbstractNodeShape(QGraphicsItem):
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         self.setFlag(QGraphicsItem.ItemIsFocusable, True)
 
-    ################################################### PROPERTIES #####################################################
-
-    @property
-    def node(self):
-        """
-        Returns the node this shape is attached to.
-        :rtype: Node
-        """
-        return self.item
+    ################################################## PROPERTIES ######################################################
 
     @property
     def resizable(self):
@@ -83,6 +82,154 @@ class AbstractNodeShape(QGraphicsItem):
         :rtype: bool
         """
         return False
+
+    ################################################ ITEM INTERFACE ####################################################
+
+    def addEdge(self, edge):
+        """
+        Add the given edge to the current node.
+        :param edge: the edge to be added.
+        """
+        self.edges.append(edge)
+
+    def anchor(self, edge):
+        """
+        Returns the anchor point of the given edge in scene coordinates.
+        :rtype: QPointF
+        """
+        try:
+            return self.anchors[edge]
+        except KeyError:
+            self.anchors[edge] = self.mapToScene(self.center())
+            return self.anchors[edge]
+
+    def center(self):
+        """
+        Returns the point at the center of the shape in item's coordinate.
+        :rtype: QPointF
+        """
+        return self.boundingRect().center()
+
+    def contextMenu(self):
+        """
+        Returns the basic nodes context menu.
+        :rtype: QMenu
+        """
+        menu = QMenu()
+        scene = self.scene()
+
+        menu.addAction(scene.actionItemDelete)
+        menu.addSeparator()
+        menu.addAction(scene.actionItemCut)
+        menu.addAction(scene.actionItemCopy)
+        menu.addAction(scene.actionItemPaste)
+        menu.addSeparator()
+        menu.addAction(scene.actionBringToFront)
+        menu.addAction(scene.actionSendToBack)
+        menu.addSeparator()
+
+        prop = menu.addAction(QIcon(':/icons/preferences'), 'Properties...')
+        prop.triggered.connect(self.handleNodeProperties)
+
+        return menu
+
+    @abstractmethod
+    def copy(self, scene):
+        """
+        Create a copy of the current item .
+        :param scene: a reference to the scene where this item is being copied from.
+        """
+        pass
+
+    @abstractmethod
+    def height(self):
+        """
+        Returns the height of the shape.
+        :rtype: int
+        """
+        pass
+
+    def intersection(self, line):
+        """
+        Returns the intersection of the shape with the given line (in scene coordinates).
+        :param line: the line whose intersection needs to be calculated (in scene coordinates).
+        :rtype: QPointF
+        """
+        intersection = QPointF()
+        path = self.painterPath()
+        polygon = self.mapToScene(path.toFillPolygon(self.transform()))
+
+        for i in range(0, polygon.size() - 1):
+            polyline = QLineF(polygon[i], polygon[i + 1])
+            if polyline.intersect(line, intersection) == QLineF.BoundedIntersection:
+                return intersection
+
+        return None
+
+    def pos(self):
+        """
+        Returns the position of this node in scene coordinates.
+        :rtype: QPointF
+        """
+        return self.mapToScene(self.center())
+
+    def removeEdge(self, edge):
+        """
+        Remove the given edge from the current node.
+        :param edge: the edge to be removed.
+        """
+        self.edges.remove(edge)
+
+    def setAnchor(self, edge, pos):
+        """
+        Set the given position as anchor for the given edge.
+        :param edge: the edge used to index the new position.
+        :param pos: the anchor position.
+        """
+        self.anchors[edge] = pos
+
+    def setPos(self, pos):
+        """
+        Set the item position.
+        :param pos: the position in scene coordinates.
+        """
+        super().setPos(pos + super().pos() - self.pos())
+
+    def updateEdges(self):
+        """
+        Update all the edges attached to the node.
+        """
+        try:
+            # update it for all the selected nodes in case we are
+            # moving multiple nodes across the whole scene
+            scene = self.scene()
+            for node in scene.selectedNodes():
+                for edge in node.edges:
+                    edge.updateEdge()
+        except AttributeError:
+            # if we don't have the scene update only local edges: this is
+            # mostly used when we load a graphol document from disk
+            for edge in self.edges:
+                edge.updateEdge()
+
+    @abstractmethod
+    def width(self):
+        """
+        Returns the width of the shape.
+        :rtype: int
+        """
+        pass
+
+    ################################################## ITEM EXPORT #####################################################
+
+    @abstractmethod
+    def asGraphol(self, document):
+        """
+        Export the current item in Graphol format.
+        :param document: the XML document where this item will be inserted.
+        :rtype: QDomElement
+        """
+        pass
 
     ################################################# EVENT HANDLERS ###################################################
 
@@ -139,164 +286,85 @@ class AbstractNodeShape(QGraphicsItem):
         """
         pass
 
-    ##################################################### GEOMETRY #####################################################
+    #################################################### GEOMETRY ######################################################
 
+    @abstractmethod
     def painterPath(self):
         """
         Returns the current shape as QPainterPath (used for collision detection).
         :rtype: QPainterPath
         """
-        raise NotImplementedError('method `painterPath` must be implemented in inherited class')
-
-    ################################################ AUXILIARY METHODS #################################################
-
-    def anchor(self, edge):
-        """
-        Returns the anchor point of the given edge (shape) in scene coordinates.
-        :rtype: QPointF
-        """
-        try:
-            return self.anchors[edge]
-        except KeyError:
-            self.anchors[edge] = self.mapToScene(self.center())
-            return self.anchors[edge]
-
-    def center(self):
-        """
-        Returns the point at the center of the shape.
-        :rtype: QPointF
-        """
-        return self.boundingRect().center()
-
-    def contextMenu(self):
-        """
-        Returns the basic nodes context menu.
-        :rtype: QMenu
-        """
-        menu = QMenu()
-        scene = self.scene()
-
-        menu.addAction(scene.actionItemDelete)
-        menu.addSeparator()
-        menu.addAction(scene.actionItemCut)
-        menu.addAction(scene.actionItemCopy)
-        menu.addAction(scene.actionItemPaste)
-        menu.addSeparator()
-        menu.addAction(scene.actionBringToFront)
-        menu.addAction(scene.actionSendToBack)
-        menu.addSeparator()
-
-        prop = menu.addAction(QIcon(':/icons/preferences'), 'Properties...')
-        prop.triggered.connect(self.handleNodeProperties)
-
-        return menu
-
-    def height(self):
-        """
-        Returns the height of the shape.
-        :rtype: int
-        """
-        raise NotImplementedError('method `height` must be implemented in inherited class')
-
-    def intersection(self, line):
-        """
-        Returns the intersection of the shape with the given line (in scene coordinates).
-        :param line: the line whose intersection needs to be calculated (in scene coordinates).
-        :rtype: QPointF
-        """
-        intersection = QPointF()
-        path = self.painterPath()
-        polygon = self.mapToScene(path.toFillPolygon(self.transform()))
-
-        for i in range(0, polygon.size() - 1):
-            polyline = QLineF(polygon[i], polygon[i + 1])
-            if polyline.intersect(line, intersection) == QLineF.BoundedIntersection:
-                return intersection
-
-        return None
-
-    def setAnchor(self, edge, pos):
-        """
-        Set the given position as anchor for the given edge.
-        :param edge: the edge used to index the new position.
-        :param pos: the anchor position.
-        """
-        self.anchors[edge] = pos
-
-    def updateEdges(self):
-        """
-        Update all the edges attached to the node.
-        """
-        try:
-            # update it for all the selected nodes in case we are
-            # moving multiple nodes across the whole scene
-            scene = self.scene()
-            for shape in scene.selectedNodes():
-                for edge in shape.node.edges:
-                    edge.shape.updateEdge()
-        except AttributeError:
-            # if we don't have the scene update only local edges: this is
-            # mostly used when we load a graphol document from disk
-            for edge in self.node.edges:
-                edge.shape.updateEdge()
-
-    def width(self):
-        """
-        Returns the width of the shape.
-        :rtype: int
-        """
-        raise NotImplementedError('method `width` must be implemented in inherited class')
+        pass
 
     ################################################# LABEL SHORTCUTS ##################################################
 
+    @abstractmethod
     def labelPos(self):
         """
         Returns the current label position.
         :rtype: QPointF
         """
-        raise NotImplementedError('method `labelPos` must be implemented in inherited class')
+        pass
 
+    @abstractmethod
     def labelText(self):
         """
         Returns the label text.
         :rtype: str
         """
-        raise NotImplementedError('method `labelText` must be implemented in inherited class')
+        pass
 
+    @abstractmethod
     def setLabelPos(self, pos):
         """
         Set the label position updating the 'moved' flag accordingly.
         :param pos: the node position.
         """
-        raise NotImplementedError('method `setLabelPos` must be implemented in inherited class')
+        pass
 
+    @abstractmethod
     def setLabelText(self, text):
         """
         Set the label text.
         :param text: the text value to set.
         """
-        raise NotImplementedError('method `setLabelText` must be implemented in inherited class')
+        pass
 
+    @abstractmethod
     def updateLabelPos(self):
         """
-        Update the label text position.
+        Update the label position.
         """
-        raise NotImplementedError('method `updateLabelPos` must be implemented in inherited class')
+        pass
 
-    ################################################## ACTION HANDLERS #################################################
+    ################################################## ITEM DRAWING ####################################################
 
+    @classmethod
+    @abstractmethod
+    def image(cls, **kwargs):
+        """
+        Returns an image suitable for the palette.
+        :rtype: QPixmap
+        """
+        pass
+
+    ################################################# ACTION HANDLERS ##################################################
+
+    @pyqtSlot()
     def handleNodeProperties(self):
         """
         Executed when node properties needs to be diplayed.
         """
-        prop = NodePropertiesDialog(scene=self.scene(), node=self.node)
+        prop = NodePropertiesDialog(scene=self.scene(), node=self)
         prop.exec_()
 
 
-class AbstractResizableNodeShape(AbstractNodeShape):
+class ResizableNode(Node):
     """
-    This is the base class for all the resizable node shapes.
+    Base class for all the diagram resizable nodes.
     """
+    __metaclass__ = ABCMeta
+
     handleTL = 1
     handleTM = 2
     handleTR = 3
@@ -306,10 +374,10 @@ class AbstractResizableNodeShape(AbstractNodeShape):
     handleBM = 7
     handleBR = 8
 
-    handleSize = +8.0
-    handleSpace = -4.0
     handleBrush = QColor(79, 195, 247, 255)
     handlePen = QPen(QColor(0, 0, 0, 255), 1.0, Qt.SolidLine)
+    handleSize = +8.0
+    handleSpace = -4.0
 
     handleCursors = {
         handleTL: Qt.SizeFDiagCursor,
@@ -324,17 +392,18 @@ class AbstractResizableNodeShape(AbstractNodeShape):
 
     def __init__(self, **kwargs):
         """
-        Initialize resizable shape attributes.
+        Initialize the node.
         """
+        super().__init__(**kwargs)
+
         self.command = None
         self.handles = dict()
         self.handleSelected = None
         self.mousePressData = None
         self.mousePressPos = None
         self.mousePressRect = None
-        super().__init__(**kwargs)
 
-    ################################################### PROPERTIES #####################################################
+    ################################################## PROPERTIES ######################################################
 
     @property
     def resizable(self):
@@ -343,6 +412,36 @@ class AbstractResizableNodeShape(AbstractNodeShape):
         :rtype: bool
         """
         return True
+
+    ################################################# ITEM INTERFACE ###################################################
+
+    def handleAt(self, point):
+        """
+        Returns the resize handle below the given point.
+        Will return None if the mouse is not over a resizing handle.
+        :type point: QPointF
+        :param point: the point where to look for a resizing handle.
+        :rtype: int
+        """
+        for k, v, in self.handles.items():
+            if v.contains(point):
+                return k
+        return None
+
+    def updateHandlesPos(self):
+        """
+        Update current resize handles according to the shape size and position.
+        """
+        s = self.handleSize
+        b = self.boundingRect()
+        self.handles[self.handleTL] = QRectF(b.left(), b.top(), s, s)
+        self.handles[self.handleTM] = QRectF(b.center().x() - s / 2, b.top(), s, s)
+        self.handles[self.handleTR] = QRectF(b.right() - s, b.top(), s, s)
+        self.handles[self.handleML] = QRectF(b.left(), b.center().y() - s / 2, s, s)
+        self.handles[self.handleMR] = QRectF(b.right() - s, b.center().y() - s / 2, s, s)
+        self.handles[self.handleBL] = QRectF(b.left(), b.bottom() - s, s, s)
+        self.handles[self.handleBM] = QRectF(b.center().x() - s / 2, b.bottom() - s, s, s)
+        self.handles[self.handleBR] = QRectF(b.right() - s, b.bottom() - s, s, s)
 
     ################################################# EVENT HANDLERS ###################################################
 
@@ -387,9 +486,9 @@ class AbstractResizableNodeShape(AbstractNodeShape):
         :param mouseEvent: the mouse move event instance.
         """
         if self.handleSelected:
-            
+
             if not self.command:
-                self.command = CommandNodeRezize(self.node)
+                self.command = CommandNodeRezize(self)
             self.interactiveResize(mouseEvent.pos())
             self.updateEdges()
 
@@ -419,101 +518,15 @@ class AbstractResizableNodeShape(AbstractNodeShape):
 
     ##################################################### GEOMETRY #####################################################
 
+    @abstractmethod
     def interactiveResize(self, mousePos):
         """
-        Handle the interactive resize of the shape.
+        Handle the interactive resize of the node.
         :param mousePos: the current mouse position.
         """
-        raise NotImplementedError('method `interactiveResize` must be implemented in inherited class')
+        pass
 
-    def painterPath(self):
-        """
-        Returns the current shape as QPainterPath (used for collision detection).
-        :rtype: QPainterPath
-        """
-        raise NotImplementedError('method `painterPath` must be implemented in inherited class')
-
-    ################################################ AUXILIARY METHODS #################################################
-
-    def handleAt(self, point):
-        """
-        Returns the resize handle below the given point.
-        Will return None if the mouse is not over a resizing handle.
-        :type point: QPointF
-        :param point: the point where to look for a resizing handle.
-        :rtype: int
-        """
-        for k, v, in self.handles.items():
-            if v.contains(point):
-                return k
-        return None
-
-    def height(self):
-        """
-        Returns the height of the shape.
-        :rtype: int
-        """
-        raise NotImplementedError('method `height` must be implemented in inherited class')
-    
-    def updateHandlesPos(self):
-        """
-        Update current resize handles according to the shape size and position.
-        """
-        s = self.handleSize
-        b = self.boundingRect()
-        self.handles[self.handleTL] = QRectF(b.left(), b.top(), s, s)
-        self.handles[self.handleTM] = QRectF(b.center().x() - s / 2, b.top(), s, s)
-        self.handles[self.handleTR] = QRectF(b.right() - s, b.top(), s, s)
-        self.handles[self.handleML] = QRectF(b.left(), b.center().y() - s / 2, s, s)
-        self.handles[self.handleMR] = QRectF(b.right() - s, b.center().y() - s / 2, s, s)
-        self.handles[self.handleBL] = QRectF(b.left(), b.bottom() - s, s, s)
-        self.handles[self.handleBM] = QRectF(b.center().x() - s / 2, b.bottom() - s, s, s)
-        self.handles[self.handleBR] = QRectF(b.right() - s, b.bottom() - s, s, s)
-
-    def width(self):
-        """
-        Returns the width of the shape.
-        :rtype: int
-        """
-        raise NotImplementedError('method `width` must be implemented in inherited class')
-
-    ################################################# LABEL SHORTCUTS ##################################################
-
-    def labelPos(self):
-        """
-        Returns the current label position.
-        :rtype: QPointF
-        """
-        raise NotImplementedError('method `labelPos` must be implemented in inherited class')
-
-    def labelText(self):
-        """
-        Returns the label text.
-        :rtype: str
-        """
-        raise NotImplementedError('method `labelText` must be implemented in inherited class')
-
-    def setLabelPos(self, pos):
-        """
-        Set the label position updating the 'moved' flag accordingly.
-        :param pos: the node position.
-        """
-        raise NotImplementedError('method `setLabelPos` must be implemented in inherited class')
-
-    def setLabelText(self, text):
-        """
-        Set the label text.
-        :param text: the text value to set.
-        """
-        raise NotImplementedError('method `setLabelText` must be implemented in inherited class')
-
-    def updateLabelPos(self):
-        """
-        Update the label text position.
-        """
-        raise NotImplementedError('method `updateLabelPos` must be implemented in inherited class')
-
-    ################################################### ITEM DRAWING ###################################################
+    ################################################## ITEM DRAWING ####################################################
 
     def paintHandles(self, painter):
         """

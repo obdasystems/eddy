@@ -43,8 +43,8 @@ class UniqueID(object):
     """
     Helper class used to generate sequential IDs for GraphicScene items.
     """
-    start = 0 # the initial id number
-    step = 1 # incremental step
+    START = 0 # the initial id number
+    STEP = 1 # incremental step
 
     def __init__(self):
         """
@@ -60,13 +60,13 @@ class UniqueID(object):
         :rtype: str
         """
         if RE_DIGIT.search(prefix):
-            raise ValueError('invalid prefix supplied (%s): id prefix MUST not contain any digit' % prefix)
+            raise ValueError('invalid prefix supplied ({0}): id prefix MUST not contain any digit'.format(prefix))
         try:
             last = self.ids[prefix]
         except KeyError:
-            self.ids[prefix] = UniqueID.start
+            self.ids[prefix] = UniqueID.START
         else:
-            self.ids[prefix] = last + UniqueID.step
+            self.ids[prefix] = last + UniqueID.STEP
         finally:
             return '%s%s' % (prefix, self.ids[prefix])
 
@@ -80,7 +80,7 @@ class UniqueID(object):
         """
         match = RE_PARSE.match(unique_id)
         if not match:
-            raise ValueError('invalid id supplied (%s)' % unique_id)
+            raise ValueError('invalid id supplied ({0})'.format(unique_id))
         return match.group('prefix'), int(match.group('value'))
 
     def update(self, unique_id):
@@ -90,7 +90,6 @@ class UniqueID(object):
         :param unique_id: the for incremental adjustment.
         """
         prefix, value = self.parse(unique_id)
-
         try:
             last = self.ids[prefix]
         except KeyError:

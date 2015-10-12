@@ -32,29 +32,188 @@
 ##########################################################################
 
 
-from grapholed.items.nodes import Node
-from grapholed.items.nodes.shapes import PropertyAssertionNodeShape
+from grapholed.items import ItemType
+from grapholed.items.nodes.common.base import Node
+
+from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath
 
 
 class PropertyAssertionNode(Node):
     """
-    This class implements the 'PropertyAssertion' node.
+    This class implements the 'Property Assertion' node.
     """
+    itemtype = ItemType.PropertyAssertionNode
+    minHeight = 40
+    minWidth = 80
     name = 'property assertion'
+    radius = 20
     xmlname = 'property-assertion'
-    type = Node.PropertyAssertionNode
 
-    def __init__(self, scene, description='', url='', **kwargs):
+    def __init__(self, width=minWidth, height=minHeight, **kwargs):
         """
-        Initialize the node.
-        :param scene: the scene where this node is being added.
-        :param description: the description of this node.
-        :param url: the url this node is referencing.
+        Initialize the Property Assertion node.
+        :param width: the shape width (unused in current implementation).
+        :param height: the shape height (unused in current implementation).
         """
-        super().__init__(scene, description, url, **kwargs)
-        self.shape = PropertyAssertionNodeShape(item=self, **kwargs)
+        super().__init__(**kwargs)
+        self.rect = self.createRect(self.minWidth, self.minHeight)
 
-    ############################################ NODE REPRESENTATION ###################################################
+    ################################################ ITEM INTERFACE ####################################################
+
+    def copy(self, scene):
+        """
+        Create a copy of the current item .
+        :param scene: a reference to the scene where this item is being copied from.
+        """
+        node = self.__class__(scene=scene,
+                              id=self.id,
+                              description=self.description,
+                              url=self.url,
+                              width=self.width(),
+                              height=self.height())
+
+        node.setPos(self.pos())
+        return node
+
+    def height(self):
+        """
+        Returns the height of the shape.
+        :rtype: int
+        """
+        return self.rect.height()
+
+    def width(self):
+        """
+        Returns the width of the shape.
+        :rtype: int
+        """
+        return self.rect.width()
+
+    ############################################### AUXILIARY METHODS ##################################################
+
+    @staticmethod
+    def createRect(shape_w, shape_h):
+        """
+        Returns the initialized rect according to the given width/height.
+        :param shape_w: the shape width.
+        :param shape_h: the shape height.
+        :rtype: QRectF
+        """
+        return QRectF(-shape_w / 2, -shape_h / 2, shape_w, shape_h)
+
+    ################################################## ITEM EXPORT #####################################################
+
+    def asGraphol(self, document):
+        """
+        Export the current item in Graphol format.
+        :param document: the XML document where this item will be inserted.
+        :rtype: QDomElement
+        """
+        pos = self.pos()
+
+        # create the root element for this node
+        node = document.createElement('node')
+        node.setAttribute('id', self.id)
+        node.setAttribute('type', self.xmlname)
+
+        # add node attributes
+        url = document.createElement('data:url')
+        url.appendChild(document.createTextNode(self.url))
+        description = document.createElement('data:description')
+        description.appendChild(document.createTextNode(self.description))
+
+        # add the shape geometry
+        geometry = document.createElement('shape:geometry')
+        geometry.setAttribute('height', self.height())
+        geometry.setAttribute('width', self.width())
+        geometry.setAttribute('x', pos.x())
+        geometry.setAttribute('y', pos.y())
+
+        node.appendChild(url)
+        node.appendChild(description)
+        node.appendChild(geometry)
+
+        return node
+
+    #################################################### GEOMETRY ######################################################
+
+    def boundingRect(self):
+        """
+        Returns the shape bounding rectangle.
+        :rtype: QRectF
+        """
+        return self.rect
+
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used for collision detection).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRoundedRect(self.rect, self.radius, self.radius)
+        return path
+
+    def shape(self):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRoundedRect(self.rect, self.radius, self.radius)
+        return path
+
+    ################################################# LABEL SHORTCUTS ##################################################
+
+    def labelPos(self):
+        """
+        Returns the current label position in item coordinates.
+        :rtype: QPointF
+        """
+        pass
+
+    def labelText(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        pass
+
+    def setLabelPos(self, pos):
+        """
+        Set the label position.
+        :param pos: the node position in item coordinates.
+        """
+        pass
+
+    def setLabelText(self, text):
+        """
+        Set the label text.
+        :param text: the text value to set.
+        """
+        pass
+
+    def updateLabelPos(self):
+        """
+        Update the label position.
+        """
+        pass
+
+    ################################################## ITEM DRAWING ####################################################
+
+    def paint(self, painter, option, widget=None):
+        """
+        Paint the node in the graphic view.
+        :param painter: the active painter.
+        :param option: the style option for this item.
+        :param widget: the widget that is being painted on.
+        """
+        shapeBrush = self.shapeBrushSelected if self.isSelected() else self.shapeBrush
+
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setBrush(shapeBrush)
+        painter.setPen(self.shapePen)
+        painter.drawRoundedRect(self.rect, self.radius, self.radius)
 
     @classmethod
     def image(cls, **kwargs):
@@ -62,4 +221,24 @@ class PropertyAssertionNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return PropertyAssertionNodeShape.image(**kwargs)
+        shape_w = 50
+        shape_h = 30
+        bRadius = 14
+
+        # Initialize the pixmap
+        pixmap = QPixmap(kwargs['w'], kwargs['h'])
+        pixmap.fill(Qt.transparent)
+
+        painter = QPainter(pixmap)
+
+        # Initialize the shape
+        rect = cls.createRect(shape_w, shape_h)
+
+        # Draw the rectangle
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin))
+        painter.setBrush(QColor(252, 252, 252))
+        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
+        painter.drawRoundedRect(rect, bRadius, bRadius)
+
+        return pixmap

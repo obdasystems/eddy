@@ -51,14 +51,12 @@ class Label(QGraphicsTextItem):
         :param parent: the parent node.
         """
         super().__init__(parent)
-        self.moved = False
-        self.command = None
         self.setDefaultTextColor(QColor(0, 0, 0, 255))
         self.setFont(Font('Arial', 12, Font.Light))
         self.setText(text)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
 
-    ##################################################### GEOMETRY #####################################################
+    ################################################### GEOMETRY #######################################################
 
     def shape(self):
         """
@@ -69,7 +67,7 @@ class Label(QGraphicsTextItem):
         path.addRect(self.boundingRect())
         return path
 
-    ################################################ AUXILIARY METHODS #################################################
+    ################################################ ITEM INTERFACE ####################################################
 
     def center(self):
         """
@@ -84,6 +82,20 @@ class Label(QGraphicsTextItem):
         :rtype: int
         """
         return self.boundingRect().height()
+
+    def pos(self):
+        """
+        Returns the position of the label in parent's item coordinates.
+        :rtype: QPointF
+        """
+        return self.mapToParent(self.parentItem(), self.center())
+
+    def setPos(self, pos):
+        """
+        Set the item position.
+        :param pos: the position in parent's item coordinates.
+        """
+        super().setPos(pos - QPointF(self.width() / 2, self.height() / 2))
 
     def setText(self, text):
         """
@@ -114,7 +126,7 @@ class Label(QGraphicsTextItem):
             p1 = points[int(len(points) / 2) - 1]
             p2 = points[int(len(points) / 2)]
 
-            mid = midpoint(p1, p2) - QPointF((self.width() / 2), (self.height() / 2))
+            mid = midpoint(p1, p2)
             rad = angleP(p1, p2)
 
             spaceX = -40
@@ -126,11 +138,9 @@ class Label(QGraphicsTextItem):
 
             # if we have an even number of points compute the
             # position of the label according the point in the middle
-            mid1 = points[int(len(points) / 2)] # without adding the width/height offset
-            mid2 = mid1 - QPointF((self.width() / 2), (self.height() / 2)) # used for the final positioning
-
-            rad1 = angleP(points[int(len(points) / 2) - 1], mid1)
-            rad2 = angleP(mid1, points[int(len(points) / 2) + 1])
+            mid = points[int(len(points) / 2)]
+            rad1 = angleP(points[int(len(points) / 2) - 1], mid)
+            rad2 = angleP(mid, points[int(len(points) / 2) + 1])
             diff = rad2 - rad1
 
             spaceX1 = 0
@@ -142,7 +152,7 @@ class Label(QGraphicsTextItem):
                 spaceX2 = -80 * sin(rad2)
                 spaceY += spaceY * sin(diff) * 1.8
 
-            self.setPos(QPointF(mid2.x() + spaceX1 + spaceX2, mid2.y() + spaceY))
+            self.setPos(QPointF(mid.x() + spaceX1 + spaceX2, mid.y() + spaceY))
 
     def width(self):
         """

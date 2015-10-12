@@ -37,7 +37,7 @@ from grapholed.widgets.misc import ZoomControl
 from grapholed.widgets.misc import SplashScreen
 from grapholed.widgets.pane import Pane
 from grapholed.widgets.palette import Palette
-from grapholed.widgets.scene import GraphicsScene
+from grapholed.widgets.scene import DiagramScene
 from grapholed.widgets.view import MainView
 from grapholed.widgets.view import Navigator
 

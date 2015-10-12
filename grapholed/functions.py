@@ -60,7 +60,7 @@ def clamp(val, minval=None, maxval=None):
     :param maxval: the maximum value.
     """
     if minval is not None and maxval is not None and minval > maxval:
-        raise ProgrammingError('minval (%s) MUST be lower than maxval (%s)' % (minval, maxval))
+        raise ProgrammingError('minval ({min}) MUST be lower than maxval ({max})'.format(min=minval, max=maxval))
     if minval is not None:
         val = max(val, minval)
     if maxval is not None:
@@ -229,8 +229,8 @@ def QSS(path):
     :rtype: str
     """
     if not path.lower().endswith('.qss'):
-        raise TypeError('invalid QSS file supplied: %s' % path)
+        raise TypeError('invalid QSS file supplied: {0}'.format(path))
     if not os.path.isfile(path):
-        raise IOError('could not load QSS file (%s): file no found' % path)
+        raise IOError('could not load QSS file ({0}): file no found'.format(path))
     with open(path) as qss:
         return qss.read()

@@ -49,7 +49,6 @@ from grapholed.commands.edges import CommandEdgeAnchorMove
 from grapholed.commands.edges import CommandEdgeBreakpointAdd
 from grapholed.commands.edges import CommandEdgeBreakpointMove
 from grapholed.commands.edges import CommandEdgeBreakpointDel
-from grapholed.commands.edges import CommandEdgeLabelMove
 
 from grapholed.commands.common import CommandItemsMultiAdd
 from grapholed.commands.common import CommandItemsMultiRemove

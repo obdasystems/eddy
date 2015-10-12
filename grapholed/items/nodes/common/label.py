@@ -54,13 +54,16 @@ class Label(QGraphicsTextItem):
         :param parent: the parent node.
         """
         super().__init__(parent)
-        self.defaultText = default
-        self.centered = centered
-        self.editable = editable
-        self.movable = movable
-        self.moved = False
+
+        self._defaultText = default
+        self._centered = centered
+        self._editable = editable
+        self._movable = movable
+
         self.commandEdit = None
         self.commandMove = None
+        self.moved = False
+
         self.setFlag(QGraphicsItem.ItemIsMovable, self.movable)
         self.setFlag(QGraphicsItem.ItemIsSelectable, self.movable)
         self.setFlag(QGraphicsItem.ItemIsFocusable, self.editable)
@@ -68,6 +71,134 @@ class Label(QGraphicsTextItem):
         self.setFont(Font('Arial', 12, Font.Light))
         self.setText(self.defaultText)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
+
+    ################################################## PROPERTIES ######################################################
+
+    @property
+    def centered(self):
+        """
+        Tells whether the label is centered in parent item by default.
+        :rtype: bool
+        """
+        return self._centered
+
+    @property
+    def defaultText(self):
+        """
+        Returns the label default text.
+        :rtype: str
+        """
+        return self._defaultText
+
+    @property
+    def editable(self):
+        """
+        Tells whether the label is movable
+        :rtype: bool
+        """
+        return self._editable
+
+    @property
+    def movable(self):
+        """
+        Tells whether the label is movable
+        :rtype: bool
+        """
+        return self._movable
+
+    ################################################ ITEM INTERFACE ####################################################
+
+    def center(self):
+        """
+        Returns the point at the center of the label in item coordinates.
+        :rtype: QPointF
+        """
+        return self.boundingRect().center()
+
+    def contextMenuAdd(self):
+        """
+        Returns a list of actions for the item shape context menu.
+        :rtype: list
+        """
+        collection = []
+        if self.movable and self.moved:
+            parent = self.parentItem()
+            action = QAction('Reset text position', parent.scene())
+            action.setIcon(QIcon(':/icons/refresh'))
+            action.triggered.connect(self.handleResetTextPosition)
+            collection.append(action)
+        return collection
+
+    def defaultPos(self):
+        """
+        Returns the label default position in parent's item coordinates.
+        :rtype: QPointF
+        """
+        parent = self.parentItem()
+        pos = parent.pos()
+        if not self.centered:
+            pos.setY(pos.y() - parent.height() / 2 - 10)
+        return pos
+
+    def height(self):
+        """
+        Returns the height of the text label.
+        :rtype: int
+        """
+        return self.boundingRect().height()
+
+    def pos(self):
+        """
+        Returns the position of the label in parent's item coordinates.
+        :rtype: QPointF
+        """
+        return self.mapToParent(self.parentItem(), self.center())
+
+    def setPos(self, pos):
+        """
+        Set the item position.
+        :param pos: the position in parent's item coordinates.
+        """
+        moved_X = True
+        moved_Y = True
+        defaultPos = self.defaultPos()
+        if abs(pos.x() - defaultPos.x()) <= 1:
+            moved_X = False
+            pos.setX(defaultPos.x())
+        if abs(pos.y() - defaultPos.y()) <= 1:
+            moved_Y = False
+            pos.setY(defaultPos.y())
+        self.moved = moved_X or moved_Y
+        super().setPos(pos - QPointF(self.width() / 2, self.height() / 2))
+
+    def setText(self, text):
+        """
+        Set the given text as plain text.
+        :param text: the text value to set.
+        """
+        self.setPlainText(text)
+        self.updatePos()
+
+    def text(self):
+        """
+        Returns the current shape text (shortcut for self.toPlainText()).
+        :return: str
+        """
+        return self.toPlainText()
+
+    def updatePos(self):
+        """
+        Update the current text position with respect to the shape.
+        """
+        if not self.moved:
+            self.setPos(self.defaultPos())
+
+    def width(self):
+        """
+        Returns the width of the text label.
+        :rtype: int
+        """
+        return self.boundingRect().width()
 
     ################################################## EVENT HANDLERS ##################################################
 
@@ -80,9 +211,7 @@ class Label(QGraphicsTextItem):
         cursor.select(QTextCursor.BlockUnderCursor)
         self.setTextCursor(cursor)
         if not self.commandEdit:
-            text = self.text()
-            parent = self.parentItem()
-            self.commandEdit = CommandNodeLabelEdit(node=parent.node, label=self, text=text)
+            self.commandEdit = CommandNodeLabelEdit(node=self.parentItem(), label=self, text=self.text())
         super().focusInEvent(focusEvent)
 
     def focusOutEvent(self, focusEvent):
@@ -167,12 +296,11 @@ class Label(QGraphicsTextItem):
         Executed when the text is moved with the mouse.
         :param mouseEvent: the mouse event instance.
         """
-        parent = self.parentItem()
         scene = self.scene()
         if scene.mode == scene.MoveItem:
             super().mouseMoveEvent(mouseEvent)
             if not self.commandMove:
-                self.commandMove = CommandNodeLabelMove(node=parent.node, label=self, moved=self.moved)
+                self.commandMove = CommandNodeLabelMove(node=self.parentItem(), label=self, moved=self.moved)
             self.moved = True
 
     def mouseReleaseEvent(self, mouseEvent):
@@ -199,105 +327,15 @@ class Label(QGraphicsTextItem):
         path.addRect(self.boundingRect())
         return path
 
-    ################################################ AUXILIARY METHODS #################################################
-
-    def center(self):
-        """
-        Returns the point at the center of the shape.
-        :rtype: QPointF
-        """
-        return self.boundingRect().center()
-
-    def contextMenuAdd(self):
-        """
-        Returns a list of actions for the item shape context menu.
-        :rtype: list
-        """
-        collection = []
-        if self.flags() & QGraphicsItem.ItemIsMovable and self.moved:
-            parent = self.parentItem()
-            action = QAction('Reset text position', parent.scene())
-            action.setIcon(QIcon(':/icons/refresh'))
-            action.triggered.connect(self.handleResetTextPosition)
-            collection.append(action)
-        return collection
-
-    def defaultPos(self):
-        """
-        Returns the label default position.
-        :rtype: QPointF
-        """
-        b1 = self.boundingRect()
-        b2 = self.parentItem().boundingRect()
-        x = b2.center().x() - b1.width() / 2
-        y = b2.center().y() - b1.height() / 2
-        if not self.centered:
-            y -= b1.height() / 2 + 10
-        return QPointF(x, y)
-
-    def height(self):
-        """
-        Returns the height of the text label.
-        :rtype: int
-        """
-        return self.boundingRect().height()
-
-    def setPos(self, pos):
-        """
-        Set the label position updating the 'moved' flag accordingly.
-        :param pos: the node position.
-        """
-        moved_X = True
-        moved_Y = True
-        defaultPos = self.defaultPos()
-        if abs(pos.x() - defaultPos.x()) <= 1:
-            moved_X = False
-            pos.setX(defaultPos.x())
-        if abs(pos.y() - defaultPos.y()) <= 1:
-            moved_Y = False
-            pos.setY(defaultPos.y())
-        self.moved = moved_X or moved_Y
-        super().setPos(pos)
-
-    def setText(self, text):
-        """
-        Set the given text as plain text.
-        :param text: the text value to set.
-        """
-        self.setPlainText(text)
-        self.updatePos()
-
-    def text(self):
-        """
-        Returns the current shape text (shortcut for self.toPlainText()).
-        :return: str
-        """
-        return self.toPlainText()
-
-    def updatePos(self):
-        """
-        Update the current text position with respect to the shape.
-        """
-        if not self.moved:
-            self.setPos(self.defaultPos())
-
-    def width(self):
-        """
-        Returns the width of the text label.
-        :rtype: int
-        """
-        return self.boundingRect().width()
-
     ################################################# ACTION HANDLERS ##################################################
 
     def handleResetTextPosition(self):
         """
         Reset the text position to the default value.
         """
-        if self.flags() & QGraphicsItem.ItemIsMovable:
-            scene = self.scene()
-            parent = self.parentItem()
-            command = CommandNodeLabelMove(node=parent.node, label=self, moved=self.moved)
+        if self.movable:
+            command = CommandNodeLabelMove(node=self.parentItem(), label=self, moved=self.moved)
             command.end(pos=self.defaultPos())
+            scene = self.scene()
             scene.undoStack.push(command)
             self.updatePos()

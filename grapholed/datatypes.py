@@ -217,7 +217,7 @@ class RestrictionType(Enum):
             RestrictionType.exists: 'exists',
             RestrictionType.forall: 'forall',
             RestrictionType.self: 'self',
-            RestrictionType.cardinality: '(%s,%s)',
+            RestrictionType.cardinality: '({min},{max})',
         }
         return __mapping__[self]
 

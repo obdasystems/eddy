@@ -32,32 +32,29 @@
 ##########################################################################
 
 
-from grapholed.datatypes import RestrictionType
-from grapholed.items.nodes import Node
-from grapholed.items.nodes.shapes import RangeRestrictionNodeShape
+from grapholed.datatypes import Font
+from grapholed.items import ItemType
+from grapholed.items.nodes.common.square import SquaredNode
+
+from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
 
-class RangeRestrictionNode(Node):
+class RangeRestrictionNode(SquaredNode):
     """
-    This class implements the 'Range restriction' node.
+    This class implements the 'Range Restriction' node.
     """
+    itemtype = ItemType.RangeRestrictionNode
     name = 'range restriction'
     xmlname = 'range-restriction'
-    type = Node.RangeRestrictionNode
 
-    def __init__(self, scene, description='', url='', **kwargs):
+    def __init__(self, **kwargs):
         """
-        Initialize the node.
-        :param scene: the scene where this node is being added.
-        :param description: the description of this node.
-        :param url: the url this node is referencing.
+        Initialize the Range Restriction node.
         """
-        super().__init__(scene, description, url, **kwargs)
-        self.cardinality = dict(min=None, max=None)
-        self.restriction = RestrictionType.exists
-        self.shape = RangeRestrictionNodeShape(item=self, **kwargs)
+        super().__init__(brush=(0, 0, 0), **kwargs)
 
-    ############################################ NODE REPRESENTATION ###################################################
+    ################################################### ITEM DRAWING ###################################################
 
     @classmethod
     def image(cls, **kwargs):
@@ -65,4 +62,23 @@ class RangeRestrictionNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return RangeRestrictionNodeShape.image(**kwargs)
+        shape_w = 18
+        shape_h = 18
+
+        # Initialize the pixmap
+        pixmap = QPixmap(kwargs['w'], kwargs['h'])
+        pixmap.fill(Qt.transparent)
+        painter = QPainter(pixmap)
+
+        # Draw the text above the shape
+        painter.setFont(Font('Arial', 9, Font.Light))
+        painter.translate(0, 0)
+        painter.drawText(QRectF(0, 0, kwargs['w'], kwargs['h'] / 2), Qt.AlignCenter, 'restriction')
+
+        # Draw the rectangle
+        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+        painter.setBrush(QColor(0, 0, 0))
+        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
+        painter.drawRect(QRectF(-shape_w / 2, -shape_h / 2 + 6, shape_w, shape_h))
+
+        return pixmap

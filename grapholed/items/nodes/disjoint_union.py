@@ -32,29 +32,115 @@
 ##########################################################################
 
 
-from grapholed.items.nodes import Node
-from grapholed.items.nodes.shapes import DisjointUnionNodeShape
+from grapholed.items import ItemType
+from grapholed.items.nodes.common.hexagon import HexagonNode
+
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
 
-class DisjointUnionNode(Node):
+class DisjointUnionNode(HexagonNode):
     """
-    This class implements the 'Disjoint union' node.
+    This class implements the 'Disjoint Union' node.
     """
+    itemtype = ItemType.DisjointUnionNode
     name = 'disjoint union'
     xmlname = 'disjoint-union'
-    type = Node.DisjointUnionNode
 
-    def __init__(self, scene, description='', url='', **kwargs):
+    def __init__(self, **kwargs):
         """
-        Initialize the node.
-        :param scene: the scene where this node is being added.
-        :param description: the description of this node.
-        :param url: the url this node is referencing.
+        Initialize the Disjoint Union node.
         """
-        super().__init__(scene, description, url, **kwargs)
-        self.shape = DisjointUnionNodeShape(item=self, **kwargs)
+        super().__init__(brush=(0, 0, 0), **kwargs)
 
-    ############################################ NODE REPRESENTATION ###################################################
+    ################################################ ITEM INTERFACE ####################################################
+
+    def copy(self, scene):
+        """
+        Create a copy of the current item .
+        :param scene: a reference to the scene where this item is being copied from.
+        """
+        node = self.__class__(scene=scene,
+                              id=self.id,
+                              description=self.description,
+                              url=self.url,
+                              width=self.width(),
+                              height=self.height())
+
+        node.setPos(self.pos())
+        return node
+
+    ################################################## ITEM EXPORT #####################################################
+
+    def asGraphol(self, document):
+        """
+        Export the current item in Graphol format.
+        :param document: the XML document where this item will be inserted.
+        :rtype: QDomElement
+        """
+        pos = self.pos()
+
+        # create the root element for this node
+        node = document.createElement('node')
+        node.setAttribute('id', self.id)
+        node.setAttribute('type', self.xmlname)
+
+        # add node attributes
+        url = document.createElement('data:url')
+        url.appendChild(document.createTextNode(self.url))
+        description = document.createElement('data:description')
+        description.appendChild(document.createTextNode(self.description))
+
+        # add the shape geometry
+        geometry = document.createElement('shape:geometry')
+        geometry.setAttribute('height', self.height())
+        geometry.setAttribute('width', self.width())
+        geometry.setAttribute('x', pos.x())
+        geometry.setAttribute('y', pos.y())
+
+        node.appendChild(url)
+        node.appendChild(description)
+        node.appendChild(geometry)
+
+        return node
+
+    ################################################# LABEL SHORTCUTS ##################################################
+
+    def labelPos(self):
+        """
+        Returns the current label position in item coordinates.
+        :rtype: QPointF
+        """
+        pass
+
+    def labelText(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        pass
+
+    def setLabelPos(self, pos):
+        """
+        Set the label position.
+        :param pos: the node position in item coordinates.
+        """
+        pass
+
+    def setLabelText(self, text):
+        """
+        Set the label text.
+        :param text: the text value to set.
+        """
+        pass
+
+    def updateLabelPos(self):
+        """
+        Update the label position.
+        """
+        pass
+
+    ################################################### ITEM DRAWING ###################################################
 
     @classmethod
     def image(cls, **kwargs):
@@ -62,4 +148,23 @@ class DisjointUnionNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        return DisjointUnionNodeShape.image(**kwargs)
+        shape_w = 48
+        shape_h = 30
+        oblique = 6
+
+        # Initialize the pixmap
+        pixmap = QPixmap(kwargs['w'], kwargs['h'])
+        pixmap.fill(Qt.transparent)
+        painter = QPainter(pixmap)
+
+        # Initialize the shape
+        polygon = cls.createPolygon(shape_w, shape_h, oblique)
+
+        # Draw the polygon
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+        painter.setBrush(QColor(0, 0, 0))
+        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
+        painter.drawPolygon(polygon)
+
+        return pixmap

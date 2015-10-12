@@ -90,7 +90,7 @@ class NodePropertiesDialog(QDialog):
         self.geometryWidget = QWidget()
         self.geometryLayout = QFormLayout(self.geometryWidget)
 
-        p = self.node.shape.mapToScene(self.node.shape.center())
+        p = self.node.pos()
         r = self.scene.sceneRect()
 
         self.xField = SpinBox(self.geometryWidget)
@@ -107,13 +107,13 @@ class NodePropertiesDialog(QDialog):
         self.wField = SpinBox(self.geometryWidget)
         self.wField.setEnabled(False)
         self.wField.setFixedWidth(60)
-        self.wField.setValue(int(self.node.shape.width()))
+        self.wField.setValue(int(self.node.width()))
 
         # TODO: allow to modify shape height from properties dialog
         self.hField = SpinBox(self.geometryWidget)
         self.hField.setEnabled(False)
         self.hField.setFixedWidth(60)
-        self.hField.setValue(int(self.node.shape.height()))
+        self.hField.setValue(int(self.node.height()))
 
         self.geometryLayout.addRow('X', self.xField)
         self.geometryLayout.addRow('Y', self.yField)
@@ -177,22 +177,18 @@ class NodePropertiesDialog(QDialog):
         """
         x = clamp(self.xField.value(), 0, self.scene.sceneRect().width())
         y = clamp(self.yField.value(), 0, self.scene.sceneRect().height())
-        pos1 = self.node.shape.mapToScene(self.node.shape.center())
+        pos1 = self.node.pos()
         pos2 = QPointF(x, y)
 
         if pos1 != pos2:
 
-            # calculate the correct position: for simplicity we show the center
-            # of the node as the position, but this is actually not always true
             diff = pos2 - pos1
-            pos3 = self.node.shape.pos()
-            pos4 = pos3 + diff
 
             data1 = {
                 'nodes': {
-                    self.node.shape: {
-                        'anchors': {k: v for k, v in self.node.shape.anchors.items()},
-                        'pos': pos3,
+                    self.node: {
+                        'anchors': {k: v for k, v in self.node.anchors.items()},
+                        'pos': pos1,
                     }
                 },
                 'edges': {}
@@ -200,9 +196,9 @@ class NodePropertiesDialog(QDialog):
 
             data2 = {
                 'nodes': {
-                    self.node.shape: {
-                        'anchors': {k: v + diff for k, v in self.node.shape.anchors.items()},
-                        'pos': pos4,
+                    self.node: {
+                        'anchors': {k: v + diff for k, v in self.node.anchors.items()},
+                        'pos': pos2,
                     }
                 },
                 'edges': {}

@@ -42,35 +42,37 @@ class CommandItemsMultiAdd(QUndoCommand):
     def __init__(self, scene, collection):
         """
         Initialize the command.
-        :param scene: the graphic scene where this command is being performed.
+        :param scene: the scene where this command is being performed.
         :param collection: a collection of items to add to the scene.
         """
-        super().__init__('add %s items' % len(collection))
         self.scene = scene
         self.collection = collection
         self.selected = scene.selectedItems()
+
+        if len(collection) == 1:
+            super().__init__('add {0} {1}'.format(collection[0].name, 'node' if collection[0].isNode() else 'edge'))
+        else:
+            super().__init__('add {0} items'.format(len(collection)))
 
     def redo(self):
         """redo the command"""
         self.scene.clearSelection()
         for item in self.collection:
-            self.scene.itemList.append(item)
-            self.scene.addItem(item.shape)
-            item.shape.setSelected(True)
+            self.scene.addItem(item)
+            item.setSelected(True)
 
     def undo(self):
         """undo the command"""
         self.scene.clearSelection()
         for item in self.collection:
-            self.scene.itemList.remove(item)
-            self.scene.removeItem(item.shape)
-        for shape in self.selected:
-            shape.setSelected(True)
+            self.scene.removeItem(item)
+        for item in self.selected:
+            item.setSelected(True)
 
 
 class CommandItemsMultiRemove(QUndoCommand):
     """
-    This command is used to remove multiple items from the graphic scene.
+    This command is used to remove multiple items from the scene.
     The selection of the items involved in the multi remove needs to be handled somewhere else.
     """
     def __init__(self, scene, collection):
@@ -84,9 +86,9 @@ class CommandItemsMultiRemove(QUndoCommand):
         self.edges = [item for item in collection if item.isEdge()]
 
         if len(collection) == 1:
-            super().__init__('remove %s %s' % (collection[0].name, 'node' if collection[0].isNode() else 'edge'))
+            super().__init__('remove {0} {1}'.format(collection[0].name, 'node' if collection[0].isNode() else 'edge'))
         else:
-            super().__init__('remove %s items' % len(collection))
+            super().__init__('remove {0} items'.format(len(collection)))
 
     def redo(self):
         """redo the command"""
@@ -94,23 +96,18 @@ class CommandItemsMultiRemove(QUndoCommand):
         for edge in self.edges:
             edge.source.removeEdge(edge)
             edge.target.removeEdge(edge)
-            self.scene.itemList.remove(edge)
-            self.scene.removeItem(edge.shape)
+            self.scene.removeItem(edge)
         # remove the nodes
         for node in self.nodes:
-            self.scene.itemList.remove(node)
-            self.scene.removeItem(node.shape)
+            self.scene.removeItem(node)
 
     def undo(self):
         """undo the command"""
         # add back the nodes
         for node in self.nodes:
-            self.scene.itemList.append(node)
-            self.scene.addItem(node.shape)
+            self.scene.addItem(node)
         # add back the edges
         for edge in self.edges:
-            if not edge in self.scene.itemList:
-                edge.source.addEdge(edge)
-                edge.target.addEdge(edge)
-                self.scene.itemList.append(edge)
-                self.scene.addItem(edge.shape)
+            edge.source.addEdge(edge)
+            edge.target.addEdge(edge)
+            self.scene.addItem(edge)
