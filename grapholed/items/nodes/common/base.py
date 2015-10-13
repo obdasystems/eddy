@@ -188,11 +188,18 @@ class Node(Item):
         """
         self.anchors[edge] = pos
 
-    def setPos(self, pos):
+    def setPos(self, *__args):
         """
         Set the item position.
-        :param pos: the position in scene coordinates.
+        QGraphicsItem.setPos(QPointF)
+        QGraphicsItem.setPos(float, float)
         """
+        if len(__args) == 1:
+            pos = __args[0]
+        elif len(__args) == 2:
+            pos = QPointF(__args[0], __args[1])
+        else:
+            raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
         super().setPos(pos + super().pos() - self.pos())
 
     def updateEdges(self):
