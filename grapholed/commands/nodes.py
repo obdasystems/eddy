@@ -101,7 +101,8 @@ class CommandNodeRezize(QUndoCommand):
         self.data2 = None
         self.data1 = {
             'shape': QRectF(self.node.rect) if hasattr(self.node, 'rect') else QPolygonF(self.node.polygon),
-            'anchors': {edge: pos for edge, pos in self.node.anchors.items()}
+            'anchors': {edge: pos for edge, pos in self.node.anchors.items()},
+            'label': {'moved': self.node.label.moved}
         }
 
     def end(self):
@@ -110,7 +111,8 @@ class CommandNodeRezize(QUndoCommand):
         """
         self.data2 = {
             'shape': QRectF(self.node.rect) if hasattr(self.node, 'rect') else QPolygonF(self.node.polygon),
-            'anchors': {edge: pos for edge, pos in self.node.anchors.items()}
+            'anchors': {edge: pos for edge, pos in self.node.anchors.items()},
+            'label': {'moved': self.node.label.moved}
         }
 
     def redo(self):
@@ -125,7 +127,7 @@ class CommandNodeRezize(QUndoCommand):
                 self.node.setAnchor(edge, pos)
 
             self.node.updateHandlesPos()
-            self.node.updateLabelPos()
+            self.node.updateLabelPos(moved=self.data2['label']['moved'])
             self.node.updateEdges()
             self.node.update()
 
@@ -140,7 +142,7 @@ class CommandNodeRezize(QUndoCommand):
             self.node.setAnchor(edge, pos)
 
         self.node.updateHandlesPos()
-        self.node.updateLabelPos()
+        self.node.updateLabelPos(moved=self.data2['label']['moved'])
         self.node.updateEdges()
         self.node.update()
 
