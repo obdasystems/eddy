@@ -60,8 +60,8 @@ class IndividualNode(ResizableNode):
     indexEE = 8
 
     itemtype = ItemType.IndividualNode
-    minHeight = 100
-    minWidth = 100
+    minHeight = 80
+    minWidth = 80
     name = 'individual'
     shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
     xmlname = 'individual'
