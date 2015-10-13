@@ -182,11 +182,11 @@ class RoleChainNode(HexagonNode):
         """
         pass
 
-    def updateLabelPos(self):
+    def updateLabelPos(self, *args, **kwargs):
         """
         Update the label position.
         """
-        self.label.updatePos()
+        self.label.updatePos(*args, **kwargs)
 
     ################################################### ITEM DRAWING ###################################################
 

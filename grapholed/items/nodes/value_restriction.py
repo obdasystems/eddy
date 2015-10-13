@@ -253,6 +253,7 @@ class ValueRestrictionNode(ResizableNode):
         :param mousePos: the current mouse position.
         """
         offset = self.handleSize + self.handleSpace
+        moved = self.label.moved
         scene = self.scene()
         rect = self.boundingRect()
         snap = scene.settings.value('scene/snap_to_grid', False, bool)
@@ -439,7 +440,7 @@ class ValueRestrictionNode(ResizableNode):
             self.polygon[self.indexEE] = QPointF(rect.right() + offset - fold, self.polygon[self.indexEE].y())
 
         self.updateHandlesPos()
-        self.updateLabelPos()
+        self.updateLabelPos(moved=moved)
 
         # update edge anchors
         for edge, pos in self.mousePressData.items():
@@ -498,11 +499,11 @@ class ValueRestrictionNode(ResizableNode):
         """
         self.label.setText(text)
 
-    def updateLabelPos(self):
+    def updateLabelPos(self, *args, **kwargs):
         """
         Update the label position.
         """
-        self.label.updatePos()
+        self.label.updatePos(*args, **kwargs)
 
     ################################################## ITEM DRAWING ####################################################
 

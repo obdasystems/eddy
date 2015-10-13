@@ -350,7 +350,7 @@ class Node(Item):
         pass
 
     @abstractmethod
-    def updateLabelPos(self):
+    def updateLabelPos(self, *args, **kwargs):
         """
         Update the label position.
         """

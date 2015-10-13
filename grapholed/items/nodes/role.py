@@ -233,6 +233,7 @@ class RoleNode(ResizableNode):
         :param mousePos: the current mouse position.
         """
         offset = self.handleSize + self.handleSpace
+        moved = self.label.moved
         scene = self.scene()
         snap = scene.settings.value('scene/snap_to_grid', False, bool)
         rect = self.boundingRect()
@@ -423,7 +424,7 @@ class RoleNode(ResizableNode):
             self.polygon[self.indexR] = QPointF(rect.right() - offset, rect.bottom() - rect.height() / 2)
 
         self.updateHandlesPos()
-        self.updateLabelPos()
+        self.updateLabelPos(moved=moved)
 
         # update edge anchors
         for edge, pos in self.mousePressData.items():
@@ -482,11 +483,11 @@ class RoleNode(ResizableNode):
         """
         self.label.setText(text)
 
-    def updateLabelPos(self):
+    def updateLabelPos(self, *args, **kwargs):
         """
         Update the label position.
         """
-        self.label.updatePos()
+        self.label.updatePos(*args, **kwargs)
 
     ################################################## ITEM DRAWING ####################################################
 

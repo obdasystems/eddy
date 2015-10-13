@@ -297,11 +297,11 @@ class ValueDomainNode(Node):
         # raise an error in case the given text doesn't match any XsdDatatype value
         raise ParseError('invalid datatype supplied: {0}'.format(text))
 
-    def updateLabelPos(self):
+    def updateLabelPos(self, *args, **kwargs):
         """
         Update the label position.
         """
-        self.label.updatePos()
+        self.label.updatePos(*args, **kwargs)
 
     ################################################## ITEM DRAWING ####################################################
 

@@ -306,11 +306,11 @@ class SquaredNode(Node):
             else:
                 raise ParseError('invalid restriction supplied: {0}'.format(text))
 
-    def updateLabelPos(self):
+    def updateLabelPos(self, *args, **kwargs):
         """
         Update the label position.
         """
-        self.label.updatePos()
+        self.label.updatePos(*args, **kwargs)
 
     ################################################## ITEM DRAWING ####################################################
 

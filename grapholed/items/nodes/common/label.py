@@ -191,11 +191,12 @@ class Label(QGraphicsTextItem):
         """
         return self.toPlainText()
 
-    def updatePos(self):
+    def updatePos(self, moved=False):
         """
         Update the current text position with respect to the shape.
+        :param moved: the moved status of the label.
         """
-        if not self.moved:
+        if not moved:
             self.setPos(self.defaultPos())
 
     def width(self):

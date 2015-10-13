@@ -30,8 +30,8 @@
 #     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
 #                                                                        #
 ##########################################################################
-from grapholed.exceptions import ParseError
 
+from grapholed.exceptions import ParseError
 from grapholed.items import ItemType
 from grapholed.items.nodes.common.base import Node
 
@@ -220,7 +220,7 @@ class PropertyAssertionNode(Node):
         """
         pass
 
-    def updateLabelPos(self):
+    def updateLabelPos(self, *args, **kwargs):
         """
         Update the label position.
         """
