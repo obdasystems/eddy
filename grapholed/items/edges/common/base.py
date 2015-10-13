@@ -37,6 +37,7 @@ from functools import partial
 
 from grapholed.commands import CommandEdgeBreakpointAdd, CommandEdgeBreakpointDel, CommandEdgeBreakpointMove
 from grapholed.commands import CommandEdgeAnchorMove
+from grapholed.exceptions import ParseError
 from grapholed.functions import distanceP, distanceL
 from grapholed.items import Item
 
@@ -263,6 +264,12 @@ class Edge(Item):
         Check whether we have to draw the edge or not.
         :return: True if we need to draw the edge, False otherwise.
         """
+        if not self.scene():
+            # no scene => probably the edge is lying int a CommandEdgeAdd instance in the
+            # undoStack of the scene but it is currently detached from it: removing this
+            # check will cause an AttributeError being raised in paint() methods.
+            return False
+
         if self.target:
 
             sourcePath = self.mapFromItem(self.source, self.source.painterPath())
@@ -345,7 +352,7 @@ class Edge(Item):
             return self.source
         raise AttributeError('node {0} is not attached to edge {1}'.format(node, self))
 
-    ################################################## ITEM EXPORT #####################################################
+    ############################################# ITEM IMPORT / EXPORT #################################################
 
     def asGraphol(self, document):
         """
@@ -361,8 +368,8 @@ class Edge(Item):
         edge.setAttribute('type', self.xmlname)
 
         ## LINE GEOMETRY
-        source = self.source.shape.anchor(self.shape)
-        target = self.target.shape.anchor(self.shape)
+        source = self.source.anchor(self)
+        target = self.target.anchor(self)
 
         for p in [source] + self.breakpoints + [target]:
             point = document.createElement('line:point')
@@ -371,6 +378,50 @@ class Edge(Item):
             edge.appendChild(point)
 
         return edge
+
+    @classmethod
+    def fromGraphol(cls, scene, E):
+        """
+        Create a new item instance by parsing a Graphol document item entry.
+        :param scene: the scene where the element will be inserted.
+        :param E: the Graphol document element entry.
+        :raise ParseError: in case it's not possible to generate the node using the given element.
+        :rtype: Edge
+        """
+        try:
+
+            eid = E.attribute('id')
+
+            # get source an target node of this edge
+            source = scene.node(E.attribute('source'))
+            target = scene.node(E.attribute('target'))
+
+            points = []
+
+            # extract all the breakpoints from the edge children
+            children = E.elementsByTagName('line:point')
+            for i in range(0, children.count()):
+                P = children.at(i).toElement()
+                point = QPointF(int(P.attribute('x')), int(P.attribute('y')))
+                points.append(point)
+
+            sourceA = points[0]         ## SOURCE NODE ANCHOR
+            targetA = points[-1]        ## TARGET NODE ANCHOR
+            breakpoints = points[1:-1]  ## BREAKPOINTS
+
+            edge = cls(scene=scene, id=eid, source=source, target=target, breakpoints=breakpoints)
+            edge.source.setAnchor(edge, sourceA)
+            edge.target.setAnchor(edge, targetA)
+            edge.updateEdge()
+
+            # map the edge over the source and target nodes
+            edge.source.edges.append(edge)
+            edge.target.edges.append(edge)
+
+        except Exception as e:
+            raise ParseError('could not create {0} instance from Graphol node: {1}'.format(cls.__name__, e))
+        else:
+            return edge
 
     ################################################## EVENT HANDLERS ##################################################
 

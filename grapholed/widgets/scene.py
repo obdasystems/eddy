@@ -383,7 +383,9 @@ class DiagramScene(QGraphicsScene):
                 # put the command on hold since we don't know if the edge will be truly inserted or the
                 # insertion will be aborted (case when the user fails to release the edge arrow on top of a node)
                 self.command = CommandEdgeAdd(scene=self, edge=edge)
-                self.command.redo()
+
+                # add the edge to the scene
+                self.addItem(self.command.edge)
 
             super().mousePressEvent(mouseEvent)
 
@@ -490,18 +492,17 @@ class DiagramScene(QGraphicsScene):
                 self.command.edge.target.addEdge(self.command.edge)
                 self.command.edge.updateEdge()
 
-                # undo the command and push it on the stack
-                # right after so redo will be executed
-                self.command.undo()
+                # push the command in the undostack
                 self.undoStack.push(self.command)
 
             else:
 
-                # just undo the command without pushing it on the stack
-                self.command.undo()
+                # remove the edge from the scene
+                self.removeItem(self.command.edge)
 
             self.edgeInsertEnd.emit(self.command.edge)
             self.clearSelection()
+            self.command = None
 
         elif self.mode == DiagramScene.MoveItem:
 

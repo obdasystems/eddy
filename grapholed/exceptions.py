@@ -37,12 +37,12 @@ class ProgrammingError(Exception):
     Raised whenever a programming error is detected.
     """
     def __init__(self, message):
-        Exception.__init__(self, message)
+        super().__init__(message)
 
 
 class ParseError(Exception):
     """
-    Raised whenever it's not possible to complete a document parsing..
+    Raised whenever it's not possible to complete a document parsing.
     """
     def __init__(self, message=''):
-        Exception.__init__(self, message)
+        super().__init__(message)

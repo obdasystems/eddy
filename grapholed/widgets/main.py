@@ -36,7 +36,7 @@ import sys
 import traceback
 import webbrowser
 
-from PyQt5.QtCore import Qt, QSize, QRectF, pyqtSlot, QSettings, QFile, QIODevice, QPointF
+from PyQt5.QtCore import Qt, QSize, QRectF, pyqtSlot, QSettings, QFile, QIODevice
 from PyQt5.QtGui import QIcon, QKeySequence, QPixmap
 from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QAction, QStatusBar, QButtonGroup, QHBoxLayout
 from PyQt5.QtWidgets import QToolButton, QWidget, QUndoGroup, QMessageBox
@@ -426,7 +426,8 @@ class MainWindow(QMainWindow):
         """
         Create a new empty document and add it to the MDI Area.
         """
-        scene = self.getScene()
+        size = self.settings.value('scene/size', 5000, int)
+        scene = self.getScene(size, size)
         mainview = self.getMainView(scene)
         subwindow = self.getMDISubWindow(mainview)
         subwindow.showMaximized()
@@ -440,6 +441,7 @@ class MainWindow(QMainWindow):
         opendialog = OpenFileDialog(getPath('~'))
         opendialog.setNameFilters([FileType.graphol.value])
         if opendialog.exec_():
+
             filepath = opendialog.selectedFiles()[0]
             # if the file is already opened just focus the subwindow
             for subwindow in self.mdiArea.subWindowList():
@@ -450,6 +452,7 @@ class MainWindow(QMainWindow):
                     return
 
             scene = self.getSceneFromGrapholFile(filepath)
+
             if scene:
                 mainview = self.getMainView(scene)
                 subwindow = self.getMDISubWindow(mainview)
@@ -730,25 +733,21 @@ class MainWindow(QMainWindow):
 
         return subwindow
 
-    def getScene(self):
+    def getScene(self, width, height):
         """
-        Create and return an empty scene.
+        Create and return an empty scene (not connected to the undoStack).
+        :param width: the width of the scene rect.
+        :param height: the height of the scene rect
         :return: the initialized GraphicScene.
         :rtype: DiagramScene
         """
-        # get the size of the document from the preferences
-        size = self.settings.value('scene/size', 5000, int)
-
         # create the new scene
         scene = DiagramScene(self)
-        scene.setSceneRect(QRectF(0, 0, size, size))
+        scene.setSceneRect(QRectF(0, 0, width, height))
         scene.nodeInsertEnd.connect(self.handleNodeInsertEnd)
         scene.edgeInsertEnd.connect(self.handleEdgeInsertEnd)
         scene.modeChanged.connect(self.handleSceneModeChanged)
-
-        # connect the undostack to the undogroup
         self.undoGroup.addStack(scene.undoStack)
-
         return scene
 
     def getSceneFromGrapholFile(self, filepath):
@@ -777,116 +776,43 @@ class MainWindow(QMainWindow):
 
             root = document.documentElement()
 
+            # read graph initialization data
             graph = root.firstChildElement('graph')
-            w = int(graph.attribute('width', '5000'))
-            h = int(graph.attribute('height', '5000'))
+            w = int(graph.attribute('width', self.settings.value('scene/size', '5000', str)))
+            h = int(graph.attribute('height', self.settings.value('scene/size', '5000', str)))
 
             # create the scene
-            scene = DiagramScene(self)
+            scene = self.getScene(width=w, height=h)
             scene.document.filepath = filepath
-            scene.setSceneRect(QRectF(0, 0, w, h))
-            scene.nodeInsertEnd.connect(self.handleNodeInsertEnd)
-            scene.edgeInsertEnd.connect(self.handleEdgeInsertEnd)
-            scene.modeChanged.connect(self.handleSceneModeChanged)
 
             # add the nodes
-            xmlnodes = graph.elementsByTagName('node')
-            for i in range(0, xmlnodes.count()):
-
-                E = xmlnodes.at(i).toElement()
-                U = E.elementsByTagName('data:url').at(0).toElement()
-                D = E.elementsByTagName('data:description').at(0).toElement()
-                G = E.elementsByTagName('shape:geometry').at(0).toElement()
-                L = E.elementsByTagName('shape:label').at(0).toElement()
-
-                nid = E.attribute('id')
-                ntype = E.attribute('type')
-
-                shapeX = int(G.attribute('x'))
-                shapeY = int(G.attribute('y'))
-                shapeW = int(G.attribute('width'))
-                shapeH = int(G.attribute('height'))
-
-                labelV = L.text()
-                labelX = int(L.attribute('x'))
-                labelY = int(L.attribute('y'))
-                #labelW = int(L.attribute('width'))
-                #labelH = int(L.attribute('height'))
-
-                # create the node: this will set the position of the node matching the center of the shape.
-                # the might have been not true when the scene has been exported but we don't record such info
-                # in the graphol XML document in order to make the document format indipendent from the tool.
-                node = __mapping__[ntype](scene=scene, id=nid, url=U.text(), description=D.text(), width=shapeW, height=shapeH)
-                node.setPos(QPointF(shapeX, shapeY))
-
-                # add the node label: the node label position stored in the graphol document is in scene coordinates,
-                # and the position matches the center of the bounding rect of the text item: the translation to Qt
-                # position (0,0) is handled inside the label
-
-                node.setLabelText(labelV)
-                node.setLabelPos(node.mapFromScene(QPointF(labelX, labelY)))
-
-                # append the element to the scene
+            nodes_from_graphol = graph.elementsByTagName('node')
+            for i in range(nodes_from_graphol.count()):
+                E = nodes_from_graphol.at(i).toElement()
+                C = __mapping__[E.attribute('type')]
+                node = C.fromGraphol(scene=scene, E=E)
                 scene.addItem(node)
-
-                # adjust the scene node id
-                scene.uniqueID.update(nid)
+                scene.uniqueID.update(node.id)
 
             # add the edges
-            xmledges = graph.elementsByTagName('edge')
-            for i in range(0, xmledges.count()):
-
-                E = xmledges.at(i).toElement()
-
-                eid = E.attribute('id')
-                etype = E.attribute('type')
-
-                # get source an target node of this edge
-                source = scene.node(E.attribute('source'))
-                target = scene.node(E.attribute('target'))
-
-                points = []
-
-                # extract all the breakpoints from the edge children
-                xmlchildren = E.elementsByTagName('line:point')
-                for j in range(0, xmlchildren.count()):
-                    P = xmlchildren.at(j).toElement()
-                    points.append(QPointF(int(P.attribute('x')), int(P.attribute('y'))))
-
-                # remove the first and last breakpoints since we handle the anchors differently
-                sourceP = points[0]
-                targetP = points[-1]
-                breakpoints = points[1:-1]
-
-                # create the edge
-                edge = __mapping__[etype](scene=scene, source=source, target=target, breakpoints=breakpoints, id=eid)
-                edge.source.setAnchor(edge, sourceP)
-                edge.target.setAnchor(edge, targetP)
-                edge.updateEdge()
-
-                # map the edge over the source and target nodes
-                edge.source.edges.append(edge)
-                edge.target.edges.append(edge)
-
-                # append the element to the scene
+            edges_from_graphol = graph.elementsByTagName('edge')
+            for i in range(edges_from_graphol.count()):
+                E = edges_from_graphol.at(i).toElement()
+                C = __mapping__[E.attribute('type')]
+                edge = C.fromGraphol(scene=scene, E=E)
                 scene.addItem(edge)
-
-                # adjust the scene edge id
-                scene.uniqueID.update(eid)
-
-            # connect the undostack to the undogroup
-            self.undoGroup.addStack(scene.undoStack)
+                scene.uniqueID.update(edge.id)
 
         except Exception as e:
             box = QMessageBox()
             box.setIconPixmap(QPixmap(':/icons/warning'))
             box.setWindowTitle('WARNING')
-            box.setText('Unable to parse Graphol document from %s!' % filepath)
+            box.setText('Unable to parse Graphol document from {0}!'.format(filepath))
             # format the traceback so it prints nice
             most_recent_calls = traceback.format_tb(sys.exc_info()[2])
             most_recent_calls = [x.strip().replace('\n', '') for x in most_recent_calls]
             # set the traceback as detailed text so it won't occupy too much space in the dialog box
-            box.setDetailedText('%s: %s\n\n%s' % (e.__class__.__name__, str(e), '\n'.join(most_recent_calls)))
+            box.setDetailedText('{0}: {1}\n\n{2}'.format(e.__class__.__name__, str(e), '\n'.join(most_recent_calls)))
             box.setStandardButtons(QMessageBox.Ok)
             box.exec_()
             return None
@@ -900,4 +826,5 @@ class MainWindow(QMainWindow):
         Set the main window title.
         :param p_str: the prefix for the window title
         """
-        super().setWindowTitle('%s %s' % (appname, version) if not p_str else '%s - %s %s' % (p_str, appname, version))
+        T = '{0} {1}'.format(appname, version) if not p_str else '{0} - {1} {2}'.format(p_str, appname, version)
+        super().setWindowTitle(T)

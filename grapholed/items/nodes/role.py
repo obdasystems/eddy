@@ -33,6 +33,7 @@
 
 
 from grapholed.datatypes import Font
+from grapholed.exceptions import ParseError
 from grapholed.functions import snapToGrid
 from grapholed.items import ItemType
 from grapholed.items.nodes.common.base import ResizableNode
@@ -138,7 +139,7 @@ class RoleNode(ResizableNode):
             QPointF(-shape_w / 2, 0)
         ])
 
-    ################################################## ITEM EXPORT #####################################################
+    ############################################# ITEM IMPORT / EXPORT #################################################
 
     def asGraphol(self, document):
         """
@@ -181,6 +182,36 @@ class RoleNode(ResizableNode):
         node.appendChild(label)
 
         return node
+
+    @classmethod
+    def fromGraphol(cls, scene, E):
+        """
+        Create a new item instance by parsing a Graphol document item entry.
+        :param scene: the scene where the element will be inserted.
+        :param E: the Graphol document element entry.
+        :raise ParseError: in case it's not possible to generate the node using the given element.
+        :rtype: Node
+        """
+        try:
+
+            U = E.elementsByTagName('data:url').at(0).toElement()
+            D = E.elementsByTagName('data:description').at(0).toElement()
+            G = E.elementsByTagName('shape:geometry').at(0).toElement()
+            L = E.elementsByTagName('shape:label').at(0).toElement()
+
+            nid = E.attribute('id')
+            w = int(G.attribute('width'))
+            h = int(G.attribute('height'))
+
+            node = cls(scene=scene, id=nid, url=U.text(), description=D.text(), width=w, height=h)
+            node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
+            node.setLabelText(L.text())
+            node.setLabelPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
+
+        except Exception as e:
+            raise ParseError('could not create {0} instance from Graphol node: {1}'.format(cls.__name__, e))
+        else:
+            return node
 
     #################################################### GEOMETRY ######################################################
 
