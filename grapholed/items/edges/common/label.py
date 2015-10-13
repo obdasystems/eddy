@@ -88,7 +88,7 @@ class Label(QGraphicsTextItem):
         Returns the position of the label in parent's item coordinates.
         :rtype: QPointF
         """
-        return self.mapToParent(self.parentItem(), self.center())
+        return self.mapToParent(self.center())
 
     def setPos(self, pos):
         """

@@ -54,7 +54,7 @@ class DatatypeRestrictionNode(HexagonNode):
         Initialize the Datatype Restriction node.
         """
         super().__init__(brush=(252, 252, 252), **kwargs)
-        self.label = Label('not', movable=False, editable=False, parent=self)
+        self.label = Label('data', movable=False, editable=False, parent=self)
         self.label.updatePos()
 
     ################################################ ITEM INTERFACE ####################################################

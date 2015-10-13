@@ -529,7 +529,7 @@ class MainWindow(QMainWindow):
         scene = mainview.scene()
         self.setWindowTitle(scene.document.name)
 
-    @pyqtSlot(Edge)
+    @pyqtSlot('QGraphicsItem')
     def handleEdgeInsertEnd(self, edge):
         """
         Triggered after a edge insertion process ends.
@@ -537,7 +537,7 @@ class MainWindow(QMainWindow):
         """
         self.paletteItems[edge.itemtype].setChecked(False)
 
-    @pyqtSlot(Node)
+    @pyqtSlot('QGraphicsItem')
     def handleNodeInsertEnd(self, node):
         """
         Triggered after a node insertion process ends.

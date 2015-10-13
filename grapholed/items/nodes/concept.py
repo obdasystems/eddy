@@ -33,7 +33,7 @@
 
 
 from grapholed.datatypes import Font
-from grapholed.functions import snapPointToGrid
+from grapholed.functions import snapToGrid
 from grapholed.items import ItemType
 from grapholed.items.nodes.common.base import ResizableNode
 from grapholed.items.nodes.common.label import Label
@@ -50,6 +50,7 @@ class ConceptNode(ResizableNode):
     minHeight = 60
     minWidth = 140
     name = 'concept'
+    shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
     xmlname = 'concept'
 
     def __init__(self, width=minWidth, height=minHeight, **kwargs):
@@ -61,8 +62,8 @@ class ConceptNode(ResizableNode):
         super().__init__(**kwargs)
         self.rect = self.createRect(max(width, self.minWidth), max(height, self.minHeight))
         self.label = Label(self.name, parent=self)
-        self.label.updatePos()
         self.updateHandlesPos()
+        self.updateLabelPos()
 
     ################################################ ITEM INTERFACE ####################################################
 
@@ -201,8 +202,8 @@ class ConceptNode(ResizableNode):
             fromY = self.mousePressRect.top()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapPointToGrid(toX, scene.GridSize, -offset, snap)
-            toY = snapPointToGrid(toY, scene.GridSize, -offset, snap)
+            toX = snapToGrid(toX, scene.GridSize, -offset, snap)
+            toY = snapToGrid(toY, scene.GridSize, -offset, snap)
             diff.setX(toX - fromX)
             diff.setY(toY - fromY)
             rect.setLeft(toX)
@@ -223,7 +224,7 @@ class ConceptNode(ResizableNode):
 
             fromY = self.mousePressRect.top()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapPointToGrid(toY, scene.GridSize, -offset, snap)
+            toY = snapToGrid(toY, scene.GridSize, -offset, snap)
             diff.setY(toY - fromY)
             rect.setTop(toY)
 
@@ -240,8 +241,8 @@ class ConceptNode(ResizableNode):
             fromY = self.mousePressRect.top()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapPointToGrid(toX, scene.GridSize, +offset, snap)
-            toY = snapPointToGrid(toY, scene.GridSize, -offset, snap)
+            toX = snapToGrid(toX, scene.GridSize, +offset, snap)
+            toY = snapToGrid(toY, scene.GridSize, -offset, snap)
             diff.setX(toX - fromX)
             diff.setY(toY - fromY)
             rect.setRight(toX)
@@ -262,7 +263,7 @@ class ConceptNode(ResizableNode):
 
             fromX = self.mousePressRect.left()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapPointToGrid(toX, scene.GridSize, -offset, snap)
+            toX = snapToGrid(toX, scene.GridSize, -offset, snap)
             diff.setX(toX - fromX)
             rect.setLeft(toX)
 
@@ -277,7 +278,7 @@ class ConceptNode(ResizableNode):
 
             fromX = self.mousePressRect.right()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapPointToGrid(toX, scene.GridSize, +offset, snap)
+            toX = snapToGrid(toX, scene.GridSize, +offset, snap)
             diff.setX(toX - fromX)
             rect.setRight(toX)
 
@@ -294,8 +295,8 @@ class ConceptNode(ResizableNode):
             fromY = self.mousePressRect.bottom()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapPointToGrid(toX, scene.GridSize, -offset, snap)
-            toY = snapPointToGrid(toY, scene.GridSize, +offset, snap)
+            toX = snapToGrid(toX, scene.GridSize, -offset, snap)
+            toY = snapToGrid(toY, scene.GridSize, +offset, snap)
             diff.setX(toX - fromX)
             diff.setY(toY - fromY)
             rect.setLeft(toX)
@@ -316,7 +317,7 @@ class ConceptNode(ResizableNode):
 
             fromY = self.mousePressRect.bottom()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapPointToGrid(toY, scene.GridSize, +offset, snap)
+            toY = snapToGrid(toY, scene.GridSize, +offset, snap)
             diff.setY(toY - fromY)
             rect.setBottom(toY)
 
@@ -333,8 +334,8 @@ class ConceptNode(ResizableNode):
             fromY = self.mousePressRect.bottom()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapPointToGrid(toX, scene.GridSize, +offset, snap)
-            toY = snapPointToGrid(toY, scene.GridSize, +offset, snap)
+            toX = snapToGrid(toX, scene.GridSize, +offset, snap)
+            toY = snapToGrid(toY, scene.GridSize, +offset, snap)
             diff.setX(toX - fromX)
             diff.setY(toY - fromY)
             rect.setRight(toX)

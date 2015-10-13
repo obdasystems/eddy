@@ -161,7 +161,7 @@ class CommandNodeMove(QUndoCommand):
         if len(pos1['nodes']) != 1:
             params = 'move {0} nodes'.format(len(pos1['nodes']))
         else:
-            params = 'move {0} node'.format(next(iter(pos1['nodes'].keys())).node.name)
+            params = 'move {0} node'.format(next(iter(pos1['nodes'].keys())).name)
 
         super().__init__(params)
 
@@ -210,7 +210,7 @@ class CommandNodeLabelMove(QUndoCommand):
         super().__init__('move {0} node label'.format(node.name))
         self.label = label
         self.moved = moved
-        self.pos1 = node.label.pos()
+        self.pos1 = label.pos()
         self.pos2 = None
 
     def end(self, pos):
@@ -222,7 +222,7 @@ class CommandNodeLabelMove(QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        if self.pos2:
+        if self.pos2 is not None:
             self.label.setPos(self.pos2)
             self.label.moved = not self.moved
 
@@ -320,23 +320,45 @@ class CommandNodeHexagonSwitchTo(QUndoCommand):
 
     def redo(self):
         """redo the command"""
+        # move the edges
         for edge in self.node1.edges:
             if edge.source == self.node1:
                 edge.source = self.node2
             else:
                 edge.target = self.node2
             self.node2.addEdge(edge)
+
+        # move the anchor points
+        for edge, point in self.node1.anchors.items():
+            self.node2.setAnchor(edge, point)
+
+        # clear edge and anchor references from node1
+        self.node1.edges.clear()
+        self.node1.anchors.clear()
+
+        # add the new node to the scene
         self.scene.addItem(self.node2)
         self.scene.removeItem(self.node1)
 
     def undo(self):
         """undo the command"""
+        # move edges back
         for edge in self.node2.edges:
             if edge.source == self.node2:
                 edge.source = self.node1
             else:
                 edge.target = self.node1
             self.node1.addEdge(edge)
+
+        # move the anchor points back
+        for edge, point in self.node2.anchors.items():
+            self.node1.setAnchor(edge, point)
+
+        # clear edge and anchor references from node2
+        self.node2.edges.clear()
+        self.node2.anchors.clear()
+
+        # add back to the scene the old node
         self.scene.addItem(self.node1)
         self.scene.removeItem(self.node2)
 
@@ -361,7 +383,7 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
         if restriction is RestrictionType.cardinality:
             label = label.format(min=self.s(cardinality['min']), max=self.s(cardinality['max']))
 
-        super().__init__('change {0} restriction to {1}'.format(node.name, label))
+        super().__init__('change {0} to {1}'.format(node.name, label))
 
     @staticmethod
     def s(x):

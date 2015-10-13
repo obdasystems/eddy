@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from collections import OrderedDict
 from functools import partial
 
@@ -40,7 +40,7 @@ from grapholed.commands import CommandNodeHexagonSwitchTo
 from grapholed.items.nodes.common.base import Node
 
 from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QIcon, QPolygonF
+from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QIcon, QPolygonF
 from PyQt5.QtWidgets import QAction
 
 
@@ -112,14 +112,6 @@ class HexagonNode(Node):
 
         return menu
 
-    @abstractmethod
-    def copy(self, scene):
-        """
-        Create a copy of the current item .
-        :param scene: a reference to the scene where this item is being copied from.
-        """
-        pass
-
     def height(self):
         """
         Returns the height of the shape.
@@ -133,7 +125,7 @@ class HexagonNode(Node):
         :param clazz: the class implementing the new node type.
         """
         scene = self.scene()
-        xnode = clazz(scene)
+        xnode = clazz(scene=scene)
         xnode.setPos(self.pos())
         scene.undoStack.push(CommandNodeHexagonSwitchTo(scene, self, xnode))
 
@@ -164,17 +156,6 @@ class HexagonNode(Node):
             QPointF(-shape_w / 2 + oblique, -shape_h / 2),  # 5
             QPointF(-shape_w / 2, 0)                        # 6
         ])
-
-    ################################################## ITEM EXPORT #####################################################
-
-    @abstractmethod
-    def asGraphol(self, document):
-        """
-        Export the current item in Graphol format.
-        :param document: the XML document where this item will be inserted.
-        :rtype: QDomElement
-        """
-        pass
 
     #################################################### GEOMETRY ######################################################
 
@@ -258,12 +239,3 @@ class HexagonNode(Node):
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawPolygon(self.polygon)
-
-    @classmethod
-    @abstractmethod
-    def image(cls, **kwargs):
-        """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
-        """
-        pass

@@ -44,10 +44,8 @@ from grapholed import __appname__ as appname, __organization__ as organization
 from grapholed.commands import CommandItemsMultiAdd, CommandItemsMultiRemove
 from grapholed.commands import CommandNodeAdd, CommandNodeSetZValue, CommandNodeMove
 from grapholed.commands import CommandEdgeAdd
-from grapholed.functions import snapPointToGrid
+from grapholed.functions import snapToGrid, rangeF
 from grapholed.items import Item
-from grapholed.items.nodes.common.base import Node
-from grapholed.items.edges.common.base import Edge
 from grapholed.tools import UniqueID
 
 
@@ -67,8 +65,8 @@ class DiagramScene(QGraphicsScene):
     PasteOffsetY = 10
 
     ## SIGNALS
-    nodeInsertEnd = pyqtSignal(Node)
-    edgeInsertEnd = pyqtSignal(Edge)
+    nodeInsertEnd = pyqtSignal('QGraphicsItem')
+    edgeInsertEnd = pyqtSignal('QGraphicsItem')
     modeChanged = pyqtSignal(int)
 
     ####################################################################################################################
@@ -298,7 +296,7 @@ class DiagramScene(QGraphicsScene):
     #                                                                                                                  #
     ####################################################################################################################
 
-    @pyqtSlot(Node)
+    @pyqtSlot('QGraphicsItem')
     def handleNodeInsertEnd(self, node):
         """
         Triggered after a node insertion process ends.
@@ -306,7 +304,7 @@ class DiagramScene(QGraphicsScene):
         """
         self.setMode(DiagramScene.MoveItem)
 
-    @pyqtSlot(Edge)
+    @pyqtSlot('QGraphicsItem')
     def handleEdgeInsertEnd(self, edge):
         """
         Triggered after a edge insertion process ends.
@@ -398,32 +396,40 @@ class DiagramScene(QGraphicsScene):
 
             if not self.resizing and mouseEvent.buttons() & Qt.LeftButton:
 
-                # prepare data for mouse move event
-                self.mousePressNode = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
+                # see if we have some nodes selected in the scene: this is needed because itemOnTopOf
+                # will discard labels, so if we have a node whose label is overlapping the node shape,
+                # clicking on the label will make itemOnTopOf return the node item instad of the label itself.
+                selected = self.selectedNodes()
 
-                if self.mousePressNode:
+                if selected:
 
-                    # execute only if there is at least one item selected
-                    self.mousePressNodePos = self.mousePressNode.pos()
-                    self.mousePressPos = mouseEvent.scenePos()
+                    # we have some nodes selected in the scene so we probably are going to do a
+                    # move operation, prepare data for mouse move event => selecta node that will act
+                    # as mouse grabber to compute delta movements for each componened in the selection
+                    self.mousePressNode = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
 
-                    # initialize data
-                    self.mousePressData = {
-                        'nodes': {
-                            node: {
-                                'anchors': {k: v for k, v in node.anchors.items()},
-                                'pos': node.pos(),
-                            } for node in self.selectedNodes()},
-                        'edges': {}
-                    }
+                    if self.mousePressNode:
 
-                    # figure out if the nodes we are moving are sharing edges: if so, move the edge
-                    # together with the nodes (which actually means moving the edge breakpoints)
-                    for node in self.mousePressData['nodes']:
-                        for edge in node.edges:
-                            if edge not in self.mousePressData['edges']:
-                                if edge.other(node).isSelected():
-                                    self.mousePressData['edges'][edge] = edge.breakpoints[:]
+                        self.mousePressNodePos = self.mousePressNode.pos()
+                        self.mousePressPos = mouseEvent.scenePos()
+
+                        # initialize data
+                        self.mousePressData = {
+                            'nodes': {
+                                node: {
+                                    'anchors': {k: v for k, v in node.anchors.items()},
+                                    'pos': node.pos(),
+                                } for node in selected},
+                            'edges': {}
+                        }
+
+                        # figure out if the nodes we are moving are sharing edges: if so, move the edge
+                        # together with the nodes (which actually means moving the edge breakpoints)
+                        for node in self.mousePressData['nodes']:
+                            for edge in node.edges:
+                                if edge not in self.mousePressData['edges']:
+                                    if edge.other(node).isSelected():
+                                        self.mousePressData['edges'][edge] = edge.breakpoints[:]
 
     def mouseMoveEvent(self, mouseEvent):
         """
@@ -539,8 +545,8 @@ class DiagramScene(QGraphicsScene):
             painter.setPen(DiagramScene.GridPen)
             startX = int(rect.left()) - (int(rect.left()) % self.GridSize)
             startY = int(rect.top()) - (int(rect.top()) % self.GridSize)
-            points = [QPointF(x, y) for x in range(startX, rect.right(), self.GridSize) \
-                                        for y in range(startY, rect.bottom(), self.GridSize)]
+            points = [QPointF(x, y) for x in rangeF(startX, rect.right(), self.GridSize) \
+                                        for y in rangeF(startY, rect.bottom(), self.GridSize)]
             painter.drawPoints(*points)
 
     ####################################################################################################################
@@ -696,8 +702,8 @@ class DiagramScene(QGraphicsScene):
         :rtype: QPointF
         """
         if self.settings.value('scene/snap_to_grid', False, bool):
-            newX = snapPointToGrid(point.x(), DiagramScene.GridSize)
-            newY = snapPointToGrid(point.y(), DiagramScene.GridSize)
+            newX = snapToGrid(point.x(), DiagramScene.GridSize)
+            newY = snapToGrid(point.y(), DiagramScene.GridSize)
             return QPointF(newX, newY)
         else:
             return point

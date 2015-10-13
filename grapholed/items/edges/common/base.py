@@ -120,8 +120,8 @@ class Edge(Item):
         """
         return self._target
 
-    @source.setter
-    def source(self, value):
+    @target.setter
+    def target(self, value):
         """
         Set the target of this edge.
         :param value: the target node

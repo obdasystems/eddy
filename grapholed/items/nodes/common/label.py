@@ -34,7 +34,7 @@
 
 from grapholed.commands import CommandNodeLabelMove, CommandNodeLabelEdit
 from grapholed.datatypes import Font
-from grapholed.functions import isEmpty
+from grapholed.functions import isEmpty, distanceP
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QColor, QTextCursor, QIcon, QPainterPath
 from PyQt5.QtWidgets import QGraphicsTextItem, QGraphicsItem, QAction
@@ -42,7 +42,7 @@ from PyQt5.QtWidgets import QGraphicsTextItem, QGraphicsItem, QAction
 
 class Label(QGraphicsTextItem):
     """
-    This class implements the label to be attached to the graph shapes.
+    This class implements the label to be attached to the graph nodes.
     """
     def __init__(self, default='', centered=True, movable=True, editable=True, parent=None):
         """
@@ -135,9 +135,9 @@ class Label(QGraphicsTextItem):
         :rtype: QPointF
         """
         parent = self.parentItem()
-        pos = parent.pos()
+        pos = parent.center()
         if not self.centered:
-            pos.setY(pos.y() - parent.height() / 2 - 10)
+            pos.setY(pos.y() - parent.height() / 2 - 12)
         return pos
 
     def height(self):
@@ -152,23 +152,19 @@ class Label(QGraphicsTextItem):
         Returns the position of the label in parent's item coordinates.
         :rtype: QPointF
         """
-        return self.mapToParent(self.parentItem(), self.center())
+        return self.mapToParent(self.center())
 
     def setPos(self, pos):
         """
         Set the item position.
         :param pos: the position in parent's item coordinates.
         """
-        moved_X = True
-        moved_Y = True
+        epsilon = 1.41421356237  # sqrt(2) => max distance in 1px
         defaultPos = self.defaultPos()
-        if abs(pos.x() - defaultPos.x()) <= 1:
-            moved_X = False
-            pos.setX(defaultPos.x())
-        if abs(pos.y() - defaultPos.y()) <= 1:
-            moved_Y = False
-            pos.setY(defaultPos.y())
-        self.moved = moved_X or moved_Y
+        self.moved = True
+        if distanceP(pos, defaultPos) <= epsilon:
+            self.moved = False
+            pos = defaultPos
         super().setPos(pos - QPointF(self.width() / 2, self.height() / 2))
 
     def setText(self, text):

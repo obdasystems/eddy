@@ -206,12 +206,12 @@ def shaded(pixmap, opacity=0.5):
     return o
 
 
-def snapPointToGrid(value, gridsize, offset=0, snap=True):
+def snapToGrid(value, gridsize, offset=0, snap=True):
     """
-    Snap the given point according to the given grid size.
+    Snap the given value according to the given grid size.
     :param value: the value to snap.
     :param gridsize: the size of the grid.
-    :param offset: an offset valut to add to the result of the snap.
+    :param offset: an offset value to add to the result of the snap.
     :param snap: whether or not to perform the snap.
     :rtype: float
     """
