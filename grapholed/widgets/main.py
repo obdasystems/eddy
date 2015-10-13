@@ -49,8 +49,6 @@ from grapholed.dialogs import OpenFileDialog
 from grapholed.dialogs import PreferencesDialog
 from grapholed.exceptions import ParseError
 from grapholed.functions import getPath, shaded
-from grapholed.items.nodes.common.base import Node
-from grapholed.items.edges.common.base import Edge
 from grapholed.items import __mapping__
 from grapholed.items import *
 from grapholed.widgets import MdiArea, MdiSubWindow
