@@ -744,6 +744,7 @@ class MainWindow(QMainWindow):
         # create the new scene
         scene = DiagramScene(self)
         scene.setSceneRect(QRectF(0, 0, width, height))
+        scene.setItemIndexMethod(DiagramScene.NoIndex)
         scene.nodeInsertEnd.connect(self.handleNodeInsertEnd)
         scene.edgeInsertEnd.connect(self.handleEdgeInsertEnd)
         scene.modeChanged.connect(self.handleSceneModeChanged)
