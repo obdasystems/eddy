@@ -530,21 +530,25 @@ class MainWindow(QMainWindow):
         scene = mainview.scene()
         self.setWindowTitle(scene.document.name)
 
-    @pyqtSlot('QGraphicsItem')
-    def handleEdgeInsertEnd(self, edge):
+    @pyqtSlot('QGraphicsItem', int)
+    def handleEdgeInsertEnd(self, edge, modifiers):
         """
         Triggered after a edge insertion process ends.
         :param edge: the inserted edge.
+        :param modifiers: keyboard modifiers held during edge insertion.
         """
-        self.paletteItems[edge.itemtype].setChecked(False)
+        if not modifiers & Qt.ControlModifier:
+            self.paletteItems[edge.itemtype].setChecked(False)
 
-    @pyqtSlot('QGraphicsItem')
-    def handleNodeInsertEnd(self, node):
+    @pyqtSlot('QGraphicsItem', int)
+    def handleNodeInsertEnd(self, node, modifiers):
         """
         Triggered after a node insertion process ends.
-        :param node:the inserted node.
+        :param node: the inserted node.
+        :param modifiers: keyboard modifiers held during node insertion.
         """
-        self.paletteItems[node.itemtype].setChecked(False)
+        if not modifiers & Qt.ControlModifier:
+            self.paletteItems[node.itemtype].setChecked(False)
 
     @pyqtSlot(int)
     def handleSceneModeChanged(self, mode):
@@ -687,6 +691,18 @@ class MainWindow(QMainWindow):
         """
         for subwindow in self.mdiArea.subWindowList():
             subwindow.close()
+
+    def keyReleaseEvent(self, keyEvent):
+        """
+        Executed when a keyboard button is released from the scene.
+        :param keyEvent: the keyboard event instance.
+        """
+        if keyEvent.key() == Qt.Key_Control:
+            mainview = self.mdiArea.activeView
+            if mainview:
+                scene = mainview.scene()
+                scene.setMode(DiagramScene.MoveItem)
+        super().keyReleaseEvent(keyEvent)
 
     def showEvent(self, showEvent):
         """

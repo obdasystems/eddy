@@ -54,9 +54,9 @@ class DiagramScene(QGraphicsScene):
     This class implements the main Diagram Scene.
     """
     ## OPERATION MODE
-    InsertNode = 1
-    InsertEdge = 2
-    MoveItem = 3
+    MoveItem = 1
+    InsertNode = 2
+    InsertEdge = 3
 
     ## CONSTANTS
     GridPen = QPen(QColor(80, 80, 80), 0, Qt.SolidLine)
@@ -65,8 +65,8 @@ class DiagramScene(QGraphicsScene):
     PasteOffsetY = 10
 
     ## SIGNALS
-    nodeInsertEnd = pyqtSignal('QGraphicsItem')
-    edgeInsertEnd = pyqtSignal('QGraphicsItem')
+    nodeInsertEnd = pyqtSignal('QGraphicsItem', int)
+    edgeInsertEnd = pyqtSignal('QGraphicsItem', int)
     modeChanged = pyqtSignal(int)
 
     ####################################################################################################################
@@ -296,22 +296,28 @@ class DiagramScene(QGraphicsScene):
     #                                                                                                                  #
     ####################################################################################################################
 
-    @pyqtSlot('QGraphicsItem')
-    def handleNodeInsertEnd(self, node):
-        """
-        Triggered after a node insertion process ends.
-        :param node: the inserted node.
-        """
-        self.setMode(DiagramScene.MoveItem)
-
-    @pyqtSlot('QGraphicsItem')
-    def handleEdgeInsertEnd(self, edge):
+    @pyqtSlot('QGraphicsItem', int)
+    def handleEdgeInsertEnd(self, edge, modifiers):
         """
         Triggered after a edge insertion process ends.
         :param edge: the inserted edge.
+        :param modifiers: keyboard modifiers held during edge insertion.
         """
-        self.setMode(DiagramScene.MoveItem)
         self.command = None
+        if not modifiers & Qt.ControlModifier:
+            # set back default mode if CTRL is not being held
+            self.setMode(DiagramScene.MoveItem)
+
+    @pyqtSlot('QGraphicsItem', int)
+    def handleNodeInsertEnd(self, node, modifiers):
+        """
+        Triggered after a node insertion process ends.
+        :param node: the inserted node.
+        :param modifiers: keyboard modifiers held during node insertion.
+        """
+        if not modifiers & Qt.ControlModifier:
+            # set back default mode if CTRL is not being held
+            self.setMode(DiagramScene.MoveItem)
 
     @pyqtSlot()
     def handleSelectionChanged(self):
@@ -370,7 +376,7 @@ class DiagramScene(QGraphicsScene):
 
                 # push the command in the undo stack so we can revert the action
                 self.undoStack.push(CommandNodeAdd(scene=self, node=node))
-                self.nodeInsertEnd.emit(node)
+                self.nodeInsertEnd.emit(node, mouseEvent.modifiers())
 
                 super().mousePressEvent(mouseEvent)
 
@@ -518,7 +524,7 @@ class DiagramScene(QGraphicsScene):
                     # remove the edge from the scene
                     self.removeItem(self.command.edge)
 
-                self.edgeInsertEnd.emit(self.command.edge)
+                self.edgeInsertEnd.emit(self.command.edge, mouseEvent.modifiers())
                 self.clearSelection()
                 self.command = None
 
