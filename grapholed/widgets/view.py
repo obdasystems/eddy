@@ -52,6 +52,8 @@ class MainView(QGraphicsView):
         :param scene: the graphics scene to render in the main view.
         """
         super().__init__(scene)
+        self.mousePressCenterPos = None
+        self.mousePressPos = None
         self.zoom = 1.00
 
     ############################################### SIGNAL HANDLERS ####################################################
@@ -64,6 +66,38 @@ class MainView(QGraphicsView):
         self.scaleView(zoom)
 
     ############################################### EVENT HANDLERS #####################################################
+
+    def mousePressEvent(self, mouseEvent):
+        """
+        Executed when a mouse button is clicked on the view.
+        :param mouseEvent: the mouse event instance.
+        """
+        if mouseEvent.buttons() & Qt.MidButton:
+            self.mousePressCenterPos = self.mapToScene(self.viewport().rect().center())
+            self.mousePressPos = mouseEvent.pos()
+        else:
+            super().mousePressEvent(mouseEvent)
+
+    def mouseMoveEvent(self, mouseEvent):
+        """
+        Executed when then mouse is moved on the view.
+        :param mouseEvent: the mouse event instance.
+        """
+        if mouseEvent.buttons() & Qt.MidButton:
+            self.centerOn(self.mousePressCenterPos - mouseEvent.pos() + self.mousePressPos)
+        else:
+            super().mouseMoveEvent(mouseEvent)
+
+    def mouseReleaseEvent(self, mouseEvent):
+        """
+        Executed when the mouse is released from the view.
+        :param mouseEvent: the mouse event instance.
+        """
+        if mouseEvent.buttons() & Qt.MidButton:
+            self.mousePressCenterPos = None
+            self.mousePressPos = None
+        else:
+            super().mouseReleaseEvent(mouseEvent)
 
     def viewportEvent(self, event):
         """

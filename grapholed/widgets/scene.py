@@ -117,7 +117,7 @@ class DiagramScene(QGraphicsScene):
         self.settings = QSettings(organization, appname)  ## application settings
         self.uniqueID = UniqueID()  ## used to generate unique incrementsl ids
         self.undoStack = QUndoStack(self)  ## use to push actions and keep history for undo/redo
-        self.undoStack.setUndoLimit(50)
+        self.undoStack.setUndoLimit(50) ## TODO: make the stack configurable
         self.mode = self.MoveItem ## operation mode
         self.modeParam = None  ## extra parameter for the operation mode (see setMode())
         self.mousePressPos = None  ## scene position where the mouse has been pressed
@@ -357,120 +357,134 @@ class DiagramScene(QGraphicsScene):
         Executed when a mouse button is clicked on the scene.
         :param mouseEvent: the mouse event instance.
         """
-        if self.mode == DiagramScene.InsertNode:
+        if mouseEvent.buttons() & Qt.LeftButton:
 
-            # create a new node and place it under the mouse position
-            func = self.modeParam
-            node = func(scene=self)
-            node.setPos(self.snapToGrid(mouseEvent.scenePos()))
+            if self.mode == DiagramScene.InsertNode:
 
-            # push the command in the undo stack so we can revert the action
-            self.undoStack.push(CommandNodeAdd(scene=self, node=node))
-            self.nodeInsertEnd.emit(node)
+                ############################################ NODE INSERTION ############################################
 
-            super().mousePressEvent(mouseEvent)
-
-        elif self.mode == DiagramScene.InsertEdge:
-
-            # see if we are pressing the mouse on a node and if so set the edge add command
-            node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
-            if node:
-
+                # create a new node and place it under the mouse position
                 func = self.modeParam
-                edge = func(scene=self, source=node)
-                edge.updateEdge(target=mouseEvent.scenePos())
+                node = func(scene=self)
+                node.setPos(self.snapToGrid(mouseEvent.scenePos()))
 
-                # put the command on hold since we don't know if the edge will be truly inserted or the
-                # insertion will be aborted (case when the user fails to release the edge arrow on top of a node)
-                self.command = CommandEdgeAdd(scene=self, edge=edge)
+                # push the command in the undo stack so we can revert the action
+                self.undoStack.push(CommandNodeAdd(scene=self, node=node))
+                self.nodeInsertEnd.emit(node)
 
-                # add the edge to the scene
-                self.addItem(self.command.edge)
+                super().mousePressEvent(mouseEvent)
 
-            super().mousePressEvent(mouseEvent)
+            elif self.mode == DiagramScene.InsertEdge:
 
-        elif self.mode == DiagramScene.MoveItem:
+                ############################################ EDGE INSERTION ############################################
 
-            # execute the mouse press event first: this is needed before we prepare data for the move event because
-            # we may select another node (eventually using the control modifier) or init a shape interactive resize
-            # that will clear the selection hence bypass the interactive move.
-            super().mousePressEvent(mouseEvent)
+                # see if we are pressing the mouse on a node and if so set the edge add command
+                node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
+                if node:
 
-            if not self.resizing and mouseEvent.buttons() & Qt.LeftButton:
+                    func = self.modeParam
+                    edge = func(scene=self, source=node)
+                    edge.updateEdge(target=mouseEvent.scenePos())
 
-                # see if we have some nodes selected in the scene: this is needed because itemOnTopOf
-                # will discard labels, so if we have a node whose label is overlapping the node shape,
-                # clicking on the label will make itemOnTopOf return the node item instad of the label itself.
-                selected = self.selectedNodes()
+                    # put the command on hold since we don't know if the edge will be truly inserted or the
+                    # insertion will be aborted (case when the user fails to release the edge arrow on top of a node)
+                    self.command = CommandEdgeAdd(scene=self, edge=edge)
 
-                if selected:
+                    # add the edge to the scene
+                    self.addItem(self.command.edge)
 
-                    # we have some nodes selected in the scene so we probably are going to do a
-                    # move operation, prepare data for mouse move event => selecta node that will act
-                    # as mouse grabber to compute delta movements for each componened in the selection
-                    self.mousePressNode = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
+                super().mousePressEvent(mouseEvent)
 
-                    if self.mousePressNode:
+            elif self.mode == DiagramScene.MoveItem:
 
-                        self.mousePressNodePos = self.mousePressNode.pos()
-                        self.mousePressPos = mouseEvent.scenePos()
+                ############################################ ITEM MOVEMENT #############################################
 
-                        # initialize data
-                        self.mousePressData = {
-                            'nodes': {
-                                node: {
-                                    'anchors': {k: v for k, v in node.anchors.items()},
-                                    'pos': node.pos(),
-                                } for node in selected},
-                            'edges': {}
-                        }
+                # execute the mouse press event first: this is needed before we prepare data for the move event because
+                # we may select another node (eventually using the control modifier) or init a shape interactive resize
+                # that will clear the selection hence bypass the interactive move.
+                super().mousePressEvent(mouseEvent)
 
-                        # figure out if the nodes we are moving are sharing edges: if so, move the edge
-                        # together with the nodes (which actually means moving the edge breakpoints)
-                        for node in self.mousePressData['nodes']:
-                            for edge in node.edges:
-                                if edge not in self.mousePressData['edges']:
-                                    if edge.other(node).isSelected():
-                                        self.mousePressData['edges'][edge] = edge.breakpoints[:]
+                if not self.resizing:
+
+                    # see if we have some nodes selected in the scene: this is needed because itemOnTopOf
+                    # will discard labels, so if we have a node whose label is overlapping the node shape,
+                    # clicking on the label will make itemOnTopOf return the node item instad of the label itself.
+                    selected = self.selectedNodes()
+
+                    if selected:
+
+                        # we have some nodes selected in the scene so we probably are going to do a
+                        # move operation, prepare data for mouse move event => selecta node that will act
+                        # as mouse grabber to compute delta movements for each componened in the selection
+                        self.mousePressNode = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
+
+                        if self.mousePressNode:
+
+                            self.mousePressNodePos = self.mousePressNode.pos()
+                            self.mousePressPos = mouseEvent.scenePos()
+
+                            # initialize data
+                            self.mousePressData = {
+                                'nodes': {
+                                    node: {
+                                        'anchors': {k: v for k, v in node.anchors.items()},
+                                        'pos': node.pos(),
+                                    } for node in selected},
+                                'edges': {}
+                            }
+
+                            # figure out if the nodes we are moving are sharing edges: if so, move the edge
+                            # together with the nodes (which actually means moving the edge breakpoints)
+                            for node in self.mousePressData['nodes']:
+                                for edge in node.edges:
+                                    if edge not in self.mousePressData['edges']:
+                                        if edge.other(node).isSelected():
+                                            self.mousePressData['edges'][edge] = edge.breakpoints[:]
 
     def mouseMoveEvent(self, mouseEvent):
         """
         Executed when then mouse is moved on the scene.
         :param mouseEvent: the mouse event instance.
         """
-        if self.mode == DiagramScene.InsertEdge and self.command and self.command.edge:
+        if mouseEvent.buttons() & Qt.LeftButton:
 
-            # update the edge position so that it will follow the mouse cursor
-            self.command.edge.updateEdge(target=mouseEvent.scenePos())
+            if self.mode == DiagramScene.InsertEdge and self.command and self.command.edge:
 
-        elif self.mode == DiagramScene.MoveItem:
+                ############################################ NODE INSERTION ############################################
 
-            if not self.resizing and self.mousePressNode and mouseEvent.buttons() & Qt.LeftButton:
+                # update the edge position so that it will follow the mouse cursor
+                self.command.edge.updateEdge(target=mouseEvent.scenePos())
 
-                # calculate the delta and adjust the value if the snap to grid feature is
-                # enabled: we'll use the position of the node acting as mouse grabber to
-                # determine the new delta value and move other items accordingly
-                snapped = self.snapToGrid(self.mousePressNodePos + mouseEvent.scenePos() - self.mousePressPos)
-                delta = snapped - self.mousePressNodePos
+            elif self.mode == DiagramScene.MoveItem:
 
-                # update all the breakpoints positions
-                for edge, breakpoints in self.mousePressData['edges'].items():
-                    for i in range(len(breakpoints)):
-                        edge.breakpoints[i] = breakpoints[i] + delta
+                ############################################ ITEM MOVEMENT #############################################
 
-                # move all the selected nodes
-                for node, data in self.mousePressData['nodes'].items():
-                    # update node position and attached edges
-                    node.setPos(data['pos'] + delta)
-                    # update anchors points
-                    for edge, pos in data['anchors'].items():
-                        node.setAnchor(edge, pos + delta)
-                    # update the edges connected to the shape
-                    node.updateEdges()
+                if not self.resizing and self.mousePressNode:
 
-                # mark mouse move as happened so we can push
-                # the undo command in the stack on mouse release
-                self.mouseMoved = True
+                    # calculate the delta and adjust the value if the snap to grid feature is
+                    # enabled: we'll use the position of the node acting as mouse grabber to
+                    # determine the new delta value and move other items accordingly
+                    snapped = self.snapToGrid(self.mousePressNodePos + mouseEvent.scenePos() - self.mousePressPos)
+                    delta = snapped - self.mousePressNodePos
+
+                    # update all the breakpoints positions
+                    for edge, breakpoints in self.mousePressData['edges'].items():
+                        for i in range(len(breakpoints)):
+                            edge.breakpoints[i] = breakpoints[i] + delta
+
+                    # move all the selected nodes
+                    for node, data in self.mousePressData['nodes'].items():
+                        # update node position and attached edges
+                        node.setPos(data['pos'] + delta)
+                        # update anchors points
+                        for edge, pos in data['anchors'].items():
+                            node.setAnchor(edge, pos + delta)
+                        # update the edges connected to the shape
+                        node.updateEdges()
+
+                    # mark mouse move as happened so we can push
+                    # the undo command in the stack on mouse release
+                    self.mouseMoved = True
 
         # always call super for this event since it will also trigger hover events on shapes
         super().mouseMoveEvent(mouseEvent)
@@ -480,54 +494,60 @@ class DiagramScene(QGraphicsScene):
         Executed when the mouse is released from the scene.
         :param mouseEvent: the mouse event instance.
         """
-        if self.mode == DiagramScene.InsertEdge and self.command and self.command.edge:
+        if mouseEvent.buttons() & Qt.LeftButton:
 
-            # keep the edge only if it's overlapping a node in the scene
-            node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
+            if self.mode == DiagramScene.InsertEdge and self.command and self.command.edge:
 
-            if node:
+                ############################################ EDGE INSERTION ############################################
 
-                self.command.edge.target = node
-                self.command.edge.source.addEdge(self.command.edge)
-                self.command.edge.target.addEdge(self.command.edge)
-                self.command.edge.updateEdge()
+                # keep the edge only if it's overlapping a node in the scene
+                node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
 
-                # push the command in the undostack
-                self.undoStack.push(self.command)
+                if node:
 
-            else:
+                    self.command.edge.target = node
+                    self.command.edge.source.addEdge(self.command.edge)
+                    self.command.edge.target.addEdge(self.command.edge)
+                    self.command.edge.updateEdge()
 
-                # remove the edge from the scene
-                self.removeItem(self.command.edge)
+                    # push the command in the undostack
+                    self.undoStack.push(self.command)
 
-            self.edgeInsertEnd.emit(self.command.edge)
-            self.clearSelection()
-            self.command = None
+                else:
 
-        elif self.mode == DiagramScene.MoveItem:
+                    # remove the edge from the scene
+                    self.removeItem(self.command.edge)
 
-            if self.mouseMoved:
+                self.edgeInsertEnd.emit(self.command.edge)
+                self.clearSelection()
+                self.command = None
 
-                # collect new positions for the undo command
-                data = {
-                    'nodes': {
-                        node: {
-                            'anchors': {k: v for k, v in node.anchors.items()},
-                            'pos': node.pos(),
-                        } for node in self.mousePressData['nodes']},
-                    'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}
-                }
+            elif self.mode == DiagramScene.MoveItem:
 
-                # push the command in the stack so we can revert the moving operation
-                self.undoStack.push(CommandNodeMove(pos1=self.mousePressData, pos2=data))
+                ############################################ NODE INSERTION ############################################
 
-            self.mousePressPos = None
-            self.mousePressNode = None
-            self.mousePressNodePos = None
-            self.mousePressData = None
-            self.mouseMoved = False
+                if self.mouseMoved:
+
+                    # collect new positions for the undo command
+                    data = {
+                        'nodes': {
+                            node: {
+                                'anchors': {k: v for k, v in node.anchors.items()},
+                                'pos': node.pos(),
+                            } for node in self.mousePressData['nodes']},
+                        'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}
+                    }
+
+                    # push the command in the stack so we can revert the moving operation
+                    self.undoStack.push(CommandNodeMove(pos1=self.mousePressData, pos2=data))
 
         super().mouseReleaseEvent(mouseEvent)
+
+        self.mousePressPos = None
+        self.mousePressNode = None
+        self.mousePressNodePos = None
+        self.mousePressData = None
+        self.mouseMoved = False
 
     ####################################################################################################################
     #                                                                                                                  #
