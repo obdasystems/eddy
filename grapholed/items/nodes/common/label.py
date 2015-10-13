@@ -62,7 +62,6 @@ class Label(QGraphicsTextItem):
 
         self.commandEdit = None
         self.commandMove = None
-        self.moved = False
 
         self.setFlag(QGraphicsItem.ItemIsMovable, self.movable)
         self.setFlag(QGraphicsItem.ItemIsSelectable, self.movable)
@@ -71,6 +70,7 @@ class Label(QGraphicsTextItem):
         self.setFont(Font('Arial', 12, Font.Light))
         self.setText(self.defaultText)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
+        self.setPos(self.defaultPos())
 
     ################################################## PROPERTIES ######################################################
 
@@ -105,6 +105,14 @@ class Label(QGraphicsTextItem):
         :rtype: bool
         """
         return self._movable
+
+    @property
+    def moved(self):
+        """
+        Tells whether the label has been moved from its default position.
+        :return: bool
+        """
+        return distanceP(self.pos(), self.defaultPos()) > 1.41421356237 # sqrt(2) => max distance in 1px
 
     ################################################ ITEM INTERFACE ####################################################
 
@@ -154,17 +162,18 @@ class Label(QGraphicsTextItem):
         """
         return self.mapToParent(self.center())
 
-    def setPos(self, pos):
+    def setPos(self, *__args):
         """
         Set the item position.
-        :param pos: the position in parent's item coordinates.
+        QGraphicsItem.setPos(QPointF)
+        QGraphicsItem.setPos(float, float)
         """
-        epsilon = 1.41421356237  # sqrt(2) => max distance in 1px
-        defaultPos = self.defaultPos()
-        self.moved = True
-        if distanceP(pos, defaultPos) <= epsilon:
-            self.moved = False
-            pos = defaultPos
+        if len(__args) == 1:
+            pos = __args[0]
+        elif len(__args) == 2:
+            pos = QPointF(__args[0], __args[1])
+        else:
+            raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
         super().setPos(pos - QPointF(self.width() / 2, self.height() / 2))
 
     def setText(self, text):
@@ -285,7 +294,17 @@ class Label(QGraphicsTextItem):
         """
         scene = self.scene()
         if scene.mode == scene.MoveItem:
-            super().mousePressEvent(mouseEvent)
+            if mouseEvent.modifiers() & Qt.ControlModifier:
+                # allow the moving of the label
+                scene.clearSelection()
+                self.setSelected(True)
+                super().mousePressEvent(mouseEvent)
+            else:
+                # see if the mouse is hovering the parent item: if so select
+                # it so that mouseMoveEvent method in DiagramScene can move it
+                parent = self.parentItem()
+                if parent in scene.items(mouseEvent.scenePos()):
+                    parent.setSelected(True)
 
     def mouseMoveEvent(self, mouseEvent):
         """
@@ -296,8 +315,7 @@ class Label(QGraphicsTextItem):
         if scene.mode == scene.MoveItem:
             super().mouseMoveEvent(mouseEvent)
             if not self.commandMove:
-                self.commandMove = CommandNodeLabelMove(node=self.parentItem(), label=self, moved=self.moved)
-            self.moved = True
+                self.commandMove = CommandNodeLabelMove(node=self.parentItem(), label=self)
 
     def mouseReleaseEvent(self, mouseEvent):
         """
@@ -330,7 +348,7 @@ class Label(QGraphicsTextItem):
         Reset the text position to the default value.
         """
         if self.movable:
-            command = CommandNodeLabelMove(node=self.parentItem(), label=self, moved=self.moved)
+            command = CommandNodeLabelMove(node=self.parentItem(), label=self)
             command.end(pos=self.defaultPos())
             scene = self.scene()
             scene.undoStack.push(command)

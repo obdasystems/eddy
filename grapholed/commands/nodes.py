@@ -200,16 +200,14 @@ class CommandNodeLabelMove(QUndoCommand):
     """
     This command is used to move nodes labels.
     """
-    def __init__(self, node, label, moved):
+    def __init__(self, node, label):
         """
         Initialize the command
         :param node: the node whose label is being moved.
         :param label: the label that is being moved.
-        :param moved: whether the label was moved already or not.
         """
         super().__init__('move {0} node label'.format(node.name))
         self.label = label
-        self.moved = moved
         self.pos1 = label.pos()
         self.pos2 = None
 
@@ -224,12 +222,10 @@ class CommandNodeLabelMove(QUndoCommand):
         """redo the command"""
         if self.pos2 is not None:
             self.label.setPos(self.pos2)
-            self.label.moved = not self.moved
 
     def undo(self):
         """undo the command"""
         self.label.setPos(self.pos1)
-        self.label.moved = self.moved
 
 
 class CommandNodeLabelEdit(QUndoCommand):
