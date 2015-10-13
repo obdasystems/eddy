@@ -494,7 +494,7 @@ class DiagramScene(QGraphicsScene):
         Executed when the mouse is released from the scene.
         :param mouseEvent: the mouse event instance.
         """
-        if mouseEvent.buttons() & Qt.LeftButton:
+        if mouseEvent.button() == Qt.LeftButton:
 
             if self.mode == DiagramScene.InsertEdge and self.command and self.command.edge:
 
