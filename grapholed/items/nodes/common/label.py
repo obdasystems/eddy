@@ -305,6 +305,7 @@ class Label(QGraphicsTextItem):
                 # it so that mouseMoveEvent method in DiagramScene can move it
                 parent = self.parentItem()
                 if parent in scene.items(mouseEvent.scenePos()):
+                    scene.clearSelection()
                     parent.setSelected(True)
 
     def mouseMoveEvent(self, mouseEvent):
