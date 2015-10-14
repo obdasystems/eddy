@@ -155,23 +155,25 @@ class Edge(Item):
             self.setSelected(True)
             self.command = CommandEdgeAnchorMove(edge=self, node=node)
 
-        pos = None
-        path = self.mapFromItem(node, node.painterPath())
         scene = self.scene()
+        nodePos = node.pos()
         mousePos = scene.snapToGrid(mousePos)
-        if path.contains(mousePos):
-            epsilon = 10.0
-            magnet = self.mapFromItem(node, node.center())
-            pos = magnet if distanceP(mousePos, magnet) < epsilon else mousePos
-        else:
-            # still move the anchor but make sure it stays on the border of the shape
-            p1 = QPointF(mousePos.x(), self.mousePressPos.y())
-            p2 = QPointF(self.mousePressPos.x(), mousePos.y())
-            p3 = QPointF(self.mousePressPos)
 
-            for p in (p1, p2, p3):
-                if path.contains(p):
-                    pos = p
+        path = self.mapFromItem(node, node.painterPath())
+        if path.contains(mousePos):
+            # mouse is inside the shape => use this position as anchor point
+            epsilon = 10.0
+            pos = nodePos if distanceP(mousePos, nodePos) < epsilon else mousePos
+        else:
+            # FIXME: intersection point doesn't seem to be the best we can do here
+            pos = node.intersection(QLineF(mousePos, nodePos))
+            # make sure the point is actually inside the shape since
+            for bound in [pos, pos + QPointF(1, -1), pos + QPointF(1, 0),
+                               pos + QPointF(1, 1), pos + QPointF(0, 1),
+                               pos + QPointF(-1, 1), pos + QPointF(-1, 0),
+                               pos + QPointF(-1, -1), pos + QPointF(0, -1)]:
+                if path.contains(bound):
+                    pos = bound
                     break
 
         if pos:
