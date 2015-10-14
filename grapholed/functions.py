@@ -178,16 +178,16 @@ def midpoint(p1, p2):
 
 def rangeF(start, stop, step):
     """
-    Generator which can be used to generate lists of float values.
+    Generator which can be used to generate lists of float values. Floats are rounded up to 4 decimals.
     It works like the python built-in range function but accepts a floating point number as incremental step.
     :param start: the start value
     :param stop: the end value
     :param step: the incremental step
     """
-    x = start
+    x = round(start, 4)
     while x < stop:
         yield x
-        x += step
+        x = round(x + step, 4)
 
 
 def shaded(pixmap, opacity=0.5):
