@@ -32,67 +32,39 @@
 ##########################################################################
 
 
-import re
+import unittest
+
+from grapholed.tools import UniqueID
 
 
-RE_DIGIT = re.compile("""\d""")
-RE_PARSE = re.compile("""^(?P<prefix>[^\d])(?P<value>\d+)$""")
+class Test_UniqueID(unittest.TestCase):
 
+    def test_unique_id_generation(self):
+        uniqueid = UniqueID()
+        self.assertEqual('n0', uniqueid.next('n'))
+        self.assertEqual('n1', uniqueid.next('n'))
+        self.assertEqual('e0', uniqueid.next('e'))
+        self.assertEqual('n2', uniqueid.next('n'))
+        self.assertEqual('e1', uniqueid.next('e'))
+        self.assertEqual({'n': 2, 'e': 1}, uniqueid.ids)
 
-class UniqueID(object):
-    """
-    Helper class used to generate sequential IDs for GraphicScene items.
-    """
-    START = 0 # the initial id number
-    STEP = 1 # incremental step
+    def test_unique_id_generation_with_exception(self):
+        uniqueid = UniqueID()
+        self.assertRaises(ValueError, uniqueid.next, '1')
+        self.assertRaises(ValueError, uniqueid.next, 'n1')
+        self.assertRaises(ValueError, uniqueid.next, 'n 1')
 
-    def __init__(self):
-        """
-        Initialize the UniqueID generator.
-        """
-        self.ids = dict()
+    def test_unique_id_update(self):
+        uniqueid = UniqueID()
+        uniqueid.update('n19')
+        uniqueid.update('e7')
+        self.assertEqual({'n': 19, 'e': 7}, uniqueid.ids)
 
-    def next(self, prefix):
-        """
-        Returns the next id available prepending the given prefix.
-        :param prefix: the prefix to be added before the node (usually 'n' for nodes and 'e' for edges).
-        :raise ValueError: if the given prefix contains digits.
-        :rtype: str
-        """
-        if RE_DIGIT.search(prefix):
-            raise ValueError('invalid prefix supplied ({0}): id prefix MUST not contain any digit'.format(prefix))
-        try:
-            last = self.ids[prefix]
-        except KeyError:
-            self.ids[prefix] = UniqueID.START
-        else:
-            self.ids[prefix] = last + UniqueID.STEP
-        finally:
-            return '{PREFIX}{ID}'.format(PREFIX=prefix, ID=self.ids[prefix])
+    def test_unique_id_parse(self):
+        self.assertEqual(('n', 8), UniqueID.parse('n8'))
+        self.assertEqual(('e', 122), UniqueID.parse('e122'))
 
-    @staticmethod
-    def parse(unique_id):
-        """
-        Parse the given unique id returning a tuple in the format (prefix, value).
-        :raise ValueError: if the given value has an invalid format.
-        :param unique_id: the unique id to parse.
-        :rtype: tuple
-        """
-        match = RE_PARSE.match(unique_id)
-        if not match:
-            raise ValueError('invalid id supplied ({0})'.format(unique_id))
-        return match.group('prefix'), int(match.group('value'))
-
-    def update(self, unique_id):
-        """
-        Update the last incremental value according to the given id.
-        :raise ValueError: if the given value has an invalid format.
-        :param unique_id: the for incremental adjustment.
-        """
-        prefix, value = self.parse(unique_id)
-        try:
-            last = self.ids[prefix]
-        except KeyError:
-            self.ids[prefix] = value
-        else:
-            self.ids[prefix] = max(last, value)
+    def test_unique_id_parse_with_exception(self):
+        self.assertRaises(ValueError, UniqueID.parse, '1')
+        self.assertRaises(ValueError, UniqueID.parse, 'n')
+        self.assertRaises(ValueError, UniqueID.parse, 'n 8')
