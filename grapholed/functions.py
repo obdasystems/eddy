@@ -148,6 +148,25 @@ def getPath(path):
     return os.path.normpath(os.path.expanduser(path))
 
 
+def intersectionL(l1, l2):
+    """
+    Return the intersection point of the given lines.
+    Will return None if there is no intersection point.
+    :type l1: QLineF
+    :type l2: QlineF
+    :param l1: the first line.
+    :param l2: the second line.
+    :rtype: QPointF
+    """
+    L = max(min(l1.p1().x(), l1.p2().x()), min(l2.p1().x(), l2.p2().x()))
+    R = min(max(l1.p1().x(), l1.p2().x()), max(l2.p1().x(), l2.p2().x()))
+    T = max(min(l1.p1().y(), l1.p2().y()), min(l2.p1().y(), l2.p2().y()))
+    B = min(max(l1.p1().y(), l1.p2().y()), max(l2.p1().y(), l2.p2().y()))
+    if (T, L) == (B, R):
+        return QPointF(L, T)
+    return None
+
+
 def isEmpty(text):
     """
     Safely detect whether the given string is empty.
