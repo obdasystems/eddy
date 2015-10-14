@@ -36,7 +36,8 @@ import math
 import unittest
 
 from grapholed.exceptions import ProgrammingError
-from grapholed.functions import angleP, clamp, distanceP, distanceL, isEmpty, midpoint, rangeF, snapToGrid
+from grapholed.functions import angleP, clamp, distanceP, distanceL, intersectionL
+from grapholed.functions import isEmpty, midpoint, rangeF, snapToGrid
 
 from PyQt5.QtCore import QPointF, QLineF
 
@@ -84,6 +85,14 @@ class Test_DistanceL(unittest.TestCase):
         self.assertIsInstance(D, tuple)
         self.assertEqual(D[0], 8.0)
         self.assertEqual(D[1], QPointF(2, 0))
+
+
+class Test_IntersectionL(unittest.TestCase):
+
+    def test_intersection(self):
+        self.assertEqual(QPointF(0, 0), intersectionL(QLineF(QPointF(-1, 0), QPointF(1, 0)), QLineF(QPointF(0, -1), QPointF(0, 1))))
+        self.assertEqual(QPointF(-4, 0), intersectionL(QLineF(QPointF(-10, 0), QPointF(10, 0)), QLineF(QPointF(-4, -12), QPointF(-4, 14))))
+        self.assertIsNone(intersectionL(QLineF(QPointF(-1, 0), QPointF(1, 0)), QLineF(QPointF(-1, 2), QPointF(1, 2))))
 
 
 class Test_IsEmpty(unittest.TestCase):
