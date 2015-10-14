@@ -31,11 +31,12 @@
 #                                                                        #
 ##########################################################################
 
+
 from time import time, sleep
 
 from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QSplashScreen, QSlider, QWidget, QHBoxLayout, QLineEdit
+from PyQt5.QtWidgets import QSlider, QWidget, QHBoxLayout, QLineEdit, QLabel, QDesktopWidget
 
 
 class ZoomControl(QWidget):
@@ -166,7 +167,7 @@ class ZoomControl(QWidget):
         self.label.setText('%d%%' % int(self.zoom[index] * 100))
 
 
-class SplashScreen(QSplashScreen):
+class SplashScreen(QLabel):
     """
     This class implements the Grapholed splash screen.
     It can be used with the context manager, i.e:
@@ -182,13 +183,19 @@ class SplashScreen(QSplashScreen):
     """
     def __init__(self, min_splash_time=2):
         """
-        Initialize the B3 splash screen.
+        Initialize the Grapholed splash screen.
         :param min_splash_time: the minimum amount of seconds the splash screen should be drawn.
         """
-        self.splash_pix = QPixmap(':/images/splash')
         self.min_splash_time = time() + min_splash_time
-        QSplashScreen.__init__(self, self.splash_pix, Qt.WindowStaysOnTopHint)
-        self.setMask(self.splash_pix.mask())
+        super().__init__(None, Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint)
+        self.setPixmap(QPixmap(':/images/splash'))
+        self.setAttribute(Qt.WA_TranslucentBackground)
+
+        screen = QDesktopWidget().screenGeometry()
+        posX = (screen.width() - self.pixmap().width()) / 2
+        posY = (screen.height() - self.pixmap().height()) / 2
+        self.setGeometry(posX, posY, self.pixmap().width(), self.pixmap().height())
+        self.setFixedSize(self.pixmap().width(), self.pixmap().height())
 
     def __enter__(self):
         """

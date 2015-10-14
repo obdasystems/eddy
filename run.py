@@ -48,7 +48,7 @@ def main():
     """
     try:
         app = Grapholed(sys.argv)
-        with SplashScreen(min_splash_time=2):
+        with SplashScreen(min_splash_time=4):
             mainwindow = app.init()
     except Exception as e:
         box = QMessageBox()
