@@ -32,9 +32,12 @@
 ##########################################################################
 
 
+from functools import partial
+
 from grapholed.functions import clamp, shaded
 from grapholed.widgets import ZoomControl
-from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QEvent, pyqtSlot
+
+from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QEvent, pyqtSlot, QPointF, QTimer
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 from PyQt5.QtWidgets import QGraphicsView, QWidget, QLabel, QHBoxLayout, QStyleOption, QStyle, QVBoxLayout
 
@@ -52,6 +55,9 @@ class MainView(QGraphicsView):
         :param scene: the graphics scene to render in the main view.
         """
         super().__init__(scene)
+        self.viewMove = None
+        self.viewMoveRate = 20
+        self.viewMoveBound = 10
         self.mousePressCenterPos = None
         self.mousePressPos = None
         self.zoom = 1.00
@@ -72,10 +78,11 @@ class MainView(QGraphicsView):
         Executed when a mouse button is clicked on the view.
         :param mouseEvent: the mouse event instance.
         """
-        if mouseEvent.buttons() & Qt.MidButton:
-            self.mousePressCenterPos = self.mapToScene(self.viewport().rect().center())
-            self.mousePressPos = mouseEvent.pos()
-        else:
+        self.mousePressCenterPos = self.visibleRect().center()
+        self.mousePressPos = mouseEvent.pos()
+        if not mouseEvent.buttons() & Qt.MidButton:
+            # middle button is used to move the viewport => everything
+            # else needs to be forwared to the scene and graphicsitems
             super().mousePressEvent(mouseEvent)
 
     def mouseMoveEvent(self, mouseEvent):
@@ -84,19 +91,55 @@ class MainView(QGraphicsView):
         :param mouseEvent: the mouse event instance.
         """
         if mouseEvent.buttons() & Qt.MidButton:
+            # move the view accoriding to the delta between current mouse post and stored one
             self.centerOn(self.mousePressCenterPos - mouseEvent.pos() + self.mousePressPos)
         else:
+            # handle the movement of graphics item before anything else
             super().mouseMoveEvent(mouseEvent)
+
+            if mouseEvent.buttons() & Qt.LeftButton:
+
+                self.stopViewMove()
+
+                # see if the mouse is outside the viewport
+                viewPortRect = self.viewport().rect()
+                if not viewPortRect.contains(mouseEvent.pos()):
+
+                    # check if we have an item under the mouse => we are
+                    # dragging it outside the viewport rect, hence we need
+                    # to move the view so that the item stays visible
+                    if self.scene().itemOnTopOf(self.mapToScene(mouseEvent.pos()), edges=False):
+
+                        delta = QPointF()
+                        
+                        if mouseEvent.pos().x() < viewPortRect.left():
+                            delta.setX(mouseEvent.pos().x() - viewPortRect.left())
+                        elif mouseEvent.pos().x() > viewPortRect.right():
+                            delta.setX(mouseEvent.pos().x() - viewPortRect.right())
+                            
+                        if mouseEvent.pos().y() < viewPortRect.top():
+                            delta.setY(mouseEvent.pos().y() - viewPortRect.top())
+                        elif mouseEvent.pos().y() > viewPortRect.bottom():
+                            delta.setY(mouseEvent.pos().y() - viewPortRect.bottom())
+
+                        if delta:
+
+                            # clamp the value so the moving operation won't be too fast
+                            delta.setX(clamp(delta.x(), -self.viewMoveBound, +self.viewMoveBound))
+                            delta.setY(clamp(delta.y(), -self.viewMoveBound, +self.viewMoveBound))
+
+                            # start the view move using the predefined rate
+                            self.startViewMove(delta, self.viewMoveRate)
 
     def mouseReleaseEvent(self, mouseEvent):
         """
         Executed when the mouse is released from the view.
         :param mouseEvent: the mouse event instance.
         """
-        if mouseEvent.buttons() & Qt.MidButton:
-            self.mousePressCenterPos = None
-            self.mousePressPos = None
-        else:
+        self.mousePressCenterPos = None
+        self.mousePressPos = None
+        self.stopViewMove()
+        if mouseEvent.button() != Qt.MidButton:
             super().mouseReleaseEvent(mouseEvent)
 
     def viewportEvent(self, event):
@@ -136,11 +179,19 @@ class MainView(QGraphicsView):
                 # move the scene so the mouse is centered
                 move = new - old
                 self.translate(move.x(), move.y())
+
         else:
             # handle default behavior (view scrolling)
             super().wheelEvent(wheelEvent)
 
     ############################################# AUXILIARY METHODS ####################################################
+
+    def moveView(self, delta):
+        """
+        Move the view by the given delta.
+        :param delta: the delta movement.
+        """
+        self.centerOn(self.visibleRect().center() + delta)
 
     def scaleView(self, zoom):
         """
@@ -152,6 +203,42 @@ class MainView(QGraphicsView):
         self.translate(transform.dx(), transform.dy())
         self.scale(zoom, zoom)
         self.zoom = zoom
+
+    def startViewMove(self, delta, rate):
+        """
+        Start the view movement.
+        :param delta: the delta movement.
+        :param rate: amount of milliseconds between refresh.
+        """
+        if self.viewMove:
+            self.stopViewMove()
+
+        # move the view: this is needed before the timer so that if we keep
+        # moving the mouse fast outside the viewport rectangle we still are able
+        # to move the view; if we don't do this the timer may not have kicked in
+        # and thus we remain with a non-moving view with a unfocused graphicsitem
+        self.moveView(delta)
+
+        # setup a timer for future move, so the view keeps moving
+        # also if we are not moving the mouse anymore but we are
+        # holding the position outside the viewport rect
+        self.viewMove = QTimer()
+        self.viewMove.timeout.connect(partial(self.moveView, delta))
+        self.viewMove.start(rate)
+
+    def stopViewMove(self):
+        """
+        Stop the view movement by destroying the timer object causing it.
+        """
+        if self.viewMove:
+
+            try:
+                self.viewMove.stop()
+                self.viewMove.timeout.disconnect()
+            except RuntimeError:
+                pass
+            finally:
+                self.viewMove = None
 
     def visibleRect(self):
         """
