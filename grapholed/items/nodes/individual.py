@@ -580,8 +580,6 @@ class IndividualNode(ResizableNode):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        painter.setClipRect(option.exposedRect)
-
         shapeBrush = self.shapeBrushSelected if self.isSelected() else self.shapeBrush
 
         painter.setRenderHint(QPainter.Antialiasing)
