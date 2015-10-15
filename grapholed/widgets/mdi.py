@@ -33,9 +33,11 @@
 
 
 import os
+import traceback
 
 from grapholed.datatypes import FileType
 from grapholed.dialogs import SaveFileDialog
+from grapholed.functions import getPath
 
 from PyQt5.QtCore import pyqtSlot, Qt, QFile, QTextStream, QIODevice, pyqtSignal, QSizeF
 from PyQt5.QtGui import QPainter, QPageSize, QPixmap
@@ -161,7 +163,7 @@ class MdiSubWindow(QMdiSubWindow):
         mainview = self.widget()
         scene = mainview.scene()
         if scene.document.filepath:
-            windowtitle = scene.document.name if clean else '%s *' % scene.document.name
+            windowtitle = scene.document.name if clean else '{0} *'.format(scene.document.name)
             self.setWindowTitle(windowtitle)
 
     ############################################ AUXILIARY METHODS #####################################################
@@ -301,19 +303,39 @@ class MdiSubWindow(QMdiSubWindow):
         :param filepath: the filepath where to save the scene.
         :return: True if the save has been performed, False otherwise.
         """
-        file = QFile(filepath)
-        if not file.open(QIODevice.WriteOnly|QIODevice.Truncate|QIODevice.Text):
+        # save the file in a hidden file inside the grapholed home: if the save successfully
+        # complete, move the file on the given filepath (in this way if an exception is raised
+        # while exporting the scene, we won't lose previously saved data)
+        tmpPath = getPath('@home/.{0}'.format(os.path.basename(os.path.normpath(filepath))))
+        tmpFile = QFile(tmpPath)
+
+        if not tmpFile.open(QIODevice.WriteOnly|QIODevice.Truncate|QIODevice.Text):
             box = QMessageBox()
             box.setIconPixmap(QPixmap(':/icons/warning'))
             box.setWindowTitle('Save FAILED')
-            box.setText('Unable to save Graphol document to %s' % filepath)
-            box.setDetailedText(file.errorString())
+            box.setText('Could not export diagram!')
+            box.setDetailedText(tmpFile.errorString())
             box.setStandardButtons(QMessageBox.Ok)
             box.exec_()
             return False
 
-        stream = QTextStream(file)
-        document = scene.asGraphol()
-        document.save(stream, 2)
-        file.close()
-        return True
+        try:
+            stream = QTextStream(tmpFile)
+            document = scene.asGraphol()
+            document.save(stream, 2)
+            tmpFile.close()
+            os.rename(tmpPath, filepath)
+        except Exception:
+            box = QMessageBox()
+            box.setIconPixmap(QPixmap(':/icons/warning'))
+            box.setWindowTitle('Save FAILED')
+            box.setText('Could not export diagram!')
+            box.setDetailedText(traceback.format_exc())
+            box.setStandardButtons(QMessageBox.Ok)
+            box.exec_()
+            return False
+        else:
+            return True
+        finally:
+            if tmpFile.isOpen():
+                tmpFile.close()
