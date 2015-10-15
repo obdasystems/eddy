@@ -30,7 +30,7 @@ We prefer contributors to submit their code change throught GitHub [pull request
 * Create a topic branch from where you want to base your work.
     * This is **NOT** the `master` branch. You should push your changes to a `release` branch. 
     * Please avoid working directly on the `master` branch.
-* Make sure your code follows our [coding style](#coding-style)
+* Make sure your code follows our [coding style](#coding-style).
 * Make commits of logical units.
 * Make sure your commit messages are in the **proper format** (example below): 
 ```
@@ -60,8 +60,7 @@ Different programmers use to write code in different ways. Without the usage of 
 source code may become unreadable and eventually not understandable. While GrapholEd doesn't strictly follows 
 PEP-8 coding conventions, it is required that your code follows the following guidelines:
 
-* **Break long lines** after `110` characters: PEP-8 enforces a shorter length (72-99 characters), however 
-  new screens' resolution allow longer lines to stay visibile without the need of horizontal scrolling.
+* **Break long lines** after `110` characters.
 * Do not indent using `TAB`: use **4 spaces** to indent your code.
 * Do not use python built-in names to name your variables.
 * **Document** your code (example below):
@@ -81,7 +80,7 @@ def myFunc(self, param1, param2):
 ```
 * Always use `self` for the first argument to instance methods.
 * Always use `cls` for the first argument to class methods.
-* When catching exceptions, **mention specific exception** whenever possible instead of using only the `except` keyword.
+* **Mention specific exception** type whenever possible instead of using only the `except` keyword.
 * When you add new python modules remember to place the licensing on the top of the file.
 * Last but not least: **comment your code**!
 
