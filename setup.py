@@ -484,6 +484,7 @@ setup(
             'include_files': [
                 ('grapholed/stylesheets', 'stylesheets'),
                 ('LICENSE', 'LICENSE'),
+                ('CONTRIBUTING.md', 'CONTRIBUTING.md'),
                 ('PACKAGING.md', 'PACKAGING.md'),
                 ('README.md', 'README.md'),
             ],
