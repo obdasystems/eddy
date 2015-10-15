@@ -32,11 +32,155 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QPointF
+from datetime import datetime
+
+from PyQt5.QtCore import Qt, QPointF, QRectF
 from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
+
 from grapholed.commands import CommandNodeMove, CommandNodeSetURL, CommandNodeSetDescription
-from grapholed.fields import StringEditField, TextEditField, SpinBox
+from grapholed.fields import StringEditField, TextEditField, SpinBox, IntEditField
 from grapholed.functions import clamp
+
+
+################################################## SCENE PROPERTIES ####################################################
+
+
+class ScenePropertiesDialog(QDialog):
+    """
+    This class implements the 'Scene properties' dialog.
+    """
+    def __init__(self, scene, parent=None):
+        """
+        Initialize the scene properties dialog.
+        :param scene: the scene whose properties we want to display.
+        :param parent: the parent widget.
+        """
+        super().__init__(parent)
+        self.scene = scene
+        self.finished.connect(self.handleFinished)
+
+        self.mainWidget = QTabWidget(self)
+
+        ################################################ GENERAL TAB ###################################################
+
+        self.generalWidget = QWidget()
+        self.generalLayout = QFormLayout(self.generalWidget)
+
+        # amount of nodes in the scene
+        self.nodesF = IntEditField(self.generalWidget)
+        self.nodesF.setEnabled(False)
+        self.nodesF.setFixedWidth(300)
+        self.nodesF.setValue(len(self.scene.nodes()))
+
+        # amount of edges in the scene
+        self.edgesF = IntEditField(self.generalWidget)
+        self.edgesF.setEnabled(False)
+        self.edgesF.setFixedWidth(300)
+        self.edgesF.setValue(len(self.scene.edges()))
+
+        self.generalLayout.addRow('N° nodes', self.nodesF)
+        self.generalLayout.addRow('N° edges', self.edgesF)
+
+        self.mainWidget.addTab(self.generalWidget, 'General')
+
+        ############################################### GEOMETRY TAB ###################################################
+
+        self.geometryWidget = QWidget()
+        self.geometryLayout = QFormLayout(self.geometryWidget)
+
+        R = self.scene.sceneRect()
+
+        self.sceneSizeF = SpinBox(self)
+        self.sceneSizeF.setRange(self.scene.MinSize, self.scene.MaxSize)
+        self.sceneSizeF.setSingleStep(100)
+        self.sceneSizeF.setValue(R.width())
+
+        self.geometryLayout.addRow('Size', self.sceneSizeF)
+
+        self.mainWidget.addTab(self.geometryWidget, 'Geometry')
+
+        ############################################## DOCUMENT WIDGET #################################################
+
+        if self.scene.document.filepath:
+
+            self.documentWidget = QWidget()
+            self.documentLayout = QFormLayout(self.documentWidget)
+
+            # filepath of the saved document
+            self.filepathF = StringEditField(self.documentWidget)
+            self.filepathF.setEnabled(False)
+            self.filepathF.setFixedWidth(300)
+            self.filepathF.setValue(self.scene.document.filepath)
+
+            # timestamp when the document has been last modified
+            self.editedF = StringEditField(self.documentWidget)
+            self.editedF.setEnabled(False)
+            self.editedF.setFixedWidth(300)
+            self.editedF.setValue(datetime.fromtimestamp(int(self.scene.document.edited)).strftime('%Y/%m/%d %H:%M:%S'))
+
+            self.documentLayout.addRow('File', self.filepathF)
+            self.documentLayout.addRow('Last edit', self.editedF)
+
+            self.mainWidget.addTab(self.documentWidget, 'Geometry')
+
+        ################################################# BUTTON BOX ###################################################
+
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+
+        ################################################ MAIN LAYOUT ###################################################
+
+        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout.addWidget(self.mainWidget)
+        self.mainLayout.addWidget(self.buttonBox, 0, Qt.AlignRight)
+
+        self.setFixedSize(self.sizeHint())
+        self.setWindowTitle('Scene properties')
+
+    ################################################# SIGNAL HANDLERS ##################################################
+
+    def handleFinished(self, code):
+        """
+        Executed when the dialog is terminated.
+        :param code: the result code.
+        """
+        if code == QDialog.Accepted:
+            self.handleSceneSizeChanged()
+
+    ################################################ AUXILIARY METHODS #################################################
+
+    def handleSceneSizeChanged(self):
+        """
+        Change the sice of the scene rect.
+        """
+        size1 = self.scene.sceneRect().width()
+        size2 = self.sceneSizeF.value()
+
+        if size1 != size2:
+
+            # see if the new size is sufficient to contain all the elements in the scene
+            items = self.scene.items()
+
+            if len(items) > 0:
+
+                X = set()
+                Y = set()
+
+                for item in items:
+                    BR = item.mapRectToScene(item.boundingRect())
+                    X.add(BR.left())
+                    X.add(BR.right())
+                    Y.add(BR.top())
+                    Y.add(BR.bottom())
+
+                # clamp size2 so that all the elements in the scene stays visible
+                size2 = max(size2, abs(min(X) * 2), abs(max(X) * 2), abs(min(Y) * 2), abs(max(Y) * 2))
+
+            self.scene.setSceneRect(QRectF(-size2 / 2, -size2 / 2, size2, size2))
+
+
+################################################### NODE PROPERTIES ####################################################
 
 
 class NodePropertiesDialog(QDialog):
@@ -90,18 +234,18 @@ class NodePropertiesDialog(QDialog):
         self.geometryWidget = QWidget()
         self.geometryLayout = QFormLayout(self.geometryWidget)
 
-        p = self.node.pos()
-        r = self.scene.sceneRect()
+        P = self.node.pos()
+        R = self.scene.sceneRect()
 
         self.xField = SpinBox(self.geometryWidget)
         self.xField.setFixedWidth(60)
-        self.xField.setRange(0, r.width())
-        self.xField.setValue(int(p.x()))
+        self.xField.setRange(R.left(), R.right())
+        self.xField.setValue(int(P.x()))
 
         self.yField = SpinBox(self.geometryWidget)
         self.yField.setFixedWidth(60)
-        self.yField.setRange(0, r.height())
-        self.yField.setValue(int(p.y()))
+        self.yField.setRange(R.top(), R.bottom())
+        self.yField.setValue(int(P.y()))
 
         # TODO: allow to modify shape width from properties dialog
         self.wField = SpinBox(self.geometryWidget)
@@ -175,8 +319,9 @@ class NodePropertiesDialog(QDialog):
         """
         Move the node properly if the position has been changed.
         """
-        x = clamp(self.xField.value(), 0, self.scene.sceneRect().width())
-        y = clamp(self.yField.value(), 0, self.scene.sceneRect().height())
+        R = self.scene.sceneRect()
+        x = clamp(self.xField.value(), R.left(), R.right())
+        y = clamp(self.yField.value(), R.top(), R.bottom())
         pos1 = self.node.pos()
         pos2 = QPointF(x, y)
 

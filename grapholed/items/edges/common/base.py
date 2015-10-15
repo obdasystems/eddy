@@ -341,6 +341,18 @@ class Edge(Item):
                               target=self.target,
                               breakpoints=self.breakpoints[:])
 
+    def moveBy(self, x, y):
+        """
+        Move the edge by the given deltas.
+        :param x: the x delta.
+        :param y: the y delta.
+        """
+        delta = QPointF(x, y)
+        self.breakpoints = [p + delta for p in self.breakpoints]
+        self.source.setAnchor(self.source.anchor(self) + delta)
+        if self.target:
+            self.target.setAnchor(self.target.anchor(self) + delta)
+
     def other(self, node):
         """
         Returns the opposite endpoint of the given node.

@@ -32,8 +32,11 @@
 ##########################################################################
 
 
+import os
+
 from grapholed.datatypes import FileType
 from grapholed.dialogs import SaveFileDialog
+
 from PyQt5.QtCore import pyqtSlot, Qt, QFile, QTextStream, QIODevice, pyqtSignal, QSizeF
 from PyQt5.QtGui import QPainter, QPageSize, QPixmap
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
@@ -265,6 +268,7 @@ class MdiSubWindow(QMdiSubWindow):
             saved = self.saveSceneToGrapholFile(scene, filepath)
             if saved:
                 scene.document.filepath = filepath
+                scene.document.edited = os.path.getmtime(filepath)
                 scene.undoStack.setClean()
                 # emit a signal so the main window can update the title
                 self.signalDocumentSaved.emit(self)

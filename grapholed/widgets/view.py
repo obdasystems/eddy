@@ -328,9 +328,17 @@ class Navigator(QWidget):
         @pyqtSlot()
         def handleNavUpdate(self):
             """
-            Triggered whenever the navigator view needs to be updated.
+            Executed whenever the navigator view needs to be updated.
             """
             self.viewport().update()
+
+        @pyqtSlot('QRectF')
+        def handleSceneRectChanged(self, rect):
+            """
+            Executed whenever the rectangle of the scene rendered in the navigator changes.
+            :param rect: the new rectangle.
+            """
+            self.fitInView(rect, Qt.KeepAspectRatio)
 
         ########################################### AUXILIARY METHODS ##################################################
 
@@ -350,7 +358,9 @@ class Navigator(QWidget):
             self.mainview = mainview
 
             if self.mainview:
-                self.setScene(self.mainview.scene())
+                scene = self.mainview.scene()
+                scene.sceneRectChanged.connect(self.handleSceneRectChanged)
+                self.setScene(scene)
                 self.fitInView(self.mainview.sceneRect(), Qt.KeepAspectRatio)
                 self.mainview.navUpdate.connect(self.handleNavUpdate)
             else:

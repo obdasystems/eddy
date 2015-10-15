@@ -35,7 +35,8 @@
 from grapholed import __appname__ as appname, __organization__ as organization
 from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout, QSpinBox
+from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
+from grapholed.fields import SpinBox
 
 
 class PreferencesDialog(QDialog):
@@ -54,11 +55,11 @@ class PreferencesDialog(QDialog):
 
         ############################################### APPEARANCE TAB #################################################
 
-        self.sceneSizeField = QSpinBox(self)
-        self.sceneSizeField.setRange(2000, 100000)
+        # TODO: make size dependent from DiagramScene constants
+        self.sceneSizeField = SpinBox(self)
+        self.sceneSizeField.setRange(2000, 1000000)
         self.sceneSizeField.setSingleStep(100)
         self.sceneSizeField.setValue(self.settings.value('scene/size', 5000, int))
-        self.sceneSizeField.setAttribute(Qt.WA_MacShowFocusRect, 0)
 
         self.appearanceWidget = QWidget()
         self.appearanceLayout = QFormLayout(self.appearanceWidget)

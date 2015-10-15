@@ -32,6 +32,7 @@
 ##########################################################################
 
 
+import os
 import sys
 import traceback
 import webbrowser
@@ -727,7 +728,7 @@ class MainWindow(QMainWindow):
         """
         view = MainView(scene)
         view.setViewportUpdateMode(MainView.FullViewportUpdate)
-        view.centerOn(scene.sceneRect().width() / 2, scene.sceneRect().height() / 2)
+        view.centerOn(0, 0)
         view.setDragMode(MainView.RubberBandDrag)
         return view
 
@@ -751,7 +752,7 @@ class MainWindow(QMainWindow):
 
     def getScene(self, width, height):
         """
-        Create and return an empty scene (not connected to the undoStack).
+        Create and return an empty scene.
         :param width: the width of the scene rect.
         :param height: the height of the scene rect
         :return: the initialized GraphicScene.
@@ -759,7 +760,7 @@ class MainWindow(QMainWindow):
         """
         # create the new scene
         scene = DiagramScene(self)
-        scene.setSceneRect(QRectF(0, 0, width, height))
+        scene.setSceneRect(QRectF(-width / 2, -height / 2, width, height))
         scene.setItemIndexMethod(DiagramScene.NoIndex)
         scene.nodeInsertEnd.connect(self.handleNodeInsertEnd)
         scene.edgeInsertEnd.connect(self.handleEdgeInsertEnd)
@@ -801,6 +802,7 @@ class MainWindow(QMainWindow):
             # create the scene
             scene = self.getScene(width=w, height=h)
             scene.document.filepath = filepath
+            scene.document.edited = os.path.getmtime(filepath)
 
             # add the nodes
             nodes_from_graphol = graph.elementsByTagName('node')

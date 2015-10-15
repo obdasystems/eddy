@@ -35,7 +35,7 @@
 import os
 
 from PyQt5.QtCore import Qt, pyqtSignal, QPointF, pyqtSlot, QSettings
-from PyQt5.QtGui import QPen, QColor
+from PyQt5.QtGui import QPen, QColor, QIcon
 from PyQt5.QtPrintSupport import QPrinter
 from PyQt5.QtWidgets import QGraphicsScene, QUndoStack, QMenu
 from PyQt5.QtXml import QDomDocument
@@ -44,6 +44,7 @@ from grapholed import __appname__ as appname, __organization__ as organization
 from grapholed.commands import CommandItemsMultiAdd, CommandItemsMultiRemove
 from grapholed.commands import CommandNodeAdd, CommandNodeSetZValue, CommandNodeMove
 from grapholed.commands import CommandEdgeAdd
+from grapholed.dialogs.properties import ScenePropertiesDialog
 from grapholed.functions import snapToGrid, rangeF
 from grapholed.items import Item
 from grapholed.tools import UniqueID
@@ -61,6 +62,8 @@ class DiagramScene(QGraphicsScene):
     ## CONSTANTS
     GridPen = QPen(QColor(80, 80, 80), 0, Qt.SolidLine)
     GridSize = 20
+    MinSize = 2000
+    MaxSize = 1000000
     PasteOffsetX = 20
     PasteOffsetY = 10
 
@@ -83,7 +86,40 @@ class DiagramScene(QGraphicsScene):
             """
             Initialize the scene document.
             """
-            self.filepath = ''
+            self._filepath = ''
+            self._edited = None
+
+        @property
+        def edited(self):
+            """
+            Returns the timestamp when the file has been last modified.
+            :return: float
+            """
+            return self._edited
+
+        @edited.setter
+        def edited(self, value):
+            """
+            Set the timestamp when the file has been last modified
+            :param value: the timestamp value
+            """
+            self._edited = float(value)
+
+        @property
+        def filepath(self):
+            """
+            Returns the filepath of the document.
+            :return: str
+            """
+            return self._filepath
+
+        @filepath.setter
+        def filepath(self, value):
+            """
+            Set the filepath of the document.
+            :param value: the filepath of the document.
+            """
+            self._filepath = value
 
         @property
         def name(self):
@@ -149,6 +185,7 @@ class DiagramScene(QGraphicsScene):
     #                                                                                                                  #
     ####################################################################################################################
 
+    @pyqtSlot()
     def handleItemCut(self):
         """
         Cut selected items from the scene.
@@ -168,6 +205,7 @@ class DiagramScene(QGraphicsScene):
         self.clipboardPasteOffsetY = 0
         self.clipboardPasteOffsetZ = 0
 
+    @pyqtSlot()
     def handleItemCopy(self):
         """
         Make a copy of selected items.
@@ -176,6 +214,7 @@ class DiagramScene(QGraphicsScene):
         self.updateClipboard()
         self.updateActions()
 
+    @pyqtSlot()
     def handleItemPaste(self):
         """
         Paste previously copied items.
@@ -243,6 +282,7 @@ class DiagramScene(QGraphicsScene):
         self.clipboardPasteOffsetY += DiagramScene.PasteOffsetY
         self.clipboardPasteOffsetZ += 0.1 * len(nodes)
 
+    @pyqtSlot()
     def handleItemDelete(self):
         """
         Delete the currently selected items from the graphic scene.
@@ -255,6 +295,7 @@ class DiagramScene(QGraphicsScene):
             selection.extend([x for item in selection if item.isNode() for x in item.edges if x not in selection])
             self.undoStack.push(CommandItemsMultiRemove(scene=self, collection=selection))
 
+    @pyqtSlot()
     def handleBringToFront(self):
         """
         Bring the selected item to the top of the scene.
@@ -268,6 +309,7 @@ class DiagramScene(QGraphicsScene):
             if zValue != selected.zValue():
                 self.undoStack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
 
+    @pyqtSlot()
     def handleSendToBack(self):
         """
         Send the selected item to the back of the scene.
@@ -281,6 +323,7 @@ class DiagramScene(QGraphicsScene):
             if zValue != selected.zValue():
                 self.undoStack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
 
+    @pyqtSlot()
     def handleSelectAll(self):
         """
         Select all the items in the scene.
@@ -289,6 +332,14 @@ class DiagramScene(QGraphicsScene):
         self.clearSelection()
         for item in self.nodes() + self.edges():
             item.setSelected(True)
+
+    @pyqtSlot()
+    def handleSceneProperties(self):
+        """
+        Executed when scene properties needs to be diplayed.
+        """
+        prop = ScenePropertiesDialog(scene=self)
+        prop.exec_()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -338,12 +389,19 @@ class DiagramScene(QGraphicsScene):
         :param menuEvent: the context menu event instance.
         """
         if not self.items(menuEvent.scenePos()):
-            contextMenu = QMenu()
-            contextMenu.addAction(self.actionSelectAll)
+
+            menu = QMenu()
             if self.clipboard:
-                contextMenu.addSeparator()
-                contextMenu.addAction(self.actionItemPaste)
-            contextMenu.exec_(menuEvent.screenPos())
+                menu.addAction(self.actionItemPaste)
+                menu.addSeparator()
+
+            menu.addAction(self.actionSelectAll)
+            menu.addSeparator()
+
+            prop = menu.addAction(QIcon(':/icons/preferences'), 'Properties...')
+            prop.triggered.connect(self.handleSceneProperties)
+
+            menu.exec_(menuEvent.screenPos())
         else:
             super().contextMenuEvent(menuEvent)
 
