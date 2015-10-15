@@ -324,6 +324,8 @@ class MdiSubWindow(QMdiSubWindow):
             document = scene.asGraphol()
             document.save(stream, 2)
             tmpFile.close()
+            if os.path.isfile(filepath):
+                os.remove(filepath)
             os.rename(tmpPath, filepath)
         except Exception:
             box = QMessageBox()
