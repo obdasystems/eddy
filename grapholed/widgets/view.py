@@ -64,6 +64,7 @@ class MainView(QGraphicsView):
 
     ############################################### SIGNAL HANDLERS ####################################################
 
+    @pyqtSlot(float)
     def handleScaleChanged(self, zoom):
         """
         Executed when the scale factor changes (triggered by the Main Slider in the Toolbar)
@@ -80,7 +81,10 @@ class MainView(QGraphicsView):
         """
         self.mousePressCenterPos = self.visibleRect().center()
         self.mousePressPos = mouseEvent.pos()
-        if not mouseEvent.buttons() & Qt.MidButton:
+        if mouseEvent.buttons() & Qt.MidButton:
+            viewport = self.viewport()
+            viewport.setCursor(Qt.ClosedHandCursor)
+        else:
             # middle button is used to move the viewport => everything
             # else needs to be forwared to the scene and graphicsitems
             super().mousePressEvent(mouseEvent)
@@ -90,8 +94,11 @@ class MainView(QGraphicsView):
         Executed when then mouse is moved on the view.
         :param mouseEvent: the mouse event instance.
         """
+        viewport = self.viewport()
+
         if mouseEvent.buttons() & Qt.MidButton:
-            # move the view accoriding to the delta between current mouse post and stored one
+            # move the view according to the delta between current mouse post and stored one
+            viewport.setCursor(Qt.ClosedHandCursor)
             self.centerOn(self.mousePressCenterPos - mouseEvent.pos() + self.mousePressPos)
         else:
             # handle the movement of graphics item before anything else
@@ -102,8 +109,8 @@ class MainView(QGraphicsView):
                 self.stopViewMove()
 
                 # see if the mouse is outside the viewport
-                viewPortRect = self.viewport().rect()
-                if not viewPortRect.contains(mouseEvent.pos()):
+                viewportRect = viewport.rect()
+                if not viewportRect.contains(mouseEvent.pos()):
 
                     # check if we have an item under the mouse => we are
                     # dragging it outside the viewport rect, hence we need
@@ -112,22 +119,20 @@ class MainView(QGraphicsView):
 
                         delta = QPointF()
                         
-                        if mouseEvent.pos().x() < viewPortRect.left():
-                            delta.setX(mouseEvent.pos().x() - viewPortRect.left())
-                        elif mouseEvent.pos().x() > viewPortRect.right():
-                            delta.setX(mouseEvent.pos().x() - viewPortRect.right())
+                        if mouseEvent.pos().x() < viewportRect.left():
+                            delta.setX(mouseEvent.pos().x() - viewportRect.left())
+                        elif mouseEvent.pos().x() > viewportRect.right():
+                            delta.setX(mouseEvent.pos().x() - viewportRect.right())
                             
-                        if mouseEvent.pos().y() < viewPortRect.top():
-                            delta.setY(mouseEvent.pos().y() - viewPortRect.top())
-                        elif mouseEvent.pos().y() > viewPortRect.bottom():
-                            delta.setY(mouseEvent.pos().y() - viewPortRect.bottom())
+                        if mouseEvent.pos().y() < viewportRect.top():
+                            delta.setY(mouseEvent.pos().y() - viewportRect.top())
+                        elif mouseEvent.pos().y() > viewportRect.bottom():
+                            delta.setY(mouseEvent.pos().y() - viewportRect.bottom())
 
                         if delta:
-
                             # clamp the value so the moving operation won't be too fast
                             delta.setX(clamp(delta.x(), -self.viewMoveBound, +self.viewMoveBound))
                             delta.setY(clamp(delta.y(), -self.viewMoveBound, +self.viewMoveBound))
-
                             # start the view move using the predefined rate
                             self.startViewMove(delta, self.viewMoveRate)
 
@@ -139,6 +144,8 @@ class MainView(QGraphicsView):
         self.mousePressCenterPos = None
         self.mousePressPos = None
         self.stopViewMove()
+        viewport = self.viewport()
+        viewport.setCursor(Qt.ArrowCursor)
         if mouseEvent.button() != Qt.MidButton:
             super().mouseReleaseEvent(mouseEvent)
 
