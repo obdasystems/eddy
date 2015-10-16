@@ -572,7 +572,7 @@ class Overview(MainViewInspector):
                         X |= {B.left(), B.right()}
                         Y |= {B.top(), B.bottom()}
 
-                    padding = 20
+                    padding = 10
                     self.fitInView(QRectF(QPointF(min(X) - padding, min(Y) - padding),
                                           QPointF(max(X) + padding, max(Y) + padding)), Qt.KeepAspectRatio)
 
