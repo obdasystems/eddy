@@ -78,6 +78,8 @@ class Pane(QScrollArea):
             raise ProgrammingError('invalid argument specified ({0}): '
                                    'expecting PaneItem'.format(widget.__class__.__name__))
         item = PaneWidgetItem()
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable & ~Qt.ItemIsSelectable & ~Qt.ItemIsEnabled)
+
         item.setSizeHint(widget.sizeHint())
         widget.sizeChanged.connect(item.handleSizeChanged)
         self.paneList.addItem(item)
