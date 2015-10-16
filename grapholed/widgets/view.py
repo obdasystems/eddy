@@ -186,11 +186,16 @@ class MainView(QGraphicsView):
 
     ############################################# AUXILIARY METHODS ####################################################
 
-    def moveView(self, delta):
+    def moveBy(self, *__args):
         """
         Move the view by the given delta.
-        :param delta: the delta movement.
         """
+        if len(__args) == 1:
+            delta = __args[0]
+        elif len(__args) == 2:
+            delta = QPointF(__args[0], __args[1])
+        else:
+            raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
         self.centerOn(self.visibleRect().center() + delta)
 
     def scaleView(self, zoom):
@@ -217,13 +222,13 @@ class MainView(QGraphicsView):
         # moving the mouse fast outside the viewport rectangle we still are able
         # to move the view; if we don't do this the timer may not have kicked in
         # and thus we remain with a non-moving view with a unfocused graphicsitem
-        self.moveView(delta)
+        self.moveBy(delta)
 
         # setup a timer for future move, so the view keeps moving
         # also if we are not moving the mouse anymore but we are
         # holding the position outside the viewport rect
         self.viewMove = QTimer()
-        self.viewMove.timeout.connect(partial(self.moveView, delta))
+        self.viewMove.timeout.connect(partial(self.moveBy, delta))
         self.viewMove.start(rate)
 
     def stopViewMove(self):
