@@ -45,15 +45,16 @@ from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QMdiArea, QMdiSubWindow, QMessageBox, QDialog, QTabWidget
 
 
+
 class MdiArea(QMdiArea):
     """
     This class implements the MDI Area where documents are rendered.
     """
 
-    def __init__(self, nav, parent=None):
+    def __init__(self, *args, parent=None):
         """
         Initialize the MDI area.
-        :param nav: the navigator widget.
+        :param args: widgets that needs to be updated whenever the main active view changes.
         :param parent: the parent widget.
         """
         super().__init__(parent)
@@ -63,7 +64,7 @@ class MdiArea(QMdiArea):
         self.setTabsMovable(True)
         self.setContentsMargins(0, 0, 0, 0)
         self.subWindowActivated.connect(self.handleSubWindowActivated)
-        self.nav = nav
+        self.inspectors = args
 
     ################################################ PROPERTIES ########################################################
 
@@ -91,11 +92,13 @@ class MdiArea(QMdiArea):
             mainview = subwindow.widget()
             scene = mainview.scene()
             scene.undoStack.setActive()
-            # switch the navigator to show the new mainview
-            self.nav.setView(subwindow.widget())
+            # switch inspectors to show the new mainview
+            for widget in self.inspectors:
+                widget.setView(subwindow.widget())
         else:
-            # clear the navigator
-            self.nav.setView(None)
+            # clear inspectors
+            for widget in self.inspectors:
+                widget.clearView()
 
 
 class MdiSubWindow(QMdiSubWindow):

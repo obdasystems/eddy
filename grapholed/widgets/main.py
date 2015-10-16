@@ -57,7 +57,7 @@ from grapholed.widgets import DiagramScene
 from grapholed.widgets import Palette, Pane
 from grapholed.widgets import MainView, Navigator
 from grapholed.widgets import ZoomControl
-from grapholed.widgets import Navigator2
+from grapholed.widgets import Overview
 
 
 class MainWindow(QMainWindow):
@@ -76,10 +76,10 @@ class MainWindow(QMainWindow):
         self.undoGroup = QUndoGroup()
         self.undoGroup.cleanChanged.connect(self.handleUndoGroupCleanChanged)
 
-        ############################################ EXTRA WIDGETS #####################################################
+        ########################################### AUXILIARY WIDGETS ##################################################
 
-        self.nav = Navigator()
-        self.overview = Navigator2()
+        self.navigator = Navigator()
+        self.overview = Overview()
         self.zoomctl = ZoomControl()
 
         ################################################# ICONS ########################################################
@@ -313,26 +313,26 @@ class MainWindow(QMainWindow):
 
         ################################################ PALETTE #######################################################
 
-        self.paletteItems = dict()
-        self.paletteNodes = dict()
-        self.paletteEdges = dict()
+        self.palette_items = dict()
+        self.palette_nodes = dict()
+        self.palette_edges = dict()
 
-        self.pGroup = QButtonGroup()
-        self.pGroup.setExclusive(False)
-        self.pGroup.buttonClicked[int].connect(self.handleToolBoxButtonClicked)
+        self.paletteP_group = QButtonGroup()
+        self.paletteP_group.setExclusive(False)
+        self.paletteP_group.buttonClicked[int].connect(self.handleToolBoxButtonClicked)
 
-        self.cGroup = QButtonGroup()
-        self.cGroup.setExclusive(False)
-        self.cGroup.buttonClicked[int].connect(self.handleToolBoxButtonClicked)
+        self.paletteC_group = QButtonGroup()
+        self.paletteC_group.setExclusive(False)
+        self.paletteC_group.buttonClicked[int].connect(self.handleToolBoxButtonClicked)
 
-        self.eGroup = QButtonGroup()
-        self.eGroup.setExclusive(False)
-        self.eGroup.buttonClicked[int].connect(self.handleToolBoxButtonClicked)
+        self.paletteE_group = QButtonGroup()
+        self.paletteE_group.setExclusive(False)
+        self.paletteE_group.buttonClicked[int].connect(self.handleToolBoxButtonClicked)
 
-        nodes = [self.paletteItems, self.paletteNodes]
-        edges = [self.paletteItems, self.paletteEdges]
+        nodes = [self.palette_items, self.palette_nodes]
+        edges = [self.palette_items, self.palette_edges]
 
-        def _w(item, bgroup, groups):
+        def BTN(item, bgroup, groups):
             """
             Create a cell widget with the item shape rendered inside.
             :type item: class
@@ -354,50 +354,48 @@ class MainWindow(QMainWindow):
                 collection[item.itemtype] = button
             return button
 
-        pItem = Palette.Item('Predicate nodes', collapsed=False)
-        pItem.addWidget(_w(ConceptNode, self.pGroup, nodes))
-        pItem.addWidget(_w(RoleNode, self.pGroup, nodes))
-        pItem.addWidget(_w(ValueDomainNode, self.pGroup, nodes))
-        pItem.addWidget(_w(IndividualNode, self.pGroup, nodes))
-        pItem.addWidget(_w(ValueRestrictionNode, self.pGroup, nodes))
-        pItem.addWidget(_w(AttributeNode, self.pGroup, nodes))
+        self.paletteP = Palette('Predicate nodes', ':/icons/add')
+        self.paletteP.addButton(BTN(ConceptNode, self.paletteP_group, nodes))
+        self.paletteP.addButton(BTN(RoleNode, self.paletteP_group, nodes))
+        self.paletteP.addButton(BTN(ValueDomainNode, self.paletteP_group, nodes))
+        self.paletteP.addButton(BTN(IndividualNode, self.paletteP_group, nodes))
+        self.paletteP.addButton(BTN(ValueRestrictionNode, self.paletteP_group, nodes))
+        self.paletteP.addButton(BTN(AttributeNode, self.paletteP_group, nodes))
 
-        cItem = Palette.Item('Constructor nodes', collapsed=False)
-        cItem.addWidget(_w(DomainRestrictionNode, self.cGroup, nodes))
-        cItem.addWidget(_w(RangeRestrictionNode, self.cGroup, nodes))
-        cItem.addWidget(_w(UnionNode, self.cGroup, nodes))
-        cItem.addWidget(_w(EnumerationNode, self.cGroup, nodes))
-        cItem.addWidget(_w(ComplementNode, self.cGroup, nodes))
-        cItem.addWidget(_w(RoleChainNode, self.cGroup, nodes))
-        cItem.addWidget(_w(IntersectionNode, self.cGroup, nodes))
-        cItem.addWidget(_w(RoleInverseNode, self.cGroup, nodes))
-        cItem.addWidget(_w(DatatypeRestrictionNode, self.cGroup, nodes))
-        cItem.addWidget(_w(DisjointUnionNode, self.cGroup, nodes))
-        cItem.addWidget(_w(PropertyAssertionNode, self.cGroup, nodes))
+        self.paletteC = Palette('Constructor nodes', ':/icons/add')
+        self.paletteC.addButton(BTN(DomainRestrictionNode, self.paletteC_group, nodes))
+        self.paletteC.addButton(BTN(RangeRestrictionNode, self.paletteC_group, nodes))
+        self.paletteC.addButton(BTN(UnionNode, self.paletteC_group, nodes))
+        self.paletteC.addButton(BTN(EnumerationNode, self.paletteC_group, nodes))
+        self.paletteC.addButton(BTN(ComplementNode, self.paletteC_group, nodes))
+        self.paletteC.addButton(BTN(RoleChainNode, self.paletteC_group, nodes))
+        self.paletteC.addButton(BTN(IntersectionNode, self.paletteC_group, nodes))
+        self.paletteC.addButton(BTN(RoleInverseNode, self.paletteC_group, nodes))
+        self.paletteC.addButton(BTN(DatatypeRestrictionNode, self.paletteC_group, nodes))
+        self.paletteC.addButton(BTN(DisjointUnionNode, self.paletteC_group, nodes))
+        self.paletteC.addButton(BTN(PropertyAssertionNode, self.paletteC_group, nodes))
 
-        eItem = Palette.Item('Edges', collapsed=False)
-        eItem.addWidget(_w(InclusionEdge, self.eGroup, edges))
-        eItem.addWidget(_w(InputEdge, self.eGroup, edges))
-        eItem.addWidget(_w(InstanceOfEdge, self.eGroup, edges))
-
-        self.palette = Palette()
-        self.palette.addItem(pItem)
-        self.palette.addItem(cItem)
-        self.palette.addItem(eItem)
+        self.paletteE = Palette('Edges', ':/icons/add')
+        self.paletteE.addButton(BTN(InclusionEdge, self.paletteE_group, edges))
+        self.paletteE.addButton(BTN(InputEdge, self.paletteE_group, edges))
+        self.paletteE.addButton(BTN(InstanceOfEdge, self.paletteE_group, edges))
 
         ############################################### MDI AREA #######################################################
 
-        self.mdiArea = MdiArea(self.overview)
+        self.mdiArea = MdiArea(self.navigator, self.overview)
         self.mdiArea.subWindowActivated.connect(self.handleSubWindowActivated)
 
         ############################################## LEFT PANE #######################################################
 
-        self.leftPane = Pane(alignment=Qt.AlignLeft|Qt.AlignTop)
-        self.leftPane.addWidget(self.palette)
-
+        self.leftPane = Pane()
+        self.leftPane.addWidget(self.paletteP)
+        self.leftPane.addWidget(self.paletteC)
+        self.leftPane.addWidget(self.paletteE)
+        
         ############################################## RIGHT PANE ######################################################
 
-        self.rightPane = Pane(alignment=Qt.AlignRight|Qt.AlignTop)
+        self.rightPane = Pane()
+        self.rightPane.addWidget(self.navigator)
         self.rightPane.addWidget(self.overview)
 
         ############################################ CENTRAL WIDGET ####################################################
@@ -541,7 +539,7 @@ class MainWindow(QMainWindow):
         :param modifiers: keyboard modifiers held during edge insertion.
         """
         if not modifiers & Qt.ControlModifier:
-            self.paletteItems[edge.itemtype].setChecked(False)
+            self.palette_items[edge.itemtype].setChecked(False)
 
     @pyqtSlot('QGraphicsItem', int)
     def handleNodeInsertEnd(self, node, modifiers):
@@ -551,7 +549,7 @@ class MainWindow(QMainWindow):
         :param modifiers: keyboard modifiers held during node insertion.
         """
         if not modifiers & Qt.ControlModifier:
-            self.paletteItems[node.itemtype].setChecked(False)
+            self.palette_items[node.itemtype].setChecked(False)
 
     @pyqtSlot(int)
     def handleSceneModeChanged(self, mode):
@@ -560,7 +558,7 @@ class MainWindow(QMainWindow):
         :param mode: the scene operation mode.
         """
         if mode == DiagramScene.MoveItem:
-            for btn in self.paletteItems.values():
+            for btn in self.palette_items.values():
                 btn.setChecked(False)
 
     @pyqtSlot(int)
@@ -571,23 +569,23 @@ class MainWindow(QMainWindow):
         """
         mainview = self.mdiArea.activeView
         if not mainview:
-            for btn in self.paletteItems.values():
+            for btn in self.palette_items.values():
                 btn.setChecked(False)
         else:
             scene = mainview.scene()
             scene.clearSelection()
-            button = self.paletteItems[button_id]
+            button = self.palette_items[button_id]
 
-            for btn in self.paletteItems.values():
+            for btn in self.palette_items.values():
                 if btn != button:
                     btn.setChecked(False)
 
             if not button.isChecked():
                 scene.setMode(DiagramScene.MoveItem)
             else:
-                if button_id in self.paletteNodes:
+                if button_id in self.palette_nodes:
                     scene.setMode(DiagramScene.InsertNode, button.property('item'))
-                elif button_id in self.paletteEdges:
+                elif button_id in self.palette_edges:
                     scene.setMode(DiagramScene.InsertEdge, button.property('item'))
 
     @pyqtSlot('QMdiSubWindow')
