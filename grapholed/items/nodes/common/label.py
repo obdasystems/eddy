@@ -181,8 +181,9 @@ class Label(QGraphicsTextItem):
         Set the given text as plain text.
         :param text: the text value to set.
         """
+        moved = self.moved
         self.setPlainText(text)
-        self.updatePos()
+        self.updatePos(moved)
 
     def text(self):
         """
@@ -231,7 +232,6 @@ class Label(QGraphicsTextItem):
         # make sure we have something in the label
         if isEmpty(self.text()):
             self.setText(self.defaultText)
-            self.updatePos()
 
         # push the edit command in the stack only if the label actually changed
         if self.commandEdit and self.commandEdit.isTextChanged(self.text()):
@@ -268,6 +268,7 @@ class Label(QGraphicsTextItem):
         Executed when a key is pressed.
         :param keyEvent: the key press event.
         """
+        moved = self.moved
         if keyEvent.key() in {Qt.Key_Enter, Qt.Key_Return}:
             # enter has been pressed: allow insertion of a newline
             # character only if the shift modifier is being held
@@ -279,7 +280,7 @@ class Label(QGraphicsTextItem):
         else:
             # normal key press so allow insertion
             super().keyPressEvent(keyEvent)
-        self.updatePos()
+        self.updatePos(moved)
 
     def mouseDoubleClickEvent(self, mouseEvent):
         """
