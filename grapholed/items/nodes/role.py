@@ -54,8 +54,8 @@ class RoleNode(ResizableNode):
     indexE = 4
 
     itemtype = ItemType.RoleNode
-    minHeight = 60
-    minWidth = 80
+    minHeight = 50
+    minWidth = 70
     name = 'role'
     shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
     xmlname = 'role'

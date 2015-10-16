@@ -48,8 +48,8 @@ class ConceptNode(ResizableNode):
     This class implements the 'Concept' node.
     """
     itemtype = ItemType.ConceptNode
-    minHeight = 60
-    minWidth = 140
+    minHeight = 50
+    minWidth = 110
     name = 'concept'
     shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
     xmlname = 'concept'

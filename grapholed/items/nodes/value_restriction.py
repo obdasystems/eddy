@@ -56,8 +56,8 @@ class ValueRestrictionNode(ResizableNode):
 
     foldSize = 12
     itemtype = ItemType.ValueRestrictionNode
-    minHeight = 60
-    minWidth = 140
+    minHeight = 50
+    minWidth = 110
     name = 'value restriction'
     xmlname = 'value-restriction'
 
