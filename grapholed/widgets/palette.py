@@ -63,7 +63,6 @@ class Palette(PaneWidget):
             self.setContentsMargins(0, 0, 0, 0)
             self.setFixedWidth(Pane.MinWidth)
             self.numcol = 3
-            self.numwgt = 0
             self.indexC = 0
             self.indexR = 0
 
@@ -76,7 +75,6 @@ class Palette(PaneWidget):
             """
             self.mainLayout.addWidget(button, self.indexR, self.indexC)
             self.indexC += 1
-            self.numwgt += 1
             if self.indexC >= self.numcol:
                 self.indexC = 0
                 self.indexR += 1
@@ -116,4 +114,4 @@ class Palette(PaneWidget):
         # fixed height in the constructor (because we don't know the
         # exact height) so we need to continuously recalculate it
         sizeHint = self.widget.mainLayout.sizeHint()
-        self.body.setFixedHeight(sizeHint.height())
+        self.body.setFixedHeight(sizeHint.height() - 2 * self.widget.mainLayout.rowCount())
