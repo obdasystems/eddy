@@ -218,6 +218,9 @@ class Label(QGraphicsTextItem):
         self.setTextCursor(cursor)
         if not self.commandEdit:
             self.commandEdit = CommandNodeLabelEdit(node=self.parentItem(), label=self, text=self.text())
+        scene = self.scene()
+        scene.clearSelection()
+        self.setSelected(True)
         super().focusInEvent(focusEvent)
 
     def focusOutEvent(self, focusEvent):
