@@ -121,7 +121,7 @@ class ScenePropertiesDialog(QDialog):
             self.documentLayout.addRow('File', self.filepathF)
             self.documentLayout.addRow('Last edit', self.editedF)
 
-            self.mainWidget.addTab(self.documentWidget, 'Geometry')
+            self.mainWidget.addTab(self.documentWidget, 'Document')
 
         ################################################# BUTTON BOX ###################################################
 
