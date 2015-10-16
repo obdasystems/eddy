@@ -40,6 +40,7 @@ from grapholed.widgets.palette import Palette
 from grapholed.widgets.scene import DiagramScene
 from grapholed.widgets.view import MainView
 from grapholed.widgets.view import Navigator
+from grapholed.widgets.view import Navigator2
 
 # keep this as the last one since it uses all the modules imported above
 from grapholed.widgets.main import MainWindow

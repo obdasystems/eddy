@@ -168,9 +168,9 @@ class ScenePropertiesDialog(QDialog):
                 Y = set()
 
                 for item in items:
-                    BR = item.mapRectToScene(item.boundingRect())
-                    X |= {BR.left(), BR.right()}
-                    Y |= {BR.top(), BR.bottom()}
+                    B = item.mapRectToScene(item.boundingRect())
+                    X |= {B.left(), B.right()}
+                    Y |= {B.top(), B.bottom()}
 
                 # clamp size2 so that all the elements in the scene stays visible
                 size2 = max(size2, abs(min(X) * 2), abs(max(X) * 2), abs(min(Y) * 2), abs(max(Y) * 2))

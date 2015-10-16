@@ -57,6 +57,7 @@ from grapholed.widgets import DiagramScene
 from grapholed.widgets import Palette, Pane
 from grapholed.widgets import MainView, Navigator
 from grapholed.widgets import ZoomControl
+from grapholed.widgets import Navigator2
 
 
 class MainWindow(QMainWindow):
@@ -78,6 +79,7 @@ class MainWindow(QMainWindow):
         ############################################ EXTRA WIDGETS #####################################################
 
         self.nav = Navigator()
+        self.overview = Navigator2()
         self.zoomctl = ZoomControl()
 
         ################################################# ICONS ########################################################
@@ -385,7 +387,7 @@ class MainWindow(QMainWindow):
 
         ############################################### MDI AREA #######################################################
 
-        self.mdiArea = MdiArea(self.nav)
+        self.mdiArea = MdiArea(self.overview)
         self.mdiArea.subWindowActivated.connect(self.handleSubWindowActivated)
 
         ############################################## LEFT PANE #######################################################
@@ -396,7 +398,7 @@ class MainWindow(QMainWindow):
         ############################################## RIGHT PANE ######################################################
 
         self.rightPane = Pane(alignment=Qt.AlignRight|Qt.AlignTop)
-        self.rightPane.addWidget(self.nav)
+        self.rightPane.addWidget(self.overview)
 
         ############################################ CENTRAL WIDGET ####################################################
 

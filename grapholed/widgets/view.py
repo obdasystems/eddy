@@ -46,7 +46,7 @@ class MainView(QGraphicsView):
     """
     This class implements the main view displayed in the MDI area.
     """
-    navUpdate = pyqtSignal()
+    viewUpdate = pyqtSignal()
     zoomChanged = pyqtSignal(float)
 
     def __init__(self, scene):
@@ -157,7 +157,7 @@ class MainView(QGraphicsView):
         # if the main view has been repainted, emit a
         # signal so that also the navigator can update
         if event.type() == QEvent.Paint:
-            self.navUpdate.emit()
+            self.viewUpdate.emit()
         return super().viewportEvent(event)
 
     def wheelEvent(self, wheelEvent):
@@ -338,7 +338,7 @@ class Navigator(QWidget):
         ############################################ SIGNAL HANDLERS ###################################################
 
         @pyqtSlot()
-        def handleNavUpdate(self):
+        def handleMainViewUpdate(self):
             """
             Executed whenever the navigator view needs to be updated.
             """
@@ -362,7 +362,7 @@ class Navigator(QWidget):
             if self.mainview:
 
                 try:
-                    self.mainview.navUpdate.disconnect()
+                    self.mainview.viewUpdate.disconnect()
                 except RuntimeError:
                     # which happens when the subwindow containing the view is closed
                     pass
@@ -374,7 +374,7 @@ class Navigator(QWidget):
                 scene.sceneRectChanged.connect(self.handleSceneRectChanged)
                 self.setScene(scene)
                 self.fitInView(self.mainview.sceneRect(), Qt.KeepAspectRatio)
-                self.mainview.navUpdate.connect(self.handleNavUpdate)
+                self.mainview.viewUpdate.connect(self.handleMainViewUpdate)
             else:
                 # all subwindow closed => refresh so the foreground disappears
                 self.viewport().update()
@@ -519,6 +519,301 @@ class Navigator(QWidget):
 
         self.body = Navigator.Body()
         self.head = Navigator.Head(self.body)
+        self.head.setCollapsed(collapsed)
+
+        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
+        self.mainLayout.setContentsMargins(0, 0, 0, 4)
+        self.mainLayout.setSpacing(0)
+        self.mainLayout.addWidget(self.head)
+        self.mainLayout.addWidget(self.body)
+
+    ################################################# SHORTCUTS ########################################################
+
+    def setView(self, mainview):
+        """
+        Set the navigator over the given main view.
+        :param mainview: the main view from where to pick the scene for the navigator.
+        """
+        self.body.overview.setView(mainview)
+
+    ################################################ LAYOUT UPDATE #####################################################
+
+    def update(self, *__args):
+        """
+        Update the widget refreshing all the children.
+        """
+        self.head.update()
+        self.body.update()
+        super().update(*__args)
+
+
+
+
+class Navigator2(QWidget):
+    """
+    This class is used to display the current scene overview.
+    """
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   OVERVIEW                                                                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    class Overview(QGraphicsView):
+        """
+        This class implements the view shown in the navigator.
+        """
+
+        def __init__(self, parent=None):
+            """
+            Initialize the overview.
+            :param parent: the parent widget.
+            """
+            super().__init__(parent)
+            self.mousepressed = False
+            self.mainview = None
+
+        ########################################## CUSTOM VIEW DRAWING #################################################
+
+        def drawBackground(self, painter, rect):
+            """
+            Override scene drawBackground method so the grid is not rendered in the overview.
+            :param painter: the active painter
+            :param rect: the exposed rectangle
+            """
+            pass
+
+        def drawForeground(self, painter, rect):
+            """
+            Draw the navigation cursor.
+            :param painter: the active painter
+            :param rect: the exposed rectangle
+            """
+            pass
+
+        ######################################### MOUSE EVENT HANDLERS #################################################
+
+        def mousePressEvent(self, mouseEvent):
+            """
+            Executed when the mouse is pressed on the view.
+            :param mouseEvent: the mouse event instance.
+            """
+            if self.mainview:
+                self.mousepressed = True
+                self.mainview.centerOn(self.mapToScene(mouseEvent.pos()))
+
+        def mouseMoveEvent(self, mouseEvent):
+            """
+            Executed when the mouse is moved on the view.
+            :param mouseEvent: the mouse event instance.
+            """
+            if self.mainview and self.mousepressed:
+                self.mainview.centerOn(self.mapToScene(mouseEvent.pos()))
+
+        def mouseReleaseEvent(self, mouseEvent):
+            """
+            Executed when the mouse is released from the view.
+            :param mouseEvent: the mouse event instance.
+            """
+            if self.mainview:
+                self.mousepressed = False
+
+        ############################################ SIGNAL HANDLERS ###################################################
+
+        @pyqtSlot()
+        def handleMainViewUpdate(self):
+            """
+            Executed whenever the navigator view needs to be updated.
+            """
+            self.updateView()
+
+        ########################################### AUXILIARY METHODS ##################################################
+
+        def updateView(self):
+            """
+            Update the Overview so that it renders only the elements in the scene discarding empty space.
+            """
+            if self.mainview:
+
+                scene = self.mainview.scene()
+                items = scene.items()
+                if items:
+                    X = set()
+                    Y = set()
+                    for item in items:
+                        B = item.mapRectToScene(item.boundingRect())
+                        X |= {B.left(), B.right()}
+                        Y |= {B.top(), B.bottom()}
+
+                    padding = 20
+                    self.fitInView(QRectF(QPointF(min(X) - padding, min(Y) - padding),
+                                          QPointF(max(X) + padding, max(Y) + padding)), Qt.KeepAspectRatio)
+
+            self.viewport().update()
+
+        def setView(self, mainview):
+            """
+            Set the navigator over the given main view.
+            :param mainview: the mainView from where to pick the scene for the navigator.
+            """
+            if self.mainview:
+
+                try:
+                    self.mainview.viewUpdate.disconnect()
+                except RuntimeError:
+                    # which happens when the subwindow containing the view is closed
+                    pass
+
+            self.mainview = mainview
+
+            if self.mainview:
+                self.mainview.viewUpdate.connect(self.handleMainViewUpdate)
+                self.setScene(self.mainview.scene())
+
+            self.updateView()
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   HEAD                                                                                                           #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    class Head(QWidget):
+
+        def __init__(self, body, parent=None):
+            """
+            Initialize the header of the widget.
+            :param body: the body this header is controlling.
+            :param parent: the parent widget
+            """
+            super().__init__(parent)
+            self.body = body
+            self.iconUp = QPixmap(':/icons/arrow-up')
+            self.iconDown = QPixmap(':/icons/arrow-down')
+            self.iconZoom = shaded(QPixmap(':/icons/zoom'), 0.7)
+            self.headText = QLabel('Navigator')
+            self.headImg1 = QLabel()
+            self.headImg1.setPixmap(self.iconZoom)
+            self.headImg2 = QLabel()
+
+            self.headLayout = QHBoxLayout(self)
+            self.headLayout.addWidget(self.headImg1, 0, Qt.AlignLeft)
+            self.headLayout.addWidget(self.headText, 1, Qt.AlignLeft)
+            self.headLayout.addWidget(self.headImg2, 0, Qt.AlignRight)
+            self.headLayout.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            self.headLayout.setContentsMargins(5, 4, 5, 4)
+
+            self.setFixedSize(216, 30)
+            self.setContentsMargins(0, 0, 0, 0)
+
+        ############################################## EVENT HANDLERS ##################################################
+
+        def enterEvent(self, event):
+            """
+            Executed when the mouse enter the widget area.
+            :param event: the event instance.
+            """
+            self.setCursor(Qt.PointingHandCursor)
+
+        def leaveEvent(self, event):
+            """
+            Executed when the mouse leaves the widget area.
+            :param event: the event instance.
+            """
+            self.setCursor(Qt.ArrowCursor)
+
+        def mousePressEvent(self, mouseEvent):
+            """
+            Executed when the mouse is pressed on the widget.
+            :param mouseEvent: the event instance.
+            """
+            self.setCollapsed(self.body.isVisible())
+
+        ############################################ AUXILIARY METHODS #################################################
+
+        def setCollapsed(self, collapsed):
+            """
+            Set the collapsed status (of the attached body).
+            :param collapsed: True if the body attached to the header should be collapsed, False otherwise.
+            """
+            self.body.setVisible(not collapsed)
+            self.headImg2.setPixmap(self.iconDown if collapsed else self.iconUp)
+            self.setProperty('class', 'collapsed' if collapsed else 'normal')
+            # refresh the widget stylesheet
+            self.style().unpolish(self)
+            self.style().polish(self)
+            # refresh the label stylesheet
+            self.headText.style().unpolish(self.headText)
+            self.headText.style().polish(self.headText)
+            self.update()
+
+        ############################################## LAYOUT UPDATE ###################################################
+
+        def update(self, *__args):
+            """
+            Update the widget refreshing all the children.
+            """
+            self.headText.update()
+            self.headImg1.update()
+            super().update(*__args)
+
+        ############################################## ITEM PAINTING ###################################################
+
+        def paintEvent(self, paintEvent):
+            """
+            This is needed for the widget to pick the stylesheet.
+            :param paintEvent: the paint event instance.
+            """
+            option = QStyleOption()
+            option.initFrom(self)
+            painter = QPainter(self)
+            self.style().drawPrimitive(QStyle.PE_Widget, option, painter, self)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   BODY                                                                                                           #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    class Body(QWidget):
+
+        def __init__(self, parent=None):
+            """
+            Initialize the body of the widget.
+            :param parent: the parent widget.
+            """
+            super().__init__(parent)
+            self.overview = Navigator2.Overview()
+            self.bodyLayout = QVBoxLayout(self)
+            self.bodyLayout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
+            self.bodyLayout.setContentsMargins(0, 0, 0, 0)
+            self.bodyLayout.addWidget(self.overview)
+            self.setFixedSize(216, 216)
+            self.setContentsMargins(0, 0, 0, 0)
+
+        ############################################# ITEM PAINTING ####################################################
+
+        def paintEvent(self, paintEvent):
+            """
+            This is needed for the widget to pick the stylesheet.
+            :param paintEvent: the paint event instance.
+            """
+            option = QStyleOption()
+            option.initFrom(self)
+            painter = QPainter(self)
+            self.style().drawPrimitive(QStyle.PE_Widget, option, painter, self)
+
+    def __init__(self, collapsed=False):
+        """
+        Initialize the navigator.
+        :param collapsed: whether the widget should be collapsed by default.
+        """
+        super().__init__()
+
+        self.body = Navigator2.Body()
+        self.head = Navigator2.Head(self.body)
         self.head.setCollapsed(collapsed)
 
         self.mainLayout = QVBoxLayout(self)
