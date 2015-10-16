@@ -38,7 +38,7 @@ from functools import partial
 from grapholed.functions import clamp
 from grapholed.widgets import ZoomControl, PaneWidget
 
-from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QEvent, pyqtSlot, QPointF, QTimer
+from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QEvent, pyqtSlot, QPointF, QTimer, QThread
 from PyQt5.QtGui import QPen, QColor
 from PyQt5.QtWidgets import QGraphicsView
 
@@ -293,15 +293,14 @@ class Navigator(MainViewInspector):
         """
         This class implements the view shown in the navigator.
         """
-        navBrush = QColor(250, 140, 140, 100)
-        navPen = QPen(QColor(250, 0, 0, 100), 1.0, Qt.SolidLine)
-
         def __init__(self, parent=None):
             """
             Initialize the navigator inner widget.
             :param parent: the parent widget.
             """
             super().__init__(parent)
+            self.navBrush = QColor(250, 140, 140, 100)
+            self.navPen = QPen(QColor(250, 0, 0, 100), 1.0, Qt.SolidLine)
             self.mousepressed = False
             self.mainview = None
 
@@ -366,7 +365,7 @@ class Navigator(MainViewInspector):
         ############################################ SIGNAL HANDLERS ###################################################
 
         @pyqtSlot()
-        def handleMainViewUpdate(self):
+        def handleMainViewUpdated(self):
             """
             Executed whenever the navigator view needs to be updated.
             """
@@ -393,7 +392,6 @@ class Navigator(MainViewInspector):
                     scene.sceneRectChanged.disconnect()
                     self.mainview.viewUpdated.disconnect()
                 except (RuntimeError, TypeError):
-                    # which happens when the subwindow containing the view is closed
                     pass
 
                 self.mainview = None
@@ -407,19 +405,17 @@ class Navigator(MainViewInspector):
             """
             self.clearView()
 
-            self.mainview = mainview
-
-            if self.mainview:
-                scene = self.mainview.scene()
+            if mainview:
+                scene = mainview.scene()
                 # attach signals to new slots
                 scene.sceneRectChanged.connect(self.handleSceneRectChanged)
-                self.mainview.viewUpdated.connect(self.handleMainViewUpdate)
+                mainview.viewUpdated.connect(self.handleMainViewUpdated)
                 # fit the scene in the view
                 self.setScene(scene)
-                self.fitInView(self.mainview.sceneRect(), Qt.KeepAspectRatio)
-            else:
-                # all subwindow closed => refresh so the foreground disappears
-                self.viewport().update()
+                self.fitInView(mainview.sceneRect(), Qt.KeepAspectRatio)
+
+            self.mainview = mainview
+            self.viewport().update()
 
     def __init__(self, collapsed=False):
         """
@@ -462,6 +458,31 @@ class Overview(MainViewInspector):
         """
         This class implements the view shown in the navigator.
         """
+        class UpdateThread(QThread):
+            """
+            This class implements a thread which is used to update the overview.
+            """
+            def run(self):
+                """
+                Threaded implementation.
+                """
+                parent = self.parent()
+                if parent.mainview:
+                    scene = parent.mainview.scene()
+                    items = scene.items()
+                    if items:
+                        X = set()
+                        Y = set()
+                        for item in items:
+                            B = item.mapRectToScene(item.boundingRect())
+                            X |= {B.left(), B.right()}
+                            Y |= {B.top(), B.bottom()}
+
+                        margin = 10
+                        parent.fitInView(QRectF(QPointF(min(X) - margin, min(Y) - margin),
+                                                QPointF(max(X) + margin, max(Y) + margin)), Qt.KeepAspectRatio)
+
+                parent.viewport().update()
 
         def __init__(self, parent=None):
             """
@@ -471,6 +492,7 @@ class Overview(MainViewInspector):
             super().__init__(parent)
             self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
             self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            self.updatethread = Overview.Widget.UpdateThread(self)
             self.mousepressed = False
             self.mainview = None
 
@@ -532,7 +554,7 @@ class Overview(MainViewInspector):
         ############################################ SIGNAL HANDLERS ###################################################
 
         @pyqtSlot()
-        def handleMainViewUpdate(self):
+        def handleMainViewUpdated(self):
             """
             Executed whenever the navigator view needs to be updated.
             """
@@ -549,10 +571,9 @@ class Overview(MainViewInspector):
                 try:
                     self.mainview.viewUpdated.disconnect()
                 except (RuntimeError, TypeError):
-                    # which happens when the subwindow containing the view is closed
                     pass
-
-                self.mainview = None
+                finally:
+                    self.mainview = None
 
             self.viewport().update()
 
@@ -560,23 +581,8 @@ class Overview(MainViewInspector):
             """
             Update the Overview so that it renders only the elements in the scene discarding empty space.
             """
-            if self.mainview:
-
-                scene = self.mainview.scene()
-                items = scene.items()
-                if items:
-                    X = set()
-                    Y = set()
-                    for item in items:
-                        B = item.mapRectToScene(item.boundingRect())
-                        X |= {B.left(), B.right()}
-                        Y |= {B.top(), B.bottom()}
-
-                    padding = 10
-                    self.fitInView(QRectF(QPointF(min(X) - padding, min(Y) - padding),
-                                          QPointF(max(X) + padding, max(Y) + padding)), Qt.KeepAspectRatio)
-
-            self.viewport().update()
+            if not self.updatethread.isRunning():
+                self.updatethread.start()
 
         def setView(self, mainview):
             """
@@ -585,12 +591,11 @@ class Overview(MainViewInspector):
             """
             self.clearView()
 
+            if mainview:
+                mainview.viewUpdated.connect(self.handleMainViewUpdated)
+                self.setScene(mainview.scene())
+
             self.mainview = mainview
-
-            if self.mainview:
-                self.mainview.viewUpdated.connect(self.handleMainViewUpdate)
-                self.setScene(self.mainview.scene())
-
             self.updateView()
 
     def __init__(self, collapsed=False):
