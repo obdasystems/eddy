@@ -362,6 +362,13 @@ class Navigator(MainViewInspector):
                 if self.mainview:
                     self.mousepressed = False
 
+        def wheelEvent(self, wheelEvent):
+            """
+            Turn off wheel event since we don't need to scroll anything.
+            :param wheelEvent: the mouse wheel event.
+            """
+            pass
+
         ############################################ SIGNAL HANDLERS ###################################################
 
         @pyqtSlot()
@@ -550,6 +557,13 @@ class Overview(MainViewInspector):
             if mouseEvent.buttons() & Qt.LeftButton:
                 if self.mainview:
                     self.mousepressed = False
+
+        def wheelEvent(self, wheelEvent):
+            """
+            Turn off wheel event since we don't need to scroll anything.
+            :param wheelEvent: the mouse wheel event.
+            """
+            pass
 
         ############################################ SIGNAL HANDLERS ###################################################
 
