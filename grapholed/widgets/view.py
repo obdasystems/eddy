@@ -267,6 +267,8 @@ class MainViewInspector(PaneWidget):
     """
     __metaclass__ = ABCMeta
 
+    ############################################## WIDGET INTERFACE ####################################################
+
     @abstractmethod
     def clearView(self):
         """
@@ -324,32 +326,42 @@ class Navigator(MainViewInspector):
                 painter.setBrush(self.navBrush)
                 painter.drawRect(self.mainview.visibleRect())
 
-        ######################################### MOUSE EVENT HANDLERS #################################################
+        ############################################ EVENT HANDLERS ####################################################
+
+        def contextMenuEvent(self, menuEvent):
+            """
+            Turn off the context menu for this view.
+            :param menuEvent: the context menu event instance.
+            """
+            pass
 
         def mousePressEvent(self, mouseEvent):
             """
             Executed when the mouse is pressed on the view.
             :param mouseEvent: the mouse event instance.
             """
-            if self.mainview:
-                self.mousepressed = True
-                self.mainview.centerOn(self.mapToScene(mouseEvent.pos()))
+            if mouseEvent.buttons() & Qt.LeftButton:
+                if self.mainview:
+                    self.mousepressed = True
+                    self.mainview.centerOn(self.mapToScene(mouseEvent.pos()))
 
         def mouseMoveEvent(self, mouseEvent):
             """
             Executed when the mouse is moved on the view.
             :param mouseEvent: the mouse event instance.
             """
-            if self.mainview and self.mousepressed:
-                self.mainview.centerOn(self.mapToScene(mouseEvent.pos()))
+            if mouseEvent.buttons() & Qt.LeftButton:
+                if self.mainview and self.mousepressed:
+                    self.mainview.centerOn(self.mapToScene(mouseEvent.pos()))
 
         def mouseReleaseEvent(self, mouseEvent):
             """
             Executed when the mouse is released from the view.
             :param mouseEvent: the mouse event instance.
             """
-            if self.mainview:
-                self.mousepressed = False
+            if mouseEvent.buttons() & Qt.LeftButton:
+                if self.mainview:
+                    self.mousepressed = False
 
         ############################################ SIGNAL HANDLERS ###################################################
 
@@ -480,32 +492,42 @@ class Overview(MainViewInspector):
             """
             pass
 
-        ######################################### MOUSE EVENT HANDLERS #################################################
+        ############################################ EVENT HANDLERS ####################################################
+
+        def contextMenuEvent(self, menuEvent):
+            """
+            Turn off the context menu for this view.
+            :param menuEvent: the context menu event instance.
+            """
+            pass
 
         def mousePressEvent(self, mouseEvent):
             """
             Executed when the mouse is pressed on the view.
             :param mouseEvent: the mouse event instance.
             """
-            if self.mainview:
-                self.mousepressed = True
-                self.mainview.centerOn(self.mapToScene(mouseEvent.pos()))
+            if mouseEvent.buttons() & Qt.LeftButton:
+                if self.mainview:
+                    self.mousepressed = True
+                    self.mainview.centerOn(self.mapToScene(mouseEvent.pos()))
 
         def mouseMoveEvent(self, mouseEvent):
             """
             Executed when the mouse is moved on the view.
             :param mouseEvent: the mouse event instance.
             """
-            if self.mainview and self.mousepressed:
-                self.mainview.centerOn(self.mapToScene(mouseEvent.pos()))
+            if mouseEvent.buttons() & Qt.LeftButton:
+                if self.mainview and self.mousepressed:
+                    self.mainview.centerOn(self.mapToScene(mouseEvent.pos()))
 
         def mouseReleaseEvent(self, mouseEvent):
             """
             Executed when the mouse is released from the view.
             :param mouseEvent: the mouse event instance.
             """
-            if self.mainview:
-                self.mousepressed = False
+            if mouseEvent.buttons() & Qt.LeftButton:
+                if self.mainview:
+                    self.mousepressed = False
 
         ############################################ SIGNAL HANDLERS ###################################################
 
