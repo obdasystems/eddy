@@ -37,7 +37,7 @@ from datetime import datetime
 from PyQt5.QtCore import Qt, QPointF, QRectF
 from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
 
-from grapholed.commands import CommandNodeMove, CommandNodeSetURL, CommandNodeSetDescription
+from grapholed.commands import CommandNodeMove, CommandNodeSetURL, CommandNodeSetDescription, CommandSceneResize
 from grapholed.fields import StringEditField, TextEditField, SpinBox, IntEditField
 from grapholed.functions import clamp
 
@@ -177,7 +177,7 @@ class ScenePropertiesDialog(QDialog):
                 # clamp size2 so that all the elements in the scene stays visible
                 size2 = max(size2, abs(min(X) * 2), abs(max(X) * 2), abs(min(Y) * 2), abs(max(Y) * 2))
 
-            self.scene.setSceneRect(QRectF(-size2 / 2, -size2 / 2, size2, size2))
+            self.scene.undoStack.push(CommandSceneResize(self.scene, QRectF(-size2 / 2, -size2 / 2, size2, size2)))
 
 
 ################################################### NODE PROPERTIES ####################################################

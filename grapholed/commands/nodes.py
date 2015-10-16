@@ -32,8 +32,9 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QRectF
 from grapholed.datatypes import RestrictionType
+
+from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QPolygonF
 from PyQt5.QtWidgets import QUndoCommand
 

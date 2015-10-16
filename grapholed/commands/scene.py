@@ -32,25 +32,28 @@
 ##########################################################################
 
 
-from grapholed.commands.nodes import CommandNodeAdd
-from grapholed.commands.nodes import CommandNodeSetZValue
-from grapholed.commands.nodes import CommandNodeRezize
-from grapholed.commands.nodes import CommandNodeMove
-from grapholed.commands.nodes import CommandNodeLabelMove
-from grapholed.commands.nodes import CommandNodeLabelEdit
-from grapholed.commands.nodes import CommandNodeValueDomainSelectDatatype
-from grapholed.commands.nodes import CommandNodeHexagonSwitchTo
-from grapholed.commands.nodes import CommandNodeSquareChangeRestriction
-from grapholed.commands.nodes import CommandNodeSetURL
-from grapholed.commands.nodes import CommandNodeSetDescription
+from PyQt5.QtWidgets import QUndoCommand
 
-from grapholed.commands.edges import CommandEdgeAdd
-from grapholed.commands.edges import CommandEdgeAnchorMove
-from grapholed.commands.edges import CommandEdgeBreakpointAdd
-from grapholed.commands.edges import CommandEdgeBreakpointMove
-from grapholed.commands.edges import CommandEdgeBreakpointDel
 
-from grapholed.commands.common import CommandItemsMultiAdd
-from grapholed.commands.common import CommandItemsMultiRemove
+class CommandSceneResize(QUndoCommand):
+    """
+    This command is used to resize the scene rect
+    """
+    def __init__(self, scene, rect):
+        """
+        Initialize the command.
+        :param scene: the scene being resized.
+        :param rect: the new scene rect.
+        """
+        super().__init__('resize diagram')
+        self.scene = scene
+        self.rect1 = scene.sceneRect()
+        self.rect2 = rect
 
-from grapholed.commands.scene import CommandSceneResize
+    def redo(self):
+        """redo the command"""
+        self.scene.setSceneRect(self.rect2)
+
+    def undo(self):
+        """undo the command"""
+        self.scene.setSceneRect(self.rect1)
