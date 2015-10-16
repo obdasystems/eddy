@@ -187,7 +187,7 @@ class SplashScreen(QLabel):
         :param min_splash_time: the minimum amount of seconds the splash screen should be drawn.
         """
         self.min_splash_time = time() + min_splash_time
-        super().__init__(None, Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint)
+        super().__init__(None, Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint|Qt.SplashScreen)
         self.setPixmap(QPixmap(':/images/splash'))
         self.setAttribute(Qt.WA_TranslucentBackground)
 
