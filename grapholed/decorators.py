@@ -36,7 +36,7 @@ from functools import partial
 
 
 # noinspection PyCallByClass
-# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences,PyTypeChecker
 class memoized(object):
     """
     Cache the return value of a method/function.
@@ -91,11 +91,3 @@ class memoized(object):
          Return the function's docstring.
          """
          return self.func.__doc__
-
-
-class classproperty(property):
-    """
-    Property to be used with class methods (SET IS NOT SUPPORTED).
-    """
-    def __get__(self, cls, owner):
-        return self.fget.__get__(None, owner)()
