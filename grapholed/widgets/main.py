@@ -609,9 +609,9 @@ class MainWindow(QMainWindow):
 
                 # detach signals from the old view/scene: will raise an exception if the scene got closed
                 # since the action reference has been destroyed and we don't need to detach anything
-                self.actionItemCut.disconnect()
-                self.actionItemCopy.disconnect()
-                self.actionItemPaste.disconnect()
+                self.actionItemCut.triggered.disconnect()
+                self.actionItemCopy.triggered.disconnect()
+                self.actionItemPaste.triggered.disconnect()
                 self.actionItemDelete.triggered.disconnect()
                 self.actionBringToFront.triggered.disconnect()
                 self.actionSendToBack.triggered.disconnect()
