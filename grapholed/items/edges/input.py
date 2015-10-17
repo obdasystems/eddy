@@ -110,7 +110,7 @@ class InputEdge(Edge):
         :rtype: Edge
         """
         edge = super().fromGraphol(scene, E)
-        edge.functionality = bool(E.attribute('functional', '0'))
+        edge.functionality = bool(int(E.attribute('functional', '0')))
         edge.updateEdge()
         return edge
 

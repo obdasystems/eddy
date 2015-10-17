@@ -105,7 +105,7 @@ class InclusionEdge(Edge):
         :rtype: Edge
         """
         edge = super().fromGraphol(scene, E)
-        edge.complete = bool(E.attribute('complete', '0'))
+        edge.complete = bool(int(E.attribute('complete', '0')))
         edge.updateEdge()
         return edge
 
