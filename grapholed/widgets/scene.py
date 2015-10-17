@@ -34,7 +34,7 @@
 
 import os
 
-from PyQt5.QtCore import Qt, pyqtSignal, QPointF, pyqtSlot, QSettings
+from PyQt5.QtCore import Qt, pyqtSignal, QPointF, pyqtSlot, QSettings, QRectF
 from PyQt5.QtGui import QPen, QColor, QIcon
 from PyQt5.QtPrintSupport import QPrinter
 from PyQt5.QtWidgets import QGraphicsScene, QUndoStack, QMenu, QAction
@@ -848,3 +848,24 @@ class DiagramScene(QGraphicsScene):
                         # add the copy of the edge to the collection
                         self.clipboard['edges'][edge.id] = copy
                         self.clipboardPasteOffsetZ = max(self.clipboardPasteOffsetZ, edge.zValue())
+
+    def visibleRect(self, margin=0):
+        """
+        Returns a rectangle matching the area of visible items.
+        Will return None if there is no item in the diagram.
+        :param margin: extra margin to be added to the sides of the rectangle.
+        :rtype: QRectF
+        """
+        items = self.items()
+        if items:
+
+            X = set()
+            Y = set()
+            for item in items:
+                B = item.mapRectToScene(item.boundingRect())
+                X |= {B.left(), B.right()}
+                Y |= {B.top(), B.bottom()}
+
+            return QRectF(QPointF(min(X) - margin, min(Y) - margin), QPointF(max(X) + margin, max(Y) + margin))
+
+        return None
