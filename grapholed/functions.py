@@ -32,6 +32,7 @@
 ##########################################################################
 
 
+import functools
 import math
 import os
 import sys
@@ -66,6 +67,37 @@ def clamp(val, minval=None, maxval=None):
     if maxval is not None:
         val = min(val, maxval)
     return val
+
+
+def connect(signal, slot, *args, **kwargs):
+    """
+    Connect the given signal to the specified slots passing all arguments to the slot.
+    :param signal: the signal to attach.
+    :param slot: the slot where to attach the signal.
+    """
+    if not args and not kwargs:
+        signal.connect(slot)
+    else:
+        signal.connect(functools.partial(slot, *args, **kwargs))
+
+
+def disconnect(signal, *args):
+    """
+    Disconnect the given signal.
+    If slots are supplied as positional arguments, the signal will be detached only form the given slots.
+    :param signal: the signal to disconnect.
+    """
+    if args:
+        for slot in args:
+            try:
+                signal.disconnect(slot)
+            except (RuntimeError, TypeError, AttributeError):
+                pass
+    else:
+        try:
+            signal.disconnect()
+        except (RuntimeError, TypeError, AttributeError):
+            pass
 
 
 def distanceP(p1, p2):
@@ -138,7 +170,7 @@ def getPath(path):
         - @home => will be expanded to the grapholed home directory path (.grapholed in $HOME)
         - ~ => will be expanded to the user home directory ($HOME)
 
-    :param path: the relative path to expand
+    :param path: the relative path to expand.
     :rtype: str
     """
     if path.startswith('@grapholed\\') or path.startswith('@grapholed/'):
