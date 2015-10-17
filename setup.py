@@ -482,6 +482,7 @@ setup(
                 'PyQt5.QtXml',
             ],
             'include_files': [
+                ('examples', 'examples'),
                 ('grapholed/stylesheets', 'stylesheets'),
                 ('LICENSE', 'LICENSE'),
                 ('CONTRIBUTING.md', 'CONTRIBUTING.md'),
