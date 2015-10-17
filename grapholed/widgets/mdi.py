@@ -219,25 +219,36 @@ class MdiSubWindow(QMdiSubWindow):
                 return self.exportSceneToPdfFile(scene, filepath)
         return False
 
-    @staticmethod
-    def exportSceneToPdfFile(scene, filepath):
+    def exportSceneToPdfFile(self, scene, filepath):
         """
         Export the given scene as PDF saving it in the given filepath.
         :param scene: the scene to be exported.
         :param filepath: the filepath where to export the scene.
         :return: True if the export has been performed, False otherwise.
         """
+        mainview = self.widget()
+        scene = mainview.scene()
+        shape = scene.visibleRect(margin=20)
+        if not shape:
+            box = QMessageBox()
+            box.setIconPixmap(QPixmap(':/icons/info'))
+            box.setWindowTitle('Empty document!')
+            box.setText('The document you are trying to export is empty!')
+            box.setStandardButtons(QMessageBox.Ok)
+            box.exec_()
+            return False
+
         printer = QPrinter(QPrinter.HighResolution)
         printer.setOutputFormat(QPrinter.PdfFormat)
         printer.setOutputFileName(filepath)
         printer.setPaperSize(QPrinter.Custom)
-        printer.setPageSize(QPageSize(QSizeF(scene.width(), scene.height()), QPageSize.Point))
+        printer.setPageSize(QPageSize(QSizeF(shape.width(), shape.height()), QPageSize.Point))
 
         painter = QPainter()
         if not painter.begin(printer):
             return False
 
-        scene.render(painter)
+        scene.render(painter, source=shape)
         painter.end()
         return True
 
