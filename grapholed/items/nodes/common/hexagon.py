@@ -34,9 +34,9 @@
 
 from abc import ABCMeta
 from collections import OrderedDict
-from functools import partial
 
 from grapholed.commands import CommandNodeHexagonSwitchTo
+from grapholed.functions import connect
 from grapholed.items.nodes.common.base import Node
 
 from PyQt5.QtCore import Qt, QRectF, QPointF
@@ -107,9 +107,9 @@ class HexagonNode(Node):
         for k, v in data.items():
             if not isinstance(self, k):
                 action = QAction(v, scene)
-                action.triggered.connect(partial(self.switchTo, clazz=k))
+                connect(action.triggered, self.switchTo, clazz=k)
                 subMenu.addAction(action)
-
+                
         return menu
 
     def height(self):

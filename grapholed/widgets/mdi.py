@@ -37,7 +37,7 @@ import traceback
 
 from grapholed.datatypes import FileType
 from grapholed.dialogs import SaveFileDialog
-from grapholed.functions import getPath
+from grapholed.functions import getPath, connect
 
 from PyQt5.QtCore import pyqtSlot, Qt, QFile, QTextStream, QIODevice, pyqtSignal, QSizeF
 from PyQt5.QtGui import QPainter, QPageSize, QPixmap
@@ -63,8 +63,8 @@ class MdiArea(QMdiArea):
         self.setTabsClosable(True)
         self.setTabsMovable(True)
         self.setContentsMargins(0, 0, 0, 0)
-        self.subWindowActivated.connect(self.handleSubWindowActivated)
         self.inspectors = args
+        connect(self.subWindowActivated, self.handleSubWindowActivated)
 
     ################################################ PROPERTIES ########################################################
 

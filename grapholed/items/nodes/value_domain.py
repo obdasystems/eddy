@@ -32,11 +32,10 @@
 ##########################################################################
 
 
-from functools import partial
-
 from grapholed.commands import CommandNodeValueDomainSelectDatatype
 from grapholed.datatypes import Font, XsdDatatype
 from grapholed.exceptions import ParseError
+from grapholed.functions import connect
 from grapholed.items import ItemType
 from grapholed.items.nodes.common.base import Node
 from grapholed.items.nodes.common.label import Label
@@ -89,7 +88,7 @@ class ValueDomainNode(Node):
             action = QAction(datatype.value, scene)
             action.setCheckable(True)
             action.setChecked(datatype == self.datatype)
-            action.triggered.connect(partial(self.updateDatatype, datatype=datatype))
+            connect(action.triggered, self.updateDatatype, datatype=datatype)
             subMenu.addAction(action)
 
         return menu

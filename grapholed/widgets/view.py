@@ -33,9 +33,8 @@
 
 
 from abc import ABCMeta, abstractmethod
-from functools import partial
 
-from grapholed.functions import clamp
+from grapholed.functions import clamp, connect, disconnect
 from grapholed.widgets import ZoomControl, PaneWidget
 
 from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QEvent, pyqtSlot, QPointF, QTimer
@@ -236,7 +235,7 @@ class MainView(QGraphicsView):
         # also if we are not moving the mouse anymore but we are
         # holding the position outside the viewport rect
         self.viewMove = QTimer()
-        self.viewMove.timeout.connect(partial(self.moveBy, delta))
+        connect(self.viewMove.timeout, self.moveBy, delta)
         self.viewMove.start(rate)
 
     def stopViewMove(self):
@@ -244,14 +243,9 @@ class MainView(QGraphicsView):
         Stop the view movement by destroying the timer object causing it.
         """
         if self.viewMove:
-
-            try:
-                self.viewMove.stop()
-                self.viewMove.timeout.disconnect()
-            except RuntimeError:
-                pass
-            finally:
-                self.viewMove = None
+            self.viewMove.stop()
+            disconnect(self.viewMove.timeout)
+            self.viewMove = None
 
     def visibleRect(self):
         """
@@ -396,12 +390,13 @@ class Navigator(MainViewInspector):
 
                 try:
                     scene = self.mainview.scene()
-                    scene.sceneRectChanged.disconnect()
-                    self.mainview.updated.disconnect()
-                except (RuntimeError, TypeError):
+                    disconnect(scene.sceneRectChanged)
+                    disconnect(self.mainview.updated)
+                except RuntimeError:
+                    # subwindow closed => we don't have the scene reference anymore
                     pass
-
-                self.mainview = None
+                finally:
+                    self.mainview = None
 
             self.viewport().update()
 
@@ -415,8 +410,8 @@ class Navigator(MainViewInspector):
             if mainview:
                 scene = mainview.scene()
                 # attach signals to new slots
-                scene.sceneRectChanged.connect(self.handleSceneRectChanged)
-                mainview.updated.connect(self.handleMainViewUpdated)
+                connect(scene.sceneRectChanged, self.handleSceneRectChanged)
+                connect(mainview.updated, self.handleMainViewUpdated)
                 # fit the scene in the view
                 self.setScene(scene)
                 self.fitInView(mainview.sceneRect(), Qt.KeepAspectRatio)
@@ -558,9 +553,10 @@ class Overview(MainViewInspector):
 
                 try:
                     scene = self.mainview.scene()
-                    scene.selectionChanged.disconnect()
-                    scene.updated.disconnect()
-                except (RuntimeError, TypeError):
+                    disconnect(scene.selectionChanged)
+                    disconnect(scene.updated)
+                except RuntimeError:
+                    # subwindow closed => we don't have the scene reference anymore
                     pass
                 finally:
                     self.mainview = None
@@ -597,8 +593,8 @@ class Overview(MainViewInspector):
 
             if mainview:
                 scene = mainview.scene()
-                scene.selectionChanged.connect(self.handleSceneUpdated)
-                scene.updated.connect(self.handleSceneUpdated)
+                connect(scene.selectionChanged, self.handleSceneUpdated)
+                connect(scene.updated, self.handleSceneUpdated)
                 self.setScene(scene)
 
             self.mainview = mainview

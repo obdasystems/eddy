@@ -33,7 +33,7 @@
 
 
 from grapholed.exceptions import ProgrammingError
-from grapholed.functions import shaded
+from grapholed.functions import shaded, connect
 
 from PyQt5.QtCore import Qt, QEvent, QSize, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QPixmap, QPainter
@@ -79,9 +79,10 @@ class Pane(QScrollArea):
                                    'expecting PaneItem'.format(widget.__class__.__name__))
         item = PaneWidgetItem()
         item.setFlags(item.flags() & ~Qt.ItemIsEditable & ~Qt.ItemIsSelectable & ~Qt.ItemIsEnabled)
-
         item.setSizeHint(widget.sizeHint())
-        widget.sizeChanged.connect(item.handleSizeChanged)
+
+        connect(widget.sizeChanged, item.handleSizeChanged)
+
         self.paneList.addItem(item)
         self.paneList.setItemWidget(item, widget)
 

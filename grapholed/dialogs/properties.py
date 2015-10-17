@@ -39,7 +39,7 @@ from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTa
 
 from grapholed.commands import CommandNodeMove, CommandNodeSetURL, CommandNodeSetDescription, CommandSceneResize
 from grapholed.fields import StringEditField, TextEditField, SpinBox, IntEditField
-from grapholed.functions import clamp
+from grapholed.functions import clamp, connect
 
 
 ################################################## SCENE PROPERTIES ####################################################
@@ -57,8 +57,6 @@ class ScenePropertiesDialog(QDialog):
         """
         super().__init__(parent)
         self.scene = scene
-        self.finished.connect(self.handleFinished)
-
         self.mainWidget = QTabWidget(self)
 
         ################################################ GENERAL TAB ###################################################
@@ -126,8 +124,6 @@ class ScenePropertiesDialog(QDialog):
         ################################################# BUTTON BOX ###################################################
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
 
         ################################################ MAIN LAYOUT ###################################################
 
@@ -137,6 +133,12 @@ class ScenePropertiesDialog(QDialog):
 
         self.setFixedSize(self.sizeHint())
         self.setWindowTitle('Scene properties')
+
+        ################################################## SIGNALS #####################################################
+
+        connect(self.finished, self.handleFinished)
+        connect(self.buttonBox.accepted, self.accept)
+        connect(self.buttonBox.rejected, self.reject)
 
     ################################################# SIGNAL HANDLERS ##################################################
 
@@ -196,8 +198,6 @@ class NodePropertiesDialog(QDialog):
 
         self.node = node
         self.scene = scene
-
-        self.finished.connect(self.handleFinished)
 
         ################################################ GENERAL TAB ###################################################
         
@@ -271,8 +271,6 @@ class NodePropertiesDialog(QDialog):
         ################################################# BUTTON BOX ###################################################
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
 
         ################################################ MAIN LAYOUT ###################################################
 
@@ -282,6 +280,12 @@ class NodePropertiesDialog(QDialog):
 
         self.setFixedSize(self.sizeHint())
         self.setWindowTitle('Properties')
+
+        ################################################## SIGNALS #####################################################
+
+        connect(self.finished, self.handleFinished)
+        connect(self.buttonBox.accepted, self.accept)
+        connect(self.buttonBox.rejected, self.reject)
 
     ################################################# SIGNAL HANDLERS ##################################################
 

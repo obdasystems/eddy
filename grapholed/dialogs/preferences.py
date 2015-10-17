@@ -32,11 +32,13 @@
 ##########################################################################
 
 
+from grapholed.fields import SpinBox
+from grapholed.functions import connect
 from grapholed import __appname__ as appname, __organization__ as organization
+
 from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
-from grapholed.fields import SpinBox
 
 
 class PreferencesDialog(QDialog):
@@ -50,7 +52,6 @@ class PreferencesDialog(QDialog):
         """
         super().__init__(parent)
 
-        self.finished.connect(self.handleFinished)
         self.settings = QSettings(organization, appname)
 
         ############################################### APPEARANCE TAB #################################################
@@ -73,8 +74,6 @@ class PreferencesDialog(QDialog):
         ################################################# BUTTON BOX ###################################################
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Close, Qt.Horizontal, self)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
 
         ################################################ MAIN LAYOUT ###################################################
 
@@ -84,6 +83,12 @@ class PreferencesDialog(QDialog):
 
         self.setFixedSize(self.sizeHint())
         self.setWindowTitle('Preferences')
+
+        ################################################# SIGNALS ######################################################
+
+        connect(self.buttonBox.accepted, self.accept)
+        connect(self.buttonBox.rejected, self.reject)
+        connect(self.finished, self.handleFinished)
 
     ################################################# SIGNAL HANDLERS ##################################################
 

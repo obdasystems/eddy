@@ -32,8 +32,8 @@
 ##########################################################################
 
 
-from functools import partial
 from math import sin, cos, radians, pi as M_PI
+from grapholed.functions import connect
 
 from grapholed.items import ItemType
 from grapholed.items.edges.common.base import Edge
@@ -75,13 +75,13 @@ class InputEdge(Edge):
         breakpoint = self.breakpointAt(pos)
         if breakpoint is not None:
             action = QAction(QIcon(':/icons/delete'), 'Remove breakpoint', self.scene())
-            action.triggered.connect(partial(self.breakpointDel, breakpoint=breakpoint))
+            connect(action.triggered, self.breakpointDel, breakpoint=breakpoint)
             menu.addAction(action)
         else:
             functionality = QAction('Functionality', self.scene())
             functionality.setCheckable(True)
             functionality.setChecked(self.functionality)
-            functionality.triggered.connect(self.handleToggleFunctionality)
+            connect(functionality.triggered, self.handleToggleFunctionality)
             menu.addAction(self.scene().actionItemDelete)
             menu.addSeparator()
             menu.addAction(functionality)

@@ -37,7 +37,7 @@ import os
 from PyQt5.QtCore import Qt, pyqtSignal, QPointF, pyqtSlot, QSettings
 from PyQt5.QtGui import QPen, QColor, QIcon
 from PyQt5.QtPrintSupport import QPrinter
-from PyQt5.QtWidgets import QGraphicsScene, QUndoStack, QMenu
+from PyQt5.QtWidgets import QGraphicsScene, QUndoStack, QMenu, QAction
 from PyQt5.QtXml import QDomDocument
 
 from grapholed import __appname__ as appname, __organization__ as organization
@@ -45,7 +45,7 @@ from grapholed.commands import CommandItemsMultiAdd, CommandItemsMultiRemove
 from grapholed.commands import CommandNodeAdd, CommandNodeSetZValue, CommandNodeMove
 from grapholed.commands import CommandEdgeAdd
 from grapholed.dialogs.properties import ScenePropertiesDialog
-from grapholed.functions import snapToGrid, rangeF
+from grapholed.functions import snapToGrid, rangeF, connect
 from grapholed.items import Item
 from grapholed.tools import UniqueID
 
@@ -173,12 +173,15 @@ class DiagramScene(QGraphicsScene):
         self.actionBringToFront = mainwindow.actionBringToFront
         self.actionSendToBack = mainwindow.actionSendToBack
         self.actionSelectAll = mainwindow.actionSelectAll
+        self.actionProperties = QAction('Properties...', self)
+        self.actionProperties.setIcon(QIcon(':/icons/preferences'))
 
         ################################################# SIGNALS ######################################################
 
-        self.nodeInsertEnd.connect(self.handleNodeInsertEnd)
-        self.edgeInsertEnd.connect(self.handleEdgeInsertEnd)
-        self.selectionChanged.connect(self.handleSelectionChanged)
+        connect(self.nodeInsertEnd, self.handleNodeInsertEnd)
+        connect(self.edgeInsertEnd, self.handleEdgeInsertEnd)
+        connect(self.selectionChanged, self.handleSelectionChanged)
+        connect(self.actionProperties.triggered, self.handleSceneProperties)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -398,10 +401,7 @@ class DiagramScene(QGraphicsScene):
 
             menu.addAction(self.actionSelectAll)
             menu.addSeparator()
-
-            prop = menu.addAction(QIcon(':/icons/preferences'), 'Properties...')
-            prop.triggered.connect(self.handleSceneProperties)
-
+            menu.addAction(self.actionProperties)
             menu.exec_(menuEvent.screenPos())
         else:
             super().contextMenuEvent(menuEvent)

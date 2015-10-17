@@ -35,12 +35,12 @@
 import re
 
 from abc import ABCMeta, abstractmethod
-from functools import partial
 
 from grapholed.commands import CommandNodeSquareChangeRestriction
 from grapholed.datatypes import RestrictionType
 from grapholed.dialogs import CardinalityRestrictionForm
 from grapholed.exceptions import ParseError
+from grapholed.functions import connect
 from grapholed.items.nodes.common.base import Node
 from grapholed.items.nodes.common.label import Label
 
@@ -92,7 +92,7 @@ class SquaredNode(Node):
             action = QAction(restriction.value, scene)
             action.setCheckable(True)
             action.setChecked(restriction is self.restriction)
-            action.triggered.connect(partial(self.updateRestriction, restriction=restriction))
+            connect(action.triggered, self.updateRestriction, restriction=restriction)
             subMenu.addAction(action)
 
         return menu

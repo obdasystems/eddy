@@ -49,7 +49,7 @@ from grapholed.datatypes import FileType
 from grapholed.dialogs import OpenFileDialog
 from grapholed.dialogs import PreferencesDialog
 from grapholed.exceptions import ParseError
-from grapholed.functions import getPath, shaded
+from grapholed.functions import getPath, shaded, connect, disconnect
 from grapholed.items import __mapping__
 from grapholed.items import *
 from grapholed.widgets import MdiArea, MdiSubWindow
@@ -74,7 +74,6 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.settings = QSettings(organization, appname)
         self.undoGroup = QUndoGroup()
-        self.undoGroup.cleanChanged.connect(self.handleUndoGroupCleanChanged)
 
         ########################################### AUXILIARY WIDGETS ##################################################
 
@@ -121,69 +120,58 @@ class MainWindow(QMainWindow):
         self.actionNewDocument.setIcon(self.iconNew)
         self.actionNewDocument.setShortcut(QKeySequence.New)
         self.actionNewDocument.setStatusTip('Create a new document')
-        self.actionNewDocument.triggered.connect(self.handleNewDocument)
 
         self.actionOpenDocument = QAction('Open...', self)
         self.actionOpenDocument.setIcon(self.iconOpen)
         self.actionOpenDocument.setShortcut(QKeySequence.Open)
         self.actionOpenDocument.setStatusTip('Open a document')
-        self.actionOpenDocument.triggered.connect(self.handleOpenDocument)
 
         self.actionSaveDocument = QAction('Save', self)
         self.actionSaveDocument.setIcon(self.iconSave)
         self.actionSaveDocument.setShortcut(QKeySequence.Save)
         self.actionSaveDocument.setStatusTip('Save the current document')
-        self.actionSaveDocument.triggered.connect(self.handleSaveDocument)
         self.actionSaveDocument.setEnabled(False)
 
         self.actionSaveDocumentAs = QAction('Save As...', self)
         self.actionSaveDocumentAs.setIcon(self.iconSaveAs)
         self.actionSaveDocumentAs.setShortcut(QKeySequence.SaveAs)
         self.actionSaveDocumentAs.setStatusTip('Save the active document')
-        self.actionSaveDocumentAs.triggered.connect(self.handleSaveDocumentAs)
         self.actionSaveDocumentAs.setEnabled(False)
 
         self.actionImportDocument = QAction('Import...', self)
         self.actionImportDocument.setStatusTip('Import a document')
-        self.actionImportDocument.triggered.connect(self.handleImportDocument)
 
         self.actionExportDocument = QAction('Export...', self)
         self.actionExportDocument.setStatusTip('Export the active document')
-        self.actionExportDocument.triggered.connect(self.handleExportDocument)
         self.actionExportDocument.setEnabled(False)
 
         self.actionPrintDocument = QAction('Print...', self)
         self.actionPrintDocument.setIcon(self.iconPrint)
         self.actionPrintDocument.setStatusTip('Print the active document')
-        self.actionPrintDocument.triggered.connect(self.handlePrintDocument)
         self.actionPrintDocument.setEnabled(False)
 
         self.actionCloseActiveSubWindow = QAction('Close', self)
         self.actionCloseActiveSubWindow.setIcon(self.iconClose)
         self.actionCloseActiveSubWindow.setShortcut(QKeySequence.Close)
         self.actionCloseActiveSubWindow.setStatusTip('Close the active document')
-        self.actionCloseActiveSubWindow.triggered.connect(lambda: self.mdiArea.activeSubWindow().close())
         self.actionCloseActiveSubWindow.setEnabled(False)
 
         self.actionOpenPreferences = QAction('Preferences', self)
         self.actionOpenPreferences.setIcon(self.iconPreferences)
         self.actionOpenPreferences.setShortcut(QKeySequence.Preferences)
         self.actionOpenPreferences.setStatusTip('Open application preferences dialog')
-        self.actionOpenPreferences.triggered.connect(self.handleOpenPreferences)
 
         self.actionQuit = QAction('Quit', self)
         self.actionQuit.setIcon(self.iconQuit)
         self.actionQuit.setStatusTip('Quit Grapholed')
         self.actionQuit.setShortcut(QKeySequence.Quit)
-        self.actionQuit.triggered.connect(self.close)
 
         self.actionSnapToGrid = QAction('Snap to grid', self)
         self.actionSnapToGrid.setIcon(self.iconGrid)
         self.actionSnapToGrid.setStatusTip('Snap scene elements to the grid')
         self.actionSnapToGrid.setCheckable(True)
         self.actionSnapToGrid.setChecked(self.settings.value('scene/snap_to_grid', False, bool))
-        self.actionSnapToGrid.triggered.connect(self.handleSnapToGrid)
-
+        
         self.actionItemCut = QAction('Cut', self)
         self.actionItemCut.setIcon(self.iconCut)
         self.actionItemCut.setShortcut(QKeySequence.Cut)
@@ -233,12 +221,10 @@ class MainWindow(QMainWindow):
 
         self.actionSapienzaWebOpen = QAction('DIAG - Sapienza university', self)
         self.actionSapienzaWebOpen.setIcon(self.iconLink)
-        self.actionSapienzaWebOpen.triggered.connect(lambda: webbrowser.open('http://www.dis.uniroma1.it/en'))
-
+        
         self.actionGrapholWebOpen = QAction('Graphol homepage', self)
         self.actionGrapholWebOpen.setIcon(self.iconLink)
-        self.actionGrapholWebOpen.triggered.connect(lambda: webbrowser.open('http://www.dis.uniroma1.it/~graphol/'))
-
+        
         ################################################# MENUS ########################################################
 
         self.menuFile = self.menuBar().addMenu("&File")
@@ -317,17 +303,14 @@ class MainWindow(QMainWindow):
         self.palette_nodes = dict()
         self.palette_edges = dict()
 
-        self.paletteP_group = QButtonGroup()
-        self.paletteP_group.setExclusive(False)
-        self.paletteP_group.buttonClicked[int].connect(self.handleToolBoxButtonClicked)
+        self.palettePG = QButtonGroup()
+        self.palettePG.setExclusive(False)
 
-        self.paletteC_group = QButtonGroup()
-        self.paletteC_group.setExclusive(False)
-        self.paletteC_group.buttonClicked[int].connect(self.handleToolBoxButtonClicked)
+        self.paletteCG = QButtonGroup()
+        self.paletteCG.setExclusive(False)
 
-        self.paletteE_group = QButtonGroup()
-        self.paletteE_group.setExclusive(False)
-        self.paletteE_group.buttonClicked[int].connect(self.handleToolBoxButtonClicked)
+        self.paletteEG = QButtonGroup()
+        self.paletteEG.setExclusive(False)
 
         nodes = [self.palette_items, self.palette_nodes]
         edges = [self.palette_items, self.palette_edges]
@@ -355,35 +338,34 @@ class MainWindow(QMainWindow):
             return button
 
         self.paletteP = Palette('Predicate nodes', ':/icons/add')
-        self.paletteP.addButton(BTN(ConceptNode, self.paletteP_group, nodes))
-        self.paletteP.addButton(BTN(RoleNode, self.paletteP_group, nodes))
-        self.paletteP.addButton(BTN(ValueDomainNode, self.paletteP_group, nodes))
-        self.paletteP.addButton(BTN(IndividualNode, self.paletteP_group, nodes))
-        self.paletteP.addButton(BTN(ValueRestrictionNode, self.paletteP_group, nodes))
-        self.paletteP.addButton(BTN(AttributeNode, self.paletteP_group, nodes))
+        self.paletteP.addButton(BTN(ConceptNode, self.palettePG, nodes))
+        self.paletteP.addButton(BTN(RoleNode, self.palettePG, nodes))
+        self.paletteP.addButton(BTN(ValueDomainNode, self.palettePG, nodes))
+        self.paletteP.addButton(BTN(IndividualNode, self.palettePG, nodes))
+        self.paletteP.addButton(BTN(ValueRestrictionNode, self.palettePG, nodes))
+        self.paletteP.addButton(BTN(AttributeNode, self.palettePG, nodes))
 
         self.paletteC = Palette('Constructor nodes', ':/icons/add')
-        self.paletteC.addButton(BTN(DomainRestrictionNode, self.paletteC_group, nodes))
-        self.paletteC.addButton(BTN(RangeRestrictionNode, self.paletteC_group, nodes))
-        self.paletteC.addButton(BTN(UnionNode, self.paletteC_group, nodes))
-        self.paletteC.addButton(BTN(EnumerationNode, self.paletteC_group, nodes))
-        self.paletteC.addButton(BTN(ComplementNode, self.paletteC_group, nodes))
-        self.paletteC.addButton(BTN(RoleChainNode, self.paletteC_group, nodes))
-        self.paletteC.addButton(BTN(IntersectionNode, self.paletteC_group, nodes))
-        self.paletteC.addButton(BTN(RoleInverseNode, self.paletteC_group, nodes))
-        self.paletteC.addButton(BTN(DatatypeRestrictionNode, self.paletteC_group, nodes))
-        self.paletteC.addButton(BTN(DisjointUnionNode, self.paletteC_group, nodes))
-        self.paletteC.addButton(BTN(PropertyAssertionNode, self.paletteC_group, nodes))
+        self.paletteC.addButton(BTN(DomainRestrictionNode, self.paletteCG, nodes))
+        self.paletteC.addButton(BTN(RangeRestrictionNode, self.paletteCG, nodes))
+        self.paletteC.addButton(BTN(UnionNode, self.paletteCG, nodes))
+        self.paletteC.addButton(BTN(EnumerationNode, self.paletteCG, nodes))
+        self.paletteC.addButton(BTN(ComplementNode, self.paletteCG, nodes))
+        self.paletteC.addButton(BTN(RoleChainNode, self.paletteCG, nodes))
+        self.paletteC.addButton(BTN(IntersectionNode, self.paletteCG, nodes))
+        self.paletteC.addButton(BTN(RoleInverseNode, self.paletteCG, nodes))
+        self.paletteC.addButton(BTN(DatatypeRestrictionNode, self.paletteCG, nodes))
+        self.paletteC.addButton(BTN(DisjointUnionNode, self.paletteCG, nodes))
+        self.paletteC.addButton(BTN(PropertyAssertionNode, self.paletteCG, nodes))
 
         self.paletteE = Palette('Edges', ':/icons/add')
-        self.paletteE.addButton(BTN(InclusionEdge, self.paletteE_group, edges))
-        self.paletteE.addButton(BTN(InputEdge, self.paletteE_group, edges))
-        self.paletteE.addButton(BTN(InstanceOfEdge, self.paletteE_group, edges))
+        self.paletteE.addButton(BTN(InclusionEdge, self.paletteEG, edges))
+        self.paletteE.addButton(BTN(InputEdge, self.paletteEG, edges))
+        self.paletteE.addButton(BTN(InstanceOfEdge, self.paletteEG, edges))
 
         ############################################### MDI AREA #######################################################
 
         self.mdiArea = MdiArea(self.navigator, self.overview)
-        self.mdiArea.subWindowActivated.connect(self.handleSubWindowActivated)
 
         ############################################## LEFT PANE #######################################################
 
@@ -416,6 +398,27 @@ class MainWindow(QMainWindow):
         posY = (screen.height() - MainWindow.MinHeight) / 2
         self.setGeometry(posX, posY, MainWindow.MinWidth, MainWindow.MinHeight)
         self.setMinimumSize(MainWindow.MinWidth, MainWindow.MinHeight)
+
+        ################################################ SIGNALS #######################################################
+
+        connect(self.undoGroup.cleanChanged, self.handleUndoGroupCleanChanged)
+        connect(self.actionNewDocument.triggered, self.handleNewDocument)
+        connect(self.actionOpenDocument.triggered, self.handleOpenDocument)
+        connect(self.actionSaveDocument.triggered, self.handleSaveDocument)
+        connect(self.actionSaveDocumentAs.triggered, self.handleSaveDocumentAs)
+        connect(self.actionImportDocument.triggered, self.handleImportDocument)
+        connect(self.actionExportDocument.triggered, self.handleExportDocument)
+        connect(self.actionPrintDocument.triggered, self.handlePrintDocument)
+        connect(self.actionCloseActiveSubWindow.triggered, lambda: self.mdiArea.activeSubWindow().close())
+        connect(self.actionOpenPreferences.triggered, self.handleOpenPreferences)
+        connect(self.actionQuit.triggered, self.close)
+        connect(self.actionSnapToGrid.triggered, self.handleSnapToGrid)
+        connect(self.actionSapienzaWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/en'))
+        connect(self.actionGrapholWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/~graphol/'))
+        connect(self.palettePG.buttonClicked[int], self.handleToolBoxButtonClicked)
+        connect(self.paletteCG.buttonClicked[int], self.handleToolBoxButtonClicked)
+        connect(self.paletteEG.buttonClicked[int], self.handleToolBoxButtonClicked)
+        connect(self.mdiArea.subWindowActivated, self.handleSubWindowActivated)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -552,7 +555,7 @@ class MainWindow(QMainWindow):
             self.palette_items[node.itemtype].setChecked(False)
 
     @pyqtSlot(int)
-    def handleSceneModeChanged(self, mode):
+    def handleModeChanged(self, mode):
         """
         Triggered when the scene operation mode changes.
         :param mode: the scene operation mode.
@@ -605,50 +608,35 @@ class MainWindow(QMainWindow):
             mainview = subwindow.widget()
             scene = mainview.scene()
 
-            try:
+            disconnect(self.actionItemCut.triggered)
+            disconnect(self.actionItemCopy.triggered)
+            disconnect(self.actionItemPaste.triggered)
+            disconnect(self.actionItemDelete.triggered)
+            disconnect(self.actionBringToFront.triggered)
+            disconnect(self.actionSendToBack.triggered)
+            disconnect(self.actionSelectAll.triggered)
+            disconnect(self.zoomctl.signalScaleChanged)
+            disconnect(mainview.zoomChanged)
 
-                # detach signals from the old view/scene: will raise an exception if the scene got closed
-                # since the action reference has been destroyed and we don't need to detach anything
-                self.actionItemCut.triggered.disconnect()
-                self.actionItemCopy.triggered.disconnect()
-                self.actionItemPaste.triggered.disconnect()
-                self.actionItemDelete.triggered.disconnect()
-                self.actionBringToFront.triggered.disconnect()
-                self.actionSendToBack.triggered.disconnect()
-                self.actionSelectAll.triggered.disconnect()
+            self.zoomctl.setEnabled(False)
+            self.zoomctl.setZoomLevel(self.zoomctl.index(mainview.zoom))
+            self.zoomctl.setEnabled(True)
+            
+ 
+            connect(self.actionItemCut.triggered, scene.handleItemCut)
+            connect(self.actionItemCopy.triggered, scene.handleItemCopy)
+            connect(self.actionItemPaste.triggered, scene.handleItemPaste)
+            connect(self.actionItemDelete.triggered, scene.handleItemDelete)
+            connect(self.actionBringToFront.triggered, scene.handleBringToFront)
+            connect(self.actionSendToBack.triggered, scene.handleSendToBack)
+            connect(self.actionSelectAll.triggered, scene.handleSelectAll)
+            connect(self.zoomctl.signalScaleChanged, mainview.handleScaleChanged)
+            connect(mainview.zoomChanged, self.zoomctl.handleMainViewZoomChanged)
 
-                self.zoomctl.signalScaleChanged.disconnect()
+            # update scene specific actions
+            scene.updateActions()
 
-                mainview.zoomChanged.disconnect()
-
-            except (RuntimeError, TypeError):
-
-                # just do nothing since we do not have the reference to the subwindow anymore so
-                # we can't detach signals (in case the scene has already a reference somewhere else the
-                # signal won't be detached, but it won't cause any trouble since the scene can't be focused)
-                pass
-
-            finally:
-
-                # attach signals to the new active view/scene
-                self.actionItemCut.triggered.connect(scene.handleItemCut)
-                self.actionItemCopy.triggered.connect(scene.handleItemCopy)
-                self.actionItemPaste.triggered.connect(scene.handleItemPaste)
-                self.actionItemDelete.triggered.connect(scene.handleItemDelete)
-                self.actionBringToFront.triggered.connect(scene.handleBringToFront)
-                self.actionSendToBack.triggered.connect(scene.handleSendToBack)
-                self.actionSelectAll.triggered.connect(scene.handleSelectAll)
-
-                self.zoomctl.setEnabled(False)
-                self.zoomctl.setZoomLevel(self.zoomctl.index(mainview.zoom))
-                self.zoomctl.signalScaleChanged.connect(mainview.handleScaleChanged)
-                self.zoomctl.setEnabled(True)
-
-                mainview.zoomChanged.connect(self.zoomctl.handleMainViewZoomChanged)
-
-                # update scene specific actions
-                scene.updateActions()
-
+            # update window title to reflect document name
             self.setWindowTitle(scene.document.name)
 
         else:
@@ -740,8 +728,8 @@ class MainWindow(QMainWindow):
         """
         subwindow = self.mdiArea.addSubWindow(MdiSubWindow(mainview))
         scene = mainview.scene()
-        scene.undoStack.cleanChanged.connect(subwindow.handleUndoStackCleanChanged)
-        subwindow.signalDocumentSaved.connect(self.handleDocumentSaved)
+        connect(scene.undoStack.cleanChanged, subwindow.handleUndoStackCleanChanged)
+        connect(subwindow.signalDocumentSaved, self.handleDocumentSaved)
 
         if scene.document.filepath:
             # set the title in case the scene we are rendering
@@ -762,9 +750,9 @@ class MainWindow(QMainWindow):
         scene = DiagramScene(self)
         scene.setSceneRect(QRectF(-width / 2, -height / 2, width, height))
         scene.setItemIndexMethod(DiagramScene.NoIndex)
-        scene.nodeInsertEnd.connect(self.handleNodeInsertEnd)
-        scene.edgeInsertEnd.connect(self.handleEdgeInsertEnd)
-        scene.modeChanged.connect(self.handleSceneModeChanged)
+        connect(scene.nodeInsertEnd, self.handleNodeInsertEnd)
+        connect(scene.edgeInsertEnd, self.handleEdgeInsertEnd)
+        connect(scene.modeChanged, self.handleModeChanged)
         self.undoGroup.addStack(scene.undoStack)
         return scene
 

@@ -34,7 +34,7 @@
 
 from grapholed.commands import CommandNodeLabelMove, CommandNodeLabelEdit
 from grapholed.datatypes import Font
-from grapholed.functions import isEmpty, distanceP
+from grapholed.functions import isEmpty, distanceP, connect
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QColor, QTextCursor, QIcon, QPainterPath
 from PyQt5.QtWidgets import QGraphicsTextItem, QGraphicsItem, QAction
@@ -133,7 +133,7 @@ class Label(QGraphicsTextItem):
             parent = self.parentItem()
             action = QAction('Reset text position', parent.scene())
             action.setIcon(QIcon(':/icons/refresh'))
-            action.triggered.connect(self.handleResetTextPosition)
+            connect(action.triggered, self.handleResetTextPosition)
             collection.append(action)
         return collection
 

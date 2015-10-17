@@ -34,6 +34,8 @@
 
 from time import time, sleep
 
+from grapholed.functions import connect
+
 from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QSlider, QWidget, QHBoxLayout, QLineEdit, QLabel, QDesktopWidget
@@ -70,7 +72,8 @@ class ZoomControl(QWidget):
         self.slider.setSingleStep(1)
         self.slider.setTickPosition(QSlider.NoTicks)
         self.slider.setTickInterval(1)
-        self.slider.valueChanged.connect(self.handleSliderValueChanged)
+
+        connect(self.slider.valueChanged, self.handleSliderValueChanged)
 
         self.label = QLineEdit(self)
         self.label.setAttribute(Qt.WA_MacShowFocusRect, 0)

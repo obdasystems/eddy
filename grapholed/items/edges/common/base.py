@@ -33,12 +33,11 @@
 
 
 from abc import ABCMeta, abstractmethod
-from functools import partial
 
 from grapholed.commands import CommandEdgeBreakpointAdd, CommandEdgeBreakpointDel, CommandEdgeBreakpointMove
 from grapholed.commands import CommandEdgeAnchorMove
 from grapholed.exceptions import ParseError
-from grapholed.functions import distanceP, distanceL
+from grapholed.functions import distanceP, distanceL, connect
 from grapholed.items import Item
 
 from PyQt5.QtCore import Qt, QPointF, QLineF, QRectF
@@ -323,7 +322,7 @@ class Edge(Item):
         breakpoint = self.breakpointAt(pos)
         if breakpoint is not None:
             action = QAction(QIcon(':/icons/delete'), 'Remove breakpoint', self.scene())
-            action.triggered.connect(partial(self.breakpointDel, breakpoint=breakpoint))
+            connect(action.triggered, self.breakpointDel, breakpoint=breakpoint)
             menu.addAction(action)
         else:
             scene = self.scene()

@@ -38,11 +38,12 @@ from copy import deepcopy
 from grapholed.commands import CommandNodeRezize
 from grapholed.datatypes import DistinctList
 from grapholed.dialogs.properties import NodePropertiesDialog
+from grapholed.functions import connect
 from grapholed.items import Item
 
 from PyQt5.QtCore import QPointF, QLineF, Qt, QRectF, pyqtSlot
 from PyQt5.QtGui import QIcon, QColor, QPen, QPainter
-from PyQt5.QtWidgets import QMenu, QGraphicsItem
+from PyQt5.QtWidgets import QMenu, QGraphicsItem, QAction
 
 
 class Node(Item):
@@ -72,6 +73,11 @@ class Node(Item):
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         self.setFlag(QGraphicsItem.ItemIsFocusable, True)
+
+        self.actionProperties = QAction('Properties...', self.scene())
+        self.actionProperties.setIcon(QIcon(':/icons/preferences'))
+
+        connect(self.actionProperties.triggered, self.handleNodeProperties)
 
     ################################################## PROPERTIES ######################################################
 
@@ -117,7 +123,6 @@ class Node(Item):
         """
         menu = QMenu()
         scene = self.scene()
-
         menu.addAction(scene.actionItemDelete)
         menu.addSeparator()
         menu.addAction(scene.actionItemCut)
@@ -127,10 +132,7 @@ class Node(Item):
         menu.addAction(scene.actionBringToFront)
         menu.addAction(scene.actionSendToBack)
         menu.addSeparator()
-
-        prop = menu.addAction(QIcon(':/icons/preferences'), 'Properties...')
-        prop.triggered.connect(self.handleNodeProperties)
-
+        menu.addAction(self.actionProperties)
         return menu
 
     @abstractmethod

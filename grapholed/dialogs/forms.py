@@ -33,7 +33,7 @@
 
 
 from grapholed.fields import IntEditField
-from grapholed.functions import isEmpty
+from grapholed.functions import isEmpty, connect
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QDialog, QFormLayout, QDialogButtonBox, QMessageBox
@@ -59,14 +59,15 @@ class CardinalityRestrictionForm(QDialog):
         self.minCardinalityField.setFixedWidth(80)
         self.maxCardinalityField.setFixedWidth(80)
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
-        self.buttonBox.accepted.connect(self.validate)
-        self.buttonBox.rejected.connect(self.reject)
         self.mainLayout = QFormLayout(self)
         self.mainLayout.addRow('Min. cardinality', self.minCardinalityField)
         self.mainLayout.addRow('Max. cardinality', self.maxCardinalityField)
         self.mainLayout.addRow(self.buttonBox)
         self.setWindowTitle('Insert cardinality range')
         self.setFixedSize(self.sizeHint())
+
+        connect(self.buttonBox.accepted, self.validate)
+        connect(self.buttonBox.rejected, self.reject)
 
     def validate(self):
         """
