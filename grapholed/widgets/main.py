@@ -46,8 +46,7 @@ from PyQt5.QtXml import QDomDocument
 from grapholed import __version__ as version, __appname__ as appname
 from grapholed import __organization__ as organization
 from grapholed.datatypes import FileType
-from grapholed.dialogs import OpenFileDialog
-from grapholed.dialogs import PreferencesDialog
+from grapholed.dialogs import AboutDialog, OpenFileDialog,PreferencesDialog
 from grapholed.exceptions import ParseError
 from grapholed.functions import getPath, shaded, connect, disconnect
 from grapholed.items import __mapping__
@@ -219,6 +218,9 @@ class MainWindow(QMainWindow):
         self.actionRedo.setIcon(self.iconRedo)
         self.actionRedo.setShortcut(QKeySequence.Redo)
 
+        self.actionAbout = QAction('About {0}'.format(appname), self)
+        self.actionAbout.setShortcut(QKeySequence.HelpContents)
+
         self.actionSapienzaWebOpen = QAction('DIAG - Sapienza university', self)
         self.actionSapienzaWebOpen.setIcon(self.iconLink)
         
@@ -262,6 +264,12 @@ class MainWindow(QMainWindow):
         self.menuView.addAction(self.actionSnapToGrid)
 
         self.menuHelp = self.menuBar().addMenu("&Help")
+        self.menuHelp.addAction(self.actionAbout)
+
+        if not sys.platform.startswith('darwin'):
+            # add a separator only if it's not Mac OS
+            self.menuHelp.addSeparator()
+
         self.menuHelp.addAction(self.actionSapienzaWebOpen)
         self.menuHelp.addAction(self.actionGrapholWebOpen)
 
@@ -413,6 +421,7 @@ class MainWindow(QMainWindow):
         connect(self.actionOpenPreferences.triggered, self.handleOpenPreferences)
         connect(self.actionQuit.triggered, self.close)
         connect(self.actionSnapToGrid.triggered, self.handleSnapToGrid)
+        connect(self.actionAbout.triggered, self.handleAbout)
         connect(self.actionSapienzaWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/en'))
         connect(self.actionGrapholWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/~graphol/'))
         connect(self.palettePG.buttonClicked[int], self.handleToolBoxButtonClicked)
@@ -425,6 +434,14 @@ class MainWindow(QMainWindow):
     #   ACTION HANDLERS                                                                                                #
     #                                                                                                                  #
     ####################################################################################################################
+
+    @staticmethod
+    def handleAbout():
+        """
+        Display the about dialog.
+        """
+        about = AboutDialog()
+        about.exec_()
 
     def handleNewDocument(self):
         """

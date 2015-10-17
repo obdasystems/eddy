@@ -44,7 +44,7 @@ from grapholed import __appname__ as appname, __organization__ as organization
 from grapholed.commands import CommandItemsMultiAdd, CommandItemsMultiRemove
 from grapholed.commands import CommandNodeAdd, CommandNodeSetZValue, CommandNodeMove
 from grapholed.commands import CommandEdgeAdd
-from grapholed.dialogs.properties import ScenePropertiesDialog
+from grapholed.dialogs import ScenePropertiesDialog
 from grapholed.functions import snapToGrid, rangeF, connect
 from grapholed.items import Item
 from grapholed.tools import UniqueID

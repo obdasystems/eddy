@@ -37,7 +37,7 @@ from copy import deepcopy
 
 from grapholed.commands import CommandNodeRezize
 from grapholed.datatypes import DistinctList
-from grapholed.dialogs.properties import NodePropertiesDialog
+from grapholed.dialogs import NodePropertiesDialog
 from grapholed.functions import connect
 from grapholed.items import Item
 
