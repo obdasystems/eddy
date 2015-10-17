@@ -569,19 +569,9 @@ class Overview(MainViewInspector):
             """
             if self.mainview:
                 scene = self.mainview.scene()
-                items = scene.items()
-                if items:
-                    X = set()
-                    Y = set()
-                    for item in items:
-                        B = item.mapRectToScene(item.boundingRect())
-                        X |= {B.left(), B.right()}
-                        Y |= {B.top(), B.bottom()}
-
-                    margin = 10
-                    self.fitInView(QRectF(QPointF(min(X) - margin, min(Y) - margin),
-                                          QPointF(max(X) + margin, max(Y) + margin)), Qt.KeepAspectRatio)
-
+                shape = scene.visibleRect(margin=10)
+                if shape:
+                    self.fitInView(shape, Qt.KeepAspectRatio)
             self.viewport().update()
 
         def setView(self, mainview):
