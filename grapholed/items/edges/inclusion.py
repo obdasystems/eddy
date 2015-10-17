@@ -83,6 +83,32 @@ class InclusionEdge(Edge):
             menu.addAction(completness)
         return menu
 
+    ############################################# ITEM IMPORT / EXPORT #################################################
+
+    def asGraphol(self, document):
+        """
+        Export the current item in Graphol format.
+        :param document: the XML document where this item will be inserted.
+        :rtype: QDomElement
+        """
+        edge = super().asGraphol(document)
+        edge.setAttribute('complete', int(self.complete))
+        return edge
+
+    @classmethod
+    def fromGraphol(cls, scene, E):
+        """
+        Create a new item instance by parsing a Graphol document item entry.
+        :param scene: the scene where the element will be inserted.
+        :param E: the Graphol document element entry.
+        :raise ParseError: in case it's not possible to generate the node using the given element.
+        :rtype: Edge
+        """
+        edge = super().fromGraphol(scene, E)
+        edge.complete = bool(E.attribute('complete', '0'))
+        edge.updateEdge()
+        return edge
+
     ################################################ ACTION HANDLERS ###################################################
 
     def handleToggleCompletness(self):
