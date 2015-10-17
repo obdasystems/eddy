@@ -32,11 +32,11 @@
 ##########################################################################
 
 
-from grapholed import __version__, __appname__, __copyright__, __organization__, __email__, __license__
+from grapholed import __version__, __appname__, __copyright__, __email__, __license__
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy
+from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout, QHBoxLayout
 
 
 class AboutDialog(QDialog):
@@ -93,6 +93,8 @@ class AboutDialog(QDialog):
         self.mainLayout.addLayout(topLayout)
         self.mainLayout.addLayout(bottomLayout)
 
-        self.setFixedSize(360, 440)
+        self.setFixedWidth(360)
+        self.setFixedHeight(self.sizeHint().height())
         self.setModal(True)
+        self.setWindowIcon(QIcon(':/images/grapholed'))
         self.setWindowTitle('About {0}'.format(__appname__))
