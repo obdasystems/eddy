@@ -246,20 +246,33 @@ class MdiSubWindow(QMdiSubWindow):
         Print the current scene.
         :return: True if the print has been performed, False otherwise.
         """
+        mainview = self.widget()
+        scene = mainview.scene()
+        shape = scene.visibleRect(margin=20)
+        if not shape:
+            box = QMessageBox()
+            box.setIconPixmap(QPixmap(':/icons/info'))
+            box.setWindowTitle('Empty document!')
+            box.setText('The document you are trying to print is empty!')
+            box.setStandardButtons(QMessageBox.Ok)
+            box.exec_()
+            return False
+
         printer = QPrinter(QPrinter.HighResolution)
         printer.setOutputFormat(QPrinter.NativeFormat)
         printdialog = QPrintDialog(printer)
 
         if printdialog.exec_() == QDialog.Accepted:
+
             painter = QPainter()
             if not painter.begin(printer):
                 return False
 
-            mainview = self.widget()
-            scene = mainview.scene()
-            scene.render(painter)
+            scene.render(painter, source=shape)
             painter.end()
             return True
+
+        return False
 
     def saveScene(self):
         """
