@@ -68,9 +68,10 @@ class DiagramScene(QGraphicsScene):
     PasteOffsetY = 10
 
     ## SIGNALS
-    nodeInsertEnd = pyqtSignal('QGraphicsItem', int)
-    edgeInsertEnd = pyqtSignal('QGraphicsItem', int)
-    modeChanged = pyqtSignal(int)
+    nodeInsertEnd = pyqtSignal('QGraphicsItem', int)  # emitted when a node is inserted in the scene
+    edgeInsertEnd = pyqtSignal('QGraphicsItem', int)  # emitted when a edge is inserted in the scene
+    modeChanged = pyqtSignal(int)  # emitted when the operational mode changes
+    updated = pyqtSignal()  # emitted when the scene is updated
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -576,6 +577,7 @@ class DiagramScene(QGraphicsScene):
 
                     # push the command in the undostack
                     self.undoStack.push(self.command)
+                    self.updated.emit()
 
                 else:
 
@@ -603,7 +605,7 @@ class DiagramScene(QGraphicsScene):
                     }
 
                     # push the command in the stack so we can revert the moving operation
-                    self.undoStack.push(CommandNodeMove(pos1=self.mousePressData, pos2=data))
+                    self.undoStack.push(CommandNodeMove(scene=self, pos1=self.mousePressData, pos2=data))
 
         super().mouseReleaseEvent(mouseEvent)
 

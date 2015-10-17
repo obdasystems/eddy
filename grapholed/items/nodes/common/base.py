@@ -507,7 +507,7 @@ class ResizableNode(Node):
         if self.handleSelected:
 
             if not self.command:
-                self.command = CommandNodeRezize(self)
+                self.command = CommandNodeRezize(scene=self.scene(), node=self)
             self.interactiveResize(mouseEvent.pos())
             self.updateEdges()
 

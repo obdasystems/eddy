@@ -54,27 +54,31 @@ class CommandEdgeAdd(QUndoCommand):
         # IMPORTANT: don't remove this check!
         if self.edge not in self.scene.items():
             self.scene.addItem(self.edge)
+            self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         # IMPORTANT: don't remove this check!
         if self.edge in self.scene.items():
             self.scene.removeItem(self.edge)
+            self.scene.updated.emit()
 
 
 class CommandEdgeBreakpointAdd(QUndoCommand):
     """
     This command is used to add a breakpoint on the given edge.
     """
-    def __init__(self, edge, index, point):
+    def __init__(self, scene, edge, index, point):
         """
         Initialize the command.
+        :param scene: the scene where this command is being performed.
         :param edge: the edge on which the break point is being added.
         :param index: the index of the new breakpoint.
         :param point: the breakpoint.
         """
         super().__init__('add {0} edge breakpoint'.format(edge.name))
         self.edge = edge
+        self.scene = scene
         self.index = index
         self.point = point
 
@@ -82,24 +86,28 @@ class CommandEdgeBreakpointAdd(QUndoCommand):
         """redo the command"""
         self.edge.breakpoints.insert(self.index, self.point)
         self.edge.updateEdge()
+        self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         self.edge.breakpoints.pop(self.index)
         self.edge.updateEdge()
+        self.scene.updated.emit()
 
 
 class CommandEdgeAnchorMove(QUndoCommand):
     """
     This command is used to move edge anchor points.
     """
-    def __init__(self, edge, node):
+    def __init__(self, scene, edge, node):
         """
         Initialize the command.
+        :param scene: the scene where this command is being performed.
         :param edge: the edge whose anchor point is being moved.
         :param node: the shape on which the moving is happening.
         """
         super().__init__('move {0} anchor point'.format(edge.name))
+        self.scene = scene
         self.edge = edge
         self.node = node
         self.pos1 = node.anchor(edge)
@@ -116,25 +124,29 @@ class CommandEdgeAnchorMove(QUndoCommand):
         if self.pos2:
             self.node.setAnchor(self.edge, self.pos2)
             self.edge.updateEdge()
+            self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         self.node.setAnchor(self.edge, self.pos1)
         self.edge.updateEdge()
+        self.scene.updated.emit()
 
 
 class CommandEdgeBreakpointMove(QUndoCommand):
     """
     This command is used to move edge breakpoints.
     """
-    def __init__(self, edge, index):
+    def __init__(self, scene, edge, index):
         """
         Initialize the command.
+        :param scene: the scene where this command is being performed.
         :param edge: the edge whose breakpoint is being moved.
         :param index: the index of the breakpoint.
         """
         super().__init__('move {0} edge breakpoint'.format(edge.name))
         self.edge = edge
+        self.scene = scene
         self.index = index
         self.pos1 = edge.breakpoints[self.index]
         self.pos2 = None
@@ -151,25 +163,29 @@ class CommandEdgeBreakpointMove(QUndoCommand):
         if self.pos2:
             self.edge.breakpoints[self.index] = self.pos2
             self.edge.updateEdge()
+            self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         self.edge.breakpoints[self.index] = self.pos1
         self.edge.updateEdge()
+        self.scene.updated.emit()
 
 
 class CommandEdgeBreakpointDel(QUndoCommand):
     """
     This command is used to delete edge breakpoints.
     """
-    def __init__(self, edge, index):
+    def __init__(self, scene, edge, index):
         """
         Initialize the command.
+        :param scene: the scene where this command is being performed.
         :param edge: the edge whose breakpoint is being deleted.
         :param index: the index of the breakpoint.
         """
         super().__init__('remove {0} edge breakpoint'.format(edge.name))
         self.edge = edge
+        self.scene = scene
         self.index = index
         self.point = edge.breakpoints[self.index]
 
@@ -177,8 +193,10 @@ class CommandEdgeBreakpointDel(QUndoCommand):
         """redo the command"""
         self.edge.breakpoints.pop(self.index)
         self.edge.updateEdge()
+        self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         self.edge.breakpoints.insert(self.index, self.point)
         self.edge.updateEdge()
+        self.scene.updated.emit()

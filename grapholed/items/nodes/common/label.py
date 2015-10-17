@@ -214,12 +214,12 @@ class Label(QGraphicsTextItem):
         Executed when the text item lose the focus.
         :param focusEvent: the focus event instance.
         """
+        scene = self.scene()
         cursor = self.textCursor()
         cursor.select(QTextCursor.BlockUnderCursor)
         self.setTextCursor(cursor)
         if not self.commandEdit:
-            self.commandEdit = CommandNodeLabelEdit(node=self.parentItem(), label=self, text=self.text())
-        scene = self.scene()
+            self.commandEdit = CommandNodeLabelEdit(scene=scene, node=self.parentItem(), label=self, text=self.text())
         scene.clearSelection()
         self.setSelected(True)
         super().focusInEvent(focusEvent)
@@ -321,7 +321,7 @@ class Label(QGraphicsTextItem):
         if scene.mode == scene.MoveItem:
             super().mouseMoveEvent(mouseEvent)
             if not self.commandMove:
-                self.commandMove = CommandNodeLabelMove(node=self.parentItem(), label=self)
+                self.commandMove = CommandNodeLabelMove(scene=scene, node=self.parentItem(), label=self)
 
     def mouseReleaseEvent(self, mouseEvent):
         """
@@ -354,8 +354,8 @@ class Label(QGraphicsTextItem):
         Reset the text position to the default value.
         """
         if self.movable:
-            command = CommandNodeLabelMove(node=self.parentItem(), label=self)
-            command.end(pos=self.defaultPos())
             scene = self.scene()
+            command = CommandNodeLabelMove(scene=scene, node=self.parentItem(), label=self)
+            command.end(pos=self.defaultPos())
             scene.undoStack.push(command)
             self.updatePos()

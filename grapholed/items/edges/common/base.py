@@ -153,7 +153,7 @@ class Edge(Item):
         if not self.command:
             scene.clearSelection()
             self.setSelected(True)
-            self.command = CommandEdgeAnchorMove(edge=self, node=node)
+            self.command = CommandEdgeAnchorMove(scene=scene, edge=self, node=node)
 
         scene = self.scene()
         nodePos = node.pos()
@@ -221,7 +221,7 @@ class Edge(Item):
                 break
 
         scene = self.scene()
-        scene.undoStack.push(CommandEdgeBreakpointAdd(edge=self, index=index, point=point))
+        scene.undoStack.push(CommandEdgeBreakpointAdd(scene=scene, edge=self, index=index, point=point))
         return index
 
     def breakpointAt(self, point):
@@ -243,7 +243,7 @@ class Edge(Item):
         """
         if 0 <= breakpoint < len(self.breakpoints):
             scene = self.scene()
-            scene.undoStack.push(CommandEdgeBreakpointDel(self, breakpoint))
+            scene.undoStack.push(CommandEdgeBreakpointDel(scene=scene, edge=self, index=breakpoint))
 
     def breakpointMove(self, breakpoint, mousePos):
         """
@@ -256,7 +256,7 @@ class Edge(Item):
         if not self.command:
             scene.clearSelection()
             self.setSelected(True)
-            self.command = CommandEdgeBreakpointMove(edge=self, index=breakpoint)
+            self.command = CommandEdgeBreakpointMove(scene=scene, edge=self, index=breakpoint)
 
         self.breakpoints[breakpoint] = scene.snapToGrid(mousePos)
         self.updateEdge()

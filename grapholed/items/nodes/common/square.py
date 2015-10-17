@@ -132,9 +132,9 @@ class SquaredNode(Node):
             form = CardinalityRestrictionForm()
             if form.exec_() == QDialog.Accepted:
                 cardinality = dict(min=form.minCardinalityValue, max=form.maxCardinalityValue)
-                scene.undoStack.push(CommandNodeSquareChangeRestriction(self, restriction, cardinality))
+                scene.undoStack.push(CommandNodeSquareChangeRestriction(scene, self, restriction, cardinality))
         else:
-            scene.undoStack.push(CommandNodeSquareChangeRestriction(self, restriction))
+            scene.undoStack.push(CommandNodeSquareChangeRestriction(scene, self, restriction))
 
     def width(self):
         """

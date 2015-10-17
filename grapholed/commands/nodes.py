@@ -56,10 +56,12 @@ class CommandNodeAdd(QUndoCommand):
     def redo(self):
         """redo the command"""
         self.scene.addItem(self.node)
+        self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         self.scene.removeItem(self.node)
+        self.scene.updated.emit()
 
 
 class CommandNodeSetZValue(QUndoCommand):
@@ -82,23 +84,27 @@ class CommandNodeSetZValue(QUndoCommand):
     def redo(self):
         """redo the command"""
         self.node.setZValue(self.zvalue2)
+        self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         self.node.setZValue(self.zvalue1)
+        self.scene.updated.emit()
 
 
 class CommandNodeRezize(QUndoCommand):
     """
     This command is used to resize nodes.
     """
-    def __init__(self, node):
+    def __init__(self, scene, node):
         """
-        Initialize the command
+        Initialize the command.
+        :param scene: the scene where this command is being performed.
         :param node: the node whose resizing operation we want to Undo.
         """
         super().__init__('resize {0} node'.format(node.name))
         self.node = node
+        self.scene = scene
         self.data2 = None
         self.data1 = {
             'shape': QRectF(self.node.rect) if hasattr(self.node, 'rect') else QPolygonF(self.node.polygon),
@@ -132,6 +138,8 @@ class CommandNodeRezize(QUndoCommand):
             self.node.updateEdges()
             self.node.update()
 
+            self.scene.updated.emit()
+
     def undo(self):
         """undo the command"""
         if hasattr(self.node, 'rect'):
@@ -147,17 +155,21 @@ class CommandNodeRezize(QUndoCommand):
         self.node.updateEdges()
         self.node.update()
 
+        self.scene.updated.emit()
+
 
 class CommandNodeMove(QUndoCommand):
     """
     This command is used to move nodes (1 or more).
     """
-    def __init__(self, pos1, pos2):
+    def __init__(self, scene, pos1, pos2):
         """
-        Initialize the command
+        Initialize the command.
+        :param scene: the scene where this command is being performed.
         :param pos1: a dictionary containing node old positions' data.
         :param pos2: a dictionary containing node new positions' data.
         """
+        self.scene = scene
         self.pos1 = pos1
         self.pos2 = pos2
 
@@ -182,6 +194,8 @@ class CommandNodeMove(QUndoCommand):
                 node.setAnchor(edge, pos)
             node.updateEdges()
             node.update()
+        # emit updated signal
+        self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
@@ -197,19 +211,23 @@ class CommandNodeMove(QUndoCommand):
                 node.setAnchor(edge, pos)
             node.updateEdges()
             node.update()
+        # emit updated signal
+        self.scene.updated.emit()
 
 
 class CommandNodeLabelMove(QUndoCommand):
     """
     This command is used to move nodes labels.
     """
-    def __init__(self, node, label):
+    def __init__(self, scene, node, label):
         """
-        Initialize the command
+        Initialize the command.
+        :param scene: the scene where this command is being performed.
         :param node: the node whose label is being moved.
         :param label: the label that is being moved.
         """
         super().__init__('move {0} node label'.format(node.name))
+        self.scene = scene
         self.label = label
         self.pos1 = label.pos()
         self.pos2 = None
@@ -225,24 +243,28 @@ class CommandNodeLabelMove(QUndoCommand):
         """redo the command"""
         if self.pos2 is not None:
             self.label.setPos(self.pos2)
+            self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         self.label.setPos(self.pos1)
+        self.scene.updated.emit()
 
 
 class CommandNodeLabelEdit(QUndoCommand):
     """
     This command is used to edit nodes labels.
     """
-    def __init__(self, node, label, text):
+    def __init__(self, scene, node, label, text):
         """
         Initialize the command.
+        :param scene: the scene where this command is being performed.
         :param node: the node whose label is being edited.
         :param label: the label whose text is being edited.
         :param text: the text of the label before the edit.
         """
         super().__init__('edit {0} node label'.format(node.name))
+        self.scene = scene
         self.label = label
         self.text1 = text
         self.text2 = None
@@ -265,23 +287,27 @@ class CommandNodeLabelEdit(QUndoCommand):
         """redo the command"""
         if self.text2:
             self.label.setText(self.text2)
+            self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         self.label.setText(self.text1)
+        self.scene.updated.emit()
 
 
 class CommandNodeValueDomainSelectDatatype(QUndoCommand):
     """
     This command is used to change the datatype of a value-domain node.
     """
-    def __init__(self, node, datatype):
+    def __init__(self, scene, node, datatype):
         """
         Initialize the command.
+        :param scene: the scene where this command is being performed.
         :param node: the node whose datatype is being changed.
         :param datatype: the new datatype.
         """
         super().__init__('change {0} datatype'.format(node.name))
+        self.scene = scene
         self.node = node
         self.data1 = node.datatype
         self.data2 = datatype
@@ -292,6 +318,7 @@ class CommandNodeValueDomainSelectDatatype(QUndoCommand):
         self.node.label.setText(self.node.datatype.value)
         self.node.updateShape()
         self.node.updateEdges()
+        self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
@@ -299,6 +326,7 @@ class CommandNodeValueDomainSelectDatatype(QUndoCommand):
         self.node.label.setText(self.node.datatype.value)
         self.node.updateShape()
         self.node.updateEdges()
+        self.scene.updated.emit()
 
 
 class CommandNodeHexagonSwitchTo(QUndoCommand):
@@ -339,6 +367,9 @@ class CommandNodeHexagonSwitchTo(QUndoCommand):
         self.scene.addItem(self.node2)
         self.scene.removeItem(self.node1)
 
+        # emit updated signal
+        self.scene.updated.emit()
+
     def undo(self):
         """undo the command"""
         # move edges back
@@ -361,18 +392,23 @@ class CommandNodeHexagonSwitchTo(QUndoCommand):
         self.scene.addItem(self.node1)
         self.scene.removeItem(self.node2)
 
+        # emit updated signal
+        self.scene.updated.emit()
+
 
 class CommandNodeSquareChangeRestriction(QUndoCommand):
     """
     This command is used to change the restriction of square based constructor nodes.
     """
-    def __init__(self, node, restriction, cardinality=None):
+    def __init__(self, scene, node, restriction, cardinality=None):
         """
-        Initialize the command
+        Initialize the command.
+        :param scene: the scene where this command is being performed.
         :param node: the node whose restriction is being changed.
         :param restriction: the new restriction type.
         """
         self.node = node
+        self.scene = scene
         self.restriction1 = self.node.restriction
         self.cardinality1 = self.node.cardinality
         self.restriction2 = restriction
@@ -404,6 +440,9 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
             self.node.cardinality = dict(min=None, max=None)
             self.node.label.setText(self.node.restriction.label)
 
+        # emit updated signal
+        self.scene.updated.emit()
+
     def undo(self):
         """undo the command"""
         if self.restriction1 is RestrictionType.cardinality:
@@ -415,6 +454,9 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
             self.node.restriction = self.restriction1
             self.node.cardinality = dict(min=None, max=None)
             self.node.label.setText(self.node.restriction.label)
+
+        # emit updated signal
+        self.scene.updated.emit()
 
 
 class CommandNodeSetURL(QUndoCommand):

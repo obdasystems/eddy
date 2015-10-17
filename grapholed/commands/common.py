@@ -60,6 +60,8 @@ class CommandItemsMultiAdd(QUndoCommand):
         for item in self.collection:
             self.scene.addItem(item)
             item.setSelected(True)
+        # emit updated signal
+        self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
@@ -68,6 +70,8 @@ class CommandItemsMultiAdd(QUndoCommand):
             self.scene.removeItem(item)
         for item in self.selected:
             item.setSelected(True)
+        # emit updated signal
+        self.scene.updated.emit()
 
 
 class CommandItemsMultiRemove(QUndoCommand):
@@ -100,6 +104,8 @@ class CommandItemsMultiRemove(QUndoCommand):
         # remove the nodes
         for node in self.nodes:
             self.scene.removeItem(node)
+        # emit updated signal
+        self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
@@ -111,3 +117,5 @@ class CommandItemsMultiRemove(QUndoCommand):
             edge.source.addEdge(edge)
             edge.target.addEdge(edge)
             self.scene.addItem(edge)
+        # emit updated signal
+        self.scene.updated.emit()

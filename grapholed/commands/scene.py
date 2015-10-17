@@ -53,7 +53,9 @@ class CommandSceneResize(QUndoCommand):
     def redo(self):
         """redo the command"""
         self.scene.setSceneRect(self.rect2)
+        self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         self.scene.setSceneRect(self.rect1)
+        self.scene.updated.emit()

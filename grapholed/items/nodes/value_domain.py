@@ -125,7 +125,7 @@ class ValueDomainNode(Node):
         :param datatype: the datatype to select.
         """
         scene = self.scene()
-        scene.undoStack.push(CommandNodeValueDomainSelectDatatype(node=self, datatype=datatype))
+        scene.undoStack.push(CommandNodeValueDomainSelectDatatype(scene=scene, node=self, datatype=datatype))
 
     def updateShape(self):
         """

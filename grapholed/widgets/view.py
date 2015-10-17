@@ -38,7 +38,7 @@ from functools import partial
 from grapholed.functions import clamp
 from grapholed.widgets import ZoomControl, PaneWidget
 
-from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QEvent, pyqtSlot, QPointF, QTimer, QThread
+from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QEvent, pyqtSlot, QPointF, QTimer
 from PyQt5.QtGui import QPen, QColor
 from PyQt5.QtWidgets import QGraphicsView
 
@@ -47,7 +47,7 @@ class MainView(QGraphicsView):
     """
     This class implements the main view displayed in the MDI area.
     """
-    viewUpdated = pyqtSignal()
+    updated = pyqtSignal()
     zoomChanged = pyqtSignal(float)
 
     def __init__(self, scene):
@@ -158,7 +158,7 @@ class MainView(QGraphicsView):
         # if the main view has been repainted, emit a
         # signal so that also the navigator can update
         if event.type() == QEvent.Paint:
-            self.viewUpdated.emit()
+            self.updated.emit()
         return super().viewportEvent(event)
 
     def wheelEvent(self, wheelEvent):
@@ -397,7 +397,7 @@ class Navigator(MainViewInspector):
                 try:
                     scene = self.mainview.scene()
                     scene.sceneRectChanged.disconnect()
-                    self.mainview.viewUpdated.disconnect()
+                    self.mainview.updated.disconnect()
                 except (RuntimeError, TypeError):
                     pass
 
@@ -416,7 +416,7 @@ class Navigator(MainViewInspector):
                 scene = mainview.scene()
                 # attach signals to new slots
                 scene.sceneRectChanged.connect(self.handleSceneRectChanged)
-                mainview.viewUpdated.connect(self.handleMainViewUpdated)
+                mainview.updated.connect(self.handleMainViewUpdated)
                 # fit the scene in the view
                 self.setScene(scene)
                 self.fitInView(mainview.sceneRect(), Qt.KeepAspectRatio)
@@ -465,32 +465,6 @@ class Overview(MainViewInspector):
         """
         This class implements the view shown in the navigator.
         """
-        class UpdateThread(QThread):
-            """
-            This class implements a thread which is used to update the overview.
-            """
-            def run(self):
-                """
-                Threaded implementation.
-                """
-                parent = self.parent()
-                if parent.mainview:
-                    scene = parent.mainview.scene()
-                    items = scene.items()
-                    if items:
-                        X = set()
-                        Y = set()
-                        for item in items:
-                            B = item.mapRectToScene(item.boundingRect())
-                            X |= {B.left(), B.right()}
-                            Y |= {B.top(), B.bottom()}
-
-                        margin = 10
-                        parent.fitInView(QRectF(QPointF(min(X) - margin, min(Y) - margin),
-                                                QPointF(max(X) + margin, max(Y) + margin)), Qt.KeepAspectRatio)
-
-                parent.viewport().update()
-
         def __init__(self, parent=None):
             """
             Initialize the overview.
@@ -499,7 +473,7 @@ class Overview(MainViewInspector):
             super().__init__(parent)
             self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
             self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-            self.updatethread = Overview.Widget.UpdateThread(self)
+            self.setViewportUpdateMode(QGraphicsView.NoViewportUpdate)
             self.mousepressed = False
             self.mainview = None
 
@@ -568,9 +542,9 @@ class Overview(MainViewInspector):
         ############################################ SIGNAL HANDLERS ###################################################
 
         @pyqtSlot()
-        def handleMainViewUpdated(self):
+        def handleSceneUpdated(self):
             """
-            Executed whenever the navigator view needs to be updated.
+            Executed whenever the overview view needs to be updated.
             """
             self.updateView()
 
@@ -583,7 +557,9 @@ class Overview(MainViewInspector):
             if self.mainview:
 
                 try:
-                    self.mainview.viewUpdated.disconnect()
+                    scene = self.mainview.scene()
+                    scene.selectionChanged.disconnect()
+                    scene.updated.disconnect()
                 except (RuntimeError, TypeError):
                     pass
                 finally:
@@ -595,8 +571,22 @@ class Overview(MainViewInspector):
             """
             Update the Overview so that it renders only the elements in the scene discarding empty space.
             """
-            if not self.updatethread.isRunning():
-                self.updatethread.start()
+            if self.mainview:
+                scene = self.mainview.scene()
+                items = scene.items()
+                if items:
+                    X = set()
+                    Y = set()
+                    for item in items:
+                        B = item.mapRectToScene(item.boundingRect())
+                        X |= {B.left(), B.right()}
+                        Y |= {B.top(), B.bottom()}
+
+                    margin = 10
+                    self.fitInView(QRectF(QPointF(min(X) - margin, min(Y) - margin),
+                                          QPointF(max(X) + margin, max(Y) + margin)), Qt.KeepAspectRatio)
+
+            self.viewport().update()
 
         def setView(self, mainview):
             """
@@ -606,8 +596,10 @@ class Overview(MainViewInspector):
             self.clearView()
 
             if mainview:
-                mainview.viewUpdated.connect(self.handleMainViewUpdated)
-                self.setScene(mainview.scene())
+                scene = mainview.scene()
+                scene.selectionChanged.connect(self.handleSceneUpdated)
+                scene.updated.connect(self.handleSceneUpdated)
+                self.setScene(scene)
 
             self.mainview = mainview
             self.updateView()

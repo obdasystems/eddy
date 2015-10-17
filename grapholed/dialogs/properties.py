@@ -347,4 +347,4 @@ class NodePropertiesDialog(QDialog):
                 'edges': {}
             }
 
-            self.scene.undoStack.push(CommandNodeMove(data1, data2))
+            self.scene.undoStack.push(CommandNodeMove(scene=self.scene, pos1=data1, pos2=data2))
