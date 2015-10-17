@@ -33,8 +33,9 @@
 
 
 from math import sin, cos, radians, pi as M_PI
-from grapholed.functions import connect
 
+from grapholed.commands import CommandEdgeInclusionToggleCompletness
+from grapholed.functions import connect
 from grapholed.items import ItemType
 from grapholed.items.edges.common.base import Edge
 
@@ -88,8 +89,8 @@ class InclusionEdge(Edge):
         """
         Toggle the complete attribute for this edge.
         """
-        self.complete = not self.complete
-        self.updateEdge()
+        scene = self.scene()
+        scene.undoStack.push(CommandEdgeInclusionToggleCompletness(scene=scene, edge=self, complete=not self.complete))
 
     ##################################################### GEOMETRY #####################################################
 

@@ -200,3 +200,61 @@ class CommandEdgeBreakpointDel(QUndoCommand):
         self.edge.breakpoints.insert(self.index, self.point)
         self.edge.updateEdge()
         self.scene.updated.emit()
+
+
+class CommandEdgeInclusionToggleCompletness(QUndoCommand):
+    """
+    This command is used to toggle the completness attribute of Inclusion Edges.
+    """
+    def __init__(self, scene, edge, complete):
+        """
+        Initialize the command.
+        :param scene: the scene where this command is being performed.
+        :param edge: the edge whose breakpoint is being deleted.
+        :param complete: the complete value.
+        """
+        super().__init__('toggle {0} edge completness'.format(edge.name))
+        self.edge = edge
+        self.scene = scene
+        self.complete = complete
+
+    def redo(self):
+        """redo the command"""
+        self.edge.complete = self.complete
+        self.edge.updateEdge()
+        self.scene.updated.emit()
+
+    def undo(self):
+        """undo the command"""
+        self.edge.complete = not self.complete
+        self.edge.updateEdge()
+        self.scene.updated.emit()
+
+
+class CommandEdgeInputToggleFunctionality(QUndoCommand):
+    """
+    This command is used to toggle the functionality attribute of Inclusion Edges.
+    """
+    def __init__(self, scene, edge, functionality):
+        """
+        Initialize the command.
+        :param scene: the scene where this command is being performed.
+        :param edge: the edge whose breakpoint is being deleted.
+        :param functionality: the functionality value.
+        """
+        super().__init__('toggle {0} edge functionality'.format(edge.name))
+        self.edge = edge
+        self.scene = scene
+        self.functionality = functionality
+
+    def redo(self):
+        """redo the command"""
+        self.edge.functionality = self.functionality
+        self.edge.updateEdge()
+        self.scene.updated.emit()
+
+    def undo(self):
+        """undo the command"""
+        self.edge.functionality = not self.functionality
+        self.edge.updateEdge()
+        self.scene.updated.emit()

@@ -33,6 +33,7 @@
 
 
 from math import sin, cos, radians, pi as M_PI
+from grapholed.commands import CommandEdgeInputToggleFunctionality
 from grapholed.functions import connect
 
 from grapholed.items import ItemType
@@ -93,8 +94,8 @@ class InputEdge(Edge):
         """
         Toggle the functionality attribute for this edge.
         """
-        self.functionality = not self.functionality
-        self.updateEdge()
+        scene = self.scene()
+        scene.undoStack.push(CommandEdgeInputToggleFunctionality(scene=scene, edge=self, functionality=not self.functionality))
 
     ##################################################### GEOMETRY #####################################################
 
