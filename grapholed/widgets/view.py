@@ -328,6 +328,13 @@ class Navigator(MainViewInspector):
             """
             pass
 
+        def mouseDoubleClickEvent(self, mouseEvent):
+            """
+            Executed when the mouse is double clicked on the view.
+            :param mouseEvent: the mouse event instance.
+            """
+            pass
+
         def mousePressEvent(self, mouseEvent):
             """
             Executed when the mouse is pressed on the view.
@@ -496,6 +503,13 @@ class Overview(MainViewInspector):
             """
             Turn off the context menu for this view.
             :param menuEvent: the context menu event instance.
+            """
+            pass
+
+        def mouseDoubleClickEvent(self, mouseEvent):
+            """
+            Executed when the mouse is double clicked on the view.
+            :param mouseEvent: the mouse event instance.
             """
             pass
 
