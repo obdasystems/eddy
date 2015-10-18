@@ -27,10 +27,22 @@ Bring up a terminal window (or command prompt if on win32 platform) and type the
 
 ## Windows
 
-Install [Qt 5.5](http://download.qt.io/official_releases/qt/5.5/5.5.0/qt-opensource-windows-x86-mingw492-5.5.0.exe).  
-Install [PyQt 5.5](http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5/PyQt5-5.5-gpl-Py3.4-Qt5.5.0-x32.exe).   
+Install [Qt 5.5](http://download.qt.io/official_releases/qt/5.5/5.5.0/qt-opensource-windows-x86-mingw492-5.5.0.exe).    
 Install [cx_Freeze](https://pypi.python.org/pypi/cx_Freeze/4.3.4).  
-Bring up command prompt window and type the following:
+Download and uncompress [SIP 4.16.9](http://sourceforge.net/projects/pyqt/files/sip/sip-4.16.9/sip-4.16.9.zip).
+Download and uncompress [PyQt5.5](http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5/PyQt-gpl-5.5.zip)
+Bring up command prompt window and navigate to the uncompressed SIP 4.16.9 directory:
+
+    >>> PATH=C:\Qt\5.5\mingw492_32\bin;C:\Qt\Tools\mingw492_32\bin;%PATH%
+    >>> python configure.py -p win32-g++
+    >>> mingw32-make && mingw32-make install
+    
+Navigate using the command prompt to the uncompressed PyQt5.5 directory:
+
+    >>> python configure.py --spec win32-g++
+    >>> mingw32-make && mingw32-make install
+
+Change the current active directory and type the following:
 
     >>> git clone https://github.com/danielepantaleone/grapholed.git
     >>> cd grapholed
