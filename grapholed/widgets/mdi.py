@@ -219,15 +219,14 @@ class MdiSubWindow(QMdiSubWindow):
                 return self.exportSceneToPdfFile(scene, filepath)
         return False
 
-    def exportSceneToPdfFile(self, scene, filepath):
+    @staticmethod
+    def exportSceneToPdfFile(scene, filepath):
         """
         Export the given scene as PDF saving it in the given filepath.
         :param scene: the scene to be exported.
         :param filepath: the filepath where to export the scene.
         :return: True if the export has been performed, False otherwise.
         """
-        mainview = self.widget()
-        scene = mainview.scene()
         shape = scene.visibleRect(margin=20)
         if not shape:
             box = QMessageBox()
