@@ -746,7 +746,7 @@ class MainWindow(QMainWindow):
         subwindow = self.mdiArea.addSubWindow(MdiSubWindow(mainview))
         scene = mainview.scene()
         connect(scene.undoStack.cleanChanged, subwindow.handleUndoStackCleanChanged)
-        connect(subwindow.signalDocumentSaved, self.handleDocumentSaved)
+        connect(subwindow.documentSaved, self.handleDocumentSaved)
 
         if scene.document.filepath:
             # set the title in case the scene we are rendering
