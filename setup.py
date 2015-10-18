@@ -43,6 +43,8 @@ import zipfile
 from distutils import dir_util, log
 from grapholed import __appname__, __license__, __version__
 
+from PyQt5 import QtCore
+
 
 PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))  # directory where this file is in
 BUILD_DIR = os.path.join(PROJECT_DIR, 'build')  # directory where all work will be done
@@ -127,11 +129,21 @@ else:
 
             super().run() # call original build_exe run method
 
+            self.copy_qt5_plugins()
             self.clean_compiled_files()
             self.chmod_exec()
             self.unix2dos()
 
             self.make_zip(RELEASE_NAME)
+
+        def copy_qt5_plugins(self):
+            """Copy necessary Qt5 plugins"""
+            if sys.platform.startswith('win32') or sys.platform.startswith('darwin'):
+                log.info(">>> copy qt5 printsupport plugin")
+                src = os.path.join(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath), 'printsupport')
+                dst = os.path.join(self.build_exe, 'printsupport')
+                self.mkpath(dst)
+                self.copy_tree(src, dst)
 
         def clean_compiled_files(self):
             """Remove python compiled files (if any got left in)"""
@@ -204,11 +216,8 @@ else:
                 log.info(">>> searching for qt_menu.nib")
 
                 if self.qt_menu_nib:
+                    # already found
                     return self.qt_menu_nib
-                elif any(n.startswith("PyQt5.QtCore") for n in os.listdir(self.binDir)):
-                    from PyQt5 import QtCore
-                else:
-                    return None
 
                 libpath = os.path.join(str(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.DataPath)), '..')
                 subpath = 'Src/qtbase/src/plugins/platforms/cocoa/qt_menu.nib'
