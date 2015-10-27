@@ -32,39 +32,62 @@
 #                                                                        #
 ##########################################################################
 
+
 import sys
 import traceback
 
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QMessageBox, QSpacerItem, QSizePolicy
+from argparse import ArgumentParser
 from grapholed import images_rc ## DO NOT REMOVE
 from grapholed import Grapholed
+from grapholed.dialogs.popups import MessageBox
 from grapholed.widgets import SplashScreen
+from PyQt5.QtGui import QPixmap
 
 
 def main():
     """
-    Application main execution.
+    Application entry point.
     """
+    parser = ArgumentParser(description='parse GrapholEd command line options')
+    parser.add_argument('--nosplash', dest='nosplash', action='store_true')
+
+    (options, args) = parser.parse_known_args()
+
+    def init(application):
+        """
+        Initialize the application using the splash screen.
+        :param application: the application to initialize.
+        :return: the initialized main window instance.
+        :rtype: MainWindow
+        """
+        with SplashScreen(min_splash_time=4):
+            mainwindow = application.init()
+        return mainwindow
+
+    def init_no_splash(application):
+        """
+        Initialize the application WITHOUT using the splash screen.
+        :param application: the application to initialize.
+        :return: the initialized main window instance.
+        :rtype: MainWindow
+        """
+        return application.init()
+
     try:
         app = Grapholed(sys.argv)
-        with SplashScreen(min_splash_time=4):
-            mainwindow = app.init()
+        window = init_no_splash(app) if options.nosplash else init(app)
     except Exception as e:
-        box = QMessageBox()
+        box = MessageBox(width=400)
         box.setIconPixmap(QPixmap(':/icons/error'))
-        box.setWindowTitle('FATAL')
-        box.setText('Grapholed failed to start!')
+        box.setWindowTitle('Startup failure')
+        box.setText('GrapholEd failed to start!')
         box.setInformativeText('ERROR: %s' % e)
         box.setDetailedText(traceback.format_exc())
-        box.setStandardButtons(QMessageBox.Ok)
-        # this will trick Qt and resize a bit the QMessageBox so the exception stack trace is printed nice
-        foo = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        box.layout().addItem(foo, box.layout().rowCount(), 0, 1, box.layout().columnCount())
+        box.setStandardButtons(MessageBox.Ok)
         box.exec_()
-        sys.exit(127)
+        sys.exit(1)
     else:
-        mainwindow.show()
+        window.show()
         sys.exit(app.exec_())
 
 

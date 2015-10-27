@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -33,41 +32,21 @@
 ##########################################################################
 
 
-__author__ = 'Daniele Pantaleone'
-__email__ = 'danielepantaleone@me.com'
-__copyright__ = 'Copyright 2015, Daniele Pantaleone'
-__organization__ = 'Sapienza - University Of Rome'
-__appname__ = 'GrapholEd'
-__version__ = '0.2.3'
-__status__ = 'Development'
-__license__ = 'GPL'
+from PyQt5.QtWidgets import  QMessageBox, QSpacerItem, QSizePolicy
 
 
-from PyQt5.QtWidgets import QApplication
-from grapholed.functions import QSS, getPath
-from grapholed.style import DefaultStyle
-from grapholed.widgets import MainWindow, SplashScreen
-
-
-class Grapholed(QApplication):
+class MessageBox(QMessageBox):
     """
-    This class implements the main Qt application.
+    This class implements the 'Preferences' dialog.
     """
-    mainWindow = None
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, width=None, parent=None):
         """
-        Initialize GrapholEd.
+        Initialize the Message Box.
+        :param width: the minimum width of the message box.
+        :param parent: the parent widget.
         """
-        super().__init__(*args, **kwargs)
-
-    def init(self):
-        """
-        Run initialization tasks for Grapholed (i.e: initialize the Style, Main Window...).
-        :return: the application MainWindow.
-        :rtype: MainWindow
-        """
-        self.setStyle(DefaultStyle())
-        self.setStyleSheet(QSS(getPath('@grapholed/stylesheets/default.qss')))
-        self.mainWindow = MainWindow()
-        return self.mainWindow
+        super().__init__(parent)
+        if width:
+            spacer = QSpacerItem(width, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
+            layout = self.layout()
+            layout.addItem(spacer, layout.rowCount(), 0, 1, layout.columnCount())
