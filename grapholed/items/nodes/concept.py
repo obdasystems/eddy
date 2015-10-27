@@ -51,7 +51,6 @@ class ConceptNode(ResizableNode):
     minHeight = 50
     minWidth = 110
     name = 'concept'
-    shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
     xmlname = 'concept'
 
     def __init__(self, width=minWidth, height=minHeight, **kwargs):
@@ -461,7 +460,6 @@ class ConceptNode(ResizableNode):
         """
         shapeBrush = self.shapeBrushSelected if self.isSelected() else self.shapeBrush
 
-        painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawRect(self.rect)
