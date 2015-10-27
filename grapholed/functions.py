@@ -84,7 +84,7 @@ def connect(signal, slot, *args, **kwargs):
 def disconnect(signal, *args):
     """
     Disconnect the given signal.
-    If slots are supplied as positional arguments, the signal will be detached only form the given slots.
+    If slots are supplied as positional arguments, the signal will be detached only from the given slots.
     :param signal: the signal to disconnect.
     """
     if args:
