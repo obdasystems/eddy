@@ -50,7 +50,7 @@ class ValueDomainNode(Node):
     This class implements the 'Value-Domain' node.
     """
     itemtype = ItemType.ValueDomainNode
-    minHeight = 50
+    minHeight = 40
     minWidth = 100
     name = 'value domain'
     padding = 16
