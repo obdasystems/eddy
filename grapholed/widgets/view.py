@@ -35,7 +35,7 @@
 from abc import ABCMeta, abstractmethod
 
 from grapholed.functions import clamp, connect, disconnect
-from grapholed.widgets import ZoomControl, PaneWidget
+from grapholed.widgets import ZoomControl, PaneWidget, DiagramScene
 
 from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QEvent, pyqtSlot, QPointF, QTimer
 from PyQt5.QtGui import QPen, QColor
@@ -106,16 +106,20 @@ class MainView(QGraphicsView):
 
             if mouseEvent.buttons() & Qt.LeftButton:
 
+                # stop previous timer before setting a new one
                 self.stopViewMove()
 
                 # see if the mouse is outside the viewport
                 viewportRect = viewport.rect()
                 if not viewportRect.contains(mouseEvent.pos()):
 
-                    # check if we have an item under the mouse => we are
-                    # dragging it outside the viewport rect, hence we need
-                    # to move the view so that the item stays visible
-                    if self.scene().itemOnTopOf(self.mapToScene(mouseEvent.pos()), edges=False):
+                    scene = self.scene()
+
+                    # we need to scroll the mainview whenever we move a node outside the viewport area or in case
+                    # we are adding an edge and the mouse goes outside the viewport area (so we can connect far nodes)
+                    if scene.mode == DiagramScene.InsertEdge or \
+                        scene.mode == DiagramScene.MoveItem and \
+                         scene.itemOnTopOf(self.mapToScene(mouseEvent.pos()), edges=False):
 
                         delta = QPointF()
                         
