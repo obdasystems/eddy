@@ -78,6 +78,7 @@ class AboutDialog(QDialog):
         self.text.setWordWrap(True)
         self.text.setOpenExternalLinks(True)
         self.text.setAlignment(Qt.AlignHCenter)
+        self.text.setFixedWidth(340)
 
         topLayout = QHBoxLayout()
         topLayout.addWidget(self.icon)
