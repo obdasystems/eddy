@@ -32,21 +32,16 @@
 ##########################################################################
 
 
-from PyQt5.QtWidgets import  QMessageBox, QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import  QMessageBox
 
 
 class MessageBox(QMessageBox):
     """
     This class implements the 'Preferences' dialog.
     """
-    def __init__(self, width=None, parent=None):
+    def __init__(self, parent=None):
         """
         Initialize the Message Box.
-        :param width: the minimum width of the message box.
         :param parent: the parent widget.
         """
         super().__init__(parent)
-        if width:
-            spacer = QSpacerItem(width, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-            layout = self.layout()
-            layout.addItem(spacer, layout.rowCount(), 0, 1, layout.columnCount())
