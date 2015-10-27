@@ -36,6 +36,7 @@ from grapholed.dialogs.about import AboutDialog
 from grapholed.dialogs.files import SaveFileDialog
 from grapholed.dialogs.files import OpenFileDialog
 from grapholed.dialogs.forms import CardinalityRestrictionForm
+from grapholed.dialogs.popups import MessageBox
 from grapholed.dialogs.preferences import PreferencesDialog
 from grapholed.dialogs.properties import NodePropertiesDialog
 from grapholed.dialogs.properties import ScenePropertiesDialog

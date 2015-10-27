@@ -39,7 +39,7 @@ import traceback
 from argparse import ArgumentParser
 from grapholed import images_rc ## DO NOT REMOVE
 from grapholed import Grapholed
-from grapholed.dialogs.popups import MessageBox
+from grapholed.dialogs import MessageBox
 from grapholed.widgets import SplashScreen
 from PyQt5.QtGui import QPixmap
 
@@ -87,7 +87,7 @@ def main():
         box.exec_()
         sys.exit(1)
     else:
-        window.show()
+        window.showMaximized()
         sys.exit(app.exec_())
 
 

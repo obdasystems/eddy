@@ -40,13 +40,13 @@ import webbrowser
 from PyQt5.QtCore import Qt, QSize, QRectF, pyqtSlot, QSettings, QFile, QIODevice
 from PyQt5.QtGui import QIcon, QKeySequence, QPixmap
 from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QAction, QStatusBar, QButtonGroup, QHBoxLayout
-from PyQt5.QtWidgets import QToolButton, QWidget, QUndoGroup, QMessageBox
+from PyQt5.QtWidgets import QToolButton, QWidget, QUndoGroup
 from PyQt5.QtXml import QDomDocument
 
 from grapholed import __version__ as version, __appname__ as appname
 from grapholed import __organization__ as organization
 from grapholed.datatypes import FileType
-from grapholed.dialogs import AboutDialog, OpenFileDialog,PreferencesDialog
+from grapholed.dialogs import AboutDialog, OpenFileDialog, PreferencesDialog, MessageBox
 from grapholed.exceptions import ParseError
 from grapholed.functions import getPath, shaded, connect, disconnect
 from grapholed.items import __mapping__
@@ -782,12 +782,12 @@ class MainWindow(QMainWindow):
         """
         file = QFile(filepath)
         if not file.open(QIODevice.ReadOnly):
-            box = QMessageBox()
+            box = MessageBox()
             box.setIconPixmap(QPixmap(':/icons/warning'))
             box.setWindowTitle('WARNING')
             box.setText('Unable to open Graphol document {0}!'.format(filepath))
             box.setDetailedText(file.errorString())
-            box.setStandardButtons(QMessageBox.Ok)
+            box.setStandardButtons(MessageBox.Ok)
             box.exec_()
             return None
 
@@ -828,7 +828,7 @@ class MainWindow(QMainWindow):
                 scene.uniqueID.update(edge.id)
 
         except Exception as e:
-            box = QMessageBox()
+            box = MessageBox()
             box.setIconPixmap(QPixmap(':/icons/warning'))
             box.setWindowTitle('WARNING')
             box.setText('Unable to parse Graphol document from {0}!'.format(filepath))
@@ -837,7 +837,7 @@ class MainWindow(QMainWindow):
             most_recent_calls = [x.strip().replace('\n', '') for x in most_recent_calls]
             # set the traceback as detailed text so it won't occupy too much space in the dialog box
             box.setDetailedText('{0}: {1}\n\n{2}'.format(e.__class__.__name__, str(e), '\n'.join(most_recent_calls)))
-            box.setStandardButtons(QMessageBox.Ok)
+            box.setStandardButtons(MessageBox.Ok)
             box.exec_()
             return None
         else:
