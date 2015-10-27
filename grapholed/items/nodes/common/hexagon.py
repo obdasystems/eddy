@@ -58,9 +58,9 @@ class HexagonNode(Node):
     indexTL = 5
     indexEE = 6
 
-    diagonalSize = 10
-    minHeight = 40
-    minWidth = 70
+    diagonalSize = 6
+    minHeight = 30
+    minWidth = 50
     shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
 
     def __init__(self, width=minWidth, height=minHeight, brush=(252, 252, 252), **kwargs):
