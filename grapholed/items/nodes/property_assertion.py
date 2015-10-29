@@ -44,10 +44,10 @@ class PropertyAssertionNode(Node):
     This class implements the 'Property Assertion' node.
     """
     itemtype = ItemType.PropertyAssertionNode
-    minHeight = 40
-    minWidth = 80
+    minHeight = 30
+    minWidth = 52
     name = 'property assertion'
-    radius = 20
+    radius = 16
     xmlname = 'property-assertion'
 
     def __init__(self, width=minWidth, height=minHeight, **kwargs):
