@@ -409,25 +409,25 @@ class MainWindow(QMainWindow):
 
         ################################################ SIGNALS #######################################################
 
-        connect(self.undoGroup.cleanChanged, self.handleUndoGroupCleanChanged)
-        connect(self.actionNewDocument.triggered, self.handleNewDocument)
-        connect(self.actionOpenDocument.triggered, self.handleOpenDocument)
-        connect(self.actionSaveDocument.triggered, self.handleSaveDocument)
-        connect(self.actionSaveDocumentAs.triggered, self.handleSaveDocumentAs)
-        connect(self.actionImportDocument.triggered, self.handleImportDocument)
-        connect(self.actionExportDocument.triggered, self.handleExportDocument)
-        connect(self.actionPrintDocument.triggered, self.handlePrintDocument)
+        connect(self.undoGroup.cleanChanged, self.onUndoGroupCleanChanged)
+        connect(self.actionNewDocument.triggered, self.doNewDocument)
+        connect(self.actionOpenDocument.triggered, self.doOpenDocument)
+        connect(self.actionSaveDocument.triggered, self.doSaveDocument)
+        connect(self.actionSaveDocumentAs.triggered, self.doSaveDocumentAs)
+        connect(self.actionImportDocument.triggered, self.doImportDocument)
+        connect(self.actionExportDocument.triggered, self.doExportDocument)
+        connect(self.actionPrintDocument.triggered, self.doPrintDocument)
         connect(self.actionCloseActiveSubWindow.triggered, lambda: self.mdiArea.activeSubWindow().close())
-        connect(self.actionOpenPreferences.triggered, self.handleOpenPreferences)
+        connect(self.actionOpenPreferences.triggered, self.doOpenPreferences)
         connect(self.actionQuit.triggered, self.close)
-        connect(self.actionSnapToGrid.triggered, self.handleSnapToGrid)
-        connect(self.actionAbout.triggered, self.handleAbout)
+        connect(self.actionSnapToGrid.triggered, self.doSnapToGrid)
+        connect(self.actionAbout.triggered, self.doAbout)
         connect(self.actionSapienzaWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/en'))
         connect(self.actionGrapholWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/~graphol/'))
-        connect(self.palettePG.buttonClicked[int], self.handleToolBoxButtonClicked)
-        connect(self.paletteCG.buttonClicked[int], self.handleToolBoxButtonClicked)
-        connect(self.paletteEG.buttonClicked[int], self.handleToolBoxButtonClicked)
-        connect(self.mdiArea.subWindowActivated, self.handleSubWindowActivated)
+        connect(self.palettePG.buttonClicked[int], self.onToolBoxButtonClicked)
+        connect(self.paletteCG.buttonClicked[int], self.onToolBoxButtonClicked)
+        connect(self.paletteEG.buttonClicked[int], self.onToolBoxButtonClicked)
+        connect(self.mdiArea.subWindowActivated, self.onSubWindowActivated)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -435,15 +435,16 @@ class MainWindow(QMainWindow):
     #                                                                                                                  #
     ####################################################################################################################
 
-    @staticmethod
-    def handleAbout():
+    @pyqtSlot()
+    def doAbout(self):
         """
         Display the about dialog.
         """
         about = AboutDialog()
         about.exec_()
 
-    def handleNewDocument(self):
+    @pyqtSlot()
+    def doNewDocument(self):
         """
         Create a new empty document and add it to the MDI Area.
         """
@@ -455,7 +456,8 @@ class MainWindow(QMainWindow):
         self.mdiArea.setActiveSubWindow(subwindow)
         self.mdiArea.update()
 
-    def handleOpenDocument(self):
+    @pyqtSlot()
+    def doOpenDocument(self):
         """
         Open a document.
         """
@@ -481,7 +483,8 @@ class MainWindow(QMainWindow):
                 self.mdiArea.setActiveSubWindow(subwindow)
                 self.mdiArea.update()
 
-    def handleSaveDocument(self):
+    @pyqtSlot()
+    def doSaveDocument(self):
         """
         Save the currently open graphol document.
         """
@@ -489,7 +492,8 @@ class MainWindow(QMainWindow):
         if subwindow:
             subwindow.saveScene()
 
-    def handleSaveDocumentAs(self):
+    @pyqtSlot()
+    def doSaveDocumentAs(self):
         """
         Save the currently open graphol document (enforcing a new name).
         """
@@ -497,13 +501,15 @@ class MainWindow(QMainWindow):
         if subwindow:
             subwindow.saveSceneAs()
 
-    def handleImportDocument(self):
+    @pyqtSlot()
+    def doImportDocument(self):
         """
         Import a document from a different file format.
         """
         pass
 
-    def handleExportDocument(self):
+    @pyqtSlot()
+    def doExportDocument(self):
         """
         Export the currently open graphol document.
         """
@@ -511,7 +517,8 @@ class MainWindow(QMainWindow):
         if subwindow:
             subwindow.exportScene()
 
-    def handlePrintDocument(self):
+    @pyqtSlot()
+    def doPrintDocument(self):
         """
         Print the currently open graphol document.
         """
@@ -519,14 +526,16 @@ class MainWindow(QMainWindow):
         if subwindow:
             subwindow.printScene()
 
-    def handleOpenPreferences(self):
+    @pyqtSlot()
+    def doOpenPreferences(self):
         """
         Open the preferences dialog.
         """
         preferences = PreferencesDialog(self.centralWidget())
         preferences.exec_()
 
-    def handleSnapToGrid(self):
+    @pyqtSlot()
+    def doSnapToGrid(self):
         """
         Toggle snap to grid setting.
         """
@@ -542,7 +551,7 @@ class MainWindow(QMainWindow):
     ####################################################################################################################
 
     @pyqtSlot('QMdiSubWindow')
-    def handleDocumentSaved(self, subwindow):
+    def onDocumentSaved(self, subwindow):
         """
         Executed when the document in a subwindow is saved.
         :param subwindow: the subwindow containing the saved document.
@@ -552,7 +561,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(scene.document.name)
 
     @pyqtSlot('QGraphicsItem', int)
-    def handleEdgeInsertEnd(self, edge, modifiers):
+    def onEdgeInsertEnd(self, edge, modifiers):
         """
         Triggered after a edge insertion process ends.
         :param edge: the inserted edge.
@@ -562,7 +571,7 @@ class MainWindow(QMainWindow):
             self.palette_items[edge.itemtype].setChecked(False)
 
     @pyqtSlot('QGraphicsItem', int)
-    def handleNodeInsertEnd(self, node, modifiers):
+    def onNodeInsertEnd(self, node, modifiers):
         """
         Triggered after a node insertion process ends.
         :param node: the inserted node.
@@ -572,7 +581,7 @@ class MainWindow(QMainWindow):
             self.palette_items[node.itemtype].setChecked(False)
 
     @pyqtSlot(int)
-    def handleModeChanged(self, mode):
+    def onModeChanged(self, mode):
         """
         Triggered when the scene operation mode changes.
         :param mode: the scene operation mode.
@@ -582,7 +591,7 @@ class MainWindow(QMainWindow):
                 btn.setChecked(False)
 
     @pyqtSlot(int)
-    def handleToolBoxButtonClicked(self, button_id):
+    def onToolBoxButtonClicked(self, button_id):
         """
         Executed whenever a node QToolButton in a QButtonGroup is clicked.
         :param button_id: the button id.
@@ -609,7 +618,7 @@ class MainWindow(QMainWindow):
                     scene.setMode(DiagramScene.InsertEdge, button.property('item'))
 
     @pyqtSlot('QMdiSubWindow')
-    def handleSubWindowActivated(self, subwindow):
+    def onSubWindowActivated(self, subwindow):
         """
         Executed when the active subwindow changes.
         :param subwindow: the subwindow which got the focus (0 if there is no subwindow).
@@ -632,7 +641,7 @@ class MainWindow(QMainWindow):
             disconnect(self.actionBringToFront.triggered)
             disconnect(self.actionSendToBack.triggered)
             disconnect(self.actionSelectAll.triggered)
-            disconnect(self.zoomctl.signalScaleChanged)
+            disconnect(self.zoomctl.scaleChanged)
             disconnect(mainview.zoomChanged)
 
             self.zoomctl.setEnabled(False)
@@ -640,15 +649,15 @@ class MainWindow(QMainWindow):
             self.zoomctl.setEnabled(True)
             
  
-            connect(self.actionItemCut.triggered, scene.handleItemCut)
-            connect(self.actionItemCopy.triggered, scene.handleItemCopy)
-            connect(self.actionItemPaste.triggered, scene.handleItemPaste)
-            connect(self.actionItemDelete.triggered, scene.handleItemDelete)
-            connect(self.actionBringToFront.triggered, scene.handleBringToFront)
-            connect(self.actionSendToBack.triggered, scene.handleSendToBack)
-            connect(self.actionSelectAll.triggered, scene.handleSelectAll)
-            connect(self.zoomctl.signalScaleChanged, mainview.handleScaleChanged)
-            connect(mainview.zoomChanged, self.zoomctl.handleMainViewZoomChanged)
+            connect(self.actionItemCut.triggered, scene.doItemCut)
+            connect(self.actionItemCopy.triggered, scene.doItemCopy)
+            connect(self.actionItemPaste.triggered, scene.doItemPaste)
+            connect(self.actionItemDelete.triggered, scene.doItemDelete)
+            connect(self.actionBringToFront.triggered, scene.doBringToFront)
+            connect(self.actionSendToBack.triggered, scene.doSendToBack)
+            connect(self.actionSelectAll.triggered, scene.doSelectAll)
+            connect(self.zoomctl.scaleChanged, mainview.onScaleChanged)
+            connect(mainview.zoomChanged, self.zoomctl.onMainViewZoomChanged)
 
             # update scene specific actions
             scene.updateActions()
@@ -677,7 +686,7 @@ class MainWindow(QMainWindow):
                 self.setWindowTitle()
 
     @pyqtSlot(bool)
-    def handleUndoGroupCleanChanged(self, clean):
+    def onUndoGroupCleanChanged(self, clean):
         """
         Executed when the clean state of the active undoStack changes.
         :param clean: the clean state.
@@ -745,8 +754,8 @@ class MainWindow(QMainWindow):
         """
         subwindow = self.mdiArea.addSubWindow(MdiSubWindow(mainview))
         scene = mainview.scene()
-        connect(scene.undoStack.cleanChanged, subwindow.handleUndoStackCleanChanged)
-        connect(subwindow.documentSaved, self.handleDocumentSaved)
+        connect(scene.undoStack.cleanChanged, subwindow.onUndoStackCleanChanged)
+        connect(subwindow.documentSaved, self.onDocumentSaved)
 
         if scene.document.filepath:
             # set the title in case the scene we are rendering
@@ -767,9 +776,9 @@ class MainWindow(QMainWindow):
         scene = DiagramScene(self)
         scene.setSceneRect(QRectF(-width / 2, -height / 2, width, height))
         scene.setItemIndexMethod(DiagramScene.NoIndex)
-        connect(scene.nodeInsertEnd, self.handleNodeInsertEnd)
-        connect(scene.edgeInsertEnd, self.handleEdgeInsertEnd)
-        connect(scene.modeChanged, self.handleModeChanged)
+        connect(scene.nodeInsertEnd, self.onNodeInsertEnd)
+        connect(scene.edgeInsertEnd, self.onEdgeInsertEnd)
+        connect(scene.modeChanged, self.onModeChanged)
         self.undoGroup.addStack(scene.undoStack)
         return scene
 

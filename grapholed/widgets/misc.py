@@ -49,7 +49,7 @@ class ZoomControl(QWidget):
     MaxScale = 5.00 # the maximum scale value
     Step = 4 # scale tick step
 
-    signalScaleChanged = pyqtSignal(float)
+    scaleChanged = pyqtSignal(float)
 
     def __init__(self, parent=None):
         """
@@ -73,7 +73,7 @@ class ZoomControl(QWidget):
         self.slider.setTickPosition(QSlider.NoTicks)
         self.slider.setTickInterval(1)
 
-        connect(self.slider.valueChanged, self.handleSliderValueChanged)
+        connect(self.slider.valueChanged, self.onSliderValueChanged)
 
         self.label = QLineEdit(self)
         self.label.setAttribute(Qt.WA_MacShowFocusRect, 0)
@@ -92,16 +92,16 @@ class ZoomControl(QWidget):
     ############################################## SIGNAL HANDLERS #####################################################
 
     @pyqtSlot()
-    def handleSliderValueChanged(self):
+    def onSliderValueChanged(self):
         """
         Executed when the value of the slider changes.
         """
         if self.isEnabled():
-            self.signalScaleChanged.emit(self.zoom[self.slider.value()])
+            self.scaleChanged.emit(self.zoom[self.slider.value()])
             self.setZoomText(self.slider.value())
 
     @pyqtSlot(float)
-    def handleMainViewZoomChanged(self, zoom):
+    def onMainViewZoomChanged(self, zoom):
         """
         Executed when the main view zoom value changes.
         :param zoom: the zoom value.

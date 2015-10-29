@@ -178,10 +178,10 @@ class DiagramScene(QGraphicsScene):
 
         ################################################# SIGNALS ######################################################
 
-        connect(self.nodeInsertEnd, self.handleNodeInsertEnd)
-        connect(self.edgeInsertEnd, self.handleEdgeInsertEnd)
-        connect(self.selectionChanged, self.handleSelectionChanged)
-        connect(self.actionProperties.triggered, self.handleSceneProperties)
+        connect(self.nodeInsertEnd, self.onNodeInsertEnd)
+        connect(self.edgeInsertEnd, self.onEdgeInsertEnd)
+        connect(self.selectionChanged, self.onSelectionChanged)
+        connect(self.actionProperties.triggered, self.doSceneProperties)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -190,7 +190,7 @@ class DiagramScene(QGraphicsScene):
     ####################################################################################################################
 
     @pyqtSlot()
-    def handleItemCut(self):
+    def doItemCut(self):
         """
         Cut selected items from the scene.
         """
@@ -210,7 +210,7 @@ class DiagramScene(QGraphicsScene):
         self.clipboardPasteOffsetZ = 0
 
     @pyqtSlot()
-    def handleItemCopy(self):
+    def doItemCopy(self):
         """
         Make a copy of selected items.
         """
@@ -219,7 +219,7 @@ class DiagramScene(QGraphicsScene):
         self.updateActions()
 
     @pyqtSlot()
-    def handleItemPaste(self):
+    def doItemPaste(self):
         """
         Paste previously copied items.
         """
@@ -287,7 +287,7 @@ class DiagramScene(QGraphicsScene):
         self.clipboardPasteOffsetZ += 0.1 * len(nodes)
 
     @pyqtSlot()
-    def handleItemDelete(self):
+    def doItemDelete(self):
         """
         Delete the currently selected items from the graphic scene.
         """
@@ -300,7 +300,7 @@ class DiagramScene(QGraphicsScene):
             self.undoStack.push(CommandItemsMultiRemove(scene=self, collection=selection))
 
     @pyqtSlot()
-    def handleBringToFront(self):
+    def doBringToFront(self):
         """
         Bring the selected item to the top of the scene.
         """
@@ -314,7 +314,7 @@ class DiagramScene(QGraphicsScene):
                 self.undoStack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
 
     @pyqtSlot()
-    def handleSendToBack(self):
+    def doSendToBack(self):
         """
         Send the selected item to the back of the scene.
         """
@@ -328,7 +328,7 @@ class DiagramScene(QGraphicsScene):
                 self.undoStack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
 
     @pyqtSlot()
-    def handleSelectAll(self):
+    def doSelectAll(self):
         """
         Select all the items in the scene.
         """
@@ -338,7 +338,7 @@ class DiagramScene(QGraphicsScene):
             item.setSelected(True)
 
     @pyqtSlot()
-    def handleSceneProperties(self):
+    def doSceneProperties(self):
         """
         Executed when scene properties needs to be diplayed.
         """
@@ -352,7 +352,7 @@ class DiagramScene(QGraphicsScene):
     ####################################################################################################################
 
     @pyqtSlot('QGraphicsItem', int)
-    def handleEdgeInsertEnd(self, edge, modifiers):
+    def onEdgeInsertEnd(self, edge, modifiers):
         """
         Triggered after a edge insertion process ends.
         :param edge: the inserted edge.
@@ -360,22 +360,20 @@ class DiagramScene(QGraphicsScene):
         """
         self.command = None
         if not modifiers & Qt.ControlModifier:
-            # set back default mode if CTRL is not being held
             self.setMode(DiagramScene.MoveItem)
 
     @pyqtSlot('QGraphicsItem', int)
-    def handleNodeInsertEnd(self, node, modifiers):
+    def onNodeInsertEnd(self, node, modifiers):
         """
         Triggered after a node insertion process ends.
         :param node: the inserted node.
         :param modifiers: keyboard modifiers held during node insertion.
         """
         if not modifiers & Qt.ControlModifier:
-            # set back default mode if CTRL is not being held
             self.setMode(DiagramScene.MoveItem)
 
     @pyqtSlot()
-    def handleSelectionChanged(self):
+    def onSelectionChanged(self):
         """
         Executed when the scene selection changes.
         """
@@ -414,7 +412,7 @@ class DiagramScene(QGraphicsScene):
         if keyEvent.key() in {Qt.Key_Delete, Qt.Key_Backspace}:
             # handle this here and not using a shortcut otherwise we won't be able
             # to delete elements on systems not having the CANC button on the keyboard
-            self.handleItemDelete()
+            self.doItemDelete()
         super().keyPressEvent(keyEvent)
 
     def mousePressEvent(self, mouseEvent):

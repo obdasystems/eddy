@@ -65,7 +65,7 @@ class MainView(QGraphicsView):
     ############################################### SIGNAL HANDLERS ####################################################
 
     @pyqtSlot(float)
-    def handleScaleChanged(self, zoom):
+    def onScaleChanged(self, zoom):
         """
         Executed when the scale factor changes (triggered by the Main Slider in the Toolbar)
         :param zoom: the scale factor.
