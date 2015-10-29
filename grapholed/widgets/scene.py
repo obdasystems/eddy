@@ -640,7 +640,7 @@ class DiagramScene(QGraphicsScene):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def asGraphol(self):
+    def toGraphol(self):
         """
         Export the current node in Graphol format.
         :rtype: QDomDocument
@@ -665,11 +665,11 @@ class DiagramScene(QGraphicsScene):
 
         for node in self.nodes():
             # append all the nodes to the graph element
-            graph.appendChild(node.asGraphol(document))
+            graph.appendChild(node.toGraphol(document))
 
         for edge in self.edges():
             # append all the edges to the graph element
-            graph.appendChild(edge.asGraphol(document))
+            graph.appendChild(edge.toGraphol(document))
 
         # append the whole graph to the root
         root.appendChild(graph)

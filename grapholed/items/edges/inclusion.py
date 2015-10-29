@@ -85,13 +85,13 @@ class InclusionEdge(Edge):
 
     ############################################# ITEM IMPORT / EXPORT #################################################
 
-    def asGraphol(self, document):
+    def toGraphol(self, document):
         """
         Export the current item in Graphol format.
         :param document: the XML document where this item will be inserted.
         :rtype: QDomElement
         """
-        edge = super().asGraphol(document)
+        edge = super().toGraphol(document)
         edge.setAttribute('complete', int(self.complete))
         return edge
 

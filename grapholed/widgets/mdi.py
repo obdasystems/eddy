@@ -347,7 +347,7 @@ class MdiSubWindow(QMdiSubWindow):
 
         try:
             stream = QTextStream(tmpFile)
-            document = scene.asGraphol()
+            document = scene.toGraphol()
             document.save(stream, 2)
             tmpFile.close()
             if os.path.isfile(filepath):

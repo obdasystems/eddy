@@ -128,7 +128,7 @@ class ConceptNode(ResizableNode):
 
     ############################################# ITEM IMPORT / EXPORT #################################################
 
-    def asGraphol(self, document):
+    def toGraphol(self, document):
         """
         Export the current item in Graphol format.
         :param document: the XML document where this item will be inserted.
