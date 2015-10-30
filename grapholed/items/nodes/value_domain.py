@@ -33,10 +33,9 @@
 
 
 from grapholed.commands import CommandNodeValueDomainSelectDatatype
-from grapholed.datatypes import Font, XsdDatatype
+from grapholed.datatypes import Font, ItemType, XsdDatatype
 from grapholed.exceptions import ParseError
 from grapholed.functions import connect
-from grapholed.items import ItemType
 from grapholed.items.nodes.common.base import Node
 from grapholed.items.nodes.common.label import Label
 

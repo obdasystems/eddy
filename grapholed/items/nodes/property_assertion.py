@@ -31,8 +31,9 @@
 #                                                                        #
 ##########################################################################
 
+
+from grapholed.datatypes import ItemType
 from grapholed.exceptions import ParseError
-from grapholed.items import ItemType
 from grapholed.items.nodes.common.base import Node
 
 from PyQt5.QtCore import Qt, QRectF, QPointF

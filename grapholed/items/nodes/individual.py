@@ -34,10 +34,9 @@
 
 import math
 
-from grapholed.datatypes import Font
+from grapholed.datatypes import Font, ItemType
 from grapholed.exceptions import ParseError
 from grapholed.functions import snapToGrid
-from grapholed.items import ItemType
 from grapholed.items.nodes.common.base import ResizableNode
 from grapholed.items.nodes.common.label import Label
 

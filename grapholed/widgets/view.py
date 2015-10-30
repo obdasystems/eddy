@@ -34,8 +34,9 @@
 
 from abc import ABCMeta, abstractmethod
 
+from grapholed.datatypes import DiagramMode
 from grapholed.functions import clamp, connect, disconnect
-from grapholed.widgets import ZoomControl, PaneWidget, DiagramScene
+from grapholed.widgets import ZoomControl, PaneWidget
 
 from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QEvent, pyqtSlot, QPointF, QTimer
 from PyQt5.QtGui import QPen, QColor
@@ -117,8 +118,7 @@ class MainView(QGraphicsView):
 
                     # we need to scroll the mainview whenever we move a node outside the viewport area or in case
                     # we are adding an edge and the mouse goes outside the viewport area (so we can connect far nodes)
-                    if scene.mode == DiagramScene.InsertEdge or \
-                        scene.mode == DiagramScene.MoveItem and \
+                    if scene.mode in (DiagramMode.EdgeInsert, DiagramMode.NodeMove) and \
                          scene.itemOnTopOf(self.mapToScene(mouseEvent.pos()), edges=False):
 
                         delta = QPointF()

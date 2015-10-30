@@ -35,8 +35,8 @@
 from math import sin, cos, radians, pi as M_PI
 
 from grapholed.commands import CommandEdgeInclusionToggleCompletness
+from grapholed.datatypes import DiagramMode, ItemType
 from grapholed.functions import connect
-from grapholed.items import ItemType
 from grapholed.items.edges.common.base import Edge
 
 from PyQt5.QtCore import QPointF, QLineF, Qt
@@ -345,7 +345,7 @@ class InclusionEdge(Edge):
             scene = self.scene()
 
             # Draw the selection path if needed
-            if scene.mode == scene.MoveItem and self.isSelected():
+            if scene.mode in (DiagramMode.Idle, DiagramMode.NodeMove) and self.isSelected():
                 painter.setRenderHint(QPainter.Antialiasing)
                 painter.fillPath(self.selection, self.selectionBrush)
 

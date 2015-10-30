@@ -34,32 +34,81 @@
 
 import os
 
+from grapholed import __appname__ as appname, __organization__ as organization
+from grapholed.commands import CommandItemsMultiAdd, CommandItemsMultiRemove
+from grapholed.commands import CommandNodeAdd, CommandNodeSetZValue, CommandNodeMove
+from grapholed.commands import CommandEdgeAdd
+from grapholed.datatypes import DiagramMode
+from grapholed.dialogs import ScenePropertiesDialog
+from grapholed.functions import getPath, snapToGrid, rangeF, connect
+from grapholed.items import Item
+from grapholed.tools import UniqueID
+
 from PyQt5.QtCore import Qt, pyqtSignal, QPointF, pyqtSlot, QSettings, QRectF
 from PyQt5.QtGui import QPen, QColor, QIcon
 from PyQt5.QtPrintSupport import QPrinter
 from PyQt5.QtWidgets import QGraphicsScene, QUndoStack, QMenu, QAction
 from PyQt5.QtXml import QDomDocument
 
-from grapholed import __appname__ as appname, __organization__ as organization
-from grapholed.commands import CommandItemsMultiAdd, CommandItemsMultiRemove
-from grapholed.commands import CommandNodeAdd, CommandNodeSetZValue, CommandNodeMove
-from grapholed.commands import CommandEdgeAdd
-from grapholed.dialogs import ScenePropertiesDialog
-from grapholed.functions import snapToGrid, rangeF, connect
-from grapholed.items import Item
-from grapholed.tools import UniqueID
+
+class DiagramDocument(object):
+    """
+    This class is used to hold scene saved file data (filepath, filename etc).
+    """
+    def __init__(self):
+        """
+        Initialize the scene document.
+        """
+        self._filepath = ''
+        self._edited = None
+
+    @property
+    def edited(self):
+        """
+        Returns the timestamp when the file has been last modified.
+        :return: float
+        """
+        return self._edited
+
+    @edited.setter
+    def edited(self, value):
+        """
+        Set the timestamp when the file has been last modified
+        :param value: the timestamp value
+        """
+        self._edited = float(value)
+
+    @property
+    def filepath(self):
+        """
+        Returns the filepath of the document.
+        :return: str
+        """
+        return self._filepath
+
+    @filepath.setter
+    def filepath(self, value):
+        """
+        Set the filepath of the document.
+        :param value: the filepath of the document.
+        """
+        self._filepath = getPath(value)
+
+    @property
+    def name(self):
+        """
+        Returns the name of the saved file.
+        :rtype: str
+        """
+        if not self.filepath:
+            return 'Untitled'
+        return os.path.basename(os.path.normpath(self.filepath))
 
 
 class DiagramScene(QGraphicsScene):
     """
     This class implements the main Diagram Scene.
     """
-    ## OPERATION MODE
-    MoveItem = 1
-    InsertNode = 2
-    InsertEdge = 3
-
-    ## CONSTANTS
     GridPen = QPen(QColor(80, 80, 80), 0, Qt.SolidLine)
     GridSize = 20
     MinSize = 2000
@@ -67,70 +116,10 @@ class DiagramScene(QGraphicsScene):
     PasteOffsetX = 20
     PasteOffsetY = 10
 
-    ## SIGNALS
-    nodeInsertEnd = pyqtSignal('QGraphicsItem', int)  # emitted when a node is inserted in the scene
-    edgeInsertEnd = pyqtSignal('QGraphicsItem', int)  # emitted when a edge is inserted in the scene
-    modeChanged = pyqtSignal(int)  # emitted when the operational mode changes
+    nodeInserted = pyqtSignal('QGraphicsItem', int)  # emitted when a node is inserted in the scene
+    edgeInserted = pyqtSignal('QGraphicsItem', int)  # emitted when a edge is inserted in the scene
+    modeChanged = pyqtSignal(DiagramMode)  # emitted when the operational mode changes
     updated = pyqtSignal()  # emitted when the scene is updated
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SCENE DOCUMENT                                                                                                 #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    class Document(object):
-        """
-        This class is used to hold scene saved file data (filepath, filename etc).
-        """
-        def __init__(self):
-            """
-            Initialize the scene document.
-            """
-            self._filepath = ''
-            self._edited = None
-
-        @property
-        def edited(self):
-            """
-            Returns the timestamp when the file has been last modified.
-            :return: float
-            """
-            return self._edited
-
-        @edited.setter
-        def edited(self, value):
-            """
-            Set the timestamp when the file has been last modified
-            :param value: the timestamp value
-            """
-            self._edited = float(value)
-
-        @property
-        def filepath(self):
-            """
-            Returns the filepath of the document.
-            :return: str
-            """
-            return self._filepath
-
-        @filepath.setter
-        def filepath(self, value):
-            """
-            Set the filepath of the document.
-            :param value: the filepath of the document.
-            """
-            self._filepath = value
-
-        @property
-        def name(self):
-            """
-            Returns the name of the saved file.
-            :rtype: str
-            """
-            if not self.filepath:
-                return 'Untitled'
-            return os.path.basename(os.path.normpath(self.filepath))
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -150,19 +139,17 @@ class DiagramScene(QGraphicsScene):
         self.clipboardPasteOffsetX = DiagramScene.PasteOffsetX  ## X offset to be added to item position upon paste
         self.clipboardPasteOffsetY = DiagramScene.PasteOffsetY  ## Y offset to be added to item position upon paste
         self.clipboardPasteOffsetZ = 0  ## > offset to be added to item zValue upon paste
-        self.document = DiagramScene.Document()  ## will contain the filepath of the graphol document
+        self.document = DiagramDocument()  ## document associated with the current scene
         self.settings = QSettings(organization, appname)  ## application settings
         self.uniqueID = UniqueID()  ## used to generate unique incrementsl ids
         self.undoStack = QUndoStack(self)  ## use to push actions and keep history for undo/redo
         self.undoStack.setUndoLimit(50) ## TODO: make the stack configurable
-        self.mode = self.MoveItem ## operation mode
+        self.mode = DiagramMode.Idle ## operation mode
         self.modeParam = None  ## extra parameter for the operation mode (see setMode())
         self.mousePressPos = None  ## scene position where the mouse has been pressed
         self.mousePressNode = None  ## node acting as mouse grabber during mouse move events
         self.mousePressNodePos = None  ## position of the shape acting as mouse grabber during mouse move events
         self.mousePressData = {}  ## extra data needed to process item interactive movements
-        self.mouseMoved = False  ## will be set to true whenever nodes will be moved using the mouse
-        self.resizing = False  ## will be set to true when interactive resize is triggered
 
         ################################################# ACTIONS ######################################################
 
@@ -178,8 +165,8 @@ class DiagramScene(QGraphicsScene):
 
         ################################################# SIGNALS ######################################################
 
-        connect(self.nodeInsertEnd, self.onNodeInsertEnd)
-        connect(self.edgeInsertEnd, self.onEdgeInsertEnd)
+        connect(self.nodeInserted, self.onNodeInserted)
+        connect(self.edgeInserted, self.onEdgeInserted)
         connect(self.selectionChanged, self.onSelectionChanged)
         connect(self.actionProperties.triggered, self.doSceneProperties)
 
@@ -194,17 +181,16 @@ class DiagramScene(QGraphicsScene):
         """
         Cut selected items from the scene.
         """
-        self.setMode(DiagramScene.MoveItem)
+        self.setMode(DiagramMode.Idle)
         self.updateClipboard()
         self.updateActions()
 
         selection = self.selectedItems()
         if selection:
-            # extend the selection adding hanging edges
             selection.extend([x for item in selection if item.isNode() for x in item.edges if x not in selection])
             self.undoStack.push(CommandItemsMultiRemove(scene=self, collection=selection))
 
-        # set the offset to 0 so we can paste in the same position
+        # clear offsets so we can paste in the same position
         self.clipboardPasteOffsetX = 0
         self.clipboardPasteOffsetY = 0
         self.clipboardPasteOffsetZ = 0
@@ -214,7 +200,7 @@ class DiagramScene(QGraphicsScene):
         """
         Make a copy of selected items.
         """
-        self.setMode(DiagramScene.MoveItem)
+        self.setMode(DiagramMode.Idle)
         self.updateClipboard()
         self.updateActions()
 
@@ -223,7 +209,7 @@ class DiagramScene(QGraphicsScene):
         """
         Paste previously copied items.
         """
-        self.setMode(DiagramScene.MoveItem)
+        self.setMode(DiagramMode.Idle)
 
         def ncopy(node):
             """
@@ -291,11 +277,9 @@ class DiagramScene(QGraphicsScene):
         """
         Delete the currently selected items from the graphic scene.
         """
-        self.setMode(DiagramScene.MoveItem)
-
+        self.setMode(DiagramMode.Idle)
         selection = self.selectedItems()
         if selection:
-            # extend the selection adding hanging edges
             selection.extend([x for item in selection if item.isNode() for x in item.edges if x not in selection])
             self.undoStack.push(CommandItemsMultiRemove(scene=self, collection=selection))
 
@@ -304,6 +288,7 @@ class DiagramScene(QGraphicsScene):
         """
         Bring the selected item to the top of the scene.
         """
+        self.setMode(DiagramMode.Idle)
         for selected in self.selectedNodes():
             zValue = 0
             colliding = selected.collidingItems()
@@ -318,6 +303,7 @@ class DiagramScene(QGraphicsScene):
         """
         Send the selected item to the back of the scene.
         """
+        self.setMode(DiagramMode.Idle)
         for selected in self.selectedNodes():
             zValue = 0
             colliding = selected.collidingItems()
@@ -332,7 +318,7 @@ class DiagramScene(QGraphicsScene):
         """
         Select all the items in the scene.
         """
-        self.setMode(DiagramScene.MoveItem)
+        self.setMode(DiagramMode.Idle)
         self.clearSelection()
         for item in self.nodes() + self.edges():
             item.setSelected(True)
@@ -352,7 +338,7 @@ class DiagramScene(QGraphicsScene):
     ####################################################################################################################
 
     @pyqtSlot('QGraphicsItem', int)
-    def onEdgeInsertEnd(self, edge, modifiers):
+    def onEdgeInserted(self, edge, modifiers):
         """
         Triggered after a edge insertion process ends.
         :param edge: the inserted edge.
@@ -360,17 +346,17 @@ class DiagramScene(QGraphicsScene):
         """
         self.command = None
         if not modifiers & Qt.ControlModifier:
-            self.setMode(DiagramScene.MoveItem)
+            self.setMode(DiagramMode.Idle)
 
     @pyqtSlot('QGraphicsItem', int)
-    def onNodeInsertEnd(self, node, modifiers):
+    def onNodeInserted(self, node, modifiers):
         """
         Triggered after a node insertion process ends.
         :param node: the inserted node.
         :param modifiers: keyboard modifiers held during node insertion.
         """
         if not modifiers & Qt.ControlModifier:
-            self.setMode(DiagramScene.MoveItem)
+            self.setMode(DiagramMode.Idle)
 
     @pyqtSlot()
     def onSelectionChanged(self):
@@ -422,7 +408,7 @@ class DiagramScene(QGraphicsScene):
         """
         if mouseEvent.buttons() & Qt.LeftButton:
 
-            if self.mode == DiagramScene.InsertNode:
+            if self.mode is DiagramMode.NodeInsert:
 
                 ############################################ NODE INSERTION ############################################
 
@@ -431,13 +417,14 @@ class DiagramScene(QGraphicsScene):
                 node = func(scene=self)
                 node.setPos(self.snapToGrid(mouseEvent.scenePos()))
 
-                # push the command in the undo stack so we can revert the action
+                # no need to switch back the operation mode here: the signal handlers already does that and takes
+                # care of the keyboard modifiers being held (if CTRL is being held the operation mode doesn't change)
                 self.undoStack.push(CommandNodeAdd(scene=self, node=node))
-                self.nodeInsertEnd.emit(node, mouseEvent.modifiers())
+                self.nodeInserted.emit(node, mouseEvent.modifiers())
 
                 super().mousePressEvent(mouseEvent)
 
-            elif self.mode == DiagramScene.InsertEdge:
+            elif self.mode is DiagramMode.EdgeInsert:
 
                 ############################################ EDGE INSERTION ############################################
 
@@ -449,8 +436,7 @@ class DiagramScene(QGraphicsScene):
                     edge = func(scene=self, source=node)
                     edge.updateEdge(target=mouseEvent.scenePos())
 
-                    # put the command on hold since we don't know if the edge will be truly inserted or the
-                    # insertion will be aborted (case when the user fails to release the edge arrow on top of a node)
+                    # put the command on hold since we don't know if the edge will be truly inserted
                     self.command = CommandEdgeAdd(scene=self, edge=edge)
 
                     # add the edge to the scene
@@ -458,27 +444,27 @@ class DiagramScene(QGraphicsScene):
 
                 super().mousePressEvent(mouseEvent)
 
-            elif self.mode == DiagramScene.MoveItem:
+            else:
 
-                ############################################ ITEM MOVEMENT #############################################
-
-                # execute the mouse press event first: this is needed before we prepare data for the move event because
-                # we may select another node (eventually using the control modifier) or init a shape interactive resize
-                # that will clear the selection hence bypass the interactive move.
+                # see if this event needs to be handled in graphics items before we prepare data for a different
+                # operational mode: a graphics item may bypass the actions being performed here below by
+                # switching the operational mode to something different than DiagramMode.Idle.
                 super().mousePressEvent(mouseEvent)
 
-                if not self.resizing:
+                if self.mode is DiagramMode.Idle:
+
+                    ########################################## ITEM MOVEMENT ###########################################
 
                     # see if we have some nodes selected in the scene: this is needed because itemOnTopOf
                     # will discard labels, so if we have a node whose label is overlapping the node shape,
-                    # clicking on the label will make itemOnTopOf return the node item instad of the label itself.
+                    # clicking on the label will make itemOnTopOf return the node item instead of the label.
                     selected = self.selectedNodes()
 
                     if selected:
 
                         # we have some nodes selected in the scene so we probably are going to do a
-                        # move operation, prepare data for mouse move event => selecta node that will act
-                        # as mouse grabber to compute delta movements for each componened in the selection
+                        # move operation, prepare data for mouse move event => select a node that will act
+                        # as mouse grabber to compute delta movements for each componenet in the selection
                         self.mousePressNode = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
 
                         if self.mousePressNode:
@@ -511,22 +497,28 @@ class DiagramScene(QGraphicsScene):
         """
         if mouseEvent.buttons() & Qt.LeftButton:
 
-            if self.mode == DiagramScene.InsertEdge and self.command and self.command.edge:
+            if self.mode is DiagramMode.EdgeInsert:
 
-                ############################################ NODE INSERTION ############################################
+                ############################################ EDGE INSERTION ############################################
 
-                # update the edge position so that it will follow the mouse cursor
-                self.command.edge.updateEdge(target=mouseEvent.scenePos())
+                # update the edge position so that it will follow the mouse one
+                if self.command and self.command.edge:
+                    self.command.edge.updateEdge(target=mouseEvent.scenePos())
 
-            elif self.mode == DiagramScene.MoveItem:
+            else:
 
-                ############################################ ITEM MOVEMENT #############################################
+                # if we are still idle we are probably going to start a node(s) move: if that's
+                # the case change the operational mode before actually computing delta movements
+                if self.mode is DiagramMode.Idle:
+                    if self.mousePressNode:
+                        self.setMode(DiagramMode.NodeMove)
 
-                if not self.resizing and self.mousePressNode:
+                if self.mode is DiagramMode.NodeMove:
 
-                    # calculate the delta and adjust the value if the snap to grid feature is
-                    # enabled: we'll use the position of the node acting as mouse grabber to
-                    # determine the new delta value and move other items accordingly
+                    ########################################## ITEM MOVEMENT ###########################################
+
+                    # calculate the delta and adjust the value if the snap to grid feature is enabled: we'll use the
+                    # position of the node acting as mouse grabber to determine the new delta to and move other items
                     snapped = self.snapToGrid(self.mousePressNodePos + mouseEvent.scenePos() - self.mousePressPos)
                     delta = snapped - self.mousePressNodePos
 
@@ -537,19 +529,12 @@ class DiagramScene(QGraphicsScene):
 
                     # move all the selected nodes
                     for node, data in self.mousePressData['nodes'].items():
-                        # update node position and attached edges
                         node.setPos(data['pos'] + delta)
-                        # update anchors points
                         for edge, pos in data['anchors'].items():
                             node.setAnchor(edge, pos + delta)
-                        # update the edges connected to the shape
                         node.updateEdges()
 
-                    # mark mouse move as happened so we can push
-                    # the undo command in the stack on mouse release
-                    self.mouseMoved = True
-
-        # always call super for this event since it will also trigger hover events on shapes
+        # !!! IMPORTANT !!! THIS MUST ALWAYS BE CALLED SINCE IT TRIGGERS ALSO HOVER EVENTS FOR GRAPHICS ITEMS
         super().mouseMoveEvent(mouseEvent)
 
     def mouseReleaseEvent(self, mouseEvent):
@@ -559,51 +544,53 @@ class DiagramScene(QGraphicsScene):
         """
         if mouseEvent.button() == Qt.LeftButton:
 
-            if self.mode == DiagramScene.InsertEdge and self.command and self.command.edge:
+            if self.mode is DiagramMode.EdgeInsert:
 
                 ############################################ EDGE INSERTION ############################################
 
-                # keep the edge only if it's overlapping a node in the scene
-                node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
+                if self.command and self.command.edge:
 
-                if node:
+                    # keep the edge only if it's overlapping a node in the scene
+                    node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
 
-                    self.command.edge.target = node
-                    self.command.edge.source.addEdge(self.command.edge)
-                    self.command.edge.target.addEdge(self.command.edge)
-                    self.command.edge.updateEdge()
+                    if node:
 
-                    # push the command in the undostack
-                    self.undoStack.push(self.command)
-                    self.updated.emit()
+                        self.command.edge.target = node
+                        self.command.edge.source.addEdge(self.command.edge)
+                        self.command.edge.target.addEdge(self.command.edge)
+                        self.command.edge.updateEdge()
 
-                else:
+                        self.undoStack.push(self.command)
+                        self.updated.emit()
 
-                    # remove the edge from the scene
-                    self.removeItem(self.command.edge)
+                    else:
 
-                self.edgeInsertEnd.emit(self.command.edge, mouseEvent.modifiers())
-                self.clearSelection()
-                self.command = None
+                        # remove the edge from the scene
+                        self.removeItem(self.command.edge)
 
-            elif self.mode == DiagramScene.MoveItem:
+                    # always emit this signal even if the edge has not been inserted since this will clear
+                    # also the toolbox switching back the operation mode to DiagramMode.Idle in case the CTRL
+                    # keyboard modifier is not being held (in which case the toolbox button will stay selected)
+                    self.edgeInserted.emit(self.command.edge, mouseEvent.modifiers())
 
-                ############################################ NODE INSERTION ############################################
+                    self.clearSelection()
+                    self.command = None
 
-                if self.mouseMoved:
+            elif self.mode is DiagramMode.NodeMove:
 
-                    # collect new positions for the undo command
-                    data = {
-                        'nodes': {
-                            node: {
-                                'anchors': {k: v for k, v in node.anchors.items()},
-                                'pos': node.pos(),
-                            } for node in self.mousePressData['nodes']},
-                        'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}
-                    }
+                ########################################## ITEM MOVEMENT ###########################################
 
-                    # push the command in the stack so we can revert the moving operation
-                    self.undoStack.push(CommandNodeMove(scene=self, pos1=self.mousePressData, pos2=data))
+                data = {
+                    'nodes': {
+                        node: {
+                            'anchors': {k: v for k, v in node.anchors.items()},
+                            'pos': node.pos(),
+                        } for node in self.mousePressData['nodes']},
+                    'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}
+                }
+
+                self.undoStack.push(CommandNodeMove(scene=self, pos1=self.mousePressData, pos2=data))
+                self.setMode(DiagramMode.Idle)
 
         super().mouseReleaseEvent(mouseEvent)
 
@@ -611,7 +598,6 @@ class DiagramScene(QGraphicsScene):
         self.mousePressNode = None
         self.mousePressNodePos = None
         self.mousePressData = None
-        self.mouseMoved = False
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -628,11 +614,10 @@ class DiagramScene(QGraphicsScene):
         # do not draw the background grid if we are printing the scene
         if self.settings.value('scene/snap_to_grid', False, bool) and not isinstance(painter.device(), QPrinter):
             painter.setPen(DiagramScene.GridPen)
-            startX = int(rect.left()) - (int(rect.left()) % self.GridSize)
-            startY = int(rect.top()) - (int(rect.top()) % self.GridSize)
-            points = [QPointF(x, y) for x in rangeF(startX, rect.right(), self.GridSize) \
-                                        for y in rangeF(startY, rect.bottom(), self.GridSize)]
-            painter.drawPoints(*points)
+            startX = int(rect.left()) - (int(rect.left()) % DiagramScene.GridSize)
+            startY = int(rect.top()) - (int(rect.top()) % DiagramScene.GridSize)
+            painter.drawPoints(*(QPointF(x, y) for x in rangeF(startX, rect.right(), DiagramScene.GridSize) \
+                                                 for y in rangeF(startY, rect.bottom(), DiagramScene.GridSize)))
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -645,10 +630,10 @@ class DiagramScene(QGraphicsScene):
         Export the current node in Graphol format.
         :rtype: QDomDocument
         """
-        document = QDomDocument()
-        document.appendChild(document.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8" standalone="no"'))
+        doc = QDomDocument()
+        doc.appendChild(doc.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8" standalone="no"'))
 
-        root = document.createElement('graphol')
+        root = doc.createElement('graphol')
         root.setAttribute('xmlns', 'http://www.dis.uniroma1.it/~graphol/schema')
         root.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
         root.setAttribute('xmlns:data', 'http://www.dis.uniroma1.it/~graphol/schema/data')
@@ -657,24 +642,24 @@ class DiagramScene(QGraphicsScene):
         root.setAttribute('xsi:schemaLocation', 'http://www.dis.uniroma1.it/~graphol/schema '
                                                 'http://www.dis.uniroma1.it/~graphol/schema/graphol.xsd')
 
-        document.appendChild(root)
+        doc.appendChild(root)
 
-        graph = document.createElement('graph')
+        graph = doc.createElement('graph')
         graph.setAttribute('width', self.sceneRect().width())
         graph.setAttribute('height', self.sceneRect().height())
 
         for node in self.nodes():
             # append all the nodes to the graph element
-            graph.appendChild(node.toGraphol(document))
+            graph.appendChild(node.toGraphol(doc))
 
         for edge in self.edges():
             # append all the edges to the graph element
-            graph.appendChild(edge.toGraphol(document))
+            graph.appendChild(edge.toGraphol(doc))
 
         # append the whole graph to the root
         root.appendChild(graph)
 
-        return document
+        return doc
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -774,9 +759,10 @@ class DiagramScene(QGraphicsScene):
         :param mode: the operation mode.
         :param param: the mode parameter (if any).
         """
-        self.mode = mode
-        self.modeParam = param
-        self.modeChanged.emit(mode)
+        if self.mode != mode or self.modeParam != param:
+            self.mode = mode
+            self.modeParam = param
+            self.modeChanged.emit(mode)
 
     def snapToGrid(self, point):
         """

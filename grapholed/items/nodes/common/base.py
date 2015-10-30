@@ -36,7 +36,7 @@ from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 
 from grapholed.commands import CommandNodeRezize
-from grapholed.datatypes import DistinctList
+from grapholed.datatypes import DistinctList, DiagramMode
 from grapholed.dialogs import NodePropertiesDialog
 from grapholed.functions import connect
 from grapholed.items import Item
@@ -272,37 +272,43 @@ class Node(Item):
         Executed when the mouse is pressed on the item.
         :param mouseEvent: the mouse event instance.
         """
-        # here is a slightly modified version of the default behavior
-        # which improves the interaction with multiple selected nodes
-        if mouseEvent.modifiers() & Qt.ControlModifier:
-            # if the control modifier is being held switch the selection flag
-            self.setSelected(not self.isSelected())
-        else:
-            scene = self.scene()
-            if scene.selectedItems():
-                # some elements are already selected (previoust mouse press event)
-                if not self.isSelected():
-                    # there are some items selected but we clicked on a node
-                    # which is not currently selected, so select only this one
+        scene = self.scene()
+
+        # allow node selection only if we are in DiagramMode.Idle state: resizable
+        # nodes may have changed the scene mode to DiagramMode.NodeResize if a resize
+        # handle is selected, thus we don't need to perform (multi)selection
+        if scene.mode is DiagramMode.Idle:
+
+            # here is a slightly modified version of the default behavior
+            # which improves the interaction with multiple selected nodes
+            if mouseEvent.modifiers() & Qt.ControlModifier:
+                # if the control modifier is being held switch the selection flag
+                self.setSelected(not self.isSelected())
+            else:
+                if scene.selectedItems():
+                    # some elements are already selected (previoust mouse press event)
+                    if not self.isSelected():
+                        # there are some items selected but we clicked on a node
+                        # which is not currently selected, so select only this one
+                        scene.clearSelection()
+                        self.setSelected(True)
+                else:
+                    # no node is selected and we just clicked on one so select it
+                    # since we filter out the Label, clear the scene selection
+                    # in any case to avoid strange bugs.
                     scene.clearSelection()
                     self.setSelected(True)
-            else:
-                # no node is selected and we just clicked on one so select it
-                # since we filter out the Label, clear the scene selection
-                # in any case to avoid strange bugs.
-                scene.clearSelection()
-                self.setSelected(True)
 
     def mouseMoveEvent(self, mouseEvent):
         """
-        Executed when the mouse is being moved over the item while being pressed.
+        Executed when the mouse is being moved over the item while being pressed (EXCLUDED).
         :param mouseEvent: the mouse move event instance.
         """
         pass
 
     def mouseReleaseEvent(self, mouseEvent):
         """
-        Executed when the mouse is released from the item.
+        Executed when the mouse is released from the item (EXCLUDED).
         :param mouseEvent: the mouse event instance.
         """
         pass
@@ -471,9 +477,15 @@ class ResizableNode(Node):
         Executed when the mouse moves over the shape (NOT PRESSED).
         :param moveEvent: the move event.
         """
-        if self.isSelected():
-            handle = self.handleAt(moveEvent.pos())
-            self.setCursor(Qt.ArrowCursor if handle is None else self.handleCursors[handle])
+        scene = self.scene()
+
+        # display resize handle only if we are idle: it's not possible to start a resizing operation from any
+        # other state so it makes no sense in displaying the cursor for the resize if we cannot enter the mode
+        if scene.mode is DiagramMode.Idle:
+            if self.isSelected():
+                handle = self.handleAt(moveEvent.pos())
+                self.setCursor(Qt.ArrowCursor if handle is None else self.handleCursors[handle])
+
         super().hoverMoveEvent(moveEvent)
 
     def hoverLeaveEvent(self, moveEvent):
@@ -489,15 +501,17 @@ class ResizableNode(Node):
         Executed when the mouse is pressed on the item.
         :param mouseEvent: the mouse event instance.
         """
-        self.handleSelected = self.handleAt(mouseEvent.pos())
-        if self.handleSelected:
-            scene = self.scene()
-            scene.resizing = True
-            scene.clearSelection()
-            self.setSelected(True)
-            self.mousePressPos = mouseEvent.pos()
-            self.mousePressRect = deepcopy(self.boundingRect())
-            self.mousePressData = {edge: pos for edge, pos in self.anchors.items()}
+        scene = self.scene()
+
+        if scene.mode is DiagramMode.Idle:
+            self.handleSelected = self.handleAt(mouseEvent.pos())
+            if self.handleSelected:
+                scene.clearSelection()
+                scene.setMode(DiagramMode.NodeResize)
+                self.setSelected(True)
+                self.mousePressPos = mouseEvent.pos()
+                self.mousePressRect = deepcopy(self.boundingRect())
+                self.mousePressData = {edge: pos for edge, pos in self.anchors.items()}
 
         super().mousePressEvent(mouseEvent)
 
@@ -506,10 +520,10 @@ class ResizableNode(Node):
         Executed when the mouse is being moved over the item while being pressed.
         :param mouseEvent: the mouse move event instance.
         """
-        if self.handleSelected:
+        scene = self.scene()
 
-            if not self.command:
-                self.command = CommandNodeRezize(scene=self.scene(), node=self)
+        if scene.mode is DiagramMode.NodeResize:
+            self.command = self.command or CommandNodeRezize(scene=self.scene(), node=self)
             self.interactiveResize(mouseEvent.pos())
             self.updateEdges()
 
@@ -521,11 +535,12 @@ class ResizableNode(Node):
         :param mouseEvent: the mouse event instance.
         """
         scene = self.scene()
-        scene.resizing = False
 
-        if self.handleSelected and self.command:
-            self.command.end()
-            scene.undoStack.push(self.command)
+        if scene.mode is DiagramMode.NodeResize:
+            if self.command:
+                self.command.end()
+                scene.undoStack.push(self.command)
+                scene.setMode(DiagramMode.Idle)
 
         super().mouseReleaseEvent(mouseEvent)
 

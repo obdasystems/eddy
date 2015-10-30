@@ -33,7 +33,7 @@
 
 
 from grapholed.commands import CommandNodeLabelMove, CommandNodeLabelEdit
-from grapholed.datatypes import Font
+from grapholed.datatypes import Font, DiagramMode
 from grapholed.functions import isEmpty, distanceP, connect
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QColor, QTextCursor, QIcon, QPainterPath
@@ -133,7 +133,7 @@ class Label(QGraphicsTextItem):
             parent = self.parentItem()
             action = QAction('Reset text position', parent.scene())
             action.setIcon(QIcon(':/icons/refresh'))
-            connect(action.triggered, self.handleResetTextPosition)
+            connect(action.triggered, self.doResetTextPosition)
             collection.append(action)
         return collection
 
@@ -211,15 +211,16 @@ class Label(QGraphicsTextItem):
 
     def focusInEvent(self, focusEvent):
         """
-        Executed when the text item lose the focus.
+        Executed when the text item is focused.
         :param focusEvent: the focus event instance.
         """
         scene = self.scene()
+        scene.setMode(DiagramMode.LabelEdit)
+        parent = self.parentItem()
         cursor = self.textCursor()
         cursor.select(QTextCursor.BlockUnderCursor)
         self.setTextCursor(cursor)
-        if not self.commandEdit:
-            self.commandEdit = CommandNodeLabelEdit(scene=scene, node=self.parentItem(), label=self, text=self.text())
+        self.commandEdit = self.commandEdit or CommandNodeLabelEdit(scene, parent, self, self.text())
         scene.clearSelection()
         self.setSelected(True)
         super().focusInEvent(focusEvent)
@@ -229,21 +230,27 @@ class Label(QGraphicsTextItem):
         Executed when the text item lose the focus.
         :param focusEvent: the focus event instance.
         """
-        # make sure we have something in the label
-        if isEmpty(self.text()):
-            self.setText(self.defaultText)
+        scene = self.scene()
 
-        # push the edit command in the stack only if the label actually changed
-        if self.commandEdit and self.commandEdit.isTextChanged(self.text()):
-            self.commandEdit.end(self.text())
-            scene = self.scene()
-            scene.undoStack.push(self.commandEdit)
+        if scene.mode is DiagramMode.LabelEdit:
+            # make sure we have something in the label
+            if isEmpty(self.text()):
+                self.setText(self.defaultText)
 
-        self.commandEdit = None
-        cursor = self.textCursor()
-        cursor.clearSelection()
-        self.setTextCursor(cursor)
-        self.setTextInteractionFlags(Qt.NoTextInteraction)
+            # push the edit command in the stack only if the label actually changed
+            if self.commandEdit.isTextChanged(self.text()):
+                self.commandEdit.end(self.text())
+                scene.undoStack.push(self.commandEdit)
+
+            cursor = self.textCursor()
+            cursor.clearSelection()
+            self.commandEdit = None
+            self.setTextCursor(cursor)
+            self.setTextInteractionFlags(Qt.NoTextInteraction)
+
+            # go back idle so we can perform another operation
+            scene.setMode(DiagramMode.Idle)
+
         super().focusOutEvent(focusEvent)
 
     def hoverMoveEvent(self, moveEvent):
@@ -298,10 +305,13 @@ class Label(QGraphicsTextItem):
         :param mouseEvent: the mouse event instance.
         """
         scene = self.scene()
-        if scene.mode == scene.MoveItem:
+
+        if scene.mode is DiagramMode.Idle:
+
             if mouseEvent.modifiers() & Qt.ControlModifier:
-                # allow the moving of the label
+                # allow the moving of the label if the CTRL modifier is being held
                 scene.clearSelection()
+                scene.setMode(DiagramMode.LabelMove)
                 self.setSelected(True)
                 super().mousePressEvent(mouseEvent)
             else:
@@ -318,23 +328,23 @@ class Label(QGraphicsTextItem):
         :param mouseEvent: the mouse event instance.
         """
         scene = self.scene()
-        if scene.mode == scene.MoveItem:
+        if scene.mode is DiagramMode.LabelMove:
             super().mouseMoveEvent(mouseEvent)
-            if not self.commandMove:
-                self.commandMove = CommandNodeLabelMove(scene=scene, node=self.parentItem(), label=self)
+            self.commandMove = self.commandMove or CommandNodeLabelMove(scene=scene, node=self.parentItem(), label=self)
 
     def mouseReleaseEvent(self, mouseEvent):
         """
         Executed when the mouse is released from the label.
         :param mouseEvent: the mouse event instance.
         """
-        super().mouseReleaseEvent(mouseEvent)
         scene = self.scene()
-        if scene.mode == scene.MoveItem:
+        super().mouseReleaseEvent(mouseEvent)
+
+        if scene.mode is DiagramMode.LabelMove:
             if self.commandMove:
                 self.commandMove.end(pos=self.pos())
                 scene.undoStack.push(self.commandMove)
-        self.commandMove = None
+                self.commandMove = None
 
     #################################################### GEOMETRY ######################################################
 
@@ -349,7 +359,7 @@ class Label(QGraphicsTextItem):
 
     ################################################# ACTION HANDLERS ##################################################
 
-    def handleResetTextPosition(self):
+    def doResetTextPosition(self):
         """
         Reset the text position to the default value.
         """

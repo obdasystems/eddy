@@ -31,8 +31,9 @@
 #                                                                        #
 ##########################################################################
 
+
+from grapholed.datatypes import ItemType
 from grapholed.exceptions import ParseError
-from grapholed.items import ItemType
 from grapholed.items.nodes.common.hexagon import HexagonNode
 
 from PyQt5.QtCore import Qt, QPointF

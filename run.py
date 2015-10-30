@@ -38,11 +38,11 @@ import traceback
 
 from argparse import ArgumentParser
 from grapholed import images_rc ## DO NOT REMOVE
-from grapholed import Grapholed
+from grapholed import Grapholed, __appname__, __version__
 from grapholed.dialogs import MessageBox
 from grapholed.widgets import SplashScreen
-from PyQt5.QtWidgets import QSpacerItem, QSizePolicy
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QSpacerItem, QSizePolicy
 
 
 def main():

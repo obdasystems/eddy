@@ -36,8 +36,7 @@ import sys
 
 from math import sin, cos, radians, pi as M_PI
 
-from grapholed.datatypes import Font
-from grapholed.items import ItemType
+from grapholed.datatypes import Font, DiagramMode, ItemType
 from grapholed.items.edges.common.base import Edge
 from grapholed.items.edges.common.label import Label
 
@@ -284,7 +283,7 @@ class InstanceOfEdge(Edge):
             scene = self.scene()
 
             # Draw the selection path if needed
-            if scene.mode == scene.MoveItem and self.isSelected():
+            if scene.mode in (DiagramMode.Idle, DiagramMode.NodeMove) and self.isSelected():
                 painter.setRenderHint(QPainter.Antialiasing)
                 painter.fillPath(self.selection, self.selectionBrush)
 

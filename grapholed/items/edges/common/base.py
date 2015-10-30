@@ -36,6 +36,7 @@ from abc import ABCMeta, abstractmethod
 
 from grapholed.commands import CommandEdgeBreakpointAdd, CommandEdgeBreakpointDel, CommandEdgeBreakpointMove
 from grapholed.commands import CommandEdgeAnchorMove
+from grapholed.datatypes import DiagramMode
 from grapholed.exceptions import ParseError
 from grapholed.functions import distanceP, distanceL, connect
 from grapholed.items import Item
@@ -161,8 +162,7 @@ class Edge(Item):
         path = self.mapFromItem(node, node.painterPath())
         if path.contains(mousePos):
             # mouse is inside the shape => use this position as anchor point
-            epsilon = 10.0
-            pos = nodePos if distanceP(mousePos, nodePos) < epsilon else mousePos
+            pos = nodePos if distanceP(mousePos, nodePos) < 10.0 else mousePos
         else:
             # FIXME: intersection point doesn't seem to be the best we can do here
             pos = node.intersection(QLineF(mousePos, nodePos))
@@ -480,8 +480,23 @@ class Edge(Item):
         Executed when the mouse is pressed on the selection box.
         :param mouseEvent: the mouse event instance.
         """
-        self.selectedAP = self.anchorAt(mouseEvent.pos())
-        self.selectedBP = self.breakpointAt(mouseEvent.pos())
+        scene = self.scene()
+
+        if scene.mode is DiagramMode.Idle:
+            # check first if we need to start an anchor point movement: we need to evaluate anchor
+            # points first because we may be in the situation where we are trying to select the anchor
+            # point, but if the code for breakpoint retrieval is executed first, no breakpoint is found
+            # and hence a new one will be added upon mouseMoveEvent (even a small move will cause this)
+            self.selectedAP = self.anchorAt(mouseEvent.pos())
+            if self.selectedAP is not None:
+                scene.setMode(DiagramMode.EdgeAnchorPointMove)
+            else:
+                # if no anchor point is selected then check for a breakpoint
+                self.selectedBP = self.breakpointAt(mouseEvent.pos())
+                if self.selectedBP is not None:
+                    scene.setMode(DiagramMode.EdgeBreakPointMove)
+
+        # always track the press position since it's need by other events to compute deltas
         self.mousePressPos = mouseEvent.pos()
         super().mousePressEvent(mouseEvent)
 
@@ -493,13 +508,17 @@ class Edge(Item):
         """
         scene = self.scene()
 
-        if scene.mode == scene.MoveItem:
+        if scene.mode is DiagramMode.EdgeAnchorPointMove:
+            self.anchorMove(self.selectedAP, mouseEvent.pos())
+        else:
 
-            if self.selectedAP is not None:
-                self.anchorMove(self.selectedAP, mouseEvent.pos())
-            else:
-                if self.selectedBP is None:
-                    self.selectedBP = self.breakpointAdd(self.mousePressPos)
+            if scene.mode is DiagramMode.Idle:
+                # if we are still idle we didn't succeeded in selecting a breakpoint
+                # so we need to create a new one and switch the operation mode
+                self.selectedBP = self.breakpointAdd(self.mousePressPos)
+                scene.setMode(DiagramMode.EdgeBreakPointMove)
+
+            if scene.mode is DiagramMode.EdgeBreakPointMove:
                 self.breakpointMove(self.selectedBP, mouseEvent.pos())
 
     def mouseReleaseEvent(self, mouseEvent):
@@ -508,17 +527,17 @@ class Edge(Item):
         :param mouseEvent: the mouse event instance.
         """
         scene = self.scene()
-        if scene.mode == scene.MoveItem:
 
-            if self.selectedAP is not None:
-                if self.command:
-                    self.command.end()
-                    scene.undoStack.push(self.command)
+        if scene.mode is DiagramMode.EdgeAnchorPointMove:
+            if self.command:
+                self.command.end()
+                scene.undoStack.push(self.command)
+        elif scene.mode is DiagramMode.EdgeBreakPointMove:
+            if self.command:
+                self.command.end(scene.snapToGrid(mouseEvent.pos()))
+                scene.undoStack.push(self.command)
 
-            if self.selectedBP is not None:
-                if self.command:
-                    self.command.end(scene.snapToGrid(mouseEvent.pos()))
-                    scene.undoStack.push(self.command)
+        scene.setMode(DiagramMode.Idle)
 
         self.selectedAP = None
         self.selectedBP = None

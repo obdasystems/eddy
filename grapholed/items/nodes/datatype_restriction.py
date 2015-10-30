@@ -32,9 +32,8 @@
 ##########################################################################
 
 
-from grapholed.datatypes import Font
+from grapholed.datatypes import Font, ItemType
 from grapholed.exceptions import ParseError
-from grapholed.items import ItemType
 from grapholed.items.nodes.common.hexagon import HexagonNode
 from grapholed.items.nodes.common.label import Label
 

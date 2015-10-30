@@ -33,38 +33,8 @@
 
 
 from abc import ABCMeta, abstractmethod
-from enum import IntEnum, unique
+from grapholed.datatypes import ItemType
 from PyQt5.QtWidgets import QGraphicsItem
-
-
-@unique
-class ItemType(IntEnum):
-    """
-    This class defines all the available Graphol items.
-    """
-    ## NODES
-    ConceptNode = 1
-    AttributeNode = 2
-    RoleNode = 3
-    ValueDomainNode = 4
-    IndividualNode = 5
-    ValueRestrictionNode = 6
-    DomainRestrictionNode = 7
-    RangeRestrictionNode = 8
-    UnionNode = 9
-    EnumerationNode = 10
-    ComplementNode = 11
-    RoleChainNode = 12
-    IntersectionNode = 13
-    RoleInverseNode = 14
-    DatatypeRestrictionNode = 15
-    DisjointUnionNode = 16
-    PropertyAssertionNode = 17
-
-    ## EDGES
-    InclusionEdge = 18
-    InputEdge = 19
-    InstanceOfEdge = 20
 
 
 class Item(QGraphicsItem):
@@ -195,7 +165,7 @@ class Item(QGraphicsItem):
         :param scene: the scene where the element will be inserted.
         :param E: the Graphol document element entry.
         :raise ParseError: in case it's not possible to generate the node using the given element.
-        :return: Item
+        :rtype: Item
         """
         pass
 

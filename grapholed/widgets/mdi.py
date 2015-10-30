@@ -214,7 +214,7 @@ class MdiSubWindow(QMdiSubWindow):
         value = self.getExportFilePath(name=scene.document.name)
         if value:
             filepath = value[0]
-            filetype = FileType.getFromValue(value[1])
+            filetype = FileType.forValue(value[1])
             if filetype is FileType.pdf:
                 return self.exportSceneToPdfFile(scene, filepath)
         return False

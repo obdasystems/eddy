@@ -114,7 +114,7 @@ class CommandNodeRezize(QUndoCommand):
 
     def end(self):
         """
-        End the command collecting new information.
+        End the command collecting new data.
         """
         self.data2 = {
             'shape': QRectF(self.node.rect) if hasattr(self.node, 'rect') else QPolygonF(self.node.polygon),

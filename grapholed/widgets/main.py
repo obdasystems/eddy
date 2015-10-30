@@ -45,7 +45,7 @@ from PyQt5.QtXml import QDomDocument
 
 from grapholed import __version__ as version, __appname__ as appname
 from grapholed import __organization__ as organization
-from grapholed.datatypes import FileType
+from grapholed.datatypes import FileType, DiagramMode
 from grapholed.dialogs import AboutDialog, OpenFileDialog, PreferencesDialog, MessageBox
 from grapholed.exceptions import ParseError
 from grapholed.functions import getPath, shaded, connect, disconnect
@@ -561,7 +561,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(scene.document.name)
 
     @pyqtSlot('QGraphicsItem', int)
-    def onEdgeInsertEnd(self, edge, modifiers):
+    def onEdgeInserted(self, edge, modifiers):
         """
         Triggered after a edge insertion process ends.
         :param edge: the inserted edge.
@@ -571,7 +571,7 @@ class MainWindow(QMainWindow):
             self.palette_items[edge.itemtype].setChecked(False)
 
     @pyqtSlot('QGraphicsItem', int)
-    def onNodeInsertEnd(self, node, modifiers):
+    def onNodeInserted(self, node, modifiers):
         """
         Triggered after a node insertion process ends.
         :param node: the inserted node.
@@ -580,13 +580,13 @@ class MainWindow(QMainWindow):
         if not modifiers & Qt.ControlModifier:
             self.palette_items[node.itemtype].setChecked(False)
 
-    @pyqtSlot(int)
+    @pyqtSlot(DiagramMode)
     def onModeChanged(self, mode):
         """
         Triggered when the scene operation mode changes.
         :param mode: the scene operation mode.
         """
-        if mode == DiagramScene.MoveItem:
+        if mode not in (DiagramMode.NodeInsert, DiagramMode.EdgeInsert):
             for btn in self.palette_items.values():
                 btn.setChecked(False)
 
@@ -610,12 +610,12 @@ class MainWindow(QMainWindow):
                     btn.setChecked(False)
 
             if not button.isChecked():
-                scene.setMode(DiagramScene.MoveItem)
+                scene.setMode(DiagramMode.Idle)
             else:
                 if button_id in self.palette_nodes:
-                    scene.setMode(DiagramScene.InsertNode, button.property('item'))
+                    scene.setMode(DiagramMode.NodeInsert, button.property('item'))
                 elif button_id in self.palette_edges:
-                    scene.setMode(DiagramScene.InsertEdge, button.property('item'))
+                    scene.setMode(DiagramMode.EdgeInsert, button.property('item'))
 
     @pyqtSlot('QMdiSubWindow')
     def onSubWindowActivated(self, subwindow):
@@ -716,7 +716,7 @@ class MainWindow(QMainWindow):
             mainview = self.mdiArea.activeView
             if mainview:
                 scene = mainview.scene()
-                scene.setMode(DiagramScene.MoveItem)
+                scene.setMode(DiagramMode.Idle)
         super().keyReleaseEvent(keyEvent)
 
     def showEvent(self, showEvent):
@@ -772,12 +772,11 @@ class MainWindow(QMainWindow):
         :return: the initialized GraphicScene.
         :rtype: DiagramScene
         """
-        # create the new scene
         scene = DiagramScene(self)
         scene.setSceneRect(QRectF(-width / 2, -height / 2, width, height))
         scene.setItemIndexMethod(DiagramScene.NoIndex)
-        connect(scene.nodeInsertEnd, self.onNodeInsertEnd)
-        connect(scene.edgeInsertEnd, self.onEdgeInsertEnd)
+        connect(scene.nodeInserted, self.onNodeInserted)
+        connect(scene.edgeInserted, self.onEdgeInserted)
         connect(scene.modeChanged, self.onModeChanged)
         self.undoGroup.addStack(scene.undoStack)
         return scene

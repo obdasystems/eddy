@@ -34,8 +34,26 @@
 
 import sys
 
-from enum import Enum, unique
+from enum import Enum, unique, IntEnum
+from types import DynamicClassAttribute
+
 from PyQt5.QtGui import QFont
+
+
+@unique
+class DiagramMode(IntEnum):
+    """
+    This class defines the DiagramScene operational modes.
+    """
+    Idle = 0 # idle mode
+    NodeInsert = 1 # node insertion
+    NodeMove = 2 # node movement
+    NodeResize = 3 # node interactive resize
+    EdgeInsert = 4 # edge insertion
+    EdgeAnchorPointMove = 5 # edge anchor point movement
+    EdgeBreakPointMove = 6 # edge breakpoint movement
+    LabelMove = 7 # text label edit
+    LabelEdit = 8 # text label movement
 
 
 class DistinctList(list):
@@ -153,7 +171,7 @@ class FileType(Enum):
     pdf = 'PDF (*.pdf)'
 
     @classmethod
-    def getFromValue(cls, value):
+    def forValue(cls, value):
         """
         Returns the filetype matching the given value.
         :param value: the value to match.
@@ -164,24 +182,19 @@ class FileType(Enum):
                 return x
         return None
 
-    @property
+    @DynamicClassAttribute
     def suffix(self):
-        """
-        Returns the suffix associated with the current FileType.
-        :rtype: str
-        """
-        __mapping__ = {
+        """The suffix associated with the Enum member."""
+        return {
             FileType.graphol: '.graphol',
             FileType.pdf: '.pdf'
-        }
-        return __mapping__[self]
+        }[self]
 
 
 class Font(QFont):
     """
     This class extends PyQt5.QtGui.QFont providing better font rendering on different platforms.
     """
-
     def __init__(self, family, pointSize=12, weight=-1, italic=False):
         """
         Contruct a new Font instance using the given parameters.
@@ -196,6 +209,36 @@ class Font(QFont):
 
 
 @unique
+class ItemType(IntEnum):
+    """
+    This class defines all the available Graphol items.
+    """
+    ## NODES
+    ConceptNode = 1
+    AttributeNode = 2
+    RoleNode = 3
+    ValueDomainNode = 4
+    IndividualNode = 5
+    ValueRestrictionNode = 6
+    DomainRestrictionNode = 7
+    RangeRestrictionNode = 8
+    UnionNode = 9
+    EnumerationNode = 10
+    ComplementNode = 11
+    RoleChainNode = 12
+    IntersectionNode = 13
+    RoleInverseNode = 14
+    DatatypeRestrictionNode = 15
+    DisjointUnionNode = 16
+    PropertyAssertionNode = 17
+
+    ## EDGES
+    InclusionEdge = 18
+    InputEdge = 19
+    InstanceOfEdge = 20
+
+
+@unique
 class RestrictionType(Enum):
     """
     This class defines all the available restrictions for the Domain and Range restriction nodes.
@@ -207,19 +250,15 @@ class RestrictionType(Enum):
     cardinality = 'Cardinality: (min, max)'
     self = 'Self: self'
 
-    @property
+    @DynamicClassAttribute
     def label(self):
-        """
-        Returns the label representing this enum.
-        :rtype: str
-        """
-        __mapping__ = {
+        """The label of the Enum member."""
+        return {
             RestrictionType.exists: 'exists',
             RestrictionType.forall: 'forall',
             RestrictionType.self: 'self',
             RestrictionType.cardinality: '({min},{max})',
-        }
-        return __mapping__[self]
+        }[self]
 
 
 @unique

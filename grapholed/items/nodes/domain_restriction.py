@@ -32,8 +32,7 @@
 ##########################################################################
 
 
-from grapholed.datatypes import Font
-from grapholed.items import ItemType
+from grapholed.datatypes import Font, ItemType
 from grapholed.items.nodes.common.square import SquaredNode
 
 from PyQt5.QtCore import Qt, QRectF
