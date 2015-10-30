@@ -322,6 +322,12 @@ class Label(QGraphicsTextItem):
                     scene.clearSelection()
                     parent.setSelected(True)
 
+        elif scene.mode is DiagramMode.LabelEdit:
+
+            # call super method in this case so we can move the mouse
+            # ibeam cursor within the label while being in EDIT mode
+            super().mousePressEvent(mouseEvent)
+
     def mouseMoveEvent(self, mouseEvent):
         """
         Executed when the text is moved with the mouse.
@@ -331,6 +337,10 @@ class Label(QGraphicsTextItem):
         if scene.mode is DiagramMode.LabelMove:
             super().mouseMoveEvent(mouseEvent)
             self.commandMove = self.commandMove or CommandNodeLabelMove(scene=scene, node=self.parentItem(), label=self)
+        elif scene.mode is DiagramMode.LabelEdit:
+            # call super method also in this case so we can select
+            # text within the label while being in EDIT mode
+            super().mouseMoveEvent(mouseEvent)
 
     def mouseReleaseEvent(self, mouseEvent):
         """
@@ -341,10 +351,16 @@ class Label(QGraphicsTextItem):
         super().mouseReleaseEvent(mouseEvent)
 
         if scene.mode is DiagramMode.LabelMove:
+
             if self.commandMove:
                 self.commandMove.end(pos=self.pos())
                 scene.undoStack.push(self.commandMove)
-                self.commandMove = None
+                scene.setMode(DiagramMode.Idle)
+
+        # always remove the selected flag so that the dotted outline disappears also
+        # if we release the CTRL keyboard modifier begore the mouse left button
+        self.setSelected(False)
+        self.commandMove = None
 
     #################################################### GEOMETRY ######################################################
 
