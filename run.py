@@ -39,10 +39,9 @@ import traceback
 from argparse import ArgumentParser
 from grapholed import images_rc ## DO NOT REMOVE
 from grapholed import Grapholed, __appname__, __version__
-from grapholed.dialogs import MessageBox
 from grapholed.widgets import SplashScreen
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QSpacerItem, QSizePolicy
+from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtWidgets import QSpacerItem, QSizePolicy, QMessageBox
 
 
 def main():
@@ -78,13 +77,14 @@ def main():
         app = Grapholed(sys.argv)
         window = init_no_splash(app) if options.nosplash else init(app)
     except Exception as e:
-        box = MessageBox()
+        box = QMessageBox()
         box.setIconPixmap(QPixmap(':/icons/error'))
+        box.setWindowIcon(QIcon(':/images/grapholed'))
         box.setWindowTitle('Startup failure')
         box.setText('GrapholEd failed to start!')
         box.setInformativeText('ERROR: %s' % e)
         box.setDetailedText(traceback.format_exc())
-        box.setStandardButtons(MessageBox.Ok)
+        box.setStandardButtons(QMessageBox.Ok)
         L = box.layout()
         L.addItem(QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding), L.rowCount(), 0, 1, L.columnCount())
         box.exec_()

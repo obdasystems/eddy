@@ -40,10 +40,9 @@ from grapholed.dialogs import SaveFileDialog
 from grapholed.functions import getPath, connect
 
 from PyQt5.QtCore import pyqtSlot, Qt, QFile, QTextStream, QIODevice, pyqtSignal, QSizeF
-from PyQt5.QtGui import QPainter, QPageSize, QPixmap
+from PyQt5.QtGui import QPainter, QPageSize, QPixmap, QIcon
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QMdiArea, QMdiSubWindow, QMessageBox, QDialog, QTabWidget
-
 
 
 class MdiArea(QMdiArea):
@@ -130,6 +129,7 @@ class MdiSubWindow(QMdiSubWindow):
             # ask the user if he wants to save unsaved changes to disk
             box = QMessageBox()
             box.setIconPixmap(QPixmap(':/icons/info'))
+            box.setWindowIcon(QIcon(':/images/grapholed'))
             box.setWindowTitle('Save file?')
             box.setText('The document has been modified. Save changes?')
             box.setStandardButtons(QMessageBox.Cancel|QMessageBox.No|QMessageBox.Yes)
@@ -166,8 +166,7 @@ class MdiSubWindow(QMdiSubWindow):
         mainview = self.widget()
         scene = mainview.scene()
         if scene.document.filepath:
-            windowtitle = scene.document.name if clean else '{0} *'.format(scene.document.name)
-            self.setWindowTitle(windowtitle)
+            self.setWindowTitle(scene.document.name if clean else '{0} *'.format(scene.document.name))
 
     ############################################ AUXILIARY METHODS #####################################################
 
@@ -180,12 +179,12 @@ class MdiSubWindow(QMdiSubWindow):
         :param name: the default name of the file.
         :rtype: str
         """
-        exportdialog = SaveFileDialog(path)
-        exportdialog.setWindowTitle('Export')
-        exportdialog.setNameFilters([x.value for x in FileType if x is not FileType.graphol])
-        exportdialog.selectFile(name or 'Untitled')
-        if exportdialog.exec_():
-            return exportdialog.selectedFiles()[0], exportdialog.selectedNameFilter()
+        dialog = SaveFileDialog(path)
+        dialog.setWindowTitle('Export')
+        dialog.setNameFilters([x.value for x in FileType if x is not FileType.graphol])
+        dialog.selectFile(name or 'Untitled')
+        if dialog.exec_():
+            return dialog.selectedFiles()[0], dialog.selectedNameFilter()
         return None
 
     @staticmethod
@@ -197,11 +196,11 @@ class MdiSubWindow(QMdiSubWindow):
         :param name: the default name of the file.
         :rtype: str
         """
-        savedialog = SaveFileDialog(path)
-        savedialog.setNameFilters([FileType.graphol.value])
-        savedialog.selectFile(name or 'Untitled')
-        if savedialog.exec_():
-            return savedialog.selectedFiles()[0]
+        dialog = SaveFileDialog(path)
+        dialog.setNameFilters([FileType.graphol.value])
+        dialog.selectFile(name or 'Untitled')
+        if dialog.exec_():
+            return dialog.selectedFiles()[0]
         return None
 
     def exportScene(self):
@@ -231,6 +230,7 @@ class MdiSubWindow(QMdiSubWindow):
         if not shape:
             box = QMessageBox()
             box.setIconPixmap(QPixmap(':/icons/info'))
+            box.setWindowIcon(QIcon(':/images/grapholed'))
             box.setWindowTitle('Empty document!')
             box.setText('The document you are trying to export is empty!')
             box.setStandardButtons(QMessageBox.Ok)
@@ -262,6 +262,7 @@ class MdiSubWindow(QMdiSubWindow):
         if not shape:
             box = QMessageBox()
             box.setIconPixmap(QPixmap(':/icons/info'))
+            box.setWindowIcon(QIcon(':/images/grapholed'))
             box.setWindowTitle('Empty document!')
             box.setText('The document you are trying to print is empty!')
             box.setStandardButtons(QMessageBox.Ok)
@@ -338,6 +339,7 @@ class MdiSubWindow(QMdiSubWindow):
         if not tmpFile.open(QIODevice.WriteOnly|QIODevice.Truncate|QIODevice.Text):
             box = QMessageBox()
             box.setIconPixmap(QPixmap(':/icons/warning'))
+            box.setWindowIcon(QIcon(':/images/grapholed'))
             box.setWindowTitle('Save FAILED')
             box.setText('Could not export diagram!')
             box.setDetailedText(tmpFile.errorString())
@@ -356,6 +358,7 @@ class MdiSubWindow(QMdiSubWindow):
         except Exception:
             box = QMessageBox()
             box.setIconPixmap(QPixmap(':/icons/warning'))
+            box.setWindowIcon(QIcon(':/images/grapholed'))
             box.setWindowTitle('Save FAILED')
             box.setText('Could not export diagram!')
             box.setDetailedText(traceback.format_exc())
