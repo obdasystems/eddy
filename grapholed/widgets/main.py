@@ -51,12 +51,11 @@ from grapholed.exceptions import ParseError
 from grapholed.functions import getPath, shaded, connect, disconnect
 from grapholed.items import __mapping__
 from grapholed.items import *
-from grapholed.widgets import MdiArea, MdiSubWindow
-from grapholed.widgets import DiagramScene
-from grapholed.widgets import Palette, Pane
-from grapholed.widgets import MainView, Navigator
-from grapholed.widgets import ZoomControl
-from grapholed.widgets import Overview
+from grapholed.widgets.mdi import MdiArea, MdiSubWindow
+from grapholed.widgets.scene import DiagramScene
+from grapholed.widgets.sidebar import Sidebar, Palette, Navigator, Overview
+from grapholed.widgets.view import MainView
+from grapholed.widgets.toolbar import ZoomControl
 
 
 class MainWindow(QMainWindow):
@@ -375,26 +374,26 @@ class MainWindow(QMainWindow):
 
         self.mdiArea = MdiArea()
 
-        ############################################## LEFT PANE #######################################################
+        ############################################# LEFT SIDEBAR #####################################################
 
-        self.leftPane = Pane()
-        self.leftPane.addWidget(self.paletteP)
-        self.leftPane.addWidget(self.paletteC)
-        self.leftPane.addWidget(self.paletteE)
+        self.leftSidebar = Sidebar()
+        self.leftSidebar.addWidget(self.paletteP)
+        self.leftSidebar.addWidget(self.paletteC)
+        self.leftSidebar.addWidget(self.paletteE)
         
-        ############################################## RIGHT PANE ######################################################
+        ############################################# RIGHT SIDEBAR ####################################################
 
-        self.rightPane = Pane()
-        self.rightPane.addWidget(self.navigator)
-        self.rightPane.addWidget(self.overview)
+        self.rightSidebar = Sidebar()
+        self.rightSidebar.addWidget(self.navigator)
+        self.rightSidebar.addWidget(self.overview)
 
         ############################################ CENTRAL WIDGET ####################################################
 
         widget = QWidget()
         layout = QHBoxLayout(widget)
-        layout.addWidget(self.leftPane)
+        layout.addWidget(self.leftSidebar)
         layout.addWidget(self.mdiArea)
-        layout.addWidget(self.rightPane)
+        layout.addWidget(self.rightSidebar)
         self.setCentralWidget(widget)
         self.setWindowIcon(QIcon(':/images/grapholed'))
         self.setWindowTitle()

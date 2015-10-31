@@ -30,20 +30,3 @@
 #     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
 #                                                                        #
 ##########################################################################
-
-
-from grapholed.widgets.mdi import MdiArea
-from grapholed.widgets.mdi import MdiSubWindow
-from grapholed.widgets.misc import ZoomControl
-from grapholed.widgets.misc import SplashScreen
-from grapholed.widgets.pane import Pane
-from grapholed.widgets.pane import PaneWidget
-from grapholed.widgets.palette import Palette
-from grapholed.widgets.scene import DiagramScene
-from grapholed.widgets.view import MainView
-from grapholed.widgets.view import MainViewInspector
-from grapholed.widgets.view import Navigator
-from grapholed.widgets.view import Overview
-
-# keep this as the last one since it uses all the modules imported above
-from grapholed.widgets.main import MainWindow

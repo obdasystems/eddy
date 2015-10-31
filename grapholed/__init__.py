@@ -44,9 +44,11 @@ __license__ = 'GPL'
 
 
 from PyQt5.QtWidgets import QApplication
+
 from grapholed.functions import QSS, getPath
 from grapholed.style import DefaultStyle
-from grapholed.widgets import MainWindow, SplashScreen
+from grapholed.widgets.main import MainWindow
+from grapholed.widgets.misc import SplashScreen
 
 
 class Grapholed(QApplication):
