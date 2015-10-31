@@ -51,39 +51,39 @@ QToolBar QToolButton:pressed {
 
 /******************** LEFT/RIGHT PANE WIDGETS LAYOUT **********************/
 
-Pane Head {
+Sidebar Head {
     color: #000000;
     border: 1px solid #A9A9A9;
     border-radius: 2px;
 }
-Pane Head.normal {
+Sidebar Head.normal {
     border-color: #A9A9A9;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #F8F8F8, stop: 0.3 #F4F4F4,
                                                             stop: 0.7 #F0F0F0, stop: 1.0 #EDEDED);
 }
-Pane Head.collapsed {
+Sidebar Head.closed {
     border-color: #BABABA;
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #E0E0E0, stop: 0.3 #DCDCDC,
-                                                            stop: 0.7 #DBDBDB, stop: 1.0 #D3D3D3);
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #D0D0D0, stop: 0.3 #CCCCCC,
+                                                            stop: 0.7 #CBCBCB, stop: 1.0 #C3C3C3);
 }
-Pane Body {
+Sidebar Body {
     background: #FFFFFF;
     border: 1px solid #A9A9A9;
     border-top: 0;
 }
-Pane Palette QToolButton {
+Sidebar Palette QToolButton {
     background: #E0E0E0;
     border: 1px solid #BABABA;
 }
-Pane Palette QToolButton:checked {
+Sidebar Palette QToolButton:checked {
     background: #4FC3F7;
     border: 1px solid #455A64;
 }
-Pane QListWidget,
-Pane QListWidget PaneWidget,
-Pane QListWidget PaneWidget Widget {
+Sidebar QListWidget,
+Sidebar QListWidget SidebarWidget,
+Sidebar QListWidget SidebarWidget Widget {
     background: transparent;
     border: 0;
 }
