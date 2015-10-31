@@ -727,7 +727,7 @@ class DiagramScene(QGraphicsScene):
 
     def nodes(self):
         """
-        Returns all the nodes of the scene (not the shapes).
+        Returns all the nodes of the scene.
         :rtype: list
         """
         return [x for x in self.items() if isinstance(x, Item) and x.isNode()]
