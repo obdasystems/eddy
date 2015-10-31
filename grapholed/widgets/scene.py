@@ -34,7 +34,7 @@
 
 import os
 
-from grapholed import __appname__ as appname, __organization__ as organization
+from grapholed import __appname__, __organization__
 from grapholed.commands import CommandItemsMultiAdd, CommandItemsMultiRemove
 from grapholed.commands import CommandNodeAdd, CommandNodeSetZValue, CommandNodeMove
 from grapholed.commands import CommandEdgeAdd
@@ -140,7 +140,7 @@ class DiagramScene(QGraphicsScene):
         self.clipboardPasteOffsetY = DiagramScene.PasteOffsetY  ## Y offset to be added to item position upon paste
         self.clipboardPasteOffsetZ = 0  ## > offset to be added to item zValue upon paste
         self.document = DiagramDocument()  ## document associated with the current scene
-        self.settings = QSettings(organization, appname)  ## application settings
+        self.settings = QSettings(__organization__, __appname__)  ## application settings
         self.uniqueID = UniqueID()  ## used to generate unique incrementsl ids
         self.undoStack = QUndoStack(self)  ## use to push actions and keep history for undo/redo
         self.undoStack.setUndoLimit(50) ## TODO: make the stack configurable

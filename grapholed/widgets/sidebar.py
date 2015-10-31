@@ -34,10 +34,11 @@
 
 from abc import ABCMeta
 
+from grapholed import __appname__, __organization__
 from grapholed.exceptions import ProgrammingError
 from grapholed.functions import shaded, connect, disconnect
 
-from PyQt5.QtCore import Qt, QEvent, QSize, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import Qt, QEvent, QSize, pyqtSignal, pyqtSlot, QSettings
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QPen
 from PyQt5.QtWidgets import QScrollArea, QVBoxLayout, QWidget, QFrame, QScrollBar, QLabel, QGraphicsView, QGridLayout
 from PyQt5.QtWidgets import QHBoxLayout, QStyleOption, QStyle, QListWidget, QListWidgetItem
@@ -153,6 +154,8 @@ class SidebarWidget(QWidget):
             """
             super().__init__(parent)
 
+            self.settings = QSettings(__organization__, __appname__)
+
             self.body = body
             self.icon = shaded(QPixmap(icon), 0.7)
             self.title = QLabel(title)
@@ -173,6 +176,7 @@ class SidebarWidget(QWidget):
 
             self.setContentsMargins(0, 0, 0, 0)
             self.setFixedSize(QSize(Sidebar.MinWidth, 30))
+            self.setClosed(self.settings.value('sidebar/{0}/closed'.format(title), False, bool))
 
         ############################################## EVENT HANDLERS ##################################################
 
@@ -204,12 +208,13 @@ class SidebarWidget(QWidget):
             Set the closed status (of the attached body).
             :param closed: True if the body attached to the header should be closed, False otherwise.
             """
+            parent = self.parent()
+            self.settings.setValue('sidebar/{0}/closed'.format(parent.objectName()), closed)
             self.body.setVisible(not closed)
             self.arrow.setPixmap(self.iconDown if closed else self.iconUp)
             self.setProperty('class', 'closed' if closed else 'normal')
 
             # emit a signal so other widgets can react on the size change
-            parent = self.parent()
             parent.sizeChanged.emit()
 
             # refresh the widget stylesheet
@@ -283,14 +288,12 @@ class SidebarWidget(QWidget):
             style = self.style()
             style.drawPrimitive(QStyle.PE_Widget, option, painter, self)
 
-    def __init__(self, title, icon, widget, closed=False, fixed=True):
+    def __init__(self, title, icon, widget):
         """
         Initialize the Sidebar widget.
         :param title: the title of the widget.
         :param icon: the path of the icon to display as widget icon.
         :param widget: the widget to be rendered inside the body of the Pane widget.
-        :param closed: whether the widget should be closed by default.
-        :param fixed: whether the widget has fixed height.
         """
         super().__init__()
 
@@ -298,7 +301,6 @@ class SidebarWidget(QWidget):
 
         self.body = SidebarWidget.Body(widget, self)
         self.head = SidebarWidget.Head(title, icon, self.body, self)
-        self.head.setClosed(closed)
 
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
@@ -308,6 +310,7 @@ class SidebarWidget(QWidget):
         self.mainLayout.addWidget(self.body)
 
         self.setFixedWidth(Sidebar.MinWidth)
+        self.setObjectName(title)
 
     @property
     def widget(self):
@@ -399,14 +402,13 @@ class Palette(SidebarWidget):
             style = self.style()
             style.drawPrimitive(QStyle.PE_Widget, option, painter, self)
 
-    def __init__(self, title, icon, closed=False):
+    def __init__(self, title, icon):
         """
         Initialize the palette block.
         :param title: the title of the widget.
         :param icon: the path of the icon to display as widget icon.
-        :param closed: whether the widget should be collapsed by default.
         """
-        super().__init__(title, icon, Palette.Widget(), closed)
+        super().__init__(title, icon, Palette.Widget())
         self.body.setFixedWidth(Sidebar.MinWidth)
 
     ################################################# INTERFACE ########################################################
@@ -598,12 +600,11 @@ class Navigator(ViewBrowser):
             """
             self.viewport().update()
 
-    def __init__(self, closed=False):
+    def __init__(self):
         """
         Initialize the navigator.
-        :param closed: whether the widget should be collapsed by default.
         """
-        super().__init__('Navigator', ':/icons/zoom', Navigator.Widget(), closed)
+        super().__init__('Navigator', ':/icons/zoom', Navigator.Widget())
         self.body.setFixedSize(QSize(Sidebar.MinWidth, Sidebar.MinWidth))
 
 
@@ -747,10 +748,9 @@ class Overview(ViewBrowser):
                     self.fitInView(shape, Qt.KeepAspectRatio)
             self.viewport().update()
 
-    def __init__(self, closed=False):
+    def __init__(self,):
         """
         Initialize the overview.
-        :param closed: whether the widget should be collapsed by default.
         """
-        super().__init__('Overview', ':/icons/zoom', Overview.Widget(), closed)
+        super().__init__('Overview', ':/icons/zoom', Overview.Widget())
         self.body.setFixedSize(QSize(Sidebar.MinWidth, Sidebar.MinWidth))
