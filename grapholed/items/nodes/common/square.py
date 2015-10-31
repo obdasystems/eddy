@@ -95,6 +95,12 @@ class SquaredNode(Node):
             connect(action.triggered, self.updateRestriction, restriction=restriction)
             subMenu.addAction(action)
 
+        collection = self.label.contextMenuAdd()
+        if collection:
+            menu.addSeparator()
+            for action in collection:
+                menu.addAction(action)
+
         return menu
 
     def copy(self, scene):
