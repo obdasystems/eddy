@@ -373,7 +373,7 @@ class MainWindow(QMainWindow):
 
         ############################################### MDI AREA #######################################################
 
-        self.mdiArea = MdiArea(self.navigator, self.overview)
+        self.mdiArea = MdiArea()
 
         ############################################## LEFT PANE #######################################################
 
@@ -409,7 +409,6 @@ class MainWindow(QMainWindow):
 
         ################################################ SIGNALS #######################################################
 
-        connect(self.undoGroup.cleanChanged, self.onUndoGroupCleanChanged)
         connect(self.actionNewDocument.triggered, self.doNewDocument)
         connect(self.actionOpenDocument.triggered, self.doOpenDocument)
         connect(self.actionSaveDocument.triggered, self.doSaveDocument)
@@ -428,6 +427,7 @@ class MainWindow(QMainWindow):
         connect(self.paletteCG.buttonClicked[int], self.onToolBoxButtonClicked)
         connect(self.paletteEG.buttonClicked[int], self.onToolBoxButtonClicked)
         connect(self.mdiArea.subWindowActivated, self.onSubWindowActivated)
+        connect(self.undoGroup.cleanChanged, self.onUndoGroupCleanChanged)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -625,14 +625,19 @@ class MainWindow(QMainWindow):
         """
         if subwindow:
 
+            mainview = subwindow.widget()
+            scene = mainview.scene()
+            scene.undoStack.setActive()
+            scene.updateActions()
+
+            self.navigator.setView(mainview)
+            self.overview.setView(mainview)
+
             self.actionCloseActiveSubWindow.setEnabled(True)
             self.actionExportDocument.setEnabled(True)
             self.actionPrintDocument.setEnabled(True)
             self.actionSaveDocumentAs.setEnabled(True)
             self.actionSelectAll.setEnabled(True)
-
-            mainview = subwindow.widget()
-            scene = mainview.scene()
 
             disconnect(self.actionItemCut.triggered)
             disconnect(self.actionItemCopy.triggered)
@@ -656,19 +661,17 @@ class MainWindow(QMainWindow):
             connect(self.actionSendToBack.triggered, scene.doSendToBack)
             connect(self.actionSelectAll.triggered, scene.doSelectAll)
             connect(self.zoomctl.scaleChanged, mainview.onScaleChanged)
+            #connect(scene.selectionChanged, scene.onSelectionChanged)
             connect(mainview.zoomChanged, self.zoomctl.onMainViewZoomChanged)
 
-            # update scene specific actions
-            scene.updateActions()
-
-            # update window title to reflect document name
             self.setWindowTitle(scene.document.name)
 
         else:
 
             # disable the stuff below only if all the subwindows have been closed: this if clause
             # make sure to keep those things activated in case the MainWindow lost just the focus
-            if not len(self.mdiArea.subWindowList()):
+            if not self.mdiArea.subWindowList():
+
                 self.actionSaveDocumentAs.setEnabled(False)
                 self.actionExportDocument.setEnabled(False)
                 self.actionPrintDocument.setEnabled(False)
@@ -682,6 +685,8 @@ class MainWindow(QMainWindow):
                 self.actionCloseActiveSubWindow.setEnabled(False)
                 self.zoomctl.reset()
                 self.zoomctl.setEnabled(False)
+                self.navigator.clearView()
+                self.overview.clearView()
                 self.setWindowTitle()
 
     @pyqtSlot(bool)

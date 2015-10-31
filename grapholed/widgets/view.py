@@ -374,23 +374,6 @@ class Navigator(MainViewInspector):
             """
             pass
 
-        ############################################ SIGNAL HANDLERS ###################################################
-
-        @pyqtSlot()
-        def handleMainViewUpdated(self):
-            """
-            Executed whenever the navigator view needs to be updated.
-            """
-            self.viewport().update()
-
-        @pyqtSlot('QRectF')
-        def handleSceneRectChanged(self, rect):
-            """
-            Executed whenever the rectangle of the scene rendered in the navigator changes.
-            :param rect: the new rectangle.
-            """
-            self.fitInView(rect, Qt.KeepAspectRatio)
-
         ############################################ WIDGET INTERFACE ##################################################
 
         def clearView(self):
@@ -401,15 +384,23 @@ class Navigator(MainViewInspector):
 
                 try:
                     scene = self.mainview.scene()
-                    disconnect(scene.sceneRectChanged)
-                    disconnect(self.mainview.updated)
+                    disconnect(scene.sceneRectChanged, self.fitRectInView)
+                    disconnect(self.mainview.updated, self.updateView)
                 except RuntimeError:
                     # subwindow closed => we don't have the scene reference anymore
                     pass
                 finally:
                     self.mainview = None
 
-            self.viewport().update()
+            self.updateView()
+
+        @pyqtSlot('QRectF')
+        def fitRectInView(self, rect):
+            """
+            Make sure that the given rectangle is fully visible in the navigator.
+            :param rect: the new rectangle.
+            """
+            self.fitInView(rect, Qt.KeepAspectRatio)
 
         def setView(self, mainview):
             """
@@ -421,13 +412,20 @@ class Navigator(MainViewInspector):
             if mainview:
                 scene = mainview.scene()
                 # attach signals to new slots
-                connect(scene.sceneRectChanged, self.handleSceneRectChanged)
-                connect(mainview.updated, self.handleMainViewUpdated)
+                connect(scene.sceneRectChanged, self.fitRectInView)
+                connect(mainview.updated, self.updateView)
                 # fit the scene in the view
                 self.setScene(scene)
-                self.fitInView(mainview.sceneRect(), Qt.KeepAspectRatio)
+                self.fitRectInView(mainview.sceneRect())
 
             self.mainview = mainview
+            self.updateView()
+
+        @pyqtSlot()
+        def updateView(self):
+            """
+            Update the Navigator.
+            """
             self.viewport().update()
 
     def __init__(self, collapsed=False):
@@ -451,16 +449,6 @@ class Navigator(MainViewInspector):
         :param mainview: the main view from where to pick the scene for the navigator.
         """
         self.widget.setView(mainview)
-
-    ################################################ LAYOUT UPDATE #####################################################
-
-    def update(self, *__args):
-        """
-        Update the widget refreshing all the children.
-        """
-        self.head.update()
-        self.body.update()
-        super().update(*__args)
 
 
 class Overview(MainViewInspector):
@@ -488,16 +476,16 @@ class Overview(MainViewInspector):
         def drawBackground(self, painter, rect):
             """
             Override scene drawBackground method so the grid is not rendered in the overview.
-            :param painter: the active painter
-            :param rect: the exposed rectangle
+            :param painter: the active painter.
+            :param rect: the exposed rectangle.
             """
             pass
 
         def drawForeground(self, painter, rect):
             """
             Draw the navigation cursor.
-            :param painter: the active painter
-            :param rect: the exposed rectangle
+            :param painter: the active painter.
+            :param rect: the exposed rectangle.
             """
             pass
 
@@ -552,16 +540,7 @@ class Overview(MainViewInspector):
             """
             pass
 
-        ############################################ SIGNAL HANDLERS ###################################################
-
-        @pyqtSlot()
-        def handleSceneUpdated(self):
-            """
-            Executed whenever the overview view needs to be updated.
-            """
-            self.updateView()
-
-        ############################################ WIDGET INTERFACE ##################################################
+        ############################################# WIDGET INTERFACE #################################################
 
         def clearView(self):
             """
@@ -571,25 +550,17 @@ class Overview(MainViewInspector):
 
                 try:
                     scene = self.mainview.scene()
-                    disconnect(scene.selectionChanged)
-                    disconnect(scene.updated)
+                    # make sure to disconnect only the signals connected to the slots provided by this
+                    # widget otherwise we will experiences bugs when the MainWindow goes out of focus: for more
+                    # details on the matter read: https://github.com/danielepantaleone/grapholed/issues/15
+                    disconnect(scene.selectionChanged, self.updateView)
+                    disconnect(scene.updated, self.updateView)
                 except RuntimeError:
                     # subwindow closed => we don't have the scene reference anymore
                     pass
                 finally:
                     self.mainview = None
 
-            self.viewport().update()
-
-        def updateView(self):
-            """
-            Update the Overview so that it renders only the elements in the scene discarding empty space.
-            """
-            if self.mainview:
-                scene = self.mainview.scene()
-                shape = scene.visibleRect(margin=10)
-                if shape:
-                    self.fitInView(shape, Qt.KeepAspectRatio)
             self.viewport().update()
 
         def setView(self, mainview):
@@ -601,12 +572,24 @@ class Overview(MainViewInspector):
 
             if mainview:
                 scene = mainview.scene()
-                connect(scene.selectionChanged, self.handleSceneUpdated)
-                connect(scene.updated, self.handleSceneUpdated)
+                connect(scene.selectionChanged, self.updateView)
+                connect(scene.updated, self.updateView)
                 self.setScene(scene)
 
             self.mainview = mainview
             self.updateView()
+
+        @pyqtSlot()
+        def updateView(self):
+            """
+            Update the Overview.
+            """
+            if self.mainview:
+                scene = self.mainview.scene()
+                shape = scene.visibleRect(margin=10)
+                if shape:
+                    self.fitInView(shape, Qt.KeepAspectRatio)
+            self.viewport().update()
 
     def __init__(self, collapsed=False):
         """
@@ -629,13 +612,3 @@ class Overview(MainViewInspector):
         :param mainview: the main view from where to pick the scene for the navigator.
         """
         self.widget.setView(mainview)
-
-    ################################################ LAYOUT UPDATE #####################################################
-
-    def update(self, *__args):
-        """
-        Update the widget refreshing all the children.
-        """
-        self.head.update()
-        self.body.update()
-        super().update(*__args)

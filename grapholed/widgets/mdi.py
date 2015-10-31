@@ -37,7 +37,7 @@ import traceback
 
 from grapholed.datatypes import FileType
 from grapholed.dialogs import SaveFileDialog
-from grapholed.functions import getPath, connect
+from grapholed.functions import getPath
 
 from PyQt5.QtCore import pyqtSlot, Qt, QFile, QTextStream, QIODevice, pyqtSignal, QSizeF
 from PyQt5.QtGui import QPainter, QPageSize, QPixmap, QIcon
@@ -49,21 +49,17 @@ class MdiArea(QMdiArea):
     """
     This class implements the MDI Area where documents are rendered.
     """
-
-    def __init__(self, *args, parent=None):
+    def __init__(self, parent=None):
         """
         Initialize the MDI area.
-        :param args: widgets that needs to be updated whenever the main active view changes.
         :param parent: the parent widget.
         """
         super().__init__(parent)
+        self.setContentsMargins(0, 0, 0, 0)
         self.setViewMode(MdiArea.TabbedView)
         self.setTabPosition(QTabWidget.North)
         self.setTabsClosable(True)
         self.setTabsMovable(True)
-        self.setContentsMargins(0, 0, 0, 0)
-        self.inspectors = args
-        connect(self.subWindowActivated, self.onSubWindowActivated)
 
     ################################################ PROPERTIES ########################################################
 
@@ -77,27 +73,6 @@ class MdiArea(QMdiArea):
         if activeSubWindow:
             return activeSubWindow.widget()
         return None
-
-    ############################################# SIGNALS HANDLERS #####################################################
-
-    @pyqtSlot('QMdiSubWindow')
-    def onSubWindowActivated(self, subwindow):
-        """
-        Executed when the active subwindow changes.
-        :param subwindow: the subwindow which got the focus (0 if there is no subwindow).
-        """
-        if subwindow:
-            # change the active undo stack
-            mainview = subwindow.widget()
-            scene = mainview.scene()
-            scene.undoStack.setActive()
-            # switch inspectors to show the new mainview
-            for widget in self.inspectors:
-                widget.setView(subwindow.widget())
-        else:
-            # clear inspectors
-            for widget in self.inspectors:
-                widget.clearView()
 
 
 class MdiSubWindow(QMdiSubWindow):
@@ -123,7 +98,8 @@ class MdiSubWindow(QMdiSubWindow):
         Executed when the subwindow is closed.
         :param closeEvent: the close event instance.
         """
-        scene = self.widget().scene()
+        mainview = self.widget()
+        scene = mainview.scene()
 
         if (scene.items() and not scene.document.filepath) or (not scene.undoStack.isClean()):
             # ask the user if he wants to save unsaved changes to disk
