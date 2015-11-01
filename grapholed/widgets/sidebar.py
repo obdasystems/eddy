@@ -35,7 +35,6 @@
 from abc import ABCMeta
 
 from grapholed import __appname__, __organization__
-from grapholed.exceptions import ProgrammingError
 from grapholed.functions import shaded, connect, disconnect
 
 from PyQt5.QtCore import Qt, QEvent, QSize, pyqtSignal, pyqtSlot, QSettings
@@ -83,9 +82,6 @@ class Sidebar(QScrollArea):
         Add a widget to the Sidebar.
         :param widget: the widget to add.
         """
-        if not isinstance(widget, SidebarWidget):
-            raise ProgrammingError('invalid argument specified ({0}): '
-                                   'expecting PaneItem'.format(widget.__class__.__name__))
         item = SidebarWidgetItem()
         item.setFlags(item.flags() & ~Qt.ItemIsEditable & ~Qt.ItemIsSelectable & ~Qt.ItemIsEnabled)
         item.setSizeHint(widget.sizeHint())
@@ -293,7 +289,7 @@ class SidebarWidget(QWidget):
         Initialize the Sidebar widget.
         :param title: the title of the widget.
         :param icon: the path of the icon to display as widget icon.
-        :param widget: the widget to be rendered inside the body of the Pane widget.
+        :param widget: the widget to be rendered inside the body of the Sidebar widget.
         """
         super().__init__()
 
@@ -315,7 +311,7 @@ class SidebarWidget(QWidget):
     @property
     def widget(self):
         """
-        Returns the widget displayed inside this Pane widget.
+        Returns the widget displayed inside this Sidebar widget.
         """
         return self._widget
 
@@ -574,6 +570,17 @@ class Navigator(ViewBrowser):
             """
             self.fitInView(rect, Qt.KeepAspectRatio)
 
+        @pyqtSlot()
+        def refreshView(self):
+            """
+            Refresh the current view by fitting the scene rect to the widget size.
+            """
+            if self.mainview:
+                self.fitRectInView(self.mainview.sceneRect())
+                self.updateView()
+            else:
+                self.clearView()
+
         def setView(self, view):
             """
             Set the widget to browse the given view.
@@ -606,6 +613,7 @@ class Navigator(ViewBrowser):
         """
         super().__init__('Navigator', ':/icons/zoom', Navigator.Widget())
         self.body.setFixedSize(QSize(Sidebar.MinWidth, Sidebar.MinWidth))
+        connect(self.sizeChanged, self.widget.refreshView)
 
 
 class Overview(ViewBrowser):
