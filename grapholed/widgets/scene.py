@@ -140,6 +140,8 @@ class DiagramScene(QGraphicsScene):
         self.clipboardPasteOffsetY = DiagramScene.PasteOffsetY  ## Y offset to be added to item position upon paste
         self.clipboardPasteOffsetZ = 0  ## > offset to be added to item zValue upon paste
         self.document = DiagramDocument()  ## document associated with the current scene
+        self.nodesById = {} ## used to index nodes using their id
+        self.edgesById = {} ## used to index edges using their id
         self.settings = QSettings(__organization__, __appname__)  ## application settings
         self.uniqueID = UniqueID()  ## used to generate unique incrementsl ids
         self.undoStack = QUndoStack(self)  ## use to push actions and keep history for undo/redo
@@ -320,13 +322,14 @@ class DiagramScene(QGraphicsScene):
         """
         self.setMode(DiagramMode.Idle)
         self.clearSelection()
-        for item in self.nodes() + self.edges():
-            item.setSelected(True)
+        for collection in (self.nodes(), self.edges()):
+            for item in collection:
+                item.setSelected(True)
 
     @pyqtSlot()
     def doSceneProperties(self):
         """
-        Executed when scene properties needs to be diplayed.
+        Executed when scene properties needs to be displayed.
         """
         prop = ScenePropertiesDialog(scene=self)
         prop.exec_()
@@ -663,15 +666,26 @@ class DiagramScene(QGraphicsScene):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
+    #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
 
+    def addItem(self, item):
+        """
+        Add an item to the Diagram scene.
+        :param item: the item to add.
+        """
+        collection = self.nodesById if item.isNode() else self.edgesById
+        collection[item.id] = item
+        super().addItem(item)
+
     def clear(self):
         """
-        Clear the graphics scene by removing all the elements.
+        Clear the Diagram Scene by removing all the elements.
         """
         self.clipboard.clear()
+        self.nodesById.clear()
+        self.edgesById.clear()
         self.undoStack.clear()
         super().clear()
 
@@ -679,22 +693,16 @@ class DiagramScene(QGraphicsScene):
         """
         Returns the edge matching the given node id.
         :param eid: the edge id.
-        :raise KeyError: if there is no such edge in the scene.
+        :raise KeyError: if there is no such edge in the diagram.
         """
-        # iterating over the whole item list is not actually very performant but currently
-        # this method is used only when we have to generate a DiagramScene by loading a Graphol
-        # document so it won't impact performances once the document is loaded.
-        for edge in self.edges():
-            if edge.id == eid:
-                return edge
-        raise KeyError('no edge found with id <{0}>'.format(eid))
+        return self.edgesById[eid]
 
     def edges(self):
         """
-        Returns all the edges in the diagram scene.
-        :rtype: list
+        Returns a view on all the edges of the diagram.
+        :rtype: view
         """
-        return [x for x in self.items() if isinstance(x, Item) and x.isEdge()]
+        return self.edgesById.values()
 
     def itemOnTopOf(self, point, nodes=True, edges=True):
         """
@@ -715,22 +723,16 @@ class DiagramScene(QGraphicsScene):
         """
         Returns the node matching the given node id.
         :param nid: the node id.
-        :raise KeyError: if there is no such node in the scene.
+        :raise KeyError: if there is no such node in the diagram.
         """
-        # iterating over the whole item list is not actually very performant but currently
-        # this method is used only when we have to generate a DiagramScene by loading a Graphol
-        # document so it won't impact performances once the document is loaded.
-        for node in self.nodes():
-            if node.id == nid:
-                return node
-        raise KeyError('no node found with id <{0}>'.format(nid))
+        return self.nodesById[nid]
 
     def nodes(self):
         """
-        Returns all the nodes of the scene.
-        :rtype: list
+        Returns a view on all the nodes in the diagram
+        :rtype: view
         """
-        return [x for x in self.items() if isinstance(x, Item) and x.isNode()]
+        return self.nodesById.values()
 
     def selectedEdges(self):
         """
