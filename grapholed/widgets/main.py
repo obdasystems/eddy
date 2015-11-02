@@ -37,21 +37,21 @@ import sys
 import traceback
 import webbrowser
 
-from PyQt5.QtCore import Qt, QRectF, pyqtSlot, QSettings, QFile, QIODevice
+from PyQt5.QtCore import Qt, QRectF, pyqtSlot, QSettings, QFile, QIODevice, pyqtSignal
 from PyQt5.QtGui import QIcon, QKeySequence, QPixmap
 from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QAction, QStatusBar, QMessageBox
 from PyQt5.QtWidgets import QUndoGroup
 from PyQt5.QtXml import QDomDocument
 
 from grapholed import __version__, __appname__, __organization__
-from grapholed.datatypes import FileType, DiagramMode
+from grapholed.datatypes import FileType, DiagramMode, DistinctList
 from grapholed.dialogs import AboutDialog, OpenFileDialog, PreferencesDialog
 from grapholed.exceptions import ParseError
 from grapholed.functions import getPath, shaded, connect, disconnect
 from grapholed.items import __mapping__, ItemType
 from grapholed.widgets.dock import DockWidget, Navigator, Overview, Palette
 from grapholed.widgets.mdi import MdiArea, MdiSubWindow
-from grapholed.widgets.scene import DiagramScene
+from grapholed.widgets.scene import DiagramScene, DiagramDocument
 from grapholed.widgets.view import MainView
 from grapholed.widgets.toolbar import ZoomControl
 
@@ -60,8 +60,11 @@ class MainWindow(QMainWindow):
     """
     This class implements the Grapholed Main Window.
     """
+    MaxRecentDocuments = 5
     MinWidth = 1024
     MinHeight = 600
+
+    documentLoaded = pyqtSignal('QGraphicsScene')
 
     def __init__(self):
         """
@@ -70,10 +73,6 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.settings = QSettings(__organization__, __appname__)
         self.undoGroup = QUndoGroup()
-
-        ########################################### AUXILIARY WIDGETS ##################################################
-
-        self.zoomctl = ZoomControl()
 
         ################################################# ICONS ########################################################
 
@@ -146,6 +145,12 @@ class MainWindow(QMainWindow):
         self.actionOpenDocument.setIcon(self.iconOpen)
         self.actionOpenDocument.setShortcut(QKeySequence.Open)
         self.actionOpenDocument.setStatusTip('Open a diagram')
+
+        self.actionsOpenRecentDocument = []
+        for i in range(MainWindow.MaxRecentDocuments):
+            action = QAction(self)
+            action.setVisible(False)
+            self.actionsOpenRecentDocument.append(action)
 
         self.actionSaveDocument = QAction('Save', self)
         self.actionSaveDocument.setIcon(self.iconSave)
@@ -269,6 +274,12 @@ class MainWindow(QMainWindow):
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionImportDocument)
         self.menuFile.addAction(self.actionExportDocument)
+
+        self.recentDocumentSeparator = self.menuFile.addSeparator()
+        for i in range(MainWindow.MaxRecentDocuments):
+            self.menuFile.addAction(self.actionsOpenRecentDocument[i])
+        self.updateRecentDocumentActions()
+
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionPrintDocument)
         self.menuFile.addSeparator()
@@ -313,6 +324,8 @@ class MainWindow(QMainWindow):
         self.setStatusBar(statusbar)
 
         ################################################# TOOLBAR ######################################################
+
+        self.zoomctl = ZoomControl()
 
         self.documentToolBar = self.addToolBar("Document")
         self.documentToolBar.setContextMenuPolicy(Qt.PreventContextMenu)
@@ -363,9 +376,13 @@ class MainWindow(QMainWindow):
         connect(self.actionAbout.triggered, self.doAbout)
         connect(self.actionSapienzaWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/en'))
         connect(self.actionGrapholWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/~graphol/'))
+        connect(self.documentLoaded, self.onDocumentLoaded)
         connect(self.mdiArea.subWindowActivated, self.onSubWindowActivated)
         connect(self.palette_.buttonClicked[int], self.onPaletteButtonClicked)
         connect(self.undoGroup.cleanChanged, self.onUndoGroupCleanChanged)
+
+        for i in range(MainWindow.MaxRecentDocuments):
+            connect(self.actionsOpenRecentDocument[i].triggered, self.doOpenRecentDocument)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -404,22 +421,30 @@ class MainWindow(QMainWindow):
         if opendialog.exec_():
 
             filepath = opendialog.selectedFiles()[0]
-            # if the file is already opened just focus the subwindow
-            for subwindow in self.mdiArea.subWindowList():
-                scene = subwindow.widget().scene()
-                if scene.document.filepath and scene.document.filepath == filepath:
+            if not self.focusDocument(filepath):
+                scene = self.getSceneFromGrapholFile(filepath)
+                if scene:
+                    mainview = self.getMainView(scene)
+                    subwindow = self.getMDISubWindow(mainview)
+                    subwindow.showMaximized()
                     self.mdiArea.setActiveSubWindow(subwindow)
                     self.mdiArea.update()
-                    return
 
-            scene = self.getSceneFromGrapholFile(filepath)
-
-            if scene:
-                mainview = self.getMainView(scene)
-                subwindow = self.getMDISubWindow(mainview)
-                subwindow.showMaximized()
-                self.mdiArea.setActiveSubWindow(subwindow)
-                self.mdiArea.update()
+    @pyqtSlot()
+    def doOpenRecentDocument(self):
+        """
+        Open the clicked recent document.
+        """
+        action = self.sender()
+        if action:
+            if not self.focusDocument(action.data()):
+                scene = self.getSceneFromGrapholFile(action.data())
+                if scene:
+                    mainview = self.getMainView(scene)
+                    subwindow = self.getMDISubWindow(mainview)
+                    subwindow.showMaximized()
+                    self.mdiArea.setActiveSubWindow(subwindow)
+                    self.mdiArea.update()
 
     @pyqtSlot()
     def doSaveDocument(self):
@@ -488,14 +513,22 @@ class MainWindow(QMainWindow):
     #                                                                                                                  #
     ####################################################################################################################
 
-    @pyqtSlot('QMdiSubWindow')
-    def onDocumentSaved(self, subwindow):
+    @pyqtSlot('QGraphicsScene')
+    def onDocumentLoaded(self, scene):
         """
-        Executed when the document in a subwindow is saved.
-        :param subwindow: the subwindow containing the saved document.
+        Executed when a document is loaded from Graphol file.
+        :param scene: the DiagramScene instance containing the document.
         """
-        mainview = subwindow.widget()
-        scene = mainview.scene()
+        self.addRecentDocument(scene.document.filepath)
+        self.setWindowTitle(scene.document.name)
+
+    @pyqtSlot('QGraphicsScene')
+    def onDocumentSaved(self, scene):
+        """
+        Executed when a document is saved to a Graphol file
+        :param scene: the DiagramScene instance containing the document.
+        """
+        self.addRecentDocument(scene.document.filepath)
         self.setWindowTitle(scene.document.name)
 
     @pyqtSlot('QGraphicsItem', int)
@@ -665,9 +698,43 @@ class MainWindow(QMainWindow):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
+    #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
+
+    def addRecentDocument(self, path):
+        """
+        Add the given document to the recent document list
+        :param path: the path of the recent document.
+        :return:
+        """
+        documents = self.settings.value('recentDocumentList', DistinctList())
+        documents.remove(path)
+        documents.insert(0, path) # insert on top of the list
+        documents = documents[:MainWindow.MaxRecentDocuments]
+        self.settings.setValue('recentDocumentList', documents)
+        self.updateRecentDocumentActions()
+
+    def focusDocument(self, document):
+        """
+        Move the focus on the subwindow containing the given document.
+        :param document: the document filepath.
+        :return: True if the subwindow has been focused, False otherwise.
+        :rtype: bool
+        """
+        if isinstance(document, DiagramScene):
+            document = document.document.filepath
+        elif isinstance(document, DiagramDocument):
+            document = document.filepath
+
+        for subwindow in self.mdiArea.subWindowList():
+            scene = subwindow.widget().scene()
+            if scene.document.filepath and scene.document.filepath == document:
+                self.mdiArea.setActiveSubWindow(subwindow)
+                self.mdiArea.update()
+                return True
+
+        return False
 
     def getMainView(self, scene):
         """
@@ -728,8 +795,8 @@ class MainWindow(QMainWindow):
             box = QMessageBox()
             box.setIconPixmap(QPixmap(':/icons/warning'))
             box.setWindowIcon(QIcon(':/images/grapholed'))
-            box.setWindowTitle('WARNING')
-            box.setText('Unable to open Graphol document {0}!'.format(filepath))
+            box.setWindowTitle('File not found!')
+            box.setText('Could not open Graphol document: {0}!'.format(filepath))
             box.setDetailedText(file.errorString())
             box.setStandardButtons(QMessageBox.Ok)
             box.exec_()
@@ -776,7 +843,7 @@ class MainWindow(QMainWindow):
             box.setIconPixmap(QPixmap(':/icons/warning'))
             box.setWindowIcon(QIcon(':/images/grapholed'))
             box.setWindowTitle('WARNING')
-            box.setText('Unable to parse Graphol document from {0}!'.format(filepath))
+            box.setText('Could not open Graphol document: {0}!'.format(filepath))
             # format the traceback so it prints nice
             most_recent_calls = traceback.format_tb(sys.exc_info()[2])
             most_recent_calls = [x.strip().replace('\n', '') for x in most_recent_calls]
@@ -786,6 +853,7 @@ class MainWindow(QMainWindow):
             box.exec_()
             return None
         else:
+            self.documentLoaded.emit(scene)
             return scene
         finally:
             file.close()
@@ -795,5 +863,25 @@ class MainWindow(QMainWindow):
         Set the main window title.
         :param p_str: the prefix for the window title
         """
-        T = '{0} {1}'.format(__appname__, __version__) if not p_str else '{0} - {1} {2}'.format(p_str, __appname__, __version__)
+        T = '{0} - {1} {2}'.format(p_str, __appname__, __version__) if p_str else '{0} {1}'.format(__appname__, __version__)
         super().setWindowTitle(T)
+
+    def updateRecentDocumentActions(self):
+        """
+        Update the recent document action list.
+        """
+        documents = self.settings.value('recentDocumentList', DistinctList())
+        numRecentDocuments = min(len(documents), MainWindow.MaxRecentDocuments)
+
+        for i in range(numRecentDocuments):
+            filename = '&{0} {1}'.format(i + 1, os.path.basename(os.path.normpath(documents[i])))
+            self.actionsOpenRecentDocument[i].setText(filename)
+            self.actionsOpenRecentDocument[i].setData(documents[i])
+            self.actionsOpenRecentDocument[i].setVisible(True)
+
+        # turn off actions that we don't need
+        for i in range(numRecentDocuments, MainWindow.MaxRecentDocuments):
+            self.actionsOpenRecentDocument[i].setVisible(False)
+
+        # show the separator only if we got at least one recent document
+        self.recentDocumentSeparator.setVisible(numRecentDocuments > 0)

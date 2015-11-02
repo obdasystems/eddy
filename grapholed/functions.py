@@ -38,7 +38,7 @@ import os
 import sys
 
 from grapholed.exceptions import ProgrammingError
-from PyQt5.QtCore import Qt, QPointF, QFileInfo
+from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter
 
 
@@ -136,15 +136,6 @@ def distanceL(line, p):
     p2 = QPointF(x4, y4)
 
     return distanceP(p1, p2), p2
-
-
-def filename(path):
-    """
-    Returna the filename of the file pointed by the given path.
-    :param path: the file path
-    :rtype: str
-    """
-    return QFileInfo(path).fileName()
 
 
 def getHomePath():

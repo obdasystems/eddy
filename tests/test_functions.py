@@ -37,7 +37,7 @@ import unittest
 
 from grapholed.exceptions import ProgrammingError
 from grapholed.functions import angleP, clamp, distanceP, distanceL, intersectionL
-from grapholed.functions import isEmpty, midpoint, rangeF, snapToGrid, filename
+from grapholed.functions import isEmpty, midpoint, rangeF, snapToGrid
 
 from PyQt5.QtCore import QPointF, QLineF
 
@@ -76,6 +76,7 @@ class Test_DistanceP(unittest.TestCase):
         self.assertEqual(10.0, distanceP(QPointF(0, 8), QPointF(6, 0)))
         self.assertEqual(10.0, distanceP(QPointF(0, -8), QPointF(-6, 0)))
 
+
 class Test_DistanceL(unittest.TestCase):
 
     def test_distance(self):
@@ -85,13 +86,6 @@ class Test_DistanceL(unittest.TestCase):
         self.assertIsInstance(D, tuple)
         self.assertEqual(D[0], 8.0)
         self.assertEqual(D[1], QPointF(2, 0))
-
-
-class Test_Filename(unittest.TestCase):
-
-    def test_filename(self):
-        self.assertEqual('Pizza.graphol', filename('/home/.grapholed/Pizza.graphol'))
-        self.assertEqual('Pizza.graphol', filename('Pizza.graphol'))
 
 
 class Test_IntersectionL(unittest.TestCase):

@@ -79,7 +79,7 @@ class MdiSubWindow(QMdiSubWindow):
     """
     This class implements the MDI area subwindow.
     """
-    documentSaved = pyqtSignal('QMdiSubWindow')
+    documentSaved = pyqtSignal('QGraphicsScene')
 
     def __init__(self, view, parent=None):
         """
@@ -275,8 +275,7 @@ class MdiSubWindow(QMdiSubWindow):
                 scene.document.filepath = filepath
                 scene.document.edited = os.path.getmtime(filepath)
                 scene.undoStack.setClean()
-                # emit a signal so the main window can update the title
-                self.documentSaved.emit(self)
+                self.documentSaved.emit(scene)
             return saved
         return False
 
@@ -293,8 +292,7 @@ class MdiSubWindow(QMdiSubWindow):
             if saved:
                 scene.document.filepath = filepath
                 scene.undoStack.setClean()
-                # emit a signal so the main window can update the title
-                self.documentSaved.emit(self)
+                self.documentSaved.emit(scene)
             return saved
         return False
 
