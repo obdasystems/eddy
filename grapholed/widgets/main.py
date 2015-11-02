@@ -317,6 +317,7 @@ class MainWindow(QMainWindow):
         self.documentToolBar = self.addToolBar("Document")
         self.documentToolBar.setContextMenuPolicy(Qt.PreventContextMenu)
         self.documentToolBar.setFloatable(False)
+        self.documentToolBar.setMovable(False)
 
         self.documentToolBar.addAction(self.actionNewDocument)
         self.documentToolBar.addAction(self.actionOpenDocument)
