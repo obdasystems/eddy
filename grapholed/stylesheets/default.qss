@@ -30,11 +30,22 @@
 /**************************************************************************/
 
 
-/******************************* TOOLBAR **********************************/
-
+/**
+ * MAIN WINDOW
+ */
+QMainWindow::separator {
+    width: 10px;
+    height: 0;
+    margin: -10px;
+    padding: 0;
+}
+/**
+ * TOOLBAR
+ */
 QToolBar {
     padding: 4px;
     spacing: 2px;
+    border: 0;
 }
 QToolBar QToolButton {
     border: 1px solid transparent;
@@ -48,48 +59,50 @@ QToolBar QToolButton:pressed {
     background: #B0BEC5;
     border: 1px solid #607D8B;
 }
-
-/******************** LEFT/RIGHT PANE WIDGETS LAYOUT **********************/
-
-Sidebar Head {
-    color: #000000;
-    border: 1px solid #A9A9A9;
+/**
+ * DOCK WIDGETS
+ */
+QDockWidget {
+    border: 1px solid transparent;
+    titlebar-close-icon: url(:/icons/close);
+}
+QDockWidget::title {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #E0E0E0, stop: 0.3 #DCDCDC, stop: 0.7 #DBDBDB, stop: 1.0 #D3D3D3);
+    border-top: 1px solid #BABABA;
+    border-bottom: 1px solid #BABABA;
+    padding: 4px;
+    text-align: center;
+}
+QDockWidget::close-button {
+    border: 1px solid transparent;
+    background: transparent;
+    right: 6px;
+    top: 3px;
+}
+QDockWidget::close-button:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #D0D0D0, stop: 0.3 #CCCCCC, stop: 0.7 #CBCBCB, stop: 1.0 #C3C3C3);
+    border-color: #BABABA;
     border-radius: 2px;
 }
-Sidebar Head.normal {
-    border-color: #A9A9A9;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #F8F8F8, stop: 0.3 #F4F4F4,
-                                                            stop: 0.7 #F0F0F0, stop: 1.0 #EDEDED);
+QDockWidget QWidget {
+    border: 0;
 }
-Sidebar Head.closed {
-    border-color: #BABABA;
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #D0D0D0, stop: 0.3 #CCCCCC,
-                                                            stop: 0.7 #CBCBCB, stop: 1.0 #C3C3C3);
-}
-Sidebar Body {
+QDockWidget Palette {
     background: #FFFFFF;
-    border: 1px solid #A9A9A9;
-    border-top: 0;
 }
-Sidebar Palette QToolButton {
+QDockWidget Palette QToolButton {
+    /*background: transparent;*/
+    /*border: 1px solid transparent;*/
     background: #E0E0E0;
     border: 1px solid #BABABA;
 }
-Sidebar Palette QToolButton:checked {
+QDockWidget Palette QToolButton:checked {
     background: #4FC3F7;
     border: 1px solid #455A64;
 }
-Sidebar QListWidget,
-Sidebar QListWidget SidebarWidget,
-Sidebar QListWidget SidebarWidget Widget {
-    background: transparent;
-    border: 0;
-}
-
-/******************************* TAB BAR **********************************/
-
+/**
+ * TAB BAR
+ */
 QTabBar {
     qproperty-drawBase: 0;
 }
@@ -99,55 +112,57 @@ QTabBar:focus {
 QTabBar::close-button  {
     image: url(:/icons/close);
     background: transparent;
+    border: 1px solid transparent;
+}
+QTabBar::close-button:hover {
+    border-color: #BABABA;
+    border-radius: 2px;
+    background: qlineargradient(x1:0, y1 : 0, x2 : 0, y2 : 1, stop : 0.0 #D0D0D0, stop : 0.3 #CCCCCC, stop : 0.7 #CBCBCB, stop : 1.0 #C3C3C3);
 }
 QTabBar::tab:top {
-    padding: 2px 10px;
-    border: 1px solid #A9A9A9;
+    border: 1px solid #BABABA;
     border-bottom: 0;
-    border-top-left-radius: 2px;
-    border-top-right-radius: 2px;
+    height: 24px;
     min-width: 80px;
+    padding: 0 10px;
 }
 QTabBar::tab:top:selected {
-    height: 24px;
-    margin-top: 0;
-    margin-left: -4px;
-    margin-right: -4px;
-    border-color: #A9A9A9;
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #F8F8F8, stop: 0.3 #F4F4F4,
-                                                            stop: 0.7 #F0F0F0, stop: 1.0 #EDEDED);
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #F8F8F8, stop: 0.3 #F4F4F4, stop: 0.7 #F0F0F0, stop: 1.0 #EDEDED);
 }
 QTabBar::tab:top:!selected {
-    height: 22px;
-    margin-top: 2px;
-    border-color: #BABABA;
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #E0E0E0, stop: 0.3 #DCDCDC,
-                                                            stop: 0.7 #DBDBDB, stop: 1.0 #D3D3D3);
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #E0E0E0, stop: 0.3 #DCDCDC, stop: 0.7 #DBDBDB, stop: 1.0 #D3D3D3);
 }
-QTabBar::tab:top:first:selected {
-    margin-left: 0;
-}
-QTabBar::tab:top:last:selected {
-    margin-right: 0;
+QTabBar::tab:top:!last {
+    border: 1px solid #BABABA;
+    border-right: 0;
+    border-bottom: 0;
 }
 QTabBar::tab:top:only-one {
-    margin: 0;
+    border: 1px solid #BABABA;
+    border-bottom: 0;
 }
-
-/****************************** TAB WIDGET ********************************/
-
+/**
+ * MDI AREA
+ */
+QMdiArea {
+    border: 1px solid #BABABA;
+    border-top: 0;
+}
+/**
+ * TAB WIDGET
+ */
 QTabWidget::pane {
     border: 1px solid #A9A9A9;
 }
-
-/****************************** MAIN VIEW *********************************/
-
-QGraphicsView {
-    border: 1px solid #A9A9A9;
+/**
+ * MAIN VIEW
+ */
+MainView {
+    border-top: 1px solid #A9A9A9;
 }
-
-/****************************** SCROLL BAR ********************************/
-
+/**
+ * SCROLL BAR
+ */
 QScrollBar {
     background: transparent;
     margin: 0;
@@ -184,9 +199,9 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
     height: 0;
     width: 0;
 }
-
-/******************************** SLIDER ***********************************/
-
+/**
+ * SLIDER
+ */
 QSlider::groove:horizontal {
     border: 1px solid #555555;
     height: 6px;
@@ -194,7 +209,6 @@ QSlider::groove:horizontal {
     margin: 2px 0;
     border-radius: 2px;
 }
-
 QSlider::handle:horizontal {
     background: #37474F;
     border: 1px solid #263238;
@@ -203,9 +217,9 @@ QSlider::handle:horizontal {
     margin: -4px 0;
     border-radius: 2px;
 }
-
-/********************************* MENU ***********************************/
-
+/**
+ * MENU
+ */
 QMenu {
     border: 1px solid #A9A9A9;
     background: #EDEDED;
@@ -234,21 +248,21 @@ QMenu::separator {
     margin-left: 8px;
     margin-right: 4px;
 }
-
-/******************************** POPUPS **********************************/
-
+/**
+ * POPUPS
+ */
 QMessageBox QLabel {
     font-weight: normal;
 }
-
-/******************************** FIELDS **********************************/
-
+/**
+ * FIELDS
+ */
 QLineEdit {
     background: #FFFFFF;
 }
-
-/***************************** STARTUS BAR ********************************/
-
+/**
+ * STATUS BAR
+ */
 QStatusBar {
     background: #BBBBBB;
 }

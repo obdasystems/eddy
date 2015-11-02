@@ -37,23 +37,21 @@ import sys
 import traceback
 import webbrowser
 
-from PyQt5.QtCore import Qt, QSize, QRectF, pyqtSlot, QSettings, QFile, QIODevice
+from PyQt5.QtCore import Qt, QRectF, pyqtSlot, QSettings, QFile, QIODevice
 from PyQt5.QtGui import QIcon, QKeySequence, QPixmap
-from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QAction, QStatusBar, QButtonGroup, QHBoxLayout, QMessageBox
-from PyQt5.QtWidgets import QToolButton, QWidget, QUndoGroup
+from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QAction, QStatusBar, QMessageBox
+from PyQt5.QtWidgets import QUndoGroup
 from PyQt5.QtXml import QDomDocument
 
-from grapholed import __version__ as version, __appname__ as appname
-from grapholed import __organization__ as organization
+from grapholed import __version__, __appname__, __organization__
 from grapholed.datatypes import FileType, DiagramMode
 from grapholed.dialogs import AboutDialog, OpenFileDialog, PreferencesDialog
 from grapholed.exceptions import ParseError
 from grapholed.functions import getPath, shaded, connect, disconnect
-from grapholed.items import __mapping__
-from grapholed.items import *
+from grapholed.items import __mapping__, ItemType
+from grapholed.widgets.dock import DockWidget, Navigator, Overview, Palette
 from grapholed.widgets.mdi import MdiArea, MdiSubWindow
 from grapholed.widgets.scene import DiagramScene
-from grapholed.widgets.sidebar import Sidebar, Palette, Navigator, Overview
 from grapholed.widgets.view import MainView
 from grapholed.widgets.toolbar import ZoomControl
 
@@ -70,13 +68,11 @@ class MainWindow(QMainWindow):
         Initialize the application Main Window.
         """
         super().__init__()
-        self.settings = QSettings(organization, appname)
+        self.settings = QSettings(__organization__, __appname__)
         self.undoGroup = QUndoGroup()
 
         ########################################### AUXILIARY WIDGETS ##################################################
 
-        self.navigator = Navigator()
-        self.overview = Overview()
         self.zoomctl = ZoomControl()
 
         ################################################# ICONS ########################################################
@@ -102,6 +98,7 @@ class MainWindow(QMainWindow):
         self.iconNew = getIcon(':/icons/new')
         self.iconOpen = getIcon(':/icons/open')
         self.iconPaste = getIcon(':/icons/paste')
+        self.iconPalette = getIcon(':/icons/appearance')
         self.iconPreferences = getIcon(':/icons/preferences')
         self.iconPrint = getIcon(':/icons/print')
         self.iconQuit = getIcon(':/icons/quit')
@@ -111,18 +108,44 @@ class MainWindow(QMainWindow):
         self.iconSelectAll = getIcon(':/icons/select-all')
         self.iconSendToBack = getIcon(':/icons/send-to-back')
         self.iconUndo = getIcon(':/icons/undo')
+        self.iconZoom = getIcon(':/icons/zoom')
+
+        ############################################# DOCK WIDGETS #####################################################
+
+        self.palette_ = Palette()
+        self.paletteDock = DockWidget('Palette', self)
+        self.paletteDock.setWidget(self.palette_)
+
+        self.navigator = Navigator()
+        self.navigatorDock = DockWidget('Navigator', self)
+        self.navigatorDock.setWidget(self.navigator)
+
+        self.overview = Overview()
+        self.overviewDock = DockWidget('Overview', self)
+        self.overviewDock.setWidget(self.overview)
+
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.paletteDock)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.navigatorDock)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.overviewDock)
+
+        ########################################### MAIN AREA WIDGET ###################################################
+
+        self.mdiArea = MdiArea()
+        self.setCentralWidget(self.mdiArea)
+        self.setWindowIcon(QIcon(':/images/grapholed'))
+        self.setWindowTitle()
 
         ################################################ ACTIONS #######################################################
 
         self.actionNewDocument = QAction('New', self)
         self.actionNewDocument.setIcon(self.iconNew)
         self.actionNewDocument.setShortcut(QKeySequence.New)
-        self.actionNewDocument.setStatusTip('Create a new document')
+        self.actionNewDocument.setStatusTip('Create a new diagram')
 
         self.actionOpenDocument = QAction('Open...', self)
         self.actionOpenDocument.setIcon(self.iconOpen)
         self.actionOpenDocument.setShortcut(QKeySequence.Open)
-        self.actionOpenDocument.setStatusTip('Open a document')
+        self.actionOpenDocument.setStatusTip('Open a diagram')
 
         self.actionSaveDocument = QAction('Save', self)
         self.actionSaveDocument.setIcon(self.iconSave)
@@ -133,40 +156,44 @@ class MainWindow(QMainWindow):
         self.actionSaveDocumentAs = QAction('Save As...', self)
         self.actionSaveDocumentAs.setIcon(self.iconSaveAs)
         self.actionSaveDocumentAs.setShortcut(QKeySequence.SaveAs)
-        self.actionSaveDocumentAs.setStatusTip('Save the active document')
+        self.actionSaveDocumentAs.setStatusTip('Save the active diagram')
         self.actionSaveDocumentAs.setEnabled(False)
 
         self.actionImportDocument = QAction('Import...', self)
         self.actionImportDocument.setStatusTip('Import a document')
 
         self.actionExportDocument = QAction('Export...', self)
-        self.actionExportDocument.setStatusTip('Export the active document')
+        self.actionExportDocument.setStatusTip('Export the active diagram')
         self.actionExportDocument.setEnabled(False)
 
         self.actionPrintDocument = QAction('Print...', self)
         self.actionPrintDocument.setIcon(self.iconPrint)
-        self.actionPrintDocument.setStatusTip('Print the active document')
+        self.actionPrintDocument.setStatusTip('Print the active diagram')
         self.actionPrintDocument.setEnabled(False)
 
         self.actionCloseActiveSubWindow = QAction('Close', self)
         self.actionCloseActiveSubWindow.setIcon(self.iconClose)
         self.actionCloseActiveSubWindow.setShortcut(QKeySequence.Close)
-        self.actionCloseActiveSubWindow.setStatusTip('Close the active document')
+        self.actionCloseActiveSubWindow.setStatusTip('Close the active diagram')
         self.actionCloseActiveSubWindow.setEnabled(False)
 
         self.actionOpenPreferences = QAction('Preferences', self)
-        self.actionOpenPreferences.setIcon(self.iconPreferences)
         self.actionOpenPreferences.setShortcut(QKeySequence.Preferences)
-        self.actionOpenPreferences.setStatusTip('Open application preferences dialog')
+        self.actionOpenPreferences.setStatusTip('Open {0} preferences'.format(__appname__))
+
+        if not sys.platform.startswith('darwin'):
+            self.actionOpenPreferences.setIcon(self.iconPreferences)
 
         self.actionQuit = QAction('Quit', self)
-        self.actionQuit.setIcon(self.iconQuit)
-        self.actionQuit.setStatusTip('Quit Grapholed')
+        self.actionQuit.setStatusTip('Quit {0}'.format(__appname__))
         self.actionQuit.setShortcut(QKeySequence.Quit)
+
+        if not sys.platform.startswith('darwin'):
+            self.actionQuit.setIcon(self.iconQuit)
 
         self.actionSnapToGrid = QAction('Snap to grid', self)
         self.actionSnapToGrid.setIcon(self.iconGrid)
-        self.actionSnapToGrid.setStatusTip('Snap scene elements to the grid')
+        self.actionSnapToGrid.setStatusTip('Snap diagram elements to the grid')
         self.actionSnapToGrid.setCheckable(True)
         self.actionSnapToGrid.setChecked(self.settings.value('scene/snap_to_grid', False, bool))
         
@@ -206,7 +233,7 @@ class MainWindow(QMainWindow):
         self.actionSelectAll = QAction('Select All', self)
         self.actionSelectAll.setIcon(self.iconSelectAll)
         self.actionSelectAll.setShortcut(QKeySequence.SelectAll)
-        self.actionSelectAll.setStatusTip('Send all items in the active scene')
+        self.actionSelectAll.setStatusTip('Select all items in the active diagram')
         self.actionSelectAll.setEnabled(False)
 
         self.actionUndo = self.undoGroup.createUndoAction(self)
@@ -217,7 +244,7 @@ class MainWindow(QMainWindow):
         self.actionRedo.setIcon(self.iconRedo)
         self.actionRedo.setShortcut(QKeySequence.Redo)
 
-        self.actionAbout = QAction('About {0}'.format(appname), self)
+        self.actionAbout = QAction('About {0}'.format(__appname__), self)
         self.actionAbout.setShortcut(QKeySequence.HelpContents)
 
         self.actionSapienzaWebOpen = QAction('DIAG - Sapienza university', self)
@@ -225,6 +252,10 @@ class MainWindow(QMainWindow):
         
         self.actionGrapholWebOpen = QAction('Graphol homepage', self)
         self.actionGrapholWebOpen.setIcon(self.iconLink)
+
+        self.navigatorDock.toggleViewAction().setIcon(self.iconZoom)
+        self.overviewDock.toggleViewAction().setIcon(self.iconZoom)
+        self.paletteDock.toggleViewAction().setIcon(self.iconPalette)
         
         ################################################# MENUS ########################################################
 
@@ -261,12 +292,15 @@ class MainWindow(QMainWindow):
 
         self.menuView = self.menuBar().addMenu("&View")
         self.menuView.addAction(self.actionSnapToGrid)
+        self.menuView.addSeparator()
+        self.menuView.addAction(self.navigatorDock.toggleViewAction())
+        self.menuView.addAction(self.overviewDock.toggleViewAction())
+        self.menuView.addAction(self.paletteDock.toggleViewAction())
 
         self.menuHelp = self.menuBar().addMenu("&Help")
         self.menuHelp.addAction(self.actionAbout)
 
         if not sys.platform.startswith('darwin'):
-            # add a separator only if it's not Mac OS
             self.menuHelp.addSeparator()
 
         self.menuHelp.addAction(self.actionSapienzaWebOpen)
@@ -278,7 +312,7 @@ class MainWindow(QMainWindow):
         statusbar.setSizeGripEnabled(False)
         self.setStatusBar(statusbar)
 
-        ################################################ TOOLBAR #######################################################
+        ################################################# TOOLBAR ######################################################
 
         self.documentToolBar = self.addToolBar("Document")
         self.documentToolBar.setContextMenuPolicy(Qt.PreventContextMenu)
@@ -304,100 +338,6 @@ class MainWindow(QMainWindow):
         self.documentToolBar.addSeparator()
         self.documentToolBar.addWidget(self.zoomctl)
 
-        ################################################ PALETTE #######################################################
-
-        self.palette_items = dict()
-        self.palette_nodes = dict()
-        self.palette_edges = dict()
-
-        self.palettePG = QButtonGroup()
-        self.palettePG.setExclusive(False)
-
-        self.paletteCG = QButtonGroup()
-        self.paletteCG.setExclusive(False)
-
-        self.paletteEG = QButtonGroup()
-        self.paletteEG.setExclusive(False)
-
-        nodes = [self.palette_items, self.palette_nodes]
-        edges = [self.palette_items, self.palette_edges]
-
-        def BTN(item, bgroup, groups):
-            """
-            Create a cell widget with the item shape rendered inside.
-            :type item: class
-            :type bgroup: QButtonGroup
-            :type groups: list
-            :param item: the class implementing the item.
-            :param bgroup: the button group this widget is associated.
-            :param groups: an iterable of dictionaries where to map the generated QToolButton using the item class type.
-            :rtype: QToolButton
-            """
-            button = QToolButton()
-            button.setIcon(QIcon(item.image(w=60, h=44)))
-            button.setIconSize(QSize(60, 44))
-            button.setCheckable(True)
-            button.setContentsMargins(0, 0, 0, 0)
-            button.setProperty('item', item)
-            bgroup.addButton(button, item.itemtype)
-            for collection in groups:
-                collection[item.itemtype] = button
-            return button
-
-        self.paletteP = Palette('Predicate nodes', ':/icons/add')
-        self.paletteP.addButton(BTN(ConceptNode, self.palettePG, nodes))
-        self.paletteP.addButton(BTN(RoleNode, self.palettePG, nodes))
-        self.paletteP.addButton(BTN(ValueDomainNode, self.palettePG, nodes))
-        self.paletteP.addButton(BTN(IndividualNode, self.palettePG, nodes))
-        self.paletteP.addButton(BTN(ValueRestrictionNode, self.palettePG, nodes))
-        self.paletteP.addButton(BTN(AttributeNode, self.palettePG, nodes))
-
-        self.paletteC = Palette('Constructor nodes', ':/icons/add')
-        self.paletteC.addButton(BTN(DomainRestrictionNode, self.paletteCG, nodes))
-        self.paletteC.addButton(BTN(RangeRestrictionNode, self.paletteCG, nodes))
-        self.paletteC.addButton(BTN(UnionNode, self.paletteCG, nodes))
-        self.paletteC.addButton(BTN(EnumerationNode, self.paletteCG, nodes))
-        self.paletteC.addButton(BTN(ComplementNode, self.paletteCG, nodes))
-        self.paletteC.addButton(BTN(RoleChainNode, self.paletteCG, nodes))
-        self.paletteC.addButton(BTN(IntersectionNode, self.paletteCG, nodes))
-        self.paletteC.addButton(BTN(RoleInverseNode, self.paletteCG, nodes))
-        self.paletteC.addButton(BTN(DatatypeRestrictionNode, self.paletteCG, nodes))
-        self.paletteC.addButton(BTN(DisjointUnionNode, self.paletteCG, nodes))
-        self.paletteC.addButton(BTN(PropertyAssertionNode, self.paletteCG, nodes))
-
-        self.paletteE = Palette('Edges', ':/icons/add')
-        self.paletteE.addButton(BTN(InclusionEdge, self.paletteEG, edges))
-        self.paletteE.addButton(BTN(InputEdge, self.paletteEG, edges))
-        self.paletteE.addButton(BTN(InstanceOfEdge, self.paletteEG, edges))
-
-        ############################################### MDI AREA #######################################################
-
-        self.mdiArea = MdiArea()
-
-        ############################################# LEFT SIDEBAR #####################################################
-
-        self.leftSidebar = Sidebar()
-        self.leftSidebar.addWidget(self.paletteP)
-        self.leftSidebar.addWidget(self.paletteC)
-        self.leftSidebar.addWidget(self.paletteE)
-        
-        ############################################# RIGHT SIDEBAR ####################################################
-
-        self.rightSidebar = Sidebar()
-        self.rightSidebar.addWidget(self.navigator)
-        self.rightSidebar.addWidget(self.overview)
-
-        ############################################ CENTRAL WIDGET ####################################################
-
-        widget = QWidget()
-        layout = QHBoxLayout(widget)
-        layout.addWidget(self.leftSidebar)
-        layout.addWidget(self.mdiArea)
-        layout.addWidget(self.rightSidebar)
-        self.setCentralWidget(widget)
-        self.setWindowIcon(QIcon(':/images/grapholed'))
-        self.setWindowTitle()
-
         ############################################### GEOMETRY #######################################################
 
         screen = QDesktopWidget().screenGeometry()
@@ -406,7 +346,7 @@ class MainWindow(QMainWindow):
         self.setGeometry(posX, posY, MainWindow.MinWidth, MainWindow.MinHeight)
         self.setMinimumSize(MainWindow.MinWidth, MainWindow.MinHeight)
 
-        ################################################ SIGNALS #######################################################
+        ############################################### SIGNALS ########################################################
 
         connect(self.actionNewDocument.triggered, self.doNewDocument)
         connect(self.actionOpenDocument.triggered, self.doOpenDocument)
@@ -422,10 +362,8 @@ class MainWindow(QMainWindow):
         connect(self.actionAbout.triggered, self.doAbout)
         connect(self.actionSapienzaWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/en'))
         connect(self.actionGrapholWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/~graphol/'))
-        connect(self.palettePG.buttonClicked[int], self.onToolBoxButtonClicked)
-        connect(self.paletteCG.buttonClicked[int], self.onToolBoxButtonClicked)
-        connect(self.paletteEG.buttonClicked[int], self.onToolBoxButtonClicked)
         connect(self.mdiArea.subWindowActivated, self.onSubWindowActivated)
+        connect(self.palette_.buttonClicked[int], self.onPaletteButtonClicked)
         connect(self.undoGroup.cleanChanged, self.onUndoGroupCleanChanged)
 
     ####################################################################################################################
@@ -567,7 +505,7 @@ class MainWindow(QMainWindow):
         :param modifiers: keyboard modifiers held during edge insertion.
         """
         if not modifiers & Qt.ControlModifier:
-            self.palette_items[edge.itemtype].setChecked(False)
+            self.palette_.button(edge.itemtype).setChecked(False)
 
     @pyqtSlot('QGraphicsItem', int)
     def onNodeInserted(self, node, modifiers):
@@ -577,7 +515,7 @@ class MainWindow(QMainWindow):
         :param modifiers: keyboard modifiers held during node insertion.
         """
         if not modifiers & Qt.ControlModifier:
-            self.palette_items[node.itemtype].setChecked(False)
+            self.palette_.button(node.itemtype).setChecked(False)
 
     @pyqtSlot(DiagramMode)
     def onModeChanged(self, mode):
@@ -586,34 +524,28 @@ class MainWindow(QMainWindow):
         :param mode: the scene operation mode.
         """
         if mode not in (DiagramMode.NodeInsert, DiagramMode.EdgeInsert):
-            for btn in self.palette_items.values():
-                btn.setChecked(False)
+            self.palette_.clear()
 
     @pyqtSlot(int)
-    def onToolBoxButtonClicked(self, button_id):
+    def onPaletteButtonClicked(self, button_id):
         """
-        Executed whenever a node QToolButton in a QButtonGroup is clicked.
+        Executed whenever a Palette button is clicked.
         :param button_id: the button id.
         """
         mainview = self.mdiArea.activeView
         if not mainview:
-            for btn in self.palette_items.values():
-                btn.setChecked(False)
+            self.palette_.clear()
         else:
             scene = mainview.scene()
             scene.clearSelection()
-            button = self.palette_items[button_id]
-
-            for btn in self.palette_items.values():
-                if btn != button:
-                    btn.setChecked(False)
-
+            button = self.palette_.button(button_id)
+            self.palette_.clear(button)
             if not button.isChecked():
                 scene.setMode(DiagramMode.Idle)
             else:
-                if button_id in self.palette_nodes:
+                if ItemType.ConceptNode <= button_id < ItemType.InclusionEdge:
                     scene.setMode(DiagramMode.NodeInsert, button.property('item'))
-                elif button_id in self.palette_edges:
+                elif ItemType.InclusionEdge <= button_id <= ItemType.InstanceOfEdge:
                     scene.setMode(DiagramMode.EdgeInsert, button.property('item'))
 
     @pyqtSlot('QMdiSubWindow')
@@ -660,7 +592,6 @@ class MainWindow(QMainWindow):
             connect(self.actionSendToBack.triggered, scene.doSendToBack)
             connect(self.actionSelectAll.triggered, scene.doSelectAll)
             connect(self.zoomctl.scaleChanged, mainview.onScaleChanged)
-            #connect(scene.selectionChanged, scene.onSelectionChanged)
             connect(mainview.zoomChanged, self.zoomctl.onMainViewZoomChanged)
 
             self.setWindowTitle(scene.document.name)
@@ -863,5 +794,5 @@ class MainWindow(QMainWindow):
         Set the main window title.
         :param p_str: the prefix for the window title
         """
-        T = '{0} {1}'.format(appname, version) if not p_str else '{0} - {1} {2}'.format(p_str, appname, version)
+        T = '{0} {1}'.format(__appname__, __version__) if not p_str else '{0} - {1} {2}'.format(p_str, __appname__, __version__)
         super().setWindowTitle(T)

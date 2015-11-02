@@ -37,6 +37,12 @@ from PyQt5.QtWidgets import QProxyStyle, QStyle
 
 class DefaultStyle(QProxyStyle):
 
+    PM = {
+        QStyle.PM_SmallIconSize: 18,
+        QStyle.PM_TabBarIconSize: 14,
+        QStyle.PM_ToolBarIconSize: 24 ,
+    }
+
     def __init__(self):
         """
         Initialize the Default style (using Fusion as base).
@@ -48,10 +54,7 @@ class DefaultStyle(QProxyStyle):
         Returns the value for the given pixel metric.
         :rtype: int
         """
-        if metric == QStyle.PM_SmallIconSize:
-            return 18
-        elif metric == QStyle.PM_TabBarIconSize:
-            return 18
-        elif metric == QStyle.PM_ToolBarIconSize:
-            return 24
-        return super().pixelMetric(metric, option, widget)
+        try:
+            return DefaultStyle.PM[metric]
+        except KeyError:
+            return super().pixelMetric(metric, option, widget)
