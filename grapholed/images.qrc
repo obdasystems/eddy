@@ -6,6 +6,9 @@
     <file alias="arrow-down">images/icons/arrow-down.png</file>
     <file alias="arrow-up">images/icons/arrow-up.png</file>
     <file alias="bring-to-front">images/icons/bring-to-front.png</file>
+    <file alias="checkbox-checked">images/icons/checkbox-checked.png</file>
+    <file alias="checkbox-indeterminate">images/icons/checkbox-indeterminate.png</file>
+    <file alias="checkbox-outline">images/icons/checkbox-outline.png</file>
     <file alias="close">images/icons/close.png</file>
     <file alias="copy">images/icons/copy.png</file>
     <file alias="cut">images/icons/cut.png</file>
@@ -20,6 +23,8 @@
     <file alias="preferences">images/icons/preferences.png</file>
     <file alias="print">images/icons/print.png</file>
     <file alias="quit">images/icons/quit.png</file>
+    <file alias="radio-checked">images/icons/radio-checked.png</file>
+    <file alias="radio-outline">images/icons/radio-outline.png</file>
     <file alias="redo">images/icons/redo.png</file>
     <file alias="refresh">images/icons/refresh.png</file>
     <file alias="save">images/icons/save.png</file>
