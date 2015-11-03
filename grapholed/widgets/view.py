@@ -54,7 +54,7 @@ class MainView(QGraphicsView):
         """
         super().__init__(scene)
         self.viewMove = None
-        self.viewMoveRate = 20
+        self.viewMoveRate = 40
         self.viewMoveBound = 10
         self.mousePressCenterPos = None
         self.mousePressPos = None
