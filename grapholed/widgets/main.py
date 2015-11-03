@@ -38,8 +38,9 @@ import traceback
 import webbrowser
 
 from PyQt5.QtCore import Qt, QRectF, pyqtSlot, QSettings, QFile, QIODevice, pyqtSignal
-from PyQt5.QtGui import QIcon, QKeySequence, QPixmap
-from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QAction, QStatusBar, QMessageBox
+from PyQt5.QtGui import QIcon, QKeySequence, QPixmap, QPainter
+from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
+from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QAction, QStatusBar, QMessageBox, QDialog
 from PyQt5.QtWidgets import QUndoGroup
 from PyQt5.QtXml import QDomDocument
 
@@ -501,9 +502,18 @@ class MainWindow(QMainWindow):
         """
         Print the currently open graphol document.
         """
-        subwindow = self.mdiArea.currentSubWindow()
-        if subwindow:
-            subwindow.printScene()
+        mainview = self.mdiArea.activeView
+        if mainview:
+            scene = mainview.scene()
+            shape = scene.visibleRect(margin=20)
+            if shape:
+                printer = QPrinter(QPrinter.HighResolution)
+                printer.setOutputFormat(QPrinter.NativeFormat)
+                dialog = QPrintDialog(printer)
+                if dialog.exec_() == QDialog.Accepted:
+                    painter = QPainter()
+                    if painter.begin(printer):
+                        scene.render(painter, source=shape)
 
     @pyqtSlot()
     def openPreferences(self):
