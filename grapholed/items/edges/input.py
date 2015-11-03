@@ -39,7 +39,7 @@ from grapholed.datatypes import DiagramMode, ItemType
 from grapholed.functions import connect
 from grapholed.items.edges.common.base import Edge
 
-from PyQt5.QtCore import QPointF, QLineF, Qt
+from PyQt5.QtCore import QPointF, QLineF, Qt, pyqtSlot
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QIcon, QPainterPath
 from PyQt5.QtWidgets import QAction, QMenu
 
@@ -73,20 +73,30 @@ class InputEdge(Edge):
         :rtype: QMenu
         """
         menu = QMenu()
+        scene = self.scene()
         breakpoint = self.breakpointAt(pos)
         if breakpoint is not None:
-            action = QAction(QIcon(':/icons/delete'), 'Remove breakpoint', self.scene())
+            action = QAction(QIcon(':/icons/delete'), 'Remove breakpoint', scene)
             connect(action.triggered, self.breakpointDel, breakpoint=breakpoint)
             menu.addAction(action)
         else:
-            functionality = QAction('Functionality', self.scene())
+            functionality = QAction('Functionality', scene)
             functionality.setCheckable(True)
             functionality.setChecked(self.functionality)
-            connect(functionality.triggered, self.handleToggleFunctionality)
-            menu.addAction(self.scene().actionItemDelete)
+            connect(functionality.triggered, self.doToggleFunctionality)
+            menu.addAction(scene.actionItemDelete)
             menu.addSeparator()
             menu.addAction(functionality)
         return menu
+
+    def copy(self, scene):
+        """
+        Create a copy of the current edge.
+        :param scene: a reference to the scene where this item is being copied.
+        """
+        edge = super().copy(scene)
+        edge.functionality = self.functionality
+        return edge
 
     ############################################# ITEM IMPORT / EXPORT #################################################
 
@@ -116,12 +126,13 @@ class InputEdge(Edge):
 
     ################################################ ACTION HANDLERS ###################################################
 
-    def handleToggleFunctionality(self):
+    @pyqtSlot()
+    def doToggleFunctionality(self):
         """
         Toggle the functionality attribute for this edge.
         """
         scene = self.scene()
-        scene.undoStack.push(CommandEdgeInputToggleFunctionality(scene=scene, edge=self, functionality=not self.functionality))
+        scene.undoStack.push(CommandEdgeInputToggleFunctionality(scene, self, not self.functionality))
 
     ##################################################### GEOMETRY #####################################################
 

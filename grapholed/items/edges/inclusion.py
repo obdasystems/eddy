@@ -68,20 +68,30 @@ class InclusionEdge(Edge):
         :rtype: QMenu
         """
         menu = QMenu()
+        scene = self.scene()
         breakpoint = self.breakpointAt(pos)
         if breakpoint is not None:
-            action = QAction(QIcon(':/icons/delete'), 'Remove breakpoint', self.scene())
+            action = QAction(QIcon(':/icons/delete'), 'Remove breakpoint', scene)
             connect(action.triggered, self.breakpointDel, breakpoint=breakpoint)
             menu.addAction(action)
         else:
-            completness = QAction('Complete', self.scene())
+            completness = QAction('Complete', scene)
             completness.setCheckable(True)
             completness.setChecked(self.complete)
-            connect(completness.triggered, self.handleToggleCompletness)
-            menu.addAction(self.scene().actionItemDelete)
+            connect(completness.triggered, self.doToggleCompletness)
+            menu.addAction(scene.actionItemDelete)
             menu.addSeparator()
             menu.addAction(completness)
         return menu
+
+    def copy(self, scene):
+        """
+        Create a copy of the current edge.
+        :param scene: a reference to the scene where this item is being copied.
+        """
+        edge = super().copy(scene)
+        edge.complete = self.complete
+        return edge
 
     ############################################# ITEM IMPORT / EXPORT #################################################
 
@@ -111,7 +121,7 @@ class InclusionEdge(Edge):
 
     ################################################ ACTION HANDLERS ###################################################
 
-    def handleToggleCompletness(self):
+    def doToggleCompletness(self):
         """
         Toggle the complete attribute for this edge.
         """
