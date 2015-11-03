@@ -52,14 +52,14 @@ class CommandEdgeAdd(QUndoCommand):
     def redo(self):
         """redo the command"""
         # IMPORTANT: don't remove this check!
-        if self.edge not in self.scene.items():
+        if self.edge.id not in self.scene.edgesById:
             self.scene.addItem(self.edge)
             self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         # IMPORTANT: don't remove this check!
-        if self.edge in self.scene.items():
+        if self.edge.id in self.scene.edgesById:
             self.scene.removeItem(self.edge)
             self.scene.updated.emit()
 
