@@ -138,7 +138,7 @@ class DiagramScene(QGraphicsScene):
         self.clipboard = {}  ## used to store copy of scene nodes/edges
         self.clipboardPasteOffsetX = DiagramScene.PasteOffsetX  ## X offset to be added to item position upon paste
         self.clipboardPasteOffsetY = DiagramScene.PasteOffsetY  ## Y offset to be added to item position upon paste
-        self.clipboardPasteOffsetZ = 0  ## > offset to be added to item zValue upon paste
+        self.clipboardPasteOffsetZ = 0  ## Z offset to be added to item zValue upon paste
         self.document = DiagramDocument()  ## document associated with the current scene
         self.nodesById = {} ## used to index nodes using their id
         self.edgesById = {} ## used to index edges using their id
@@ -788,12 +788,12 @@ class DiagramScene(QGraphicsScene):
         isNode = len(self.selectedNodes()) != 0
         isEdge = len(self.selectedEdges()) != 0
         isClip = len(self.clipboard) != 0 and len(self.clipboard['nodes']) != 0
+        self.actionBringToFront.setEnabled(isNode)
         self.actionItemCut.setEnabled(isNode)
         self.actionItemCopy.setEnabled(isNode)
-        self.actionItemPaste.setEnabled(isClip)
-        self.actionBringToFront.setEnabled(isNode)
-        self.actionSendToBack.setEnabled(isNode)
         self.actionItemDelete.setEnabled(isNode or isEdge)
+        self.actionItemPaste.setEnabled(isClip)
+        self.actionSendToBack.setEnabled(isNode)
 
     def updateClipboard(self):
         """
