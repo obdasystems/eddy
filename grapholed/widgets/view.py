@@ -115,8 +115,7 @@ class MainView(QGraphicsView):
 
                     # we need to scroll the mainview whenever we move a node outside the viewport area or in case
                     # we are adding an edge and the mouse goes outside the viewport area (so we can connect far nodes)
-                    if scene.mode in (DiagramMode.EdgeInsert, DiagramMode.NodeMove) and \
-                         scene.itemOnTopOf(self.mapToScene(mouseEvent.pos()), edges=False):
+                    if scene.mode in (DiagramMode.EdgeInsert, DiagramMode.NodeMove):
 
                         delta = QPointF()
                         
