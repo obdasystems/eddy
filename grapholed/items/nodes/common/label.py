@@ -131,9 +131,9 @@ class Label(QGraphicsTextItem):
         collection = []
         if self.movable and self.moved:
             parent = self.parentItem()
-            action = QAction('Reset text position', parent.scene())
+            action = QAction('Reset label position', parent.scene())
             action.setIcon(QIcon(':/icons/refresh'))
-            connect(action.triggered, self.doResetTextPosition)
+            connect(action.triggered, self.resetLabelPosition)
             collection.append(action)
         return collection
 
@@ -375,7 +375,7 @@ class Label(QGraphicsTextItem):
 
     ################################################# ACTION HANDLERS ##################################################
 
-    def doResetTextPosition(self):
+    def resetLabelPosition(self):
         """
         Reset the text position to the default value.
         """
