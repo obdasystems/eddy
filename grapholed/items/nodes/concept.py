@@ -215,7 +215,7 @@ class ConceptNode(ResizableNode):
         :param mousePos: the current mouse position.
         """
         offset = self.handleSize + self.handleSpace
-        moved = self.label.moved
+        moved = self.label.isMoved()
         scene = self.scene()
         snap = scene.settings.value('scene/snap_to_grid', False, bool)
         rect = self.boundingRect()
