@@ -37,8 +37,8 @@ import sys
 import traceback
 import webbrowser
 
-from PyQt5.QtCore import Qt, QRectF, pyqtSlot, QSettings, QFile, QIODevice, pyqtSignal
-from PyQt5.QtGui import QIcon, QKeySequence, QPixmap, QPainter
+from PyQt5.QtCore import Qt, QRectF, pyqtSlot, QSettings, QFile, QIODevice, pyqtSignal, QTextStream, QSizeF
+from PyQt5.QtGui import QIcon, QKeySequence, QPixmap, QPainter, QPageSize
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QAction, QStatusBar, QMessageBox, QDialog
 from PyQt5.QtWidgets import QUndoGroup
@@ -46,7 +46,7 @@ from PyQt5.QtXml import QDomDocument
 
 from grapholed import __version__, __appname__, __organization__
 from grapholed.datatypes import FileType, DiagramMode, DistinctList
-from grapholed.dialogs import AboutDialog, OpenFileDialog, PreferencesDialog
+from grapholed.dialogs import AboutDialog, OpenFileDialog, PreferencesDialog, SaveFileDialog
 from grapholed.exceptions import ParseError
 from grapholed.functions import getPath, shaded, connect, disconnect
 from grapholed.items import __mapping__, ItemType
@@ -66,6 +66,7 @@ class MainWindow(QMainWindow):
     MinHeight = 600
 
     documentLoaded = pyqtSignal('QGraphicsScene')
+    documentSaved = pyqtSignal('QGraphicsScene')
 
     def __init__(self):
         """
@@ -395,6 +396,7 @@ class MainWindow(QMainWindow):
         connect(self.actionSapienzaWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/en'))
         connect(self.actionGrapholWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/~graphol/'))
         connect(self.documentLoaded, self.onDocumentLoaded)
+        connect(self.documentSaved, self.onDocumentSaved)
         connect(self.mdiArea.subWindowActivated, self.onSubWindowActivated)
         connect(self.palette_.buttonClicked[int], self.onPaletteButtonClicked)
         connect(self.undoGroup.cleanChanged, self.onUndoGroupCleanChanged)
@@ -421,9 +423,15 @@ class MainWindow(QMainWindow):
         """
         Export the currently open graphol document.
         """
-        subwindow = self.mdiArea.currentSubWindow()
-        if subwindow:
-            subwindow.exportScene()
+        mainview = self.mdiArea.activeView
+        if mainview:
+            scene = mainview.scene()
+            res = self.getExportFilePath(name=scene.document.name)
+            if res:
+                filepath = res[0]
+                filetype = FileType.forValue(res[1])
+                if filetype is FileType.pdf:
+                    self.exportSceneToPdfFile(scene, filepath)
 
     @pyqtSlot()
     def importDocument(self):
@@ -484,18 +492,34 @@ class MainWindow(QMainWindow):
         """
         Save the currently open graphol document.
         """
-        subwindow = self.mdiArea.currentSubWindow()
-        if subwindow:
-            subwindow.saveScene()
+        mainview = self.mdiArea.activeView
+        if mainview:
+            scene = mainview.scene()
+            filepath = scene.document.filepath or self.getSaveFilePath(name=scene.document.name)
+            if filepath:
+                saved = self.saveSceneToGrapholFile(scene, filepath)
+                if saved:
+                    scene.document.filepath = filepath
+                    scene.document.edited = os.path.getmtime(filepath)
+                    scene.undoStack.setClean()
+                    self.documentSaved.emit(scene)
 
     @pyqtSlot()
     def saveDocumentAs(self):
         """
         Save the currently open graphol document (enforcing a new name).
         """
-        subwindow = self.mdiArea.currentSubWindow()
-        if subwindow:
-            subwindow.saveSceneAs()
+        mainview = self.mdiArea.activeView
+        if mainview:
+            scene = mainview.scene()
+            filepath = self.getSaveFilePath(name=scene.document.name)
+            if filepath:
+                saved = self.saveSceneToGrapholFile(scene, filepath)
+                if saved:
+                    scene.document.filepath = filepath
+                    scene.document.edited = os.path.getmtime(filepath)
+                    scene.undoStack.setClean()
+                    self.documentSaved.emit(scene)
 
     @pyqtSlot()
     def printDocument(self):
@@ -529,9 +553,9 @@ class MainWindow(QMainWindow):
         Toggle snap to grid setting.
         """
         self.settings.setValue('scene/snap_to_grid', self.actionSnapToGrid.isChecked())
-        subwindow = self.mdiArea.currentSubWindow()
-        if subwindow:
-            subwindow.widget().scene().update()
+        mainview = self.mdiArea.activeView
+        if mainview:
+            mainview.scene().update()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -686,7 +710,7 @@ class MainWindow(QMainWindow):
     @pyqtSlot(bool)
     def onUndoGroupCleanChanged(self, clean):
         """
-        Executed when the clean state of the active undoStack changes.
+        Executed when the clean state of the active undo stack changes.
         :param clean: the clean state.
         """
         self.actionSaveDocument.setEnabled(not clean)
@@ -745,6 +769,30 @@ class MainWindow(QMainWindow):
         self.settings.setValue('recentDocumentList', documents)
         self.updateRecentDocumentActions()
 
+    @staticmethod
+    def exportSceneToPdfFile(scene, filepath):
+        """
+        Export the given scene as PDF saving it in the given filepath.
+        :param scene: the scene to be exported.
+        :param filepath: the filepath where to export the scene.
+        :return: True if the export has been performed, False otherwise.
+        """
+        shape = scene.visibleRect(margin=20)
+        if shape:
+            printer = QPrinter(QPrinter.HighResolution)
+            printer.setOutputFormat(QPrinter.PdfFormat)
+            printer.setOutputFileName(filepath)
+            printer.setPaperSize(QPrinter.Custom)
+            printer.setPageSize(QPageSize(QSizeF(shape.width(), shape.height()), QPageSize.Point))
+
+            painter = QPainter()
+            if painter.begin(printer):
+                scene.render(painter, source=shape)
+                painter.end()
+                return True
+
+        return False
+
     def focusDocument(self, document):
         """
         Move the focus on the subwindow containing the given document.
@@ -766,7 +814,26 @@ class MainWindow(QMainWindow):
 
         return False
 
-    def getMainView(self, scene):
+    @staticmethod
+    def getExportFilePath(path=None, name=None):
+        """
+        Bring up the 'Export' file dialog and returns the selected filepath.
+        Will return None in case the user hit the 'Cancel' button to abort the operation.
+        :param path: the start path of the file dialog.
+        :param name: the default name of the file.
+        :return: a tuple with the filepath and the selected file filter.
+        :rtype: tuple
+        """
+        dialog = SaveFileDialog(path)
+        dialog.setWindowTitle('Export')
+        dialog.setNameFilters([x.value for x in FileType if x is not FileType.graphol])
+        dialog.selectFile(name or 'Untitled')
+        if dialog.exec_():
+            return dialog.selectedFiles()[0], dialog.selectedNameFilter()
+        return None
+
+    @staticmethod
+    def getMainView(scene):
         """
         Create a new Main View for the given scene.
         :param scene: the scene to be added in the view.
@@ -785,16 +852,27 @@ class MainWindow(QMainWindow):
         :rtype: MdiSubWindow
         """
         subwindow = self.mdiArea.addSubWindow(MdiSubWindow(mainview))
+        subwindow.updateSubwindowTitle()
         scene = mainview.scene()
+        connect(self.documentSaved, subwindow.onDocumentSaved)
         connect(scene.undoStack.cleanChanged, subwindow.onUndoStackCleanChanged)
-        connect(subwindow.documentSaved, self.onDocumentSaved)
-
-        if scene.document.filepath:
-            # set the title in case the scene we are rendering
-            # is saved already somewhere (used when opening documents)
-            subwindow.setWindowTitle(scene.document.name)
-
         return subwindow
+
+    @staticmethod
+    def getSaveFilePath(path=None, name=None):
+        """
+        Bring up the 'Save' file dialog and returns the selected filepath.
+        Will return None in case the user hit the 'Cancel' button to abort the operation.
+        :param path: the start path of the file dialog.
+        :param name: the default name of the file.
+        :rtype: str
+        """
+        dialog = SaveFileDialog(path)
+        dialog.setNameFilters([FileType.graphol.value])
+        dialog.selectFile(name or 'Untitled')
+        if dialog.exec_():
+            return dialog.selectedFiles()[0]
+        return None
 
     def getScene(self, width, height):
         """
@@ -821,18 +899,11 @@ class MainWindow(QMainWindow):
         :rtype: DiagramScene
         """
         file = QFile(filepath)
-        if not file.open(QIODevice.ReadOnly):
-            box = QMessageBox()
-            box.setIconPixmap(QPixmap(':/icons/warning'))
-            box.setWindowIcon(QIcon(':/images/grapholed'))
-            box.setWindowTitle('File not found!')
-            box.setText('Could not open Graphol document: {0}!'.format(filepath))
-            box.setDetailedText(file.errorString())
-            box.setStandardButtons(QMessageBox.Ok)
-            box.exec_()
-            return None
 
         try:
+
+            if not file.open(QIODevice.ReadOnly):
+                raise IOError('file not found: {0}'.format(filepath))
 
             document = QDomDocument()
             if not document.setContent(file):
@@ -872,7 +943,7 @@ class MainWindow(QMainWindow):
             box = QMessageBox()
             box.setIconPixmap(QPixmap(':/icons/warning'))
             box.setWindowIcon(QIcon(':/images/grapholed'))
-            box.setWindowTitle('WARNING')
+            box.setWindowTitle('Load FAILED')
             box.setText('Could not open Graphol document: {0}!'.format(filepath))
             # format the traceback so it prints nice
             most_recent_calls = traceback.format_tb(sys.exc_info()[2])
@@ -887,6 +958,46 @@ class MainWindow(QMainWindow):
             return scene
         finally:
             file.close()
+
+    @staticmethod
+    def saveSceneToGrapholFile(scene, filepath):
+        """
+        Save the given scene to the corresponding given filepath.
+        :param scene: the scene to be saved.
+        :param filepath: the filepath where to save the scene.
+        :return: True if the save has been performed, False otherwise.
+        """
+        # save the file in a hidden file inside the grapholed home: if the save successfully
+        # complete, move the file on the given filepath (in this way if an exception is raised
+        # while exporting the scene, we won't lose previously saved data)
+        tmpPath = getPath('@home/.{0}'.format(os.path.basename(os.path.normpath(filepath))))
+        tmpFile = QFile(tmpPath)
+
+        try:
+            if not tmpFile.open(QIODevice.WriteOnly|QIODevice.Truncate|QIODevice.Text):
+                raise IOError('could not create temporary file {0}'.format(tmpPath))
+            stream = QTextStream(tmpFile)
+            document = scene.toGraphol()
+            document.save(stream, 2)
+            tmpFile.close()
+            if os.path.isfile(filepath):
+                os.remove(filepath)
+            os.rename(tmpPath, filepath)
+        except Exception:
+            box = QMessageBox()
+            box.setIconPixmap(QPixmap(':/icons/warning'))
+            box.setWindowIcon(QIcon(':/images/grapholed'))
+            box.setWindowTitle('Save FAILED')
+            box.setText('Could not export diagram!')
+            box.setDetailedText(traceback.format_exc())
+            box.setStandardButtons(QMessageBox.Ok)
+            box.exec_()
+            return False
+        else:
+            return True
+        finally:
+            if tmpFile.isOpen():
+                tmpFile.close()
 
     def setWindowTitle(self, p_str=None):
         """

@@ -32,17 +32,9 @@
 ##########################################################################
 
 
-import os
-import traceback
-
-from grapholed.datatypes import FileType
-from grapholed.dialogs import SaveFileDialog
-from grapholed.functions import getPath
-
-from PyQt5.QtCore import pyqtSlot, Qt, QFile, QTextStream, QIODevice, pyqtSignal, QSizeF
-from PyQt5.QtGui import QPainter, QPageSize, QPixmap, QIcon
-from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
-from PyQt5.QtWidgets import QMdiArea, QMdiSubWindow, QMessageBox, QDialog, QTabWidget
+from PyQt5.QtCore import pyqtSlot, Qt
+from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtWidgets import QMdiArea, QMdiSubWindow, QMessageBox, QTabWidget
 
 
 class MdiArea(QMdiArea):
@@ -69,9 +61,9 @@ class MdiArea(QMdiArea):
         Returns active MainView.
         :rtype: MainView
         """
-        activeSubWindow = self.activeSubWindow()
-        if activeSubWindow:
-            return activeSubWindow.widget()
+        subwindow = self.activeSubWindow()
+        if subwindow:
+            return subwindow.widget()
         return None
 
 
@@ -79,8 +71,6 @@ class MdiSubWindow(QMdiSubWindow):
     """
     This class implements the MDI area subwindow.
     """
-    documentSaved = pyqtSignal('QGraphicsScene')
-
     def __init__(self, view, parent=None):
         """
         Initialize the subwindow
@@ -133,180 +123,30 @@ class MdiSubWindow(QMdiSubWindow):
 
     ############################################# SIGNALS HANDLERS #####################################################
 
+    @pyqtSlot('QGraphicsScene')
+    def onDocumentSaved(self, scene):
+        """
+        Executed when a document contained in the scene rendered in this subwindow is saved.
+        :param scene: the DiagramScene instance containing the document.
+        """
+        self.updateSubwindowTitle()
+
     @pyqtSlot(bool)
     def onUndoStackCleanChanged(self, clean):
         """
-        Executed when the clean state of undoStack of the scene displayed in the MDI subwindow changes.
-        :param clean: the clean state.
+        Executed when the clean state of undo stack of the scene displayed in the MDI subwindow changes.
+        :param clean: the undo stack clean state.
+        """
+        self.updateSubwindowTitle(clean)
+
+    ################################################# INTERFACE ########################################################
+
+    def updateSubwindowTitle(self, clean=True):
+        """
+        Updated the subwindow title.
+        :param clean: the undo stack clean state.
         """
         mainview = self.widget()
         scene = mainview.scene()
         if scene.document.filepath:
             self.setWindowTitle(scene.document.name if clean else '{0} *'.format(scene.document.name))
-
-    ############################################ AUXILIARY METHODS #####################################################
-
-    @staticmethod
-    def getExportFilePath(path=None, name=None):
-        """
-        Bring up the 'Export' file dialog and returns the selected filepath.
-        Will return None in case the user hit the 'Cancel' button to abort the operation.
-        :param path: the start path of the file dialog.
-        :param name: the default name of the file.
-        :rtype: str
-        """
-        dialog = SaveFileDialog(path)
-        dialog.setWindowTitle('Export')
-        dialog.setNameFilters([x.value for x in FileType if x is not FileType.graphol])
-        dialog.selectFile(name or 'Untitled')
-        if dialog.exec_():
-            return dialog.selectedFiles()[0], dialog.selectedNameFilter()
-        return None
-
-    @staticmethod
-    def getSaveFilePath(path=None, name=None):
-        """
-        Bring up the 'Save' file dialog and returns the selected filepath.
-        Will return None in case the user hit the 'Cancel' button to abort the operation.
-        :param path: the start path of the file dialog.
-        :param name: the default name of the file.
-        :rtype: str
-        """
-        dialog = SaveFileDialog(path)
-        dialog.setNameFilters([FileType.graphol.value])
-        dialog.selectFile(name or 'Untitled')
-        if dialog.exec_():
-            return dialog.selectedFiles()[0]
-        return None
-
-    def exportScene(self):
-        """
-        Export the current scene in a different format than Graphol.
-        :return: True if the export has been performed, False otherwise.
-        """
-        mainview = self.widget()
-        scene = mainview.scene()
-        value = self.getExportFilePath(name=scene.document.name)
-        if value:
-            filepath = value[0]
-            filetype = FileType.forValue(value[1])
-            if filetype is FileType.pdf:
-                return self.exportSceneToPdfFile(scene, filepath)
-        return False
-
-    @staticmethod
-    def exportSceneToPdfFile(scene, filepath):
-        """
-        Export the given scene as PDF saving it in the given filepath.
-        :param scene: the scene to be exported.
-        :param filepath: the filepath where to export the scene.
-        :return: True if the export has been performed, False otherwise.
-        """
-        shape = scene.visibleRect(margin=20)
-        if not shape:
-            box = QMessageBox()
-            box.setIconPixmap(QPixmap(':/icons/info'))
-            box.setWindowIcon(QIcon(':/images/grapholed'))
-            box.setWindowTitle('Empty document!')
-            box.setText('The document you are trying to export is empty!')
-            box.setStandardButtons(QMessageBox.Ok)
-            box.exec_()
-            return False
-
-        printer = QPrinter(QPrinter.HighResolution)
-        printer.setOutputFormat(QPrinter.PdfFormat)
-        printer.setOutputFileName(filepath)
-        printer.setPaperSize(QPrinter.Custom)
-        printer.setPageSize(QPageSize(QSizeF(shape.width(), shape.height()), QPageSize.Point))
-
-        painter = QPainter()
-        if not painter.begin(printer):
-            return False
-
-        scene.render(painter, source=shape)
-        painter.end()
-        return True
-
-    def saveScene(self):
-        """
-        Save the current scene to disk.
-        :return: True if the save has been performed, False otherwise.
-        """
-        mainview = self.widget()
-        scene = mainview.scene()
-        filepath = scene.document.filepath or self.getSaveFilePath(name=scene.document.name)
-        if filepath:
-            saved = self.saveSceneToGrapholFile(scene, filepath)
-            if saved:
-                scene.document.filepath = filepath
-                scene.document.edited = os.path.getmtime(filepath)
-                scene.undoStack.setClean()
-                self.documentSaved.emit(scene)
-            return saved
-        return False
-
-    def saveSceneAs(self):
-        """
-        Save the current scene to disk.
-        :return: True if the save has been performed, False otherwise.
-        """
-        mainview = self.widget()
-        scene = mainview.scene()
-        filepath = self.getSaveFilePath(name=scene.document.name)
-        if filepath:
-            saved = self.saveSceneToGrapholFile(scene, filepath)
-            if saved:
-                scene.document.filepath = filepath
-                scene.undoStack.setClean()
-                self.documentSaved.emit(scene)
-            return saved
-        return False
-
-    @staticmethod
-    def saveSceneToGrapholFile(scene, filepath):
-        """
-        Save the given scene to the corresponding given filepath.
-        :param scene: the scene to be saved.
-        :param filepath: the filepath where to save the scene.
-        :return: True if the save has been performed, False otherwise.
-        """
-        # save the file in a hidden file inside the grapholed home: if the save successfully
-        # complete, move the file on the given filepath (in this way if an exception is raised
-        # while exporting the scene, we won't lose previously saved data)
-        tmpPath = getPath('@home/.{0}'.format(os.path.basename(os.path.normpath(filepath))))
-        tmpFile = QFile(tmpPath)
-
-        if not tmpFile.open(QIODevice.WriteOnly|QIODevice.Truncate|QIODevice.Text):
-            box = QMessageBox()
-            box.setIconPixmap(QPixmap(':/icons/warning'))
-            box.setWindowIcon(QIcon(':/images/grapholed'))
-            box.setWindowTitle('Save FAILED')
-            box.setText('Could not export diagram!')
-            box.setDetailedText(tmpFile.errorString())
-            box.setStandardButtons(QMessageBox.Ok)
-            box.exec_()
-            return False
-
-        try:
-            stream = QTextStream(tmpFile)
-            document = scene.toGraphol()
-            document.save(stream, 2)
-            tmpFile.close()
-            if os.path.isfile(filepath):
-                os.remove(filepath)
-            os.rename(tmpPath, filepath)
-        except Exception:
-            box = QMessageBox()
-            box.setIconPixmap(QPixmap(':/icons/warning'))
-            box.setWindowIcon(QIcon(':/images/grapholed'))
-            box.setWindowTitle('Save FAILED')
-            box.setText('Could not export diagram!')
-            box.setDetailedText(traceback.format_exc())
-            box.setStandardButtons(QMessageBox.Ok)
-            box.exec_()
-            return False
-        else:
-            return True
-        finally:
-            if tmpFile.isOpen():
-                tmpFile.close()
