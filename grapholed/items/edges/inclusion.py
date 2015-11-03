@@ -34,7 +34,7 @@
 
 from math import sin, cos, radians, pi as M_PI
 
-from grapholed.commands import CommandEdgeInclusionToggleCompletness
+from grapholed.commands import CommandEdgeInclusionToggleComplete
 from grapholed.datatypes import DiagramMode, ItemType
 from grapholed.functions import connect
 from grapholed.items.edges.common.base import Edge
@@ -75,13 +75,10 @@ class InclusionEdge(Edge):
             connect(action.triggered, self.breakpointDel, breakpoint=breakpoint)
             menu.addAction(action)
         else:
-            completness = QAction('Complete', scene)
-            completness.setCheckable(True)
-            completness.setChecked(self.complete)
-            connect(completness.triggered, self.doToggleCompletness)
             menu.addAction(scene.actionItemDelete)
             menu.addSeparator()
-            menu.addAction(completness)
+            menu.addAction(scene.actionToggleEdgeComplete)
+            scene.actionToggleEdgeComplete.setChecked(self.isComplete())
         return menu
 
     def copy(self, scene):
@@ -90,8 +87,23 @@ class InclusionEdge(Edge):
         :param scene: a reference to the scene where this item is being copied.
         """
         edge = super().copy(scene)
-        edge.complete = self.complete
+        edge.setComplete(self.isComplete())
         return edge
+
+    def isComplete(self):
+        """
+        Tells whether this edge is complete (same as querying the complete attribute).
+        :return: True if the edge is complete, False otherwise.
+        :rtype: bool
+        """
+        return self.complete
+
+    def setComplete(self, complete):
+        """
+        Set the complete attribute for this edge.
+        :param complete: the complete value.
+        """
+        self.complete = bool(complete)
 
     ############################################# ITEM IMPORT / EXPORT #################################################
 
@@ -102,7 +114,7 @@ class InclusionEdge(Edge):
         :rtype: QDomElement
         """
         edge = super().toGraphol(document)
-        edge.setAttribute('complete', int(self.complete))
+        edge.setAttribute('complete', int(self.isComplete()))
         return edge
 
     @classmethod
@@ -126,7 +138,7 @@ class InclusionEdge(Edge):
         Toggle the complete attribute for this edge.
         """
         scene = self.scene()
-        scene.undoStack.push(CommandEdgeInclusionToggleCompletness(scene=scene, edge=self, complete=not self.complete))
+        scene.undoStack.push(CommandEdgeInclusionToggleComplete(scene=scene, edge=self, complete=not self.complete))
 
     ##################################################### GEOMETRY #####################################################
 

@@ -37,8 +37,8 @@ import os
 from grapholed import __appname__, __organization__
 from grapholed.commands import CommandItemsMultiAdd, CommandItemsMultiRemove
 from grapholed.commands import CommandNodeAdd, CommandNodeSetZValue, CommandNodeMove
-from grapholed.commands import CommandEdgeAdd
-from grapholed.datatypes import DiagramMode
+from grapholed.commands import CommandEdgeAdd, CommandEdgeInputToggleFunctional, CommandEdgeInclusionToggleComplete
+from grapholed.datatypes import DiagramMode, ItemType
 from grapholed.dialogs import ScenePropertiesDialog
 from grapholed.functions import getPath, snapToGrid, rangeF, connect
 from grapholed.items import Item
@@ -155,6 +155,8 @@ class DiagramScene(QGraphicsScene):
 
         ################################################# ACTIONS ######################################################
 
+        self.actionToggleEdgeComplete = mainwindow.actionToggleEdgeComplete
+        self.actionToggleEdgeFunctional = mainwindow.actionToggleEdgeFunctional
         self.actionItemCut = mainwindow.actionItemCut
         self.actionItemCopy = mainwindow.actionItemCopy
         self.actionItemPaste = mainwindow.actionItemPaste
@@ -162,15 +164,15 @@ class DiagramScene(QGraphicsScene):
         self.actionBringToFront = mainwindow.actionBringToFront
         self.actionSendToBack = mainwindow.actionSendToBack
         self.actionSelectAll = mainwindow.actionSelectAll
-        self.actionProperties = QAction('Properties...', self)
-        self.actionProperties.setIcon(QIcon(':/icons/preferences'))
+        self.actionOpenSceneProperties = QAction('Properties...', self)
+        self.actionOpenSceneProperties.setIcon(QIcon(':/icons/preferences'))
 
         ################################################# SIGNALS ######################################################
 
         connect(self.nodeInserted, self.onNodeInserted)
         connect(self.edgeInserted, self.onEdgeInserted)
         connect(self.selectionChanged, self.onSelectionChanged)
-        connect(self.actionProperties.triggered, self.doSceneProperties)
+        connect(self.actionOpenSceneProperties.triggered, self.openSceneProperties)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -179,7 +181,22 @@ class DiagramScene(QGraphicsScene):
     ####################################################################################################################
 
     @pyqtSlot()
-    def doItemCut(self):
+    def bringToFront(self):
+        """
+        Bring the selected item to the top of the scene.
+        """
+        self.setMode(DiagramMode.Idle)
+        for selected in self.selectedNodes():
+            zValue = 0
+            colliding = selected.collidingItems()
+            for item in filter(lambda x: isinstance(x, Item), colliding):
+                if item.zValue() >= zValue:
+                    zValue = item.zValue() + 0.1
+            if zValue != selected.zValue():
+                self.undoStack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
+
+    @pyqtSlot()
+    def itemCut(self):
         """
         Cut selected items from the scene.
         """
@@ -198,7 +215,7 @@ class DiagramScene(QGraphicsScene):
         self.clipboardPasteOffsetZ = 0
 
     @pyqtSlot()
-    def doItemCopy(self):
+    def itemCopy(self):
         """
         Make a copy of selected items.
         """
@@ -207,7 +224,7 @@ class DiagramScene(QGraphicsScene):
         self.updateActions()
 
     @pyqtSlot()
-    def doItemPaste(self):
+    def itemPaste(self):
         """
         Paste previously copied items.
         """
@@ -275,7 +292,7 @@ class DiagramScene(QGraphicsScene):
         self.clipboardPasteOffsetZ += 0.1 * len(nodes)
 
     @pyqtSlot()
-    def doItemDelete(self):
+    def itemDelete(self):
         """
         Delete the currently selected items from the graphic scene.
         """
@@ -286,22 +303,15 @@ class DiagramScene(QGraphicsScene):
             self.undoStack.push(CommandItemsMultiRemove(scene=self, collection=selection))
 
     @pyqtSlot()
-    def doBringToFront(self):
+    def openSceneProperties(self):
         """
-        Bring the selected item to the top of the scene.
+        Executed when scene properties needs to be displayed.
         """
-        self.setMode(DiagramMode.Idle)
-        for selected in self.selectedNodes():
-            zValue = 0
-            colliding = selected.collidingItems()
-            for item in filter(lambda x: isinstance(x, Item), colliding):
-                if item.zValue() >= zValue:
-                    zValue = item.zValue() + 0.1
-            if zValue != selected.zValue():
-                self.undoStack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
+        prop = ScenePropertiesDialog(scene=self)
+        prop.exec_()
 
     @pyqtSlot()
-    def doSendToBack(self):
+    def sendToBack(self):
         """
         Send the selected item to the back of the scene.
         """
@@ -316,7 +326,7 @@ class DiagramScene(QGraphicsScene):
                 self.undoStack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
 
     @pyqtSlot()
-    def doSelectAll(self):
+    def selectAll(self):
         """
         Select all the items in the scene.
         """
@@ -327,12 +337,32 @@ class DiagramScene(QGraphicsScene):
                 item.setSelected(True)
 
     @pyqtSlot()
-    def doSceneProperties(self):
+    def toggleEdgeComplete(self):
         """
-        Executed when scene properties needs to be displayed.
+        Toggle the 'complete' attribute for all the selected Input edges.
         """
-        prop = ScenePropertiesDialog(scene=self)
-        prop.exec_()
+        self.setMode(DiagramMode.Idle)
+        selected = [item for item in self.selectedEdges() if item.isType(ItemType.InclusionEdge)]
+        if selected:
+            # establish whether a multi-toggle should enable/disable the complete: if we have a
+            # majority of edges with complete enabled, we will disable it, else we will enable it
+            func = sum(edge.isComplete() for edge in selected) <= len(selected) / 2
+            data = {edge: {'from': edge.isComplete(), 'to': func} for edge in selected}
+            self.undoStack.push(CommandEdgeInclusionToggleComplete(scene=self, data=data))
+
+    @pyqtSlot()
+    def toggleEdgeFunctional(self):
+        """
+        Toggle the 'functional' attribute for all the selected Input edges.
+        """
+        self.setMode(DiagramMode.Idle)
+        selected = [item for item in self.selectedEdges() if item.isType(ItemType.InputEdge)]
+        if selected:
+            # establish whether a multi-toggle should enable/disable the functional: if we have a
+            # majority of edges with functional enabled, we will disable it, else we will enable it
+            func = sum(edge.isFunctional() for edge in selected) <= len(selected) / 2
+            data = {edge: {'from': edge.isFunctional(), 'to': func} for edge in selected}
+            self.undoStack.push(CommandEdgeInputToggleFunctional(scene=self, data=data))
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -388,21 +418,10 @@ class DiagramScene(QGraphicsScene):
 
             menu.addAction(self.actionSelectAll)
             menu.addSeparator()
-            menu.addAction(self.actionProperties)
+            menu.addAction(self.actionOpenSceneProperties)
             menu.exec_(menuEvent.screenPos())
         else:
             super().contextMenuEvent(menuEvent)
-
-    def keyPressEvent(self, keyEvent):
-        """
-        Executed when a keyboard button is pressed on the scene.
-        :param keyEvent: the keyboard event instance.
-        """
-        if keyEvent.key() in {Qt.Key_Delete, Qt.Key_Backspace}:
-            # handle this here and not using a shortcut otherwise we won't be able
-            # to delete elements on systems not having the CANC button on the keyboard
-            self.doItemDelete()
-        super().keyPressEvent(keyEvent)
 
     def mousePressEvent(self, mouseEvent):
         """
@@ -675,9 +694,9 @@ class DiagramScene(QGraphicsScene):
         Add an item to the Diagram scene.
         :param item: the item to add.
         """
+        super().addItem(item)
         collection = self.nodesById if item.isNode() else self.edgesById
         collection[item.id] = item
-        super().addItem(item)
 
     def clear(self):
         """
@@ -733,6 +752,15 @@ class DiagramScene(QGraphicsScene):
         :rtype: view
         """
         return self.nodesById.values()
+
+    def removeItem(self, item):
+        """
+        Remove an item from the Diagram scene.
+        :param item: the item to remove.
+        """
+        super().removeItem(item)
+        collection = self.nodesById if item.isNode() else self.edgesById
+        collection.pop(item.id, None)
 
     def selectedEdges(self):
         """

@@ -222,6 +222,7 @@ class MainWindow(QMainWindow):
 
         self.actionItemDelete = QAction('Delete', self)
         self.actionItemDelete.setIcon(self.iconDelete)
+        self.actionItemDelete.setShortcut(QKeySequence.Delete)
         self.actionItemDelete.setStatusTip('Delete selected items')
         self.actionItemDelete.setEnabled(False)
 
@@ -258,9 +259,25 @@ class MainWindow(QMainWindow):
         self.actionGrapholWebOpen = QAction('Graphol homepage', self)
         self.actionGrapholWebOpen.setIcon(self.iconLink)
 
+        # set the icon on dock widgets actions
         self.navigatorDock.toggleViewAction().setIcon(self.iconZoom)
         self.overviewDock.toggleViewAction().setIcon(self.iconZoom)
         self.paletteDock.toggleViewAction().setIcon(self.iconPalette)
+
+        # actions below are not available in the application Main Menu, nor in the Toolbar (entries can be found in
+        # context menus): since we need shortcuts to work, we would need to add such actions to a visible widget that
+        # receive events, otherwise we won't be able to use shortcuts. More on this can be found in the lik below:
+        # https://forum.qt.io/topic/15107/solved-action-shortcut-not-triggering-unless-action-is-placed-in-a-toolbar)
+        self.actionToggleEdgeComplete = QAction('Complete', self)
+        self.actionToggleEdgeComplete.setShortcut('ALT+C')
+        self.actionToggleEdgeComplete.setCheckable(True)
+
+        self.actionToggleEdgeFunctional = QAction('Functional', self)
+        self.actionToggleEdgeFunctional.setShortcut('ALT+F')
+        self.actionToggleEdgeFunctional.setCheckable(True)
+
+        self.addAction(self.actionToggleEdgeComplete)
+        self.addAction(self.actionToggleEdgeFunctional)
         
         ################################################# MENUS ########################################################
 
@@ -362,18 +379,18 @@ class MainWindow(QMainWindow):
 
         ############################################### SIGNALS ########################################################
 
-        connect(self.actionNewDocument.triggered, self.doNewDocument)
-        connect(self.actionOpenDocument.triggered, self.doOpenDocument)
-        connect(self.actionSaveDocument.triggered, self.doSaveDocument)
-        connect(self.actionSaveDocumentAs.triggered, self.doSaveDocumentAs)
-        connect(self.actionImportDocument.triggered, self.doImportDocument)
-        connect(self.actionExportDocument.triggered, self.doExportDocument)
-        connect(self.actionPrintDocument.triggered, self.doPrintDocument)
+        connect(self.actionNewDocument.triggered, self.newDocument)
+        connect(self.actionOpenDocument.triggered, self.openDocument)
+        connect(self.actionSaveDocument.triggered, self.saveDocument)
+        connect(self.actionSaveDocumentAs.triggered, self.saveDocumentAs)
+        connect(self.actionImportDocument.triggered, self.importDocument)
+        connect(self.actionExportDocument.triggered, self.exportDocument)
+        connect(self.actionPrintDocument.triggered, self.printDocument)
         connect(self.actionCloseActiveSubWindow.triggered, lambda: self.mdiArea.activeSubWindow().close())
-        connect(self.actionOpenPreferences.triggered, self.doOpenPreferences)
+        connect(self.actionOpenPreferences.triggered, self.openPreferences)
         connect(self.actionQuit.triggered, self.close)
-        connect(self.actionSnapToGrid.triggered, self.doSnapToGrid)
-        connect(self.actionAbout.triggered, self.doAbout)
+        connect(self.actionSnapToGrid.triggered, self.toggleSnapToGrid)
+        connect(self.actionAbout.triggered, self.about)
         connect(self.actionSapienzaWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/en'))
         connect(self.actionGrapholWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/~graphol/'))
         connect(self.documentLoaded, self.onDocumentLoaded)
@@ -382,7 +399,7 @@ class MainWindow(QMainWindow):
         connect(self.undoGroup.cleanChanged, self.onUndoGroupCleanChanged)
 
         for i in range(MainWindow.MaxRecentDocuments):
-            connect(self.actionsOpenRecentDocument[i].triggered, self.doOpenRecentDocument)
+            connect(self.actionsOpenRecentDocument[i].triggered, self.openRecentDocument)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -391,7 +408,7 @@ class MainWindow(QMainWindow):
     ####################################################################################################################
 
     @pyqtSlot()
-    def doAbout(self):
+    def about(self):
         """
         Display the about dialog.
         """
@@ -399,7 +416,23 @@ class MainWindow(QMainWindow):
         about.exec_()
 
     @pyqtSlot()
-    def doNewDocument(self):
+    def exportDocument(self):
+        """
+        Export the currently open graphol document.
+        """
+        subwindow = self.mdiArea.currentSubWindow()
+        if subwindow:
+            subwindow.exportScene()
+
+    @pyqtSlot()
+    def importDocument(self):
+        """
+        Import a document from a different file format.
+        """
+        pass
+
+    @pyqtSlot()
+    def newDocument(self):
         """
         Create a new empty document and add it to the MDI Area.
         """
@@ -412,15 +445,14 @@ class MainWindow(QMainWindow):
         self.mdiArea.update()
 
     @pyqtSlot()
-    def doOpenDocument(self):
+    def openDocument(self):
         """
         Open a document.
         """
-        opendialog = OpenFileDialog(getPath('~'))
-        opendialog.setNameFilters([FileType.graphol.value])
-        if opendialog.exec_():
-
-            filepath = opendialog.selectedFiles()[0]
+        dialog = OpenFileDialog(getPath('~'))
+        dialog.setNameFilters([FileType.graphol.value])
+        if dialog.exec_():
+            filepath = dialog.selectedFiles()[0]
             if not self.focusDocument(filepath):
                 scene = self.getSceneFromGrapholFile(filepath)
                 if scene:
@@ -431,7 +463,7 @@ class MainWindow(QMainWindow):
                     self.mdiArea.update()
 
     @pyqtSlot()
-    def doOpenRecentDocument(self):
+    def openRecentDocument(self):
         """
         Open the clicked recent document.
         """
@@ -447,7 +479,7 @@ class MainWindow(QMainWindow):
                     self.mdiArea.update()
 
     @pyqtSlot()
-    def doSaveDocument(self):
+    def saveDocument(self):
         """
         Save the currently open graphol document.
         """
@@ -456,7 +488,7 @@ class MainWindow(QMainWindow):
             subwindow.saveScene()
 
     @pyqtSlot()
-    def doSaveDocumentAs(self):
+    def saveDocumentAs(self):
         """
         Save the currently open graphol document (enforcing a new name).
         """
@@ -465,23 +497,7 @@ class MainWindow(QMainWindow):
             subwindow.saveSceneAs()
 
     @pyqtSlot()
-    def doImportDocument(self):
-        """
-        Import a document from a different file format.
-        """
-        pass
-
-    @pyqtSlot()
-    def doExportDocument(self):
-        """
-        Export the currently open graphol document.
-        """
-        subwindow = self.mdiArea.currentSubWindow()
-        if subwindow:
-            subwindow.exportScene()
-
-    @pyqtSlot()
-    def doPrintDocument(self):
+    def printDocument(self):
         """
         Print the currently open graphol document.
         """
@@ -490,7 +506,7 @@ class MainWindow(QMainWindow):
             subwindow.printScene()
 
     @pyqtSlot()
-    def doOpenPreferences(self):
+    def openPreferences(self):
         """
         Open the preferences dialog.
         """
@@ -498,7 +514,7 @@ class MainWindow(QMainWindow):
         preferences.exec_()
 
     @pyqtSlot()
-    def doSnapToGrid(self):
+    def toggleSnapToGrid(self):
         """
         Toggle snap to grid setting.
         """
@@ -604,6 +620,8 @@ class MainWindow(QMainWindow):
             self.actionSaveDocumentAs.setEnabled(True)
             self.actionSelectAll.setEnabled(True)
 
+            disconnect(self.actionToggleEdgeComplete.triggered)
+            disconnect(self.actionToggleEdgeFunctional.triggered)
             disconnect(self.actionItemCut.triggered)
             disconnect(self.actionItemCopy.triggered)
             disconnect(self.actionItemPaste.triggered)
@@ -618,13 +636,15 @@ class MainWindow(QMainWindow):
             self.zoomctl.setZoomLevel(self.zoomctl.index(mainview.zoom))
             self.zoomctl.setEnabled(True)
 
-            connect(self.actionItemCut.triggered, scene.doItemCut)
-            connect(self.actionItemCopy.triggered, scene.doItemCopy)
-            connect(self.actionItemPaste.triggered, scene.doItemPaste)
-            connect(self.actionItemDelete.triggered, scene.doItemDelete)
-            connect(self.actionBringToFront.triggered, scene.doBringToFront)
-            connect(self.actionSendToBack.triggered, scene.doSendToBack)
-            connect(self.actionSelectAll.triggered, scene.doSelectAll)
+            connect(self.actionToggleEdgeComplete.triggered, scene.toggleEdgeComplete)
+            connect(self.actionToggleEdgeFunctional.triggered, scene.toggleEdgeFunctional)
+            connect(self.actionItemCut.triggered, scene.itemCut)
+            connect(self.actionItemCopy.triggered, scene.itemCopy)
+            connect(self.actionItemPaste.triggered, scene.itemPaste)
+            connect(self.actionItemDelete.triggered, scene.itemDelete)
+            connect(self.actionBringToFront.triggered, scene.bringToFront)
+            connect(self.actionSendToBack.triggered, scene.sendToBack)
+            connect(self.actionSelectAll.triggered, scene.selectAll)
             connect(self.zoomctl.scaleChanged, mainview.onScaleChanged)
             connect(mainview.zoomChanged, self.zoomctl.onMainViewZoomChanged)
 

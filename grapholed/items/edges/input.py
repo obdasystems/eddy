@@ -34,12 +34,11 @@
 
 from math import sin, cos, radians, pi as M_PI
 
-from grapholed.commands import CommandEdgeInputToggleFunctionality
 from grapholed.datatypes import DiagramMode, ItemType
 from grapholed.functions import connect
 from grapholed.items.edges.common.base import Edge
 
-from PyQt5.QtCore import QPointF, QLineF, Qt, pyqtSlot
+from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QIcon, QPainterPath
 from PyQt5.QtWidgets import QAction, QMenu
 
@@ -62,7 +61,7 @@ class InputEdge(Edge):
         Initialize the Input edge.
         """
         super().__init__(**kwargs)
-        self.functionality = False
+        self.functional = False
         self.tail = QLineF()
 
     ################################################# ITEM INTERFACE ###################################################
@@ -80,13 +79,10 @@ class InputEdge(Edge):
             connect(action.triggered, self.breakpointDel, breakpoint=breakpoint)
             menu.addAction(action)
         else:
-            functionality = QAction('Functionality', scene)
-            functionality.setCheckable(True)
-            functionality.setChecked(self.functionality)
-            connect(functionality.triggered, self.doToggleFunctionality)
             menu.addAction(scene.actionItemDelete)
             menu.addSeparator()
-            menu.addAction(functionality)
+            menu.addAction(scene.actionToggleEdgeFunctional)
+            scene.actionToggleEdgeFunctional.setChecked(self.isFunctional())
         return menu
 
     def copy(self, scene):
@@ -95,8 +91,23 @@ class InputEdge(Edge):
         :param scene: a reference to the scene where this item is being copied.
         """
         edge = super().copy(scene)
-        edge.functionality = self.functionality
+        edge.setFunctional(self.isFunctional())
         return edge
+
+    def isFunctional(self):
+        """
+        Tells whether this edge is functional (same as querying the functional attribute).
+        :return: True if the edge express functionality, False otherwise.
+        :rtype: bool
+        """
+        return self.functional
+
+    def setFunctional(self, functional):
+        """
+        Set the functional attribute for this edge.
+        :param functional: the functional value.
+        """
+        self.functional = bool(functional)
 
     ############################################# ITEM IMPORT / EXPORT #################################################
 
@@ -107,7 +118,7 @@ class InputEdge(Edge):
         :rtype: QDomElement
         """
         edge = super().toGraphol(document)
-        edge.setAttribute('functional', int(self.functionality))
+        edge.setAttribute('functional', int(self.isFunctional()))
         return edge
 
     @classmethod
@@ -124,16 +135,6 @@ class InputEdge(Edge):
         edge.updateEdge()
         return edge
 
-    ################################################ ACTION HANDLERS ###################################################
-
-    @pyqtSlot()
-    def doToggleFunctionality(self):
-        """
-        Toggle the functionality attribute for this edge.
-        """
-        scene = self.scene()
-        scene.undoStack.push(CommandEdgeInputToggleFunctionality(scene, self, not self.functionality))
-
     ##################################################### GEOMETRY #####################################################
 
     def boundingRect(self):
@@ -145,7 +146,7 @@ class InputEdge(Edge):
         path.addPath(self.selection)
         path.addPolygon(self.head)
 
-        if self.functionality:
+        if self.functional:
             path.moveTo(self.tail.p1())
             path.lineTo(self.tail.p2())
 
@@ -165,7 +166,7 @@ class InputEdge(Edge):
         path.addPath(self.path)
         path.addPolygon(self.head)
 
-        if self.functionality:
+        if self.functional:
             path.moveTo(self.tail.p1())
             path.lineTo(self.tail.p2())
 
@@ -180,7 +181,7 @@ class InputEdge(Edge):
         path.addPath(self.selection)
         path.addPolygon(self.head)
 
-        if self.functionality:
+        if self.functional:
             path.moveTo(self.tail.p1())
             path.lineTo(self.tail.p2())
 
@@ -270,7 +271,7 @@ class InputEdge(Edge):
                 self.path.lineTo(p2)
                 self.selection.addPolygon(createSelectionBox(p1, p2, subpath.angle(), boxSize))
                 self.head = createHead(p2, subpath.angle(), headSize)
-                if self.functionality:
+                if self.functional:
                     self.tail = createTail(p1, subpath.angle(), headSize)
 
         elif len(collection) > 1:
@@ -301,7 +302,7 @@ class InputEdge(Edge):
                 self.selection.addPolygon(createSelectionBox(p21, p22, subpathN.angle(), boxSize))
 
                 self.head = createHead(p22, subpathN.angle(), headSize)
-                if self.functionality:
+                if self.functional:
                     self.tail = createTail(p11, subpath1.angle(), headSize)
 
         self.updateZValue()
@@ -386,7 +387,7 @@ class InputEdge(Edge):
             painter.drawPolygon(self.head)
 
             # Draw the tail line
-            if self.functionality:
+            if self.functional:
                 painter.setRenderHint(QPainter.Antialiasing)
                 painter.setPen(self.headPen)
                 painter.drawLine(self.tail)

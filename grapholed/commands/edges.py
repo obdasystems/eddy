@@ -202,59 +202,67 @@ class CommandEdgeBreakpointDel(QUndoCommand):
         self.scene.updated.emit()
 
 
-class CommandEdgeInclusionToggleCompletness(QUndoCommand):
+class CommandEdgeInclusionToggleComplete(QUndoCommand):
     """
-    This command is used to toggle the completness attribute of Inclusion Edges.
+    This command is used to toggle the complete attribute of Inclusion edges.
     """
-    def __init__(self, scene, edge, complete):
+    def __init__(self, scene, data):
         """
         Initialize the command.
         :param scene: the scene where this command is being performed.
-        :param edge: the edge whose breakpoint is being deleted.
-        :param complete: the complete value.
+        :param data: a mapping containing 'complete' data change for each edge.
         """
-        super().__init__('toggle {0} edge completness'.format(edge.name))
-        self.edge = edge
+        if len(data) == 1:
+            super().__init__('toggle {0} edge completness'.format(next(iter(data.keys())).name))
+        else:
+            super().__init__('toggle completness for {0} edges'.format(len(data)))
+
         self.scene = scene
-        self.complete = complete
+        self.data = data
 
     def redo(self):
         """redo the command"""
-        self.edge.complete = self.complete
-        self.edge.updateEdge()
+        for edge in self.data:
+            edge.setComplete(self.data[edge]['to'])
+            edge.updateEdge()
         self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        self.edge.complete = not self.complete
-        self.edge.updateEdge()
+        for edge in self.data:
+            edge.setComplete(self.data[edge]['from'])
+            edge.updateEdge()
         self.scene.updated.emit()
 
 
-class CommandEdgeInputToggleFunctionality(QUndoCommand):
+class CommandEdgeInputToggleFunctional(QUndoCommand):
     """
-    This command is used to toggle the functionality attribute of Inclusion Edges.
+    This command is used to toggle the functional attribute of Input edges.
     """
-    def __init__(self, scene, edge, functionality):
+    def __init__(self, scene, data):
         """
         Initialize the command.
         :param scene: the scene where this command is being performed.
-        :param edge: the edge whose breakpoint is being deleted.
-        :param functionality: the functionality value.
+        :param data: a mapping containing 'functional' data change for each edge.
         """
-        super().__init__('toggle {0} edge functionality'.format(edge.name))
-        self.edge = edge
+        if len(data) == 1:
+            super().__init__('toggle {0} edge functionality'.format(next(iter(data.keys())).name))
+        else:
+            super().__init__('toggle functionality for {0} edges'.format(len(data)))
+
         self.scene = scene
-        self.functionality = functionality
+        self.data = data
 
     def redo(self):
         """redo the command"""
-        self.edge.functionality = self.functionality
-        self.edge.updateEdge()
+        for edge in self.data:
+            edge.setFunctional(self.data[edge]['to'])
+            edge.updateEdge()
         self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        self.edge.functionality = not self.functionality
-        self.edge.updateEdge()
+        for edge in self.data:
+            edge.setFunctional(self.data[edge]['from'])
+            edge.updateEdge()
         self.scene.updated.emit()

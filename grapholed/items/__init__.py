@@ -146,6 +146,15 @@ class Item(QGraphicsItem):
         """
         return ItemType.ConceptNode <= self.itemtype <= ItemType.PropertyAssertionNode
 
+    def isType(self, value):
+        """
+        Tells whether the current item is of the given ItemType.
+        :param value: the item type to match.
+        :return: True if the item matches the given type, False otherwise.
+        :rtype: bool
+        """
+        return value is self.itemtype
+
     ############################################# ITEM IMPORT / EXPORT #################################################
 
     @abstractmethod
