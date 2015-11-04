@@ -265,8 +265,8 @@ class Edge(Item):
         :return: True if we need to draw the edge, False otherwise.
         """
         if not self.scene():
-            # no scene => probably the edge is lying int a CommandEdgeAdd instance in the
-            # undoStack of the scene but it is currently detached from it: removing this
+            # no scene => probably the edge is sitting in a CommandEdgeAdd instance in the
+            # undo stack of the scene but it is currently detached from it: removing this
             # check will cause an AttributeError being raised in paint() methods.
             return False
 
@@ -315,6 +315,7 @@ class Edge(Item):
     def contextMenu(self, pos):
         """
         Returns the basic edge context menu.
+        :param pos: the position where the context menu has been requested.
         :rtype: QMenu
         """
         menu = QMenu()

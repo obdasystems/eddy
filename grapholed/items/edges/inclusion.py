@@ -85,6 +85,7 @@ class InclusionEdge(Edge):
     def contextMenu(self, pos):
         """
         Returns the basic edge context menu.
+        :param pos: the position where the context menu has been requested.
         :rtype: QMenu
         """
         menu = QMenu()
