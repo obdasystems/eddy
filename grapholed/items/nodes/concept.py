@@ -41,7 +41,7 @@ from grapholed.items.nodes.common.label import Label
 
 from PyQt5.QtCore import QRectF, QPointF, Qt, pyqtSlot
 from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QColor, QPen, QIcon
-from PyQt5.QtWidgets import QAction
+from PyQt5.QtWidgets import QAction, QMenu
 
 
 class ConceptNode(ResizableNode):
@@ -98,9 +98,10 @@ class ConceptNode(ResizableNode):
         :rtype: QMenu
         """
         scene = self.scene()
-        menu = super().contextMenu()
 
+        menu = super().contextMenu()
         menu.addSeparator()
+
         subMenu = menu.addMenu('Special type')
         subMenu.setIcon(QIcon(':/icons/star-filled'))
 
@@ -111,12 +112,18 @@ class ConceptNode(ResizableNode):
             connect(action.triggered, self.setSpecialType, special=special)
             subMenu.addAction(action)
 
+        # insert the submenu before the the node properties
+        menu.insertMenu(self.actionOpenNodeProperties, subMenu)
+
         if not self.special:
             collection = self.label.contextMenuAdd()
             if collection:
-                menu.addSeparator()
                 for action in collection:
-                    menu.addAction(action)
+                    # insert the action before the the node properties
+                    menu.insertAction(self.actionOpenNodeProperties, action)
+
+        # insert a separator before the properties menu entry
+        menu.insertSeparator(self.actionOpenNodeProperties)
 
         return menu
 
