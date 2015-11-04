@@ -160,3 +160,16 @@ class Label(QGraphicsTextItem):
         :rtype: int
         """
         return self.boundingRect().width()
+
+    ################################################## ITEM DRAWING ####################################################
+
+    def paint(self, painter, option, widget=None):
+        """
+        Paint the label in the graphic view.
+        :param painter: the active painter.
+        :param option: the style option for this item.
+        :param widget: the widget that is being painted on.
+        """
+        parent = self.parentItem()
+        if not parent.path.isEmpty():
+            super().paint(painter, option, widget)
