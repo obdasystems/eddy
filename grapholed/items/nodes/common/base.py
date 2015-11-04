@@ -53,6 +53,8 @@ class Node(Item):
     __metaclass__ = ABCMeta
 
     name = 'node'
+    minHeight = 20
+    minWidth = 20
     prefix = 'n'
     shapeBrush = QColor(252, 252, 252)
     shapeBrushSelected = QColor(251, 255, 148)
