@@ -78,14 +78,18 @@ class RoleNode(ResizableNode):
         Returns the basic nodes context menu.
         :rtype: QMenu
         """
+        scene = self.scene()
+
         menu = super().contextMenu()
+        menu.addSeparator()
+        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuRoleNodeCompose)
 
         collection = self.label.contextMenuAdd()
         if collection:
-            menu.addSeparator()
             for action in collection:
-                menu.addAction(action)
+                menu.insertAction(scene.actionOpenNodeProperties, action)
 
+        menu.insertSeparator(scene.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):
@@ -114,6 +118,20 @@ class RoleNode(ResizableNode):
         :rtype: int
         """
         return self.boundingRect().height() - 2 * (self.handleSize + self.handleSpace)
+
+    def isAsymmetric(self):
+        """
+        Tells whether the Role is defined as asymmetric.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and e1.source is self and e1.target.isType(ItemType.RoleInverseNode):
+                for e2 in e1.target.edges:
+                    if e2.isType(ItemType.InputEdge) and e2.source is e1.target and e2.target.isType(ItemType.ComplementNode):
+                        for e3 in e2.target.edges:
+                            if e3.isType(ItemType.InclusionEdge) and e3.target is e2.target and e3.source is self:
+                                return True
+        return False
 
     def width(self):
         """

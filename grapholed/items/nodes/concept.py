@@ -32,16 +32,15 @@
 ##########################################################################
 
 
-from grapholed.commands import CommandConceptNodeSetSpecial
 from grapholed.datatypes import Font, ItemType, SpecialConceptType
 from grapholed.exceptions import ParseError
-from grapholed.functions import snapToGrid, connect
+from grapholed.functions import snapToGrid
 from grapholed.items.nodes.common.base import ResizableNode
 from grapholed.items.nodes.common.label import Label
 
-from PyQt5.QtCore import QRectF, QPointF, Qt, pyqtSlot
-from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QColor, QPen, QIcon
-from PyQt5.QtWidgets import QAction, QMenu
+from PyQt5.QtCore import QRectF, QPointF, Qt
+from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QColor, QPen
+from PyQt5.QtWidgets import QMenu
 
 
 class ConceptNode(ResizableNode):
@@ -101,30 +100,19 @@ class ConceptNode(ResizableNode):
 
         menu = super().contextMenu()
         menu.addSeparator()
+        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuConceptNodeSpecial)
 
-        subMenu = menu.addMenu('Special type')
-        subMenu.setIcon(QIcon(':/icons/star-filled'))
-
-        for special in SpecialConceptType:
-            action = QAction(special.value, scene)
-            action.setCheckable(True)
-            action.setChecked(special is self.special)
-            connect(action.triggered, self.setSpecialType, special=special)
-            subMenu.addAction(action)
-
-        # insert the submenu before the the node properties
-        menu.insertMenu(self.actionOpenNodeProperties, subMenu)
+        # switch the check on the currently active special
+        for action in scene.actionsConceptNodeSetSpecial:
+            action.setChecked(self.special is action.data())
 
         if not self.special:
             collection = self.label.contextMenuAdd()
             if collection:
                 for action in collection:
-                    # insert the action before the the node properties
-                    menu.insertAction(self.actionOpenNodeProperties, action)
+                    menu.insertAction(scene.actionOpenNodeProperties, action)
 
-        # insert a separator before the properties menu entry
-        menu.insertSeparator(self.actionOpenNodeProperties)
-
+        menu.insertSeparator(scene.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):
@@ -161,17 +149,6 @@ class ConceptNode(ResizableNode):
         :rtype: int
         """
         return self.rect.width()
-
-    ################################################ ACTION HANDLERS ###################################################
-
-    @pyqtSlot()
-    def setSpecialType(self, special):
-        """
-        Switch the node special type.
-        :param special: the special type (may be None)
-        """
-        scene = self.scene()
-        scene.undoStack.push(CommandConceptNodeSetSpecial(scene, self, None if special is self.special else special))
 
     ############################################### AUXILIARY METHODS ##################################################
 

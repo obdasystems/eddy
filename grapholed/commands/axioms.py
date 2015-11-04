@@ -32,57 +32,49 @@
 ##########################################################################
 
 
-from grapholed.commands.nodes import CommandNodeAdd
-from grapholed.commands.nodes import CommandNodeSetZValue
-from grapholed.commands.nodes import CommandNodeRezize
-from grapholed.commands.nodes import CommandNodeMove
-from grapholed.commands.nodes import CommandNodeLabelMove
-from grapholed.commands.nodes import CommandNodeLabelEdit
-from grapholed.commands.nodes import CommandNodeValueDomainSelectDatatype
-from grapholed.commands.nodes import CommandNodeHexagonSwitchTo
-from grapholed.commands.nodes import CommandNodeSquareChangeRestriction
-from grapholed.commands.nodes import CommandNodeSetURL
-from grapholed.commands.nodes import CommandNodeSetDescription
-from grapholed.commands.nodes import CommandConceptNodeSetSpecial
-
-from grapholed.commands.edges import CommandEdgeAdd
-from grapholed.commands.edges import CommandEdgeAnchorMove
-from grapholed.commands.edges import CommandEdgeBreakpointAdd
-from grapholed.commands.edges import CommandEdgeBreakpointMove
-from grapholed.commands.edges import CommandEdgeBreakpointDel
-from grapholed.commands.edges import CommandEdgeInclusionToggleComplete
-from grapholed.commands.edges import CommandEdgeInputToggleFunctional
-
-from grapholed.commands.common import CommandItemsMultiAdd
-from grapholed.commands.common import CommandItemsMultiRemove
-
-from grapholed.commands.scene import CommandSceneResize
-
-from grapholed.commands.axioms import CommandComposeAsymmetricRole
+from PyQt5.QtWidgets import QUndoCommand
 
 
-__all__ = [
-    'CommandComposeAsymmetricRole',
-    'CommandNodeAdd',
-    'CommandNodeSetZValue',
-    'CommandNodeRezize',
-    'CommandNodeMove',
-    'CommandNodeLabelMove',
-    'CommandNodeLabelEdit',
-    'CommandNodeValueDomainSelectDatatype',
-    'CommandNodeHexagonSwitchTo',
-    'CommandNodeSquareChangeRestriction',
-    'CommandNodeSetURL',
-    'CommandNodeSetDescription',
-    'CommandConceptNodeSetSpecial',
-    'CommandEdgeAdd',
-    'CommandEdgeAnchorMove',
-    'CommandEdgeBreakpointAdd',
-    'CommandEdgeBreakpointMove',
-    'CommandEdgeBreakpointDel',
-    'CommandEdgeInclusionToggleComplete',
-    'CommandEdgeInputToggleFunctional',
-    'CommandItemsMultiAdd',
-    'CommandItemsMultiRemove',
-    'CommandSceneResize',
-]
+class CommandComposeAsymmetricRole(QUndoCommand):
+    """
+    This command is used to compose an AsymmetricRole starting from a Role node.
+    """
+    def __init__(self, scene, role, inverse, complement, input1, input2, inclusion):
+        """
+        Initialize the command.
+        :param scene: the graphic scene where this command is being performed.
+        :param role: the role node where to base the composition.
+        """
+        super().__init__('create asymmetric role axiom')
+        self.scene = scene
+        self.role = role
+        self.inverse = inverse
+        self.complement = complement
+        self.input1 = input1
+        self.input2 = input2
+        self.inclusion = inclusion
+
+    def redo(self):
+        """redo the command"""
+        # add items to the scene
+        for item in (self.inverse, self.complement, self.input1, self.input2, self.inclusion):
+            self.scene.addItem(item)
+            # map edges over source and target nodes
+        for edge in (self.input1, self.input2, self.inclusion):
+            edge.source.addEdge(edge)
+            edge.target.addEdge(edge)
+            edge.updateEdge()
+        # emit updated signal
+        self.scene.updated.emit()
+
+    def undo(self):
+        """undo the command"""
+        # remove items from the scene
+        for item in (self.inverse, self.complement, self.input1, self.input2, self.inclusion):
+            self.scene.removeItem(item)
+        # remove edge mappings from source and target nodes
+        for edge in (self.input1, self.input2, self.inclusion):
+            edge.source.removeEdge(edge)
+            edge.target.removeEdge(edge)
+        # emit updated signal
+        self.scene.updated.emit()

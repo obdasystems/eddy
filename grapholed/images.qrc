@@ -11,6 +11,7 @@
     <file alias="checkbox-outline">images/icons/checkbox-outline.png</file>
     <file alias="close">images/icons/close.png</file>
     <file alias="copy">images/icons/copy.png</file>
+    <file alias="create">images/icons/create.png</file>
     <file alias="cut">images/icons/cut.png</file>
     <file alias="delete">images/icons/delete.png</file>
     <file alias="error">images/icons/error.png</file>

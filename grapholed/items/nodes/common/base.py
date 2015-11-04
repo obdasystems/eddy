@@ -38,12 +38,11 @@ from copy import deepcopy
 from grapholed.commands import CommandNodeRezize
 from grapholed.datatypes import DistinctList, DiagramMode
 from grapholed.dialogs import NodePropertiesDialog
-from grapholed.functions import connect
 from grapholed.items import Item
 
-from PyQt5.QtCore import QPointF, QLineF, Qt, QRectF, pyqtSlot
-from PyQt5.QtGui import QIcon, QColor, QPen, QPainter
-from PyQt5.QtWidgets import QMenu, QGraphicsItem, QAction
+from PyQt5.QtCore import QPointF, QLineF, Qt, QRectF
+from PyQt5.QtGui import QColor, QPen, QPainter
+from PyQt5.QtWidgets import QMenu, QGraphicsItem
 
 
 class Node(Item):
@@ -75,11 +74,6 @@ class Node(Item):
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         self.setFlag(QGraphicsItem.ItemIsFocusable, True)
-
-        self.actionProperties = QAction('Properties...', self.scene())
-        self.actionProperties.setIcon(QIcon(':/icons/preferences'))
-
-        connect(self.actionProperties.triggered, self.handleNodeProperties)
 
     ################################################## PROPERTIES ######################################################
 
@@ -123,8 +117,8 @@ class Node(Item):
         Returns the basic nodes context menu.
         :rtype: QMenu
         """
-        menu = QMenu()
         scene = self.scene()
+        menu = QMenu()
         menu.addAction(scene.actionItemDelete)
         menu.addSeparator()
         menu.addAction(scene.actionItemCut)
@@ -134,7 +128,7 @@ class Node(Item):
         menu.addAction(scene.actionBringToFront)
         menu.addAction(scene.actionSendToBack)
         menu.addSeparator()
-        menu.addAction(self.actionProperties)
+        menu.addAction(scene.actionOpenNodeProperties)
         return menu
 
     @abstractmethod
@@ -176,6 +170,12 @@ class Node(Item):
         :rtype: QPointF
         """
         return self.mapToScene(self.center())
+
+    def propertiesDialog(self):
+        """
+        Build and returns the node properties dialog.
+        """
+        return NodePropertiesDialog(scene=self.scene(), node=self)
 
     def removeEdge(self, edge):
         """
@@ -233,15 +233,6 @@ class Node(Item):
 
     ############################################# ITEM IMPORT / EXPORT #################################################
 
-    @abstractmethod
-    def toGraphol(self, document):
-        """
-        Export the current item in Graphol format.
-        :param document: the XML document where this item will be inserted.
-        :rtype: QDomElement
-        """
-        pass
-
     @classmethod
     @abstractmethod
     def fromGraphol(cls, scene, E):
@@ -251,6 +242,15 @@ class Node(Item):
         :param E: the Graphol document element entry.
         :raise ParseError: in case it's not possible to generate the node using the given element.
         :rtype: Node
+        """
+        pass
+
+    @abstractmethod
+    def toGraphol(self, document):
+        """
+        Export the current item in Graphol format.
+        :param document: the XML document where this item will be inserted.
+        :rtype: QDomElement
         """
         pass
 
@@ -376,16 +376,6 @@ class Node(Item):
         :rtype: QPixmap
         """
         pass
-
-    ################################################# ACTION HANDLERS ##################################################
-
-    @pyqtSlot()
-    def handleNodeProperties(self):
-        """
-        Executed when node properties needs to be diplayed.
-        """
-        prop = NodePropertiesDialog(scene=self.scene(), node=self)
-        prop.exec_()
 
 
 class ResizableNode(Node):

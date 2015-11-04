@@ -35,13 +35,11 @@
 import os
 
 from grapholed import __appname__, __organization__
-from grapholed.commands import CommandItemsMultiAdd, CommandItemsMultiRemove
-from grapholed.commands import CommandNodeAdd, CommandNodeSetZValue, CommandNodeMove
-from grapholed.commands import CommandEdgeAdd, CommandEdgeInputToggleFunctional, CommandEdgeInclusionToggleComplete
-from grapholed.datatypes import DiagramMode, ItemType
+from grapholed.commands import *
+from grapholed.datatypes import DiagramMode, ItemType, SpecialConceptType
 from grapholed.dialogs import ScenePropertiesDialog
 from grapholed.functions import getPath, snapToGrid, rangeF, connect
-from grapholed.items import Item
+from grapholed.items import Item, RoleInverseNode, ComplementNode, InputEdge, InclusionEdge
 from grapholed.tools import UniqueID
 
 from PyQt5.QtCore import Qt, pyqtSignal, QPointF, pyqtSlot, QSettings, QRectF
@@ -59,8 +57,8 @@ class DiagramDocument(object):
         """
         Initialize the scene document.
         """
-        self._filepath = ''
         self._edited = None
+        self._filepath = ''
 
     @property
     def edited(self):
@@ -164,15 +162,57 @@ class DiagramScene(QGraphicsScene):
         self.actionBringToFront = mainwindow.actionBringToFront
         self.actionSendToBack = mainwindow.actionSendToBack
         self.actionSelectAll = mainwindow.actionSelectAll
+
+        ## DIAGRAM SCENE
         self.actionOpenSceneProperties = QAction('Properties...', self)
         self.actionOpenSceneProperties.setIcon(QIcon(':/icons/preferences'))
+        connect(self.actionOpenSceneProperties.triggered, self.openSceneProperties)
+
+        ## NODE GENERIC
+        self.actionOpenNodeProperties = QAction('Properties...', self)
+        self.actionOpenNodeProperties.setIcon(QIcon(':/icons/preferences'))
+        connect(self.actionOpenNodeProperties.triggered, self.openNodeProperties)
+
+        ## CONCEPT NODE
+        self.actionsConceptNodeSetSpecial = []
+        for special in SpecialConceptType:
+            action = QAction(special.value, self)
+            action.setCheckable(True)
+            action.setData(special)
+            connect(action.triggered, self.setSpecialConceptNode)
+            self.actionsConceptNodeSetSpecial.append(action)
+
+        ## ROLE NODE
+        self.actionComposeAsymmetricRole = QAction('Asymmetric Role', self)
+        self.actionComposeIrreflexiveRole = QAction('Irreflexive Role', self)
+        self.actionComposeReflexiveRole = QAction('Reflexive Role', self)
+        self.actionComposeSymmetricRole = QAction('Symmetric Role', self)
+        self.actionComposeTransitiveRole = QAction('Transitive Role', self)
+
+        connect(self.actionComposeAsymmetricRole.triggered, self.composeAsymmetricRole)
+
+        ################################################## MENUS #######################################################
+
+        ## CONCEPT NODE
+        self.menuConceptNodeSpecial = QMenu('Special type')
+        self.menuConceptNodeSpecial.setIcon(QIcon(':/icons/star-filled'))
+        for action in self.actionsConceptNodeSetSpecial:
+            self.menuConceptNodeSpecial.addAction(action)
+
+        ## ROLE NODE
+        self.menuRoleNodeCompose = QMenu('Compose')
+        self.menuRoleNodeCompose.setIcon(QIcon(':/icons/create'))
+        self.menuRoleNodeCompose.addAction(self.actionComposeAsymmetricRole)
+        self.menuRoleNodeCompose.addAction(self.actionComposeIrreflexiveRole)
+        self.menuRoleNodeCompose.addAction(self.actionComposeReflexiveRole)
+        self.menuRoleNodeCompose.addAction(self.actionComposeSymmetricRole)
+        self.menuRoleNodeCompose.addAction(self.actionComposeTransitiveRole)
 
         ################################################# SIGNALS ######################################################
 
         connect(self.nodeInserted, self.onNodeInserted)
         connect(self.edgeInserted, self.onEdgeInserted)
         connect(self.selectionChanged, self.onSelectionChanged)
-        connect(self.actionOpenSceneProperties.triggered, self.openSceneProperties)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -194,6 +234,49 @@ class DiagramScene(QGraphicsScene):
                     zValue = item.zValue() + 0.1
             if zValue != selected.zValue():
                 self.undoStack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
+
+    @pyqtSlot()
+    def composeAsymmetricRole(self):
+        """
+        Compose a symmetric role using the selected Role node.
+        """
+        action = self.sender()
+        if action:
+
+            nodes = [node for node in self.selectedNodes() if node.isType(ItemType.RoleNode)]
+            if nodes:
+
+                role = nodes[0]
+                if not role.isAsymmetric():
+
+                    # always snap the points to the grid, even if the feature is not enabled so we have items aligned
+                    x1 = snapToGrid(role.pos().x() + role.width() / 2 + 100, DiagramScene.GridSize, snap=True)
+                    y1 = snapToGrid(role.pos().y() - role.height() / 2 - 40, DiagramScene.GridSize, snap=True)
+                    y2 = snapToGrid(role.pos().y() - role.height() / 2 - 80, DiagramScene.GridSize, snap=True)
+
+                    inverse = RoleInverseNode(scene=self)
+                    inverse.setPos(QPointF(x1, role.pos().y()))
+                    complement = ComplementNode(scene=self)
+                    complement.setPos(x1, y1)
+                    input1 = InputEdge(scene=self, source=role, target=inverse)
+                    input2 = InputEdge(scene=self, source=inverse, target=complement)
+                    inclusion = InclusionEdge(scene=self, source=role, target=complement, breakpoints=[
+                        QPointF(role.pos().x(), y2),
+                        QPointF(x1, y2)
+                    ])
+
+                    kwargs = {
+                        'scene': self,
+                        'role': role,
+                        'inverse': inverse,
+                        'complement': complement,
+                        'input1': input1,
+                        'input2': input2,
+                        'inclusion': inclusion,
+                    }
+
+                    # push the composition on the stack as a single action
+                    self.undoStack.push(CommandComposeAsymmetricRole(**kwargs))
 
     @pyqtSlot()
     def itemCut(self):
@@ -303,10 +386,23 @@ class DiagramScene(QGraphicsScene):
             self.undoStack.push(CommandItemsMultiRemove(scene=self, collection=selection))
 
     @pyqtSlot()
+    def openNodeProperties(self):
+        """
+        Executed when node properties needs to be displayed.
+        """
+        self.setMode(DiagramMode.Idle)
+        collection = self.selectedNodes()
+        if collection:
+            node = collection[0]
+            prop = node.propertiesDialog()
+            prop.exec_()
+
+    @pyqtSlot()
     def openSceneProperties(self):
         """
         Executed when scene properties needs to be displayed.
         """
+        self.setMode(DiagramMode.Idle)
         prop = ScenePropertiesDialog(scene=self)
         prop.exec_()
 
@@ -330,11 +426,24 @@ class DiagramScene(QGraphicsScene):
         """
         Select all the items in the scene.
         """
-        self.setMode(DiagramMode.Idle)
         self.clearSelection()
+        self.setMode(DiagramMode.Idle)
         for collection in (self.nodes(), self.edges()):
             for item in collection:
                 item.setSelected(True)
+
+    @pyqtSlot()
+    def setSpecialConceptNode(self):
+        """
+        Set the special type of the selected concept node.
+        """
+        action = self.sender()
+        if action:
+            selected = [node for node in self.selectedNodes() if node.isType(ItemType.ConceptNode)]
+            if selected:
+                node = selected[0]
+                special = action.data() if node.special is not action.data() else None
+                self.undoStack.push(CommandConceptNodeSetSpecial(self, node, special))
 
     @pyqtSlot()
     def toggleEdgeComplete(self):
@@ -410,12 +519,9 @@ class DiagramScene(QGraphicsScene):
         :param menuEvent: the context menu event instance.
         """
         if not self.items(menuEvent.scenePos()):
-
             menu = QMenu()
             if self.clipboard:
                 menu.addAction(self.actionItemPaste)
-                menu.addSeparator()
-
             menu.addAction(self.actionSelectAll)
             menu.addSeparator()
             menu.addAction(self.actionOpenSceneProperties)
