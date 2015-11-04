@@ -256,7 +256,11 @@ class InstanceOfEdge(Edge):
         append = points.append  # keep this shortcut and the one below since it saves a lot of computation
         extend = points.extend  # more: http://blog.cdleary.com/2010/04/efficiency-of-list-comprehensions/
 
-        if len(collection) == 1:
+        if len(collection) == 0:
+
+            self.head = QPolygonF()
+
+        elif len(collection) == 1:
 
             subpath = collection[0]
             p1 = sourceNode.intersection(subpath)

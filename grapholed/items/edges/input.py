@@ -319,7 +319,12 @@ class InputEdge(Edge):
         self.path = QPainterPath()
         self.selection = QPainterPath()
 
-        if len(collection) == 1:
+        if len(collection) == 0:
+
+            self.head = QPolygonF()
+            self.tail = QLineF()
+
+        elif len(collection) == 1:
 
             subpath = collection[0]
             p1 = sourceNode.intersection(subpath)
