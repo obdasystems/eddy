@@ -37,7 +37,6 @@ from abc import ABCMeta, abstractmethod
 from grapholed.commands import CommandEdgeBreakpointAdd, CommandEdgeBreakpointDel, CommandEdgeBreakpointMove
 from grapholed.commands import CommandEdgeAnchorMove
 from grapholed.datatypes import DiagramMode
-from grapholed.exceptions import ParseError
 from grapholed.functions import distanceP, distanceL, connect
 from grapholed.items import Item
 
@@ -329,17 +328,6 @@ class Edge(Item):
             menu.addAction(scene.actionItemDelete)
         return menu
 
-    def copy(self, scene):
-        """
-        Create a copy of the current edge.
-        :param scene: a reference to the scene where this item is being copied.
-        """
-        return self.__class__(scene=scene,
-                              id=self.id,
-                              source=self.source,
-                              target=self.target,
-                              breakpoints=self.breakpoints[:])
-
     def moveBy(self, x, y):
         """
         Move the edge by the given deltas.
@@ -364,77 +352,6 @@ class Edge(Item):
         elif node == self.target:
             return self.source
         raise AttributeError('node {0} is not attached to edge {1}'.format(node, self))
-
-    ############################################# ITEM IMPORT / EXPORT #################################################
-
-    def toGraphol(self, document):
-        """
-        Export the current item in Graphol format.
-        :param document: the XML document where this item will be inserted.
-        :rtype: QDomElement
-        """
-        ## ROOT ELEMENT
-        edge = document.createElement('edge')
-        edge.setAttribute('source', self.source.id)
-        edge.setAttribute('target', self.target.id)
-        edge.setAttribute('id', self.id)
-        edge.setAttribute('type', self.xmlname)
-
-        ## LINE GEOMETRY
-        source = self.source.anchor(self)
-        target = self.target.anchor(self)
-
-        for p in [source] + self.breakpoints + [target]:
-            point = document.createElement('line:point')
-            point.setAttribute('x', p.x())
-            point.setAttribute('y', p.y())
-            edge.appendChild(point)
-
-        return edge
-
-    @classmethod
-    def fromGraphol(cls, scene, E):
-        """
-        Create a new item instance by parsing a Graphol document item entry.
-        :param scene: the scene where the element will be inserted.
-        :param E: the Graphol document element entry.
-        :raise ParseError: in case it's not possible to generate the node using the given element.
-        :rtype: Edge
-        """
-        try:
-
-            eid = E.attribute('id')
-
-            # get source an target node of this edge
-            source = scene.node(E.attribute('source'))
-            target = scene.node(E.attribute('target'))
-
-            points = []
-
-            # extract all the breakpoints from the edge children
-            children = E.elementsByTagName('line:point')
-            for i in range(0, children.count()):
-                P = children.at(i).toElement()
-                point = QPointF(int(P.attribute('x')), int(P.attribute('y')))
-                points.append(point)
-
-            sourceA = points[0]         ## SOURCE NODE ANCHOR
-            targetA = points[-1]        ## TARGET NODE ANCHOR
-            breakpoints = points[1:-1]  ## BREAKPOINTS
-
-            edge = cls(scene=scene, id=eid, source=source, target=target, breakpoints=breakpoints)
-            edge.source.setAnchor(edge, sourceA)
-            edge.target.setAnchor(edge, targetA)
-            edge.updateEdge()
-
-            # map the edge over the source and target nodes
-            edge.source.edges.append(edge)
-            edge.target.edges.append(edge)
-
-        except Exception as e:
-            raise ParseError('could not create {0} instance from Graphol node: {1}'.format(cls.__name__, e))
-        else:
-            return edge
 
     ################################################## EVENT HANDLERS ##################################################
 

@@ -346,8 +346,8 @@ class DiagramScene(QGraphicsScene):
         if selected:
             # establish whether a multi-toggle should enable/disable the complete: if we have a
             # majority of edges with complete enabled, we will disable it, else we will enable it
-            func = sum(edge.isComplete() for edge in selected) <= len(selected) / 2
-            data = {edge: {'from': edge.isComplete(), 'to': func} for edge in selected}
+            func = sum(edge.complete for edge in selected) <= len(selected) / 2
+            data = {edge: {'from': edge.complete, 'to': func} for edge in selected}
             self.undoStack.push(CommandEdgeInclusionToggleComplete(scene=self, data=data))
 
     @pyqtSlot()
@@ -360,8 +360,8 @@ class DiagramScene(QGraphicsScene):
         if selected:
             # establish whether a multi-toggle should enable/disable the functional: if we have a
             # majority of edges with functional enabled, we will disable it, else we will enable it
-            func = sum(edge.isFunctional() for edge in selected) <= len(selected) / 2
-            data = {edge: {'from': edge.isFunctional(), 'to': func} for edge in selected}
+            func = sum(edge.functional for edge in selected) <= len(selected) / 2
+            data = {edge: {'from': edge.functional, 'to': func} for edge in selected}
             self.undoStack.push(CommandEdgeInputToggleFunctional(scene=self, data=data))
 
     ####################################################################################################################

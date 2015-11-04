@@ -61,23 +61,60 @@ class DatatypeRestrictionNode(HexagonNode):
 
     def copy(self, scene):
         """
-        Create a copy of the current item .
+        Create a copy of the current item.
         :param scene: a reference to the scene where this item is being copied from.
         """
-        node = self.__class__(scene=scene,
-                              id=self.id,
-                              description=self.description,
-                              url=self.url,
-                              width=self.width(),
-                              height=self.height())
+        kwargs = {
+            'scene': scene,
+            'id': self.id,
+            'description': self.description,
+            'url': self.url,
+            'width': self.width(),
+            'height': self.height(),
+        }
 
+        node = self.__class__(**kwargs)
         node.setPos(self.pos())
         node.setLabelText(self.labelText())
         node.setLabelPos(node.mapFromScene(self.mapToScene(self.labelPos())))
-
         return node
 
     ############################################# ITEM IMPORT / EXPORT #################################################
+
+    @classmethod
+    def fromGraphol(cls, scene, E):
+        """
+        Create a new item instance by parsing a Graphol document item entry.
+        :param scene: the scene where the element will be inserted.
+        :param E: the Graphol document element entry.
+        :raise ParseError: in case it's not possible to generate the node using the given element.
+        :rtype: Node
+        """
+        try:
+
+            U = E.elementsByTagName('data:url').at(0).toElement()
+            D = E.elementsByTagName('data:description').at(0).toElement()
+            G = E.elementsByTagName('shape:geometry').at(0).toElement()
+            L = E.elementsByTagName('shape:label').at(0).toElement()
+
+            kwargs = {
+                'scene': scene,
+                'id': E.attribute('id'),
+                'description': D.text(),
+                'url': U.text(),
+                'width': int(G.attribute('width')),
+                'height': int(G.attribute('height')),
+            }
+
+            node = cls(**kwargs)
+            node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
+            node.setLabelText(L.text())
+            node.setLabelPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
+
+        except Exception as e:
+            raise ParseError('could not create {0} instance from Graphol node: {1}'.format(cls.__name__, e))
+        else:
+            return node
 
     def toGraphol(self, document):
         """
@@ -120,36 +157,6 @@ class DatatypeRestrictionNode(HexagonNode):
         node.appendChild(label)
 
         return node
-
-    @classmethod
-    def fromGraphol(cls, scene, E):
-        """
-        Create a new item instance by parsing a Graphol document item entry.
-        :param scene: the scene where the element will be inserted.
-        :param E: the Graphol document element entry.
-        :raise ParseError: in case it's not possible to generate the node using the given element.
-        :rtype: Node
-        """
-        try:
-
-            U = E.elementsByTagName('data:url').at(0).toElement()
-            D = E.elementsByTagName('data:description').at(0).toElement()
-            G = E.elementsByTagName('shape:geometry').at(0).toElement()
-            L = E.elementsByTagName('shape:label').at(0).toElement()
-
-            nid = E.attribute('id')
-            w = int(G.attribute('width'))
-            h = int(G.attribute('height'))
-
-            node = cls(scene=scene, id=nid, url=U.text(), description=D.text(), width=w, height=h)
-            node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
-            node.setLabelText(L.text())
-            node.setLabelPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
-
-        except Exception as e:
-            raise ParseError('could not create {0} instance from Graphol node: {1}'.format(cls.__name__, e))
-        else:
-            return node
 
     ################################################# LABEL SHORTCUTS ##################################################
 

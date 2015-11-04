@@ -35,6 +35,7 @@
 from math import sin, cos, radians, pi as M_PI
 
 from grapholed.datatypes import DiagramMode, ItemType
+from grapholed.exceptions import ParseError
 from grapholed.functions import connect
 from grapholed.items.edges.common.base import Edge
 
@@ -56,13 +57,33 @@ class InputEdge(Edge):
     shapePen.setDashPattern([5, 5])
     xmlname = 'input'
 
-    def __init__(self, **kwargs):
+    def __init__(self, functional=False, **kwargs):
         """
         Initialize the Input edge.
+        :param functional: whether the edge is functional or not.
         """
         super().__init__(**kwargs)
-        self.functional = False
+        self._functional = functional
         self.tail = QLineF()
+
+    ################################################## PROPERTIES ######################################################
+
+    @property
+    def functional(self):
+        """
+        Tells whether this edge is functional.
+        :return: True if the edge is functional, False otherwise.
+        :rtype: bool
+        """
+        return self._functional
+
+    @functional.setter
+    def functional(self, functional):
+        """
+        Set the functional attribute for this edge.
+        :param functional: the complete value.
+        """
+        self._functional = bool(functional)
 
     ################################################# ITEM INTERFACE ###################################################
 
@@ -82,7 +103,7 @@ class InputEdge(Edge):
             menu.addAction(scene.actionItemDelete)
             menu.addSeparator()
             menu.addAction(scene.actionToggleEdgeFunctional)
-            scene.actionToggleEdgeFunctional.setChecked(self.isFunctional())
+            scene.actionToggleEdgeFunctional.setChecked(self.functional)
         return menu
 
     def copy(self, scene):
@@ -90,36 +111,18 @@ class InputEdge(Edge):
         Create a copy of the current edge.
         :param scene: a reference to the scene where this item is being copied.
         """
-        edge = super().copy(scene)
-        edge.setFunctional(self.isFunctional())
-        return edge
+        kwargs = {
+            'scene': scene,
+            'id': self.id,
+            'source': self.source,
+            'target': self.target,
+            'breakpoints': self.breakpoints[:],
+            'functional': self.functional,
+        }
 
-    def isFunctional(self):
-        """
-        Tells whether this edge is functional (same as querying the functional attribute).
-        :return: True if the edge express functionality, False otherwise.
-        :rtype: bool
-        """
-        return self.functional
-
-    def setFunctional(self, functional):
-        """
-        Set the functional attribute for this edge.
-        :param functional: the functional value.
-        """
-        self.functional = bool(functional)
+        return self.__class__(**kwargs)
 
     ############################################# ITEM IMPORT / EXPORT #################################################
-
-    def toGraphol(self, document):
-        """
-        Export the current item in Graphol format.
-        :param document: the XML document where this item will be inserted.
-        :rtype: QDomElement
-        """
-        edge = super().toGraphol(document)
-        edge.setAttribute('functional', int(self.isFunctional()))
-        return edge
 
     @classmethod
     def fromGraphol(cls, scene, E):
@@ -130,9 +133,63 @@ class InputEdge(Edge):
         :raise ParseError: in case it's not possible to generate the node using the given element.
         :rtype: Edge
         """
-        edge = super().fromGraphol(scene, E)
-        edge.functionality = bool(int(E.attribute('functional', '0')))
-        edge.updateEdge()
+        try:
+
+            points = []
+            # extract all the breakpoints from the edge children
+            children = E.elementsByTagName('line:point')
+            for i in range(0, children.count()):
+                P = children.at(i).toElement()
+                point = QPointF(int(P.attribute('x')), int(P.attribute('y')))
+                points.append(point)
+
+            kwargs = {
+                'scene': scene,
+                'id': E.attribute('id'),
+                'source': scene.node(E.attribute('source')),
+                'target': scene.node(E.attribute('target')),
+                'breakpoints': points[1:-1],
+                'functional': bool(int(E.attribute('functional', '0'))),
+            }
+
+            edge = cls(**kwargs)
+            edge.source.setAnchor(edge, points[0])
+            edge.target.setAnchor(edge, points[-1])
+            edge.updateEdge()
+
+            # map the edge over the source and target nodes
+            edge.source.edges.append(edge)
+            edge.target.edges.append(edge)
+
+        except Exception as e:
+            raise ParseError('could not create {0} instance from Graphol node: {1}'.format(cls.__name__, e))
+        else:
+            return edge
+
+    def toGraphol(self, document):
+        """
+        Export the current item in Graphol format.
+        :param document: the XML document where this item will be inserted.
+        :rtype: QDomElement
+        """
+        ## ROOT ELEMENT
+        edge = document.createElement('edge')
+        edge.setAttribute('source', self.source.id)
+        edge.setAttribute('target', self.target.id)
+        edge.setAttribute('id', self.id)
+        edge.setAttribute('type', self.xmlname)
+        edge.setAttribute('functional', int(self.functional))
+
+        ## LINE GEOMETRY
+        source = self.source.anchor(self)
+        target = self.target.anchor(self)
+
+        for p in [source] + self.breakpoints + [target]:
+            point = document.createElement('line:point')
+            point.setAttribute('x', p.x())
+            point.setAttribute('y', p.y())
+            edge.appendChild(point)
+
         return edge
 
     ##################################################### GEOMETRY #####################################################

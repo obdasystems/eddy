@@ -44,7 +44,7 @@ from grapholed.functions import connect
 from grapholed.items.nodes.common.base import Node
 from grapholed.items.nodes.common.label import Label
 
-from PyQt5.QtCore import QRectF, QPointF
+from PyQt5.QtCore import QRectF, QPointF, pyqtSlot
 from PyQt5.QtGui import QPixmap, QColor, QPainterPath, QIcon
 from PyQt5.QtWidgets import QAction, QDialog
 
@@ -108,17 +108,19 @@ class SquaredNode(Node):
         Create a copy of the current item .
         :param scene: a reference to the scene where this item is being copied from.
         """
-        node = self.__class__(scene=scene,
-                              id=self.id,
-                              description=self.description,
-                              url=self.url,
-                              width=self.width(),
-                              height=self.height())
+        kwargs = {
+            'scene': scene,
+            'id': self.id,
+            'description': self.description,
+            'url': self.url,
+            'width': self.width(),
+            'height': self.height(),
+        }
 
+        node = self.__class__(**kwargs)
         node.setPos(self.pos())
         node.setLabelText(self.labelText())
         node.setLabelPos(node.mapFromScene(self.mapToScene(self.labelPos())))
-
         return node
 
     def height(self):
@@ -128,6 +130,7 @@ class SquaredNode(Node):
         """
         return self.rect.height()
 
+    @pyqtSlot(RestrictionType)
     def updateRestriction(self, restriction):
         """
         Update the node restriction.
@@ -162,6 +165,41 @@ class SquaredNode(Node):
         return QRectF(-shape_w / 2, -shape_h / 2, shape_w, shape_h)
 
     ############################################# ITEM IMPORT / EXPORT #################################################
+
+    @classmethod
+    def fromGraphol(cls, scene, E):
+        """
+        Create a new item instance by parsing a Graphol document item entry.
+        :param scene: the scene where the element will be inserted.
+        :param E: the Graphol document element entry.
+        :raise ParseError: in case it's not possible to generate the node using the given element.
+        :rtype: AttributeNode
+        """
+        try:
+
+            U = E.elementsByTagName('data:url').at(0).toElement()
+            D = E.elementsByTagName('data:description').at(0).toElement()
+            G = E.elementsByTagName('shape:geometry').at(0).toElement()
+            L = E.elementsByTagName('shape:label').at(0).toElement()
+
+            kwargs = {
+                'scene': scene,
+                'id': E.attribute('id'),
+                'description': D.text(),
+                'url': U.text(),
+                'width': int(G.attribute('width')),
+                'height': int(G.attribute('height')),
+            }
+
+            node = cls(**kwargs)
+            node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
+            node.setLabelText(L.text())
+            node.setLabelPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
+
+        except Exception as e:
+            raise ParseError('could not create {0} instance from Graphol node: {1}'.format(cls.__name__, e))
+        else:
+            return node
 
     def toGraphol(self, document):
         """
@@ -204,36 +242,6 @@ class SquaredNode(Node):
         node.appendChild(label)
 
         return node
-
-    @classmethod
-    def fromGraphol(cls, scene, E):
-        """
-        Create a new item instance by parsing a Graphol document item entry.
-        :param scene: the scene where the element will be inserted.
-        :param E: the Graphol document element entry.
-        :raise ParseError: in case it's not possible to generate the node using the given element.
-        :rtype: AttributeNode
-        """
-        try:
-
-            U = E.elementsByTagName('data:url').at(0).toElement()
-            D = E.elementsByTagName('data:description').at(0).toElement()
-            G = E.elementsByTagName('shape:geometry').at(0).toElement()
-            L = E.elementsByTagName('shape:label').at(0).toElement()
-
-            nid = E.attribute('id')
-            w = int(G.attribute('width'))
-            h = int(G.attribute('height'))
-
-            node = cls(scene=scene, id=nid, url=U.text(), description=D.text(), width=w, height=h)
-            node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
-            node.setLabelText(L.text())
-            node.setLabelPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
-
-        except Exception as e:
-            raise ParseError('could not create {0} instance from Graphol node: {1}'.format(cls.__name__, e))
-        else:
-            return node
 
     ##################################################### GEOMETRY #####################################################
 
@@ -328,7 +336,6 @@ class SquaredNode(Node):
         :param widget: the widget that is being painted on.
         """
         shapeBrush = self.shapeBrushSelected if self.isSelected() else self.shapeBrush
-
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawRect(self.rect)

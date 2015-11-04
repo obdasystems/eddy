@@ -223,14 +223,14 @@ class CommandEdgeInclusionToggleComplete(QUndoCommand):
     def redo(self):
         """redo the command"""
         for edge in self.data:
-            edge.setComplete(self.data[edge]['to'])
+            edge.complete = self.data[edge]['to']
             edge.updateEdge()
         self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         for edge in self.data:
-            edge.setComplete(self.data[edge]['from'])
+            edge.complete = self.data[edge]['from']
             edge.updateEdge()
         self.scene.updated.emit()
 
@@ -256,13 +256,13 @@ class CommandEdgeInputToggleFunctional(QUndoCommand):
     def redo(self):
         """redo the command"""
         for edge in self.data:
-            edge.setFunctional(self.data[edge]['to'])
+            edge.functional = self.data[edge]['to']
             edge.updateEdge()
         self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         for edge in self.data:
-            edge.setFunctional(self.data[edge]['from'])
+            edge.functional = self.data[edge]['from']
             edge.updateEdge()
         self.scene.updated.emit()

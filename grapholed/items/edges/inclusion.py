@@ -34,8 +34,8 @@
 
 from math import sin, cos, radians, pi as M_PI
 
-from grapholed.commands import CommandEdgeInclusionToggleComplete
 from grapholed.datatypes import DiagramMode, ItemType
+from grapholed.exceptions import ParseError
 from grapholed.functions import connect
 from grapholed.items.edges.common.base import Edge
 
@@ -52,13 +52,33 @@ class InclusionEdge(Edge):
     name = 'inclusion'
     xmlname = 'inclusion'
 
-    def __init__(self, **kwargs):
+    def __init__(self, complete=False, **kwargs):
         """
         Initialize the Inclusion edge.
+        :param complete: whether the edge is complete or not.
         """
         super().__init__(**kwargs)
-        self.complete = False
+        self._complete = complete
         self.tail = QPolygonF()
+
+    ################################################## PROPERTIES ######################################################
+
+    @property
+    def complete(self):
+        """
+        Tells whether this edge is complete.
+        :return: True if the edge is complete, False otherwise.
+        :rtype: bool
+        """
+        return self._complete
+
+    @complete.setter
+    def complete(self, complete):
+        """
+        Set the complete attribute for this edge.
+        :param complete: the complete value.
+        """
+        self._complete = bool(complete)
 
     ################################################# ITEM INTERFACE ###################################################
 
@@ -78,7 +98,7 @@ class InclusionEdge(Edge):
             menu.addAction(scene.actionItemDelete)
             menu.addSeparator()
             menu.addAction(scene.actionToggleEdgeComplete)
-            scene.actionToggleEdgeComplete.setChecked(self.isComplete())
+            scene.actionToggleEdgeComplete.setChecked(self.complete)
         return menu
 
     def copy(self, scene):
@@ -86,36 +106,18 @@ class InclusionEdge(Edge):
         Create a copy of the current edge.
         :param scene: a reference to the scene where this item is being copied.
         """
-        edge = super().copy(scene)
-        edge.setComplete(self.isComplete())
-        return edge
+        kwargs = {
+            'scene': scene,
+            'id': self.id,
+            'source': self.source,
+            'target': self.target,
+            'breakpoints': self.breakpoints[:],
+            'complete': self.complete,
+        }
 
-    def isComplete(self):
-        """
-        Tells whether this edge is complete (same as querying the complete attribute).
-        :return: True if the edge is complete, False otherwise.
-        :rtype: bool
-        """
-        return self.complete
-
-    def setComplete(self, complete):
-        """
-        Set the complete attribute for this edge.
-        :param complete: the complete value.
-        """
-        self.complete = bool(complete)
+        return self.__class__(**kwargs)
 
     ############################################# ITEM IMPORT / EXPORT #################################################
-
-    def toGraphol(self, document):
-        """
-        Export the current item in Graphol format.
-        :param document: the XML document where this item will be inserted.
-        :rtype: QDomElement
-        """
-        edge = super().toGraphol(document)
-        edge.setAttribute('complete', int(self.isComplete()))
-        return edge
 
     @classmethod
     def fromGraphol(cls, scene, E):
@@ -126,19 +128,64 @@ class InclusionEdge(Edge):
         :raise ParseError: in case it's not possible to generate the node using the given element.
         :rtype: Edge
         """
-        edge = super().fromGraphol(scene, E)
-        edge.complete = bool(int(E.attribute('complete', '0')))
-        edge.updateEdge()
+        try:
+
+            points = []
+            # extract all the breakpoints from the edge children
+            children = E.elementsByTagName('line:point')
+            for i in range(0, children.count()):
+                P = children.at(i).toElement()
+                point = QPointF(int(P.attribute('x')), int(P.attribute('y')))
+                points.append(point)
+
+            kwargs = {
+                'scene': scene,
+                'id': E.attribute('id'),
+                'source': scene.node(E.attribute('source')),
+                'target': scene.node(E.attribute('target')),
+                'breakpoints': points[1:-1],
+                'complete': bool(int(E.attribute('complete', '0'))),
+            }
+
+            edge = cls(**kwargs)
+            edge.source.setAnchor(edge, points[0])
+            edge.target.setAnchor(edge, points[-1])
+            edge.updateEdge()
+
+            # map the edge over the source and target nodes
+            edge.source.edges.append(edge)
+            edge.target.edges.append(edge)
+
+        except Exception as e:
+            raise ParseError('could not create {0} instance from Graphol node: {1}'.format(cls.__name__, e))
+        else:
+            return edge
+
+    def toGraphol(self, document):
+        """
+        Export the current item in Graphol format.
+        :param document: the XML document where this item will be inserted.
+        :rtype: QDomElement
+        """
+        ## ROOT ELEMENT
+        edge = document.createElement('edge')
+        edge.setAttribute('source', self.source.id)
+        edge.setAttribute('target', self.target.id)
+        edge.setAttribute('id', self.id)
+        edge.setAttribute('type', self.xmlname)
+        edge.setAttribute('complete', int(self.complete))
+
+        ## LINE GEOMETRY
+        source = self.source.anchor(self)
+        target = self.target.anchor(self)
+
+        for p in [source] + self.breakpoints + [target]:
+            point = document.createElement('line:point')
+            point.setAttribute('x', p.x())
+            point.setAttribute('y', p.y())
+            edge.appendChild(point)
+
         return edge
-
-    ################################################ ACTION HANDLERS ###################################################
-
-    def doToggleCompletness(self):
-        """
-        Toggle the complete attribute for this edge.
-        """
-        scene = self.scene()
-        scene.undoStack.push(CommandEdgeInclusionToggleComplete(scene=scene, edge=self, complete=not self.complete))
 
     ##################################################### GEOMETRY #####################################################
 
