@@ -710,7 +710,7 @@ class MainWindow(QMainWindow):
     @pyqtSlot(bool)
     def onUndoGroupCleanChanged(self, clean):
         """
-        Executed when the clean state of the active undo stack changes.
+        Executed when the clean state of the active undoStack changes.
         :param clean: the clean state.
         """
         self.actionSaveDocument.setEnabled(not clean)

@@ -55,10 +55,10 @@ class Label(QGraphicsTextItem):
         """
         super().__init__(parent)
 
-        self.centered = centered
-        self.default = default
-        self.editable = editable
-        self.movable = movable
+        self._centered = centered
+        self._defaultText = default
+        self._editable = editable
+        self._movable = movable
 
         self.commandEdit = None
         self.commandMove = None
@@ -68,9 +68,70 @@ class Label(QGraphicsTextItem):
         self.setFlag(QGraphicsItem.ItemIsFocusable, self.editable)
         self.setDefaultTextColor(QColor(0, 0, 0, 255))
         self.setFont(Font('Arial', 12, Font.Light))
-        self.setText(self.default)
+        self.setText(self.defaultText)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
         self.setPos(self.defaultPos())
+    
+    ################################################## PROPERTIES ######################################################
+ 
+    @property
+    def centered(self):
+        """
+        Tells whether the label is centered in parent item by default.
+        :rtype: bool
+        """
+        return self._centered
+
+    @property
+    def defaultText(self):
+        """
+        Returns the label default text.
+        :rtype: str
+        """
+        return self._defaultText
+ 
+    @property
+    def editable(self):
+        """
+        Tells whether the label is movable
+        :rtype: bool
+        """
+        return self._editable
+
+    @editable.setter
+    def editable(self, editable):
+        """
+        Set the editable status of the Label.
+        :param editable: whether or not the Label should be editable.
+        """
+        self._editable = bool(editable)
+        self.setFlag(QGraphicsItem.ItemIsFocusable, self._editable)
+
+    @property
+    def movable(self):
+        """
+        Tells whether the label is movable
+        :rtype: bool
+        """
+        return self._movable
+
+    @movable.setter
+    def movable(self, movable):
+        """
+        Set the movable status of the Label.
+        :param movable: whether or not the Label should be movable.
+        """
+        self._movable = bool(movable)
+        self.setFlag(QGraphicsItem.ItemIsMovable, self._movable)
+        self.setFlag(QGraphicsItem.ItemIsSelectable, self._movable)
+
+    @property
+    def moved(self):
+        """
+        Tells whether the label has been moved from its default position.
+        :return: bool
+        """
+        return distanceP(self.pos(), self.defaultPos()) > 1.41421356237 # sqrt(2) => max distance in 1px
 
     ################################################ ITEM INTERFACE ####################################################
 
@@ -87,7 +148,7 @@ class Label(QGraphicsTextItem):
         :rtype: list
         """
         collection = []
-        if self.isMovable() and self.isMoved():
+        if self.movable and self.moved:
             parent = self.parentItem()
             action = QAction('Reset label position', parent.scene())
             action.setIcon(QIcon(':/icons/refresh'))
@@ -102,7 +163,7 @@ class Label(QGraphicsTextItem):
         """
         parent = self.parentItem()
         pos = parent.center()
-        if not self.isCentered():
+        if not self.centered:
             pos.setY(pos.y() - parent.height() / 2 - 12)
         return pos
 
@@ -113,57 +174,12 @@ class Label(QGraphicsTextItem):
         """
         return self.boundingRect().height()
 
-    def isCentered(self):
-        """
-        Tells whether the label is centered in parent item by default (same as querying the centered attribute).
-        :rtype: bool
-        """
-        return self.centered
-
-    def isEditable(self):
-        """
-        Tells whether the label is editable (same as querying the editable attribute).
-        :rtype: bool
-        """
-        return self.editable
-
-    def isMovable(self):
-        """
-        Tells whether the label is movable (same as querying the movable attribute).
-        :rtype: bool
-        """
-        return self.movable
-
-    def isMoved(self):
-        """
-        Tells whether the label has been moved from its default position.
-        :return: bool
-        """
-        return distanceP(self.pos(), self.defaultPos()) > 1.41421356237 # sqrt(2) => max distance in 1px
-
     def pos(self):
         """
         Returns the position of the label in parent's item coordinates.
         :rtype: QPointF
         """
         return self.mapToParent(self.center())
-
-    def setEditable(self, editable):
-        """
-        Set the editable status of the Label.
-        :param editable: whether or not the Label should be editable.
-        """
-        self.editable = bool(editable)
-        self.setFlag(QGraphicsItem.ItemIsFocusable, self.editable)
-
-    def setMovable(self, movable):
-        """
-        Set the movable status of the Label.
-        :param movable: whether or not the Label should be movable.
-        """
-        self.movable = bool(movable)
-        self.setFlag(QGraphicsItem.ItemIsMovable, self.movable)
-        self.setFlag(QGraphicsItem.ItemIsSelectable, self.movable)
 
     def setPos(self, *__args):
         """
@@ -184,7 +200,7 @@ class Label(QGraphicsTextItem):
         Set the given text as plain text.
         :param text: the text value to set.
         """
-        moved = self.isMoved()
+        moved = self.moved
         self.setPlainText(text)
         self.updatePos(moved)
 
@@ -261,7 +277,7 @@ class Label(QGraphicsTextItem):
         Executed when the mouse move over the text area (NOT PRESSED).
         :param moveEvent: the move event instance.
         """
-        if self.isEditable() and self.hasFocus():
+        if self.editable and self.hasFocus():
             self.setCursor(Qt.IBeamCursor)
             super().hoverMoveEvent(moveEvent)
 
@@ -278,7 +294,7 @@ class Label(QGraphicsTextItem):
         Executed when a key is pressed.
         :param keyEvent: the key press event.
         """
-        moved = self.isMoved()
+        moved = self.moved
         if keyEvent.key() in {Qt.Key_Enter, Qt.Key_Return}:
             # enter has been pressed: allow insertion of a newline
             # character only if the shift modifier is being held
@@ -297,7 +313,7 @@ class Label(QGraphicsTextItem):
         Executed when the mouse is double clicked on the text item.
         :param mouseEvent: the mouse event instance.
         """
-        if self.isEditable():
+        if self.editable:
             super().mouseDoubleClickEvent(mouseEvent)
             self.setTextInteractionFlags(Qt.TextEditorInteraction)
             self.setFocus()
@@ -382,7 +398,7 @@ class Label(QGraphicsTextItem):
         """
         Reset the text position to the default value.
         """
-        if self.isMovable():
+        if self.movable:
             scene = self.scene()
             command = CommandNodeLabelMove(scene=scene, node=self.parentItem(), label=self)
             command.end(pos=self.defaultPos())

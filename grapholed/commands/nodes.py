@@ -109,7 +109,7 @@ class CommandNodeRezize(QUndoCommand):
         self.data1 = {
             'shape': QRectF(self.node.rect) if hasattr(self.node, 'rect') else QPolygonF(self.node.polygon),
             'anchors': {edge: pos for edge, pos in self.node.anchors.items()},
-            'label': {'moved': self.node.label.isMoved()}
+            'label': {'moved': self.node.label.moved}
         }
 
     def end(self):
@@ -119,7 +119,7 @@ class CommandNodeRezize(QUndoCommand):
         self.data2 = {
             'shape': QRectF(self.node.rect) if hasattr(self.node, 'rect') else QPolygonF(self.node.polygon),
             'anchors': {edge: pos for edge, pos in self.node.anchors.items()},
-            'label': {'moved': self.node.label.isMoved()}
+            'label': {'moved': self.node.label.moved}
         }
 
     def redo(self):
@@ -505,3 +505,49 @@ class CommandNodeSetDescription(QUndoCommand):
     def undo(self):
         """undo the command"""
         self.node.description = self.description1
+
+
+class CommandConceptNodeSetSpecial(QUndoCommand):
+    """
+    This command is used to change the special attribute of Concept nodes.
+    """
+    def __init__(self, scene, node, special):
+        """
+        Initilize the command.
+        :param scene: the scene where this command is being performed.
+        :param node: the node whose special attribute is changing.
+        :param special: the special value.
+        """
+        self.node = node
+        self.scene = scene
+
+        if not special:
+            # remove special: TOP|BOTTOM -> None
+            self.data1 = {'special': node.special, 'text': node.special.value, 'pos': node.label.defaultPos()}
+            self.data2 = {'special': None, 'text': node.label.defaultText, 'pos': node.label.defaultPos()}
+            super().__init__('remove {0} from {1} node'.format(node.special.value, node.name))
+        else:
+            if node.special:
+                # change special TOP <-> BOTTOM
+                self.data1 = {'special': node.special, 'text': node.special.value, 'pos': node.label.defaultPos()}
+                self.data2 = {'special': special, 'text': special.value, 'pos': node.label.defaultPos()}
+                super().__init__('change {0} node from {1} to {2}'.format(node.name, node.special.value, special.value))
+            else:
+                # set as special: None -> TOP|BOTTOM
+                self.data1 = {'special': None, 'text': node.label.text(), 'pos': node.label.pos()}
+                self.data2 = {'special': special, 'text': special.value, 'pos': node.label.defaultPos()}
+                super().__init__('set {0} node as {1}'.format(node.name, special.value))
+
+    def redo(self):
+        """redo the command"""
+        self.node.special = self.data2['special']
+        self.node.setLabelText(self.data2['text'])
+        self.node.setLabelPos(self.data2['pos'])
+        self.scene.updated.emit()
+
+    def undo(self):
+        """redo the command"""
+        self.node.special = self.data1['special']
+        self.node.setLabelText(self.data1['text'])
+        self.node.setLabelPos(self.data1['pos'])
+        self.scene.updated.emit()

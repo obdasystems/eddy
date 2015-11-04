@@ -30,6 +30,7 @@
     <file alias="save">images/icons/save.png</file>
     <file alias="select-all">images/icons/select-all.png</file>
     <file alias="send-to-back">images/icons/send-to-back.png</file>
+    <file alias="star-filled">images/icons/star-filled.png</file>
     <file alias="undo">images/icons/undo.png</file>
     <file alias="warning">images/icons/warning.png</file>
     <file alias="zoom">images/icons/zoom.png</file>

@@ -32,14 +32,16 @@
 ##########################################################################
 
 
-from grapholed.datatypes import Font, ItemType
+from grapholed.commands import CommandConceptNodeSetSpecial
+from grapholed.datatypes import Font, ItemType, SpecialConceptType
 from grapholed.exceptions import ParseError
-from grapholed.functions import snapToGrid
+from grapholed.functions import snapToGrid, connect
 from grapholed.items.nodes.common.base import ResizableNode
 from grapholed.items.nodes.common.label import Label
 
-from PyQt5.QtCore import QRectF, QPointF, Qt
-from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QColor, QPen
+from PyQt5.QtCore import QRectF, QPointF, Qt, pyqtSlot
+from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QColor, QPen, QIcon
+from PyQt5.QtWidgets import QAction
 
 
 class ConceptNode(ResizableNode):
@@ -52,17 +54,41 @@ class ConceptNode(ResizableNode):
     name = 'concept'
     xmlname = 'concept'
 
-    def __init__(self, width=minWidth, height=minHeight, **kwargs):
+    def __init__(self, width=minWidth, height=minHeight, special=None, **kwargs):
         """
         Initialize the Concept node.
         :param width: the shape width.
         :param height: the shape height.
+        :param special: the special type of this Concept node (if None).
         """
         super().__init__(**kwargs)
+
+        self._special = special
+
         self.rect = self.createRect(max(width, self.minWidth), max(height, self.minHeight))
-        self.label = Label(self.name, parent=self)
+        self.label = Label(self.name, movable=special is None, editable=special is None, parent=self)
         self.updateHandlesPos()
         self.updateLabelPos()
+
+    ################################################## PROPERTIES ######################################################
+
+    @property
+    def special(self):
+        """
+        Returns the special type of this Concept node.
+        :rtype: SpecialConceptType
+        """
+        return self._special
+
+    @special.setter
+    def special(self, special):
+        """
+        Set the special type of this Concept node.
+        :param special: the special type.
+        """
+        self._special = special
+        self.label.editable = self._special is None
+        self.label.movable = self._special is None
 
     ################################################ ITEM INTERFACE ####################################################
 
@@ -71,32 +97,48 @@ class ConceptNode(ResizableNode):
         Returns the basic nodes context menu.
         :rtype: QMenu
         """
+        scene = self.scene()
         menu = super().contextMenu()
 
-        collection = self.label.contextMenuAdd()
-        if collection:
-            menu.addSeparator()
-            for action in collection:
-                menu.addAction(action)
+        menu.addSeparator()
+        subMenu = menu.addMenu('Special type')
+        subMenu.setIcon(QIcon(':/icons/star-filled'))
+
+        for special in SpecialConceptType:
+            action = QAction(special.value, scene)
+            action.setCheckable(True)
+            action.setChecked(special is self.special)
+            connect(action.triggered, self.setSpecialType, special=special)
+            subMenu.addAction(action)
+
+        if not self.special:
+            collection = self.label.contextMenuAdd()
+            if collection:
+                menu.addSeparator()
+                for action in collection:
+                    menu.addAction(action)
 
         return menu
 
     def copy(self, scene):
         """
-        Create a copy of the current item .
+        Create a copy of the current item.
         :param scene: a reference to the scene where this item is being copied from.
         """
-        node = self.__class__(scene=scene,
-                              id=self.id,
-                              description=self.description,
-                              url=self.url,
-                              width=self.width(),
-                              height=self.height())
+        kwargs = {
+            'scene': scene,
+            'id': self.id,
+            'description': self.description,
+            'url': self.url,
+            'width': self.width(),
+            'height': self.height(),
+            'special': self.special
+        }
 
+        node = self.__class__(**kwargs)
         node.setPos(self.pos())
         node.setLabelText(self.labelText())
         node.setLabelPos(node.mapFromScene(self.mapToScene(self.labelPos())))
-
         return node
 
     def height(self):
@@ -113,6 +155,17 @@ class ConceptNode(ResizableNode):
         """
         return self.rect.width()
 
+    ################################################ ACTION HANDLERS ###################################################
+
+    @pyqtSlot()
+    def setSpecialType(self, special):
+        """
+        Switch the node special type.
+        :param special: the special type (may be None)
+        """
+        scene = self.scene()
+        scene.undoStack.push(CommandConceptNodeSetSpecial(scene, self, None if special is self.special else special))
+
     ############################################### AUXILIARY METHODS ##################################################
 
     @staticmethod
@@ -126,6 +179,42 @@ class ConceptNode(ResizableNode):
         return QRectF(-shape_w / 2, -shape_h / 2, shape_w, shape_h)
 
     ############################################# ITEM IMPORT / EXPORT #################################################
+
+    @classmethod
+    def fromGraphol(cls, scene, E):
+        """
+        Create a new item instance by parsing a Graphol document item entry.
+        :param scene: the scene where the element will be inserted.
+        :param E: the Graphol document element entry.
+        :raise ParseError: in case it's not possible to generate the node using the given element.
+        :rtype: Node
+        """
+        try:
+
+            U = E.elementsByTagName('data:url').at(0).toElement()
+            D = E.elementsByTagName('data:description').at(0).toElement()
+            G = E.elementsByTagName('shape:geometry').at(0).toElement()
+            L = E.elementsByTagName('shape:label').at(0).toElement()
+
+            kwargs = {
+                'scene': scene,
+                'id': E.attribute('id'),
+                'description': D.text(),
+                'url': U.text(),
+                'width': int(G.attribute('width')),
+                'height': int(G.attribute('height')),
+                'special': SpecialConceptType.forValue(L.text())
+            }
+
+            node = cls(**kwargs)
+            node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
+            node.setLabelText(L.text())
+            node.setLabelPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
+
+        except Exception as e:
+            raise ParseError('could not create {0} instance from Graphol node: {1}'.format(cls.__name__, e))
+        else:
+            return node
 
     def toGraphol(self, document):
         """
@@ -169,36 +258,6 @@ class ConceptNode(ResizableNode):
 
         return node
 
-    @classmethod
-    def fromGraphol(cls, scene, E):
-        """
-        Create a new item instance by parsing a Graphol document item entry.
-        :param scene: the scene where the element will be inserted.
-        :param E: the Graphol document element entry.
-        :raise ParseError: in case it's not possible to generate the node using the given element.
-        :rtype: Node
-        """
-        try:
-
-            U = E.elementsByTagName('data:url').at(0).toElement()
-            D = E.elementsByTagName('data:description').at(0).toElement()
-            G = E.elementsByTagName('shape:geometry').at(0).toElement()
-            L = E.elementsByTagName('shape:label').at(0).toElement()
-
-            nid = E.attribute('id')
-            w = int(G.attribute('width'))
-            h = int(G.attribute('height'))
-
-            node = cls(scene=scene, id=nid, url=U.text(), description=D.text(), width=w, height=h)
-            node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
-            node.setLabelText(L.text())
-            node.setLabelPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
-
-        except Exception as e:
-            raise ParseError('could not create {0} instance from Graphol node: {1}'.format(cls.__name__, e))
-        else:
-            return node
-
     #################################################### GEOMETRY ######################################################
 
     def boundingRect(self):
@@ -215,7 +274,7 @@ class ConceptNode(ResizableNode):
         :param mousePos: the current mouse position.
         """
         offset = self.handleSize + self.handleSpace
-        moved = self.label.isMoved()
+        moved = self.label.moved
         scene = self.scene()
         snap = scene.settings.value('scene/snap_to_grid', False, bool)
         rect = self.boundingRect()

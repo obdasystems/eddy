@@ -239,6 +239,37 @@ class ItemType(IntEnum):
 
 
 @unique
+class SpecialConceptType(Enum):
+    """
+    This class defines special Concept nodes types.
+    """
+    __order__ = 'TOP BOTTOM'
+
+    TOP = 'TOP'
+    BOTTOM = 'BOTTOM'
+
+    @classmethod
+    def forValue(cls, value):
+        """
+        Returns the SpecialConceptType matching the given value.
+        :param value: the value to match.
+        :rtype: SpecialConceptType
+        """
+        for x in cls:
+            if x.value == value.upper().strip():
+                return x
+        return None
+
+    @DynamicClassAttribute
+    def owl(self):
+        """Returns the Owl corrispective of the special Concept node type."""
+        return {
+            SpecialConceptType.TOP: 'owl:Thing',
+            SpecialConceptType.BOTTOM: 'owl:Nothing',
+        }[self]
+
+
+@unique
 class RestrictionType(Enum):
     """
     This class defines all the available restrictions for the Domain and Range restriction nodes.

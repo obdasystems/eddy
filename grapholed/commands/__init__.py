@@ -43,6 +43,7 @@ from grapholed.commands.nodes import CommandNodeHexagonSwitchTo
 from grapholed.commands.nodes import CommandNodeSquareChangeRestriction
 from grapholed.commands.nodes import CommandNodeSetURL
 from grapholed.commands.nodes import CommandNodeSetDescription
+from grapholed.commands.nodes import CommandConceptNodeSetSpecial
 
 from grapholed.commands.edges import CommandEdgeAdd
 from grapholed.commands.edges import CommandEdgeAnchorMove
