@@ -50,7 +50,7 @@ class ValueDomainNode(Node):
     """
     itemtype = ItemType.ValueDomainNode
     minHeight = 40
-    minWidth = 100
+    minWidth = 90
     name = 'value domain'
     padding = 16
     radius = 8
