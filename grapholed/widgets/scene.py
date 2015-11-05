@@ -291,12 +291,11 @@ class DiagramScene(QGraphicsScene):
         self.setMode(DiagramMode.Idle)
         action = self.sender()
         if action:
-            node = next(filter(lambda x: x.isType(ItemType.DomainRestrictionNode) or \
-                                      x.isType(ItemType.RangeRestrictionNode), self.selectedNodes()), None)
+            node = next(filter(lambda x: x.isType(ItemType.DomainRestrictionNode,
+                                                  ItemType.RangeRestrictionNode), self.selectedNodes()), None)
             if node:
                 restriction = action.data()
                 if restriction == RestrictionType.cardinality:
-                    # bring up the cardinality restriction form
                     dialog = CardinalityRestrictionForm()
                     if dialog.exec_() == CardinalityRestrictionForm.Accepted:
                         cardinality = dict(min=dialog.minCardinalityValue, max=dialog.maxCardinalityValue)
@@ -675,7 +674,7 @@ class DiagramScene(QGraphicsScene):
     @pyqtSlot('QGraphicsItem', int)
     def onEdgeInserted(self, edge, modifiers):
         """
-        Triggered after a edge insertion process ends.
+        Executed after a edge insertion process ends.
         :param edge: the inserted edge.
         :param modifiers: keyboard modifiers held during edge insertion.
         """
@@ -686,7 +685,7 @@ class DiagramScene(QGraphicsScene):
     @pyqtSlot('QGraphicsItem', int)
     def onNodeInserted(self, node, modifiers):
         """
-        Triggered after a node insertion process ends.
+        Executed after a node insertion process ends.
         :param node: the inserted node.
         :param modifiers: keyboard modifiers held during node insertion.
         """
