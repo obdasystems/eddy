@@ -66,6 +66,7 @@ class ConceptNode(ResizableNode):
 
         self.rect = self.createRect(max(width, self.minWidth), max(height, self.minHeight))
         self.label = Label(self.name, movable=special is None, editable=special is None, parent=self)
+        self.label.setText(self._special.value if self._special else self.label.text())
         self.updateHandlesPos()
         self.updateLabelPos()
 
@@ -88,6 +89,7 @@ class ConceptNode(ResizableNode):
         self._special = special
         self.label.editable = self._special is None
         self.label.movable = self._special is None
+        self.label.setText(self._special.value if self._special else self.label.defaultText)
 
     ################################################ ITEM INTERFACE ####################################################
 
