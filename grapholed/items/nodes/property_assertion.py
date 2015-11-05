@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from grapholed.datatypes import ItemType
+from grapholed.datatypes import ItemType, DistinctList
 from grapholed.exceptions import ParseError
 from grapholed.items.nodes.common.base import Node
 
@@ -58,9 +58,20 @@ class PropertyAssertionNode(Node):
         :param height: the shape height (unused in current implementation).
         """
         super().__init__(**kwargs)
+        self.inputs = DistinctList()
         self.rect = self.createRect(self.minWidth, self.minHeight)
 
     ################################################ ITEM INTERFACE ####################################################
+
+    def addEdge(self, edge):
+        """
+        Add the given edge to the current node.
+        :param edge: the edge to be added.
+        """
+        self.edges.append(edge)
+        if edge.isType(ItemType.InputEdge) and edge.target is self:
+            self.inputs.append(edge)
+            edge.updateEdge()
 
     def copy(self, scene):
         """
@@ -86,6 +97,16 @@ class PropertyAssertionNode(Node):
         :rtype: int
         """
         return self.rect.height()
+
+    def removeEdge(self, edge):
+        """
+        Remove the given edge from the current node.
+        :param edge: the edge to be removed.
+        """
+        self.edges.remove(edge)
+        self.inputs.remove(edge)
+        for edge in self.inputs:
+            edge.updateEdge()
 
     def width(self):
         """

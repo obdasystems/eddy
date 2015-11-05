@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from grapholed.datatypes import Font, ItemType
+from grapholed.datatypes import Font, ItemType, DistinctList
 from grapholed.exceptions import ParseError
 from grapholed.items.nodes.common.hexagon import HexagonNode
 from grapholed.items.nodes.common.label import Label
@@ -54,10 +54,21 @@ class RoleChainNode(HexagonNode):
         Initialize the Role Chain node.
         """
         super().__init__(brush=(252, 252, 252), **kwargs)
+        self.inputs = DistinctList()
         self.label = Label('chain', movable=False, editable=False, parent=self)
         self.label.updatePos()
 
     ################################################ ITEM INTERFACE ####################################################
+
+    def addEdge(self, edge):
+        """
+        Add the given edge to the current node.
+        :param edge: the edge to be added.
+        """
+        self.edges.append(edge)
+        if edge.isType(ItemType.InputEdge) and edge.target is self:
+            self.inputs.append(edge)
+            edge.updateEdge()
 
     def copy(self, scene):
         """
@@ -78,6 +89,16 @@ class RoleChainNode(HexagonNode):
         node.setLabelText(self.labelText())
         node.setLabelPos(node.mapFromScene(self.mapToScene(self.labelPos())))
         return node
+
+    def removeEdge(self, edge):
+        """
+        Remove the given edge from the current node.
+        :param edge: the edge to be removed.
+        """
+        self.edges.remove(edge)
+        self.inputs.remove(edge)
+        for edge in self.inputs:
+            edge.updateEdge()
 
     ############################################# ITEM IMPORT / EXPORT #################################################
 

@@ -36,8 +36,9 @@ from math import sin, cos, radians, pi as M_PI
 
 from grapholed.datatypes import DiagramMode, ItemType
 from grapholed.exceptions import ParseError
-from grapholed.functions import connect
+from grapholed.functions import connect, isEmpty
 from grapholed.items.edges.common.base import Edge
+from grapholed.items.edges.common.label import Label
 
 from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QIcon, QPainterPath
@@ -64,6 +65,7 @@ class InputEdge(Edge):
         """
         super().__init__(**kwargs)
         self._functional = functional
+        self.label = Label('', centered=False, parent=self)
         self.tail = QLineF()
 
     ################################################## PROPERTIES ######################################################
@@ -122,6 +124,18 @@ class InputEdge(Edge):
         }
 
         return self.__class__(**kwargs)
+
+    def updateLabel(self, points):
+        """
+        Update the edge label (both text and position).
+        :param points: a list of points defining the edge of this label.
+        """
+        if self.target and self.target.isType(ItemType.PropertyAssertionNode, ItemType.RoleChainNode):
+            self.label.setVisible(True)
+            self.label.setText(str(self.target.inputs.index(self) + 1))
+            self.label.updatePos(points)
+        else:
+            self.label.setVisible(False)
 
     ############################################# ITEM IMPORT / EXPORT #################################################
 
@@ -319,6 +333,10 @@ class InputEdge(Edge):
         self.path = QPainterPath()
         self.selection = QPainterPath()
 
+        points = [] # will store all the points defining the edge not to recompute the path to update the label
+        append = points.append  # keep this shortcut and the one below since it saves a lot of computation
+        extend = points.extend  # more: http://blog.cdleary.com/2010/04/efficiency-of-list-comprehensions/
+
         if len(collection) == 0:
 
             self.head = QPolygonF()
@@ -336,6 +354,7 @@ class InputEdge(Edge):
                 self.head = createHead(p2, subpath.angle(), headSize)
                 if self.functional:
                     self.tail = createTail(p1, subpath.angle(), headSize)
+                extend((p1, p2))
 
         elif len(collection) > 1:
 
@@ -352,6 +371,7 @@ class InputEdge(Edge):
                 self.path.moveTo(p11)
                 self.path.lineTo(p12)
                 self.selection.addPolygon(createSelectionBox(p11, p12, subpath1.angle(), boxSize))
+                extend((p11, p12))
 
                 for subpath in collection[1:-1]:
                     p1 = subpath.p1()
@@ -359,16 +379,19 @@ class InputEdge(Edge):
                     self.path.moveTo(p1)
                     self.path.lineTo(p2)
                     self.selection.addPolygon(createSelectionBox(p1, p2, subpath.angle(), boxSize))
+                    append(p2)
 
                 self.path.moveTo(p21)
                 self.path.lineTo(p22)
                 self.selection.addPolygon(createSelectionBox(p21, p22, subpathN.angle(), boxSize))
+                append(p22)
 
                 self.head = createHead(p22, subpathN.angle(), headSize)
                 if self.functional:
                     self.tail = createTail(p11, subpath1.angle(), headSize)
 
         self.updateZValue()
+        self.updateLabel(points)
         self.update()
 
     ################################################## ITEM DRAWING ####################################################

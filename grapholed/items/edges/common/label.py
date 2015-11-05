@@ -33,8 +33,10 @@
 
 
 from math import sin, cos, pi as M_PI
+
 from grapholed.datatypes import Font
 from grapholed.functions import midpoint, angleP
+
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QColor, QPainterPath
 from PyQt5.QtWidgets import QGraphicsTextItem
@@ -44,17 +46,31 @@ class Label(QGraphicsTextItem):
     """
     This class implements the label to be attached to the graph edges.
     """
-    def __init__(self, text='', parent=None):
+    def __init__(self, text='', centered=True, parent=None):
         """
         Initialize the label.
         :param text: the text to be rendered on the label.
+        :param centered: whether the text should be rendered in the middle of the edge or not.
         :param parent: the parent node.
         """
         super().__init__(parent)
+
+        self._centered = centered
+
         self.setDefaultTextColor(QColor(0, 0, 0, 255))
         self.setFont(Font('Arial', 12, Font.Light))
         self.setText(text)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
+
+    ################################################## PROPERTIES ######################################################
+
+    @property
+    def centered(self):
+        """
+        Tells whether the label should be rendered in the middle of the edge or not.
+        :rtype: bool
+        """
+        return self._centered
 
     ################################################### GEOMETRY #######################################################
 
@@ -119,40 +135,55 @@ class Label(QGraphicsTextItem):
         if not points:
             return
 
-        if len(points) % 2 == 0:
+        if self.centered:
 
-            # if we have an even number of points, compute the position of the label
-            # according to the middle point of the subpath connecting the middle points
-            p1 = points[int(len(points) / 2) - 1]
-            p2 = points[int(len(points) / 2)]
+            # here the label should be centered in the edge path => we need to compute 2 different positions:
+            #   1. when the edge path is composed of an even number of points (odd subpaths)
+            #   2. when the edge path is composed of an odd number of points (even subpaths)
 
-            mid = midpoint(p1, p2)
-            rad = angleP(p1, p2)
+            if len(points) % 2 == 0:
 
-            spaceX = -40
-            spaceY = -16
+                # if we have an even number of points, compute the position of the label
+                # according to the middle point of the subpath connecting the middle points
+                p1 = points[int(len(points) / 2) - 1]
+                p2 = points[int(len(points) / 2)]
 
-            self.setPos(QPointF(mid.x() + spaceX * sin(rad), mid.y() + spaceY * cos(rad)))
+                mid = midpoint(p1, p2)
+                rad = angleP(p1, p2)
+
+                spaceX = -40
+                spaceY = -16
+
+                self.setPos(QPointF(mid.x() + spaceX * sin(rad), mid.y() + spaceY * cos(rad)))
+
+            else:
+
+                # if we have an even number of points compute the
+                # position of the label according the point in the middle
+                mid = points[int(len(points) / 2)]
+                rad1 = angleP(points[int(len(points) / 2) - 1], mid)
+                rad2 = angleP(mid, points[int(len(points) / 2) + 1])
+                diff = rad2 - rad1
+
+                spaceX1 = 0
+                spaceX2 = 0
+                spaceY = -16
+
+                if 0 < diff < M_PI:
+                    spaceX1 = -80 * sin(rad1)
+                    spaceX2 = -80 * sin(rad2)
+                    spaceY += spaceY * sin(diff) * 1.8
+
+                self.setPos(QPointF(mid.x() + spaceX1 + spaceX2, mid.y() + spaceY))
 
         else:
 
-            # if we have an even number of points compute the
-            # position of the label according the point in the middle
-            mid = points[int(len(points) / 2)]
-            rad1 = angleP(points[int(len(points) / 2) - 1], mid)
-            rad2 = angleP(mid, points[int(len(points) / 2) + 1])
-            diff = rad2 - rad1
-
-            spaceX1 = 0
-            spaceX2 = 0
-            spaceY = -16
-
-            if 0 < diff < M_PI:
-                spaceX1 = -80 * sin(rad1)
-                spaceX2 = -80 * sin(rad2)
-                spaceY += spaceY * sin(diff) * 1.8
-
-            self.setPos(QPointF(mid.x() + spaceX1 + spaceX2, mid.y() + spaceY))
+            # here instead we will place the label near the intersection with the target shape: this is mostly
+            # used for input edges connecting role chain nodes and property assertion nodes, so we can inspect
+            # visually the partecipation order of connected nodes without having to scroll the diagram (if it's big)
+            rad = angleP(points[-2], points[-1])
+            pos = points[-1] - QPointF(sin(rad + M_PI / 3.0) * 20, cos(rad + M_PI / 3.0) * 20)
+            self.setPos(pos)
 
     def width(self):
         """

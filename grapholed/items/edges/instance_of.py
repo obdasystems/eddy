@@ -58,7 +58,7 @@ class InstanceOfEdge(Edge):
         Initialize the InstanceOf edge.
         """
         super().__init__(**kwargs)
-        self.label = Label('instanceOf', self)
+        self.label = Label('instanceOf', centered=True, parent=self)
 
     ################################################# ITEM INTERFACE ###################################################
 
