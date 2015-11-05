@@ -193,6 +193,7 @@ class DiagramScene(QGraphicsScene):
         connect(self.actionComposeAsymmetricRole.triggered, self.composeAsymmetricRole)
         connect(self.actionComposeIrreflexiveRole.triggered, self.composeIrreflexiveRole)
         connect(self.actionComposeReflexiveRole.triggered, self.composeReflexiveRole)
+        connect(self.actionComposeSymmetricRole.triggered, self.composeSymmetricRole)
 
         ## DOMAIN / RANGE RESTRICTION
         self.actionsRestrictionChange = []
@@ -306,7 +307,7 @@ class DiagramScene(QGraphicsScene):
     @pyqtSlot()
     def composeAsymmetricRole(self):
         """
-        Compose a symmetric role using the selected Role node.
+        Compose an asymmetric role using the selected Role node.
         """
         self.setMode(DiagramMode.Idle)
         action = self.sender()
@@ -419,6 +420,42 @@ class DiagramScene(QGraphicsScene):
 
                 # push the composition on the stack as a single action
                 self.undoStack.push(CommandComposeReflexiveRole(**kwargs))
+
+    @pyqtSlot()
+    def composeSymmetricRole(self):
+        """
+        Compose a symmetric role using the selected Role node.
+        """
+        self.setMode(DiagramMode.Idle)
+        action = self.sender()
+        if action:
+
+            role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
+            if role and not role.isSymmetric():
+
+                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
+                x1 = snapToGrid(role.pos().x() + role.width() / 2 + 100, DiagramScene.GridSize, snap=True)
+                y1 = snapToGrid(role.pos().y() - role.height() / 2 - 40, DiagramScene.GridSize, snap=True)
+                y2 = snapToGrid(role.pos().y() - role.height() / 2 - 80, DiagramScene.GridSize, snap=True)
+
+                inverse = RoleInverseNode(scene=self)
+                inverse.setPos(QPointF(x1, role.pos().y()))
+                edge1 = InputEdge(scene=self, source=role, target=inverse)
+                edge2 = InclusionEdge(scene=self, source=role, target=inverse, breakpoints=[
+                    QPointF(role.pos().x(), y2),
+                    QPointF(x1, y2)
+                ])
+
+                kwargs = {
+                    'scene': self,
+                    'role': role,
+                    'inverse': inverse,
+                    'edge1': edge1,
+                    'edge2': edge2,
+                }
+
+                # push the composition on the stack as a single action
+                self.undoStack.push(CommandComposeSymmetricRole(**kwargs))
 
     @pyqtSlot()
     def itemCut(self):

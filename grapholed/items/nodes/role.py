@@ -177,6 +177,22 @@ class RoleNode(ResizableNode):
                         return True
         return False
 
+    def isSymmetric(self):
+        """
+        Tells whether the Role is defined as asymmetric.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and \
+                e1.source is self and \
+                    e1.target.isType(ItemType.RoleInverseNode):
+                for e2 in e1.target.edges:
+                    if e2.isType(ItemType.InclusionEdge) and \
+                        e2.target is e1.target and \
+                            e2.source is self:
+                        return True
+        return False
+
     def width(self):
         """
         Returns the width of the shape.

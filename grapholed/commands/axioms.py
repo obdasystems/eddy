@@ -183,3 +183,49 @@ class CommandComposeReflexiveRole(QUndoCommand):
             edge.target.removeEdge(edge)
         # emit updated signal
         self.scene.updated.emit()
+
+
+class CommandComposeSymmetricRole(QUndoCommand):
+    """
+    This command is used to compose a Symmetric role starting from a Role node.
+    """
+    def __init__(self, scene, role, inverse, edge1, edge2):
+        """
+        Initialize the command.
+        :param scene: the graphic scene where this command is being performed.
+        :param role: the role node where to base the composition.
+        :param inverse: the role inverse node to use in the axiom.
+        :param edge1: the input edge connecting role node to the role inverse node.
+        :param edge2: the inclusion edge connecting the role node to the role inverse node.
+        """
+        super().__init__('create symmetric role axiom')
+        self.scene = scene
+        self.role = role
+        self.inverse = inverse
+        self.edge1 = edge1
+        self.edge2 = edge2
+
+    def redo(self):
+        """redo the command"""
+        # add items to the scene
+        for item in (self.inverse, self.edge1, self.edge2):
+            self.scene.addItem(item)
+            # map edges over source and target nodes
+        for edge in (self.edge1, self.edge2):
+            edge.source.addEdge(edge)
+            edge.target.addEdge(edge)
+            edge.updateEdge()
+        # emit updated signal
+        self.scene.updated.emit()
+
+    def undo(self):
+        """undo the command"""
+        # remove items from the scene
+        for item in (self.inverse, self.edge1, self.edge2):
+            self.scene.removeItem(item)
+        # remove edge mappings from source and target nodes
+        for edge in (self.edge1, self.edge2):
+            edge.source.removeEdge(edge)
+            edge.target.removeEdge(edge)
+        # emit updated signal
+        self.scene.updated.emit()
