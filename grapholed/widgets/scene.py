@@ -312,38 +312,78 @@ class DiagramScene(QGraphicsScene):
         if action:
 
             role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
-            if role:
+            if role and not role.isAsymmetric():
 
-                if not role.isAsymmetric():
+                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
+                x1 = snapToGrid(role.pos().x() + role.width() / 2 + 100, DiagramScene.GridSize, snap=True)
+                y1 = snapToGrid(role.pos().y() - role.height() / 2 - 40, DiagramScene.GridSize, snap=True)
+                y2 = snapToGrid(role.pos().y() - role.height() / 2 - 80, DiagramScene.GridSize, snap=True)
 
-                    # always snap the points to the grid, even if the feature is not enabled so we have items aligned
-                    x1 = snapToGrid(role.pos().x() + role.width() / 2 + 100, DiagramScene.GridSize, snap=True)
-                    y1 = snapToGrid(role.pos().y() - role.height() / 2 - 40, DiagramScene.GridSize, snap=True)
-                    y2 = snapToGrid(role.pos().y() - role.height() / 2 - 80, DiagramScene.GridSize, snap=True)
+                inverse = RoleInverseNode(scene=self)
+                inverse.setPos(QPointF(x1, role.pos().y()))
+                complement = ComplementNode(scene=self)
+                complement.setPos(QPointF(x1, y1))
+                input1 = InputEdge(scene=self, source=role, target=inverse)
+                input2 = InputEdge(scene=self, source=inverse, target=complement)
+                inclusion = InclusionEdge(scene=self, source=role, target=complement, breakpoints=[
+                    QPointF(role.pos().x(), y2),
+                    QPointF(x1, y2)
+                ])
 
-                    inverse = RoleInverseNode(scene=self)
-                    inverse.setPos(QPointF(x1, role.pos().y()))
-                    complement = ComplementNode(scene=self)
-                    complement.setPos(x1, y1)
-                    input1 = InputEdge(scene=self, source=role, target=inverse)
-                    input2 = InputEdge(scene=self, source=inverse, target=complement)
-                    inclusion = InclusionEdge(scene=self, source=role, target=complement, breakpoints=[
-                        QPointF(role.pos().x(), y2),
-                        QPointF(x1, y2)
-                    ])
+                kwargs = {
+                    'scene': self,
+                    'role': role,
+                    'inverse': inverse,
+                    'complement': complement,
+                    'input1': input1,
+                    'input2': input2,
+                    'inclusion': inclusion,
+                }
 
-                    kwargs = {
-                        'scene': self,
-                        'role': role,
-                        'inverse': inverse,
-                        'complement': complement,
-                        'input1': input1,
-                        'input2': input2,
-                        'inclusion': inclusion,
-                    }
+                # push the composition on the stack as a single action
+                self.undoStack.push(CommandComposeAsymmetricRole(**kwargs))
 
-                    # push the composition on the stack as a single action
-                    self.undoStack.push(CommandComposeAsymmetricRole(**kwargs))
+    @pyqtSlot()
+    def composeIrreflexiveRole(self):
+        """
+        Compose an irreflexive role using the selected Role node.
+        """
+        self.setMode(DiagramMode.Idle)
+        action = self.sender()
+        if action:
+
+            role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
+            if role and not role.isIrreflexive():
+
+                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
+                x1 = snapToGrid(role.pos().x() + role.width() / 2 + 40, DiagramScene.GridSize, snap=True)
+                x2 = snapToGrid(role.pos().x() + role.width() / 2 + 120, DiagramScene.GridSize, snap=True)
+                x3 = snapToGrid(role.pos().x() + role.width() / 2 + 250, DiagramScene.GridSize, snap=True)
+
+                restriction = DomainRestrictionNode(scene=self, restriction=RestrictionType.self)
+                restriction.setPos(QPointF(x1, role.pos().y()))
+                complement = ComplementNode(scene=self)
+                complement.setPos(QPointF(x2, role.pos().y()))
+                concept = ConceptNode(scene=self, special=SpecialConceptType.TOP)
+                concept.setPos(QPointF(x3, role.pos().y()))
+                input1 = InputEdge(scene=self, source=role, target=restriction)
+                input2 = InputEdge(scene=self, source=restriction, target=complement)
+                inclusion = InclusionEdge(scene=self, source=concept, target=complement)
+
+                kwargs = {
+                    'scene': self,
+                    'role': role,
+                    'restriction': restriction,
+                    'complement': complement,
+                    'concept': concept,
+                    'input1': input1,
+                    'input2': input2,
+                    'inclusion': inclusion,
+                }
+
+                # push the composition on the stack as a single action
+                self.undoStack.push(CommandComposeIrreflexiveRole(**kwargs))
+
 
     @pyqtSlot()
     def itemCut(self):

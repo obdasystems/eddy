@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from grapholed.datatypes import Font, ItemType
+from grapholed.datatypes import Font, ItemType, RestrictionType, SpecialConceptType
 from grapholed.exceptions import ParseError
 from grapholed.functions import snapToGrid
 from grapholed.items.nodes.common.base import ResizableNode
@@ -125,11 +125,38 @@ class RoleNode(ResizableNode):
         :rtype: bool
         """
         for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and e1.source is self and e1.target.isType(ItemType.RoleInverseNode):
+            if e1.isType(ItemType.InputEdge) and \
+                e1.source is self and \
+                    e1.target.isType(ItemType.RoleInverseNode):
                 for e2 in e1.target.edges:
-                    if e2.isType(ItemType.InputEdge) and e2.source is e1.target and e2.target.isType(ItemType.ComplementNode):
+                    if e2.isType(ItemType.InputEdge) and \
+                        e2.source is e1.target and \
+                            e2.target.isType(ItemType.ComplementNode):
                         for e3 in e2.target.edges:
-                            if e3.isType(ItemType.InclusionEdge) and e3.target is e2.target and e3.source is self:
+                            if e3.isType(ItemType.InclusionEdge) and \
+                                e3.target is e2.target and \
+                                    e3.source is self:
+                                return True
+        return False
+
+    def isIrreflexive(self):
+        """
+        Tells whether the Role is defined as irreflexive.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and \
+                e1.source is self and \
+                    e1.target.isType(ItemType.DomainRestrictionNode) and \
+                        e1.target.restriction is RestrictionType.self:
+                for e2 in e1.target.edges:
+                    if e2.isType(ItemType.InputEdge) and \
+                        e2.source is e1.target and \
+                            e2.target.isType(ItemType.ComplementNode):
+                        for e3 in e2.target.edges:
+                            if e3.source.isType(ItemType.ConceptNode) and \
+                                e3.source.special is SpecialConceptType.TOP and \
+                                    e3.target is e2.target:
                                 return True
         return False
 
