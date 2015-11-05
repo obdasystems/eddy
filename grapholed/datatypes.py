@@ -239,6 +239,29 @@ class ItemType(IntEnum):
 
 
 @unique
+class RestrictionType(Enum):
+    """
+    This class defines all the available restrictions for the Domain and Range restriction nodes.
+    """
+    __order__ = 'exists forall cardinality self'
+
+    exists = 'Existential: exists'
+    forall = 'Universal: forall'
+    cardinality = 'Cardinality: (min, max)'
+    self = 'Self: self'
+
+    @DynamicClassAttribute
+    def label(self):
+        """The label of the Enum member."""
+        return {
+            RestrictionType.exists: 'exists',
+            RestrictionType.forall: 'forall',
+            RestrictionType.self: 'self',
+            RestrictionType.cardinality: '({min},{max})',
+        }[self]
+
+
+@unique
 class SpecialConceptType(Enum):
     """
     This class defines special Concept nodes types.
@@ -266,29 +289,6 @@ class SpecialConceptType(Enum):
         return {
             SpecialConceptType.TOP: 'owl:Thing',
             SpecialConceptType.BOTTOM: 'owl:Nothing',
-        }[self]
-
-
-@unique
-class RestrictionType(Enum):
-    """
-    This class defines all the available restrictions for the Domain and Range restriction nodes.
-    """
-    __order__ = 'exists forall cardinality self'
-
-    exists = 'Existential: exists'
-    forall = 'Universal: forall'
-    cardinality = 'Cardinality: (min, max)'
-    self = 'Self: self'
-
-    @DynamicClassAttribute
-    def label(self):
-        """The label of the Enum member."""
-        return {
-            RestrictionType.exists: 'exists',
-            RestrictionType.forall: 'forall',
-            RestrictionType.self: 'self',
-            RestrictionType.cardinality: '({min},{max})',
         }[self]
 
 

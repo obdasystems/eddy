@@ -36,8 +36,8 @@ import os
 
 from grapholed import __appname__, __organization__
 from grapholed.commands import *
-from grapholed.datatypes import DiagramMode, ItemType, SpecialConceptType
-from grapholed.dialogs import ScenePropertiesDialog
+from grapholed.datatypes import DiagramMode, ItemType, SpecialConceptType, RestrictionType
+from grapholed.dialogs import ScenePropertiesDialog, CardinalityRestrictionForm
 from grapholed.functions import getPath, snapToGrid, rangeF, connect
 from grapholed.items import Item, RoleInverseNode, ComplementNode, InputEdge, InclusionEdge
 from grapholed.tools import UniqueID
@@ -153,8 +153,6 @@ class DiagramScene(QGraphicsScene):
 
         ################################################# ACTIONS ######################################################
 
-        self.actionToggleEdgeComplete = mainwindow.actionToggleEdgeComplete
-        self.actionToggleEdgeFunctional = mainwindow.actionToggleEdgeFunctional
         self.actionItemCut = mainwindow.actionItemCut
         self.actionItemCopy = mainwindow.actionItemCopy
         self.actionItemPaste = mainwindow.actionItemPaste
@@ -189,7 +187,21 @@ class DiagramScene(QGraphicsScene):
         self.actionComposeSymmetricRole = QAction('Symmetric Role', self)
         self.actionComposeTransitiveRole = QAction('Transitive Role', self)
 
+        ## DOMAIN / RANGE RESTRICTION
+        self.actionsRestrictionChange = []
+        for restriction in RestrictionType:
+            action = QAction(restriction.value, self)
+            action.setCheckable(True)
+            action.setData(restriction)
+            connect(action.triggered, self.changeRestriction)
+            self.actionsRestrictionChange.append(action)
+
+        ## EDGES
+        self.actionToggleEdgeComplete = mainwindow.actionToggleEdgeComplete
+        self.actionToggleEdgeFunctional = mainwindow.actionToggleEdgeFunctional
+
         connect(self.actionComposeAsymmetricRole.triggered, self.composeAsymmetricRole)
+        connect(self.actionComposeIrreflexiveRole.triggered, self.composeIrreflexiveRole)
 
         ################################################## MENUS #######################################################
 
@@ -207,6 +219,12 @@ class DiagramScene(QGraphicsScene):
         self.menuRoleNodeCompose.addAction(self.actionComposeReflexiveRole)
         self.menuRoleNodeCompose.addAction(self.actionComposeSymmetricRole)
         self.menuRoleNodeCompose.addAction(self.actionComposeTransitiveRole)
+
+        ## DOMAIN / RANGE RESTRICTION
+        self.menuRestrictionChange = QMenu('Select restriction')
+        self.menuRestrictionChange.setIcon(QIcon(':/icons/refresh'))
+        for action in self.actionsRestrictionChange:
+            self.menuRestrictionChange.addAction(action)
 
         ################################################# SIGNALS ######################################################
 
@@ -236,17 +254,38 @@ class DiagramScene(QGraphicsScene):
                 self.undoStack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
 
     @pyqtSlot()
+    def changeRestriction(self):
+        """
+        Change domain/range restriction types.
+        """
+        self.setMode(DiagramMode.Idle)
+        action = self.sender()
+        if action:
+            node = next(filter(lambda x: x.isType(ItemType.DomainRestrictionNode) or \
+                                      x.isType(ItemType.RangeRestrictionNode), self.selectedNodes()), None)
+            if node:
+                restriction = action.data()
+                if restriction == RestrictionType.cardinality:
+                    # bring up the cardinality restriction form
+                    dialog = CardinalityRestrictionForm()
+                    if dialog.exec_() == CardinalityRestrictionForm.Accepted:
+                        cardinality = dict(min=dialog.minCardinalityValue, max=dialog.maxCardinalityValue)
+                        self.undoStack.push(CommandNodeSquareChangeRestriction(self, node, restriction, cardinality))
+                else:
+                    self.undoStack.push(CommandNodeSquareChangeRestriction(self, node, action.data()))
+
+    @pyqtSlot()
     def composeAsymmetricRole(self):
         """
         Compose a symmetric role using the selected Role node.
         """
+        self.setMode(DiagramMode.Idle)
         action = self.sender()
         if action:
 
-            nodes = [node for node in self.selectedNodes() if node.isType(ItemType.RoleNode)]
-            if nodes:
+            role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
+            if role:
 
-                role = nodes[0]
                 if not role.isAsymmetric():
 
                     # always snap the points to the grid, even if the feature is not enabled so we have items aligned
@@ -439,11 +478,10 @@ class DiagramScene(QGraphicsScene):
         """
         action = self.sender()
         if action:
-            selected = [node for node in self.selectedNodes() if node.isType(ItemType.ConceptNode)]
-            if selected:
-                node = selected[0]
-                special = action.data() if node.special is not action.data() else None
-                self.undoStack.push(CommandConceptNodeSetSpecial(self, node, special))
+            concept = next(filter(lambda x: x.isType(ItemType.ConceptNode), self.selectedNodes()), None)
+            if concept:
+                special = action.data() if concept.special is not action.data() else None
+                self.undoStack.push(CommandConceptNodeSetSpecial(self, concept, special))
 
     @pyqtSlot()
     def toggleEdgeComplete(self):

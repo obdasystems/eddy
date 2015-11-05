@@ -414,11 +414,11 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
         self.restriction2 = restriction
         self.cardinality2 = dict(min=None, max=None) if not cardinality else cardinality
 
-        label = restriction.label
+        value = restriction.label
         if restriction is RestrictionType.cardinality:
-            label = label.format(min=self.s(cardinality['min']), max=self.s(cardinality['max']))
+            value = value.format(min=self.s(cardinality['min']), max=self.s(cardinality['max']))
 
-        super().__init__('change {0} to {1}'.format(node.name, label))
+        super().__init__('change {0} to {1}'.format(node.name, value))
 
     @staticmethod
     def s(x):

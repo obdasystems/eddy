@@ -36,17 +36,13 @@ import re
 
 from abc import ABCMeta, abstractmethod
 
-from grapholed.commands import CommandNodeSquareChangeRestriction
 from grapholed.datatypes import RestrictionType
-from grapholed.dialogs import CardinalityRestrictionForm
 from grapholed.exceptions import ParseError
-from grapholed.functions import connect
 from grapholed.items.nodes.common.base import Node
 from grapholed.items.nodes.common.label import Label
 
-from PyQt5.QtCore import QRectF, QPointF, pyqtSlot
-from PyQt5.QtGui import QPixmap, QColor, QPainterPath, QIcon
-from PyQt5.QtWidgets import QAction, QDialog
+from PyQt5.QtCore import QRectF, QPointF
+from PyQt5.QtGui import QPixmap, QColor, QPainterPath
 
 
 class SquaredNode(Node):
@@ -55,23 +51,61 @@ class SquaredNode(Node):
     """
     __metaclass__ = ABCMeta
 
-    minHeight = 20
-    minWidth = 20
-
-    def __init__(self, width=minWidth, height=minHeight, brush=(252, 252, 252), **kwargs):
+    def __init__(self, width=20, height=20, restriction=None, cardinality=None, brush=(252, 252, 252), **kwargs):
         """
         Initialize the Squared shaped node.
         :param width: the shape width (unused in current implementation).
         :param height: the shape height (unused in current implementation).
+        :param restriction: the restriction of the node.
+        :param cardinality: the cardinality of the node (if it's a cardinality restriction).
         :param brush: the brush to use as shape background
         """
         super().__init__(**kwargs)
+
+        self._restriction = restriction or RestrictionType.exists
+        self._cardinality = cardinality if self.restriction is RestrictionType.cardinality else dict(min=None, max=None)
+
         self.shapeBrush = QColor(*brush)
-        self.cardinality = dict(min=None, max=None)
-        self.restriction = RestrictionType.exists
-        self.rect = self.createRect(self.minWidth, self.minHeight)
+        self.rect = self.createRect(20, 20)
         self.label = Label(self.restriction.label, centered=False, editable=False, parent=self)
         self.label.updatePos()
+
+    ################################################## PROPERTIES ######################################################
+
+    @property
+    def restriction(self):
+        """
+        Returns the restriction of the node.
+        :rtype: RestrictionType
+        """
+        return self._restriction
+
+    @restriction.setter
+    def restriction(self, restriction):
+        """
+        Set the restriction of this node.
+        Setting the restriction will also reset the cardinality which would need to be set again.
+        :param restriction: the restriction type.
+        """
+        self._restriction = restriction
+        self._cardinality = dict(min=None, max=None)
+
+    @property
+    def cardinality(self):
+        """
+        Returns the cardinality of the node.
+        :rtype: dict
+        """
+        return self._cardinality if self._cardinality is not None else dict(min=None, max=None)
+
+    @cardinality.setter
+    def cardinality(self, cardinality):
+        """
+        Set the restriction of this node.
+        Will not set the attribute in case the restriction is not RestrictionType.cardinality.
+        :param cardinality: the cartinality of the node.
+        """
+        self._cardinality = cardinality if self.restriction is RestrictionType.cardinality else dict(min=None, max=None)
 
     ################################################ ITEM INTERFACE ####################################################
 
@@ -80,27 +114,23 @@ class SquaredNode(Node):
         Returns the basic nodes context menu.
         :rtype: QMenu
         """
-        menu = super().contextMenu()
-        menu.addSeparator()
-
-        subMenu = menu.addMenu('Select restriction')
-        subMenu.setIcon(QIcon(':/icons/refresh'))
-
         scene = self.scene()
 
-        for restriction in RestrictionType:
-            action = QAction(restriction.value, scene)
-            action.setCheckable(True)
-            action.setChecked(restriction is self.restriction)
-            connect(action.triggered, self.updateRestriction, restriction=restriction)
-            subMenu.addAction(action)
+        menu = super().contextMenu()
+        menu.addSeparator()
+        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuRestrictionChange)
+
+        # switch the check on the currently active restriction
+        for action in scene.actionsRestrictionChange:
+            action.setChecked(self.restriction is action.data())
 
         collection = self.label.contextMenuAdd()
         if collection:
             menu.addSeparator()
             for action in collection:
-                menu.addAction(action)
+                menu.insertAction(scene.actionOpenNodeProperties, action)
 
+        menu.insertSeparator(scene.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):
@@ -129,21 +159,6 @@ class SquaredNode(Node):
         :rtype: int
         """
         return self.rect.height()
-
-    @pyqtSlot(RestrictionType)
-    def updateRestriction(self, restriction):
-        """
-        Update the node restriction.
-        :param restriction: the restriction type.
-        """
-        scene = self.scene()
-        if restriction == RestrictionType.cardinality:
-            form = CardinalityRestrictionForm()
-            if form.exec_() == QDialog.Accepted:
-                cardinality = dict(min=form.minCardinalityValue, max=form.maxCardinalityValue)
-                scene.undoStack.push(CommandNodeSquareChangeRestriction(scene, self, restriction, cardinality))
-        else:
-            scene.undoStack.push(CommandNodeSquareChangeRestriction(scene, self, restriction))
 
     def width(self):
         """
@@ -299,24 +314,26 @@ class SquaredNode(Node):
         :raise ParseError: if an invalid text value is supplied.
         :param text: the text value to set.
         """
-        text = text.strip()
-        if text == RestrictionType.exists.label:
+        value = text.strip().lower()
+        if value == RestrictionType.exists.label:
+            self.label.setText(value)
             self.restriction = RestrictionType.exists
-            self.label.setText(text)
-        elif text == RestrictionType.forall.label:
+        elif value == RestrictionType.forall.label:
+            self.label.setText(value)
             self.restriction = RestrictionType.forall
-            self.label.setText(text)
-        elif text == RestrictionType.self.label:
+        elif value == RestrictionType.self.label:
+            self.label.setText(value)
             self.restriction = RestrictionType.self
-            self.label.setText(text)
         else:
             RE_PARSE = re.compile("""^\(\s*(?P<min>[\d-]+)\s*,\s*(?P<max>[\d-]+)\s*\)$""")
-            match = RE_PARSE.match(text)
+            match = RE_PARSE.match(value)
             if match:
+                self.label.setText(value)
                 self.restriction = RestrictionType.cardinality
-                self.cardinality['min'] = None if match.group('min') == '-' else int(match.group('min'))
-                self.cardinality['max'] = None if match.group('max') == '-' else int(match.group('max'))
-                self.label.setText(text)
+                self.cardinality = {
+                    'min': None if match.group('min') == '-' else int(match.group('min')),
+                    'max': None if match.group('max') == '-' else int(match.group('max')),
+                }
             else:
                 raise ParseError('invalid restriction supplied: {0}'.format(text))
 
