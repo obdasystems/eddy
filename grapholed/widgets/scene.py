@@ -192,6 +192,7 @@ class DiagramScene(QGraphicsScene):
 
         connect(self.actionComposeAsymmetricRole.triggered, self.composeAsymmetricRole)
         connect(self.actionComposeIrreflexiveRole.triggered, self.composeIrreflexiveRole)
+        connect(self.actionComposeReflexiveRole.triggered, self.composeReflexiveRole)
 
         ## DOMAIN / RANGE RESTRICTION
         self.actionsRestrictionChange = []
@@ -323,9 +324,9 @@ class DiagramScene(QGraphicsScene):
                 inverse.setPos(QPointF(x1, role.pos().y()))
                 complement = ComplementNode(scene=self)
                 complement.setPos(QPointF(x1, y1))
-                input1 = InputEdge(scene=self, source=role, target=inverse)
-                input2 = InputEdge(scene=self, source=inverse, target=complement)
-                inclusion = InclusionEdge(scene=self, source=role, target=complement, breakpoints=[
+                edge1 = InputEdge(scene=self, source=role, target=inverse)
+                edge2 = InputEdge(scene=self, source=inverse, target=complement)
+                edge3 = InclusionEdge(scene=self, source=role, target=complement, breakpoints=[
                     QPointF(role.pos().x(), y2),
                     QPointF(x1, y2)
                 ])
@@ -335,9 +336,9 @@ class DiagramScene(QGraphicsScene):
                     'role': role,
                     'inverse': inverse,
                     'complement': complement,
-                    'input1': input1,
-                    'input2': input2,
-                    'inclusion': inclusion,
+                    'edge1': edge1,
+                    'edge2': edge2,
+                    'edge3': edge3,
                 }
 
                 # push the composition on the stack as a single action
@@ -366,9 +367,9 @@ class DiagramScene(QGraphicsScene):
                 complement.setPos(QPointF(x2, role.pos().y()))
                 concept = ConceptNode(scene=self, special=SpecialConceptType.TOP)
                 concept.setPos(QPointF(x3, role.pos().y()))
-                input1 = InputEdge(scene=self, source=role, target=restriction)
-                input2 = InputEdge(scene=self, source=restriction, target=complement)
-                inclusion = InclusionEdge(scene=self, source=concept, target=complement)
+                edge1 = InputEdge(scene=self, source=role, target=restriction)
+                edge2 = InputEdge(scene=self, source=restriction, target=complement)
+                edge3 = InclusionEdge(scene=self, source=concept, target=complement)
 
                 kwargs = {
                     'scene': self,
@@ -376,14 +377,48 @@ class DiagramScene(QGraphicsScene):
                     'restriction': restriction,
                     'complement': complement,
                     'concept': concept,
-                    'input1': input1,
-                    'input2': input2,
-                    'inclusion': inclusion,
+                    'edge1': edge1,
+                    'edge2': edge2,
+                    'edge3': edge3,
                 }
 
                 # push the composition on the stack as a single action
                 self.undoStack.push(CommandComposeIrreflexiveRole(**kwargs))
 
+    @pyqtSlot()
+    def composeReflexiveRole(self):
+        """
+        Compose a reflexive role using the selected Role node.
+        """
+        self.setMode(DiagramMode.Idle)
+        action = self.sender()
+        if action:
+
+            role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
+            if role and not role.isReflexive():
+
+                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
+                x1 = snapToGrid(role.pos().x() + role.width() / 2 + 40, DiagramScene.GridSize, snap=True)
+                x2 = snapToGrid(role.pos().x() + role.width() / 2 + 250, DiagramScene.GridSize, snap=True)
+
+                restriction = DomainRestrictionNode(scene=self, restriction=RestrictionType.self)
+                restriction.setPos(QPointF(x1, role.pos().y()))
+                concept = ConceptNode(scene=self, special=SpecialConceptType.TOP)
+                concept.setPos(QPointF(x2, role.pos().y()))
+                edge1 = InputEdge(scene=self, source=role, target=restriction)
+                edge2 = InclusionEdge(scene=self, source=concept, target=restriction)
+
+                kwargs = {
+                    'scene': self,
+                    'role': role,
+                    'restriction': restriction,
+                    'concept': concept,
+                    'edge1': edge1,
+                    'edge2': edge2,
+                }
+
+                # push the composition on the stack as a single action
+                self.undoStack.push(CommandComposeReflexiveRole(**kwargs))
 
     @pyqtSlot()
     def itemCut(self):

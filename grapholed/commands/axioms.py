@@ -39,33 +39,33 @@ class CommandComposeAsymmetricRole(QUndoCommand):
     """
     This command is used to compose an Asymmetric role starting from a Role node.
     """
-    def __init__(self, scene, role, inverse, complement, input1, input2, inclusion):
+    def __init__(self, scene, role, inverse, complement, edge1, edge2, edge3):
         """
         Initialize the command.
         :param scene: the graphic scene where this command is being performed.
         :param role: the role node where to base the composition.
         :param inverse: the role inverse node to use in the axiom.
         :param complement: the complement node to use in the axiom.
-        :param input1: the input edge connecting role node to the role inverse node.
-        :param input2: the input edge connecting the role inverse node to the complement node.
-        :param inclusion: the inclusion edge connecting the role node to the complement node.
+        :param edge1: the input edge connecting role node to the role inverse node.
+        :param edge2: the input edge connecting the role inverse node to the complement node.
+        :param edge3: the inclusion edge connecting the role node to the complement node.
         """
         super().__init__('create asymmetric role axiom')
         self.scene = scene
         self.role = role
         self.inverse = inverse
         self.complement = complement
-        self.input1 = input1
-        self.input2 = input2
-        self.inclusion = inclusion
+        self.edge1 = edge1
+        self.edge2 = edge2
+        self.edge3 = edge3
 
     def redo(self):
         """redo the command"""
         # add items to the scene
-        for item in (self.inverse, self.complement, self.input1, self.input2, self.inclusion):
+        for item in (self.inverse, self.complement, self.edge1, self.edge2, self.edge3):
             self.scene.addItem(item)
             # map edges over source and target nodes
-        for edge in (self.input1, self.input2, self.inclusion):
+        for edge in (self.edge1, self.edge2, self.edge3):
             edge.source.addEdge(edge)
             edge.target.addEdge(edge)
             edge.updateEdge()
@@ -75,10 +75,10 @@ class CommandComposeAsymmetricRole(QUndoCommand):
     def undo(self):
         """undo the command"""
         # remove items from the scene
-        for item in (self.inverse, self.complement, self.input1, self.input2, self.inclusion):
+        for item in (self.inverse, self.complement, self.edge1, self.edge2, self.edge3):
             self.scene.removeItem(item)
         # remove edge mappings from source and target nodes
-        for edge in (self.input1, self.input2, self.inclusion):
+        for edge in (self.edge1, self.edge2, self.edge3):
             edge.source.removeEdge(edge)
             edge.target.removeEdge(edge)
         # emit updated signal
@@ -89,17 +89,17 @@ class CommandComposeIrreflexiveRole(QUndoCommand):
     """
     This command is used to compose an Irreflexive role starting from a Role node.
     """
-    def __init__(self, scene, role, restriction, complement, concept, input1, input2, inclusion):
+    def __init__(self, scene, role, restriction, complement, concept, edge1, edge2, edge3):
         """
         Initialize the command.
         :param scene: the graphic scene where this command is being performed.
         :param role: the role node where to base the composition.
         :param restriction: the domain restriction node to use in the axiom.
         :param complement: the complement node to use in the axiom.
-        :param top: the special concept node (TOP) to use in the axiom.
-        :param input1: the input edge connecting role node to the domain restriction node.
-        :param input2: the input edge connecting the domain restriction node to the complement node.
-        :param inclusion: the inclusion edge connecting the special concept node to the complement node.
+        :param concept: the special concept node (TOP) to use in the axiom.
+        :param edge1: the input edge connecting role node to the domain restriction node.
+        :param edge2: the input edge connecting the domain restriction node to the complement node.
+        :param edge3: the inclusion edge connecting the special concept node to the complement node.
         """
         super().__init__('create irreflexive role axiom')
         self.scene = scene
@@ -107,17 +107,17 @@ class CommandComposeIrreflexiveRole(QUndoCommand):
         self.restriction = restriction
         self.complement = complement
         self.concept = concept
-        self.input1 = input1
-        self.input2 = input2
-        self.inclusion = inclusion
+        self.edge1 = edge1
+        self.edge2 = edge2
+        self.edge3 = edge3
 
     def redo(self):
         """redo the command"""
         # add items to the scene
-        for item in (self.restriction, self.complement, self.concept, self.input1, self.input2, self.inclusion):
+        for item in (self.restriction, self.complement, self.concept, self.edge1, self.edge2, self.edge3):
             self.scene.addItem(item)
             # map edges over source and target nodes
-        for edge in (self.input1, self.input2, self.inclusion):
+        for edge in (self.edge1, self.edge2, self.edge3):
             edge.source.addEdge(edge)
             edge.target.addEdge(edge)
             edge.updateEdge()
@@ -127,10 +127,58 @@ class CommandComposeIrreflexiveRole(QUndoCommand):
     def undo(self):
         """undo the command"""
         # remove items from the scene
-        for item in (self.restriction, self.complement, self.concept, self.input1, self.input2, self.inclusion):
+        for item in (self.restriction, self.complement, self.concept, self.edge1, self.edge2, self.edge3):
             self.scene.removeItem(item)
         # remove edge mappings from source and target nodes
-        for edge in (self.input1, self.input2, self.inclusion):
+        for edge in (self.edge1, self.edge2, self.edge3):
+            edge.source.removeEdge(edge)
+            edge.target.removeEdge(edge)
+        # emit updated signal
+        self.scene.updated.emit()
+
+
+class CommandComposeReflexiveRole(QUndoCommand):
+    """
+    This command is used to compose a Reflexive role starting from a Role node.
+    """
+    def __init__(self, scene, role, restriction, concept, edge1, edge2):
+        """
+        Initialize the command.
+        :param scene: the graphic scene where this command is being performed.
+        :param role: the role node where to base the composition.
+        :param restriction: the domain restriction node to use in the axiom.
+        :param concept: the special concept node (TOP) to use in the axiom.
+        :param edge1: the input edge connecting role node to the domain restriction node.
+        :param edge2: the inclusion edge connecting the special concept node to the domain restriction node.
+        """
+        super().__init__('create reflexive role axiom')
+        self.scene = scene
+        self.role = role
+        self.restriction = restriction
+        self.concept = concept
+        self.edge1 = edge1
+        self.edge2 = edge2
+
+    def redo(self):
+        """redo the command"""
+        # add items to the scene
+        for item in (self.restriction, self.concept, self.edge1, self.edge2):
+            self.scene.addItem(item)
+            # map edges over source and target nodes
+        for edge in (self.edge1, self.edge2):
+            edge.source.addEdge(edge)
+            edge.target.addEdge(edge)
+            edge.updateEdge()
+        # emit updated signal
+        self.scene.updated.emit()
+
+    def undo(self):
+        """undo the command"""
+        # remove items from the scene
+        for item in (self.restriction, self.concept, self.edge1, self.edge2):
+            self.scene.removeItem(item)
+        # remove edge mappings from source and target nodes
+        for edge in (self.edge1, self.edge2):
             edge.source.removeEdge(edge)
             edge.target.removeEdge(edge)
         # emit updated signal

@@ -160,6 +160,23 @@ class RoleNode(ResizableNode):
                                 return True
         return False
 
+    def isReflexive(self):
+        """
+        Tells whether the Role is defined as reflexive.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and \
+                e1.source is self and \
+                    e1.target.isType(ItemType.DomainRestrictionNode) and \
+                        e1.target.restriction is RestrictionType.self:
+                for e2 in e1.target.edges:
+                    if e2.source.isType(ItemType.ConceptNode) and \
+                        e2.source.special is SpecialConceptType.TOP and \
+                            e2.target is e1.target:
+                        return True
+        return False
+
     def width(self):
         """
         Returns the width of the shape.

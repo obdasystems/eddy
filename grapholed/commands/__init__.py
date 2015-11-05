@@ -60,11 +60,13 @@ from grapholed.commands.scene import CommandSceneResize
 
 from grapholed.commands.axioms import CommandComposeAsymmetricRole
 from grapholed.commands.axioms import CommandComposeIrreflexiveRole
+from grapholed.commands.axioms import CommandComposeReflexiveRole
 
 
 __all__ = [
     'CommandComposeAsymmetricRole',
     'CommandComposeIrreflexiveRole',
+    'CommandComposeReflexiveRole',
     'CommandNodeAdd',
     'CommandNodeSetZValue',
     'CommandNodeRezize',
