@@ -34,12 +34,15 @@
 
 import os
 
+from collections import OrderedDict
+
 from grapholed import __appname__, __organization__
 from grapholed.commands import *
 from grapholed.datatypes import DiagramMode, ItemType, SpecialConceptType, RestrictionType
 from grapholed.dialogs import ScenePropertiesDialog, CardinalityRestrictionForm
 from grapholed.functions import getPath, snapToGrid, rangeF, connect
-from grapholed.items import Item, RoleInverseNode, ComplementNode, InputEdge, InclusionEdge
+from grapholed.items import Item
+from grapholed.items import *
 from grapholed.tools import UniqueID
 
 from PyQt5.QtCore import Qt, pyqtSignal, QPointF, pyqtSlot, QSettings, QRectF
@@ -187,6 +190,9 @@ class DiagramScene(QGraphicsScene):
         self.actionComposeSymmetricRole = QAction('Symmetric Role', self)
         self.actionComposeTransitiveRole = QAction('Transitive Role', self)
 
+        connect(self.actionComposeAsymmetricRole.triggered, self.composeAsymmetricRole)
+        connect(self.actionComposeIrreflexiveRole.triggered, self.composeIrreflexiveRole)
+
         ## DOMAIN / RANGE RESTRICTION
         self.actionsRestrictionChange = []
         for restriction in RestrictionType:
@@ -196,12 +202,28 @@ class DiagramScene(QGraphicsScene):
             connect(action.triggered, self.changeRestriction)
             self.actionsRestrictionChange.append(action)
 
+        ## HEXAGON BASED CONSTRUCTOR NODES
+        data = OrderedDict()
+        data[ComplementNode] = 'Complement'
+        data[DisjointUnionNode] = 'Disjoint union'
+        data[DatatypeRestrictionNode] = 'Datatype restriction'
+        data[EnumerationNode] = 'Enumeration'
+        data[IntersectionNode] = 'Intersection'
+        data[RoleChainNode] = 'Role chain'
+        data[RoleInverseNode] = 'Role inverse'
+        data[UnionNode] = 'Union'
+
+        self.actionsSwitchHexagonNode = []
+        for k, v in data.items():
+            action = QAction(v, self)
+            action.setCheckable(True)
+            action.setData(k)
+            connect(action.triggered, self.switchHexagonNode)
+            self.actionsSwitchHexagonNode.append(action)
+
         ## EDGES
         self.actionToggleEdgeComplete = mainwindow.actionToggleEdgeComplete
         self.actionToggleEdgeFunctional = mainwindow.actionToggleEdgeFunctional
-
-        connect(self.actionComposeAsymmetricRole.triggered, self.composeAsymmetricRole)
-        connect(self.actionComposeIrreflexiveRole.triggered, self.composeIrreflexiveRole)
 
         ################################################## MENUS #######################################################
 
@@ -225,6 +247,12 @@ class DiagramScene(QGraphicsScene):
         self.menuRestrictionChange.setIcon(QIcon(':/icons/refresh'))
         for action in self.actionsRestrictionChange:
             self.menuRestrictionChange.addAction(action)
+
+        ## HEXAGON BASED CONSTRUCTOR NODES
+        self.menuHexagonNodeSwitch = QMenu('Switch to')
+        self.menuHexagonNodeSwitch.setIcon(QIcon(':/icons/refresh'))
+        for action in self.actionsSwitchHexagonNode:
+            self.menuHexagonNodeSwitch.addAction(action)
 
         ################################################# SIGNALS ######################################################
 
@@ -482,6 +510,21 @@ class DiagramScene(QGraphicsScene):
             if concept:
                 special = action.data() if concept.special is not action.data() else None
                 self.undoStack.push(CommandConceptNodeSetSpecial(self, concept, special))
+
+    @pyqtSlot()
+    def switchHexagonNode(self):
+        """
+        Switch the selected hexagon based constructor node to a different type.
+        """
+        self.setMode(DiagramMode.Idle)
+        action = self.sender()
+        if action:
+            node = next(filter(lambda x: ItemType.UnionNode <= x.itemtype <= ItemType.DisjointUnionNode, self.selectedNodes()), None)
+            clazz = action.data()
+            if not isinstance(node, clazz):
+                xnode = clazz(scene=self)
+                xnode.setPos(node.pos())
+                self.undoStack.push(CommandNodeHexagonSwitchTo(scene=self, node1=node, node2=xnode))
 
     @pyqtSlot()
     def toggleEdgeComplete(self):

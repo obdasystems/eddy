@@ -33,15 +33,11 @@
 
 
 from abc import ABCMeta
-from collections import OrderedDict
 
-from grapholed.commands import CommandNodeHexagonSwitchTo
-from grapholed.functions import connect
 from grapholed.items.nodes.common.base import Node
 
 from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QIcon, QPolygonF
-from PyQt5.QtWidgets import QAction
+from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QPolygonF
 
 
 class HexagonNode(Node):
@@ -58,12 +54,9 @@ class HexagonNode(Node):
     indexTL = 5
     indexEE = 6
 
-    diagonalSize = 6
-    minHeight = 30
-    minWidth = 50
     shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
 
-    def __init__(self, width=minWidth, height=minHeight, brush=(252, 252, 252), **kwargs):
+    def __init__(self, width=50, height=30, brush=(252, 252, 252), **kwargs):
         """
         Initialize the Hexagon shaped node.
         :param width: the shape width (unused in current implementation).
@@ -72,7 +65,7 @@ class HexagonNode(Node):
         """
         super().__init__(**kwargs)
         self.shapeBrush = QColor(*brush)
-        self.polygon = self.createPolygon(self.minWidth, self.minHeight, self.diagonalSize)
+        self.polygon = self.createPolygon(shape_w=50, shape_h=30, oblique=6)
 
     ################################################ ITEM INTERFACE ####################################################
 
@@ -81,35 +74,17 @@ class HexagonNode(Node):
         Returns the basic nodes context menu.
         :rtype: QMenu
         """
-        menu = super().contextMenu()
-        menu.addSeparator()
-
-        data = OrderedDict()
-
-        from grapholed.items.nodes import UnionNode, DisjointUnionNode
-        from grapholed.items.nodes import EnumerationNode, RoleChainNode, RoleInverseNode
-        from grapholed.items.nodes import ComplementNode, IntersectionNode, DatatypeRestrictionNode
-
-        data[ComplementNode] = 'Complement'
-        data[DisjointUnionNode] = 'Disjoint union'
-        data[DatatypeRestrictionNode] = 'Datatype restriction'
-        data[EnumerationNode] = 'Enumeration'
-        data[IntersectionNode] = 'Intersection'
-        data[RoleChainNode] = 'Role chain'
-        data[RoleInverseNode] = 'Role inverse'
-        data[UnionNode] = 'Union'
-
-        subMenu = menu.addMenu('Switch to')
-        subMenu.setIcon(QIcon(':/icons/refresh'))
-
         scene = self.scene()
 
-        for k, v in data.items():
-            if not isinstance(self, k):
-                action = QAction(v, scene)
-                connect(action.triggered, self.switchTo, clazz=k)
-                subMenu.addAction(action)
-                
+        menu = super().contextMenu()
+        menu.addSeparator()
+        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuHexagonNodeSwitch)
+
+        # switch the check matching the current node
+        for action in scene.actionsSwitchHexagonNode:
+            action.setChecked(isinstance(self, action.data()))
+
+        menu.insertSeparator(scene.actionOpenNodeProperties)
         return menu
 
     def height(self):
@@ -118,16 +93,6 @@ class HexagonNode(Node):
         :rtype: int
         """
         return self.polygon[self.indexBL].y() - self.polygon[self.indexTL].y()
-
-    def switchTo(self, clazz):
-        """
-        Switch the current node to a different type.
-        :param clazz: the class implementing the new node type.
-        """
-        scene = self.scene()
-        xnode = clazz(scene=scene)
-        xnode.setPos(self.pos())
-        scene.undoStack.push(CommandNodeHexagonSwitchTo(scene, self, xnode))
 
     def width(self):
         """
