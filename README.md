@@ -2,7 +2,7 @@
 
 ### Description
 
-GrapholEd is a diagramming software for the Graphol language. [Graphol] is developed by members 
+GrapholEd is an editor for the Graphol ontology language. [Graphol] is developed by members 
 of the DASI-lab group  of the [Dipartimento di Informatica e Sistemistica "A.Ruberti"] at [Sapienza] 
 University of Rome. Graphol offers a  completely visual representation of ontologies to users, in 
 order to help understanding by people who are not skilled in logic. Graphol provides designers with 

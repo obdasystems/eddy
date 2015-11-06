@@ -3,7 +3,7 @@
 
 ##########################################################################
 #                                                                        #
-#  Grapholed: a diagramming software for the Graphol language.           #
+#  GrapholEd: an editor for the Graphol ontology language.               #
 #  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
