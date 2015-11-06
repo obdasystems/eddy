@@ -31,7 +31,10 @@
 #                                                                        #
 ##########################################################################
 
+
 from datetime import datetime
+
+from PyQt5.QtGui import QIcon
 
 from grapholed.commands import CommandNodeMove, CommandNodeSetURL, CommandNodeSetDescription
 from grapholed.commands import CommandSceneResize, CommandNodeLabelEdit, CommandNodeChangeInputOrder
@@ -135,6 +138,7 @@ class ScenePropertiesDialog(QDialog):
 
         self.setFixedSize(self.sizeHint())
         self.setWindowTitle('Scene properties')
+        self.setWindowIcon(QIcon(':/images/grapholed'))
 
         ################################################## SIGNALS #####################################################
 
@@ -282,6 +286,7 @@ class NodePropertiesDialog(QDialog):
 
         self.setFixedSize(self.sizeHint())
         self.setWindowTitle('Properties')
+        self.setWindowIcon(QIcon(':/images/grapholed'))
 
         ################################################## SIGNALS #####################################################
 
