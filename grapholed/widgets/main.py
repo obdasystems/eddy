@@ -73,8 +73,9 @@ class MainWindow(QMainWindow):
         Initialize the application Main Window.
         """
         super().__init__()
-        self.settings = QSettings(__organization__, __appname__)
-        self.undoGroup = QUndoGroup()
+        self.abortQuit = False  ## will be set to true whenever we need to about a Quit action
+        self.settings = QSettings(__organization__, __appname__)  ## application settings
+        self.undoGroup = QUndoGroup()  ## undo group for DiagramScene undo stacks
 
         ################################################# ICONS ########################################################
 
@@ -707,6 +708,15 @@ class MainWindow(QMainWindow):
                 self.overview.clearView()
                 self.setWindowTitle()
 
+    @pyqtSlot('QMdiSubWindow')
+    def onSubwindowCloseEventIgnored(self, subwindow):
+        """
+        Executed when the close event of an MDI subwindow is aborted.
+        :param subwindow: the subwindow whose closeEvent has been interrupted.
+        """
+        self.abortQuit = True
+        self.mdiArea.setActiveSubWindow(subwindow)
+
     @pyqtSlot(bool)
     def onUndoGroupCleanChanged(self, clean):
         """
@@ -726,8 +736,17 @@ class MainWindow(QMainWindow):
         Executed when the main window is closed.
         :param closeEvent: the close event instance.
         """
+        self.abortQuit = False
         for subwindow in self.mdiArea.subWindowList():
+            mainview = subwindow.widget()
+            scene = mainview.scene()
+            if (scene.items() and not scene.document.filepath) or (not scene.undoStack.isClean()):
+                self.mdiArea.setActiveSubWindow(subwindow)
+                subwindow.showMaximized()
             subwindow.close()
+            if self.abortQuit:
+                closeEvent.ignore()
+                break
 
     def keyReleaseEvent(self, keyEvent):
         """
@@ -856,6 +875,7 @@ class MainWindow(QMainWindow):
         scene = mainview.scene()
         connect(self.documentSaved, subwindow.onDocumentSaved)
         connect(scene.undoStack.cleanChanged, subwindow.onUndoStackCleanChanged)
+        connect(subwindow.closeEventIgnored, self.onSubwindowCloseEventIgnored)
         return subwindow
 
     @staticmethod

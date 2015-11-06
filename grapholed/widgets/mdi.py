@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import pyqtSlot, Qt
+from PyQt5.QtCore import pyqtSlot, Qt, pyqtSignal
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QMdiArea, QMdiSubWindow, QMessageBox, QTabWidget
 
@@ -71,6 +71,8 @@ class MdiSubWindow(QMdiSubWindow):
     """
     This class implements the MDI area subwindow.
     """
+    closeEventIgnored = pyqtSignal('QMdiSubWindow')
+
     def __init__(self, view, parent=None):
         """
         Initialize the subwindow
@@ -104,6 +106,7 @@ class MdiSubWindow(QMdiSubWindow):
 
             if result == QMessageBox.Cancel:
                 closeEvent.ignore()
+                self.closeEventIgnored.emit(self)
             elif result == QMessageBox.Yes:
                 if not self.saveScene():
                     closeEvent.ignore()
