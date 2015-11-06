@@ -194,6 +194,7 @@ class DiagramScene(QGraphicsScene):
         connect(self.actionComposeIrreflexiveRole.triggered, self.composeIrreflexiveRole)
         connect(self.actionComposeReflexiveRole.triggered, self.composeReflexiveRole)
         connect(self.actionComposeSymmetricRole.triggered, self.composeSymmetricRole)
+        connect(self.actionComposeTransitiveRole.triggered, self.composeTransitiveRole)
 
         ## DOMAIN / RANGE RESTRICTION
         self.actionsRestrictionChange = []
@@ -434,15 +435,14 @@ class DiagramScene(QGraphicsScene):
 
                 # always snap the points to the grid, even if the feature is not enabled so we have items aligned
                 x1 = snapToGrid(role.pos().x() + role.width() / 2 + 100, DiagramScene.GridSize, snap=True)
-                y1 = snapToGrid(role.pos().y() - role.height() / 2 - 40, DiagramScene.GridSize, snap=True)
-                y2 = snapToGrid(role.pos().y() - role.height() / 2 - 80, DiagramScene.GridSize, snap=True)
+                y1 = snapToGrid(role.pos().y() - role.height() / 2 - 80, DiagramScene.GridSize, snap=True)
 
                 inverse = RoleInverseNode(scene=self)
                 inverse.setPos(QPointF(x1, role.pos().y()))
                 edge1 = InputEdge(scene=self, source=role, target=inverse)
                 edge2 = InclusionEdge(scene=self, source=role, target=inverse, breakpoints=[
-                    QPointF(role.pos().x(), y2),
-                    QPointF(x1, y2)
+                    QPointF(role.pos().x(), y1),
+                    QPointF(x1, y1)
                 ])
 
                 kwargs = {
@@ -455,6 +455,57 @@ class DiagramScene(QGraphicsScene):
 
                 # push the composition on the stack as a single action
                 self.undoStack.push(CommandComposeSymmetricRole(**kwargs))
+
+    @pyqtSlot()
+    def composeTransitiveRole(self):
+        """
+        Compose a transitive role using the selected Role node.
+        """
+        self.setMode(DiagramMode.Idle)
+        action = self.sender()
+        if action:
+
+            role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
+            if role and not role.isTransitive():
+
+                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
+                x1 = snapToGrid(role.pos().x() + role.width() / 2 + 90, DiagramScene.GridSize, snap=True)
+                x2 = snapToGrid(role.pos().x() + role.width() / 2 + 50, DiagramScene.GridSize, snap=True)
+                x3 = snapToGrid(role.pos().x() - role.width() / 2 - 20, DiagramScene.GridSize, snap=True)
+                y1 = snapToGrid(role.pos().y() - role.height() / 2 - 20, DiagramScene.GridSize, snap=True)
+                y2 = snapToGrid(role.pos().y() + role.height() / 2 + 20, DiagramScene.GridSize, snap=True)
+                y3 = snapToGrid(role.pos().y() - role.height() / 2 + 80, DiagramScene.GridSize, snap=True)
+
+                chain = RoleChainNode(scene=self)
+                chain.setPos(QPointF(x1, role.pos().y()))
+
+                edge1 = InputEdge(scene=self, source=role, target=chain, breakpoints=[
+                    QPointF(role.pos().x(), y1),
+                    QPointF(x2, y1),
+                ])
+
+                edge2 = InputEdge(scene=self, source=role, target=chain, breakpoints=[
+                    QPointF(role.pos().x(), y2),
+                    QPointF(x2, y2),
+                ])
+
+                edge3 = InclusionEdge(scene=self, source=chain, target=role, breakpoints=[
+                    QPointF(x1, y3),
+                    QPointF(x3, y3),
+                    QPointF(x3, role.pos().y()),
+                ])
+
+                kwargs = {
+                    'scene': self,
+                    'role': role,
+                    'chain': chain,
+                    'edge1': edge1,
+                    'edge2': edge2,
+                    'edge3': edge3,
+                }
+
+                # push the composition on the stack as a single action
+                self.undoStack.push(CommandComposeTransitiveRole(**kwargs))
 
     @pyqtSlot()
     def itemCut(self):

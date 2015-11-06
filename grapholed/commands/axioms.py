@@ -229,3 +229,51 @@ class CommandComposeSymmetricRole(QUndoCommand):
             edge.target.removeEdge(edge)
         # emit updated signal
         self.scene.updated.emit()
+
+
+class CommandComposeTransitiveRole(QUndoCommand):
+    """
+    This command is used to compose a Transitive role starting from a Role node.
+    """
+    def __init__(self, scene, role, chain, edge1, edge2, edge3):
+        """
+        Initialize the command.
+        :param scene: the graphic scene where this command is being performed.
+        :param role: the role node where to base the composition.
+        :param chain: the role chain node to use in the axiom.
+        :param edge1: the first input edge connecting role node to the role chain node.
+        :param edge3: the second input edge connecting role node to the role chain node.
+        :param edge3: the inclusion edge connecting the role chain node to the role node.
+        """
+        super().__init__('create transitive role axiom')
+        self.scene = scene
+        self.role = role
+        self.chain = chain
+        self.edge1 = edge1
+        self.edge2 = edge2
+        self.edge3 = edge3
+
+    def redo(self):
+        """redo the command"""
+        # add items to the scene
+        for item in (self.chain, self.edge1, self.edge2, self.edge3):
+            self.scene.addItem(item)
+            # map edges over source and target nodes
+        for edge in (self.edge1, self.edge2, self.edge3):
+            edge.source.addEdge(edge)
+            edge.target.addEdge(edge)
+            edge.updateEdge()
+        # emit updated signal
+        self.scene.updated.emit()
+
+    def undo(self):
+        """undo the command"""
+        # remove items from the scene
+        for item in (self.chain, self.edge1, self.edge2, self.edge3):
+            self.scene.removeItem(item)
+        # remove edge mappings from source and target nodes
+        for edge in (self.edge1, self.edge2, self.edge3):
+            edge.source.removeEdge(edge)
+            edge.target.removeEdge(edge)
+        # emit updated signal
+        self.scene.updated.emit()

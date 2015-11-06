@@ -62,6 +62,7 @@ from grapholed.commands.axioms import CommandComposeAsymmetricRole
 from grapholed.commands.axioms import CommandComposeIrreflexiveRole
 from grapholed.commands.axioms import CommandComposeReflexiveRole
 from grapholed.commands.axioms import CommandComposeSymmetricRole
+from grapholed.commands.axioms import CommandComposeTransitiveRole
 
 
 __all__ = [
@@ -69,6 +70,7 @@ __all__ = [
     'CommandComposeIrreflexiveRole',
     'CommandComposeReflexiveRole',
     'CommandComposeSymmetricRole',
+    'CommandComposeTransitiveRole',
     'CommandNodeAdd',
     'CommandNodeSetZValue',
     'CommandNodeRezize',

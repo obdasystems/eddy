@@ -193,6 +193,27 @@ class RoleNode(ResizableNode):
                         return True
         return False
 
+    def isTransitive(self):
+        """
+        Tells whether the Role is defined as transitive.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and \
+                e1.source is self and \
+                    e1.target.isType(ItemType.RoleChainNode):
+                for e2 in e1.target.edges:
+                    if e2.isType(ItemType.InputEdge) and \
+                        e2.target is e1.target and \
+                            e2 is not e1 and e2.source is self:
+                        for e3 in e2.source.edges:
+                            if e3.isType(ItemType.InclusionEdge) and \
+                                e3.source is e1.target and \
+                                    e3.target is e1.source:
+                                        return True
+        return False
+
+
     def width(self):
         """
         Returns the width of the shape.
