@@ -33,6 +33,7 @@
 
 
 from grapholed.datatypes import Font, ItemType
+from grapholed.dialogs import EditableNodePropertiesDialog
 from grapholed.exceptions import ParseError
 from grapholed.items.nodes.common.base import Node
 from grapholed.items.nodes.common.label import Label
@@ -106,6 +107,12 @@ class AttributeNode(Node):
         :rtype: int
         """
         return self.rect.height()
+
+    def propertiesDialog(self):
+        """
+        Build and returns the node properties dialog.
+        """
+        return EditableNodePropertiesDialog(scene=self.scene(), node=self)
 
     def width(self):
         """

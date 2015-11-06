@@ -34,12 +34,13 @@
 
 from datetime import datetime
 
+from grapholed.commands import CommandNodeMove, CommandNodeSetURL, CommandNodeSetDescription
+from grapholed.commands import CommandSceneResize, CommandNodeLabelEdit
+from grapholed.fields import StringEditField, TextEditField, SpinBox, IntEditField
+from grapholed.functions import clamp, connect, isEmpty
+
 from PyQt5.QtCore import Qt, QPointF, QRectF
 from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
-
-from grapholed.commands import CommandNodeMove, CommandNodeSetURL, CommandNodeSetDescription, CommandSceneResize
-from grapholed.fields import StringEditField, TextEditField, SpinBox, IntEditField
-from grapholed.functions import clamp, connect
 
 
 ################################################## SCENE PROPERTIES ####################################################
@@ -352,3 +353,55 @@ class NodePropertiesDialog(QDialog):
             }
 
             self.scene.undoStack.push(CommandNodeMove(scene=self.scene, pos1=data1, pos2=data2))
+
+
+class EditableNodePropertiesDialog(NodePropertiesDialog):
+    """
+    This class implements the properties dialog for label editable nodes.
+    """
+    def __init__(self, scene, node, parent=None):
+        """
+        Initialize the editable node properties dialog.
+        :param scene: the scene the node is placed into.
+        :param node: the node whose properties we want to inspect.
+        :param parent: the parent widget.
+        """
+        super().__init__(scene, node, parent)
+
+        ################################################ LABEL TAB ###################################################
+
+        self.labelWidget = QWidget()
+        self.labelLayout = QFormLayout(self.labelWidget)
+
+        self.labelF = StringEditField(self.labelWidget)
+        self.labelF.setFixedWidth(300)
+        self.labelF.setValue(self.node.labelText())
+        self.labelF.setEnabled(self.node.label.editable)
+
+        self.labelLayout.addRow('Text', self.labelF)
+
+        self.mainWidget.addTab(self.labelWidget, 'Label')
+
+    ################################################# SIGNAL HANDLERS ##################################################
+
+    def handleFinished(self, code):
+        """
+        Executed when the dialog is terminated.
+        :param code: the result code.
+        """
+        if code == QDialog.Accepted:
+            super().handleFinished(code)
+            self.handleLabelChanged()
+
+    ################################################ AUXILIARY METHODS #################################################
+
+    def handleLabelChanged(self):
+        """
+        Change the label of the node.
+        """
+        value = self.labelF.value().strip()
+        if self.node.labelText().strip() != value:
+            value = value if not isEmpty(value) else self.node.label.defaultText
+            command = CommandNodeLabelEdit(self.scene, self.node, self.node.label, self.node.label.text())
+            command.end(value)
+            self.scene.undoStack.push(command)

@@ -33,6 +33,7 @@
 
 
 from grapholed.datatypes import Font, ItemType, RestrictionType, SpecialConceptType
+from grapholed.dialogs import EditableNodePropertiesDialog
 from grapholed.exceptions import ParseError
 from grapholed.functions import snapToGrid
 from grapholed.items.nodes.common.base import ResizableNode
@@ -213,6 +214,11 @@ class RoleNode(ResizableNode):
                                         return True
         return False
 
+    def propertiesDialog(self):
+        """
+        Build and returns the node properties dialog.
+        """
+        return EditableNodePropertiesDialog(scene=self.scene(), node=self)
 
     def width(self):
         """
