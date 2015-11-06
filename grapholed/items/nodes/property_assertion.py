@@ -51,14 +51,15 @@ class PropertyAssertionNode(Node):
     radius = 16
     xmlname = 'property-assertion'
 
-    def __init__(self, width=minWidth, height=minHeight, **kwargs):
+    def __init__(self, width=minWidth, height=minHeight, inputs=None, **kwargs):
         """
         Initialize the Property Assertion node.
         :param width: the shape width (unused in current implementation).
         :param height: the shape height (unused in current implementation).
+        :param inputs: a DistinctList of edges id specifying the partecipation order.
         """
         super().__init__(**kwargs)
-        self.inputs = DistinctList()
+        self.inputs = inputs or DistinctList()
         self.rect = self.createRect(self.minWidth, self.minHeight)
 
     ################################################ ITEM INTERFACE ####################################################
@@ -70,7 +71,7 @@ class PropertyAssertionNode(Node):
         """
         self.edges.append(edge)
         if edge.isType(ItemType.InputEdge) and edge.target is self:
-            self.inputs.append(edge)
+            self.inputs.append(edge.id)
             edge.updateEdge()
 
     def copy(self, scene):
@@ -103,10 +104,15 @@ class PropertyAssertionNode(Node):
         Remove the given edge from the current node.
         :param edge: the edge to be removed.
         """
+        scene = self.scene()
         self.edges.remove(edge)
-        self.inputs.remove(edge)
-        for edge in self.inputs:
-            edge.updateEdge()
+        self.inputs.remove(edge.id)
+        for x in self.inputs:
+            try:
+                edge = scene.edge(x)
+                edge.updateEdge()
+            except KeyError:
+                pass
 
     def width(self):
         """
@@ -147,6 +153,7 @@ class PropertyAssertionNode(Node):
             kwargs = {
                 'scene': scene,
                 'id': E.attribute('id'),
+                'inputs': DistinctList(E.attribute('inputs', '').split(',')),
                 'description': D.text(),
                 'url': U.text(),
                 'width': int(G.attribute('width')),
@@ -173,6 +180,7 @@ class PropertyAssertionNode(Node):
         node = document.createElement('node')
         node.setAttribute('id', self.id)
         node.setAttribute('type', self.xmlname)
+        node.setAttribute('inputs', ','.join(edge.id for edge in self.inputs))
 
         # add node attributes
         url = document.createElement('data:url')

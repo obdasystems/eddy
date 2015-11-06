@@ -49,12 +49,13 @@ class RoleChainNode(HexagonNode):
     name = 'role chain'
     xmlname = 'role-chain'
 
-    def __init__(self, **kwargs):
+    def __init__(self, inputs=None, **kwargs):
         """
         Initialize the Role Chain node.
+        :param inputs: a DistinctList of edges id specifying the partecipation order.
         """
         super().__init__(brush=(252, 252, 252), **kwargs)
-        self.inputs = DistinctList()
+        self.inputs = inputs or DistinctList()
         self.label = Label('chain', movable=False, editable=False, parent=self)
         self.label.updatePos()
 
@@ -67,7 +68,7 @@ class RoleChainNode(HexagonNode):
         """
         self.edges.append(edge)
         if edge.isType(ItemType.InputEdge) and edge.target is self:
-            self.inputs.append(edge)
+            self.inputs.append(edge.id)
             edge.updateEdge()
 
     def copy(self, scene):
@@ -95,10 +96,15 @@ class RoleChainNode(HexagonNode):
         Remove the given edge from the current node.
         :param edge: the edge to be removed.
         """
+        scene = self.scene()
         self.edges.remove(edge)
-        self.inputs.remove(edge)
-        for edge in self.inputs:
-            edge.updateEdge()
+        self.inputs.remove(edge.id)
+        for x in self.inputs:
+            try:
+                edge = scene.edge(x)
+                edge.updateEdge()
+            except KeyError:
+                pass
 
     ############################################# ITEM IMPORT / EXPORT #################################################
 
@@ -121,6 +127,7 @@ class RoleChainNode(HexagonNode):
             kwargs = {
                 'scene': scene,
                 'id': E.attribute('id'),
+                'inputs': DistinctList(E.attribute('inputs', '').split(',')),
                 'description': D.text(),
                 'url': U.text(),
                 'width': int(G.attribute('width')),

@@ -36,7 +36,7 @@ from math import sin, cos, radians, pi as M_PI
 
 from grapholed.datatypes import DiagramMode, ItemType
 from grapholed.exceptions import ParseError
-from grapholed.functions import connect, isEmpty
+from grapholed.functions import connect
 from grapholed.items.edges.common.base import Edge
 from grapholed.items.edges.common.label import Label
 
@@ -132,7 +132,7 @@ class InputEdge(Edge):
         """
         if self.target and self.target.isType(ItemType.PropertyAssertionNode, ItemType.RoleChainNode):
             self.label.setVisible(True)
-            self.label.setText(str(self.target.inputs.index(self) + 1))
+            self.label.setText(str(self.target.inputs.index(self.id) + 1))
             self.label.updatePos(points)
         else:
             self.label.setVisible(False)
