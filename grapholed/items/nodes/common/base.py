@@ -238,7 +238,6 @@ class Node(Item):
         Create a new item instance by parsing a Graphol document item entry.
         :param scene: the scene where the element will be inserted.
         :param E: the Graphol document element entry.
-        :raise ParseError: in case it's not possible to generate the node using the given element.
         :rtype: Node
         """
         pass

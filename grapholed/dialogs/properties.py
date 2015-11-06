@@ -31,16 +31,17 @@
 #                                                                        #
 ##########################################################################
 
-
 from datetime import datetime
 
 from grapholed.commands import CommandNodeMove, CommandNodeSetURL, CommandNodeSetDescription
-from grapholed.commands import CommandSceneResize, CommandNodeLabelEdit
+from grapholed.commands import CommandSceneResize, CommandNodeLabelEdit, CommandNodeChangeInputOrder
+from grapholed.datatypes import DistinctList
 from grapholed.fields import StringEditField, TextEditField, SpinBox, IntEditField
 from grapholed.functions import clamp, connect, isEmpty
 
 from PyQt5.QtCore import Qt, QPointF, QRectF
 from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
+from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
 
 
 ################################################## SCENE PROPERTIES ####################################################
@@ -405,3 +406,63 @@ class EditableNodePropertiesDialog(NodePropertiesDialog):
             command = CommandNodeLabelEdit(self.scene, self.node, self.node.label, self.node.label.text())
             command.end(value)
             self.scene.undoStack.push(command)
+
+
+class OrderedInputNodePropertiesDialog(NodePropertiesDialog):
+    """
+    This class implements the properties dialog for constructor nodes having incoming input edges
+    numbered according to source nodes partecipations to the axiom (Role chain and Property assertion).
+    """
+    def __init__(self, scene, node, parent=None):
+        """
+        Initialize the editable node properties dialog.
+        :param scene: the scene the node is placed into.
+        :param node: the node whose properties we want to inspect.
+        :param parent: the parent widget.
+        """
+        super().__init__(scene, node, parent)
+
+        ############################################### ORDERING TAB ###################################################
+
+        if self.node.inputs:
+
+            self.orderingWidget = QWidget()
+            self.orderingLayout = QFormLayout(self.orderingWidget)
+
+            self.listWidget = QListWidget(self.orderingWidget)
+            self.listWidget.setDragDropMode(QAbstractItemView.InternalMove)
+            for i in self.node.inputs:
+                edge = self.scene.edge(i)
+                item = QListWidgetItem('{0} ({1})'.format(edge.source.labelText(), edge.source.id))
+                item.setData(Qt.UserRole, edge.id)
+                self.listWidget.addItem(item)
+
+            self.orderingLayout.addRow('Sort', self.listWidget)
+            self.mainWidget.addTab(self.orderingWidget, 'Ordering')
+
+    ################################################# SIGNAL HANDLERS ##################################################
+
+    def handleFinished(self, code):
+        """
+        Executed when the dialog is terminated.
+        :param code: the result code.
+        """
+        if code == QDialog.Accepted:
+            super().handleFinished(code)
+            self.handleInputsOrderChanged()
+
+    ################################################ AUXILIARY METHODS #################################################
+
+    def handleInputsOrderChanged(self):
+        """
+        Change the order of inputs edges.
+        """
+        if self.node.inputs:
+
+            inputs = DistinctList()
+            for i in range(0, self.listWidget.count()):
+                item = self.listWidget.item(i)
+                inputs.append(item.data(Qt.UserRole))
+
+            if self.node.inputs != inputs:
+                self.scene.undoStack.push(CommandNodeChangeInputOrder(self.scene, self.node, inputs))

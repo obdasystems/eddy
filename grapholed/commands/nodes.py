@@ -555,3 +555,33 @@ class CommandConceptNodeSetSpecial(QUndoCommand):
         self.node.setLabelText(self.data1['text'])
         self.node.setLabelPos(self.data1['pos'])
         self.scene.updated.emit()
+
+
+class CommandNodeChangeInputOrder(QUndoCommand):
+    """
+    This command is used to change the order of Role chain and Property assertion inputs.
+    """
+    def __init__(self, scene, node, inputs):
+        """
+        Initilize the command.
+        :param scene: the scene where this command is being performed.
+        :param node: the node whose special attribute is changing.
+        :param inputs: the new inputs order.
+        """
+        self.node = node
+        self.scene = scene
+        self.inputs1 = node.inputs
+        self.inputs2 = inputs
+        super().__init__('change {0} node inputs order'.format(node.name))
+
+    def redo(self):
+        """redo the command"""
+        self.node.inputs = self.inputs2
+        self.node.updateEdges()
+        self.scene.updated.emit()
+
+    def undo(self):
+        """redo the command"""
+        self.node.inputs = self.inputs1
+        self.node.updateEdges()
+        self.scene.updated.emit()

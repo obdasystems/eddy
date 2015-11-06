@@ -33,7 +33,7 @@
 
 
 from grapholed.datatypes import Font, ItemType, DistinctList
-from grapholed.exceptions import ParseError
+from grapholed.dialogs import OrderedInputNodePropertiesDialog
 from grapholed.items.nodes.common.hexagon import HexagonNode
 from grapholed.items.nodes.common.label import Label
 
@@ -91,6 +91,12 @@ class RoleChainNode(HexagonNode):
         node.setLabelPos(node.mapFromScene(self.mapToScene(self.labelPos())))
         return node
 
+    def propertiesDialog(self):
+        """
+        Build and returns the node properties dialog.
+        """
+        return OrderedInputNodePropertiesDialog(scene=self.scene(), node=self)
+
     def removeEdge(self, edge):
         """
         Remove the given edge from the current node.
@@ -114,35 +120,28 @@ class RoleChainNode(HexagonNode):
         Create a new item instance by parsing a Graphol document item entry.
         :param scene: the scene where the element will be inserted.
         :param E: the Graphol document element entry.
-        :raise ParseError: in case it's not possible to generate the node using the given element.
         :rtype: Node
         """
-        try:
+        U = E.elementsByTagName('data:url').at(0).toElement()
+        D = E.elementsByTagName('data:description').at(0).toElement()
+        G = E.elementsByTagName('shape:geometry').at(0).toElement()
+        L = E.elementsByTagName('shape:label').at(0).toElement()
 
-            U = E.elementsByTagName('data:url').at(0).toElement()
-            D = E.elementsByTagName('data:description').at(0).toElement()
-            G = E.elementsByTagName('shape:geometry').at(0).toElement()
-            L = E.elementsByTagName('shape:label').at(0).toElement()
+        kwargs = {
+            'scene': scene,
+            'id': E.attribute('id'),
+            'inputs': DistinctList(E.attribute('inputs', '').split(',')),
+            'description': D.text(),
+            'url': U.text(),
+            'width': int(G.attribute('width')),
+            'height': int(G.attribute('height')),
+        }
 
-            kwargs = {
-                'scene': scene,
-                'id': E.attribute('id'),
-                'inputs': DistinctList(E.attribute('inputs', '').split(',')),
-                'description': D.text(),
-                'url': U.text(),
-                'width': int(G.attribute('width')),
-                'height': int(G.attribute('height')),
-            }
-
-            node = cls(**kwargs)
-            node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
-            node.setLabelText(L.text())
-            node.setLabelPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
-
-        except Exception as e:
-            raise ParseError('could not create {0} instance from Graphol node: {1}'.format(cls.__name__, e))
-        else:
-            return node
+        node = cls(**kwargs)
+        node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
+        node.setLabelText(L.text())
+        node.setLabelPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
+        return node
 
     def toGraphol(self, document):
         """
@@ -157,6 +156,7 @@ class RoleChainNode(HexagonNode):
         node = document.createElement('node')
         node.setAttribute('id', self.id)
         node.setAttribute('type', self.xmlname)
+        node.setAttribute('inputs', ','.join(self.inputs))
 
         # add node attributes
         url = document.createElement('data:url')

@@ -33,7 +33,7 @@
 
 
 from grapholed.datatypes import ItemType, DistinctList
-from grapholed.exceptions import ParseError
+from grapholed.dialogs import OrderedInputNodePropertiesDialog
 from grapholed.items.nodes.common.base import Node
 
 from PyQt5.QtCore import Qt, QRectF, QPointF
@@ -99,6 +99,12 @@ class PropertyAssertionNode(Node):
         """
         return self.rect.height()
 
+    def propertiesDialog(self):
+        """
+        Build and returns the node properties dialog.
+        """
+        return OrderedInputNodePropertiesDialog(scene=self.scene(), node=self)
+
     def removeEdge(self, edge):
         """
         Remove the given edge from the current node.
@@ -141,32 +147,25 @@ class PropertyAssertionNode(Node):
         Create a new item instance by parsing a Graphol document item entry.
         :param scene: the scene where the element will be inserted.
         :param E: the Graphol document element entry.
-        :raise ParseError: in case it's not possible to generate the node using the given element.
         :rtype: Node
         """
-        try:
+        U = E.elementsByTagName('data:url').at(0).toElement()
+        D = E.elementsByTagName('data:description').at(0).toElement()
+        G = E.elementsByTagName('shape:geometry').at(0).toElement()
 
-            U = E.elementsByTagName('data:url').at(0).toElement()
-            D = E.elementsByTagName('data:description').at(0).toElement()
-            G = E.elementsByTagName('shape:geometry').at(0).toElement()
+        kwargs = {
+            'scene': scene,
+            'id': E.attribute('id'),
+            'inputs': DistinctList(E.attribute('inputs', '').split(',')),
+            'description': D.text(),
+            'url': U.text(),
+            'width': int(G.attribute('width')),
+            'height': int(G.attribute('height')),
+        }
 
-            kwargs = {
-                'scene': scene,
-                'id': E.attribute('id'),
-                'inputs': DistinctList(E.attribute('inputs', '').split(',')),
-                'description': D.text(),
-                'url': U.text(),
-                'width': int(G.attribute('width')),
-                'height': int(G.attribute('height')),
-            }
-
-            node = cls(**kwargs)
-            node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
-
-        except Exception as e:
-            raise ParseError('could not create {0} instance from Graphol node: {1}'.format(cls.__name__, e))
-        else:
-            return node
+        node = cls(**kwargs)
+        node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
+        return node
 
     def toGraphol(self, document):
         """
@@ -180,7 +179,7 @@ class PropertyAssertionNode(Node):
         node = document.createElement('node')
         node.setAttribute('id', self.id)
         node.setAttribute('type', self.xmlname)
-        node.setAttribute('inputs', ','.join(edge.id for edge in self.inputs))
+        node.setAttribute('inputs', ','.join(self.inputs))
 
         # add node attributes
         url = document.createElement('data:url')

@@ -42,4 +42,5 @@ from grapholed.dialogs.preferences import PreferencesDialog
 
 from grapholed.dialogs.properties import NodePropertiesDialog
 from grapholed.dialogs.properties import EditableNodePropertiesDialog
+from grapholed.dialogs.properties import OrderedInputNodePropertiesDialog
 from grapholed.dialogs.properties import ScenePropertiesDialog

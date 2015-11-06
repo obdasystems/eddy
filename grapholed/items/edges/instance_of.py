@@ -37,7 +37,6 @@ import sys
 from math import sin, cos, radians, pi as M_PI
 
 from grapholed.datatypes import Font, DiagramMode, ItemType
-from grapholed.exceptions import ParseError
 from grapholed.items.edges.common.base import Edge
 from grapholed.items.edges.common.label import Label
 
@@ -92,40 +91,34 @@ class InstanceOfEdge(Edge):
         Create a new item instance by parsing a Graphol document item entry.
         :param scene: the scene where the element will be inserted.
         :param E: the Graphol document element entry.
-        :raise ParseError: in case it's not possible to generate the node using the given element.
         :rtype: Edge
         """
-        try:
+        points = []
 
-            points = []
-            # extract all the breakpoints from the edge children
-            children = E.elementsByTagName('line:point')
-            for i in range(0, children.count()):
-                P = children.at(i).toElement()
-                point = QPointF(int(P.attribute('x')), int(P.attribute('y')))
-                points.append(point)
+        # extract all the breakpoints from the edge children
+        children = E.elementsByTagName('line:point')
+        for i in range(0, children.count()):
+            P = children.at(i).toElement()
+            point = QPointF(int(P.attribute('x')), int(P.attribute('y')))
+            points.append(point)
 
-            kwargs = {
-                'scene': scene,
-                'id': E.attribute('id'),
-                'source': scene.node(E.attribute('source')),
-                'target': scene.node(E.attribute('target')),
-                'breakpoints': points[1:-1],
-            }
+        kwargs = {
+            'scene': scene,
+            'id': E.attribute('id'),
+            'source': scene.node(E.attribute('source')),
+            'target': scene.node(E.attribute('target')),
+            'breakpoints': points[1:-1],
+        }
 
-            edge = cls(**kwargs)
-            edge.source.setAnchor(edge, points[0])
-            edge.target.setAnchor(edge, points[-1])
+        edge = cls(**kwargs)
+        edge.source.setAnchor(edge, points[0])
+        edge.target.setAnchor(edge, points[-1])
 
-            # map the edge over the source and target nodes
-            edge.source.addEdge(edge)
-            edge.target.addEdge(edge)
-            edge.updateEdge()
-
-        except Exception as e:
-            raise ParseError('could not create {0} instance from Graphol node: {1}'.format(cls.__name__, e))
-        else:
-            return edge
+        # map the edge over the source and target nodes
+        edge.source.addEdge(edge)
+        edge.target.addEdge(edge)
+        edge.updateEdge()
+        return edge
 
     def toGraphol(self, document):
         """
