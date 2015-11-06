@@ -170,11 +170,11 @@ class InputEdge(Edge):
             edge = cls(**kwargs)
             edge.source.setAnchor(edge, points[0])
             edge.target.setAnchor(edge, points[-1])
-            edge.updateEdge()
 
             # map the edge over the source and target nodes
-            edge.source.edges.append(edge)
-            edge.target.edges.append(edge)
+            edge.source.addEdge(edge)
+            edge.target.addEdge(edge)
+            edge.updateEdge()
 
         except Exception as e:
             raise ParseError('could not create {0} instance from Graphol node: {1}'.format(cls.__name__, e))
