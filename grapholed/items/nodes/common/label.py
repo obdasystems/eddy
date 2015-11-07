@@ -334,12 +334,14 @@ class Label(QGraphicsTextItem):
                 self.setSelected(True)
                 super().mousePressEvent(mouseEvent)
             else:
-                # see if the mouse is hovering the parent item: if so select
-                # it so that mouseMoveEvent method in DiagramScene can move it
+                # see if the mouse is hovering the parent item: if so see if the
+                # item is not selected and in case select it so the mouseMoveEvent
+                # in DiagramScene can perform the node movement
                 parent = self.parentItem()
                 if parent in scene.items(mouseEvent.scenePos()):
-                    scene.clearSelection()
-                    parent.setSelected(True)
+                    if not parent.isSelected():
+                        scene.clearSelection()
+                        parent.setSelected(True)
 
         elif scene.mode is DiagramMode.LabelEdit:
 
