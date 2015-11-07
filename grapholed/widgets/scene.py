@@ -196,12 +196,16 @@ class DiagramScene(QGraphicsScene):
         connect(self.actionComposeSymmetricRole.triggered, self.composeSymmetricRole)
         connect(self.actionComposeTransitiveRole.triggered, self.composeTransitiveRole)
 
-        ## FUNCIONAL ROLE / ATTRIBUTE
+        ## ROLE / ATTRIBUTE NODES
         self.actionComposeFunctional = QAction('Functional', self)
         self.actionComposeInverseFunctional = QAction('Inverse Functional', self)
+        self.actionComposePropertyDomain = QAction('Property Domain', self)
+        self.actionComposePropertyRange = QAction('Property Range', self)
 
         connect(self.actionComposeFunctional.triggered, self.composeFunctional)
         connect(self.actionComposeInverseFunctional.triggered, self.composeInverseFunctional)
+        connect(self.actionComposePropertyDomain.triggered, self.composePropertyDomain)
+        connect(self.actionComposePropertyRange.triggered, self.composePropertyRange)
 
         ## DOMAIN / RANGE RESTRICTION
         self.actionsRestrictionChange = []
@@ -254,11 +258,19 @@ class DiagramScene(QGraphicsScene):
         self.menuRoleNodeCompose.addSeparator()
         self.menuRoleNodeCompose.addAction(self.actionComposeFunctional)
         self.menuRoleNodeCompose.addAction(self.actionComposeInverseFunctional)
+        self.menuRoleNodeCompose.addSeparator()
+        self.menuRoleNodeCompose.addAction(self.actionComposePropertyDomain)
+        self.menuRoleNodeCompose.addAction(self.actionComposePropertyRange)
 
         ## ATTRIBUTE NODE
         self.menuAttributeNodeCompose = QMenu('Compose')
         self.menuAttributeNodeCompose.setIcon(QIcon(':/icons/create'))
         self.menuAttributeNodeCompose.addAction(self.actionComposeFunctional)
+        self.menuAttributeNodeCompose.addSeparator()
+        self.menuAttributeNodeCompose.addAction(self.actionComposePropertyDomain)
+        self.menuAttributeNodeCompose.addSeparator()
+        self.menuAttributeNodeCompose.addAction(self.actionComposePropertyDomain)
+        self.menuAttributeNodeCompose.addAction(self.actionComposePropertyRange)
 
         ## DOMAIN / RANGE RESTRICTION
         self.menuRestrictionChange = QMenu('Select restriction')
@@ -459,6 +471,80 @@ class DiagramScene(QGraphicsScene):
                 self.undoStack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
+    def composePropertyDomain(self):
+        """
+        Compose a property domain using the selected role/attribute node.
+        """
+        self.setMode(DiagramMode.Idle)
+        action = self.sender()
+        if action:
+
+            node = next(filter(lambda x: x.isType(ItemType.RoleNode, ItemType.AttributeNode), self.selectedNodes()), None)
+            if node:
+
+                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
+                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 60, DiagramScene.GridSize, snap=True)
+                x2 = snapToGrid(node.pos().x() + node.width() / 2 + 200, DiagramScene.GridSize, snap=True)
+
+                restriction = DomainRestrictionNode(scene=self, restriction=RestrictionType.exists)
+                restriction.setPos(QPointF(x1, node.pos().y()))
+                concept = ConceptNode(scene=self)
+                concept.setPos(QPointF(x2, node.pos().y()))
+                edge1 = InputEdge(scene=self, source=node, target=restriction)
+                edge2 = InclusionEdge(scene=self, source=restriction, target=concept)
+
+                kwargs = {
+                    'name': 'compose {0} property domain'.format(node.name),
+                    'scene': self,
+                    'source': node,
+                    'nodes': {restriction, concept},
+                    'edges': {edge1, edge2},
+                }
+
+                # push the composition on the stack as a single action
+                self.undoStack.push(CommandComposeAxiom(**kwargs))
+
+    @pyqtSlot()
+    def composePropertyRange(self):
+        """
+        Compose a property range using the selected role/attribute node.
+        """
+        self.setMode(DiagramMode.Idle)
+        action = self.sender()
+        if action:
+
+            node = next(filter(lambda x: x.isType(ItemType.RoleNode, ItemType.AttributeNode), self.selectedNodes()), None)
+            if node:
+
+                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
+                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 60, DiagramScene.GridSize, snap=True)
+                x2 = snapToGrid(node.pos().x() + node.width() / 2 + 200, DiagramScene.GridSize, snap=True)
+
+                restriction = RangeRestrictionNode(scene=self, restriction=RestrictionType.exists)
+                restriction.setPos(QPointF(x1, node.pos().y()))
+
+                if node.isType(ItemType.RoleNode):
+                    target = ConceptNode(scene=self)
+                    target.setPos(QPointF(x2, node.pos().y()))
+                else:
+                    target = ValueDomainNode(scene=self)
+                    target.setPos(QPointF(x2, node.pos().y()))
+
+                edge1 = InputEdge(scene=self, source=node, target=restriction)
+                edge2 = InclusionEdge(scene=self, source=restriction, target=target)
+
+                kwargs = {
+                    'name': 'compose {0} property range'.format(node.name),
+                    'scene': self,
+                    'source': node,
+                    'nodes': {restriction, target},
+                    'edges': {edge1, edge2},
+                }
+
+                # push the composition on the stack as a single action
+                self.undoStack.push(CommandComposeAxiom(**kwargs))
+
+    @pyqtSlot()
     def composeReflexiveRole(self):
         """
         Compose a reflexive role using the selected Role node.
@@ -482,7 +568,7 @@ class DiagramScene(QGraphicsScene):
                 edge2 = InclusionEdge(scene=self, source=concept, target=restriction)
 
                 kwargs = {
-                    'name': 'compose eflexive role',
+                    'name': 'compose reflexive role',
                     'scene': self,
                     'source': role,
                     'nodes': {restriction, concept},

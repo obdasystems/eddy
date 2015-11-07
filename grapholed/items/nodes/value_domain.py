@@ -94,7 +94,7 @@ class ValueDomainNode(Node):
 
     def copy(self, scene):
         """
-        Create a copy of the current item .
+        Create a copy of the current item.
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
