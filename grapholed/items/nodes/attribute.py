@@ -63,6 +63,23 @@ class AttributeNode(Node):
         self.label = Label(self.name, centered=False, parent=self)
         self.label.updatePos()
 
+    ################################################## PROPERTIES ######################################################
+
+    @property
+    def functional(self):
+        """
+        Tells whether the Role is defined as functional.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and \
+                e1.functional and \
+                    e1.source is self and \
+                        e1.target.isType(ItemType.DomainRestrictionNode) and \
+                            e1.target.restriction is RestrictionType.exists:
+                                return True
+        return False
+
     ################################################ ITEM INTERFACE ####################################################
 
     def contextMenu(self):
@@ -110,20 +127,6 @@ class AttributeNode(Node):
         :rtype: int
         """
         return self.rect.height()
-
-    def isFunctional(self):
-        """
-        Tells whether the Attribute is defined as functional.
-        :rtype: bool
-        """
-        for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
-                e1.functional and \
-                    e1.source is self and \
-                        e1.target.isType(ItemType.DomainRestrictionNode) and \
-                            e1.target.restriction is RestrictionType.exists:
-                                return True
-        return False
 
     def propertiesDialog(self):
         """

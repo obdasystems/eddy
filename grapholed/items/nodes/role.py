@@ -71,6 +71,137 @@ class RoleNode(ResizableNode):
         self.updateHandlesPos()
         self.updateLabelPos()
 
+    ################################################## PROPERTIES ######################################################
+
+    @property
+    def asymmetric(self):
+        """
+        Tells whether the Role is defined as asymmetric.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and \
+                e1.source is self and \
+                    e1.target.isType(ItemType.RoleInverseNode):
+                for e2 in e1.target.edges:
+                    if e2.isType(ItemType.InputEdge) and \
+                        e2.source is e1.target and \
+                            e2.target.isType(ItemType.ComplementNode):
+                        for e3 in e2.target.edges:
+                            if e3.isType(ItemType.InclusionEdge) and \
+                                e3.target is e2.target and \
+                                    e3.source is self:
+                                return True
+        return False
+
+    @property
+    def functional(self):
+        """
+        Tells whether the Role is defined as functional.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and \
+                e1.functional and \
+                    e1.source is self and \
+                        e1.target.isType(ItemType.DomainRestrictionNode) and \
+                            e1.target.restriction is RestrictionType.exists:
+                                return True
+        return False
+
+    @property
+    def inverse_functional(self):
+        """
+        Tells whether the Role is defined as inverse functional.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and \
+                e1.functional and \
+                    e1.source is self and \
+                        e1.target.isType(ItemType.RangeRestrictionNode) and \
+                            e1.target.restriction is RestrictionType.exists:
+                                return True
+        return False
+
+    @property
+    def irreflexive(self):
+        """
+        Tells whether the Role is defined as irreflexive.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and \
+                e1.source is self and \
+                    e1.target.isType(ItemType.DomainRestrictionNode) and \
+                        e1.target.restriction is RestrictionType.self:
+                for e2 in e1.target.edges:
+                    if e2.isType(ItemType.InputEdge) and \
+                        e2.source is e1.target and \
+                            e2.target.isType(ItemType.ComplementNode):
+                        for e3 in e2.target.edges:
+                            if e3.source.isType(ItemType.ConceptNode) and \
+                                e3.source.special is SpecialConceptType.TOP and \
+                                    e3.target is e2.target:
+                                return True
+        return False
+
+    @property
+    def reflexive(self):
+        """
+        Tells whether the Role is defined as reflexive.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and \
+                e1.source is self and \
+                    e1.target.isType(ItemType.DomainRestrictionNode) and \
+                        e1.target.restriction is RestrictionType.self:
+                for e2 in e1.target.edges:
+                    if e2.source.isType(ItemType.ConceptNode) and \
+                        e2.source.special is SpecialConceptType.TOP and \
+                            e2.target is e1.target:
+                        return True
+        return False
+
+    @property
+    def symmetric(self):
+        """
+        Tells whether the Role is defined as asymmetric.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and \
+                e1.source is self and \
+                    e1.target.isType(ItemType.RoleInverseNode):
+                for e2 in e1.target.edges:
+                    if e2.isType(ItemType.InclusionEdge) and \
+                        e2.target is e1.target and \
+                            e2.source is self:
+                        return True
+        return False
+
+    @property
+    def transitive(self):
+        """
+        Tells whether the Role is defined as transitive.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and \
+                e1.source is self and \
+                    e1.target.isType(ItemType.RoleChainNode):
+                for e2 in e1.target.edges:
+                    if e2.isType(ItemType.InputEdge) and \
+                        e2.target is e1.target and \
+                            e2 is not e1 and e2.source is self:
+                        for e3 in e2.source.edges:
+                            if e3.isType(ItemType.InclusionEdge) and \
+                                e3.source is e1.target and \
+                                    e3.target is e1.source:
+                                        return True
+        return False
+
     ################################################ ITEM INTERFACE ####################################################
 
     def contextMenu(self):
@@ -118,128 +249,6 @@ class RoleNode(ResizableNode):
         :rtype: int
         """
         return self.boundingRect().height() - 2 * (self.handleSize + self.handleSpace)
-
-    def isAsymmetric(self):
-        """
-        Tells whether the Role is defined as asymmetric.
-        :rtype: bool
-        """
-        for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
-                e1.source is self and \
-                    e1.target.isType(ItemType.RoleInverseNode):
-                for e2 in e1.target.edges:
-                    if e2.isType(ItemType.InputEdge) and \
-                        e2.source is e1.target and \
-                            e2.target.isType(ItemType.ComplementNode):
-                        for e3 in e2.target.edges:
-                            if e3.isType(ItemType.InclusionEdge) and \
-                                e3.target is e2.target and \
-                                    e3.source is self:
-                                return True
-        return False
-
-    def isFunctional(self):
-        """
-        Tells whether the Role is defined as functional.
-        :rtype: bool
-        """
-        for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
-                e1.functional and \
-                    e1.source is self and \
-                        e1.target.isType(ItemType.DomainRestrictionNode) and \
-                            e1.target.restriction is RestrictionType.exists:
-                                return True
-        return False
-
-    def isInverseFunctional(self):
-        """
-        Tells whether the Role is defined as inverse functional.
-        :rtype: bool
-        """
-        for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
-                e1.functional and \
-                    e1.source is self and \
-                        e1.target.isType(ItemType.RangeRestrictionNode) and \
-                            e1.target.restriction is RestrictionType.exists:
-                                return True
-        return False
-
-    def isIrreflexive(self):
-        """
-        Tells whether the Role is defined as irreflexive.
-        :rtype: bool
-        """
-        for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
-                e1.source is self and \
-                    e1.target.isType(ItemType.DomainRestrictionNode) and \
-                        e1.target.restriction is RestrictionType.self:
-                for e2 in e1.target.edges:
-                    if e2.isType(ItemType.InputEdge) and \
-                        e2.source is e1.target and \
-                            e2.target.isType(ItemType.ComplementNode):
-                        for e3 in e2.target.edges:
-                            if e3.source.isType(ItemType.ConceptNode) and \
-                                e3.source.special is SpecialConceptType.TOP and \
-                                    e3.target is e2.target:
-                                return True
-        return False
-
-    def isReflexive(self):
-        """
-        Tells whether the Role is defined as reflexive.
-        :rtype: bool
-        """
-        for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
-                e1.source is self and \
-                    e1.target.isType(ItemType.DomainRestrictionNode) and \
-                        e1.target.restriction is RestrictionType.self:
-                for e2 in e1.target.edges:
-                    if e2.source.isType(ItemType.ConceptNode) and \
-                        e2.source.special is SpecialConceptType.TOP and \
-                            e2.target is e1.target:
-                        return True
-        return False
-
-    def isSymmetric(self):
-        """
-        Tells whether the Role is defined as asymmetric.
-        :rtype: bool
-        """
-        for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
-                e1.source is self and \
-                    e1.target.isType(ItemType.RoleInverseNode):
-                for e2 in e1.target.edges:
-                    if e2.isType(ItemType.InclusionEdge) and \
-                        e2.target is e1.target and \
-                            e2.source is self:
-                        return True
-        return False
-
-    def isTransitive(self):
-        """
-        Tells whether the Role is defined as transitive.
-        :rtype: bool
-        """
-        for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
-                e1.source is self and \
-                    e1.target.isType(ItemType.RoleChainNode):
-                for e2 in e1.target.edges:
-                    if e2.isType(ItemType.InputEdge) and \
-                        e2.target is e1.target and \
-                            e2 is not e1 and e2.source is self:
-                        for e3 in e2.source.edges:
-                            if e3.isType(ItemType.InclusionEdge) and \
-                                e3.source is e1.target and \
-                                    e3.target is e1.source:
-                                        return True
-        return False
 
     def propertiesDialog(self):
         """

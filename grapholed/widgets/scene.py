@@ -341,7 +341,7 @@ class DiagramScene(QGraphicsScene):
         if action:
 
             role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
-            if role and not role.isAsymmetric():
+            if role and not role.asymmetric:
 
                 # always snap the points to the grid, even if the feature is not enabled so we have items aligned
                 x1 = snapToGrid(role.pos().x() + role.width() / 2 + 100, DiagramScene.GridSize, snap=True)
@@ -380,7 +380,7 @@ class DiagramScene(QGraphicsScene):
         if action:
 
             node = next(filter(lambda x: x.isType(ItemType.RoleNode, ItemType.AttributeNode), self.selectedNodes()), None)
-            if node and not node.isFunctional():
+            if node and not node.functional:
 
                 # always snap the points to the grid, even if the feature is not enabled so we have items aligned
                 x1 = snapToGrid(node.pos().x() + node.width() / 2 + 90, DiagramScene.GridSize, snap=True)
@@ -411,7 +411,7 @@ class DiagramScene(QGraphicsScene):
         if action:
 
             node = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
-            if node and not node.isInverseFunctional():
+            if node and not node.inverse_functional:
 
                 # always snap the points to the grid, even if the feature is not enabled so we have items aligned
                 x1 = snapToGrid(node.pos().x() + node.width() / 2 + 90, DiagramScene.GridSize, snap=True)
@@ -442,7 +442,7 @@ class DiagramScene(QGraphicsScene):
         if action:
 
             role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
-            if role and not role.isIrreflexive():
+            if role and not role.irreflexive:
 
                 # always snap the points to the grid, even if the feature is not enabled so we have items aligned
                 x1 = snapToGrid(role.pos().x() + role.width() / 2 + 40, DiagramScene.GridSize, snap=True)
@@ -554,7 +554,7 @@ class DiagramScene(QGraphicsScene):
         if action:
 
             role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
-            if role and not role.isReflexive():
+            if role and not role.reflexive:
 
                 # always snap the points to the grid, even if the feature is not enabled so we have items aligned
                 x1 = snapToGrid(role.pos().x() + role.width() / 2 + 40, DiagramScene.GridSize, snap=True)
@@ -588,7 +588,7 @@ class DiagramScene(QGraphicsScene):
         if action:
 
             role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
-            if role and not role.isSymmetric():
+            if role and not role.symmetric:
 
                 # always snap the points to the grid, even if the feature is not enabled so we have items aligned
                 x1 = snapToGrid(role.pos().x() + role.width() / 2 + 100, DiagramScene.GridSize, snap=True)
@@ -623,7 +623,7 @@ class DiagramScene(QGraphicsScene):
         if action:
 
             role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
-            if role and not role.isTransitive():
+            if role and not role.transitive:
 
                 # always snap the points to the grid, even if the feature is not enabled so we have items aligned
                 x1 = snapToGrid(role.pos().x() + role.width() / 2 + 90, DiagramScene.GridSize, snap=True)
