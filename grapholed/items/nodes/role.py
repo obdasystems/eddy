@@ -139,6 +139,34 @@ class RoleNode(ResizableNode):
                                 return True
         return False
 
+    def isFunctional(self):
+        """
+        Tells whether the Role is defined as functional.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and \
+                e1.functional and \
+                    e1.source is self and \
+                        e1.target.isType(ItemType.DomainRestrictionNode) and \
+                            e1.target.restriction is RestrictionType.exists:
+                                return True
+        return False
+
+    def isInverseFunctional(self):
+        """
+        Tells whether the Role is defined as inverse functional.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and \
+                e1.functional and \
+                    e1.source is self and \
+                        e1.target.isType(ItemType.RangeRestrictionNode) and \
+                            e1.target.restriction is RestrictionType.exists:
+                                return True
+        return False
+
     def isIrreflexive(self):
         """
         Tells whether the Role is defined as irreflexive.

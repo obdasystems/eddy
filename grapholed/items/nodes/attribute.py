@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from grapholed.datatypes import Font, ItemType
+from grapholed.datatypes import Font, ItemType, RestrictionType
 from grapholed.dialogs import EditableNodePropertiesDialog
 from grapholed.items.nodes.common.base import Node
 from grapholed.items.nodes.common.label import Label
@@ -70,14 +70,18 @@ class AttributeNode(Node):
         Returns the basic nodes context menu.
         :rtype: QMenu
         """
+        scene = self.scene()
+
         menu = super().contextMenu()
+        menu.addSeparator()
+        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuAttributeNodeCompose)
 
         collection = self.label.contextMenuAdd()
         if collection:
-            menu.addSeparator()
             for action in collection:
-                menu.addAction(action)
+                menu.insertAction(scene.actionOpenNodeProperties, action)
 
+        menu.insertSeparator(scene.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):
@@ -106,6 +110,20 @@ class AttributeNode(Node):
         :rtype: int
         """
         return self.rect.height()
+
+    def isFunctional(self):
+        """
+        Tells whether the Attribute is defined as functional.
+        :rtype: bool
+        """
+        for e1 in self.edges:
+            if e1.isType(ItemType.InputEdge) and \
+                e1.functional and \
+                    e1.source is self and \
+                        e1.target.isType(ItemType.DomainRestrictionNode) and \
+                            e1.target.restriction is RestrictionType.exists:
+                                return True
+        return False
 
     def propertiesDialog(self):
         """

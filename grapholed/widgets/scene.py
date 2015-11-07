@@ -196,6 +196,13 @@ class DiagramScene(QGraphicsScene):
         connect(self.actionComposeSymmetricRole.triggered, self.composeSymmetricRole)
         connect(self.actionComposeTransitiveRole.triggered, self.composeTransitiveRole)
 
+        ## FUNCIONAL ROLE / ATTRIBUTE
+        self.actionComposeFunctional = QAction('Functional', self)
+        self.actionComposeInverseFunctional = QAction('Inverse Functional', self)
+
+        connect(self.actionComposeFunctional.triggered, self.composeFunctional)
+        connect(self.actionComposeInverseFunctional.triggered, self.composeInverseFunctional)
+
         ## DOMAIN / RANGE RESTRICTION
         self.actionsRestrictionChange = []
         for restriction in RestrictionType:
@@ -244,6 +251,14 @@ class DiagramScene(QGraphicsScene):
         self.menuRoleNodeCompose.addAction(self.actionComposeReflexiveRole)
         self.menuRoleNodeCompose.addAction(self.actionComposeSymmetricRole)
         self.menuRoleNodeCompose.addAction(self.actionComposeTransitiveRole)
+        self.menuRoleNodeCompose.addSeparator()
+        self.menuRoleNodeCompose.addAction(self.actionComposeFunctional)
+        self.menuRoleNodeCompose.addAction(self.actionComposeInverseFunctional)
+
+        ## ATTRIBUTE NODE
+        self.menuAttributeNodeCompose = QMenu('Compose')
+        self.menuAttributeNodeCompose.setIcon(QIcon(':/icons/create'))
+        self.menuAttributeNodeCompose.addAction(self.actionComposeFunctional)
 
         ## DOMAIN / RANGE RESTRICTION
         self.menuRestrictionChange = QMenu('Select restriction')
@@ -333,17 +348,77 @@ class DiagramScene(QGraphicsScene):
                 ])
 
                 kwargs = {
+                    'name': 'compose asymmetric role',
                     'scene': self,
-                    'role': role,
-                    'inverse': inverse,
-                    'complement': complement,
-                    'edge1': edge1,
-                    'edge2': edge2,
-                    'edge3': edge3,
+                    'source': role,
+                    'nodes': {inverse, complement},
+                    'edges': {edge1, edge2, edge3},
                 }
 
                 # push the composition on the stack as a single action
-                self.undoStack.push(CommandComposeAsymmetricRole(**kwargs))
+                self.undoStack.push(CommandComposeAxiom(**kwargs))
+
+    @pyqtSlot()
+    def composeFunctional(self):
+        """
+        Makes the selected role/attribute node functional.
+        """
+        self.setMode(DiagramMode.Idle)
+        action = self.sender()
+        if action:
+
+            node = next(filter(lambda x: x.isType(ItemType.RoleNode, ItemType.AttributeNode), self.selectedNodes()), None)
+            if node and not node.isFunctional():
+
+                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
+                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 90, DiagramScene.GridSize, snap=True)
+
+                restriction = DomainRestrictionNode(scene=self, restriction=RestrictionType.exists)
+                restriction.setPos(QPointF(x1, node.pos().y()))
+
+                edge = InputEdge(scene=self, source=node, target=restriction, functional=True)
+
+                kwargs = {
+                    'name': 'compose functional {0}'.format(node.name),
+                    'scene': self,
+                    'source': node,
+                    'nodes': {restriction},
+                    'edges': {edge},
+                }
+
+                # push the composition on the stack as a single action
+                self.undoStack.push(CommandComposeAxiom(**kwargs))
+
+    @pyqtSlot()
+    def composeInverseFunctional(self):
+        """
+        Makes the selected role node inverse functional.
+        """
+        self.setMode(DiagramMode.Idle)
+        action = self.sender()
+        if action:
+
+            node = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
+            if node and not node.isInverseFunctional():
+
+                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
+                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 90, DiagramScene.GridSize, snap=True)
+
+                restriction = RangeRestrictionNode(scene=self, restriction=RestrictionType.exists)
+                restriction.setPos(QPointF(x1, node.pos().y()))
+
+                edge = InputEdge(scene=self, source=node, target=restriction, functional=True)
+
+                kwargs = {
+                    'name': 'compose inverse functional {0}'.format(node.name),
+                    'scene': self,
+                    'source': node,
+                    'nodes': {restriction},
+                    'edges': {edge},
+                }
+
+                # push the composition on the stack as a single action
+                self.undoStack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
     def composeIrreflexiveRole(self):
@@ -373,18 +448,15 @@ class DiagramScene(QGraphicsScene):
                 edge3 = InclusionEdge(scene=self, source=concept, target=complement)
 
                 kwargs = {
+                    'name': 'compose irreflexive role',
                     'scene': self,
-                    'role': role,
-                    'restriction': restriction,
-                    'complement': complement,
-                    'concept': concept,
-                    'edge1': edge1,
-                    'edge2': edge2,
-                    'edge3': edge3,
+                    'source': role,
+                    'nodes': {restriction, complement, concept},
+                    'edges': {edge1, edge2, edge3},
                 }
 
                 # push the composition on the stack as a single action
-                self.undoStack.push(CommandComposeIrreflexiveRole(**kwargs))
+                self.undoStack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
     def composeReflexiveRole(self):
@@ -410,16 +482,15 @@ class DiagramScene(QGraphicsScene):
                 edge2 = InclusionEdge(scene=self, source=concept, target=restriction)
 
                 kwargs = {
+                    'name': 'compose eflexive role',
                     'scene': self,
-                    'role': role,
-                    'restriction': restriction,
-                    'concept': concept,
-                    'edge1': edge1,
-                    'edge2': edge2,
+                    'source': role,
+                    'nodes': {restriction, concept},
+                    'edges': {edge1, edge2},
                 }
 
                 # push the composition on the stack as a single action
-                self.undoStack.push(CommandComposeReflexiveRole(**kwargs))
+                self.undoStack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
     def composeSymmetricRole(self):
@@ -446,15 +517,15 @@ class DiagramScene(QGraphicsScene):
                 ])
 
                 kwargs = {
+                    'name': 'compose symmetric role',
                     'scene': self,
-                    'role': role,
-                    'inverse': inverse,
-                    'edge1': edge1,
-                    'edge2': edge2,
+                    'source': role,
+                    'nodes': {inverse},
+                    'edges': {edge1, edge2},
                 }
 
                 # push the composition on the stack as a single action
-                self.undoStack.push(CommandComposeSymmetricRole(**kwargs))
+                self.undoStack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
     def composeTransitiveRole(self):
@@ -496,16 +567,15 @@ class DiagramScene(QGraphicsScene):
                 ])
 
                 kwargs = {
+                    'name': 'compose transitive role',
                     'scene': self,
-                    'role': role,
-                    'chain': chain,
-                    'edge1': edge1,
-                    'edge2': edge2,
-                    'edge3': edge3,
+                    'source': role,
+                    'nodes': {chain},
+                    'edges': {edge1, edge2, edge3},
                 }
 
                 # push the composition on the stack as a single action
-                self.undoStack.push(CommandComposeTransitiveRole(**kwargs))
+                self.undoStack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
     def itemCut(self):
