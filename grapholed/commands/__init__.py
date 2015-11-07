@@ -32,6 +32,8 @@
 ##########################################################################
 
 
+from grapholed.commands.axioms import CommandComposeAxiom
+
 from grapholed.commands.nodes import CommandNodeAdd
 from grapholed.commands.nodes import CommandNodeSetZValue
 from grapholed.commands.nodes import CommandNodeRezize
@@ -59,19 +61,9 @@ from grapholed.commands.common import CommandItemsMultiRemove
 
 from grapholed.commands.scene import CommandSceneResize
 
-from grapholed.commands.axioms import CommandComposeAsymmetricRole
-from grapholed.commands.axioms import CommandComposeIrreflexiveRole
-from grapholed.commands.axioms import CommandComposeReflexiveRole
-from grapholed.commands.axioms import CommandComposeSymmetricRole
-from grapholed.commands.axioms import CommandComposeTransitiveRole
-
 
 __all__ = [
-    'CommandComposeAsymmetricRole',
-    'CommandComposeIrreflexiveRole',
-    'CommandComposeReflexiveRole',
-    'CommandComposeSymmetricRole',
-    'CommandComposeTransitiveRole',
+    'CommandComposeAxiom',
     'CommandNodeAdd',
     'CommandNodeSetZValue',
     'CommandNodeRezize',
