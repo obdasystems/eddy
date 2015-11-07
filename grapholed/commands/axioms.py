@@ -69,12 +69,12 @@ class CommandComposeAxiom(QUndoCommand):
 
     def undo(self):
         """undo the command"""
-        # remove items from the scene
-        for item in self.nodes | self.edges:
-            self.scene.removeItem(item)
         # remove edge mappings from source and target nodes
         for edge in self.edges:
             edge.source.removeEdge(edge)
             edge.target.removeEdge(edge)
+        # remove items from the scene
+        for item in self.nodes | self.edges:
+            self.scene.removeItem(item)
         # emit updated signal
         self.scene.updated.emit()
