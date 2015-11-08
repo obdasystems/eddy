@@ -143,11 +143,13 @@ class MainWindow(QMainWindow):
         self.actionNewDocument.setIcon(self.iconNew)
         self.actionNewDocument.setShortcut(QKeySequence.New)
         self.actionNewDocument.setStatusTip('Create a new diagram')
+        connect(self.actionNewDocument.triggered, self.newDocument)
 
         self.actionOpenDocument = QAction('Open...', self)
         self.actionOpenDocument.setIcon(self.iconOpen)
         self.actionOpenDocument.setShortcut(QKeySequence.Open)
         self.actionOpenDocument.setStatusTip('Open a diagram')
+        connect(self.actionOpenDocument.triggered, self.openDocument)
 
         self.actionsOpenRecentDocument = []
         for i in range(MainWindow.MaxRecentDocuments):
@@ -160,34 +162,41 @@ class MainWindow(QMainWindow):
         self.actionSaveDocument.setShortcut(QKeySequence.Save)
         self.actionSaveDocument.setStatusTip('Save the current document')
         self.actionSaveDocument.setEnabled(False)
+        connect(self.actionSaveDocument.triggered, self.saveDocument)
 
         self.actionSaveDocumentAs = QAction('Save As...', self)
         self.actionSaveDocumentAs.setIcon(self.iconSaveAs)
         self.actionSaveDocumentAs.setShortcut(QKeySequence.SaveAs)
         self.actionSaveDocumentAs.setStatusTip('Save the active diagram')
         self.actionSaveDocumentAs.setEnabled(False)
+        connect(self.actionSaveDocumentAs.triggered, self.saveDocumentAs)
 
         self.actionImportDocument = QAction('Import...', self)
         self.actionImportDocument.setStatusTip('Import a document')
+        connect(self.actionImportDocument.triggered, self.importDocument)
 
         self.actionExportDocument = QAction('Export...', self)
         self.actionExportDocument.setStatusTip('Export the active diagram')
         self.actionExportDocument.setEnabled(False)
+        connect(self.actionExportDocument.triggered, self.exportDocument)
 
         self.actionPrintDocument = QAction('Print...', self)
         self.actionPrintDocument.setIcon(self.iconPrint)
         self.actionPrintDocument.setStatusTip('Print the active diagram')
         self.actionPrintDocument.setEnabled(False)
+        connect(self.actionPrintDocument.triggered, self.printDocument)
 
         self.actionCloseActiveSubWindow = QAction('Close', self)
         self.actionCloseActiveSubWindow.setIcon(self.iconClose)
         self.actionCloseActiveSubWindow.setShortcut(QKeySequence.Close)
         self.actionCloseActiveSubWindow.setStatusTip('Close the active diagram')
         self.actionCloseActiveSubWindow.setEnabled(False)
+        connect(self.actionCloseActiveSubWindow.triggered, lambda: self.mdiArea.activeSubWindow().close())
 
         self.actionOpenPreferences = QAction('Preferences', self)
         self.actionOpenPreferences.setShortcut(QKeySequence.Preferences)
         self.actionOpenPreferences.setStatusTip('Open {0} preferences'.format(__appname__))
+        connect(self.actionOpenPreferences.triggered, self.openPreferences)
 
         if not sys.platform.startswith('darwin'):
             self.actionOpenPreferences.setIcon(self.iconPreferences)
@@ -195,6 +204,7 @@ class MainWindow(QMainWindow):
         self.actionQuit = QAction('Quit', self)
         self.actionQuit.setStatusTip('Quit {0}'.format(__appname__))
         self.actionQuit.setShortcut(QKeySequence.Quit)
+        connect(self.actionQuit.triggered, self.close)
 
         if not sys.platform.startswith('darwin'):
             self.actionQuit.setIcon(self.iconQuit)
@@ -204,7 +214,31 @@ class MainWindow(QMainWindow):
         self.actionSnapToGrid.setStatusTip('Snap diagram elements to the grid')
         self.actionSnapToGrid.setCheckable(True)
         self.actionSnapToGrid.setChecked(self.settings.value('scene/snap_to_grid', False, bool))
-        
+        connect(self.actionSnapToGrid.triggered, self.toggleSnapToGrid)
+
+        self.actionAbout = QAction('About {0}'.format(__appname__), self)
+        self.actionAbout.setShortcut(QKeySequence.HelpContents)
+        connect(self.actionAbout.triggered, self.about)
+
+        self.actionSapienzaWebOpen = QAction('DIAG - Sapienza university', self)
+        self.actionSapienzaWebOpen.setIcon(self.iconLink)
+        connect(self.actionSapienzaWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/en'))
+
+        self.actionGrapholWebOpen = QAction('Graphol homepage', self)
+        self.actionGrapholWebOpen.setIcon(self.iconLink)
+        connect(self.actionGrapholWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/~graphol/'))
+
+        ## SET THE ICON ON DOCK WIDGETS ACTIONS
+        self.navigatorDock.toggleViewAction().setIcon(self.iconZoom)
+        self.overviewDock.toggleViewAction().setIcon(self.iconZoom)
+        self.paletteDock.toggleViewAction().setIcon(self.iconPalette)
+
+        # --------------------------------------- SCENE SPECIFIC ACTIONS --------------------------------------------- #
+        # actions below are being used from within the DiagramScene (context menu): they need to be declared here      #
+        # in the Main Window so we can add them to the toolbar (so they are both bisivle there and they can also be    #
+        # triggered by means of shortcuts (see description below for actions with shortcuts only)                      #
+        # ------------------------------------------------------------------------------------------------------------ #
+
         self.actionItemCut = QAction('Cut', self)
         self.actionItemCut.setIcon(self.iconCut)
         self.actionItemCut.setShortcut(QKeySequence.Cut)
@@ -253,24 +287,12 @@ class MainWindow(QMainWindow):
         self.actionRedo.setIcon(self.iconRedo)
         self.actionRedo.setShortcut(QKeySequence.Redo)
 
-        self.actionAbout = QAction('About {0}'.format(__appname__), self)
-        self.actionAbout.setShortcut(QKeySequence.HelpContents)
-
-        self.actionSapienzaWebOpen = QAction('DIAG - Sapienza university', self)
-        self.actionSapienzaWebOpen.setIcon(self.iconLink)
-        
-        self.actionGrapholWebOpen = QAction('Graphol homepage', self)
-        self.actionGrapholWebOpen.setIcon(self.iconLink)
-
-        # set the icon on dock widgets actions
-        self.navigatorDock.toggleViewAction().setIcon(self.iconZoom)
-        self.overviewDock.toggleViewAction().setIcon(self.iconZoom)
-        self.paletteDock.toggleViewAction().setIcon(self.iconPalette)
-
-        # actions below are not available in the application Main Menu, nor in the Toolbar (entries can be found in
-        # context menus): since we need shortcuts to work, we would need to add such actions to a visible widget that
-        # receive events, otherwise we won't be able to use shortcuts. More on this can be found in the lik below:
-        # https://forum.qt.io/topic/15107/solved-action-shortcut-not-triggering-unless-action-is-placed-in-a-toolbar)
+        # ---------------------------------------- SHORTCUT ONLY ACTIONS --------------------------------------------- #
+        # actions below are not available in the application Main Menu, nor in the Toolbar (entries can be found in    #
+        # context menus): since we need shortcuts to work, we would need to add such actions to a visible widget that  #
+        # receive events, otherwise we won't be able to use shortcuts. More on this can be found in the lik below:     #
+        # https://forum.qt.io/topic/15107/solved-action-shortcut-not-triggering-unless-action-is-placed-in-a-toolbar)  #
+        # ------------------------------------------------------------------------------------------------------------ #
         self.actionToggleEdgeComplete = QAction('Complete', self)
         self.actionToggleEdgeComplete.setShortcut('ALT+C')
         self.actionToggleEdgeComplete.setCheckable(True)
@@ -382,20 +404,6 @@ class MainWindow(QMainWindow):
 
         ############################################### SIGNALS ########################################################
 
-        connect(self.actionNewDocument.triggered, self.newDocument)
-        connect(self.actionOpenDocument.triggered, self.openDocument)
-        connect(self.actionSaveDocument.triggered, self.saveDocument)
-        connect(self.actionSaveDocumentAs.triggered, self.saveDocumentAs)
-        connect(self.actionImportDocument.triggered, self.importDocument)
-        connect(self.actionExportDocument.triggered, self.exportDocument)
-        connect(self.actionPrintDocument.triggered, self.printDocument)
-        connect(self.actionCloseActiveSubWindow.triggered, lambda: self.mdiArea.activeSubWindow().close())
-        connect(self.actionOpenPreferences.triggered, self.openPreferences)
-        connect(self.actionQuit.triggered, self.close)
-        connect(self.actionSnapToGrid.triggered, self.toggleSnapToGrid)
-        connect(self.actionAbout.triggered, self.about)
-        connect(self.actionSapienzaWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/en'))
-        connect(self.actionGrapholWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/~graphol/'))
         connect(self.documentLoaded, self.onDocumentLoaded)
         connect(self.documentSaved, self.onDocumentSaved)
         connect(self.mdiArea.subWindowActivated, self.onSubWindowActivated)
