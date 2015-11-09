@@ -51,7 +51,7 @@ class Color(Enum):
     Yellow = '#f0e50c'
     Orange = '#f29210'
     Red = '#e41b20'
-    Purple = '#5f3d88'
+    Purple = '#724e9d'
     Blue = '#1760ab'
     Teal = '#16ccef'
     Green = '#2da735'
