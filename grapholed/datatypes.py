@@ -45,20 +45,17 @@ class Color(Enum):
     """
     This class defines predicate nodes available colors.
     """
-    __order__ = 'White Yellow Orange DarkOrange Red Purple Violet Blue LightBlue Teal Green LightGreen'
+    __order__ = 'White Yellow Orange Red Purple Blue Teal Green Lime'
 
     White = '#fcfcfc'
     Yellow = '#f0e50c'
     Orange = '#f29210'
-    DarkOrange = '#f27010'
     Red = '#e41b20'
-    Purple = '#8e085a'
-    Violet = '#552d86'
-    Blue = '#23358a'
-    LightBlue = '#1760ab'
-    Teal = '#0ca2bf'
+    Purple = '#5f3d88'
+    Blue = '#1760ab'
+    Teal = '#16ccef'
     Green = '#2da735'
-    LightGreen = '#9bd425'
+    Lime = '#86f42e'
 
     @classmethod
     def forValue(cls, value):
