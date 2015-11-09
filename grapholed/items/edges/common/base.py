@@ -51,7 +51,7 @@ class Edge(Item):
     """
     __metaclass__ = ABCMeta
 
-    handleBrush = QColor(79, 195, 247, 255)
+    handleBrush = QColor(168, 168, 168, 255)
     handlePen = QPen(QColor(0, 0, 0, 255), 1.0, Qt.SolidLine)
     handleSize = 8
     headPen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
