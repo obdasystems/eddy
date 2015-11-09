@@ -34,7 +34,7 @@
 
 from abc import ABCMeta, abstractmethod
 from grapholed.datatypes import ItemType
-from PyQt5.QtWidgets import QGraphicsItem
+from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem
 
 
 class Item(QGraphicsItem):
@@ -154,7 +154,6 @@ class Item(QGraphicsItem):
         :rtype: bool
         """
         return self.itemtype in args
-        #return any(x is self.itemtype for x in args)
 
     ############################################# ITEM IMPORT / EXPORT #################################################
 
@@ -198,6 +197,61 @@ class Item(QGraphicsItem):
         :rtype: QPainterPath
         """
         pass
+
+    ############################################## STRING REPRESENTATION ###############################################
+
+    def __repr__(self):
+        """
+        Object representaton.
+        """
+        return '{0}:{1}'.format(self.__class__.__name__, self.id)
+
+
+class LabelItem(QGraphicsTextItem):
+    """
+    Base class for all the diagram labels: this class is mostly needed to improve performances.
+    By using the LabelItem interface we can check the item type using the isType() method instead of using isinstance().
+    """
+    __metaclass__ = ABCMeta
+
+    # an integer identifying this node as unique type
+    itemtype = 0
+
+    def __init__(self, parent=None):
+        """
+        Initialize the Label item.
+        :param parent: the parent item
+        """
+        super().__init__(parent)
+
+    ################################################ ITEM INTERFACE ####################################################
+
+    @staticmethod
+    def isEdge():
+        """
+        Tells whether the current element is a graph Edge.
+        :return: True if the item is an edge, False otherwise.
+        :rtype: bool
+        """
+        return False
+
+    @staticmethod
+    def isNode():
+        """
+        Tells whether the current element is a graph Node.
+        :return: True if the item is a node, False otherwise.
+        :rtype: bool
+        """
+        return False
+
+    def isType(self, *args):
+        """
+        Tells whether the current item is one of the given types.
+        :param args: positional arguments specifying item types to match.
+        :return: True if the item matches a given type, False otherwise.
+        :rtype: bool
+        """
+        return self.itemtype in args
 
     ############################################## STRING REPRESENTATION ###############################################
 

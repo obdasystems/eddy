@@ -87,6 +87,8 @@ class DiagramMode(IntEnum):
     EdgeBreakPointMove = 6 # edge breakpoint movement
     LabelMove = 7 # text label edit
     LabelEdit = 8 # text label movement
+    RubberBandDrag = 9 # multi selection
+    SceneDrag = 10 # scene being dragged by the mouse
 
 
 class DistinctList(list):
@@ -269,6 +271,10 @@ class ItemType(IntEnum):
     InclusionEdge = 18
     InputEdge = 19
     InstanceOfEdge = 20
+
+    ## LABELS
+    LabelEdge = 21
+    LabelNode = 22
 
 
 @unique

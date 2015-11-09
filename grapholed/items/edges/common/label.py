@@ -34,18 +34,20 @@
 
 from math import sin, cos, pi as M_PI
 
-from grapholed.datatypes import Font
+from grapholed.datatypes import Font, ItemType
 from grapholed.functions import midpoint, angleP
+from grapholed.items import LabelItem
 
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QColor, QPainterPath
-from PyQt5.QtWidgets import QGraphicsTextItem
 
 
-class Label(QGraphicsTextItem):
+class Label(LabelItem):
     """
     This class implements the label to be attached to the graph edges.
     """
+    itemtype = ItemType.LabelEdge
+
     def __init__(self, text='', centered=True, parent=None):
         """
         Initialize the label.

@@ -325,7 +325,7 @@ class DiagramScene(QGraphicsScene):
         for selected in self.selectedNodes():
             zValue = 0
             colliding = selected.collidingItems()
-            for item in filter(lambda x: isinstance(x, Item), colliding):
+            for item in filter(lambda x: not x.isType(ItemType.LabelNode, ItemType.LabelEdge), colliding):
                 if item.zValue() >= zValue:
                     zValue = item.zValue() + 0.1
             if zValue != selected.zValue():
@@ -846,7 +846,7 @@ class DiagramScene(QGraphicsScene):
         for selected in self.selectedNodes():
             zValue = 0
             colliding = selected.collidingItems()
-            for item in filter(lambda x: isinstance(x, Item), colliding):
+            for item in filter(lambda x: not x.isType(ItemType.LabelNode, ItemType.LabelEdge), colliding):
                 if item.zValue() >= zValue:
                     zValue = item.zValue() - 0.1
             if zValue != selected.zValue():
@@ -1285,8 +1285,7 @@ class DiagramScene(QGraphicsScene):
         :param edges: whether to include edges in our search.
         :rtype: Item
         """
-        collection = [x for x in self.items(point) if isinstance(x, Item)]
-        collection = [x for x in collection if nodes and x.isNode() or edges and x.isEdge()]
+        collection = [x for x in self.items(point) if nodes and x.isNode() or edges and x.isEdge()]
         return max(collection, key=lambda x: x.zValue()) if collection else None
 
     def node(self, nid):
@@ -1325,7 +1324,7 @@ class DiagramScene(QGraphicsScene):
         Returns the items selected in the scene (will filter out labels since we don't need them).
         :rtype: list
         """
-        return [x for x in super().selectedItems() if isinstance(x, Item)]
+        return [x for x in super().selectedItems() if x.isNode() or x.isEdge()]
 
     def selectedNodes(self):
         """

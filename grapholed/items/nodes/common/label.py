@@ -33,17 +33,20 @@
 
 
 from grapholed.commands import CommandNodeLabelMove, CommandNodeLabelEdit
-from grapholed.datatypes import Font, DiagramMode
+from grapholed.datatypes import Font, DiagramMode, ItemType
 from grapholed.functions import isEmpty, distanceP, connect
+from grapholed.items import LabelItem
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QColor, QTextCursor, QIcon, QPainterPath
-from PyQt5.QtWidgets import QGraphicsTextItem, QGraphicsItem, QAction
+from PyQt5.QtWidgets import QGraphicsItem, QAction
 
 
-class Label(QGraphicsTextItem):
+class Label(LabelItem):
     """
     This class implements the label to be attached to the graph nodes.
     """
+    itemtype = ItemType.LabelNode
+
     def __init__(self, default='', centered=True, movable=True, editable=True, parent=None):
         """
         Initialize the label.
@@ -406,3 +409,12 @@ class Label(QGraphicsTextItem):
             command.end(pos=self.defaultPos())
             scene.undoStack.push(command)
             self.updatePos()
+
+    ############################################## STRING REPRESENTATION ###############################################
+
+    def __repr__(self):
+        """
+        Object representaton.
+        """
+        parent = self.parentItem()
+        return 'Label:{0}:{1}'.format(parent.__class__.__name__, parent.id)

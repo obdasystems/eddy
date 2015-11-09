@@ -918,7 +918,7 @@ class MainWindow(QMainWindow):
         view = MainView(scene)
         view.setViewportUpdateMode(MainView.FullViewportUpdate)
         view.centerOn(0, 0)
-        view.setDragMode(MainView.RubberBandDrag)
+        view.setDragMode(MainView.NoDrag)
         return view
 
     def getMDISubWindow(self, mainview):
