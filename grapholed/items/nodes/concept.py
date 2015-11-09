@@ -220,6 +220,7 @@ class ConceptNode(ResizableNode):
         node = document.createElement('node')
         node.setAttribute('id', self.id)
         node.setAttribute('type', self.xmlname)
+        node.setAttribute('color', self.brush.color().name())
 
         # add node attributes
         url = document.createElement('data:url')
