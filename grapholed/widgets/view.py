@@ -45,7 +45,7 @@ class MainView(QGraphicsView):
     """
     This class implements the main view displayed in the MDI area.
     """
-    RubberBandDragBrush = QColor(97, 153, 242, 100)
+    RubberBandDragBrush = QColor(97, 153, 242, 40)
     RubberBandDragPen = selectionPen = QPen(QColor(46, 97, 179), 1.0, Qt.SolidLine)
 
     updated = pyqtSignal()
