@@ -59,6 +59,9 @@ QToolBar QToolButton:pressed {
     background: #B0BEC5;
     border: 1px solid #607D8B;
 }
+QToolButton::menu-indicator {
+    image: none;
+}
 /**
  * DOCK WIDGETS
  */

@@ -252,10 +252,8 @@ class DiagramScene(QGraphicsScene):
         ################################################## MENUS #######################################################
 
         ## NODE GENERIC
-        self.menuChangeNodeBrush = QMenu('Select color')
-        self.menuChangeNodeBrush.setIcon(QIcon(':/icons/color-fill'))
-        for action in self.actionsChangeNodeBrush:
-            self.menuChangeNodeBrush.addAction(action)
+        self.changeNodeBrushButton = mainwindow.changeNodeBrushButton
+        self.menuChangeNodeBrush = mainwindow.menuChangeNodeBrush
 
         ## CONCEPT NODE
         self.menuConceptNodeSpecial = QMenu('Special type')
@@ -1385,9 +1383,7 @@ class DiagramScene(QGraphicsScene):
         self.actionItemDelete.setEnabled(isNode or isEdge)
         self.actionItemPaste.setEnabled(isClip)
         self.actionSendToBack.setEnabled(isNode)
-
-        for action in self.actionsChangeNodeBrush:
-            action.setEnabled(isPred)
+        self.changeNodeBrushButton.setEnabled(isPred)
 
     def updateClipboard(self):
         """

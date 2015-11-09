@@ -40,7 +40,8 @@ import webbrowser
 from PyQt5.QtCore import Qt, QRectF, pyqtSlot, QSettings, QFile, QIODevice, pyqtSignal, QTextStream, QSizeF
 from PyQt5.QtGui import QIcon, QKeySequence, QPixmap, QPainter, QPageSize, QColor
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
-from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QAction, QStatusBar, QMessageBox, QDialog, QStyle
+from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QAction, QStatusBar, QMessageBox, QDialog, QStyle, QMenu, \
+    QToolButton
 from PyQt5.QtWidgets import QUndoGroup
 from PyQt5.QtXml import QDomDocument
 
@@ -299,13 +300,12 @@ class MainWindow(QMainWindow):
             pixmap.fill(QColor(code))
             return pixmap
 
-        ## COLOR PALETTE
+        ## NODE GENERIC ACTIONS
         self.actionsChangeNodeBrush = []
         for color in Color:
             action = QAction(color.name, self)
             action.setIcon(QIcon(create_pixmap_from_hex(color.value)))
             action.setCheckable(False)
-            action.setEnabled(False)
             action.setData(color)
             self.actionsChangeNodeBrush.append(action)
 
@@ -381,6 +381,15 @@ class MainWindow(QMainWindow):
         self.menuHelp.addAction(self.actionSapienzaWebOpen)
         self.menuHelp.addAction(self.actionGrapholWebOpen)
 
+        # ------------------------------------- NODE GENERIC CONTEXT MENU -------------------------------------------- #
+        # menu defined below are rendered as node context menus but they needs to be defined here so they are          #
+        # accessible from the toolbar (embedded into a QToolButton                                                     #
+        # ------------------------------------------------------------------------------------------------------------ #
+        self.menuChangeNodeBrush = QMenu('Select color')
+        self.menuChangeNodeBrush.setIcon(QIcon(':/icons/color-fill'))
+        for action in self.actionsChangeNodeBrush:
+            self.menuChangeNodeBrush.addAction(action)
+
         ############################################### STATUS BAR #####################################################
 
         statusbar = QStatusBar(self)
@@ -411,12 +420,18 @@ class MainWindow(QMainWindow):
         self.documentToolBar.addSeparator()
         self.documentToolBar.addAction(self.actionBringToFront)
         self.documentToolBar.addAction(self.actionSendToBack)
-        self.documentToolBar.addSeparator()
-        self.documentToolBar.addAction(self.actionSnapToGrid)
+
+        self.changeNodeBrushButton = QToolButton()
+        self.changeNodeBrushButton.setIcon(build_shaded_icon(':/icons/color-fill'))
+        self.changeNodeBrushButton.setMenu(self.menuChangeNodeBrush)
+        self.changeNodeBrushButton.setPopupMode(QToolButton.InstantPopup)
+        self.changeNodeBrushButton.setEnabled(False)
 
         self.documentToolBar.addSeparator()
-        for action in self.actionsChangeNodeBrush:
-            self.documentToolBar.addAction(action)
+        self.documentToolBar.addWidget(self.changeNodeBrushButton)
+
+        self.documentToolBar.addSeparator()
+        self.documentToolBar.addAction(self.actionSnapToGrid)
 
         self.documentToolBar.addSeparator()
         self.documentToolBar.addWidget(self.zoomctl)
@@ -732,9 +747,6 @@ class MainWindow(QMainWindow):
             # make sure to keep those things activated in case the MainWindow lost just the focus
             if not self.mdiArea.subWindowList():
 
-                for action in self.actionsChangeNodeBrush:
-                    action.setEnabled(False)
-
                 self.actionSaveDocumentAs.setEnabled(False)
                 self.actionExportDocument.setEnabled(False)
                 self.actionPrintDocument.setEnabled(False)
@@ -746,6 +758,7 @@ class MainWindow(QMainWindow):
                 self.actionSendToBack.setEnabled(False)
                 self.actionSelectAll.setEnabled(False)
                 self.actionCloseActiveSubWindow.setEnabled(False)
+                self.changeNodeBrushButton.setEnabled(False)
                 self.zoomctl.reset()
                 self.zoomctl.setEnabled(False)
                 self.navigator.clearView()
