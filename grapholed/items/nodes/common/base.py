@@ -145,6 +145,7 @@ class Node(Item):
     def anchor(self, edge):
         """
         Returns the anchor point of the given edge in scene coordinates.
+        :param edge: the edge whose anchor we want to retrieve.
         :rtype: QPointF
         """
         try:

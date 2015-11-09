@@ -883,12 +883,14 @@ class DiagramScene(QGraphicsScene):
         self.setMode(DiagramMode.Idle)
         action = self.sender()
         if action:
-            node = next(filter(lambda x: ItemType.UnionNode <= x.itemtype <= ItemType.DisjointUnionNode, self.selectedNodes()), None)
-            clazz = action.data()
-            if not isinstance(node, clazz):
-                xnode = clazz(scene=self)
-                xnode.setPos(node.pos())
-                self.undoStack.push(CommandNodeHexagonSwitchTo(scene=self, node1=node, node2=xnode))
+            selected = self.selectedNodes()
+            node = next(filter(lambda x: ItemType.UnionNode <= x.itemtype <= ItemType.DisjointUnionNode, selected), None)
+            if node:
+                clazz = action.data()
+                if not isinstance(node, clazz):
+                    xnode = clazz(scene=self)
+                    xnode.setPos(node.pos())
+                    self.undoStack.push(CommandNodeHexagonSwitchTo(scene=self, node1=node, node2=xnode))
 
     @pyqtSlot()
     def toggleEdgeComplete(self):

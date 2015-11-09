@@ -37,7 +37,7 @@ from abc import ABCMeta
 from grapholed.items.nodes.common.base import Node
 
 from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QPolygonF, QBrush
+from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QPolygonF
 
 
 class HexagonNode(Node):

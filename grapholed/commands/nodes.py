@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from grapholed.datatypes import RestrictionType
+from grapholed.datatypes import RestrictionType, DistinctList
 
 from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QPolygonF
@@ -351,24 +351,30 @@ class CommandNodeHexagonSwitchTo(QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        # move the edges
-        for edge in self.node1.edges:
-            if edge.source == self.node1:
-                edge.source = self.node2
-            else:
-                edge.target = self.node2
-            self.node2.addEdge(edge)
+        # add the new node to the scene
+        self.scene.addItem(self.node2)
 
         # move the anchor points
         for edge, point in self.node1.anchors.items():
             self.node2.setAnchor(edge, point)
 
-        # clear edge and anchor references from node1
-        self.node1.edges.clear()
-        self.node1.anchors.clear()
+        # move the edges
+        for edge in self.node1.edges:
+            if edge.source is self.node1:
+                edge.source = self.node2
+            if edge.target is self.node1:
+                edge.target = self.node2
+            # IMPORTANT: clear anchors dict in the edge or we will have also the
+            # reference  of the previous node since it's a dict indexed by item!
+            edge.anchors.clear()
+            edge.updateEdge()
+            self.node2.addEdge(edge)
 
-        # add the new node to the scene
-        self.scene.addItem(self.node2)
+        # clear edge and anchor references from node1
+        self.node1.anchors.clear()
+        self.node1.edges.clear()
+
+        # remove the old node from the scene
         self.scene.removeItem(self.node1)
 
         # emit updated signal
@@ -376,24 +382,30 @@ class CommandNodeHexagonSwitchTo(QUndoCommand):
 
     def undo(self):
         """undo the command"""
-        # move edges back
-        for edge in self.node2.edges:
-            if edge.source == self.node2:
-                edge.source = self.node1
-            else:
-                edge.target = self.node1
-            self.node1.addEdge(edge)
+        # add back to the scene the old node
+        self.scene.addItem(self.node1)
 
         # move the anchor points back
         for edge, point in self.node2.anchors.items():
             self.node1.setAnchor(edge, point)
 
-        # clear edge and anchor references from node2
-        self.node2.edges.clear()
-        self.node2.anchors.clear()
+        # move the edges
+        for edge in self.node2.edges:
+            if edge.source is self.node2:
+                edge.source = self.node1
+            if edge.target is self.node2:
+                edge.target = self.node1
+            # IMPORTANT: clear anchors dict in the edge or we will have also the
+            # reference  of the previous node since it's a dict indexed by item!
+            edge.anchors.clear()
+            edge.updateEdge()
+            self.node1.addEdge(edge)
 
-        # add back to the scene the old node
-        self.scene.addItem(self.node1)
+        # clear edge and anchor references from node2
+        self.node2.anchors.clear()
+        self.node2.edges.clear()
+
+        # remove the new node from the scene
         self.scene.removeItem(self.node2)
 
         # emit updated signal
