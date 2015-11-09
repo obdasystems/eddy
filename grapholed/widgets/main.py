@@ -40,8 +40,8 @@ import webbrowser
 from PyQt5.QtCore import Qt, QRectF, pyqtSlot, QSettings, QFile, QIODevice, pyqtSignal, QTextStream, QSizeF
 from PyQt5.QtGui import QIcon, QKeySequence, QPixmap, QPainter, QPageSize, QColor
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
-from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QAction, QStatusBar, QMessageBox, QDialog, QStyle, QMenu, \
-    QToolButton
+from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QAction, QStatusBar, QMessageBox, QDialog, QStyle
+from PyQt5.QtWidgets import QMenu, QToolButton
 from PyQt5.QtWidgets import QUndoGroup
 from PyQt5.QtXml import QDomDocument
 
