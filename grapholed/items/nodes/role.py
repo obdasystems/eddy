@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from grapholed.datatypes import Font, ItemType, RestrictionType, SpecialConceptType
+from grapholed.datatypes import Font, ItemType, RestrictionType, SpecialConceptType, DiagramMode
 from grapholed.dialogs import EditableNodePropertiesDialog
 from grapholed.functions import snapToGrid
 from grapholed.items.nodes.common.base import ResizableNode
@@ -644,9 +644,13 @@ class RoleNode(ResizableNode):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        brush = self.selectedBrush if self.isSelected() else self.brush
+        scene = self.scene()
+        if scene.mode is not DiagramMode.NodeResize and self.isSelected():
+            painter.setPen(self.selectionPen)
+            painter.drawRect(self.boundingRect())
+
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(brush)
+        painter.setBrush(self.brush)
         painter.setPen(self.pen)
         painter.drawPolygon(self.polygon)
         self.paintHandles(painter)

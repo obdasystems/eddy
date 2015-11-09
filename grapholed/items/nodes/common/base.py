@@ -53,7 +53,9 @@ class Node(Item):
 
     name = 'node'
     prefix = 'n'
-    selectedBrush = QBrush(QColor(251, 255, 148))
+    selectionOffset = 4 # used in non-resizable nodes to space the bounding rect from the shape
+    selectionPen = QPen(QColor(0, 0, 0), 1.0, Qt.CustomDashLine)
+    selectionPen.setDashPattern([2, 2])
     xmlname = 'node'
 
     def __init__(self, **kwargs):
@@ -438,8 +440,8 @@ class ResizableNode(Node):
     handleBM = 7
     handleBR = 8
 
-    handleBrush = QColor(79, 195, 247, 255)
-    handlePen = QPen(QColor(0, 0, 0, 255), 1.0, Qt.SolidLine)
+    handleBrush = QColor(168, 168, 168, 255)
+    handlePen = QPen(QColor(0, 0, 0, 255), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     handleSize = +8.0
     handleSpace = -4.0
 

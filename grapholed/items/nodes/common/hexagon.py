@@ -126,11 +126,12 @@ class HexagonNode(Node):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
+        o = self.selectionOffset
         x = self.polygon[self.indexML].x()
         y = self.polygon[self.indexTL].y()
         w = self.polygon[self.indexMR].x() - x
         h = self.polygon[self.indexBL].y() - y
-        return QRectF(x, y, w, h)
+        return QRectF(x, y, w, h).adjusted(-o, -o, o, o)
 
     def painterPath(self):
         """
@@ -195,8 +196,11 @@ class HexagonNode(Node):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        brush = self.selectedBrush if self.isSelected() else self.brush
+        if self.isSelected():
+            painter.setPen(self.selectionPen)
+            painter.drawRect(self.boundingRect())
+
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(brush)
+        painter.setBrush(self.brush)
         painter.setPen(self.pen)
         painter.drawPolygon(self.polygon)

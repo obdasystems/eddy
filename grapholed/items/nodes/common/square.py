@@ -259,7 +259,8 @@ class SquaredNode(Node):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        return self.rect
+        o = self.selectionOffset
+        return self.rect.adjusted(-o, -o, o, o)
 
     def painterPath(self):
         """
@@ -346,7 +347,10 @@ class SquaredNode(Node):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        brush = self.selectedBrush if self.isSelected() else self.brush
-        painter.setBrush(brush)
+        if self.isSelected():
+            painter.setPen(self.selectionPen)
+            painter.drawRect(self.boundingRect())
+
+        painter.setBrush(self.brush)
         painter.setPen(self.pen)
         painter.drawRect(self.rect)
