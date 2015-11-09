@@ -506,7 +506,6 @@ class ConceptNode(ResizableNode):
         painter.setBrush(shapeBrush)
         painter.setPen(self.shapePen)
         painter.drawRect(self.rect)
-        painter.drawRect(self.rect)
 
         self.paintHandles(painter)
 
