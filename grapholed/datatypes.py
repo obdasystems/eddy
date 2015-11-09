@@ -41,6 +41,39 @@ from PyQt5.QtGui import QFont
 
 
 @unique
+class Color(Enum):
+    """
+    This class defines predicate nodes available colors.
+    """
+    __order__ = 'White Yellow Orange DarkOrange Red Purple Violet Blue LightBlue Teal Green LightGreen'
+
+    White = '#fcfcfc'
+    Yellow = '#f0e50c'
+    Orange = '#f29210'
+    DarkOrange = '#f27010'
+    Red = '#e41b20'
+    Purple = '#8e085a'
+    Violet = '#552d86'
+    Blue = '#23358a'
+    LightBlue = '#1760ab'
+    Teal = '#0ca2bf'
+    Green = '#2da735'
+    LightGreen = '#9bd425'
+
+    @classmethod
+    def forValue(cls, value):
+        """
+        Returns the color matching the given HEX code.
+        :param value: the value to match.
+        :rtype: Color
+        """
+        for x in cls:
+            if x.value == value.lower():
+                return x
+        return None
+
+
+@unique
 class DiagramMode(IntEnum):
     """
     This class defines the DiagramScene operational modes.

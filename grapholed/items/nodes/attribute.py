@@ -46,20 +46,20 @@ class AttributeNode(Node):
     This class implements the 'Attribute' node.
     """
     itemtype = ItemType.AttributeNode
-    minHeight = 20
-    minWidth = 20
     name = 'attribute'
-    shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
     xmlname = 'attribute'
 
-    def __init__(self, width=minWidth, height=minHeight, **kwargs):
+    def __init__(self, width=20, height=20, brush='#fcfcfc', **kwargs):
         """
         Initialize the Attribute node.
         :param width: the shape width (unused in current implementation).
         :param height: the shape height (unused in current implementation).
+        :param brush: the brush used to paint the node.
         """
         super().__init__(**kwargs)
-        self.rect = self.createRect(self.minWidth, self.minHeight)
+        self.brush = brush
+        self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
+        self.rect = self.createRect(20, 20)
         self.label = Label(self.name, centered=False, parent=self)
         self.label.updatePos()
 
@@ -88,13 +88,13 @@ class AttributeNode(Node):
         :rtype: QMenu
         """
         scene = self.scene()
-
         menu = super().contextMenu()
-        menu.addSeparator()
+        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuChangeNodeBrush)
         menu.insertMenu(scene.actionOpenNodeProperties, scene.menuAttributeNodeCompose)
 
         collection = self.label.contextMenuAdd()
         if collection:
+            menu.insertSeparator(scene.actionOpenNodeProperties)
             for action in collection:
                 menu.insertAction(scene.actionOpenNodeProperties, action)
 
@@ -107,12 +107,13 @@ class AttributeNode(Node):
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
-            'scene': scene,
-            'id': self.id,
+            'brush': self.brush,
             'description': self.description,
+            'height': self.height(),
+            'id': self.id,
+            'scene': scene,
             'url': self.url,
             'width': self.width(),
-            'height': self.height(),
         }
 
         node = self.__class__(**kwargs)
@@ -169,12 +170,13 @@ class AttributeNode(Node):
         L = E.elementsByTagName('shape:label').at(0).toElement()
 
         kwargs = {
-            'scene': scene,
-            'id': E.attribute('id'),
+            'brush': E.attribute('color', '#fcfcfc'),
             'description': D.text(),
+            'height': int(G.attribute('height')),
+            'id': E.attribute('id'),
+            'scene': scene,
             'url': U.text(),
             'width': int(G.attribute('width')),
-            'height': int(G.attribute('height')),
         }
 
         node = cls(**kwargs)
@@ -297,11 +299,10 @@ class AttributeNode(Node):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        shapeBrush = self.shapeBrushSelected if self.isSelected() else self.shapeBrush
-
+        brush = self.selectedBrush if self.isSelected() else self.brush
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(shapeBrush)
-        painter.setPen(self.shapePen)
+        painter.setBrush(brush)
+        painter.setPen(self.pen)
         painter.drawEllipse(self.rect)
 
     @classmethod
@@ -310,9 +311,6 @@ class AttributeNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        shape_w = 18
-        shape_h = 18
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
@@ -328,6 +326,6 @@ class AttributeNode(Node):
         painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine))
         painter.setBrush(QColor(252, 252, 252))
         painter.translate(kwargs['w'] / 2, kwargs['h'] / 2 + 6)
-        painter.drawEllipse(cls.createRect(shape_w, shape_h))
+        painter.drawEllipse(cls.createRect(18, 18))
 
         return pixmap

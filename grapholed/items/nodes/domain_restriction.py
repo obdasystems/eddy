@@ -47,11 +47,12 @@ class DomainRestrictionNode(SquaredNode):
     name = 'domain restriction'
     xmlname = 'domain-restriction'
 
-    def __init__(self, **kwargs):
+    def __init__(self, brush=None, **kwargs):
         """
         Initialize the Domain Restriction node.
+        :param brush: the brush used to paint the node (unused).
         """
-        super().__init__(brush=(252, 252, 252), **kwargs)
+        super().__init__(brush='#fcfcfc', **kwargs)
 
     ################################################### ITEM DRAWING ###################################################
 

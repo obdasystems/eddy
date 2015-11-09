@@ -47,11 +47,12 @@ class RangeRestrictionNode(SquaredNode):
     name = 'range restriction'
     xmlname = 'range-restriction'
 
-    def __init__(self, **kwargs):
+    def __init__(self, brush=None, **kwargs):
         """
         Initialize the Range Restriction node.
+        :param brush: the brush used to paint the node (unused).
         """
-        super().__init__(brush=(0, 0, 0), **kwargs)
+        super().__init__(brush='#000000', **kwargs)
 
     ################################################### ITEM DRAWING ###################################################
 

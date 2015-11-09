@@ -56,16 +56,18 @@ class RoleNode(ResizableNode):
     minHeight = 50
     minWidth = 70
     name = 'role'
-    shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
     xmlname = 'role'
 
-    def __init__(self, width=minWidth, height=minHeight, **kwargs):
+    def __init__(self, width=minWidth, height=minHeight, brush='#fcfcfc', **kwargs):
         """
         Initialize the Individual node.
         :param width: the shape width.
         :param height: the shape height.
+        :param brush: the brush used to paint the node.
         """
         super().__init__(**kwargs)
+        self.brush = brush
+        self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
         self.polygon = self.createPolygon(max(width, self.minWidth), max(height, self.minHeight))
         self.label = Label(self.name, parent=self)
         self.updateHandlesPos()
@@ -212,11 +214,12 @@ class RoleNode(ResizableNode):
         scene = self.scene()
 
         menu = super().contextMenu()
-        menu.addSeparator()
+        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuChangeNodeBrush)
         menu.insertMenu(scene.actionOpenNodeProperties, scene.menuRoleNodeCompose)
 
         collection = self.label.contextMenuAdd()
         if collection:
+            menu.insertSeparator(scene.actionOpenNodeProperties)
             for action in collection:
                 menu.insertAction(scene.actionOpenNodeProperties, action)
 
@@ -229,12 +232,13 @@ class RoleNode(ResizableNode):
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
-            'scene': scene,
-            'id': self.id,
+            'brush': self.brush,
             'description': self.description,
+            'height': self.height(),
+            'id': self.id,
+            'scene': scene,
             'url': self.url,
             'width': self.width(),
-            'height': self.height(),
         }
 
         node = self.__class__(**kwargs)
@@ -297,12 +301,13 @@ class RoleNode(ResizableNode):
         L = E.elementsByTagName('shape:label').at(0).toElement()
 
         kwargs = {
-            'scene': scene,
-            'id': E.attribute('id'),
+            'brush': E.attribute('color', '#fcfcfc'),
             'description': D.text(),
+            'height': int(G.attribute('height')),
+            'id': E.attribute('id'),
+            'scene': scene,
             'url': U.text(),
             'width': int(G.attribute('width')),
-            'height': int(G.attribute('height')),
         }
 
         node = cls(**kwargs)
@@ -638,13 +643,11 @@ class RoleNode(ResizableNode):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        shapeBrush = self.shapeBrushSelected if self.isSelected() else self.shapeBrush
-
+        brush = self.selectedBrush if self.isSelected() else self.brush
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(shapeBrush)
-        painter.setPen(self.shapePen)
+        painter.setBrush(brush)
+        painter.setPen(self.pen)
         painter.drawPolygon(self.polygon)
-
         self.paintHandles(painter)
 
     @classmethod
@@ -653,16 +656,13 @@ class RoleNode(ResizableNode):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        shape_w = 46
-        shape_h = 34
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        polygon = cls.createPolygon(shape_w, shape_h)
+        polygon = cls.createPolygon(46, 34)
 
         # Draw the polygon
         painter.setRenderHint(QPainter.Antialiasing)

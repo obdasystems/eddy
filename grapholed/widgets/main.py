@@ -38,14 +38,14 @@ import traceback
 import webbrowser
 
 from PyQt5.QtCore import Qt, QRectF, pyqtSlot, QSettings, QFile, QIODevice, pyqtSignal, QTextStream, QSizeF
-from PyQt5.QtGui import QIcon, QKeySequence, QPixmap, QPainter, QPageSize
+from PyQt5.QtGui import QIcon, QKeySequence, QPixmap, QPainter, QPageSize, QColor
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
-from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QAction, QStatusBar, QMessageBox, QDialog
+from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QAction, QStatusBar, QMessageBox, QDialog, QStyle
 from PyQt5.QtWidgets import QUndoGroup
 from PyQt5.QtXml import QDomDocument
 
 from grapholed import __version__, __appname__, __organization__
-from grapholed.datatypes import FileType, DiagramMode, DistinctList
+from grapholed.datatypes import FileType, DiagramMode, DistinctList, Color
 from grapholed.dialogs import AboutDialog, OpenFileDialog, PreferencesDialog, SaveFileDialog
 from grapholed.exceptions import ParseError
 from grapholed.functions import getPath, shaded, connect, disconnect
@@ -79,7 +79,7 @@ class MainWindow(QMainWindow):
 
         ################################################# ICONS ########################################################
 
-        def getIcon(path):
+        def build_shaded_icon(path):
             """
             Load the given icon.
             :param path: the icon path.
@@ -90,27 +90,27 @@ class MainWindow(QMainWindow):
             icon.addPixmap(shaded(QPixmap(path), 0.25), QIcon.Disabled)
             return icon
 
-        self.iconBringToFront = getIcon(':/icons/bring-to-front')
-        self.iconClose = getIcon(':/icons/close')
-        self.iconCopy = getIcon(':/icons/copy')
-        self.iconCut = getIcon(':/icons/cut')
-        self.iconDelete = getIcon(':/icons/delete')
-        self.iconGrid = getIcon(':/icons/grid')
-        self.iconLink = getIcon(':/icons/link')
-        self.iconNew = getIcon(':/icons/new')
-        self.iconOpen = getIcon(':/icons/open')
-        self.iconPaste = getIcon(':/icons/paste')
-        self.iconPalette = getIcon(':/icons/appearance')
-        self.iconPreferences = getIcon(':/icons/preferences')
-        self.iconPrint = getIcon(':/icons/print')
-        self.iconQuit = getIcon(':/icons/quit')
-        self.iconRedo = getIcon(':/icons/redo')
-        self.iconSave = getIcon(':/icons/save')
-        self.iconSaveAs = getIcon(':/icons/save')
-        self.iconSelectAll = getIcon(':/icons/select-all')
-        self.iconSendToBack = getIcon(':/icons/send-to-back')
-        self.iconUndo = getIcon(':/icons/undo')
-        self.iconZoom = getIcon(':/icons/zoom')
+        self.iconBringToFront = build_shaded_icon(':/icons/bring-to-front')
+        self.iconClose = build_shaded_icon(':/icons/close')
+        self.iconCopy = build_shaded_icon(':/icons/copy')
+        self.iconCut = build_shaded_icon(':/icons/cut')
+        self.iconDelete = build_shaded_icon(':/icons/delete')
+        self.iconGrid = build_shaded_icon(':/icons/grid')
+        self.iconLink = build_shaded_icon(':/icons/link')
+        self.iconNew = build_shaded_icon(':/icons/new')
+        self.iconOpen = build_shaded_icon(':/icons/open')
+        self.iconPaste = build_shaded_icon(':/icons/paste')
+        self.iconPalette = build_shaded_icon(':/icons/appearance')
+        self.iconPreferences = build_shaded_icon(':/icons/preferences')
+        self.iconPrint = build_shaded_icon(':/icons/print')
+        self.iconQuit = build_shaded_icon(':/icons/quit')
+        self.iconRedo = build_shaded_icon(':/icons/redo')
+        self.iconSave = build_shaded_icon(':/icons/save')
+        self.iconSaveAs = build_shaded_icon(':/icons/save')
+        self.iconSelectAll = build_shaded_icon(':/icons/select-all')
+        self.iconSendToBack = build_shaded_icon(':/icons/send-to-back')
+        self.iconUndo = build_shaded_icon(':/icons/undo')
+        self.iconZoom = build_shaded_icon(':/icons/zoom')
 
         ############################################# DOCK WIDGETS #####################################################
 
@@ -228,6 +228,14 @@ class MainWindow(QMainWindow):
         self.actionGrapholWebOpen.setIcon(self.iconLink)
         connect(self.actionGrapholWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/~graphol/'))
 
+        self.actionUndo = self.undoGroup.createUndoAction(self)
+        self.actionUndo.setIcon(self.iconUndo)
+        self.actionUndo.setShortcut(QKeySequence.Undo)
+
+        self.actionRedo = self.undoGroup.createRedoAction(self)
+        self.actionRedo.setIcon(self.iconRedo)
+        self.actionRedo.setShortcut(QKeySequence.Redo)
+
         ## SET THE ICON ON DOCK WIDGETS ACTIONS
         self.navigatorDock.toggleViewAction().setIcon(self.iconZoom)
         self.overviewDock.toggleViewAction().setIcon(self.iconZoom)
@@ -279,13 +287,27 @@ class MainWindow(QMainWindow):
         self.actionSelectAll.setStatusTip('Select all items in the active diagram')
         self.actionSelectAll.setEnabled(False)
 
-        self.actionUndo = self.undoGroup.createUndoAction(self)
-        self.actionUndo.setIcon(self.iconUndo)
-        self.actionUndo.setShortcut(QKeySequence.Undo)
+        def create_pixmap_from_hex(code):
+            """
+            Create and returns a QPixmap filled using the given HEX color code.
+            :param code: the HEX color code to use to fill the icon.
+            :rtype: QPixmap
+            """
+            style = self.style()
+            size = style.pixelMetric(QStyle.PM_ToolBarIconSize)
+            pixmap = QPixmap(size, size)
+            pixmap.fill(QColor(code))
+            return pixmap
 
-        self.actionRedo = self.undoGroup.createRedoAction(self)
-        self.actionRedo.setIcon(self.iconRedo)
-        self.actionRedo.setShortcut(QKeySequence.Redo)
+        ## COLOR PALETTE
+        self.actionsChangeNodeBrush = []
+        for color in Color:
+            action = QAction(color.name, self)
+            action.setIcon(QIcon(create_pixmap_from_hex(color.value)))
+            action.setCheckable(False)
+            action.setEnabled(False)
+            action.setData(color)
+            self.actionsChangeNodeBrush.append(action)
 
         # ---------------------------------------- SHORTCUT ONLY ACTIONS --------------------------------------------- #
         # actions below are not available in the application Main Menu, nor in the Toolbar (entries can be found in    #
@@ -391,6 +413,11 @@ class MainWindow(QMainWindow):
         self.documentToolBar.addAction(self.actionSendToBack)
         self.documentToolBar.addSeparator()
         self.documentToolBar.addAction(self.actionSnapToGrid)
+
+        self.documentToolBar.addSeparator()
+        for action in self.actionsChangeNodeBrush:
+            self.documentToolBar.addAction(action)
+
         self.documentToolBar.addSeparator()
         self.documentToolBar.addWidget(self.zoomctl)
 
@@ -663,8 +690,9 @@ class MainWindow(QMainWindow):
             self.actionSaveDocumentAs.setEnabled(True)
             self.actionSelectAll.setEnabled(True)
 
-            disconnect(self.actionToggleEdgeComplete.triggered)
-            disconnect(self.actionToggleEdgeFunctional.triggered)
+            for action in self.actionsChangeNodeBrush:
+                disconnect(action.triggered)
+
             disconnect(self.actionItemCut.triggered)
             disconnect(self.actionItemCopy.triggered)
             disconnect(self.actionItemPaste.triggered)
@@ -672,6 +700,8 @@ class MainWindow(QMainWindow):
             disconnect(self.actionBringToFront.triggered)
             disconnect(self.actionSendToBack.triggered)
             disconnect(self.actionSelectAll.triggered)
+            disconnect(self.actionToggleEdgeComplete.triggered)
+            disconnect(self.actionToggleEdgeFunctional.triggered)
             disconnect(self.zoomctl.scaleChanged)
             disconnect(mainview.zoomChanged)
 
@@ -679,8 +709,9 @@ class MainWindow(QMainWindow):
             self.zoomctl.setZoomLevel(self.zoomctl.index(mainview.zoom))
             self.zoomctl.setEnabled(True)
 
-            connect(self.actionToggleEdgeComplete.triggered, scene.toggleEdgeComplete)
-            connect(self.actionToggleEdgeFunctional.triggered, scene.toggleEdgeFunctional)
+            for action in self.actionsChangeNodeBrush:
+                connect(action.triggered, scene.changeNodeBrush)
+
             connect(self.actionItemCut.triggered, scene.itemCut)
             connect(self.actionItemCopy.triggered, scene.itemCopy)
             connect(self.actionItemPaste.triggered, scene.itemPaste)
@@ -688,6 +719,8 @@ class MainWindow(QMainWindow):
             connect(self.actionBringToFront.triggered, scene.bringToFront)
             connect(self.actionSendToBack.triggered, scene.sendToBack)
             connect(self.actionSelectAll.triggered, scene.selectAll)
+            connect(self.actionToggleEdgeComplete.triggered, scene.toggleEdgeComplete)
+            connect(self.actionToggleEdgeFunctional.triggered, scene.toggleEdgeFunctional)
             connect(self.zoomctl.scaleChanged, mainview.onScaleChanged)
             connect(mainview.zoomChanged, self.zoomctl.onMainViewZoomChanged)
 
@@ -698,6 +731,9 @@ class MainWindow(QMainWindow):
             # disable the stuff below only if all the subwindows have been closed: this if clause
             # make sure to keep those things activated in case the MainWindow lost just the focus
             if not self.mdiArea.subWindowList():
+
+                for action in self.actionsChangeNodeBrush:
+                    action.setEnabled(False)
 
                 self.actionSaveDocumentAs.setEnabled(False)
                 self.actionExportDocument.setEnabled(False)

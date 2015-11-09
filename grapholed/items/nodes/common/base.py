@@ -36,12 +36,12 @@ from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 
 from grapholed.commands import CommandNodeRezize
-from grapholed.datatypes import DistinctList, DiagramMode
+from grapholed.datatypes import DistinctList, DiagramMode, Color
 from grapholed.dialogs import NodePropertiesDialog
 from grapholed.items import Item
 
 from PyQt5.QtCore import QPointF, QLineF, Qt, QRectF
-from PyQt5.QtGui import QColor, QPen, QPainter
+from PyQt5.QtGui import QColor, QPen, QPainter, QBrush
 from PyQt5.QtWidgets import QMenu, QGraphicsItem
 
 
@@ -53,9 +53,7 @@ class Node(Item):
 
     name = 'node'
     prefix = 'n'
-    shapeBrush = QColor(252, 252, 252)
-    shapeBrushSelected = QColor(251, 255, 148)
-    shapePen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
+    selectedBrush = QBrush(QColor(251, 255, 148))
     xmlname = 'node'
 
     def __init__(self, **kwargs):
@@ -63,6 +61,9 @@ class Node(Item):
         Initialize the node.
         """
         super().__init__(**kwargs)
+
+        self._brush = None
+        self._pen = None
 
         self.anchors = {}
         self.edges = DistinctList()
@@ -74,6 +75,53 @@ class Node(Item):
         self.setFlag(QGraphicsItem.ItemIsFocusable, True)
 
     ################################################## PROPERTIES ######################################################
+
+    @property
+    def brush(self):
+        """
+        Returns the brush used to paint this node.
+        :rtype: QBrush
+        """
+        if self._brush is None:
+            self._brush = QBrush(QColor(Color.White.value))
+        return self._brush
+
+    @brush.setter
+    def brush(self, value):
+        """
+        Set the brush used to paint this node.
+        :param value: the value to use in the brush.
+        """
+        if isinstance(value, QBrush):
+            self._brush = value
+        elif isinstance(value, QColor):
+            self._brush = QBrush(value)
+        elif isinstance(value, Color):
+            self._brush = QBrush(QColor(value.value))
+        elif isinstance(value, tuple) or isinstance(value, list):
+            self._brush = QBrush(QColor(*value))
+        elif isinstance(value, str):
+            self._brush = QBrush(QColor(value))
+        else:
+            raise ValueError('invalid brush specified: {0}'.format(value))
+
+    @property
+    def pen(self):
+        """
+        Returns the pen used to paint this node.
+        :rtype: QPen
+        """
+        if self._pen is None:
+            self._pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
+        return self._pen
+
+    @pen.setter
+    def pen(self, value):
+        """
+        Set the pen used to paint this node.
+        :param value: the pen to use when painting the node.
+        """
+        self._pen = value
 
     @property
     def resizable(self):

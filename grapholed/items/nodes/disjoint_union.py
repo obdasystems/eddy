@@ -47,11 +47,12 @@ class DisjointUnionNode(HexagonNode):
     name = 'disjoint union'
     xmlname = 'disjoint-union'
 
-    def __init__(self, **kwargs):
+    def __init__(self, brush=None, **kwargs):
         """
         Initialize the Disjoint Union node.
+        :param brush: the brush used to paint the node (unused).
         """
-        super().__init__(brush=(0, 0, 0), **kwargs)
+        super().__init__(brush='#000000', **kwargs)
 
     ################################################ ITEM INTERFACE ####################################################
 
@@ -61,12 +62,12 @@ class DisjointUnionNode(HexagonNode):
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
-            'scene': scene,
-            'id': self.id,
             'description': self.description,
+            'height': self.height(),
+            'id': self.id,
+            'scene': scene,
             'url': self.url,
             'width': self.width(),
-            'height': self.height(),
         }
 
         node = self.__class__(**kwargs)
@@ -88,12 +89,12 @@ class DisjointUnionNode(HexagonNode):
         G = E.elementsByTagName('shape:geometry').at(0).toElement()
 
         kwargs = {
-            'scene': scene,
-            'id': E.attribute('id'),
             'description': D.text(),
+            'height': int(G.attribute('height')),
+            'id': E.attribute('id'),
+            'scene': scene,
             'url': U.text(),
             'width': int(G.attribute('width')),
-            'height': int(G.attribute('height')),
         }
 
         node = cls(**kwargs)
@@ -176,17 +177,13 @@ class DisjointUnionNode(HexagonNode):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        shape_w = 48
-        shape_h = 30
-        oblique = 6
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        polygon = cls.createPolygon(shape_w, shape_h, oblique)
+        polygon = cls.createPolygon(48, 30, 6)
 
         # Draw the polygon
         painter.setRenderHint(QPainter.Antialiasing)

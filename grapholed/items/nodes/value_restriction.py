@@ -60,13 +60,16 @@ class ValueRestrictionNode(ResizableNode):
     name = 'value restriction'
     xmlname = 'value-restriction'
 
-    def __init__(self, width=minWidth, height=minHeight, **kwargs):
+    def __init__(self, width=minWidth, height=minHeight, brush='#fcfcfc', **kwargs):
         """
         Initialize the Value Restriction node.
         :param width: the shape width.
         :param height: the shape height.
+        :param brush: the brush used to paint the node.
         """
         super().__init__(**kwargs)
+        self.brush = brush
+        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.polygon = self.createPolygon(max(width, self.minWidth), max(height, self.minHeight), self.foldSize)
         self.label = Label(self.name, parent=self)
         self.label.updatePos()
@@ -79,14 +82,17 @@ class ValueRestrictionNode(ResizableNode):
         Returns the basic nodes context menu.
         :rtype: QMenu
         """
+        scene = self.scene()
         menu = super().contextMenu()
+        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuChangeNodeBrush)
 
         collection = self.label.contextMenuAdd()
         if collection:
-            menu.addSeparator()
+            menu.insertSeparator(scene.actionOpenNodeProperties)
             for action in collection:
-                menu.addAction(action)
+                menu.insertAction(scene.actionOpenNodeProperties, action)
 
+        menu.insertSeparator(scene.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):
@@ -95,12 +101,13 @@ class ValueRestrictionNode(ResizableNode):
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
-            'scene': scene,
-            'id': self.id,
+            'brush': self.brush,
             'description': self.description,
+            'height': self.height(),
+            'id': self.id,
+            'scene': scene,
             'url': self.url,
             'width': self.width(),
-            'height': self.height(),
         }
 
         node = self.__class__(**kwargs)
@@ -182,12 +189,13 @@ class ValueRestrictionNode(ResizableNode):
         L = E.elementsByTagName('shape:label').at(0).toElement()
 
         kwargs = {
-            'scene': scene,
-            'id': E.attribute('id'),
+            'brush': E.attribute('color', '#fcfcfc'),
             'description': D.text(),
+            'height': int(G.attribute('height')),
+            'id': E.attribute('id'),
+            'scene': scene,
             'url': U.text(),
             'width': int(G.attribute('width')),
-            'height': int(G.attribute('height')),
         }
 
         node = cls(**kwargs)
@@ -519,18 +527,18 @@ class ValueRestrictionNode(ResizableNode):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        shapeBrush = self.shapeBrushSelected if self.isSelected() else self.shapeBrush
+        brush = self.selectedBrush if self.isSelected() else self.pen
 
         # Draw the polygon
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(shapeBrush)
-        painter.setPen(self.shapePen)
+        painter.setBrush(brush)
+        painter.setPen(self.pen)
         painter.drawPolygon(self.polygon)
 
         # Draw the fold
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(shapeBrush)
-        painter.setPen(self.shapePen)
+        painter.setBrush(brush)
+        painter.setPen(self.pen)
         painter.drawPolygon(self.createFold(self.polygon, self.indexTR, self.indexRT, self.foldSize))
 
         self.paintHandles(painter)
@@ -541,20 +549,16 @@ class ValueRestrictionNode(ResizableNode):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        shape_w = 54
-        shape_h = 34
-        foldsize = 10
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        polygon = cls.createPolygon(shape_w, shape_h, foldsize)
+        polygon = cls.createPolygon(54, 34, 10)
 
         # Initialize the fold
-        fold = cls.createFold(polygon, cls.indexTR, cls.indexRT, foldsize)
+        fold = cls.createFold(polygon, cls.indexTR, cls.indexRT, 10)
 
         # Draw the polygon
         painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))

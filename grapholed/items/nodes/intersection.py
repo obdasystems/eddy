@@ -48,11 +48,12 @@ class IntersectionNode(HexagonNode):
     name = 'intersection'
     xmlname = 'intersection'
 
-    def __init__(self, **kwargs):
+    def __init__(self, brush=None, **kwargs):
         """
         Initialize the Intersection node.
+        :param brush: the brush used to paint the node (unused).
         """
-        super().__init__(brush=(252, 252, 252), **kwargs)
+        super().__init__(brush='#fcfcfc', **kwargs)
         self.label = Label('and', movable=False, editable=False, parent=self)
         self.label.updatePos()
 
@@ -64,12 +65,12 @@ class IntersectionNode(HexagonNode):
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
-            'scene': scene,
-            'id': self.id,
             'description': self.description,
+            'height': self.height(),
+            'id': self.id,
+            'scene': scene,
             'url': self.url,
             'width': self.width(),
-            'height': self.height(),
         }
 
         node = self.__class__(**kwargs)
@@ -94,12 +95,12 @@ class IntersectionNode(HexagonNode):
         L = E.elementsByTagName('shape:label').at(0).toElement()
 
         kwargs = {
-            'scene': scene,
-            'id': E.attribute('id'),
             'description': D.text(),
+            'height': int(G.attribute('height')),
+            'id': E.attribute('id'),
+            'scene': scene,
             'url': U.text(),
             'width': int(G.attribute('width')),
-            'height': int(G.attribute('height')),
         }
 
         node = cls(**kwargs)
@@ -194,17 +195,13 @@ class IntersectionNode(HexagonNode):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        shape_w = 48
-        shape_h = 30
-        oblique = 6
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        polygon = cls.createPolygon(shape_w, shape_h, oblique)
+        polygon = cls.createPolygon(48, 30, 6)
 
         # Draw the polygon
         painter.setRenderHint(QPainter.Antialiasing)

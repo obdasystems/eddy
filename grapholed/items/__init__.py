@@ -153,7 +153,8 @@ class Item(QGraphicsItem):
         :return: True if the item matches a given type, False otherwise.
         :rtype: bool
         """
-        return any(x is self.itemtype for x in args)
+        return self.itemtype in args
+        #return any(x is self.itemtype for x in args)
 
     ############################################# ITEM IMPORT / EXPORT #################################################
 

@@ -34,15 +34,15 @@
 
 import re
 
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 
 from grapholed.datatypes import RestrictionType
 from grapholed.exceptions import ParseError
 from grapholed.items.nodes.common.base import Node
 from grapholed.items.nodes.common.label import Label
 
-from PyQt5.QtCore import QRectF, QPointF
-from PyQt5.QtGui import QPixmap, QColor, QPainterPath
+from PyQt5.QtCore import QRectF, QPointF, Qt
+from PyQt5.QtGui import QColor, QPainterPath, QPen, QBrush
 
 
 class SquaredNode(Node):
@@ -51,21 +51,22 @@ class SquaredNode(Node):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, width=20, height=20, restriction=None, cardinality=None, brush=(252, 252, 252), **kwargs):
+    def __init__(self, width=20, height=20, brush='#fcfcfc', restriction=None, cardinality=None, **kwargs):
         """
         Initialize the Squared shaped node.
         :param width: the shape width (unused in current implementation).
         :param height: the shape height (unused in current implementation).
+        :param brush: the brush used to paint the node.
         :param restriction: the restriction of the node.
         :param cardinality: the cardinality of the node (if it's a cardinality restriction).
-        :param brush: the brush to use as shape background
         """
         super().__init__(**kwargs)
 
         self._restriction = restriction or RestrictionType.exists
         self._cardinality = cardinality if self.restriction is RestrictionType.cardinality else dict(min=None, max=None)
 
-        self.shapeBrush = QColor(*brush)
+        self.brush = brush
+        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.rect = self.createRect(20, 20)
         self.label = Label(self.restriction.label, centered=False, editable=False, parent=self)
         self.label.updatePos()
@@ -139,12 +140,12 @@ class SquaredNode(Node):
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
-            'scene': scene,
-            'id': self.id,
             'description': self.description,
+            'height': self.height(),
+            'id': self.id,
+            'scene': scene,
             'url': self.url,
             'width': self.width(),
-            'height': self.height(),
         }
 
         node = self.__class__(**kwargs)
@@ -195,12 +196,12 @@ class SquaredNode(Node):
         L = E.elementsByTagName('shape:label').at(0).toElement()
 
         kwargs = {
-            'scene': scene,
-            'id': E.attribute('id'),
             'description': D.text(),
+            'height': int(G.attribute('height')),
+            'id': E.attribute('id'),
+            'scene': scene,
             'url': U.text(),
             'width': int(G.attribute('width')),
-            'height': int(G.attribute('height')),
         }
 
         node = cls(**kwargs)
@@ -345,16 +346,7 @@ class SquaredNode(Node):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        shapeBrush = self.shapeBrushSelected if self.isSelected() else self.shapeBrush
-        painter.setBrush(shapeBrush)
-        painter.setPen(self.shapePen)
+        brush = self.selectedBrush if self.isSelected() else self.brush
+        painter.setBrush(brush)
+        painter.setPen(self.pen)
         painter.drawRect(self.rect)
-
-    @classmethod
-    @abstractmethod
-    def image(cls, **kwargs):
-        """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
-        """
-        pass

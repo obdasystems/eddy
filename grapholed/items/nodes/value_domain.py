@@ -32,16 +32,13 @@
 ##########################################################################
 
 
-from grapholed.commands import CommandNodeValueDomainSelectDatatype
 from grapholed.datatypes import Font, ItemType, XsdDatatype
 from grapholed.exceptions import ParseError
-from grapholed.functions import connect
 from grapholed.items.nodes.common.base import Node
 from grapholed.items.nodes.common.label import Label
 
 from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QIcon
-from PyQt5.QtWidgets import QAction
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath
 
 
 class ValueDomainNode(Node):
@@ -56,17 +53,20 @@ class ValueDomainNode(Node):
     radius = 8
     xmlname = 'value-domain'
 
-    def __init__(self, width=minWidth, height=minHeight, **kwargs):
+    def __init__(self, width=minWidth, height=minHeight, brush='#fcfcfc', **kwargs):
         """
         Initialize the Value-Domain node.
         :param width: the shape width (unused in current implementation).
         :param height: the shape height (unused in current implementation).
+        :param brush: the brush used to paint the node.
         """
         super().__init__(**kwargs)
+        self.brush = brush
+        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.datatype = XsdDatatype.string
         self.rect = self.createRect(self.minWidth, self.minHeight)
         self.label = Label(self.datatype.value, movable=False, editable=False, parent=self)
-        self.updateShape()
+        self.updateRect()
 
     ################################################ ITEM INTERFACE ####################################################
 
@@ -75,21 +75,16 @@ class ValueDomainNode(Node):
         Returns the basic nodes context menu.
         :rtype: QMenu
         """
-        menu = super().contextMenu()
-        menu.addSeparator()
-
-        subMenu = menu.addMenu('Select type')
-        subMenu.setIcon(QIcon(':/icons/refresh'))
-
         scene = self.scene()
+        menu = super().contextMenu()
+        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuChangeNodeBrush)
+        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuChangeValueDomainDatatype)
 
-        for datatype in XsdDatatype:
-            action = QAction(datatype.value, scene)
-            action.setCheckable(True)
-            action.setChecked(datatype == self.datatype)
-            connect(action.triggered, self.updateDatatype, datatype=datatype)
-            subMenu.addAction(action)
+        # switch the check matching the current datatype
+        for action in scene.actionsChangeValueDomainDatatype:
+            action.setChecked(self.datatype == action.data())
 
+        menu.insertSeparator(scene.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):
@@ -98,12 +93,13 @@ class ValueDomainNode(Node):
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
-            'scene': scene,
-            'id': self.id,
+            'brush': self.brush,
             'description': self.description,
+            'height': self.height(),
+            'id': self.id,
+            'scene': scene,
             'url': self.url,
             'width': self.width(),
-            'height': self.height(),
         }
 
         node = self.__class__(**kwargs)
@@ -119,17 +115,9 @@ class ValueDomainNode(Node):
         """
         return self.rect.height()
 
-    def updateDatatype(self, datatype):
+    def updateRect(self):
         """
-        Switch the selected domain node datatype.
-        :param datatype: the datatype to select.
-        """
-        scene = self.scene()
-        scene.undoStack.push(CommandNodeValueDomainSelectDatatype(scene=scene, node=self, datatype=datatype))
-
-    def updateShape(self):
-        """
-        Update current shape geometry according to the selected datatype.
+        Update current shape rect according to the selected datatype.
         Will also center the shape text after the width adjustment.
         """
         shape_w = max(self.label.width() + self.padding, self.minWidth)
@@ -171,12 +159,13 @@ class ValueDomainNode(Node):
         L = E.elementsByTagName('shape:label').at(0).toElement()
 
         kwargs = {
-            'scene': scene,
-            'id': E.attribute('id'),
+            'brush': E.attribute('color', '#fcfcfc'),
             'description': D.text(),
+            'height': int(G.attribute('height')),
+            'id': E.attribute('id'),
+            'scene': scene,
             'url': U.text(),
             'width': int(G.attribute('width')),
-            'height': int(G.attribute('height')),
         }
 
         node = cls(**kwargs)
@@ -288,7 +277,7 @@ class ValueDomainNode(Node):
             if datatype.value == text:
                 self.datatype = datatype
                 self.label.setText(datatype.value)
-                self.updateShape()
+                self.updateRect()
                 self.updateEdges()
                 return
 
@@ -310,11 +299,10 @@ class ValueDomainNode(Node):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        shapeBrush = self.shapeBrushSelected if self.isSelected() else self.shapeBrush
-
+        brush = self.selectedBrush if self.isSelected() else self.brush
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(shapeBrush)
-        painter.setPen(self.shapePen)
+        painter.setBrush(brush)
+        painter.setPen(self.pen)
         painter.drawRoundedRect(self.rect, self.radius, self.radius)
 
     @classmethod
@@ -323,9 +311,6 @@ class ValueDomainNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        shape_w = 54
-        shape_h = 34
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
@@ -333,7 +318,7 @@ class ValueDomainNode(Node):
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        rect = cls.createRect(shape_w, shape_h)
+        rect = cls.createRect(54, 34)
 
         # Draw the rectangle
         painter.setRenderHint(QPainter.Antialiasing)

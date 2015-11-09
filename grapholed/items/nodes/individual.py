@@ -62,16 +62,18 @@ class IndividualNode(ResizableNode):
     minHeight = 60
     minWidth = 60
     name = 'individual'
-    shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
     xmlname = 'individual'
 
-    def __init__(self, width=minWidth, height=minHeight, **kwargs):
+    def __init__(self, width=minWidth, height=minHeight, brush='#fcfcfc', **kwargs):
         """
         Initialize the Individual node.
         :param width: the shape width.
         :param height: the shape height.
+        :param brush: the brush used to paint the node.
         """
         super().__init__(**kwargs)
+        self.brush = brush
+        self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
         self.polygon = self.createPolygon(max(width, self.minWidth), max(height, self.minHeight))
         self.label = Label(self.name, parent=self)
         self.label.updatePos()
@@ -84,14 +86,17 @@ class IndividualNode(ResizableNode):
         Returns the basic nodes context menu.
         :rtype: QMenu
         """
+        scene = self.scene()
         menu = super().contextMenu()
+        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuChangeNodeBrush)
 
         collection = self.label.contextMenuAdd()
         if collection:
-            menu.addSeparator()
+            menu.insertSeparator(scene.actionOpenNodeProperties)
             for action in collection:
-                menu.addAction(action)
+                menu.insertAction(scene.actionOpenNodeProperties, action)
 
+        menu.insertSeparator(scene.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):
@@ -172,12 +177,13 @@ class IndividualNode(ResizableNode):
         L = E.elementsByTagName('shape:label').at(0).toElement()
 
         kwargs = {
-            'scene': scene,
-            'id': E.attribute('id'),
+            'brush': E.attribute('color', '#fcfcfc'),
             'description': D.text(),
+            'height': int(G.attribute('height')),
+            'id': E.attribute('id'),
+            'scene': scene,
             'url': U.text(),
             'width': int(G.attribute('width')),
-            'height': int(G.attribute('height')),
         }
 
         node = cls(**kwargs)
@@ -585,13 +591,11 @@ class IndividualNode(ResizableNode):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        shapeBrush = self.shapeBrushSelected if self.isSelected() else self.shapeBrush
-
+        brush = self.selectedBrush if self.isSelected() else self.brush
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(shapeBrush)
-        painter.setPen(self.shapePen)
+        painter.setBrush(brush)
+        painter.setPen(self.pen)
         painter.drawPolygon(self.polygon)
-
         self.paintHandles(painter)
 
     @classmethod
@@ -600,16 +604,13 @@ class IndividualNode(ResizableNode):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        shape_w = 40
-        shape_h = 40
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        polygon = cls.createPolygon(shape_w, shape_h)
+        polygon = cls.createPolygon(40, 40)
 
         # Draw the polygon
         painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))

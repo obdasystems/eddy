@@ -38,7 +38,7 @@ from collections import OrderedDict
 
 from grapholed import __appname__, __organization__
 from grapholed.commands import *
-from grapholed.datatypes import DiagramMode, ItemType, SpecialConceptType, RestrictionType
+from grapholed.datatypes import DiagramMode, ItemType, SpecialConceptType, RestrictionType, XsdDatatype
 from grapholed.dialogs import ScenePropertiesDialog, CardinalityRestrictionForm
 from grapholed.functions import getPath, snapToGrid, rangeF, connect
 from grapholed.items import Item
@@ -163,6 +163,7 @@ class DiagramScene(QGraphicsScene):
         self.actionBringToFront = mainwindow.actionBringToFront
         self.actionSendToBack = mainwindow.actionSendToBack
         self.actionSelectAll = mainwindow.actionSelectAll
+        self.actionsChangeNodeBrush = mainwindow.actionsChangeNodeBrush
 
         ## DIAGRAM SCENE
         self.actionOpenSceneProperties = QAction('Properties...', self)
@@ -207,6 +208,15 @@ class DiagramScene(QGraphicsScene):
         connect(self.actionComposePropertyDomain.triggered, self.composePropertyDomain)
         connect(self.actionComposePropertyRange.triggered, self.composePropertyRange)
 
+        ## VALUE DOMAIN NODE
+        self.actionsChangeValueDomainDatatype = []
+        for datatype in XsdDatatype:
+            action = QAction(datatype.value, self)
+            action.setCheckable(True)
+            action.setData(datatype)
+            connect(action.triggered, self.changeValueDomainDatatype)
+            self.actionsChangeValueDomainDatatype.append(action)
+
         ## DOMAIN / RANGE RESTRICTION
         self.actionsRestrictionChange = []
         for restriction in RestrictionType:
@@ -241,6 +251,12 @@ class DiagramScene(QGraphicsScene):
 
         ################################################## MENUS #######################################################
 
+        ## NODE GENERIC
+        self.menuChangeNodeBrush = QMenu('Select color')
+        self.menuChangeNodeBrush.setIcon(QIcon(':/icons/color-fill'))
+        for action in self.actionsChangeNodeBrush:
+            self.menuChangeNodeBrush.addAction(action)
+
         ## CONCEPT NODE
         self.menuConceptNodeSpecial = QMenu('Special type')
         self.menuConceptNodeSpecial.setIcon(QIcon(':/icons/star-filled'))
@@ -272,13 +288,19 @@ class DiagramScene(QGraphicsScene):
         self.menuAttributeNodeCompose.addAction(self.actionComposePropertyDomain)
         self.menuAttributeNodeCompose.addAction(self.actionComposePropertyRange)
 
-        ## DOMAIN / RANGE RESTRICTION
+        ## VALUE DOMAIN NODE
+        self.menuChangeValueDomainDatatype = QMenu('Select type')
+        self.menuChangeValueDomainDatatype.setIcon(QIcon(':/icons/refresh'))
+        for action in self.actionsChangeValueDomainDatatype:
+            self.menuChangeValueDomainDatatype.addAction(action)
+
+        ## DOMAIN / RANGE RESTRICTION NODES
         self.menuRestrictionChange = QMenu('Select restriction')
         self.menuRestrictionChange.setIcon(QIcon(':/icons/refresh'))
         for action in self.actionsRestrictionChange:
             self.menuRestrictionChange.addAction(action)
 
-        ## HEXAGON BASED CONSTRUCTOR NODES
+        ## HEXAGON BASED NODES
         self.menuHexagonNodeSwitch = QMenu('Switch to')
         self.menuHexagonNodeSwitch.setIcon(QIcon(':/icons/refresh'))
         for action in self.actionsSwitchHexagonNode:
@@ -311,6 +333,20 @@ class DiagramScene(QGraphicsScene):
             if zValue != selected.zValue():
                 self.undoStack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
 
+    def changeNodeBrush(self):
+        """
+        Change the brush of selected nodes.
+        """
+        self.setMode(DiagramMode.Idle)
+        action = self.sender()
+        if action:
+            selected = self.selectedNodes()
+            selected = [x for x in selected if x.isType(ItemType.AttributeNode, ItemType.ConceptNode,
+                                                        ItemType.IndividualNode, ItemType.RoleNode,
+                                                        ItemType.ValueDomainNode, ItemType.ValueRestrictionNode)]
+            if selected:
+                self.undoStack.push(CommandNodeChangeBrush(self, selected, action.data()))
+
     @pyqtSlot()
     def changeRestriction(self):
         """
@@ -330,6 +366,18 @@ class DiagramScene(QGraphicsScene):
                         self.undoStack.push(CommandNodeSquareChangeRestriction(self, node, restriction, cardinality))
                 else:
                     self.undoStack.push(CommandNodeSquareChangeRestriction(self, node, action.data()))
+
+    @pyqtSlot()
+    def changeValueDomainDatatype(self):
+        """
+        Change the datatype of the selected value-domain node.
+        """
+        self.setMode(DiagramMode.Idle)
+        action = self.sender()
+        if action:
+            node = next(filter(lambda x: x.isType(ItemType.ValueDomainNode), self.selectedNodes()), None)
+            if node:
+                self.undoStack.push(CommandNodeValueDomainSelectDatatype(scene=self, node=node, datatype=action.data()))
 
     @pyqtSlot()
     def composeAsymmetricRole(self):
@@ -1318,15 +1366,28 @@ class DiagramScene(QGraphicsScene):
         """
         Update scene specific actions enabling/disabling them according to the scene state.
         """
-        isNode = len(self.selectedNodes()) != 0
-        isEdge = len(self.selectedEdges()) != 0
+        selected_nodes = self.selectedNodes()
+        selected_edges = self.selectedEdges()
+
         isClip = len(self.clipboard) != 0 and len(self.clipboard['nodes']) != 0
+        isEdge = len(selected_edges) != 0
+        isNode = len(selected_nodes) != 0
+        isPred = next(filter(lambda x: x.isType(ItemType.AttributeNode,
+                                                ItemType.ConceptNode,
+                                                ItemType.IndividualNode,
+                                                ItemType.RoleNode,
+                                                ItemType.ValueDomainNode,
+                                                ItemType.ValueRestrictionNode), selected_nodes), None) is not None
+
         self.actionBringToFront.setEnabled(isNode)
         self.actionItemCut.setEnabled(isNode)
         self.actionItemCopy.setEnabled(isNode)
         self.actionItemDelete.setEnabled(isNode or isEdge)
         self.actionItemPaste.setEnabled(isClip)
         self.actionSendToBack.setEnabled(isNode)
+
+        for action in self.actionsChangeNodeBrush:
+            action.setEnabled(isPred)
 
     def updateClipboard(self):
         """

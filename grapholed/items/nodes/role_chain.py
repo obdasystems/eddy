@@ -49,12 +49,13 @@ class RoleChainNode(HexagonNode):
     name = 'role chain'
     xmlname = 'role-chain'
 
-    def __init__(self, inputs=None, **kwargs):
+    def __init__(self, brush=None, inputs=None, **kwargs):
         """
         Initialize the Role Chain node.
+        :param brush: the brush used to paint the node (unused).
         :param inputs: a DistinctList of edges id specifying the partecipation order.
         """
-        super().__init__(brush=(252, 252, 252), **kwargs)
+        super().__init__(brush='#fcfcfc', **kwargs)
         self.inputs = inputs or DistinctList()
         self.label = Label('chain', movable=False, editable=False, parent=self)
         self.label.updatePos()
@@ -77,12 +78,12 @@ class RoleChainNode(HexagonNode):
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
-            'scene': scene,
-            'id': self.id,
             'description': self.description,
+            'height': self.height(),
+            'id': self.id,
+            'scene': scene,
             'url': self.url,
             'width': self.width(),
-            'height': self.height(),
         }
 
         node = self.__class__(**kwargs)
@@ -128,13 +129,13 @@ class RoleChainNode(HexagonNode):
         L = E.elementsByTagName('shape:label').at(0).toElement()
 
         kwargs = {
-            'scene': scene,
+            'description': D.text(),
+            'height': int(G.attribute('height')),
             'id': E.attribute('id'),
             'inputs': DistinctList(E.attribute('inputs', '').split(',')),
-            'description': D.text(),
+            'scene': scene,
             'url': U.text(),
             'width': int(G.attribute('width')),
-            'height': int(G.attribute('height')),
         }
 
         node = cls(**kwargs)
@@ -230,17 +231,13 @@ class RoleChainNode(HexagonNode):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        shape_w = 48
-        shape_h = 30
-        oblique = 6
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        polygon = cls.createPolygon(shape_w, shape_h, oblique)
+        polygon = cls.createPolygon(48, 30, 6)
 
         # Draw the polygon
         painter.setRenderHint(QPainter.Antialiasing)

@@ -320,7 +320,7 @@ class CommandNodeValueDomainSelectDatatype(QUndoCommand):
         """redo the command"""
         self.node.datatype = self.data2
         self.node.label.setText(self.node.datatype.value)
-        self.node.updateShape()
+        self.node.updateRect()
         self.node.updateEdges()
         self.scene.updated.emit()
 
@@ -328,7 +328,7 @@ class CommandNodeValueDomainSelectDatatype(QUndoCommand):
         """undo the command"""
         self.node.datatype = self.data1
         self.node.label.setText(self.node.datatype.value)
-        self.node.updateShape()
+        self.node.updateRect()
         self.node.updateEdges()
         self.scene.updated.emit()
 
@@ -584,4 +584,38 @@ class CommandNodeChangeInputOrder(QUndoCommand):
         """redo the command"""
         self.node.inputs = self.inputs1
         self.node.updateEdges()
+        self.scene.updated.emit()
+
+
+class CommandNodeChangeBrush(QUndoCommand):
+    """
+    This command is used to change the brush of predicate nodes.
+    """
+    def __init__(self, scene, nodes, brush):
+        """
+        Initilize the command.
+        :param scene: the scene where this command is being performed.
+        :param nodes: a set of nodes on which to change the brush.
+        :param brush: the new brush value.
+        """
+        self.scene = scene
+        self.nodes = nodes
+        self.brush = {x: {'from': x.brush, 'to': brush} for x in nodes}
+        if len(nodes) != 1:
+            super().__init__('change color of {0} nodes'.format(len(nodes)))
+        else:
+            super().__init__('change {0} node color'.format(next(iter(nodes)).name))
+
+    def redo(self):
+        """redo the command"""
+        for node in self.nodes:
+            node.brush = self.brush[node]['to']
+            node.update()
+        self.scene.updated.emit()
+
+    def undo(self):
+        """redo the command"""
+        for node in self.nodes:
+            node.brush = self.brush[node]['from']
+            node.update()
         self.scene.updated.emit()

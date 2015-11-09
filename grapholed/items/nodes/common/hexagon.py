@@ -37,7 +37,7 @@ from abc import ABCMeta
 from grapholed.items.nodes.common.base import Node
 
 from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QPolygonF
+from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QPolygonF, QBrush
 
 
 class HexagonNode(Node):
@@ -54,17 +54,16 @@ class HexagonNode(Node):
     indexTL = 5
     indexEE = 6
 
-    shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
-
-    def __init__(self, width=50, height=30, brush=(252, 252, 252), **kwargs):
+    def __init__(self, width=50, height=30, brush='#fcfcfc', **kwargs):
         """
         Initialize the Hexagon shaped node.
         :param width: the shape width (unused in current implementation).
         :param height: the shape height (unused in current implementation).
-        :param brush: the brush to use as shape background
+        :param brush: the brush used to paint the node.
         """
         super().__init__(**kwargs)
-        self.shapeBrush = QColor(*brush)
+        self.brush = brush
+        self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
         self.polygon = self.createPolygon(shape_w=50, shape_h=30, oblique=6)
 
     ################################################ ITEM INTERFACE ####################################################
@@ -75,9 +74,7 @@ class HexagonNode(Node):
         :rtype: QMenu
         """
         scene = self.scene()
-
         menu = super().contextMenu()
-        menu.addSeparator()
         menu.insertMenu(scene.actionOpenNodeProperties, scene.menuHexagonNodeSwitch)
 
         # switch the check matching the current node
@@ -198,9 +195,8 @@ class HexagonNode(Node):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        shapeBrush = self.shapeBrushSelected if self.isSelected() else self.shapeBrush
-
+        brush = self.selectedBrush if self.isSelected() else self.brush
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(shapeBrush)
-        painter.setPen(self.shapePen)
+        painter.setBrush(brush)
+        painter.setPen(self.pen)
         painter.drawPolygon(self.polygon)

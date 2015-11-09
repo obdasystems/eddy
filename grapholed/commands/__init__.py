@@ -47,6 +47,7 @@ from grapholed.commands.nodes import CommandNodeSetURL
 from grapholed.commands.nodes import CommandNodeSetDescription
 from grapholed.commands.nodes import CommandConceptNodeSetSpecial
 from grapholed.commands.nodes import CommandNodeChangeInputOrder
+from grapholed.commands.nodes import CommandNodeChangeBrush
 
 from grapholed.commands.edges import CommandEdgeAdd
 from grapholed.commands.edges import CommandEdgeAnchorMove
@@ -77,6 +78,7 @@ __all__ = [
     'CommandNodeSetDescription',
     'CommandConceptNodeSetSpecial',
     'CommandNodeChangeInputOrder',
+    'CommandNodeChangeBrush',
     'CommandEdgeAdd',
     'CommandEdgeAnchorMove',
     'CommandEdgeBreakpointAdd',

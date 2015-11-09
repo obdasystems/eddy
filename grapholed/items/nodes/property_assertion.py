@@ -37,7 +37,7 @@ from grapholed.dialogs import OrderedInputNodePropertiesDialog
 from grapholed.items.nodes.common.base import Node
 
 from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QBrush
 
 
 class PropertyAssertionNode(Node):
@@ -47,18 +47,21 @@ class PropertyAssertionNode(Node):
     itemtype = ItemType.PropertyAssertionNode
     minHeight = 30
     minWidth = 52
-    name = 'property assertion'
     radius = 16
+    name = 'property assertion'
     xmlname = 'property-assertion'
 
-    def __init__(self, width=minWidth, height=minHeight, inputs=None, **kwargs):
+    def __init__(self, width=minWidth, height=minHeight, brush=None, inputs=None, **kwargs):
         """
         Initialize the Property Assertion node.
         :param width: the shape width (unused in current implementation).
         :param height: the shape height (unused in current implementation).
+        :param brush: the brush used to paint the node (unused).
         :param inputs: a DistinctList of edges id specifying the partecipation order.
         """
         super().__init__(**kwargs)
+        self.brush = QBrush(QColor(252, 252, 252))
+        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.inputs = inputs or DistinctList()
         self.rect = self.createRect(self.minWidth, self.minHeight)
 
@@ -80,12 +83,12 @@ class PropertyAssertionNode(Node):
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
-            'scene': scene,
-            'id': self.id,
             'description': self.description,
+            'id': self.id,
+            'height': self.height(),
+            'scene': scene,
             'url': self.url,
             'width': self.width(),
-            'height': self.height(),
         }
 
         node = self.__class__(**kwargs)
@@ -154,13 +157,13 @@ class PropertyAssertionNode(Node):
         G = E.elementsByTagName('shape:geometry').at(0).toElement()
 
         kwargs = {
-            'scene': scene,
+            'description': D.text(),
+            'height': int(G.attribute('height')),
             'id': E.attribute('id'),
             'inputs': DistinctList(E.attribute('inputs', '').split(',')),
-            'description': D.text(),
+            'scene': scene,
             'url': U.text(),
             'width': int(G.attribute('width')),
-            'height': int(G.attribute('height')),
         }
 
         node = cls(**kwargs)
@@ -272,11 +275,10 @@ class PropertyAssertionNode(Node):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        shapeBrush = self.shapeBrushSelected if self.isSelected() else self.shapeBrush
-
+        brush = self.selectedBrush if self.isSelected() else self.brush
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(shapeBrush)
-        painter.setPen(self.shapePen)
+        painter.setBrush(brush)
+        painter.setPen(self.pen)
         painter.drawRoundedRect(self.rect, self.radius, self.radius)
 
     @classmethod
@@ -285,24 +287,19 @@ class PropertyAssertionNode(Node):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        shape_w = 50
-        shape_h = 30
-        bRadius = 14
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
-
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        rect = cls.createRect(shape_w, shape_h)
+        rect = cls.createRect(50, 30)
 
         # Draw the rectangle
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin))
         painter.setBrush(QColor(252, 252, 252))
         painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
-        painter.drawRoundedRect(rect, bRadius, bRadius)
+        painter.drawRoundedRect(rect, 14, 14)
 
         return pixmap

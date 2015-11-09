@@ -53,17 +53,20 @@ class ConceptNode(ResizableNode):
     name = 'concept'
     xmlname = 'concept'
 
-    def __init__(self, width=minWidth, height=minHeight, special=None, **kwargs):
+    def __init__(self, width=minWidth, height=minHeight, brush='#fcfcfc', special=None, **kwargs):
         """
         Initialize the Concept node.
         :param width: the shape width.
         :param height: the shape height.
+        :param brush: the brush used to paint the node.
         :param special: the special type of this Concept node (if None).
         """
         super().__init__(**kwargs)
 
         self._special = special
 
+        self.brush = brush
+        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.rect = self.createRect(max(width, self.minWidth), max(height, self.minHeight))
         self.label = Label(self.name, movable=special is None, editable=special is None, parent=self)
         self.label.setText(self._special.value if self._special else self.label.text())
@@ -101,7 +104,7 @@ class ConceptNode(ResizableNode):
         scene = self.scene()
 
         menu = super().contextMenu()
-        menu.addSeparator()
+        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuChangeNodeBrush)
         menu.insertMenu(scene.actionOpenNodeProperties, scene.menuConceptNodeSpecial)
 
         # switch the check on the currently active special
@@ -111,6 +114,7 @@ class ConceptNode(ResizableNode):
         if not self.special:
             collection = self.label.contextMenuAdd()
             if collection:
+                menu.insertSeparator(scene.actionOpenNodeProperties)
                 for action in collection:
                     menu.insertAction(scene.actionOpenNodeProperties, action)
 
@@ -123,13 +127,14 @@ class ConceptNode(ResizableNode):
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
-            'scene': scene,
-            'id': self.id,
+            'brush': self.brush,
             'description': self.description,
+            'height': self.height(),
+            'id': self.id,
+            'scene': scene,
+            'special': self.special,
             'url': self.url,
             'width': self.width(),
-            'height': self.height(),
-            'special': self.special
         }
 
         node = self.__class__(**kwargs)
@@ -186,13 +191,14 @@ class ConceptNode(ResizableNode):
         L = E.elementsByTagName('shape:label').at(0).toElement()
 
         kwargs = {
-            'scene': scene,
-            'id': E.attribute('id'),
+            'brush': E.attribute('color', '#fcfcfc'),
             'description': D.text(),
+            'height': int(G.attribute('height')),
+            'id': E.attribute('id'),
+            'scene': scene,
+            'special': SpecialConceptType.forValue(L.text()),
             'url': U.text(),
             'width': int(G.attribute('width')),
-            'height': int(G.attribute('height')),
-            'special': SpecialConceptType.forValue(L.text())
         }
 
         node = cls(**kwargs)
@@ -501,12 +507,10 @@ class ConceptNode(ResizableNode):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
-        shapeBrush = self.shapeBrushSelected if self.isSelected() else self.shapeBrush
-
-        painter.setBrush(shapeBrush)
-        painter.setPen(self.shapePen)
+        brush = self.selectedBrush if self.isSelected() else self.brush
+        painter.setBrush(brush)
+        painter.setPen(self.pen)
         painter.drawRect(self.rect)
-
         self.paintHandles(painter)
 
     @classmethod
@@ -515,9 +519,6 @@ class ConceptNode(ResizableNode):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        shape_w = 54
-        shape_h = 34
-
         # Initialize the pixmap
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
@@ -525,7 +526,7 @@ class ConceptNode(ResizableNode):
         painter = QPainter(pixmap)
 
         # Initialize the shape
-        rect = cls.createRect(shape_w, shape_h)
+        rect = cls.createRect(54, 34)
 
         # Draw the rectangle
         painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
