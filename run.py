@@ -75,7 +75,7 @@ def main():
 
     try:
         app = GrapholEd(sys.argv)
-        window = init_no_splash(app) if options.nosplash else init(app)
+        window = init_no_splash(app) if options.nosplash or sys.platform.startswith('linux') else init(app)
     except Exception as e:
         box = QMessageBox()
         box.setIconPixmap(QPixmap(':/icons/error'))
