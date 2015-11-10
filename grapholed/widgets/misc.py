@@ -38,7 +38,7 @@ from grapholed.functions import connect
 
 from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QSlider, QWidget, QHBoxLayout, QLineEdit, QLabel, QDesktopWidget
+from PyQt5.QtWidgets import QSlider, QWidget, QHBoxLayout, QLineEdit, QLabel
 
 
 class ZoomControl(QWidget):
@@ -189,15 +189,11 @@ class SplashScreen(QLabel):
         Initialize the Grapholed splash screen.
         :param min_splash_time: the minimum amount of seconds the splash screen should be drawn.
         """
-        self.min_splash_time = time() + min_splash_time
         super().__init__(None, Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint|Qt.SplashScreen)
-        self.setPixmap(QPixmap(':/images/splash'))
+        self.min_splash_time = time() + min_splash_time
         self.setAttribute(Qt.WA_TranslucentBackground)
-
-        screen = QDesktopWidget().screenGeometry()
-        posX = (screen.width() - self.pixmap().width()) / 2
-        posY = (screen.height() - self.pixmap().height()) / 2
-        self.setGeometry(posX, posY, self.pixmap().width(), self.pixmap().height())
+        self.setPixmap(QPixmap(':/images/splash'))
+        self.setMask(self.pixmap().mask())
         self.setFixedSize(self.pixmap().width(), self.pixmap().height())
 
     def __enter__(self):
