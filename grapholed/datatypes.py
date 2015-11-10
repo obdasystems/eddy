@@ -235,7 +235,7 @@ class Font(QFont):
         :param weight: the font weight.
         :param italic: whether the font should be rendered as italic.
         """
-        if sys.platform.startswith('win32'):
+        if not sys.platform.startswith('darwin'):
             pointSize = int(round(pointSize * 0.75))
         super().__init__(family, pointSize, weight, italic)
 
