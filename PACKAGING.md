@@ -76,7 +76,7 @@ Bring up a terminal window and type the following:
 Install [Qt 5.5](http://download.qt.io/official_releases/qt/5.5/5.5.0/qt-opensource-linux-x86-5.5.0.run).
 Bring up a terminal window and type the following:
 
-    >>> sudo apt-get install build-essentials libssl-dev python3-pip python3-dev git
+    >>> sudo apt-get install build-essentials libssl-dev python3-pip python3-dev freeglut3-dev git
     >>> sudo pip3 install setuptools --upgrade
     >>> sudo pip3 install pip --upgrade
     >>> PATH="~/Qt/5.5/gcc/bin:$PATH"
@@ -101,7 +101,7 @@ Bring up a terminal window and type the following:
 Install [Qt 5.5](http://download.qt.io/official_releases/qt/5.5/5.5.0/qt-opensource-linux-x64-5.5.0-2.run).
 Bring up a terminal window and type the following:
 
-    >>> sudo apt-get install build-essentials libssl-dev python3-pip python3-dev git
+    >>> sudo apt-get install build-essentials libssl-dev python3-pip python3-dev freeglut3-dev git
     >>> sudo pip3 install setuptools --upgrade
     >>> sudo pip3 install pip --upgrade
     >>> PATH="~/Qt/5.5/gcc_64/bin:$PATH"
