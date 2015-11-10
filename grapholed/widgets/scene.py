@@ -847,7 +847,7 @@ class DiagramScene(QGraphicsScene):
             zValue = 0
             colliding = selected.collidingItems()
             for item in filter(lambda x: not x.isType(ItemType.LabelNode, ItemType.LabelEdge), colliding):
-                if item.zValue() >= zValue:
+                if item.zValue() <= zValue:
                     zValue = item.zValue() - 0.1
             if zValue != selected.zValue():
                 self.undoStack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
