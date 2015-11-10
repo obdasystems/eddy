@@ -36,9 +36,9 @@ from time import time, sleep
 
 from grapholed.functions import connect
 
-from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal, QRectF
-from PyQt5.QtGui import QPixmap, QPainter
-from PyQt5.QtWidgets import QSlider, QWidget, QHBoxLayout, QLineEdit, QFrame
+from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QSlider, QWidget, QHBoxLayout, QLineEdit, QLabel, QDesktopWidget
 
 
 class ZoomControl(QWidget):
@@ -170,36 +170,35 @@ class ZoomControl(QWidget):
         self.label.setText('%d%%' % int(self.zoom[index] * 100))
 
 
-class SplashScreen(QFrame):
+class SplashScreen(QLabel):
     """
-    This class implements the GrapholEd splash screen.
-    Usage:
+    This class implements the Grapholed splash screen.
+    It can be used with the context manager, i.e:
 
     >>> import sys
     >>> from PyQt5.QtWidgets import QApplication
     >>> app = QApplication(sys.argv)
     >>> with SplashScreen(min_splash_time=5):
     >>>     app.do_something_heavy()
+
+    will draw a 5 seconds (at least) splash screen on the screen.
+    The with statement body can be used to initialize the application and process heavy stuff.
     """
     def __init__(self, min_splash_time=2):
         """
-        Initialize the GrapholEd splash screen.
+        Initialize the Grapholed splash screen.
         :param min_splash_time: the minimum amount of seconds the splash screen should be drawn.
         """
-        super().__init__(None, Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint)
         self.min_splash_time = time() + min_splash_time
-        self.pixmap = QPixmap(':/images/splash')
+        super().__init__(None, Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint|Qt.SplashScreen)
+        self.setPixmap(QPixmap(':/images/splash'))
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setFixedSize(self.pixmap.size())
 
-    def paintEvent(self, paintEvent):
-        """
-        Executed when the splashscreen needs to be painted.
-        :param paintEvent: the paint event instance.
-        """
-        rect = QRectF(0, 0, self.pixmap.width(), self.pixmap.height())
-        painter = QPainter(self)
-        painter.drawPixmap(rect, self.pixmap, rect)
+        screen = QDesktopWidget().screenGeometry()
+        posX = (screen.width() - self.pixmap().width()) / 2
+        posY = (screen.height() - self.pixmap().height()) / 2
+        self.setGeometry(posX, posY, self.pixmap().width(), self.pixmap().height())
+        self.setFixedSize(self.pixmap().width(), self.pixmap().height())
 
     def __enter__(self):
         """
