@@ -158,7 +158,7 @@ else:
             """Set +x flag on compiled binary if on Linux"""
             if sys.platform.startswith('linux'):
                 log.info(">>> chmod")
-                filename = os.path.join(self.build_exe, self.linux_binary_name)
+                filename = os.path.join(self.build_exe, EXECUTABLE_NAME)
                 st = os.stat(filename)
                 os.chmod(filename, st.st_mode | stat.S_IEXEC)
 
