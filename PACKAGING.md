@@ -94,7 +94,7 @@ Bring up a terminal window and type the following:
     >>> git clone https://github.com/danielepantaleone/grapholed.git
     >>> cd ~/Downloads/grapholed
     >>> sudo pip3 install -r build-requirements.txt
-    >>> python setup.py build_exe
+    >>> python3 setup.py build_exe
     
 ## Linux 64 (debian based distro)
 
@@ -119,5 +119,5 @@ Bring up a terminal window and type the following:
     >>> git clone https://github.com/danielepantaleone/grapholed.git
     >>> cd ~/Downloads/grapholed
     >>> sudo pip3 install -r build-requirements.txt
-    >>> python setup.py build_exe
+    >>> python3 setup.py build_exe
     
