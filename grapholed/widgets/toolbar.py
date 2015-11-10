@@ -75,8 +75,9 @@ class ZoomControl(QWidget):
         self.label = QLineEdit(self)
         self.label.setAttribute(Qt.WA_MacShowFocusRect, 0)
         self.label.setAlignment(Qt.AlignCenter)
-        self.label.setFixedSize(50, 20)
+        self.label.setFixedSize(48, 20)
         self.label.setFocusPolicy(Qt.NoFocus)
+        self.label.setProperty('class', 'zoom-value')
         self.label.setReadOnly(True)
 
         self.mainLayout = QHBoxLayout(self)

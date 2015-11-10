@@ -62,6 +62,10 @@ QToolBar QToolButton:pressed {
 QToolButton::menu-indicator {
     image: none;
 }
+QLineEdit.zoom-value {
+    background: transparent;
+    border: 1px solid #90A4AE;
+}
 /**
  * DOCK WIDGETS
  */
