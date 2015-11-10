@@ -316,11 +316,11 @@ class MainWindow(QMainWindow):
         # https://forum.qt.io/topic/15107/solved-action-shortcut-not-triggering-unless-action-is-placed-in-a-toolbar)  #
         # ------------------------------------------------------------------------------------------------------------ #
         self.actionToggleEdgeComplete = QAction('Complete', self)
-        self.actionToggleEdgeComplete.setShortcut('ALT+C')
+        self.actionToggleEdgeComplete.setShortcut('CTRL+ALT+C' if sys.platform.startswith('win32') else 'ALT+C')
         self.actionToggleEdgeComplete.setCheckable(True)
 
         self.actionToggleEdgeFunctional = QAction('Functional', self)
-        self.actionToggleEdgeFunctional.setShortcut('ALT+F')
+        self.actionToggleEdgeFunctional.setShortcut('CTRL+ALT+F' if sys.platform.startswith('win32') else 'ALT+F')
         self.actionToggleEdgeFunctional.setCheckable(True)
 
         self.addAction(self.actionToggleEdgeComplete)
