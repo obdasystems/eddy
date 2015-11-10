@@ -237,10 +237,12 @@ class MainWindow(QMainWindow):
         self.actionRedo.setIcon(self.iconRedo)
         self.actionRedo.setShortcut(QKeySequence.Redo)
 
-        ## SET THE ICON ON DOCK WIDGETS ACTIONS
-        self.navigatorDock.toggleViewAction().setIcon(self.iconZoom)
-        self.overviewDock.toggleViewAction().setIcon(self.iconZoom)
-        self.paletteDock.toggleViewAction().setIcon(self.iconPalette)
+        if sys.platform.startswith('darwin'):
+            ## set the icon on dock widgets actions if we are running Mac OS: on Linux and Win32
+            ## if e set the icons we won't be able to see the check mark in the "view" Menu.
+            self.navigatorDock.toggleViewAction().setIcon(self.iconZoom)
+            self.overviewDock.toggleViewAction().setIcon(self.iconZoom)
+            self.paletteDock.toggleViewAction().setIcon(self.iconPalette)
 
         # --------------------------------------- SCENE SPECIFIC ACTIONS --------------------------------------------- #
         # actions below are being used from within the DiagramScene (context menu): they need to be declared here      #
