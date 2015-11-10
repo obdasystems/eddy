@@ -34,6 +34,7 @@
 
 from grapholed.fields import IntEditField
 from grapholed.functions import isEmpty, connect
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QDialogButtonBox, QMessageBox
@@ -63,7 +64,8 @@ class CardinalityRestrictionForm(QDialog):
         self.mainLayout.addRow('Min. cardinality', self.minCardinalityField)
         self.mainLayout.addRow('Max. cardinality', self.maxCardinalityField)
         self.mainLayout.addRow(self.buttonBox)
-        self.setWindowTitle('Insert cardinality range')
+        self.setWindowTitle('Insert cardinality')
+        self.setWindowIcon(QIcon(':/images/grapholed'))
         self.setFixedSize(self.sizeHint())
 
         connect(self.buttonBox.accepted, self.validate)
@@ -83,7 +85,7 @@ class CardinalityRestrictionForm(QDialog):
                 msgbox.setIconPixmap(QPixmap(':/icons/warning'))
                 msgbox.setWindowIcon(QIcon(':/images/grapholed'))
                 msgbox.setWindowTitle('Invalid range specified')
-                msgbox.setText('Min. cardinality (%s) must be lower or equal than Max. cardinality (%s)' % (v1, v2))
+                msgbox.setText('Minimum cardinality {0} must be lower or equal than Maximum cardinality {1}'.format(v1, v2))
                 msgbox.setStandardButtons(QMessageBox.Ok)
                 msgbox.exec_()
                 return
