@@ -43,13 +43,15 @@ __status__ = 'Development'
 __license__ = 'GPL'
 
 
-from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QApplication
+import os
 
-from grapholed.functions import QSS, getPath
+from grapholed.functions import QSS, getPath, main_is_frozen
 from grapholed.style import DefaultStyle
 from grapholed.widgets.main import MainWindow
 from grapholed.widgets.misc import SplashScreen
+
+from PyQt5.QtCore import QSettings
+from PyQt5.QtWidgets import QApplication
 
 
 class GrapholEd(QApplication):
@@ -79,9 +81,11 @@ class GrapholEd(QApplication):
             # container. So according to this we can't use an empty list as default value because PyQt5 needs
             # to know the type of the contents added to the collection: we avoid this problem by placing
             # the list of examples file in the recentDocumentList (only if there is no list defined already).
+            root = getPath('@grapholed/')
+            root = os.path.join(root, '..') if not main_is_frozen() else root
             self.settings.setValue('document/recent_documents', [
-                getPath('@grapholed/examples/Family.graphol'),
-                getPath('@grapholed/examples/Pizza.graphol')
+                os.path.join(root, 'examples', 'Family.graphol'),
+                os.path.join(root, 'examples', 'Pizza.graphol')
             ])
 
         self.mainwindow = MainWindow()
