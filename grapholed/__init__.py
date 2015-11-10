@@ -43,6 +43,7 @@ __status__ = 'Development'
 __license__ = 'GPL'
 
 
+from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QApplication
 
 from grapholed.functions import QSS, getPath
@@ -51,25 +52,37 @@ from grapholed.widgets.main import MainWindow
 from grapholed.widgets.misc import SplashScreen
 
 
-class Grapholed(QApplication):
+class GrapholEd(QApplication):
     """
     This class implements the main Qt application.
     """
-    mainWindow = None
-
     def __init__(self, *args, **kwargs):
         """
         Initialize GrapholEd.
         """
         super().__init__(*args, **kwargs)
+        self.mainwindow = None
+        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)
 
     def init(self):
         """
-        Run initialization tasks for Grapholed (i.e: initialize the Style, Main Window...).
+        Run initialization tasks for GrapholEd (i.e: initialize the Style, Settings, Main Window...).
         :return: the application MainWindow.
         :rtype: MainWindow
         """
         self.setStyle(DefaultStyle())
         self.setStyleSheet(QSS(getPath('@grapholed/stylesheets/default.qss')))
-        self.mainWindow = MainWindow()
-        return self.mainWindow
+
+        if not self.settings.contains('document/recent_documents'):
+            # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
+            # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
+            # container. So according to this we can't use an empty list as default value because PyQt5 needs
+            # to know the type of the contents added to the collection: we avoid this problem by placing
+            # the list of examples file in the recentDocumentList (only if there is no list defined already).
+            self.settings.setValue('document/recent_documents', [
+                getPath('@grapholed/examples/Family.graphol'),
+                getPath('@grapholed/examples/Pizza.graphol')
+            ])
+
+        self.mainwindow = MainWindow()
+        return self.mainwindow

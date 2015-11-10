@@ -143,7 +143,7 @@ class DiagramScene(QGraphicsScene):
         self.document = DiagramDocument()  ## document associated with the current scene
         self.nodesById = {} ## used to index nodes using their id
         self.edgesById = {} ## used to index edges using their id
-        self.settings = QSettings(__organization__, __appname__)  ## application settings
+        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)  ## settings
         self.uniqueID = UniqueID()  ## used to generate unique incrementsl ids
         self.undoStack = QUndoStack(self)  ## use to push actions and keep history for undo/redo
         self.undoStack.setUndoLimit(50) ## TODO: make the stack configurable

@@ -46,7 +46,7 @@ from PyQt5.QtWidgets import QUndoGroup
 from PyQt5.QtXml import QDomDocument
 
 from grapholed import __version__, __appname__, __organization__
-from grapholed.datatypes import FileType, DiagramMode, DistinctList, Color
+from grapholed.datatypes import FileType, DiagramMode, Color
 from grapholed.dialogs import AboutDialog, OpenFileDialog, PreferencesDialog, SaveFileDialog
 from grapholed.exceptions import ParseError
 from grapholed.functions import getPath, shaded, connect, disconnect
@@ -74,9 +74,9 @@ class MainWindow(QMainWindow):
         Initialize the application Main Window.
         """
         super().__init__()
-        self.abortQuit = False  ## will be set to true whenever we need to about a Quit action
-        self.settings = QSettings(__organization__, __appname__)  ## application settings
-        self.undoGroup = QUndoGroup()  ## undo group for DiagramScene undo stacks
+        self.abortQuit = False
+        self.undoGroup = QUndoGroup()
+        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)
 
         ################################################# ICONS ########################################################
 
@@ -838,11 +838,17 @@ class MainWindow(QMainWindow):
         :param path: the path of the recent document.
         :return:
         """
-        documents = self.settings.value('recentDocumentList', DistinctList())
-        documents.remove(path)
-        documents.insert(0, path) # insert on top of the list
-        documents = documents[:MainWindow.MaxRecentDocuments]
-        self.settings.setValue('recentDocumentList', documents)
+        documents = self.settings.value('document/recent_documents', None, str)
+
+        try:
+            documents.remove(path)
+        except ValueError:
+            pass
+        finally:
+            documents.insert(0, path) # insert on top of the list
+            documents = documents[:MainWindow.MaxRecentDocuments]
+
+        self.settings.setValue('document/recent_documents', documents)
         self.updateRecentDocumentActions()
 
     @staticmethod
@@ -1088,7 +1094,7 @@ class MainWindow(QMainWindow):
         """
         Update the recent document action list.
         """
-        documents = self.settings.value('recentDocumentList', DistinctList())
+        documents = self.settings.value('document/recent_documents', None, str)
         numRecentDocuments = min(len(documents), MainWindow.MaxRecentDocuments)
 
         for i in range(numRecentDocuments):

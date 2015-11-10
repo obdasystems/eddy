@@ -38,7 +38,7 @@ import traceback
 
 from argparse import ArgumentParser
 from grapholed import images_rc ## DO NOT REMOVE
-from grapholed import Grapholed
+from grapholed import GrapholEd
 from grapholed.widgets.misc import SplashScreen
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QSpacerItem, QSizePolicy, QMessageBox
@@ -74,7 +74,7 @@ def main():
         return application.init()
 
     try:
-        app = Grapholed(sys.argv)
+        app = GrapholEd(sys.argv)
         window = init_no_splash(app) if options.nosplash else init(app)
     except Exception as e:
         box = QMessageBox()

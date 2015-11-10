@@ -34,7 +34,7 @@
 
 from grapholed.fields import SpinBox
 from grapholed.functions import connect
-from grapholed import __appname__ as appname, __organization__ as organization
+from grapholed import __appname__, __organization__
 
 from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtGui import QIcon
@@ -52,7 +52,7 @@ class PreferencesDialog(QDialog):
         """
         super().__init__(parent)
 
-        self.settings = QSettings(organization, appname)
+        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)
 
         ############################################### APPEARANCE TAB #################################################
 
