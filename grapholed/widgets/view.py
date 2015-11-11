@@ -161,7 +161,8 @@ class MainView(QGraphicsView):
 
                     viewport.update()
 
-                if scene.mode in {DiagramMode.EdgeInsert, DiagramMode.NodeMove, DiagramMode.RubberBandDrag}:
+                if scene.mode in {DiagramMode.EdgeInsert, DiagramMode.NodeMove, DiagramMode.NodeResize,
+                                  DiagramMode.EdgeBreakPointMove, DiagramMode.RubberBandDrag}:
 
                     ######################################## MAIN VIEW SCROLL ##########################################
 
