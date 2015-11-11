@@ -417,15 +417,14 @@ setup(
     version=__version__,
     author='Daniele Pantaleone',
     author_email="danielepantaleone@me.com",
-    description="Grapholed is diagramming software for the Graphol language written in python.",
-    long_description="Grapholed is diagramming software for the Graphol language written in python. Graphol is "
-                     "developed by members of the DASI-lab group of the Dipartimento di Informatica e Sistemistica "
-                     "\"A.Ruberti\" at Sapienza University of Rome. Graphol offers a completely visual representation "
-                     "of ontologies to users, in order to help understanding by people who are not skilled in logic. "
-                     "Graphol provides designers with simple graphical primitives for ontology editing, avoiding "
-                     "complex textual syntax. Graphol's basic components are inspired by Entity Relationship(ER) "
-                     "diagrams, thus ontologies that can be rendered as ER diagrams have in Graphol a similar "
-                     "diagrammatic shape.",
+    description="GrapholEd is an editor for the Graphol ontology language.",
+    long_description="GrapholEd is an editor for the Graphol ontology language. Graphol is developed by members of the "
+                     "DASI-lab group of the Dipartimento di Informatica e Sistemistica \"A.Ruberti\" at Sapienza "
+                     "University of Rome. Graphol offers a completely visual representation of ontologies to users, "
+                     "in order to help understanding by people who are not skilled in logic. Graphol provides "
+                     "designers with simple graphical primitives for ontology editing, avoiding complex textual "
+                     "syntax. Graphol's basic components are inspired by Entity Relationship(ER) diagrams, thus "
+                     "ontologies that can be rendered as ER diagrams have in Graphol a similar diagrammatic shape.",
     license=__license__,
     url="https://github.com/danielepantaleone/grapholed",
     classifiers=[
@@ -491,6 +490,7 @@ setup(
                 'PyQt5.QtXml',
             ],
             'include_files': [
+                ('docs', 'docs'),
                 ('examples', 'examples'),
                 ('grapholed/stylesheets', 'stylesheets'),
                 ('LICENSE', 'LICENSE'),
