@@ -38,7 +38,7 @@ __email__ = 'danielepantaleone@me.com'
 __copyright__ = 'Copyright 2015, Daniele Pantaleone'
 __organization__ = 'Sapienza - University Of Rome'
 __appname__ = 'GrapholEd'
-__version__ = '0.3'
+__version__ = '0.3.1'
 __status__ = 'Development'
 __license__ = 'GPL'
 
