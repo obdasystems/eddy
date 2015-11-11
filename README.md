@@ -10,6 +10,10 @@ simple graphical primitives for ontology editing, avoiding complex textual synta
 components are inspired by Entity Relationship (ER) diagrams, thus ontologies that can be rendered as 
 ER diagrams have in Graphol a similar diagrammatic shape.
 
+### Screenshot
+
+![screenshot](/danielepantaleone/grapholed/blob/master/grapholed/images/screenshot.png?raw=true)
+
 ### License
 
 See the LICENSE file included with the distribution.
