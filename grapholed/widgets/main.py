@@ -74,9 +74,17 @@ class MainWindow(QMainWindow):
         Initialize the application Main Window.
         """
         super().__init__()
+
         self.abortQuit = False
         self.undoGroup = QUndoGroup()
         self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)
+
+        self.menuFile = self.menuBar().addMenu("&File")
+        self.menuEdit = self.menuBar().addMenu("&Edit")
+        self.menuView = self.menuBar().addMenu("&View")
+        self.menuHelp = self.menuBar().addMenu("&Help")
+
+        self.toolbar = self.addToolBar("Toolbar")
 
         ################################################# ICONS ########################################################
 
@@ -237,13 +245,6 @@ class MainWindow(QMainWindow):
         self.actionRedo.setIcon(self.iconRedo)
         self.actionRedo.setShortcut(QKeySequence.Redo)
 
-        if sys.platform.startswith('darwin'):
-            ## set the icon on dock widgets actions if we are running Mac OS: on Linux and Win32
-            ## if e set the icons we won't be able to see the check mark in the "view" Menu.
-            self.navigatorDock.toggleViewAction().setIcon(self.iconZoom)
-            self.overviewDock.toggleViewAction().setIcon(self.iconZoom)
-            self.paletteDock.toggleViewAction().setIcon(self.iconPalette)
-
         # --------------------------------------- SCENE SPECIFIC ACTIONS --------------------------------------------- #
         # actions below are being used from within the DiagramScene (context menu): they need to be declared here      #
         # in the Main Window so we can add them to the toolbar (so they are both bisivle there and they can also be    #
@@ -330,7 +331,6 @@ class MainWindow(QMainWindow):
         
         ################################################# MENUS ########################################################
 
-        self.menuFile = self.menuBar().addMenu("&File")
         self.menuFile.addAction(self.actionNewDocument)
         self.menuFile.addAction(self.actionOpenDocument)
         self.menuFile.addSeparator()
@@ -351,7 +351,6 @@ class MainWindow(QMainWindow):
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionQuit)
 
-        self.menuEdit = self.menuBar().addMenu("&Edit")
         self.menuEdit.addAction(self.actionUndo)
         self.menuEdit.addAction(self.actionRedo)
         self.menuEdit.addSeparator()
@@ -367,14 +366,14 @@ class MainWindow(QMainWindow):
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionOpenPreferences)
 
-        self.menuView = self.menuBar().addMenu("&View")
         self.menuView.addAction(self.actionSnapToGrid)
+        self.menuView.addSeparator()
+        self.menuView.addAction(self.toolbar.toggleViewAction())
         self.menuView.addSeparator()
         self.menuView.addAction(self.navigatorDock.toggleViewAction())
         self.menuView.addAction(self.overviewDock.toggleViewAction())
         self.menuView.addAction(self.paletteDock.toggleViewAction())
 
-        self.menuHelp = self.menuBar().addMenu("&Help")
         self.menuHelp.addAction(self.actionAbout)
 
         if not sys.platform.startswith('darwin'):
@@ -383,10 +382,7 @@ class MainWindow(QMainWindow):
         self.menuHelp.addAction(self.actionSapienzaWebOpen)
         self.menuHelp.addAction(self.actionGrapholWebOpen)
 
-        # ------------------------------------- NODE GENERIC CONTEXT MENU -------------------------------------------- #
-        # menu defined below are rendered as node context menus but they needs to be defined here so they are          #
-        # accessible from the toolbar (embedded into a QToolButton)                                                    #
-        # ------------------------------------------------------------------------------------------------------------ #
+        ## NODE GENERIC CONTEXT MENU
         self.menuChangeNodeBrush = QMenu('Select color')
         self.menuChangeNodeBrush.setIcon(QIcon(':/icons/color-fill'))
         for action in self.actionsChangeNodeBrush:
@@ -402,26 +398,25 @@ class MainWindow(QMainWindow):
 
         self.zoomctl = ZoomControl()
 
-        self.documentToolBar = self.addToolBar("Document")
-        self.documentToolBar.setContextMenuPolicy(Qt.PreventContextMenu)
-        self.documentToolBar.setFloatable(False)
-        self.documentToolBar.setMovable(False)
+        self.toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
+        self.toolbar.setFloatable(False)
+        self.toolbar.setMovable(False)
 
-        self.documentToolBar.addAction(self.actionNewDocument)
-        self.documentToolBar.addAction(self.actionOpenDocument)
-        self.documentToolBar.addAction(self.actionSaveDocument)
-        self.documentToolBar.addAction(self.actionPrintDocument)
-        self.documentToolBar.addSeparator()
-        self.documentToolBar.addAction(self.actionUndo)
-        self.documentToolBar.addAction(self.actionRedo)
-        self.documentToolBar.addSeparator()
-        self.documentToolBar.addAction(self.actionItemCut)
-        self.documentToolBar.addAction(self.actionItemCopy)
-        self.documentToolBar.addAction(self.actionItemPaste)
-        self.documentToolBar.addAction(self.actionItemDelete)
-        self.documentToolBar.addSeparator()
-        self.documentToolBar.addAction(self.actionBringToFront)
-        self.documentToolBar.addAction(self.actionSendToBack)
+        self.toolbar.addAction(self.actionNewDocument)
+        self.toolbar.addAction(self.actionOpenDocument)
+        self.toolbar.addAction(self.actionSaveDocument)
+        self.toolbar.addAction(self.actionPrintDocument)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.actionUndo)
+        self.toolbar.addAction(self.actionRedo)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.actionItemCut)
+        self.toolbar.addAction(self.actionItemCopy)
+        self.toolbar.addAction(self.actionItemPaste)
+        self.toolbar.addAction(self.actionItemDelete)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.actionBringToFront)
+        self.toolbar.addAction(self.actionSendToBack)
 
         self.changeNodeBrushButton = QToolButton()
         self.changeNodeBrushButton.setIcon(build_shaded_icon(':/icons/color-fill'))
@@ -429,14 +424,14 @@ class MainWindow(QMainWindow):
         self.changeNodeBrushButton.setPopupMode(QToolButton.InstantPopup)
         self.changeNodeBrushButton.setEnabled(False)
 
-        self.documentToolBar.addSeparator()
-        self.documentToolBar.addWidget(self.changeNodeBrushButton)
+        self.toolbar.addSeparator()
+        self.toolbar.addWidget(self.changeNodeBrushButton)
 
-        self.documentToolBar.addSeparator()
-        self.documentToolBar.addAction(self.actionSnapToGrid)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.actionSnapToGrid)
 
-        self.documentToolBar.addSeparator()
-        self.documentToolBar.addWidget(self.zoomctl)
+        self.toolbar.addSeparator()
+        self.toolbar.addWidget(self.zoomctl)
 
         ############################################### GEOMETRY #######################################################
 
