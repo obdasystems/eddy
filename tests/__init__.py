@@ -36,8 +36,11 @@ import sys
 import unittest
 
 from grapholed import GrapholEd
+from unittest.util import safe_repr
+from PyQt5.QtTest import QTest
 
 
+# noinspection PyTypeChecker,PyCallByClass
 class GrapholEdTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -46,9 +49,44 @@ class GrapholEdTestCase(unittest.TestCase):
         """
         self.app = GrapholEd(sys.argv)
         self.mainwindow = self.app.init()
+        self.mainwindow.show()
+        self.mainwindow.activateWindow()
+        QTest.qWaitForWindowActive(self.mainwindow)
 
     def tearDown(self):
         """
         Perform operation on test end.
         """
         self.app.quit()
+
+    ############################################## CUSTOM ASSERTIONS ###################################################
+
+    def assertDictHasKey(self, key, container, msg=None):
+        """Check for a given key to be in the given dictionary."""
+        if key not in container.keys():
+            standardMsg = '%s not found in %s' % (safe_repr(key), safe_repr(container))
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def assertDictHasValue(self, value, container, msg=None):
+        """Check for a given value to be in the given dictionary."""
+        if value not in container.value():
+            standardMsg = '%s not found in %s' % (safe_repr(value), safe_repr(container))
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def assertEmpty(self, container, msg=None):
+        """Assert for a given container to be empty."""
+        if len(container) != 0:
+            standardMsg = '%s is not empty: found %s elements' % (safe_repr(container), len(container))
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def assertLen(self, count, container, msg=None):
+        """Check for a given container to have the specified length."""
+        if len(container) != count:
+            standardMsg = 'found %s elements in %s: expecting %s' % (len(container), safe_repr(container), count)
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def assertNotEmpty(self, container, msg=None):
+        """Assert for a given container to be empty."""
+        if len(container) == 0:
+            standardMsg = '%s unexpectedly empty: found %s elements' % (safe_repr(container), len(container))
+            self.fail(self._formatMessage(msg, standardMsg))

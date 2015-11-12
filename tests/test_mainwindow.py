@@ -32,7 +32,6 @@
 ##########################################################################
 
 
-
 from PyQt5.QtCore import Qt
 from PyQt5.QtTest import QTest
 
@@ -46,7 +45,29 @@ from tests import GrapholEdTestCase
 class Test_MainWindow(GrapholEdTestCase):
 
     def test_new_document_from_toolbar(self):
+        # WHEN
         QTest.mouseClick(self.mainwindow.toolbar.widgetForAction(self.mainwindow.actionNewDocument), Qt.LeftButton)
+        # THEN
+        self.assertEqual(1, len(self.mainwindow.mdiArea.subWindowList()))
+        self.assertIsInstance(self.mainwindow.mdiArea.subWindowList()[0], MdiSubWindow)
+        self.assertIsInstance(self.mainwindow.mdiArea.subWindowList()[0].widget(), MainView)
+        self.assertIsInstance(self.mainwindow.mdiArea.subWindowList()[0].widget().scene(), DiagramScene)
+        self.assertFalse(self.mainwindow.actionSaveDocument.isEnabled())
+        self.assertFalse(self.mainwindow.actionItemCut.isEnabled())
+        self.assertFalse(self.mainwindow.actionItemCopy.isEnabled())
+        self.assertFalse(self.mainwindow.actionItemPaste.isEnabled())
+        self.assertFalse(self.mainwindow.actionItemDelete.isEnabled())
+        self.assertFalse(self.mainwindow.actionBringToFront.isEnabled())
+        self.assertFalse(self.mainwindow.actionSendToBack.isEnabled())
+        self.assertFalse(self.mainwindow.changeNodeBrushButton.isEnabled())
+        self.assertFalse(self.mainwindow.undoGroup.canRedo())
+        self.assertFalse(self.mainwindow.undoGroup.canUndo())
+        self.assertTrue(self.mainwindow.undoGroup.isClean())
+
+    def test_new_document_from_keyboard_shortcut(self):
+        # WHEN
+        QTest.keyClick(self.mainwindow, 'n', Qt.ControlModifier)
+        # THEN
         self.assertEqual(1, len(self.mainwindow.mdiArea.subWindowList()))
         self.assertIsInstance(self.mainwindow.mdiArea.subWindowList()[0], MdiSubWindow)
         self.assertIsInstance(self.mainwindow.mdiArea.subWindowList()[0].widget(), MainView)
