@@ -50,9 +50,14 @@ class Test_DiagramScene(GrapholEdTestCase):
         self.mainwindow.mdiArea.setActiveSubWindow(self.subwindow)
         self.mainwindow.mdiArea.update()
 
-    def test_insert_node_single(self):
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   NODE INSERTION                                                                                                 #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def test_insert_single_node(self):
         # GIVEN
-        self.assertIs(self.scene.mode, DiagramMode.Idle)
         button = self.mainwindow.palette_.button(ItemType.ConceptNode)
         # WHEN
         QTest.mouseClick(button, Qt.LeftButton)
@@ -70,7 +75,7 @@ class Test_DiagramScene(GrapholEdTestCase):
         self.assertTrue(self.scene.nodesById['n0'].isSelected())
         self.assertEquals(self.scene.nodesById['n0'].pos(), self.mainview.mapToScene(QPoint(100, 100)))
 
-    def test_insert_node_multi(self):
+    def test_insert_multiple_nodes(self):
         # GIVEN
         button = self.mainwindow.palette_.button(ItemType.ConceptNode)
         # WHEN
@@ -92,92 +97,75 @@ class Test_DiagramScene(GrapholEdTestCase):
         self.assertIs(self.scene.mode, DiagramMode.Idle)
         self.assertFalse(button.isChecked())
 
-    def test_insert_edge_single_with_endpoint_release(self):
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   EDGE INSERTION                                                                                                 #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def test_insert_single_edge_with_endpoint(self):
         # GIVEN
-        self.assertIs(self.scene.mode, DiagramMode.Idle)
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(0, 0))
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(400, 0))
         button = self.mainwindow.palette_.button(ItemType.InclusionEdge)
+        self.createStubDiagram1()
         # WHEN
         QTest.mouseClick(button, Qt.LeftButton)
         self.assertIs(self.scene.mode, DiagramMode.EdgeInsert)
         self.assertTrue(button.isChecked())
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(0, 0))
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(100, 100))
         self.assertIsNotNone(self.scene.command)
         self.assertIsInstance(self.scene.command.edge, InclusionEdge)
         self.assertIs(self.scene.command.edge.source, self.scene.node('n0'))
         self.assertIsNone(self.scene.command.edge.target)
-        self.assertLen(5, self.scene.items())
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(400, 0))
-        # THEN
-        self.assertLen(5, self.scene.items())
-        self.assertIsNone(self.scene.command)
-        self.assertNotEmpty(self.scene.edgesById)
-        self.assertNotEmpty(self.scene.nodesById)
-        self.assertDictHasKey('n0', self.scene.nodesById)
-        self.assertDictHasKey('n1', self.scene.nodesById)
-        self.assertDictHasKey('e0', self.scene.edgesById)
-        self.assertIs(self.scene.edge('e0').source, self.scene.node('n0'))
-        self.assertIs(self.scene.edge('e0').target, self.scene.node('n1'))
-        self.assertEqual(3, self.scene.undoStack.count())
-        self.assertIs(self.scene.mode, DiagramMode.Idle)
-
-    def test_insert_edge_single_with_no_endpoint_release(self):
-        # GIVEN
-        self.assertIs(self.scene.mode, DiagramMode.Idle)
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(0, 0))
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(400, 0))
-        button = self.mainwindow.palette_.button(ItemType.InclusionEdge)
-        # WHEN
-        QTest.mouseClick(button, Qt.LeftButton)
-        self.assertIs(self.scene.mode, DiagramMode.EdgeInsert)
-        self.assertTrue(button.isChecked())
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(0, 0))
-        self.assertIsNotNone(self.scene.command)
-        self.assertIsInstance(self.scene.command.edge, InclusionEdge)
-        self.assertIs(self.scene.command.edge.source, self.scene.node('n0'))
-        self.assertIsNone(self.scene.command.edge.target)
-        self.assertLen(5, self.scene.items())
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(2000, 0))
-        # THEN
-        self.assertLen(4, self.scene.items())
-        self.assertIsNone(self.scene.command)
-        self.assertEmpty(self.scene.edgesById)
-        self.assertNotEmpty(self.scene.nodesById)
-        self.assertDictHasKey('n0', self.scene.nodesById)
-        self.assertDictHasKey('n1', self.scene.nodesById)
-        self.assertEqual(2, self.scene.undoStack.count())
-        self.assertIs(self.scene.mode, DiagramMode.Idle)
-
-    def test_insert_edge_multi_with_endpoint_release(self):
-        # GIVEN
-        self.assertIs(self.scene.mode, DiagramMode.Idle)
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(0, 0))
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(400, 0))
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(0, 400))
-        button = self.mainwindow.palette_.button(ItemType.InclusionEdge)
-        # WHEN
-        QTest.mouseClick(button, Qt.LeftButton)
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(0, 0))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 0))
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(0, 0))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(0, 400))
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 0))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(0, 400))
+        self.assertLen(9, self.scene.items())
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(200, 100))
         # THEN
         self.assertLen(9, self.scene.items())
         self.assertIsNone(self.scene.command)
         self.assertNotEmpty(self.scene.edgesById)
-        self.assertNotEmpty(self.scene.nodesById)
-        self.assertDictHasKey('n0', self.scene.nodesById)
-        self.assertDictHasKey('n1', self.scene.nodesById)
+        self.assertDictHasKey('e0', self.scene.edgesById)
+        self.assertIs(self.scene.edge('e0').source, self.scene.node('n0'))
+        self.assertIs(self.scene.edge('e0').target, self.scene.node('n1'))
+        self.assertEqual(1, self.scene.undoStack.count())
+        self.assertIs(self.scene.mode, DiagramMode.Idle)
+
+    def test_insert_single_edge_with_no_endpoint(self):
+        # GIVEN
+        button = self.mainwindow.palette_.button(ItemType.InclusionEdge)
+        self.createStubDiagram1()
+        # WHEN
+        QTest.mouseClick(button, Qt.LeftButton)
+        self.assertIs(self.scene.mode, DiagramMode.EdgeInsert)
+        self.assertTrue(button.isChecked())
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(100, 100))
+        self.assertIsNotNone(self.scene.command)
+        self.assertIsInstance(self.scene.command.edge, InclusionEdge)
+        self.assertIs(self.scene.command.edge.source, self.scene.node('n0'))
+        self.assertIsNone(self.scene.command.edge.target)
+        self.assertLen(9, self.scene.items())
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(2000, 100))
+        # THEN
+        self.assertLen(8, self.scene.items())
+        self.assertIsNone(self.scene.command)
+        self.assertEmpty(self.scene.edgesById)
+        self.assertEqual(0, self.scene.undoStack.count())
+        self.assertIs(self.scene.mode, DiagramMode.Idle)
+
+    def test_insert_multiple_edges_with_endpoint(self):
+        # GIVEN
+        button = self.mainwindow.palette_.button(ItemType.InclusionEdge)
+        self.createStubDiagram1()
+        # WHEN
+        QTest.mouseClick(button, Qt.LeftButton)
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 100))
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 200))
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 200))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 200))
+        # THEN
+        self.assertLen(11, self.scene.items())
+        self.assertIsNone(self.scene.command)
+        self.assertNotEmpty(self.scene.edgesById)
         self.assertDictHasKey('e0', self.scene.edgesById)
         self.assertDictHasKey('e1', self.scene.edgesById)
         self.assertDictHasKey('e2', self.scene.edgesById)
@@ -185,8 +173,104 @@ class Test_DiagramScene(GrapholEdTestCase):
         self.assertIs(self.scene.edge('e0').target, self.scene.node('n1'))
         self.assertIs(self.scene.edge('e1').source, self.scene.node('n0'))
         self.assertIs(self.scene.edge('e1').target, self.scene.node('n2'))
-        self.assertEqual(6, self.scene.undoStack.count())
+        self.assertIs(self.scene.edge('e2').source, self.scene.node('n2'))
+        self.assertIs(self.scene.edge('e2').target, self.scene.node('n3'))
+        self.assertEqual(3, self.scene.undoStack.count())
         self.assertIs(self.scene.mode, DiagramMode.EdgeInsert)
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
         self.assertIs(self.scene.mode, DiagramMode.Idle)
         self.assertFalse(button.isChecked())
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   ITEM SELECTION                                                                                                 #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def test_select_single_item(self):
+        # GIVEN
+        self.createStubDiagram2()
+        # WHEN
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(100, 120))
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(200, 120))
+        # THEN
+        self.assertIs(self.scene.mode, DiagramMode.Idle)
+        self.assertLen(1, self.scene.selectedNodes())
+        self.assertLen(1, self.scene.selectedItems())
+        self.assertTrue(self.scene.node('n1').isSelected())
+
+    def test_select_multiple_items(self):
+        # GIVEN
+        self.createStubDiagram2()
+        # WHEN
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 120))
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 120))
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 220))
+        # THEN
+        self.assertIs(self.scene.mode, DiagramMode.Idle)
+        self.assertLen(0, self.scene.selectedEdges())
+        self.assertLen(3, self.scene.selectedNodes())
+        self.assertLen(3, self.scene.selectedItems())
+        self.assertTrue(self.scene.node('n0').isSelected())
+        self.assertTrue(self.scene.node('n1').isSelected())
+        self.assertTrue(self.scene.node('n3').isSelected())
+        self.assertFalse(self.scene.node('n2').isSelected())
+
+    def test_select_all_using_shortcut(self):
+        # GIVEN
+        self.createStubDiagram2()
+        # WHEN
+        QTest.keyClick(self.mainview.viewport(), 'a', Qt.ControlModifier)
+        # THEN
+        self.assertCountEqual(self.scene.nodes(), self.scene.selectedNodes())
+        self.assertCountEqual(self.scene.edges(), self.scene.selectedEdges())
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   STUB DIAGRAM GENERATION                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def createStubDiagram1(self):
+        """
+        Create a stub diagram to be used in test cases.
+        The diagram is composed of 4 Concept nodes.
+        """
+        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))     # n0
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 100))     # n1
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 200))     # n2
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 200))     # n3
+        QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
+
+        self.scene.undoStack.clear()
+
+    def createStubDiagram2(self):
+        """
+        Create a stub diagram to be used in test cases.
+        The diagram is composed of 4 Concept nodes connected using 4 Inclusion edges and 1 Input edge.
+        """
+        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))     # n0
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 100))     # n1
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 200))     # n2
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 200))     # n3
+        QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
+
+        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.InclusionEdge), Qt.LeftButton)
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 100))   # n0 -> n1
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 200))   # n0 -> n2
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 200))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 200))   # n2 -> n3
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 200))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 100))   # n3 -> n1
+        QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
+
+        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.InputEdge), Qt.LeftButton)
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 200))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 100))   # n2 -> n1
+        QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
+
+        self.scene.undoStack.clear()
