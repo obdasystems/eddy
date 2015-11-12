@@ -32,23 +32,33 @@
 ##########################################################################
 
 
-import sys
-import unittest
 
-from grapholed import GrapholEd
+from PyQt5.QtCore import Qt
+from PyQt5.QtTest import QTest
+
+from grapholed.widgets.mdi import MdiSubWindow
+from grapholed.widgets.scene import DiagramScene
+from grapholed.widgets.view import MainView
+
+from tests import GrapholEdTestCase
 
 
-class GrapholEdTestCase(unittest.TestCase):
+class Test_MainWindow(GrapholEdTestCase):
 
-    def setUp(self):
-        """
-        Initialize test case environment.
-        """
-        self.app = GrapholEd(sys.argv)
-        self.mainwindow = self.app.init()
-
-    def tearDown(self):
-        """
-        Perform operation on test end.
-        """
-        self.app.quit()
+    def test_new_document_from_toolbar(self):
+        QTest.mouseClick(self.mainwindow.toolbar.widgetForAction(self.mainwindow.actionNewDocument), Qt.LeftButton)
+        self.assertEqual(1, len(self.mainwindow.mdiArea.subWindowList()))
+        self.assertIsInstance(self.mainwindow.mdiArea.subWindowList()[0], MdiSubWindow)
+        self.assertIsInstance(self.mainwindow.mdiArea.subWindowList()[0].widget(), MainView)
+        self.assertIsInstance(self.mainwindow.mdiArea.subWindowList()[0].widget().scene(), DiagramScene)
+        self.assertFalse(self.mainwindow.actionSaveDocument.isEnabled())
+        self.assertFalse(self.mainwindow.actionItemCut.isEnabled())
+        self.assertFalse(self.mainwindow.actionItemCopy.isEnabled())
+        self.assertFalse(self.mainwindow.actionItemPaste.isEnabled())
+        self.assertFalse(self.mainwindow.actionItemDelete.isEnabled())
+        self.assertFalse(self.mainwindow.actionBringToFront.isEnabled())
+        self.assertFalse(self.mainwindow.actionSendToBack.isEnabled())
+        self.assertFalse(self.mainwindow.changeNodeBrushButton.isEnabled())
+        self.assertFalse(self.mainwindow.undoGroup.canRedo())
+        self.assertFalse(self.mainwindow.undoGroup.canUndo())
+        self.assertTrue(self.mainwindow.undoGroup.isClean())
