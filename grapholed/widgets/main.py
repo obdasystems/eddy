@@ -385,7 +385,7 @@ class MainWindow(QMainWindow):
 
         # ------------------------------------- NODE GENERIC CONTEXT MENU -------------------------------------------- #
         # menu defined below are rendered as node context menus but they needs to be defined here so they are          #
-        # accessible from the toolbar (embedded into a QToolButton                                                     #
+        # accessible from the toolbar (embedded into a QToolButton)                                                    #
         # ------------------------------------------------------------------------------------------------------------ #
         self.menuChangeNodeBrush = QMenu('Select color')
         self.menuChangeNodeBrush.setIcon(QIcon(':/icons/color-fill'))
