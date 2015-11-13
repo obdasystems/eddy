@@ -32,7 +32,7 @@ dependencies:
     - cd /builds/sip-4.17 && python configure.py
     - cd /builds/sip-4.17 && sudo make -j5 && sudo make install
     # Build PyQt5
-    - cd /builds/PyQt-gpl-5.5 && python configure.py --confirm-license --no-designer-plugin -e QtCore -e QtGui -e QtWidgets -e QtPrintSupport -e QtXml
+    - cd /builds/PyQt-gpl-5.5 && python configure.py --confirm-license --no-designer-plugin -e QtCore -e QtGui -e QtWidgets -e QtPrintSupport -e QtXml -e QtTest
     - cd /builds/PyQt-gpl-5.5 && sudo make -j5 && sudo make install
 
   ## Install PIP packages
