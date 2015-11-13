@@ -18,6 +18,10 @@ ER diagrams have in Graphol a similar diagrammatic shape.
 
 See the LICENSE file included with the distribution.
 
+### Build status
+
+# [![circleci](https://avatars0.githubusercontent.com/u/1231870?v=2&s=50)](https://circleci.com/) Circle CI [![Circle CI](https://circleci.com/gh/danielepantaleone/grapholed/tree/master.svg?style=svg&circle-token=d4611bacee6dca791faf8b03502ffabdeb099ffe)](https://circleci.com/gh/danielepantaleone/grapholed/tree/master)
+
 ### Resources
 
 * [Source code](https://github.com/danielepantaleone/grapholed)

@@ -1,2 +1,3 @@
 cx_Freeze>=4.3.4
+setuptools>=18.5
 wheel>=0.26.0
