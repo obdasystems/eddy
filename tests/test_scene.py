@@ -117,7 +117,7 @@ class Test_DiagramScene(GrapholEdTestCase):
         self.assertIs(self.scene.command.edge.source, self.scene.node('n0'))
         self.assertIsNone(self.scene.command.edge.target)
         self.assertLen(9, self.scene.items())
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(200, 100))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(400, 100))
         # THEN
         self.assertLen(9, self.scene.items())
         self.assertIsNone(self.scene.command)
@@ -142,7 +142,7 @@ class Test_DiagramScene(GrapholEdTestCase):
         self.assertIs(self.scene.command.edge.source, self.scene.node('n0'))
         self.assertIsNone(self.scene.command.edge.target)
         self.assertLen(9, self.scene.items())
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(2000, 100))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(4000, 100))
         # THEN
         self.assertLen(8, self.scene.items())
         self.assertIsNone(self.scene.command)
@@ -157,11 +157,11 @@ class Test_DiagramScene(GrapholEdTestCase):
         # WHEN
         QTest.mouseClick(button, Qt.LeftButton)
         QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 100))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 100))
         QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 200))
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 200))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 200))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 400))
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 400))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 400))
         # THEN
         self.assertLen(11, self.scene.items())
         self.assertIsNone(self.scene.command)
@@ -192,7 +192,7 @@ class Test_DiagramScene(GrapholEdTestCase):
         self.createStubDiagram2()
         # WHEN
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(100, 120))
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(200, 120))
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(400, 120))
         # THEN
         self.assertIs(self.scene.mode, DiagramMode.Idle)
         self.assertLen(1, self.scene.selectedNodes())
@@ -204,8 +204,8 @@ class Test_DiagramScene(GrapholEdTestCase):
         self.createStubDiagram2()
         # WHEN
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 120))
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 120))
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 220))
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 120))
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 420))
         # THEN
         self.assertIs(self.scene.mode, DiagramMode.Idle)
         self.assertLen(0, self.scene.selectedEdges())
@@ -238,9 +238,9 @@ class Test_DiagramScene(GrapholEdTestCase):
         """
         QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))     # n0
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 100))     # n1
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 200))     # n2
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 200))     # n3
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 100))     # n1
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 400))     # n2
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 400))     # n3
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
         self.scene.undoStack.clear()
@@ -252,25 +252,25 @@ class Test_DiagramScene(GrapholEdTestCase):
         """
         QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))     # n0
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 100))     # n1
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 200))     # n2
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 200))     # n3
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 100))     # n1
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 400))     # n2
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 400))     # n3
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
         QTest.mouseClick(self.mainwindow.palette_.button(ItemType.InclusionEdge), Qt.LeftButton)
         QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 100))   # n0 -> n1
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 100))   # n0 -> n1
         QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 200))   # n0 -> n2
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 200))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 200))   # n2 -> n3
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 200))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 100))   # n3 -> n1
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 400))   # n0 -> n2
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 400))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 400))   # n2 -> n3
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 400))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 100))   # n3 -> n1
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
         QTest.mouseClick(self.mainwindow.palette_.button(ItemType.InputEdge), Qt.LeftButton)
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 200))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(200, 100))   # n2 -> n1
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 400))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 100))   # n2 -> n1
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
         self.scene.undoStack.clear()
