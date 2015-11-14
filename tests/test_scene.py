@@ -72,8 +72,8 @@ class Test_DiagramScene(GrapholEdTestCase):
         self.assertNotEmpty(self.scene.nodesById)
         self.assertDictHasKey('n0', self.scene.nodesById)
         self.assertEqual(1, self.scene.undoStack.count())
-        self.assertTrue(self.scene.nodesById['n0'].isSelected())
-        self.assertEquals(self.scene.nodesById['n0'].pos(), self.mainview.mapToScene(QPoint(100, 100)))
+        self.assertTrue(self.scene.node('n0').isSelected())
+        self.assertEquals(self.scene.node('n0').pos(), self.mainview.mapToScene(QPoint(100, 100)))
 
     def test_insert_multiple_nodes(self):
         # GIVEN
@@ -111,13 +111,13 @@ class Test_DiagramScene(GrapholEdTestCase):
         QTest.mouseClick(button, Qt.LeftButton)
         self.assertIs(self.scene.mode, DiagramMode.EdgeInsert)
         self.assertTrue(button.isChecked())
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(100, 100))
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, self.mainview.mapFromScene(QPoint(-200, -200)))
         self.assertIsNotNone(self.scene.command)
         self.assertIsInstance(self.scene.command.edge, InclusionEdge)
         self.assertIs(self.scene.command.edge.source, self.scene.node('n0'))
         self.assertIsNone(self.scene.command.edge.target)
         self.assertLen(9, self.scene.items())
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(400, 100))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, self.mainview.mapFromScene(QPoint(+200, -200)))
         # THEN
         self.assertLen(9, self.scene.items())
         self.assertIsNone(self.scene.command)
@@ -136,13 +136,13 @@ class Test_DiagramScene(GrapholEdTestCase):
         QTest.mouseClick(button, Qt.LeftButton)
         self.assertIs(self.scene.mode, DiagramMode.EdgeInsert)
         self.assertTrue(button.isChecked())
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(100, 100))
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, self.mainview.mapFromScene(QPoint(-200, -200)))
         self.assertIsNotNone(self.scene.command)
         self.assertIsInstance(self.scene.command.edge, InclusionEdge)
         self.assertIs(self.scene.command.edge.source, self.scene.node('n0'))
         self.assertIsNone(self.scene.command.edge.target)
         self.assertLen(9, self.scene.items())
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(4000, 100))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, self.mainview.mapFromScene(QPoint(2000, -200)))
         # THEN
         self.assertLen(8, self.scene.items())
         self.assertIsNone(self.scene.command)
@@ -156,12 +156,12 @@ class Test_DiagramScene(GrapholEdTestCase):
         self.createStubDiagram1()
         # WHEN
         QTest.mouseClick(button, Qt.LeftButton)
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 100))
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 400))
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 400))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 400))
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -200)))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200)))
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -200)))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, +200)))
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, +200)))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, +200)))
         # THEN
         self.assertLen(11, self.scene.items())
         self.assertIsNone(self.scene.command)
@@ -191,8 +191,8 @@ class Test_DiagramScene(GrapholEdTestCase):
         # GIVEN
         self.createStubDiagram2()
         # WHEN
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(100, 120))
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(400, 120))
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, self.mainview.mapFromScene(QPoint(-200, -220)))
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, self.mainview.mapFromScene(QPoint(+200, -220)))
         # THEN
         self.assertIs(self.scene.mode, DiagramMode.Idle)
         self.assertLen(1, self.scene.selectedNodes())
@@ -203,9 +203,9 @@ class Test_DiagramScene(GrapholEdTestCase):
         # GIVEN
         self.createStubDiagram2()
         # WHEN
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 120))
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 120))
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 420))
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -220)))
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -220)))
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, +220)))
         # THEN
         self.assertIs(self.scene.mode, DiagramMode.Idle)
         self.assertLen(0, self.scene.selectedEdges())
@@ -237,10 +237,10 @@ class Test_DiagramScene(GrapholEdTestCase):
         The diagram is composed of 4 Concept nodes.
         """
         QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))     # n0
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 100))     # n1
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 400))     # n2
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 400))     # n3
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -200))) # n0
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n1
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, +200))) # n2
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, +200))) # n3
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
         self.scene.undoStack.clear()
@@ -251,26 +251,26 @@ class Test_DiagramScene(GrapholEdTestCase):
         The diagram is composed of 4 Concept nodes connected using 4 Inclusion edges and 1 Input edge.
         """
         QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))     # n0
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 100))     # n1
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 400))     # n2
-        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 400))     # n3
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -200))) # n0
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n1
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, +200))) # n2
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, +200))) # n3
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
         QTest.mouseClick(self.mainwindow.palette_.button(ItemType.InclusionEdge), Qt.LeftButton)
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 100))   # n0 -> n1
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 100))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 400))   # n0 -> n2
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 400))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 400))   # n2 -> n3
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 400))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 100))   # n3 -> n1
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -200)))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n0 -> n1
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -200)))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, +200))) # n0 -> n2
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, +200)))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, +200))) # n2 -> n3
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, +200)))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n3 -> n1
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
         QTest.mouseClick(self.mainwindow.palette_.button(ItemType.InputEdge), Qt.LeftButton)
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(100, 400))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(400, 100))   # n2 -> n1
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, +200)))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n2 -> n1
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
         self.scene.undoStack.clear()
