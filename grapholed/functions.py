@@ -72,8 +72,14 @@ def clamp(val, minval=None, maxval=None):
 def connect(signal, slot, *args, **kwargs):
     """
     Connect the given signal to the specified slots passing all arguments to the slot.
+    Note that this function make use of functools.partial to hand parameters over to the function slot.
+    This ia actually highly discouraged because the the function slot will be treated as a normal python function,
+    losing all the properties of Qt slot. Whenever it's possible make use of self.sender() to retrieve the action
+    executing the slot execution, and action.data() to retrieve function slot's parameters (previously set with setData)
     :param signal: the signal to attach.
     :param slot: the slot where to attach the signal.
+    :param args: positional arguments specifying slot function parameters.
+    :param kwargs: positional key-value pairs specifying slot function parameters.
     """
     if not args and not kwargs:
         signal.connect(slot)
@@ -84,8 +90,8 @@ def connect(signal, slot, *args, **kwargs):
 def disconnect(signal, *args):
     """
     Disconnect the given signal.
-    If slots are supplied as positional arguments, the signal will be detached only from the given slots.
     :param signal: the signal to disconnect.
+    :param args: positional arguments specifying the slots to disconnect.
     """
     if args:
         for slot in args:
