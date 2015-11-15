@@ -32,23 +32,30 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtTest import QTest
 from grapholed.datatypes import ItemType, DiagramMode
 from grapholed.items import InclusionEdge
+from mockito import when
+from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtTest import QTest
 from tests import GrapholEdTestCase
 
 
 class Test_DiagramScene(GrapholEdTestCase):
 
     def setUp(self):
+        """
+        Setup DiagramScene specific test environment.
+        """
         super().setUp()
+
         self.scene = self.mainwindow.getScene(5000, 5000)
         self.mainview = self.mainwindow.getMainView(self.scene)
         self.subwindow = self.mainwindow.getMDISubWindow(self.mainview)
-        self.subwindow.showMaximized() # MUST KEEP OR WE CAN'T PROCESS EVENTS
+        self.subwindow.showMaximized()
         self.mainwindow.mdiArea.setActiveSubWindow(self.subwindow)
         self.mainwindow.mdiArea.update()
+
+        when(self.scene.settings).value('scene/snap_to_grid', False, bool).thenReturn(False)
 
     ####################################################################################################################
     #                                                                                                                  #
