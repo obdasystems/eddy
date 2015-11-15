@@ -262,7 +262,7 @@ class Label(LabelItem):
             # push the edit command in the stack only if the label actually changed
             if self.commandEdit.isTextChanged(self.text()):
                 self.commandEdit.end(self.text())
-                scene.undoStack.push(self.commandEdit)
+                scene.undostack.push(self.commandEdit)
 
             cursor = self.textCursor()
             cursor.clearSelection()
@@ -378,7 +378,7 @@ class Label(LabelItem):
 
             if self.commandMove:
                 self.commandMove.end(pos=self.pos())
-                scene.undoStack.push(self.commandMove)
+                scene.undostack.push(self.commandMove)
                 scene.setMode(DiagramMode.Idle)
 
         # always remove the selected flag so that the dotted outline disappears also
@@ -407,7 +407,7 @@ class Label(LabelItem):
             scene = self.scene()
             command = CommandNodeLabelMove(scene=scene, node=self.parentItem(), label=self)
             command.end(pos=self.defaultPos())
-            scene.undoStack.push(command)
+            scene.undostack.push(command)
             self.updatePos()
 
     ############################################## STRING REPRESENTATION ###############################################

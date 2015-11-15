@@ -117,8 +117,8 @@ class DiagramScene(QGraphicsScene):
     PasteOffsetX = 20
     PasteOffsetY = 10
 
-    nodeInserted = pyqtSignal('QGraphicsItem', int)  # emitted when a node is inserted in the scene
     edgeInserted = pyqtSignal('QGraphicsItem', int)  # emitted when a edge is inserted in the scene
+    nodeInserted = pyqtSignal('QGraphicsItem', int)  # emitted when a node is inserted in the scene
     modeChanged = pyqtSignal(DiagramMode)  # emitted when the operational mode changes
     updated = pyqtSignal()  # emitted when the scene is updated
 
@@ -135,18 +135,19 @@ class DiagramScene(QGraphicsScene):
         :param parent: the parent widget.
         """
         super().__init__(parent)
+        self.mainwindow = mainwindow  ## keep main window reference
         self.command = None  ## undo/redo command to be added in the stack
         self.clipboard = {}  ## used to store copy of scene nodes/edges
         self.clipboardPasteOffsetX = DiagramScene.PasteOffsetX  ## X offset to be added to item position upon paste
         self.clipboardPasteOffsetY = DiagramScene.PasteOffsetY  ## Y offset to be added to item position upon paste
         self.clipboardPasteOffsetZ = 0  ## Z offset to be added to item zValue upon paste
         self.document = DiagramDocument()  ## document associated with the current scene
-        self.nodesById = {} ## used to index nodes using their id
         self.edgesById = {} ## used to index edges using their id
+        self.nodesById = {} ## used to index nodes using their id
         self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)  ## settings
-        self.uniqueID = UniqueID()  ## used to generate unique incrementsl ids
-        self.undoStack = QUndoStack(self)  ## use to push actions and keep history for undo/redo
-        self.undoStack.setUndoLimit(50) ## TODO: make the stack configurable
+        self.uniqueID = UniqueID()  ## used to generate unique incremental ids
+        self.undostack = QUndoStack(self)  ## use to push actions and keep history for undo/redo
+        self.undostack.setUndoLimit(50) ## TODO: make the stack configurable
         self.mode = DiagramMode.Idle ## operation mode
         self.modeParam = None  ## extra parameter for the operation mode (see setMode())
         self.mousePressPos = None  ## scene position where the mouse has been pressed
@@ -154,16 +155,19 @@ class DiagramScene(QGraphicsScene):
         self.mousePressNodePos = None  ## position of the shape acting as mouse grabber during mouse move events
         self.mousePressData = {}  ## extra data needed to process item interactive movements
 
-        ################################################# ACTIONS ######################################################
+        ########################################### CONFIGURE ACTIONS ##################################################
 
-        self.actionItemCut = mainwindow.actionItemCut
-        self.actionItemCopy = mainwindow.actionItemCopy
-        self.actionItemPaste = mainwindow.actionItemPaste
-        self.actionItemDelete = mainwindow.actionItemDelete
+        ## COPY REFERENCES
+        self.actionCut = mainwindow.actionCut
+        self.actionCopy = mainwindow.actionCopy
+        self.actionPaste = mainwindow.actionPaste
+        self.actionDelete = mainwindow.actionDelete
         self.actionBringToFront = mainwindow.actionBringToFront
         self.actionSendToBack = mainwindow.actionSendToBack
         self.actionSelectAll = mainwindow.actionSelectAll
         self.actionsChangeNodeBrush = mainwindow.actionsChangeNodeBrush
+        self.actionToggleEdgeComplete = mainwindow.actionToggleEdgeComplete
+        self.actionToggleEdgeFunctional = mainwindow.actionToggleEdgeFunctional
 
         ## DIAGRAM SCENE
         self.actionOpenSceneProperties = QAction('Properties...', self)
@@ -245,11 +249,7 @@ class DiagramScene(QGraphicsScene):
             connect(action.triggered, self.switchHexagonNode)
             self.actionsSwitchHexagonNode.append(action)
 
-        ## EDGES
-        self.actionToggleEdgeComplete = mainwindow.actionToggleEdgeComplete
-        self.actionToggleEdgeFunctional = mainwindow.actionToggleEdgeFunctional
-
-        ################################################## MENUS #######################################################
+        ############################################# CONFIGURE MENUS ##################################################
 
         ## NODE GENERIC
         self.changeNodeBrushButton = mainwindow.changeNodeBrushButton
@@ -304,7 +304,7 @@ class DiagramScene(QGraphicsScene):
         for action in self.actionsSwitchHexagonNode:
             self.menuHexagonNodeSwitch.addAction(action)
 
-        ################################################# SIGNALS ######################################################
+        ############################################ CONFIGURE SIGNALS #################################################
 
         connect(self.nodeInserted, self.onNodeInserted)
         connect(self.edgeInserted, self.onEdgeInserted)
@@ -329,7 +329,7 @@ class DiagramScene(QGraphicsScene):
                 if item.zValue() >= zValue:
                     zValue = item.zValue() + 0.1
             if zValue != selected.zValue():
-                self.undoStack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
+                self.undostack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
 
     def changeNodeBrush(self):
         """
@@ -343,7 +343,7 @@ class DiagramScene(QGraphicsScene):
                                                         ItemType.IndividualNode, ItemType.RoleNode,
                                                         ItemType.ValueDomainNode, ItemType.ValueRestrictionNode)]
             if selected:
-                self.undoStack.push(CommandNodeChangeBrush(self, selected, action.data()))
+                self.undostack.push(CommandNodeChangeBrush(self, selected, action.data()))
 
     @pyqtSlot()
     def changeRestriction(self):
@@ -361,9 +361,9 @@ class DiagramScene(QGraphicsScene):
                     dialog = CardinalityRestrictionForm()
                     if dialog.exec_() == CardinalityRestrictionForm.Accepted:
                         cardinality = dict(min=dialog.minCardinalityValue, max=dialog.maxCardinalityValue)
-                        self.undoStack.push(CommandNodeSquareChangeRestriction(self, node, restriction, cardinality))
+                        self.undostack.push(CommandNodeSquareChangeRestriction(self, node, restriction, cardinality))
                 else:
-                    self.undoStack.push(CommandNodeSquareChangeRestriction(self, node, action.data()))
+                    self.undostack.push(CommandNodeSquareChangeRestriction(self, node, action.data()))
 
     @pyqtSlot()
     def changeValueDomainDatatype(self):
@@ -375,7 +375,7 @@ class DiagramScene(QGraphicsScene):
         if action:
             node = next(filter(lambda x: x.isType(ItemType.ValueDomainNode), self.selectedNodes()), None)
             if node:
-                self.undoStack.push(CommandNodeValueDomainSelectDatatype(scene=self, node=node, datatype=action.data()))
+                self.undostack.push(CommandNodeValueDomainSelectDatatype(scene=self, node=node, datatype=action.data()))
 
     @pyqtSlot()
     def composeAsymmetricRole(self):
@@ -414,7 +414,7 @@ class DiagramScene(QGraphicsScene):
                 }
 
                 # push the composition on the stack as a single action
-                self.undoStack.push(CommandComposeAxiom(**kwargs))
+                self.undostack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
     def composeFunctional(self):
@@ -445,7 +445,7 @@ class DiagramScene(QGraphicsScene):
                 }
 
                 # push the composition on the stack as a single action
-                self.undoStack.push(CommandComposeAxiom(**kwargs))
+                self.undostack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
     def composeInverseFunctional(self):
@@ -476,7 +476,7 @@ class DiagramScene(QGraphicsScene):
                 }
 
                 # push the composition on the stack as a single action
-                self.undoStack.push(CommandComposeAxiom(**kwargs))
+                self.undostack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
     def composeIrreflexiveRole(self):
@@ -514,7 +514,7 @@ class DiagramScene(QGraphicsScene):
                 }
 
                 # push the composition on the stack as a single action
-                self.undoStack.push(CommandComposeAxiom(**kwargs))
+                self.undostack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
     def composePropertyDomain(self):
@@ -548,7 +548,7 @@ class DiagramScene(QGraphicsScene):
                 }
 
                 # push the composition on the stack as a single action
-                self.undoStack.push(CommandComposeAxiom(**kwargs))
+                self.undostack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
     def composePropertyRange(self):
@@ -588,7 +588,7 @@ class DiagramScene(QGraphicsScene):
                 }
 
                 # push the composition on the stack as a single action
-                self.undoStack.push(CommandComposeAxiom(**kwargs))
+                self.undostack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
     def composeReflexiveRole(self):
@@ -622,7 +622,7 @@ class DiagramScene(QGraphicsScene):
                 }
 
                 # push the composition on the stack as a single action
-                self.undoStack.push(CommandComposeAxiom(**kwargs))
+                self.undostack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
     def composeSymmetricRole(self):
@@ -657,7 +657,7 @@ class DiagramScene(QGraphicsScene):
                 }
 
                 # push the composition on the stack as a single action
-                self.undoStack.push(CommandComposeAxiom(**kwargs))
+                self.undostack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
     def composeTransitiveRole(self):
@@ -707,7 +707,7 @@ class DiagramScene(QGraphicsScene):
                 }
 
                 # push the composition on the stack as a single action
-                self.undoStack.push(CommandComposeAxiom(**kwargs))
+                self.undostack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
     def itemCut(self):
@@ -721,7 +721,7 @@ class DiagramScene(QGraphicsScene):
         selection = self.selectedItems()
         if selection:
             selection.extend([x for item in selection if item.isNode() for x in item.edges if x not in selection])
-            self.undoStack.push(CommandItemsMultiRemove(scene=self, collection=selection))
+            self.undostack.push(CommandItemsMultiRemove(scene=self, collection=selection))
 
         # clear offsets so we can paste in the same position
         self.clipboardPasteOffsetX = 0
@@ -798,7 +798,7 @@ class DiagramScene(QGraphicsScene):
         edges = {x:ecopy(e) for x, e in self.clipboard['edges'].items()}
 
         # push the command in the stack
-        self.undoStack.push(CommandItemsMultiAdd(scene=self, collection=list(nodes.values()) + list(edges.values())))
+        self.undostack.push(CommandItemsMultiAdd(scene=self, collection=list(nodes.values()) + list(edges.values())))
 
         # increase paste offsets for the next paste
         self.clipboardPasteOffsetX += DiagramScene.PasteOffsetX
@@ -814,7 +814,7 @@ class DiagramScene(QGraphicsScene):
         selection = self.selectedItems()
         if selection:
             selection.extend([x for item in selection if item.isNode() for x in item.edges if x not in selection])
-            self.undoStack.push(CommandItemsMultiRemove(scene=self, collection=selection))
+            self.undostack.push(CommandItemsMultiRemove(scene=self, collection=selection))
 
     @pyqtSlot()
     def openNodeProperties(self):
@@ -850,7 +850,7 @@ class DiagramScene(QGraphicsScene):
                 if item.zValue() <= zValue:
                     zValue = item.zValue() - 0.1
             if zValue != selected.zValue():
-                self.undoStack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
+                self.undostack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
 
     @pyqtSlot()
     def selectAll(self):
@@ -873,7 +873,7 @@ class DiagramScene(QGraphicsScene):
             concept = next(filter(lambda x: x.isType(ItemType.ConceptNode), self.selectedNodes()), None)
             if concept:
                 special = action.data() if concept.special is not action.data() else None
-                self.undoStack.push(CommandConceptNodeSetSpecial(self, concept, special))
+                self.undostack.push(CommandConceptNodeSetSpecial(self, concept, special))
 
     @pyqtSlot()
     def switchHexagonNode(self):
@@ -890,7 +890,7 @@ class DiagramScene(QGraphicsScene):
                 if not isinstance(node, clazz):
                     xnode = clazz(scene=self)
                     xnode.setPos(node.pos())
-                    self.undoStack.push(CommandNodeHexagonSwitchTo(scene=self, node1=node, node2=xnode))
+                    self.undostack.push(CommandNodeHexagonSwitchTo(scene=self, node1=node, node2=xnode))
 
     @pyqtSlot()
     def toggleEdgeComplete(self):
@@ -904,7 +904,7 @@ class DiagramScene(QGraphicsScene):
             # majority of edges with complete enabled, we will disable it, else we will enable it
             func = sum(edge.complete for edge in selected) <= len(selected) / 2
             data = {edge: {'from': edge.complete, 'to': func} for edge in selected}
-            self.undoStack.push(CommandEdgeInclusionToggleComplete(scene=self, data=data))
+            self.undostack.push(CommandEdgeInclusionToggleComplete(scene=self, data=data))
 
     @pyqtSlot()
     def toggleEdgeFunctional(self):
@@ -918,7 +918,7 @@ class DiagramScene(QGraphicsScene):
             # majority of edges with functional enabled, we will disable it, else we will enable it
             func = sum(edge.functional for edge in selected) <= len(selected) / 2
             data = {edge: {'from': edge.functional, 'to': func} for edge in selected}
-            self.undoStack.push(CommandEdgeInputToggleFunctional(scene=self, data=data))
+            self.undostack.push(CommandEdgeInputToggleFunctional(scene=self, data=data))
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -994,7 +994,7 @@ class DiagramScene(QGraphicsScene):
 
                 # no need to switch back the operation mode here: the signal handlers already does that and takes
                 # care of the keyboard modifiers being held (if CTRL is being held the operation mode doesn't change)
-                self.undoStack.push(CommandNodeAdd(scene=self, node=node))
+                self.undostack.push(CommandNodeAdd(scene=self, node=node))
                 self.nodeInserted.emit(node, mouseEvent.modifiers())
 
                 super().mousePressEvent(mouseEvent)
@@ -1109,7 +1109,6 @@ class DiagramScene(QGraphicsScene):
                             node.setAnchor(edge, pos + delta)
                         node.updateEdges()
 
-        # !!! IMPORTANT !!! THIS MUST ALWAYS BE CALLED SINCE IT TRIGGERS ALSO HOVER EVENTS FOR GRAPHICS ITEMS
         super().mouseMoveEvent(mouseEvent)
 
     def mouseReleaseEvent(self, mouseEvent):
@@ -1135,7 +1134,7 @@ class DiagramScene(QGraphicsScene):
                         self.command.edge.target.addEdge(self.command.edge)
                         self.command.edge.updateEdge()
 
-                        self.undoStack.push(self.command)
+                        self.undostack.push(self.command)
                         self.updated.emit()
 
                     else:
@@ -1164,7 +1163,7 @@ class DiagramScene(QGraphicsScene):
                     'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}
                 }
 
-                self.undoStack.push(CommandNodeMove(scene=self, pos1=self.mousePressData, pos2=data))
+                self.undostack.push(CommandNodeMove(scene=self, pos1=self.mousePressData, pos2=data))
                 self.setMode(DiagramMode.Idle)
 
         super().mouseReleaseEvent(mouseEvent)
@@ -1187,6 +1186,7 @@ class DiagramScene(QGraphicsScene):
         :param rect: the exposed rectangle.
         """
         # do not draw the background grid if we are printing the scene
+        # TODO: replace isinstance with something smarter since this may be resource consuming
         if self.settings.value('scene/snap_to_grid', False, bool) and not isinstance(painter.device(), QPrinter):
             painter.setPen(DiagramScene.GridPen)
             startX = int(rect.left()) - (int(rect.left()) % DiagramScene.GridSize)
@@ -1258,7 +1258,7 @@ class DiagramScene(QGraphicsScene):
         self.clipboard.clear()
         self.nodesById.clear()
         self.edgesById.clear()
-        self.undoStack.clear()
+        self.undostack.clear()
         super().clear()
 
     def edge(self, eid):
@@ -1378,13 +1378,24 @@ class DiagramScene(QGraphicsScene):
                                                 ItemType.ValueDomainNode,
                                                 ItemType.ValueRestrictionNode), selected_nodes), None) is not None
 
-        self.actionBringToFront.setEnabled(isNode)
-        self.actionItemCut.setEnabled(isNode)
-        self.actionItemCopy.setEnabled(isNode)
-        self.actionItemDelete.setEnabled(isNode or isEdge)
-        self.actionItemPaste.setEnabled(isClip)
-        self.actionSendToBack.setEnabled(isNode)
-        self.changeNodeBrushButton.setEnabled(isPred)
+        self.mainwindow.actionBringToFront.setEnabled(isNode)
+        self.mainwindow.actionCut.setEnabled(isNode)
+        self.mainwindow.actionCopy.setEnabled(isNode)
+        self.mainwindow.actionDelete.setEnabled(isNode or isEdge)
+        self.mainwindow.actionPaste.setEnabled(isClip)
+        self.mainwindow.actionSendToBack.setEnabled(isNode)
+        self.mainwindow.changeNodeBrushButton.setEnabled(isPred)
+
+
+
+        # self.actionItemCut = mainwindow.actionItemCut
+        # self.actionItemCopy = mainwindow.actionItemCopy
+        # self.actionItemPaste = mainwindow.actionItemPaste
+        # self.actionItemDelete = mainwindow.actionItemDelete
+        # self.actionBringToFront = mainwindow.actionBringToFront
+        # self.actionSendToBack = mainwindow.actionSendToBack
+        # self.actionSelectAll = mainwindow.actionSelectAll
+        # self.actionsChangeNodeBrush = mainwindow.actionsChangeNodeBrush
 
     def updateClipboard(self):
         """

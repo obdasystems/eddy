@@ -183,7 +183,7 @@ class ScenePropertiesDialog(QDialog):
                 # clamp size2 so that all the elements in the scene stays visible
                 size2 = max(size2, abs(min(X) * 2), abs(max(X) * 2), abs(min(Y) * 2), abs(max(Y) * 2))
 
-            self.scene.undoStack.push(CommandSceneResize(self.scene, QRectF(-size2 / 2, -size2 / 2, size2, size2)))
+            self.scene.undostack.push(CommandSceneResize(self.scene, QRectF(-size2 / 2, -size2 / 2, size2, size2)))
 
 
 ################################################### NODE PROPERTIES ####################################################
@@ -314,7 +314,7 @@ class NodePropertiesDialog(QDialog):
         """
         url = self.urlF.value()
         if self.node.url != url:
-            self.scene.undoStack.push(CommandNodeSetURL(self.node, url))
+            self.scene.undostack.push(CommandNodeSetURL(self.node, url))
 
     def handleDescriptionChanged(self):
         """
@@ -322,7 +322,7 @@ class NodePropertiesDialog(QDialog):
         """
         description = self.descriptionF.value()
         if self.node.description != description:
-            self.scene.undoStack.push(CommandNodeSetDescription(self.node, description))
+            self.scene.undostack.push(CommandNodeSetDescription(self.node, description))
 
     def handlePositionChanged(self):
         """
@@ -358,7 +358,7 @@ class NodePropertiesDialog(QDialog):
                 'edges': {}
             }
 
-            self.scene.undoStack.push(CommandNodeMove(scene=self.scene, pos1=data1, pos2=data2))
+            self.scene.undostack.push(CommandNodeMove(scene=self.scene, pos1=data1, pos2=data2))
 
 
 class EditableNodePropertiesDialog(NodePropertiesDialog):
@@ -410,7 +410,7 @@ class EditableNodePropertiesDialog(NodePropertiesDialog):
             value = value if not isEmpty(value) else self.node.label.defaultText
             command = CommandNodeLabelEdit(self.scene, self.node, self.node.label, self.node.label.text())
             command.end(value)
-            self.scene.undoStack.push(command)
+            self.scene.undostack.push(command)
 
 
 class OrderedInputNodePropertiesDialog(NodePropertiesDialog):
@@ -470,4 +470,4 @@ class OrderedInputNodePropertiesDialog(NodePropertiesDialog):
                 inputs.append(item.data(Qt.UserRole))
 
             if self.node.inputs != inputs:
-                self.scene.undoStack.push(CommandNodeChangeInputOrder(self.scene, self.node, inputs))
+                self.scene.undostack.push(CommandNodeChangeInputOrder(self.scene, self.node, inputs))

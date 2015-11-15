@@ -40,9 +40,8 @@ import webbrowser
 from PyQt5.QtCore import Qt, QRectF, pyqtSlot, QSettings, QFile, QIODevice, pyqtSignal, QTextStream, QSizeF
 from PyQt5.QtGui import QIcon, QKeySequence, QPixmap, QPainter, QPageSize, QColor
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
-from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QAction, QStatusBar, QMessageBox, QDialog, QStyle
-from PyQt5.QtWidgets import QMenu, QToolButton
-from PyQt5.QtWidgets import QUndoGroup
+from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDialog, QStyle
+from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup
 from PyQt5.QtXml import QDomDocument
 
 from grapholed import __version__, __appname__, __organization__
@@ -60,7 +59,7 @@ from grapholed.widgets.toolbar import ZoomControl
 
 class MainWindow(QMainWindow):
     """
-    This class implements the Grapholed Main Window.
+    This class implements the GrapholEd main window.
     """
     MaxRecentDocuments = 5
     MinWidth = 1024
@@ -71,12 +70,12 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         """
-        Initialize the application Main Window.
+        Initialize the application main window.
         """
         super().__init__()
 
         self.abortQuit = False
-        self.undoGroup = QUndoGroup()
+        self.undogroup = QUndoGroup()
         self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)
 
         self.menuFile = self.menuBar().addMenu("&File")
@@ -86,12 +85,32 @@ class MainWindow(QMainWindow):
 
         self.toolbar = self.addToolBar("Toolbar")
 
+        ############################################ CREATE WIDGETS ####################################################
+
+        self.mdiArea = MdiArea()
+        self.navigator = Navigator()
+        self.overview = Overview()
+        self.palette_ = Palette()
+        self.zoomctl = ZoomControl()
+
+        ########################################## CREATE DOCK WIDGETS #################################################
+
+        self.paletteDock = DockWidget('Palette', self)
+        self.paletteDock.setWidget(self.palette_)
+
+        self.navigatorDock = DockWidget('Navigator', self)
+        self.navigatorDock.setWidget(self.navigator)
+
+        self.overviewDock = DockWidget('Overview', self)
+        self.overviewDock.setWidget(self.overview)
+
         ################################################# ICONS ########################################################
 
-        def build_shaded_icon(path):
+        def create_icon(path):
             """
-            Load the given icon.
-            :param path: the icon path.
+            Create a QIcon using the given image.
+            Will additionally create a shaded version of the icon to be used for the disable status.
+            :param path: the path of the image.
             :rtype: QIcon
             """
             icon = QIcon()
@@ -99,54 +118,30 @@ class MainWindow(QMainWindow):
             icon.addPixmap(shaded(QPixmap(path), 0.25), QIcon.Disabled)
             return icon
 
-        self.iconBringToFront = build_shaded_icon(':/icons/bring-to-front')
-        self.iconClose = build_shaded_icon(':/icons/close')
-        self.iconCopy = build_shaded_icon(':/icons/copy')
-        self.iconCut = build_shaded_icon(':/icons/cut')
-        self.iconDelete = build_shaded_icon(':/icons/delete')
-        self.iconGrid = build_shaded_icon(':/icons/grid')
-        self.iconLink = build_shaded_icon(':/icons/link')
-        self.iconNew = build_shaded_icon(':/icons/new')
-        self.iconOpen = build_shaded_icon(':/icons/open')
-        self.iconPaste = build_shaded_icon(':/icons/paste')
-        self.iconPalette = build_shaded_icon(':/icons/appearance')
-        self.iconPreferences = build_shaded_icon(':/icons/preferences')
-        self.iconPrint = build_shaded_icon(':/icons/print')
-        self.iconQuit = build_shaded_icon(':/icons/quit')
-        self.iconRedo = build_shaded_icon(':/icons/redo')
-        self.iconSave = build_shaded_icon(':/icons/save')
-        self.iconSaveAs = build_shaded_icon(':/icons/save')
-        self.iconSelectAll = build_shaded_icon(':/icons/select-all')
-        self.iconSendToBack = build_shaded_icon(':/icons/send-to-back')
-        self.iconUndo = build_shaded_icon(':/icons/undo')
-        self.iconZoom = build_shaded_icon(':/icons/zoom')
+        self.iconBringToFront = create_icon(':/icons/bring-to-front')
+        self.iconClose = create_icon(':/icons/close')
+        self.iconColorFill = create_icon(':/icons/color-fill')
+        self.iconCopy = create_icon(':/icons/copy')
+        self.iconCut = create_icon(':/icons/cut')
+        self.iconDelete = create_icon(':/icons/delete')
+        self.iconGrid = create_icon(':/icons/grid')
+        self.iconLink = create_icon(':/icons/link')
+        self.iconNew = create_icon(':/icons/new')
+        self.iconOpen = create_icon(':/icons/open')
+        self.iconPaste = create_icon(':/icons/paste')
+        self.iconPalette = create_icon(':/icons/appearance')
+        self.iconPreferences = create_icon(':/icons/preferences')
+        self.iconPrint = create_icon(':/icons/print')
+        self.iconQuit = create_icon(':/icons/quit')
+        self.iconRedo = create_icon(':/icons/redo')
+        self.iconSave = create_icon(':/icons/save')
+        self.iconSaveAs = create_icon(':/icons/save')
+        self.iconSelectAll = create_icon(':/icons/select-all')
+        self.iconSendToBack = create_icon(':/icons/send-to-back')
+        self.iconUndo = create_icon(':/icons/undo')
+        self.iconZoom = create_icon(':/icons/zoom')
 
-        ############################################# DOCK WIDGETS #####################################################
-
-        self.palette_ = Palette()
-        self.paletteDock = DockWidget('Palette', self)
-        self.paletteDock.setWidget(self.palette_)
-
-        self.navigator = Navigator()
-        self.navigatorDock = DockWidget('Navigator', self)
-        self.navigatorDock.setWidget(self.navigator)
-
-        self.overview = Overview()
-        self.overviewDock = DockWidget('Overview', self)
-        self.overviewDock.setWidget(self.overview)
-
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.paletteDock)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.navigatorDock)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.overviewDock)
-
-        ########################################### MAIN AREA WIDGET ###################################################
-
-        self.mdiArea = MdiArea()
-        self.setCentralWidget(self.mdiArea)
-        self.setWindowIcon(QIcon(':/images/grapholed'))
-        self.setWindowTitle()
-
-        ################################################ ACTIONS #######################################################
+        ########################################### CONFIGURE ACTIONS ##################################################
 
         self.actionNewDocument = QAction('New', self)
         self.actionNewDocument.setIcon(self.iconNew)
@@ -164,6 +159,7 @@ class MainWindow(QMainWindow):
         for i in range(MainWindow.MaxRecentDocuments):
             action = QAction(self)
             action.setVisible(False)
+            connect(action.triggered, self.openRecentDocument)
             self.actionsOpenRecentDocument.append(action)
 
         self.actionSaveDocument = QAction('Save', self)
@@ -229,51 +225,45 @@ class MainWindow(QMainWindow):
         self.actionAbout.setShortcut(QKeySequence.HelpContents)
         connect(self.actionAbout.triggered, self.about)
 
-        self.actionSapienzaWebOpen = QAction('DIAG - Sapienza university', self)
-        self.actionSapienzaWebOpen.setIcon(self.iconLink)
-        connect(self.actionSapienzaWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/en'))
+        self.actionWebGraphol = QAction('Graphol homepage', self)
+        self.actionWebGraphol.setIcon(self.iconLink)
+        connect(self.actionWebGraphol.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/~graphol/'))
 
-        self.actionGrapholWebOpen = QAction('Graphol homepage', self)
-        self.actionGrapholWebOpen.setIcon(self.iconLink)
-        connect(self.actionGrapholWebOpen.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/~graphol/'))
+        self.actionWebSapienza = QAction('DIAG - Sapienza university', self)
+        self.actionWebSapienza.setIcon(self.iconLink)
+        connect(self.actionWebSapienza.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/en'))
 
-        self.actionUndo = self.undoGroup.createUndoAction(self)
+        self.actionUndo = self.undogroup.createUndoAction(self)
         self.actionUndo.setIcon(self.iconUndo)
         self.actionUndo.setShortcut(QKeySequence.Undo)
 
-        self.actionRedo = self.undoGroup.createRedoAction(self)
+        self.actionRedo = self.undogroup.createRedoAction(self)
         self.actionRedo.setIcon(self.iconRedo)
         self.actionRedo.setShortcut(QKeySequence.Redo)
 
-        # --------------------------------------- SCENE SPECIFIC ACTIONS --------------------------------------------- #
-        # actions below are being used from within the DiagramScene (context menu): they need to be declared here      #
-        # in the Main Window so we can add them to the toolbar (so they are both bisivle there and they can also be    #
-        # triggered by means of shortcuts (see description below for actions with shortcuts only)                      #
-        # ------------------------------------------------------------------------------------------------------------ #
+        self.actionCut = QAction('Cut', self)
+        self.actionCut.setIcon(self.iconCut)
+        self.actionCut.setShortcut(QKeySequence.Cut)
+        self.actionCut.setStatusTip('Cut selected items')
+        self.actionCut.setEnabled(False)
 
-        self.actionItemCut = QAction('Cut', self)
-        self.actionItemCut.setIcon(self.iconCut)
-        self.actionItemCut.setShortcut(QKeySequence.Cut)
-        self.actionItemCut.setStatusTip('Cut selected items')
-        self.actionItemCut.setEnabled(False)
+        self.actionCopy = QAction('Copy', self)
+        self.actionCopy.setIcon(self.iconCopy)
+        self.actionCopy.setShortcut(QKeySequence.Copy)
+        self.actionCopy.setStatusTip('Copy selected items')
+        self.actionCopy.setEnabled(False)
 
-        self.actionItemCopy = QAction('Copy', self)
-        self.actionItemCopy.setIcon(self.iconCopy)
-        self.actionItemCopy.setShortcut(QKeySequence.Copy)
-        self.actionItemCopy.setStatusTip('Copy selected items')
-        self.actionItemCopy.setEnabled(False)
+        self.actionPaste = QAction('Paste', self)
+        self.actionPaste.setIcon(self.iconPaste)
+        self.actionPaste.setShortcut(QKeySequence.Paste)
+        self.actionPaste.setStatusTip('Paste items')
+        self.actionPaste.setEnabled(False)
 
-        self.actionItemPaste = QAction('Paste', self)
-        self.actionItemPaste.setIcon(self.iconPaste)
-        self.actionItemPaste.setShortcut(QKeySequence.Paste)
-        self.actionItemPaste.setStatusTip('Paste items')
-        self.actionItemPaste.setEnabled(False)
-
-        self.actionItemDelete = QAction('Delete', self)
-        self.actionItemDelete.setIcon(self.iconDelete)
-        self.actionItemDelete.setShortcut(QKeySequence.Delete)
-        self.actionItemDelete.setStatusTip('Delete selected items')
-        self.actionItemDelete.setEnabled(False)
+        self.actionDelete = QAction('Delete', self)
+        self.actionDelete.setIcon(self.iconDelete)
+        self.actionDelete.setShortcut(QKeySequence.Delete)
+        self.actionDelete.setStatusTip('Delete selected items')
+        self.actionDelete.setEnabled(False)
 
         self.actionBringToFront = QAction('Bring to Front', self)
         self.actionBringToFront.setIcon(self.iconBringToFront)
@@ -291,7 +281,7 @@ class MainWindow(QMainWindow):
         self.actionSelectAll.setStatusTip('Select all items in the active diagram')
         self.actionSelectAll.setEnabled(False)
 
-        def create_pixmap_from_hex(code):
+        def create_pixmap(code):
             """
             Create and returns a QPixmap filled using the given HEX color code.
             :param code: the HEX color code to use to fill the icon.
@@ -303,21 +293,14 @@ class MainWindow(QMainWindow):
             pixmap.fill(QColor(code))
             return pixmap
 
-        ## NODE GENERIC ACTIONS
         self.actionsChangeNodeBrush = []
         for color in Color:
             action = QAction(color.name, self)
-            action.setIcon(QIcon(create_pixmap_from_hex(color.value)))
+            action.setIcon(QIcon(create_pixmap(color.value)))
             action.setCheckable(False)
             action.setData(color)
             self.actionsChangeNodeBrush.append(action)
 
-        # ---------------------------------------- SHORTCUT ONLY ACTIONS --------------------------------------------- #
-        # actions below are not available in the application Main Menu, nor in the Toolbar (entries can be found in    #
-        # context menus): since we need shortcuts to work, we would need to add such actions to a visible widget that  #
-        # receive events, otherwise we won't be able to use shortcuts. More on this can be found in the lik below:     #
-        # https://forum.qt.io/topic/15107/solved-action-shortcut-not-triggering-unless-action-is-placed-in-a-toolbar)  #
-        # ------------------------------------------------------------------------------------------------------------ #
         self.actionToggleEdgeComplete = QAction('Complete', self)
         self.actionToggleEdgeComplete.setShortcut('CTRL+ALT+C' if sys.platform.startswith('win32') else 'ALT+C')
         self.actionToggleEdgeComplete.setCheckable(True)
@@ -329,7 +312,7 @@ class MainWindow(QMainWindow):
         self.addAction(self.actionToggleEdgeComplete)
         self.addAction(self.actionToggleEdgeFunctional)
         
-        ################################################# MENUS ########################################################
+        ############################################ CONFIGURE MENUS ###################################################
 
         self.menuFile.addAction(self.actionNewDocument)
         self.menuFile.addAction(self.actionOpenDocument)
@@ -344,7 +327,7 @@ class MainWindow(QMainWindow):
         self.recentDocumentSeparator = self.menuFile.addSeparator()
         for i in range(MainWindow.MaxRecentDocuments):
             self.menuFile.addAction(self.actionsOpenRecentDocument[i])
-        self.updateRecentDocumentActions()
+        self.updateRecentDocuments()
 
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionPrintDocument)
@@ -354,10 +337,10 @@ class MainWindow(QMainWindow):
         self.menuEdit.addAction(self.actionUndo)
         self.menuEdit.addAction(self.actionRedo)
         self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actionItemCut)
-        self.menuEdit.addAction(self.actionItemCopy)
-        self.menuEdit.addAction(self.actionItemPaste)
-        self.menuEdit.addAction(self.actionItemDelete)
+        self.menuEdit.addAction(self.actionCut)
+        self.menuEdit.addAction(self.actionCopy)
+        self.menuEdit.addAction(self.actionPaste)
+        self.menuEdit.addAction(self.actionDelete)
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionBringToFront)
         self.menuEdit.addAction(self.actionSendToBack)
@@ -379,24 +362,22 @@ class MainWindow(QMainWindow):
         if not sys.platform.startswith('darwin'):
             self.menuHelp.addSeparator()
 
-        self.menuHelp.addAction(self.actionSapienzaWebOpen)
-        self.menuHelp.addAction(self.actionGrapholWebOpen)
+        self.menuHelp.addAction(self.actionWebSapienza)
+        self.menuHelp.addAction(self.actionWebGraphol)
 
         ## NODE GENERIC CONTEXT MENU
         self.menuChangeNodeBrush = QMenu('Select color')
-        self.menuChangeNodeBrush.setIcon(QIcon(':/icons/color-fill'))
+        self.menuChangeNodeBrush.setIcon(self.iconColorFill)
         for action in self.actionsChangeNodeBrush:
             self.menuChangeNodeBrush.addAction(action)
 
-        ############################################### STATUS BAR #####################################################
+        ########################################## CONFIGURE STATUS BAR ################################################
 
         statusbar = QStatusBar(self)
         statusbar.setSizeGripEnabled(False)
         self.setStatusBar(statusbar)
 
-        ################################################# TOOLBAR ######################################################
-
-        self.zoomctl = ZoomControl()
+        ############################################ CONFIGURE TOOLBAR #################################################
 
         self.toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
         self.toolbar.setFloatable(False)
@@ -410,16 +391,16 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.actionUndo)
         self.toolbar.addAction(self.actionRedo)
         self.toolbar.addSeparator()
-        self.toolbar.addAction(self.actionItemCut)
-        self.toolbar.addAction(self.actionItemCopy)
-        self.toolbar.addAction(self.actionItemPaste)
-        self.toolbar.addAction(self.actionItemDelete)
+        self.toolbar.addAction(self.actionCut)
+        self.toolbar.addAction(self.actionCopy)
+        self.toolbar.addAction(self.actionPaste)
+        self.toolbar.addAction(self.actionDelete)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.actionBringToFront)
         self.toolbar.addAction(self.actionSendToBack)
 
         self.changeNodeBrushButton = QToolButton()
-        self.changeNodeBrushButton.setIcon(build_shaded_icon(':/icons/color-fill'))
+        self.changeNodeBrushButton.setIcon(self.iconColorFill)
         self.changeNodeBrushButton.setMenu(self.menuChangeNodeBrush)
         self.changeNodeBrushButton.setPopupMode(QToolButton.InstantPopup)
         self.changeNodeBrushButton.setEnabled(False)
@@ -433,28 +414,27 @@ class MainWindow(QMainWindow):
         self.toolbar.addSeparator()
         self.toolbar.addWidget(self.zoomctl)
 
-        ############################################### GEOMETRY #######################################################
-
-        screen = QDesktopWidget().screenGeometry()
-        posX = (screen.width() - MainWindow.MinWidth) / 2
-        posY = (screen.height() - MainWindow.MinHeight) / 2
-        self.setGeometry(posX, posY, MainWindow.MinWidth, MainWindow.MinHeight)
-        self.setMinimumSize(MainWindow.MinWidth, MainWindow.MinHeight)
-
-        ############################################### SIGNALS ########################################################
+        ########################################## CONFIGURE SIGNALS ###################################################
 
         connect(self.documentLoaded, self.onDocumentLoaded)
         connect(self.documentSaved, self.onDocumentSaved)
         connect(self.mdiArea.subWindowActivated, self.onSubWindowActivated)
         connect(self.palette_.buttonClicked[int], self.onPaletteButtonClicked)
-        connect(self.undoGroup.cleanChanged, self.onUndoGroupCleanChanged)
+        connect(self.undogroup.cleanChanged, self.onUndoGroupCleanChanged)
 
-        for i in range(MainWindow.MaxRecentDocuments):
-            connect(self.actionsOpenRecentDocument[i].triggered, self.openRecentDocument)
+        ######################################## CONFIGURE MAIN WINDOW #################################################
+
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.paletteDock)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.navigatorDock)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.overviewDock)
+        self.setCentralWidget(self.mdiArea)
+        self.setMinimumSize(MainWindow.MinWidth, MainWindow.MinHeight)
+        self.setWindowIcon(QIcon(':/images/grapholed'))
+        self.setWindowTitle()
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   ACTION HANDLERS                                                                                                #
+    #   ACTION SLOTS                                                                                                   #
     #                                                                                                                  #
     ####################################################################################################################
 
@@ -549,7 +529,7 @@ class MainWindow(QMainWindow):
                 if saved:
                     scene.document.filepath = filepath
                     scene.document.edited = os.path.getmtime(filepath)
-                    scene.undoStack.setClean()
+                    scene.undostack.setClean()
                     self.documentSaved.emit(scene)
 
     @pyqtSlot()
@@ -566,7 +546,7 @@ class MainWindow(QMainWindow):
                 if saved:
                     scene.document.filepath = filepath
                     scene.document.edited = os.path.getmtime(filepath)
-                    scene.undoStack.setClean()
+                    scene.undostack.setClean()
                     self.documentSaved.emit(scene)
 
     @pyqtSlot()
@@ -607,7 +587,7 @@ class MainWindow(QMainWindow):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   SIGNAL HANDLERS                                                                                                #
+    #   CUSTOM SIGNALS SLOTS                                                                                           #
     #                                                                                                                  #
     ####################################################################################################################
 
@@ -690,7 +670,7 @@ class MainWindow(QMainWindow):
 
             mainview = subwindow.widget()
             scene = mainview.scene()
-            scene.undoStack.setActive()
+            scene.undostack.setActive()
             scene.updateActions()
 
             self.navigator.setView(mainview)
@@ -705,10 +685,10 @@ class MainWindow(QMainWindow):
             for action in self.actionsChangeNodeBrush:
                 disconnect(action.triggered)
 
-            disconnect(self.actionItemCut.triggered)
-            disconnect(self.actionItemCopy.triggered)
-            disconnect(self.actionItemPaste.triggered)
-            disconnect(self.actionItemDelete.triggered)
+            disconnect(self.actionCut.triggered)
+            disconnect(self.actionCopy.triggered)
+            disconnect(self.actionPaste.triggered)
+            disconnect(self.actionDelete.triggered)
             disconnect(self.actionBringToFront.triggered)
             disconnect(self.actionSendToBack.triggered)
             disconnect(self.actionSelectAll.triggered)
@@ -724,10 +704,10 @@ class MainWindow(QMainWindow):
             for action in self.actionsChangeNodeBrush:
                 connect(action.triggered, scene.changeNodeBrush)
 
-            connect(self.actionItemCut.triggered, scene.itemCut)
-            connect(self.actionItemCopy.triggered, scene.itemCopy)
-            connect(self.actionItemPaste.triggered, scene.itemPaste)
-            connect(self.actionItemDelete.triggered, scene.itemDelete)
+            connect(self.actionCut.triggered, scene.itemCut)
+            connect(self.actionCopy.triggered, scene.itemCopy)
+            connect(self.actionPaste.triggered, scene.itemPaste)
+            connect(self.actionDelete.triggered, scene.itemDelete)
             connect(self.actionBringToFront.triggered, scene.bringToFront)
             connect(self.actionSendToBack.triggered, scene.sendToBack)
             connect(self.actionSelectAll.triggered, scene.selectAll)
@@ -747,10 +727,10 @@ class MainWindow(QMainWindow):
                 self.actionSaveDocumentAs.setEnabled(False)
                 self.actionExportDocument.setEnabled(False)
                 self.actionPrintDocument.setEnabled(False)
-                self.actionItemCut.setEnabled(False)
-                self.actionItemCopy.setEnabled(False)
-                self.actionItemPaste.setEnabled(False)
-                self.actionItemDelete.setEnabled(False)
+                self.actionCut.setEnabled(False)
+                self.actionCopy.setEnabled(False)
+                self.actionPaste.setEnabled(False)
+                self.actionDelete.setEnabled(False)
                 self.actionBringToFront.setEnabled(False)
                 self.actionSendToBack.setEnabled(False)
                 self.actionSelectAll.setEnabled(False)
@@ -774,7 +754,7 @@ class MainWindow(QMainWindow):
     @pyqtSlot(bool)
     def onUndoGroupCleanChanged(self, clean):
         """
-        Executed when the clean state of the active undoStack changes.
+        Executed when the clean state of the active undostack changes.
         :param clean: the clean state.
         """
         self.actionSaveDocument.setEnabled(not clean)
@@ -794,7 +774,7 @@ class MainWindow(QMainWindow):
         for subwindow in self.mdiArea.subWindowList():
             mainview = subwindow.widget()
             scene = mainview.scene()
-            if (scene.items() and not scene.document.filepath) or (not scene.undoStack.isClean()):
+            if (scene.items() and not scene.document.filepath) or (not scene.undostack.isClean()):
                 self.mdiArea.setActiveSubWindow(subwindow)
                 subwindow.showMaximized()
             subwindow.close()
@@ -846,7 +826,7 @@ class MainWindow(QMainWindow):
             documents = documents[:MainWindow.MaxRecentDocuments]
 
         self.settings.setValue('document/recent_documents', documents)
-        self.updateRecentDocumentActions()
+        self.updateRecentDocuments()
 
     @staticmethod
     def exportSceneToPdfFile(scene, filepath):
@@ -934,7 +914,7 @@ class MainWindow(QMainWindow):
         subwindow.updateSubwindowTitle()
         scene = mainview.scene()
         connect(self.documentSaved, subwindow.onDocumentSaved)
-        connect(scene.undoStack.cleanChanged, subwindow.onUndoStackCleanChanged)
+        connect(scene.undostack.cleanChanged, subwindow.onUndoStackCleanChanged)
         connect(subwindow.closeEventIgnored, self.onSubwindowCloseEventIgnored)
         return subwindow
 
@@ -968,7 +948,7 @@ class MainWindow(QMainWindow):
         connect(scene.nodeInserted, self.onNodeInserted)
         connect(scene.edgeInserted, self.onEdgeInserted)
         connect(scene.modeChanged, self.onModeChanged)
-        self.undoGroup.addStack(scene.undoStack)
+        self.undogroup.addStack(scene.undostack)
         return scene
 
     def getSceneFromGrapholFile(self, filepath):
@@ -1087,7 +1067,7 @@ class MainWindow(QMainWindow):
         T = '{0} - {1} {2}'.format(p_str, __appname__, __version__) if p_str else '{0} {1}'.format(__appname__, __version__)
         super().setWindowTitle(T)
 
-    def updateRecentDocumentActions(self):
+    def updateRecentDocuments(self):
         """
         Update the recent document action list.
         """

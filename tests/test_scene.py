@@ -71,7 +71,7 @@ class Test_DiagramScene(GrapholEdTestCase):
         self.assertEmpty(self.scene.edgesById)
         self.assertNotEmpty(self.scene.nodesById)
         self.assertDictHasKey('n0', self.scene.nodesById)
-        self.assertEqual(1, self.scene.undoStack.count())
+        self.assertEqual(1, self.scene.undostack.count())
         self.assertTrue(self.scene.node('n0').isSelected())
         self.assertEquals(self.scene.node('n0').pos(), self.mainview.mapToScene(QPoint(100, 100)))
 
@@ -90,7 +90,7 @@ class Test_DiagramScene(GrapholEdTestCase):
         self.assertNotEmpty(self.scene.nodesById)
         self.assertDictHasKey('n0', self.scene.nodesById)
         self.assertDictHasKey('n1', self.scene.nodesById)
-        self.assertEqual(2, self.scene.undoStack.count())
+        self.assertEqual(2, self.scene.undostack.count())
         self.assertEquals(self.scene.node('n0').pos(), self.mainview.mapToScene(QPoint(0, 100)))
         self.assertEquals(self.scene.node('n1').pos(), self.mainview.mapToScene(QPoint(400, 100)))
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
@@ -125,7 +125,7 @@ class Test_DiagramScene(GrapholEdTestCase):
         self.assertDictHasKey('e0', self.scene.edgesById)
         self.assertIs(self.scene.edge('e0').source, self.scene.node('n0'))
         self.assertIs(self.scene.edge('e0').target, self.scene.node('n1'))
-        self.assertEqual(1, self.scene.undoStack.count())
+        self.assertEqual(1, self.scene.undostack.count())
         self.assertIs(self.scene.mode, DiagramMode.Idle)
 
     def test_insert_single_edge_with_no_endpoint(self):
@@ -147,7 +147,7 @@ class Test_DiagramScene(GrapholEdTestCase):
         self.assertLen(8, self.scene.items())
         self.assertIsNone(self.scene.command)
         self.assertEmpty(self.scene.edgesById)
-        self.assertEqual(0, self.scene.undoStack.count())
+        self.assertEqual(0, self.scene.undostack.count())
         self.assertIs(self.scene.mode, DiagramMode.Idle)
 
     def test_insert_multiple_edges_with_endpoint(self):
@@ -175,7 +175,7 @@ class Test_DiagramScene(GrapholEdTestCase):
         self.assertIs(self.scene.edge('e1').target, self.scene.node('n2'))
         self.assertIs(self.scene.edge('e2').source, self.scene.node('n2'))
         self.assertIs(self.scene.edge('e2').target, self.scene.node('n3'))
-        self.assertEqual(3, self.scene.undoStack.count())
+        self.assertEqual(3, self.scene.undostack.count())
         self.assertIs(self.scene.mode, DiagramMode.EdgeInsert)
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
         self.assertIs(self.scene.mode, DiagramMode.Idle)
@@ -243,7 +243,7 @@ class Test_DiagramScene(GrapholEdTestCase):
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, +200))) # n3
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
-        self.scene.undoStack.clear()
+        self.scene.undostack.clear()
 
     def createStubDiagram2(self):
         """
@@ -273,4 +273,4 @@ class Test_DiagramScene(GrapholEdTestCase):
         QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n2 -> n1
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
-        self.scene.undoStack.clear()
+        self.scene.undostack.clear()

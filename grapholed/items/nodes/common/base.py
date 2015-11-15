@@ -168,11 +168,11 @@ class Node(Item):
         """
         scene = self.scene()
         menu = QMenu()
-        menu.addAction(scene.actionItemDelete)
+        menu.addAction(scene.actionDelete)
         menu.addSeparator()
-        menu.addAction(scene.actionItemCut)
-        menu.addAction(scene.actionItemCopy)
-        menu.addAction(scene.actionItemPaste)
+        menu.addAction(scene.actionCut)
+        menu.addAction(scene.actionCopy)
+        menu.addAction(scene.actionPaste)
         menu.addSeparator()
         menu.addAction(scene.actionBringToFront)
         menu.addAction(scene.actionSendToBack)
@@ -579,7 +579,7 @@ class ResizableNode(Node):
         if scene.mode is DiagramMode.NodeResize:
             if self.command:
                 self.command.end()
-                scene.undoStack.push(self.command)
+                scene.undostack.push(self.command)
                 scene.setMode(DiagramMode.Idle)
 
         super().mouseReleaseEvent(mouseEvent)

@@ -219,7 +219,7 @@ class Edge(Item):
                 break
 
         scene = self.scene()
-        scene.undoStack.push(CommandEdgeBreakpointAdd(scene=scene, edge=self, index=index, point=point))
+        scene.undostack.push(CommandEdgeBreakpointAdd(scene=scene, edge=self, index=index, point=point))
         return index
 
     def breakpointAt(self, point):
@@ -241,7 +241,7 @@ class Edge(Item):
         """
         if 0 <= breakpoint < len(self.breakpoints):
             scene = self.scene()
-            scene.undoStack.push(CommandEdgeBreakpointDel(scene=scene, edge=self, index=breakpoint))
+            scene.undostack.push(CommandEdgeBreakpointDel(scene=scene, edge=self, index=breakpoint))
 
     def breakpointMove(self, breakpoint, mousePos):
         """
@@ -449,11 +449,11 @@ class Edge(Item):
         if scene.mode is DiagramMode.EdgeAnchorPointMove:
             if self.command:
                 self.command.end()
-                scene.undoStack.push(self.command)
+                scene.undostack.push(self.command)
         elif scene.mode is DiagramMode.EdgeBreakPointMove:
             if self.command:
                 self.command.end(scene.snapToGrid(mouseEvent.pos()))
-                scene.undoStack.push(self.command)
+                scene.undostack.push(self.command)
 
         scene.setMode(DiagramMode.Idle)
 
