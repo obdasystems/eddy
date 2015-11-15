@@ -65,30 +65,30 @@ class DoubleEditField(QLineEdit):
 
 
 class IntEditField(QLineEdit):
+    """
+    This class implements an input field where the user can enter only integer values.
+    """
+    def __init__(self, parent=None):
         """
-        This class implements an input field where the user can enter only integer values.
+        Initialize the integer input field.
         """
-        def __init__(self, parent=None):
-            """
-            Initialize the integer input field.
-            """
-            super().__init__(parent)
-            self.setAttribute(Qt.WA_MacShowFocusRect, 0)
-            self.setValidator(QIntValidator(self))
+        super().__init__(parent)
+        self.setAttribute(Qt.WA_MacShowFocusRect, 0)
+        self.setValidator(QIntValidator(self))
 
-        def setValue(self, value):
-            """
-            Set the value of the field.
-            :param value: the value to set.
-            """
-            self.setText(str(value).strip())
+    def setValue(self, value):
+        """
+        Set the value of the field.
+        :param value: the value to set.
+        """
+        self.setText(str(value).strip())
 
-        def value(self):
-            """
-            Returns the value of the field.
-            :rtype: int
-            """
-            return int(self.text())
+    def value(self):
+        """
+        Returns the value of the field.
+        :rtype: int
+        """
+        return int(self.text())
 
 
 class StringEditField(QLineEdit):
