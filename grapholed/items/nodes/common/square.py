@@ -42,7 +42,7 @@ from grapholed.items.nodes.common.base import Node
 from grapholed.items.nodes.common.label import Label
 
 from PyQt5.QtCore import QRectF, QPointF, Qt
-from PyQt5.QtGui import QColor, QPainterPath, QPen, QBrush
+from PyQt5.QtGui import QColor, QPainterPath, QPen
 
 
 class SquaredNode(Node):
