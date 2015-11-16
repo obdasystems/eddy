@@ -55,7 +55,7 @@ class ZoomControl(QWidget):
         """
         super().__init__(parent)
 
-        # This is a bit ugly but prevents the user from selecting values which do not match the set step (which
+        # This is a bit ugly but prevents the user from selecting values that do not match the set step (which
         # in this case is 1 / 4 = 0.25 = 25%. If we set the min size and max size on the slider and set
         # the single step the user is still able to select values which are not multiple of step.
         self.zoom = {v[0]:v[1] for v in enumerate(map(lambda x: x / ZoomControl.Step,

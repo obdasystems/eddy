@@ -34,7 +34,7 @@
 
 import unittest
 
-from grapholed.tools import UniqueID
+from grapholed.utils import UniqueID
 
 
 class Test_UniqueID(unittest.TestCase):

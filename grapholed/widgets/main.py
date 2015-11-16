@@ -50,6 +50,7 @@ from grapholed.dialogs import AboutDialog, OpenFileDialog, PreferencesDialog, Sa
 from grapholed.exceptions import ParseError
 from grapholed.functions import getPath, shaded, connect, disconnect
 from grapholed.items import __mapping__, ItemType
+from grapholed.utils import Clipboard
 from grapholed.widgets.dock import DockWidget, Navigator, Overview, Palette
 from grapholed.widgets.mdi import MdiArea, MdiSubWindow
 from grapholed.widgets.scene import DiagramScene, DiagramDocument
@@ -75,6 +76,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.abortQuit = False
+        self.clipboard = Clipboard()
         self.undogroup = QUndoGroup()
         self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)
 
@@ -95,14 +97,14 @@ class MainWindow(QMainWindow):
 
         ########################################## CREATE DOCK WIDGETS #################################################
 
-        self.paletteDock = DockWidget('Palette', self)
-        self.paletteDock.setWidget(self.palette_)
+        self.dockPalette = DockWidget('Palette', self)
+        self.dockPalette.setWidget(self.palette_)
 
-        self.navigatorDock = DockWidget('Navigator', self)
-        self.navigatorDock.setWidget(self.navigator)
+        self.dockNavigator = DockWidget('Navigator', self)
+        self.dockNavigator.setWidget(self.navigator)
 
-        self.overviewDock = DockWidget('Overview', self)
-        self.overviewDock.setWidget(self.overview)
+        self.dockOverview = DockWidget('Overview', self)
+        self.dockOverview.setWidget(self.overview)
 
         ################################################# ICONS ########################################################
 
@@ -353,9 +355,9 @@ class MainWindow(QMainWindow):
         self.menuView.addSeparator()
         self.menuView.addAction(self.toolbar.toggleViewAction())
         self.menuView.addSeparator()
-        self.menuView.addAction(self.navigatorDock.toggleViewAction())
-        self.menuView.addAction(self.overviewDock.toggleViewAction())
-        self.menuView.addAction(self.paletteDock.toggleViewAction())
+        self.menuView.addAction(self.dockNavigator.toggleViewAction())
+        self.menuView.addAction(self.dockOverview.toggleViewAction())
+        self.menuView.addAction(self.dockPalette.toggleViewAction())
 
         self.menuHelp.addAction(self.actionAbout)
 
@@ -424,9 +426,9 @@ class MainWindow(QMainWindow):
 
         ######################################## CONFIGURE MAIN WINDOW #################################################
 
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.paletteDock)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.navigatorDock)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.overviewDock)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.dockPalette)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.dockNavigator)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.dockOverview)
         self.setCentralWidget(self.mdiArea)
         self.setMinimumSize(MainWindow.MinWidth, MainWindow.MinHeight)
         self.setWindowIcon(QIcon(':/images/grapholed'))

@@ -337,9 +337,9 @@ class Edge(Item):
         """
         delta = QPointF(x, y)
         self.breakpoints = [p + delta for p in self.breakpoints]
-        self.source.setAnchor(self.source.anchor(self) + delta)
+        self.source.setAnchor(self, self.source.anchor(self) + delta)
         if self.target:
-            self.target.setAnchor(self.target.anchor(self) + delta)
+            self.target.setAnchor(self, self.target.anchor(self) + delta)
 
     def other(self, node):
         """
@@ -431,10 +431,18 @@ class Edge(Item):
         else:
 
             if scene.mode is DiagramMode.Idle:
-                # if we are still idle we didn't succeeded in selecting a breakpoint
-                # so we need to create a new one and switch the operation mode
-                self.selectedBP = self.breakpointAdd(self.mousePressPos)
-                scene.setMode(DiagramMode.EdgeBreakPointMove)
+
+                try:
+                    # if we are still idle we didn't succeeded in selecting a breakpoint
+                    # so we need to create a new one and switch the operation mode
+                    self.selectedBP = self.breakpointAdd(self.mousePressPos)
+                except TypeError:
+                    # FIXME: sometime TypeError is raised when computing the breakpoint position:
+                    # if self.breakpoints[i] == between[1]:
+                    #   TypeError: 'NoneType' object is not subscriptable
+                    pass
+                else:
+                    scene.setMode(DiagramMode.EdgeBreakPointMove)
 
             if scene.mode is DiagramMode.EdgeBreakPointMove:
                 self.breakpointMove(self.selectedBP, mouseEvent.pos())

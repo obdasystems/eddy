@@ -43,8 +43,7 @@ from grapholed.dialogs import ScenePropertiesDialog, CardinalityRestrictionForm
 from grapholed.functions import getPath, snapToGrid, rangeF, connect
 from grapholed.items import Item
 from grapholed.items import *
-from grapholed.tools import UniqueID
-
+from grapholed.utils import UniqueID, Clipboard
 from PyQt5.QtCore import Qt, pyqtSignal, QPointF, pyqtSlot, QSettings, QRectF
 from PyQt5.QtGui import QPen, QColor, QIcon
 from PyQt5.QtPrintSupport import QPrinter
@@ -114,8 +113,6 @@ class DiagramScene(QGraphicsScene):
     GridSize = 20
     MinSize = 2000
     MaxSize = 1000000
-    PasteOffsetX = 20
-    PasteOffsetY = 10
 
     edgeInserted = pyqtSignal('QGraphicsItem', int)  # emitted when a edge is inserted in the scene
     nodeInserted = pyqtSignal('QGraphicsItem', int)  # emitted when a node is inserted in the scene
@@ -135,12 +132,10 @@ class DiagramScene(QGraphicsScene):
         :param parent: the parent widget.
         """
         super().__init__(parent)
-        self.mainwindow = mainwindow  ## keep main window reference
         self.command = None  ## undo/redo command to be added in the stack
-        self.clipboard = {}  ## used to store copy of scene nodes/edges
-        self.clipboardPasteOffsetX = DiagramScene.PasteOffsetX  ## X offset to be added to item position upon paste
-        self.clipboardPasteOffsetY = DiagramScene.PasteOffsetY  ## Y offset to be added to item position upon paste
-        self.clipboardPasteOffsetZ = 0  ## Z offset to be added to item zValue upon paste
+        self.clipboard = mainwindow.clipboard  ## reference so the main clipboard
+        self.clipboardPasteOffsetX = Clipboard.PasteOffsetX  ## X offset to be added to item position upon paste
+        self.clipboardPasteOffsetY = Clipboard.PasteOffsetY  ## Y offset to be added to item position upon paste
         self.document = DiagramDocument()  ## document associated with the current scene
         self.edgesById = {} ## used to index edges using their id
         self.nodesById = {} ## used to index nodes using their id
@@ -715,7 +710,9 @@ class DiagramScene(QGraphicsScene):
         Cut selected items from the scene.
         """
         self.setMode(DiagramMode.Idle)
-        self.updateClipboard()
+        self.clipboard.update(self)
+        self.clipboardPasteOffsetX = 0
+        self.clipboardPasteOffsetY = 0
         self.updateActions()
 
         selection = self.selectedItems()
@@ -723,18 +720,15 @@ class DiagramScene(QGraphicsScene):
             selection.extend([x for item in selection if item.isNode() for x in item.edges if x not in selection])
             self.undostack.push(CommandItemsMultiRemove(scene=self, collection=selection))
 
-        # clear offsets so we can paste in the same position
-        self.clipboardPasteOffsetX = 0
-        self.clipboardPasteOffsetY = 0
-        self.clipboardPasteOffsetZ = 0
-
     @pyqtSlot()
     def itemCopy(self):
         """
         Make a copy of selected items.
         """
         self.setMode(DiagramMode.Idle)
-        self.updateClipboard()
+        self.clipboard.update(self)
+        self.clipboardPasteOffsetX = Clipboard.PasteOffsetX
+        self.clipboardPasteOffsetY = Clipboard.PasteOffsetY
         self.updateActions()
 
     @pyqtSlot()
@@ -743,72 +737,15 @@ class DiagramScene(QGraphicsScene):
         Paste previously copied items.
         """
         self.setMode(DiagramMode.Idle)
-
-        def ncopy(node):
-            """
-            Create a copy of the given node generating a new id.
-            Will also adjust the node position according to the incremental offset.
-            :param node: the node to copy.
-            """
-            copy = node.copy(self)
-            copy.id = self.uniqueID.next(self.uniqueID.parse(node.id)[0])
-            copy.setPos(copy.pos() + QPointF(self.clipboardPasteOffsetX, self.clipboardPasteOffsetY))
-            copy.setZValue(self.clipboardPasteOffsetZ + 0.1)
-            return copy
-
-        # create a copy of all the nodes in the clipboard and store them in a dict using the old
-        # node id: this is needed later when we add edges since we need to attach the copied edge
-        # to a new source/target so we need a mapping between the old id and the new id
-        nodes = {x:ncopy(n) for x, n in self.clipboard['nodes'].items()}
-
-        def ecopy(edge):
-            """
-            Create a copy of the given edge generating a new id and performing the following actions:
-                - adjust edge breakpoints positions according to the incremental offset
-                - attach the copied edge to the correspondend previously copied nodes
-                - copy the edge reference into source and target nodes.
-            :param edge: the edge to copy.
-            """
-            copy = edge.copy(self)
-
-            # calculate the offset to be added to every position
-            offset = QPointF(self.clipboardPasteOffsetX, self.clipboardPasteOffsetY)
-
-            # generate a new id for this edge
-            copy.id = self.uniqueID.next(self.uniqueID.parse(edge.id)[0])
-            # attach the edge to the copy of source and target nodes
-            copy.source = nodes[edge.source.id]
-            copy.target = nodes[edge.target.id]
-            # copy source and target anchor points moving them according to the offsets
-            copy.source.setAnchor(copy, edge.source.anchor(edge) + offset)
-            copy.target.setAnchor(copy, edge.target.anchor(edge) + offset)
-
-            # copy breakpoints moving them according to the offsets
-            copy.breakpoints = [x + offset for x in copy.breakpoints]
-
-            # map the copied edge over source and target nodes
-            nodes[edge.source.id].addEdge(copy)
-            nodes[edge.target.id].addEdge(copy)
-
-            # update the edge to generate internal stuff
-            copy.updateEdge()
-            return copy
-
-        # copy all the needed edges
-        edges = {x:ecopy(e) for x, e in self.clipboard['edges'].items()}
-
-        # push the command in the stack
-        self.undostack.push(CommandItemsMultiAdd(scene=self, collection=list(nodes.values()) + list(edges.values())))
-
-        # increase paste offsets for the next paste
-        self.clipboardPasteOffsetX += DiagramScene.PasteOffsetX
-        self.clipboardPasteOffsetY += DiagramScene.PasteOffsetY
-        self.clipboardPasteOffsetZ += 0.1 * len(nodes)
+        if not self.clipboard.empty():
+            # action = self.sender()
+            # TODO: figure out how to send context menu position to the clipboard
+            self.clipboard.paste(self)
 
     @pyqtSlot()
     def itemDelete(self):
         """
-        Delete the currently selected items from the graphic scene.
+        Delete the currently selected items from the diagram scene.
         """
         self.setMode(DiagramMode.Idle)
         selection = self.selectedItems()
@@ -967,8 +904,8 @@ class DiagramScene(QGraphicsScene):
         """
         if not self.items(menuEvent.scenePos()):
             menu = QMenu()
-            if self.clipboard:
-                menu.addAction(self.actionItemPaste)
+            if not self.clipboard.empty():
+                menu.addAction(self.actionPaste)
             menu.addAction(self.actionSelectAll)
             menu.addSeparator()
             menu.addAction(self.actionOpenSceneProperties)
@@ -1188,9 +1125,9 @@ class DiagramScene(QGraphicsScene):
         # do not draw the background grid if we are printing the scene
         # TODO: replace isinstance with something smarter since this may be resource consuming
         if self.settings.value('scene/snap_to_grid', False, bool) and not isinstance(painter.device(), QPrinter):
-            painter.setPen(DiagramScene.GridPen)
             startX = int(rect.left()) - (int(rect.left()) % DiagramScene.GridSize)
             startY = int(rect.top()) - (int(rect.top()) % DiagramScene.GridSize)
+            painter.setPen(DiagramScene.GridPen)
             painter.drawPoints(*(QPointF(x, y) for x in rangeF(startX, rect.right(), DiagramScene.GridSize) \
                                                  for y in rangeF(startY, rect.bottom(), DiagramScene.GridSize)))
 
@@ -1255,10 +1192,14 @@ class DiagramScene(QGraphicsScene):
         """
         Clear the Diagram Scene by removing all the elements.
         """
-        self.clipboard.clear()
         self.nodesById.clear()
         self.edgesById.clear()
         self.undostack.clear()
+
+        # only clear the clipboard if it's holding element coming from the current scene
+        if self.clipboard.scene is self:
+            self.clipboard.clear()
+
         super().clear()
 
     def edge(self, eid):
@@ -1288,7 +1229,9 @@ class DiagramScene(QGraphicsScene):
         :rtype: Item
         """
         collection = [x for x in self.items(point) if nodes and x.isNode() or edges and x.isEdge()]
-        return max(collection, key=lambda x: x.zValue()) if collection else None
+        if collection:
+            return max(collection, key=lambda x: x.zValue())
+        return None
 
     def node(self, nid):
         """
@@ -1368,7 +1311,7 @@ class DiagramScene(QGraphicsScene):
         selected_nodes = self.selectedNodes()
         selected_edges = self.selectedEdges()
 
-        isClip = len(self.clipboard) != 0 and len(self.clipboard['nodes']) != 0
+        isClip = not self.clipboard.empty()
         isEdge = len(selected_edges) != 0
         isNode = len(selected_nodes) != 0
         isPred = next(filter(lambda x: x.isType(ItemType.AttributeNode,
@@ -1378,64 +1321,13 @@ class DiagramScene(QGraphicsScene):
                                                 ItemType.ValueDomainNode,
                                                 ItemType.ValueRestrictionNode), selected_nodes), None) is not None
 
-        self.mainwindow.actionBringToFront.setEnabled(isNode)
-        self.mainwindow.actionCut.setEnabled(isNode)
-        self.mainwindow.actionCopy.setEnabled(isNode)
-        self.mainwindow.actionDelete.setEnabled(isNode or isEdge)
-        self.mainwindow.actionPaste.setEnabled(isClip)
-        self.mainwindow.actionSendToBack.setEnabled(isNode)
-        self.mainwindow.changeNodeBrushButton.setEnabled(isPred)
-
-
-
-        # self.actionItemCut = mainwindow.actionItemCut
-        # self.actionItemCopy = mainwindow.actionItemCopy
-        # self.actionItemPaste = mainwindow.actionItemPaste
-        # self.actionItemDelete = mainwindow.actionItemDelete
-        # self.actionBringToFront = mainwindow.actionBringToFront
-        # self.actionSendToBack = mainwindow.actionSendToBack
-        # self.actionSelectAll = mainwindow.actionSelectAll
-        # self.actionsChangeNodeBrush = mainwindow.actionsChangeNodeBrush
-
-    def updateClipboard(self):
-        """
-        Update the clipboard collecting nodes and edges that needs to be copied.
-        """
-        # reset paste offset for next paste
-        self.clipboardPasteOffsetX = DiagramScene.PasteOffsetX
-        self.clipboardPasteOffsetY = DiagramScene.PasteOffsetY
-        self.clipboardPasteOffsetZ = 0
-
-        self.clipboard = {
-            'nodes': {},
-            'edges': {},
-        }
-
-        # since we are creating a copy of the node (which doesn't carry all the edges with it)
-        # we can't iterate over the copy 'edges': because of this we store the original selection
-        # locally and we iterate over it matching nodes id to re-attach edge copies.
-        nodes = self.selectedNodes()
-
-        for node in nodes:
-            self.clipboard['nodes'][node.id] = node.copy(self)
-            self.clipboardPasteOffsetZ = max(self.clipboardPasteOffsetZ, node.zValue())
-
-        # figure out if the nodes we are copying are sharing edges:
-        # if that's the case, copy the edge together with the nodes
-        for node in nodes:
-            for edge in node.edges:
-                if edge.id not in self.clipboard['edges']:
-                    if edge.other(node).isSelected():
-                        copy = edge.copy(self)
-                        # attach source and target nodes
-                        copy.source = self.clipboard['nodes'][edge.source.id]
-                        copy.target = self.clipboard['nodes'][edge.target.id]
-                        # copy source and target nodes anchor points
-                        copy.source.setAnchor(copy, edge.source.anchor(edge))
-                        copy.target.setAnchor(copy, edge.target.anchor(edge))
-                        # add the copy of the edge to the collection
-                        self.clipboard['edges'][edge.id] = copy
-                        self.clipboardPasteOffsetZ = max(self.clipboardPasteOffsetZ, edge.zValue())
+        self.actionBringToFront.setEnabled(isNode)
+        self.actionCut.setEnabled(isNode)
+        self.actionCopy.setEnabled(isNode)
+        self.actionDelete.setEnabled(isNode or isEdge)
+        self.actionPaste.setEnabled(isClip)
+        self.actionSendToBack.setEnabled(isNode)
+        self.changeNodeBrushButton.setEnabled(isPred)
 
     def visibleRect(self, margin=0):
         """
