@@ -38,8 +38,9 @@ import os
 import sys
 
 from grapholed.exceptions import ProgrammingError
+
 from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QPixmap, QPainter, QIcon
+from PyQt5.QtGui import QPixmap, QPainter, QIcon, QColor
 
 
 def angleP(p1, p2):
@@ -219,6 +220,19 @@ def main_is_frozen():
     :rtype: bool
     """
     return hasattr(sys, 'frozen')
+
+
+def make_colored_pixmap(width, height, code):
+    """
+    Create and returns a QPixmap filled using the given color.
+    :param width: the width of the pixmap.
+    :param height: the height of the pixmap.
+    :param code: the HEX color code to use to fill the icon.
+    :rtype: QPixmap
+    """
+    pixmap = QPixmap(width, height)
+    pixmap.fill(QColor(code))
+    return pixmap
 
 
 def make_shaded_icon(path, opacity=0.25):
