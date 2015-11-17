@@ -39,7 +39,7 @@ import sys
 
 from grapholed.exceptions import ProgrammingError
 from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QPixmap, QPainter
+from PyQt5.QtGui import QPixmap, QPainter, QIcon
 
 
 def angleP(p1, p2):
@@ -221,6 +221,19 @@ def main_is_frozen():
     return hasattr(sys, 'frozen')
 
 
+def make_shaded_icon(path, opacity=0.25):
+    """
+    Create a shaded icon using the given image: the shaded copy will use the given opacity value.
+    :param path: the path of the image.
+    :param opacity: the opacity of the shaded icon.
+    :rtype: QIcon
+    """
+    icon = QIcon()
+    icon.addPixmap(QPixmap(path), QIcon.Normal)
+    icon.addPixmap(shaded(QPixmap(path), opacity), QIcon.Disabled)
+    return icon
+
+
 def midpoint(p1, p2):
     """
     Calculate the midpoint between the given points.
@@ -247,7 +260,7 @@ def rangeF(start, stop, step):
         x = round(x + step, 4)
 
 
-def shaded(pixmap, opacity=0.5):
+def shaded(pixmap, opacity=0.25):
     """
     Constructs a copy of the given pixmap using the specified opacity.
     :param pixmap: the pixmap to shade.
