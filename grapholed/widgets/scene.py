@@ -326,6 +326,7 @@ class DiagramScene(QGraphicsScene):
             if zValue != selected.zValue():
                 self.undostack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
 
+    @pyqtSlot()
     def changeNodeBrush(self):
         """
         Change the brush of selected nodes.
