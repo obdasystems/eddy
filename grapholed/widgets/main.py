@@ -941,7 +941,7 @@ class MainWindow(QMainWindow):
         Create and return an empty scene.
         :param width: the width of the scene rect.
         :param height: the height of the scene rect
-        :return: the initialized GraphicScene.
+        :return: the initialized DiagramScene.
         :rtype: DiagramScene
         """
         scene = DiagramScene(self)
@@ -955,9 +955,9 @@ class MainWindow(QMainWindow):
 
     def getSceneFromGrapholFile(self, filepath):
         """
-        Create a new scene by loading the given graphol file.
+        Create a new scene by loading the given Graphol file.
         :param filepath: the path of the file to be loaded.
-        :return: the initialized GraphicScene, or None if the load fails.
+        :return: the initialized DiagramScene, or None if the load fails.
         :rtype: DiagramScene
         """
         file = QFile(filepath)
