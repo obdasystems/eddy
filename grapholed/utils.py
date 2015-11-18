@@ -54,7 +54,6 @@ class Clipboard(QObject):
         super().__init__(parent)
         self.edges = {}
         self.nodes = {}
-        self.scene = None
 
     def clear(self):
         """
@@ -62,7 +61,6 @@ class Clipboard(QObject):
         """
         self.edges.clear()
         self.nodes.clear()
-        self.scene = None
 
     def empty(self):
         """
@@ -170,7 +168,6 @@ class Clipboard(QObject):
 
             self.edges = {}
             self.nodes = {node.id: node.copy(scene) for node in nodes}
-            self.scene = scene
 
             for node in nodes:
                 for edge in node.edges:
