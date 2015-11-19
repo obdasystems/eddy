@@ -68,7 +68,11 @@ class ValueDomainNode(Node):
         self.label = Label(self.datatype.value, movable=False, editable=False, parent=self)
         self.updateRect()
 
-    ################################################ ITEM INTERFACE ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def contextMenu(self):
         """
@@ -77,14 +81,14 @@ class ValueDomainNode(Node):
         """
         scene = self.scene()
         menu = super().contextMenu()
-        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuChangeNodeBrush)
-        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuChangeValueDomainDatatype)
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeValueDomainDatatype)
 
         # switch the check matching the current datatype
-        for action in scene.actionsChangeValueDomainDatatype:
+        for action in scene.mainwindow.actionsChangeValueDomainDatatype:
             action.setChecked(self.datatype == action.data())
 
-        menu.insertSeparator(scene.actionOpenNodeProperties)
+        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):
@@ -131,7 +135,11 @@ class ValueDomainNode(Node):
         """
         return self.rect.width()
 
-    ############################################### AUXILIARY METHODS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @staticmethod
     def createRect(shape_w, shape_h):
@@ -143,7 +151,11 @@ class ValueDomainNode(Node):
         """
         return QRectF(-shape_w / 2, -shape_h / 2, shape_w, shape_h)
 
-    ############################################# ITEM IMPORT / EXPORT #################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   IMPORT / EXPORT                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @classmethod
     def fromGraphol(cls, scene, E):
@@ -217,7 +229,11 @@ class ValueDomainNode(Node):
 
         return node
 
-    #################################################### GEOMETRY ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   GEOMETRY                                                                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def boundingRect(self):
         """
@@ -245,7 +261,11 @@ class ValueDomainNode(Node):
         path.addRoundedRect(self.rect, self.radius, self.radius)
         return path
 
-    ################################################# LABEL SHORTCUTS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   LABEL SHORTCUTS                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def labelPos(self):
         """
@@ -292,7 +312,11 @@ class ValueDomainNode(Node):
         """
         self.label.updatePos(*args, **kwargs)
 
-    ################################################## ITEM DRAWING ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def paint(self, painter, option, widget=None):
         """

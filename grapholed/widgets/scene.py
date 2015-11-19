@@ -34,21 +34,17 @@
 
 import os
 
-from collections import OrderedDict
-
-from grapholed import __appname__, __organization__
-from grapholed.commands import *
-from grapholed.datatypes import DiagramMode, ItemType, SpecialConceptType, RestrictionType, XsdDatatype
-from grapholed.dialogs import ScenePropertiesDialog, CardinalityRestrictionForm
-from grapholed.functions import getPath, snapToGrid, rangeF, connect
-from grapholed.items import Item
-from grapholed.items import *
-from grapholed.utils import UniqueID, Clipboard
-from PyQt5.QtCore import Qt, pyqtSignal, QPointF, pyqtSlot, QSettings, QRectF
-from PyQt5.QtGui import QPen, QColor, QIcon
+from PyQt5.QtCore import Qt, pyqtSignal, QPointF, QSettings, QRectF
+from PyQt5.QtGui import QPen, QColor
 from PyQt5.QtPrintSupport import QPrinter
-from PyQt5.QtWidgets import QGraphicsScene, QUndoStack, QMenu, QAction
+from PyQt5.QtWidgets import QGraphicsScene, QUndoStack, QMenu
 from PyQt5.QtXml import QDomDocument
+
+from grapholed import __appname__ as appname, __organization__ as organization
+from grapholed.commands import *
+from grapholed.datatypes import DiagramMode
+from grapholed.functions import getPath, snapToGrid, rangeF
+from grapholed.utils import UniqueID, Clipboard
 
 
 class DiagramDocument(object):
@@ -132,14 +128,14 @@ class DiagramScene(QGraphicsScene):
         :param parent: the parent widget.
         """
         super().__init__(parent)
+        self.mainwindow = mainwindow  ## main window reference
         self.command = None  ## undo/redo command to be added in the stack
-        self.clipboard = mainwindow.clipboard  ## reference so the main clipboard
         self.clipboardPasteOffsetX = Clipboard.PasteOffsetX  ## X offset to be added to item position upon paste
         self.clipboardPasteOffsetY = Clipboard.PasteOffsetY  ## Y offset to be added to item position upon paste
         self.document = DiagramDocument()  ## document associated with the current scene
-        self.edgesById = {} ## used to index edges using their id
-        self.nodesById = {} ## used to index nodes using their id
-        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)  ## settings
+        self.edgesById = {}  ## used to index edges using their id
+        self.nodesById = {}  ## used to index nodes using their id
+        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, organization, appname)  ## settings
         self.uniqueID = UniqueID()  ## used to generate unique incremental ids
         self.undostack = QUndoStack(self)  ## use to push actions and keep history for undo/redo
         self.undostack.setUndoLimit(50) ## TODO: make the stack configurable
@@ -150,751 +146,9 @@ class DiagramScene(QGraphicsScene):
         self.mousePressNodePos = None  ## position of the shape acting as mouse grabber during mouse move events
         self.mousePressData = {}  ## extra data needed to process item interactive movements
 
-        ########################################### CONFIGURE ACTIONS ##################################################
-
-        ## COPY REFERENCES
-        self.actionCut = mainwindow.actionCut
-        self.actionCopy = mainwindow.actionCopy
-        self.actionPaste = mainwindow.actionPaste
-        self.actionDelete = mainwindow.actionDelete
-        self.actionBringToFront = mainwindow.actionBringToFront
-        self.actionSendToBack = mainwindow.actionSendToBack
-        self.actionSelectAll = mainwindow.actionSelectAll
-        self.actionsChangeNodeBrush = mainwindow.actionsChangeNodeBrush
-        self.actionToggleEdgeComplete = mainwindow.actionToggleEdgeComplete
-        self.actionToggleEdgeFunctional = mainwindow.actionToggleEdgeFunctional
-
-        ## DIAGRAM SCENE
-        self.actionOpenSceneProperties = QAction('Properties...', self)
-        self.actionOpenSceneProperties.setIcon(QIcon(':/icons/preferences'))
-        connect(self.actionOpenSceneProperties.triggered, self.openSceneProperties)
-
-        ## NODE GENERIC
-        self.actionOpenNodeProperties = QAction('Properties...', self)
-        self.actionOpenNodeProperties.setIcon(QIcon(':/icons/preferences'))
-        connect(self.actionOpenNodeProperties.triggered, self.openNodeProperties)
-
-        ## CONCEPT NODE
-        self.actionsConceptNodeSetSpecial = []
-        for special in SpecialConceptType:
-            action = QAction(special.value, self)
-            action.setCheckable(True)
-            action.setData(special)
-            connect(action.triggered, self.setSpecialConceptNode)
-            self.actionsConceptNodeSetSpecial.append(action)
-
-        ## ROLE NODE
-        self.actionComposeAsymmetricRole = QAction('Asymmetric Role', self)
-        self.actionComposeIrreflexiveRole = QAction('Irreflexive Role', self)
-        self.actionComposeReflexiveRole = QAction('Reflexive Role', self)
-        self.actionComposeSymmetricRole = QAction('Symmetric Role', self)
-        self.actionComposeTransitiveRole = QAction('Transitive Role', self)
-
-        connect(self.actionComposeAsymmetricRole.triggered, self.composeAsymmetricRole)
-        connect(self.actionComposeIrreflexiveRole.triggered, self.composeIrreflexiveRole)
-        connect(self.actionComposeReflexiveRole.triggered, self.composeReflexiveRole)
-        connect(self.actionComposeSymmetricRole.triggered, self.composeSymmetricRole)
-        connect(self.actionComposeTransitiveRole.triggered, self.composeTransitiveRole)
-
-        ## ROLE / ATTRIBUTE NODES
-        self.actionComposeFunctional = QAction('Functional', self)
-        self.actionComposeInverseFunctional = QAction('Inverse Functional', self)
-        self.actionComposePropertyDomain = QAction('Property Domain', self)
-        self.actionComposePropertyRange = QAction('Property Range', self)
-
-        connect(self.actionComposeFunctional.triggered, self.composeFunctional)
-        connect(self.actionComposeInverseFunctional.triggered, self.composeInverseFunctional)
-        connect(self.actionComposePropertyDomain.triggered, self.composePropertyDomain)
-        connect(self.actionComposePropertyRange.triggered, self.composePropertyRange)
-
-        ## VALUE DOMAIN NODE
-        self.actionsChangeValueDomainDatatype = []
-        for datatype in XsdDatatype:
-            action = QAction(datatype.value, self)
-            action.setCheckable(True)
-            action.setData(datatype)
-            connect(action.triggered, self.changeValueDomainDatatype)
-            self.actionsChangeValueDomainDatatype.append(action)
-
-        ## DOMAIN / RANGE RESTRICTION
-        self.actionsRestrictionChange = []
-        for restriction in RestrictionType:
-            action = QAction(restriction.value, self)
-            action.setCheckable(True)
-            action.setData(restriction)
-            connect(action.triggered, self.changeRestriction)
-            self.actionsRestrictionChange.append(action)
-
-        ## HEXAGON BASED CONSTRUCTOR NODES
-        data = OrderedDict()
-        data[ComplementNode] = 'Complement'
-        data[DisjointUnionNode] = 'Disjoint union'
-        data[DatatypeRestrictionNode] = 'Datatype restriction'
-        data[EnumerationNode] = 'Enumeration'
-        data[IntersectionNode] = 'Intersection'
-        data[RoleChainNode] = 'Role chain'
-        data[RoleInverseNode] = 'Role inverse'
-        data[UnionNode] = 'Union'
-
-        self.actionsSwitchHexagonNode = []
-        for k, v in data.items():
-            action = QAction(v, self)
-            action.setCheckable(True)
-            action.setData(k)
-            connect(action.triggered, self.switchHexagonNode)
-            self.actionsSwitchHexagonNode.append(action)
-
-        ############################################# CONFIGURE MENUS ##################################################
-
-        ## NODE GENERIC
-        self.changeNodeBrushButton = mainwindow.changeNodeBrushButton
-        self.menuChangeNodeBrush = mainwindow.menuChangeNodeBrush
-
-        ## CONCEPT NODE
-        self.menuConceptNodeSpecial = QMenu('Special type')
-        self.menuConceptNodeSpecial.setIcon(QIcon(':/icons/star-filled'))
-        for action in self.actionsConceptNodeSetSpecial:
-            self.menuConceptNodeSpecial.addAction(action)
-
-        ## ROLE NODE
-        self.menuRoleNodeCompose = QMenu('Compose')
-        self.menuRoleNodeCompose.setIcon(QIcon(':/icons/create'))
-        self.menuRoleNodeCompose.addAction(self.actionComposeAsymmetricRole)
-        self.menuRoleNodeCompose.addAction(self.actionComposeIrreflexiveRole)
-        self.menuRoleNodeCompose.addAction(self.actionComposeReflexiveRole)
-        self.menuRoleNodeCompose.addAction(self.actionComposeSymmetricRole)
-        self.menuRoleNodeCompose.addAction(self.actionComposeTransitiveRole)
-        self.menuRoleNodeCompose.addSeparator()
-        self.menuRoleNodeCompose.addAction(self.actionComposeFunctional)
-        self.menuRoleNodeCompose.addAction(self.actionComposeInverseFunctional)
-        self.menuRoleNodeCompose.addSeparator()
-        self.menuRoleNodeCompose.addAction(self.actionComposePropertyDomain)
-        self.menuRoleNodeCompose.addAction(self.actionComposePropertyRange)
-
-        ## ATTRIBUTE NODE
-        self.menuAttributeNodeCompose = QMenu('Compose')
-        self.menuAttributeNodeCompose.setIcon(QIcon(':/icons/create'))
-        self.menuAttributeNodeCompose.addAction(self.actionComposeFunctional)
-        self.menuAttributeNodeCompose.addSeparator()
-        self.menuAttributeNodeCompose.addAction(self.actionComposePropertyDomain)
-        self.menuAttributeNodeCompose.addSeparator()
-        self.menuAttributeNodeCompose.addAction(self.actionComposePropertyDomain)
-        self.menuAttributeNodeCompose.addAction(self.actionComposePropertyRange)
-
-        ## VALUE DOMAIN NODE
-        self.menuChangeValueDomainDatatype = QMenu('Select type')
-        self.menuChangeValueDomainDatatype.setIcon(QIcon(':/icons/refresh'))
-        for action in self.actionsChangeValueDomainDatatype:
-            self.menuChangeValueDomainDatatype.addAction(action)
-
-        ## DOMAIN / RANGE RESTRICTION NODES
-        self.menuRestrictionChange = QMenu('Select restriction')
-        self.menuRestrictionChange.setIcon(QIcon(':/icons/refresh'))
-        for action in self.actionsRestrictionChange:
-            self.menuRestrictionChange.addAction(action)
-
-        ## HEXAGON BASED NODES
-        self.menuHexagonNodeSwitch = QMenu('Switch to')
-        self.menuHexagonNodeSwitch.setIcon(QIcon(':/icons/refresh'))
-        for action in self.actionsSwitchHexagonNode:
-            self.menuHexagonNodeSwitch.addAction(action)
-
-        ############################################ CONFIGURE SIGNALS #################################################
-
-        connect(self.nodeInserted, self.onNodeInserted)
-        connect(self.edgeInserted, self.onEdgeInserted)
-        connect(self.selectionChanged, self.onSelectionChanged)
-
     ####################################################################################################################
     #                                                                                                                  #
-    #   ACTION HANDLERS                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @pyqtSlot()
-    def bringToFront(self):
-        """
-        Bring the selected item to the top of the scene.
-        """
-        self.setMode(DiagramMode.Idle)
-        for selected in self.selectedNodes():
-            zValue = 0
-            colliding = selected.collidingItems()
-            for item in filter(lambda x: not x.isType(ItemType.LabelNode, ItemType.LabelEdge), colliding):
-                if item.zValue() >= zValue:
-                    zValue = item.zValue() + 0.1
-            if zValue != selected.zValue():
-                self.undostack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
-
-    @pyqtSlot()
-    def changeNodeBrush(self):
-        """
-        Change the brush of selected nodes.
-        """
-        self.setMode(DiagramMode.Idle)
-        action = self.sender()
-        if action:
-            selected = self.selectedNodes()
-            selected = [x for x in selected if x.isType(ItemType.AttributeNode, ItemType.ConceptNode,
-                                                        ItemType.IndividualNode, ItemType.RoleNode,
-                                                        ItemType.ValueDomainNode, ItemType.ValueRestrictionNode)]
-            if selected:
-                self.undostack.push(CommandNodeChangeBrush(self, selected, action.data()))
-
-    @pyqtSlot()
-    def changeRestriction(self):
-        """
-        Change domain/range restriction types.
-        """
-        self.setMode(DiagramMode.Idle)
-        action = self.sender()
-        if action:
-            node = next(filter(lambda x: x.isType(ItemType.DomainRestrictionNode,
-                                                  ItemType.RangeRestrictionNode), self.selectedNodes()), None)
-            if node:
-                restriction = action.data()
-                if restriction == RestrictionType.cardinality:
-                    dialog = CardinalityRestrictionForm()
-                    if dialog.exec_() == CardinalityRestrictionForm.Accepted:
-                        cardinality = dict(min=dialog.minCardinalityValue, max=dialog.maxCardinalityValue)
-                        self.undostack.push(CommandNodeSquareChangeRestriction(self, node, restriction, cardinality))
-                else:
-                    self.undostack.push(CommandNodeSquareChangeRestriction(self, node, action.data()))
-
-    @pyqtSlot()
-    def changeValueDomainDatatype(self):
-        """
-        Change the datatype of the selected value-domain node.
-        """
-        self.setMode(DiagramMode.Idle)
-        action = self.sender()
-        if action:
-            node = next(filter(lambda x: x.isType(ItemType.ValueDomainNode), self.selectedNodes()), None)
-            if node:
-                self.undostack.push(CommandNodeValueDomainSelectDatatype(scene=self, node=node, datatype=action.data()))
-
-    @pyqtSlot()
-    def composeAsymmetricRole(self):
-        """
-        Compose an asymmetric role using the selected Role node.
-        """
-        self.setMode(DiagramMode.Idle)
-        action = self.sender()
-        if action:
-
-            role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
-            if role and not role.asymmetric:
-
-                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
-                x1 = snapToGrid(role.pos().x() + role.width() / 2 + 100, DiagramScene.GridSize, snap=True)
-                y1 = snapToGrid(role.pos().y() - role.height() / 2 - 40, DiagramScene.GridSize, snap=True)
-                y2 = snapToGrid(role.pos().y() - role.height() / 2 - 80, DiagramScene.GridSize, snap=True)
-
-                inverse = RoleInverseNode(scene=self)
-                inverse.setPos(QPointF(x1, role.pos().y()))
-                complement = ComplementNode(scene=self)
-                complement.setPos(QPointF(x1, y1))
-                edge1 = InputEdge(scene=self, source=role, target=inverse)
-                edge2 = InputEdge(scene=self, source=inverse, target=complement)
-                edge3 = InclusionEdge(scene=self, source=role, target=complement, breakpoints=[
-                    QPointF(role.pos().x(), y2),
-                    QPointF(x1, y2)
-                ])
-
-                kwargs = {
-                    'name': 'compose asymmetric role',
-                    'scene': self,
-                    'source': role,
-                    'nodes': {inverse, complement},
-                    'edges': {edge1, edge2, edge3},
-                }
-
-                # push the composition on the stack as a single action
-                self.undostack.push(CommandComposeAxiom(**kwargs))
-
-    @pyqtSlot()
-    def composeFunctional(self):
-        """
-        Makes the selected role/attribute node functional.
-        """
-        self.setMode(DiagramMode.Idle)
-        action = self.sender()
-        if action:
-
-            node = next(filter(lambda x: x.isType(ItemType.RoleNode, ItemType.AttributeNode), self.selectedNodes()), None)
-            if node and not node.functional:
-
-                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
-                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 90, DiagramScene.GridSize, snap=True)
-
-                restriction = DomainRestrictionNode(scene=self, restriction=RestrictionType.exists)
-                restriction.setPos(QPointF(x1, node.pos().y()))
-
-                edge = InputEdge(scene=self, source=node, target=restriction, functional=True)
-
-                kwargs = {
-                    'name': 'compose functional {0}'.format(node.name),
-                    'scene': self,
-                    'source': node,
-                    'nodes': {restriction},
-                    'edges': {edge},
-                }
-
-                # push the composition on the stack as a single action
-                self.undostack.push(CommandComposeAxiom(**kwargs))
-
-    @pyqtSlot()
-    def composeInverseFunctional(self):
-        """
-        Makes the selected role node inverse functional.
-        """
-        self.setMode(DiagramMode.Idle)
-        action = self.sender()
-        if action:
-
-            node = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
-            if node and not node.inverse_functional:
-
-                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
-                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 90, DiagramScene.GridSize, snap=True)
-
-                restriction = RangeRestrictionNode(scene=self, restriction=RestrictionType.exists)
-                restriction.setPos(QPointF(x1, node.pos().y()))
-
-                edge = InputEdge(scene=self, source=node, target=restriction, functional=True)
-
-                kwargs = {
-                    'name': 'compose inverse functional {0}'.format(node.name),
-                    'scene': self,
-                    'source': node,
-                    'nodes': {restriction},
-                    'edges': {edge},
-                }
-
-                # push the composition on the stack as a single action
-                self.undostack.push(CommandComposeAxiom(**kwargs))
-
-    @pyqtSlot()
-    def composeIrreflexiveRole(self):
-        """
-        Compose an irreflexive role using the selected Role node.
-        """
-        self.setMode(DiagramMode.Idle)
-        action = self.sender()
-        if action:
-
-            role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
-            if role and not role.irreflexive:
-
-                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
-                x1 = snapToGrid(role.pos().x() + role.width() / 2 + 40, DiagramScene.GridSize, snap=True)
-                x2 = snapToGrid(role.pos().x() + role.width() / 2 + 120, DiagramScene.GridSize, snap=True)
-                x3 = snapToGrid(role.pos().x() + role.width() / 2 + 250, DiagramScene.GridSize, snap=True)
-
-                restriction = DomainRestrictionNode(scene=self, restriction=RestrictionType.self)
-                restriction.setPos(QPointF(x1, role.pos().y()))
-                complement = ComplementNode(scene=self)
-                complement.setPos(QPointF(x2, role.pos().y()))
-                concept = ConceptNode(scene=self, special=SpecialConceptType.TOP)
-                concept.setPos(QPointF(x3, role.pos().y()))
-                edge1 = InputEdge(scene=self, source=role, target=restriction)
-                edge2 = InputEdge(scene=self, source=restriction, target=complement)
-                edge3 = InclusionEdge(scene=self, source=concept, target=complement)
-
-                kwargs = {
-                    'name': 'compose irreflexive role',
-                    'scene': self,
-                    'source': role,
-                    'nodes': {restriction, complement, concept},
-                    'edges': {edge1, edge2, edge3},
-                }
-
-                # push the composition on the stack as a single action
-                self.undostack.push(CommandComposeAxiom(**kwargs))
-
-    @pyqtSlot()
-    def composePropertyDomain(self):
-        """
-        Compose a property domain using the selected role/attribute node.
-        """
-        self.setMode(DiagramMode.Idle)
-        action = self.sender()
-        if action:
-
-            node = next(filter(lambda x: x.isType(ItemType.RoleNode, ItemType.AttributeNode), self.selectedNodes()), None)
-            if node:
-
-                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
-                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 60, DiagramScene.GridSize, snap=True)
-                x2 = snapToGrid(node.pos().x() + node.width() / 2 + 200, DiagramScene.GridSize, snap=True)
-
-                restriction = DomainRestrictionNode(scene=self, restriction=RestrictionType.exists)
-                restriction.setPos(QPointF(x1, node.pos().y()))
-                concept = ConceptNode(scene=self)
-                concept.setPos(QPointF(x2, node.pos().y()))
-                edge1 = InputEdge(scene=self, source=node, target=restriction)
-                edge2 = InclusionEdge(scene=self, source=restriction, target=concept)
-
-                kwargs = {
-                    'name': 'compose {0} property domain'.format(node.name),
-                    'scene': self,
-                    'source': node,
-                    'nodes': {restriction, concept},
-                    'edges': {edge1, edge2},
-                }
-
-                # push the composition on the stack as a single action
-                self.undostack.push(CommandComposeAxiom(**kwargs))
-
-    @pyqtSlot()
-    def composePropertyRange(self):
-        """
-        Compose a property range using the selected role/attribute node.
-        """
-        self.setMode(DiagramMode.Idle)
-        action = self.sender()
-        if action:
-
-            node = next(filter(lambda x: x.isType(ItemType.RoleNode, ItemType.AttributeNode), self.selectedNodes()), None)
-            if node:
-
-                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
-                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 60, DiagramScene.GridSize, snap=True)
-                x2 = snapToGrid(node.pos().x() + node.width() / 2 + 200, DiagramScene.GridSize, snap=True)
-
-                restriction = RangeRestrictionNode(scene=self, restriction=RestrictionType.exists)
-                restriction.setPos(QPointF(x1, node.pos().y()))
-
-                if node.isType(ItemType.RoleNode):
-                    target = ConceptNode(scene=self)
-                    target.setPos(QPointF(x2, node.pos().y()))
-                else:
-                    target = ValueDomainNode(scene=self)
-                    target.setPos(QPointF(x2, node.pos().y()))
-
-                edge1 = InputEdge(scene=self, source=node, target=restriction)
-                edge2 = InclusionEdge(scene=self, source=restriction, target=target)
-
-                kwargs = {
-                    'name': 'compose {0} property range'.format(node.name),
-                    'scene': self,
-                    'source': node,
-                    'nodes': {restriction, target},
-                    'edges': {edge1, edge2},
-                }
-
-                # push the composition on the stack as a single action
-                self.undostack.push(CommandComposeAxiom(**kwargs))
-
-    @pyqtSlot()
-    def composeReflexiveRole(self):
-        """
-        Compose a reflexive role using the selected Role node.
-        """
-        self.setMode(DiagramMode.Idle)
-        action = self.sender()
-        if action:
-
-            role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
-            if role and not role.reflexive:
-
-                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
-                x1 = snapToGrid(role.pos().x() + role.width() / 2 + 40, DiagramScene.GridSize, snap=True)
-                x2 = snapToGrid(role.pos().x() + role.width() / 2 + 250, DiagramScene.GridSize, snap=True)
-
-                restriction = DomainRestrictionNode(scene=self, restriction=RestrictionType.self)
-                restriction.setPos(QPointF(x1, role.pos().y()))
-                concept = ConceptNode(scene=self, special=SpecialConceptType.TOP)
-                concept.setPos(QPointF(x2, role.pos().y()))
-                edge1 = InputEdge(scene=self, source=role, target=restriction)
-                edge2 = InclusionEdge(scene=self, source=concept, target=restriction)
-
-                kwargs = {
-                    'name': 'compose reflexive role',
-                    'scene': self,
-                    'source': role,
-                    'nodes': {restriction, concept},
-                    'edges': {edge1, edge2},
-                }
-
-                # push the composition on the stack as a single action
-                self.undostack.push(CommandComposeAxiom(**kwargs))
-
-    @pyqtSlot()
-    def composeSymmetricRole(self):
-        """
-        Compose a symmetric role using the selected Role node.
-        """
-        self.setMode(DiagramMode.Idle)
-        action = self.sender()
-        if action:
-
-            role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
-            if role and not role.symmetric:
-
-                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
-                x1 = snapToGrid(role.pos().x() + role.width() / 2 + 100, DiagramScene.GridSize, snap=True)
-                y1 = snapToGrid(role.pos().y() - role.height() / 2 - 80, DiagramScene.GridSize, snap=True)
-
-                inverse = RoleInverseNode(scene=self)
-                inverse.setPos(QPointF(x1, role.pos().y()))
-                edge1 = InputEdge(scene=self, source=role, target=inverse)
-                edge2 = InclusionEdge(scene=self, source=role, target=inverse, breakpoints=[
-                    QPointF(role.pos().x(), y1),
-                    QPointF(x1, y1)
-                ])
-
-                kwargs = {
-                    'name': 'compose symmetric role',
-                    'scene': self,
-                    'source': role,
-                    'nodes': {inverse},
-                    'edges': {edge1, edge2},
-                }
-
-                # push the composition on the stack as a single action
-                self.undostack.push(CommandComposeAxiom(**kwargs))
-
-    @pyqtSlot()
-    def composeTransitiveRole(self):
-        """
-        Compose a transitive role using the selected Role node.
-        """
-        self.setMode(DiagramMode.Idle)
-        action = self.sender()
-        if action:
-
-            role = next(filter(lambda x: x.isType(ItemType.RoleNode), self.selectedNodes()), None)
-            if role and not role.transitive:
-
-                # always snap the points to the grid, even if the feature is not enabled so we have items aligned
-                x1 = snapToGrid(role.pos().x() + role.width() / 2 + 90, DiagramScene.GridSize, snap=True)
-                x2 = snapToGrid(role.pos().x() + role.width() / 2 + 50, DiagramScene.GridSize, snap=True)
-                x3 = snapToGrid(role.pos().x() - role.width() / 2 - 20, DiagramScene.GridSize, snap=True)
-                y1 = snapToGrid(role.pos().y() - role.height() / 2 - 20, DiagramScene.GridSize, snap=True)
-                y2 = snapToGrid(role.pos().y() + role.height() / 2 + 20, DiagramScene.GridSize, snap=True)
-                y3 = snapToGrid(role.pos().y() - role.height() / 2 + 80, DiagramScene.GridSize, snap=True)
-
-                chain = RoleChainNode(scene=self)
-                chain.setPos(QPointF(x1, role.pos().y()))
-
-                edge1 = InputEdge(scene=self, source=role, target=chain, breakpoints=[
-                    QPointF(role.pos().x(), y1),
-                    QPointF(x2, y1),
-                ])
-
-                edge2 = InputEdge(scene=self, source=role, target=chain, breakpoints=[
-                    QPointF(role.pos().x(), y2),
-                    QPointF(x2, y2),
-                ])
-
-                edge3 = InclusionEdge(scene=self, source=chain, target=role, breakpoints=[
-                    QPointF(x1, y3),
-                    QPointF(x3, y3),
-                    QPointF(x3, role.pos().y()),
-                ])
-
-                kwargs = {
-                    'name': 'compose transitive role',
-                    'scene': self,
-                    'source': role,
-                    'nodes': {chain},
-                    'edges': {edge1, edge2, edge3},
-                }
-
-                # push the composition on the stack as a single action
-                self.undostack.push(CommandComposeAxiom(**kwargs))
-
-    @pyqtSlot()
-    def itemCut(self):
-        """
-        Cut selected items from the scene.
-        """
-        self.setMode(DiagramMode.Idle)
-        self.clipboard.update(self)
-        self.clipboardPasteOffsetX = 0
-        self.clipboardPasteOffsetY = 0
-        self.updateActions()
-
-        selection = self.selectedItems()
-        if selection:
-            selection.extend([x for item in selection if item.isNode() for x in item.edges if x not in selection])
-            self.undostack.push(CommandItemsMultiRemove(scene=self, collection=selection))
-
-    @pyqtSlot()
-    def itemCopy(self):
-        """
-        Make a copy of selected items.
-        """
-        self.setMode(DiagramMode.Idle)
-        self.clipboard.update(self)
-        self.clipboardPasteOffsetX = Clipboard.PasteOffsetX
-        self.clipboardPasteOffsetY = Clipboard.PasteOffsetY
-        self.updateActions()
-
-    @pyqtSlot()
-    def itemPaste(self):
-        """
-        Paste previously copied items.
-        """
-        self.setMode(DiagramMode.Idle)
-        if not self.clipboard.empty():
-            # action = self.sender()
-            # TODO: figure out how to send context menu position to the clipboard
-            self.clipboard.paste(self)
-
-    @pyqtSlot()
-    def itemDelete(self):
-        """
-        Delete the currently selected items from the diagram scene.
-        """
-        self.setMode(DiagramMode.Idle)
-        selection = self.selectedItems()
-        if selection:
-            selection.extend([x for item in selection if item.isNode() for x in item.edges if x not in selection])
-            self.undostack.push(CommandItemsMultiRemove(scene=self, collection=selection))
-
-    @pyqtSlot()
-    def openNodeProperties(self):
-        """
-        Executed when node properties needs to be displayed.
-        """
-        self.setMode(DiagramMode.Idle)
-        collection = self.selectedNodes()
-        if collection:
-            node = collection[0]
-            prop = node.propertiesDialog()
-            prop.exec_()
-
-    @pyqtSlot()
-    def openSceneProperties(self):
-        """
-        Executed when scene properties needs to be displayed.
-        """
-        self.setMode(DiagramMode.Idle)
-        prop = ScenePropertiesDialog(scene=self)
-        prop.exec_()
-
-    @pyqtSlot()
-    def sendToBack(self):
-        """
-        Send the selected item to the back of the scene.
-        """
-        self.setMode(DiagramMode.Idle)
-        for selected in self.selectedNodes():
-            zValue = 0
-            colliding = selected.collidingItems()
-            for item in filter(lambda x: not x.isType(ItemType.LabelNode, ItemType.LabelEdge), colliding):
-                if item.zValue() <= zValue:
-                    zValue = item.zValue() - 0.1
-            if zValue != selected.zValue():
-                self.undostack.push(CommandNodeSetZValue(scene=self, node=selected, zValue=zValue))
-
-    @pyqtSlot()
-    def selectAll(self):
-        """
-        Select all the items in the scene.
-        """
-        self.clearSelection()
-        self.setMode(DiagramMode.Idle)
-        for collection in (self.nodes(), self.edges()):
-            for item in collection:
-                item.setSelected(True)
-
-    @pyqtSlot()
-    def setSpecialConceptNode(self):
-        """
-        Set the special type of the selected concept node.
-        """
-        action = self.sender()
-        if action:
-            concept = next(filter(lambda x: x.isType(ItemType.ConceptNode), self.selectedNodes()), None)
-            if concept:
-                special = action.data() if concept.special is not action.data() else None
-                self.undostack.push(CommandConceptNodeSetSpecial(self, concept, special))
-
-    @pyqtSlot()
-    def switchHexagonNode(self):
-        """
-        Switch the selected hexagon based constructor node to a different type.
-        """
-        self.setMode(DiagramMode.Idle)
-        action = self.sender()
-        if action:
-            selected = self.selectedNodes()
-            node = next(filter(lambda x: ItemType.UnionNode <= x.itemtype <= ItemType.DisjointUnionNode, selected), None)
-            if node:
-                clazz = action.data()
-                if not isinstance(node, clazz):
-                    xnode = clazz(scene=self)
-                    xnode.setPos(node.pos())
-                    self.undostack.push(CommandNodeHexagonSwitchTo(scene=self, node1=node, node2=xnode))
-
-    @pyqtSlot()
-    def toggleEdgeComplete(self):
-        """
-        Toggle the 'complete' attribute for all the selected Input edges.
-        """
-        self.setMode(DiagramMode.Idle)
-        selected = [item for item in self.selectedEdges() if item.isType(ItemType.InclusionEdge)]
-        if selected:
-            # establish whether a multi-toggle should enable/disable the complete: if we have a
-            # majority of edges with complete enabled, we will disable it, else we will enable it
-            func = sum(edge.complete for edge in selected) <= len(selected) / 2
-            data = {edge: {'from': edge.complete, 'to': func} for edge in selected}
-            self.undostack.push(CommandEdgeInclusionToggleComplete(scene=self, data=data))
-
-    @pyqtSlot()
-    def toggleEdgeFunctional(self):
-        """
-        Toggle the 'functional' attribute for all the selected Input edges.
-        """
-        self.setMode(DiagramMode.Idle)
-        selected = [item for item in self.selectedEdges() if item.isType(ItemType.InputEdge)]
-        if selected:
-            # establish whether a multi-toggle should enable/disable the functional: if we have a
-            # majority of edges with functional enabled, we will disable it, else we will enable it
-            func = sum(edge.functional for edge in selected) <= len(selected) / 2
-            data = {edge: {'from': edge.functional, 'to': func} for edge in selected}
-            self.undostack.push(CommandEdgeInputToggleFunctional(scene=self, data=data))
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SIGNAL HANDLERS                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @pyqtSlot('QGraphicsItem', int)
-    def onEdgeInserted(self, edge, modifiers):
-        """
-        Executed after a edge insertion process ends.
-        :param edge: the inserted edge.
-        :param modifiers: keyboard modifiers held during edge insertion.
-        """
-        self.command = None
-        if not modifiers & Qt.ControlModifier:
-            self.setMode(DiagramMode.Idle)
-
-    @pyqtSlot('QGraphicsItem', int)
-    def onNodeInserted(self, node, modifiers):
-        """
-        Executed after a node insertion process ends.
-        :param node: the inserted node.
-        :param modifiers: keyboard modifiers held during node insertion.
-        """
-        if not modifiers & Qt.ControlModifier:
-            self.setMode(DiagramMode.Idle)
-
-    @pyqtSlot()
-    def onSelectionChanged(self):
-        """
-        Executed when the scene selection changes.
-        """
-        self.updateActions()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   EVENT HANDLERS                                                                                                 #
+    #   EVENTS                                                                                                         #
     #                                                                                                                  #
     ####################################################################################################################
 
@@ -905,11 +159,11 @@ class DiagramScene(QGraphicsScene):
         """
         if not self.items(menuEvent.scenePos()):
             menu = QMenu()
-            if not self.clipboard.empty():
-                menu.addAction(self.actionPaste)
-            menu.addAction(self.actionSelectAll)
+            if not self.mainwindow.clipboard.empty():
+                menu.addAction(self.mainwindow.actionPaste)
+            menu.addAction(self.mainwindow.actionSelectAll)
             menu.addSeparator()
-            menu.addAction(self.actionOpenSceneProperties)
+            menu.addAction(self.mainwindow.actionOpenSceneProperties)
             menu.exec_(menuEvent.screenPos())
         else:
             super().contextMenuEvent(menuEvent)
@@ -923,7 +177,11 @@ class DiagramScene(QGraphicsScene):
 
             if self.mode is DiagramMode.NodeInsert:
 
-                ############################################ NODE INSERTION ############################################
+                ########################################################################################################
+                #                                                                                                      #
+                #                                         NODE INSERTION                                               #
+                #                                                                                                      #
+                ########################################################################################################
 
                 # create a new node and place it under the mouse position
                 func = self.modeParam
@@ -939,7 +197,11 @@ class DiagramScene(QGraphicsScene):
 
             elif self.mode is DiagramMode.EdgeInsert:
 
-                ############################################ EDGE INSERTION ############################################
+                ########################################################################################################
+                #                                                                                                      #
+                #                                         EDGE INSERTION                                               #
+                #                                                                                                      #
+                ########################################################################################################
 
                 # see if we are pressing the mouse on a node and if so set the edge add command
                 node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
@@ -966,7 +228,11 @@ class DiagramScene(QGraphicsScene):
 
                 if self.mode is DiagramMode.Idle:
 
-                    ########################################## ITEM MOVEMENT ###########################################
+                    ####################################################################################################
+                    #                                                                                                  #
+                    #                                       ITEM MOVEMENT                                              #
+                    #                                                                                                  #
+                    ####################################################################################################
 
                     # see if we have some nodes selected in the scene: this is needed because itemOnTopOf
                     # will discard labels, so if we have a node whose label is overlapping the node shape,
@@ -1012,7 +278,11 @@ class DiagramScene(QGraphicsScene):
 
             if self.mode is DiagramMode.EdgeInsert:
 
-                ############################################ EDGE INSERTION ############################################
+                ########################################################################################################
+                #                                                                                                      #
+                #                                         EDGE INSERTION                                               #
+                #                                                                                                      #
+                ########################################################################################################
 
                 # update the edge position so that it will follow the mouse one
                 if self.command and self.command.edge:
@@ -1028,7 +298,11 @@ class DiagramScene(QGraphicsScene):
 
                 if self.mode is DiagramMode.NodeMove:
 
-                    ########################################## ITEM MOVEMENT ###########################################
+                    ####################################################################################################
+                    #                                                                                                  #
+                    #                                       ITEM MOVEMENT                                              #
+                    #                                                                                                  #
+                    ####################################################################################################
 
                     # calculate the delta and adjust the value if the snap to grid feature is enabled: we'll use the
                     # position of the node acting as mouse grabber to determine the new delta to and move other items
@@ -1058,7 +332,11 @@ class DiagramScene(QGraphicsScene):
 
             if self.mode is DiagramMode.EdgeInsert:
 
-                ############################################ EDGE INSERTION ############################################
+                ########################################################################################################
+                #                                                                                                      #
+                #                                         EDGE INSERTION                                               #
+                #                                                                                                      #
+                ########################################################################################################
 
                 if self.command and self.command.edge:
 
@@ -1090,7 +368,11 @@ class DiagramScene(QGraphicsScene):
 
             elif self.mode is DiagramMode.NodeMove:
 
-                ########################################## ITEM MOVEMENT ###########################################
+                ########################################################################################################
+                #                                                                                                      #
+                #                                         ITEM MOVEMENT                                                #
+                #                                                                                                      #
+                ########################################################################################################
 
                 data = {
                     'nodes': {
@@ -1113,7 +395,7 @@ class DiagramScene(QGraphicsScene):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   SCENE DRAWING                                                                                                  #
+    #   DRAWING                                                                                                        #
     #                                                                                                                  #
     ####################################################################################################################
 
@@ -1134,7 +416,7 @@ class DiagramScene(QGraphicsScene):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   SCENE EXPORT                                                                                                   #
+    #   EXPORT                                                                                                         #
     #                                                                                                                  #
     ####################################################################################################################
 
@@ -1196,11 +478,6 @@ class DiagramScene(QGraphicsScene):
         self.nodesById.clear()
         self.edgesById.clear()
         self.undostack.clear()
-
-        # only clear the clipboard if it's holding element coming from the current scene
-        if self.clipboard.scene is self:
-            self.clipboard.clear()
-
         super().clear()
 
     def edge(self, eid):
@@ -1304,31 +581,6 @@ class DiagramScene(QGraphicsScene):
             return QPointF(newX, newY)
         else:
             return point
-
-    def updateActions(self):
-        """
-        Update scene specific actions enabling/disabling them according to the scene state.
-        """
-        selected_nodes = self.selectedNodes()
-        selected_edges = self.selectedEdges()
-
-        isClip = not self.clipboard.empty()
-        isEdge = len(selected_edges) != 0
-        isNode = len(selected_nodes) != 0
-        isPred = next(filter(lambda x: x.isType(ItemType.AttributeNode,
-                                                ItemType.ConceptNode,
-                                                ItemType.IndividualNode,
-                                                ItemType.RoleNode,
-                                                ItemType.ValueDomainNode,
-                                                ItemType.ValueRestrictionNode), selected_nodes), None) is not None
-
-        self.actionBringToFront.setEnabled(isNode)
-        self.actionCut.setEnabled(isNode)
-        self.actionCopy.setEnabled(isNode)
-        self.actionDelete.setEnabled(isNode or isEdge)
-        self.actionPaste.setEnabled(isClip)
-        self.actionSendToBack.setEnabled(isNode)
-        self.changeNodeBrushButton.setEnabled(isPred)
 
     def visibleRect(self, margin=0):
         """

@@ -79,7 +79,11 @@ class IndividualNode(ResizableNode):
         self.label.updatePos()
         self.updateHandlesPos()
 
-    ################################################ ITEM INTERFACE ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def contextMenu(self):
         """
@@ -88,15 +92,15 @@ class IndividualNode(ResizableNode):
         """
         scene = self.scene()
         menu = super().contextMenu()
-        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuChangeNodeBrush)
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
 
         collection = self.label.contextMenuAdd()
         if collection:
-            menu.insertSeparator(scene.actionOpenNodeProperties)
+            menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
             for action in collection:
-                menu.insertAction(scene.actionOpenNodeProperties, action)
+                menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
 
-        menu.insertSeparator(scene.actionOpenNodeProperties)
+        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):
@@ -139,7 +143,11 @@ class IndividualNode(ResizableNode):
         """
         return self.boundingRect().width() - 2 * (self.handleSize + self.handleSpace)
 
-    ############################################### AUXILIARY METHODS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @staticmethod
     def createPolygon(shape_w, shape_h):
@@ -161,7 +169,11 @@ class IndividualNode(ResizableNode):
             QPointF(-(shape_w / 2), -((shape_h / (1 + math.sqrt(2))) / 2)), # 8
         ])
 
-    ############################################# ITEM IMPORT / EXPORT #################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   IMPORT / EXPORT                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @classmethod
     def fromGraphol(cls, scene, E):
@@ -235,7 +247,11 @@ class IndividualNode(ResizableNode):
 
         return node
 
-    #################################################### GEOMETRY ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   IMPORT / EXPORT                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def boundingRect(self):
         """
@@ -547,7 +563,11 @@ class IndividualNode(ResizableNode):
 
         return path
 
-    ################################################# LABEL SHORTCUTS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   LABEL SHORTCUTS                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def labelPos(self):
         """
@@ -583,7 +603,11 @@ class IndividualNode(ResizableNode):
         """
         self.label.updatePos(*args, **kwargs)
 
-    ################################################## ITEM DRAWING ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def paint(self, painter, option, widget=None):
         """

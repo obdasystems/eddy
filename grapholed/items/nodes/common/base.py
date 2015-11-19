@@ -168,16 +168,16 @@ class Node(Item):
         """
         scene = self.scene()
         menu = QMenu()
-        menu.addAction(scene.actionDelete)
+        menu.addAction(scene.mainwindow.actionDelete)
         menu.addSeparator()
-        menu.addAction(scene.actionCut)
-        menu.addAction(scene.actionCopy)
-        menu.addAction(scene.actionPaste)
+        menu.addAction(scene.mainwindow.actionCut)
+        menu.addAction(scene.mainwindow.actionCopy)
+        menu.addAction(scene.mainwindow.actionPaste)
         menu.addSeparator()
-        menu.addAction(scene.actionBringToFront)
-        menu.addAction(scene.actionSendToBack)
+        menu.addAction(scene.mainwindow.actionBringToFront)
+        menu.addAction(scene.mainwindow.actionSendToBack)
         menu.addSeparator()
-        menu.addAction(scene.actionOpenNodeProperties)
+        menu.addAction(scene.mainwindow.actionOpenNodeProperties)
         return menu
 
     @abstractmethod
@@ -373,7 +373,7 @@ class Node(Item):
         """
         pass
 
-    ################################################# LABEL SHORTCUTS ##################################################
+    ####################################################################################################################     #                                                                                                                  #     #   LABEL SHORTCUTS                                                                                                #     #                                                                                                                  #     ####################################################################################################################
 
     @abstractmethod
     def labelPos(self):

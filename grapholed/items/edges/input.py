@@ -35,13 +35,12 @@
 from math import sin, cos, radians, pi as M_PI
 
 from grapholed.datatypes import DiagramMode, ItemType
-from grapholed.functions import connect
 from grapholed.items.edges.common.base import Edge
 from grapholed.items.edges.common.label import Label
 
 from PyQt5.QtCore import QPointF, QLineF, Qt
-from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QIcon, QPainterPath
-from PyQt5.QtWidgets import QAction, QMenu
+from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
+from PyQt5.QtWidgets import QMenu
 
 
 class InputEdge(Edge):
@@ -67,7 +66,11 @@ class InputEdge(Edge):
         self.label = Label('', centered=False, parent=self)
         self.tail = QLineF()
 
-    ################################################## PROPERTIES ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @property
     def functional(self):
@@ -86,7 +89,11 @@ class InputEdge(Edge):
         """
         self._functional = bool(functional)
 
-    ################################################# ITEM INTERFACE ###################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def contextMenu(self, pos):
         """
@@ -98,14 +105,14 @@ class InputEdge(Edge):
         scene = self.scene()
         breakpoint = self.breakpointAt(pos)
         if breakpoint is not None:
-            action = QAction(QIcon(':/icons/delete'), 'Remove breakpoint', scene)
-            connect(action.triggered, self.breakpointDel, breakpoint=breakpoint)
+            action = scene.mainwindow.actionRemoveEdgeBreakpoint
+            action.setData((self, breakpoint))
             menu.addAction(action)
         else:
-            menu.addAction(scene.actionItemDelete)
+            menu.addAction(scene.mainwindow.actionItemDelete)
             menu.addSeparator()
-            menu.addAction(scene.actionToggleEdgeFunctional)
-            scene.actionToggleEdgeFunctional.setChecked(self.functional)
+            menu.addAction(scene.mainwindow.actionToggleEdgeFunctional)
+            scene.mainwindow.actionToggleEdgeFunctional.setChecked(self.functional)
         return menu
 
     def copy(self, scene):
@@ -136,7 +143,11 @@ class InputEdge(Edge):
         else:
             self.label.setVisible(False)
 
-    ############################################# ITEM IMPORT / EXPORT #################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   IMPORT / EXPORT                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @classmethod
     def fromGraphol(cls, scene, E):
@@ -210,7 +221,11 @@ class InputEdge(Edge):
 
         return edge
 
-    ##################################################### GEOMETRY #####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   GEOMETRY                                                                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def boundingRect(self):
         """
@@ -268,7 +283,11 @@ class InputEdge(Edge):
 
         return path
 
-    ################################################# GEOMETRY UPDATE ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   GEOMETRY UPDATE                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def updateEdge(self, target=None):
         """
@@ -397,7 +416,11 @@ class InputEdge(Edge):
         self.updateLabel(points)
         self.update()
 
-    ################################################## ITEM DRAWING ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @classmethod
     def image(cls, **kwargs):

@@ -48,10 +48,10 @@ class Test_MainWindow(GrapholEdTestCase):
         # WHEN
         QTest.mouseClick(self.mainwindow.toolbar.widgetForAction(self.mainwindow.actionNewDocument), Qt.LeftButton)
         # THEN
-        self.assertEqual(1, len(self.mainwindow.mdiArea.subWindowList()))
-        self.assertIsInstance(self.mainwindow.mdiArea.subWindowList()[0], MdiSubWindow)
-        self.assertIsInstance(self.mainwindow.mdiArea.subWindowList()[0].widget(), MainView)
-        self.assertIsInstance(self.mainwindow.mdiArea.subWindowList()[0].widget().scene(), DiagramScene)
+        self.assertEqual(1, len(self.mainwindow.mdi.subWindowList()))
+        self.assertIsInstance(self.mainwindow.mdi.subWindowList()[0], MdiSubWindow)
+        self.assertIsInstance(self.mainwindow.mdi.subWindowList()[0].widget(), MainView)
+        self.assertIsInstance(self.mainwindow.mdi.subWindowList()[0].widget().scene(), DiagramScene)
         self.assertFalse(self.mainwindow.actionSaveDocument.isEnabled())
         self.assertFalse(self.mainwindow.actionCut.isEnabled())
         self.assertFalse(self.mainwindow.actionCopy.isEnabled())
@@ -68,10 +68,10 @@ class Test_MainWindow(GrapholEdTestCase):
         # WHEN
         QTest.keyClick(self.mainwindow, 'n', Qt.ControlModifier)
         # THEN
-        self.assertEqual(1, len(self.mainwindow.mdiArea.subWindowList()))
-        self.assertIsInstance(self.mainwindow.mdiArea.subWindowList()[0], MdiSubWindow)
-        self.assertIsInstance(self.mainwindow.mdiArea.subWindowList()[0].widget(), MainView)
-        self.assertIsInstance(self.mainwindow.mdiArea.subWindowList()[0].widget().scene(), DiagramScene)
+        self.assertEqual(1, len(self.mainwindow.mdi.subWindowList()))
+        self.assertIsInstance(self.mainwindow.mdi.subWindowList()[0], MdiSubWindow)
+        self.assertIsInstance(self.mainwindow.mdi.subWindowList()[0].widget(), MainView)
+        self.assertIsInstance(self.mainwindow.mdi.subWindowList()[0].widget().scene(), DiagramScene)
         self.assertFalse(self.mainwindow.actionSaveDocument.isEnabled())
         self.assertFalse(self.mainwindow.actionCut.isEnabled())
         self.assertFalse(self.mainwindow.actionCopy.isEnabled())

@@ -39,7 +39,7 @@ from PyQt5.QtWidgets import QMdiArea, QMdiSubWindow, QMessageBox, QTabWidget
 
 class MdiArea(QMdiArea):
     """
-    This class implements the MDI Area where documents are rendered.
+    This class implements the MDI area where documents are rendered.
     """
     def __init__(self, parent=None):
         """
@@ -53,12 +53,29 @@ class MdiArea(QMdiArea):
         self.setTabsClosable(True)
         self.setTabsMovable(True)
 
-    ################################################ PROPERTIES ########################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #                                                 PROPERTIES                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def activeScene(self):
+        """
+        Returns active diagram scene.
+        :rtype: DiagramScene
+        """
+        subwindow = self.activeSubWindow()
+        if subwindow:
+            mainview = subwindow.widget()
+            if mainview:
+                return mainview.scene()
+        return None
 
     @property
     def activeView(self):
         """
-        Returns active MainView.
+        Returns active main view.
         :rtype: MainView
         """
         subwindow = self.activeSubWindow()
@@ -83,7 +100,11 @@ class MdiSubWindow(QMdiSubWindow):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWidget(view)
 
-    ############################################## EVENT HANDLERS ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   EVENTS                                                                                                         #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def closeEvent(self, closeEvent):
         """
@@ -124,27 +145,35 @@ class MdiSubWindow(QMdiSubWindow):
             # all those references after the close event is processed.
             scene.clear()
 
-    ############################################# SIGNALS HANDLERS #####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SLOTS                                                                                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @pyqtSlot('QGraphicsScene')
-    def onDocumentSaved(self, scene):
+    def documentSaved(self, scene):
         """
         Executed when a document contained in the scene rendered in this subwindow is saved.
-        :param scene: the DiagramScene instance containing the document.
+        :param scene: the diagram scene instance containing the document.
         """
-        self.updateSubwindowTitle()
+        self.updateTitle()
 
     @pyqtSlot(bool)
-    def onUndoStackCleanChanged(self, clean):
+    def undoStackCleanChanged(self, clean):
         """
         Executed when the clean state of undo stack of the scene displayed in the MDI subwindow changes.
         :param clean: the undo stack clean state.
         """
-        self.updateSubwindowTitle(clean)
+        self.updateTitle(clean)
 
-    ################################################# INTERFACE ########################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
-    def updateSubwindowTitle(self, clean=True):
+    def updateTitle(self, clean=True):
         """
         Updated the subwindow title.
         :param clean: the undo stack clean state.

@@ -32,11 +32,11 @@
 ##########################################################################
 
 
-from grapholed.datatypes import RestrictionType, DistinctList
-
 from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QPolygonF
 from PyQt5.QtWidgets import QUndoCommand
+
+from grapholed.datatypes import RestrictionType
 
 
 class CommandNodeAdd(QUndoCommand):
@@ -84,11 +84,13 @@ class CommandNodeSetZValue(QUndoCommand):
     def redo(self):
         """redo the command"""
         self.node.setZValue(self.zvalue2)
+        self.node.updateEdges()
         self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         self.node.setZValue(self.zvalue1)
+        self.node.updateEdges()
         self.scene.updated.emit()
 
 

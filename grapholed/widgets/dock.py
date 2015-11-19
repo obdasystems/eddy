@@ -49,14 +49,18 @@ class DockWidget(QDockWidget):
     """
     Width = 216
 
-    def __init__(self, *args):
+    def __init__(self, title, widget, parent=None):
         """
         Initialize the Dock widget.
+        :param title: the dock widget title.
+        :param widget: the widget to display inside this dock widget.
+        :param parent: the parent widget.
         """
-        super().__init__(*args)
+        super().__init__(title, parent, Qt.Widget)
         self.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
         self.setFeatures(QDockWidget.DockWidgetClosable)
         self.setFixedWidth(DockWidget.Width)
+        self.setWidget(widget)
 
 
 ########################################################################################################################
@@ -469,7 +473,16 @@ class Palette(QWidget):
     def clear(self, *args):
         """
         Clear the palette selection.
+        :param args: positional arguments specifying buttons not to be deactivated.
         """
         for button in self.buttonById.values():
             if button not in args:
                 button.setChecked(False)
+
+
+__all__ = [
+    'DockWidget',
+    'Palette',
+    'Overview',
+    'Navigator'
+]

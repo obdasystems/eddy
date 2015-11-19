@@ -73,7 +73,11 @@ class ConceptNode(ResizableNode):
         self.updateHandlesPos()
         self.updateLabelPos()
 
-    ################################################## PROPERTIES ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @property
     def special(self):
@@ -94,7 +98,11 @@ class ConceptNode(ResizableNode):
         self.label.movable = self._special is None
         self.label.setText(self._special.value if self._special else self.label.defaultText)
 
-    ################################################ ITEM INTERFACE ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def contextMenu(self):
         """
@@ -104,21 +112,21 @@ class ConceptNode(ResizableNode):
         scene = self.scene()
 
         menu = super().contextMenu()
-        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuChangeNodeBrush)
-        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuConceptNodeSpecial)
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuConceptNodeSpecial)
 
         # switch the check on the currently active special
-        for action in scene.actionsConceptNodeSetSpecial:
+        for action in scene.mainwindow.actionsConceptNodeSetSpecial:
             action.setChecked(self.special is action.data())
 
         if not self.special:
             collection = self.label.contextMenuAdd()
             if collection:
-                menu.insertSeparator(scene.actionOpenNodeProperties)
+                menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
                 for action in collection:
-                    menu.insertAction(scene.actionOpenNodeProperties, action)
+                    menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
 
-        menu.insertSeparator(scene.actionOpenNodeProperties)
+        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):
@@ -175,7 +183,11 @@ class ConceptNode(ResizableNode):
         """
         return QRectF(-shape_w / 2, -shape_h / 2, shape_w, shape_h)
 
-    ############################################# ITEM IMPORT / EXPORT #################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   IMPORT / EXPORT                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @classmethod
     def fromGraphol(cls, scene, E):
@@ -250,7 +262,11 @@ class ConceptNode(ResizableNode):
 
         return node
 
-    #################################################### GEOMETRY ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   GEOMETRY                                                                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def boundingRect(self):
         """
@@ -463,7 +479,11 @@ class ConceptNode(ResizableNode):
 
         return path
 
-    ################################################# LABEL SHORTCUTS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   LABEL SHORTCUTS                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def labelPos(self):
         """
@@ -499,7 +519,11 @@ class ConceptNode(ResizableNode):
         """
         self.label.updatePos(*args, **kwargs)
 
-    ################################################## ITEM DRAWING ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def paint(self, painter, option, widget=None):
         """

@@ -32,8 +32,6 @@
 ##########################################################################
 
 
-from grapholed.commands.axioms import CommandComposeAxiom
-
 from grapholed.commands.nodes import CommandNodeAdd
 from grapholed.commands.nodes import CommandNodeSetZValue
 from grapholed.commands.nodes import CommandNodeRezize
@@ -57,6 +55,7 @@ from grapholed.commands.edges import CommandEdgeBreakpointDel
 from grapholed.commands.edges import CommandEdgeInclusionToggleComplete
 from grapholed.commands.edges import CommandEdgeInputToggleFunctional
 
+from grapholed.commands.common import CommandComposeAxiom
 from grapholed.commands.common import CommandItemsMultiAdd
 from grapholed.commands.common import CommandItemsMultiRemove
 

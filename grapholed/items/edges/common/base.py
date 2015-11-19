@@ -34,15 +34,14 @@
 
 from abc import ABCMeta, abstractmethod
 
-from grapholed.commands import CommandEdgeBreakpointAdd, CommandEdgeBreakpointDel, CommandEdgeBreakpointMove
-from grapholed.commands import CommandEdgeAnchorMove
+from grapholed.commands import CommandEdgeBreakpointAdd, CommandEdgeBreakpointMove, CommandEdgeAnchorMove
 from grapholed.datatypes import DiagramMode
-from grapholed.functions import distanceP, distanceL, connect
+from grapholed.functions import distanceP, distanceL
 from grapholed.items import Item
 
 from PyQt5.QtCore import Qt, QPointF, QLineF, QRectF
-from PyQt5.QtGui import QColor, QPen, QPolygonF, QPainterPath, QIcon
-from PyQt5.QtWidgets import QGraphicsItem, QMenu, QAction
+from PyQt5.QtGui import QColor, QPen, QPolygonF, QPainterPath
+from PyQt5.QtWidgets import QGraphicsItem, QMenu
 
 
 class Edge(Item):
@@ -94,7 +93,11 @@ class Edge(Item):
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
 
-    ################################################### PROPERTIES #####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @property
     def source(self):
@@ -128,7 +131,11 @@ class Edge(Item):
         """
         self._target = value
 
-    ################################################ ITEM INTERFACE ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def anchorAt(self, point):
         """
@@ -234,15 +241,6 @@ class Edge(Item):
                 return k
         return None
 
-    def breakpointDel(self, breakpoint):
-        """
-        Remove the given breakpoint from the edge.
-        :param breakpoint: the breakpoint index.
-        """
-        if 0 <= breakpoint < len(self.breakpoints):
-            scene = self.scene()
-            scene.undostack.push(CommandEdgeBreakpointDel(scene=scene, edge=self, index=breakpoint))
-
     def breakpointMove(self, breakpoint, mousePos):
         """
         Move the selected breakpoint.
@@ -319,14 +317,14 @@ class Edge(Item):
         :rtype: QMenu
         """
         menu = QMenu()
+        scene = self.scene()
         breakpoint = self.breakpointAt(pos)
         if breakpoint is not None:
-            action = QAction(QIcon(':/icons/delete'), 'Remove breakpoint', self.scene())
-            connect(action.triggered, self.breakpointDel, breakpoint=breakpoint)
+            action = scene.mainwindow.actionRemoveEdgeBreakpoint
+            action.setData((self, breakpoint))
             menu.addAction(action)
         else:
-            scene = self.scene()
-            menu.addAction(scene.actionItemDelete)
+            menu.addAction(scene.mainwindow.actionItemDelete)
         return menu
 
     def moveBy(self, x, y):
@@ -354,7 +352,11 @@ class Edge(Item):
             return self.source
         raise AttributeError('node {0} is not attached to edge {1}'.format(node, self))
 
-    ################################################## EVENT HANDLERS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   EVENTS                                                                                                         #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def contextMenuEvent(self, menuEvent):
         """
@@ -474,7 +476,11 @@ class Edge(Item):
 
         super().mouseReleaseEvent(mouseEvent)
 
-    ################################################# GEOMETRY UPDATE ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   GEOMETRY UPDATE                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def updateAnchors(self):
         """
@@ -520,7 +526,11 @@ class Edge(Item):
         """
         pass
 
-    ################################################## ITEM DRAWING ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @classmethod
     @abstractmethod

@@ -73,7 +73,11 @@ class RoleNode(ResizableNode):
         self.updateHandlesPos()
         self.updateLabelPos()
 
-    ################################################## PROPERTIES ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @property
     def asymmetric(self):
@@ -204,7 +208,11 @@ class RoleNode(ResizableNode):
                                         return True
         return False
 
-    ################################################ ITEM INTERFACE ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def contextMenu(self):
         """
@@ -214,16 +222,16 @@ class RoleNode(ResizableNode):
         scene = self.scene()
 
         menu = super().contextMenu()
-        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuChangeNodeBrush)
-        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuRoleNodeCompose)
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRoleNodeCompose)
 
         collection = self.label.contextMenuAdd()
         if collection:
-            menu.insertSeparator(scene.actionOpenNodeProperties)
+            menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
             for action in collection:
-                menu.insertAction(scene.actionOpenNodeProperties, action)
+                menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
 
-        menu.insertSeparator(scene.actionOpenNodeProperties)
+        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):
@@ -267,7 +275,11 @@ class RoleNode(ResizableNode):
         """
         return self.boundingRect().width() - 2 * (self.handleSize + self.handleSpace)
 
-    ############################################### AUXILIARY METHODS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @staticmethod
     def createPolygon(shape_w, shape_h):
@@ -285,7 +297,11 @@ class RoleNode(ResizableNode):
             QPointF(-shape_w / 2, 0)
         ])
 
-    ############################################# ITEM IMPORT / EXPORT #################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   IMPORT / EXPORT                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @classmethod
     def fromGraphol(cls, scene, E):
@@ -359,7 +375,11 @@ class RoleNode(ResizableNode):
 
         return node
 
-    #################################################### GEOMETRY ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   GEOMETRY                                                                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def boundingRect(self):
         """
@@ -599,7 +619,11 @@ class RoleNode(ResizableNode):
 
         return path
 
-    ################################################# LABEL SHORTCUTS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   LABEL SHORTCUTS                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def labelPos(self):
         """
@@ -635,7 +659,11 @@ class RoleNode(ResizableNode):
         """
         self.label.updatePos(*args, **kwargs)
 
-    ################################################## ITEM DRAWING ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def paint(self, painter, option, widget=None):
         """

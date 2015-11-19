@@ -379,3 +379,16 @@ class XsdDatatype(Enum):
     unsignedInt = 'xsd:unsignedInt' # An unsigned 32-bit integer in the range [0, 4,294,967,295]. Derived from the unsignedLong datatype.
     unsignedLong = 'xsd:unsignedLong' # An unsigned, extended-precision integer. Derived from the nonNegativeInteger datatype.
     unsignedShort = 'xsd:unsignedShort' # An unsigned 16-bit integer in the range [0, 65,535]. Derived from the unsignedInt datatype.
+
+
+__all__ = [
+    'Color',
+    'DiagramMode',
+    'DistinctList',
+    'FileType',
+    'Font',
+    'ItemType',
+    'RestrictionType',
+    'SpecialConceptType',
+    'XsdDatatype',
+]

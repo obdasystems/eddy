@@ -71,7 +71,11 @@ class SquaredNode(Node):
         self.label = Label(self.restriction.label, centered=False, editable=False, parent=self)
         self.label.updatePos()
 
-    ################################################## PROPERTIES ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @property
     def restriction(self):
@@ -108,7 +112,11 @@ class SquaredNode(Node):
         """
         self._cardinality = cardinality if self.restriction is RestrictionType.cardinality else dict(min=None, max=None)
 
-    ################################################ ITEM INTERFACE ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def contextMenu(self):
         """
@@ -119,19 +127,19 @@ class SquaredNode(Node):
 
         menu = super().contextMenu()
         menu.addSeparator()
-        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuRestrictionChange)
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRestrictionChange)
 
         # switch the check on the currently active restriction
-        for action in scene.actionsRestrictionChange:
+        for action in scene.mainwindow.actionsRestrictionChange:
             action.setChecked(self.restriction is action.data())
 
         collection = self.label.contextMenuAdd()
         if collection:
             menu.addSeparator()
             for action in collection:
-                menu.insertAction(scene.actionOpenNodeProperties, action)
+                menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
 
-        menu.insertSeparator(scene.actionOpenNodeProperties)
+        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):
@@ -168,7 +176,11 @@ class SquaredNode(Node):
         """
         return self.rect.width()
 
-    ############################################### AUXILIARY METHODS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @staticmethod
     def createRect(shape_w, shape_h):
@@ -180,7 +192,11 @@ class SquaredNode(Node):
         """
         return QRectF(-shape_w / 2, -shape_h / 2, shape_w, shape_h)
 
-    ############################################# ITEM IMPORT / EXPORT #################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   IMPORT / EXPORT                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @classmethod
     def fromGraphol(cls, scene, E):
@@ -252,7 +268,11 @@ class SquaredNode(Node):
 
         return node
 
-    ##################################################### GEOMETRY #####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   GEOMETRY                                                                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def boundingRect(self):
         """
@@ -280,7 +300,11 @@ class SquaredNode(Node):
         path.addRect(self.rect)
         return path
 
-    ################################################# LABEL SHORTCUTS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   LABEL SHORTCUTS                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def labelPos(self):
         """
@@ -338,7 +362,11 @@ class SquaredNode(Node):
         """
         self.label.updatePos(*args, **kwargs)
 
-    ################################################## ITEM DRAWING ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def paint(self, painter, option, widget=None):
         """

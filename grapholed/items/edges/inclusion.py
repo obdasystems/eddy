@@ -35,12 +35,11 @@
 from math import sin, cos, radians, pi as M_PI
 
 from grapholed.datatypes import DiagramMode, ItemType
-from grapholed.functions import connect
 from grapholed.items.edges.common.base import Edge
 
 from PyQt5.QtCore import QPointF, QLineF, Qt
-from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QIcon, QPainterPath
-from PyQt5.QtWidgets import QAction, QMenu
+from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
+from PyQt5.QtWidgets import QMenu
 
 
 class InclusionEdge(Edge):
@@ -60,7 +59,11 @@ class InclusionEdge(Edge):
         self._complete = complete
         self.tail = QPolygonF()
 
-    ################################################## PROPERTIES ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @property
     def complete(self):
@@ -79,7 +82,11 @@ class InclusionEdge(Edge):
         """
         self._complete = bool(complete)
 
-    ################################################# ITEM INTERFACE ###################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def contextMenu(self, pos):
         """
@@ -91,14 +98,14 @@ class InclusionEdge(Edge):
         scene = self.scene()
         breakpoint = self.breakpointAt(pos)
         if breakpoint is not None:
-            action = QAction(QIcon(':/icons/delete'), 'Remove breakpoint', scene)
-            connect(action.triggered, self.breakpointDel, breakpoint=breakpoint)
+            action = scene.mainwindow.actionRemoveEdgeBreakpoint
+            action.setData((self, breakpoint))
             menu.addAction(action)
         else:
-            menu.addAction(scene.actionItemDelete)
+            menu.addAction(scene.mainwindow.actionItemDelete)
             menu.addSeparator()
-            menu.addAction(scene.actionToggleEdgeComplete)
-            scene.actionToggleEdgeComplete.setChecked(self.complete)
+            menu.addAction(scene.mainwindow.actionToggleEdgeComplete)
+            scene.mainwindow.actionToggleEdgeComplete.setChecked(self.complete)
         return menu
 
     def copy(self, scene):
@@ -117,7 +124,11 @@ class InclusionEdge(Edge):
 
         return self.__class__(**kwargs)
 
-    ############################################# ITEM IMPORT / EXPORT #################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   IMPORT / EXPORT                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @classmethod
     def fromGraphol(cls, scene, E):
@@ -191,7 +202,11 @@ class InclusionEdge(Edge):
 
         return edge
 
-    ##################################################### GEOMETRY #####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   GEOMETRY                                                                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def boundingRect(self):
         """
@@ -246,7 +261,11 @@ class InclusionEdge(Edge):
 
         return path
 
-    ################################################# GEOMETRY UPDATE ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   GEOMETRY UPDATE                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def updateEdge(self, target=None):
         """

@@ -75,7 +75,11 @@ class ValueRestrictionNode(ResizableNode):
         self.label.updatePos()
         self.updateHandlesPos()
 
-    ################################################ ITEM INTERFACE ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def contextMenu(self):
         """
@@ -84,15 +88,15 @@ class ValueRestrictionNode(ResizableNode):
         """
         scene = self.scene()
         menu = super().contextMenu()
-        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuChangeNodeBrush)
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
 
         collection = self.label.contextMenuAdd()
         if collection:
-            menu.insertSeparator(scene.actionOpenNodeProperties)
+            menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
             for action in collection:
-                menu.insertAction(scene.actionOpenNodeProperties, action)
+                menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
 
-        menu.insertSeparator(scene.actionOpenNodeProperties)
+        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):
@@ -136,7 +140,11 @@ class ValueRestrictionNode(ResizableNode):
         """
         return self.boundingRect().width() - 2 * (self.handleSize + self.handleSpace)
 
-    ############################################### AUXILIARY METHODS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @staticmethod
     def createPolygon(shape_w, shape_h, fold_size):
@@ -173,7 +181,11 @@ class ValueRestrictionNode(ResizableNode):
             QPointF(polygon[indexTR].x(), polygon[indexTR].y()),
         ])
 
-    ############################################# ITEM IMPORT / EXPORT #################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   IMPORT / EXPORT                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @classmethod
     def fromGraphol(cls, scene, E):
@@ -247,7 +259,11 @@ class ValueRestrictionNode(ResizableNode):
 
         return node
 
-    #################################################### GEOMETRY ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   GEOMETRY                                                                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def boundingRect(self):
         """
@@ -483,7 +499,11 @@ class ValueRestrictionNode(ResizableNode):
 
         return path
 
-    ################################################# LABEL SHORTCUTS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   LABEL SHORTCUTS                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def labelPos(self):
         """
@@ -519,7 +539,11 @@ class ValueRestrictionNode(ResizableNode):
         """
         self.label.updatePos(*args, **kwargs)
 
-    ################################################## ITEM DRAWING ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def paint(self, painter, option, widget=None):
         """

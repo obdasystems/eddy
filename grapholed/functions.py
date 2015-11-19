@@ -222,17 +222,17 @@ def main_is_frozen():
     return hasattr(sys, 'frozen')
 
 
-def make_colored_pixmap(width, height, code):
+def make_colored_icon(width, height, code):
     """
-    Create and returns a QPixmap filled using the given color.
-    :param width: the width of the pixmap.
-    :param height: the height of the pixmap.
+    Create and returns a QIcon filled using the given color.
+    :param width: the width of the icon.
+    :param height: the height of the icon.
     :param code: the HEX color code to use to fill the icon.
-    :rtype: QPixmap
+    :rtype: QIcon
     """
     pixmap = QPixmap(width, height)
     pixmap.fill(QColor(code))
-    return pixmap
+    return QIcon(pixmap)
 
 
 def make_shaded_icon(path, opacity=0.25):

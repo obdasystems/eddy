@@ -48,12 +48,12 @@ class Test_DiagramScene(GrapholEdTestCase):
         """
         super().setUp()
 
-        self.scene = self.mainwindow.getScene(5000, 5000)
-        self.mainview = self.mainwindow.getMainView(self.scene)
-        self.subwindow = self.mainwindow.getMDISubWindow(self.mainview)
+        self.scene = self.mainwindow.createScene(5000, 5000)
+        self.mainview = self.mainwindow.createView(self.scene)
+        self.subwindow = self.mainwindow.createSubWindow(self.mainview)
         self.subwindow.showMaximized()
-        self.mainwindow.mdiArea.setActiveSubWindow(self.subwindow)
-        self.mainwindow.mdiArea.update()
+        self.mainwindow.mdi.setActiveSubWindow(self.subwindow)
+        self.mainwindow.mdi.update()
 
         when(self.scene.settings).value('scene/snap_to_grid', False, bool).thenReturn(False)
 

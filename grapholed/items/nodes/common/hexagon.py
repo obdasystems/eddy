@@ -34,10 +34,10 @@
 
 from abc import ABCMeta
 
-from grapholed.items.nodes.common.base import Node
-
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QPolygonF
+
+from grapholed.items.nodes.common.base import Node
 
 
 class HexagonNode(Node):
@@ -66,7 +66,11 @@ class HexagonNode(Node):
         self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
         self.polygon = self.createPolygon(shape_w=50, shape_h=30, oblique=6)
 
-    ################################################ ITEM INTERFACE ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def contextMenu(self):
         """
@@ -75,13 +79,13 @@ class HexagonNode(Node):
         """
         scene = self.scene()
         menu = super().contextMenu()
-        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuHexagonNodeSwitch)
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuHexagonNodeSwitch)
 
         # switch the check matching the current node
-        for action in scene.actionsSwitchHexagonNode:
+        for action in scene.mainwindow.actionsSwitchHexagonNode:
             action.setChecked(isinstance(self, action.data()))
 
-        menu.insertSeparator(scene.actionOpenNodeProperties)
+        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
         return menu
 
     def height(self):
@@ -98,7 +102,11 @@ class HexagonNode(Node):
         """
         return self.polygon[self.indexMR].x() - self.polygon[self.indexML].x()
 
-    ############################################### AUXILIARY METHODS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @staticmethod
     def createPolygon(shape_w, shape_h, oblique):
@@ -119,7 +127,11 @@ class HexagonNode(Node):
             QPointF(-shape_w / 2, 0)                        # 6
         ])
 
-    #################################################### GEOMETRY ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   GEOMETRY                                                                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def boundingRect(self):
         """
@@ -151,7 +163,11 @@ class HexagonNode(Node):
         path.addPolygon(self.polygon)
         return path
 
-    ################################################# LABEL SHORTCUTS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   LABEL SHORTCUTS                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def labelPos(self):
         """
@@ -187,7 +203,11 @@ class HexagonNode(Node):
         """
         pass
 
-    ################################################## ITEM DRAWING ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def paint(self, painter, option, widget=None):
         """

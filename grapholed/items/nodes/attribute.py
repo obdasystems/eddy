@@ -63,7 +63,11 @@ class AttributeNode(Node):
         self.label = Label(self.name, centered=False, parent=self)
         self.label.updatePos()
 
-    ################################################## PROPERTIES ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @property
     def functional(self):
@@ -80,7 +84,11 @@ class AttributeNode(Node):
                                 return True
         return False
 
-    ################################################ ITEM INTERFACE ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def contextMenu(self):
         """
@@ -89,16 +97,16 @@ class AttributeNode(Node):
         """
         scene = self.scene()
         menu = super().contextMenu()
-        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuChangeNodeBrush)
-        menu.insertMenu(scene.actionOpenNodeProperties, scene.menuAttributeNodeCompose)
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuAttributeNodeCompose)
 
         collection = self.label.contextMenuAdd()
         if collection:
-            menu.insertSeparator(scene.actionOpenNodeProperties)
+            menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
             for action in collection:
-                menu.insertAction(scene.actionOpenNodeProperties, action)
+                menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
 
-        menu.insertSeparator(scene.actionOpenNodeProperties)
+        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):
@@ -142,7 +150,11 @@ class AttributeNode(Node):
         """
         return self.rect.width()
 
-    ############################################### AUXILIARY METHODS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @staticmethod
     def createRect(shape_w, shape_h):
@@ -154,7 +166,11 @@ class AttributeNode(Node):
         """
         return QRectF(-shape_w / 2, -shape_h / 2, shape_w, shape_h)
 
-    ############################################# ITEM IMPORT / EXPORT #################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   IMPORT / EXPORT                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @classmethod
     def fromGraphol(cls, scene, E):
@@ -228,7 +244,11 @@ class AttributeNode(Node):
 
         return node
 
-    #################################################### GEOMETRY ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   GEOMETRY                                                                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def boundingRect(self):
         """
@@ -256,7 +276,11 @@ class AttributeNode(Node):
         path.addEllipse(self.rect)
         return path
 
-    ################################################# LABEL SHORTCUTS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   LABEL SHORTCUTS                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def labelPos(self):
         """
@@ -292,7 +316,11 @@ class AttributeNode(Node):
         """
         self.label.updatePos(*args, **kwargs)
 
-    ################################################## ITEM DRAWING ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def paint(self, painter, option, widget=None):
         """

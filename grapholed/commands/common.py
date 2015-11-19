@@ -119,3 +119,48 @@ class CommandItemsMultiRemove(QUndoCommand):
             self.scene.addItem(edge)
         # emit updated signal
         self.scene.updated.emit()
+
+
+class CommandComposeAxiom(QUndoCommand):
+    """
+    This command is used to compose an axioms.
+    """
+    def __init__(self, name, scene, source, nodes, edges):
+        """
+        Initialize the command.
+        :param name: the name of the undo command
+        :param scene: the graphic scene where this command is being performed.
+        :param source: the source node of the composition
+        :param nodes: a set of nodes to be used in the composition.
+        :param edges: a set of edges to be used in the composition.
+        """
+        super().__init__(name)
+        self.scene = scene
+        self.source = source
+        self.nodes = nodes
+        self.edges = edges
+
+    def redo(self):
+        """redo the command"""
+        # add items to the scene
+        for item in self.nodes | self.edges:
+            self.scene.addItem(item)
+        # map edges over source and target nodes
+        for edge in self.edges:
+            edge.source.addEdge(edge)
+            edge.target.addEdge(edge)
+            edge.updateEdge()
+        # emit updated signal
+        self.scene.updated.emit()
+
+    def undo(self):
+        """undo the command"""
+        # remove edge mappings from source and target nodes
+        for edge in self.edges:
+            edge.source.removeEdge(edge)
+            edge.target.removeEdge(edge)
+        # remove items from the scene
+        for item in self.nodes | self.edges:
+            self.scene.removeItem(item)
+        # emit updated signal
+        self.scene.updated.emit()

@@ -32,13 +32,14 @@
 ##########################################################################
 
 
+from PyQt5.QtCore import Qt, QPointF
+from PyQt5.QtGui import QColor, QTextCursor, QPainterPath
+from PyQt5.QtWidgets import QGraphicsItem
+
 from grapholed.commands import CommandNodeLabelMove, CommandNodeLabelEdit
 from grapholed.datatypes import Font, DiagramMode, ItemType
-from grapholed.functions import isEmpty, distanceP, connect
+from grapholed.functions import isEmpty, distanceP
 from grapholed.items import LabelItem
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QColor, QTextCursor, QIcon, QPainterPath
-from PyQt5.QtWidgets import QGraphicsItem, QAction
 
 
 class Label(LabelItem):
@@ -75,7 +76,11 @@ class Label(LabelItem):
         self.setTextInteractionFlags(Qt.NoTextInteraction)
         self.setPos(self.defaultPos())
     
-    ################################################## PROPERTIES ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
  
     @property
     def centered(self):
@@ -136,7 +141,11 @@ class Label(LabelItem):
         """
         return distanceP(self.pos(), self.defaultPos()) > 1.41421356237 # sqrt(2) => max distance in 1px
 
-    ################################################ ITEM INTERFACE ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def center(self):
         """
@@ -153,10 +162,8 @@ class Label(LabelItem):
         collection = []
         if self.movable and self.moved:
             parent = self.parentItem()
-            action = QAction('Reset label position', parent.scene())
-            action.setIcon(QIcon(':/icons/refresh'))
-            connect(action.triggered, self.resetLabelPosition)
-            collection.append(action)
+            scene = parent.scene()
+            collection.append(scene.mainwindow.actionResetLabelPosition)
         return collection
 
     def defaultPos(self):
@@ -229,7 +236,11 @@ class Label(LabelItem):
         """
         return self.boundingRect().width()
 
-    ################################################## EVENT HANDLERS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   EVENTS                                                                                                         #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def focusInEvent(self, focusEvent):
         """
@@ -386,7 +397,11 @@ class Label(LabelItem):
         self.setSelected(False)
         self.commandMove = None
 
-    #################################################### GEOMETRY ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   GEOMETRY                                                                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def shape(self):
         """
@@ -397,20 +412,11 @@ class Label(LabelItem):
         path.addRect(self.boundingRect())
         return path
 
-    ################################################# ACTION HANDLERS ##################################################
-
-    def resetLabelPosition(self):
-        """
-        Reset the text position to the default value.
-        """
-        if self.movable:
-            scene = self.scene()
-            command = CommandNodeLabelMove(scene=scene, node=self.parentItem(), label=self)
-            command.end(pos=self.defaultPos())
-            scene.undostack.push(command)
-            self.updatePos()
-
-    ############################################## STRING REPRESENTATION ###############################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   REPRESENTATION                                                                                                 #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def __repr__(self):
         """
