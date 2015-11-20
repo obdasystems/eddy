@@ -60,13 +60,13 @@ class AboutDialog(QDialog):
             <br />
             <a href="http://www.dis.uniroma1.it/~graphol/" {STYLE1}>Graphol</a> is developed by members of
             the DASI-lab group of the <a href="http://www.dis.uniroma1.it/en" {STYLE1}> Dipartimento di
-            Informatica e Sistemistica "A.Ruberti"</a> at <a href="http://en.uniroma1.it/" {STYLE1}>Sapienza</a>
-            University of Rome:<br/>
+            Ingegneria Informatica, Automatica e Gestionale "A.Ruberti"</a> at <a href="http://en.uniroma1.it/"
+            {STYLE1}>Sapienza</a> University of Rome:<br/>
             <br/>
             <a href="mailto:lembo@dis.uniroma1.it" {STYLE2}>Domenico Lembo</a><br/>
-            <a href="mailto:console@dis.uniroma1.it" {STYLE2}>Marco Console</a><br/>
             <a href="mailto:santarelli@dis.uniroma1.it" {STYLE2}>Valerio Santarelli</a><br/>
-            <a href="mailto:savo@dis.uniroma1.it" {STYLE2}>Domenico Fabio Savo</a>
+            <a href="mailto:savo@dis.uniroma1.it" {STYLE2}>Domenico Fabio Savo</a><br/>
+            <a href="mailto:console@dis.uniroma1.it" {STYLE2}>Marco Console</a>
             """.format(TITLE=__appname__, EMAIL=__email__, VERSION=__version__,
                        LICENSE=__license__, COPYRIGHT=__copyright__, STYLE1='style="text-decoration:none;"',
                        STYLE2='style="text-decoration:none; color: #000000;"')
