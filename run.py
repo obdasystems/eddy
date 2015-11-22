@@ -37,11 +37,44 @@ import sys
 import traceback
 
 from argparse import ArgumentParser
+
+from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtWidgets import QSpacerItem, QSizePolicy, QMessageBox
+
 from eddy import images_rc ## DO NOT REMOVE
 from eddy import Eddy
 from eddy.widgets.misc import SplashScreen
-from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QSpacerItem, QSizePolicy, QMessageBox
+
+
+# main application reference
+app = None
+
+
+def base_except_hook(exc_type, exc_value, exc_traceback):
+    """
+    Used to handle all uncaught exceptions.
+    :param exc_type: the type of the exception.
+    :param exc_value: the exception value.
+    :param exc_traceback: the exception traceback
+    """
+    if issubclass(exc_type, KeyboardInterrupt):
+        global app
+        app.quit()
+    else:
+        box = QMessageBox()
+        box.setIconPixmap(QPixmap(':/icons/error'))
+        box.setWindowIcon(QIcon(':/images/eddy'))
+        box.setWindowTitle('Unhandled exception!')
+        box.setText('This is embarrassing :(<br /><br />'
+                    'A critical error has just occurred. '
+                    'Eddy will continue to work, however a reboot is highly recommended.')
+        box.setInformativeText('Please <a href="https://github.com/danielepantaleone/eddy/issues">submit '
+                               'a bug report</a> with detailed information')
+        box.setDetailedText(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+        box.setStandardButtons(QMessageBox.Ok)
+        L = box.layout()
+        L.addItem(QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding), L.rowCount(), 0, 1, L.columnCount())
+        box.exec_()
 
 
 def main():
@@ -73,25 +106,12 @@ def main():
         """
         return application.init()
 
-    try:
-        app = Eddy(sys.argv)
-        window = init_no_splash(app) if options.nosplash or sys.platform.startswith('linux') else init(app)
-    except Exception as e:
-        box = QMessageBox()
-        box.setIconPixmap(QPixmap(':/icons/error'))
-        box.setWindowIcon(QIcon(':/images/eddy'))
-        box.setWindowTitle('Startup failure')
-        box.setText('Eddy failed to start!')
-        box.setInformativeText('ERROR: %s' % e)
-        box.setDetailedText(traceback.format_exc())
-        box.setStandardButtons(QMessageBox.Ok)
-        L = box.layout()
-        L.addItem(QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding), L.rowCount(), 0, 1, L.columnCount())
-        box.exec_()
-        sys.exit(1)
-    else:
-        window.showMaximized()
-        sys.exit(app.exec_())
+    global app
+    sys.excepthook = base_except_hook
+    app = Eddy(sys.argv)
+    window = init_no_splash(app) if options.nosplash or sys.platform.startswith('linux') else init(app)
+    window.showMaximized()
+    sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
