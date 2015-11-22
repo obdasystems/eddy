@@ -32,39 +32,15 @@
 ##########################################################################
 
 
-import unittest
+from eddy.dialogs.about import AboutDialog
 
-from eddy.utils import UniqueID
+from eddy.dialogs.files import SaveFileDialog
+from eddy.dialogs.files import OpenFileDialog
+from eddy.dialogs.forms import CardinalityRestrictionForm
 
+from eddy.dialogs.preferences import PreferencesDialog
 
-class Test_UniqueID(unittest.TestCase):
-
-    def test_unique_id_generation(self):
-        uniqueid = UniqueID()
-        self.assertEqual('n0', uniqueid.next('n'))
-        self.assertEqual('n1', uniqueid.next('n'))
-        self.assertEqual('e0', uniqueid.next('e'))
-        self.assertEqual('n2', uniqueid.next('n'))
-        self.assertEqual('e1', uniqueid.next('e'))
-        self.assertEqual({'n': 2, 'e': 1}, uniqueid.ids)
-
-    def test_unique_id_generation_with_exception(self):
-        uniqueid = UniqueID()
-        self.assertRaises(ValueError, uniqueid.next, '1')
-        self.assertRaises(ValueError, uniqueid.next, 'n1')
-        self.assertRaises(ValueError, uniqueid.next, 'n 1')
-
-    def test_unique_id_update(self):
-        uniqueid = UniqueID()
-        uniqueid.update('n19')
-        uniqueid.update('e7')
-        self.assertEqual({'n': 19, 'e': 7}, uniqueid.ids)
-
-    def test_unique_id_parse(self):
-        self.assertEqual(('n', 8), UniqueID.parse('n8'))
-        self.assertEqual(('e', 122), UniqueID.parse('e122'))
-
-    def test_unique_id_parse_with_exception(self):
-        self.assertRaises(ValueError, UniqueID.parse, '1')
-        self.assertRaises(ValueError, UniqueID.parse, 'n')
-        self.assertRaises(ValueError, UniqueID.parse, 'n 8')
+from eddy.dialogs.properties import NodePropertiesDialog
+from eddy.dialogs.properties import EditableNodePropertiesDialog
+from eddy.dialogs.properties import OrderedInputNodePropertiesDialog
+from eddy.dialogs.properties import ScenePropertiesDialog

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -32,39 +33,60 @@
 ##########################################################################
 
 
-import unittest
+__author__ = 'Daniele Pantaleone'
+__email__ = 'danielepantaleone@me.com'
+__copyright__ = 'Copyright 2015, Daniele Pantaleone'
+__organization__ = 'Sapienza - University Of Rome'
+__appname__ = 'Eddy'
+__version__ = '0.3.2'
+__status__ = 'Development'
+__license__ = 'GPL'
 
-from eddy.utils import UniqueID
+
+import os
+
+from PyQt5.QtCore import QSettings
+from PyQt5.QtWidgets import QApplication
+
+from eddy.functions import QSS, getPath, main_is_frozen
+from eddy.styles import DefaultStyle
+from eddy.widgets.main import MainWindow
+from eddy.widgets.misc import SplashScreen
 
 
-class Test_UniqueID(unittest.TestCase):
+class Eddy(QApplication):
+    """
+    This class implements the main Qt application.
+    """
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize Eddy.
+        """
+        super().__init__(*args, **kwargs)
+        self.mainwindow = None
+        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)
 
-    def test_unique_id_generation(self):
-        uniqueid = UniqueID()
-        self.assertEqual('n0', uniqueid.next('n'))
-        self.assertEqual('n1', uniqueid.next('n'))
-        self.assertEqual('e0', uniqueid.next('e'))
-        self.assertEqual('n2', uniqueid.next('n'))
-        self.assertEqual('e1', uniqueid.next('e'))
-        self.assertEqual({'n': 2, 'e': 1}, uniqueid.ids)
+    def init(self):
+        """
+        Run initialization tasks for Eddy (i.e: initialize the Style, Settings, Main Window...).
+        :return: the application main window.
+        :rtype: MainWindow
+        """
+        self.setStyle(DefaultStyle())
+        self.setStyleSheet(QSS(getPath('@eddy/styles/default.qss')))
 
-    def test_unique_id_generation_with_exception(self):
-        uniqueid = UniqueID()
-        self.assertRaises(ValueError, uniqueid.next, '1')
-        self.assertRaises(ValueError, uniqueid.next, 'n1')
-        self.assertRaises(ValueError, uniqueid.next, 'n 1')
+        if not self.settings.contains('document/recent_documents'):
+            # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
+            # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
+            # container. So according to this we can't use an empty list as default value because PyQt5 needs
+            # to know the type of the contents added to the collection: we avoid this problem by placing
+            # the list of examples file in the recentDocumentList (only if there is no list defined already).
+            root = getPath('@eddy/')
+            root = os.path.join(root, '..') if not main_is_frozen() else root
+            self.settings.setValue('document/recent_documents', [
+                os.path.join(root, 'examples', 'Family.graphol'),
+                os.path.join(root, 'examples', 'Pizza.graphol')
+            ])
 
-    def test_unique_id_update(self):
-        uniqueid = UniqueID()
-        uniqueid.update('n19')
-        uniqueid.update('e7')
-        self.assertEqual({'n': 19, 'e': 7}, uniqueid.ids)
-
-    def test_unique_id_parse(self):
-        self.assertEqual(('n', 8), UniqueID.parse('n8'))
-        self.assertEqual(('e', 122), UniqueID.parse('e122'))
-
-    def test_unique_id_parse_with_exception(self):
-        self.assertRaises(ValueError, UniqueID.parse, '1')
-        self.assertRaises(ValueError, UniqueID.parse, 'n')
-        self.assertRaises(ValueError, UniqueID.parse, 'n 8')
+        self.mainwindow = MainWindow()
+        return self.mainwindow

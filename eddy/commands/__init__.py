@@ -32,39 +32,60 @@
 ##########################################################################
 
 
-import unittest
+from eddy.commands.nodes import CommandNodeAdd
+from eddy.commands.nodes import CommandNodeSetZValue
+from eddy.commands.nodes import CommandNodeRezize
+from eddy.commands.nodes import CommandNodeMove
+from eddy.commands.nodes import CommandNodeLabelMove
+from eddy.commands.nodes import CommandNodeLabelEdit
+from eddy.commands.nodes import CommandNodeValueDomainSelectDatatype
+from eddy.commands.nodes import CommandNodeHexagonSwitchTo
+from eddy.commands.nodes import CommandNodeSquareChangeRestriction
+from eddy.commands.nodes import CommandNodeSetURL
+from eddy.commands.nodes import CommandNodeSetDescription
+from eddy.commands.nodes import CommandConceptNodeSetSpecial
+from eddy.commands.nodes import CommandNodeChangeInputOrder
+from eddy.commands.nodes import CommandNodeChangeBrush
 
-from eddy.utils import UniqueID
+from eddy.commands.edges import CommandEdgeAdd
+from eddy.commands.edges import CommandEdgeAnchorMove
+from eddy.commands.edges import CommandEdgeBreakpointAdd
+from eddy.commands.edges import CommandEdgeBreakpointMove
+from eddy.commands.edges import CommandEdgeBreakpointDel
+from eddy.commands.edges import CommandEdgeInclusionToggleComplete
+from eddy.commands.edges import CommandEdgeInputToggleFunctional
+
+from eddy.commands.common import CommandComposeAxiom
+from eddy.commands.common import CommandItemsMultiAdd
+from eddy.commands.common import CommandItemsMultiRemove
+
+from eddy.commands.scene import CommandSceneResize
 
 
-class Test_UniqueID(unittest.TestCase):
-
-    def test_unique_id_generation(self):
-        uniqueid = UniqueID()
-        self.assertEqual('n0', uniqueid.next('n'))
-        self.assertEqual('n1', uniqueid.next('n'))
-        self.assertEqual('e0', uniqueid.next('e'))
-        self.assertEqual('n2', uniqueid.next('n'))
-        self.assertEqual('e1', uniqueid.next('e'))
-        self.assertEqual({'n': 2, 'e': 1}, uniqueid.ids)
-
-    def test_unique_id_generation_with_exception(self):
-        uniqueid = UniqueID()
-        self.assertRaises(ValueError, uniqueid.next, '1')
-        self.assertRaises(ValueError, uniqueid.next, 'n1')
-        self.assertRaises(ValueError, uniqueid.next, 'n 1')
-
-    def test_unique_id_update(self):
-        uniqueid = UniqueID()
-        uniqueid.update('n19')
-        uniqueid.update('e7')
-        self.assertEqual({'n': 19, 'e': 7}, uniqueid.ids)
-
-    def test_unique_id_parse(self):
-        self.assertEqual(('n', 8), UniqueID.parse('n8'))
-        self.assertEqual(('e', 122), UniqueID.parse('e122'))
-
-    def test_unique_id_parse_with_exception(self):
-        self.assertRaises(ValueError, UniqueID.parse, '1')
-        self.assertRaises(ValueError, UniqueID.parse, 'n')
-        self.assertRaises(ValueError, UniqueID.parse, 'n 8')
+__all__ = [
+    'CommandComposeAxiom',
+    'CommandNodeAdd',
+    'CommandNodeSetZValue',
+    'CommandNodeRezize',
+    'CommandNodeMove',
+    'CommandNodeLabelMove',
+    'CommandNodeLabelEdit',
+    'CommandNodeValueDomainSelectDatatype',
+    'CommandNodeHexagonSwitchTo',
+    'CommandNodeSquareChangeRestriction',
+    'CommandNodeSetURL',
+    'CommandNodeSetDescription',
+    'CommandConceptNodeSetSpecial',
+    'CommandNodeChangeInputOrder',
+    'CommandNodeChangeBrush',
+    'CommandEdgeAdd',
+    'CommandEdgeAnchorMove',
+    'CommandEdgeBreakpointAdd',
+    'CommandEdgeBreakpointMove',
+    'CommandEdgeBreakpointDel',
+    'CommandEdgeInclusionToggleComplete',
+    'CommandEdgeInputToggleFunctional',
+    'CommandItemsMultiAdd',
+    'CommandItemsMultiRemove',
+    'CommandSceneResize',
+]

@@ -3,7 +3,7 @@
 
 ##########################################################################
 #                                                                        #
-#  GrapholEd: an editor for the Graphol ontology language.               #
+#  Eddy: an editor for the Graphol ontology language.                    #
 #  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
@@ -22,13 +22,13 @@
 ##########################################################################
 #                                                                        #
 #  Graphol is developed by members of the DASI-lab group of the          #
-#  Dipartimento di Informatica e Sistemistica "A.Ruberti" at Sapienza    #
-#  University of Rome: http://www.dis.uniroma1.it/~graphol/:             #
+#  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
+#  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it/ #
 #                                                                        #
 #     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
-#     - Marco Console <console@dis.uniroma1.it>                          #
 #     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
 #     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
+#     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
 
@@ -37,9 +37,9 @@ import sys
 import traceback
 
 from argparse import ArgumentParser
-from grapholed import images_rc ## DO NOT REMOVE
-from grapholed import GrapholEd
-from grapholed.widgets.misc import SplashScreen
+from eddy import images_rc ## DO NOT REMOVE
+from eddy import Eddy
+from eddy.widgets.misc import SplashScreen
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QSpacerItem, QSizePolicy, QMessageBox
 
@@ -48,7 +48,7 @@ def main():
     """
     Application entry point.
     """
-    parser = ArgumentParser(description='parse GrapholEd command line options')
+    parser = ArgumentParser(description='parse Eddy\'s command line options')
     parser.add_argument('--nosplash', dest='nosplash', action='store_true')
 
     (options, args) = parser.parse_known_args()
@@ -74,14 +74,14 @@ def main():
         return application.init()
 
     try:
-        app = GrapholEd(sys.argv)
+        app = Eddy(sys.argv)
         window = init_no_splash(app) if options.nosplash or sys.platform.startswith('linux') else init(app)
     except Exception as e:
         box = QMessageBox()
         box.setIconPixmap(QPixmap(':/icons/error'))
-        box.setWindowIcon(QIcon(':/images/grapholed'))
+        box.setWindowIcon(QIcon(':/images/eddy'))
         box.setWindowTitle('Startup failure')
-        box.setText('GrapholEd failed to start!')
+        box.setText('Eddy failed to start!')
         box.setInformativeText('ERROR: %s' % e)
         box.setDetailedText(traceback.format_exc())
         box.setStandardButtons(QMessageBox.Ok)

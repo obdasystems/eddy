@@ -32,39 +32,30 @@
 ##########################################################################
 
 
-import unittest
-
-from eddy.utils import UniqueID
+from PyQt5.QtWidgets import QUndoCommand
 
 
-class Test_UniqueID(unittest.TestCase):
+class CommandSceneResize(QUndoCommand):
+    """
+    This command is used to resize the scene rect
+    """
+    def __init__(self, scene, rect):
+        """
+        Initialize the command.
+        :param scene: the scene being resized.
+        :param rect: the new scene rect.
+        """
+        super().__init__('resize diagram')
+        self.scene = scene
+        self.rect1 = scene.sceneRect()
+        self.rect2 = rect
 
-    def test_unique_id_generation(self):
-        uniqueid = UniqueID()
-        self.assertEqual('n0', uniqueid.next('n'))
-        self.assertEqual('n1', uniqueid.next('n'))
-        self.assertEqual('e0', uniqueid.next('e'))
-        self.assertEqual('n2', uniqueid.next('n'))
-        self.assertEqual('e1', uniqueid.next('e'))
-        self.assertEqual({'n': 2, 'e': 1}, uniqueid.ids)
+    def redo(self):
+        """redo the command"""
+        self.scene.setSceneRect(self.rect2)
+        self.scene.updated.emit()
 
-    def test_unique_id_generation_with_exception(self):
-        uniqueid = UniqueID()
-        self.assertRaises(ValueError, uniqueid.next, '1')
-        self.assertRaises(ValueError, uniqueid.next, 'n1')
-        self.assertRaises(ValueError, uniqueid.next, 'n 1')
-
-    def test_unique_id_update(self):
-        uniqueid = UniqueID()
-        uniqueid.update('n19')
-        uniqueid.update('e7')
-        self.assertEqual({'n': 19, 'e': 7}, uniqueid.ids)
-
-    def test_unique_id_parse(self):
-        self.assertEqual(('n', 8), UniqueID.parse('n8'))
-        self.assertEqual(('e', 122), UniqueID.parse('e122'))
-
-    def test_unique_id_parse_with_exception(self):
-        self.assertRaises(ValueError, UniqueID.parse, '1')
-        self.assertRaises(ValueError, UniqueID.parse, 'n')
-        self.assertRaises(ValueError, UniqueID.parse, 'n 8')
+    def undo(self):
+        """undo the command"""
+        self.scene.setSceneRect(self.rect1)
+        self.scene.updated.emit()

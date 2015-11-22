@@ -32,39 +32,29 @@
 ##########################################################################
 
 
-import unittest
-
-from eddy.utils import UniqueID
+from PyQt5.QtWidgets import QProxyStyle, QStyle
 
 
-class Test_UniqueID(unittest.TestCase):
+class DefaultStyle(QProxyStyle):
 
-    def test_unique_id_generation(self):
-        uniqueid = UniqueID()
-        self.assertEqual('n0', uniqueid.next('n'))
-        self.assertEqual('n1', uniqueid.next('n'))
-        self.assertEqual('e0', uniqueid.next('e'))
-        self.assertEqual('n2', uniqueid.next('n'))
-        self.assertEqual('e1', uniqueid.next('e'))
-        self.assertEqual({'n': 2, 'e': 1}, uniqueid.ids)
+    PM = {
+        QStyle.PM_SmallIconSize: 18,
+        QStyle.PM_TabBarIconSize: 14,
+        QStyle.PM_ToolBarIconSize: 24 ,
+    }
 
-    def test_unique_id_generation_with_exception(self):
-        uniqueid = UniqueID()
-        self.assertRaises(ValueError, uniqueid.next, '1')
-        self.assertRaises(ValueError, uniqueid.next, 'n1')
-        self.assertRaises(ValueError, uniqueid.next, 'n 1')
+    def __init__(self):
+        """
+        Initialize the Default style (using Fusion as base).
+        """
+        super().__init__('Fusion')
 
-    def test_unique_id_update(self):
-        uniqueid = UniqueID()
-        uniqueid.update('n19')
-        uniqueid.update('e7')
-        self.assertEqual({'n': 19, 'e': 7}, uniqueid.ids)
-
-    def test_unique_id_parse(self):
-        self.assertEqual(('n', 8), UniqueID.parse('n8'))
-        self.assertEqual(('e', 122), UniqueID.parse('e122'))
-
-    def test_unique_id_parse_with_exception(self):
-        self.assertRaises(ValueError, UniqueID.parse, '1')
-        self.assertRaises(ValueError, UniqueID.parse, 'n')
-        self.assertRaises(ValueError, UniqueID.parse, 'n 8')
+    def pixelMetric(self, metric, option=None, widget=None):
+        """
+        Returns the value for the given pixel metric.
+        :rtype: int
+        """
+        try:
+            return DefaultStyle.PM[metric]
+        except KeyError:
+            return super().pixelMetric(metric, option, widget)

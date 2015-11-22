@@ -1,0 +1,44 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+<qresource prefix="/icons">
+    <file alias="add">images/icons/add.png</file>
+    <file alias="appearance">images/icons/appearance.png</file>
+    <file alias="arrow-down">images/icons/arrow-down.png</file>
+    <file alias="arrow-up">images/icons/arrow-up.png</file>
+    <file alias="bring-to-front">images/icons/bring-to-front.png</file>
+    <file alias="checkbox-checked">images/icons/checkbox-checked.png</file>
+    <file alias="checkbox-indeterminate">images/icons/checkbox-indeterminate.png</file>
+    <file alias="checkbox-outline">images/icons/checkbox-outline.png</file>
+    <file alias="close">images/icons/close.png</file>
+    <file alias="color-fill">images/icons/color-fill.png</file>
+    <file alias="copy">images/icons/copy.png</file>
+    <file alias="create">images/icons/create.png</file>
+    <file alias="cut">images/icons/cut.png</file>
+    <file alias="delete">images/icons/delete.png</file>
+    <file alias="error">images/icons/error.png</file>
+    <file alias="grid">images/icons/grid.png</file>
+    <file alias="info">images/icons/info.png</file>
+    <file alias="link">images/icons/link.png</file>
+    <file alias="new">images/icons/new.png</file>
+    <file alias="open">images/icons/open.png</file>
+    <file alias="paste">images/icons/paste.png</file>
+    <file alias="preferences">images/icons/preferences.png</file>
+    <file alias="print">images/icons/print.png</file>
+    <file alias="quit">images/icons/quit.png</file>
+    <file alias="radio-checked">images/icons/radio-checked.png</file>
+    <file alias="radio-outline">images/icons/radio-outline.png</file>
+    <file alias="redo">images/icons/redo.png</file>
+    <file alias="refresh">images/icons/refresh.png</file>
+    <file alias="save">images/icons/save.png</file>
+    <file alias="select-all">images/icons/select-all.png</file>
+    <file alias="send-to-back">images/icons/send-to-back.png</file>
+    <file alias="star-filled">images/icons/star-filled.png</file>
+    <file alias="undo">images/icons/undo.png</file>
+    <file alias="warning">images/icons/warning.png</file>
+    <file alias="zoom">images/icons/zoom.png</file>
+</qresource>
+<qresource prefix="/images">
+    <file alias="eddy">images/eddy.png</file>
+    <file alias="splash">images/splash.png</file>
+</qresource>
+</RCC>

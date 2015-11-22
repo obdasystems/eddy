@@ -1,8 +1,8 @@
-## GrapholEd
+## Eddy
 
 ### Description
 
-GrapholEd is an editor for the Graphol ontology language. [Graphol] is developed by members 
+Eddy is an editor for the Graphol ontology language. [Graphol] is developed by members 
 of the DASI-lab group  of the [Dipartimento di Informatica e Sistemistica "A.Ruberti"] at [Sapienza] 
 University of Rome. Graphol offers a  completely visual representation of ontologies to users, in 
 order to help understanding by people who are not skilled in logic. Graphol provides designers with 
@@ -12,7 +12,7 @@ ER diagrams have in Graphol a similar diagrammatic shape.
 
 ### Screenshot
 
-![screenshot](/grapholed/images/screenshot.png?raw=true)
+![screenshot](/eddy/images/screenshot.png?raw=true)
 
 ### License
 
@@ -20,12 +20,12 @@ See the LICENSE file included with the distribution.
 
 ### Build status
 
-# [![circleci](https://avatars0.githubusercontent.com/u/1231870?v=2&s=50)](https://circleci.com/) Circle CI [![Circle CI](https://circleci.com/gh/danielepantaleone/grapholed/tree/master.svg?style=svg&circle-token=d4611bacee6dca791faf8b03502ffabdeb099ffe)](https://circleci.com/gh/danielepantaleone/grapholed/tree/master)
+# [![circleci](https://avatars0.githubusercontent.com/u/1231870?v=2&s=50)](https://circleci.com/) Circle CI [![Circle CI](https://circleci.com/gh/danielepantaleone/eddy/tree/master.svg?style=svg&circle-token=d4611bacee6dca791faf8b03502ffabdeb099ffe)](https://circleci.com/gh/danielepantaleone/eddy/tree/master)
 
 ### Resources
 
-* [Source code](https://github.com/danielepantaleone/grapholed)
-* [Bug tracker](https://github.com/danielepantaleone/grapholed/issues)
+* [Source code](https://github.com/danielepantaleone/eddy)
+* [Bug tracker](https://github.com/danielepantaleone/eddy/issues)
 * [Graphol website](http://www.dis.uniroma1.it/~graphol/)
 * [Dipartimento di Informatica e Sistemistica "A.Ruberti"](http://www.dis.uniroma1.it/en)
 * [Sapienza University](http://en.uniroma1.it/)

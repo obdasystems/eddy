@@ -32,39 +32,57 @@
 ##########################################################################
 
 
-import unittest
+from eddy.datatypes import Font, ItemType
+from eddy.items.nodes.common.square import SquaredNode
 
-from eddy.utils import UniqueID
+from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
 
-class Test_UniqueID(unittest.TestCase):
+class RangeRestrictionNode(SquaredNode):
+    """
+    This class implements the 'Range Restriction' node.
+    """
+    itemtype = ItemType.RangeRestrictionNode
+    name = 'range restriction'
+    xmlname = 'range-restriction'
 
-    def test_unique_id_generation(self):
-        uniqueid = UniqueID()
-        self.assertEqual('n0', uniqueid.next('n'))
-        self.assertEqual('n1', uniqueid.next('n'))
-        self.assertEqual('e0', uniqueid.next('e'))
-        self.assertEqual('n2', uniqueid.next('n'))
-        self.assertEqual('e1', uniqueid.next('e'))
-        self.assertEqual({'n': 2, 'e': 1}, uniqueid.ids)
+    def __init__(self, brush=None, **kwargs):
+        """
+        Initialize the Range Restriction node.
+        :param brush: the brush used to paint the node (unused).
+        """
+        super().__init__(brush='#000000', **kwargs)
 
-    def test_unique_id_generation_with_exception(self):
-        uniqueid = UniqueID()
-        self.assertRaises(ValueError, uniqueid.next, '1')
-        self.assertRaises(ValueError, uniqueid.next, 'n1')
-        self.assertRaises(ValueError, uniqueid.next, 'n 1')
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
 
-    def test_unique_id_update(self):
-        uniqueid = UniqueID()
-        uniqueid.update('n19')
-        uniqueid.update('e7')
-        self.assertEqual({'n': 19, 'e': 7}, uniqueid.ids)
+    @classmethod
+    def image(cls, **kwargs):
+        """
+        Returns an image suitable for the palette.
+        :rtype: QPixmap
+        """
+        shape_w = 18
+        shape_h = 18
 
-    def test_unique_id_parse(self):
-        self.assertEqual(('n', 8), UniqueID.parse('n8'))
-        self.assertEqual(('e', 122), UniqueID.parse('e122'))
+        # Initialize the pixmap
+        pixmap = QPixmap(kwargs['w'], kwargs['h'])
+        pixmap.fill(Qt.transparent)
+        painter = QPainter(pixmap)
 
-    def test_unique_id_parse_with_exception(self):
-        self.assertRaises(ValueError, UniqueID.parse, '1')
-        self.assertRaises(ValueError, UniqueID.parse, 'n')
-        self.assertRaises(ValueError, UniqueID.parse, 'n 8')
+        # Draw the text above the shape
+        painter.setFont(Font('Arial', 9, Font.Light))
+        painter.translate(0, 0)
+        painter.drawText(QRectF(0, 0, kwargs['w'], kwargs['h'] / 2), Qt.AlignCenter, 'restriction')
+
+        # Draw the rectangle
+        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+        painter.setBrush(QColor(0, 0, 0))
+        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
+        painter.drawRect(QRectF(-shape_w / 2, -shape_h / 2 + 6, shape_w, shape_h))
+
+        return pixmap

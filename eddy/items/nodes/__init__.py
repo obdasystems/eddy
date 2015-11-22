@@ -21,8 +21,8 @@
 ##########################################################################
 #                                                                        #
 #  Graphol is developed by members of the DASI-lab group of the          #
-#  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
-#  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it/ #
+#  Dipartimento di Informatica e Sistemistica "A.Ruberti" at Sapienza    #
+#  University of Rome: http://www.dis.uniroma1.it/~graphol/:             #
 #                                                                        #
 #     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
 #     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
@@ -32,39 +32,41 @@
 ##########################################################################
 
 
-import unittest
+from eddy.items.nodes.attribute import AttributeNode
+from eddy.items.nodes.concept import ConceptNode
+from eddy.items.nodes.complement import ComplementNode
+from eddy.items.nodes.datatype_restriction import DatatypeRestrictionNode
+from eddy.items.nodes.disjoint_union import DisjointUnionNode
+from eddy.items.nodes.domain_restriction import DomainRestrictionNode
+from eddy.items.nodes.enumeration import EnumerationNode
+from eddy.items.nodes.individual import IndividualNode
+from eddy.items.nodes.intersection import IntersectionNode
+from eddy.items.nodes.property_assertion import PropertyAssertionNode
+from eddy.items.nodes.range_restriction import RangeRestrictionNode
+from eddy.items.nodes.role import RoleNode
+from eddy.items.nodes.role_chain import RoleChainNode
+from eddy.items.nodes.role_inverse import RoleInverseNode
+from eddy.items.nodes.union import UnionNode
+from eddy.items.nodes.value_domain import ValueDomainNode
+from eddy.items.nodes.value_restriction import ValueRestrictionNode
 
-from eddy.utils import UniqueID
 
-
-class Test_UniqueID(unittest.TestCase):
-
-    def test_unique_id_generation(self):
-        uniqueid = UniqueID()
-        self.assertEqual('n0', uniqueid.next('n'))
-        self.assertEqual('n1', uniqueid.next('n'))
-        self.assertEqual('e0', uniqueid.next('e'))
-        self.assertEqual('n2', uniqueid.next('n'))
-        self.assertEqual('e1', uniqueid.next('e'))
-        self.assertEqual({'n': 2, 'e': 1}, uniqueid.ids)
-
-    def test_unique_id_generation_with_exception(self):
-        uniqueid = UniqueID()
-        self.assertRaises(ValueError, uniqueid.next, '1')
-        self.assertRaises(ValueError, uniqueid.next, 'n1')
-        self.assertRaises(ValueError, uniqueid.next, 'n 1')
-
-    def test_unique_id_update(self):
-        uniqueid = UniqueID()
-        uniqueid.update('n19')
-        uniqueid.update('e7')
-        self.assertEqual({'n': 19, 'e': 7}, uniqueid.ids)
-
-    def test_unique_id_parse(self):
-        self.assertEqual(('n', 8), UniqueID.parse('n8'))
-        self.assertEqual(('e', 122), UniqueID.parse('e122'))
-
-    def test_unique_id_parse_with_exception(self):
-        self.assertRaises(ValueError, UniqueID.parse, '1')
-        self.assertRaises(ValueError, UniqueID.parse, 'n')
-        self.assertRaises(ValueError, UniqueID.parse, 'n 8')
+__all__ = [
+    'AttributeNode',
+    'ConceptNode',
+    'ComplementNode',
+    'DatatypeRestrictionNode',
+    'DisjointUnionNode',
+    'DomainRestrictionNode',
+    'EnumerationNode',
+    'IndividualNode',
+    'IntersectionNode',
+    'PropertyAssertionNode',
+    'RangeRestrictionNode',
+    'RoleNode',
+    'RoleChainNode',
+    'RoleInverseNode',
+    'UnionNode',
+    'ValueDomainNode',
+    'ValueRestrictionNode',
+]

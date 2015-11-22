@@ -32,39 +32,39 @@
 ##########################################################################
 
 
-import unittest
+from eddy.functions import getPath
+from PyQt5.QtWidgets import QFileDialog
 
-from eddy.utils import UniqueID
+
+class SaveFileDialog(QFileDialog):
+    """
+    This class is used to bring up the save file dialog modal window.
+    """
+    def __init__(self, path, parent=None):
+        """
+        Initialize the save file dialog.
+        :param path: the start path where to open the file dialog.
+        :param parent: the parent widget.
+        """
+        super().__init__(parent)
+        self.setAcceptMode(QFileDialog.AcceptSave)
+        self.setDirectory(getPath('~') if not path else getPath(path))
+        self.setFileMode(QFileDialog.AnyFile)
+        self.setViewMode(QFileDialog.Detail)
 
 
-class Test_UniqueID(unittest.TestCase):
-
-    def test_unique_id_generation(self):
-        uniqueid = UniqueID()
-        self.assertEqual('n0', uniqueid.next('n'))
-        self.assertEqual('n1', uniqueid.next('n'))
-        self.assertEqual('e0', uniqueid.next('e'))
-        self.assertEqual('n2', uniqueid.next('n'))
-        self.assertEqual('e1', uniqueid.next('e'))
-        self.assertEqual({'n': 2, 'e': 1}, uniqueid.ids)
-
-    def test_unique_id_generation_with_exception(self):
-        uniqueid = UniqueID()
-        self.assertRaises(ValueError, uniqueid.next, '1')
-        self.assertRaises(ValueError, uniqueid.next, 'n1')
-        self.assertRaises(ValueError, uniqueid.next, 'n 1')
-
-    def test_unique_id_update(self):
-        uniqueid = UniqueID()
-        uniqueid.update('n19')
-        uniqueid.update('e7')
-        self.assertEqual({'n': 19, 'e': 7}, uniqueid.ids)
-
-    def test_unique_id_parse(self):
-        self.assertEqual(('n', 8), UniqueID.parse('n8'))
-        self.assertEqual(('e', 122), UniqueID.parse('e122'))
-
-    def test_unique_id_parse_with_exception(self):
-        self.assertRaises(ValueError, UniqueID.parse, '1')
-        self.assertRaises(ValueError, UniqueID.parse, 'n')
-        self.assertRaises(ValueError, UniqueID.parse, 'n 8')
+class OpenFileDialog(QFileDialog):
+    """
+    This class is used to bring up the open file dialog modal window.
+    """
+    def __init__(self, path, parent=None):
+        """
+        Initialize the open file dialog.
+        :param path: the start path where to open the file dialog.
+        :param parent: the parent widget.
+        """
+        super().__init__(parent)
+        self.setAcceptMode(QFileDialog.AcceptOpen)
+        self.setDirectory(getPath('~') if not path else getPath(path))
+        self.setFileMode(QFileDialog.AnyFile)
+        self.setViewMode(QFileDialog.Detail)

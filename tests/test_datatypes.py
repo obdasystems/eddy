@@ -2,7 +2,7 @@
 
 ##########################################################################
 #                                                                        #
-#  GrapholEd: an editor for the Graphol ontology language.               #
+#  Eddy: an editor for the Graphol ontology language.                    #
 #  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
@@ -21,20 +21,20 @@
 ##########################################################################
 #                                                                        #
 #  Graphol is developed by members of the DASI-lab group of the          #
-#  Dipartimento di Informatica e Sistemistica "A.Ruberti" at Sapienza    #
-#  University of Rome: http://www.dis.uniroma1.it/~graphol/:             #
+#  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
+#  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it/ #
 #                                                                        #
 #     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
-#     - Marco Console <console@dis.uniroma1.it>                          #
 #     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
 #     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
+#     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
 
 
 import unittest
 
-from grapholed.datatypes import DistinctList
+from eddy.datatypes import DistinctList
 
 class Test_DistinctList(unittest.TestCase):
 

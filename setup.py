@@ -2,7 +2,7 @@
 
 ##########################################################################
 #                                                                        #
-#  GrapholEd: an editor for the Graphol ontology language.               #
+#  Eddy: an editor for the Graphol ontology language.                    #
 #  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
@@ -21,13 +21,13 @@
 ##########################################################################
 #                                                                        #
 #  Graphol is developed by members of the DASI-lab group of the          #
-#  Dipartimento di Informatica e Sistemistica "A.Ruberti" at Sapienza    #
-#  University of Rome: http://www.dis.uniroma1.it/~graphol/:             #
+#  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
+#  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it/ #
 #                                                                        #
 #     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
-#     - Marco Console <console@dis.uniroma1.it>                          #
 #     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
 #     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
+#     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
 
@@ -41,7 +41,7 @@ import sys
 import zipfile
 
 from distutils import dir_util, log
-from grapholed import __appname__, __license__, __version__
+from eddy import __appname__, __license__, __version__
 
 from PyQt5 import QtCore
 
@@ -53,15 +53,15 @@ DIST_DIR = os.path.join(PROJECT_DIR, 'dist')  # directory where all the final bu
 
 if sys.platform.startswith('darwin'):
     EXECUTABLE_NAME = __appname__
-    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'grapholed', 'images', 'grapholed.icns')
+    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'eddy', 'images', 'eddy.icns')
     RELEASE_NAME = '%s-%s-%s-darwin' % (__appname__, __version__, __license__.lower())
 elif sys.platform.startswith('win32'):
     EXECUTABLE_NAME = '%s.exe' % __appname__
-    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'grapholed', 'images', 'grapholed.ico')
+    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'eddy', 'images', 'eddy.ico')
     RELEASE_NAME = '%s-%s-%s-win%s' % (__appname__, __version__, __license__.lower(), platform.architecture()[0][:-3])
 else:
     EXECUTABLE_NAME = __appname__
-    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'grapholed', 'images', 'grapholed.png')
+    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'eddy', 'images', 'eddy.png')
     RELEASE_NAME = '%s-%s-%s-linux%s' % (__appname__, __version__, __license__.lower(), platform.architecture()[0][:-3])
 
 
@@ -84,8 +84,8 @@ class CleanCommand(setuptools.Command):
         """Command execution"""
         if os.path.isdir(BUILD_DIR):
             dir_util.remove_tree(BUILD_DIR, verbose=1)
-        if os.path.isdir('Grapholed.egg-info'):
-            dir_util.remove_tree('Grapholed.egg-info', verbose=1)
+        if os.path.isdir('Eddy.egg-info'):
+            dir_util.remove_tree('Eddy.egg-info', verbose=1)
 
 cmdclass = {
     'clean': CleanCommand
@@ -417,8 +417,8 @@ setup(
     version=__version__,
     author='Daniele Pantaleone',
     author_email="danielepantaleone@me.com",
-    description="GrapholEd is an editor for the Graphol ontology language.",
-    long_description="GrapholEd is an editor for the Graphol ontology language. Graphol is developed by members of the "
+    description="Eddy is an editor for the Graphol ontology language.",
+    long_description="Eddy is an editor for the Graphol ontology language. Graphol is developed by members of the "
                      "DASI-lab group of the Dipartimento di Informatica e Sistemistica \"A.Ruberti\" at Sapienza "
                      "University of Rome. Graphol offers a completely visual representation of ontologies to users, "
                      "in order to help understanding by people who are not skilled in logic. Graphol provides "
@@ -426,7 +426,7 @@ setup(
                      "syntax. Graphol's basic components are inspired by Entity Relationship(ER) diagrams, thus "
                      "ontologies that can be rendered as ER diagrams have in Graphol a similar diagrammatic shape.",
     license=__license__,
-    url="https://github.com/danielepantaleone/grapholed",
+    url="https://github.com/danielepantaleone/eddy",
     classifiers=[
         'Development Status :: 1 - Planning',
         'Development Status :: 2 - Pre-Alpha',
@@ -443,7 +443,7 @@ setup(
     ],
     packages=setuptools.find_packages(),
     package_data={'': [
-            'stylesheets/*.qss',
+            'styles/*.qss',
         ]
     },
     entry_points={
@@ -476,10 +476,10 @@ setup(
             'create_shared_zip': False,
             'append_script_to_exe': True,
             'packages': [
-                'grapholed.commands',
-                'grapholed.dialogs',
-                'grapholed.items',
-                'grapholed.widgets',
+                'eddy.commands',
+                'eddy.dialogs',
+                'eddy.items',
+                'eddy.widgets',
             ],
             'excludes': ['tcl', 'ttk', 'tkinter', 'Tkinter'],
             'includes': [
@@ -492,7 +492,7 @@ setup(
             'include_files': [
                 ('docs', 'docs'),
                 ('examples', 'examples'),
-                ('grapholed/stylesheets', 'stylesheets'),
+                ('eddy/styles', 'styles'),
                 ('LICENSE', 'LICENSE'),
                 ('CONTRIBUTING.md', 'CONTRIBUTING.md'),
                 ('PACKAGING.md', 'PACKAGING.md'),

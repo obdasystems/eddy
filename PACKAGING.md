@@ -1,6 +1,6 @@
-## Grapholed packaging documentation
+## Eddy packaging documentation
 
-Grapholed is distributed as different packages:
+Eddy is distributed as different packages:
 
 * Python sources distribution
 * Win32 zip package
@@ -19,8 +19,8 @@ inside the  *dist* directory.
 
 Bring up a terminal window (or command prompt if on win32 platform) and type the following:
     
-    >>> git clone https://github.com/danielepantaleone/grapholed.git
-    >>> cd grapholed
+    >>> git clone https://github.com/danielepantaleone/eddy.git
+    >>> cd eddy
     >>> python setup.py release
 
 ## Windows
@@ -42,8 +42,8 @@ Navigate using the command prompt to the uncompressed PyQt5.5 directory:
 
 Change the current active directory and type the following:
 
-    >>> git clone https://github.com/danielepantaleone/grapholed.git
-    >>> cd grapholed
+    >>> git clone https://github.com/danielepantaleone/eddy.git
+    >>> cd eddy
     >>> python setup.py build_exe
     
 ## Mac OS
@@ -66,8 +66,8 @@ Bring up a terminal window and type the following:
     >>> python3 configure.py --confirm-license
     >>> make -j 5 && make install
     >>> cd ~/Downloads
-    >>> git clone https://github.com/danielepantaleone/grapholed.git
-    >>> cd ~/Downloads/grapholed
+    >>> git clone https://github.com/danielepantaleone/eddy.git
+    >>> cd ~/Downloads/eddy
     >>> pip install -r build-requirements.txt
     >>> python setup.py bdist_dmg
 
@@ -91,8 +91,8 @@ Bring up a terminal window and type the following:
     >>> python3 configure.py --confirm-license
     >>> make -j 5 && sudo make install
     >>> cd ~/Downloads
-    >>> git clone https://github.com/danielepantaleone/grapholed.git
-    >>> cd ~/Downloads/grapholed
+    >>> git clone https://github.com/danielepantaleone/eddy.git
+    >>> cd ~/Downloads/eddy
     >>> sudo pip3 install -r build-requirements.txt
     >>> python3 setup.py build_exe
     
@@ -116,8 +116,8 @@ Bring up a terminal window and type the following:
     >>> python3 configure.py --confirm-license
     >>> make -j 5 && sudo make install
     >>> cd ~/Downloads
-    >>> git clone https://github.com/danielepantaleone/grapholed.git
-    >>> cd ~/Downloads/grapholed
+    >>> git clone https://github.com/danielepantaleone/eddy.git
+    >>> cd ~/Downloads/eddy
     >>> sudo pip3 install -r build-requirements.txt
     >>> python3 setup.py build_exe
     

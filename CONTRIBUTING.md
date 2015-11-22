@@ -19,14 +19,14 @@ should have enough information to understand and reproduce the issue and validat
     * Actual results.
 * **Submit** your issue, assuming one does not already exist.
 * Make sure you specify your **system details** when submitting an issue.
-* Make sure you fill in the earliest version number of GrapholEd that you know has the issue.
+* Make sure you fill in the earliest version number of Eddy that you know has the issue.
 
 ## Contributing Code
 
 We prefer contributors to submit their code change throught GitHub [pull requests](http://help.github.com/send-pull-requests/). 
 
 * Make sure you have a [GitHub account](https://github.com/signup/free).
-* [Fork](https://github.com/danielepantaleone/grapholed) this repository on GitHub.
+* [Fork](https://github.com/danielepantaleone/eddy) this repository on GitHub.
 * Create a topic branch from where you want to base your work.
     * This is **NOT** the `master` branch. You should push your changes to a `release` branch. 
     * Please avoid working directly on the `master` branch.
@@ -49,7 +49,7 @@ We prefer contributors to submit their code change throught GitHub [pull request
 # Submitting Your Changes
 
 * **Push** your changes to a **topic branch** in your fork of the repository.
-* Submit a **pull request** to the GrapholEd repository.
+* Submit a **pull request** to the Eddy's repository.
 * **Update the issue** to mark that you have submitted code and are ready for it to be reviewed.
 * A pull request should contain a single feature/bugfix. If you need to send **multiple features/bugfixes** please
   use **separate pull requests**.
@@ -57,7 +57,7 @@ We prefer contributors to submit their code change throught GitHub [pull request
 ## Coding Style
 
 Different programmers use to write code in different ways. Without the usage of coding conventions, a project 
-source code may become unreadable and eventually not understandable. While GrapholEd doesn't strictly follows 
+source code may become unreadable and eventually not understandable. While Eddy doesn't strictly follows 
 PEP-8 coding conventions, it is required that your code follows the following guidelines:
 
 * **Break long lines** after `110` characters.
@@ -88,6 +88,6 @@ def myFunc(self, param1, param2):
 
 # Additional Resources
 
-* [Bug tracker](https://github.com/danielepantaleone/grapholed/issues)
+* [Bug tracker](https://github.com/danielepantaleone/eddy/issues)
 * [General GitHub documentation](http://help.github.com/)
 * [GitHub pull request documentation](http://help.github.com/send-pull-requests/)
