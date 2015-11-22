@@ -65,7 +65,11 @@ class MainView(QGraphicsView):
         self.mousePressRect = None
         self.zoom = 1.00
 
-    ############################################### SIGNAL HANDLERS ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SLOTS                                                                                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @pyqtSlot(float)
     def onScaleChanged(self, zoom):
@@ -75,7 +79,11 @@ class MainView(QGraphicsView):
         """
         self.scaleView(zoom)
 
-    ############################################ CUSTOM VIEW DRAWING ###################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def drawForeground(self, painter, rect):
         """
@@ -91,7 +99,11 @@ class MainView(QGraphicsView):
                 painter.setBrush(MainView.RubberBandDragBrush)
                 painter.drawRect(self.mousePressRect)
 
-    ############################################### EVENT HANDLERS #####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def mousePressEvent(self, mouseEvent):
         """
@@ -144,7 +156,11 @@ class MainView(QGraphicsView):
 
                 if scene.mode is DiagramMode.RubberBandDrag:
 
-                    ###################################### RUBBERBAND SELECTION ########################################
+                    ####################################################################################################
+                    #                                                                                                  #
+                    #   RUBBERBAND SELECTION                                                                           #
+                    #                                                                                                  #
+                    ####################################################################################################
 
                     x = self.mousePressPos.x()
                     y = self.mousePressPos.y()
@@ -164,7 +180,11 @@ class MainView(QGraphicsView):
                 if scene.mode in {DiagramMode.EdgeInsert, DiagramMode.NodeMove, DiagramMode.NodeResize,
                                   DiagramMode.EdgeBreakPointMove, DiagramMode.RubberBandDrag}:
 
-                    ######################################## MAIN VIEW SCROLL ##########################################
+                    ####################################################################################################
+                    #                                                                                                  #
+                    #   VIEW SCROLLING                                                                                 #
+                    #                                                                                                  #
+                    ####################################################################################################
 
                     viewportRect = viewport.rect()
                     if not viewportRect.contains(mouseEvent.pos()):
@@ -249,7 +269,11 @@ class MainView(QGraphicsView):
             # handle default behavior (view scrolling)
             super().wheelEvent(wheelEvent)
 
-    ############################################# AUXILIARY METHODS ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def moveBy(self, *__args):
         """
@@ -311,3 +335,8 @@ class MainView(QGraphicsView):
         :rtype: QRectF
         """
         return self.mapToScene(self.viewport().rect()).boundingRect()
+
+
+__all__ = [
+    'MainView',
+]

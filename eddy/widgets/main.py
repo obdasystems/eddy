@@ -57,10 +57,10 @@ from eddy.items import ItemType, __mapping__ as mapping
 from eddy.items import *
 from eddy.utils import Clipboard
 from eddy.widgets.dock import *
-from eddy.widgets.mdi import MdiArea, MdiSubWindow
-from eddy.widgets.scene import DiagramScene, DiagramDocument
-from eddy.widgets.view import MainView
-from eddy.widgets.toolbar import ZoomControl
+from eddy.widgets.mdi import *
+from eddy.widgets.scene import *
+from eddy.widgets.view import *
+from eddy.widgets.toolbar import *
 
 
 class MainWindow(QMainWindow):
@@ -1742,7 +1742,7 @@ class MainWindow(QMainWindow):
         """
         if isinstance(document, DiagramScene):
             document = document.document.filepath
-        elif isinstance(document, DiagramDocument):
+        elif isinstance(document, Document):
             document = document.filepath
 
         for subwindow in self.mdi.subWindowList():

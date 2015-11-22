@@ -32,21 +32,18 @@
 ##########################################################################
 
 
-from eddy.fields import IntEditField
-from eddy.functions import isEmpty, connect
-
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QDialogButtonBox, QMessageBox
+
+from eddy.fields import IntEditField
+from eddy.functions import isEmpty, connect
 
 
 class CardinalityRestrictionForm(QDialog):
     """
     This class implements the form used to input domain/range restriction cardinalities.
     """
-
-    ############################################ FORM DIALOG IMPLEMENTATION ############################################
-
     def __init__(self, parent=None):
         """
         Initialize the form dialog.

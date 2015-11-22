@@ -47,7 +47,7 @@ from eddy.functions import getPath, snapToGrid, rangeF
 from eddy.utils import UniqueID, Clipboard
 
 
-class DiagramDocument(object):
+class Document(object):
     """
     This class is used to hold scene saved file data (filepath, filename etc).
     """
@@ -132,7 +132,7 @@ class DiagramScene(QGraphicsScene):
         self.command = None  ## undo/redo command to be added in the stack
         self.clipboardPasteOffsetX = Clipboard.PasteOffsetX  ## X offset to be added to item position upon paste
         self.clipboardPasteOffsetY = Clipboard.PasteOffsetY  ## Y offset to be added to item position upon paste
-        self.document = DiagramDocument()  ## document associated with the current scene
+        self.document = Document()  ## document associated with the current scene
         self.edgesById = {}  ## used to index edges using their id
         self.nodesById = {}  ## used to index nodes using their id
         self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, organization, appname)  ## settings
@@ -602,3 +602,8 @@ class DiagramScene(QGraphicsScene):
             return QRectF(QPointF(min(X) - margin, min(Y) - margin), QPointF(max(X) + margin, max(Y) + margin))
 
         return None
+
+__all__ = [
+    'Document',
+    'DiagramScene',
+]

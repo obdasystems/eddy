@@ -34,7 +34,10 @@
 
 from datetime import datetime
 
+from PyQt5.QtCore import Qt, QPointF, QRectF
 from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
+from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
 
 from eddy.commands import CommandNodeMove, CommandNodeSetURL, CommandNodeSetDescription
 from eddy.commands import CommandSceneResize, CommandNodeLabelEdit, CommandNodeChangeInputOrder
@@ -42,12 +45,12 @@ from eddy.datatypes import DistinctList
 from eddy.fields import StringEditField, TextEditField, SpinBox, IntEditField
 from eddy.functions import clamp, connect, isEmpty
 
-from PyQt5.QtCore import Qt, QPointF, QRectF
-from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
-from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
 
-
-################################################## SCENE PROPERTIES ####################################################
+########################################################################################################################
+#                                                                                                                      #
+#   DIAGRAM SCENE                                                                                                      #
+#                                                                                                                      #
+########################################################################################################################
 
 
 class ScenePropertiesDialog(QDialog):
@@ -64,7 +67,11 @@ class ScenePropertiesDialog(QDialog):
         self.scene = scene
         self.mainWidget = QTabWidget(self)
 
-        ################################################ GENERAL TAB ###################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   GENERAL TAB                                                                                                #
+        #                                                                                                              #
+        ################################################################################################################
 
         self.generalWidget = QWidget()
         self.generalLayout = QFormLayout(self.generalWidget)
@@ -86,7 +93,11 @@ class ScenePropertiesDialog(QDialog):
 
         self.mainWidget.addTab(self.generalWidget, 'General')
 
-        ############################################### GEOMETRY TAB ###################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   GEOMETRY TAB                                                                                               #
+        #                                                                                                              #
+        ################################################################################################################
 
         self.geometryWidget = QWidget()
         self.geometryLayout = QFormLayout(self.geometryWidget)
@@ -102,7 +113,11 @@ class ScenePropertiesDialog(QDialog):
 
         self.mainWidget.addTab(self.geometryWidget, 'Geometry')
 
-        ############################################## DOCUMENT WIDGET #################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   DOCUMENT WIDGET                                                                                            #
+        #                                                                                                              #
+        ################################################################################################################
 
         if self.scene.document.filepath:
 
@@ -126,11 +141,19 @@ class ScenePropertiesDialog(QDialog):
 
             self.mainWidget.addTab(self.documentWidget, 'Document')
 
-        ################################################# BUTTON BOX ###################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   BUTTON BOX                                                                                                 #
+        #                                                                                                              #
+        ################################################################################################################
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
 
-        ################################################ MAIN LAYOUT ###################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   MAIN LAYOUT                                                                                                #
+        #                                                                                                              #
+        ################################################################################################################
 
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.addWidget(self.mainWidget)
@@ -140,13 +163,21 @@ class ScenePropertiesDialog(QDialog):
         self.setWindowTitle('Scene properties')
         self.setWindowIcon(QIcon(':/images/eddy'))
 
-        ################################################## SIGNALS #####################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   CONFIGURE SIGNALS                                                                                          #
+        #                                                                                                              #
+        ################################################################################################################
 
         connect(self.finished, self.handleFinished)
         connect(self.buttonBox.accepted, self.accept)
         connect(self.buttonBox.rejected, self.reject)
 
-    ################################################# SIGNAL HANDLERS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SLOTS                                                                                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def handleFinished(self, code):
         """
@@ -156,7 +187,11 @@ class ScenePropertiesDialog(QDialog):
         if code == QDialog.Accepted:
             self.handleSceneSizeChanged()
 
-    ################################################ AUXILIARY METHODS #################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def handleSceneSizeChanged(self):
         """
@@ -186,7 +221,11 @@ class ScenePropertiesDialog(QDialog):
             self.scene.undostack.push(CommandSceneResize(self.scene, QRectF(-size2 / 2, -size2 / 2, size2, size2)))
 
 
-################################################### NODE PROPERTIES ####################################################
+########################################################################################################################
+#                                                                                                                      #
+#   NODE GENERIC                                                                                                       #
+#                                                                                                                      #
+########################################################################################################################
 
 
 class NodePropertiesDialog(QDialog):
@@ -205,7 +244,11 @@ class NodePropertiesDialog(QDialog):
         self.node = node
         self.scene = scene
 
-        ################################################ GENERAL TAB ###################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   GENERAL TAB                                                                                                #
+        #                                                                                                              #
+        ################################################################################################################
         
         self.generalWidget = QWidget()
         self.generalLayout = QFormLayout(self.generalWidget)
@@ -233,7 +276,11 @@ class NodePropertiesDialog(QDialog):
         self.generalLayout.addRow('URL', self.urlF)
         self.generalLayout.addRow('Description', self.descriptionF)
         
-        ############################################### GEOMETRY TAB ###################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   GEOMETRY TAB                                                                                               #
+        #                                                                                                              #
+        ################################################################################################################
         
         self.geometryWidget = QWidget()
         self.geometryLayout = QFormLayout(self.geometryWidget)
@@ -268,17 +315,29 @@ class NodePropertiesDialog(QDialog):
         self.geometryLayout.addRow('Width', self.wField)
         self.geometryLayout.addRow('Height', self.hField)
 
-        ################################################ MAIN WIDGET ###################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   MAIN WIDGET                                                                                                #
+        #                                                                                                              #
+        ################################################################################################################
 
         self.mainWidget = QTabWidget(self)
         self.mainWidget.addTab(self.generalWidget, 'General')
         self.mainWidget.addTab(self.geometryWidget, 'Geometry')
 
-        ################################################# BUTTON BOX ###################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   BUTTON BOX                                                                                                 #
+        #                                                                                                              #
+        ################################################################################################################
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
 
-        ################################################ MAIN LAYOUT ###################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   MAIN LAYOUT                                                                                                #
+        #                                                                                                              #
+        ################################################################################################################
 
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.addWidget(self.mainWidget)
@@ -288,13 +347,21 @@ class NodePropertiesDialog(QDialog):
         self.setWindowTitle('Properties')
         self.setWindowIcon(QIcon(':/images/eddy'))
 
-        ################################################## SIGNALS #####################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   CONFIGURE SIGNALS                                                                                          #
+        #                                                                                                              #
+        ################################################################################################################
 
         connect(self.finished, self.handleFinished)
         connect(self.buttonBox.accepted, self.accept)
         connect(self.buttonBox.rejected, self.reject)
 
-    ################################################# SIGNAL HANDLERS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SLOTS                                                                                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def handleFinished(self, code):
         """
@@ -306,7 +373,11 @@ class NodePropertiesDialog(QDialog):
             self.handleURLChanged()
             self.handleDescriptionChanged()
 
-    ################################################ AUXILIARY METHODS #################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def handleURLChanged(self):
         """
@@ -361,6 +432,13 @@ class NodePropertiesDialog(QDialog):
             self.scene.undostack.push(CommandNodeMove(scene=self.scene, pos1=data1, pos2=data2))
 
 
+########################################################################################################################
+#                                                                                                                      #
+#   EDITABLE NODES                                                                                                     #
+#                                                                                                                      #
+########################################################################################################################
+
+
 class EditableNodePropertiesDialog(NodePropertiesDialog):
     """
     This class implements the properties dialog for label editable nodes.
@@ -374,7 +452,11 @@ class EditableNodePropertiesDialog(NodePropertiesDialog):
         """
         super().__init__(scene, node, parent)
 
-        ################################################ LABEL TAB ###################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   LABEL TAB                                                                                                  #
+        #                                                                                                              #
+        ################################################################################################################
 
         self.labelWidget = QWidget()
         self.labelLayout = QFormLayout(self.labelWidget)
@@ -388,7 +470,11 @@ class EditableNodePropertiesDialog(NodePropertiesDialog):
 
         self.mainWidget.addTab(self.labelWidget, 'Label')
 
-    ################################################# SIGNAL HANDLERS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SLOTS                                                                                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def handleFinished(self, code):
         """
@@ -399,7 +485,11 @@ class EditableNodePropertiesDialog(NodePropertiesDialog):
             super().handleFinished(code)
             self.handleLabelChanged()
 
-    ################################################ AUXILIARY METHODS #################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def handleLabelChanged(self):
         """
@@ -411,6 +501,13 @@ class EditableNodePropertiesDialog(NodePropertiesDialog):
             command = CommandNodeLabelEdit(self.scene, self.node, self.node.label, self.node.label.text())
             command.end(value)
             self.scene.undostack.push(command)
+
+
+########################################################################################################################
+#                                                                                                                      #
+#   ORDERED INPUT NODES                                                                                                #
+#                                                                                                                      #
+########################################################################################################################
 
 
 class OrderedInputNodePropertiesDialog(NodePropertiesDialog):
@@ -427,7 +524,11 @@ class OrderedInputNodePropertiesDialog(NodePropertiesDialog):
         """
         super().__init__(scene, node, parent)
 
-        ############################################### ORDERING TAB ###################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   ORDERING TAB                                                                                               #
+        #                                                                                                              #
+        ################################################################################################################
 
         if self.node.inputs:
 
@@ -445,7 +546,11 @@ class OrderedInputNodePropertiesDialog(NodePropertiesDialog):
             self.orderingLayout.addRow('Sort', self.listWidget)
             self.mainWidget.addTab(self.orderingWidget, 'Ordering')
 
-    ################################################# SIGNAL HANDLERS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SLOTS                                                                                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def handleFinished(self, code):
         """
@@ -456,7 +561,11 @@ class OrderedInputNodePropertiesDialog(NodePropertiesDialog):
             super().handleFinished(code)
             self.handleInputsOrderChanged()
 
-    ################################################ AUXILIARY METHODS #################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def handleInputsOrderChanged(self):
         """

@@ -32,11 +32,11 @@
 ##########################################################################
 
 
-from eddy import __version__, __appname__, __copyright__, __email__, __license__
-
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout, QHBoxLayout
+
+from eddy import __version__, __appname__, __copyright__, __email__, __license__
 
 
 class AboutDialog(QDialog):

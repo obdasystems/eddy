@@ -32,13 +32,13 @@
 ##########################################################################
 
 
-from eddy.fields import SpinBox
-from eddy.functions import connect
-from eddy import __appname__, __organization__
-
 from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
+
+from eddy.fields import SpinBox
+from eddy.functions import connect
+from eddy import __appname__, __organization__
 
 
 class PreferencesDialog(QDialog):
@@ -54,7 +54,11 @@ class PreferencesDialog(QDialog):
 
         self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)
 
-        ############################################### APPEARANCE TAB #################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   APPEARANCE TAB                                                                                             #
+        #                                                                                                              #
+        ################################################################################################################
 
         # TODO: make size dependent from DiagramScene constants
         self.sceneSizeField = SpinBox(self)
@@ -66,16 +70,28 @@ class PreferencesDialog(QDialog):
         self.appearanceLayout = QFormLayout(self.appearanceWidget)
         self.appearanceLayout.addRow('Scene size', self.sceneSizeField)
 
-        ################################################ MAIN WIDGET ###################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   MAIN WIDGET                                                                                                #
+        #                                                                                                              #
+        ################################################################################################################
 
         self.mainWidget = QTabWidget(self)
         self.mainWidget.addTab(self.appearanceWidget, QIcon(':/icons/appearance.png'), 'Appearance')
 
-        ################################################# BUTTON BOX ###################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   BUTTON BOX                                                                                                 #
+        #                                                                                                              #
+        ################################################################################################################
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Close, Qt.Horizontal, self)
 
-        ################################################ MAIN LAYOUT ###################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   MAIN LAYOUT                                                                                                #
+        #                                                                                                              #
+        ################################################################################################################
 
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.addWidget(self.mainWidget)
@@ -84,13 +100,21 @@ class PreferencesDialog(QDialog):
         self.setFixedSize(self.sizeHint())
         self.setWindowTitle('Preferences')
 
-        ################################################# SIGNALS ######################################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   CONFIGURE SIGNALS                                                                                          #
+        #                                                                                                              #
+        ################################################################################################################
 
         connect(self.buttonBox.accepted, self.accept)
         connect(self.buttonBox.rejected, self.reject)
         connect(self.finished, self.handleFinished)
 
-    ################################################# SIGNAL HANDLERS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SLOTS                                                                                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def handleFinished(self, code):
         """
