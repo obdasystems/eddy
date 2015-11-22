@@ -12,7 +12,7 @@ ER diagrams have in Graphol a similar diagrammatic shape.
 
 ### Screenshot
 
-![screenshot](/eddy/images/screenshot.png?raw=true)
+![screenshot](/eddy/images/shot01.png?raw=true)
 
 ### License
 
