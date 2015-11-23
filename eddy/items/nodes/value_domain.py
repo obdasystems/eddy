@@ -32,8 +32,7 @@
 ##########################################################################
 
 
-from eddy.datatypes import Font, ItemType, XsdDatatype
-from eddy.exceptions import ParseError
+from eddy.datatypes import Font, ItemType, XsdDatatype, SpecialType
 from eddy.items.nodes.common.base import Node
 from eddy.items.nodes.common.label import Label
 
@@ -53,19 +52,48 @@ class ValueDomainNode(Node):
     radius = 8
     xmlname = 'value-domain'
 
-    def __init__(self, width=minWidth, height=minHeight, brush='#fcfcfc', **kwargs):
+    def __init__(self, width=minWidth, height=minHeight, brush='#fcfcfc', special=None, **kwargs):
         """
         Initialize the Value-Domain node.
         :param width: the shape width (unused in current implementation).
         :param height: the shape height (unused in current implementation).
         :param brush: the brush used to paint the node.
+        :param special: the special type of this node (if any).
         """
         super().__init__(**kwargs)
+
+        self._special = special
+
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.datatype = XsdDatatype.string
         self.rect = self.createRect(self.minWidth, self.minHeight)
         self.label = Label(self.datatype.value, movable=False, editable=False, parent=self)
+        self.updateRect()
+
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def special(self):
+        """
+        Returns the special type of this node.
+        :rtype: SpecialType
+        """
+        return self._special
+
+    @special.setter
+    def special(self, special):
+        """
+        Set the special type of this node.
+        :param special: the special type.
+        """
+        self._special = special
+        self.label.setText(self._special.value if self._special else self.datatype.value)
         self.updateRect()
 
     ####################################################################################################################
@@ -82,11 +110,17 @@ class ValueDomainNode(Node):
         scene = self.scene()
         menu = super().contextMenu()
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
-        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeValueDomainDatatype)
 
-        # switch the check matching the current datatype
-        for action in scene.mainwindow.actionsChangeValueDomainDatatype:
-            action.setChecked(self.datatype == action.data())
+        if not self.special:
+            menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeValueDomainDatatype)
+            # switch the check matching the current datatype
+            for action in scene.mainwindow.actionsChangeValueDomainDatatype:
+                action.setChecked(self.datatype == action.data())
+
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeSpecial)
+        # switch the check on the currently active special
+        for action in scene.mainwindow.actionsNodeSetSpecial:
+            action.setChecked(self.special is action.data())
 
         menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
         return menu
@@ -102,6 +136,7 @@ class ValueDomainNode(Node):
             'height': self.height(),
             'id': self.id,
             'scene': scene,
+            'special': self.special,
             'url': self.url,
             'width': self.width(),
         }
@@ -127,6 +162,7 @@ class ValueDomainNode(Node):
         shape_w = max(self.label.width() + self.padding, self.minWidth)
         self.rect = self.createRect(shape_w, self.minHeight)
         self.updateLabelPos()
+        self.updateEdges()
 
     def width(self):
         """
@@ -176,6 +212,7 @@ class ValueDomainNode(Node):
             'height': int(G.attribute('height')),
             'id': E.attribute('id'),
             'scene': scene,
+            'special': SpecialType.forValue(L.text()),
             'url': U.text(),
             'width': int(G.attribute('width')),
         }
@@ -294,17 +331,15 @@ class ValueDomainNode(Node):
         :raise ParseError: if an invalid datatype is given.
         :param text: the text value to set.
         """
-        text = text.strip()
-        for datatype in XsdDatatype:
-            if datatype.value == text:
-                self.datatype = datatype
-                self.label.setText(datatype.value)
-                self.updateRect()
-                self.updateEdges()
-                return
-
-        # raise an error in case the given text doesn't match any XsdDatatype value
-        raise ParseError('invalid datatype supplied: {0}'.format(text))
+        special = SpecialType.forValue(text)
+        if special:
+            self.special = special
+            self.updateRect()
+        else:
+            datatype = XsdDatatype.forValue(text) or XsdDatatype.string
+            self.label.setText(datatype.value)
+            self.special = None
+            self.updateRect()
 
     def updateLabelPos(self, *args, **kwargs):
         """

@@ -1513,7 +1513,7 @@ class MainWindow(QMainWindow):
         if scene:
             scene.setMode(DiagramMode.Idle)
             action = self.sender()
-            args = ItemType.ConceptNode, ItemType.RoleNode, ItemType.AttributeNode
+            args = ItemType.ConceptNode, ItemType.RoleNode, ItemType.AttributeNode, ItemType.ValueDomainNode
             node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
             if node:
                 special = action.data() if node.special is not action.data() else None

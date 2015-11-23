@@ -380,6 +380,17 @@ class XsdDatatype(Enum):
     unsignedLong = 'xsd:unsignedLong' # An unsigned, extended-precision integer. Derived from the nonNegativeInteger datatype.
     unsignedShort = 'xsd:unsignedShort' # An unsigned 16-bit integer in the range [0, 65,535]. Derived from the unsignedInt datatype.
 
+    @classmethod
+    def forValue(cls, value):
+        """
+        Returns the XsdDatatype matching the given value.
+        :param value: the value to match.
+        :rtype: XsdDatatype
+        """
+        for x in cls:
+            if x.value.lower() == value.lower().strip():
+                return x
+        return None
 
 __all__ = [
     'Color',
