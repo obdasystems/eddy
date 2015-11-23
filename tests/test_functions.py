@@ -37,7 +37,7 @@ import unittest
 
 from eddy.exceptions import ProgrammingError
 from eddy.functions import angleP, clamp, distanceP, distanceL, intersectionL
-from eddy.functions import isEmpty, midpoint, rangeF, snapToGrid
+from eddy.functions import isEmpty, midpoint, rangeF, snapF
 
 from PyQt5.QtCore import QPointF, QLineF
 
@@ -121,19 +121,19 @@ class Test_RangeF(unittest.TestCase):
         self.assertEqual([0.0000, 0.0001, 0.0002, 0.0003, 0.0004], list(rangeF(0.0000, 0.0005, 0.0001)))
 
 
-class Test_SnapToGrid(unittest.TestCase):
+class Test_SnapF(unittest.TestCase):
 
     def test_snap_to_grid(self):
-        self.assertEqual(10.0, snapToGrid(value=8.0, gridsize=10.0))
-        self.assertEqual(10.0, snapToGrid(value=6.0, gridsize=10.0))
-        self.assertEqual(0.0, snapToGrid(value=5.0, gridsize=10.0))
-        self.assertEqual(0.0, snapToGrid(value=4.0, gridsize=10.0))
-        self.assertEqual(0.0, snapToGrid(value=2.0, gridsize=10.0))
+        self.assertEqual(10.0, snapF(value=8.0, gridsize=10.0))
+        self.assertEqual(10.0, snapF(value=6.0, gridsize=10.0))
+        self.assertEqual(0.0, snapF(value=5.0, gridsize=10.0))
+        self.assertEqual(0.0, snapF(value=4.0, gridsize=10.0))
+        self.assertEqual(0.0, snapF(value=2.0, gridsize=10.0))
         
     def test_snap_to_grid_with_offset(self):
-        self.assertEqual(12.0, snapToGrid(value=8.0, gridsize=10.0, offset=2.0))
-        self.assertEqual(6.0, snapToGrid(value=6.0, gridsize=10.0, offset=-4.0))
+        self.assertEqual(12.0, snapF(value=8.0, gridsize=10.0, offset=2.0))
+        self.assertEqual(6.0, snapF(value=6.0, gridsize=10.0, offset=-4.0))
 
     def test_snap_to_grid_with_skip(self):
-        self.assertEqual(8.0, snapToGrid(value=8.0, gridsize=10.0, snap=False))
-        self.assertEqual(6.0, snapToGrid(value=6.0, gridsize=10.0, snap=False))
+        self.assertEqual(8.0, snapF(value=8.0, gridsize=10.0, snap=False))
+        self.assertEqual(6.0, snapF(value=6.0, gridsize=10.0, snap=False))

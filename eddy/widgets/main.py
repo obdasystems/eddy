@@ -32,10 +32,12 @@
 ##########################################################################
 
 
+import itertools
 import os
 import sys
 import traceback
 import webbrowser
+
 from collections import OrderedDict
 
 from PyQt5.QtCore import Qt, QSettings, QFile, QIODevice, QTextStream, QSizeF, pyqtSignal, pyqtSlot
@@ -51,7 +53,7 @@ from eddy.commands import *
 from eddy.datatypes import *
 from eddy.dialogs import *
 from eddy.exceptions import ParseError
-from eddy.functions import connect, disconnect, getPath, snapToGrid
+from eddy.functions import connect, disconnect, getPath, snapF
 from eddy.functions import make_colored_icon, make_shaded_icon
 from eddy.items import ItemType, __mapping__ as mapping
 from eddy.items import *
@@ -716,9 +718,9 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isType(ItemType.RoleNode), scene.selectedNodes()), None)
             if node and not node.asymmetric:
 
-                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 100, DiagramScene.GridSize, snap=True)
-                y1 = snapToGrid(node.pos().y() - node.height() / 2 - 40, DiagramScene.GridSize, snap=True)
-                y2 = snapToGrid(node.pos().y() - node.height() / 2 - 80, DiagramScene.GridSize, snap=True)
+                x1 = snapF(node.pos().x() + node.width() / 2 + 100, DiagramScene.GridSize, snap=True)
+                y1 = snapF(node.pos().y() - node.height() / 2 - 40, DiagramScene.GridSize, snap=True)
+                y2 = snapF(node.pos().y() - node.height() / 2 - 80, DiagramScene.GridSize, snap=True)
 
                 inverse = RoleInverseNode(scene=scene)
                 inverse.setPos(QPointF(x1, node.pos().y()))
@@ -750,22 +752,44 @@ class MainWindow(QMainWindow):
         if scene:
 
             scene.setMode(DiagramMode.Idle)
-            node = next(filter(lambda x: x.isType(ItemType.RoleNode, ItemType.AttributeNode), scene.selectedNodes()), None)
-            if node and not node.functional:
+            args = ItemType.RoleNode, ItemType.AttributeNode
+            node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
+            if node:
 
-                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 90, DiagramScene.GridSize, snap=True)
+                size = DiagramScene.GridSize
 
-                restriction = DomainRestrictionNode(scene=scene, restriction=RestrictionType.exists)
-                restriction.setPos(QPointF(x1, node.pos().y()))
+                node1 = DomainRestrictionNode(scene=scene, restriction=RestrictionType.exists)
+                edge1 = InputEdge(scene=scene, source=node, target=node1, functional=True)
 
-                edge = InputEdge(scene=scene, source=node, target=restriction, functional=True)
+                offsets = (
+                    QPointF(snapF(+node.width() / 2 + 90, size), 0),
+                    QPointF(snapF(-node.width() / 2 - 90, size), 0),
+                    QPointF(0, snapF(-node.height() / 2 - 70, size)),
+                    QPointF(0, snapF(+node.height() / 2 + 70, size)),
+                    QPointF(snapF(+node.width() / 2 + 90, size), snapF(-node.height() / 2 - 70, size)),
+                    QPointF(snapF(-node.width() / 2 - 90, size), snapF(-node.height() / 2 - 70, size)),
+                    QPointF(snapF(+node.width() / 2 + 90, size), snapF(+node.height() / 2 + 70, size)),
+                    QPointF(snapF(-node.width() / 2 - 90, size), snapF(+node.height() / 2 + 70, size)),
+                )
+
+                pos = None
+                num = sys.maxsize
+                rad = QPointF(node1.width() / 2, node1.height() / 2)
+
+                for o in offsets:
+                    count = len(scene.items(QRectF(node.pos() + o - rad, node.pos() + o + rad)))
+                    if count < num:
+                        num = count
+                        pos = node.pos() + o
+
+                node1.setPos(pos)
 
                 kwargs = {
                     'name': 'compose functional {0}'.format(node.name),
                     'scene': scene,
                     'source': node,
-                    'nodes': {restriction},
-                    'edges': {edge},
+                    'nodes': {node1},
+                    'edges': {edge1},
                 }
 
                 scene.undostack.push(CommandComposeAxiom(**kwargs))
@@ -779,22 +803,44 @@ class MainWindow(QMainWindow):
         if scene:
 
             scene.setMode(DiagramMode.Idle)
-            node = next(filter(lambda x: x.isType(ItemType.RoleNode), scene.selectedNodes()), None)
-            if node and not node.inverse_functional:
+            args = ItemType.RoleNode, ItemType.AttributeNode
+            node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
+            if node:
 
-                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 90, DiagramScene.GridSize, snap=True)
+                size = DiagramScene.GridSize
 
-                restriction = RangeRestrictionNode(scene=scene, restriction=RestrictionType.exists)
-                restriction.setPos(QPointF(x1, node.pos().y()))
+                node1 = RangeRestrictionNode(scene=scene, restriction=RestrictionType.exists)
+                edge1 = InputEdge(scene=scene, source=node, target=node1, functional=True)
 
-                edge = InputEdge(scene=scene, source=node, target=restriction, functional=True)
+                offsets = (
+                    QPointF(snapF(+node.width() / 2 + 90, size), 0),
+                    QPointF(snapF(-node.width() / 2 - 90, size), 0),
+                    QPointF(0, snapF(-node.height() / 2 - 70, size)),
+                    QPointF(0, snapF(+node.height() / 2 + 70, size)),
+                    QPointF(snapF(+node.width() / 2 + 90, size), snapF(-node.height() / 2 - 70, size)),
+                    QPointF(snapF(-node.width() / 2 - 90, size), snapF(-node.height() / 2 - 70, size)),
+                    QPointF(snapF(+node.width() / 2 + 90, size), snapF(+node.height() / 2 + 70, size)),
+                    QPointF(snapF(-node.width() / 2 - 90, size), snapF(+node.height() / 2 + 70, size)),
+                )
+
+                pos = None
+                num = sys.maxsize
+                rad = QPointF(node1.width() / 2, node1.height() / 2)
+
+                for o in offsets:
+                    count = len(scene.items(QRectF(node.pos() + o - rad, node.pos() + o + rad)))
+                    if count < num:
+                        num = count
+                        pos = node.pos() + o
+
+                node1.setPos(pos)
 
                 kwargs = {
                     'name': 'compose inverse functional {0}'.format(node.name),
                     'scene': scene,
                     'source': node,
-                    'nodes': {restriction},
-                    'edges': {edge},
+                    'nodes': {node1},
+                    'edges': {edge1},
                 }
 
                 scene.undostack.push(CommandComposeAxiom(**kwargs))
@@ -811,9 +857,9 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isType(ItemType.RoleNode), scene.selectedNodes()), None)
             if node and not node.irreflexive:
 
-                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 40, DiagramScene.GridSize, snap=True)
-                x2 = snapToGrid(node.pos().x() + node.width() / 2 + 120, DiagramScene.GridSize, snap=True)
-                x3 = snapToGrid(node.pos().x() + node.width() / 2 + 250, DiagramScene.GridSize, snap=True)
+                x1 = snapF(node.pos().x() + node.width() / 2 + 40, DiagramScene.GridSize, snap=True)
+                x2 = snapF(node.pos().x() + node.width() / 2 + 120, DiagramScene.GridSize, snap=True)
+                x3 = snapF(node.pos().x() + node.width() / 2 + 250, DiagramScene.GridSize, snap=True)
 
                 restriction = DomainRestrictionNode(scene=scene, restriction=RestrictionType.self)
                 restriction.setPos(QPointF(x1, node.pos().y()))
@@ -844,25 +890,44 @@ class MainWindow(QMainWindow):
         if scene:
 
             scene.setMode(DiagramMode.Idle)
-            node = next(filter(lambda x: x.isType(ItemType.RoleNode, ItemType.AttributeNode), scene.selectedNodes()), None)
+            args = ItemType.RoleNode, ItemType.AttributeNode
+            node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
             if node:
 
-                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 60, DiagramScene.GridSize, snap=True)
-                x2 = snapToGrid(node.pos().x() + node.width() / 2 + 200, DiagramScene.GridSize, snap=True)
+                size = DiagramScene.GridSize
 
-                restriction = DomainRestrictionNode(scene=scene, restriction=RestrictionType.exists)
-                restriction.setPos(QPointF(x1, node.pos().y()))
-                concept = ConceptNode(scene=scene)
-                concept.setPos(QPointF(x2, node.pos().y()))
-                edge1 = InputEdge(scene=scene, source=node, target=restriction)
-                edge2 = InclusionEdge(scene=scene, source=restriction, target=concept)
+                node1 = DomainRestrictionNode(scene=scene, restriction=RestrictionType.exists)
+                edge1 = InputEdge(scene=scene, source=node, target=node1)
+
+                offsets = (
+                    QPointF(snapF(+node.width() / 2 + 90, size), 0),
+                    QPointF(snapF(-node.width() / 2 - 90, size), 0),
+                    QPointF(0, snapF(-node.height() / 2 - 70, size)),
+                    QPointF(0, snapF(+node.height() / 2 + 70, size)),
+                    QPointF(snapF(+node.width() / 2 + 90, size), snapF(-node.height() / 2 - 70, size)),
+                    QPointF(snapF(-node.width() / 2 - 90, size), snapF(-node.height() / 2 - 70, size)),
+                    QPointF(snapF(+node.width() / 2 + 90, size), snapF(+node.height() / 2 + 70, size)),
+                    QPointF(snapF(-node.width() / 2 - 90, size), snapF(+node.height() / 2 + 70, size)),
+                )
+
+                pos = None
+                num = sys.maxsize
+                rad = QPointF(node1.width() / 2, node1.height() / 2)
+
+                for o in offsets:
+                    count = len(scene.items(QRectF(node.pos() + o - rad, node.pos() + o + rad)))
+                    if count < num:
+                        num = count
+                        pos = node.pos() + o
+
+                node1.setPos(pos)
 
                 kwargs = {
                     'name': 'compose {0} property domain'.format(node.name),
                     'scene': scene,
                     'source': node,
-                    'nodes': {restriction, concept},
-                    'edges': {edge1, edge2},
+                    'nodes': {node1},
+                    'edges': {edge1},
                 }
 
                 scene.undostack.push(CommandComposeAxiom(**kwargs))
@@ -876,31 +941,82 @@ class MainWindow(QMainWindow):
         if scene:
 
             scene.setMode(DiagramMode.Idle)
-            node = next(filter(lambda x: x.isType(ItemType.RoleNode, ItemType.AttributeNode), scene.selectedNodes()), None)
+            args = ItemType.RoleNode, ItemType.AttributeNode
+            node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
             if node:
 
-                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 60, DiagramScene.GridSize, snap=True)
-                x2 = snapToGrid(node.pos().x() + node.width() / 2 + 200, DiagramScene.GridSize, snap=True)
+                size = DiagramScene.GridSize
 
-                restriction = RangeRestrictionNode(scene=scene, restriction=RestrictionType.exists)
-                restriction.setPos(QPointF(x1, node.pos().y()))
+                node1 = RangeRestrictionNode(scene=scene, restriction=RestrictionType.exists)
+                edge1 = InputEdge(scene=scene, source=node, target=node1)
+
+                if node.isType(ItemType.AttributeNode):
+                    node2 = ValueDomainNode(scene=scene)
+                    edge2 = InclusionEdge(scene=scene, source=node1, target=node2)
+                else:
+                    node2 = None
+                    edge2 = None
+
+                offsets = (
+                    (
+                        QPointF(snapF(+node.width() / 2 + 90, size), 0),
+                        QPointF(snapF(-node.width() / 2 - 90, size), 0),
+                        QPointF(0, snapF(-node.height() / 2 - 70, size)),
+                        QPointF(0, snapF(+node.height() / 2 + 70, size)),
+                        QPointF(snapF(+node.width() / 2 + 90, size), snapF(-node.height() / 2 - 70, size)),
+                        QPointF(snapF(-node.width() / 2 - 90, size), snapF(-node.height() / 2 - 70, size)),
+                        QPointF(snapF(+node.width() / 2 + 90, size), snapF(+node.height() / 2 + 70, size)),
+                        QPointF(snapF(-node.width() / 2 - 90, size), snapF(+node.height() / 2 + 70, size)),
+                    ),
+                    (
+                        QPointF(snapF(+node1.width() / 2 + 120, size), 0),
+                        QPointF(snapF(-node1.width() / 2 - 120, size), 0),
+                        QPointF(0, snapF(-node1.height() / 2 - 80, size)),
+                        QPointF(0, snapF(+node1.height() / 2 + 80, size)),
+                    )
+                )
+
+                pos1 = None
+                pos2 = None
+                num1 = sys.maxsize
+                num2 = sys.maxsize
+                rad1 = QPointF(node1.width() / 2, node1.height() / 2)
+                rad2 = None if node.isType(ItemType.RoleNode) else QPointF(node2.width() / 2, node2.height() / 2)
 
                 if node.isType(ItemType.RoleNode):
-                    target = ConceptNode(scene=scene)
-                    target.setPos(QPointF(x2, node.pos().y()))
-                else:
-                    target = ValueDomainNode(scene=scene)
-                    target.setPos(QPointF(x2, node.pos().y()))
 
-                edge1 = InputEdge(scene=scene, source=node, target=restriction)
-                edge2 = InclusionEdge(scene=scene, source=restriction, target=target)
+                    for o1, o2 in itertools.product(*offsets):
+                        count1 = len(scene.items(QRectF(node.pos() + o1 - rad1, node.pos() + o1 + rad1)))
+                        if count1 < num1:
+                            num1 = count1
+                            pos1 = node.pos() + o1
+
+                elif node.isType(ItemType.AttributeNode):
+
+                    for o1, o2 in itertools.product(*offsets):
+                        count1 = len(scene.items(QRectF(node.pos() + o1 - rad1, node.pos() + o1 + rad1)))
+                        count2 = len(scene.items(QRectF(node.pos() + o1 + o2 - rad2, node.pos() + o1 + o2 + rad2)))
+                        if count1 + count2 < num1 + num2:
+                            num1 = count1
+                            num2 = count2
+                            pos1 = node.pos() + o1
+                            pos2 = node.pos() + o1 + o2
+
+                node1.setPos(pos1)
+                nodes = {node1}
+                edges = {edge1}
+
+                if node.isType(ItemType.AttributeNode):
+                    node2.setPos(pos2)
+                    nodes.add(node2)
+                    edges.add(edge2)
 
                 kwargs = {
                     'name': 'compose {0} property range'.format(node.name),
                     'scene': scene,
                     'source': node,
-                    'nodes': {restriction, target},
-                    'edges': {edge1, edge2},
+                    'nodes': nodes,
+                    'edges': edges,
                 }
 
                 scene.undostack.push(CommandComposeAxiom(**kwargs))
@@ -917,8 +1033,8 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isType(ItemType.RoleNode), scene.selectedNodes()), None)
             if node and not node.reflexive:
 
-                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 40, DiagramScene.GridSize, snap=True)
-                x2 = snapToGrid(node.pos().x() + node.width() / 2 + 250, DiagramScene.GridSize, snap=True)
+                x1 = snapF(node.pos().x() + node.width() / 2 + 40, DiagramScene.GridSize, snap=True)
+                x2 = snapF(node.pos().x() + node.width() / 2 + 250, DiagramScene.GridSize, snap=True)
 
                 restriction = DomainRestrictionNode(scene=scene, restriction=RestrictionType.self)
                 restriction.setPos(QPointF(x1, node.pos().y()))
@@ -949,8 +1065,8 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isType(ItemType.RoleNode), scene.selectedNodes()), None)
             if node and not node.symmetric:
 
-                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 100, DiagramScene.GridSize, snap=True)
-                y1 = snapToGrid(node.pos().y() - node.height() / 2 - 80, DiagramScene.GridSize, snap=True)
+                x1 = snapF(node.pos().x() + node.width() / 2 + 100, DiagramScene.GridSize, snap=True)
+                y1 = snapF(node.pos().y() - node.height() / 2 - 80, DiagramScene.GridSize, snap=True)
 
                 inverse = RoleInverseNode(scene=scene)
                 inverse.setPos(QPointF(x1, node.pos().y()))
@@ -983,12 +1099,12 @@ class MainWindow(QMainWindow):
             if node and not node.transitive:
 
                 # always snap the points to the grid, even if the feature is not enabled so we have items aligned
-                x1 = snapToGrid(node.pos().x() + node.width() / 2 + 90, DiagramScene.GridSize, snap=True)
-                x2 = snapToGrid(node.pos().x() + node.width() / 2 + 50, DiagramScene.GridSize, snap=True)
-                x3 = snapToGrid(node.pos().x() - node.width() / 2 - 20, DiagramScene.GridSize, snap=True)
-                y1 = snapToGrid(node.pos().y() - node.height() / 2 - 20, DiagramScene.GridSize, snap=True)
-                y2 = snapToGrid(node.pos().y() + node.height() / 2 + 20, DiagramScene.GridSize, snap=True)
-                y3 = snapToGrid(node.pos().y() - node.height() / 2 + 80, DiagramScene.GridSize, snap=True)
+                x1 = snapF(node.pos().x() + node.width() / 2 + 90, DiagramScene.GridSize, snap=True)
+                x2 = snapF(node.pos().x() + node.width() / 2 + 50, DiagramScene.GridSize, snap=True)
+                x3 = snapF(node.pos().x() - node.width() / 2 - 20, DiagramScene.GridSize, snap=True)
+                y1 = snapF(node.pos().y() - node.height() / 2 - 20, DiagramScene.GridSize, snap=True)
+                y2 = snapF(node.pos().y() + node.height() / 2 + 20, DiagramScene.GridSize, snap=True)
+                y3 = snapF(node.pos().y() - node.height() / 2 + 80, DiagramScene.GridSize, snap=True)
 
                 chain = RoleChainNode(scene=scene)
                 chain.setPos(QPointF(x1, node.pos().y()))

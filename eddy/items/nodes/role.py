@@ -34,7 +34,7 @@
 
 from eddy.datatypes import Font, ItemType, RestrictionType, SpecialConceptType, DiagramMode
 from eddy.dialogs import EditableNodePropertiesDialog
-from eddy.functions import snapToGrid
+from eddy.functions import snapF
 from eddy.items.nodes.common.base import ResizableNode
 from eddy.items.nodes.common.label import Label
 
@@ -97,36 +97,6 @@ class RoleNode(ResizableNode):
                             if e3.isType(ItemType.InclusionEdge) and \
                                 e3.target is e2.target and \
                                     e3.source is self:
-                                return True
-        return False
-
-    @property
-    def functional(self):
-        """
-        Tells whether the Role is defined as functional.
-        :rtype: bool
-        """
-        for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
-                e1.functional and \
-                    e1.source is self and \
-                        e1.target.isType(ItemType.DomainRestrictionNode) and \
-                            e1.target.restriction is RestrictionType.exists:
-                                return True
-        return False
-
-    @property
-    def inverse_functional(self):
-        """
-        Tells whether the Role is defined as inverse functional.
-        :rtype: bool
-        """
-        for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
-                e1.functional and \
-                    e1.source is self and \
-                        e1.target.isType(ItemType.RangeRestrictionNode) and \
-                            e1.target.restriction is RestrictionType.exists:
                                 return True
         return False
 
@@ -416,8 +386,8 @@ class RoleNode(ResizableNode):
             fromY = self.mousePressRect.top()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapToGrid(toX, scene.GridSize, -offset, snap)
-            toY = snapToGrid(toY, scene.GridSize, -offset, snap)
+            toX = snapF(toX, scene.GridSize, -offset, snap)
+            toY = snapF(toY, scene.GridSize, -offset, snap)
             diff.setX(toX - fromX)
             diff.setY(toY - fromY)
             rect.setLeft(toX)
@@ -441,7 +411,7 @@ class RoleNode(ResizableNode):
 
             fromY = self.mousePressRect.top()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapToGrid(toY, scene.GridSize, -offset, snap)
+            toY = snapF(toY, scene.GridSize, -offset, snap)
             diff.setY(toY - fromY)
             rect.setTop(toY)
 
@@ -461,8 +431,8 @@ class RoleNode(ResizableNode):
             fromY = self.mousePressRect.top()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapToGrid(toX, scene.GridSize, +offset, snap)
-            toY = snapToGrid(toY, scene.GridSize, -offset, snap)
+            toX = snapF(toX, scene.GridSize, +offset, snap)
+            toY = snapF(toY, scene.GridSize, -offset, snap)
             diff.setX(toX - fromX)
             diff.setY(toY - fromY)
             rect.setRight(toX)
@@ -486,7 +456,7 @@ class RoleNode(ResizableNode):
 
             fromX = self.mousePressRect.left()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapToGrid(toX, scene.GridSize, -offset, snap)
+            toX = snapF(toX, scene.GridSize, -offset, snap)
             diff.setX(toX - fromX)
             rect.setLeft(toX)
 
@@ -504,7 +474,7 @@ class RoleNode(ResizableNode):
 
             fromX = self.mousePressRect.right()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapToGrid(toX, scene.GridSize, +offset, snap)
+            toX = snapF(toX, scene.GridSize, +offset, snap)
             diff.setX(toX - fromX)
             rect.setRight(toX)
 
@@ -523,8 +493,8 @@ class RoleNode(ResizableNode):
             fromY = self.mousePressRect.bottom()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapToGrid(toX, scene.GridSize, -offset, snap)
-            toY = snapToGrid(toY, scene.GridSize, +offset, snap)
+            toX = snapF(toX, scene.GridSize, -offset, snap)
+            toY = snapF(toY, scene.GridSize, +offset, snap)
             diff.setX(toX - fromX)
             diff.setY(toY - fromY)
             rect.setLeft(toX)
@@ -548,7 +518,7 @@ class RoleNode(ResizableNode):
 
             fromY = self.mousePressRect.bottom()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapToGrid(toY, scene.GridSize, +offset, snap)
+            toY = snapF(toY, scene.GridSize, +offset, snap)
             diff.setY(toY - fromY)
             rect.setBottom(toY)
 
@@ -568,8 +538,8 @@ class RoleNode(ResizableNode):
             fromY = self.mousePressRect.bottom()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapToGrid(toX, scene.GridSize, +offset, snap)
-            toY = snapToGrid(toY, scene.GridSize, +offset, snap)
+            toX = snapF(toX, scene.GridSize, +offset, snap)
+            toY = snapF(toY, scene.GridSize, +offset, snap)
             diff.setX(toX - fromX)
             diff.setY(toY - fromY)
             rect.setRight(toX)

@@ -43,7 +43,7 @@ from PyQt5.QtXml import QDomDocument
 from eddy import __appname__ as appname, __organization__ as organization
 from eddy.commands import *
 from eddy.datatypes import DiagramMode
-from eddy.functions import getPath, snapToGrid, rangeF
+from eddy.functions import getPath, snapF, rangeF
 from eddy.utils import UniqueID, Clipboard
 
 
@@ -576,8 +576,8 @@ class DiagramScene(QGraphicsScene):
         :rtype: QPointF
         """
         if self.settings.value('scene/snap_to_grid', False, bool):
-            newX = snapToGrid(point.x(), DiagramScene.GridSize)
-            newY = snapToGrid(point.y(), DiagramScene.GridSize)
+            newX = snapF(point.x(), DiagramScene.GridSize)
+            newY = snapF(point.y(), DiagramScene.GridSize)
             return QPointF(newX, newY)
         else:
             return point

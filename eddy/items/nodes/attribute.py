@@ -65,27 +65,6 @@ class AttributeNode(Node):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @property
-    def functional(self):
-        """
-        Tells whether the Role is defined as functional.
-        :rtype: bool
-        """
-        for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
-                e1.functional and \
-                    e1.source is self and \
-                        e1.target.isType(ItemType.DomainRestrictionNode) and \
-                            e1.target.restriction is RestrictionType.exists:
-                                return True
-        return False
-
-    ####################################################################################################################
-    #                                                                                                                  #
     #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################

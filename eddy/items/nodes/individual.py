@@ -36,7 +36,7 @@ import math
 
 from eddy.datatypes import Font, ItemType, DiagramMode
 from eddy.dialogs import EditableNodePropertiesDialog
-from eddy.functions import snapToGrid
+from eddy.functions import snapF
 from eddy.items.nodes.common.base import ResizableNode
 from eddy.items.nodes.common.label import Label
 
@@ -288,8 +288,8 @@ class IndividualNode(ResizableNode):
             fromY = self.mousePressRect.top()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapToGrid(toX, scene.GridSize, -offset, snap)
-            toY = snapToGrid(toY, scene.GridSize, -offset, snap)
+            toX = snapF(toX, scene.GridSize, -offset, snap)
+            toY = snapF(toY, scene.GridSize, -offset, snap)
             diff.setX(toX - fromX)
             diff.setY(toY - fromY)
             rect.setLeft(toX)
@@ -324,7 +324,7 @@ class IndividualNode(ResizableNode):
 
             fromY = self.mousePressRect.top()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapToGrid(toY, scene.GridSize, -offset, snap)
+            toY = snapF(toY, scene.GridSize, -offset, snap)
             diff.setY(toY - fromY)
             rect.setTop(toY)
 
@@ -351,8 +351,8 @@ class IndividualNode(ResizableNode):
             fromY = self.mousePressRect.top()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapToGrid(toX, scene.GridSize, +offset, snap)
-            toY = snapToGrid(toY, scene.GridSize, -offset, snap)
+            toX = snapF(toX, scene.GridSize, +offset, snap)
+            toY = snapF(toY, scene.GridSize, -offset, snap)
             diff.setX(toX - fromX)
             diff.setY(toY - fromY)
             rect.setRight(toX)
@@ -387,7 +387,7 @@ class IndividualNode(ResizableNode):
 
             fromX = self.mousePressRect.left()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapToGrid(toX, scene.GridSize, -offset, snap)
+            toX = snapF(toX, scene.GridSize, -offset, snap)
             diff.setX(toX - fromX)
             rect.setLeft(toX)
 
@@ -412,7 +412,7 @@ class IndividualNode(ResizableNode):
 
             fromX = self.mousePressRect.right()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapToGrid(toX, scene.GridSize, +offset, snap)
+            toX = snapF(toX, scene.GridSize, +offset, snap)
             diff.setX(toX - fromX)
             rect.setRight(toX)
 
@@ -438,8 +438,8 @@ class IndividualNode(ResizableNode):
             fromY = self.mousePressRect.bottom()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapToGrid(toX, scene.GridSize, -offset, snap)
-            toY = snapToGrid(toY, scene.GridSize, +offset, snap)
+            toX = snapF(toX, scene.GridSize, -offset, snap)
+            toY = snapF(toY, scene.GridSize, +offset, snap)
             diff.setX(toX - fromX)
             diff.setY(toY - fromY)
             rect.setLeft(toX)
@@ -474,7 +474,7 @@ class IndividualNode(ResizableNode):
 
             fromY = self.mousePressRect.bottom()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapToGrid(toY, scene.GridSize, +offset, snap)
+            toY = snapF(toY, scene.GridSize, +offset, snap)
             diff.setY(toY - fromY)
             rect.setBottom(toY)
 
@@ -501,8 +501,8 @@ class IndividualNode(ResizableNode):
             fromY = self.mousePressRect.bottom()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapToGrid(toX, scene.GridSize, +offset, snap)
-            toY = snapToGrid(toY, scene.GridSize, +offset, snap)
+            toX = snapF(toX, scene.GridSize, +offset, snap)
+            toY = snapF(toY, scene.GridSize, +offset, snap)
             diff.setX(toX - fromX)
             diff.setY(toY - fromY)
             rect.setRight(toX)
