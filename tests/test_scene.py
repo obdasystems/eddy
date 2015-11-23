@@ -234,6 +234,77 @@ class Test_DiagramScene(GrapholEdTestCase):
 
     ####################################################################################################################
     #                                                                                                                  #
+    #   EDGE SWAPPING                                                                                                  #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def test_swap_all_edges_using_shortcut(self):
+        # GIVEN
+        self.createStubDiagram2()
+        data1 = {edge: {'source': edge.source.id, 'target': edge.target.id} for edge in self.scene.edges()}
+        # WHEN
+        QTest.keyClick(self.mainview.viewport(), 'a', Qt.ControlModifier)
+        QTest.keyClick(self.mainview.viewport(), 's', Qt.AltModifier)
+        # THEN
+        data2 = {edge: {'source': edge.source.id, 'target': edge.target.id} for edge in self.scene.edges()}
+        for edge in data1:
+            self.assertEqual(data1[edge]['source'], data2[edge]['target'])
+            self.assertEqual(data1[edge]['target'], data2[edge]['source'])
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   EDGE TOGGLES                                                                                                  #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def test_toggle_edge_complete_using_shortcut(self):
+        # GIVEN
+        self.createStubDiagram2()
+        edge = self.scene.edge('e0')
+        edge.setSelected(True)
+        # WHEN
+        QTest.keyClick(self.mainview.viewport(), 'c', Qt.AltModifier)
+        # THEN
+        self.assertTrue(edge.complete)
+
+    def test_toggle_multi_edge_complete_off_using_shortcut(self):
+        # GIVEN
+        self.createStubDiagram2()
+        self.scene.edge('e0').complete = True
+        self.scene.edge('e1').complete = True
+        self.scene.edge('e2').complete = True
+        for edge in (self.scene.edge('e0'), self.scene.edge('e1'), self.scene.edge('e2'), self.scene.edge('e3')):
+            edge.setSelected(True)
+        # WHEN
+        QTest.keyClick(self.mainview.viewport(), 'c', Qt.AltModifier)
+        # THEN
+        for edge in (self.scene.edge('e0'), self.scene.edge('e1'), self.scene.edge('e2'), self.scene.edge('e3')):
+            self.assertFalse(edge.complete)
+
+    def test_toggle_multi_edge_complete_on_using_shortcut(self):
+        # GIVEN
+        self.createStubDiagram2()
+        self.scene.edge('e0').complete = True
+        for edge in (self.scene.edge('e0'), self.scene.edge('e1'), self.scene.edge('e2'), self.scene.edge('e3')):
+            edge.setSelected(True)
+        # WHEN
+        QTest.keyClick(self.mainview.viewport(), 'c', Qt.AltModifier)
+        # THEN
+        for edge in (self.scene.edge('e0'), self.scene.edge('e1'), self.scene.edge('e2'), self.scene.edge('e3')):
+            self.assertTrue(edge.complete)
+
+    def test_toggle_edge_functional_using_shortcut(self):
+        # GIVEN
+        self.createStubDiagram2()
+        edge = self.scene.edge('e4')
+        edge.setSelected(True)
+        # WHEN
+        QTest.keyClick(self.mainview.viewport(), 'f', Qt.AltModifier)
+        # THEN
+        self.assertTrue(edge.functional)
+
+    ####################################################################################################################
+    #                                                                                                                  #
     #   STUB DIAGRAM GENERATION                                                                                        #
     #                                                                                                                  #
     ####################################################################################################################
