@@ -298,7 +298,7 @@ class RestrictionType(Enum):
 
 
 @unique
-class SpecialConceptType(Enum):
+class SpecialType(Enum):
     """
     This class defines special Concept nodes types.
     """
@@ -310,9 +310,9 @@ class SpecialConceptType(Enum):
     @classmethod
     def forValue(cls, value):
         """
-        Returns the SpecialConceptType matching the given value.
+        Returns the special type matching the given value.
         :param value: the value to match.
-        :rtype: SpecialConceptType
+        :rtype: SpecialType
         """
         for x in cls:
             if x.value == value.upper().strip():
@@ -321,10 +321,10 @@ class SpecialConceptType(Enum):
 
     @DynamicClassAttribute
     def owl(self):
-        """Returns the Owl corrispective of the special Concept node type."""
+        """Returns the Owl corrispective of the special type."""
         return {
-            SpecialConceptType.TOP: 'owl:Thing',
-            SpecialConceptType.BOTTOM: 'owl:Nothing',
+            SpecialType.TOP: 'owl:Thing',
+            SpecialType.BOTTOM: 'owl:Nothing',
         }[self]
 
 
@@ -389,6 +389,6 @@ __all__ = [
     'Font',
     'ItemType',
     'RestrictionType',
-    'SpecialConceptType',
+    'SpecialType',
     'XsdDatatype',
 ]

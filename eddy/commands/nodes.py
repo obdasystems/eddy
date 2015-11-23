@@ -525,9 +525,9 @@ class CommandNodeSetDescription(QUndoCommand):
         self.node.description = self.description1
 
 
-class CommandConceptNodeSetSpecial(QUndoCommand):
+class CommandNodeSetSpecial(QUndoCommand):
     """
-    This command is used to change the special attribute of Concept nodes.
+    This command is used to change the special attribute of nodes.
     """
     def __init__(self, scene, node, special):
         """

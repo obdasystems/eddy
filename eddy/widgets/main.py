@@ -341,14 +341,13 @@ class MainWindow(QMainWindow):
         self.actionResetLabelPosition.setIcon(self.iconRefresh)
         connect(self.actionResetLabelPosition.triggered, self.resetLabelPosition)
 
-        ## CONCEPT NODE
-        self.actionsConceptNodeSetSpecial = []
-        for special in SpecialConceptType:
+        self.actionsNodeSetSpecial = []
+        for special in SpecialType:
             action = QAction(special.value, self)
             action.setCheckable(True)
             action.setData(special)
-            connect(action.triggered, self.setSpecialConceptNode)
-            self.actionsConceptNodeSetSpecial.append(action)
+            connect(action.triggered, self.setSpecialNode)
+            self.actionsNodeSetSpecial.append(action)
 
         ## ROLE NODE
         self.actionComposeAsymmetricRole = QAction('Asymmetric Role', self)
@@ -498,11 +497,10 @@ class MainWindow(QMainWindow):
         for action in self.actionsChangeNodeBrush:
             self.menuChangeNodeBrush.addAction(action)
 
-        ## CONCEPT NODE
-        self.menuConceptNodeSpecial = QMenu('Special type')
-        self.menuConceptNodeSpecial.setIcon(self.iconStarFilled)
-        for action in self.actionsConceptNodeSetSpecial:
-            self.menuConceptNodeSpecial.addAction(action)
+        self.menuNodeSpecial = QMenu('Special type')
+        self.menuNodeSpecial.setIcon(self.iconStarFilled)
+        for action in self.actionsNodeSetSpecial:
+            self.menuNodeSpecial.addAction(action)
 
         ## ROLE NODE
         self.menuRoleNodeCompose = QMenu('Compose')
@@ -873,7 +871,7 @@ class MainWindow(QMainWindow):
                 restriction.setPos(QPointF(x1, node.pos().y()))
                 complement = ComplementNode(scene=scene)
                 complement.setPos(QPointF(x2, node.pos().y()))
-                concept = ConceptNode(scene=scene, special=SpecialConceptType.TOP)
+                concept = ConceptNode(scene=scene, special=SpecialType.TOP)
                 concept.setPos(QPointF(x3, node.pos().y()))
                 edge1 = InputEdge(scene=scene, source=node, target=restriction)
                 edge2 = InputEdge(scene=scene, source=restriction, target=complement)
@@ -1046,7 +1044,7 @@ class MainWindow(QMainWindow):
 
                 restriction = DomainRestrictionNode(scene=scene, restriction=RestrictionType.self)
                 restriction.setPos(QPointF(x1, node.pos().y()))
-                concept = ConceptNode(scene=scene, special=SpecialConceptType.TOP)
+                concept = ConceptNode(scene=scene, special=SpecialType.TOP)
                 concept.setPos(QPointF(x2, node.pos().y()))
                 edge1 = InputEdge(scene=scene, source=node, target=restriction)
                 edge2 = InclusionEdge(scene=scene, source=concept, target=restriction)
@@ -1507,7 +1505,7 @@ class MainWindow(QMainWindow):
                     scene.undostack.push(CommandNodeSetZValue(scene=scene, node=selected, zValue=zValue))
 
     @pyqtSlot()
-    def setSpecialConceptNode(self):
+    def setSpecialNode(self):
         """
         Set the special type of the selected concept node.
         """
@@ -1515,10 +1513,11 @@ class MainWindow(QMainWindow):
         if scene:
             scene.setMode(DiagramMode.Idle)
             action = self.sender()
-            concept = next(filter(lambda x: x.isType(ItemType.ConceptNode), scene.selectedNodes()), None)
-            if concept:
-                special = action.data() if concept.special is not action.data() else None
-                scene.undostack.push(CommandConceptNodeSetSpecial(scene, concept, special))
+            args = ItemType.ConceptNode, ItemType.RoleNode, ItemType.AttributeNode
+            node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
+            if node:
+                special = action.data() if node.special is not action.data() else None
+                scene.undostack.push(CommandNodeSetSpecial(scene, node, special))
 
     @pyqtSlot('QMdiSubWindow')
     def subWindowActivated(self, subwindow):

@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from eddy.datatypes import Font, ItemType, RestrictionType
+from eddy.datatypes import Font, ItemType, SpecialType
 from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.items.nodes.common.base import Node
 from eddy.items.nodes.common.label import Label
@@ -49,19 +49,47 @@ class AttributeNode(Node):
     name = 'attribute'
     xmlname = 'attribute'
 
-    def __init__(self, width=20, height=20, brush='#fcfcfc', **kwargs):
+    def __init__(self, width=20, height=20, brush='#fcfcfc', special=None, **kwargs):
         """
         Initialize the Attribute node.
         :param width: the shape width (unused in current implementation).
         :param height: the shape height (unused in current implementation).
         :param brush: the brush used to paint the node.
+        :param special: the special type of this node (if any).
         """
         super().__init__(**kwargs)
+
+        self._special = special
+
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
         self.rect = self.createRect(20, 20)
-        self.label = Label(self.name, centered=False, parent=self)
+        self.label = Label(self.name, centered=False, editable=special is None, parent=self)
         self.label.updatePos()
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def special(self):
+        """
+        Returns the special type of this node.
+        :rtype: SpecialType
+        """
+        return self._special
+
+    @special.setter
+    def special(self, special):
+        """
+        Set the special type of this node.
+        :param special: the special type.
+        """
+        self._special = special
+        self.label.editable = self._special is None
+        self.label.setText(self._special.value if self._special else self.label.defaultText)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -78,12 +106,18 @@ class AttributeNode(Node):
         menu = super().contextMenu()
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuAttributeNodeCompose)
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeSpecial)
 
-        collection = self.label.contextMenuAdd()
-        if collection:
-            menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
-            for action in collection:
-                menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
+        # switch the check on the currently active special
+        for action in scene.mainwindow.actionsNodeSetSpecial:
+            action.setChecked(self.special is action.data())
+
+        if not self.special:
+            collection = self.label.contextMenuAdd()
+            if collection:
+                menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
+                for action in collection:
+                    menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
 
         menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
         return menu
@@ -99,6 +133,7 @@ class AttributeNode(Node):
             'height': self.height(),
             'id': self.id,
             'scene': scene,
+            'special': self.special,
             'url': self.url,
             'width': self.width(),
         }
@@ -170,6 +205,7 @@ class AttributeNode(Node):
             'height': int(G.attribute('height')),
             'id': E.attribute('id'),
             'scene': scene,
+            'special': SpecialType.forValue(L.text()),
             'url': U.text(),
             'width': int(G.attribute('width')),
         }

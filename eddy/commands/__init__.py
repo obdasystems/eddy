@@ -43,7 +43,7 @@ from eddy.commands.nodes import CommandNodeHexagonSwitchTo
 from eddy.commands.nodes import CommandNodeSquareChangeRestriction
 from eddy.commands.nodes import CommandNodeSetURL
 from eddy.commands.nodes import CommandNodeSetDescription
-from eddy.commands.nodes import CommandConceptNodeSetSpecial
+from eddy.commands.nodes import CommandNodeSetSpecial
 from eddy.commands.nodes import CommandNodeChangeInputOrder
 from eddy.commands.nodes import CommandNodeChangeBrush
 
@@ -76,7 +76,7 @@ __all__ = [
     'CommandNodeSquareChangeRestriction',
     'CommandNodeSetURL',
     'CommandNodeSetDescription',
-    'CommandConceptNodeSetSpecial',
+    'CommandNodeSetSpecial',
     'CommandNodeChangeInputOrder',
     'CommandNodeChangeBrush',
     'CommandEdgeAdd',

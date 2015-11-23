@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from eddy.datatypes import Font, ItemType, RestrictionType, SpecialConceptType, DiagramMode
+from eddy.datatypes import Font, ItemType, RestrictionType, SpecialType, DiagramMode
 from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.functions import snapF
 from eddy.items.nodes.common.base import ResizableNode
@@ -58,18 +58,22 @@ class RoleNode(ResizableNode):
     name = 'role'
     xmlname = 'role'
 
-    def __init__(self, width=minWidth, height=minHeight, brush='#fcfcfc', **kwargs):
+    def __init__(self, width=minWidth, height=minHeight, brush='#fcfcfc',special=None, **kwargs):
         """
         Initialize the Individual node.
         :param width: the shape width.
         :param height: the shape height.
         :param brush: the brush used to paint the node.
+        :param special: the special type of this node (if any).
         """
         super().__init__(**kwargs)
+
+        self._special = special
+
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
         self.polygon = self.createPolygon(max(width, self.minWidth), max(height, self.minHeight))
-        self.label = Label(self.name, parent=self)
+        self.label = Label(self.name, movable=special is None, editable=special is None, parent=self)
         self.updateHandlesPos()
         self.updateLabelPos()
 
@@ -78,6 +82,25 @@ class RoleNode(ResizableNode):
     #   PROPERTIES                                                                                                     #
     #                                                                                                                  #
     ####################################################################################################################
+
+    @property
+    def special(self):
+        """
+        Returns the special type of this node.
+        :rtype: SpecialType
+        """
+        return self._special
+
+    @special.setter
+    def special(self, special):
+        """
+        Set the special type of this node.
+        :param special: the special type.
+        """
+        self._special = special
+        self.label.editable = self._special is None
+        self.label.movable = self._special is None
+        self.label.setText(self._special.value if self._special else self.label.defaultText)
 
     @property
     def asymmetric(self):
@@ -117,7 +140,7 @@ class RoleNode(ResizableNode):
                             e2.target.isType(ItemType.ComplementNode):
                         for e3 in e2.target.edges:
                             if e3.source.isType(ItemType.ConceptNode) and \
-                                e3.source.special is SpecialConceptType.TOP and \
+                                e3.source.special is SpecialType.TOP and \
                                     e3.target is e2.target:
                                 return True
         return False
@@ -135,7 +158,7 @@ class RoleNode(ResizableNode):
                         e1.target.restriction is RestrictionType.self:
                 for e2 in e1.target.edges:
                     if e2.source.isType(ItemType.ConceptNode) and \
-                        e2.source.special is SpecialConceptType.TOP and \
+                        e2.source.special is SpecialType.TOP and \
                             e2.target is e1.target:
                         return True
         return False
@@ -194,12 +217,18 @@ class RoleNode(ResizableNode):
         menu = super().contextMenu()
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRoleNodeCompose)
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeSpecial)
 
-        collection = self.label.contextMenuAdd()
-        if collection:
-            menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
-            for action in collection:
-                menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
+        # switch the check on the currently active special
+        for action in scene.mainwindow.actionsNodeSetSpecial:
+            action.setChecked(self.special is action.data())
+
+        if not self.special:
+            collection = self.label.contextMenuAdd()
+            if collection:
+                menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
+                for action in collection:
+                    menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
 
         menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
         return menu
@@ -215,6 +244,7 @@ class RoleNode(ResizableNode):
             'height': self.height(),
             'id': self.id,
             'scene': scene,
+            'special': self.special,
             'url': self.url,
             'width': self.width(),
         }
@@ -292,6 +322,7 @@ class RoleNode(ResizableNode):
             'height': int(G.attribute('height')),
             'id': E.attribute('id'),
             'scene': scene,
+            'special': SpecialType.forValue(L.text()),
             'url': U.text(),
             'width': int(G.attribute('width')),
         }

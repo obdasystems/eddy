@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from eddy.datatypes import Font, ItemType, SpecialConceptType, DiagramMode
+from eddy.datatypes import Font, ItemType, SpecialType, DiagramMode
 from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.functions import snapF
 from eddy.items.nodes.common.base import ResizableNode
@@ -59,7 +59,7 @@ class ConceptNode(ResizableNode):
         :param width: the shape width.
         :param height: the shape height.
         :param brush: the brush used to paint the node.
-        :param special: the special type of this Concept node (if None).
+        :param special: the special type of this node (if any).
         """
         super().__init__(**kwargs)
 
@@ -82,15 +82,15 @@ class ConceptNode(ResizableNode):
     @property
     def special(self):
         """
-        Returns the special type of this Concept node.
-        :rtype: SpecialConceptType
+        Returns the special type of this node.
+        :rtype: SpecialType
         """
         return self._special
 
     @special.setter
     def special(self, special):
         """
-        Set the special type of this Concept node.
+        Set the special type of this node.
         :param special: the special type.
         """
         self._special = special
@@ -113,10 +113,10 @@ class ConceptNode(ResizableNode):
 
         menu = super().contextMenu()
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
-        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuConceptNodeSpecial)
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeSpecial)
 
         # switch the check on the currently active special
-        for action in scene.mainwindow.actionsConceptNodeSetSpecial:
+        for action in scene.mainwindow.actionsNodeSetSpecial:
             action.setChecked(self.special is action.data())
 
         if not self.special:
@@ -171,7 +171,11 @@ class ConceptNode(ResizableNode):
         """
         return self.rect.width()
 
-    ############################################### AUXILIARY METHODS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @staticmethod
     def createRect(shape_w, shape_h):
@@ -208,7 +212,7 @@ class ConceptNode(ResizableNode):
             'height': int(G.attribute('height')),
             'id': E.attribute('id'),
             'scene': scene,
-            'special': SpecialConceptType.forValue(L.text()),
+            'special': SpecialType.forValue(L.text()),
             'url': U.text(),
             'width': int(G.attribute('width')),
         }
