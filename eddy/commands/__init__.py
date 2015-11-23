@@ -54,6 +54,7 @@ from eddy.commands.edges import CommandEdgeBreakpointMove
 from eddy.commands.edges import CommandEdgeBreakpointDel
 from eddy.commands.edges import CommandEdgeInclusionToggleComplete
 from eddy.commands.edges import CommandEdgeInputToggleFunctional
+from eddy.commands.edges import CommandEdgeSwap
 
 from eddy.commands.common import CommandComposeAxiom
 from eddy.commands.common import CommandItemsMultiAdd
@@ -85,6 +86,7 @@ __all__ = [
     'CommandEdgeBreakpointDel',
     'CommandEdgeInclusionToggleComplete',
     'CommandEdgeInputToggleFunctional',
+    'CommandEdgeSwap',
     'CommandItemsMultiAdd',
     'CommandItemsMultiRemove',
     'CommandSceneResize',

@@ -324,7 +324,8 @@ class Edge(Item):
             action.setData((self, breakpoint))
             menu.addAction(action)
         else:
-            menu.addAction(scene.mainwindow.actionItemDelete)
+            menu.addAction(scene.mainwindow.actionDelete)
+            menu.addAction(scene.mainwindow.actionSwapEdge)
         return menu
 
     def moveBy(self, x, y):

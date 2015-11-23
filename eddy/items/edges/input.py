@@ -109,7 +109,8 @@ class InputEdge(Edge):
             action.setData((self, breakpoint))
             menu.addAction(action)
         else:
-            menu.addAction(scene.mainwindow.actionItemDelete)
+            menu.addAction(scene.mainwindow.actionDelete)
+            menu.addAction(scene.mainwindow.actionSwapEdge)
             menu.addSeparator()
             menu.addAction(scene.mainwindow.actionToggleEdgeFunctional)
             scene.mainwindow.actionToggleEdgeFunctional.setChecked(self.functional)

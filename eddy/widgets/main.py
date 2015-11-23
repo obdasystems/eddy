@@ -158,6 +158,8 @@ class MainWindow(QMainWindow):
         self.iconSelectAll = make_shaded_icon(':/icons/select-all')
         self.iconSendToBack = make_shaded_icon(':/icons/send-to-back')
         self.iconStarFilled = make_shaded_icon(':/icons/star-filled')
+        self.iconSwapHorizontal = make_shaded_icon(':/icons/swap-horizontal')
+        self.iconSwapVertical = make_shaded_icon(':/icons/swap-vertical')
         self.iconUndo = make_shaded_icon(':/icons/undo')
         self.iconZoom = make_shaded_icon(':/icons/zoom')
 
@@ -414,6 +416,11 @@ class MainWindow(QMainWindow):
         self.actionRemoveEdgeBreakpoint.setIcon(self.iconDelete)
         connect(self.actionRemoveEdgeBreakpoint.triggered, self.removeBreakpoint)
 
+        self.actionSwapEdge = QAction('Swap', self)
+        self.actionSwapEdge.setIcon(self.iconSwapHorizontal)
+        self.actionSwapEdge.setShortcut('CTRL+ALT+S' if sys.platform.startswith('win32') else 'ALT+S')
+        connect(self.actionSwapEdge.triggered, self.swapEdge)
+
         self.actionToggleEdgeComplete = QAction('Complete', self)
         self.actionToggleEdgeComplete.setShortcut('CTRL+ALT+C' if sys.platform.startswith('win32') else 'ALT+C')
         self.actionToggleEdgeComplete.setCheckable(True)
@@ -424,6 +431,7 @@ class MainWindow(QMainWindow):
         self.actionToggleEdgeFunctional.setCheckable(True)
         connect(self.actionToggleEdgeFunctional.triggered, self.toggleEdgeFunctional)
 
+        self.addAction(self.actionSwapEdge)
         self.addAction(self.actionToggleEdgeComplete)
         self.addAction(self.actionToggleEdgeFunctional)
         
@@ -1561,6 +1569,18 @@ class MainWindow(QMainWindow):
         """
         self.abortQuit = True
         self.mdi.setActiveSubWindow(subwindow)
+
+    @pyqtSlot()
+    def swapEdge(self):
+        """
+        Swap the selected edges by inverting source/target points.
+        """
+        scene = self.mdi.activeScene
+        if scene:
+            scene.setMode(DiagramMode.Idle)
+            selected = scene.selectedEdges()
+            if selected:
+                scene.undostack.push(CommandEdgeSwap(scene=scene, edges=selected))
 
     @pyqtSlot()
     def switchHexagonNode(self):

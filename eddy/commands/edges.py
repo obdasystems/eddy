@@ -266,3 +266,38 @@ class CommandEdgeInputToggleFunctional(QUndoCommand):
             edge.functional = self.data[edge]['from']
             edge.updateEdge()
         self.scene.updated.emit()
+
+
+class CommandEdgeSwap(QUndoCommand):
+    """
+    This command is used to swap edges' source/target.
+    """
+    def __init__(self, scene, edges):
+        """
+        Initialize the command.
+        :param scene: the scene where this command is being performed.
+        :param edges: a mapping containing 'functional' data change for each edge.
+        """
+        if len(edges) == 1:
+            super().__init__('swap {0} edge'.format(next(iter(edges)).name))
+        else:
+            super().__init__('swap {0} edges'.format(len(edges)))
+
+        self.scene = scene
+        self.edges = edges
+
+    def redo(self):
+        """redo the command"""
+        for edge in self.edges:
+            edge.source, edge.target = edge.target, edge.source
+            edge.breakpoints = edge.breakpoints[::-1]
+            edge.updateEdge()
+        self.scene.updated.emit()
+
+    def undo(self):
+        """undo the command"""
+        for edge in self.edges:
+            edge.source, edge.target = edge.target, edge.source
+            edge.breakpoints = edge.breakpoints[::-1]
+            edge.updateEdge()
+        self.scene.updated.emit()
