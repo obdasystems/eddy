@@ -238,36 +238,38 @@ class Test_DiagramScene(GrapholEdTestCase):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def test_swap_all_edges_using_shortcut(self):
+    def test_swap_all_edges(self):
         # GIVEN
         self.createStubDiagram2()
         data1 = {edge: {'source': edge.source.id, 'target': edge.target.id} for edge in self.scene.edges()}
         # WHEN
-        QTest.keyClick(self.mainview.viewport(), 'a', Qt.ControlModifier)
-        QTest.keyClick(self.mainview.viewport(), 's', Qt.AltModifier)
+        self.mainwindow.actionSelectAll.trigger()
+        self.mainwindow.actionSwapEdge.trigger()
         # THEN
         data2 = {edge: {'source': edge.source.id, 'target': edge.target.id} for edge in self.scene.edges()}
         for edge in data1:
             self.assertEqual(data1[edge]['source'], data2[edge]['target'])
             self.assertEqual(data1[edge]['target'], data2[edge]['source'])
+        self.assertEqual(1, self.scene.undostack.count())
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   EDGE TOGGLES                                                                                                  #
+    #   EDGE TOGGLES                                                                                                   #
     #                                                                                                                  #
     ####################################################################################################################
 
-    def test_toggle_edge_complete_using_shortcut(self):
+    def test_toggle_edge_complete(self):
         # GIVEN
         self.createStubDiagram2()
         edge = self.scene.edge('e0')
         edge.setSelected(True)
         # WHEN
-        QTest.keyClick(self.mainview.viewport(), 'c', Qt.AltModifier)
+        self.mainwindow.actionToggleEdgeComplete.trigger()
         # THEN
         self.assertTrue(edge.complete)
+        self.assertEqual(1, self.scene.undostack.count())
 
-    def test_toggle_multi_edge_complete_off_using_shortcut(self):
+    def test_toggle_multi_edge_complete_off(self):
         # GIVEN
         self.createStubDiagram2()
         self.scene.edge('e0').complete = True
@@ -276,32 +278,101 @@ class Test_DiagramScene(GrapholEdTestCase):
         for edge in (self.scene.edge('e0'), self.scene.edge('e1'), self.scene.edge('e2'), self.scene.edge('e3')):
             edge.setSelected(True)
         # WHEN
-        QTest.keyClick(self.mainview.viewport(), 'c', Qt.AltModifier)
+        self.mainwindow.actionToggleEdgeComplete.trigger()
         # THEN
         for edge in (self.scene.edge('e0'), self.scene.edge('e1'), self.scene.edge('e2'), self.scene.edge('e3')):
             self.assertFalse(edge.complete)
+        self.assertEqual(1, self.scene.undostack.count())
 
-    def test_toggle_multi_edge_complete_on_using_shortcut(self):
+    def test_toggle_multi_edge_complete_on(self):
         # GIVEN
         self.createStubDiagram2()
         self.scene.edge('e0').complete = True
         for edge in (self.scene.edge('e0'), self.scene.edge('e1'), self.scene.edge('e2'), self.scene.edge('e3')):
             edge.setSelected(True)
         # WHEN
-        QTest.keyClick(self.mainview.viewport(), 'c', Qt.AltModifier)
+        self.mainwindow.actionToggleEdgeComplete.trigger()
         # THEN
         for edge in (self.scene.edge('e0'), self.scene.edge('e1'), self.scene.edge('e2'), self.scene.edge('e3')):
             self.assertTrue(edge.complete)
+        self.assertEqual(1, self.scene.undostack.count())
 
-    def test_toggle_edge_functional_using_shortcut(self):
+    def test_toggle_edge_functional(self):
         # GIVEN
         self.createStubDiagram2()
         edge = self.scene.edge('e4')
         edge.setSelected(True)
         # WHEN
-        QTest.keyClick(self.mainview.viewport(), 'f', Qt.AltModifier)
+        self.mainwindow.actionToggleEdgeFunctional.trigger()
         # THEN
         self.assertTrue(edge.functional)
+        self.assertEqual(1, self.scene.undostack.count())
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   TEST AXIOM COMPOSITION                                                                                         #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def test_compose_asymmetric_role(self):
+        # GIVEN
+        self.createStubDiagram3()
+        self.scene.node('n0').setSelected(True)
+        # WHEN
+        self.mainwindow.actionComposeAsymmetricRole.trigger()
+        # THEN
+        self.assertEqual(4, len(self.scene.nodes()))
+        self.assertEqual(3, len(self.scene.edges()))
+        self.assertEqual(1, self.scene.undostack.count())
+        self.assertTrue(self.scene.node('n0').asymmetric)
+
+    def test_compose_irreflexive_role(self):
+        # GIVEN
+        self.createStubDiagram3()
+        self.scene.node('n0').setSelected(True)
+        # WHEN
+        self.mainwindow.actionComposeIrreflexiveRole.trigger()
+        # THEN
+        self.assertEqual(5, len(self.scene.nodes()))
+        self.assertEqual(3, len(self.scene.edges()))
+        self.assertEqual(1, self.scene.undostack.count())
+        self.assertTrue(self.scene.node('n0').irreflexive)
+
+    def test_compose_reflexive_role(self):
+        # GIVEN
+        self.createStubDiagram3()
+        self.scene.node('n0').setSelected(True)
+        # WHEN
+        self.mainwindow.actionComposeReflexiveRole.trigger()
+        # THEN
+        self.assertEqual(4, len(self.scene.nodes()))
+        self.assertEqual(2, len(self.scene.edges()))
+        self.assertEqual(1, self.scene.undostack.count())
+        self.assertTrue(self.scene.node('n0').reflexive)
+
+    def test_compose_symmetric_role(self):
+        # GIVEN
+        self.createStubDiagram3()
+        self.scene.node('n0').setSelected(True)
+        # WHEN
+        self.mainwindow.actionComposeSymmetricRole.trigger()
+        # THEN
+        self.assertEqual(3, len(self.scene.nodes()))
+        self.assertEqual(2, len(self.scene.edges()))
+        self.assertEqual(1, self.scene.undostack.count())
+        self.assertTrue(self.scene.node('n0').symmetric)
+
+    def test_compose_transitive_role(self):
+        # GIVEN
+        self.createStubDiagram3()
+        self.scene.node('n0').setSelected(True)
+        # WHEN
+        self.mainwindow.actionComposeTransitiveRole.trigger()
+        # THEN
+        self.assertEqual(3, len(self.scene.nodes()))
+        self.assertEqual(3, len(self.scene.edges()))
+        self.assertEqual(1, self.scene.undostack.count())
+        self.assertTrue(self.scene.node('n0').transitive)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -321,6 +392,7 @@ class Test_DiagramScene(GrapholEdTestCase):
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, +200))) # n3
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
+        self.scene.clearSelection()
         self.scene.undostack.clear()
 
     def createStubDiagram2(self):
@@ -351,4 +423,18 @@ class Test_DiagramScene(GrapholEdTestCase):
         QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n2 -> n1
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
+        self.scene.clearSelection()
+        self.scene.undostack.clear()
+
+    def createStubDiagram3(self):
+        """
+        Create a stub diagram to be used in test cases.
+        The diagram is composed of a Role Node and an attribute Node.
+        """
+        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.RoleNode), Qt.LeftButton)
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, self.mainview.mapFromScene(QPoint(-200, -200))) # n0
+        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.AttributeNode), Qt.LeftButton)
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n1
+
+        self.scene.clearSelection()
         self.scene.undostack.clear()
