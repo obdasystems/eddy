@@ -37,10 +37,10 @@ from eddy.items import InclusionEdge
 from mockito import when
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtTest import QTest
-from tests import GrapholEdTestCase
+from tests import EddyTestCase
 
 
-class Test_DiagramScene(GrapholEdTestCase):
+class Test_DiagramScene(EddyTestCase):
 
     def setUp(self):
         """

@@ -39,10 +39,10 @@ from eddy.widgets.mdi import MdiSubWindow
 from eddy.widgets.scene import DiagramScene
 from eddy.widgets.view import MainView
 
-from tests import GrapholEdTestCase
+from tests import EddyTestCase
 
 
-class Test_MainWindow(GrapholEdTestCase):
+class Test_MainWindow(EddyTestCase):
 
     def test_new_document_from_toolbar(self):
         # WHEN

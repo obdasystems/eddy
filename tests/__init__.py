@@ -35,13 +35,14 @@
 import sys
 import unittest
 
-from eddy import Eddy
 from unittest.util import safe_repr
 from PyQt5.QtTest import QTest
 
+from eddy import Eddy
+
 
 # noinspection PyTypeChecker,PyCallByClass
-class GrapholEdTestCase(unittest.TestCase):
+class EddyTestCase(unittest.TestCase):
 
     def setUp(self):
         """
