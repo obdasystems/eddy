@@ -302,7 +302,7 @@ else:
                     'CFBundleVersion': __version__,
                     'CFBundlePackageType': 'APPL',
                     'CFBundleIconFile': 'icon.icns',
-                    'CFBundleIdentifier': 'it.uniroma1.graphol',
+                    'CFBundleIdentifier': 'it.uniroma1.eddy',
                     'CFBundleInfoDictionaryVersion': '6.0',
                     'CFBundleDevelopmentRegion': 'English',
                     'CFBundleSpokenName': __appname__,
