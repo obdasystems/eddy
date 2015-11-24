@@ -2,13 +2,17 @@
 
 ### Description
 
-Eddy is an editor for the Graphol ontology language. [Graphol] is developed by members 
-of the DASI-lab group  of the [Dipartimento di Ingegneria Informatica, Automatica e Gestionale "A.Ruberti"] 
-at [Sapienza] University of Rome. Graphol offers a  completely visual representation of ontologies to users, 
-in order to help understanding by people who are not skilled in logic. Graphol provides designers with 
-simple graphical primitives for ontology editing, avoiding complex textual syntax. Graphol's basic 
-components are inspired by Entity Relationship (ER) diagrams, thus ontologies that can be rendered as 
-ER diagrams have in Graphol a similar diagrammatic shape.
+Eddy is an an editor for the construction of Graphol ontologies which is designed for use by people who have no 
+experience in the use of software for computer design. 
+
+### About Graphol
+
+[Graphol] is developed by members of the DASI-lab group of the [Dipartimento di Ingegneria Informatica, Automatica 
+e Gestionale "A.Ruberti"] at [Sapienza] University of Rome. Graphol offers a completely visual representation of 
+ontologies to users, in order to help understanding by people who are not skilled in logic. Graphol provides designers 
+with simple graphical primitives for ontology editing, avoiding complex textual syntax. Graphol's basic components are 
+inspired by Entity Relationship (ER) diagrams, thus ontologies that can be rendered as ER diagrams have in Graphol a 
+similar diagrammatic shape.
 
 ### Screenshot
 
