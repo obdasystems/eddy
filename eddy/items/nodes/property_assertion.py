@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from eddy.datatypes import ItemType, DistinctList
+from eddy.datatypes import ItemType, DistinctList, DiagramMode
 from eddy.dialogs import OrderedInputNodePropertiesDialog
 from eddy.items.nodes.common.base import Node
 
@@ -296,9 +296,17 @@ class PropertyAssertionNode(Node):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
+        scene = self.scene()
+
         if self.isSelected():
             painter.setPen(self.selectionPen)
             painter.drawRect(self.boundingRect())
+
+        if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setPen(self.connectionOkPen)
+            painter.setBrush(self.connectionOkBrush)
+            painter.drawRoundedRect(self.boundingRect(), self.radius, self.radius)
 
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(self.brush)

@@ -537,8 +537,14 @@ class ConceptNode(ResizableNode):
         :param widget: the widget that is being painted on.
         """
         scene = self.scene()
+
         if scene.mode is not DiagramMode.NodeResize and self.isSelected():
             painter.setPen(self.selectionPen)
+            painter.drawRect(self.boundingRect())
+
+        if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
+            painter.setPen(self.connectionOkPen)
+            painter.setBrush(self.connectionOkBrush)
             painter.drawRect(self.boundingRect())
 
         painter.setBrush(self.brush)

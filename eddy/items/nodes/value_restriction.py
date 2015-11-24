@@ -553,17 +553,21 @@ class ValueRestrictionNode(ResizableNode):
         :param widget: the widget that is being painted on.
         """
         scene = self.scene()
+
         if scene.mode is not DiagramMode.NodeResize and self.isSelected():
             painter.setPen(self.selectionPen)
             painter.drawRect(self.boundingRect())
 
-        # Draw the polygon
+        if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
+            painter.setPen(self.connectionOkPen)
+            painter.setBrush(self.connectionOkBrush)
+            painter.drawRect(self.boundingRect())
+
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(self.brush)
         painter.setPen(self.pen)
         painter.drawPolygon(self.polygon)
 
-        # Draw the fold
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(self.brush)
         painter.setPen(self.pen)

@@ -51,11 +51,15 @@ class Node(Item):
     """
     __metaclass__ = ABCMeta
 
-    name = 'node'
-    prefix = 'n'
+    name = 'node' # a string identifying this node
+    prefix = 'n' # prefix to be prepended to node ids
+    connectionOkBrush = QBrush(QColor(43, 173, 63, 160)) # brush used to highlight good connections
+    connectionOkPen = QPen(QColor(43, 173, 63, 160), 1.0, Qt.SolidLine) # pen used to highlight good connections
+    connectionNotOkBrush = QBrush(QColor(179, 12, 12, 160)) # brush used to highlight wrong connections
+    connectionNotOkPen = QPen(QColor(179, 12, 12, 160), 1.0, Qt.SolidLine) # pen used to highlight good connections
     selectionOffset = 4 # used in non-resizable nodes to space the bounding rect from the shape
-    selectionPen = QPen(QColor(0, 0, 0), 1.0, Qt.DashLine)
-    xmlname = 'node'
+    selectionPen = QPen(QColor(0, 0, 0), 1.0, Qt.DashLine) # used to draw the bounding rect when the item is selected
+    xmlname = 'node' # a string identifying this node in XML documents
 
     def __init__(self, **kwargs):
         """

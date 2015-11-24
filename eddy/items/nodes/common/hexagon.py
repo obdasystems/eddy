@@ -37,6 +37,7 @@ from abc import ABCMeta
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QPolygonF
 
+from eddy.datatypes import DiagramMode
 from eddy.items.nodes.common.base import Node
 
 
@@ -216,9 +217,18 @@ class HexagonNode(Node):
         :param option: the style option for this item.
         :param widget: the widget that is being painted on.
         """
+        scene = self.scene()
+
         if self.isSelected():
             painter.setPen(self.selectionPen)
             painter.drawRect(self.boundingRect())
+
+        if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
+            boundingRect = self.boundingRect()
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setPen(self.connectionOkPen)
+            painter.setBrush(self.connectionOkBrush)
+            painter.drawPolygon(self.createPolygon(shape_w=boundingRect.width(), shape_h=boundingRect.height(), oblique=6))
 
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(self.brush)

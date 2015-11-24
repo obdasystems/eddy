@@ -141,6 +141,7 @@ class DiagramScene(QGraphicsScene):
         self.undostack.setUndoLimit(50) ## TODO: make the stack configurable
         self.mode = DiagramMode.Idle ## operation mode
         self.modeParam = None  ## extra parameter for the operation mode (see setMode())
+        self.mouseOverNode = None  ## node below the mouse cursor during edge insertion
         self.mousePressPos = None  ## scene position where the mouse has been pressed
         self.mousePressNode = None  ## node acting as mouse grabber during mouse move events
         self.mousePressNodePos = None  ## position of the shape acting as mouse grabber during mouse move events
@@ -284,9 +285,10 @@ class DiagramScene(QGraphicsScene):
                 #                                                                                                      #
                 ########################################################################################################
 
-                # update the edge position so that it will follow the mouse one
                 if self.command and self.command.edge:
-                    self.command.edge.updateEdge(target=mouseEvent.scenePos())
+                    mousePos = mouseEvent.scenePos()
+                    self.command.edge.updateEdge(target=mousePos)
+                    self.mouseOverNode = self.itemOnTopOf(mousePos, edges=False, skip={self.command.edge.source})
 
             else:
 
@@ -341,7 +343,7 @@ class DiagramScene(QGraphicsScene):
                 if self.command and self.command.edge:
 
                     # keep the edge only if it's overlapping a node in the scene
-                    node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
+                    node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False, skip={self.command.edge.source})
 
                     if node:
 
@@ -365,6 +367,7 @@ class DiagramScene(QGraphicsScene):
 
                     self.clearSelection()
                     self.command = None
+                    self.mouseOverNode = None
 
             elif self.mode is DiagramMode.NodeMove:
 
@@ -495,20 +498,23 @@ class DiagramScene(QGraphicsScene):
         """
         return self.edgesById.values()
 
-    def itemOnTopOf(self, point, nodes=True, edges=True):
+    def itemOnTopOf(self, point, nodes=True, edges=True, skip=None):
         """
         Returns the shape which is on top of the given point.
         :type point: QPointF
         :type nodes: bool
         :type edges: bool
+        :type skip: iterable
         :param point: the graphic point of the scene from where to pick items.
         :param nodes: whether to include nodes in our search.
         :param edges: whether to include edges in our search.
+        :param skip: a collection of items to be excluded from the search.
         :rtype: Item
         """
-        collection = [x for x in self.items(point) if nodes and x.isNode() or edges and x.isEdge()]
-        if collection:
-            return max(collection, key=lambda x: x.zValue())
+        skip = skip or {}
+        data = [x for x in self.items(point) if (nodes and x.isNode() or edges and x.isEdge()) and x not in skip]
+        if data:
+            return max(data, key=lambda x: x.zValue())
         return None
 
     def node(self, nid):
