@@ -72,9 +72,9 @@ class MainView(QGraphicsView):
     ####################################################################################################################
 
     @pyqtSlot(float)
-    def onScaleChanged(self, zoom):
+    def scaleChanged(self, zoom):
         """
-        Executed when the scale factor changes (triggered by the Main Slider in the Toolbar)
+        Executed when the scale factor changes (triggered by the Zoom control in the Toolbar)
         :param zoom: the scale factor.
         """
         self.scaleView(zoom)
@@ -247,7 +247,7 @@ class MainView(QGraphicsView):
 
             # allow zooming with the mouse wheel
             zoom = self.zoom
-            zoom += +(1 / ZoomControl.Step) if wheelEvent.angleDelta().y() > 0 else -(1 / ZoomControl.Step)
+            zoom += +ZoomControl.Step if wheelEvent.angleDelta().y() > 0 else -ZoomControl.Step
             zoom = clamp(zoom, ZoomControl.MinScale, ZoomControl.MaxScale)
 
             if zoom != self.zoom:

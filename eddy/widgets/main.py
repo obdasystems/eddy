@@ -162,6 +162,8 @@ class MainWindow(QMainWindow):
         self.iconSwapVertical = make_shaded_icon(':/icons/swap-vertical')
         self.iconUndo = make_shaded_icon(':/icons/undo')
         self.iconZoom = make_shaded_icon(':/icons/zoom')
+        self.iconZoomIn = make_shaded_icon(':/icons/zoom-in')
+        self.iconZoomOut = make_shaded_icon(':/icons/zoom-out')
 
         ################################################################################################################
         #                                                                                                              #
@@ -248,13 +250,6 @@ class MainWindow(QMainWindow):
         if not sys.platform.startswith('darwin'):
             self.actionQuit.setIcon(self.iconQuit)
 
-        self.actionSnapToGrid = QAction('Snap to grid', self)
-        self.actionSnapToGrid.setIcon(self.iconGrid)
-        self.actionSnapToGrid.setStatusTip('Snap diagram elements to the grid')
-        self.actionSnapToGrid.setCheckable(True)
-        self.actionSnapToGrid.setChecked(self.settings.value('scene/snap_to_grid', False, bool))
-        connect(self.actionSnapToGrid.triggered, self.toggleSnapToGrid)
-
         self.actionAbout = QAction('About {0}'.format(appname), self)
         self.actionAbout.setShortcut(QKeySequence.HelpContents)
         connect(self.actionAbout.triggered, self.about)
@@ -271,6 +266,14 @@ class MainWindow(QMainWindow):
         self.actionOpenSceneProperties = QAction('Properties...', self)
         self.actionOpenSceneProperties.setIcon(self.iconPreferences)
         connect(self.actionOpenSceneProperties.triggered, self.openSceneProperties)
+
+        self.actionSnapToGrid = QAction('Snap to grid', self)
+        self.actionSnapToGrid.setIcon(self.iconGrid)
+        self.actionSnapToGrid.setStatusTip('Snap diagram elements to the grid')
+        self.actionSnapToGrid.setCheckable(True)
+        self.actionSnapToGrid.setChecked(self.settings.value('scene/snap_to_grid', False, bool))
+        self.actionSnapToGrid.setEnabled(False)
+        connect(self.actionSnapToGrid.triggered, self.toggleSnapToGrid)
 
         ## ITEM GENERIC ACTIONS
         self.actionCut = QAction('Cut', self)
@@ -594,7 +597,9 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.actionSnapToGrid)
 
         self.toolbar.addSeparator()
-        self.toolbar.addWidget(self.zoomctrl)
+        self.toolbar.addWidget(self.zoomctrl.buttonZoomOut)
+        self.toolbar.addWidget(self.zoomctrl.buttonZoomIn)
+        self.toolbar.addWidget(self.zoomctrl.buttonZoomLevelChange)
 
         ################################################################################################################
         #                                                                                                              #
@@ -1366,7 +1371,7 @@ class MainWindow(QMainWindow):
         """
         Update actions enabling/disabling them when needed.
         """
-        a = b = c = d = e = f = False
+        wind = undo = clip = edge = node = pred = False
 
         # we need to check if we have at least one subwindow because if the program
         # simply lose the focus, self.mdi.activeScene will return None even though we
@@ -1379,31 +1384,33 @@ class MainWindow(QMainWindow):
                 nodes = scene.selectedNodes()
                 edges = scene.selectedEdges()
 
-                a = True
-                b = not self.undogroup.isClean()
-                c = not self.clipboard.empty()
-                d = len(edges) != 0
-                e = len(nodes) != 0
-                f = next(filter(lambda x: x.isType(ItemType.AttributeNode,
-                                                   ItemType.ConceptNode,
-                                                   ItemType.IndividualNode,
-                                                   ItemType.RoleNode,
-                                                   ItemType.ValueDomainNode,
-                                                   ItemType.ValueRestrictionNode), nodes), None) is not None
+                wind = True
+                undo = not self.undogroup.isClean()
+                clip = not self.clipboard.empty()
+                edge = len(edges) != 0
+                node = len(nodes) != 0
+                pred = next(filter(lambda x: x.isType(ItemType.AttributeNode,
+                                                      ItemType.ConceptNode,
+                                                      ItemType.IndividualNode,
+                                                      ItemType.RoleNode,
+                                                      ItemType.ValueDomainNode,
+                                                      ItemType.ValueRestrictionNode), nodes), None) is not None
 
-        self.actionBringToFront.setEnabled(e)
-        self.actionCloseActiveSubWindow.setEnabled(a)
-        self.actionCut.setEnabled(e)
-        self.actionCopy.setEnabled(e)
-        self.actionDelete.setEnabled(e or d)
-        self.actionExportDocument.setEnabled(a)
-        self.actionPaste.setEnabled(c)
-        self.actionPrintDocument.setEnabled(a)
-        self.actionSaveDocument.setEnabled(b)
-        self.actionSaveDocumentAs.setEnabled(a)
-        self.actionSelectAll.setEnabled(a)
-        self.actionSendToBack.setEnabled(e)
-        self.changeNodeBrushButton.setEnabled(f)
+        self.actionBringToFront.setEnabled(node)
+        self.actionCloseActiveSubWindow.setEnabled(wind)
+        self.actionCut.setEnabled(node)
+        self.actionCopy.setEnabled(node)
+        self.actionDelete.setEnabled(node or edge)
+        self.actionExportDocument.setEnabled(wind)
+        self.actionPaste.setEnabled(clip)
+        self.actionPrintDocument.setEnabled(wind)
+        self.actionSaveDocument.setEnabled(undo)
+        self.actionSaveDocumentAs.setEnabled(wind)
+        self.actionSelectAll.setEnabled(wind)
+        self.actionSendToBack.setEnabled(node)
+        self.actionSnapToGrid.setEnabled(wind)
+        self.changeNodeBrushButton.setEnabled(pred)
+        self.zoomctrl.setEnabled(wind)
 
     @pyqtSlot()
     def removeBreakpoint(self):
@@ -1534,15 +1541,13 @@ class MainWindow(QMainWindow):
             self.navigator.setView(mainview)
             self.overview.setView(mainview)
 
-            disconnect(self.zoomctrl.scaleChanged)
+            disconnect(self.zoomctrl.zoomChanged)
             disconnect(mainview.zoomChanged)
 
-            self.zoomctrl.setEnabled(False)
-            self.zoomctrl.setZoomLevel(self.zoomctrl.index(mainview.zoom))
-            self.zoomctrl.setEnabled(True)
+            self.zoomctrl.adjustZoomLevel(mainview.zoom)
 
-            connect(self.zoomctrl.scaleChanged, mainview.onScaleChanged)
-            connect(mainview.zoomChanged, self.zoomctrl.onMainViewZoomChanged)
+            connect(self.zoomctrl.zoomChanged, mainview.scaleChanged)
+            connect(mainview.zoomChanged, self.zoomctrl.scaleChanged)
 
             self.setWindowTitle(scene.document.name)
 
@@ -1550,14 +1555,11 @@ class MainWindow(QMainWindow):
 
             if not self.mdi.subWindowList():
 
-                self.zoomctrl.reset()
-                self.zoomctrl.setEnabled(False)
+                self.zoomctrl.resetZoomLevel()
                 self.navigator.clearView()
                 self.overview.clearView()
                 self.setWindowTitle()
 
-        # refresh all actions state: this will already take care of the situation where
-        # the main window just went out of focus, and so actions will stay enabled.
         self.refreshActionsState()
 
     @pyqtSlot('QMdiSubWindow')

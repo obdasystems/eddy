@@ -32,60 +32,81 @@
 ##########################################################################
 
 
-from eddy.functions import connect
+from PyQt5.QtCore import pyqtSlot, pyqtSignal
+from PyQt5.QtWidgets import QWidget, QToolButton, QAction, QMenu
 
-from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
-from PyQt5.QtWidgets import QSlider, QWidget, QHBoxLayout, QLineEdit
+from eddy.datatypes import Font
+from eddy.functions import clamp, connect, make_shaded_icon, rangeF
 
 
 class ZoomControl(QWidget):
     """
-    This class implements the Zoom control which is used to Zoom the graphics scene.
+    This class implements the Zoom control which is used to scale the diagram scene.
     """
-    MinScale = 0.25 # the minimum scale value
-    MaxScale = 5.00 # the maximum scale value
-    Step = 4 # scale tick step
+    MinScale = 0.25 # minimum scale value
+    MaxScale = 5.00 # maximum scale value
+    Step = 0.25     # incremental scale step
+    Default = 1.00  # default zoom level
 
-    scaleChanged = pyqtSignal(float)
+    zoomChanged = pyqtSignal(float)
 
     def __init__(self, parent=None):
         """
-        Inizialize the zoom controller.
+        Inizialize the zoom control widget.
         :param parent: the parent widget.
         """
         super().__init__(parent)
 
-        # This is a bit ugly but prevents the user from selecting values that do not match the set step (which
-        # in this case is 1 / 4 = 0.25 = 25%. If we set the min size and max size on the slider and set
-        # the single step the user is still able to select values which are not multiple of step.
-        self.zoom = {v[0]:v[1] for v in enumerate(map(lambda x: x / ZoomControl.Step,
-                                                  range(int(ZoomControl.MinScale * ZoomControl.Step),
-                                                        int(ZoomControl.MaxScale * ZoomControl.Step + 1), 1)), start=1)}
+        self.zoomLevel = ZoomControl.Default
+        self.zoomLevels = [x for x in rangeF(ZoomControl.MinScale, ZoomControl.MaxScale + ZoomControl.Step, ZoomControl.Step)]
 
-        self.slider = QSlider(Qt.Horizontal, self)
-        self.slider.setEnabled(False)
-        self.slider.setFixedWidth(120)
-        self.slider.setRange(1, len(self.zoom))
-        self.slider.setSingleStep(1)
-        self.slider.setTickPosition(QSlider.NoTicks)
-        self.slider.setTickInterval(1)
+        # zoom level change actions
+        self.actionsZoomChange = []
+        for i in self.zoomLevels:
+            action = QAction('{0}%'.format(int(i * 100)), self)
+            action.setCheckable(True)
+            action.setChecked(i == self.zoomLevel)
+            action.setData(i)
+            connect(action.triggered, self.zoomLevelChange)
+            self.actionsZoomChange.append(action)
 
-        connect(self.slider.valueChanged, self.onSliderValueChanged)
+        # zoom level change menu (to be embedded into a QToolButton)
+        self.menuZoomLevelChange = QMenu('Zoom Level')
+        for action in self.actionsZoomChange:
+            self.menuZoomLevelChange.addAction(action)
 
-        self.label = QLineEdit(self)
-        self.label.setAttribute(Qt.WA_MacShowFocusRect, 0)
-        self.label.setAlignment(Qt.AlignCenter)
-        self.label.setFixedSize(48, 20)
-        self.label.setFocusPolicy(Qt.NoFocus)
-        self.label.setProperty('class', 'zoom-value')
-        self.label.setReadOnly(True)
+        # zoom out shortcut
+        self.buttonZoomOut = QToolButton()
+        self.buttonZoomOut.setIcon(make_shaded_icon(':/icons/zoom-out'))
+        connect(self.buttonZoomOut.clicked, self.zoomOut)
 
-        self.mainLayout = QHBoxLayout(self)
-        self.mainLayout.addWidget(self.slider)
-        self.mainLayout.addWidget(self.label)
-        self.mainLayout.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
-        self.mainLayout.setSpacing(6)
-        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        # zoom in shortcut
+        self.buttonZoomIn = QToolButton()
+        self.buttonZoomIn.setIcon(make_shaded_icon(':/icons/zoom-in'))
+        connect(self.buttonZoomIn.clicked, self.zoomIn)
+
+        # zoom level QToolButton (to show a drop down menu)
+        self.buttonZoomLevelChange = QToolButton()
+        self.buttonZoomLevelChange.setFont(Font('Arial', 12, Font.Light))
+        self.buttonZoomLevelChange.setMenu(self.menuZoomLevelChange)
+        self.buttonZoomLevelChange.setPopupMode(QToolButton.InstantPopup)
+        self.buttonZoomLevelChange.setProperty('class', 'zoom')
+
+        self.setEnabled(False)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def readableLevel(self):
+        """
+        Returns the current zoom level in readable format (i.e: 100%, 125%, ...)
+        :rtyoe: str
+        """
+        return '{0}%'.format(int(self.zoomLevel * 100))
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -93,55 +114,34 @@ class ZoomControl(QWidget):
     #                                                                                                                  #
     ####################################################################################################################
 
-    @pyqtSlot()
-    def onSliderValueChanged(self):
-        """
-        Executed when the value of the slider changes.
-        """
-        if self.isEnabled():
-            self.scaleChanged.emit(self.zoom[self.slider.value()])
-            self.setZoomText(self.slider.value())
-
     @pyqtSlot(float)
-    def onMainViewZoomChanged(self, zoom):
+    def scaleChanged(self, zoomLevel):
         """
-        Executed when the main view zoom value changes.
-        :param zoom: the zoom value.
+        Executed when the main view changed the zoom value.
+        :param zoomLevel: the zoom value.
         """
-        if self.isEnabled():
-            self.slider.setValue(self.index(zoom))
-            self.setZoomText(self.slider.value())
+        self.adjustZoomLevel(zoomLevel)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   OVERRIDES                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    @pyqtSlot()
+    def zoomOut(self):
+        """
+        Decrese the main view zoom level.
+        """
+        self.setZoomLevel(self.zoomLevel - ZoomControl.Step)
 
-    def isEnabled(self):
+    @pyqtSlot()
+    def zoomIn(self):
         """
-        Tells whether this widget is enabled.
-        :return: True if the widget is enabled, False otherwise.
+        Increase the main view zoom level.
         """
-        return self.slider.isEnabled() and self.label.isEnabled() and super().isEnabled()
+        self.setZoomLevel(self.zoomLevel + ZoomControl.Step)
 
-    def setDisabled(self, disabled):
+    @pyqtSlot()
+    def zoomLevelChange(self):
         """
-        Set the widget enabled state.
-        :param disabled: True if the widget is disabled, False otherwise.
+        Change the zoom level using the value stored in the action that triggered the slot.
         """
-        self.slider.setDisabled(disabled)
-        self.label.setDisabled(disabled)
-        super().setDisabled(disabled)
-
-    def setEnabled(self, enabled):
-        """
-        Set the widget enabled state.
-        :param enabled: True if the widget is enabled, False otherwise.
-        """
-        self.slider.setEnabled(enabled)
-        self.label.setEnabled(enabled)
-        super().setEnabled(enabled)
+        self.setZoomLevel(self.sender().data())
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -149,36 +149,72 @@ class ZoomControl(QWidget):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def index(self, zoom):
+    def adjustZoomLevel(self, zoomLevel):
         """
-        Returns the Zoom control tick index given the scale factor.
-        :param zoom: the scale factor.
-        :raise IndexError: if the given scale factor is not valid.
+        Adjust the zoom control zoom level using the given value.
+        :param zoomLevel: the new zoom level.
         """
-        return [k for k in self.zoom if self.zoom[k] == zoom][0]
+        self.zoomLevel = zoomLevel
+        self.updateWidget()
 
-    def reset(self):
+    def resetZoomLevel(self):
         """
         Reset the zoom control to the default index.
         """
-        self.slider.setValue(1)
-        self.label.setText('')
+        self.setZoomLevel(ZoomControl.Default)
 
-    def setZoomLevel(self, index):
+    def setZoomLevel(self, zoomLevel):
         """
-        Set the zoom control value.
-        :param index: the index of the position of the slider.
+        Set the zoom level according to the given value.
+        :param zoomLevel: the new zoom level.
         """
-        self.slider.setValue(index)
-        self.setZoomText(index)
+        if self.isEnabled():
+            zoomLevel = clamp(zoomLevel, ZoomControl.MinScale, ZoomControl.MaxScale)
+            if zoomLevel != self.zoomLevel:
+                self.zoomLevel = zoomLevel
+                self.zoomChanged.emit(self.zoomLevel)
+                self.updateWidget()
 
-    def setZoomText(self, index):
+    def updateWidget(self):
         """
-        Set the zoom text value.
-        :param index: the index of the position of the slider.
+        Update current widget status.
         """
-        self.label.setText('%d%%' % int(self.zoom[index] * 100))
+        if self.isEnabled():
+            self.buttonZoomOut.setEnabled(self.zoomLevel > min(self.zoomLevels))
+            self.buttonZoomIn.setEnabled(self.zoomLevel < max(self.zoomLevels))
+            self.buttonZoomLevelChange.setText(self.readableLevel)
+            self.buttonZoomLevelChange.setEnabled(True)
+            for action in self.actionsZoomChange:
+                action.setChecked(action.data() == self.zoomLevel)
+        else:
+            self.buttonZoomOut.setEnabled(False)
+            self.buttonZoomIn.setEnabled(False)
+            self.buttonZoomLevelChange.setEnabled(False)
+            self.buttonZoomLevelChange.setText('{0}%'.format(int(ZoomControl.Default * 100)))
+            for action in self.actionsZoomChange:
+                action.setChecked(False)
 
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   OVERRIDES                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def setDisabled(self, disabled):
+        """
+        Set the widget disabled status.
+        :param disabled: the disabled status.
+        """
+        super().setDisabled(disabled)
+        self.updateWidget()
+
+    def setEnabled(self, enabled):
+        """
+        Set the widget enabled status.
+        :param enabled: the enabled status.
+        """
+        super().setEnabled(enabled)
+        self.updateWidget()
 
 __all__ = [
     'ZoomControl',
