@@ -234,7 +234,11 @@ class InstanceOfEdge(Edge):
         self.updateAnchors()
         self.updateHandles()
 
-        ################################### UPDATE EDGE PATH, SELECTION BOX AND HEAD ###################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   UPDATE EDGE PATH, SELECTION BOX AND HEAD                                                                   #
+        #                                                                                                              #
+        ################################################################################################################
 
         # get the list of visible subpaths for this edge
         collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])

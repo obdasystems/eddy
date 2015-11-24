@@ -283,7 +283,11 @@ class InclusionEdge(Edge):
         self.updateAnchors()
         self.updateHandles()
 
-        ################################ UPDATE EDGE PATH, SELECTION BOX, HEAD AND TAIL ################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   UPDATE EDGE PATH, SELECTION BOX, HEAD AND TAIL                                                             #
+        #                                                                                                              #
+        ################################################################################################################
 
         # get the list of visible subpaths for this edge
         collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
@@ -385,7 +389,11 @@ class InclusionEdge(Edge):
         self.updateZValue()
         self.update()
 
-    ################################################## ITEM DRAWING ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @classmethod
     def image(cls, **kwargs):
