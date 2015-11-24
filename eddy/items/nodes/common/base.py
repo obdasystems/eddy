@@ -54,8 +54,7 @@ class Node(Item):
     name = 'node'
     prefix = 'n'
     selectionOffset = 4 # used in non-resizable nodes to space the bounding rect from the shape
-    selectionPen = QPen(QColor(0, 0, 0), 1.0, Qt.CustomDashLine)
-    selectionPen.setDashPattern([2, 2])
+    selectionPen = QPen(QColor(0, 0, 0), 1.0, Qt.DashLine)
     xmlname = 'node'
 
     def __init__(self, **kwargs):
