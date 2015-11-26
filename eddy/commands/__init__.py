@@ -57,6 +57,7 @@ from eddy.commands.edges import CommandEdgeInputToggleFunctional
 from eddy.commands.edges import CommandEdgeSwap
 
 from eddy.commands.common import CommandComposeAxiom
+from eddy.commands.common import CommandDecomposeAxiom
 from eddy.commands.common import CommandItemsMultiAdd
 from eddy.commands.common import CommandItemsMultiRemove
 
@@ -65,6 +66,7 @@ from eddy.commands.scene import CommandSceneResize
 
 __all__ = [
     'CommandComposeAxiom',
+    'CommandDecomposeAxiom',
     'CommandNodeAdd',
     'CommandNodeSetZValue',
     'CommandNodeRezize',

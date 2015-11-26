@@ -123,12 +123,12 @@ class CommandItemsMultiRemove(QUndoCommand):
 
 class CommandComposeAxiom(QUndoCommand):
     """
-    This command is used to compose an axioms.
+    This command is used to compose axioms.
     """
     def __init__(self, name, scene, source, nodes, edges):
         """
         Initialize the command.
-        :param name: the name of the undo command
+        :param name: the name of the undo command.
         :param scene: the graphic scene where this command is being performed.
         :param source: the source node of the composition
         :param nodes: a set of nodes to be used in the composition.
@@ -163,4 +163,46 @@ class CommandComposeAxiom(QUndoCommand):
         for item in self.nodes | self.edges:
             self.scene.removeItem(item)
         # emit updated signal
+        self.scene.updated.emit()
+
+
+class CommandDecomposeAxiom(QUndoCommand):
+    """
+    This command is used to decompose axioms.
+    """
+    def __init__(self, name, scene, source, items):
+        """
+        Initialize the command.
+        :param name: the name of the undo command.
+        :param scene: the graphic scene where this command is being performed.
+        :param source: the source node of the decomposition.
+        :param items: a set of items to be removed from the composition.
+        """
+        super().__init__(name)
+        self.items = items
+        self.scene = scene
+        self.source = source
+
+    def redo(self):
+        """redo the command"""
+        for item in self.items:
+            if item.isEdge():
+                item.source.removeEdge(item)
+                item.target.removeEdge(item)
+                self.scene.removeItem(item)
+        for item in self.items:
+            if item.isNode():
+                self.scene.removeItem(item)
+        self.scene.updated.emit()
+
+    def undo(self):
+        """undo the command"""
+        for item in self.items:
+            if item.isNode():
+                self.scene.addItem(item)
+        for item in self.items:
+            if item.isEdge():
+                item.source.addEdge(item)
+                item.target.addEdge(item)
+                self.scene.addItem(item)
         self.scene.updated.emit()

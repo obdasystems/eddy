@@ -32,14 +32,14 @@
 ##########################################################################
 
 
+from PyQt5.QtCore import QPointF, QRectF, Qt
+from PyQt5.QtGui import QPolygonF, QPainterPath, QPixmap, QPainter, QPen, QColor
+
 from eddy.datatypes import Font, ItemType, RestrictionType, SpecialType, DiagramMode
 from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.functions import snapF
 from eddy.items.nodes.common.base import ResizableNode
 from eddy.items.nodes.common.label import Label
-
-from PyQt5.QtCore import QPointF, QRectF, Qt
-from PyQt5.QtGui import QPolygonF, QPainterPath, QPixmap, QPainter, QPen, QColor
 
 
 class RoleNode(ResizableNode):
@@ -124,6 +124,34 @@ class RoleNode(ResizableNode):
         return False
 
     @property
+    def asymmetryPath(self):
+        """
+        Returns a collection of items that are defining the asymmetry for this role node.
+        :rtype: set
+        """
+        paths = set()
+        for e1 in self.edges:
+            path = set()
+            if e1.isType(ItemType.InputEdge) and \
+                e1.source is self and \
+                    e1.target.isType(ItemType.RoleInverseNode) and \
+                        all(x not in paths for x in {e1, e1.target}):
+                path |= {e1, e1.target}
+                for e2 in e1.target.edges:
+                    if e2.isType(ItemType.InputEdge) and \
+                        e2.source is e1.target and \
+                            e2.target.isType(ItemType.ComplementNode) and \
+                                all(x not in paths for x in {e2, e2.target}):
+                        path |= {e2, e2.target}
+                        for e3 in e2.target.edges:
+                            if e3.isType(ItemType.InclusionEdge) and \
+                                e3.target is e2.target and \
+                                    e3.source is self and \
+                                        e3 not in paths:
+                                paths |= path | {e3}
+        return paths
+
+    @property
     def irreflexive(self):
         """
         Tells whether the Role is defined as irreflexive.
@@ -146,6 +174,35 @@ class RoleNode(ResizableNode):
         return False
 
     @property
+    def irreflexivityPath(self):
+        """
+        Returns a collection of items that are defining the irreflexivity for this role node.
+        :rtype: set
+        """
+        paths = set()
+        for e1 in self.edges:
+            path = set()
+            if e1.isType(ItemType.InputEdge) and \
+                e1.source is self and \
+                    e1.target.isType(ItemType.DomainRestrictionNode) and \
+                        e1.target.restriction is RestrictionType.self and \
+                            all(x not in paths for x in {e1, e1.target}):
+                path |= {e1, e1.target}
+                for e2 in e1.target.edges:
+                    if e2.isType(ItemType.InputEdge) and \
+                        e2.source is e1.target and \
+                            e2.target.isType(ItemType.ComplementNode) and \
+                                all(x not in paths for x in {e2, e2.target}):
+                        path |= {e2, e2.target}
+                        for e3 in e2.target.edges:
+                            if e3.source.isType(ItemType.ConceptNode) and \
+                                e3.source.special is SpecialType.TOP and \
+                                    e3.target is e2.target and \
+                                        all(x not in paths for x in {e3, e3.source}):
+                                paths |= path | {e3, e3.source}
+        return paths
+
+    @property
     def reflexive(self):
         """
         Tells whether the Role is defined as reflexive.
@@ -164,6 +221,29 @@ class RoleNode(ResizableNode):
         return False
 
     @property
+    def reflexivityPath(self):
+        """
+        Returns a collection of items that are defining the reflexivity for this role node.
+        :rtype: set
+        """
+        paths = set()
+        for e1 in self.edges:
+            path = set()
+            if e1.isType(ItemType.InputEdge) and \
+                e1.source is self and \
+                    e1.target.isType(ItemType.DomainRestrictionNode) and \
+                        e1.target.restriction is RestrictionType.self and \
+                            all(x not in paths for x in {e1, e1.target}):
+                path |= {e1, e1.target}
+                for e2 in e1.target.edges:
+                    if e2.source.isType(ItemType.ConceptNode) and \
+                        e2.source.special is SpecialType.TOP and \
+                            e2.target is e1.target and \
+                                all(x not in paths for x in {e2, e2.source}):
+                        paths |= path | {e2, e2.source}
+        return paths
+
+    @property
     def symmetric(self):
         """
         Tells whether the Role is defined as asymmetric.
@@ -179,6 +259,28 @@ class RoleNode(ResizableNode):
                             e2.source is self:
                         return True
         return False
+
+    @property
+    def symmetryPath(self):
+        """
+        Returns a collection of items that are defining the simmetry for this role node.
+        :rtype: set
+        """
+        paths = set()
+        for e1 in self.edges:
+            path = set()
+            if e1.isType(ItemType.InputEdge) and \
+                e1.source is self and \
+                    e1.target.isType(ItemType.RoleInverseNode) and \
+                        all(x not in paths for x in {e1, e1.target}):
+                path |= {e1, e1.target}
+                for e2 in e1.target.edges:
+                    if e2.isType(ItemType.InclusionEdge) and \
+                        e2.target is e1.target and \
+                            e2.source is self and \
+                                e2 not in paths:
+                        paths |= path | {e2}
+        return paths
 
     @property
     def transitive(self):
@@ -201,6 +303,35 @@ class RoleNode(ResizableNode):
                                         return True
         return False
 
+    @property
+    def transitivityPath(self):
+        """
+        Returns a collection of items that are defining the transitivity for this role node.
+        :rtype: set
+        """
+        paths = set()
+        for e1 in self.edges:
+            path = set()
+            if e1.isType(ItemType.InputEdge) and \
+                e1.source is self and \
+                    e1.target.isType(ItemType.RoleChainNode) and \
+                        all(x not in paths for x in {e1, e1.target}):
+                path |= {e1, e1.target}
+                for e2 in e1.target.edges:
+                    if e2.isType(ItemType.InputEdge) and \
+                        e2.target is e1.target and \
+                            e2 is not e1 and \
+                                e2.source is self and \
+                                    e2 not in paths:
+                        path |= {e2}
+                        for e3 in e2.source.edges:
+                            if e3.isType(ItemType.InclusionEdge) and \
+                                e3.source is e1.target and \
+                                    e3.target is e1.source and \
+                                        e3 not in paths:
+                                paths |= path | {e3}
+        return paths
+
     ####################################################################################################################
     #                                                                                                                  #
     #   INTERFACE                                                                                                      #
@@ -218,6 +349,13 @@ class RoleNode(ResizableNode):
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRoleNodeCompose)
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeSpecial)
+
+        # check currently composed axioms
+        scene.mainwindow.actionComposeAsymmetricRole.setChecked(self.asymmetric)
+        scene.mainwindow.actionComposeIrreflexiveRole.setChecked(self.irreflexive)
+        scene.mainwindow.actionComposeReflexiveRole.setChecked(self.reflexive)
+        scene.mainwindow.actionComposeSymmetricRole.setChecked(self.symmetric)
+        scene.mainwindow.actionComposeTransitiveRole.setChecked(self.transitive)
 
         # switch the check on the currently active special
         for action in scene.mainwindow.actionsNodeSetSpecial:
