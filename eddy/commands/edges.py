@@ -34,6 +34,8 @@
 
 from PyQt5.QtWidgets import QUndoCommand
 
+from eddy.datatypes import ItemType
+
 
 class CommandEdgeAdd(QUndoCommand):
     """
@@ -276,7 +278,7 @@ class CommandEdgeSwap(QUndoCommand):
         """
         Initialize the command.
         :param scene: the scene where this command is being performed.
-        :param edges: a mapping containing 'functional' data change for each edge.
+        :param edges: a collection of edges to swap.
         """
         if len(edges) == 1:
             super().__init__('swap {0} edge'.format(next(iter(edges)).name))
@@ -286,11 +288,36 @@ class CommandEdgeSwap(QUndoCommand):
         self.scene = scene
         self.edges = edges
 
+        # backup inputs order for role chain and property assertion
+        self.inputs1 = {node: node.inputs[:] for edge in self.edges \
+                                                if edge.isType(ItemType.InputEdge) \
+                                                    for node in {edge.source, edge.target} \
+                                                        if node.isType(ItemType.RoleChainNode,
+                                                            ItemType.PropertyAssertionNode)}
+
+        # exec dict comprehension again since we need a copy of the order and not the reference
+        self.inputs2 = {node: node.inputs[:] for edge in self.edges \
+                                                if edge.isType(ItemType.InputEdge) \
+                                                    for node in {edge.source, edge.target} \
+                                                        if node.isType(ItemType.RoleChainNode,
+                                                            ItemType.PropertyAssertionNode)}
+
+        for edge in self.edges:
+            if edge.target in self.inputs2:
+                self.inputs2[edge.target].remove(edge.id)
+
+        for edge in self.edges:
+            if edge.source in self.inputs2:
+                self.inputs2[edge.source].append(edge.id)
+
     def redo(self):
         """redo the command"""
         for edge in self.edges:
             edge.source, edge.target = edge.target, edge.source
             edge.breakpoints = edge.breakpoints[::-1]
+            for node in {edge.source, edge.target}:
+                if node in self.inputs2:
+                    node.inputs = self.inputs2[node]
             edge.updateEdge()
         self.scene.updated.emit()
 
@@ -299,5 +326,8 @@ class CommandEdgeSwap(QUndoCommand):
         for edge in self.edges:
             edge.source, edge.target = edge.target, edge.source
             edge.breakpoints = edge.breakpoints[::-1]
+            for node in {edge.source, edge.target}:
+                if node in self.inputs1:
+                    node.inputs = self.inputs1[node]
             edge.updateEdge()
         self.scene.updated.emit()
