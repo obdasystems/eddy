@@ -272,7 +272,7 @@ class CommandNodeLabelEdit(QUndoCommand):
         super().__init__('edit {0} node label'.format(node.name))
         self.scene = scene
         self.label = label
-        self.text1 = text
+        self.text1 = text.strip()
         self.text2 = None
 
     def end(self, text):
@@ -280,14 +280,14 @@ class CommandNodeLabelEdit(QUndoCommand):
         End the command collecting new data.
         :param text: the new label text.
         """
-        self.text2 = text
+        self.text2 = text.strip()
 
     def isTextChanged(self, text):
         """
         Checks whether the given text is different from the old value.
         :param text: the text to compare with the old value.
         """
-        return self.text1 != text
+        return self.text1 != text.strip()
 
     def redo(self):
         """redo the command"""
