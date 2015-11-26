@@ -34,10 +34,10 @@
 
 from time import time, sleep
 
-from PyQt5.QtCore import Qt, QRect, pyqtSlot
+from PyQt5.QtCore import Qt, QRect
 from PyQt5.QtGui import QPixmap, QPainter, QColor
-from PyQt5.QtWidgets import QLabel, QApplication
-from eddy import __appname__ as appname, __version__ as version
+from PyQt5.QtWidgets import QLabel
+from eddy import __appname__, __copyright__, __version__
 from eddy.datatypes import Font
 
 
@@ -105,8 +105,8 @@ class SplashScreen(QLabel):
         painter.setFont(Font('Arial', 12, Font.Light))
         ## BOUNDING RECT (0, 194, 400, 86)
         painter.setBrush(QColor(0, 0, 0))
-        painter.drawText(QRect(0, 202, 396, 14), Qt.AlignTop|Qt.AlignRight, '{0} v{1}'.format(appname, version))
-        painter.drawText(QRect(0, 216, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Copyright © 2015 Daniele Pantaleone')
+        painter.drawText(QRect(0, 202, 396, 14), Qt.AlignTop|Qt.AlignRight, '{0} v{1}'.format(__appname__, __version__))
+        painter.drawText(QRect(0, 216, 396, 14), Qt.AlignTop|Qt.AlignRight, __copyright__)
         painter.drawText(QRect(0, 230, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Licensed under the GNU GPL v3')
         painter.drawText(QRect(0, 258, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Starting up...')
 

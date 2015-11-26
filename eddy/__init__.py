@@ -35,7 +35,7 @@
 
 __author__ = 'Daniele Pantaleone'
 __email__ = 'danielepantaleone@me.com'
-__copyright__ = 'Copyright 2015, Daniele Pantaleone'
+__copyright__ = 'Copyright © 2015 Daniele Pantaleone'
 __organization__ = 'Sapienza - University Of Rome'
 __appname__ = 'Eddy'
 __version__ = '0.3.2'
