@@ -14,6 +14,11 @@ with simple graphical primitives for ontology editing, avoiding complex textual 
 inspired by Entity Relationship (ER) diagrams, thus ontologies that can be rendered as ER diagrams have in Graphol a 
 similar diagrammatic shape.
 
+* [Domenico Lembo](http://www.dis.uniroma1.it/~lembo/)                         
+* [Valerio Santarelli](http://www.dis.uniroma1.it/~dottoratoii/students/valerio-santarelli)           
+* [Domenico Fabio Savo](http://www.dis.uniroma1.it/~savo/)                       
+* [Marco Console](http://www.dis.uniroma1.it/~dottoratoii/students/marco-console)                 
+
 ### Screenshot
 
 ![screenshot](/eddy/images/shot01.png?raw=true)
