@@ -34,9 +34,11 @@
 
 from time import time, sleep
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QLabel
+from PyQt5.QtCore import Qt, QRect, pyqtSlot
+from PyQt5.QtGui import QPixmap, QPainter, QColor
+from PyQt5.QtWidgets import QLabel, QApplication
+from eddy import __appname__ as appname, __version__ as version
+from eddy.datatypes import Font
 
 
 class SplashScreen(QLabel):
@@ -65,6 +67,12 @@ class SplashScreen(QLabel):
         self.setMask(self.pixmap().mask())
         self.setFixedSize(self.pixmap().width(), self.pixmap().height())
 
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   CONTEXT MANAGER                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
+
     def __enter__(self):
         """
         Draw the splash screen.
@@ -80,6 +88,27 @@ class SplashScreen(QLabel):
         if now < self.min_splash_time:
             sleep(self.min_splash_time - now)
         self.close()
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def paintEvent(self, paintEvent):
+        """
+        Executed when the splashscreen needs to be painted.
+        :param paintEvent: the paint event instance.
+        """
+        super().paintEvent(paintEvent)
+        painter = QPainter(self)
+        painter.setFont(Font('Arial', 12, Font.Light))
+        ## BOUNDING RECT (0, 194, 400, 86)
+        painter.setBrush(QColor(0, 0, 0))
+        painter.drawText(QRect(0, 202, 396, 14), Qt.AlignTop|Qt.AlignRight, '{0} v{1}'.format(appname, version))
+        painter.drawText(QRect(0, 216, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Copyright © 2015 Daniele Pantaleone')
+        painter.drawText(QRect(0, 230, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Licensed under the GNU GPL v3')
+        painter.drawText(QRect(0, 258, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Starting up...')
 
 
 __all__ = [
