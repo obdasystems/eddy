@@ -163,12 +163,14 @@ class PropertyAssertionNode(Node):
         U = E.elementsByTagName('data:url').at(0).toElement()
         D = E.elementsByTagName('data:description').at(0).toElement()
         G = E.elementsByTagName('shape:geometry').at(0).toElement()
+        I = E.attribute('inputs', '').strip()
+
 
         kwargs = {
             'description': D.text(),
             'height': int(G.attribute('height')),
             'id': E.attribute('id'),
-            'inputs': DistinctList(E.attribute('inputs', '').split(',')),
+            'inputs': DistinctList(I.split(',') if I else []),
             'scene': scene,
             'url': U.text(),
             'width': int(G.attribute('width')),
