@@ -36,7 +36,7 @@ from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QPolygonF
 from PyQt5.QtWidgets import QUndoCommand
 
-from eddy.datatypes import RestrictionType
+from eddy.datatypes import RestrictionType, DistinctList
 
 
 class CommandNodeAdd(QUndoCommand):
@@ -261,18 +261,16 @@ class CommandNodeLabelEdit(QUndoCommand):
     """
     This command is used to edit nodes labels.
     """
-    def __init__(self, scene, node, label, text):
+    def __init__(self, scene, node):
         """
         Initialize the command.
         :param scene: the scene where this command is being performed.
         :param node: the node whose label is being edited.
-        :param label: the label whose text is being edited.
-        :param text: the text of the label before the edit.
         """
         super().__init__('edit {0} node label'.format(node.name))
+        self.node = node
         self.scene = scene
-        self.label = label
-        self.text1 = text.strip()
+        self.text1 = node.label.text().strip()
         self.text2 = None
 
     def end(self, text):
@@ -292,12 +290,40 @@ class CommandNodeLabelEdit(QUndoCommand):
     def redo(self):
         """redo the command"""
         if self.text2:
-            self.label.setText(self.text2)
+            # remove the item from the old index
+            if self.text1 in self.scene.nodesByLabel:
+                self.scene.nodesByLabel[self.text1].remove(self.node)
+                if not self.scene.nodesByLabel[self.text1]:
+                    del self.scene.nodesByLabel[self.text1]
+
+            # update the label text
+            self.node.label.setText(self.text2)
+
+            # map the item over the new index
+            if not self.text2 in self.scene.nodesByLabel:
+                self.scene.nodesByLabel[self.text2] = DistinctList()
+            self.scene.nodesByLabel[self.text2].append(self.node)
+
+            # emit update signal
             self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        self.label.setText(self.text1)
+        # remove the item from the old index
+        if self.text2 in self.scene.nodesByLabel:
+            self.scene.nodesByLabel[self.text2].remove(self.node)
+            if not self.scene.nodesByLabel[self.text2]:
+                del self.scene.nodesByLabel[self.text2]
+
+        # update the label text
+        self.node.label.setText(self.text1)
+
+        # map the item over the new index
+        if not self.text1 in self.scene.nodesByLabel:
+            self.scene.nodesByLabel[self.text1] = DistinctList()
+        self.scene.nodesByLabel[self.text1].append(self.node)
+
+        # emit update signal
         self.scene.updated.emit()
 
 

@@ -42,7 +42,7 @@ from PyQt5.QtXml import QDomDocument
 
 from eddy import __appname__ as appname, __organization__ as organization
 from eddy.commands import *
-from eddy.datatypes import DiagramMode
+from eddy.datatypes import DiagramMode, DistinctList
 from eddy.functions import getPath, snapF, rangeF
 from eddy.utils import UniqueID, Clipboard
 
@@ -135,11 +135,12 @@ class DiagramScene(QGraphicsScene):
         self.document = Document()  ## document associated with the current scene
         self.edgesById = {}  ## used to index edges using their id
         self.nodesById = {}  ## used to index nodes using their id
+        self.nodesByLabel = {}  ## used to index nodes using their label text
         self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, organization, appname)  ## settings
         self.uniqueID = UniqueID()  ## used to generate unique incremental ids
         self.undostack = QUndoStack(self)  ## use to push actions and keep history for undo/redo
-        self.undostack.setUndoLimit(50) ## TODO: make the stack configurable
-        self.mode = DiagramMode.Idle ## operation mode
+        self.undostack.setUndoLimit(50)  ## TODO: make the stack configurable
+        self.mode = DiagramMode.Idle  ## operation mode
         self.modeParam = None  ## extra parameter for the operation mode (see setMode())
         self.mouseOverNode = None  ## node below the mouse cursor during edge insertion
         self.mousePressPos = None  ## scene position where the mouse has been pressed
@@ -467,19 +468,27 @@ class DiagramScene(QGraphicsScene):
 
     def addItem(self, item):
         """
-        Add an item to the Diagram scene.
+        Add an item to the diagram scene.
         :param item: the item to add.
         """
         super().addItem(item)
+        # map the item over the index matching its type
         collection = self.nodesById if item.isNode() else self.edgesById
         collection[item.id] = item
+        # map the item in the nodesByLabel index if needed
+        if item.isNode() and item.label.editable:
+            index = item.labelText()
+            if not index in self.nodesByLabel:
+                self.nodesByLabel[index] = DistinctList()
+            self.nodesByLabel[index].append(item)
 
     def clear(self):
         """
         Clear the Diagram Scene by removing all the elements.
         """
-        self.nodesById.clear()
         self.edgesById.clear()
+        self.nodesById.clear()
+        self.nodesByLabel.clear()
         self.undostack.clear()
         super().clear()
 
@@ -538,8 +547,16 @@ class DiagramScene(QGraphicsScene):
         :param item: the item to remove.
         """
         super().removeItem(item)
+        # remove the item from the index matching its type
         collection = self.nodesById if item.isNode() else self.edgesById
         collection.pop(item.id, None)
+        # remove the item from the nodesByLabel index if needed
+        if item.isNode() and item.label.editable:
+            index = item.labelText()
+            if index in self.nodesByLabel:
+                self.nodesByLabel[index].remove(item)
+                if not self.nodesByLabel[index]:
+                    del self.nodesByLabel[index]
 
     def selectedEdges(self):
         """

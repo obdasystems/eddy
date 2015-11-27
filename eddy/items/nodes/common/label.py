@@ -253,7 +253,7 @@ class Label(LabelItem):
         cursor = self.textCursor()
         cursor.select(QTextCursor.BlockUnderCursor)
         self.setTextCursor(cursor)
-        self.commandEdit = self.commandEdit or CommandNodeLabelEdit(scene, parent, self, self.text())
+        self.commandEdit = self.commandEdit or CommandNodeLabelEdit(scene, parent)
         scene.clearSelection()
         self.setSelected(True)
         super().focusInEvent(focusEvent)

@@ -498,7 +498,7 @@ class EditableNodePropertiesDialog(NodePropertiesDialog):
         value = self.labelF.value().strip()
         if self.node.labelText().strip() != value:
             value = value if not isEmpty(value) else self.node.label.defaultText
-            command = CommandNodeLabelEdit(self.scene, self.node, self.node.label, self.node.label.text())
+            command = CommandNodeLabelEdit(self.scene, self.node)
             command.end(value)
             self.scene.undostack.push(command)
 
