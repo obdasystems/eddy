@@ -38,7 +38,7 @@ __email__ = 'danielepantaleone@me.com'
 __copyright__ = 'Copyright © 2015 Daniele Pantaleone'
 __organization__ = 'Sapienza - University Of Rome'
 __appname__ = 'Eddy'
-__version__ = '0.3.2'
+__version__ = '0.4'
 __status__ = 'Development'
 __license__ = 'GPL'
 
