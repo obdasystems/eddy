@@ -32,7 +32,6 @@
 ##########################################################################
 
 
-import itertools
 import os
 import sys
 import traceback
@@ -41,7 +40,7 @@ import webbrowser
 from collections import OrderedDict
 
 from PyQt5.QtCore import Qt, QSettings, QFile, QIODevice, QTextStream, QSizeF, pyqtSignal, pyqtSlot
-from PyQt5.QtCore import QRectF, QPointF
+from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter, QPageSize
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDialog, QStyle
@@ -53,7 +52,7 @@ from eddy.commands import *
 from eddy.datatypes import *
 from eddy.dialogs import *
 from eddy.exceptions import ParseError
-from eddy.functions import connect, disconnect, getPath, snapF
+from eddy.functions import connect, disconnect, getPath
 from eddy.functions import make_colored_icon, make_shaded_icon
 from eddy.items import ItemType, __mapping__ as mapping
 from eddy.items import *
@@ -757,53 +756,32 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-
             scene.setMode(DiagramMode.Idle)
             node = next(filter(lambda x: x.isType(ItemType.RoleNode), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
                 if action:
-
                     if action.isChecked():
-
                         if not node.asymmetric:
-
-                            x1 = snapF(node.pos().x() + node.width() / 2 + 100, DiagramScene.GridSize, snap=True)
-                            y1 = snapF(node.pos().y() - node.height() / 2 - 40, DiagramScene.GridSize, snap=True)
-                            y2 = snapF(node.pos().y() - node.height() / 2 - 80, DiagramScene.GridSize, snap=True)
-
-                            inverse = RoleInverseNode(scene=scene)
-                            inverse.setPos(QPointF(x1, node.pos().y()))
-                            complement = ComplementNode(scene=scene)
-                            complement.setPos(QPointF(x1, y1))
-                            edge1 = InputEdge(scene=scene, source=node, target=inverse)
-                            edge2 = InputEdge(scene=scene, source=inverse, target=complement)
-                            edge3 = InclusionEdge(scene=scene, source=node, target=complement, breakpoints=[
-                                QPointF(node.pos().x(), y2),
-                                QPointF(x1, y2)
-                            ])
-
+                            items = scene.asymmetricRoleAxiomComposition(node)
+                            nodes = {x for x in items if x.isNode()}
+                            edges = {x for x in items if x.isEdge()}
                             kwargs = {
                                 'name': 'compose asymmetric role',
                                 'scene': scene,
                                 'source': node,
-                                'nodes': {inverse, complement},
-                                'edges': {edge1, edge2, edge3},
+                                'nodes': nodes,
+                                'edges': edges,
                             }
-
                             scene.undostack.push(CommandComposeAxiom(**kwargs))
-
                     else:
-
                         if node.asymmetric:
-
                             kwargs = {
                                 'name': 'decompose asymmetric role',
                                 'scene': scene,
                                 'source': node,
                                 'items': node.asymmetryPath,
                             }
-
                             scene.undostack.push(CommandDecomposeAxiom(**kwargs))
 
     @pyqtSlot()
@@ -813,48 +791,20 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-
             scene.setMode(DiagramMode.Idle)
             args = ItemType.RoleNode, ItemType.AttributeNode
             node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
             if node:
-
-                size = DiagramScene.GridSize
-
-                node1 = DomainRestrictionNode(scene=scene, restriction=RestrictionType.exists)
-                edge1 = InputEdge(scene=scene, source=node, target=node1, functional=True)
-
-                offsets = (
-                    QPointF(snapF(+node.width() / 2 + 90, size), 0),
-                    QPointF(snapF(-node.width() / 2 - 90, size), 0),
-                    QPointF(0, snapF(-node.height() / 2 - 70, size)),
-                    QPointF(0, snapF(+node.height() / 2 + 70, size)),
-                    QPointF(snapF(+node.width() / 2 + 90, size), snapF(-node.height() / 2 - 70, size)),
-                    QPointF(snapF(-node.width() / 2 - 90, size), snapF(-node.height() / 2 - 70, size)),
-                    QPointF(snapF(+node.width() / 2 + 90, size), snapF(+node.height() / 2 + 70, size)),
-                    QPointF(snapF(-node.width() / 2 - 90, size), snapF(+node.height() / 2 + 70, size)),
-                )
-
-                pos = None
-                num = sys.maxsize
-                rad = QPointF(node1.width() / 2, node1.height() / 2)
-
-                for o in offsets:
-                    count = len(scene.items(QRectF(node.pos() + o - rad, node.pos() + o + rad)))
-                    if count < num:
-                        num = count
-                        pos = node.pos() + o
-
-                node1.setPos(pos)
-
+                items = scene.functionalAxiomComposition(node)
+                nodes = {x for x in items if x.isNode()}
+                edges = {x for x in items if x.isEdge()}
                 kwargs = {
                     'name': 'compose functional {0}'.format(node.name),
                     'scene': scene,
                     'source': node,
-                    'nodes': {node1},
-                    'edges': {edge1},
+                    'nodes': nodes,
+                    'edges': edges,
                 }
-
                 scene.undostack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
@@ -864,48 +814,20 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-
             scene.setMode(DiagramMode.Idle)
             args = ItemType.RoleNode, ItemType.AttributeNode
             node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
             if node:
-
-                size = DiagramScene.GridSize
-
-                node1 = RangeRestrictionNode(scene=scene, restriction=RestrictionType.exists)
-                edge1 = InputEdge(scene=scene, source=node, target=node1, functional=True)
-
-                offsets = (
-                    QPointF(snapF(+node.width() / 2 + 90, size), 0),
-                    QPointF(snapF(-node.width() / 2 - 90, size), 0),
-                    QPointF(0, snapF(-node.height() / 2 - 70, size)),
-                    QPointF(0, snapF(+node.height() / 2 + 70, size)),
-                    QPointF(snapF(+node.width() / 2 + 90, size), snapF(-node.height() / 2 - 70, size)),
-                    QPointF(snapF(-node.width() / 2 - 90, size), snapF(-node.height() / 2 - 70, size)),
-                    QPointF(snapF(+node.width() / 2 + 90, size), snapF(+node.height() / 2 + 70, size)),
-                    QPointF(snapF(-node.width() / 2 - 90, size), snapF(+node.height() / 2 + 70, size)),
-                )
-
-                pos = None
-                num = sys.maxsize
-                rad = QPointF(node1.width() / 2, node1.height() / 2)
-
-                for o in offsets:
-                    count = len(scene.items(QRectF(node.pos() + o - rad, node.pos() + o + rad)))
-                    if count < num:
-                        num = count
-                        pos = node.pos() + o
-
-                node1.setPos(pos)
-
+                items = scene.inverseFunctionalAxiomComposition(node)
+                nodes = {x for x in items if x.isNode()}
+                edges = {x for x in items if x.isEdge()}
                 kwargs = {
                     'name': 'compose inverse functional {0}'.format(node.name),
                     'scene': scene,
                     'source': node,
-                    'nodes': {node1},
-                    'edges': {edge1},
+                    'nodes': nodes,
+                    'edges': edges,
                 }
-
                 scene.undostack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
@@ -915,52 +837,32 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-
             scene.setMode(DiagramMode.Idle)
             node = next(filter(lambda x: x.isType(ItemType.RoleNode), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
                 if action:
-
                     if action.isChecked():
-
                         if not node.irreflexive:
-
-                            x1 = snapF(node.pos().x() + node.width() / 2 + 40, DiagramScene.GridSize, snap=True)
-                            x2 = snapF(node.pos().x() + node.width() / 2 + 120, DiagramScene.GridSize, snap=True)
-                            x3 = snapF(node.pos().x() + node.width() / 2 + 250, DiagramScene.GridSize, snap=True)
-
-                            restriction = DomainRestrictionNode(scene=scene, restriction=RestrictionType.self)
-                            restriction.setPos(QPointF(x1, node.pos().y()))
-                            complement = ComplementNode(scene=scene)
-                            complement.setPos(QPointF(x2, node.pos().y()))
-                            concept = ConceptNode(scene=scene, special=SpecialType.TOP)
-                            concept.setPos(QPointF(x3, node.pos().y()))
-                            edge1 = InputEdge(scene=scene, source=node, target=restriction)
-                            edge2 = InputEdge(scene=scene, source=restriction, target=complement)
-                            edge3 = InclusionEdge(scene=scene, source=concept, target=complement)
-
+                            items = scene.irreflexiveRoleAxiomComposition(node)
+                            nodes = {x for x in items if x.isNode()}
+                            edges = {x for x in items if x.isEdge()}
                             kwargs = {
                                 'name': 'compose irreflexive role',
                                 'scene': scene,
                                 'source': node,
-                                'nodes': {restriction, complement, concept},
-                                'edges': {edge1, edge2, edge3},
+                                'nodes': nodes,
+                                'edges': edges,
                             }
-
                             scene.undostack.push(CommandComposeAxiom(**kwargs))
-
                     else:
-
                         if node.irreflexive:
-
                             kwargs = {
                                 'name': 'decompose irreflexive role',
                                 'scene': scene,
                                 'source': node,
                                 'items': node.irreflexivityPath,
                             }
-
                             scene.undostack.push(CommandDecomposeAxiom(**kwargs))
 
     @pyqtSlot()
@@ -970,48 +872,20 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-
             scene.setMode(DiagramMode.Idle)
             args = ItemType.RoleNode, ItemType.AttributeNode
             node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
             if node:
-
-                size = DiagramScene.GridSize
-
-                node1 = DomainRestrictionNode(scene=scene, restriction=RestrictionType.exists)
-                edge1 = InputEdge(scene=scene, source=node, target=node1)
-
-                offsets = (
-                    QPointF(snapF(+node.width() / 2 + 90, size), 0),
-                    QPointF(snapF(-node.width() / 2 - 90, size), 0),
-                    QPointF(0, snapF(-node.height() / 2 - 70, size)),
-                    QPointF(0, snapF(+node.height() / 2 + 70, size)),
-                    QPointF(snapF(+node.width() / 2 + 90, size), snapF(-node.height() / 2 - 70, size)),
-                    QPointF(snapF(-node.width() / 2 - 90, size), snapF(-node.height() / 2 - 70, size)),
-                    QPointF(snapF(+node.width() / 2 + 90, size), snapF(+node.height() / 2 + 70, size)),
-                    QPointF(snapF(-node.width() / 2 - 90, size), snapF(+node.height() / 2 + 70, size)),
-                )
-
-                pos = None
-                num = sys.maxsize
-                rad = QPointF(node1.width() / 2, node1.height() / 2)
-
-                for o in offsets:
-                    count = len(scene.items(QRectF(node.pos() + o - rad, node.pos() + o + rad)))
-                    if count < num:
-                        num = count
-                        pos = node.pos() + o
-
-                node1.setPos(pos)
-
+                items = scene.propertyDomainAxiomComposition(node)
+                nodes = {x for x in items if x.isNode()}
+                edges = {x for x in items if x.isEdge()}
                 kwargs = {
                     'name': 'compose {0} property domain'.format(node.name),
                     'scene': scene,
                     'source': node,
-                    'nodes': {node1},
-                    'edges': {edge1},
+                    'nodes': nodes,
+                    'edges': edges,
                 }
-
                 scene.undostack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
@@ -1021,78 +895,13 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-
             scene.setMode(DiagramMode.Idle)
             args = ItemType.RoleNode, ItemType.AttributeNode
             node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
             if node:
-
-                size = DiagramScene.GridSize
-
-                node1 = RangeRestrictionNode(scene=scene, restriction=RestrictionType.exists)
-                edge1 = InputEdge(scene=scene, source=node, target=node1)
-
-                if node.isType(ItemType.AttributeNode):
-                    node2 = ValueDomainNode(scene=scene)
-                    edge2 = InclusionEdge(scene=scene, source=node1, target=node2)
-                else:
-                    node2 = None
-                    edge2 = None
-
-                offsets = (
-                    (
-                        QPointF(snapF(+node.width() / 2 + 90, size), 0),
-                        QPointF(snapF(-node.width() / 2 - 90, size), 0),
-                        QPointF(0, snapF(-node.height() / 2 - 70, size)),
-                        QPointF(0, snapF(+node.height() / 2 + 70, size)),
-                        QPointF(snapF(+node.width() / 2 + 90, size), snapF(-node.height() / 2 - 70, size)),
-                        QPointF(snapF(-node.width() / 2 - 90, size), snapF(-node.height() / 2 - 70, size)),
-                        QPointF(snapF(+node.width() / 2 + 90, size), snapF(+node.height() / 2 + 70, size)),
-                        QPointF(snapF(-node.width() / 2 - 90, size), snapF(+node.height() / 2 + 70, size)),
-                    ),
-                    (
-                        QPointF(snapF(+node1.width() / 2 + 120, size), 0),
-                        QPointF(snapF(-node1.width() / 2 - 120, size), 0),
-                        QPointF(0, snapF(-node1.height() / 2 - 80, size)),
-                        QPointF(0, snapF(+node1.height() / 2 + 80, size)),
-                    )
-                )
-
-                pos1 = None
-                pos2 = None
-                num1 = sys.maxsize
-                num2 = sys.maxsize
-                rad1 = QPointF(node1.width() / 2, node1.height() / 2)
-                rad2 = None if node.isType(ItemType.RoleNode) else QPointF(node2.width() / 2, node2.height() / 2)
-
-                if node.isType(ItemType.RoleNode):
-
-                    for o1, o2 in itertools.product(*offsets):
-                        count1 = len(scene.items(QRectF(node.pos() + o1 - rad1, node.pos() + o1 + rad1)))
-                        if count1 < num1:
-                            num1 = count1
-                            pos1 = node.pos() + o1
-
-                elif node.isType(ItemType.AttributeNode):
-
-                    for o1, o2 in itertools.product(*offsets):
-                        count1 = len(scene.items(QRectF(node.pos() + o1 - rad1, node.pos() + o1 + rad1)))
-                        count2 = len(scene.items(QRectF(node.pos() + o1 + o2 - rad2, node.pos() + o1 + o2 + rad2)))
-                        if count1 + count2 < num1 + num2:
-                            num1 = count1
-                            num2 = count2
-                            pos1 = node.pos() + o1
-                            pos2 = node.pos() + o1 + o2
-
-                node1.setPos(pos1)
-                nodes = {node1}
-                edges = {edge1}
-
-                if node.isType(ItemType.AttributeNode):
-                    node2.setPos(pos2)
-                    nodes.add(node2)
-                    edges.add(edge2)
-
+                items = scene.propertyRangeAxiomComposition(node)
+                nodes = {x for x in items if x.isNode()}
+                edges = {x for x in items if x.isEdge()}
                 kwargs = {
                     'name': 'compose {0} property range'.format(node.name),
                     'scene': scene,
@@ -1100,7 +909,6 @@ class MainWindow(QMainWindow):
                     'nodes': nodes,
                     'edges': edges,
                 }
-
                 scene.undostack.push(CommandComposeAxiom(**kwargs))
 
     @pyqtSlot()
@@ -1110,48 +918,32 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-
             scene.setMode(DiagramMode.Idle)
             node = next(filter(lambda x: x.isType(ItemType.RoleNode), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
                 if action:
-
                     if action.isChecked():
-
                         if not node.reflexive:
-
-                            x1 = snapF(node.pos().x() + node.width() / 2 + 40, DiagramScene.GridSize, snap=True)
-                            x2 = snapF(node.pos().x() + node.width() / 2 + 250, DiagramScene.GridSize, snap=True)
-
-                            restriction = DomainRestrictionNode(scene=scene, restriction=RestrictionType.self)
-                            restriction.setPos(QPointF(x1, node.pos().y()))
-                            concept = ConceptNode(scene=scene, special=SpecialType.TOP)
-                            concept.setPos(QPointF(x2, node.pos().y()))
-                            edge1 = InputEdge(scene=scene, source=node, target=restriction)
-                            edge2 = InclusionEdge(scene=scene, source=concept, target=restriction)
-
+                            items = scene.reflexiveRoleAxiomComposition(node)
+                            nodes = {x for x in items if x.isNode()}
+                            edges = {x for x in items if x.isEdge()}
                             kwargs = {
                                 'name': 'compose reflexive role',
                                 'scene': scene,
                                 'source': node,
-                                'nodes': {restriction, concept},
-                                'edges': {edge1, edge2},
+                                'nodes': nodes,
+                                'edges': edges,
                             }
-
                             scene.undostack.push(CommandComposeAxiom(**kwargs))
-
                     else:
-
                         if node.reflexive:
-
                             kwargs = {
                                 'name': 'decompose reflexive role',
                                 'scene': scene,
                                 'source': node,
                                 'items': node.reflexivityPath,
                             }
-
                             scene.undostack.push(CommandDecomposeAxiom(**kwargs))
 
     @pyqtSlot()
@@ -1161,49 +953,32 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-
             scene.setMode(DiagramMode.Idle)
             node = next(filter(lambda x: x.isType(ItemType.RoleNode), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
                 if action:
-
                     if action.isChecked():
-
                         if not node.symmetric:
-
-                            x1 = snapF(node.pos().x() + node.width() / 2 + 100, DiagramScene.GridSize, snap=True)
-                            y1 = snapF(node.pos().y() - node.height() / 2 - 80, DiagramScene.GridSize, snap=True)
-
-                            inverse = RoleInverseNode(scene=scene)
-                            inverse.setPos(QPointF(x1, node.pos().y()))
-                            edge1 = InputEdge(scene=scene, source=node, target=inverse)
-                            edge2 = InclusionEdge(scene=scene, source=node, target=inverse, breakpoints=[
-                                QPointF(node.pos().x(), y1),
-                                QPointF(x1, y1)
-                            ])
-
+                            items = scene.symmetricRoleAxiomComposition(node)
+                            nodes = {x for x in items if x.isNode()}
+                            edges = {x for x in items if x.isEdge()}
                             kwargs = {
                                 'name': 'compose symmetric role',
                                 'scene': scene,
                                 'source': node,
-                                'nodes': {inverse},
-                                'edges': {edge1, edge2},
+                                'nodes': nodes,
+                                'edges': edges,
                             }
-
                             scene.undostack.push(CommandComposeAxiom(**kwargs))
-
                     else:
-
                         if node.symmetric:
-
                             kwargs = {
                                 'name': 'decompose symmetric role',
                                 'scene': scene,
                                 'source': node,
                                 'items': node.symmetryPath,
                             }
-
                             scene.undostack.push(CommandDecomposeAxiom(**kwargs))
 
     @pyqtSlot()
@@ -1213,65 +988,32 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-
             scene.setMode(DiagramMode.Idle)
             node = next(filter(lambda x: x.isType(ItemType.RoleNode), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
                 if action:
-
                     if action.isChecked():
-
                         if not node.transitive:
-
-                            # always snap the points to the grid, even if the feature is not enabled so we have items aligned
-                            x1 = snapF(node.pos().x() + node.width() / 2 + 90, DiagramScene.GridSize, snap=True)
-                            x2 = snapF(node.pos().x() + node.width() / 2 + 50, DiagramScene.GridSize, snap=True)
-                            x3 = snapF(node.pos().x() - node.width() / 2 - 20, DiagramScene.GridSize, snap=True)
-                            y1 = snapF(node.pos().y() - node.height() / 2 - 20, DiagramScene.GridSize, snap=True)
-                            y2 = snapF(node.pos().y() + node.height() / 2 + 20, DiagramScene.GridSize, snap=True)
-                            y3 = snapF(node.pos().y() - node.height() / 2 + 80, DiagramScene.GridSize, snap=True)
-
-                            chain = RoleChainNode(scene=scene)
-                            chain.setPos(QPointF(x1, node.pos().y()))
-
-                            edge1 = InputEdge(scene=scene, source=node, target=chain, breakpoints=[
-                                QPointF(node.pos().x(), y1),
-                                QPointF(x2, y1),
-                            ])
-
-                            edge2 = InputEdge(scene=scene, source=node, target=chain, breakpoints=[
-                                QPointF(node.pos().x(), y2),
-                                QPointF(x2, y2),
-                            ])
-
-                            edge3 = InclusionEdge(scene=scene, source=chain, target=node, breakpoints=[
-                                QPointF(x1, y3),
-                                QPointF(x3, y3),
-                                QPointF(x3, node.pos().y()),
-                            ])
-
+                            items = scene.transitiveRoleAxiomComposition(node)
+                            nodes = {x for x in items if x.isNode()}
+                            edges = {x for x in items if x.isEdge()}
                             kwargs = {
                                 'name': 'compose transitive role',
                                 'scene': scene,
                                 'source': node,
-                                'nodes': {chain},
-                                'edges': {edge1, edge2, edge3},
+                                'nodes': nodes,
+                                'edges': edges,
                             }
-
                             scene.undostack.push(CommandComposeAxiom(**kwargs))
-
                     else:
-
                         if node.transitive:
-
                             kwargs = {
                                 'name': 'decompose transitive role',
                                 'scene': scene,
                                 'source': node,
                                 'items': node.transitivityPath,
                             }
-
                             scene.undostack.push(CommandDecomposeAxiom(**kwargs))
 
     @pyqtSlot('QGraphicsScene')
