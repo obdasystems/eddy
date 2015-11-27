@@ -472,15 +472,21 @@ class DiagramScene(QGraphicsScene):
         :param item: the item to add.
         """
         super().addItem(item)
+
         # map the item over the index matching its type
         collection = self.nodesById if item.isNode() else self.edgesById
         collection[item.id] = item
-        # map the item in the nodesByLabel index if needed
-        if item.isNode() and item.label.editable:
-            index = item.labelText()
-            if not index in self.nodesByLabel:
-                self.nodesByLabel[index] = DistinctList()
-            self.nodesByLabel[index].append(item)
+
+        try:
+            # map the item in the nodesByLabel index if needed
+            if item.isNode() and item.label.editable:
+                index = item.labelText()
+                if not index in self.nodesByLabel:
+                    self.nodesByLabel[index] = DistinctList()
+                self.nodesByLabel[index].append(item)
+        except AttributeError:
+            # some nodes have no label hence we don't have to index them
+            pass
 
     def clear(self):
         """
@@ -547,16 +553,22 @@ class DiagramScene(QGraphicsScene):
         :param item: the item to remove.
         """
         super().removeItem(item)
+
         # remove the item from the index matching its type
         collection = self.nodesById if item.isNode() else self.edgesById
         collection.pop(item.id, None)
-        # remove the item from the nodesByLabel index if needed
-        if item.isNode() and item.label.editable:
-            index = item.labelText()
-            if index in self.nodesByLabel:
-                self.nodesByLabel[index].remove(item)
-                if not self.nodesByLabel[index]:
-                    del self.nodesByLabel[index]
+
+        try:
+            # remove the item from the nodesByLabel index if needed
+            if item.isNode() and item.label.editable:
+                index = item.labelText()
+                if index in self.nodesByLabel:
+                    self.nodesByLabel[index].remove(item)
+                    if not self.nodesByLabel[index]:
+                        del self.nodesByLabel[index]
+        except AttributeError:
+            # some nodes have no label hence we don't have to index them
+            pass
 
     def selectedEdges(self):
         """
