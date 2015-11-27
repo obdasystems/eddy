@@ -32,7 +32,8 @@
 ##########################################################################
 
 
-from eddy.datatypes import ItemType, DiagramMode
+from eddy.commands import *
+from eddy.datatypes import ItemType, DiagramMode, DistinctList
 from eddy.items import InclusionEdge
 from mockito import when
 from PyQt5.QtCore import Qt, QPoint
@@ -373,6 +374,50 @@ class Test_DiagramScene(EddyTestCase):
         self.assertEqual(3, len(self.scene.edges()))
         self.assertEqual(1, self.scene.undostack.count())
         self.assertTrue(self.scene.node('n0').transitive)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   NODE LABEL INDEX                                                                                               #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def test_node_label_index_update_upon_label_edit(self):
+        # GIVEN
+        self.createStubDiagram1()
+        self.assertIn('concept', self.scene.nodesByLabel)
+        self.assertIsInstance(self.scene.nodesByLabel['concept'], DistinctList)
+        self.assertLen(4, self.scene.nodesByLabel['concept'])
+        # WHEN
+        command = CommandNodeLabelEdit(self.scene, self.scene.node('n0'))
+        command.end('label1')
+        self.scene.undostack.push(command)
+        # THEN
+        self.assertEqual(1, self.scene.undostack.count())
+        self.assertIn('concept', self.scene.nodesByLabel)
+        self.assertLen(3, self.scene.nodesByLabel['concept'])
+        self.assertNotIn(self.scene.node('n0'), self.scene.nodesByLabel['concept'])
+        self.assertIn('label1', self.scene.nodesByLabel)
+        self.assertLen(1, self.scene.nodesByLabel['label1'])
+        self.assertIn(self.scene.node('n0'), self.scene.nodesByLabel['label1'])
+        # WHEN
+        self.scene.undostack.undo()
+        # THEN
+        self.assertIn('concept', self.scene.nodesByLabel)
+        self.assertLen(4, self.scene.nodesByLabel['concept'])
+        self.assertIn(self.scene.node('n0'), self.scene.nodesByLabel['concept'])
+        self.assertNotIn('label1', self.scene.nodesByLabel)
+
+    def test_node_label_index_update_upon_node_removal(self):
+        # GIVEN
+        self.createStubDiagram1()
+        self.assertIn('concept', self.scene.nodesByLabel)
+        self.assertIsInstance(self.scene.nodesByLabel['concept'], DistinctList)
+        self.assertLen(4, self.scene.nodesByLabel['concept'])
+        # WHEN
+        self.scene.removeItem(self.scene.node('n2'))
+        # THEN
+        self.assertIn('concept', self.scene.nodesByLabel)
+        self.assertLen(3, self.scene.nodesByLabel['concept'])
 
     ####################################################################################################################
     #                                                                                                                  #
