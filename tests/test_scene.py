@@ -327,6 +327,18 @@ class Test_DiagramScene(EddyTestCase):
         self.assertEqual(1, self.scene.undostack.count())
         self.assertTrue(self.scene.node('n0').asymmetric)
 
+    def test_decompose_asymmetric_role(self):
+        # GIVEN
+        self.createStubDiagram3()
+        self.scene.node('n0').setSelected(True)
+        self.mainwindow.actionComposeAsymmetricRole.trigger()
+        self.assertTrue(self.scene.node('n0').asymmetric)
+        # WHEN
+        self.mainwindow.actionComposeAsymmetricRole.setChecked(True)
+        self.mainwindow.actionComposeAsymmetricRole.trigger()
+        # THEN
+        self.assertFalse(self.scene.node('n0').asymmetric)
+
     def test_compose_irreflexive_role(self):
         # GIVEN
         self.createStubDiagram3()
@@ -338,6 +350,18 @@ class Test_DiagramScene(EddyTestCase):
         self.assertEqual(3, len(self.scene.edges()))
         self.assertEqual(1, self.scene.undostack.count())
         self.assertTrue(self.scene.node('n0').irreflexive)
+
+    def test_decompose_irreflexive_role(self):
+        # GIVEN
+        self.createStubDiagram3()
+        self.scene.node('n0').setSelected(True)
+        self.mainwindow.actionComposeIrreflexiveRole.trigger()
+        self.assertTrue(self.scene.node('n0').irreflexive)
+        # WHEN
+        self.mainwindow.actionComposeIrreflexiveRole.setChecked(True)
+        self.mainwindow.actionComposeIrreflexiveRole.trigger()
+        # THEN
+        self.assertFalse(self.scene.node('n0').irreflexive)
 
     def test_compose_reflexive_role(self):
         # GIVEN
@@ -351,6 +375,18 @@ class Test_DiagramScene(EddyTestCase):
         self.assertEqual(1, self.scene.undostack.count())
         self.assertTrue(self.scene.node('n0').reflexive)
 
+    def test_decompose_reflexive_role(self):
+        # GIVEN
+        self.createStubDiagram3()
+        self.scene.node('n0').setSelected(True)
+        self.mainwindow.actionComposeReflexiveRole.trigger()
+        self.assertTrue(self.scene.node('n0').reflexive)
+        # WHEN
+        self.mainwindow.actionComposeReflexiveRole.setChecked(True)
+        self.mainwindow.actionComposeReflexiveRole.trigger()
+        # THEN
+        self.assertFalse(self.scene.node('n0').reflexive)
+
     def test_compose_symmetric_role(self):
         # GIVEN
         self.createStubDiagram3()
@@ -363,6 +399,18 @@ class Test_DiagramScene(EddyTestCase):
         self.assertEqual(1, self.scene.undostack.count())
         self.assertTrue(self.scene.node('n0').symmetric)
 
+    def test_decompose_symmetric_role(self):
+        # GIVEN
+        self.createStubDiagram3()
+        self.scene.node('n0').setSelected(True)
+        self.mainwindow.actionComposeSymmetricRole.trigger()
+        self.assertTrue(self.scene.node('n0').symmetric)
+        # WHEN
+        self.mainwindow.actionComposeSymmetricRole.setChecked(True)
+        self.mainwindow.actionComposeSymmetricRole.trigger()
+        # THEN
+        self.assertFalse(self.scene.node('n0').symmetric)
+
     def test_compose_transitive_role(self):
         # GIVEN
         self.createStubDiagram3()
@@ -374,6 +422,18 @@ class Test_DiagramScene(EddyTestCase):
         self.assertEqual(3, len(self.scene.edges()))
         self.assertEqual(1, self.scene.undostack.count())
         self.assertTrue(self.scene.node('n0').transitive)
+
+    def test_decompose_transitive_role(self):
+        # GIVEN
+        self.createStubDiagram3()
+        self.scene.node('n0').setSelected(True)
+        self.mainwindow.actionComposeTransitiveRole.trigger()
+        self.assertTrue(self.scene.node('n0').transitive)
+        # WHEN
+        self.mainwindow.actionComposeTransitiveRole.setChecked(True)
+        self.mainwindow.actionComposeTransitiveRole.trigger()
+        # THEN
+        self.assertFalse(self.scene.node('n0').transitive)
 
     ####################################################################################################################
     #                                                                                                                  #
