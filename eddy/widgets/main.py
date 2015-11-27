@@ -358,6 +358,15 @@ class MainWindow(QMainWindow):
         self.actionRefactorName.setIcon(self.iconLabel)
         connect(self.actionRefactorName.triggered, self.refactorName)
 
+        self.actionsRefactorBrush = []
+        for color in Color:
+            action = QAction(color.name, self)
+            action.setIcon(make_colored_icon(size, size, color.value))
+            action.setCheckable(False)
+            action.setData(color)
+            connect(action.triggered, self.refactorBrush)
+            self.actionsRefactorBrush.append(action)
+
         ## ROLE NODE
         self.actionComposeAsymmetricRole = QAction('Asymmetric Role', self)
         self.actionComposeAsymmetricRole.setCheckable(True)
@@ -519,9 +528,15 @@ class MainWindow(QMainWindow):
         for action in self.actionsNodeSetSpecial:
             self.menuNodeSpecial.addAction(action)
 
+        self.menuRefactorBrush = QMenu('Select color')
+        self.menuRefactorBrush.setIcon(self.iconColorFill)
+        for action in self.actionsRefactorBrush:
+            self.menuRefactorBrush.addAction(action)
+
         self.menuNodeRefactor = QMenu('Refactor')
         self.menuNodeRefactor.setIcon(self.iconRefactor)
         self.menuNodeRefactor.addAction(self.actionRefactorName)
+        self.menuNodeRefactor.addMenu(self.menuRefactorBrush)
 
         ## ROLE NODE
         self.menuRoleNodeCompose = QMenu('Compose')
@@ -1478,6 +1493,24 @@ class MainWindow(QMainWindow):
                     painter = QPainter()
                     if painter.begin(printer):
                         scene.render(painter, source=shape)
+
+    @pyqtSlot()
+    def refactorBrush(self):
+        """
+        Change the node brush for all the nodes whose label is equal to the label of the currently selected node.
+        """
+        scene = self.mdi.activeScene
+        if scene:
+
+            scene.setMode(DiagramMode.Idle)
+            args = ItemType.ConceptNode, ItemType.RoleNode, \
+                   ItemType.AttributeNode, ItemType.IndividualNode, \
+                   ItemType.ValueRestrictionNode
+
+            node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
+            if node:
+                action = self.sender()
+                scene.undostack.push(CommandNodeChangeBrush(scene, scene.nodesByLabel[node.labelText()], action.data()))
 
     @pyqtSlot()
     def refactorName(self):
