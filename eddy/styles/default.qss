@@ -261,6 +261,9 @@ QMenu::separator {
 QMessageBox QLabel {
     font-weight: normal;
 }
+QLabel.invalid {
+    color: #ec3f3a;
+}
 /**
  * FIELDS
  */

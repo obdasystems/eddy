@@ -36,7 +36,9 @@ from eddy.dialogs.about import AboutDialog
 
 from eddy.dialogs.files import SaveFileDialog
 from eddy.dialogs.files import OpenFileDialog
+
 from eddy.dialogs.forms import CardinalityRestrictionForm
+from eddy.dialogs.forms import RenameForm
 
 from eddy.dialogs.preferences import PreferencesDialog
 

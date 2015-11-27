@@ -346,6 +346,7 @@ class RoleNode(ResizableNode):
         scene = self.scene()
 
         menu = super().contextMenu()
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeRefactor)
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRoleNodeCompose)
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeSpecial)

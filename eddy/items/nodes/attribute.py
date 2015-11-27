@@ -104,6 +104,7 @@ class AttributeNode(Node):
         """
         scene = self.scene()
         menu = super().contextMenu()
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeRefactor)
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuAttributeNodeCompose)
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeSpecial)

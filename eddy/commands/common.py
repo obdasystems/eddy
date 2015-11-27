@@ -206,3 +206,31 @@ class CommandDecomposeAxiom(QUndoCommand):
                 item.target.addEdge(item)
                 self.scene.addItem(item)
         self.scene.updated.emit()
+
+
+class CommandRefactor(QUndoCommand):
+    """
+    This command is used to perform refactoring by applying multiple QUndoCommand.
+    """
+    def __init__(self, name, scene, commands):
+        """
+        Initialize the command.
+        :param name: the name of the undo command.
+        :param scene: the scene where the command is being performed.
+        :param commands: a collection of QUndoCommand to be performed.
+        """
+        super().__init__(name)
+        self.scene = scene
+        self.commands = commands
+
+    def redo(self):
+        """redo the command"""
+        for command in self.commands:
+            command.redo()
+        self.scene.updated.emit()
+
+    def undo(self):
+        """undo the command"""
+        for command in self.commands:
+            command.undo()
+        self.scene.updated.emit()

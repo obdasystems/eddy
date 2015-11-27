@@ -20,6 +20,7 @@
     <file alias="error">images/icons/error.png</file>
     <file alias="grid">images/icons/grid.png</file>
     <file alias="info">images/icons/info.png</file>
+    <file alias="label">images/icons/label.png</file>
     <file alias="link">images/icons/link.png</file>
     <file alias="new">images/icons/new.png</file>
     <file alias="open">images/icons/open.png</file>
@@ -30,6 +31,7 @@
     <file alias="radio-checked">images/icons/radio-checked.png</file>
     <file alias="radio-outline">images/icons/radio-outline.png</file>
     <file alias="redo">images/icons/redo.png</file>
+    <file alias="refactor">images/icons/refactor.png</file>
     <file alias="refresh">images/icons/refresh.png</file>
     <file alias="save">images/icons/save.png</file>
     <file alias="select-all">images/icons/select-all.png</file>

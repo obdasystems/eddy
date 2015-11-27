@@ -143,6 +143,7 @@ class MainWindow(QMainWindow):
         self.iconCut = make_shaded_icon(':/icons/cut')
         self.iconDelete = make_shaded_icon(':/icons/delete')
         self.iconGrid = make_shaded_icon(':/icons/grid')
+        self.iconLabel = make_shaded_icon(':/icons/label')
         self.iconLink = make_shaded_icon(':/icons/link')
         self.iconNew = make_shaded_icon(':/icons/new')
         self.iconOpen = make_shaded_icon(':/icons/open')
@@ -152,6 +153,7 @@ class MainWindow(QMainWindow):
         self.iconPrint = make_shaded_icon(':/icons/print')
         self.iconQuit = make_shaded_icon(':/icons/quit')
         self.iconRedo = make_shaded_icon(':/icons/redo')
+        self.iconRefactor = make_shaded_icon(':/icons/refactor')
         self.iconRefresh = make_shaded_icon(':/icons/refresh')
         self.iconSave = make_shaded_icon(':/icons/save')
         self.iconSaveAs = make_shaded_icon(':/icons/save')
@@ -352,6 +354,10 @@ class MainWindow(QMainWindow):
             connect(action.triggered, self.setSpecialNode)
             self.actionsNodeSetSpecial.append(action)
 
+        self.actionRefactorName = QAction('Rename...', self)
+        self.actionRefactorName.setIcon(self.iconLabel)
+        connect(self.actionRefactorName.triggered, self.refactorName)
+
         ## ROLE NODE
         self.actionComposeAsymmetricRole = QAction('Asymmetric Role', self)
         self.actionComposeAsymmetricRole.setCheckable(True)
@@ -512,6 +518,10 @@ class MainWindow(QMainWindow):
         self.menuNodeSpecial.setIcon(self.iconStarFilled)
         for action in self.actionsNodeSetSpecial:
             self.menuNodeSpecial.addAction(action)
+
+        self.menuNodeRefactor = QMenu('Refactor')
+        self.menuNodeRefactor.setIcon(self.iconRefactor)
+        self.menuNodeRefactor.addAction(self.actionRefactorName)
 
         ## ROLE NODE
         self.menuRoleNodeCompose = QMenu('Compose')
@@ -1468,6 +1478,41 @@ class MainWindow(QMainWindow):
                     painter = QPainter()
                     if painter.begin(printer):
                         scene.render(painter, source=shape)
+
+    @pyqtSlot()
+    def refactorName(self):
+        """
+        Rename the label of the currently selected node and all the occurrences sharing the same label text.
+        """
+        scene = self.mdi.activeScene
+        if scene:
+
+            scene.setMode(DiagramMode.Idle)
+            args = ItemType.ConceptNode, ItemType.RoleNode, \
+                   ItemType.AttributeNode, ItemType.IndividualNode, \
+                   ItemType.ValueRestrictionNode
+
+            node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
+            if node:
+
+                form = RenameForm(node, self)
+                if form.exec_() == RenameForm.Accepted:
+
+                    if node.labelText() != form.renameField.value():
+
+                        commands = []
+                        for n in scene.nodesByLabel[node.labelText()]:
+                            command = CommandNodeLabelEdit(scene=scene, node=n)
+                            command.end(form.renameField.value())
+                            commands.append(command)
+
+                        kwargs = {
+                            'name': 'Rename {0} node{1}'.format(len(commands), 's' if len(commands) > 1 else ''),
+                            'scene': scene,
+                            'commands': commands,
+                        }
+
+                        scene.undostack.push(CommandRefactor(**kwargs))
 
     @pyqtSlot()
     def refreshActionsState(self):

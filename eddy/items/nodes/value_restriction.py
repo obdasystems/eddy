@@ -88,6 +88,7 @@ class ValueRestrictionNode(ResizableNode):
         """
         scene = self.scene()
         menu = super().contextMenu()
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeRefactor)
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
 
         collection = self.label.contextMenuAdd()
