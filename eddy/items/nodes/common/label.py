@@ -268,7 +268,7 @@ class Label(LabelItem):
         if scene.mode is DiagramMode.LabelEdit:
             # make sure we have something in the label
             if isEmpty(self.text()):
-                self.setText(self.default)
+                self.setText(self.defaultText)
 
             # push the edit command in the stack only if the label actually changed
             if self.commandEdit.isTextChanged(self.text()):
