@@ -84,8 +84,8 @@ class CleanCommand(setuptools.Command):
         """Command execution"""
         if os.path.isdir(BUILD_DIR):
             dir_util.remove_tree(BUILD_DIR, verbose=1)
-        if os.path.isdir('Eddy.egg-info'):
-            dir_util.remove_tree('Eddy.egg-info', verbose=1)
+        if os.path.isdir('eddy.egg-info'):
+            dir_util.remove_tree('eddy.egg-info', verbose=1)
 
 cmdclass = {
     'clean': CleanCommand
@@ -437,7 +437,7 @@ setup(
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Natural Language :: English',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Utilities'
     ],
@@ -460,11 +460,11 @@ setup(
         },
         'bdist_mac': {
             'iconfile': EXECUTABLE_ICON,
-            'bundle_name': '%s %s' % (__appname__, __version__),
+            'bundle_name': '{0} {1}'.format(__appname__, __version__),
         },
         'bdist_dmg': {
             'dist_dir': DIST_DIR,
-            'volume_label': '%s %s' % (__appname__, __version__),
+            'volume_label': '{0} {1}'.format(__appname__, __version__),
             'applications_shortcut': True,
         },
         'build_exe': {
@@ -479,6 +479,7 @@ setup(
                 'eddy.commands',
                 'eddy.dialogs',
                 'eddy.items',
+                'eddy.styles',
                 'eddy.widgets',
             ],
             'excludes': ['tcl', 'ttk', 'tkinter', 'Tkinter'],
@@ -492,7 +493,7 @@ setup(
             'include_files': [
                 ('docs', 'docs'),
                 ('examples', 'examples'),
-                ('eddy/styles', 'styles'),
+                ('eddy/styles/default.qss', 'styles/default.qss'),
                 ('LICENSE', 'LICENSE'),
                 ('CONTRIBUTING.md', 'CONTRIBUTING.md'),
                 ('PACKAGING.md', 'PACKAGING.md'),
