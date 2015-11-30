@@ -211,15 +211,15 @@ class Edge(Item):
                 between = subpath.p1(), subpath.p2()
 
         # if there is no breakpoint the new one will be appended
-        for i in range(len(self.breakpoints)):
+        for i, breakpoint in enumerate(self.breakpoints):
 
-            if self.breakpoints[i] == between[1]:
+            if breakpoint == between[1]:
                 # in case the new breakpoint is being added between
                 # the source node of this edge and the last breakpoint
                 index = i
                 break
 
-            if self.breakpoints[i] == between[0]:
+            if breakpoint == between[0]:
                 # in case the new breakpoint is being added between
                 # the last breakpoint and the target node of this edge
                 index = i + 1
