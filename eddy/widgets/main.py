@@ -262,11 +262,11 @@ class MainWindow(QMainWindow):
 
         self.actionSapienzaWeb = QAction('DIAG - Sapienza university', self)
         self.actionSapienzaWeb.setIcon(self.iconLink)
-        connect(self.actionSapienzaWeb.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/en'))
+        connect(self.actionSapienzaWeb.triggered, lambda: webbrowser.open('http://www.diag.uniroma1.it/en'))
 
         self.actionGrapholWeb = QAction('Graphol homepage', self)
         self.actionGrapholWeb.setIcon(self.iconLink)
-        connect(self.actionGrapholWeb.triggered, lambda: webbrowser.open('http://www.dis.uniroma1.it/~graphol/'))
+        connect(self.actionGrapholWeb.triggered, lambda: webbrowser.open('http://www.diag.uniroma1.it/~graphol/'))
 
         ## DIAGRAM SCENE
         self.actionOpenSceneProperties = QAction('Properties...', self)

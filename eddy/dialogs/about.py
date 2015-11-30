@@ -59,7 +59,7 @@ class AboutDialog(QDialog):
             License: {LICENSE}<br/>
             <br />
             <a href="http://www.dis.uniroma1.it/~graphol/" {STYLE1}>Graphol</a> is developed by members of
-            the DASI-lab group of the <a href="http://www.dis.uniroma1.it/en" {STYLE1}> Dipartimento di
+            the DASI-lab group of the <a href="http://www.diag.uniroma1.it/en" {STYLE1}> Dipartimento di
             Ingegneria Informatica, Automatica e Gestionale "A.Ruberti"</a> at <a href="http://en.uniroma1.it/"
             {STYLE1}>Sapienza</a> University of Rome:<br/>
             <br/>
