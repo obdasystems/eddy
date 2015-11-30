@@ -33,7 +33,3 @@
 
 
 from eddy.styles.default import DefaultStyle
-
-__all__ = [
-    'DefaultStyle',
-]

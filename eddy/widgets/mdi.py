@@ -182,9 +182,3 @@ class MdiSubWindow(QMdiSubWindow):
         scene = mainview.scene()
         if scene.document.filepath:
             self.setWindowTitle(scene.document.name if clean else '{0} *'.format(scene.document.name))
-
-
-__all__ = [
-    'MdiArea',
-    'MdiSubWindow',
-]

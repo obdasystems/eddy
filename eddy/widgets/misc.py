@@ -37,6 +37,7 @@ from time import time, sleep
 from PyQt5.QtCore import Qt, QRect
 from PyQt5.QtGui import QPixmap, QPainter, QColor
 from PyQt5.QtWidgets import QLabel
+
 from eddy import __appname__, __copyright__, __version__
 from eddy.datatypes import Font
 
@@ -109,8 +110,3 @@ class SplashScreen(QLabel):
         painter.drawText(QRect(0, 216, 396, 14), Qt.AlignTop|Qt.AlignRight, __copyright__)
         painter.drawText(QRect(0, 230, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Licensed under the GNU GPL v3')
         painter.drawText(QRect(0, 258, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Starting up...')
-
-
-__all__ = [
-    'SplashScreen',
-]

@@ -215,7 +215,3 @@ class ZoomControl(QWidget):
         """
         super().setEnabled(enabled)
         self.updateWidget()
-
-__all__ = [
-    'ZoomControl',
-]

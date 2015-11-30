@@ -63,35 +63,3 @@ from eddy.commands.common import CommandItemsMultiRemove
 from eddy.commands.common import CommandRefactor
 
 from eddy.commands.scene import CommandSceneResize
-
-
-__all__ = [
-    'CommandComposeAxiom',
-    'CommandDecomposeAxiom',
-    'CommandNodeAdd',
-    'CommandNodeSetZValue',
-    'CommandNodeRezize',
-    'CommandNodeMove',
-    'CommandNodeLabelMove',
-    'CommandNodeLabelEdit',
-    'CommandNodeValueDomainSelectDatatype',
-    'CommandNodeHexagonSwitchTo',
-    'CommandNodeSquareChangeRestriction',
-    'CommandNodeSetURL',
-    'CommandNodeSetDescription',
-    'CommandNodeSetSpecial',
-    'CommandNodeChangeInputOrder',
-    'CommandNodeChangeBrush',
-    'CommandEdgeAdd',
-    'CommandEdgeAnchorMove',
-    'CommandEdgeBreakpointAdd',
-    'CommandEdgeBreakpointMove',
-    'CommandEdgeBreakpointDel',
-    'CommandEdgeInclusionToggleComplete',
-    'CommandEdgeInputToggleFunctional',
-    'CommandEdgeSwap',
-    'CommandItemsMultiAdd',
-    'CommandItemsMultiRemove',
-    'CommandRefactor',
-    'CommandSceneResize',
-]

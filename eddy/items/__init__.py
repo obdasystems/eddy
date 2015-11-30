@@ -33,8 +33,8 @@
 
 
 from abc import ABCMeta, abstractmethod
-from eddy.datatypes import ItemType
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem
+from eddy.datatypes import ItemType
 
 
 class Item(QGraphicsItem):
@@ -117,7 +117,7 @@ class Item(QGraphicsItem):
     @abstractmethod
     def contextMenu(self, *args, **kwargs):
         """
-        Returns the basic nodes context menu.
+        Returns the basic node context menu.
         :rtype: QMenu
         """
         pass
@@ -125,7 +125,7 @@ class Item(QGraphicsItem):
     @abstractmethod
     def copy(self, scene):
         """
-        Create a copy of the current item .
+        Create a copy of the current item.
         :param scene: a reference to the scene where this item is being copied from.
         """
         pass
@@ -262,8 +262,11 @@ class LabelItem(QGraphicsTextItem):
         return '{0}:{1}'.format(self.__class__.__name__, self.id)
 
 
-from eddy.items.nodes import *
-from eddy.items.edges import *
+from eddy.items.nodes import AttributeNode, ConceptNode, ComplementNode, DatatypeRestrictionNode, DisjointUnionNode
+from eddy.items.nodes import DomainRestrictionNode, EnumerationNode, IndividualNode, IntersectionNode
+from eddy.items.nodes import PropertyAssertionNode, RangeRestrictionNode, RoleNode, RoleChainNode, RoleInverseNode
+from eddy.items.nodes import UnionNode, ValueDomainNode, ValueRestrictionNode
+from eddy.items.edges import InputEdge, InclusionEdge, InstanceOfEdge
 
 
 __mapping__ = {
@@ -288,27 +291,3 @@ __mapping__ = {
     InputEdge.xmlname: InputEdge,
     InstanceOfEdge.xmlname: InstanceOfEdge,
 }
-
-
-__all__ = [
-    'ConceptNode',
-    'ValueDomainNode',
-    'RoleNode',
-    'IndividualNode',
-    'AttributeNode',
-    'ValueRestrictionNode',
-    'DomainRestrictionNode',
-    'RangeRestrictionNode',
-    'UnionNode',
-    'EnumerationNode',
-    'ComplementNode',
-    'RoleChainNode',
-    'IntersectionNode',
-    'RoleInverseNode',
-    'DatatypeRestrictionNode',
-    'DisjointUnionNode',
-    'PropertyAssertionNode',
-    'InclusionEdge',
-    'InputEdge',
-    'InstanceOfEdge',
-]

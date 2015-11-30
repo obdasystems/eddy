@@ -32,12 +32,15 @@
 ##########################################################################
 
 
-from eddy.commands import *
-from eddy.datatypes import ItemType, DiagramMode, DistinctList
-from eddy.items import InclusionEdge
 from mockito import when
+
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtTest import QTest
+
+from eddy.commands import CommandNodeLabelEdit
+from eddy.datatypes import ItemType, DiagramMode, DistinctList
+from eddy.items import InclusionEdge
+
 from tests import EddyTestCase
 
 

@@ -36,7 +36,7 @@ from eddy.datatypes import DiagramMode
 from eddy.functions import clamp, connect, disconnect
 from eddy.widgets.toolbar import ZoomControl
 
-from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QEvent, pyqtSlot, QPointF, QTimer
+from PyQt5.QtCore import Qt, QRectF, QEvent, QPointF, QTimer, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QColor, QPen
 from PyQt5.QtWidgets import QGraphicsView
 
@@ -45,8 +45,10 @@ class MainView(QGraphicsView):
     """
     This class implements the main view displayed in the MDI area.
     """
+    MoveRate = 40
+    MoveBound = 10
     RubberBandDragBrush = QColor(97, 153, 242, 40)
-    RubberBandDragPen = selectionPen = QPen(QColor(46, 97, 179), 1.0, Qt.SolidLine)
+    RubberBandDragPen = QPen(QColor(46, 97, 179), 1.0, Qt.SolidLine)
 
     updated = pyqtSignal()
     zoomChanged = pyqtSignal(float)
@@ -54,12 +56,10 @@ class MainView(QGraphicsView):
     def __init__(self, scene):
         """
         Initialize the main scene.
-        :param scene: the graphics scene to render in the main view.
+        :param scene: the diagram scene to render in the main view.
         """
         super().__init__(scene)
         self.viewMove = None
-        self.viewMoveRate = 40
-        self.viewMoveBound = 10
         self.mousePressCenterPos = None
         self.mousePressPos = None
         self.mousePressRect = None
@@ -74,7 +74,7 @@ class MainView(QGraphicsView):
     @pyqtSlot(float)
     def scaleChanged(self, zoom):
         """
-        Executed when the scale factor changes (triggered by the Zoom control in the Toolbar)
+        Executed when the scale factor changes (triggered by the Zoom control in the Toolbar).
         :param zoom: the scale factor.
         """
         self.scaleView(zoom)
@@ -177,8 +177,9 @@ class MainView(QGraphicsView):
 
                     viewport.update()
 
-                if scene.mode in {DiagramMode.EdgeInsert, DiagramMode.NodeMove, DiagramMode.NodeResize,
-                                  DiagramMode.EdgeBreakPointMove, DiagramMode.RubberBandDrag}:
+                if scene.mode in {DiagramMode.EdgeInsert, DiagramMode.NodeMove,
+                                  DiagramMode.NodeResize, DiagramMode.EdgeBreakPointMove,
+                                  DiagramMode.RubberBandDrag}:
 
                     ####################################################################################################
                     #                                                                                                  #
@@ -202,9 +203,9 @@ class MainView(QGraphicsView):
                             delta.setY(mouseEvent.pos().y() - viewportRect.bottom())
 
                         if delta:
-                            delta.setX(clamp(delta.x(), -self.viewMoveBound, +self.viewMoveBound))
-                            delta.setY(clamp(delta.y(), -self.viewMoveBound, +self.viewMoveBound))
-                            self.startViewMove(delta, self.viewMoveRate)
+                            delta.setX(clamp(delta.x(), -MainView.MoveBound, +MainView.MoveBound))
+                            delta.setY(clamp(delta.y(), -MainView.MoveBound, +MainView.MoveBound))
+                            self.startViewMove(delta, MainView.MoveRate)
 
     def mouseReleaseEvent(self, mouseEvent):
         """
@@ -271,7 +272,7 @@ class MainView(QGraphicsView):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
+    #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
 
@@ -335,8 +336,3 @@ class MainView(QGraphicsView):
         :rtype: QRectF
         """
         return self.mapToScene(self.viewport().rect()).boundingRect()
-
-
-__all__ = [
-    'MainView',
-]

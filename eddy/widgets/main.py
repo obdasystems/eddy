@@ -39,8 +39,8 @@ import webbrowser
 
 from collections import OrderedDict
 
-from PyQt5.QtCore import Qt, QSettings, QFile, QIODevice, QTextStream, QSizeF, pyqtSignal, pyqtSlot
-from PyQt5.QtCore import QRectF
+from PyQt5.QtCore import Qt, QSettings, QFile, QIODevice, QTextStream, QSizeF, QRectF
+from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter, QPageSize
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDialog, QStyle
@@ -48,20 +48,25 @@ from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup
 from PyQt5.QtXml import QDomDocument
 
 from eddy import __version__ as version, __appname__ as appname, __organization__ as organization
-from eddy.commands import *
-from eddy.datatypes import *
-from eddy.dialogs import *
+from eddy.commands import CommandComposeAxiom, CommandDecomposeAxiom, CommandItemsMultiRemove
+from eddy.commands import CommandNodeLabelMove, CommandNodeLabelEdit, CommandEdgeBreakpointDel, CommandRefactor
+from eddy.commands import CommandNodeSetZValue, CommandNodeHexagonSwitchTo, CommandNodeValueDomainSelectDatatype
+from eddy.commands import CommandNodeSquareChangeRestriction, CommandNodeSetSpecial, CommandNodeChangeBrush
+from eddy.commands import CommandEdgeInclusionToggleComplete, CommandEdgeInputToggleFunctional, CommandEdgeSwap
+from eddy.datatypes import Color, DiagramMode, FileType, RestrictionType, SpecialType, XsdDatatype
+from eddy.dialogs import AboutDialog, CardinalityRestrictionForm, RenameForm
+from eddy.dialogs import OpenFileDialog, PreferencesDialog, SaveFileDialog, ScenePropertiesDialog
 from eddy.exceptions import ParseError
-from eddy.functions import connect, disconnect, getPath
-from eddy.functions import make_colored_icon, make_shaded_icon
+from eddy.functions import connect, disconnect, getPath, make_colored_icon, make_shaded_icon
 from eddy.items import ItemType, __mapping__ as mapping
-from eddy.items import *
+from eddy.items import UnionNode, EnumerationNode, ComplementNode, RoleChainNode, IntersectionNode
+from eddy.items import RoleInverseNode, DisjointUnionNode, DatatypeRestrictionNode
 from eddy.utils import Clipboard
-from eddy.widgets.dock import *
-from eddy.widgets.mdi import *
-from eddy.widgets.scene import *
-from eddy.widgets.view import *
-from eddy.widgets.toolbar import *
+from eddy.widgets import DockWidget, Navigator, Overview, Palette
+from eddy.widgets import MdiArea, MdiSubWindow
+from eddy.widgets import DiagramScene, Document
+from eddy.widgets import MainView
+from eddy.widgets import ZoomControl
 
 
 class MainWindow(QMainWindow):

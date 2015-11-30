@@ -36,18 +36,19 @@ import itertools
 import os
 import sys
 
-from PyQt5.QtCore import Qt, pyqtSignal, QPointF, QSettings, QRectF
+from PyQt5.QtCore import Qt, QPointF, QSettings, QRectF, pyqtSignal
 from PyQt5.QtGui import QPen, QColor
 from PyQt5.QtPrintSupport import QPrinter
 from PyQt5.QtWidgets import QGraphicsScene, QUndoStack, QMenu
 from PyQt5.QtXml import QDomDocument
 
-from eddy import __appname__ as appname, __organization__ as organization
-from eddy.commands import *
-from eddy.datatypes import *
-from eddy.functions import getPath, snapF, rangeF
-from eddy.items import *
-from eddy.utils import UniqueID, Clipboard
+from eddy import __appname__ as appname, __organization__ as organization, getPath
+from eddy.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
+from eddy.datatypes import DiagramMode, DistinctList, ItemType, RestrictionType, SpecialType
+from eddy.functions import rangeF, snapF
+from eddy.items import ConceptNode, ComplementNode, DomainRestrictionNode, InputEdge, InclusionEdge
+from eddy.items import RangeRestrictionNode, RoleChainNode, RoleInverseNode, ValueDomainNode
+from eddy.utils import Clipboard, UniqueID
 
 
 class Document(object):
@@ -944,8 +945,3 @@ class DiagramScene(QGraphicsScene):
             return QRectF(QPointF(min(X) - margin, min(Y) - margin), QPointF(max(X) + margin, max(Y) + margin))
 
         return None
-
-__all__ = [
-    'Document',
-    'DiagramScene',
-]

@@ -49,24 +49,3 @@ from eddy.items.nodes.role_inverse import RoleInverseNode
 from eddy.items.nodes.union import UnionNode
 from eddy.items.nodes.value_domain import ValueDomainNode
 from eddy.items.nodes.value_restriction import ValueRestrictionNode
-
-
-__all__ = [
-    'AttributeNode',
-    'ConceptNode',
-    'ComplementNode',
-    'DatatypeRestrictionNode',
-    'DisjointUnionNode',
-    'DomainRestrictionNode',
-    'EnumerationNode',
-    'IndividualNode',
-    'IntersectionNode',
-    'PropertyAssertionNode',
-    'RangeRestrictionNode',
-    'RoleNode',
-    'RoleChainNode',
-    'RoleInverseNode',
-    'UnionNode',
-    'ValueDomainNode',
-    'ValueRestrictionNode',
-]

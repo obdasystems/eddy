@@ -34,12 +34,12 @@
 
 from math import sin, cos, radians, pi as M_PI
 
-from eddy.datatypes import DiagramMode, ItemType
-from eddy.items.edges.common.base import Edge
-
 from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
 from PyQt5.QtWidgets import QMenu
+
+from eddy.datatypes import DiagramMode, ItemType
+from eddy.items.edges.common.base import Edge
 
 
 class InclusionEdge(Edge):

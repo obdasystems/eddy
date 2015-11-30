@@ -391,15 +391,3 @@ class XsdDatatype(Enum):
             if x.value.lower() == value.lower().strip():
                 return x
         return None
-
-__all__ = [
-    'Color',
-    'DiagramMode',
-    'DistinctList',
-    'FileType',
-    'Font',
-    'ItemType',
-    'RestrictionType',
-    'SpecialType',
-    'XsdDatatype',
-]

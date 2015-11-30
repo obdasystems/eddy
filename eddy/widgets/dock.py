@@ -35,7 +35,10 @@
 from abc import ABCMeta, abstractmethod
 
 from eddy.functions import disconnect, connect
-from eddy.items import *
+from eddy.items import ConceptNode, ComplementNode, DomainRestrictionNode, InputEdge, InclusionEdge, RoleNode
+from eddy.items import IndividualNode, ValueRestrictionNode, AttributeNode, UnionNode, EnumerationNode
+from eddy.items import DatatypeRestrictionNode, DisjointUnionNode, PropertyAssertionNode, InstanceOfEdge
+from eddy.items import RangeRestrictionNode, RoleChainNode, RoleInverseNode, ValueDomainNode, IntersectionNode
 
 from PyQt5.QtCore import Qt, pyqtSlot, QSize
 from PyQt5.QtGui import QColor, QPen, QIcon, QPainter
@@ -514,11 +517,3 @@ class Palette(QWidget):
         for button in self.buttonById.values():
             if button not in args:
                 button.setChecked(False)
-
-
-__all__ = [
-    'DockWidget',
-    'Palette',
-    'Overview',
-    'Navigator'
-]

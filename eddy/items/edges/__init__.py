@@ -35,10 +35,3 @@
 from eddy.items.edges.inclusion import InclusionEdge
 from eddy.items.edges.input import InputEdge
 from eddy.items.edges.instance_of import InstanceOfEdge
-
-
-__all__ = [
-    'InclusionEdge',
-    'InputEdge',
-    'InstanceOfEdge'
-]
