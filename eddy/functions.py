@@ -41,14 +41,14 @@ from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QIcon, QColor
 
 from eddy.exceptions import ProgrammingError
+from eddy.regex import RE_QUOTE_FULL
 
 
 def angleP(p1, p2):
     """
     Returns the angle of the line connecting the given points.
-    NOTE: the Y axis on Qt is inverted (increas down, decrease up)
-    :param p1: the first point.
-    :param p2: the second point.
+    :type p1: T <= QPoint | QPointF
+    :type p2: T <= QPoint | QPointF
     :rtype: float
     """
     return math.atan2(p1.y() - p2.y(), p2.x() - p1.x())
@@ -56,10 +56,11 @@ def angleP(p1, p2):
 
 def clamp(val, minval=None, maxval=None):
     """
-    Returns a copy of val making sure it fits the bound.
-    :param val: the value to be clamped.
-    :param minval: the minimum value.
-    :param maxval: the maximum value.
+    Returns a copy of val making sure it fits the given bounds.
+    :type val: float
+    :type minval: float
+    :type maxval: float
+    :rtype: float
     """
     if minval is not None and maxval is not None and minval > maxval:
         raise ProgrammingError('minval ({min}) MUST be lower than maxval ({max})'.format(min=minval, max=maxval))
@@ -110,10 +111,8 @@ def disconnect(signal, *args):
 def distanceP(p1, p2):
     """
     Calculate the distance between the given points.
-    :type p1: QPointF
-    :type p2: QPointF
-    :param p1: the first point.
-    :param p2: the second point.
+    :type p1: T <= QPoint | QPointF
+    :type p2: T <= QPoint | QPointF
     :rtype: float
     """
     return math.sqrt(math.pow(p2.x() - p1.x(), 2) + math.pow(p2.y() - p1.y(), 2))
@@ -122,10 +121,8 @@ def distanceP(p1, p2):
 def distanceL(line, p):
     """
     Returns a tuple containing the distance between the given line and the given point, and the intersection point.
-    :type line: QLineF
-    :type p: QPointF
-    :param line: the line.
-    :param p: the point.
+    :type line: T <= QLine | QLineF
+    :type p: T <= QPoint | QPointF
     :rtype: tuple
     """
     x1 = line.x1()
@@ -177,7 +174,7 @@ def getPath(path):
         - @home => will be expanded to the eddy home directory path (.eddy in $HOME)
         - ~ => will be expanded to the user home directory ($HOME)
 
-    :param path: the relative path to expand.
+    :type path: T <= bytes | unicode
     :rtype: str
     """
     if path.startswith('@eddy\\') or path.startswith('@eddy/'):
@@ -191,10 +188,8 @@ def intersectionL(l1, l2):
     """
     Return the intersection point of the given lines.
     Will return None if there is no intersection point.
-    :type l1: QLineF
-    :type l2: QlineF
-    :param l1: the first line.
-    :param l2: the second line.
+    :type l1: T <= QLine | QLineF
+    :type l2: T <= QLine | QLineF
     :rtype: QPointF
     """
     L = max(min(l1.p1().x(), l1.p2().x()), min(l2.p1().x(), l2.p2().x()))
@@ -206,13 +201,21 @@ def intersectionL(l1, l2):
     return None
 
 
-def isEmpty(text):
+def isEmpty(string):
     """
     Safely detect whether the given string is empty.
-    :param text: the text to check for emptiness.
+    :type string: T <= bytes | unicode
     :rtype: bool
     """
-    return not text or str(text).strip() == ''
+    return not string or str(string).strip() == ''
+
+def isQuoted(string):
+    """
+    Checks whether the given string is quoted or not.
+    :type string: T <= bytes | unicode
+    :rtype: bool
+    """
+    return RE_QUOTE_FULL.match(string) is not None
 
 def main_is_frozen():
     """
@@ -225,9 +228,9 @@ def main_is_frozen():
 def make_colored_icon(width, height, code):
     """
     Create and returns a QIcon filled using the given color.
-    :param width: the width of the icon.
-    :param height: the height of the icon.
-    :param code: the HEX color code to use to fill the icon.
+    :type width: T <= int | float
+    :type height: T <= int | float
+    :type code: T <= bytes | unicode
     :rtype: QIcon
     """
     pixmap = QPixmap(width, height)
@@ -238,8 +241,8 @@ def make_colored_icon(width, height, code):
 def make_shaded_icon(path, opacity=0.25):
     """
     Create a shaded icon using the given image: the shaded copy will use the given opacity value.
-    :param path: the path of the image.
-    :param opacity: the opacity of the shaded icon.
+    :type path: T <= bytes | unicode
+    :type opacity: T <= int | float
     :rtype: QIcon
     """
     icon = QIcon()
@@ -251,10 +254,8 @@ def make_shaded_icon(path, opacity=0.25):
 def midpoint(p1, p2):
     """
     Calculate the midpoint between the given points.
-    :type p1: QPointF
-    :type p2: QPointF
-    :param p1: the first point.
-    :param p2: the second point.
+    :type p1: T <= QPoint | QPointF
+    :type p2: T <= QPoint | QPointF
     :rtype: QPointF
     """
     return QPointF(((p1.x() + p2.x()) / 2), ((p1.y() + p2.y()) / 2))
@@ -264,9 +265,9 @@ def rangeF(start, stop, step):
     """
     Generator which can be used to generate lists of float values. Floats are rounded up to 4 decimals.
     It works like the python built-in range function but accepts a floating point number as incremental step.
-    :param start: the start value
-    :param stop: the end value
-    :param step: the incremental step
+    :type start: float
+    :type start: float
+    :type start: float
     """
     x = round(start, 4)
     while x < stop:
@@ -277,8 +278,8 @@ def rangeF(start, stop, step):
 def shaded(pixmap, opacity=0.25):
     """
     Constructs a copy of the given pixmap using the specified opacity.
-    :param pixmap: the pixmap to shade.
-    :param opacity: the opacity to use for the shade.
+    :type pixmap: QPixmap
+    :type opacity: T <= int | float
     :rtype: QPixmap
     """
     o = QPixmap(pixmap.size())
@@ -293,10 +294,10 @@ def shaded(pixmap, opacity=0.25):
 def snapF(value, gridsize, offset=0, snap=True):
     """
     Snap the given value according to the given grid size.
-    :param value: the value to snap.
-    :param gridsize: the size of the grid.
-    :param offset: an offset value to add to the result of the snap.
-    :param snap: whether or not to perform the snap.
+    :type value: float
+    :type gridsize: float
+    :type offset: float
+    :type snap: bool
     :rtype: float
     """
     if snap:
@@ -307,9 +308,9 @@ def snapF(value, gridsize, offset=0, snap=True):
 def QSS(path):
     """
     Read a QSS file matching the given name and return its content.
-    :param path: the path of the QSS file.
     :raise TypeError: if an invalid QSS file is supplied.
     :raise IOError: if there is no QSS file matching the given name.
+    :type path: T <= bytes | unicode
     :rtype: str
     """
     if not path.lower().endswith('.qss'):
