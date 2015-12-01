@@ -32,11 +32,10 @@
 ##########################################################################
 
 
-import re
+from PyQt5.QtCore import QObject, QPointF
 
 from eddy.commands import CommandItemsMultiAdd
-
-from PyQt5.QtCore import QObject, QPointF
+from eddy.regex import RE_DIGIT, RE_ITEM_PREFIX
 
 
 class Clipboard(QObject):
@@ -124,10 +123,10 @@ class Clipboard(QObject):
             offset = pos - item.pos() + QPointF(item.width() / 2, item.height() / 2)
             for item in items:
                 item.moveBy(offset.x(), offset.y())
-                if item.isNode():
+                if item.node:
                     item.setZValue(zValue + 0.1)
                     zValue += 0.1
-                elif item.isEdge():
+                elif item.edge:
                     item.updateEdge()
 
             # adjust scene offsets for a possible next paste using shortcuts
@@ -139,10 +138,10 @@ class Clipboard(QObject):
             # no paste position given => use offsets set in the scene instance
             for item in items:
                 item.moveBy(scene.clipboardPasteOffsetX, scene.clipboardPasteOffsetY)
-                if item.isNode():
+                if item.node:
                     item.setZValue(zValue + 0.1)
                     zValue += 0.1
-                elif item.isEdge():
+                elif item.edge:
                     item.updateEdge()
 
             # adjust scene offsets for a possible next paste using shortcuts
@@ -186,10 +185,6 @@ class Clipboard(QObject):
         return 'Clipboard<nodes:{0},edges:{0}>'.format(len(self.nodes), len(self.edges))
 
 
-RE_DIGIT = re.compile("""\d""")
-RE_PARSE = re.compile("""^(?P<prefix>[^\d])(?P<value>\d+)$""")
-
-
 class UniqueID(object):
     """
     Helper class used to generate sequential IDs for GraphicScene items.
@@ -229,7 +224,7 @@ class UniqueID(object):
         :param unique_id: the unique id to parse.
         :rtype: tuple
         """
-        match = RE_PARSE.match(unique_id)
+        match = RE_ITEM_PREFIX.match(unique_id)
         if not match:
             raise ValueError('invalid id supplied ({0})'.format(unique_id))
         return match.group('prefix'), int(match.group('value'))
