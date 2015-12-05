@@ -50,7 +50,7 @@ class CommandItemsMultiAdd(QUndoCommand):
         self.selected = scene.selectedItems()
 
         if len(collection) == 1:
-            super().__init__('add {0} {1}'.format(collection[0].name, 'node' if collection[0].isNode() else 'edge'))
+            super().__init__('add {0} {1}'.format(collection[0].name, 'node' if collection[0].node else 'edge'))
         else:
             super().__init__('add {0} items'.format(len(collection)))
 
@@ -86,11 +86,11 @@ class CommandItemsMultiRemove(QUndoCommand):
         :param collection: a collection of items to remove.
         """
         self.scene = scene
-        self.nodes = {item for item in collection if item.isNode()}
-        self.edges = [item for item in collection if item.isEdge()]
+        self.nodes = {item for item in collection if item.node}
+        self.edges = [item for item in collection if item.edge]
 
         if len(collection) == 1:
-            super().__init__('remove {0} {1}'.format(collection[0].name, 'node' if collection[0].isNode() else 'edge'))
+            super().__init__('remove {0} {1}'.format(collection[0].name, 'node' if collection[0].node else 'edge'))
         else:
             super().__init__('remove {0} items'.format(len(collection)))
 
@@ -186,22 +186,22 @@ class CommandDecomposeAxiom(QUndoCommand):
     def redo(self):
         """redo the command"""
         for item in self.items:
-            if item.isEdge():
+            if item.edge:
                 item.source.removeEdge(item)
                 item.target.removeEdge(item)
                 self.scene.removeItem(item)
         for item in self.items:
-            if item.isNode():
+            if item.node:
                 self.scene.removeItem(item)
         self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         for item in self.items:
-            if item.isNode():
+            if item.node:
                 self.scene.addItem(item)
         for item in self.items:
-            if item.isEdge():
+            if item.edge:
                 item.source.addEdge(item)
                 item.target.addEdge(item)
                 self.scene.addItem(item)

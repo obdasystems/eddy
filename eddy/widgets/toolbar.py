@@ -58,7 +58,9 @@ class ZoomControl(QWidget):
         super().__init__(parent)
 
         self.zoomLevel = ZoomControl.Default
-        self.zoomLevels = [x for x in rangeF(ZoomControl.MinScale, ZoomControl.MaxScale + ZoomControl.Step, ZoomControl.Step)]
+        self.zoomLevels = [x for x in rangeF(ZoomControl.MinScale,
+                                             ZoomControl.MaxScale + ZoomControl.Step,
+                                             ZoomControl.Step)]
 
         # zoom level change actions
         self.actionsZoomChange = []
@@ -145,7 +147,7 @@ class ZoomControl(QWidget):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
+    #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
 

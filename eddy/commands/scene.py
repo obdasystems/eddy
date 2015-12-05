@@ -37,7 +37,7 @@ from PyQt5.QtWidgets import QUndoCommand
 
 class CommandSceneResize(QUndoCommand):
     """
-    This command is used to resize the scene rect
+    This command is used to resize the scene rect.
     """
     def __init__(self, scene, rect):
         """

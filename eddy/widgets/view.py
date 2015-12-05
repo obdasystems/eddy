@@ -170,7 +170,7 @@ class MainView(QGraphicsView):
                     self.mousePressRect = QRectF(x, y, w, h)
 
                     items = scene.items()
-                    selected = {x for x in scene.items(self.mousePressRect) if x.isNode() or x.isEdge()}
+                    selected = {x for x in scene.items(self.mousePressRect) if x.node or x.edge}
 
                     for item in items:
                         item.setSelected(item in selected)

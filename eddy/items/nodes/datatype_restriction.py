@@ -32,12 +32,12 @@
 ##########################################################################
 
 
-from eddy.datatypes import Font, ItemType
-from eddy.items.nodes.common.hexagon import HexagonNode
-from eddy.items.nodes.common.label import Label
-
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
+
+from eddy.datatypes import Font, ItemType, Identity
+from eddy.items.nodes.common.hexagon import HexagonNode
+from eddy.items.nodes.common.label import Label
 
 
 class DatatypeRestrictionNode(HexagonNode):
@@ -56,6 +56,28 @@ class DatatypeRestrictionNode(HexagonNode):
         super().__init__(brush='#fcfcfc', **kwargs)
         self.label = Label('data', movable=False, editable=False, parent=self)
         self.label.updatePos()
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return Identity.Data
+
+    @identity.setter
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
 
     ####################################################################################################################
     #                                                                                                                  #

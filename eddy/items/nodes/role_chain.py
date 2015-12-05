@@ -32,13 +32,13 @@
 ##########################################################################
 
 
-from eddy.datatypes import Font, ItemType, DistinctList
+from PyQt5.QtCore import Qt, QPointF
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
+
+from eddy.datatypes import Font, ItemType, DistinctList, Identity
 from eddy.dialogs import OrderedInputNodePropertiesDialog
 from eddy.items.nodes.common.hexagon import HexagonNode
 from eddy.items.nodes.common.label import Label
-
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
 
 class RoleChainNode(HexagonNode):
@@ -62,6 +62,28 @@ class RoleChainNode(HexagonNode):
 
     ####################################################################################################################
     #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return Identity.Role
+
+    @identity.setter
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
+
+    ####################################################################################################################
+    #                                                                                                                  #
     #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
@@ -71,14 +93,14 @@ class RoleChainNode(HexagonNode):
         Add the given edge to the current node.
         :param edge: the edge to be added.
         """
-        self.edges.append(edge)
+        super().addEdge(edge)
         if edge.isType(ItemType.InputEdge) and edge.target is self:
             self.inputs.append(edge.id)
             edge.updateEdge()
 
     def copy(self, scene):
         """
-        Create a copy of the current item .
+        Create a copy of the current item.
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
@@ -107,8 +129,8 @@ class RoleChainNode(HexagonNode):
         Remove the given edge from the current node.
         :param edge: the edge to be removed.
         """
+        super().removeEdge(edge)
         scene = self.scene()
-        self.edges.remove(edge)
         self.inputs.remove(edge.id)
         for x in self.inputs:
             try:

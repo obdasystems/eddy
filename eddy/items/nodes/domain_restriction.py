@@ -32,11 +32,11 @@
 ##########################################################################
 
 
-from eddy.datatypes import Font, ItemType
-from eddy.items.nodes.common.square import SquaredNode
-
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
+
+from eddy.datatypes import Font, ItemType
+from eddy.items.nodes.common.square import SquaredNode
 
 
 class DomainRestrictionNode(SquaredNode):

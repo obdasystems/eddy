@@ -769,8 +769,8 @@ class MainWindow(QMainWindow):
                     if action.isChecked():
                         if not node.asymmetric:
                             items = scene.asymmetricRoleAxiomComposition(node)
-                            nodes = {x for x in items if x.isNode()}
-                            edges = {x for x in items if x.isEdge()}
+                            nodes = {x for x in items if x.node}
+                            edges = {x for x in items if x.edge}
                             kwargs = {
                                 'name': 'compose asymmetric role',
                                 'scene': scene,
@@ -801,8 +801,8 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
             if node:
                 items = scene.functionalAxiomComposition(node)
-                nodes = {x for x in items if x.isNode()}
-                edges = {x for x in items if x.isEdge()}
+                nodes = {x for x in items if x.node}
+                edges = {x for x in items if x.edge}
                 kwargs = {
                     'name': 'compose functional {0}'.format(node.name),
                     'scene': scene,
@@ -824,8 +824,8 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
             if node:
                 items = scene.inverseFunctionalAxiomComposition(node)
-                nodes = {x for x in items if x.isNode()}
-                edges = {x for x in items if x.isEdge()}
+                nodes = {x for x in items if x.node}
+                edges = {x for x in items if x.edge}
                 kwargs = {
                     'name': 'compose inverse functional {0}'.format(node.name),
                     'scene': scene,
@@ -850,8 +850,8 @@ class MainWindow(QMainWindow):
                     if action.isChecked():
                         if not node.irreflexive:
                             items = scene.irreflexiveRoleAxiomComposition(node)
-                            nodes = {x for x in items if x.isNode()}
-                            edges = {x for x in items if x.isEdge()}
+                            nodes = {x for x in items if x.node}
+                            edges = {x for x in items if x.edge}
                             kwargs = {
                                 'name': 'compose irreflexive role',
                                 'scene': scene,
@@ -882,8 +882,8 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
             if node:
                 items = scene.propertyDomainAxiomComposition(node)
-                nodes = {x for x in items if x.isNode()}
-                edges = {x for x in items if x.isEdge()}
+                nodes = {x for x in items if x.node}
+                edges = {x for x in items if x.edge}
                 kwargs = {
                     'name': 'compose {0} property domain'.format(node.name),
                     'scene': scene,
@@ -905,8 +905,8 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
             if node:
                 items = scene.propertyRangeAxiomComposition(node)
-                nodes = {x for x in items if x.isNode()}
-                edges = {x for x in items if x.isEdge()}
+                nodes = {x for x in items if x.node}
+                edges = {x for x in items if x.edge}
                 kwargs = {
                     'name': 'compose {0} property range'.format(node.name),
                     'scene': scene,
@@ -931,8 +931,8 @@ class MainWindow(QMainWindow):
                     if action.isChecked():
                         if not node.reflexive:
                             items = scene.reflexiveRoleAxiomComposition(node)
-                            nodes = {x for x in items if x.isNode()}
-                            edges = {x for x in items if x.isEdge()}
+                            nodes = {x for x in items if x.node}
+                            edges = {x for x in items if x.edge}
                             kwargs = {
                                 'name': 'compose reflexive role',
                                 'scene': scene,
@@ -966,8 +966,8 @@ class MainWindow(QMainWindow):
                     if action.isChecked():
                         if not node.symmetric:
                             items = scene.symmetricRoleAxiomComposition(node)
-                            nodes = {x for x in items if x.isNode()}
-                            edges = {x for x in items if x.isEdge()}
+                            nodes = {x for x in items if x.node}
+                            edges = {x for x in items if x.edge}
                             kwargs = {
                                 'name': 'compose symmetric role',
                                 'scene': scene,
@@ -1001,8 +1001,8 @@ class MainWindow(QMainWindow):
                     if action.isChecked():
                         if not node.transitive:
                             items = scene.transitiveRoleAxiomComposition(node)
-                            nodes = {x for x in items if x.isNode()}
-                            edges = {x for x in items if x.isEdge()}
+                            nodes = {x for x in items if x.node}
+                            edges = {x for x in items if x.edge}
                             kwargs = {
                                 'name': 'compose transitive role',
                                 'scene': scene,
@@ -1068,7 +1068,7 @@ class MainWindow(QMainWindow):
 
             selection = scene.selectedItems()
             if selection:
-                selection.extend([x for item in selection if item.isNode() for x in item.edges if x not in selection])
+                selection.extend([x for item in selection if item.node for x in item.edges if x not in selection])
                 scene.undostack.push(CommandItemsMultiRemove(scene=scene, collection=selection))
 
     @pyqtSlot()
@@ -1106,7 +1106,7 @@ class MainWindow(QMainWindow):
             scene.setMode(DiagramMode.Idle)
             selection = scene.selectedItems()
             if selection:
-                selection.extend([x for item in selection if item.isNode() for x in item.edges if x not in selection])
+                selection.extend([x for item in selection if item.node for x in item.edges if x not in selection])
                 scene.undostack.push(CommandItemsMultiRemove(scene=scene, collection=selection))
 
     @pyqtSlot('QGraphicsItem', int)

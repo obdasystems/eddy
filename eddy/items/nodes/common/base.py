@@ -40,7 +40,7 @@ from PyQt5.QtGui import QColor, QPen, QPainter, QBrush
 from PyQt5.QtWidgets import QMenu, QGraphicsItem
 
 from eddy.commands import CommandNodeRezize
-from eddy.datatypes import DistinctList, DiagramMode, Color
+from eddy.datatypes import Color, DistinctList, DiagramMode, Identity, ItemType
 from eddy.dialogs import NodePropertiesDialog
 from eddy.items import Item
 
@@ -53,10 +53,8 @@ class Node(Item):
 
     name = 'node' # a string identifying this node
     prefix = 'n' # prefix to be prepended to node ids
-    connectionOkBrush = QBrush(QColor(43, 173, 63, 160)) # brush used to highlight good connections
-    connectionOkPen = QPen(QColor(43, 173, 63, 160), 1.0, Qt.SolidLine) # pen used to highlight good connections
-    connectionNotOkBrush = QBrush(QColor(179, 12, 12, 160)) # brush used to highlight wrong connections
-    connectionNotOkPen = QPen(QColor(179, 12, 12, 160), 1.0, Qt.SolidLine) # pen used to highlight good connections
+    brushConnectionBad = QBrush(QColor(179, 12, 12, 160)) # brush used to highlight wrong connections
+    brushConnectionOk = QBrush(QColor(43, 173, 63, 160)) # brush used to highlight good connections
     selectionOffset = 4 # used in non-resizable nodes to space the bounding rect from the shape
     selectionPen = QPen(QColor(0, 0, 0), 1.0, Qt.DashLine) # used to draw the bounding rect when the item is selected
     xmlname = 'node' # a string identifying this node in XML documents
@@ -99,7 +97,7 @@ class Node(Item):
     def brush(self, value):
         """
         Set the brush used to paint this node.
-        :param value: the value to use in the brush.
+        :param value: the value to use as brush.
         """
         if isinstance(value, QBrush):
             self._brush = value
@@ -115,6 +113,40 @@ class Node(Item):
             raise ValueError('invalid brush specified: {0}'.format(value))
 
     @property
+    def constructor(self):
+        """
+        Tells whether this node is a constructor node.
+        :rtype: bool
+        """
+        return ItemType.DomainRestrictionNode <= self.itemtype <= ItemType.PropertyAssertionNode
+
+    @property
+    @abstractmethod
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        pass
+
+    @identity.setter
+    @abstractmethod
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
+
+    @property
+    def operator(self):
+        """
+        Tells whether this node is an operator node.
+        :rtype: bool
+        """
+        return ItemType.UnionNode <= self.itemtype <= ItemType.PropertyAssertionNode
+
+    @property
     def pen(self):
         """
         Returns the pen used to paint this node.
@@ -128,9 +160,17 @@ class Node(Item):
     def pen(self, value):
         """
         Set the pen used to paint this node.
-        :param value: the pen to use when painting the node.
+        :type value: QPen
         """
         self._pen = value
+
+    @property
+    def predicate(self):
+        """
+        Tells whether this node is a predicate node.
+        :rtype: bool
+        """
+        return ItemType.ConceptNode <= self.itemtype <= ItemType.ValueRestrictionNode
 
     @property
     def resizable(self):
@@ -139,6 +179,14 @@ class Node(Item):
         :rtype: bool
         """
         return False
+
+    @property
+    def restriction(self):
+        """
+        Tells whether this node is a restriction node.
+        :rtype: bool
+        """
+        return ItemType.DomainRestrictionNode <= self.itemtype <= ItemType.RangeRestrictionNode
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -194,7 +242,7 @@ class Node(Item):
     @abstractmethod
     def copy(self, scene):
         """
-        Create a copy of the current item .
+        Create a copy of the current item.
         :param scene: a reference to the scene where this item is being copied from.
         """
         pass
@@ -223,6 +271,15 @@ class Node(Item):
                 return intersection
 
         return None
+
+    def isIdentity(self, *args):
+        """
+        Tells whether the current node identyty is one of the given types.
+        :param args: positional arguments specifying item types to match.
+        :return: True if the node identity matches a given type, False otherwise.
+        :rtype: bool
+        """
+        return self.identity in args
 
     def pos(self):
         """
@@ -506,6 +563,24 @@ class ResizableNode(Node):
     #   PROPERTIES                                                                                                     #
     #                                                                                                                  #
     ####################################################################################################################
+
+    @property
+    @abstractmethod
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        pass
+
+    @identity.setter
+    @abstractmethod
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
 
     @property
     def resizable(self):

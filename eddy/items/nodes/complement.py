@@ -32,12 +32,12 @@
 ##########################################################################
 
 
-from eddy.datatypes import Font, ItemType
-from eddy.items.nodes.common.hexagon import HexagonNode
-from eddy.items.nodes.common.label import Label
-
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
+
+from eddy.datatypes import Font, Identity, ItemType
+from eddy.items.nodes.common.hexagon import HexagonNode
+from eddy.items.nodes.common.label import Label
 
 
 class ComplementNode(HexagonNode):
@@ -54,8 +54,35 @@ class ComplementNode(HexagonNode):
         :param brush: the brush used to paint the node (unused).
         """
         super().__init__(brush='#fcfcfc', **kwargs)
+
+        self._identity = Identity.Neutral
+
         self.label = Label('not', movable=False, editable=False, parent=self)
         self.label.updatePos()
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return self._identity
+
+    @identity.setter
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        if identity not in {Identity.Concept, Identity.Role, Identity.Data}:
+            identity = Identity.Unknown
+        self._identity = identity
 
     ####################################################################################################################
     #                                                                                                                  #

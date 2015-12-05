@@ -444,22 +444,22 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
     """
     This command is used to change the restriction of square based constructor nodes.
     """
-    def __init__(self, scene, node, restriction, cardinality=None):
+    def __init__(self, scene, node, restrictiontype, cardinality=None):
         """
         Initialize the command.
         :param scene: the scene where this command is being performed.
         :param node: the node whose restriction is being changed.
-        :param restriction: the new restriction type.
+        :param restrictiontype: the new restriction type.
         """
         self.node = node
         self.scene = scene
-        self.restriction1 = self.node.restriction
+        self.restrictiontype1 = self.node.restrictiontype
         self.cardinality1 = self.node.cardinality
-        self.restriction2 = restriction
+        self.restrictiontype2 = restrictiontype
         self.cardinality2 = dict(min=None, max=None) if not cardinality else cardinality
 
-        value = restriction.label
-        if restriction is RestrictionType.cardinality:
+        value = restrictiontype.label
+        if restrictiontype is RestrictionType.cardinality:
             value = value.format(min=self.s(cardinality['min']), max=self.s(cardinality['max']))
 
         super().__init__('change {0} to {1}'.format(node.name, value))
@@ -474,30 +474,30 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        if self.restriction2 is RestrictionType.cardinality:
-            self.node.restriction = self.restriction2
+        if self.restrictiontype2 is RestrictionType.cardinality:
+            self.node.restrictiontype = self.restrictiontype2
             self.node.cardinality = self.cardinality2
-            self.node.label.setText(self.node.restriction.label.format(min=self.s(self.node.cardinality['min']),
-                                                                       max=self.s(self.node.cardinality['max'])))
+            self.node.label.setText(self.node.restrictiontype.label.format(min=self.s(self.node.cardinality['min']),
+                                                                           max=self.s(self.node.cardinality['max'])))
         else:
-            self.node.restriction = self.restriction2
+            self.node.restrictiontype = self.restrictiontype2
             self.node.cardinality = dict(min=None, max=None)
-            self.node.label.setText(self.node.restriction.label)
+            self.node.label.setText(self.node.restrictiontype.label)
 
         # emit updated signal
         self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        if self.restriction1 is RestrictionType.cardinality:
-            self.node.restriction = self.restriction1
+        if self.restrictiontype1 is RestrictionType.cardinality:
+            self.node.restrictiontype = self.restrictiontype1
             self.node.cardinality = self.cardinality1
-            self.node.label.setText(self.node.restriction.label.format(min=self.s(self.node.cardinality['min']),
-                                                                       max=self.s(self.node.cardinality['max'])))
+            self.node.label.setText(self.node.restrictiontype.label.format(min=self.s(self.node.cardinality['min']),
+                                                                           max=self.s(self.node.cardinality['max'])))
         else:
-            self.node.restriction = self.restriction1
+            self.node.restrictiontype = self.restrictiontype1
             self.node.cardinality = dict(min=None, max=None)
-            self.node.label.setText(self.node.restriction.label)
+            self.node.label.setText(self.node.restrictiontype.label)
 
         # emit updated signal
         self.scene.updated.emit()

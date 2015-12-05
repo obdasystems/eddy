@@ -328,6 +328,16 @@ class Edge(Item):
             menu.addAction(scene.mainwindow.actionSwapEdge)
         return menu
 
+    def isValid(self, source, target):
+        """
+        Tells whether this edge is valid when being added between the given source and target nodes.
+        :param source: the source node.
+        :param target: the target node.
+        :return: True if the edge is valid, False otherwise
+        :rtype: bool
+        """
+        return source is not target
+
     def moveBy(self, x, y):
         """
         Move the edge by the given deltas.

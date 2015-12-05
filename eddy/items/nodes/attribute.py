@@ -32,13 +32,13 @@
 ##########################################################################
 
 
-from eddy.datatypes import Font, ItemType, SpecialType, DiagramMode
+from PyQt5.QtCore import Qt, QRectF, QPointF
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath
+
+from eddy.datatypes import Font, ItemType, SpecialType, DiagramMode, Identity
 from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.items.nodes.common.base import Node
 from eddy.items.nodes.common.label import Label
-
-from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath
 
 
 class AttributeNode(Node):
@@ -74,6 +74,22 @@ class AttributeNode(Node):
     ####################################################################################################################
 
     @property
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return Identity.Attribute
+
+    @identity.setter
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
+
+    @property
     def special(self):
         """
         Returns the special type of this node.
@@ -85,7 +101,7 @@ class AttributeNode(Node):
     def special(self, special):
         """
         Set the special type of this node.
-        :param special: the special type.
+        :type special: SpecialType
         """
         self._special = special
         self.label.editable = self._special is None
@@ -352,9 +368,16 @@ class AttributeNode(Node):
             painter.drawRect(self.boundingRect())
 
         if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
+
+            edge = scene.command.edge
+
+            brush = self.brushConnectionOk
+            if not edge.isValid(edge.source, scene.mouseOverNode):
+                brush = self.brushConnectionBad
+
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(self.connectionOkPen)
-            painter.setBrush(self.connectionOkBrush)
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(brush)
             painter.drawEllipse(self.boundingRect())
 
         painter.setRenderHint(QPainter.Antialiasing)

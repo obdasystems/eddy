@@ -34,14 +34,14 @@
 
 import math
 
-from eddy.datatypes import Font, ItemType, DiagramMode
-from eddy.dialogs import EditableNodePropertiesDialog
-from eddy.functions import snapF
-from eddy.items.nodes.common.base import ResizableNode
-from eddy.items.nodes.common.label import Label
-
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap
+
+from eddy.datatypes import DiagramMode, Font, Identity, ItemType
+from eddy.dialogs import EditableNodePropertiesDialog
+from eddy.functions import snapF, isQuoted
+from eddy.items.nodes.common.base import ResizableNode
+from eddy.items.nodes.common.label import Label
 
 
 class IndividualNode(ResizableNode):
@@ -81,6 +81,30 @@ class IndividualNode(ResizableNode):
 
     ####################################################################################################################
     #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        if isQuoted(self.labelText()):
+            return Identity.Value
+        return Identity.Individual
+
+    @identity.setter
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
+
+    ####################################################################################################################
+    #                                                                                                                  #
     #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
@@ -106,7 +130,7 @@ class IndividualNode(ResizableNode):
 
     def copy(self, scene):
         """
-        Create a copy of the current item .
+        Create a copy of the current item.
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
@@ -624,11 +648,18 @@ class IndividualNode(ResizableNode):
             painter.drawRect(self.boundingRect())
 
         if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
+
+            edge = scene.command.edge
+
+            brush = self.brushConnectionOk
+            if not edge.isValid(edge.source, scene.mouseOverNode):
+                brush = self.brushConnectionBad
+
             boundingRect = self.boundingRect()
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(self.connectionOkPen)
-            painter.setBrush(self.connectionOkBrush)
-            painter.drawPolygon(self.createPolygon(shape_w=boundingRect.width(), shape_h=boundingRect.height()))
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(brush)
+            painter.drawPolygon(self.createPolygon(boundingRect.width(), boundingRect.height()))
 
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(self.brush)

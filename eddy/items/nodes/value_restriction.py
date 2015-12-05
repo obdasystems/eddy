@@ -32,14 +32,14 @@
 ##########################################################################
 
 
-from eddy.datatypes import Font, ItemType, DiagramMode
+from PyQt5.QtCore import QPointF, QRectF, Qt
+from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap
+
+from eddy.datatypes import DiagramMode, Font, Identity, ItemType
 from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.functions import snapF
 from eddy.items.nodes.common.base import ResizableNode
 from eddy.items.nodes.common.label import Label
-
-from PyQt5.QtCore import QPointF, QRectF, Qt
-from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap
 
 
 class ValueRestrictionNode(ResizableNode):
@@ -77,6 +77,28 @@ class ValueRestrictionNode(ResizableNode):
 
     ####################################################################################################################
     #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return Identity.Data
+
+    @identity.setter
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
+
+    ####################################################################################################################
+    #                                                                                                                  #
     #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
@@ -102,7 +124,7 @@ class ValueRestrictionNode(ResizableNode):
 
     def copy(self, scene):
         """
-        Create a copy of the current item .
+        Create a copy of the current item.
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
@@ -560,8 +582,15 @@ class ValueRestrictionNode(ResizableNode):
             painter.drawRect(self.boundingRect())
 
         if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
-            painter.setPen(self.connectionOkPen)
-            painter.setBrush(self.connectionOkBrush)
+
+            edge = scene.command.edge
+
+            brush = self.brushConnectionOk
+            if not edge.isValid(edge.source, scene.mouseOverNode):
+                brush = self.brushConnectionBad
+
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(brush)
             painter.drawRect(self.boundingRect())
 
         painter.setRenderHint(QPainter.Antialiasing)

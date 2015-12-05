@@ -32,8 +32,7 @@
 ##########################################################################
 
 
-from abc import ABCMeta
-
+from abc import ABCMeta, abstractmethod
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QPolygonF
 
@@ -66,6 +65,30 @@ class HexagonNode(Node):
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
         self.polygon = self.createPolygon(shape_w=50, shape_h=30, oblique=6)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    @abstractmethod
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        pass
+
+    @identity.setter
+    @abstractmethod
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -224,11 +247,17 @@ class HexagonNode(Node):
             painter.drawRect(self.boundingRect())
 
         if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
+            edge = scene.command.edge
+
+            brush = self.brushConnectionOk
+            if not edge.isValid(edge.source, scene.mouseOverNode):
+                brush = self.brushConnectionBad
+
             boundingRect = self.boundingRect()
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(self.connectionOkPen)
-            painter.setBrush(self.connectionOkBrush)
-            painter.drawPolygon(self.createPolygon(shape_w=boundingRect.width(), shape_h=boundingRect.height(), oblique=6))
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(brush)
+            painter.drawPolygon(self.createPolygon(boundingRect.width(), boundingRect.height(), 6))
 
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(self.brush)

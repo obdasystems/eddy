@@ -32,12 +32,12 @@
 ##########################################################################
 
 
-from eddy.datatypes import ItemType, DistinctList, DiagramMode
-from eddy.dialogs import OrderedInputNodePropertiesDialog
-from eddy.items.nodes.common.base import Node
-
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QBrush
+
+from eddy.datatypes import DiagramMode, DistinctList, ItemType, Identity
+from eddy.dialogs import OrderedInputNodePropertiesDialog
+from eddy.items.nodes.common.base import Node
 
 
 class PropertyAssertionNode(Node):
@@ -67,6 +67,28 @@ class PropertyAssertionNode(Node):
 
     ####################################################################################################################
     #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return Identity.Link
+
+    @identity.setter
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
+
+    ####################################################################################################################
+    #                                                                                                                  #
     #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
@@ -76,14 +98,14 @@ class PropertyAssertionNode(Node):
         Add the given edge to the current node.
         :param edge: the edge to be added.
         """
-        self.edges.append(edge)
+        super().addEdge(edge)
         if edge.isType(ItemType.InputEdge) and edge.target is self:
             self.inputs.append(edge.id)
             edge.updateEdge()
 
     def copy(self, scene):
         """
-        Create a copy of the current item .
+        Create a copy of the current item.
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
@@ -117,8 +139,8 @@ class PropertyAssertionNode(Node):
         Remove the given edge from the current node.
         :param edge: the edge to be removed.
         """
+        super().removeEdge(edge)
         scene = self.scene()
-        self.edges.remove(edge)
         self.inputs.remove(edge.id)
         for x in self.inputs:
             try:
@@ -305,9 +327,16 @@ class PropertyAssertionNode(Node):
             painter.drawRect(self.boundingRect())
 
         if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
+
+            edge = scene.command.edge
+
+            brush = self.brushConnectionOk
+            if not edge.isValid(edge.source, scene.mouseOverNode):
+                brush = self.brushConnectionBad
+
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(self.connectionOkPen)
-            painter.setBrush(self.connectionOkBrush)
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(brush)
             painter.drawRoundedRect(self.boundingRect(), self.radius, self.radius)
 
         painter.setRenderHint(QPainter.Antialiasing)

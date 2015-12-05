@@ -62,23 +62,11 @@ class Item(QGraphicsItem):
 
         super().__init__(**kwargs)
 
-    ################################################### PROPERTIES #####################################################
-
-    @property
-    def id(self):
-        """
-        Returns the node id.
-        :rtype: str
-        """
-        return self._id
-
-    @id.setter
-    def id(self, value):
-        """
-        Set the node id.
-        :param value: the new node id.
-        """
-        self._id = value
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @property
     def description(self):
@@ -97,6 +85,40 @@ class Item(QGraphicsItem):
         self._description = value.strip()
 
     @property
+    def edge(self):
+        """
+        Tells whether the current element is an Edge.
+        :return: True if the item is an edge, False otherwise.
+        :rtype: bool
+        """
+        return ItemType.InclusionEdge <= self.itemtype <= ItemType.InstanceOfEdge
+
+    @property
+    def id(self):
+        """
+        Returns the node id.
+        :rtype: str
+        """
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        """
+        Set the node id.
+        :param value: the new node id.
+        """
+        self._id = value
+
+    @property
+    def node(self):
+        """
+        Tells whether the current element is a Node.
+        :return: True if the item is a node, False otherwise.
+        :rtype: bool
+        """
+        return ItemType.ConceptNode <= self.itemtype <= ItemType.PropertyAssertionNode
+
+    @property
     def url(self):
         """
         Returns the url attached to the  node.
@@ -112,7 +134,11 @@ class Item(QGraphicsItem):
         """
         self._url = value.strip()
 
-    ################################################ ITEM INTERFACE ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @abstractmethod
     def contextMenu(self, *args, **kwargs):
@@ -130,22 +156,6 @@ class Item(QGraphicsItem):
         """
         pass
 
-    def isEdge(self):
-        """
-        Tells whether the current element is a graph Edge.
-        :return: True if the item is an edge, False otherwise.
-        :rtype: bool
-        """
-        return ItemType.InclusionEdge <= self.itemtype <= ItemType.InstanceOfEdge
-
-    def isNode(self):
-        """
-        Tells whether the current element is a graph Node.
-        :return: True if the item is a node, False otherwise.
-        :rtype: bool
-        """
-        return ItemType.ConceptNode <= self.itemtype <= ItemType.PropertyAssertionNode
-
     def isType(self, *args):
         """
         Tells whether the current item is one of the given types.
@@ -155,7 +165,11 @@ class Item(QGraphicsItem):
         """
         return self.itemtype in args
 
-    ############################################# ITEM IMPORT / EXPORT #################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   IMPORT / EXPORT                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @abstractmethod
     def toGraphol(self, document):
@@ -177,7 +191,11 @@ class Item(QGraphicsItem):
         """
         pass
 
-    ################################################## ITEM DRAWING ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   DRAWING                                                                                                        #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @classmethod
     @abstractmethod
@@ -188,7 +206,11 @@ class Item(QGraphicsItem):
         """
         pass
 
-    #################################################### GEOMETRY ######################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   GEOMETRY                                                                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @abstractmethod
     def painterPath(self):
@@ -198,7 +220,11 @@ class Item(QGraphicsItem):
         """
         pass
 
-    ############################################## STRING REPRESENTATION ###############################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   REPRESENTATION                                                                                                 #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def __repr__(self):
         """
@@ -224,25 +250,35 @@ class LabelItem(QGraphicsTextItem):
         """
         super().__init__(parent)
 
-    ################################################ ITEM INTERFACE ####################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
 
-    @staticmethod
-    def isEdge():
+    @property
+    def edge(self):
         """
-        Tells whether the current element is a graph Edge.
+        Tells whether the current element is an Edge.
         :return: True if the item is an edge, False otherwise.
         :rtype: bool
         """
         return False
 
-    @staticmethod
-    def isNode():
+    @property
+    def node(self):
         """
-        Tells whether the current element is a graph Node.
+        Tells whether the current element is a Node.
         :return: True if the item is a node, False otherwise.
         :rtype: bool
         """
         return False
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def isType(self, *args):
         """
@@ -253,7 +289,11 @@ class LabelItem(QGraphicsTextItem):
         """
         return self.itemtype in args
 
-    ############################################## STRING REPRESENTATION ###############################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   REPRESENTATION                                                                                                 #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def __repr__(self):
         """
@@ -264,8 +304,8 @@ class LabelItem(QGraphicsTextItem):
 
 from eddy.items.nodes import AttributeNode, ConceptNode, ComplementNode, DatatypeRestrictionNode, DisjointUnionNode
 from eddy.items.nodes import DomainRestrictionNode, EnumerationNode, IndividualNode, IntersectionNode
-from eddy.items.nodes import PropertyAssertionNode, RangeRestrictionNode, RoleNode, RoleChainNode, RoleInverseNode
-from eddy.items.nodes import UnionNode, ValueDomainNode, ValueRestrictionNode
+from eddy.items.nodes import PropertyAssertionNode, RangeRestrictionNode, RoleNode, RoleChainNode
+from eddy.items.nodes import RoleInverseNode, UnionNode, ValueDomainNode, ValueRestrictionNode
 from eddy.items.edges import InputEdge, InclusionEdge, InstanceOfEdge
 
 

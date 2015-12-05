@@ -32,11 +32,11 @@
 ##########################################################################
 
 
-from eddy.datatypes import ItemType
-from eddy.items.nodes.common.hexagon import HexagonNode
-
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
+
+from eddy.datatypes import ItemType, Identity
+from eddy.items.nodes.common.hexagon import HexagonNode
 
 
 class DisjointUnionNode(HexagonNode):
@@ -53,6 +53,31 @@ class DisjointUnionNode(HexagonNode):
         :param brush: the brush used to paint the node (unused).
         """
         super().__init__(brush='#000000', **kwargs)
+        self._identity = Identity.Neutral
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return self._identity
+
+    @identity.setter
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        if identity not in {Identity.Concept, Identity.Data}:
+            identity = Identity.Unknown
+        self._identity = identity
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -62,7 +87,7 @@ class DisjointUnionNode(HexagonNode):
 
     def copy(self, scene):
         """
-        Create a copy of the current item .
+        Create a copy of the current item.
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {

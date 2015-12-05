@@ -216,11 +216,7 @@ class DiagramScene(QGraphicsScene):
                     func = self.modeParam
                     edge = func(scene=self, source=node)
                     edge.updateEdge(target=mouseEvent.scenePos())
-
-                    # put the command on hold since we don't know if the edge will be truly inserted
                     self.command = CommandEdgeAdd(scene=self, edge=edge)
-
-                    # add the edge to the scene
                     self.addItem(self.command.edge)
 
                 super().mousePressEvent(mouseEvent)
@@ -347,28 +343,27 @@ class DiagramScene(QGraphicsScene):
 
                 if self.command and self.command.edge:
 
-                    # keep the edge only if it's overlapping a node in the scene
-                    node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False, skip={self.command.edge.source})
+                    edge = self.command.edge
+                    node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False, skip={edge.source})
 
-                    if node:
+                    if node and edge.isValid(edge.source, node):
 
-                        self.command.edge.target = node
-                        self.command.edge.source.addEdge(self.command.edge)
-                        self.command.edge.target.addEdge(self.command.edge)
-                        self.command.edge.updateEdge()
+                        edge.target = node
+                        edge.source.addEdge(edge)
+                        edge.target.addEdge(edge)
+                        edge.updateEdge()
 
                         self.undostack.push(self.command)
                         self.updated.emit()
 
                     else:
 
-                        # remove the edge from the scene
-                        self.removeItem(self.command.edge)
+                        self.removeItem(edge)
 
                     # always emit this signal even if the edge has not been inserted since this will clear
                     # also the toolbox switching back the operation mode to DiagramMode.Idle in case the CTRL
                     # keyboard modifier is not being held (in which case the toolbox button will stay selected)
-                    self.edgeInserted.emit(self.command.edge, mouseEvent.modifiers())
+                    self.edgeInserted.emit(edge, mouseEvent.modifiers())
 
                     self.clearSelection()
                     self.command = None
@@ -452,14 +447,9 @@ class DiagramScene(QGraphicsScene):
         graph.setAttribute('height', self.sceneRect().height())
 
         for node in self.nodes():
-            # append all the nodes to the graph element
             graph.appendChild(node.toGraphol(doc))
-
         for edge in self.edges():
-            # append all the edges to the graph element
             graph.appendChild(edge.toGraphol(doc))
-
-        # append the whole graph to the root
         root.appendChild(graph)
 
         return doc
@@ -499,7 +489,7 @@ class DiagramScene(QGraphicsScene):
         :param source: the node source of the composition.
         :rtype: set
         """
-        node1 = DomainRestrictionNode(scene=self, restriction=RestrictionType.exists)
+        node1 = DomainRestrictionNode(scene=self, restrictiontype=RestrictionType.exists)
         edge1 = InputEdge(scene=self, source=source, target=node1, functional=True)
 
         size = DiagramScene.GridSize
@@ -535,7 +525,7 @@ class DiagramScene(QGraphicsScene):
         :param source: the node source of the composition.
         :rtype: set
         """
-        node1 = RangeRestrictionNode(scene=self, restriction=RestrictionType.exists)
+        node1 = RangeRestrictionNode(scene=self, restrictiontype=RestrictionType.exists)
         edge1 = InputEdge(scene=self, source=source, target=node1, functional=True)
         
         size = DiagramScene.GridSize
@@ -575,7 +565,7 @@ class DiagramScene(QGraphicsScene):
         x2 = snapF(source.pos().x() + source.width() / 2 + 120, DiagramScene.GridSize, snap=True)
         x3 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize, snap=True)
 
-        node1 = DomainRestrictionNode(scene=self, restriction=RestrictionType.self)
+        node1 = DomainRestrictionNode(scene=self, restrictiontype=RestrictionType.self)
         node1.setPos(QPointF(x1, source.pos().y()))
         node2 = ComplementNode(scene=self)
         node2.setPos(QPointF(x2, source.pos().y()))
@@ -593,7 +583,7 @@ class DiagramScene(QGraphicsScene):
         :param source: the node source of the composition.
         :rtype: set
         """
-        node1 = DomainRestrictionNode(scene=self, restriction=RestrictionType.exists)
+        node1 = DomainRestrictionNode(scene=self, restrictiontype=RestrictionType.exists)
         edge1 = InputEdge(scene=self, source=source, target=node1)
         
         size = DiagramScene.GridSize
@@ -629,7 +619,7 @@ class DiagramScene(QGraphicsScene):
         :param source: the node source of the composition.
         :rtype: set
         """
-        node1 = RangeRestrictionNode(scene=self, restriction=RestrictionType.exists)
+        node1 = RangeRestrictionNode(scene=self, restrictiontype=RestrictionType.exists)
         edge1 = InputEdge(scene=self, source=source, target=node1)
 
         if source.isType(ItemType.AttributeNode):
@@ -706,7 +696,7 @@ class DiagramScene(QGraphicsScene):
         x1 = snapF(source.pos().x() + source.width() / 2 + 40, DiagramScene.GridSize, snap=True)
         x2 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize, snap=True)
 
-        node1 = DomainRestrictionNode(scene=self, restriction=RestrictionType.self)
+        node1 = DomainRestrictionNode(scene=self, restrictiontype=RestrictionType.self)
         node1.setPos(QPointF(x1, source.pos().y()))
         node2 = ConceptNode(scene=self, special=SpecialType.TOP)
         node2.setPos(QPointF(x2, source.pos().y()))
@@ -782,12 +772,12 @@ class DiagramScene(QGraphicsScene):
         super().addItem(item)
 
         # map the item over the index matching its type
-        collection = self.nodesById if item.isNode() else self.edgesById
+        collection = self.nodesById if item.node else self.edgesById
         collection[item.id] = item
 
         try:
             # map the item in the nodesByLabel index if needed
-            if item.isNode() and item.label.editable:
+            if item.node and item.label.editable:
                 index = item.labelText()
                 if not index in self.nodesByLabel:
                     self.nodesByLabel[index] = DistinctList()
@@ -835,7 +825,7 @@ class DiagramScene(QGraphicsScene):
         :rtype: Item
         """
         skip = skip or {}
-        data = [x for x in self.items(point) if (nodes and x.isNode() or edges and x.isEdge()) and x not in skip]
+        data = [x for x in self.items(point) if (nodes and x.node or edges and x.edge) and x not in skip]
         if data:
             return max(data, key=lambda x: x.zValue())
         return None
@@ -863,12 +853,12 @@ class DiagramScene(QGraphicsScene):
         super().removeItem(item)
 
         # remove the item from the index matching its type
-        collection = self.nodesById if item.isNode() else self.edgesById
+        collection = self.nodesById if item.node else self.edgesById
         collection.pop(item.id, None)
 
         try:
             # remove the item from the nodesByLabel index if needed
-            if item.isNode() and item.label.editable:
+            if item.node and item.label.editable:
                 index = item.labelText()
                 if index in self.nodesByLabel:
                     self.nodesByLabel[index].remove(item)
@@ -883,21 +873,21 @@ class DiagramScene(QGraphicsScene):
         Returns the edges selected in the scene.
         :rtype: list
         """
-        return [x for x in self.selectedItems() if x.isEdge()]
+        return [x for x in self.selectedItems() if x.edge]
 
     def selectedItems(self):
         """
         Returns the items selected in the scene (will filter out labels since we don't need them).
         :rtype: list
         """
-        return [x for x in super().selectedItems() if x.isNode() or x.isEdge()]
+        return [x for x in super().selectedItems() if x.node or x.edge]
 
     def selectedNodes(self):
         """
         Returns the nodes selected in the scene.
         :rtype: list
         """
-        return [x for x in self.selectedItems() if x.isNode()]
+        return [x for x in self.selectedItems() if x.node]
 
     def setMode(self, mode, param=None):
         """

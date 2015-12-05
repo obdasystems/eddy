@@ -303,8 +303,8 @@ class Test_DiagramScene(EddyTestCase):
 
     def test_toggle_edge_functional(self):
         # GIVEN
-        self.createStubDiagram2()
-        edge = self.scene.edge('e4')
+        self.createStubDiagram4()
+        edge = self.scene.edge('e0')
         edge.setSelected(True)
         # WHEN
         self.mainwindow.actionToggleEdgeFunctional.trigger()
@@ -506,7 +506,7 @@ class Test_DiagramScene(EddyTestCase):
     def createStubDiagram2(self):
         """
         Create a stub diagram to be used in test cases.
-        The diagram is composed of 4 Concept nodes connected using 4 Inclusion edges and 1 Input edge.
+        The diagram is composed of 4 Concept nodes connected using 4 Inclusion edges.
         """
         QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -200))) # n0
@@ -526,11 +526,6 @@ class Test_DiagramScene(EddyTestCase):
         QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n3 -> n1
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.InputEdge), Qt.LeftButton)
-        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, +200)))
-        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n2 -> n1
-        QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
-
         self.scene.clearSelection()
         self.scene.undostack.clear()
 
@@ -543,6 +538,35 @@ class Test_DiagramScene(EddyTestCase):
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, self.mainview.mapFromScene(QPoint(-200, -200))) # n0
         QTest.mouseClick(self.mainwindow.palette_.button(ItemType.AttributeNode), Qt.LeftButton)
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n1
+
+        self.scene.clearSelection()
+        self.scene.undostack.clear()
+
+    def createStubDiagram4(self):
+        """
+        Create a stub diagram to be used in test cases.
+        The diagram is composed of 4 Concept nodes connected to an Intersection node using 4 Input edges.
+        """
+        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -200))) # n0
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n1
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, +200))) # n2
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, +200))) # n3
+        QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
+
+        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.IntersectionNode), Qt.LeftButton)
+        QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, self.mainview.mapFromScene(QPoint(0, 0))) # n4
+
+        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.InputEdge), Qt.LeftButton)
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -200)))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(0, 0))) # n0 -> n4
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200)))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(0, 0))) # n1 -> n4
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, +200)))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(0, 0))) # n2 -> n4
+        QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, +200)))
+        QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(0, 0))) # n3 -> n4
+        QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
         self.scene.clearSelection()
         self.scene.undostack.clear()

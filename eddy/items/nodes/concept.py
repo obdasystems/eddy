@@ -32,15 +32,15 @@
 ##########################################################################
 
 
-from eddy.datatypes import Font, ItemType, SpecialType, DiagramMode
-from eddy.dialogs import EditableNodePropertiesDialog
-from eddy.functions import snapF
-from eddy.items.nodes.common.base import ResizableNode
-from eddy.items.nodes.common.label import Label
-
 from PyQt5.QtCore import QRectF, QPointF, Qt
 from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QColor, QPen
 from PyQt5.QtWidgets import QMenu
+
+from eddy.datatypes import Font, ItemType, SpecialType, DiagramMode, Identity
+from eddy.dialogs import EditableNodePropertiesDialog
+from eddy.functions import snapF
+from eddy.items.nodes.common.base import Node, ResizableNode
+from eddy.items.nodes.common.label import Label
 
 
 class ConceptNode(ResizableNode):
@@ -80,6 +80,22 @@ class ConceptNode(ResizableNode):
     ####################################################################################################################
 
     @property
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return Identity.Concept
+
+    @identity.setter
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
+
+    @property
     def special(self):
         """
         Returns the special type of this node.
@@ -91,7 +107,7 @@ class ConceptNode(ResizableNode):
     def special(self, special):
         """
         Set the special type of this node.
-        :param special: the special type.
+        :type special: SpecialType
         """
         self._special = special
         self.label.editable = self._special is None
@@ -544,8 +560,15 @@ class ConceptNode(ResizableNode):
             painter.drawRect(self.boundingRect())
 
         if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
-            painter.setPen(self.connectionOkPen)
-            painter.setBrush(self.connectionOkBrush)
+
+            edge = scene.command.edge
+
+            brush = self.brushConnectionOk
+            if not edge.isValid(edge.source, scene.mouseOverNode):
+                brush = self.brushConnectionBad
+
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(brush)
             painter.drawRect(self.boundingRect())
 
         painter.setBrush(self.brush)

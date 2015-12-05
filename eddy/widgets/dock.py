@@ -34,16 +34,16 @@
 
 from abc import ABCMeta, abstractmethod
 
+from PyQt5.QtCore import Qt, QSize, pyqtSlot
+from PyQt5.QtGui import QColor, QPen, QIcon, QPainter
+from PyQt5.QtWidgets import QGraphicsView, QDockWidget, QWidget, QGridLayout, QButtonGroup, QToolButton
+from PyQt5.QtWidgets import QStyleOption, QStyle
+
 from eddy.functions import disconnect, connect
 from eddy.items import ConceptNode, ComplementNode, DomainRestrictionNode, InputEdge, InclusionEdge, RoleNode
 from eddy.items import IndividualNode, ValueRestrictionNode, AttributeNode, UnionNode, EnumerationNode
 from eddy.items import DatatypeRestrictionNode, DisjointUnionNode, PropertyAssertionNode, InstanceOfEdge
 from eddy.items import RangeRestrictionNode, RoleChainNode, RoleInverseNode, ValueDomainNode, IntersectionNode
-
-from PyQt5.QtCore import Qt, pyqtSlot, QSize
-from PyQt5.QtGui import QColor, QPen, QIcon, QPainter
-from PyQt5.QtWidgets import QGraphicsView, QDockWidget, QWidget, QGridLayout, QButtonGroup, QToolButton
-from PyQt5.QtWidgets import QStyleOption, QStyle
 
 
 class DockWidget(QDockWidget):

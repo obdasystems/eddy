@@ -36,13 +36,13 @@ import re
 
 from abc import ABCMeta
 
-from eddy.datatypes import RestrictionType, DiagramMode
+from PyQt5.QtCore import QRectF, QPointF, Qt
+from PyQt5.QtGui import QColor, QPainterPath, QPen
+
+from eddy.datatypes import DiagramMode, Identity, RestrictionType
 from eddy.exceptions import ParseError
 from eddy.items.nodes.common.base import Node
 from eddy.items.nodes.common.label import Label
-
-from PyQt5.QtCore import QRectF, QPointF, Qt
-from PyQt5.QtGui import QColor, QPainterPath, QPen
 
 
 class SquaredNode(Node):
@@ -51,24 +51,24 @@ class SquaredNode(Node):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, width=20, height=20, brush='#fcfcfc', restriction=None, cardinality=None, **kwargs):
+    def __init__(self, width=20, height=20, brush='#fcfcfc', restrictiontype=None, cardinality=None, **kwargs):
         """
         Initialize the Squared shaped node.
         :param width: the shape width (unused in current implementation).
         :param height: the shape height (unused in current implementation).
         :param brush: the brush used to paint the node.
-        :param restriction: the restriction of the node.
+        :param restrictiontype: the restriction type of the node.
         :param cardinality: the cardinality of the node (if it's a cardinality restriction).
         """
         super().__init__(**kwargs)
 
-        self._restriction = restriction or RestrictionType.exists
-        self._cardinality = cardinality if self.restriction is RestrictionType.cardinality else dict(min=None, max=None)
+        self._restrictiontype = restrictiontype or RestrictionType.exists
+        self._cardinality = cardinality if self.restrictiontype is RestrictionType.cardinality else dict(min=None, max=None)
 
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.rect = self.createRect(20, 20)
-        self.label = Label(self.restriction.label, centered=False, editable=False, parent=self)
+        self.label = Label(self.restrictiontype.label, centered=False, editable=False, parent=self)
         self.label.updatePos()
 
     ####################################################################################################################
@@ -78,22 +78,20 @@ class SquaredNode(Node):
     ####################################################################################################################
 
     @property
-    def restriction(self):
+    def identity(self):
         """
-        Returns the restriction of the node.
-        :rtype: RestrictionType
+        Returns the identity of the current node.
+        :rtype: Identity
         """
-        return self._restriction
+        return Identity.Concept
 
-    @restriction.setter
-    def restriction(self, restriction):
+    @identity.setter
+    def identity(self, identity):
         """
-        Set the restriction of this node.
-        Setting the restriction will also reset the cardinality which would need to be set again.
-        :param restriction: the restriction type.
+        Set the identity of the current node.
+        :type identity: Identity
         """
-        self._restriction = restriction
-        self._cardinality = dict(min=None, max=None)
+        pass
 
     @property
     def cardinality(self):
@@ -101,16 +99,38 @@ class SquaredNode(Node):
         Returns the cardinality of the node.
         :rtype: dict
         """
-        return self._cardinality if self._cardinality is not None else dict(min=None, max=None)
+        if self._cardinality is not None:
+            return self._cardinality
+        return dict(min=None, max=None)
 
     @cardinality.setter
     def cardinality(self, cardinality):
         """
-        Set the restriction of this node.
-        Will not set the attribute in case the restriction is not RestrictionType.cardinality.
-        :param cardinality: the cartinality of the node.
+        Set the cardinality restriction of this node.
+        If the restriction type of this node is not RestrictionType.cardinality the cardinality will be set to default.
+        :param cardinality: the cardinality of the node.
         """
-        self._cardinality = cardinality if self.restriction is RestrictionType.cardinality else dict(min=None, max=None)
+        self._cardinality = cardinality
+        if self.restrictiontype is not RestrictionType.cardinality:
+            self._cardinality = dict(min=None, max=None)
+
+    @property
+    def restrictiontype(self):
+        """
+        Returns the restriction type of the node.
+        :rtype: RestrictionType
+        """
+        return self._restrictiontype
+
+    @restrictiontype.setter
+    def restrictiontype(self, restrictiontype):
+        """
+        Set the restriction type of this node.
+        Setting the restriction type will also reset the cardinality which would need to be set again.
+        :param restrictiontype: the restriction type.
+        """
+        self._restrictiontype = restrictiontype
+        self._cardinality = dict(min=None, max=None)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -129,9 +149,9 @@ class SquaredNode(Node):
         menu.addSeparator()
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRestrictionChange)
 
-        # switch the check on the currently active restriction
+        # switch the check on the currently active restrictiontype
         for action in scene.mainwindow.actionsRestrictionChange:
-            action.setChecked(self.restriction is action.data())
+            action.setChecked(self.restrictiontype is action.data())
 
         collection = self.label.contextMenuAdd()
         if collection:
@@ -144,7 +164,7 @@ class SquaredNode(Node):
 
     def copy(self, scene):
         """
-        Create a copy of the current item .
+        Create a copy of the current item.
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
@@ -155,7 +175,6 @@ class SquaredNode(Node):
             'url': self.url,
             'width': self.width(),
         }
-
         node = self.__class__(**kwargs)
         node.setPos(self.pos())
         node.setLabelText(self.labelText())
@@ -329,26 +348,26 @@ class SquaredNode(Node):
 
     def setLabelText(self, text):
         """
-        Set the label text: will additionally parse the text value and set the restriction type accordingly.
+        Set the label text: will additionally parse the text value and set the restrictiontype type accordingly.
         :raise ParseError: if an invalid text value is supplied.
         :param text: the text value to set.
         """
         value = text.strip().lower()
         if value == RestrictionType.exists.label:
             self.label.setText(value)
-            self.restriction = RestrictionType.exists
+            self.restrictiontype = RestrictionType.exists
         elif value == RestrictionType.forall.label:
             self.label.setText(value)
-            self.restriction = RestrictionType.forall
+            self.restrictiontype = RestrictionType.forall
         elif value == RestrictionType.self.label:
             self.label.setText(value)
-            self.restriction = RestrictionType.self
+            self.restrictiontype = RestrictionType.self
         else:
             RE_PARSE = re.compile("""^\(\s*(?P<min>[\d-]+)\s*,\s*(?P<max>[\d-]+)\s*\)$""")
             match = RE_PARSE.match(value)
             if match:
                 self.label.setText(value)
-                self.restriction = RestrictionType.cardinality
+                self.restrictiontype = RestrictionType.cardinality
                 self.cardinality = {
                     'min': None if match.group('min') == '-' else int(match.group('min')),
                     'max': None if match.group('max') == '-' else int(match.group('max')),
@@ -382,8 +401,15 @@ class SquaredNode(Node):
             painter.drawRect(self.boundingRect())
 
         if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
-            painter.setPen(self.connectionOkPen)
-            painter.setBrush(self.connectionOkBrush)
+
+            edge = scene.command.edge
+
+            brush = self.brushConnectionOk
+            if not edge.isValid(edge.source, scene.mouseOverNode):
+                brush = self.brushConnectionBad
+
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(brush)
             painter.drawRect(self.boundingRect())
 
         painter.setBrush(self.brush)

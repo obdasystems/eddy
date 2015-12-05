@@ -35,7 +35,7 @@
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPixmap, QPainter, QPen, QColor
 
-from eddy.datatypes import Font, ItemType, RestrictionType, SpecialType, DiagramMode
+from eddy.datatypes import Font, ItemType, RestrictionType, SpecialType, DiagramMode, Identity
 from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.functions import snapF
 from eddy.items.nodes.common.base import ResizableNode
@@ -84,6 +84,22 @@ class RoleNode(ResizableNode):
     ####################################################################################################################
 
     @property
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return Identity.Role
+
+    @identity.setter
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
+
+    @property
     def special(self):
         """
         Returns the special type of this node.
@@ -95,7 +111,7 @@ class RoleNode(ResizableNode):
     def special(self, special):
         """
         Set the special type of this node.
-        :param special: the special type.
+        :type special: SpecialType
         """
         self._special = special
         self.label.editable = self._special is None
@@ -161,7 +177,7 @@ class RoleNode(ResizableNode):
             if e1.isType(ItemType.InputEdge) and \
                 e1.source is self and \
                     e1.target.isType(ItemType.DomainRestrictionNode) and \
-                        e1.target.restriction is RestrictionType.self:
+                        e1.target.restrictiontype is RestrictionType.self:
                 for e2 in e1.target.edges:
                     if e2.isType(ItemType.InputEdge) and \
                         e2.source is e1.target and \
@@ -185,7 +201,7 @@ class RoleNode(ResizableNode):
             if e1.isType(ItemType.InputEdge) and \
                 e1.source is self and \
                     e1.target.isType(ItemType.DomainRestrictionNode) and \
-                        e1.target.restriction is RestrictionType.self and \
+                        e1.target.restrictiontype is RestrictionType.self and \
                             all(x not in paths for x in {e1, e1.target}):
                 path |= {e1, e1.target}
                 for e2 in e1.target.edges:
@@ -212,7 +228,7 @@ class RoleNode(ResizableNode):
             if e1.isType(ItemType.InputEdge) and \
                 e1.source is self and \
                     e1.target.isType(ItemType.DomainRestrictionNode) and \
-                        e1.target.restriction is RestrictionType.self:
+                        e1.target.restrictiontype is RestrictionType.self:
                 for e2 in e1.target.edges:
                     if e2.source.isType(ItemType.ConceptNode) and \
                         e2.source.special is SpecialType.TOP and \
@@ -232,7 +248,7 @@ class RoleNode(ResizableNode):
             if e1.isType(ItemType.InputEdge) and \
                 e1.source is self and \
                     e1.target.isType(ItemType.DomainRestrictionNode) and \
-                        e1.target.restriction is RestrictionType.self and \
+                        e1.target.restrictiontype is RestrictionType.self and \
                             all(x not in paths for x in {e1, e1.target}):
                 path |= {e1, e1.target}
                 for e2 in e1.target.edges:
@@ -374,7 +390,7 @@ class RoleNode(ResizableNode):
 
     def copy(self, scene):
         """
-        Create a copy of the current item .
+        Create a copy of the current item.
         :param scene: a reference to the scene where this item is being copied from.
         """
         kwargs = {
@@ -819,11 +835,18 @@ class RoleNode(ResizableNode):
             painter.drawRect(self.boundingRect())
 
         if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
+
+            edge = scene.command.edge
+
+            brush = self.brushConnectionOk
+            if not edge.isValid(edge.source, scene.mouseOverNode):
+                brush = self.brushConnectionBad
+
             boundingRect = self.boundingRect()
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(self.connectionOkPen)
-            painter.setBrush(self.connectionOkBrush)
-            painter.drawPolygon(self.createPolygon(shape_w=boundingRect.width(), shape_h=boundingRect.height()))
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(brush)
+            painter.drawPolygon(self.createPolygon(boundingRect.width(), boundingRect.height()))
 
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(self.brush)

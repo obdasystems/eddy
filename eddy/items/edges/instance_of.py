@@ -36,12 +36,12 @@ import sys
 
 from math import sin, cos, radians, pi as M_PI
 
+from PyQt5.QtCore import QPointF, QLineF, Qt
+from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
+
 from eddy.datatypes import Font, DiagramMode, ItemType
 from eddy.items.edges.common.base import Edge
 from eddy.items.edges.common.label import Label
-
-from PyQt5.QtCore import QPointF, QLineF, Qt
-from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
 
 
 class InstanceOfEdge(Edge):

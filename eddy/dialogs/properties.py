@@ -258,10 +258,15 @@ class NodePropertiesDialog(QDialog):
         self.idF.setFixedWidth(300)
         self.idF.setValue(self.node.id)
 
-        self.nameF = StringEditField(self.generalWidget)
-        self.nameF.setEnabled(False)
-        self.nameF.setFixedWidth(300)
-        self.nameF.setValue(self.node.name)
+        self.typeF = StringEditField(self.generalWidget)
+        self.typeF.setEnabled(False)
+        self.typeF.setFixedWidth(300)
+        self.typeF.setValue(self.node.name)
+
+        self.identityF = StringEditField(self.generalWidget)
+        self.identityF.setEnabled(False)
+        self.identityF.setFixedWidth(300)
+        self.identityF.setValue(self.node.identity.label)
 
         self.urlF = StringEditField(self.generalWidget)
         self.urlF.setFixedWidth(300)
@@ -272,7 +277,8 @@ class NodePropertiesDialog(QDialog):
         self.descriptionF.setValue(self.node.description)
 
         self.generalLayout.addRow('ID', self.idF)
-        self.generalLayout.addRow('Node', self.nameF)
+        self.generalLayout.addRow('Type', self.typeF)
+        self.generalLayout.addRow('Identity', self.identityF)
         self.generalLayout.addRow('URL', self.urlF)
         self.generalLayout.addRow('Description', self.descriptionF)
         

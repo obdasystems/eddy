@@ -241,19 +241,55 @@ class Font(QFont):
 
 
 @unique
+class Identity(IntEnum):
+    """
+    This class defines all the identities a Graph node may assume.
+    """
+    Neutral = 0
+    Concept = 1
+    Role = 2
+    Attribute = 3
+    Data = 4
+    Individual = 5
+    Value = 6
+    Link = 7
+    Unknown = 8
+
+    @DynamicClassAttribute
+    def label(self):
+        """The label of the Enum member."""
+        return {
+            Identity.Neutral: 'neutral',
+            Identity.Concept: 'concept',
+            Identity.Role: 'role',
+            Identity.Attribute: 'attribute',
+            Identity.Data: 'data',
+            Identity.Individual: 'individual',
+            Identity.Value: 'value',
+            Identity.Link: 'link',
+            Identity.Unknown: 'unknown',
+        }[self]
+
+
+@unique
 class ItemType(IntEnum):
     """
-    This class defines all the available Graphol items.
+    This class defines all the available Graphol items. The enum is ordered according to Graphol
+    elements' classes. Changing the order of the enum elements (which actually means assigning a
+    different integer value) may affect node properties results such as 'predicate', 'constructor',
+    'operator', 'restriction', 'node', 'edge', etc.
     """
-    ## NODES
+    # PREDICATE NODES
     ConceptNode = 1
     AttributeNode = 2
     RoleNode = 3
     ValueDomainNode = 4
     IndividualNode = 5
     ValueRestrictionNode = 6
+    # RESTRICTION NODES
     DomainRestrictionNode = 7
     RangeRestrictionNode = 8
+    # OPERATOR NODES
     UnionNode = 9
     EnumerationNode = 10
     ComplementNode = 11
@@ -263,13 +299,11 @@ class ItemType(IntEnum):
     DatatypeRestrictionNode = 15
     DisjointUnionNode = 16
     PropertyAssertionNode = 17
-
-    ## EDGES
+    # EDGES
     InclusionEdge = 18
     InputEdge = 19
     InstanceOfEdge = 20
-
-    ## LABELS
+    # LABEL
     LabelEdge = 21
     LabelNode = 22
 
