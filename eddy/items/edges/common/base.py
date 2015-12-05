@@ -357,9 +357,9 @@ class Edge(Item):
         :param node: the node we want to find the opposite endpoint.
         :rtype: Node
         """
-        if node == self.source:
+        if node is self.source:
             return self.target
-        elif node == self.target:
+        elif node is self.target:
             return self.source
         raise AttributeError('node {0} is not attached to edge {1}'.format(node, self))
 
