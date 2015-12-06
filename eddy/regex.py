@@ -37,4 +37,5 @@ import re
 
 RE_DIGIT = re.compile("""\d""") # used to identify strings composed of only digits
 RE_ITEM_PREFIX = re.compile("""^(?P<prefix>[^\d])(?P<value>\d+)$""") # used to split items prefix/id
+RE_CARDINALITY = re.compile("""^\(\s*(?P<min>[\d-]+)\s*,\s*(?P<max>[\d-]+)\s*\)$""") # used to parse cardinality restriction
 RE_QUOTE_FULL = re.compile("""^".*"$""") # used to identify strings fully embraced into quotes

@@ -32,8 +32,6 @@
 ##########################################################################
 
 
-import re
-
 from abc import ABCMeta
 
 from PyQt5.QtCore import QRectF, QPointF, Qt
@@ -43,6 +41,7 @@ from eddy.datatypes import DiagramMode, Identity, RestrictionType
 from eddy.exceptions import ParseError
 from eddy.items.nodes.common.base import Node
 from eddy.items.nodes.common.label import Label
+from eddy.regex import RE_CARDINALITY
 
 
 class SquaredNode(Node):
@@ -363,8 +362,7 @@ class SquaredNode(Node):
             self.label.setText(value)
             self.restrictiontype = RestrictionType.self
         else:
-            RE_PARSE = re.compile("""^\(\s*(?P<min>[\d-]+)\s*,\s*(?P<max>[\d-]+)\s*\)$""")
-            match = RE_PARSE.match(value)
+            match = RE_CARDINALITY.match(value)
             if match:
                 self.label.setText(value)
                 self.restrictiontype = RestrictionType.cardinality
