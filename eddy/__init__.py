@@ -49,7 +49,8 @@ import sys
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QApplication
 
-from eddy.functions import QSS, getPath
+from eddy.functions.fsystem import getPath
+from eddy.functions.misc import QSS
 from eddy.styles import DefaultStyle
 from eddy.widgets.main import MainWindow
 from eddy.widgets.misc import SplashScreen
