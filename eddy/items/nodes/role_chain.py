@@ -45,6 +45,7 @@ class RoleChainNode(HexagonNode):
     """
     This class implements the 'Role Chain' node.
     """
+    identities = {Identity.Role}
     itemtype = ItemType.RoleChainNode
     name = 'role chain'
     xmlname = 'role-chain'

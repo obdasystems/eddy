@@ -54,6 +54,7 @@ class ValueRestrictionNode(ResizableNode):
     indexEE = 5
 
     foldSize = 12
+    identities = {Identity.DataRange}
     itemtype = ItemType.ValueRestrictionNode
     minHeight = 50
     minWidth = 110
@@ -87,7 +88,7 @@ class ValueRestrictionNode(ResizableNode):
         Returns the identity of the current node.
         :rtype: Identity
         """
-        return Identity.Data
+        return Identity.DataRange
 
     @identity.setter
     def identity(self, identity):

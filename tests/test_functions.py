@@ -36,8 +36,9 @@ import math
 import unittest
 
 from eddy.exceptions import ProgrammingError
-from eddy.functions import angleP, clamp, distanceP, distanceL, intersectionL
-from eddy.functions import isEmpty, midpoint, rangeF, snapF
+from eddy.functions.misc import clamp, isEmpty, rangeF, snapF
+from eddy.functions.geometry import angleP, distanceP, distanceL, intersectionL, midpoint
+
 
 from PyQt5.QtCore import QPointF, QLineF
 

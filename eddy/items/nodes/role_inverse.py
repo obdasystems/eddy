@@ -44,6 +44,7 @@ class RoleInverseNode(HexagonNode):
     """
     This class implements the 'Role Inverse' node.
     """
+    identities = {Identity.Role}
     itemtype = ItemType.RoleInverseNode
     name = 'role inverse'
     xmlname = 'role-inverse'

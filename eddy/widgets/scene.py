@@ -489,7 +489,7 @@ class DiagramScene(QGraphicsScene):
         :param source: the node source of the composition.
         :rtype: set
         """
-        node1 = DomainRestrictionNode(scene=self, restrictiontype=RestrictionType.exists)
+        node1 = DomainRestrictionNode(scene=self, restriction_type=RestrictionType.exists)
         edge1 = InputEdge(scene=self, source=source, target=node1, functional=True)
 
         size = DiagramScene.GridSize
@@ -525,7 +525,7 @@ class DiagramScene(QGraphicsScene):
         :param source: the node source of the composition.
         :rtype: set
         """
-        node1 = RangeRestrictionNode(scene=self, restrictiontype=RestrictionType.exists)
+        node1 = RangeRestrictionNode(scene=self, restriction_type=RestrictionType.exists)
         edge1 = InputEdge(scene=self, source=source, target=node1, functional=True)
         
         size = DiagramScene.GridSize
@@ -565,7 +565,7 @@ class DiagramScene(QGraphicsScene):
         x2 = snapF(source.pos().x() + source.width() / 2 + 120, DiagramScene.GridSize, snap=True)
         x3 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize, snap=True)
 
-        node1 = DomainRestrictionNode(scene=self, restrictiontype=RestrictionType.self)
+        node1 = DomainRestrictionNode(scene=self, restriction_type=RestrictionType.self)
         node1.setPos(QPointF(x1, source.pos().y()))
         node2 = ComplementNode(scene=self)
         node2.setPos(QPointF(x2, source.pos().y()))
@@ -583,7 +583,7 @@ class DiagramScene(QGraphicsScene):
         :param source: the node source of the composition.
         :rtype: set
         """
-        node1 = DomainRestrictionNode(scene=self, restrictiontype=RestrictionType.exists)
+        node1 = DomainRestrictionNode(scene=self, restriction_type=RestrictionType.exists)
         edge1 = InputEdge(scene=self, source=source, target=node1)
         
         size = DiagramScene.GridSize
@@ -619,7 +619,7 @@ class DiagramScene(QGraphicsScene):
         :param source: the node source of the composition.
         :rtype: set
         """
-        node1 = RangeRestrictionNode(scene=self, restrictiontype=RestrictionType.exists)
+        node1 = RangeRestrictionNode(scene=self, restriction_type=RestrictionType.exists)
         edge1 = InputEdge(scene=self, source=source, target=node1)
 
         if source.isType(ItemType.AttributeNode):
@@ -696,7 +696,7 @@ class DiagramScene(QGraphicsScene):
         x1 = snapF(source.pos().x() + source.width() / 2 + 40, DiagramScene.GridSize, snap=True)
         x2 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize, snap=True)
 
-        node1 = DomainRestrictionNode(scene=self, restrictiontype=RestrictionType.self)
+        node1 = DomainRestrictionNode(scene=self, restriction_type=RestrictionType.self)
         node1.setPos(QPointF(x1, source.pos().y()))
         node2 = ConceptNode(scene=self, special=SpecialType.TOP)
         node2.setPos(QPointF(x2, source.pos().y()))
@@ -840,7 +840,7 @@ class DiagramScene(QGraphicsScene):
 
     def nodes(self):
         """
-        Returns a view on all the nodes in the diagram
+        Returns a view on all the nodes in the diagram.
         :rtype: view
         """
         return self.nodesById.values()

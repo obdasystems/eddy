@@ -32,26 +32,14 @@
 ##########################################################################
 
 
-import functools
-import math
+import itertools
 import os
-import sys
 
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QPixmap, QPainter, QIcon, QColor
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
 
 from eddy.exceptions import ProgrammingError
 from eddy.regex import RE_QUOTE_FULL
-
-
-def angleP(p1, p2):
-    """
-    Returns the angle of the line connecting the given points.
-    :type p1: T <= QPoint | QPointF
-    :type p2: T <= QPoint | QPointF
-    :rtype: float
-    """
-    return math.atan2(p1.y() - p2.y(), p2.x() - p1.x())
 
 
 def clamp(val, minval=None, maxval=None):
@@ -70,137 +58,6 @@ def clamp(val, minval=None, maxval=None):
         val = min(val, maxval)
     return val
 
-
-def connect(signal, slot, *args, **kwargs):
-    """
-    Connect the given signal to the specified slots passing all arguments to the slot.
-    Note that this function make use of functools.partial to hand parameters over to the function slot.
-    This ia actually highly discouraged because the the function slot will be treated as a normal python function,
-    losing all the properties of Qt slot. Whenever it's possible make use of self.sender() to retrieve the action
-    executing the slot execution, and action.data() to retrieve function slot's parameters (previously set with setData)
-    :param signal: the signal to attach.
-    :param slot: the slot where to attach the signal.
-    :param args: positional arguments specifying slot function parameters.
-    :param kwargs: positional key-value pairs specifying slot function parameters.
-    """
-    if not args and not kwargs:
-        signal.connect(slot)
-    else:
-        signal.connect(functools.partial(slot, *args, **kwargs))
-
-
-def disconnect(signal, *args):
-    """
-    Disconnect the given signal.
-    :param signal: the signal to disconnect.
-    :param args: positional arguments specifying the slots to disconnect.
-    """
-    if args:
-        for slot in args:
-            try:
-                signal.disconnect(slot)
-            except (RuntimeError, TypeError, AttributeError):
-                pass
-    else:
-        try:
-            signal.disconnect()
-        except (RuntimeError, TypeError, AttributeError):
-            pass
-
-
-def distanceP(p1, p2):
-    """
-    Calculate the distance between the given points.
-    :type p1: T <= QPoint | QPointF
-    :type p2: T <= QPoint | QPointF
-    :rtype: float
-    """
-    return math.sqrt(math.pow(p2.x() - p1.x(), 2) + math.pow(p2.y() - p1.y(), 2))
-
-
-def distanceL(line, p):
-    """
-    Returns a tuple containing the distance between the given line and the given point, and the intersection point.
-    :type line: T <= QLine | QLineF
-    :type p: T <= QPoint | QPointF
-    :rtype: tuple
-    """
-    x1 = line.x1()
-    y1 = line.y1()
-    x2 = line.x2()
-    y2 = line.y2()
-    x3 = p.x()
-    y3 = p.y()
-
-    kk = ((y2 - y1) * (x3 - x1) - (x2 - x1) * (y3 - y1)) / (math.pow(y2 - y1, 2) + math.pow(x2 - x1, 2))
-    x4 = x3 - kk * (y2 - y1)
-    y4 = y3 + kk * (x2 - x1)
-
-    p1 = QPointF(x3, y3)
-    p2 = QPointF(x4, y4)
-
-    return distanceP(p1, p2), p2
-
-
-def getHomePath():
-    """
-    Returns the path to the eddy home directory.
-    :rtype: str
-    """
-    homepath = os.path.normpath(os.path.expanduser('~/.eddy'))
-    if not os.path.isdir(homepath):
-        os.mkdir(homepath)
-    return homepath
-
-
-def getModulePath():
-    """
-    Returns the path to the eddy directory.
-    :rtype: str
-    """
-    if main_is_frozen():
-        path = os.path.dirname(sys.executable)
-    else:
-        path = os.path.dirname(sys.modules['eddy'].__file__)
-    return os.path.normpath(os.path.expanduser(path))
-
-
-def getPath(path):
-    """
-    Return an absolute path by expanding the given relative one.
-    The following tokens will be expanded:
-
-        - @eddy => will be expanded to the eddy directory path
-        - @home => will be expanded to the eddy home directory path (.eddy in $HOME)
-        - ~ => will be expanded to the user home directory ($HOME)
-
-    :type path: T <= bytes | unicode
-    :rtype: str
-    """
-    if path.startswith('@eddy\\') or path.startswith('@eddy/'):
-        path = os.path.join(getModulePath(), path[6:])
-    elif path.startswith('@home\\') or path.startswith('@home/'):
-        path = os.path.join(getHomePath(), path[6:])
-    return os.path.normpath(os.path.expanduser(path))
-
-
-def intersectionL(l1, l2):
-    """
-    Return the intersection point of the given lines.
-    Will return None if there is no intersection point.
-    :type l1: T <= QLine | QLineF
-    :type l2: T <= QLine | QLineF
-    :rtype: QPointF
-    """
-    L = max(min(l1.p1().x(), l1.p2().x()), min(l2.p1().x(), l2.p2().x()))
-    R = min(max(l1.p1().x(), l1.p2().x()), max(l2.p1().x(), l2.p2().x()))
-    T = max(min(l1.p1().y(), l1.p2().y()), min(l2.p1().y(), l2.p2().y()))
-    B = min(max(l1.p1().y(), l1.p2().y()), max(l2.p1().y(), l2.p2().y()))
-    if (T, L) == (B, R):
-        return QPointF(L, T)
-    return None
-
-
 def isEmpty(string):
     """
     Safely detect whether the given string is empty.
@@ -216,13 +73,6 @@ def isQuoted(string):
     :rtype: bool
     """
     return RE_QUOTE_FULL.match(string) is not None
-
-def main_is_frozen():
-    """
-    Detects whether we are running a Frozen application.
-    :rtype: bool
-    """
-    return hasattr(sys, 'frozen')
 
 
 def make_colored_icon(width, height, code):
@@ -250,24 +100,23 @@ def make_shaded_icon(path, opacity=0.25):
     icon.addPixmap(shaded(QPixmap(path), opacity), QIcon.Disabled)
     return icon
 
-
-def midpoint(p1, p2):
+def partition(predicate, iterable):
     """
-    Calculate the midpoint between the given points.
-    :type p1: T <= QPoint | QPointF
-    :type p2: T <= QPoint | QPointF
-    :rtype: QPointF
+    Uses the given predicate to partition entries from the given iterable.
+    :type predicate: callable
+    :param iterable: iterable
+    :rtype: tuple
     """
-    return QPointF(((p1.x() + p2.x()) / 2), ((p1.y() + p2.y()) / 2))
-
+    t1, t2 = itertools.tee(iterable)
+    return filter(predicate, t2), itertools.filterfalse(predicate, t1)
 
 def rangeF(start, stop, step):
     """
     Generator which can be used to generate lists of float values. Floats are rounded up to 4 decimals.
     It works like the python built-in range function but accepts a floating point number as incremental step.
     :type start: float
-    :type start: float
-    :type start: float
+    :type stop: float
+    :type step: float
     """
     x = round(start, 4)
     while x < stop:

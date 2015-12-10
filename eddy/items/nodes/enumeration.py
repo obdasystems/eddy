@@ -36,6 +36,7 @@ from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
 from eddy.datatypes import Font, ItemType, Identity
+from eddy.functions import identify
 from eddy.items.nodes.common.hexagon import HexagonNode
 from eddy.items.nodes.common.label import Label
 
@@ -44,6 +45,7 @@ class EnumerationNode(HexagonNode):
     """
     This class implements the 'Enumeration' node.
     """
+    identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
     itemtype = ItemType.EnumerationNode
     name = 'enumeration'
     xmlname = 'enumeration'
@@ -80,7 +82,7 @@ class EnumerationNode(HexagonNode):
         Set the identity of the current node.
         :type identity: Identity
         """
-        if identity not in {Identity.Individual, Identity.Value}:
+        if identity not in self.identities:
             identity = Identity.Unknown
         self._identity = identity
 
@@ -89,6 +91,15 @@ class EnumerationNode(HexagonNode):
     #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
+
+    def addEdge(self, edge):
+        """
+        Add the given edge to the current node.
+        :param edge: the edge to be added.
+        """
+        super().addEdge(edge)
+        if edge.target is self:
+            identify(self)
 
     def copy(self, scene):
         """
@@ -109,6 +120,15 @@ class EnumerationNode(HexagonNode):
         node.setLabelText(self.labelText())
         node.setLabelPos(node.mapFromScene(self.mapToScene(self.labelPos())))
         return node
+
+    def removeEdge(self, edge):
+        """
+        Remove the given edge from the current node.
+        :param edge: the edge to be removed.
+        """
+        super().removeEdge(edge)
+        if edge.target is self:
+            identify(self)
 
     ####################################################################################################################
     #                                                                                                                  #

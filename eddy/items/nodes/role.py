@@ -52,6 +52,7 @@ class RoleNode(ResizableNode):
     indexR = 2
     indexE = 4
 
+    identities = {Identity.Role}
     itemtype = ItemType.RoleNode
     minHeight = 50
     minWidth = 70
@@ -177,7 +178,7 @@ class RoleNode(ResizableNode):
             if e1.isType(ItemType.InputEdge) and \
                 e1.source is self and \
                     e1.target.isType(ItemType.DomainRestrictionNode) and \
-                        e1.target.restrictiontype is RestrictionType.self:
+                        e1.target.restriction_type is RestrictionType.self:
                 for e2 in e1.target.edges:
                     if e2.isType(ItemType.InputEdge) and \
                         e2.source is e1.target and \
@@ -201,7 +202,7 @@ class RoleNode(ResizableNode):
             if e1.isType(ItemType.InputEdge) and \
                 e1.source is self and \
                     e1.target.isType(ItemType.DomainRestrictionNode) and \
-                        e1.target.restrictiontype is RestrictionType.self and \
+                        e1.target.restriction_type is RestrictionType.self and \
                             all(x not in paths for x in {e1, e1.target}):
                 path |= {e1, e1.target}
                 for e2 in e1.target.edges:
@@ -228,7 +229,7 @@ class RoleNode(ResizableNode):
             if e1.isType(ItemType.InputEdge) and \
                 e1.source is self and \
                     e1.target.isType(ItemType.DomainRestrictionNode) and \
-                        e1.target.restrictiontype is RestrictionType.self:
+                        e1.target.restriction_type is RestrictionType.self:
                 for e2 in e1.target.edges:
                     if e2.source.isType(ItemType.ConceptNode) and \
                         e2.source.special is SpecialType.TOP and \
@@ -248,7 +249,7 @@ class RoleNode(ResizableNode):
             if e1.isType(ItemType.InputEdge) and \
                 e1.source is self and \
                     e1.target.isType(ItemType.DomainRestrictionNode) and \
-                        e1.target.restrictiontype is RestrictionType.self and \
+                        e1.target.restriction_type is RestrictionType.self and \
                             all(x not in paths for x in {e1, e1.target}):
                 path |= {e1, e1.target}
                 for e2 in e1.target.edges:

@@ -44,6 +44,7 @@ class PropertyAssertionNode(Node):
     """
     This class implements the 'Property Assertion' node.
     """
+    identities = {Identity.Link}
     itemtype = ItemType.PropertyAssertionNode
     minHeight = 30
     minWidth = 52

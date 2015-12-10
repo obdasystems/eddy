@@ -51,6 +51,7 @@ class Node(Item):
     """
     __metaclass__ = ABCMeta
 
+    identities = {} # a set of identities this node may assume
     name = 'node' # a string identifying this node
     prefix = 'n' # prefix to be prepended to node ids
     brushConnectionBad = QBrush(QColor(179, 12, 12, 160)) # brush used to highlight wrong connections
@@ -271,15 +272,6 @@ class Node(Item):
                 return intersection
 
         return None
-
-    def isIdentity(self, *args):
-        """
-        Tells whether the current node identyty is one of the given types.
-        :param args: positional arguments specifying item types to match.
-        :return: True if the node identity matches a given type, False otherwise.
-        :rtype: bool
-        """
-        return self.identity in args
 
     def pos(self):
         """

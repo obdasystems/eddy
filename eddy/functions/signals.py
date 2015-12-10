@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -33,61 +32,41 @@
 ##########################################################################
 
 
-__author__ = 'Daniele Pantaleone'
-__email__ = 'danielepantaleone@me.com'
-__copyright__ = 'Copyright © 2015 Daniele Pantaleone'
-__organization__ = 'Sapienza - University Of Rome'
-__appname__ = 'Eddy'
-__version__ = '0.4'
-__status__ = 'Development'
-__license__ = 'GPL'
+from functools import partial
 
 
-import os
-import sys
-
-from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QApplication
-
-from eddy.functions import QSS, getPath
-from eddy.styles import DefaultStyle
-from eddy.widgets.main import MainWindow
-from eddy.widgets.misc import SplashScreen
-
-
-class Eddy(QApplication):
+def connect(signal, slot, *args, **kwargs):
     """
-    This class implements the main Qt application.
+    Connect the given signal to the specified slots passing all arguments to the slot.
+    Note that this function make use of functools.partial to hand parameters over to the function slot.
+    This ia actually highly discouraged because the the function slot will be treated as a normal python function,
+    losing all the properties of Qt slot. Whenever it's possible make use of self.sender() to retrieve the action
+    executing the slot execution, and action.data() to retrieve function slot's parameters (previously set with setData)
+    :param signal: the signal to attach.
+    :param slot: the slot where to attach the signal.
+    :param args: positional arguments specifying slot function parameters.
+    :param kwargs: positional key-value pairs specifying slot function parameters.
     """
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize Eddy.
-        """
-        super().__init__(*args, **kwargs)
-        self.mainwindow = None
-        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)
+    if not args and not kwargs:
+        signal.connect(slot)
+    else:
+        signal.connect(partial(slot, *args, **kwargs))
 
-    def init(self):
-        """
-        Run initialization tasks for Eddy (i.e: initialize the Style, Settings, Main Window...).
-        :return: the application main window.
-        :rtype: MainWindow
-        """
-        self.setStyle(DefaultStyle())
-        self.setStyleSheet(QSS(getPath('@eddy/styles/default.qss')))
 
-        if not self.settings.contains('document/recent_documents'):
-            # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
-            # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
-            # container. So according to this we can't use an empty list as default value because PyQt5 needs
-            # to know the type of the contents added to the collection: we avoid this problem by placing
-            # the list of examples file in the recentDocumentList (only if there is no list defined already).
-            root = getPath('@eddy/')
-            root = os.path.join(root, '..') if not hasattr(sys, 'frozen') else root
-            self.settings.setValue('document/recent_documents', [
-                os.path.join(root, 'examples', 'Family.graphol'),
-                os.path.join(root, 'examples', 'Pizza.graphol')
-            ])
-
-        self.mainwindow = MainWindow()
-        return self.mainwindow
+def disconnect(signal, *args):
+    """
+    Disconnect the given signal.
+    :param signal: the signal to disconnect.
+    :param args: positional arguments specifying the slots to disconnect.
+    """
+    if args:
+        for slot in args:
+            try:
+                signal.disconnect(slot)
+            except (RuntimeError, TypeError, AttributeError):
+                pass
+    else:
+        try:
+            signal.disconnect()
+        except (RuntimeError, TypeError, AttributeError):
+            pass

@@ -35,7 +35,8 @@
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
-from eddy.datatypes import Font, ItemType
+from eddy.datatypes import Font, ItemType, Identity
+from eddy.functions import identify
 from eddy.items.nodes.common.square import SquaredNode
 
 
@@ -43,6 +44,7 @@ class RangeRestrictionNode(SquaredNode):
     """
     This class implements the 'Range Restriction' node.
     """
+    identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
     itemtype = ItemType.RangeRestrictionNode
     name = 'range restriction'
     xmlname = 'range-restriction'
@@ -53,6 +55,53 @@ class RangeRestrictionNode(SquaredNode):
         :param brush: the brush used to paint the node (unused).
         """
         super().__init__(brush='#000000', **kwargs)
+        self._identity = Identity.Neutral
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return self._identity
+
+    @identity.setter
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        if identity not in self.identities:
+            identity = Identity.Unknown
+        self._identity = identity
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def addEdge(self, edge):
+        """
+        Add the given edge to the current node.
+        :param edge: the edge to be added.
+        """
+        super().addEdge(edge)
+        identify(self)
+
+    def removeEdge(self, edge):
+        """
+        Remove the given edge from the current node.
+        :param edge: the edge to be removed.
+        """
+        super().removeEdge(edge)
+        identify(self)
 
     ####################################################################################################################
     #                                                                                                                  #

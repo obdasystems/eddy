@@ -47,6 +47,7 @@ class ConceptNode(ResizableNode):
     """
     This class implements the 'Concept' node.
     """
+    identities = {Identity.Concept}
     itemtype = ItemType.ConceptNode
     minHeight = 50
     minWidth = 110

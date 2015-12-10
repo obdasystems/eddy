@@ -478,6 +478,7 @@ setup(
             'packages': [
                 'eddy.commands',
                 'eddy.dialogs',
+                'eddy.functions',
                 'eddy.items',
                 'eddy.styles',
                 'eddy.widgets',

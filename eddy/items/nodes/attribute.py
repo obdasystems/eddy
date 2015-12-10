@@ -45,6 +45,7 @@ class AttributeNode(Node):
     """
     This class implements the 'Attribute' node.
     """
+    identities = {Identity.Attribute}
     itemtype = ItemType.AttributeNode
     name = 'attribute'
     xmlname = 'attribute'

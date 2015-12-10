@@ -58,6 +58,7 @@ class IndividualNode(ResizableNode):
     indexTL = 7
     indexEE = 8
 
+    identities = {Identity.Individual, Identity.Literal}
     itemtype = ItemType.IndividualNode
     minHeight = 60
     minWidth = 60
@@ -92,7 +93,7 @@ class IndividualNode(ResizableNode):
         :rtype: Identity
         """
         if isQuoted(self.labelText()):
-            return Identity.Value
+            return Identity.Literal
         return Identity.Individual
 
     @identity.setter

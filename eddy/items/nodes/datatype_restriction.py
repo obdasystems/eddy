@@ -44,6 +44,7 @@ class DatatypeRestrictionNode(HexagonNode):
     """
     This class implements the 'Datatype Restriction' node.
     """
+    identities = {Identity.DataRange}
     itemtype = ItemType.DatatypeRestrictionNode
     name = 'datatype restriction'
     xmlname = 'datatype-restriction'
@@ -69,7 +70,7 @@ class DatatypeRestrictionNode(HexagonNode):
         Returns the identity of the current node.
         :rtype: Identity
         """
-        return Identity.Data
+        return Identity.DataRange
 
     @identity.setter
     def identity(self, identity):

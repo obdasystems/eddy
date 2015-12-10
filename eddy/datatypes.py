@@ -249,9 +249,9 @@ class Identity(IntEnum):
     Concept = 1
     Role = 2
     Attribute = 3
-    Data = 4
+    DataRange = 4
     Individual = 5
-    Value = 6
+    Literal = 6
     Link = 7
     Unknown = 8
 
@@ -263,9 +263,9 @@ class Identity(IntEnum):
             Identity.Concept: 'concept',
             Identity.Role: 'role',
             Identity.Attribute: 'attribute',
-            Identity.Data: 'data',
+            Identity.DataRange: 'data range',
             Identity.Individual: 'individual',
-            Identity.Value: 'value',
+            Identity.Literal: 'literal',
             Identity.Link: 'link',
             Identity.Unknown: 'unknown',
         }[self]
@@ -286,9 +286,11 @@ class ItemType(IntEnum):
     ValueDomainNode = 4
     IndividualNode = 5
     ValueRestrictionNode = 6
+
     # RESTRICTION NODES
     DomainRestrictionNode = 7
     RangeRestrictionNode = 8
+
     # OPERATOR NODES
     UnionNode = 9
     EnumerationNode = 10
@@ -299,10 +301,12 @@ class ItemType(IntEnum):
     DatatypeRestrictionNode = 15
     DisjointUnionNode = 16
     PropertyAssertionNode = 17
+
     # EDGES
     InclusionEdge = 18
     InputEdge = 19
     InstanceOfEdge = 20
+
     # LABEL
     LabelEdge = 21
     LabelNode = 22

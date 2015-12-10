@@ -36,7 +36,8 @@ from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QPolygonF
 from PyQt5.QtWidgets import QUndoCommand
 
-from eddy.datatypes import RestrictionType, DistinctList
+from eddy.datatypes import RestrictionType, DistinctList, ItemType
+from eddy.functions import identify
 
 
 class CommandNodeAdd(QUndoCommand):
@@ -290,6 +291,7 @@ class CommandNodeLabelEdit(QUndoCommand):
     def redo(self):
         """redo the command"""
         if self.text2:
+
             # remove the item from the old index
             if self.text1 in self.scene.nodesByLabel:
                 self.scene.nodesByLabel[self.text1].remove(self.node)
@@ -303,6 +305,13 @@ class CommandNodeLabelEdit(QUndoCommand):
             if not self.text2 in self.scene.nodesByLabel:
                 self.scene.nodesByLabel[self.text2] = DistinctList()
             self.scene.nodesByLabel[self.text2].append(self.node)
+
+            # if the label belongs to an individual identify all the connected enumeration nodes
+            if self.node.isType(ItemType.IndividualNode):
+                f1 = lambda x: x.isType(ItemType.InputEdge) and x.source is self.node
+                f2 = lambda x: x.isType(ItemType.EnumerationNode)
+                for node in {n for n in [e.other(self.node) for e in self.node.edges if f1(e)] if f2(n)}:
+                    identify(node)
 
             # emit update signal
             self.scene.updated.emit()
@@ -322,6 +331,13 @@ class CommandNodeLabelEdit(QUndoCommand):
         if not self.text1 in self.scene.nodesByLabel:
             self.scene.nodesByLabel[self.text1] = DistinctList()
         self.scene.nodesByLabel[self.text1].append(self.node)
+
+        # if the label belongs to an individual identify all the connected enumeration nodes
+        if self.node.isType(ItemType.IndividualNode):
+            f1 = lambda x: x.isType(ItemType.InputEdge) and x.source is self.node
+            f2 = lambda x: x.isType(ItemType.EnumerationNode)
+            for node in {n for n in [e.other(self.node) for e in self.node.edges if f1(e)] if f2(n)}:
+                identify(node)
 
         # emit update signal
         self.scene.updated.emit()
@@ -444,22 +460,22 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
     """
     This command is used to change the restriction of square based constructor nodes.
     """
-    def __init__(self, scene, node, restrictiontype, cardinality=None):
+    def __init__(self, scene, node, restriction_type, cardinality=None):
         """
         Initialize the command.
         :param scene: the scene where this command is being performed.
         :param node: the node whose restriction is being changed.
-        :param restrictiontype: the new restriction type.
+        :param restriction_type: the new restriction type.
         """
         self.node = node
         self.scene = scene
-        self.restrictiontype1 = self.node.restrictiontype
+        self.restriction_type1 = self.node.restriction_type
         self.cardinality1 = self.node.cardinality
-        self.restrictiontype2 = restrictiontype
+        self.restriction_type2 = restriction_type
         self.cardinality2 = dict(min=None, max=None) if not cardinality else cardinality
 
-        value = restrictiontype.label
-        if restrictiontype is RestrictionType.cardinality:
+        value = restriction_type.label
+        if restriction_type is RestrictionType.cardinality:
             value = value.format(min=self.s(cardinality['min']), max=self.s(cardinality['max']))
 
         super().__init__('change {0} to {1}'.format(node.name, value))
@@ -474,30 +490,30 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        if self.restrictiontype2 is RestrictionType.cardinality:
-            self.node.restrictiontype = self.restrictiontype2
+        if self.restriction_type2 is RestrictionType.cardinality:
+            self.node.restriction_type = self.restriction_type2
             self.node.cardinality = self.cardinality2
-            self.node.label.setText(self.node.restrictiontype.label.format(min=self.s(self.node.cardinality['min']),
-                                                                           max=self.s(self.node.cardinality['max'])))
+            self.node.label.setText(self.node.restriction_type.label.format(min=self.s(self.node.cardinality['min']),
+                                                                            max=self.s(self.node.cardinality['max'])))
         else:
-            self.node.restrictiontype = self.restrictiontype2
+            self.node.restriction_type = self.restriction_type2
             self.node.cardinality = dict(min=None, max=None)
-            self.node.label.setText(self.node.restrictiontype.label)
+            self.node.label.setText(self.node.restriction_type.label)
 
         # emit updated signal
         self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        if self.restrictiontype1 is RestrictionType.cardinality:
-            self.node.restrictiontype = self.restrictiontype1
+        if self.restriction_type1 is RestrictionType.cardinality:
+            self.node.restriction_type = self.restriction_type1
             self.node.cardinality = self.cardinality1
-            self.node.label.setText(self.node.restrictiontype.label.format(min=self.s(self.node.cardinality['min']),
-                                                                           max=self.s(self.node.cardinality['max'])))
+            self.node.label.setText(self.node.restriction_type.label.format(min=self.s(self.node.cardinality['min']),
+                                                                            max=self.s(self.node.cardinality['max'])))
         else:
-            self.node.restrictiontype = self.restrictiontype1
+            self.node.restriction_type = self.restriction_type1
             self.node.cardinality = dict(min=None, max=None)
-            self.node.label.setText(self.node.restrictiontype.label)
+            self.node.label.setText(self.node.restriction_type.label)
 
         # emit updated signal
         self.scene.updated.emit()

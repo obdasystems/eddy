@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -33,61 +32,29 @@
 ##########################################################################
 
 
-__author__ = 'Daniele Pantaleone'
-__email__ = 'danielepantaleone@me.com'
-__copyright__ = 'Copyright © 2015 Daniele Pantaleone'
-__organization__ = 'Sapienza - University Of Rome'
-__appname__ = 'Eddy'
-__version__ = '0.4'
-__status__ = 'Development'
-__license__ = 'GPL'
+from eddy.functions.fsystem import getHomePath
+from eddy.functions.fsystem import getModulePath
+from eddy.functions.fsystem import getPath
 
+from eddy.functions.geometry import angleP
+from eddy.functions.geometry import distanceL
+from eddy.functions.geometry import distanceP
+from eddy.functions.geometry import intersectionL
+from eddy.functions.geometry import midpoint
 
-import os
-import sys
+from eddy.functions.graph import bfs
+from eddy.functions.graph import identify
 
-from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QApplication
+from eddy.functions.misc import clamp
+from eddy.functions.misc import isEmpty
+from eddy.functions.misc import isQuoted
+from eddy.functions.misc import make_colored_icon
+from eddy.functions.misc import make_shaded_icon
+from eddy.functions.misc import QSS
+from eddy.functions.misc import partition
+from eddy.functions.misc import rangeF
+from eddy.functions.misc import shaded
+from eddy.functions.misc import snapF
 
-from eddy.functions import QSS, getPath
-from eddy.styles import DefaultStyle
-from eddy.widgets.main import MainWindow
-from eddy.widgets.misc import SplashScreen
-
-
-class Eddy(QApplication):
-    """
-    This class implements the main Qt application.
-    """
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize Eddy.
-        """
-        super().__init__(*args, **kwargs)
-        self.mainwindow = None
-        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)
-
-    def init(self):
-        """
-        Run initialization tasks for Eddy (i.e: initialize the Style, Settings, Main Window...).
-        :return: the application main window.
-        :rtype: MainWindow
-        """
-        self.setStyle(DefaultStyle())
-        self.setStyleSheet(QSS(getPath('@eddy/styles/default.qss')))
-
-        if not self.settings.contains('document/recent_documents'):
-            # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
-            # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
-            # container. So according to this we can't use an empty list as default value because PyQt5 needs
-            # to know the type of the contents added to the collection: we avoid this problem by placing
-            # the list of examples file in the recentDocumentList (only if there is no list defined already).
-            root = getPath('@eddy/')
-            root = os.path.join(root, '..') if not hasattr(sys, 'frozen') else root
-            self.settings.setValue('document/recent_documents', [
-                os.path.join(root, 'examples', 'Family.graphol'),
-                os.path.join(root, 'examples', 'Pizza.graphol')
-            ])
-
-        self.mainwindow = MainWindow()
-        return self.mainwindow
+from eddy.functions.signals import connect
+from eddy.functions.signals import disconnect

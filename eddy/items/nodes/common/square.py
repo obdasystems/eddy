@@ -50,24 +50,24 @@ class SquaredNode(Node):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, width=20, height=20, brush='#fcfcfc', restrictiontype=None, cardinality=None, **kwargs):
+    def __init__(self, width=20, height=20, brush='#fcfcfc', restriction_type=None, cardinality=None, **kwargs):
         """
         Initialize the Squared shaped node.
         :param width: the shape width (unused in current implementation).
         :param height: the shape height (unused in current implementation).
         :param brush: the brush used to paint the node.
-        :param restrictiontype: the restriction type of the node.
+        :param restriction_type: the restriction type of the node.
         :param cardinality: the cardinality of the node (if it's a cardinality restriction).
         """
         super().__init__(**kwargs)
 
-        self._restrictiontype = restrictiontype or RestrictionType.exists
-        self._cardinality = cardinality if self.restrictiontype is RestrictionType.cardinality else dict(min=None, max=None)
+        self._restriction_type = restriction_type or RestrictionType.exists
+        self._cardinality = cardinality if self.restriction_type is RestrictionType.cardinality else dict(min=None, max=None)
 
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.rect = self.createRect(20, 20)
-        self.label = Label(self.restrictiontype.label, centered=False, editable=False, parent=self)
+        self.label = Label(self.restriction_type.label, centered=False, editable=False, parent=self)
         self.label.updatePos()
 
     ####################################################################################################################
@@ -110,25 +110,25 @@ class SquaredNode(Node):
         :param cardinality: the cardinality of the node.
         """
         self._cardinality = cardinality
-        if self.restrictiontype is not RestrictionType.cardinality:
+        if self.restriction_type is not RestrictionType.cardinality:
             self._cardinality = dict(min=None, max=None)
 
     @property
-    def restrictiontype(self):
+    def restriction_type(self):
         """
         Returns the restriction type of the node.
         :rtype: RestrictionType
         """
-        return self._restrictiontype
+        return self._restriction_type
 
-    @restrictiontype.setter
-    def restrictiontype(self, restrictiontype):
+    @restriction_type.setter
+    def restriction_type(self, restriction_type):
         """
         Set the restriction type of this node.
         Setting the restriction type will also reset the cardinality which would need to be set again.
-        :param restrictiontype: the restriction type.
+        :param restriction_type: the restriction type.
         """
-        self._restrictiontype = restrictiontype
+        self._restriction_type = restriction_type
         self._cardinality = dict(min=None, max=None)
 
     ####################################################################################################################
@@ -148,9 +148,9 @@ class SquaredNode(Node):
         menu.addSeparator()
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRestrictionChange)
 
-        # switch the check on the currently active restrictiontype
+        # switch the check on the currently active restriction_type
         for action in scene.mainwindow.actionsRestrictionChange:
-            action.setChecked(self.restrictiontype is action.data())
+            action.setChecked(self.restriction_type is action.data())
 
         collection = self.label.contextMenuAdd()
         if collection:
@@ -347,25 +347,25 @@ class SquaredNode(Node):
 
     def setLabelText(self, text):
         """
-        Set the label text: will additionally parse the text value and set the restrictiontype type accordingly.
+        Set the label text: will additionally parse the text value and set the restriction_type type accordingly.
         :raise ParseError: if an invalid text value is supplied.
         :param text: the text value to set.
         """
         value = text.strip().lower()
         if value == RestrictionType.exists.label:
             self.label.setText(value)
-            self.restrictiontype = RestrictionType.exists
+            self.restriction_type = RestrictionType.exists
         elif value == RestrictionType.forall.label:
             self.label.setText(value)
-            self.restrictiontype = RestrictionType.forall
+            self.restriction_type = RestrictionType.forall
         elif value == RestrictionType.self.label:
             self.label.setText(value)
-            self.restrictiontype = RestrictionType.self
+            self.restriction_type = RestrictionType.self
         else:
             match = RE_CARDINALITY.match(value)
             if match:
                 self.label.setText(value)
-                self.restrictiontype = RestrictionType.cardinality
+                self.restriction_type = RestrictionType.cardinality
                 self.cardinality = {
                     'min': None if match.group('min') == '-' else int(match.group('min')),
                     'max': None if match.group('max') == '-' else int(match.group('max')),

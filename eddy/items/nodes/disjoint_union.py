@@ -36,6 +36,7 @@ from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
 from eddy.datatypes import ItemType, Identity
+from eddy.functions import identify
 from eddy.items.nodes.common.hexagon import HexagonNode
 
 
@@ -43,6 +44,7 @@ class DisjointUnionNode(HexagonNode):
     """
     This class implements the 'Disjoint Union' node.
     """
+    identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
     itemtype = ItemType.DisjointUnionNode
     name = 'disjoint union'
     xmlname = 'disjoint-union'
@@ -75,7 +77,7 @@ class DisjointUnionNode(HexagonNode):
         Set the identity of the current node.
         :type identity: Identity
         """
-        if identity not in {Identity.Concept, Identity.Data}:
+        if identity not in self.identities:
             identity = Identity.Unknown
         self._identity = identity
 
@@ -84,6 +86,14 @@ class DisjointUnionNode(HexagonNode):
     #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
+
+    def addEdge(self, edge):
+        """
+        Add the given edge to the current node.
+        :param edge: the edge to be added.
+        """
+        super().addEdge(edge)
+        identify(self)
 
     def copy(self, scene):
         """
@@ -102,6 +112,14 @@ class DisjointUnionNode(HexagonNode):
         node = self.__class__(**kwargs)
         node.setPos(self.pos())
         return node
+
+    def removeEdge(self, edge):
+        """
+        Remove the given edge from the current node.
+        :param edge: the edge to be removed.
+        """
+        super().removeEdge(edge)
+        identify(self)
 
     ####################################################################################################################
     #                                                                                                                  #

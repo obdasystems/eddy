@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -33,61 +32,77 @@
 ##########################################################################
 
 
-__author__ = 'Daniele Pantaleone'
-__email__ = 'danielepantaleone@me.com'
-__copyright__ = 'Copyright © 2015 Daniele Pantaleone'
-__organization__ = 'Sapienza - University Of Rome'
-__appname__ = 'Eddy'
-__version__ = '0.4'
-__status__ = 'Development'
-__license__ = 'GPL'
+import math
+
+from PyQt5.QtCore import QPointF
 
 
-import os
-import sys
-
-from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QApplication
-
-from eddy.functions import QSS, getPath
-from eddy.styles import DefaultStyle
-from eddy.widgets.main import MainWindow
-from eddy.widgets.misc import SplashScreen
-
-
-class Eddy(QApplication):
+def angleP(p1, p2):
     """
-    This class implements the main Qt application.
+    Returns the angle of the line connecting the given points.
+    :type p1: T <= QPoint | QPointF
+    :type p2: T <= QPoint | QPointF
+    :rtype: float
     """
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize Eddy.
-        """
-        super().__init__(*args, **kwargs)
-        self.mainwindow = None
-        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)
+    return math.atan2(p1.y() - p2.y(), p2.x() - p1.x())
 
-    def init(self):
-        """
-        Run initialization tasks for Eddy (i.e: initialize the Style, Settings, Main Window...).
-        :return: the application main window.
-        :rtype: MainWindow
-        """
-        self.setStyle(DefaultStyle())
-        self.setStyleSheet(QSS(getPath('@eddy/styles/default.qss')))
 
-        if not self.settings.contains('document/recent_documents'):
-            # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
-            # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
-            # container. So according to this we can't use an empty list as default value because PyQt5 needs
-            # to know the type of the contents added to the collection: we avoid this problem by placing
-            # the list of examples file in the recentDocumentList (only if there is no list defined already).
-            root = getPath('@eddy/')
-            root = os.path.join(root, '..') if not hasattr(sys, 'frozen') else root
-            self.settings.setValue('document/recent_documents', [
-                os.path.join(root, 'examples', 'Family.graphol'),
-                os.path.join(root, 'examples', 'Pizza.graphol')
-            ])
+def distanceP(p1, p2):
+    """
+    Calculate the distance between the given points.
+    :type p1: T <= QPoint | QPointF
+    :type p2: T <= QPoint | QPointF
+    :rtype: float
+    """
+    return math.sqrt(math.pow(p2.x() - p1.x(), 2) + math.pow(p2.y() - p1.y(), 2))
 
-        self.mainwindow = MainWindow()
-        return self.mainwindow
+
+def distanceL(line, p):
+    """
+    Returns a tuple containing the distance between the given line and the given point, and the intersection point.
+    :type line: T <= QLine | QLineF
+    :type p: T <= QPoint | QPointF
+    :rtype: tuple
+    """
+    x1 = line.x1()
+    y1 = line.y1()
+    x2 = line.x2()
+    y2 = line.y2()
+    x3 = p.x()
+    y3 = p.y()
+
+    kk = ((y2 - y1) * (x3 - x1) - (x2 - x1) * (y3 - y1)) / (math.pow(y2 - y1, 2) + math.pow(x2 - x1, 2))
+    x4 = x3 - kk * (y2 - y1)
+    y4 = y3 + kk * (x2 - x1)
+
+    p1 = QPointF(x3, y3)
+    p2 = QPointF(x4, y4)
+
+    return distanceP(p1, p2), p2
+
+
+def intersectionL(l1, l2):
+    """
+    Return the intersection point of the given lines.
+    Will return None if there is no intersection point.
+    :type l1: T <= QLine | QLineF
+    :type l2: T <= QLine | QLineF
+    :rtype: QPointF
+    """
+    L = max(min(l1.p1().x(), l1.p2().x()), min(l2.p1().x(), l2.p2().x()))
+    R = min(max(l1.p1().x(), l1.p2().x()), max(l2.p1().x(), l2.p2().x()))
+    T = max(min(l1.p1().y(), l1.p2().y()), min(l2.p1().y(), l2.p2().y()))
+    B = min(max(l1.p1().y(), l1.p2().y()), max(l2.p1().y(), l2.p2().y()))
+    if (T, L) == (B, R):
+        return QPointF(L, T)
+    return None
+
+
+def midpoint(p1, p2):
+    """
+    Calculate the midpoint between the given points.
+    :type p1: T <= QPoint | QPointF
+    :type p2: T <= QPoint | QPointF
+    :rtype: QPointF
+    """
+    return QPointF(((p1.x() + p2.x()) / 2), ((p1.y() + p2.y()) / 2))

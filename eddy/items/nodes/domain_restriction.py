@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
-from eddy.datatypes import Font, ItemType
+from eddy.datatypes import Font, ItemType, Identity
 from eddy.items.nodes.common.square import SquaredNode
 
 
@@ -43,6 +43,7 @@ class DomainRestrictionNode(SquaredNode):
     """
     This class implements the 'Domain Restriction' node.
     """
+    identities = {Identity.Concept}
     itemtype = ItemType.DomainRestrictionNode
     name = 'domain restriction'
     xmlname = 'domain-restriction'
@@ -53,6 +54,28 @@ class DomainRestrictionNode(SquaredNode):
         :param brush: the brush used to paint the node (unused).
         """
         super().__init__(brush='#fcfcfc', **kwargs)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return Identity.Concept
+
+    @identity.setter
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
 
     ####################################################################################################################
     #                                                                                                                  #

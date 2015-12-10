@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -33,61 +32,47 @@
 ##########################################################################
 
 
-__author__ = 'Daniele Pantaleone'
-__email__ = 'danielepantaleone@me.com'
-__copyright__ = 'Copyright © 2015 Daniele Pantaleone'
-__organization__ = 'Sapienza - University Of Rome'
-__appname__ = 'Eddy'
-__version__ = '0.4'
-__status__ = 'Development'
-__license__ = 'GPL'
-
-
 import os
 import sys
 
-from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QApplication
 
-from eddy.functions import QSS, getPath
-from eddy.styles import DefaultStyle
-from eddy.widgets.main import MainWindow
-from eddy.widgets.misc import SplashScreen
-
-
-class Eddy(QApplication):
+def getHomePath():
     """
-    This class implements the main Qt application.
+    Returns the path to the eddy home directory.
+    :rtype: str
     """
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize Eddy.
-        """
-        super().__init__(*args, **kwargs)
-        self.mainwindow = None
-        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)
+    homepath = os.path.normpath(os.path.expanduser('~/.eddy'))
+    if not os.path.isdir(homepath):
+        os.mkdir(homepath)
+    return homepath
 
-    def init(self):
-        """
-        Run initialization tasks for Eddy (i.e: initialize the Style, Settings, Main Window...).
-        :return: the application main window.
-        :rtype: MainWindow
-        """
-        self.setStyle(DefaultStyle())
-        self.setStyleSheet(QSS(getPath('@eddy/styles/default.qss')))
 
-        if not self.settings.contains('document/recent_documents'):
-            # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
-            # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
-            # container. So according to this we can't use an empty list as default value because PyQt5 needs
-            # to know the type of the contents added to the collection: we avoid this problem by placing
-            # the list of examples file in the recentDocumentList (only if there is no list defined already).
-            root = getPath('@eddy/')
-            root = os.path.join(root, '..') if not hasattr(sys, 'frozen') else root
-            self.settings.setValue('document/recent_documents', [
-                os.path.join(root, 'examples', 'Family.graphol'),
-                os.path.join(root, 'examples', 'Pizza.graphol')
-            ])
+def getModulePath():
+    """
+    Returns the path to the eddy directory.
+    :rtype: str
+    """
+    if hasattr(sys, 'frozen'):
+        path = os.path.dirname(sys.executable)
+    else:
+        path = os.path.dirname(sys.modules['eddy'].__file__)
+    return os.path.normpath(os.path.expanduser(path))
 
-        self.mainwindow = MainWindow()
-        return self.mainwindow
+
+def getPath(path):
+    """
+    Return an absolute path by expanding the given relative one.
+    The following tokens will be expanded:
+
+        - @eddy => will be expanded to the eddy directory path
+        - @home => will be expanded to the eddy home directory path (.eddy in $HOME)
+        - ~ => will be expanded to the user home directory ($HOME)
+
+    :type path: T <= bytes | unicode
+    :rtype: str
+    """
+    if path.startswith('@eddy\\') or path.startswith('@eddy/'):
+        path = os.path.join(getModulePath(), path[6:])
+    elif path.startswith('@home\\') or path.startswith('@home/'):
+        path = os.path.join(getHomePath(), path[6:])
+    return os.path.normpath(os.path.expanduser(path))
