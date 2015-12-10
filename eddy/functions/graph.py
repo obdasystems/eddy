@@ -77,6 +77,45 @@ def bfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None
     return ordered
 
 
+def dfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None):
+    """
+    Perform a customized DFS returning a list of nodes ordered according to the visit time.
+    The function accepts 3 callable parameters:
+
+        * filter_on_edges: a callable which takes as input an edge and returns True iff the search has to proceed along
+                           the edge; if instead the callable returns False, the given edge is excluded from the search.
+        * filter_on_nodes: a callable which takes as input a node and returns True iff the search has to take the node
+                           into consideration; else the callable MUST return False (NOTE: the node is not included
+                           in the returned set of visited nodes, nor its neighbours are being visited, unless they are
+                           connected through some other nodes for which the callable returns True).
+        * filter_on_visit: a callable which takes as input a node and returns True iff the search algoritm should visit
+                           the given node neighbours; else the callable MUST return False (NOTE: the node IS included in
+                           the returned set of visited nodes, but its neighbours are not being vistied, unless they are
+                           connected through some other nodes for which the callable returns True).
+
+    :type source: Node
+    :type filter_on_edges: callable
+    :type filter_on_nodes callable
+    :type filter_on_visit: callable
+    :type: list
+    """
+    f0 = lambda x: True
+    f1 = filter_on_edges or f0
+    f2 = filter_on_nodes or f0
+    f3 = filter_on_visit or f0
+    stack = [source]
+    extend = stack.extend
+    ordered = []
+    visited = set()
+    while stack:
+        node = stack.pop()
+        if node not in visited:
+            ordered.append(node)
+            visited.add(node)
+            if f3(node):
+                extend([n for n in [e.other(node) for e in node.edges if f1(e)] if n not in visited and f2(n)])
+    return visited
+
 def identify(node):
     """
     Perform node identification by traversing all the nodes in the graph which are directly/indirectly
