@@ -116,6 +116,7 @@ def dfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None
                 extend([n for n in [e.other(node) for e in node.edges if f1(e)] if n not in visited and f2(n)])
     return visited
 
+
 def identify(node):
     """
     Perform node identification by traversing all the nodes in the graph which are directly/indirectly

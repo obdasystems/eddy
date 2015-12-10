@@ -1287,7 +1287,7 @@ class MainWindow(QMainWindow):
                             commands.append(command)
 
                         kwargs = {
-                            'name': 'Rename {0} node{1}'.format(len(commands), 's' if len(commands) > 1 else ''),
+                            'name': 'rename {0} node{1}'.format(len(commands), 's' if len(commands) > 1 else ''),
                             'scene': scene,
                             'commands': commands,
                         }

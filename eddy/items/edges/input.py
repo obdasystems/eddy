@@ -38,7 +38,7 @@ from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
 from PyQt5.QtWidgets import QMenu
 
-from eddy.datatypes import DiagramMode, ItemType
+from eddy.datatypes import DiagramMode, ItemType, Identity
 from eddy.items.edges.common.base import Edge
 from eddy.items.edges.common.label import Label
 
@@ -132,6 +132,224 @@ class InputEdge(Edge):
             'functional': self.functional,
         }
         return self.__class__(**kwargs)
+
+    def isValid(self, source, target):
+        """
+        Tells whether this edge is valid when being added between the given source and target nodes.
+        :type source: Node.
+        :type target: Node.
+        :rtype: bool
+        """
+        if source is target:
+            # Self connection is not valid.
+            return False
+
+        if not target.constructor:
+            # Input edges can only target constructor nodes.
+            return False
+
+        ################################################################################################################
+        #                                                                                                              #
+        #   COMPLEMENT, DISJOINT UNION, INTERSECTION, UNION                                                            #
+        #                                                                                                              #
+        ################################################################################################################
+
+        if target.isType(ItemType.ComplementNode,
+                         ItemType.DisjointUnionNode,
+                         ItemType.IntersectionNode,
+                         ItemType.UnionNode):
+
+            if source.identity not in target.identities:
+                # Source node identity is not supported by this node despite the currently set identity.
+                return False
+
+            if source.isType(ItemType.ValueRestrictionNode):
+                # Exclude unsupported nodes despite identity matching.
+                return False
+
+            if source.identity is not Identity.Neutral and \
+                target.identity is not Identity.Neutral and \
+                    source.identity is not target.identity:
+                # Identity mismatch.
+                return False
+
+            ############################################################################################################
+            #                                                                                                          #
+            #   COMPLEMENT                                                                                             #
+            #                                                                                                          #
+            ############################################################################################################
+
+            if target.isType(ItemType.ComplementNode):
+
+                if len([e for e in target.edges \
+                    if e.isType(ItemType.InputEdge) and \
+                        e.target is target and e is not self]) > 0:
+                    # The Complement operator may have at most one node connected to it.
+                    return False
+
+                if source.isType(ItemType.RoleNode, ItemType.RoleInverseNode) and \
+                    len([e for e in target.edges \
+                        if e.isType(ItemType.InputEdge) and \
+                            e.source is target]) > 0:
+                    # If the source of the node is a Role (ObjectPropertyExpression => chain is not included)
+                    # check for the node not to have any outgoing Input edge: the only supported expression
+                    # is `R1 ISA NOT R2 (this prenvents the connection of Role expressions to Complement nodes
+                    # that are given as inputs to Enumeration, Union and Disjoint Union operatore nodes.
+                    return False
+
+        ################################################################################################################
+        #                                                                                                              #
+        #   ENUMERATION                                                                                                #
+        #                                                                                                              #
+        ################################################################################################################
+
+        if target.isType(ItemType.EnumerationNode):
+
+            if not source.isType(ItemType.IndividualNode):
+                # Enumeration operator (oneOf) takes as inputs individuals or literals, both represented by the
+                # Individual node, and has the job of composing a set if individuals (either Concept or DataRange,
+                # but not both together).
+                return False
+
+            if target.identity is Identity.Unknown:
+                # Target node has an unkown identity: we do not allow the connection => the user MUST fix the
+                # error first and then try to create again the connection (this should never happen actually).
+                return False
+
+            if target.identity is not Identity.Neutral:
+                # Target node identity has been computed already so check for identity mismatch
+                if source.identity is Identity.Individual and target.identity is Identity.DataRange or \
+                    source.identity is Identity.Literal and target.identity is Identity.Concept:
+                    # Identity mismatch.
+                    return False
+
+        ################################################################################################################
+        #                                                                                                              #
+        #   ROLE INVERSE                                                                                               #
+        #                                                                                                              #
+        ################################################################################################################
+
+        elif target.isType(ItemType.RoleInverseNode):
+
+            # OWL 2 syntax: http://www.w3.org/TR/owl2-syntax/#Inverse_Object_Properties
+
+            if not source.isType(ItemType.RoleNode):
+                # The Role Inverse operator takes as input a role and constructs its inverse by switching
+                # domain and range of the role. Assume to have a Role labelled 'is_owner_of' whose instances
+                # are {(o1,o2), (o1,o3), (o4,o5)}: connecting this Role in input to a Role Inverse node will
+                # construct a new Role whose instances are {(o2,o1), (o3,o1), (o5,o4)}.
+                return False
+
+            if len([e for e in target.edges \
+                if e.isType(ItemType.InputEdge) and \
+                     e.target is target and e is not self]) > 0:
+                # The Role Inverse operator may have at most one Role node connected to it: if we need to
+                # define multiple Role inverse we would need to use multiple Role Inverse operator nodes.
+                return False
+
+        ################################################################################################################
+        #                                                                                                              #
+        #   ROLE CHAIN                                                                                                 #
+        #                                                                                                              #
+        ################################################################################################################
+
+        elif target.isType(ItemType.RoleChainNode):
+
+            # OWL 2 syntax: http://www.w3.org/TR/owl2-syntax/#Object_Subproperties
+
+            if not source.isType(ItemType.RoleNode, ItemType.RoleChainNode):
+                # The Role Chain operator constructs a concatenation of roles. Assume to have 2 Role nodes
+                # defined as 'lives_in_region' and 'region_in_country': if {(o1, o2), (o3, o4)} is the
+                # instance of 'lives_in_region' and {(o2, o6)} is the instance of 'region_in_country', then
+                # {(o1, o6)} is the instance of the chain, which would match another Role 'lives_in_country'.
+                # ObjectPropertyExpression := ObjectProperty | InverseObjectProperty => we need to match only
+                # Role nodes and Role Inverse nodes as sources of our edge (it's not possible to create a chain
+                # of chains, despite the identity matches Role in both expressions).
+                return False
+
+        ################################################################################################################
+        #                                                                                                              #
+        #   DATATYPE RESTRICTION                                                                                       #
+        #                                                                                                              #
+        ################################################################################################################
+
+        elif target.isType(ItemType.DatatypeRestrictionNode):
+
+            if not source.isType(ItemType.ValueDomainNode, ItemType.ValueRestrictionNode):
+                # The DatatypeRestriction node is used to compose complex datatypes and
+                # accepts as inputs a Value-Domain node together with N Value-Restriction
+                # nodes to compose the OWL 2 equivalent DatatypeRestriction.
+                return False
+
+            if source.isType(ItemType.ValueDomainNode):
+                if len([e.source for e in target.edges \
+                    if e.isType(ItemType.InputEdge) and \
+                        e.target is target and e is not self and \
+                            e.source.isType(ItemType.ValueDomainNode)]) > 0:
+                    # The Value-Domain has already been attached to the DatatypeRestriction.
+                    return False
+
+        ################################################################################################################
+        #                                                                                                              #
+        #   PROPERTY ASSERTION                                                                                         #
+        #                                                                                                              #
+        ################################################################################################################
+
+        elif target.isType(ItemType.PropertyAssertionNode):
+
+            # OWL 2 syntax: http://www.w3.org/TR/owl2-syntax/#Anonymous_Individuals
+
+            if not source.isType(ItemType.IndividualNode):
+                # Property Assertion operators accepts only Individual nodes as input: they are
+                # used to construct ObjectPropertyAssertion and DataPropertyAssertion axioms.
+                return False
+
+            if len([e for e in target.edges \
+                if e.isType(ItemType.InputEdge) and \
+                    e.target is target and e is not self]) >= 2:
+                # At most 2 Individual nodes can be connected to a PropertyAssertion node. As an example
+                # we can construct ObjectPropertyAssertion(presiede M.Draghi BCE) where the individuals
+                # are identified by M.Draghi and BCE, or DataPropertyAssertion(nome M.Draghi "Mario") where
+                # the individuals are identified by M.Draghi and "Mario".
+                return False
+
+            if len([n for n in [e.other(target) \
+                        for e in target.edges \
+                            if e.isType(ItemType.InputEdge) and \
+                                e.target is target and e is not self] if n.identity is Identity.Literal]) > 0:
+                # At most one Literal can be given as input (2 Individuals | 1 Individual + 1 Literal)
+                return False
+
+        ################################################################################################################
+        #                                                                                                              #
+        #   DOMAIN / RANGE RESTRICTION                                                                                 #
+        #                                                                                                              #
+        ################################################################################################################
+
+        elif target.isType(ItemType.DomainRestrictionNode, ItemType.RangeRestrictionNode):
+
+            if not source.isType(ItemType.AttributeNode, ItemType.RoleNode, ItemType.RoleChainNode):
+                # Domain and Range Restriction node takes as input a Role (which in OWL 2 is represented
+                # by ObjectPropertyExpression which excludes the RoleChain) or an Attribute node.
+                return False
+
+            ############################################################################################################
+            #                                                                                                          #
+            #   RANGE RESTRICTION                                                                                      #
+            #                                                                                                          #
+            ############################################################################################################
+
+            if target.isType(ItemType.RangeRestrictionNode):
+
+                if target.identity is not Identity.Neutral:
+                    # If the identity of the target node has been already computed check for mismatch.
+                    if target.identity is Identity.Concept and source.isType(ItemType.AttributeNode) or \
+                        target.identity is Identity.DataRange and source.isType(ItemType.RoleNode,
+                                                                                ItemType.RoleChainNode):
+                        # Identity mismatch.
+                        return False
+
+        return True
 
     def updateLabel(self, points):
         """
