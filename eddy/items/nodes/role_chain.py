@@ -99,6 +99,22 @@ class RoleChainNode(HexagonNode):
             self.inputs.append(edge.id)
             edge.updateEdge()
 
+    def contextMenu(self):
+        """
+        Returns the basic nodes context menu.
+        :rtype: QMenu
+        """
+        menu = super().contextMenu()
+        scene = self.scene()
+        if self.edges:
+            from eddy.items import ComplementNode, RoleInverseNode
+            switch = {ComplementNode, RoleChainNode, RoleInverseNode}
+            if len([e for e in self.edges if e.isType(ItemType.InputEdge) and e.target is self]) > 1:
+                switch = {RoleChainNode}
+            for action in scene.mainwindow.actionsSwitchHexagonNode:
+                action.setVisible(action.data() in switch)
+        return menu
+
     def copy(self, scene):
         """
         Create a copy of the current item.

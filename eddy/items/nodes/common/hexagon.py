@@ -33,6 +33,7 @@
 
 
 from abc import ABCMeta, abstractmethod
+
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QPolygonF
 
@@ -108,6 +109,7 @@ class HexagonNode(Node):
         # switch the check matching the current node
         for action in scene.mainwindow.actionsSwitchHexagonNode:
             action.setChecked(isinstance(self, action.data()))
+            action.setVisible(True)
 
         menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
         return menu

@@ -100,6 +100,29 @@ class EnumerationNode(HexagonNode):
         super().addEdge(edge)
         identify(self)
 
+    def contextMenu(self):
+        """
+        Returns the basic nodes context menu.
+        :rtype: QMenu
+        """
+        menu = super().contextMenu()
+        scene = self.scene()
+        if self.edges:
+
+            if [e for e in self.edges if e.isType(ItemType.InputEdge) and e.target is self]:
+                # If we have input edges targeting this node keep only the Enumeration action active: individuals can
+                # be connected only to Enumeration nodes and Link, so switching to another operator would be an error.
+                for action in scene.mainwindow.actionsSwitchHexagonNode:
+                    action.setVisible(action.data() is EnumerationNode)
+            elif [e for e in self.edges if e.isType(ItemType.InclusionEdge)]:
+                # We have inclusion edges attached to this edge but no input => allow switching to
+                # operators that can be identified using the identities declared by this very node.
+                from eddy.items import DisjointUnionNode, IntersectionNode, UnionNode
+                for action in scene.mainwindow.actionsSwitchHexagonNode:
+                    action.setVisible(action.data() in {DisjointUnionNode, EnumerationNode, IntersectionNode, UnionNode})
+
+        return menu
+
     def copy(self, scene):
         """
         Create a copy of the current item.
