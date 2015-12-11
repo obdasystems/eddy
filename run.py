@@ -69,7 +69,7 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
                     'A critical error has just occurred. '
                     'Eddy will continue to work, however a reboot is highly recommended.')
         box.setInformativeText('Please <a href="https://github.com/danielepantaleone/eddy/issues">submit '
-                               'a bug report</a> with detailed information')
+                               'a bug report</a> with detailed information.')
         box.setDetailedText(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
         box.setStandardButtons(QMessageBox.Ok)
         L = box.layout()
