@@ -320,6 +320,28 @@ class InputEdge(Edge):
                 # At most one Literal can be given as input (2 Individuals | 1 Individual + 1 Literal)
                 return False
 
+            # See if the source we are connecting to the Link is consistent with the instanceOf expression
+            # if there is such expression (else we do not care since we check this in the instanceOf edge.
+            node = next(iter(e.other(target) for e in target.edges \
+                                if e.isType(ItemType.InstanceOfEdge) and \
+                                    e.source is target), None)
+
+            if node:
+
+                if node.isType(ItemType.RoleNode, ItemType.RoleInverseNode):
+                    if source.identity is Identity.Literal:
+                        # We are constructing an ObjectPropertyAssertion expression so we can't connect a Literal.
+                        return False
+
+                if node.isType(ItemType.AttributeNode):
+                    if source.identity is Identity.Individual and \
+                        len([n for n in [e.other(target) \
+                            for e in target.edges \
+                                if e.isType(ItemType.InputEdge) and \
+                                    e.target is target and e is not self] if n.identity is Identity.Individual]) > 0:
+                        # We are constructing a DataPropertyAssertion and so we can't have more than 1 Individual.
+                        return False
+
         ################################################################################################################
         #                                                                                                              #
         #   DOMAIN / RANGE RESTRICTION                                                                                 #
