@@ -98,8 +98,7 @@ class EnumerationNode(HexagonNode):
         :param edge: the edge to be added.
         """
         super().addEdge(edge)
-        if edge.target is self:
-            identify(self)
+        identify(self)
 
     def copy(self, scene):
         """
@@ -127,8 +126,7 @@ class EnumerationNode(HexagonNode):
         :param edge: the edge to be removed.
         """
         super().removeEdge(edge)
-        if edge.target is self:
-            identify(self)
+        identify(self)
 
     ####################################################################################################################
     #                                                                                                                  #
