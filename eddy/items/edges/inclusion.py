@@ -38,7 +38,7 @@ from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
 from PyQt5.QtWidgets import QMenu
 
-from eddy.datatypes import DiagramMode, ItemType
+from eddy.datatypes import DiagramMode, ItemType, Identity
 from eddy.items.edges.common.base import Edge
 
 
@@ -124,6 +124,26 @@ class InclusionEdge(Edge):
         }
 
         return self.__class__(**kwargs)
+
+    def isValid(self, source, target):
+        """
+        Tells whether this edge is valid when being added between the given source and target nodes.
+        :type source: Node.
+        :type target: Node.
+        :rtype: bool
+        """
+        if source is target:
+            # Self connection is not valid.
+            return False
+
+        if source.identity is not Identity.Neutral and \
+            target.identity is not Identity.Neutral and \
+                source.identity is not target.identity:
+            # If neither of the endpoints is NEUTRAL and the two nodes are specifying
+            # a different identity, then we can't create an ISA between the nodes.
+            return False
+
+        return True
 
     ####################################################################################################################
     #                                                                                                                  #
