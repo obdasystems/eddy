@@ -257,7 +257,7 @@ class InputEdge(Edge):
 
             # OWL 2 syntax: http://www.w3.org/TR/owl2-syntax/#Object_Subproperties
 
-            if not source.isType(ItemType.RoleNode, ItemType.RoleChainNode):
+            if not source.isType(ItemType.RoleNode, ItemType.RoleInverseNode):
                 # The Role Chain operator constructs a concatenation of roles. Assume to have 2 Role nodes
                 # defined as 'lives_in_region' and 'region_in_country': if {(o1, o2), (o3, o4)} is the
                 # instance of 'lives_in_region' and {(o2, o6)} is the instance of 'region_in_country', then
