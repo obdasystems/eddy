@@ -408,11 +408,12 @@ class CommandNodeHexagonSwitchTo(QUndoCommand):
                 edge.source = self.node2
             if edge.target is self.node1:
                 edge.target = self.node2
+
+            self.node2.addEdge(edge)
             # IMPORTANT: clear anchors dict in the edge or we will have also the
-            # reference  of the previous node since it's a dict indexed by item!
+            # reference of the previous node since it's a dict indexed by item!
             edge.anchors.clear()
             edge.updateEdge()
-            self.node2.addEdge(edge)
 
         # clear edge and anchor references from node1
         self.node1.anchors.clear()
@@ -439,11 +440,12 @@ class CommandNodeHexagonSwitchTo(QUndoCommand):
                 edge.source = self.node1
             if edge.target is self.node2:
                 edge.target = self.node1
+
+            self.node1.addEdge(edge)
             # IMPORTANT: clear anchors dict in the edge or we will have also the
-            # reference  of the previous node since it's a dict indexed by item!
+            # reference of the previous node since it's a dict indexed by item!
             edge.anchors.clear()
             edge.updateEdge()
-            self.node1.addEdge(edge)
 
         # clear edge and anchor references from node2
         self.node2.anchors.clear()
