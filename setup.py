@@ -138,10 +138,16 @@ else:
 
         def copy_qt5_plugins(self):
             """Copy necessary Qt5 plugins"""
-            if sys.platform.startswith('win32') or sys.platform.startswith('darwin'):
-                log.info(">>> copy qt5 printsupport plugin")
-                src = os.path.join(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath), 'printsupport')
-                dst = os.path.join(self.build_exe, 'printsupport')
+            log.info(">>> copy qt5 printsupport plugin")
+            src = os.path.join(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath), 'printsupport')
+            dst = os.path.join(self.build_exe, 'printsupport')
+            self.mkpath(dst)
+            self.copy_tree(src, dst)
+            
+            if sys.platform.startswith('linux'):
+                log.info(">>> copy qt5 platforms plugin")
+                src = os.path.join(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath), 'platforms')
+                dst = os.path.join(self.build_exe, 'platforms')
                 self.mkpath(dst)
                 self.copy_tree(src, dst)
 
