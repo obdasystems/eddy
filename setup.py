@@ -138,15 +138,16 @@ else:
 
         def copy_qt5_plugins(self):
             """Copy necessary Qt5 plugins"""
-            log.info(">>> copy qt5 printsupport plugin")
+            log.info(">>> copy qt5 printsupport")
             src = os.path.join(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath), 'printsupport')
             dst = os.path.join(self.build_exe, 'printsupport')
             self.mkpath(dst)
             self.copy_tree(src, dst)
             
             if sys.platform.startswith('linux'):
-                log.info(">>> copy qt5 platforms plugin")
+                log.info(">>> copy qt5 libqxcb.so")
                 src = os.path.join(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath), 'platforms')
+                src = os.path.join(src, 'libqxcb.so')
                 dst = os.path.join(self.build_exe, 'platforms')
                 self.mkpath(dst)
                 self.copy_tree(src, dst)
