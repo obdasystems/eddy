@@ -143,14 +143,6 @@ else:
             dst = os.path.join(self.build_exe, 'printsupport')
             self.mkpath(dst)
             self.copy_tree(src, dst)
-            
-            if sys.platform.startswith('linux'):
-                log.info(">>> copy qt5 libqxcb.so")
-                src = os.path.join(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath), 'platforms')
-                src = os.path.join(src, 'libqxcb.so')
-                dst = os.path.join(self.build_exe, 'platforms')
-                self.mkpath(dst)
-                self.copy_tree(src, dst)
 
         def clean_compiled_files(self):
             """Remove python compiled files (if any got left in)"""
@@ -164,7 +156,7 @@ else:
         def chmod_exec(self):
             """Set +x flag on compiled binary if on Linux"""
             if sys.platform.startswith('linux'):
-                log.info(">>> chmod")
+                log.info(">>> chmod +x executable file")
                 filename = os.path.join(self.build_exe, EXECUTABLE_NAME)
                 st = os.stat(filename)
                 os.chmod(filename, st.st_mode | stat.S_IEXEC)
