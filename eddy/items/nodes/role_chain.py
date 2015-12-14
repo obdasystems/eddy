@@ -151,9 +151,9 @@ class RoleChainNode(HexagonNode):
         scene = self.scene()
         self.inputs.remove(edge.id)
         self.inputs.sanitize(lambda x: x in {e.id for e in self.edges if e.target is self})
-        for x in self.inputs:
+        for i in self.inputs:
             try:
-                edge = scene.edge(x)
+                edge = scene.edge(i)
                 edge.updateEdge()
             except KeyError:
                 pass
