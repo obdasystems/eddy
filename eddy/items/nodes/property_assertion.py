@@ -46,13 +46,13 @@ class PropertyAssertionNode(Node):
     """
     identities = {Identity.Link}
     itemtype = ItemType.PropertyAssertionNode
-    minHeight = 30
-    minWidth = 52
+    minheight = 30
+    minwidth = 52
     radius = 16
     name = 'property assertion'
     xmlname = 'property-assertion'
 
-    def __init__(self, width=minWidth, height=minHeight, brush=None, inputs=None, **kwargs):
+    def __init__(self, width=minwidth, height=minheight, brush=None, inputs=None, **kwargs):
         """
         Initialize the Property Assertion node.
         :param width: the shape width (unused in current implementation).
@@ -64,7 +64,7 @@ class PropertyAssertionNode(Node):
         self.brush = QBrush(QColor(252, 252, 252))
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.inputs = inputs or DistinctList()
-        self.rect = self.createRect(self.minWidth, self.minHeight)
+        self.rect = self.createRect(self.minwidth, self.minheight)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -101,6 +101,7 @@ class PropertyAssertionNode(Node):
         """
         super().addEdge(edge)
         if edge.isType(ItemType.InputEdge) and edge.target is self:
+            self.inputs.sanitize(lambda x: x in {e.id for e in self.edges if e.target is self})
             self.inputs.append(edge.id)
             edge.updateEdge()
 
@@ -143,9 +144,10 @@ class PropertyAssertionNode(Node):
         super().removeEdge(edge)
         scene = self.scene()
         self.inputs.remove(edge.id)
-        for x in self.inputs:
+        self.inputs.sanitize(lambda x: x in {e.id for e in self.edges if e.target is self})
+        for i in self.inputs:
             try:
-                edge = scene.edge(x)
+                edge = scene.edge(i)
                 edge.updateEdge()
             except KeyError:
                 pass
@@ -157,7 +159,11 @@ class PropertyAssertionNode(Node):
         """
         return self.rect.width()
 
-    ############################################### AUXILIARY METHODS ##################################################
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     @staticmethod
     def createRect(shape_w, shape_h):

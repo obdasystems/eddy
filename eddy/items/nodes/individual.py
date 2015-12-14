@@ -60,12 +60,12 @@ class IndividualNode(ResizableNode):
 
     identities = {Identity.Individual, Identity.Literal}
     itemtype = ItemType.IndividualNode
-    minHeight = 60
-    minWidth = 60
+    minheight = 60
+    minwidth = 60
     name = 'individual'
     xmlname = 'individual'
 
-    def __init__(self, width=minWidth, height=minHeight, brush='#fcfcfc', **kwargs):
+    def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc', **kwargs):
         """
         Initialize the Individual node.
         :param width: the shape width.
@@ -75,7 +75,7 @@ class IndividualNode(ResizableNode):
         super().__init__(**kwargs)
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
-        self.polygon = self.createPolygon(max(width, self.minWidth), max(height, self.minHeight))
+        self.polygon = self.createPolygon(max(width, self.minwidth), max(height, self.minheight))
         self.label = Label(self.name, parent=self)
         self.label.updatePos()
         self.updateHandlesPos()
@@ -303,8 +303,8 @@ class IndividualNode(ResizableNode):
         rect = self.boundingRect()
         diff = QPointF(0, 0)
 
-        minBoundingRectW = self.minWidth + offset * 2
-        minBoundingRectH = self.minHeight + offset * 2
+        minBoundingRectW = self.minwidth + offset * 2
+        minBoundingRectH = self.minheight + offset * 2
 
         self.prepareGeometryChange()
 

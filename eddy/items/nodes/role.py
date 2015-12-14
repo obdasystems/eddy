@@ -54,12 +54,12 @@ class RoleNode(ResizableNode):
 
     identities = {Identity.Role}
     itemtype = ItemType.RoleNode
-    minHeight = 50
-    minWidth = 70
+    minheight = 50
+    minwidth = 70
     name = 'role'
     xmlname = 'role'
 
-    def __init__(self, width=minWidth, height=minHeight, brush='#fcfcfc',special=None, **kwargs):
+    def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc',special=None, **kwargs):
         """
         Initialize the Individual node.
         :param width: the shape width.
@@ -73,7 +73,7 @@ class RoleNode(ResizableNode):
 
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
-        self.polygon = self.createPolygon(max(width, self.minWidth), max(height, self.minHeight))
+        self.polygon = self.createPolygon(max(width, self.minwidth), max(height, self.minheight))
         self.label = Label(self.name, movable=special is None, editable=special is None, parent=self)
         self.updateHandlesPos()
         self.updateLabelPos()
@@ -562,8 +562,8 @@ class RoleNode(ResizableNode):
         rect = self.boundingRect()
         diff = QPointF(0, 0)
 
-        minBoundingRectW = self.minWidth + offset * 2
-        minBoundingRectH = self.minHeight + offset * 2
+        minBoundingRectW = self.minwidth + offset * 2
+        minBoundingRectH = self.minheight + offset * 2
 
         self.prepareGeometryChange()
 

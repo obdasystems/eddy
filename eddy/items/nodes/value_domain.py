@@ -46,14 +46,14 @@ class ValueDomainNode(Node):
     """
     identities = {Identity.DataRange}
     itemtype = ItemType.ValueDomainNode
-    minHeight = 40
-    minWidth = 90
+    minheight = 40
+    minwidth = 90
     name = 'value domain'
     padding = 16
     radius = 8
     xmlname = 'value-domain'
 
-    def __init__(self, width=minWidth, height=minHeight, brush='#fcfcfc', special=None, **kwargs):
+    def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc', special=None, **kwargs):
         """
         Initialize the Value-Domain node.
         :param width: the shape width (unused in current implementation).
@@ -68,7 +68,7 @@ class ValueDomainNode(Node):
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.datatype = XsdDatatype.string
-        self.rect = self.createRect(self.minWidth, self.minHeight)
+        self.rect = self.createRect(self.minwidth, self.minheight)
         self.label = Label(self.datatype.value, movable=False, editable=False, parent=self)
         self.updateRect()
 
@@ -175,8 +175,8 @@ class ValueDomainNode(Node):
         Update current shape rect according to the selected datatype.
         Will also center the shape text after the width adjustment.
         """
-        shape_w = max(self.label.width() + self.padding, self.minWidth)
-        self.rect = self.createRect(shape_w, self.minHeight)
+        shape_w = max(self.label.width() + self.padding, self.minwidth)
+        self.rect = self.createRect(shape_w, self.minheight)
         self.updateLabelPos()
         self.updateEdges()
 

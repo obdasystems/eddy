@@ -56,12 +56,12 @@ class ValueRestrictionNode(ResizableNode):
     foldSize = 12
     identities = {Identity.DataRange}
     itemtype = ItemType.ValueRestrictionNode
-    minHeight = 50
-    minWidth = 110
+    minheight = 50
+    minwidth = 110
     name = 'value restriction'
     xmlname = 'value-restriction'
 
-    def __init__(self, width=minWidth, height=minHeight, brush='#fcfcfc', **kwargs):
+    def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc', **kwargs):
         """
         Initialize the Value Restriction node.
         :param width: the shape width.
@@ -71,7 +71,7 @@ class ValueRestrictionNode(ResizableNode):
         super().__init__(**kwargs)
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
-        self.polygon = self.createPolygon(max(width, self.minWidth), max(height, self.minHeight), self.foldSize)
+        self.polygon = self.createPolygon(max(width, self.minwidth), max(height, self.minheight), self.foldSize)
         self.label = Label(self.name, parent=self)
         self.label.updatePos()
         self.updateHandlesPos()
@@ -314,8 +314,8 @@ class ValueRestrictionNode(ResizableNode):
         fold = self.foldSize
         diff = QPointF(0, 0)
 
-        minBoundingRectW = self.minWidth + offset * 2
-        minBoundingRectH = self.minHeight + offset * 2
+        minBoundingRectW = self.minwidth + offset * 2
+        minBoundingRectH = self.minheight + offset * 2
 
         self.prepareGeometryChange()
 

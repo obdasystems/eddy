@@ -49,12 +49,12 @@ class ConceptNode(ResizableNode):
     """
     identities = {Identity.Concept}
     itemtype = ItemType.ConceptNode
-    minHeight = 50
-    minWidth = 110
+    minheight = 50
+    minwidth = 110
     name = 'concept'
     xmlname = 'concept'
 
-    def __init__(self, width=minWidth, height=minHeight, brush='#fcfcfc', special=None, **kwargs):
+    def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc', special=None, **kwargs):
         """
         Initialize the Concept node.
         :param width: the shape width.
@@ -68,7 +68,7 @@ class ConceptNode(ResizableNode):
 
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
-        self.rect = self.createRect(max(width, self.minWidth), max(height, self.minHeight))
+        self.rect = self.createRect(max(width, self.minwidth), max(height, self.minheight))
         self.label = Label(self.name, movable=special is None, editable=special is None, parent=self)
         self.label.setText(self._special.value if self._special else self.label.text())
         self.updateHandlesPos()
@@ -310,8 +310,8 @@ class ConceptNode(ResizableNode):
         rect = self.boundingRect()
         diff = QPointF(0, 0)
 
-        minBoundingRectW = self.minWidth + offset * 2
-        minBoundingRectH = self.minHeight + offset * 2
+        minBoundingRectW = self.minwidth + offset * 2
+        minBoundingRectH = self.minheight + offset * 2
 
         self.prepareGeometryChange()
 

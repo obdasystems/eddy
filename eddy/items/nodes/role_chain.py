@@ -96,6 +96,7 @@ class RoleChainNode(HexagonNode):
         """
         super().addEdge(edge)
         if edge.isType(ItemType.InputEdge) and edge.target is self:
+            self.inputs.sanitize(lambda x: x in {e.id for e in self.edges if e.target is self})
             self.inputs.append(edge.id)
             edge.updateEdge()
 
@@ -149,6 +150,7 @@ class RoleChainNode(HexagonNode):
         super().removeEdge(edge)
         scene = self.scene()
         self.inputs.remove(edge.id)
+        self.inputs.sanitize(lambda x: x in {e.id for e in self.edges if e.target is self})
         for x in self.inputs:
             try:
                 edge = scene.edge(x)
