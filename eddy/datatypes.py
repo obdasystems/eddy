@@ -144,6 +144,15 @@ class DistinctList(list):
         except ValueError:
             pass
 
+    def sanitize(self, f_sanitize):
+        """
+        Remove all the elements in this list for which the given callable returns False.
+        :param f_sanitize: a callable used to filter elements in this list.
+        """
+        for p_object in self:
+            if not f_sanitize(p_object):
+                self.remove(p_object)
+
     def __add__(self, p_object):
         """ x.__add__(y) <==> x+y """
         copy = self[:]
