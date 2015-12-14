@@ -347,17 +347,10 @@ class DiagramScene(QGraphicsScene):
                     node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False, skip={edge.source})
 
                     if node and edge.isValid(edge.source, node):
-
-                        edge.target = node
-                        edge.source.addEdge(edge)
-                        edge.target.addEdge(edge)
-                        edge.updateEdge()
-
+                        self.command.end(node)
                         self.undostack.push(self.command)
                         self.updated.emit()
-
                     else:
-
                         self.removeItem(edge)
 
                     # always emit this signal even if the edge has not been inserted since this will clear

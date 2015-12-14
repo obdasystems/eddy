@@ -48,21 +48,51 @@ class CommandEdgeAdd(QUndoCommand):
         :param edge: the edge being added.
         """
         super().__init__('add {0} edge'.format(edge.name))
-        self.scene = scene
         self.edge = edge
+        self.scene = scene
+        self.source = edge.source
+        self.target = None
+        self.inputs1 = []
+        self.inputs2 = []
+
+    def end(self, node):
+        """
+        Complete the Edge insertion command.
+        :param node: the target node of this edge.
+        """
+        self.edge.target = node
+        self.edge.source.addEdge(self.edge)
+        self.edge.target.addEdge(self.edge)
+        self.edge.updateEdge()
+
+        self.target = self.edge.target
+
+        if self.edge.isType(ItemType.InputEdge):
+            if self.edge.target.isType(ItemType.RoleChainNode, ItemType.PropertyAssertionNode):
+                self.inputs2 = self.edge.target.inputs[:]
+                self.inputs1 = self.edge.target.inputs[:]
+                self.inputs1.remove(self.edge.id)
 
     def redo(self):
         """redo the command"""
         # IMPORTANT: don't remove this check!
         if self.edge.id not in self.scene.edgesById:
+            self.edge.source.addEdge(self.edge)
+            self.edge.target.addEdge(self.edge)
             self.scene.addItem(self.edge)
+            if self.target.isType(ItemType.RoleChainNode, ItemType.PropertyAssertionNode):
+                self.target.inputs = self.inputs2[:]
             self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
         # IMPORTANT: don't remove this check!
         if self.edge.id in self.scene.edgesById:
+            self.edge.source.removeEdge(self.edge)
+            self.edge.target.removeEdge(self.edge)
             self.scene.removeItem(self.edge)
+            if self.target.isType(ItemType.RoleChainNode, ItemType.PropertyAssertionNode):
+                self.target.inputs = self.inputs1[:]
             self.scene.updated.emit()
 
 
@@ -108,7 +138,7 @@ class CommandEdgeAnchorMove(QUndoCommand):
         :param edge: the edge whose anchor point is being moved.
         :param node: the shape on which the moving is happening.
         """
-        super().__init__('move {0} anchor point'.format(edge.name))
+        super().__init__('move {0} edge anchor point'.format(edge.name))
         self.scene = scene
         self.edge = edge
         self.node = node
