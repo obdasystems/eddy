@@ -313,7 +313,8 @@ class InputEdge(Edge):
                 # the individuals are identified by M.Draghi and "Mario".
                 return False
 
-            if len([n for n in [e.other(target) \
+            if source.identity is Identity.Literal and \
+                    len([n for n in [e.other(target) \
                         for e in target.edges \
                             if e.isType(ItemType.InputEdge) and \
                                 e.target is target and e is not self] if n.identity is Identity.Literal]) > 0:
