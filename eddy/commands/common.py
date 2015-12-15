@@ -34,6 +34,8 @@
 
 from PyQt5.QtWidgets import QUndoCommand
 
+from eddy.datatypes import Item
+
 
 class CommandItemsMultiAdd(QUndoCommand):
     """
@@ -87,7 +89,23 @@ class CommandItemsMultiRemove(QUndoCommand):
         """
         self.scene = scene
         self.nodes = {item for item in collection if item.node}
-        self.edges = [item for item in collection if item.edge]
+        self.edges = {item for item in collection if item.edge}
+
+        # compute the new inputs order for role chain and property assertion nodes
+        # which are not being removed but whose other endpoint is being detached.
+        self.inputs = {n: {
+            'undo': n.inputs[:],
+            'redo': n.inputs[:],
+        } for edge in self.edges \
+            if edge.isItem(Item.InputEdge) \
+                for n in {edge.source, edge.target} \
+                    if n.isItem(Item.RoleChainNode, Item.PropertyAssertionNode) and \
+                        n not in self.nodes}
+
+        for node in self.inputs:
+            for edge in node.edges:
+                if edge.isItem(Item.InputEdge) and edge in self.edges and edge.target is node:
+                    self.inputs[node]['redo'].remove(edge.id)
 
         if len(collection) == 1:
             super().__init__('remove {0} {1}'.format(collection[0].name, 'node' if collection[0].node else 'edge'))
@@ -104,6 +122,11 @@ class CommandItemsMultiRemove(QUndoCommand):
         # remove the nodes
         for node in self.nodes:
             self.scene.removeItem(node)
+        # update node inputs
+        for node in self.inputs:
+            node.inputs = self.inputs[node]['redo'][:]
+            for edge in node.edges:
+                edge.updateEdge()
         # emit updated signal
         self.scene.updated.emit()
 
@@ -117,6 +140,11 @@ class CommandItemsMultiRemove(QUndoCommand):
             edge.source.addEdge(edge)
             edge.target.addEdge(edge)
             self.scene.addItem(edge)
+        # update node inputs
+        for node in self.inputs:
+            node.inputs = self.inputs[node]['undo'][:]
+            for edge in node.edges:
+                edge.updateEdge()
         # emit updated signal
         self.scene.updated.emit()
 

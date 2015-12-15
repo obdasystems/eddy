@@ -190,8 +190,6 @@ class RoleChainNode(HexagonNode):
             'width': int(G.attribute('width')),
         }
 
-        print(kwargs['inputs'])
-
         node = cls(**kwargs)
         node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
         node.setLabelText(L.text())
