@@ -323,27 +323,21 @@ class CommandEdgeSwap(QUndoCommand):
         self.scene = scene
         self.edges = edges
 
-        # backup inputs order for role chain and property assertion
-        self.inputs1 = {node: node.inputs[:] for edge in self.edges \
-                        if edge.isItem(Item.InputEdge) \
-                        for node in {edge.source, edge.target} \
-                        if node.isItem(Item.RoleChainNode,
-                                       Item.PropertyAssertionNode)}
-
-        # exec dict comprehension again since we need a copy of the order and not the reference
-        self.inputs2 = {node: node.inputs[:] for edge in self.edges \
-                        if edge.isItem(Item.InputEdge) \
-                        for node in {edge.source, edge.target} \
-                        if node.isItem(Item.RoleChainNode,
-                                       Item.PropertyAssertionNode)}
+        self.inputs = {n: {
+            'undo': n.inputs[:],
+            'redo': n.inputs[:],
+        } for edge in self.edges \
+            if edge.isItem(Item.InputEdge) \
+                for n in {edge.source, edge.target} \
+                    if n.isItem(Item.RoleChainNode, Item.PropertyAssertionNode)}
 
         for edge in self.edges:
-            if edge.target in self.inputs2:
-                self.inputs2[edge.target].remove(edge.id)
+            if edge.isItem(Item.InputEdge) and edge.target in self.inputs:
+                self.inputs[edge.target]['redo'].remove(edge.id)
 
         for edge in self.edges:
-            if edge.source in self.inputs2:
-                self.inputs2[edge.source].append(edge.id)
+            if edge.isItem(Item.InputEdge) and edge.source in self.inputs:
+                self.inputs[edge.source]['redo'].append(edge.id)
 
     def redo(self):
         """redo the command"""
@@ -351,8 +345,8 @@ class CommandEdgeSwap(QUndoCommand):
             edge.source, edge.target = edge.target, edge.source
             edge.breakpoints = edge.breakpoints[::-1]
             for node in {edge.source, edge.target}:
-                if node in self.inputs2:
-                    node.inputs = self.inputs2[node]
+                if node in self.inputs:
+                    node.inputs = self.inputs[node]['redo'][:]
             edge.updateEdge()
         self.scene.updated.emit()
 
@@ -362,7 +356,7 @@ class CommandEdgeSwap(QUndoCommand):
             edge.source, edge.target = edge.target, edge.source
             edge.breakpoints = edge.breakpoints[::-1]
             for node in {edge.source, edge.target}:
-                if node in self.inputs1:
-                    node.inputs = self.inputs1[node]
+                if node in self.inputs:
+                    node.inputs = self.inputs[node]['undo'][:]
             edge.updateEdge()
         self.scene.updated.emit()
