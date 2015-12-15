@@ -35,7 +35,6 @@
 import math
 import unittest
 
-from eddy.exceptions import ProgrammingError
 from eddy.functions.misc import clamp, isEmpty, rangeF, snapF
 from eddy.functions.geometry import angleP, distanceP, distanceL, intersectionL, midpoint
 
@@ -63,7 +62,7 @@ class Test_Clamp(unittest.TestCase):
         self.assertEqual(10.0, clamp(val=12.0, minval=0.0, maxval=10.0))
 
     def test_clamp_with_exception(self):
-        self.assertRaises(ProgrammingError, clamp, val=4.0, minval=10.0, maxval=0.0)
+        self.assertRaises(ValueError, clamp, val=4.0, minval=10.0, maxval=0.0)
 
 
 class Test_DistanceP(unittest.TestCase):
