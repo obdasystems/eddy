@@ -68,6 +68,9 @@ class CommandEdgeAdd(QUndoCommand):
         self.target = self.edge.target
 
         if self.edge.isType(ItemType.InputEdge):
+            # if we are adding an input edge targeting a role chain or a property
+            # assertion node we need to save the new inputs order and compute the
+            # old one by removing the current edge id from the input list.
             if self.edge.target.isType(ItemType.RoleChainNode, ItemType.PropertyAssertionNode):
                 self.inputs2 = self.edge.target.inputs[:]
                 self.inputs1 = self.edge.target.inputs[:]
@@ -77,9 +80,12 @@ class CommandEdgeAdd(QUndoCommand):
         """redo the command"""
         # IMPORTANT: don't remove this check!
         if self.edge.id not in self.scene.edgesById:
+            # map source/target over the edge
             self.edge.source.addEdge(self.edge)
             self.edge.target.addEdge(self.edge)
+            # remove the edge from the scene
             self.scene.addItem(self.edge)
+            # switch the inputs
             if self.target.isType(ItemType.RoleChainNode, ItemType.PropertyAssertionNode):
                 self.target.inputs = self.inputs2[:]
             self.scene.updated.emit()
@@ -88,9 +94,12 @@ class CommandEdgeAdd(QUndoCommand):
         """undo the command"""
         # IMPORTANT: don't remove this check!
         if self.edge.id in self.scene.edgesById:
+            # remove source/target from the edge
             self.edge.source.removeEdge(self.edge)
             self.edge.target.removeEdge(self.edge)
+            # remove the edge from the scene
             self.scene.removeItem(self.edge)
+            # switch the inputs
             if self.target.isType(ItemType.RoleChainNode, ItemType.PropertyAssertionNode):
                 self.target.inputs = self.inputs1[:]
             self.scene.updated.emit()
