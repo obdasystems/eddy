@@ -96,7 +96,8 @@ class RoleChainNode(HexagonNode):
         """
         super().addEdge(edge)
         if edge.isItem(Item.InputEdge) and edge.target is self:
-            self.inputs.sanitize(lambda x: x in {e.id for e in self.edges if e.target is self})
+            # FIXME: this cause troubles when loading a document from a graphol file since it doesn't preserve ordering
+            # self.inputs.sanitize(lambda x: x in {e.id for e in self.edges if e.target is self})
             self.inputs.append(edge.id)
             edge.updateEdge()
 
@@ -150,7 +151,8 @@ class RoleChainNode(HexagonNode):
         super().removeEdge(edge)
         scene = self.scene()
         self.inputs.remove(edge.id)
-        self.inputs.sanitize(lambda x: x in {e.id for e in self.edges if e.target is self})
+        # FIXME: this cause troubles when loading a document from a graphol file since it doesn't preserve ordering
+        # self.inputs.sanitize(lambda x: x in {e.id for e in self.edges if e.target is self})
         for i in self.inputs:
             try:
                 edge = scene.edge(i)
@@ -187,6 +189,8 @@ class RoleChainNode(HexagonNode):
             'url': U.text(),
             'width': int(G.attribute('width')),
         }
+
+        print(kwargs['inputs'])
 
         node = cls(**kwargs)
         node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
