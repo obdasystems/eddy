@@ -50,8 +50,6 @@ class CommandEdgeAdd(QUndoCommand):
         super().__init__('add {0} edge'.format(edge.name))
         self.edge = edge
         self.scene = scene
-        self.source = edge.source
-        self.target = None
         self.inputs1 = []
         self.inputs2 = []
 
@@ -64,8 +62,6 @@ class CommandEdgeAdd(QUndoCommand):
         self.edge.source.addEdge(self.edge)
         self.edge.target.addEdge(self.edge)
         self.edge.updateEdge()
-
-        self.target = self.edge.target
 
         if self.edge.isItem(Item.InputEdge):
             # if we are adding an input edge targeting a role chain or a property
@@ -86,8 +82,8 @@ class CommandEdgeAdd(QUndoCommand):
             # remove the edge from the scene
             self.scene.addItem(self.edge)
             # switch the inputs
-            if self.target.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
-                self.target.inputs = self.inputs2[:]
+            if self.edge.target.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
+                self.edge.target.inputs = self.inputs2[:]
             self.scene.updated.emit()
 
     def undo(self):
@@ -100,8 +96,8 @@ class CommandEdgeAdd(QUndoCommand):
             # remove the edge from the scene
             self.scene.removeItem(self.edge)
             # switch the inputs
-            if self.target.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
-                self.target.inputs = self.inputs1[:]
+            if self.edge.target.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
+                self.edge.target.inputs = self.inputs1[:]
             self.scene.updated.emit()
 
 
