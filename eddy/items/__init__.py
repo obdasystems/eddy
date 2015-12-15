@@ -34,16 +34,16 @@
 
 from abc import ABCMeta, abstractmethod
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem
-from eddy.datatypes import ItemType
+from eddy.datatypes import Item
 
 
-class Item(QGraphicsItem):
+class AbstractItem(QGraphicsItem):
     """
     Base class for all the diagram elements.
     """
     __metaclass__ = ABCMeta
 
-    itemtype = 0  # an integer identifying this node as unique type
+    item = 0  # an integer identifying this node as unique item type
     name = 'item' # a lowercase word which identifies this object
     prefix = 'i' # a prefix character to be prepended to the unique id
     xmlname = 'item' # a lowercase word used to identify this node in XML related documents
@@ -91,7 +91,7 @@ class Item(QGraphicsItem):
         :return: True if the item is an edge, False otherwise.
         :rtype: bool
         """
-        return ItemType.InclusionEdge <= self.itemtype <= ItemType.InstanceOfEdge
+        return Item.InclusionEdge <= self.item <= Item.InstanceOfEdge
 
     @property
     def id(self):
@@ -116,7 +116,7 @@ class Item(QGraphicsItem):
         :return: True if the item is a node, False otherwise.
         :rtype: bool
         """
-        return ItemType.ConceptNode <= self.itemtype <= ItemType.PropertyAssertionNode
+        return Item.ConceptNode <= self.item <= Item.PropertyAssertionNode
 
     @property
     def url(self):
@@ -156,14 +156,14 @@ class Item(QGraphicsItem):
         """
         pass
 
-    def isType(self, *args):
+    def isItem(self, *args):
         """
         Tells whether the current item is one of the given types.
         :param args: positional arguments specifying item types to match.
         :return: True if the item matches a given type, False otherwise.
         :rtype: bool
         """
-        return self.itemtype in args
+        return self.item in args
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -187,7 +187,7 @@ class Item(QGraphicsItem):
         Create a new item instance by parsing a Graphol document item entry.
         :param scene: the scene where the element will be inserted.
         :param E: the Graphol document element entry.
-        :rtype: Item
+        :rtype: AbstractItem
         """
         pass
 
@@ -236,12 +236,11 @@ class Item(QGraphicsItem):
 class LabelItem(QGraphicsTextItem):
     """
     Base class for all the diagram labels: this class is mostly needed to improve performances.
-    By using the LabelItem interface we can check the item type using the isType() method instead of using isinstance().
+    By using the LabelItem interface we can check the item type using the isItem() method instead of using isinstance().
     """
     __metaclass__ = ABCMeta
 
-    # an integer identifying this node as unique type
-    itemtype = 0
+    item = 0 # an integer identifying this label as unique item type
 
     def __init__(self, parent=None):
         """
@@ -280,14 +279,14 @@ class LabelItem(QGraphicsTextItem):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def isType(self, *args):
+    def isItem(self, *args):
         """
         Tells whether the current item is one of the given types.
         :param args: positional arguments specifying item types to match.
         :return: True if the item matches a given type, False otherwise.
         :rtype: bool
         """
-        return self.itemtype in args
+        return self.item in args
 
     ####################################################################################################################
     #                                                                                                                  #

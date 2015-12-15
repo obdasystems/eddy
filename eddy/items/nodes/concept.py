@@ -36,19 +36,19 @@ from PyQt5.QtCore import QRectF, QPointF, Qt
 from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QColor, QPen
 from PyQt5.QtWidgets import QMenu
 
-from eddy.datatypes import Font, ItemType, SpecialType, DiagramMode, Identity
+from eddy.datatypes import Font, Item, SpecialType, DiagramMode, Identity
 from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.functions import snapF
-from eddy.items.nodes.common.base import Node, ResizableNode
+from eddy.items.nodes.common.base import AbstractNode, AbstractResizableNode
 from eddy.items.nodes.common.label import Label
 
 
-class ConceptNode(ResizableNode):
+class ConceptNode(AbstractResizableNode):
     """
     This class implements the 'Concept' node.
     """
     identities = {Identity.Concept}
-    itemtype = ItemType.ConceptNode
+    item = Item.ConceptNode
     minheight = 50
     minwidth = 110
     name = 'concept'
@@ -217,7 +217,7 @@ class ConceptNode(ResizableNode):
         Create a new item instance by parsing a Graphol document item entry.
         :param scene: the scene where the element will be inserted.
         :param E: the Graphol document element entry.
-        :rtype: Node
+        :rtype: AbstractNode
         """
         U = E.elementsByTagName('data:url').at(0).toElement()
         D = E.elementsByTagName('data:description').at(0).toElement()

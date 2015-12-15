@@ -44,7 +44,7 @@ from PyQt5.QtXml import QDomDocument
 
 from eddy import __appname__ as appname, __organization__ as organization, getPath
 from eddy.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
-from eddy.datatypes import DiagramMode, DistinctList, ItemType, RestrictionType, SpecialType
+from eddy.datatypes import DiagramMode, DistinctList, Item, RestrictionType, SpecialType
 from eddy.functions import rangeF, snapF
 from eddy.items import ConceptNode, ComplementNode, DomainRestrictionNode, InputEdge, InclusionEdge
 from eddy.items import RangeRestrictionNode, RoleChainNode, RoleInverseNode, ValueDomainNode
@@ -615,7 +615,7 @@ class DiagramScene(QGraphicsScene):
         node1 = RangeRestrictionNode(scene=self, restriction_type=RestrictionType.exists)
         edge1 = InputEdge(scene=self, source=source, target=node1)
 
-        if source.isType(ItemType.AttributeNode):
+        if source.isItem(Item.AttributeNode):
             node2 = ValueDomainNode(scene=self)
             edge2 = InclusionEdge(scene=self, source=node1, target=node2)
         else:
@@ -648,9 +648,9 @@ class DiagramScene(QGraphicsScene):
         num1 = sys.maxsize
         num2 = sys.maxsize
         rad1 = QPointF(node1.width() / 2, node1.height() / 2)
-        rad2 = None if source.isType(ItemType.RoleNode) else QPointF(node2.width() / 2, node2.height() / 2)
+        rad2 = None if source.isItem(Item.RoleNode) else QPointF(node2.width() / 2, node2.height() / 2)
 
-        if source.isType(ItemType.RoleNode):
+        if source.isItem(Item.RoleNode):
 
             for o1, o2 in itertools.product(*offsets):
                 count1 = len(self.items(QRectF(source.pos() + o1 - rad1, source.pos() + o1 + rad1)))
@@ -658,7 +658,7 @@ class DiagramScene(QGraphicsScene):
                     num1 = count1
                     pos1 = source.pos() + o1
 
-        elif source.isType(ItemType.AttributeNode):
+        elif source.isItem(Item.AttributeNode):
 
             for o1, o2 in itertools.product(*offsets):
                 count1 = len(self.items(QRectF(source.pos() + o1 - rad1, source.pos() + o1 + rad1)))
@@ -673,7 +673,7 @@ class DiagramScene(QGraphicsScene):
         nodes = {node1}
         edges = {edge1}
 
-        if source.isType(ItemType.AttributeNode):
+        if source.isItem(Item.AttributeNode):
             node2.setPos(pos2)
             nodes.add(node2)
             edges.add(edge2)

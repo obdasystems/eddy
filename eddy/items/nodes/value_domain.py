@@ -35,17 +35,17 @@
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath
 
-from eddy.datatypes import Font, ItemType, XsdDatatype, SpecialType, DiagramMode, Identity
-from eddy.items.nodes.common.base import Node
+from eddy.datatypes import Font, Item, XsdDatatype, SpecialType, DiagramMode, Identity
+from eddy.items.nodes.common.base import AbstractNode
 from eddy.items.nodes.common.label import Label
 
 
-class ValueDomainNode(Node):
+class ValueDomainNode(AbstractNode):
     """
     This class implements the 'Value-Domain' node.
     """
     identities = {Identity.DataRange}
-    itemtype = ItemType.ValueDomainNode
+    item = Item.ValueDomainNode
     minheight = 40
     minwidth = 90
     name = 'value domain'
@@ -215,7 +215,7 @@ class ValueDomainNode(Node):
         Create a new item instance by parsing a Graphol document item entry.
         :param scene: the scene where the element will be inserted.
         :param E: the Graphol document element entry.
-        :rtype: Node
+        :rtype: AbstractNode
         """
         U = E.elementsByTagName('data:url').at(0).toElement()
         D = E.elementsByTagName('data:description').at(0).toElement()

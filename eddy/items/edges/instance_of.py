@@ -39,16 +39,16 @@ from math import sin, cos, radians, pi as M_PI
 from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
 
-from eddy.datatypes import Font, DiagramMode, ItemType, Identity
-from eddy.items.edges.common.base import Edge
+from eddy.datatypes import Font, DiagramMode, Item, Identity
+from eddy.items.edges.common.base import AbstractEdge
 from eddy.items.edges.common.label import Label
 
 
-class InstanceOfEdge(Edge):
+class InstanceOfEdge(AbstractEdge):
     """
     This class implements the InstanceOf edge.
     """
-    itemtype = ItemType.InstanceOfEdge
+    item = Item.InstanceOfEdge
     name = 'instanceOf'
     xmlname = 'instance-of'
 
@@ -95,7 +95,7 @@ class InstanceOfEdge(Edge):
             # The source of the edge must be one of Individual or Link.
             return False
 
-        if len([e for e in source.edges if e.isType(ItemType.InstanceOfEdge) and e.source is source]) > 0:
+        if len([e for e in source.edges if e.isItem(Item.InstanceOfEdge) and e.source is source]) > 0:
             # The source node MUST be instanceOf at most of one construct.
             return False
 
@@ -107,28 +107,28 @@ class InstanceOfEdge(Edge):
 
         if source.identity is Identity.Link:
 
-            if not target.isType(ItemType.RoleNode, ItemType.RoleInverseNode, ItemType.AttributeNode):
+            if not target.isItem(Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode):
                 # If the source of the edge is a Link then the target of the edge MUST be the
                 # OWL 2 equivalent of ObjectPropertyExpression and DataPropertyExpression.
                 return False
 
-            if target.isType(ItemType.RoleNode, ItemType.RoleInverseNode):
+            if target.isItem(Item.RoleNode, Item.RoleInverseNode):
                 # If the target of the edge is a Role expression then we need to check
                 # not to have Literals in input to the source node (which is a Link).
                 # OWL 2 syntax: ObjectPropertyAssertion(axiomAnnotations ObjectPropertyExpression Individual Individual)
                 if len([n for n in [e.other(source) \
                         for e in source.edges \
-                            if e.isType(ItemType.InputEdge) and \
+                            if e.isItem(Item.InputEdge) and \
                                 e.target is source] if n.identity is Identity.Literal]) > 0:
                     return False
 
-            if target.isType(ItemType.AttributeNode):
+            if target.isItem(Item.AttributeNode):
                 # If the target of the edge is an Attribute expression then we need to check
                 # not to have 2 Individuals as input to the source node (which is a link).
                 # OWL 2 syntax: DataPropertyAssertion(axiomAnnotations DataPropertyExpression Individual Literal)
                 if len([n for n in [e.other(source) \
                         for e in source.edges \
-                            if e.isType(ItemType.InputEdge) and \
+                            if e.isItem(Item.InputEdge) and \
                                 e.target is source] if n.identity is Identity.Individual]) > 1:
                     return False
 
@@ -153,7 +153,7 @@ class InstanceOfEdge(Edge):
         Create a new item instance by parsing a Graphol document item entry.
         :param scene: the scene where the element will be inserted.
         :param E: the Graphol document element entry.
-        :rtype: Edge
+        :rtype: AbstractEdge
         """
         points = []
 

@@ -37,7 +37,7 @@ from PyQt5.QtGui import QColor, QTextCursor, QPainterPath
 from PyQt5.QtWidgets import QGraphicsItem
 
 from eddy.commands import CommandNodeLabelMove, CommandNodeLabelEdit
-from eddy.datatypes import Font, DiagramMode, ItemType
+from eddy.datatypes import Font, DiagramMode, Item
 from eddy.functions import isEmpty, distanceP
 from eddy.items import LabelItem
 
@@ -46,7 +46,7 @@ class Label(LabelItem):
     """
     This class implements the label to be attached to the graph nodes.
     """
-    itemtype = ItemType.LabelNode
+    item = Item.LabelNode
 
     def __init__(self, default='', centered=True, movable=True, editable=True, parent=None):
         """

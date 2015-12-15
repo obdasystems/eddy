@@ -35,18 +35,18 @@
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath
 
-from eddy.datatypes import Font, ItemType, SpecialType, DiagramMode, Identity
+from eddy.datatypes import Font, Item, SpecialType, DiagramMode, Identity
 from eddy.dialogs import EditableNodePropertiesDialog
-from eddy.items.nodes.common.base import Node
+from eddy.items.nodes.common.base import AbstractNode
 from eddy.items.nodes.common.label import Label
 
 
-class AttributeNode(Node):
+class AttributeNode(AbstractNode):
     """
     This class implements the 'Attribute' node.
     """
     identities = {Identity.Attribute}
-    itemtype = ItemType.AttributeNode
+    item = Item.AttributeNode
     name = 'attribute'
     xmlname = 'attribute'
 
@@ -210,7 +210,7 @@ class AttributeNode(Node):
         Create a new item instance by parsing a Graphol document item entry.
         :param scene: the scene where the element will be inserted.
         :param E: the Graphol document element entry.
-        :rtype: Node
+        :rtype: AbstractNode
         """
         U = E.elementsByTagName('data:url').at(0).toElement()
         D = E.elementsByTagName('data:description').at(0).toElement()

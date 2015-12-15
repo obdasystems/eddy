@@ -281,7 +281,7 @@ class Identity(IntEnum):
 
 
 @unique
-class ItemType(IntEnum):
+class Item(IntEnum):
     """
     This class defines all the available Graphol items. The enum is ordered according to Graphol
     elements' classes. Changing the order of the enum elements (which actually means assigning a

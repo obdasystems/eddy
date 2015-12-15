@@ -38,15 +38,15 @@ from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
 from PyQt5.QtWidgets import QMenu
 
-from eddy.datatypes import DiagramMode, ItemType, Identity
-from eddy.items.edges.common.base import Edge
+from eddy.datatypes import DiagramMode, Item, Identity
+from eddy.items.edges.common.base import AbstractEdge
 
 
-class InclusionEdge(Edge):
+class InclusionEdge(AbstractEdge):
     """
     This class implements the Inclusion edge.
     """
-    itemtype = ItemType.InclusionEdge
+    item = Item.InclusionEdge
     name = 'inclusion'
     xmlname = 'inclusion'
 
@@ -157,7 +157,7 @@ class InclusionEdge(Edge):
         Create a new item instance by parsing a Graphol document item entry.
         :param scene: the scene where the element will be inserted.
         :param E: the Graphol document element entry.
-        :rtype: Edge
+        :rtype: AbstractEdge
         """
         points = []
 

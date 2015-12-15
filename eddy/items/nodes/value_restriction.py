@@ -35,14 +35,14 @@
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap
 
-from eddy.datatypes import DiagramMode, Font, Identity, ItemType
+from eddy.datatypes import DiagramMode, Font, Identity, Item
 from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.functions import snapF
-from eddy.items.nodes.common.base import ResizableNode
+from eddy.items.nodes.common.base import AbstractResizableNode
 from eddy.items.nodes.common.label import Label
 
 
-class ValueRestrictionNode(ResizableNode):
+class ValueRestrictionNode(AbstractResizableNode):
     """
     This class implements the 'Value-Restriction' node.
     """
@@ -55,7 +55,7 @@ class ValueRestrictionNode(ResizableNode):
 
     foldSize = 12
     identities = {Identity.DataRange}
-    itemtype = ItemType.ValueRestrictionNode
+    item = Item.ValueRestrictionNode
     minheight = 50
     minwidth = 110
     name = 'value restriction'

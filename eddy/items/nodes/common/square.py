@@ -39,12 +39,12 @@ from PyQt5.QtGui import QColor, QPainterPath, QPen
 
 from eddy.datatypes import DiagramMode, Identity, RestrictionType
 from eddy.exceptions import ParseError
-from eddy.items.nodes.common.base import Node
+from eddy.items.nodes.common.base import AbstractNode
 from eddy.items.nodes.common.label import Label
 from eddy.regex import RE_CARDINALITY
 
 
-class SquaredNode(Node):
+class SquaredNode(AbstractNode):
     """
     This is the base class for all the Squared shaped nodes.
     """
@@ -222,7 +222,7 @@ class SquaredNode(Node):
         Create a new item instance by parsing a Graphol document item entry.
         :param scene: the scene where the element will be inserted.
         :param E: the Graphol document element entry.
-        :rtype: Node
+        :rtype: AbstractNode
         """
         U = E.elementsByTagName('data:url').at(0).toElement()
         D = E.elementsByTagName('data:description').at(0).toElement()

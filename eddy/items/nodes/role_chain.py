@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
-from eddy.datatypes import Font, ItemType, DistinctList, Identity
+from eddy.datatypes import Font, Item, DistinctList, Identity
 from eddy.dialogs import OrderedInputNodePropertiesDialog
 from eddy.items.nodes.common.hexagon import HexagonNode
 from eddy.items.nodes.common.label import Label
@@ -46,7 +46,7 @@ class RoleChainNode(HexagonNode):
     This class implements the 'Role Chain' node.
     """
     identities = {Identity.Role}
-    itemtype = ItemType.RoleChainNode
+    item = Item.RoleChainNode
     name = 'role chain'
     xmlname = 'role-chain'
 
@@ -95,7 +95,7 @@ class RoleChainNode(HexagonNode):
         :param edge: the edge to be added.
         """
         super().addEdge(edge)
-        if edge.isType(ItemType.InputEdge) and edge.target is self:
+        if edge.isItem(Item.InputEdge) and edge.target is self:
             self.inputs.sanitize(lambda x: x in {e.id for e in self.edges if e.target is self})
             self.inputs.append(edge.id)
             edge.updateEdge()
@@ -110,7 +110,7 @@ class RoleChainNode(HexagonNode):
         if self.edges:
             from eddy.items import ComplementNode, RoleInverseNode
             switch = {ComplementNode, RoleChainNode, RoleInverseNode}
-            if len([e for e in self.edges if e.isType(ItemType.InputEdge) and e.target is self]) > 1:
+            if len([e for e in self.edges if e.isItem(Item.InputEdge) and e.target is self]) > 1:
                 switch = {RoleChainNode}
             for action in scene.mainwindow.actionsSwitchHexagonNode:
                 action.setVisible(action.data() in switch)

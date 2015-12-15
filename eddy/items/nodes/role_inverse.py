@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
-from eddy.datatypes import Font, ItemType, Identity
+from eddy.datatypes import Font, Item, Identity
 from eddy.items.nodes.common.hexagon import HexagonNode
 from eddy.items.nodes.common.label import Label
 
@@ -45,7 +45,7 @@ class RoleInverseNode(HexagonNode):
     This class implements the 'Role Inverse' node.
     """
     identities = {Identity.Role}
-    itemtype = ItemType.RoleInverseNode
+    item = Item.RoleInverseNode
     name = 'role inverse'
     xmlname = 'role-inverse'
 

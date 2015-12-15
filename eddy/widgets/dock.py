@@ -491,8 +491,8 @@ class Palette(QWidget):
         button.setCheckable(True)
         button.setContentsMargins(0, 0, 0, 0)
         button.setProperty('item', item)
-        self.buttonById[item.itemtype] = button
-        self.buttonGroup.addButton(button, item.itemtype)
+        self.buttonById[item.item] = button
+        self.buttonGroup.addButton(button, item.item)
         self.mainLayout.addWidget(button, row, col)
         self.setFixedHeight(self.mainLayout.sizeHint().height() - 2 * self.mainLayout.rowCount())
 

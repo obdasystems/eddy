@@ -37,7 +37,7 @@ from math import sin, cos, pi as M_PI
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QColor, QPainterPath
 
-from eddy.datatypes import Font, ItemType
+from eddy.datatypes import Font, Item
 from eddy.functions import midpoint, angleP
 from eddy.items import LabelItem
 
@@ -46,7 +46,7 @@ class Label(LabelItem):
     """
     This class implements the label to be attached to the graph edges.
     """
-    itemtype = ItemType.LabelEdge
+    item = Item.LabelEdge
 
     def __init__(self, text='', centered=True, parent=None):
         """

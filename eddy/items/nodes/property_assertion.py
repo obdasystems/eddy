@@ -35,17 +35,17 @@
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QBrush
 
-from eddy.datatypes import DiagramMode, DistinctList, ItemType, Identity
+from eddy.datatypes import DiagramMode, DistinctList, Item, Identity
 from eddy.dialogs import OrderedInputNodePropertiesDialog
-from eddy.items.nodes.common.base import Node
+from eddy.items.nodes.common.base import AbstractNode
 
 
-class PropertyAssertionNode(Node):
+class PropertyAssertionNode(AbstractNode):
     """
     This class implements the 'Property Assertion' node.
     """
     identities = {Identity.Link}
-    itemtype = ItemType.PropertyAssertionNode
+    item = Item.PropertyAssertionNode
     minheight = 30
     minwidth = 52
     radius = 16
@@ -100,7 +100,7 @@ class PropertyAssertionNode(Node):
         :param edge: the edge to be added.
         """
         super().addEdge(edge)
-        if edge.isType(ItemType.InputEdge) and edge.target is self:
+        if edge.isItem(Item.InputEdge) and edge.target is self:
             self.inputs.sanitize(lambda x: x in {e.id for e in self.edges if e.target is self})
             self.inputs.append(edge.id)
             edge.updateEdge()
@@ -187,7 +187,7 @@ class PropertyAssertionNode(Node):
         Create a new item instance by parsing a Graphol document item entry.
         :param scene: the scene where the element will be inserted.
         :param E: the Graphol document element entry.
-        :rtype: Node
+        :rtype: AbstractNode
         """
         U = E.elementsByTagName('data:url').at(0).toElement()
         D = E.elementsByTagName('data:description').at(0).toElement()

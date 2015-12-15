@@ -40,12 +40,12 @@ from PyQt5.QtGui import QColor, QPen, QPainter, QBrush
 from PyQt5.QtWidgets import QMenu, QGraphicsItem
 
 from eddy.commands import CommandNodeRezize
-from eddy.datatypes import Color, DistinctList, DiagramMode, Identity, ItemType
+from eddy.datatypes import Color, DistinctList, DiagramMode, Identity, Item
 from eddy.dialogs import NodePropertiesDialog
-from eddy.items import Item
+from eddy.items import AbstractItem
 
 
-class Node(Item):
+class AbstractNode(AbstractItem):
     """
     Base class for all the diagram nodes.
     """
@@ -119,7 +119,7 @@ class Node(Item):
         Tells whether this node is a constructor node.
         :rtype: bool
         """
-        return ItemType.DomainRestrictionNode <= self.itemtype <= ItemType.PropertyAssertionNode
+        return Item.DomainRestrictionNode <= self.item <= Item.PropertyAssertionNode
 
     @property
     @abstractmethod
@@ -145,7 +145,7 @@ class Node(Item):
         Tells whether this node is an operator node.
         :rtype: bool
         """
-        return ItemType.UnionNode <= self.itemtype <= ItemType.PropertyAssertionNode
+        return Item.UnionNode <= self.item <= Item.PropertyAssertionNode
 
     @property
     def pen(self):
@@ -171,7 +171,7 @@ class Node(Item):
         Tells whether this node is a predicate node.
         :rtype: bool
         """
-        return ItemType.ConceptNode <= self.itemtype <= ItemType.ValueRestrictionNode
+        return Item.ConceptNode <= self.item <= Item.ValueRestrictionNode
 
     @property
     def resizable(self):
@@ -187,7 +187,7 @@ class Node(Item):
         Tells whether this node is a restriction node.
         :rtype: bool
         """
-        return ItemType.DomainRestrictionNode <= self.itemtype <= ItemType.RangeRestrictionNode
+        return Item.DomainRestrictionNode <= self.item <= Item.RangeRestrictionNode
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -353,7 +353,7 @@ class Node(Item):
         Create a new item instance by parsing a Graphol document item entry.
         :param scene: the scene where the element will be inserted.
         :param E: the Graphol document element entry.
-        :rtype: Node
+        :rtype: AbstractNode
         """
         pass
 
@@ -506,7 +506,7 @@ class Node(Item):
         pass
 
 
-class ResizableNode(Node):
+class AbstractResizableNode(AbstractNode):
     """
     Base class for all the diagram resizable nodes.
     """

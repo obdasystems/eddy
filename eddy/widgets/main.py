@@ -58,7 +58,7 @@ from eddy.dialogs import AboutDialog, CardinalityRestrictionForm, RenameForm
 from eddy.dialogs import OpenFileDialog, PreferencesDialog, SaveFileDialog, ScenePropertiesDialog
 from eddy.exceptions import ParseError
 from eddy.functions import connect, disconnect, getPath, make_colored_icon, make_shaded_icon
-from eddy.items import ItemType, __mapping__ as mapping
+from eddy.items import Item, __mapping__ as mapping
 from eddy.items import UnionNode, EnumerationNode, ComplementNode, RoleChainNode, IntersectionNode
 from eddy.items import RoleInverseNode, DisjointUnionNode, DatatypeRestrictionNode
 from eddy.utils import Clipboard
@@ -689,7 +689,7 @@ class MainWindow(QMainWindow):
             for selected in scene.selectedNodes():
                 zValue = 0
                 colliding = selected.collidingItems()
-                for item in filter(lambda x: not x.isType(ItemType.LabelNode, ItemType.LabelEdge), colliding):
+                for item in filter(lambda x: not x.isItem(Item.LabelNode, Item.LabelEdge), colliding):
                     if item.zValue() >= zValue:
                         zValue = item.zValue() + 0.2
                 if zValue != selected.zValue():
@@ -704,8 +704,8 @@ class MainWindow(QMainWindow):
         if scene:
             scene.setMode(DiagramMode.Idle)
             action = self.sender()
-            node = next(filter(lambda x: x.isType(ItemType.DomainRestrictionNode,
-                                                  ItemType.RangeRestrictionNode), scene.selectedNodes()), None)
+            node = next(filter(lambda x: x.isItem(Item.DomainRestrictionNode,
+                                                  Item.RangeRestrictionNode), scene.selectedNodes()), None)
             if node:
                 restriction = action.data()
                 if restriction == RestrictionType.cardinality:
@@ -726,9 +726,9 @@ class MainWindow(QMainWindow):
             scene.setMode(DiagramMode.Idle)
             action = self.sender()
             selected = scene.selectedNodes()
-            selected = [x for x in selected if x.isType(ItemType.AttributeNode, ItemType.ConceptNode,
-                                                        ItemType.IndividualNode, ItemType.RoleNode,
-                                                        ItemType.ValueDomainNode, ItemType.ValueRestrictionNode)]
+            selected = [x for x in selected if x.isItem(Item.AttributeNode, Item.ConceptNode,
+                                                        Item.IndividualNode, Item.RoleNode,
+                                                        Item.ValueDomainNode, Item.ValueRestrictionNode)]
             if selected:
                 scene.undostack.push(CommandNodeChangeBrush(scene, selected, action.data()))
 
@@ -741,7 +741,7 @@ class MainWindow(QMainWindow):
         if scene:
             scene.setMode(DiagramMode.Idle)
             action = self.sender()
-            node = next(filter(lambda x: x.isType(ItemType.ValueDomainNode), scene.selectedNodes()), None)
+            node = next(filter(lambda x: x.isItem(Item.ValueDomainNode), scene.selectedNodes()), None)
             if node:
                 scene.undostack.push(CommandNodeValueDomainSelectDatatype(scene, node, action.data()))
 
@@ -762,7 +762,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            node = next(filter(lambda x: x.isType(ItemType.RoleNode), scene.selectedNodes()), None)
+            node = next(filter(lambda x: x.isItem(Item.RoleNode), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
                 if action:
@@ -797,8 +797,8 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            args = ItemType.RoleNode, ItemType.AttributeNode
-            node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
+            args = Item.RoleNode, Item.AttributeNode
+            node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
                 items = scene.functionalAxiomComposition(node)
                 nodes = {x for x in items if x.node}
@@ -820,8 +820,8 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            args = ItemType.RoleNode, ItemType.AttributeNode
-            node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
+            args = Item.RoleNode, Item.AttributeNode
+            node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
                 items = scene.inverseFunctionalAxiomComposition(node)
                 nodes = {x for x in items if x.node}
@@ -843,7 +843,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            node = next(filter(lambda x: x.isType(ItemType.RoleNode), scene.selectedNodes()), None)
+            node = next(filter(lambda x: x.isItem(Item.RoleNode), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
                 if action:
@@ -878,8 +878,8 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            args = ItemType.RoleNode, ItemType.AttributeNode
-            node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
+            args = Item.RoleNode, Item.AttributeNode
+            node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
                 items = scene.propertyDomainAxiomComposition(node)
                 nodes = {x for x in items if x.node}
@@ -901,8 +901,8 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            args = ItemType.RoleNode, ItemType.AttributeNode
-            node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
+            args = Item.RoleNode, Item.AttributeNode
+            node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
                 items = scene.propertyRangeAxiomComposition(node)
                 nodes = {x for x in items if x.node}
@@ -924,7 +924,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            node = next(filter(lambda x: x.isType(ItemType.RoleNode), scene.selectedNodes()), None)
+            node = next(filter(lambda x: x.isItem(Item.RoleNode), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
                 if action:
@@ -959,7 +959,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            node = next(filter(lambda x: x.isType(ItemType.RoleNode), scene.selectedNodes()), None)
+            node = next(filter(lambda x: x.isItem(Item.RoleNode), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
                 if action:
@@ -994,7 +994,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            node = next(filter(lambda x: x.isType(ItemType.RoleNode), scene.selectedNodes()), None)
+            node = next(filter(lambda x: x.isItem(Item.RoleNode), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
                 if action:
@@ -1117,7 +1117,7 @@ class MainWindow(QMainWindow):
         :param modifiers: keyboard modifiers held during item insertion.
         """
         if not modifiers & Qt.ControlModifier:
-            self.palette_.button(item.itemtype).setChecked(False)
+            self.palette_.button(item.item).setChecked(False)
             scene = self.mdi.activeScene
             if scene:
                 scene.setMode(DiagramMode.Idle)
@@ -1219,9 +1219,9 @@ class MainWindow(QMainWindow):
             if not button.isChecked():
                 scene.setMode(DiagramMode.Idle)
             else:
-                if ItemType.ConceptNode <= button_id < ItemType.InclusionEdge:
+                if Item.ConceptNode <= button_id < Item.InclusionEdge:
                     scene.setMode(DiagramMode.NodeInsert, button.property('item'))
-                elif ItemType.InclusionEdge <= button_id <= ItemType.InstanceOfEdge:
+                elif Item.InclusionEdge <= button_id <= Item.InstanceOfEdge:
                     scene.setMode(DiagramMode.EdgeInsert, button.property('item'))
 
     @pyqtSlot()
@@ -1250,11 +1250,11 @@ class MainWindow(QMainWindow):
         if scene:
 
             scene.setMode(DiagramMode.Idle)
-            args = ItemType.ConceptNode, ItemType.RoleNode, \
-                   ItemType.AttributeNode, ItemType.IndividualNode, \
-                   ItemType.ValueRestrictionNode
+            args = Item.ConceptNode, Item.RoleNode, \
+                   Item.AttributeNode, Item.IndividualNode, \
+                   Item.ValueRestrictionNode
 
-            node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
+            node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
                 scene.undostack.push(CommandNodeChangeBrush(scene, scene.nodesByLabel[node.labelText()], action.data()))
@@ -1268,11 +1268,11 @@ class MainWindow(QMainWindow):
         if scene:
 
             scene.setMode(DiagramMode.Idle)
-            args = ItemType.ConceptNode, ItemType.RoleNode, \
-                   ItemType.AttributeNode, ItemType.IndividualNode, \
-                   ItemType.ValueRestrictionNode
+            args = Item.ConceptNode, Item.RoleNode, \
+                   Item.AttributeNode, Item.IndividualNode, \
+                   Item.ValueRestrictionNode
 
-            node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
+            node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
 
                 form = RenameForm(node, self)
@@ -1317,12 +1317,12 @@ class MainWindow(QMainWindow):
                 clip = not self.clipboard.empty()
                 edge = len(edges) != 0
                 node = len(nodes) != 0
-                pred = next(filter(lambda x: x.isType(ItemType.AttributeNode,
-                                                      ItemType.ConceptNode,
-                                                      ItemType.IndividualNode,
-                                                      ItemType.RoleNode,
-                                                      ItemType.ValueDomainNode,
-                                                      ItemType.ValueRestrictionNode), nodes), None) is not None
+                pred = next(filter(lambda x: x.isItem(Item.AttributeNode,
+                                                      Item.ConceptNode,
+                                                      Item.IndividualNode,
+                                                      Item.RoleNode,
+                                                      Item.ValueDomainNode,
+                                                      Item.ValueRestrictionNode), nodes), None) is not None
 
         self.actionBringToFront.setEnabled(node)
         self.actionCloseActiveSubWindow.setEnabled(wind)
@@ -1433,7 +1433,7 @@ class MainWindow(QMainWindow):
             for selected in scene.selectedNodes():
                 zValue = 0
                 colliding = selected.collidingItems()
-                for item in filter(lambda x: not x.isType(ItemType.LabelNode, ItemType.LabelEdge), colliding):
+                for item in filter(lambda x: not x.isItem(Item.LabelNode, Item.LabelEdge), colliding):
                     if item.zValue() <= zValue:
                         zValue = item.zValue() - 0.2
                 if zValue != selected.zValue():
@@ -1448,8 +1448,8 @@ class MainWindow(QMainWindow):
         if scene:
             scene.setMode(DiagramMode.Idle)
             action = self.sender()
-            args = ItemType.ConceptNode, ItemType.RoleNode, ItemType.AttributeNode, ItemType.ValueDomainNode
-            node = next(filter(lambda x: x.isType(*args), scene.selectedNodes()), None)
+            args = Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.ValueDomainNode
+            node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
                 special = action.data() if node.special is not action.data() else None
                 scene.undostack.push(CommandNodeSetSpecial(scene, node, special))
@@ -1521,7 +1521,7 @@ class MainWindow(QMainWindow):
             scene.setMode(DiagramMode.Idle)
             action = self.sender()
             selected = scene.selectedNodes()
-            node = next(filter(lambda x: ItemType.UnionNode <= x.itemtype <= ItemType.DisjointUnionNode, selected), None)
+            node = next(filter(lambda x: Item.UnionNode <= x.item <= Item.DisjointUnionNode, selected), None)
             if node:
                 clazz = action.data()
                 if not isinstance(node, clazz):
@@ -1537,7 +1537,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            selected = [item for item in scene.selectedEdges() if item.isType(ItemType.InclusionEdge)]
+            selected = [item for item in scene.selectedEdges() if item.isItem(Item.InclusionEdge)]
             if selected:
                 func = sum(edge.complete for edge in selected) <= len(selected) / 2
                 data = {edge: {'from': edge.complete, 'to': func} for edge in selected}
@@ -1551,7 +1551,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            selected = [item for item in scene.selectedEdges() if item.isType(ItemType.InputEdge)]
+            selected = [item for item in scene.selectedEdges() if item.isItem(Item.InputEdge)]
             if selected:
                 func = sum(edge.functional for edge in selected) <= len(selected) / 2
                 data = {edge: {'from': edge.functional, 'to': func} for edge in selected}

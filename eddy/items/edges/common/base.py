@@ -37,14 +37,14 @@ from abc import ABCMeta, abstractmethod
 from eddy.commands import CommandEdgeBreakpointAdd, CommandEdgeBreakpointMove, CommandEdgeAnchorMove
 from eddy.datatypes import DiagramMode
 from eddy.functions import distanceP, distanceL
-from eddy.items import Item
+from eddy.items import AbstractItem
 
 from PyQt5.QtCore import Qt, QPointF, QLineF, QRectF
 from PyQt5.QtGui import QColor, QPen, QPolygonF, QPainterPath
 from PyQt5.QtWidgets import QGraphicsItem, QMenu
 
 
-class Edge(Item):
+class AbstractEdge(AbstractItem):
     """
     Base class for all the diagram edges.
     """

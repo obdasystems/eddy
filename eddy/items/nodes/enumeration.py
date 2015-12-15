@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
-from eddy.datatypes import Font, ItemType, Identity
+from eddy.datatypes import Font, Item, Identity
 from eddy.functions import identify
 from eddy.items.nodes.common.hexagon import HexagonNode
 from eddy.items.nodes.common.label import Label
@@ -46,7 +46,7 @@ class EnumerationNode(HexagonNode):
     This class implements the 'Enumeration' node.
     """
     identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
-    itemtype = ItemType.EnumerationNode
+    item = Item.EnumerationNode
     name = 'enumeration'
     xmlname = 'enumeration'
 
@@ -109,12 +109,12 @@ class EnumerationNode(HexagonNode):
         scene = self.scene()
         if self.edges:
 
-            if [e for e in self.edges if e.isType(ItemType.InputEdge) and e.target is self]:
+            if [e for e in self.edges if e.isItem(Item.InputEdge) and e.target is self]:
                 # If we have input edges targeting this node keep only the Enumeration action active: individuals can
                 # be connected only to Enumeration nodes and Link, so switching to another operator would be an error.
                 for action in scene.mainwindow.actionsSwitchHexagonNode:
                     action.setVisible(action.data() is EnumerationNode)
-            elif [e for e in self.edges if e.isType(ItemType.InclusionEdge)]:
+            elif [e for e in self.edges if e.isItem(Item.InclusionEdge)]:
                 # We have inclusion edges attached to this edge but no input => allow switching to
                 # operators that can be identified using the identities declared by this very node.
                 from eddy.items import DisjointUnionNode, IntersectionNode, UnionNode

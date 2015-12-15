@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
-from eddy.datatypes import Font, Identity, ItemType
+from eddy.datatypes import Font, Identity, Item
 from eddy.functions import identify
 from eddy.items.nodes.common.hexagon import HexagonNode
 from eddy.items.nodes.common.label import Label
@@ -46,7 +46,7 @@ class ComplementNode(HexagonNode):
     This class implements the 'Complement' node.
     """
     identities = {Identity.Concept, Identity.Role, Identity.DataRange, Identity.Neutral}
-    itemtype = ItemType.ComplementNode
+    item = Item.ComplementNode
     name = 'complement'
     xmlname = 'complement'
 

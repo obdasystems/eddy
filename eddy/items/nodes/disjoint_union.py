@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
-from eddy.datatypes import ItemType, Identity
+from eddy.datatypes import Item, Identity
 from eddy.functions import identify
 from eddy.items.nodes.common.hexagon import HexagonNode
 
@@ -45,7 +45,7 @@ class DisjointUnionNode(HexagonNode):
     This class implements the 'Disjoint Union' node.
     """
     identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
-    itemtype = ItemType.DisjointUnionNode
+    item = Item.DisjointUnionNode
     name = 'disjoint union'
     xmlname = 'disjoint-union'
 

@@ -38,7 +38,7 @@ from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtTest import QTest
 
 from eddy.commands import CommandNodeLabelEdit
-from eddy.datatypes import ItemType, DiagramMode, DistinctList
+from eddy.datatypes import Item, DiagramMode, DistinctList
 from eddy.items import InclusionEdge
 
 from tests import EddyTestCase
@@ -69,7 +69,7 @@ class Test_DiagramScene(EddyTestCase):
 
     def test_insert_single_node(self):
         # GIVEN
-        button = self.mainwindow.palette_.button(ItemType.ConceptNode)
+        button = self.mainwindow.palette_.button(Item.ConceptNode)
         # WHEN
         QTest.mouseClick(button, Qt.LeftButton)
         self.assertTrue(button.isChecked())
@@ -88,7 +88,7 @@ class Test_DiagramScene(EddyTestCase):
 
     def test_insert_multiple_nodes(self):
         # GIVEN
-        button = self.mainwindow.palette_.button(ItemType.ConceptNode)
+        button = self.mainwindow.palette_.button(Item.ConceptNode)
         # WHEN
         QTest.mouseClick(button, Qt.LeftButton)
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, QPoint(0, 100))
@@ -116,7 +116,7 @@ class Test_DiagramScene(EddyTestCase):
 
     def test_insert_single_edge_with_endpoint(self):
         # GIVEN
-        button = self.mainwindow.palette_.button(ItemType.InclusionEdge)
+        button = self.mainwindow.palette_.button(Item.InclusionEdge)
         self.createStubDiagram1()
         # WHEN
         QTest.mouseClick(button, Qt.LeftButton)
@@ -141,7 +141,7 @@ class Test_DiagramScene(EddyTestCase):
 
     def test_insert_single_edge_with_no_endpoint(self):
         # GIVEN
-        button = self.mainwindow.palette_.button(ItemType.InclusionEdge)
+        button = self.mainwindow.palette_.button(Item.InclusionEdge)
         self.createStubDiagram1()
         # WHEN
         QTest.mouseClick(button, Qt.LeftButton)
@@ -163,7 +163,7 @@ class Test_DiagramScene(EddyTestCase):
 
     def test_insert_multiple_edges_with_endpoint(self):
         # GIVEN
-        button = self.mainwindow.palette_.button(ItemType.InclusionEdge)
+        button = self.mainwindow.palette_.button(Item.InclusionEdge)
         self.createStubDiagram1()
         # WHEN
         QTest.mouseClick(button, Qt.LeftButton)
@@ -493,7 +493,7 @@ class Test_DiagramScene(EddyTestCase):
         Create a stub diagram to be used in test cases.
         The diagram is composed of 4 Concept nodes.
         """
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
+        QTest.mouseClick(self.mainwindow.palette_.button(Item.ConceptNode), Qt.LeftButton)
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -200))) # n0
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n1
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, +200))) # n2
@@ -508,14 +508,14 @@ class Test_DiagramScene(EddyTestCase):
         Create a stub diagram to be used in test cases.
         The diagram is composed of 4 Concept nodes connected using 4 Inclusion edges.
         """
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
+        QTest.mouseClick(self.mainwindow.palette_.button(Item.ConceptNode), Qt.LeftButton)
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -200))) # n0
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n1
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, +200))) # n2
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, +200))) # n3
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.InclusionEdge), Qt.LeftButton)
+        QTest.mouseClick(self.mainwindow.palette_.button(Item.InclusionEdge), Qt.LeftButton)
         QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -200)))
         QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n0 -> n1
         QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -200)))
@@ -534,9 +534,9 @@ class Test_DiagramScene(EddyTestCase):
         Create a stub diagram to be used in test cases.
         The diagram is composed of a Role Node and an attribute Node.
         """
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.RoleNode), Qt.LeftButton)
+        QTest.mouseClick(self.mainwindow.palette_.button(Item.RoleNode), Qt.LeftButton)
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, self.mainview.mapFromScene(QPoint(-200, -200))) # n0
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.AttributeNode), Qt.LeftButton)
+        QTest.mouseClick(self.mainwindow.palette_.button(Item.AttributeNode), Qt.LeftButton)
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n1
 
         self.scene.clearSelection()
@@ -547,17 +547,17 @@ class Test_DiagramScene(EddyTestCase):
         Create a stub diagram to be used in test cases.
         The diagram is composed of 4 Concept nodes connected to an Intersection node using 4 Input edges.
         """
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.ConceptNode), Qt.LeftButton)
+        QTest.mouseClick(self.mainwindow.palette_.button(Item.ConceptNode), Qt.LeftButton)
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -200))) # n0
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200))) # n1
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, +200))) # n2
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, +200))) # n3
         QTest.keyRelease(self.mainview.viewport(), Qt.Key_Control)
 
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.IntersectionNode), Qt.LeftButton)
+        QTest.mouseClick(self.mainwindow.palette_.button(Item.IntersectionNode), Qt.LeftButton)
         QTest.mouseClick(self.mainview.viewport(), Qt.LeftButton, Qt.NoModifier, self.mainview.mapFromScene(QPoint(0, 0))) # n4
 
-        QTest.mouseClick(self.mainwindow.palette_.button(ItemType.InputEdge), Qt.LeftButton)
+        QTest.mouseClick(self.mainwindow.palette_.button(Item.InputEdge), Qt.LeftButton)
         QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(-200, -200)))
         QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(0, 0))) # n0 -> n4
         QTest.mousePress(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, -200)))

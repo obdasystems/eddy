@@ -34,7 +34,7 @@
 
 from PyQt5.QtWidgets import QUndoCommand
 
-from eddy.datatypes import ItemType
+from eddy.datatypes import Item
 
 
 class CommandEdgeAdd(QUndoCommand):
@@ -67,11 +67,11 @@ class CommandEdgeAdd(QUndoCommand):
 
         self.target = self.edge.target
 
-        if self.edge.isType(ItemType.InputEdge):
+        if self.edge.isItem(Item.InputEdge):
             # if we are adding an input edge targeting a role chain or a property
             # assertion node we need to save the new inputs order and compute the
             # old one by removing the current edge id from the input list.
-            if self.edge.target.isType(ItemType.RoleChainNode, ItemType.PropertyAssertionNode):
+            if self.edge.target.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
                 self.inputs2 = self.edge.target.inputs[:]
                 self.inputs1 = self.edge.target.inputs[:]
                 self.inputs1.remove(self.edge.id)
@@ -86,7 +86,7 @@ class CommandEdgeAdd(QUndoCommand):
             # remove the edge from the scene
             self.scene.addItem(self.edge)
             # switch the inputs
-            if self.target.isType(ItemType.RoleChainNode, ItemType.PropertyAssertionNode):
+            if self.target.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
                 self.target.inputs = self.inputs2[:]
             self.scene.updated.emit()
 
@@ -100,7 +100,7 @@ class CommandEdgeAdd(QUndoCommand):
             # remove the edge from the scene
             self.scene.removeItem(self.edge)
             # switch the inputs
-            if self.target.isType(ItemType.RoleChainNode, ItemType.PropertyAssertionNode):
+            if self.target.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
                 self.target.inputs = self.inputs1[:]
             self.scene.updated.emit()
 
@@ -329,17 +329,17 @@ class CommandEdgeSwap(QUndoCommand):
 
         # backup inputs order for role chain and property assertion
         self.inputs1 = {node: node.inputs[:] for edge in self.edges \
-                                                if edge.isType(ItemType.InputEdge) \
-                                                    for node in {edge.source, edge.target} \
-                                                        if node.isType(ItemType.RoleChainNode,
-                                                            ItemType.PropertyAssertionNode)}
+                        if edge.isItem(Item.InputEdge) \
+                        for node in {edge.source, edge.target} \
+                        if node.isItem(Item.RoleChainNode,
+                                       Item.PropertyAssertionNode)}
 
         # exec dict comprehension again since we need a copy of the order and not the reference
         self.inputs2 = {node: node.inputs[:] for edge in self.edges \
-                                                if edge.isType(ItemType.InputEdge) \
-                                                    for node in {edge.source, edge.target} \
-                                                        if node.isType(ItemType.RoleChainNode,
-                                                            ItemType.PropertyAssertionNode)}
+                        if edge.isItem(Item.InputEdge) \
+                        for node in {edge.source, edge.target} \
+                        if node.isItem(Item.RoleChainNode,
+                                       Item.PropertyAssertionNode)}
 
         for edge in self.edges:
             if edge.target in self.inputs2:

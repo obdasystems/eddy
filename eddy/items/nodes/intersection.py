@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
-from eddy.datatypes import Font, ItemType, Identity
+from eddy.datatypes import Font, Item, Identity
 from eddy.functions import identify
 from eddy.items.nodes.common.hexagon import HexagonNode
 from eddy.items.nodes.common.label import Label
@@ -46,7 +46,7 @@ class IntersectionNode(HexagonNode):
     This class implements the 'Intersection' node.
     """
     identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
-    itemtype = ItemType.IntersectionNode
+    item = Item.IntersectionNode
     name = 'intersection'
     xmlname = 'intersection'
 

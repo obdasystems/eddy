@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
-from eddy.datatypes import Font, ItemType, Identity
+from eddy.datatypes import Font, Item, Identity
 from eddy.items.nodes.common.hexagon import HexagonNode
 from eddy.items.nodes.common.label import Label
 
@@ -45,7 +45,7 @@ class DatatypeRestrictionNode(HexagonNode):
     This class implements the 'Datatype Restriction' node.
     """
     identities = {Identity.DataRange}
-    itemtype = ItemType.DatatypeRestrictionNode
+    item = Item.DatatypeRestrictionNode
     name = 'datatype restriction'
     xmlname = 'datatype-restriction'
 

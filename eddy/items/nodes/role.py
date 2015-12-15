@@ -35,14 +35,14 @@
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPixmap, QPainter, QPen, QColor
 
-from eddy.datatypes import Font, ItemType, RestrictionType, SpecialType, DiagramMode, Identity
+from eddy.datatypes import Font, Item, RestrictionType, SpecialType, DiagramMode, Identity
 from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.functions import snapF
-from eddy.items.nodes.common.base import ResizableNode
+from eddy.items.nodes.common.base import AbstractResizableNode
 from eddy.items.nodes.common.label import Label
 
 
-class RoleNode(ResizableNode):
+class RoleNode(AbstractResizableNode):
     """
     This class implements the 'Role' node.
     """
@@ -53,7 +53,7 @@ class RoleNode(ResizableNode):
     indexE = 4
 
     identities = {Identity.Role}
-    itemtype = ItemType.RoleNode
+    item = Item.RoleNode
     minheight = 50
     minwidth = 70
     name = 'role'
@@ -126,15 +126,15 @@ class RoleNode(ResizableNode):
         :rtype: bool
         """
         for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
+            if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
-                    e1.target.isType(ItemType.RoleInverseNode):
+                    e1.target.isItem(Item.RoleInverseNode):
                 for e2 in e1.target.edges:
-                    if e2.isType(ItemType.InputEdge) and \
+                    if e2.isItem(Item.InputEdge) and \
                         e2.source is e1.target and \
-                            e2.target.isType(ItemType.ComplementNode):
+                            e2.target.isItem(Item.ComplementNode):
                         for e3 in e2.target.edges:
-                            if e3.isType(ItemType.InclusionEdge) and \
+                            if e3.isItem(Item.InclusionEdge) and \
                                 e3.target is e2.target and \
                                     e3.source is self:
                                 return True
@@ -149,19 +149,19 @@ class RoleNode(ResizableNode):
         paths = set()
         for e1 in self.edges:
             path = set()
-            if e1.isType(ItemType.InputEdge) and \
+            if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
-                    e1.target.isType(ItemType.RoleInverseNode) and \
+                    e1.target.isItem(Item.RoleInverseNode) and \
                         all(x not in paths for x in {e1, e1.target}):
                 path |= {e1, e1.target}
                 for e2 in e1.target.edges:
-                    if e2.isType(ItemType.InputEdge) and \
+                    if e2.isItem(Item.InputEdge) and \
                         e2.source is e1.target and \
-                            e2.target.isType(ItemType.ComplementNode) and \
+                            e2.target.isItem(Item.ComplementNode) and \
                                 all(x not in paths for x in {e2, e2.target}):
                         path |= {e2, e2.target}
                         for e3 in e2.target.edges:
-                            if e3.isType(ItemType.InclusionEdge) and \
+                            if e3.isItem(Item.InclusionEdge) and \
                                 e3.target is e2.target and \
                                     e3.source is self and \
                                         e3 not in paths:
@@ -175,16 +175,16 @@ class RoleNode(ResizableNode):
         :rtype: bool
         """
         for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
+            if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
-                    e1.target.isType(ItemType.DomainRestrictionNode) and \
+                    e1.target.isItem(Item.DomainRestrictionNode) and \
                         e1.target.restriction_type is RestrictionType.self:
                 for e2 in e1.target.edges:
-                    if e2.isType(ItemType.InputEdge) and \
+                    if e2.isItem(Item.InputEdge) and \
                         e2.source is e1.target and \
-                            e2.target.isType(ItemType.ComplementNode):
+                            e2.target.isItem(Item.ComplementNode):
                         for e3 in e2.target.edges:
-                            if e3.source.isType(ItemType.ConceptNode) and \
+                            if e3.source.isItem(Item.ConceptNode) and \
                                 e3.source.special is SpecialType.TOP and \
                                     e3.target is e2.target:
                                 return True
@@ -199,20 +199,20 @@ class RoleNode(ResizableNode):
         paths = set()
         for e1 in self.edges:
             path = set()
-            if e1.isType(ItemType.InputEdge) and \
+            if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
-                    e1.target.isType(ItemType.DomainRestrictionNode) and \
+                    e1.target.isItem(Item.DomainRestrictionNode) and \
                         e1.target.restriction_type is RestrictionType.self and \
                             all(x not in paths for x in {e1, e1.target}):
                 path |= {e1, e1.target}
                 for e2 in e1.target.edges:
-                    if e2.isType(ItemType.InputEdge) and \
+                    if e2.isItem(Item.InputEdge) and \
                         e2.source is e1.target and \
-                            e2.target.isType(ItemType.ComplementNode) and \
+                            e2.target.isItem(Item.ComplementNode) and \
                                 all(x not in paths for x in {e2, e2.target}):
                         path |= {e2, e2.target}
                         for e3 in e2.target.edges:
-                            if e3.source.isType(ItemType.ConceptNode) and \
+                            if e3.source.isItem(Item.ConceptNode) and \
                                 e3.source.special is SpecialType.TOP and \
                                     e3.target is e2.target and \
                                         all(x not in paths for x in {e3, e3.source}):
@@ -226,12 +226,12 @@ class RoleNode(ResizableNode):
         :rtype: bool
         """
         for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
+            if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
-                    e1.target.isType(ItemType.DomainRestrictionNode) and \
+                    e1.target.isItem(Item.DomainRestrictionNode) and \
                         e1.target.restriction_type is RestrictionType.self:
                 for e2 in e1.target.edges:
-                    if e2.source.isType(ItemType.ConceptNode) and \
+                    if e2.source.isItem(Item.ConceptNode) and \
                         e2.source.special is SpecialType.TOP and \
                             e2.target is e1.target:
                         return True
@@ -246,14 +246,14 @@ class RoleNode(ResizableNode):
         paths = set()
         for e1 in self.edges:
             path = set()
-            if e1.isType(ItemType.InputEdge) and \
+            if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
-                    e1.target.isType(ItemType.DomainRestrictionNode) and \
+                    e1.target.isItem(Item.DomainRestrictionNode) and \
                         e1.target.restriction_type is RestrictionType.self and \
                             all(x not in paths for x in {e1, e1.target}):
                 path |= {e1, e1.target}
                 for e2 in e1.target.edges:
-                    if e2.source.isType(ItemType.ConceptNode) and \
+                    if e2.source.isItem(Item.ConceptNode) and \
                         e2.source.special is SpecialType.TOP and \
                             e2.target is e1.target and \
                                 all(x not in paths for x in {e2, e2.source}):
@@ -267,11 +267,11 @@ class RoleNode(ResizableNode):
         :rtype: bool
         """
         for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
+            if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
-                    e1.target.isType(ItemType.RoleInverseNode):
+                    e1.target.isItem(Item.RoleInverseNode):
                 for e2 in e1.target.edges:
-                    if e2.isType(ItemType.InclusionEdge) and \
+                    if e2.isItem(Item.InclusionEdge) and \
                         e2.target is e1.target and \
                             e2.source is self:
                         return True
@@ -286,13 +286,13 @@ class RoleNode(ResizableNode):
         paths = set()
         for e1 in self.edges:
             path = set()
-            if e1.isType(ItemType.InputEdge) and \
+            if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
-                    e1.target.isType(ItemType.RoleInverseNode) and \
+                    e1.target.isItem(Item.RoleInverseNode) and \
                         all(x not in paths for x in {e1, e1.target}):
                 path |= {e1, e1.target}
                 for e2 in e1.target.edges:
-                    if e2.isType(ItemType.InclusionEdge) and \
+                    if e2.isItem(Item.InclusionEdge) and \
                         e2.target is e1.target and \
                             e2.source is self and \
                                 e2 not in paths:
@@ -306,15 +306,15 @@ class RoleNode(ResizableNode):
         :rtype: bool
         """
         for e1 in self.edges:
-            if e1.isType(ItemType.InputEdge) and \
+            if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
-                    e1.target.isType(ItemType.RoleChainNode):
+                    e1.target.isItem(Item.RoleChainNode):
                 for e2 in e1.target.edges:
-                    if e2.isType(ItemType.InputEdge) and \
+                    if e2.isItem(Item.InputEdge) and \
                         e2.target is e1.target and \
                             e2 is not e1 and e2.source is self:
                         for e3 in e2.source.edges:
-                            if e3.isType(ItemType.InclusionEdge) and \
+                            if e3.isItem(Item.InclusionEdge) and \
                                 e3.source is e1.target and \
                                     e3.target is e1.source:
                                         return True
@@ -329,20 +329,20 @@ class RoleNode(ResizableNode):
         paths = set()
         for e1 in self.edges:
             path = set()
-            if e1.isType(ItemType.InputEdge) and \
+            if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
-                    e1.target.isType(ItemType.RoleChainNode) and \
+                    e1.target.isItem(Item.RoleChainNode) and \
                         all(x not in paths for x in {e1, e1.target}):
                 path |= {e1, e1.target}
                 for e2 in e1.target.edges:
-                    if e2.isType(ItemType.InputEdge) and \
+                    if e2.isItem(Item.InputEdge) and \
                         e2.target is e1.target and \
                             e2 is not e1 and \
                                 e2.source is self and \
                                     e2 not in paths:
                         path |= {e2}
                         for e3 in e2.source.edges:
-                            if e3.isType(ItemType.InclusionEdge) and \
+                            if e3.isItem(Item.InclusionEdge) and \
                                 e3.source is e1.target and \
                                     e3.target is e1.source and \
                                         e3 not in paths:

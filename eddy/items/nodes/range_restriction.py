@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
-from eddy.datatypes import Font, ItemType, Identity
+from eddy.datatypes import Font, Item, Identity
 from eddy.functions import identify
 from eddy.items.nodes.common.square import SquaredNode
 
@@ -45,7 +45,7 @@ class RangeRestrictionNode(SquaredNode):
     This class implements the 'Range Restriction' node.
     """
     identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
-    itemtype = ItemType.RangeRestrictionNode
+    item = Item.RangeRestrictionNode
     name = 'range restriction'
     xmlname = 'range-restriction'
 

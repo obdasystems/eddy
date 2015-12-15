@@ -37,14 +37,14 @@ import math
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap
 
-from eddy.datatypes import DiagramMode, Font, Identity, ItemType
+from eddy.datatypes import DiagramMode, Font, Identity, Item
 from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.functions import snapF, isQuoted
-from eddy.items.nodes.common.base import ResizableNode
+from eddy.items.nodes.common.base import AbstractResizableNode
 from eddy.items.nodes.common.label import Label
 
 
-class IndividualNode(ResizableNode):
+class IndividualNode(AbstractResizableNode):
     """
     This class implements the 'Individual' node.
     """
@@ -59,7 +59,7 @@ class IndividualNode(ResizableNode):
     indexEE = 8
 
     identities = {Identity.Individual, Identity.Literal}
-    itemtype = ItemType.IndividualNode
+    item = Item.IndividualNode
     minheight = 60
     minwidth = 60
     name = 'individual'

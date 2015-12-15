@@ -38,10 +38,10 @@ from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QPolygonF
 
 from eddy.datatypes import DiagramMode
-from eddy.items.nodes.common.base import Node
+from eddy.items.nodes.common.base import AbstractNode
 
 
-class HexagonNode(Node):
+class HexagonNode(AbstractNode):
     """
     This is the base class for all the Hexagon shaped nodes.
     """

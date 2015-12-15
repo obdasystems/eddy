@@ -38,7 +38,6 @@ import os
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
 
-from eddy.exceptions import ProgrammingError
 from eddy.regex import RE_QUOTE_FULL
 
 
@@ -51,7 +50,7 @@ def clamp(val, minval=None, maxval=None):
     :rtype: float
     """
     if minval is not None and maxval is not None and minval > maxval:
-        raise ProgrammingError('minval ({min}) MUST be lower than maxval ({max})'.format(min=minval, max=maxval))
+        raise ValueError('minval ({min}) MUST be lower than maxval ({max})'.format(min=minval, max=maxval))
     if minval is not None:
         val = max(val, minval)
     if maxval is not None:

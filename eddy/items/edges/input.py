@@ -38,19 +38,19 @@ from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
 from PyQt5.QtWidgets import QMenu
 
-from eddy.datatypes import DiagramMode, ItemType, Identity
-from eddy.items.edges.common.base import Edge
+from eddy.datatypes import DiagramMode, Item, Identity
+from eddy.items.edges.common.base import AbstractEdge
 from eddy.items.edges.common.label import Label
 
 
-class InputEdge(Edge):
+class InputEdge(AbstractEdge):
     """
     This class implements the Input edge.
     """
     headPen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     headBrush = QColor(252, 252, 252)
     headSize = 10
-    itemtype = ItemType.InputEdge
+    item = Item.InputEdge
     name = 'input'
     shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.CustomDashLine, Qt.RoundCap, Qt.RoundJoin)
     shapePen.setDashPattern([5, 5])
@@ -154,16 +154,16 @@ class InputEdge(Edge):
         #                                                                                                              #
         ################################################################################################################
 
-        if target.isType(ItemType.ComplementNode,
-                         ItemType.DisjointUnionNode,
-                         ItemType.IntersectionNode,
-                         ItemType.UnionNode):
+        if target.isItem(Item.ComplementNode,
+                         Item.DisjointUnionNode,
+                         Item.IntersectionNode,
+                         Item.UnionNode):
 
             if source.identity not in target.identities:
                 # Source node identity is not supported by this node despite the currently set identity.
                 return False
 
-            if source.isType(ItemType.ValueRestrictionNode):
+            if source.isItem(Item.ValueRestrictionNode):
                 # Exclude unsupported nodes despite identity matching.
                 return False
 
@@ -179,17 +179,17 @@ class InputEdge(Edge):
             #                                                                                                          #
             ############################################################################################################
 
-            if target.isType(ItemType.ComplementNode):
+            if target.isItem(Item.ComplementNode):
 
                 if len([e for e in target.edges \
-                    if e.isType(ItemType.InputEdge) and \
+                    if e.isItem(Item.InputEdge) and \
                         e.target is target and e is not self]) > 0:
                     # The Complement operator may have at most one node connected to it.
                     return False
 
-                if source.isType(ItemType.RoleNode, ItemType.RoleInverseNode) and \
+                if source.isItem(Item.RoleNode, Item.RoleInverseNode) and \
                     len([e for e in target.edges \
-                        if e.isType(ItemType.InputEdge) and \
+                        if e.isItem(Item.InputEdge) and \
                             e.source is target]) > 0:
                     # If the source of the node is a Role (ObjectPropertyExpression => chain is not included)
                     # check for the node not to have any outgoing Input edge: the only supported expression
@@ -203,9 +203,9 @@ class InputEdge(Edge):
         #                                                                                                              #
         ################################################################################################################
 
-        if target.isType(ItemType.EnumerationNode):
+        if target.isItem(Item.EnumerationNode):
 
-            if not source.isType(ItemType.IndividualNode):
+            if not source.isItem(Item.IndividualNode):
                 # Enumeration operator (oneOf) takes as inputs individuals or literals, both represented by the
                 # Individual node, and has the job of composing a set if individuals (either Concept or DataRange,
                 # but not both together).
@@ -229,11 +229,11 @@ class InputEdge(Edge):
         #                                                                                                              #
         ################################################################################################################
 
-        elif target.isType(ItemType.RoleInverseNode):
+        elif target.isItem(Item.RoleInverseNode):
 
             # OWL 2 syntax: http://www.w3.org/TR/owl2-syntax/#Inverse_Object_Properties
 
-            if not source.isType(ItemType.RoleNode):
+            if not source.isItem(Item.RoleNode):
                 # The Role Inverse operator takes as input a role and constructs its inverse by switching
                 # domain and range of the role. Assume to have a Role labelled 'is_owner_of' whose instances
                 # are {(o1,o2), (o1,o3), (o4,o5)}: connecting this Role in input to a Role Inverse node will
@@ -241,7 +241,7 @@ class InputEdge(Edge):
                 return False
 
             if len([e for e in target.edges \
-                if e.isType(ItemType.InputEdge) and \
+                if e.isItem(Item.InputEdge) and \
                      e.target is target and e is not self]) > 0:
                 # The Role Inverse operator may have at most one Role node connected to it: if we need to
                 # define multiple Role inverse we would need to use multiple Role Inverse operator nodes.
@@ -253,11 +253,11 @@ class InputEdge(Edge):
         #                                                                                                              #
         ################################################################################################################
 
-        elif target.isType(ItemType.RoleChainNode):
+        elif target.isItem(Item.RoleChainNode):
 
             # OWL 2 syntax: http://www.w3.org/TR/owl2-syntax/#Object_Subproperties
 
-            if not source.isType(ItemType.RoleNode, ItemType.RoleInverseNode):
+            if not source.isItem(Item.RoleNode, Item.RoleInverseNode):
                 # The Role Chain operator constructs a concatenation of roles. Assume to have 2 Role nodes
                 # defined as 'lives_in_region' and 'region_in_country': if {(o1, o2), (o3, o4)} is the
                 # instance of 'lives_in_region' and {(o2, o6)} is the instance of 'region_in_country', then
@@ -273,19 +273,19 @@ class InputEdge(Edge):
         #                                                                                                              #
         ################################################################################################################
 
-        elif target.isType(ItemType.DatatypeRestrictionNode):
+        elif target.isItem(Item.DatatypeRestrictionNode):
 
-            if not source.isType(ItemType.ValueDomainNode, ItemType.ValueRestrictionNode):
+            if not source.isItem(Item.ValueDomainNode, Item.ValueRestrictionNode):
                 # The DatatypeRestriction node is used to compose complex datatypes and
                 # accepts as inputs a Value-Domain node together with N Value-Restriction
                 # nodes to compose the OWL 2 equivalent DatatypeRestriction.
                 return False
 
-            if source.isType(ItemType.ValueDomainNode):
+            if source.isItem(Item.ValueDomainNode):
                 if len([e.source for e in target.edges \
-                    if e.isType(ItemType.InputEdge) and \
+                        if e.isItem(Item.InputEdge) and \
                         e.target is target and e is not self and \
-                            e.source.isType(ItemType.ValueDomainNode)]) > 0:
+                            e.source.isItem(Item.ValueDomainNode)]) > 0:
                     # The Value-Domain has already been attached to the DatatypeRestriction.
                     return False
 
@@ -295,17 +295,17 @@ class InputEdge(Edge):
         #                                                                                                              #
         ################################################################################################################
 
-        elif target.isType(ItemType.PropertyAssertionNode):
+        elif target.isItem(Item.PropertyAssertionNode):
 
             # OWL 2 syntax: http://www.w3.org/TR/owl2-syntax/#Anonymous_Individuals
 
-            if not source.isType(ItemType.IndividualNode):
+            if not source.isItem(Item.IndividualNode):
                 # Property Assertion operators accepts only Individual nodes as input: they are
                 # used to construct ObjectPropertyAssertion and DataPropertyAssertion axioms.
                 return False
 
             if len([e for e in target.edges \
-                if e.isType(ItemType.InputEdge) and \
+                if e.isItem(Item.InputEdge) and \
                     e.target is target and e is not self]) >= 2:
                 # At most 2 Individual nodes can be connected to a PropertyAssertion node. As an example
                 # we can construct ObjectPropertyAssertion(presiede M.Draghi BCE) where the individuals
@@ -316,7 +316,7 @@ class InputEdge(Edge):
             if source.identity is Identity.Literal and \
                     len([n for n in [e.other(target) \
                         for e in target.edges \
-                            if e.isType(ItemType.InputEdge) and \
+                            if e.isItem(Item.InputEdge) and \
                                 e.target is target and e is not self] if n.identity is Identity.Literal]) > 0:
                 # At most one Literal can be given as input (2 Individuals | 1 Individual + 1 Literal)
                 return False
@@ -324,21 +324,21 @@ class InputEdge(Edge):
             # See if the source we are connecting to the Link is consistent with the instanceOf expression
             # if there is such expression (else we do not care since we check this in the instanceOf edge.
             node = next(iter(e.other(target) for e in target.edges \
-                                if e.isType(ItemType.InstanceOfEdge) and \
-                                    e.source is target), None)
+                             if e.isItem(Item.InstanceOfEdge) and \
+                             e.source is target), None)
 
             if node:
 
-                if node.isType(ItemType.RoleNode, ItemType.RoleInverseNode):
+                if node.isItem(Item.RoleNode, Item.RoleInverseNode):
                     if source.identity is Identity.Literal:
                         # We are constructing an ObjectPropertyAssertion expression so we can't connect a Literal.
                         return False
 
-                if node.isType(ItemType.AttributeNode):
+                if node.isItem(Item.AttributeNode):
                     if source.identity is Identity.Individual and \
                         len([n for n in [e.other(target) \
                             for e in target.edges \
-                                if e.isType(ItemType.InputEdge) and \
+                                if e.isItem(Item.InputEdge) and \
                                     e.target is target and e is not self] if n.identity is Identity.Individual]) > 0:
                         # We are constructing a DataPropertyAssertion and so we can't have more than 1 Individual.
                         return False
@@ -349,9 +349,9 @@ class InputEdge(Edge):
         #                                                                                                              #
         ################################################################################################################
 
-        elif target.isType(ItemType.DomainRestrictionNode, ItemType.RangeRestrictionNode):
+        elif target.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode):
 
-            if not source.isType(ItemType.AttributeNode, ItemType.RoleNode, ItemType.RoleChainNode):
+            if not source.isItem(Item.AttributeNode, Item.RoleNode, Item.RoleChainNode):
                 # Domain and Range Restriction node takes as input a Role (which in OWL 2 is represented
                 # by ObjectPropertyExpression which excludes the RoleChain) or an Attribute node.
                 return False
@@ -362,13 +362,13 @@ class InputEdge(Edge):
             #                                                                                                          #
             ############################################################################################################
 
-            if target.isType(ItemType.RangeRestrictionNode):
+            if target.isItem(Item.RangeRestrictionNode):
 
                 if target.identity is not Identity.Neutral:
                     # If the identity of the target node has been already computed check for mismatch.
-                    if target.identity is Identity.Concept and source.isType(ItemType.AttributeNode) or \
-                        target.identity is Identity.DataRange and source.isType(ItemType.RoleNode,
-                                                                                ItemType.RoleChainNode):
+                    if target.identity is Identity.Concept and source.isItem(Item.AttributeNode) or \
+                        target.identity is Identity.DataRange and source.isItem(Item.RoleNode,
+                                                                                Item.RoleChainNode):
                         # Identity mismatch.
                         return False
 
@@ -379,7 +379,7 @@ class InputEdge(Edge):
         Update the edge label (both text and position).
         :param points: a list of points defining the edge of this label.
         """
-        if self.target and self.target.isType(ItemType.PropertyAssertionNode, ItemType.RoleChainNode):
+        if self.target and self.target.isItem(Item.PropertyAssertionNode, Item.RoleChainNode):
             self.label.setVisible(True)
             self.label.setText(str(self.target.inputs.index(self.id) + 1))
             self.label.updatePos(points)
@@ -398,7 +398,7 @@ class InputEdge(Edge):
         Create a new item instance by parsing a Graphol document item entry.
         :param scene: the scene where the element will be inserted.
         :param E: the Graphol document element entry.
-        :rtype: Edge
+        :rtype: AbstractEdge
         """
         points = []
 

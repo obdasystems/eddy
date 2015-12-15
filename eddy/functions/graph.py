@@ -34,7 +34,7 @@
 
 from collections import deque
 
-from eddy.datatypes import Identity, ItemType
+from eddy.datatypes import Identity, Item
 from eddy.functions.misc import partition
 
 
@@ -124,7 +124,7 @@ def identify(node):
     nodes which are specifying a "WEAK" identity.
     :type node: Node
     """
-    f1 = lambda x: x.isType(ItemType.InclusionEdge, ItemType.InputEdge)
+    f1 = lambda x: x.isItem(Item.InclusionEdge, Item.InputEdge)
     f2 = lambda x: Identity.Neutral in x.identities
 
     collection = bfs(source=node, filter_on_edges=f1, filter_on_visit=f2)
@@ -134,7 +134,7 @@ def identify(node):
 
     for node in weak:
 
-        if node.isType(ItemType.EnumerationNode):
+        if node.isItem(Item.EnumerationNode):
 
             # Enumeration nodes needs to be analyzed separately since they do not inherit an identity
             # from their inputs but they compute it according to the nodes source of the inputs (note
@@ -147,8 +147,8 @@ def identify(node):
             # among the ones specifying a WEAK identity, otherwise we treat is as if it were
             # a node specifying a STRONG identity => computed identity >>> inherited identity.
 
-            f3 = lambda x: x.isType(ItemType.InputEdge) and x.target is node
-            f4 = lambda x: x.isType(ItemType.IndividualNode)
+            f3 = lambda x: x.isItem(Item.InputEdge) and x.target is node
+            f4 = lambda x: x.isItem(Item.IndividualNode)
 
             individuals = [n for n in [e.other(node) for e in node.edges if f3(e)] if f4(n)]
             identity = [n.identity for n in individuals]
@@ -173,7 +173,7 @@ def identify(node):
             for i in individuals:
                 strong.discard(i)
 
-        elif node.isType(ItemType.RangeRestrictionNode):
+        elif node.isItem(Item.RangeRestrictionNode):
 
             # RangeRestriction nodes needs to be analyzed separately since they do not inherit an identity
             # from their inputs but they compute it according to the nodes source of the inputs.
@@ -185,7 +185,7 @@ def identify(node):
             # among the ones specifying a WEAK identity, otherwise we treat is as if it were
             # a node specifying a STRONG identity => computed identity >>> inherited identity.
 
-            f3 = lambda x: x.isType(ItemType.InputEdge) and x.target is node
+            f3 = lambda x: x.isItem(Item.InputEdge) and x.target is node
             f5 = lambda x: x.identity in {Identity.Role, Identity.Attribute} and Identity.Neutral not in x.identities
 
             mixed = [n for n in [e.other(node) for e in node.edges if f3(e)] if f5(n)]

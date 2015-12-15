@@ -36,7 +36,7 @@ from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QPolygonF
 from PyQt5.QtWidgets import QUndoCommand
 
-from eddy.datatypes import RestrictionType, DistinctList, ItemType
+from eddy.datatypes import RestrictionType, DistinctList, Item
 from eddy.functions import identify
 
 
@@ -307,9 +307,9 @@ class CommandNodeLabelEdit(QUndoCommand):
             self.scene.nodesByLabel[self.text2].append(self.node)
 
             # if the label belongs to an individual identify all the connected enumeration nodes
-            if self.node.isType(ItemType.IndividualNode):
-                f1 = lambda x: x.isType(ItemType.InputEdge) and x.source is self.node
-                f2 = lambda x: x.isType(ItemType.EnumerationNode)
+            if self.node.isItem(Item.IndividualNode):
+                f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
+                f2 = lambda x: x.isItem(Item.EnumerationNode)
                 for node in {n for n in [e.other(self.node) for e in self.node.edges if f1(e)] if f2(n)}:
                     identify(node)
 
@@ -333,9 +333,9 @@ class CommandNodeLabelEdit(QUndoCommand):
         self.scene.nodesByLabel[self.text1].append(self.node)
 
         # if the label belongs to an individual identify all the connected enumeration nodes
-        if self.node.isType(ItemType.IndividualNode):
-            f1 = lambda x: x.isType(ItemType.InputEdge) and x.source is self.node
-            f2 = lambda x: x.isType(ItemType.EnumerationNode)
+        if self.node.isItem(Item.IndividualNode):
+            f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
+            f2 = lambda x: x.isItem(Item.EnumerationNode)
             for node in {n for n in [e.other(self.node) for e in self.node.edges if f1(e)] if f2(n)}:
                 identify(node)
 
