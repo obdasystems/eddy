@@ -38,6 +38,7 @@ from math import sin, cos, radians, pi as M_PI
 
 from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
+from PyQt5.QtWidgets import QMenu
 
 from eddy.datatypes import Font, DiagramMode, Item, Identity
 from eddy.items.edges.common.base import AbstractEdge
@@ -64,6 +65,23 @@ class InstanceOfEdge(AbstractEdge):
     #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
+
+    def contextMenu(self, pos):
+        """
+        Returns the basic edge context menu.
+        :param pos: the position where the context menu has been requested.
+        :rtype: QMenu
+        """
+        menu = QMenu()
+        scene = self.scene()
+        breakpoint = self.breakpointAt(pos)
+        if breakpoint is not None:
+            action = scene.mainwindow.actionRemoveEdgeBreakpoint
+            action.setData((self, breakpoint))
+            menu.addAction(action)
+        else:
+            menu.addAction(scene.mainwindow.actionDelete)
+        return menu
 
     def copy(self, scene):
         """

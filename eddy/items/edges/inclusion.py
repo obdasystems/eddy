@@ -106,6 +106,7 @@ class InclusionEdge(AbstractEdge):
             menu.addAction(scene.mainwindow.actionSwapEdge)
             menu.addSeparator()
             menu.addAction(scene.mainwindow.actionToggleEdgeComplete)
+            scene.mainwindow.actionSwapEdge.setVisible(self.isValid(self.target, self.source))
             scene.mainwindow.actionToggleEdgeComplete.setChecked(self.complete)
         return menu
 
