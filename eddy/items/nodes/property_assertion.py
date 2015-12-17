@@ -64,7 +64,7 @@ class PropertyAssertionNode(AbstractNode):
         self.brush = QBrush(QColor(252, 252, 252))
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.inputs = inputs or DistinctList()
-        self.rect = self.createRect(self.minwidth, self.minheight)
+        self.polygon = self.createRect(self.minwidth, self.minheight)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -129,7 +129,7 @@ class PropertyAssertionNode(AbstractNode):
         Returns the height of the shape.
         :rtype: int
         """
-        return self.rect.height()
+        return self.polygon.height()
 
     def propertiesDialog(self):
         """
@@ -159,7 +159,7 @@ class PropertyAssertionNode(AbstractNode):
         Returns the width of the shape.
         :rtype: int
         """
-        return self.rect.width()
+        return self.polygon.width()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -256,7 +256,7 @@ class PropertyAssertionNode(AbstractNode):
         :rtype: QRectF
         """
         o = self.selectionOffset
-        return self.rect.adjusted(-o, -o, o, o)
+        return self.polygon.adjusted(-o, -o, o, o)
 
     def painterPath(self):
         """
@@ -264,7 +264,7 @@ class PropertyAssertionNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRoundedRect(self.rect, self.radius, self.radius)
+        path.addRoundedRect(self.polygon, self.radius, self.radius)
         return path
 
     def shape(self):
@@ -273,7 +273,7 @@ class PropertyAssertionNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRoundedRect(self.rect, self.radius, self.radius)
+        path.addRoundedRect(self.polygon, self.radius, self.radius)
         return path
 
     ####################################################################################################################
@@ -351,7 +351,7 @@ class PropertyAssertionNode(AbstractNode):
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(self.brush)
         painter.setPen(self.pen)
-        painter.drawRoundedRect(self.rect, self.radius, self.radius)
+        painter.drawRoundedRect(self.polygon, self.radius, self.radius)
 
     @classmethod
     def image(cls, **kwargs):

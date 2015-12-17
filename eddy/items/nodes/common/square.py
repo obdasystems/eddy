@@ -66,7 +66,7 @@ class SquaredNode(AbstractNode):
 
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
-        self.rect = self.createRect(20, 20)
+        self.polygon = self.createRect(20, 20)
         self.label = Label(self.restriction_type.label, centered=False, editable=False, parent=self)
         self.label.updatePos()
 
@@ -185,14 +185,14 @@ class SquaredNode(AbstractNode):
         Returns the height of the shape.
         :rtype: int
         """
-        return self.rect.height()
+        return self.polygon.height()
 
     def width(self):
         """
         Returns the width of the shape.
         :rtype: int
         """
-        return self.rect.width()
+        return self.polygon.width()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -298,7 +298,7 @@ class SquaredNode(AbstractNode):
         :rtype: QRectF
         """
         o = self.selectionOffset
-        return self.rect.adjusted(-o, -o, o, o)
+        return self.polygon.adjusted(-o, -o, o, o)
 
     def painterPath(self):
         """
@@ -306,7 +306,7 @@ class SquaredNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRect(self.rect)
+        path.addRect(self.polygon)
         return path
 
     def shape(self, *args, **kwargs):
@@ -315,7 +315,7 @@ class SquaredNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRect(self.rect)
+        path.addRect(self.polygon)
         return path
 
     ####################################################################################################################
@@ -412,4 +412,4 @@ class SquaredNode(AbstractNode):
 
         painter.setBrush(self.brush)
         painter.setPen(self.pen)
-        painter.drawRect(self.rect)
+        painter.drawRect(self.polygon)

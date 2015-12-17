@@ -64,7 +64,7 @@ class AttributeNode(AbstractNode):
 
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
-        self.rect = self.createRect(20, 20)
+        self.polygon = self.createRect(20, 20)
         self.label = Label(self.name, centered=False, editable=special is None, parent=self)
         self.label.updatePos()
 
@@ -167,7 +167,7 @@ class AttributeNode(AbstractNode):
         Returns the height of the shape.
         :rtype: int
         """
-        return self.rect.height()
+        return self.polygon.height()
 
     def propertiesDialog(self):
         """
@@ -180,7 +180,7 @@ class AttributeNode(AbstractNode):
         Returns the width of the shape.
         :rtype: int
         """
-        return self.rect.width()
+        return self.polygon.width()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -289,7 +289,7 @@ class AttributeNode(AbstractNode):
         :rtype: QRectF
         """
         o = self.selectionOffset
-        return self.rect.adjusted(-o, -o, o, o)
+        return self.polygon.adjusted(-o, -o, o, o)
 
     def painterPath(self):
         """
@@ -297,7 +297,7 @@ class AttributeNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addEllipse(self.rect)
+        path.addEllipse(self.polygon)
         return path
 
     def shape(self):
@@ -306,7 +306,7 @@ class AttributeNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addEllipse(self.rect)
+        path.addEllipse(self.polygon)
         return path
 
     ####################################################################################################################
@@ -384,7 +384,7 @@ class AttributeNode(AbstractNode):
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(self.brush)
         painter.setPen(self.pen)
-        painter.drawEllipse(self.rect)
+        painter.drawEllipse(self.polygon)
 
     @classmethod
     def image(cls, **kwargs):

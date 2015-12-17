@@ -68,7 +68,7 @@ class ConceptNode(AbstractResizableNode):
 
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
-        self.rect = self.createRect(max(width, self.minwidth), max(height, self.minheight))
+        self.polygon = self.createRect(max(width, self.minwidth), max(height, self.minheight))
         self.label = Label(self.name, movable=special is None, editable=special is None, parent=self)
         self.label.setText(self._special.value if self._special else self.label.text())
         self.updateHandlesPos()
@@ -174,7 +174,7 @@ class ConceptNode(AbstractResizableNode):
         Returns the height of the shape.
         :rtype: int
         """
-        return self.rect.height()
+        return self.polygon.height()
 
     def propertiesDialog(self):
         """
@@ -187,7 +187,7 @@ class ConceptNode(AbstractResizableNode):
         Returns the width of the shape.
         :rtype: int
         """
-        return self.rect.width()
+        return self.polygon.width()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -296,7 +296,7 @@ class ConceptNode(AbstractResizableNode):
         :rtype: QRectF
         """
         o = self.handleSize + self.handleSpace
-        return self.rect.adjusted(-o, -o, o, o)
+        return self.polygon.adjusted(-o, -o, o, o)
 
     def interactiveResize(self, mousePos):
         """
@@ -336,8 +336,8 @@ class ConceptNode(AbstractResizableNode):
                 diff.setY(diff.y() - minBoundingRectH + rect.height())
                 rect.setTop(rect.top() - minBoundingRectH + rect.height())
 
-            self.rect.setLeft(rect.left() + offset)
-            self.rect.setTop(rect.top() + offset)
+            self.polygon.setLeft(rect.left() + offset)
+            self.polygon.setTop(rect.top() + offset)
 
         elif self.handleSelected == self.handleTM:
 
@@ -352,7 +352,7 @@ class ConceptNode(AbstractResizableNode):
                 diff.setY(diff.y() - minBoundingRectH + rect.height())
                 rect.setTop(rect.top() - minBoundingRectH + rect.height())
 
-            self.rect.setTop(rect.top() + offset)
+            self.polygon.setTop(rect.top() + offset)
 
         elif self.handleSelected == self.handleTR:
 
@@ -375,8 +375,8 @@ class ConceptNode(AbstractResizableNode):
                 diff.setY(diff.y() - minBoundingRectH + rect.height())
                 rect.setTop(rect.top() - minBoundingRectH + rect.height())
 
-            self.rect.setRight(rect.right() - offset)
-            self.rect.setTop(rect.top() + offset)
+            self.polygon.setRight(rect.right() - offset)
+            self.polygon.setTop(rect.top() + offset)
 
         elif self.handleSelected == self.handleML:
 
@@ -391,7 +391,7 @@ class ConceptNode(AbstractResizableNode):
                 diff.setX(diff.x() - minBoundingRectW + rect.width())
                 rect.setLeft(rect.left() - minBoundingRectW + rect.width())
 
-            self.rect.setLeft(rect.left() + offset)
+            self.polygon.setLeft(rect.left() + offset)
 
         elif self.handleSelected == self.handleMR:
 
@@ -406,7 +406,7 @@ class ConceptNode(AbstractResizableNode):
                 diff.setX(diff.x() + minBoundingRectW - rect.width())
                 rect.setRight(rect.right() + minBoundingRectW - rect.width())
 
-            self.rect.setRight(rect.right() - offset)
+            self.polygon.setRight(rect.right() - offset)
 
         elif self.handleSelected == self.handleBL:
 
@@ -429,8 +429,8 @@ class ConceptNode(AbstractResizableNode):
                 diff.setY(diff.y() + minBoundingRectH - rect.height())
                 rect.setBottom(rect.bottom() + minBoundingRectH - rect.height())
 
-            self.rect.setLeft(rect.left() + offset)
-            self.rect.setBottom(rect.bottom() - offset)
+            self.polygon.setLeft(rect.left() + offset)
+            self.polygon.setBottom(rect.bottom() - offset)
 
         elif self.handleSelected == self.handleBM:
 
@@ -445,7 +445,7 @@ class ConceptNode(AbstractResizableNode):
                 diff.setY(diff.y() + minBoundingRectH - rect.height())
                 rect.setBottom(rect.bottom() + minBoundingRectH - rect.height())
 
-            self.rect.setBottom(rect.bottom() - offset)
+            self.polygon.setBottom(rect.bottom() - offset)
 
         elif self.handleSelected == self.handleBR:
 
@@ -468,8 +468,8 @@ class ConceptNode(AbstractResizableNode):
                 diff.setY(diff.y() + minBoundingRectH - rect.height())
                 rect.setBottom(rect.bottom() + minBoundingRectH - rect.height())
 
-            self.rect.setRight(rect.right() - offset)
-            self.rect.setBottom(rect.bottom() - offset)
+            self.polygon.setRight(rect.right() - offset)
+            self.polygon.setBottom(rect.bottom() - offset)
 
         self.updateHandlesPos()
         self.updateLabelPos(moved=moved)
@@ -484,7 +484,7 @@ class ConceptNode(AbstractResizableNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRect(self.rect)
+        path.addRect(self.polygon)
         return path
 
     def shape(self):
@@ -493,7 +493,7 @@ class ConceptNode(AbstractResizableNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRect(self.rect)
+        path.addRect(self.polygon)
 
         if self.isSelected():
             for shape in self.handles.values():
@@ -574,7 +574,7 @@ class ConceptNode(AbstractResizableNode):
 
         painter.setBrush(self.brush)
         painter.setPen(self.pen)
-        painter.drawRect(self.rect)
+        painter.drawRect(self.polygon)
         self.paintHandles(painter)
 
     @classmethod
