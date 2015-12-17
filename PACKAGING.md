@@ -2,18 +2,18 @@
 
 Eddy is distributed as different packages:
 
-* Python sources distribution
-* Win32 zip package
-* Mac OS .dmg disk image
-* Linux32 zip package
-* Linux64 zip package
+* Python `sources` distribution
+* `Win32` zip package
+* `Mac OS` .dmg disk image
+* `Linux32` zip package
+* `Linux64` zip package
 
 # Packaging
 
 To create distribution packages you need to have installed Python 3 on your system. You also need 
 to have installed [GIT](http://git-scm.com/) on your system and make sure that the `git` command
-is in your PATH environment. Once the building process is completed you will find the built package(s) 
-inside the  *dist* directory.
+is in your `$PATH` environment. Once the building process is completed you will find the built 
+package(s) inside the *dist* directory.
 
 ## Source distribution
 
@@ -54,26 +54,30 @@ Install [Qt 5.5.1](http://download.qt.io/official_releases/qt/5.5/5.5.1/qt-opens
 Bring up a terminal window and type the following:
     
     >>> brew install wget
+    >>> pip install virtualenv --upgrade
+    >>> cd ~
+    >>> virtualenv python34
+    >>> source python34/bin/activate
+    >>> pip install setuptools --upgrade
+    >>> pip install pip --upgrade
+    >>> pip install cx_Freeze --upgrade
     >>> cd ~/Downloads
     >>> wget http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.tar.gz
     >>> tar xf sip-4.17.tar.gz
     >>> cd sip-4.17
     >>> python3 configure.py
-    >>> make -j 3
+    >>> make
     >>> make install
     >>> cd ~/Downloads
     >>> wget http://skylink.dl.sourceforge.net/project/pyqt/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
     >>> tar xf PyQt-gpl-5.5.1.tar.gz
     >>> cd PyQt-gpl-5.5.1
     >>> python3 configure.py --qmake ~/Qt/5.5/clang_64/bin/qmake --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
-    >>> make -j 3
+    >>> make
     >>> make install
     >>> cd ~/Downloads
     >>> git clone https://github.com/danielepantaleone/eddy.git
     >>> cd ~/Downloads/eddy
-    >>> pip install -r build-requirements.txt
-    >>> pip install setuptools --upgrade
-    >>> pip install pip --upgrade
     >>> python setup.py bdist_dmg
 
 ## Linux 32 (debian based distro)
@@ -83,6 +87,10 @@ Bring up a terminal window and type the following:
     >>> sudo apt-get install -y build-essential libgl1-mesa-dev libx11-dev libxext-dev libxfixes-dev libxi-dev
     >>> sudo apt-get install -y libxrender-dev libxcb1-dev libx11-xcb-dev libxcb-glx0-dev libfontconfig1-dev 
     >>> sudo apt-get install -y libfreetype6-dev libcups2-dev git mercurial python3 python3-dev
+    >>> sudo pip3 install virtualenv --upgrade
+    >>> cd ~
+    >>> virtualenv python34
+    >>> source python34/bin/activate
     >>> sudo pip3 install setuptools --upgrade
     >>> sudo pip3 install pip --upgrade
     >>> cd ~/Downloads
@@ -121,6 +129,10 @@ Bring up a terminal window and type the following:
     >>> sudo apt-get install -y build-essential libgl1-mesa-dev libx11-dev libxext-dev libxfixes-dev libxi-dev
     >>> sudo apt-get install -y libxrender-dev libxcb1-dev libx11-xcb-dev libxcb-glx0-dev libfontconfig1-dev 
     >>> sudo apt-get install -y libfreetype6-dev libcups2-dev git mercurial python3 python3-dev
+    >>> sudo pip3 install virtualenv --upgrade
+    >>> cd ~
+    >>> virtualenv python34
+    >>> source python34/bin/activate
     >>> sudo pip3 install setuptools --upgrade
     >>> sudo pip3 install pip --upgrade
     >>> cd ~/Downloads
@@ -151,4 +163,3 @@ Bring up a terminal window and type the following:
     >>> git clone https://github.com/danielepantaleone/eddy.git
     >>> cd eddy
     >>> python3 setup.py build_exe
-    
