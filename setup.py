@@ -105,7 +105,6 @@ else:
         """extends the build_exe command to:
            - add option 'dist_dir' (or --dist-dir as a command line parameter)
            - produce a zip file
-           - produce an installer with InnoSetup
         """
         dist_dir = None
         user_options = build_exe.user_options
@@ -124,25 +123,38 @@ else:
 
         def run(self):
             """Command execution"""
+            super().run()
+            self.prepare_dist()
+            self.copy_qt5_libraries()
+            self.copy_qt5_plugins()
+            self.clean_compiled_files()
+            self.unix_2_dos()
+            self.unix_exec()
+            self.chmod_exec()
+            self.make_zip()
+
+        def prepare_dist(self):
+            """Create 'dist' directory"""
             if not os.path.isdir(self.dist_dir):
                 os.mkdir(self.dist_dir)
 
-            super().run() # call original build_exe run method
-
-            self.copy_qt5_plugins()
-            self.clean_compiled_files()
-            self.chmod_exec()
-            self.unix2dos()
-
-            self.make_zip(RELEASE_NAME)
+        def copy_qt5_libraries(self):
+            """Copy necessary Qt5 libraries"""
+            if sys.platform.startswith('linux'):
+                log.info(">>> copy qt5 libraries")
+                basepath = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.LibrariesPath)
+                for lib in ['libQt5DBus.so.5', 'libQt5XcbQpa.so.5']:
+                    self.copy_file(os.path.join(basepath, lib), self.build_exe )
 
         def copy_qt5_plugins(self):
             """Copy necessary Qt5 plugins"""
-            log.info(">>> copy qt5 printsupport")
-            src = os.path.join(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath), 'printsupport')
-            dst = os.path.join(self.build_exe, 'printsupport')
-            self.mkpath(dst)
-            self.copy_tree(src, dst)
+            log.info(">>> copy qt5 plugins")
+            basepath = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath)
+            for plugin in ['printsupport']:
+                src = os.path.join(basepath, plugin)
+                dst = os.path.join(self.build_exe, plugin)
+                self.mkpath(dst)
+                self.copy_tree(src, dst)
 
         def clean_compiled_files(self):
             """Remove python compiled files (if any got left in)"""
@@ -153,18 +165,10 @@ else:
                     if path.endswith('.pyc') or path.endswith('.pyo'):
                         os.remove(path)
 
-        def chmod_exec(self):
-            """Set +x flag on compiled binary if on Linux"""
-            if sys.platform.startswith('linux'):
-                log.info(">>> chmod +x executable file")
-                filename = os.path.join(self.build_exe, EXECUTABLE_NAME)
-                st = os.stat(filename)
-                os.chmod(filename, st.st_mode | stat.S_IEXEC)
-
-        def unix2dos(self):
+        def unix_2_dos(self):
             """Makes sure text files from directory have 'Windows style' end of lines"""
             if sys.platform == 'win32':
-                log.info(">>> unix2dos")
+                log.info(">>> unix 2 dos")
                 for root, dirs, files in os.walk(self.build_exe):
                     for filename in files:
                         path = os.path.abspath(os.path.join(root, filename))
@@ -176,9 +180,43 @@ else:
                                 with open(path, mode='wb') as f:
                                     f.write(new_data.encode(encoding='UTF-8'))
 
-        def make_zip(self, release_name):
+        def unix_exec(self):
+            """Create shell start script if on Linux"""
+            if sys.platform.startswith('linux'):
+                 log.info(">>> unix exec")
+                 path = os.path.join(self.build_exe, '%s.sh' % __appname__)
+                 with open(path, mode='w') as f:
+                    f.write("""#!/bin/sh
+APP="{0}"
+EXEC="{1}"
+VERSION="{2}"
+DIRNAME=`dirname $0`
+TMP="$DIRNAME#?"
+
+if [ "$DIRNAME%$TMP" != "/" ]; then
+	DIRNAME=$PWD/$DIRNAME
+fi
+
+LD_LIBRARY_PATH=$DIRNAME
+export LD_LIBRARY_PATH
+
+echo "Starting $APP $VERSION ..."
+$DIRNAME/$EXEC "$@"
+echo "... Bye!"
+""".format(__appname__, EXECUTABLE_NAME, __version__))
+
+        def chmod_exec(self):
+            """Set +x flag on executable files"""
+            if sys.platform.startswith('linux'):
+                log.info(">>> chmod")
+                for filename in [EXECUTABLE_NAME, '%s.sh' % __appname__]:
+                    filepath = os.path.join(self.build_exe, filename)
+                    st = os.stat(filepath)
+                    os.chmod(filepath, st.st_mode | stat.S_IEXEC)
+
+        def make_zip(self):
             """Create a ZIP distribution"""
-            zip_file = os.path.join(self.dist_dir, '%s.zip' % release_name)
+            zip_file = os.path.join(self.dist_dir, '%s.zip' % RELEASE_NAME)
             log.info(">>> create zip %s from content of %s" % (zip_file, self.build_exe))
             zipf = zipfile.ZipFile(zip_file, 'w', zipfile.ZIP_DEFLATED)
             for root, dirs, files in os.walk(self.build_exe):
