@@ -230,7 +230,7 @@ class AbstractItem(QGraphicsItem):
         """
         Object representaton.
         """
-        return '{0}:{1}'.format(self.__class__.__name__, self.id)
+        return '{}:{}'.format(self.__class__.__name__, self.id)
 
 
 class LabelItem(QGraphicsTextItem):
@@ -298,7 +298,7 @@ class LabelItem(QGraphicsTextItem):
         """
         Object representaton.
         """
-        return '{0}:{1}'.format(self.__class__.__name__, self.id)
+        return '{}:{}'.format(self.__class__.__name__, self.id)
 
 
 from eddy.items.nodes import AttributeNode, ConceptNode, ComplementNode, DatatypeRestrictionNode, DisjointUnionNode

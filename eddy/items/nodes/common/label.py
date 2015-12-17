@@ -202,7 +202,7 @@ class Label(LabelItem):
         elif len(__args) == 2:
             pos = QPointF(__args[0], __args[1])
         else:
-            raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
+            raise TypeError('too many arguments; expected {}, got {}'.format(2, len(__args)))
         super().setPos(pos - QPointF(self.width() / 2, self.height() / 2))
 
     def setText(self, text):
@@ -423,4 +423,4 @@ class Label(LabelItem):
         Object representaton.
         """
         parent = self.parentItem()
-        return 'Label:{0}:{1}'.format(parent.__class__.__name__, parent.id)
+        return 'Label:{}:{}'.format(parent.__class__.__name__, parent.id)

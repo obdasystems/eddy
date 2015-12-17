@@ -50,7 +50,7 @@ class CommandNodeAdd(QUndoCommand):
         :param scene: the scene where this command is being performed.
         :param node: the node being added.
         """
-        super().__init__('add {0} node'.format(node.name))
+        super().__init__('add {} node'.format(node.name))
         self.scene = scene
         self.node = node
 
@@ -76,7 +76,7 @@ class CommandNodeSetZValue(QUndoCommand):
         :param node: the node whose zValue is changing.
         :param zValue: the new zValue.
         """
-        super().__init__('change {0} node Z value'.format(node.name))
+        super().__init__('change {} node Z value'.format(node.name))
         self.scene = scene
         self.node = node
         self.zvalue1 = node.zValue()
@@ -105,7 +105,7 @@ class CommandNodeRezize(QUndoCommand):
         :param scene: the scene where this command is being performed.
         :param node: the node whose resizing operation we want to Undo.
         """
-        super().__init__('resize {0} node'.format(node.name))
+        super().__init__('resize {} node'.format(node.name))
         self.node = node
         self.scene = scene
         self.data2 = None
@@ -177,9 +177,9 @@ class CommandNodeMove(QUndoCommand):
         self.pos2 = pos2
 
         if len(pos1['nodes']) != 1:
-            params = 'move {0} nodes'.format(len(pos1['nodes']))
+            params = 'move {} nodes'.format(len(pos1['nodes']))
         else:
-            params = 'move {0} node'.format(next(iter(pos1['nodes'].keys())).name)
+            params = 'move {} node'.format(next(iter(pos1['nodes'].keys())).name)
 
         super().__init__(params)
 
@@ -233,7 +233,7 @@ class CommandNodeLabelMove(QUndoCommand):
         :param node: the node whose label is being moved.
         :param label: the label that is being moved.
         """
-        super().__init__('move {0} node label'.format(node.name))
+        super().__init__('move {} node label'.format(node.name))
         self.scene = scene
         self.label = label
         self.pos1 = label.pos()
@@ -268,7 +268,7 @@ class CommandNodeLabelEdit(QUndoCommand):
         :param scene: the scene where this command is being performed.
         :param node: the node whose label is being edited.
         """
-        super().__init__('edit {0} node label'.format(node.name))
+        super().__init__('edit {} node label'.format(node.name))
         self.node = node
         self.scene = scene
         self.text1 = node.label.text().strip()
@@ -354,7 +354,7 @@ class CommandNodeValueDomainSelectDatatype(QUndoCommand):
         :param node: the node whose datatype is being changed.
         :param datatype: the new datatype.
         """
-        super().__init__('change {0} datatype'.format(node.name))
+        super().__init__('change {} datatype'.format(node.name))
         self.scene = scene
         self.node = node
         self.data1 = node.datatype
@@ -388,7 +388,7 @@ class CommandNodeHexagonSwitchTo(QUndoCommand):
         :param node1: the node being replaced.
         :param node2: the replacement node.
         """
-        super().__init__('switch {0} to {1}'.format(node1.name, node2.name))
+        super().__init__('switch {} to {}'.format(node1.name, node2.name))
         self.scene = scene
         self.node1 = node1
         self.node2 = node2
@@ -480,7 +480,7 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
         if restriction_type is RestrictionType.cardinality:
             value = value.format(min=self.s(cardinality['min']), max=self.s(cardinality['max']))
 
-        super().__init__('change {0} to {1}'.format(node.name, value))
+        super().__init__('change {} to {}'.format(node.name, value))
 
     @staticmethod
     def s(x):
@@ -531,7 +531,7 @@ class CommandNodeSetURL(QUndoCommand):
         :param node: the node whose url is changing.
         :param url: the new url.
         """
-        super().__init__('change {0} node URL'.format(node.name))
+        super().__init__('change {} node URL'.format(node.name))
         self.node = node
         self.url1 = node.url
         self.url2 = url
@@ -555,7 +555,7 @@ class CommandNodeSetDescription(QUndoCommand):
         :param node: the node whose description is changing.
         :param description: the new description.
         """
-        super().__init__('change {0} node description'.format(node.name))
+        super().__init__('change {} node description'.format(node.name))
         self.node = node
         self.description1 = node.description
         self.description2 = description
@@ -587,18 +587,18 @@ class CommandNodeSetSpecial(QUndoCommand):
             # remove special: TOP|BOTTOM -> None
             self.data1 = {'special': node.special, 'text': node.special.value, 'pos': node.label.defaultPos()}
             self.data2 = {'special': None, 'text': node.label.defaultText, 'pos': node.label.defaultPos()}
-            super().__init__('remove {0} from {1} node'.format(node.special.value, node.name))
+            super().__init__('remove {} from {} node'.format(node.special.value, node.name))
         else:
             if node.special:
                 # change special TOP <-> BOTTOM
                 self.data1 = {'special': node.special, 'text': node.special.value, 'pos': node.label.defaultPos()}
                 self.data2 = {'special': special, 'text': special.value, 'pos': node.label.defaultPos()}
-                super().__init__('change {0} node from {1} to {2}'.format(node.name, node.special.value, special.value))
+                super().__init__('change {} node from {} to {}'.format(node.name, node.special.value, special.value))
             else:
                 # set as special: None -> TOP|BOTTOM
                 self.data1 = {'special': None, 'text': node.label.text(), 'pos': node.label.pos()}
                 self.data2 = {'special': special, 'text': special.value, 'pos': node.label.defaultPos()}
-                super().__init__('set {0} node as {1}'.format(node.name, special.value))
+                super().__init__('set {} node as {}'.format(node.name, special.value))
 
     def redo(self):
         """redo the command"""
@@ -630,7 +630,7 @@ class CommandNodeChangeInputOrder(QUndoCommand):
         self.scene = scene
         self.inputs1 = node.inputs
         self.inputs2 = inputs
-        super().__init__('change {0} node inputs order'.format(node.name))
+        super().__init__('change {} node inputs order'.format(node.name))
 
     def redo(self):
         """redo the command"""
@@ -660,9 +660,9 @@ class CommandNodeChangeBrush(QUndoCommand):
         self.nodes = nodes
         self.brush = {x: {'from': x.brush, 'to': brush} for x in nodes}
         if len(nodes) != 1:
-            super().__init__('change color of {0} nodes'.format(len(nodes)))
+            super().__init__('change color of {} nodes'.format(len(nodes)))
         else:
-            super().__init__('change {0} node color'.format(next(iter(nodes)).name))
+            super().__init__('change {} node color'.format(next(iter(nodes)).name))
 
     def redo(self):
         """redo the command"""

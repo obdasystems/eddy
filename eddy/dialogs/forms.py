@@ -89,7 +89,7 @@ class CardinalityRestrictionForm(QDialog):
                 msgbox.setIconPixmap(QPixmap(':/icons/warning'))
                 msgbox.setWindowIcon(QIcon(':/images/eddy'))
                 msgbox.setWindowTitle('Invalid range specified')
-                msgbox.setText('Minimum cardinality {0} must be lower or equal than Maximum cardinality {1}'.format(v1, v2))
+                msgbox.setText('Minimum cardinality {} must be lower or equal than Maximum cardinality {}'.format(v1, v2))
                 msgbox.setStandardButtons(QMessageBox.Ok)
                 msgbox.exec_()
                 return

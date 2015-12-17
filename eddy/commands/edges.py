@@ -47,7 +47,7 @@ class CommandEdgeAdd(QUndoCommand):
         :param scene: the scene where this command is being performed.
         :param edge: the edge being added.
         """
-        super().__init__('add {0} edge'.format(edge.name))
+        super().__init__('add {} edge'.format(edge.name))
         self.edge = edge
         self.scene = scene
         self.inputs1 = []
@@ -113,7 +113,7 @@ class CommandEdgeBreakpointAdd(QUndoCommand):
         :param index: the index of the new breakpoint.
         :param point: the breakpoint.
         """
-        super().__init__('add {0} edge breakpoint'.format(edge.name))
+        super().__init__('add {} edge breakpoint'.format(edge.name))
         self.edge = edge
         self.scene = scene
         self.index = index
@@ -143,7 +143,7 @@ class CommandEdgeAnchorMove(QUndoCommand):
         :param edge: the edge whose anchor point is being moved.
         :param node: the shape on which the moving is happening.
         """
-        super().__init__('move {0} edge anchor point'.format(edge.name))
+        super().__init__('move {} edge anchor point'.format(edge.name))
         self.scene = scene
         self.edge = edge
         self.node = node
@@ -181,7 +181,7 @@ class CommandEdgeBreakpointMove(QUndoCommand):
         :param edge: the edge whose breakpoint is being moved.
         :param index: the index of the breakpoint.
         """
-        super().__init__('move {0} edge breakpoint'.format(edge.name))
+        super().__init__('move {} edge breakpoint'.format(edge.name))
         self.edge = edge
         self.scene = scene
         self.index = index
@@ -220,7 +220,7 @@ class CommandEdgeBreakpointDel(QUndoCommand):
         :param edge: the edge whose breakpoint is being deleted.
         :param index: the index of the breakpoint.
         """
-        super().__init__('remove {0} edge breakpoint'.format(edge.name))
+        super().__init__('remove {} edge breakpoint'.format(edge.name))
         self.edge = edge
         self.scene = scene
         self.index = index
@@ -250,9 +250,9 @@ class CommandEdgeInclusionToggleComplete(QUndoCommand):
         :param data: a mapping containing 'complete' data change for each edge.
         """
         if len(data) == 1:
-            super().__init__('toggle {0} edge completness'.format(next(iter(data.keys())).name))
+            super().__init__('toggle {} edge completness'.format(next(iter(data.keys())).name))
         else:
-            super().__init__('toggle completness for {0} edges'.format(len(data)))
+            super().__init__('toggle completness for {} edges'.format(len(data)))
 
         self.scene = scene
         self.data = data
@@ -283,9 +283,9 @@ class CommandEdgeInputToggleFunctional(QUndoCommand):
         :param data: a mapping containing 'functional' data change for each edge.
         """
         if len(data) == 1:
-            super().__init__('toggle {0} edge functionality'.format(next(iter(data.keys())).name))
+            super().__init__('toggle {} edge functionality'.format(next(iter(data.keys())).name))
         else:
-            super().__init__('toggle functionality for {0} edges'.format(len(data)))
+            super().__init__('toggle functionality for {} edges'.format(len(data)))
 
         self.scene = scene
         self.data = data
@@ -316,9 +316,9 @@ class CommandEdgeSwap(QUndoCommand):
         :param edges: a collection of edges to swap.
         """
         if len(edges) == 1:
-            super().__init__('swap {0} edge'.format(next(iter(edges)).name))
+            super().__init__('swap {} edge'.format(next(iter(edges)).name))
         else:
-            super().__init__('swap {0} edges'.format(len(edges)))
+            super().__init__('swap {} edges'.format(len(edges)))
 
         self.scene = scene
         self.edges = edges

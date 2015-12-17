@@ -111,7 +111,7 @@ class AbstractNode(AbstractItem):
         elif isinstance(value, str):
             self._brush = QBrush(QColor(value))
         else:
-            raise ValueError('invalid brush specified: {0}'.format(value))
+            raise ValueError('invalid brush specified: {}'.format(value))
 
     @property
     def constructor(self):
@@ -312,7 +312,7 @@ class AbstractNode(AbstractItem):
         elif len(__args) == 2:
             pos = QPointF(__args[0], __args[1])
         else:
-            raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
+            raise TypeError('too many arguments; expected {}, got {}'.format(2, len(__args)))
         super().setPos(pos + super().pos() - self.pos())
 
     def updateEdges(self):

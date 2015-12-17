@@ -162,8 +162,8 @@ def QSS(path):
     :rtype: str
     """
     if not path.lower().endswith('.qss'):
-        raise TypeError('invalid QSS file supplied: {0}'.format(path))
+        raise TypeError('invalid QSS file supplied: {}'.format(path))
     if not os.path.isfile(path):
-        raise IOError('could not load QSS file ({0}): file no found'.format(path))
+        raise IOError('could not load QSS file ({}): file no found'.format(path))
     with open(path) as qss:
         return qss.read()

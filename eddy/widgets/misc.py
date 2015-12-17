@@ -106,7 +106,7 @@ class SplashScreen(QLabel):
         painter.setFont(Font('Arial', 12, Font.Light))
         ## BOUNDING RECT (0, 194, 400, 86)
         painter.setBrush(QColor(0, 0, 0))
-        painter.drawText(QRect(0, 202, 396, 14), Qt.AlignTop|Qt.AlignRight, '{0} v{1}'.format(__appname__, __version__))
+        painter.drawText(QRect(0, 202, 396, 14), Qt.AlignTop|Qt.AlignRight, '{} v{}'.format(__appname__, __version__))
         painter.drawText(QRect(0, 216, 396, 14), Qt.AlignTop|Qt.AlignRight, __copyright__)
         painter.drawText(QRect(0, 230, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Licensed under the GNU GPL v3')
         painter.drawText(QRect(0, 258, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Starting up...')

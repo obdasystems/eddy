@@ -181,4 +181,4 @@ class MdiSubWindow(QMdiSubWindow):
         mainview = self.widget()
         scene = mainview.scene()
         if scene.document.filepath:
-            self.setWindowTitle(scene.document.name if clean else '{0} *'.format(scene.document.name))
+            self.setWindowTitle(scene.document.name if clean else '{} *'.format(scene.document.name))

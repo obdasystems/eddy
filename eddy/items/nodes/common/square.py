@@ -371,7 +371,7 @@ class SquaredNode(AbstractNode):
                     'max': None if match.group('max') == '-' else int(match.group('max')),
                 }
             else:
-                raise ParseError('invalid restriction supplied: {0}'.format(text))
+                raise ParseError('invalid restriction supplied: {}'.format(text))
 
     def updateLabelPos(self, *args, **kwargs):
         """

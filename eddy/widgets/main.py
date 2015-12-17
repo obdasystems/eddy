@@ -242,21 +242,21 @@ class MainWindow(QMainWindow):
 
         self.actionOpenPreferences = QAction('Preferences', self)
         self.actionOpenPreferences.setShortcut(QKeySequence.Preferences)
-        self.actionOpenPreferences.setStatusTip('Open {0} preferences'.format(appname))
+        self.actionOpenPreferences.setStatusTip('Open {} preferences'.format(appname))
         connect(self.actionOpenPreferences.triggered, self.openPreferences)
 
         if not sys.platform.startswith('darwin'):
             self.actionOpenPreferences.setIcon(self.iconPreferences)
 
         self.actionQuit = QAction('Quit', self)
-        self.actionQuit.setStatusTip('Quit {0}'.format(appname))
+        self.actionQuit.setStatusTip('Quit {}'.format(appname))
         self.actionQuit.setShortcut(QKeySequence.Quit)
         connect(self.actionQuit.triggered, self.close)
 
         if not sys.platform.startswith('darwin'):
             self.actionQuit.setIcon(self.iconQuit)
 
-        self.actionAbout = QAction('About {0}'.format(appname), self)
+        self.actionAbout = QAction('About {}'.format(appname), self)
         self.actionAbout.setShortcut(QKeySequence.HelpContents)
         connect(self.actionAbout.triggered, self.about)
 
@@ -804,7 +804,7 @@ class MainWindow(QMainWindow):
                 nodes = {x for x in items if x.node}
                 edges = {x for x in items if x.edge}
                 kwargs = {
-                    'name': 'compose functional {0}'.format(node.name),
+                    'name': 'compose functional {}'.format(node.name),
                     'scene': scene,
                     'source': node,
                     'nodes': nodes,
@@ -827,7 +827,7 @@ class MainWindow(QMainWindow):
                 nodes = {x for x in items if x.node}
                 edges = {x for x in items if x.edge}
                 kwargs = {
-                    'name': 'compose inverse functional {0}'.format(node.name),
+                    'name': 'compose inverse functional {}'.format(node.name),
                     'scene': scene,
                     'source': node,
                     'nodes': nodes,
@@ -885,7 +885,7 @@ class MainWindow(QMainWindow):
                 nodes = {x for x in items if x.node}
                 edges = {x for x in items if x.edge}
                 kwargs = {
-                    'name': 'compose {0} property domain'.format(node.name),
+                    'name': 'compose {} property domain'.format(node.name),
                     'scene': scene,
                     'source': node,
                     'nodes': nodes,
@@ -908,7 +908,7 @@ class MainWindow(QMainWindow):
                 nodes = {x for x in items if x.node}
                 edges = {x for x in items if x.edge}
                 kwargs = {
-                    'name': 'compose {0} property range'.format(node.name),
+                    'name': 'compose {} property range'.format(node.name),
                     'scene': scene,
                     'source': node,
                     'nodes': nodes,
@@ -1287,7 +1287,7 @@ class MainWindow(QMainWindow):
                             commands.append(command)
 
                         kwargs = {
-                            'name': 'rename {0} node{1}'.format(len(commands), 's' if len(commands) > 1 else ''),
+                            'name': 'rename {} node{}'.format(len(commands), 's' if len(commands) > 1 else ''),
                             'scene': scene,
                             'commands': commands,
                         }
@@ -1673,7 +1673,7 @@ class MainWindow(QMainWindow):
         try:
 
             if not file.open(QIODevice.ReadOnly):
-                raise IOError('file not found: {0}'.format(filepath))
+                raise IOError('file not found: {}'.format(filepath))
 
             document = QDomDocument()
             if not document.setContent(file):
@@ -1714,12 +1714,12 @@ class MainWindow(QMainWindow):
             box.setIconPixmap(QPixmap(':/icons/warning'))
             box.setWindowIcon(QIcon(':/images/eddy'))
             box.setWindowTitle('Load FAILED')
-            box.setText('Could not open Graphol document: {0}!'.format(filepath))
+            box.setText('Could not open Graphol document: {}!'.format(filepath))
             # format the traceback so it prints nice
             most_recent_calls = traceback.format_tb(sys.exc_info()[2])
             most_recent_calls = [x.strip().replace('\n', '') for x in most_recent_calls]
             # set the traceback as detailed text so it won't occupy too much space in the dialog box
-            box.setDetailedText('{0}: {1}\n\n{2}'.format(e.__class__.__name__, str(e), '\n'.join(most_recent_calls)))
+            box.setDetailedText('{}: {}\n\n{}'.format(e.__class__.__name__, str(e), '\n'.join(most_recent_calls)))
             box.setStandardButtons(QMessageBox.Ok)
             box.exec_()
             return None
@@ -1846,12 +1846,12 @@ class MainWindow(QMainWindow):
         # save the file in a hidden file inside the eddy home: if the save successfully
         # complete, move the file on the given filepath (in this way if an exception is raised
         # while exporting the scene, we won't lose previously saved data)
-        tmpPath = getPath('@home/.{0}'.format(os.path.basename(os.path.normpath(filepath))))
+        tmpPath = getPath('@home/.{}'.format(os.path.basename(os.path.normpath(filepath))))
         tmpFile = QFile(tmpPath)
 
         try:
             if not tmpFile.open(QIODevice.WriteOnly|QIODevice.Truncate|QIODevice.Text):
-                raise IOError('could not create temporary file {0}'.format(tmpPath))
+                raise IOError('could not create temporary file {}'.format(tmpPath))
             stream = QTextStream(tmpFile)
             document = scene.toGraphol()
             document.save(stream, 2)
@@ -1880,7 +1880,7 @@ class MainWindow(QMainWindow):
         Set the main window title.
         :param p_str: the prefix for the window title
         """
-        T = '{0} - {1} {2}'.format(p_str, appname, version) if p_str else '{0} {1}'.format(appname, version)
+        T = '{} - {} {}'.format(p_str, appname, version) if p_str else '{} {}'.format(appname, version)
         super().setWindowTitle(T)
 
     def updateRecentDocuments(self):
@@ -1891,7 +1891,7 @@ class MainWindow(QMainWindow):
         numRecentDocuments = min(len(documents), MainWindow.MaxRecentDocuments)
 
         for i in range(numRecentDocuments):
-            filename = '&{0} {1}'.format(i + 1, os.path.basename(os.path.normpath(documents[i])))
+            filename = '&{} {}'.format(i + 1, os.path.basename(os.path.normpath(documents[i])))
             self.actionsOpenRecentDocument[i].setText(filename)
             self.actionsOpenRecentDocument[i].setData(documents[i])
             self.actionsOpenRecentDocument[i].setVisible(True)

@@ -545,7 +545,7 @@ class OrderedInputNodePropertiesDialog(NodePropertiesDialog):
             self.listWidget.setDragDropMode(QAbstractItemView.InternalMove)
             for i in self.node.inputs:
                 edge = self.scene.edge(i)
-                item = QListWidgetItem('{0} ({1})'.format(edge.source.labelText(), edge.source.id))
+                item = QListWidgetItem('{} ({})'.format(edge.source.labelText(), edge.source.id))
                 item.setData(Qt.UserRole, edge.id)
                 self.listWidget.addItem(item)
 

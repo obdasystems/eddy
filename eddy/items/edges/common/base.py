@@ -361,7 +361,7 @@ class AbstractEdge(AbstractItem):
             return self.target
         elif node is self.target:
             return self.source
-        raise AttributeError('node {0} is not attached to edge {1}'.format(node, self))
+        raise AttributeError('node {} is not attached to edge {}'.format(node, self))
 
     ####################################################################################################################
     #                                                                                                                  #

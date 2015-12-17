@@ -58,7 +58,7 @@ if sys.platform.startswith('darwin'):
     OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'images', 'eddy.icns')
     OPTS['DIST_NAME'] = '{}-{}-{}-darwin'.format(APPNAME, VERSION, LICENSE.lower())
 elif sys.platform.startswith('win32'):
-    OPTS['EXEC_NAME'] = '{0}.exe'.format(APPNAME)
+    OPTS['EXEC_NAME'] = '{}.exe'.format(APPNAME)
     OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'images', 'eddy.ico')
     OPTS['DIST_NAME'] = '{}-{}-{}-win{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
 else:
@@ -189,9 +189,9 @@ else:
                  path = os.path.join(self.build_exe, '{}.sh'.format(APPNAME))
                  with open(path, mode='w') as f:
                     f.write("""#!/bin/sh
-APP="{0}"
-EXEC="{1}"
-VERSION="{2}"
+APP="{}"
+EXEC="{}"
+VERSION="{}"
 DIRNAME=`dirname $0`
 TMP="$DIRNAME#?"
 if [ "$DIRNAME%$TMP" != "/" ]; then
@@ -332,7 +332,7 @@ echo "... bye!"
                 """Create the Contents/Info.plist file"""
                 import plistlib
                 contents = {
-                    'CFBundleName': '{0} {1}'.format(APPNAME, VERSION),
+                    'CFBundleName': '{} {}'.format(APPNAME, VERSION),
                     'CFBundleGetInfoString': VERSION,
                     'CFBundleShortVersionString': VERSION,
                     'CFBundleVersion': VERSION,

@@ -182,7 +182,7 @@ class Clipboard(QObject):
         """
         Return repr(self).
         """
-        return 'Clipboard<nodes:{0},edges:{0}>'.format(len(self.nodes), len(self.edges))
+        return 'Clipboard<nodes:{},edges:{}>'.format(len(self.nodes), len(self.edges))
 
 
 class UniqueID(object):
@@ -206,7 +206,7 @@ class UniqueID(object):
         :rtype: str
         """
         if RE_DIGIT.search(prefix):
-            raise ValueError('invalid prefix supplied ({0}): id prefix MUST not contain any digit'.format(prefix))
+            raise ValueError('invalid prefix supplied ({}): id prefix MUST not contain any digit'.format(prefix))
         try:
             last = self.ids[prefix]
         except KeyError:
@@ -226,7 +226,7 @@ class UniqueID(object):
         """
         match = RE_ITEM_PREFIX.match(unique_id)
         if not match:
-            raise ValueError('invalid id supplied ({0})'.format(unique_id))
+            raise ValueError('invalid id supplied ({})'.format(unique_id))
         return match.group('prefix'), int(match.group('value'))
 
     def update(self, unique_id):

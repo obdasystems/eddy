@@ -65,7 +65,7 @@ class ZoomControl(QWidget):
         # zoom level change actions
         self.actionsZoomChange = []
         for i in self.zoomLevels:
-            action = QAction('{0}%'.format(int(i * 100)), self)
+            action = QAction('{}%'.format(int(i * 100)), self)
             action.setCheckable(True)
             action.setChecked(i == self.zoomLevel)
             action.setData(i)
@@ -108,7 +108,7 @@ class ZoomControl(QWidget):
         Returns the current zoom level in readable format (i.e: 100%, 125%, ...)
         :rtyoe: str
         """
-        return '{0}%'.format(int(self.zoomLevel * 100))
+        return '{}%'.format(int(self.zoomLevel * 100))
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -192,7 +192,7 @@ class ZoomControl(QWidget):
             self.buttonZoomOut.setEnabled(False)
             self.buttonZoomIn.setEnabled(False)
             self.buttonZoomLevelChange.setEnabled(False)
-            self.buttonZoomLevelChange.setText('{0}%'.format(int(ZoomControl.Default * 100)))
+            self.buttonZoomLevelChange.setText('{}%'.format(int(ZoomControl.Default * 100)))
             for action in self.actionsZoomChange:
                 action.setChecked(False)
 

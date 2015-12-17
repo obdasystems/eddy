@@ -52,9 +52,9 @@ class CommandItemsMultiAdd(QUndoCommand):
         self.selected = scene.selectedItems()
 
         if len(collection) == 1:
-            super().__init__('add {0} {1}'.format(collection[0].name, 'node' if collection[0].node else 'edge'))
+            super().__init__('add {} {}'.format(collection[0].name, 'node' if collection[0].node else 'edge'))
         else:
-            super().__init__('add {0} items'.format(len(collection)))
+            super().__init__('add {} items'.format(len(collection)))
 
     def redo(self):
         """redo the command"""
@@ -108,9 +108,9 @@ class CommandItemsMultiRemove(QUndoCommand):
                     self.inputs[node]['redo'].remove(edge.id)
 
         if len(collection) == 1:
-            super().__init__('remove {0} {1}'.format(collection[0].name, 'node' if collection[0].node else 'edge'))
+            super().__init__('remove {} {}'.format(collection[0].name, 'node' if collection[0].node else 'edge'))
         else:
-            super().__init__('remove {0} items'.format(len(collection)))
+            super().__init__('remove {} items'.format(len(collection)))
 
     def redo(self):
         """redo the command"""

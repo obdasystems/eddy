@@ -285,7 +285,7 @@ class MainView(QGraphicsView):
         elif len(__args) == 2:
             delta = QPointF(__args[0], __args[1])
         else:
-            raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
+            raise TypeError('too many arguments; expected {}, got {}'.format(2, len(__args)))
         self.centerOn(self.visibleRect().center() + delta)
 
     def scaleView(self, zoom):
