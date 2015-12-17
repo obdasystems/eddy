@@ -8,10 +8,10 @@ machine:
 
   ## Install Qt5
   pre:
-    - sudo apt-add-repository ppa:beineri/opt-qt55 -y
+    - sudo apt-add-repository ppa:beineri/opt-qt551 -y
     - sudo apt-get update
     - sudo apt-get install qt-latest
-    - echo "source /opt/qt55/bin/qt55-env.sh" >> ~/.circlerc
+    - echo "source /opt/qt551/bin/qt551-env.sh" >> ~/.circlerc
 
 
 ## Customize python dependencies
@@ -24,16 +24,16 @@ dependencies:
     - sudo mkdir -p /downloads && sudo chmod a+rw /downloads
     # Downloads
     - curl -L -o /downloads/sip.tar.gz http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.tar.gz
-    - curl -L -o /downloads/pyqt.tar.gz http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5/PyQt-gpl-5.5.tar.gz
+    - curl -L -o /downloads/pyqt.tar.gz http://skylink.dl.sourceforge.net/project/pyqt/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
     # Extract archives
     - tar xzf /downloads/sip.tar.gz -C /builds --keep-newer-files
     - tar xzf /downloads/pyqt.tar.gz -C /builds --keep-newer-files
     # Build SIP
     - cd /builds/sip-4.17 && python configure.py
-    - cd /builds/sip-4.17 && sudo make -j5 && sudo make install
+    - cd /builds/sip-4.17 && sudo make && sudo make install
     # Build PyQt5
-    - cd /builds/PyQt-gpl-5.5 && python configure.py --confirm-license --no-designer-plugin -e QtCore -e QtGui -e QtWidgets -e QtPrintSupport -e QtXml -e QtTest
-    - cd /builds/PyQt-gpl-5.5 && sudo make -j5 && sudo make install
+    - cd /builds/PyQt-gpl-5.5.1 && python configure.py --confirm-license --no-designer-plugin -e QtCore -e QtGui -e QtWidgets -e QtPrintSupport -e QtXml -e QtTest
+    - cd /builds/PyQt-gpl-5.5.1 && sudo make && sudo make install
 
   ## Install PIP packages
   post:
