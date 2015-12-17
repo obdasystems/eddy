@@ -41,31 +41,33 @@ import sys
 import zipfile
 
 from distutils import dir_util, log
-from eddy import __appname__, __license__, __version__
+from eddy import __appname__ as APPNAME, __license__ as LICENSE, __version__ as VERSION
 
 from PyQt5 import QtCore
 
 
-PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))  # directory where this file is in
-BUILD_DIR = os.path.join(PROJECT_DIR, 'build')  # directory where all work will be done
-DIST_DIR = os.path.join(PROJECT_DIR, 'dist')  # directory where all the final builds will be found
+OPTS = {
+    'PROJECT_DIR': os.path.abspath(os.path.dirname(__file__))
+}
 
+OPTS['BUILD_DIR'] = os.path.join(OPTS['PROJECT_DIR'], 'build')
+OPTS['DIST_DIR'] = os.path.join(OPTS['PROJECT_DIR'], 'dist')
 
 if sys.platform.startswith('darwin'):
-    EXECUTABLE_NAME = __appname__
-    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'eddy', 'images', 'eddy.icns')
-    RELEASE_NAME = '%s-%s-%s-darwin' % (__appname__, __version__, __license__.lower())
+    OPTS['EXEC_NAME'] = APPNAME
+    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'images', 'eddy.icns')
+    OPTS['DIST_NAME'] = '{}-{}-{}-darwin'.format(APPNAME, VERSION, LICENSE.lower())
 elif sys.platform.startswith('win32'):
-    EXECUTABLE_NAME = '%s.exe' % __appname__
-    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'eddy', 'images', 'eddy.ico')
-    RELEASE_NAME = '%s-%s-%s-win%s' % (__appname__, __version__, __license__.lower(), platform.architecture()[0][:-3])
+    OPTS['EXEC_NAME'] = '{0}.exe'.format(APPNAME)
+    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'images', 'eddy.ico')
+    OPTS['DIST_NAME'] = '{}-{}-{}-win{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
 else:
-    EXECUTABLE_NAME = __appname__
-    EXECUTABLE_ICON = os.path.join(PROJECT_DIR, 'eddy', 'images', 'eddy.png')
-    RELEASE_NAME = '%s-%s-%s-linux%s' % (__appname__, __version__, __license__.lower(), platform.architecture()[0][:-3])
+    OPTS['EXEC_NAME'] = APPNAME
+    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'images', 'eddy.png')
+    OPTS['DIST_NAME'] = '{}-{}-{}-linux{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
 
 
-BUILD_PATH = os.path.join(BUILD_DIR, RELEASE_NAME)
+OPTS['BUILD_PATH'] = os.path.join(OPTS['BUILD_DIR'], OPTS['DIST_NAME'])
 
 
 class CleanCommand(setuptools.Command):
@@ -82,8 +84,8 @@ class CleanCommand(setuptools.Command):
 
     def run(self):
         """Command execution"""
-        if os.path.isdir(BUILD_DIR):
-            dir_util.remove_tree(BUILD_DIR, verbose=1)
+        if os.path.isdir(OPTS['BUILD_DIR']):
+            dir_util.remove_tree(OPTS['BUILD_DIR'], verbose=1)
         if os.path.isdir('eddy.egg-info'):
             dir_util.remove_tree('eddy.egg-info', verbose=1)
 
@@ -184,7 +186,7 @@ else:
             """Create shell start script if on Linux"""
             if sys.platform.startswith('linux'):
                  log.info(">>> unix exec")
-                 path = os.path.join(self.build_exe, '%s.sh' % __appname__)
+                 path = os.path.join(self.build_exe, '{}.sh'.format(APPNAME))
                  with open(path, mode='w') as f:
                     f.write("""#!/bin/sh
 APP="{0}"
@@ -192,37 +194,34 @@ EXEC="{1}"
 VERSION="{2}"
 DIRNAME=`dirname $0`
 TMP="$DIRNAME#?"
-
 if [ "$DIRNAME%$TMP" != "/" ]; then
-	DIRNAME=$PWD/$DIRNAME
+DIRNAME=$PWD/$DIRNAME
 fi
-
 LD_LIBRARY_PATH=$DIRNAME
 export LD_LIBRARY_PATH
-
 echo "Starting $APP $VERSION ..."
 $DIRNAME/$EXEC "$@"
-echo "... Bye!"
-""".format(__appname__, EXECUTABLE_NAME, __version__))
+echo "... bye!"
+""".format(APPNAME, OPTS['EXEC_NAME'], VERSION))
 
         def chmod_exec(self):
             """Set +x flag on executable files"""
             if sys.platform.startswith('linux'):
                 log.info(">>> chmod")
-                for filename in [EXECUTABLE_NAME, '%s.sh' % __appname__]:
+                for filename in [OPTS['EXEC_NAME'], '{}.sh'.format(APPNAME)]:
                     filepath = os.path.join(self.build_exe, filename)
                     st = os.stat(filepath)
                     os.chmod(filepath, st.st_mode | stat.S_IEXEC)
 
         def make_zip(self):
             """Create a ZIP distribution"""
-            zip_file = os.path.join(self.dist_dir, '%s.zip' % RELEASE_NAME)
-            log.info(">>> create zip %s from content of %s" % (zip_file, self.build_exe))
+            zip_file = os.path.join(self.dist_dir, '{}.zip'.format(OPTS['DIST_NAME']))
+            log.info('>>> create zip {} from content of {}'.format(zip_file, self.build_exe))
             zipf = zipfile.ZipFile(zip_file, 'w', zipfile.ZIP_DEFLATED)
             for root, dirs, files in os.walk(self.build_exe):
                 for filename in files:
                     path = os.path.abspath(os.path.join(root, filename))
-                    zipf.write(path, arcname=os.path.join(__appname__, path[len(self.build_exe):]))
+                    zipf.write(path, arcname=os.path.join(APPNAME, path[len(self.build_exe):]))
             zipf.close()
 
     cmdclass['build_exe'] = my_build_exe
@@ -235,7 +234,7 @@ echo "... Bye!"
         class my_bdist_mac(bdist_mac):
             """
             Extends bdist_mac adding the following changes:
-               - properly lookup build_exe path (using BUILD_PATH)
+               - properly lookup build_exe path (using OPTS['BUILD_PATH'])
                - correctly generate Info.plist
             """
             binDir = None
@@ -253,12 +252,12 @@ echo "... Bye!"
                 log.info(">>> searching for qt_menu.nib")
 
                 if self.qt_menu_nib:
-                    # already found
                     return self.qt_menu_nib
 
-                libpath = os.path.join(str(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.DataPath)), '..')
-                subpath = 'Src/qtbase/src/plugins/platforms/cocoa/qt_menu.nib'
-                path = os.path.join(libpath, subpath)
+                # Qt5 library path
+                base = os.path.join(str(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.DataPath)), '..')
+                file = 'Src/qtbase/src/plugins/platforms/cocoa/qt_menu.nib'
+                path = os.path.join(base, file)
                 if os.path.exists(path):
                     return path
 
@@ -291,7 +290,7 @@ echo "... Bye!"
                 self.mkpath(self.binDir)
                 self.mkpath(self.frameworksDir)
 
-                self.copy_tree(BUILD_PATH, self.binDir)
+                self.copy_tree(OPTS['BUILD_PATH'], self.binDir)
 
                 # copy the icon
                 if self.iconfile:
@@ -299,7 +298,7 @@ echo "... Bye!"
 
                 # copy in Frameworks
                 for framework in self.include_frameworks:
-                    self.copy_tree(framework, self.frameworksDir + '/' + os.path.basename(framework))
+                    self.copy_tree(framework, os.path.join(self.frameworksDir, os.path.basename(framework)))
 
                 # create the Info.plist file
                 self.execute(self.create_plist, ())
@@ -333,16 +332,16 @@ echo "... Bye!"
                 """Create the Contents/Info.plist file"""
                 import plistlib
                 contents = {
-                    'CFBundleName': '%s %s' % (__appname__, __version__),
-                    'CFBundleGetInfoString': __version__,
-                    'CFBundleShortVersionString': __version__,
-                    'CFBundleVersion': __version__,
+                    'CFBundleName': '{0} {1}'.format(APPNAME, VERSION),
+                    'CFBundleGetInfoString': VERSION,
+                    'CFBundleShortVersionString': VERSION,
+                    'CFBundleVersion': VERSION,
                     'CFBundlePackageType': 'APPL',
                     'CFBundleIconFile': 'icon.icns',
                     'CFBundleIdentifier': 'it.uniroma1.eddy',
                     'CFBundleInfoDictionaryVersion': '6.0',
                     'CFBundleDevelopmentRegion': 'English',
-                    'CFBundleSpokenName': __appname__,
+                    'CFBundleSpokenName': APPNAME,
                     'CFBundleExecutable': self.bundle_executable
                 }
 
@@ -419,7 +418,7 @@ echo "... Bye!"
                 self.buildDir = self.get_finalized_command('build').build_base
 
                 # set the file name of the DMG to be built
-                self.dmgName = os.path.join(self.buildDir, RELEASE_NAME + '.dmg')
+                self.dmgName = os.path.join(self.buildDir, OPTS['DIST_NAME'] + '.dmg')
 
                 self.execute(self.buildDMG, ())
 
@@ -435,8 +434,8 @@ echo "... Bye!"
             base='Win32GUI' if sys.platform.startswith('win32') else None,
             compress=True,
             copyDependentFiles=True,
-            targetName=EXECUTABLE_NAME,
-            icon=EXECUTABLE_ICON,
+            targetName=OPTS['EXEC_NAME'],
+            icon=OPTS['EXEC_ICON'],
         )
     ]
 
@@ -450,8 +449,8 @@ echo "... Bye!"
 
 setup(
     cmdclass=cmdclass,
-    name=__appname__,
-    version=__version__,
+    name=APPNAME,
+    version=VERSION,
     author='Daniele Pantaleone',
     author_email="danielepantaleone@me.com",
     description="Eddy is an editor for the Graphol ontology language.",
@@ -462,7 +461,7 @@ setup(
                      "designers with simple graphical primitives for ontology editing, avoiding complex textual "
                      "syntax. Graphol's basic components are inspired by Entity Relationship(ER) diagrams, thus "
                      "ontologies that can be rendered as ER diagrams have in Graphol a similar diagrammatic shape.",
-    license=__license__,
+    license=LICENSE,
     url="https://github.com/danielepantaleone/eddy",
     classifiers=[
         'Development Status :: 1 - Planning',
@@ -490,23 +489,23 @@ setup(
     },
     options={
         'sdist': {
-            'dist_dir': DIST_DIR,
+            'dist_dir': OPTS['DIST_DIR'],
         },
         'bdist_egg': {
-            'dist_dir': DIST_DIR,
+            'dist_dir': OPTS['DIST_DIR'],
         },
         'bdist_mac': {
-            'iconfile': EXECUTABLE_ICON,
-            'bundle_name': '{0} {1}'.format(__appname__, __version__),
+            'iconfile': OPTS['EXEC_ICON'],
+            'bundle_name': '{} {}'.format(APPNAME, VERSION),
         },
         'bdist_dmg': {
-            'dist_dir': DIST_DIR,
-            'volume_label': '{0} {1}'.format(__appname__, __version__),
+            'dist_dir': OPTS['DIST_DIR'],
+            'volume_label': '{} {}'.format(APPNAME, VERSION),
             'applications_shortcut': True,
         },
         'build_exe': {
-            'dist_dir': DIST_DIR,
-            'build_exe': BUILD_PATH,
+            'dist_dir': OPTS['DIST_DIR'],
+            'build_exe': OPTS['BUILD_PATH'],
             'silent': False,
             'optimize': 1,
             'compressed': True,
