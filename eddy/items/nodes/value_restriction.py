@@ -594,12 +594,12 @@ class ValueRestrictionNode(AbstractResizableNode):
             painter.setBrush(brush)
             painter.drawRect(self.boundingRect())
 
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.Antialiasing, False)
         painter.setBrush(self.brush)
         painter.setPen(self.pen)
         painter.drawPolygon(self.polygon)
 
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.Antialiasing, False)
         painter.setBrush(self.brush)
         painter.setPen(self.pen)
         painter.drawPolygon(self.createFold(self.polygon, self.indexTR, self.indexRT, self.foldSize))
