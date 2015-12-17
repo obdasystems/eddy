@@ -39,7 +39,7 @@ import webbrowser
 
 from collections import OrderedDict
 
-from PyQt5.QtCore import Qt, QSettings, QFile, QIODevice, QTextStream, QSizeF, QRectF
+from PyQt5.QtCore import Qt, QSettings, QFile, QIODevice, QSizeF, QRectF
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter, QPageSize
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
@@ -53,7 +53,7 @@ from eddy.commands import CommandNodeLabelMove, CommandNodeLabelEdit, CommandEdg
 from eddy.commands import CommandNodeSetZValue, CommandNodeHexagonSwitchTo, CommandNodeValueDomainSelectDatatype
 from eddy.commands import CommandNodeSquareChangeRestriction, CommandNodeSetSpecial, CommandNodeChangeBrush
 from eddy.commands import CommandEdgeInclusionToggleComplete, CommandEdgeInputToggleFunctional, CommandEdgeSwap
-from eddy.datatypes import Color, DiagramMode, FileType, RestrictionType, SpecialType, XsdDatatype
+from eddy.datatypes import Color, File, DiagramMode, FileType, RestrictionType, SpecialType, XsdDatatype
 from eddy.dialogs import AboutDialog, CardinalityRestrictionForm, RenameForm
 from eddy.dialogs import OpenFileDialog, PreferencesDialog, SaveFileDialog, ScenePropertiesDialog
 from eddy.exceptions import ParseError
@@ -64,7 +64,7 @@ from eddy.items import RoleInverseNode, DisjointUnionNode, DatatypeRestrictionNo
 from eddy.utils import Clipboard
 from eddy.widgets import DockWidget, Navigator, Overview, Palette
 from eddy.widgets import MdiArea, MdiSubWindow
-from eddy.widgets import DiagramScene, Document
+from eddy.widgets import DiagramScene
 from eddy.widgets import MainView
 from eddy.widgets import ZoomControl
 
@@ -1027,7 +1027,7 @@ class MainWindow(QMainWindow):
         Executed when a document is loaded or saved from/to a Graphol file.
         :param scene: the diagram scene instance containing the document.
         """
-        self.addRecentDocument(scene.document.filepath)
+        self.addRecentDocument(scene.document.path)
         self.setWindowTitle(scene.document.name)
 
     @pyqtSlot()
@@ -1375,12 +1375,10 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-            filepath = scene.document.filepath or self.saveFilePath(name=scene.document.name)
+            filepath = scene.document.path or self.saveFilePath(name=scene.document.name)
             if filepath:
                 saved = self.saveSceneToGrapholFile(scene, filepath)
                 if saved:
-                    scene.document.filepath = filepath
-                    scene.document.edited = os.path.getmtime(filepath)
                     scene.undostack.setClean()
                     self.documentSaved.emit(scene)
 
@@ -1395,8 +1393,6 @@ class MainWindow(QMainWindow):
             if filepath:
                 saved = self.saveSceneToGrapholFile(scene, filepath)
                 if saved:
-                    scene.document.filepath = filepath
-                    scene.document.edited = os.path.getmtime(filepath)
                     scene.undostack.setClean()
                     self.documentSaved.emit(scene)
 
@@ -1590,7 +1586,7 @@ class MainWindow(QMainWindow):
         for subwindow in self.mdi.subWindowList():
             mainview = subwindow.widget()
             scene = mainview.scene()
-            if (scene.items() and not scene.document.filepath) or (not scene.undostack.isClean()):
+            if (scene.items() and not scene.document.path) or (not scene.undostack.isClean()):
                 self.mdi.setActiveSubWindow(subwindow)
                 subwindow.showMaximized()
             subwindow.close()
@@ -1688,7 +1684,7 @@ class MainWindow(QMainWindow):
 
             # create the scene
             scene = self.createScene(width=w, height=h)
-            scene.document.filepath = filepath
+            scene.document.path = filepath
             scene.document.edited = os.path.getmtime(filepath)
 
             # add the nodes
@@ -1806,17 +1802,15 @@ class MainWindow(QMainWindow):
         :rtype: bool
         """
         if isinstance(document, DiagramScene):
-            document = document.document.filepath
-        elif isinstance(document, Document):
-            document = document.filepath
-
+            document = document.document.path
+        elif isinstance(document, File):
+            document = document.path
         for subwindow in self.mdi.subWindowList():
             scene = subwindow.widget().scene()
-            if scene.document.filepath and scene.document.filepath == document:
+            if scene.document.path and scene.document.path == document:
                 self.mdi.setActiveSubWindow(subwindow)
                 self.mdi.update()
                 return True
-
         return False
 
     @staticmethod
@@ -1840,25 +1834,12 @@ class MainWindow(QMainWindow):
         """
         Save the given scene to the corresponding given filepath.
         :param scene: the scene to be saved.
-        :param filepath: the filepath where to save the scene.
+        :param filepath: the path where to save the scene.
         :return: True if the save has been performed, False otherwise.
         """
-        # save the file in a hidden file inside the eddy home: if the save successfully
-        # complete, move the file on the given filepath (in this way if an exception is raised
-        # while exporting the scene, we won't lose previously saved data)
-        tmpPath = getPath('@home/.{}'.format(os.path.basename(os.path.normpath(filepath))))
-        tmpFile = QFile(tmpPath)
-
         try:
-            if not tmpFile.open(QIODevice.WriteOnly|QIODevice.Truncate|QIODevice.Text):
-                raise IOError('could not create temporary file {}'.format(tmpPath))
-            stream = QTextStream(tmpFile)
             document = scene.toGraphol()
-            document.save(stream, 2)
-            tmpFile.close()
-            if os.path.isfile(filepath):
-                os.remove(filepath)
-            os.rename(tmpPath, filepath)
+            scene.document.write(document.toString(4), filepath)
         except Exception:
             box = QMessageBox()
             box.setIconPixmap(QPixmap(':/icons/warning'))
@@ -1871,9 +1852,6 @@ class MainWindow(QMainWindow):
             return False
         else:
             return True
-        finally:
-            if tmpFile.isOpen():
-                tmpFile.close()
 
     def setWindowTitle(self, p_str=None):
         """

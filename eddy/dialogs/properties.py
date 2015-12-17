@@ -119,16 +119,16 @@ class ScenePropertiesDialog(QDialog):
         #                                                                                                              #
         ################################################################################################################
 
-        if self.scene.document.filepath:
+        if self.scene.document.path:
 
             self.documentWidget = QWidget()
             self.documentLayout = QFormLayout(self.documentWidget)
 
             # filepath of the saved document
-            self.filepathF = StringEditField(self.documentWidget)
-            self.filepathF.setEnabled(False)
-            self.filepathF.setFixedWidth(300)
-            self.filepathF.setValue(self.scene.document.filepath)
+            self.pathF = StringEditField(self.documentWidget)
+            self.pathF.setEnabled(False)
+            self.pathF.setFixedWidth(300)
+            self.pathF.setValue(self.scene.document.path)
 
             # timestamp when the document has been last modified
             self.editedF = StringEditField(self.documentWidget)
@@ -136,7 +136,7 @@ class ScenePropertiesDialog(QDialog):
             self.editedF.setFixedWidth(300)
             self.editedF.setValue(datetime.fromtimestamp(int(self.scene.document.edited)).strftime('%Y/%m/%d %H:%M:%S'))
 
-            self.documentLayout.addRow('File', self.filepathF)
+            self.documentLayout.addRow('File', self.pathF)
             self.documentLayout.addRow('Last edit', self.editedF)
 
             self.mainWidget.addTab(self.documentWidget, 'Document')

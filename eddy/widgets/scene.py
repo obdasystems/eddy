@@ -33,7 +33,6 @@
 
 
 import itertools
-import os
 import sys
 
 from PyQt5.QtCore import Qt, QPointF, QSettings, QRectF, pyqtSignal
@@ -42,67 +41,13 @@ from PyQt5.QtPrintSupport import QPrinter
 from PyQt5.QtWidgets import QGraphicsScene, QUndoStack, QMenu
 from PyQt5.QtXml import QDomDocument
 
-from eddy import __appname__ as appname, __organization__ as organization, getPath
+from eddy import __appname__ as appname, __organization__ as organization
 from eddy.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
-from eddy.datatypes import DiagramMode, DistinctList, Item, RestrictionType, SpecialType
+from eddy.datatypes import DiagramMode, DistinctList, File, Item, RestrictionType, SpecialType
 from eddy.functions import rangeF, snapF
 from eddy.items import ConceptNode, ComplementNode, DomainRestrictionNode, InputEdge, InclusionEdge
 from eddy.items import RangeRestrictionNode, RoleChainNode, RoleInverseNode, ValueDomainNode
 from eddy.utils import Clipboard, UniqueID
-
-
-class Document(object):
-    """
-    This class is used to hold scene saved file data (filepath, filename etc).
-    """
-    def __init__(self):
-        """
-        Initialize the scene document.
-        """
-        self._edited = None
-        self._filepath = ''
-
-    @property
-    def edited(self):
-        """
-        Returns the timestamp when the file has been last modified.
-        :return: float
-        """
-        return self._edited
-
-    @edited.setter
-    def edited(self, value):
-        """
-        Set the timestamp when the file has been last modified
-        :param value: the timestamp value
-        """
-        self._edited = float(value)
-
-    @property
-    def filepath(self):
-        """
-        Returns the filepath of the document.
-        :return: str
-        """
-        return self._filepath
-
-    @filepath.setter
-    def filepath(self, value):
-        """
-        Set the filepath of the document.
-        :param value: the filepath of the document.
-        """
-        self._filepath = getPath(value)
-
-    @property
-    def name(self):
-        """
-        Returns the name of the saved file.
-        :rtype: str
-        """
-        if not self.filepath:
-            return 'Untitled'
-        return os.path.basename(os.path.normpath(self.filepath))
 
 
 class DiagramScene(QGraphicsScene):
@@ -136,7 +81,7 @@ class DiagramScene(QGraphicsScene):
         self.command = None  ## undo/redo command to be added in the stack
         self.clipboardPasteOffsetX = Clipboard.PasteOffsetX  ## X offset to be added to item position upon paste
         self.clipboardPasteOffsetY = Clipboard.PasteOffsetY  ## Y offset to be added to item position upon paste
-        self.document = Document()  ## document associated with the current scene
+        self.document = File()  ## file associated with the current scene
         self.edgesById = {}  ## used to index edges using their id
         self.nodesById = {}  ## used to index nodes using their id
         self.nodesByLabel = {}  ## used to index nodes using their label text

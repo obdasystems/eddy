@@ -32,12 +32,15 @@
 ##########################################################################
 
 
+import os
 import sys
 
 from enum import Enum, unique, IntEnum
 from types import DynamicClassAttribute
 
 from PyQt5.QtGui import QFont
+
+from eddy.functions.fsystem import getPath
 
 
 @unique
@@ -200,6 +203,88 @@ class DistinctList(list):
         """
         return self[max(0, i):max(0, j):]
 
+
+class File(object):
+    """
+    This class is used to manage Files.
+    """
+    def __init__(self):
+        """
+        Initialize the File.
+        """
+        self._edited = 0
+        self._path = None
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def edited(self):
+        """
+        Returns the timestamp when the file has been last modified.
+        :rtype: float
+        """
+        return self._edited
+
+    @edited.setter
+    def edited(self, edited):
+        """
+        Set the timestamp when the file has been last modified.
+        :type edited: T <= int | float
+        """
+        self._edited = float(edited)
+
+    @property
+    def path(self):
+        """
+        Returns the path of the File.
+        :rtype: unicode
+        """
+        return self._path
+
+    @path.setter
+    def path(self, path):
+        """
+        Set the path of the File.
+        :type path: T <= bytes | unicode.
+        """
+        self._path = getPath(path)
+
+    @property
+    def name(self):
+        """
+        Returns the name of the File.
+        :rtype: str
+        """
+        if not self.path:
+            return 'Untitled'
+        return os.path.basename(os.path.normpath(self.path))
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def write(self, string, path=None):
+        """
+        Write the content of 'string' in 'path'.
+        :type string: T <= bytes | unicode.
+        :type path: T <= bytes | unicode.
+        """
+        path = path or self.path
+        temp = getPath('@home/.{}'.format(os.path.basename(os.path.normpath(path))))
+
+        with open(temp, mode='wb') as file:
+            file.write(string.encode(encoding='UTF-8'))
+            if os.path.isfile(path):
+                os.remove(path)
+            os.rename(temp, path)
+            self.edited = os.path.getmtime(path)
+            self.path = path
 
 @unique
 class FileType(Enum):

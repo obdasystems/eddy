@@ -114,7 +114,7 @@ class MdiSubWindow(QMdiSubWindow):
         mainview = self.widget()
         scene = mainview.scene()
 
-        if (scene.items() and not scene.document.filepath) or (not scene.undostack.isClean()):
+        if (scene.items() and not scene.document.path) or (not scene.undostack.isClean()):
             # ask the user if he wants to save unsaved changes to disk
             box = QMessageBox()
             box.setIconPixmap(QPixmap(':/icons/info'))
@@ -180,5 +180,5 @@ class MdiSubWindow(QMdiSubWindow):
         """
         mainview = self.widget()
         scene = mainview.scene()
-        if scene.document.filepath:
+        if scene.document.path:
             self.setWindowTitle(scene.document.name if clean else '{} *'.format(scene.document.name))
