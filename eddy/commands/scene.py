@@ -47,15 +47,14 @@ class CommandSceneResize(QUndoCommand):
         """
         super().__init__('resize diagram')
         self.scene = scene
-        self.rect1 = scene.sceneRect()
-        self.rect2 = rect
+        self.rect = {'redo': rect, 'undo': scene.sceneRect()}
 
     def redo(self):
         """redo the command"""
-        self.scene.setSceneRect(self.rect2)
+        self.scene.setSceneRect(self.rect['redo'])
         self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        self.scene.setSceneRect(self.rect1)
+        self.scene.setSceneRect(self.rect['undo'])
         self.scene.updated.emit()

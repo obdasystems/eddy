@@ -77,20 +77,19 @@ class CommandNodeSetZValue(QUndoCommand):
         :param zValue: the new zValue.
         """
         super().__init__('change {} node Z value'.format(node.name))
-        self.scene = scene
         self.node = node
-        self.zvalue1 = node.zValue()
-        self.zvalue2 = zValue
+        self.scene = scene
+        self.zValue = {'redo': zValue, 'undo': node.zValue()}
 
     def redo(self):
         """redo the command"""
-        self.node.setZValue(self.zvalue2)
+        self.node.setZValue(self.zValue['redo'])
         self.node.updateEdges()
         self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        self.node.setZValue(self.zvalue1)
+        self.node.setZValue(self.zValue['undo'])
         self.node.updateEdges()
         self.scene.updated.emit()
 
@@ -108,56 +107,46 @@ class CommandNodeRezize(QUndoCommand):
         super().__init__('resize {} node'.format(node.name))
         self.node = node
         self.scene = scene
-        self.data2 = None
-        self.data1 = {
-            'shape': QRectF(self.node.rect) if hasattr(self.node, 'rect') else QPolygonF(self.node.polygon),
-            'anchors': {edge: pos for edge, pos in self.node.anchors.items()},
-            'label': {'moved': self.node.label.moved}
+        self.data = {
+            'undo': {
+                'polygon': QRectF(node.polygon) if isinstance(node.polygon, QRectF) else QPolygonF(node.polygon),
+                'anchors': {edge: pos for edge, pos in node.anchors.items()},
+                'label': {'moved': node.label.moved}
+            }
         }
 
     def end(self):
         """
         End the command collecting new data.
         """
-        self.data2 = {
-            'shape': QRectF(self.node.rect) if hasattr(self.node, 'rect') else QPolygonF(self.node.polygon),
-            'anchors': {edge: pos for edge, pos in self.node.anchors.items()},
-            'label': {'moved': self.node.label.moved}
+        node = self.node
+        self.data['redo'] = {
+            'polygon': QRectF(node.polygon) if isinstance(node.polygon, QRectF) else QPolygonF(node.polygon),
+            'anchors': {edge: pos for edge, pos in node.anchors.items()},
+            'label': {'moved': node.label.moved}
         }
 
     def redo(self):
         """redo the command"""
-        if self.data2:
-            if hasattr(self.node, 'rect'):
-                self.node.rect = self.data2['shape']
-            else:
-                self.node.polygon = self.data2['shape']
-
-            for edge, pos in self.data2['anchors'].items():
+        if 'redo' in self.data:
+            self.node.polygon = self.data['redo']['polygon']
+            for edge, pos in self.data['redo']['anchors'].items():
                 self.node.setAnchor(edge, pos)
-
             self.node.updateHandlesPos()
-            self.node.updateLabelPos(moved=self.data2['label']['moved'])
+            self.node.updateLabelPos(moved=self.data['redo']['label']['moved'])
             self.node.updateEdges()
             self.node.update()
-
             self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        if hasattr(self.node, 'rect'):
-            self.node.rect = self.data1['shape']
-        else:
-            self.node.polygon = self.data1['shape']
-
-        for edge, pos in self.data1['anchors'].items():
+        self.node.polygon = self.data['undo']['polygon']
+        for edge, pos in self.data['undo']['anchors'].items():
             self.node.setAnchor(edge, pos)
-
         self.node.updateHandlesPos()
-        self.node.updateLabelPos(moved=self.data2['label']['moved'])
+        self.node.updateLabelPos(moved=self.data['undo']['label']['moved'])
         self.node.updateEdges()
         self.node.update()
-
         self.scene.updated.emit()
 
 
@@ -173,8 +162,7 @@ class CommandNodeMove(QUndoCommand):
         :param pos2: a dictionary containing node new positions' data.
         """
         self.scene = scene
-        self.pos1 = pos1
-        self.pos2 = pos2
+        self.pos = {'redo': pos2, 'undo': pos1}
 
         if len(pos1['nodes']) != 1:
             params = 'move {} nodes'.format(len(pos1['nodes']))
@@ -186,18 +174,18 @@ class CommandNodeMove(QUndoCommand):
     def redo(self):
         """redo the command"""
         # update edges breakpoints
-        for edge, breakpoints in self.pos2['edges'].items():
+        for edge, breakpoints in self.pos['redo']['edges'].items():
             for i in range(len(breakpoints)):
                 edge.breakpoints[i] = breakpoints[i]
         # update nodes positions
-        for node, data in self.pos2['nodes'].items():
+        for node, data in self.pos['redo']['nodes'].items():
             node.setPos(data['pos'])
             # update edge anchors
             for edge, pos in data['anchors'].items():
                 node.setAnchor(edge, pos)
         # handle edge updates in a separate cycle: calling node.updateEdges() here seems
         # to be causing troubles, leaving the diagram scene with edges pointing nowhere
-        for edge in set(self.pos2['edges'].keys()) | set(x for n in self.pos2['nodes'].keys() for x in n.edges):
+        for edge in set(self.pos['redo']['edges'].keys()) | set(x for n in self.pos['redo']['nodes'].keys() for x in n.edges):
             edge.updateEdge()
         # emit updated signal
         self.scene.updated.emit()
@@ -205,18 +193,18 @@ class CommandNodeMove(QUndoCommand):
     def undo(self):
         """undo the command"""
         # update edges breakpoints
-        for edge, breakpoints in self.pos1['edges'].items():
+        for edge, breakpoints in self.pos['undo']['edges'].items():
             for i in range(len(breakpoints)):
                 edge.breakpoints[i] = breakpoints[i]
         # update nodes positions
-        for node, data in self.pos1['nodes'].items():
+        for node, data in self.pos['undo']['nodes'].items():
             node.setPos(data['pos'])
             # update edge anchors
             for edge, pos in data['anchors'].items():
                 node.setAnchor(edge, pos)
         # handle edge updates in a separate cycle: calling node.updateEdges() here seems
         # to be causing troubles, leaving the diagram scene with edges pointing nowhere
-        for edge in set(self.pos1['edges'].keys()) | set(x for n in self.pos1['nodes'].keys() for x in n.edges):
+        for edge in set(self.pos['undo']['edges'].keys()) | set(x for n in self.pos['undo']['nodes'].keys() for x in n.edges):
             edge.updateEdge()
         # emit updated signal
         self.scene.updated.emit()
@@ -236,25 +224,24 @@ class CommandNodeLabelMove(QUndoCommand):
         super().__init__('move {} node label'.format(node.name))
         self.scene = scene
         self.label = label
-        self.pos1 = label.pos()
-        self.pos2 = None
+        self.pos = {'undo': label.pos()}
 
     def end(self, pos):
         """
         End the command collecting new data.
         :param pos: the new position of the label.
         """
-        self.pos2 = pos
+        self.pos['redo'] = pos
 
     def redo(self):
         """redo the command"""
-        if self.pos2 is not None:
-            self.label.setPos(self.pos2)
+        if 'redo' in self.pos:
+            self.label.setPos(self.pos['redo'])
             self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        self.label.setPos(self.pos1)
+        self.label.setPos(self.pos['undo'])
         self.scene.updated.emit()
 
 
@@ -271,40 +258,39 @@ class CommandNodeLabelEdit(QUndoCommand):
         super().__init__('edit {} node label'.format(node.name))
         self.node = node
         self.scene = scene
-        self.text1 = node.label.text().strip()
-        self.text2 = None
+        self.text = {'undo': node.label.text().strip()}
 
     def end(self, text):
         """
         End the command collecting new data.
         :param text: the new label text.
         """
-        self.text2 = text.strip()
+        self.text['redo'] = text.strip()
 
     def isTextChanged(self, text):
         """
         Checks whether the given text is different from the old value.
         :param text: the text to compare with the old value.
         """
-        return self.text1 != text.strip()
+        return self.text['undo'] != text.strip()
 
     def redo(self):
         """redo the command"""
-        if self.text2:
+        if 'redo' in self.text:
 
             # remove the item from the old index
-            if self.text1 in self.scene.nodesByLabel:
-                self.scene.nodesByLabel[self.text1].remove(self.node)
-                if not self.scene.nodesByLabel[self.text1]:
-                    del self.scene.nodesByLabel[self.text1]
+            if self.text['undo'] in self.scene.nodesByLabel:
+                self.scene.nodesByLabel[self.text['undo']].remove(self.node)
+                if not self.scene.nodesByLabel[self.text['undo']]:
+                    del self.scene.nodesByLabel[self.text['undo']]
 
             # update the label text
-            self.node.label.setText(self.text2)
+            self.node.label.setText(self.text['redo'])
 
             # map the item over the new index
-            if not self.text2 in self.scene.nodesByLabel:
-                self.scene.nodesByLabel[self.text2] = DistinctList()
-            self.scene.nodesByLabel[self.text2].append(self.node)
+            if not self.text['redo'] in self.scene.nodesByLabel:
+                self.scene.nodesByLabel[self.text['redo']] = DistinctList()
+            self.scene.nodesByLabel[self.text['redo']].append(self.node)
 
             # if the label belongs to an individual identify all the connected enumeration nodes
             if self.node.isItem(Item.IndividualNode):
@@ -319,18 +305,18 @@ class CommandNodeLabelEdit(QUndoCommand):
     def undo(self):
         """undo the command"""
         # remove the item from the old index
-        if self.text2 in self.scene.nodesByLabel:
-            self.scene.nodesByLabel[self.text2].remove(self.node)
-            if not self.scene.nodesByLabel[self.text2]:
-                del self.scene.nodesByLabel[self.text2]
+        if self.text['redo'] in self.scene.nodesByLabel:
+            self.scene.nodesByLabel[self.text['redo']].remove(self.node)
+            if not self.scene.nodesByLabel[self.text['redo']]:
+                del self.scene.nodesByLabel[self.text['redo']]
 
         # update the label text
-        self.node.label.setText(self.text1)
+        self.node.label.setText(self.text['undo'])
 
         # map the item over the new index
-        if not self.text1 in self.scene.nodesByLabel:
-            self.scene.nodesByLabel[self.text1] = DistinctList()
-        self.scene.nodesByLabel[self.text1].append(self.node)
+        if not self.text['undo'] in self.scene.nodesByLabel:
+            self.scene.nodesByLabel[self.text['undo']] = DistinctList()
+        self.scene.nodesByLabel[self.text['undo']].append(self.node)
 
         # if the label belongs to an individual identify all the connected enumeration nodes
         if self.node.isItem(Item.IndividualNode):
@@ -357,12 +343,11 @@ class CommandNodeValueDomainSelectDatatype(QUndoCommand):
         super().__init__('change {} datatype'.format(node.name))
         self.scene = scene
         self.node = node
-        self.data1 = node.datatype
-        self.data2 = datatype
+        self.data = {'redo': datatype, 'undo': node.datatype}
 
     def redo(self):
         """redo the command"""
-        self.node.datatype = self.data2
+        self.node.datatype = self.data['redo']
         self.node.label.setText(self.node.datatype.value)
         self.node.updateRect()
         self.node.updateEdges()
@@ -370,7 +355,7 @@ class CommandNodeValueDomainSelectDatatype(QUndoCommand):
 
     def undo(self):
         """undo the command"""
-        self.node.datatype = self.data1
+        self.node.datatype = self.data['undo']
         self.node.label.setText(self.node.datatype.value)
         self.node.updateRect()
         self.node.updateEdges()
@@ -390,37 +375,36 @@ class CommandNodeHexagonSwitchTo(QUndoCommand):
         """
         super().__init__('switch {} to {}'.format(node1.name, node2.name))
         self.scene = scene
-        self.node1 = node1
-        self.node2 = node2
+        self.node = {'redo': node2, 'undo': node1}
 
     def redo(self):
         """redo the command"""
         # add the new node to the scene
-        self.scene.addItem(self.node2)
+        self.scene.addItem(self.node['redo'])
 
         # move the anchor points
-        for edge, point in self.node1.anchors.items():
-            self.node2.setAnchor(edge, point)
+        for edge, point in self.node['undo'].anchors.items():
+            self.node['redo'].setAnchor(edge, point)
 
         # move the edges
-        for edge in self.node1.edges:
-            if edge.source is self.node1:
-                edge.source = self.node2
-            if edge.target is self.node1:
-                edge.target = self.node2
+        for edge in self.node['undo'].edges:
+            if edge.source is self.node['undo']:
+                edge.source = self.node['redo']
+            if edge.target is self.node['undo']:
+                edge.target = self.node['redo']
 
-            self.node2.addEdge(edge)
+            self.node['redo'].addEdge(edge)
             # IMPORTANT: clear anchors dict in the edge or we will have also the
             # reference of the previous node since it's a dict indexed by item!
             edge.anchors.clear()
             edge.updateEdge()
 
         # clear edge and anchor references from node1
-        self.node1.anchors.clear()
-        self.node1.edges.clear()
+        self.node['undo'].anchors.clear()
+        self.node['undo'].edges.clear()
 
         # remove the old node from the scene
-        self.scene.removeItem(self.node1)
+        self.scene.removeItem(self.node['undo'])
 
         # emit updated signal
         self.scene.updated.emit()
@@ -428,31 +412,31 @@ class CommandNodeHexagonSwitchTo(QUndoCommand):
     def undo(self):
         """undo the command"""
         # add back to the scene the old node
-        self.scene.addItem(self.node1)
+        self.scene.addItem(self.node['undo'])
 
         # move the anchor points back
-        for edge, point in self.node2.anchors.items():
-            self.node1.setAnchor(edge, point)
+        for edge, point in self.node['redo'].anchors.items():
+            self.node['undo'].setAnchor(edge, point)
 
         # move the edges
-        for edge in self.node2.edges:
-            if edge.source is self.node2:
-                edge.source = self.node1
-            if edge.target is self.node2:
-                edge.target = self.node1
+        for edge in self.node['redo'].edges:
+            if edge.source is self.node['redo']:
+                edge.source = self.node['undo']
+            if edge.target is self.node['redo']:
+                edge.target = self.node['undo']
 
-            self.node1.addEdge(edge)
+            self.node['undo'].addEdge(edge)
             # IMPORTANT: clear anchors dict in the edge or we will have also the
             # reference of the previous node since it's a dict indexed by item!
             edge.anchors.clear()
             edge.updateEdge()
 
         # clear edge and anchor references from node2
-        self.node2.anchors.clear()
-        self.node2.edges.clear()
+        self.node['redo'].anchors.clear()
+        self.node['redo'].edges.clear()
 
         # remove the new node from the scene
-        self.scene.removeItem(self.node2)
+        self.scene.removeItem(self.node['redo'])
 
         # emit updated signal
         self.scene.updated.emit()
@@ -471,15 +455,11 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
         """
         self.node = node
         self.scene = scene
-        self.restriction_type1 = self.node.restriction_type
-        self.cardinality1 = self.node.cardinality
-        self.restriction_type2 = restriction_type
-        self.cardinality2 = dict(min=None, max=None) if not cardinality else cardinality
-
+        self.restriction = {'redo': restriction_type, 'undo': self.node.restriction_type}
+        self.cardinality = {'redo': dict(min=None, max=None) if not cardinality else cardinality, 'undo': self.node.cardinality}
         value = restriction_type.label
         if restriction_type is RestrictionType.cardinality:
             value = value.format(min=self.s(cardinality['min']), max=self.s(cardinality['max']))
-
         super().__init__('change {} to {}'.format(node.name, value))
 
     @staticmethod
@@ -492,13 +472,13 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        if self.restriction_type2 is RestrictionType.cardinality:
-            self.node.restriction_type = self.restriction_type2
-            self.node.cardinality = self.cardinality2
+        if self.restriction['redo'] is RestrictionType.cardinality:
+            self.node.restriction_type = self.restriction['redo']
+            self.node.cardinality = self.cardinality['redo']
             self.node.label.setText(self.node.restriction_type.label.format(min=self.s(self.node.cardinality['min']),
                                                                             max=self.s(self.node.cardinality['max'])))
         else:
-            self.node.restriction_type = self.restriction_type2
+            self.node.restriction_type = self.restriction['redo']
             self.node.cardinality = dict(min=None, max=None)
             self.node.label.setText(self.node.restriction_type.label)
 
@@ -507,13 +487,13 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
 
     def undo(self):
         """undo the command"""
-        if self.restriction_type1 is RestrictionType.cardinality:
-            self.node.restriction_type = self.restriction_type1
-            self.node.cardinality = self.cardinality1
+        if self.restriction['undo'] is RestrictionType.cardinality:
+            self.node.restriction_type = self.restriction['undo']
+            self.node.cardinality = self.cardinality['undo']
             self.node.label.setText(self.node.restriction_type.label.format(min=self.s(self.node.cardinality['min']),
                                                                             max=self.s(self.node.cardinality['max'])))
         else:
-            self.node.restriction_type = self.restriction_type1
+            self.node.restriction_type = self.restriction['undo']
             self.node.cardinality = dict(min=None, max=None)
             self.node.label.setText(self.node.restriction_type.label)
 
@@ -532,17 +512,16 @@ class CommandNodeSetURL(QUndoCommand):
         :param url: the new url.
         """
         super().__init__('change {} node URL'.format(node.name))
+        self.url = {'redo': url, 'undo': node.url}
         self.node = node
-        self.url1 = node.url
-        self.url2 = url
 
     def redo(self):
         """redo the command"""
-        self.node.url = self.url2
+        self.node.url = self.url['redo']
 
     def undo(self):
         """undo the command"""
-        self.node.url = self.url1
+        self.node.url = self.url['undo']
 
 
 class CommandNodeSetDescription(QUndoCommand):
@@ -556,17 +535,16 @@ class CommandNodeSetDescription(QUndoCommand):
         :param description: the new description.
         """
         super().__init__('change {} node description'.format(node.name))
+        self.description = {'redo': description, 'undo': node.description}
         self.node = node
-        self.description1 = node.description
-        self.description2 = description
 
     def redo(self):
         """redo the command"""
-        self.node.description = self.description2
+        self.node.description = self.description['redo']
 
     def undo(self):
         """undo the command"""
-        self.node.description = self.description1
+        self.node.description = self.description['undo']
 
 
 class CommandNodeSetSpecial(QUndoCommand):
@@ -585,33 +563,39 @@ class CommandNodeSetSpecial(QUndoCommand):
 
         if not special:
             # remove special: TOP|BOTTOM -> None
-            self.data1 = {'special': node.special, 'text': node.special.value, 'pos': node.label.defaultPos()}
-            self.data2 = {'special': None, 'text': node.label.defaultText, 'pos': node.label.defaultPos()}
             super().__init__('remove {} from {} node'.format(node.special.value, node.name))
+            self.data = {
+                'undo': {'special': node.special, 'text': node.special.value, 'pos': node.label.defaultPos()},
+                'redo': {'special': None, 'text': node.label.defaultText, 'pos': node.label.defaultPos()}
+            }
         else:
             if node.special:
                 # change special TOP <-> BOTTOM
-                self.data1 = {'special': node.special, 'text': node.special.value, 'pos': node.label.defaultPos()}
-                self.data2 = {'special': special, 'text': special.value, 'pos': node.label.defaultPos()}
                 super().__init__('change {} node from {} to {}'.format(node.name, node.special.value, special.value))
+                self.data = {
+                    'undo': {'special': node.special, 'text': node.special.value, 'pos': node.label.defaultPos()},
+                    'redo': {'special': special, 'text': special.value, 'pos': node.label.defaultPos()}
+                }
             else:
                 # set as special: None -> TOP|BOTTOM
-                self.data1 = {'special': None, 'text': node.label.text(), 'pos': node.label.pos()}
-                self.data2 = {'special': special, 'text': special.value, 'pos': node.label.defaultPos()}
                 super().__init__('set {} node as {}'.format(node.name, special.value))
+                self.data = {
+                    'undo': {'special': None, 'text': node.label.text(), 'pos': node.label.pos()},
+                    'redo': {'special': special, 'text': special.value, 'pos': node.label.defaultPos()}
+                }
 
     def redo(self):
         """redo the command"""
-        self.node.special = self.data2['special']
-        self.node.setLabelText(self.data2['text'])
-        self.node.setLabelPos(self.data2['pos'])
+        self.node.special = self.data['redo']['special']
+        self.node.setLabelText(self.data['redo']['text'])
+        self.node.setLabelPos(self.data['redo']['pos'])
         self.scene.updated.emit()
 
     def undo(self):
         """redo the command"""
-        self.node.special = self.data1['special']
-        self.node.setLabelText(self.data1['text'])
-        self.node.setLabelPos(self.data1['pos'])
+        self.node.special = self.data['undo']['special']
+        self.node.setLabelText(self.data['undo']['text'])
+        self.node.setLabelPos(self.data['undo']['pos'])
         self.scene.updated.emit()
 
 
@@ -628,19 +612,18 @@ class CommandNodeChangeInputOrder(QUndoCommand):
         """
         self.node = node
         self.scene = scene
-        self.inputs1 = node.inputs
-        self.inputs2 = inputs
+        self.inputs = {'redo': inputs, 'undo': node.inputs}
         super().__init__('change {} node inputs order'.format(node.name))
 
     def redo(self):
         """redo the command"""
-        self.node.inputs = self.inputs2
+        self.node.inputs = self.inputs['redo']
         self.node.updateEdges()
         self.scene.updated.emit()
 
     def undo(self):
         """redo the command"""
-        self.node.inputs = self.inputs1
+        self.node.inputs = self.inputs['undo']
         self.node.updateEdges()
         self.scene.updated.emit()
 
@@ -658,7 +641,7 @@ class CommandNodeChangeBrush(QUndoCommand):
         """
         self.scene = scene
         self.nodes = nodes
-        self.brush = {x: {'from': x.brush, 'to': brush} for x in nodes}
+        self.brush = {x: {'undo': x.brush, 'redo': brush} for x in nodes}
         if len(nodes) != 1:
             super().__init__('change color of {} nodes'.format(len(nodes)))
         else:
@@ -667,13 +650,13 @@ class CommandNodeChangeBrush(QUndoCommand):
     def redo(self):
         """redo the command"""
         for node in self.nodes:
-            node.brush = self.brush[node]['to']
+            node.brush = self.brush[node]['redo']
             node.update()
         self.scene.updated.emit()
 
     def undo(self):
         """redo the command"""
         for node in self.nodes:
-            node.brush = self.brush[node]['from']
+            node.brush = self.brush[node]['undo']
             node.update()
         self.scene.updated.emit()
