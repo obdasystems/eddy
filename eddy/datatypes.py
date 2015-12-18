@@ -407,7 +407,7 @@ class Item(IntEnum):
 
 
 @unique
-class RestrictionType(Enum):
+class Restriction(Enum):
     """
     This class defines all the available restrictions for the Domain and Range restriction nodes.
     """
@@ -422,15 +422,15 @@ class RestrictionType(Enum):
     def label(self):
         """The label of the Enum member."""
         return {
-            RestrictionType.exists: 'exists',
-            RestrictionType.forall: 'forall',
-            RestrictionType.self: 'self',
-            RestrictionType.cardinality: '({min},{max})',
+            Restriction.exists: 'exists',
+            Restriction.forall: 'forall',
+            Restriction.self: 'self',
+            Restriction.cardinality: '({min},{max})',
         }[self]
 
 
 @unique
-class SpecialType(Enum):
+class Special(Enum):
     """
     This class defines special Concept nodes types.
     """
@@ -444,7 +444,7 @@ class SpecialType(Enum):
         """
         Returns the special type matching the given value.
         :param value: the value to match.
-        :rtype: SpecialType
+        :rtype: Special
         """
         for x in cls:
             if x.value == value.upper().strip():
@@ -455,8 +455,8 @@ class SpecialType(Enum):
     def owl(self):
         """Returns the Owl corrispective of the special type."""
         return {
-            SpecialType.TOP: 'owl:Thing',
-            SpecialType.BOTTOM: 'owl:Nothing',
+            Special.TOP: 'owl:Thing',
+            Special.BOTTOM: 'owl:Nothing',
         }[self]
 
 

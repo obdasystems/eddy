@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath
 
-from eddy.datatypes import Font, Item, XsdDatatype, SpecialType, DiagramMode, Identity
+from eddy.datatypes import Font, Item, XsdDatatype, Special, DiagramMode, Identity
 from eddy.items.nodes.common.base import AbstractNode
 from eddy.items.nodes.common.label import Label
 
@@ -98,7 +98,7 @@ class ValueDomainNode(AbstractNode):
     def special(self):
         """
         Returns the special type of this node.
-        :rtype: SpecialType
+        :rtype: Special
         """
         return self._special
 
@@ -106,7 +106,7 @@ class ValueDomainNode(AbstractNode):
     def special(self, special):
         """
         Set the special type of this node.
-        :type special: SpecialType
+        :type special: Special
         """
         self._special = special
         self.label.setText(self._special.value if self._special else self.datatype.value)
@@ -228,7 +228,7 @@ class ValueDomainNode(AbstractNode):
             'height': int(G.attribute('height')),
             'id': E.attribute('id'),
             'scene': scene,
-            'special': SpecialType.forValue(L.text()),
+            'special': Special.forValue(L.text()),
             'url': U.text(),
             'width': int(G.attribute('width')),
         }
@@ -347,7 +347,7 @@ class ValueDomainNode(AbstractNode):
         :raise ParseError: if an invalid datatype is given.
         :param text: the text value to set.
         """
-        special = SpecialType.forValue(text)
+        special = Special.forValue(text)
         if special:
             self.special = special
             self.updateRect()

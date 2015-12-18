@@ -140,14 +140,6 @@ class AbstractNode(AbstractItem):
         pass
 
     @property
-    def operator(self):
-        """
-        Tells whether this node is an operator node.
-        :rtype: bool
-        """
-        return Item.UnionNode <= self.item <= Item.PropertyAssertionNode
-
-    @property
     def pen(self):
         """
         Returns the pen used to paint this node.
@@ -180,14 +172,6 @@ class AbstractNode(AbstractItem):
         :rtype: bool
         """
         return False
-
-    @property
-    def restriction(self):
-        """
-        Tells whether this node is a restriction node.
-        :rtype: bool
-        """
-        return Item.DomainRestrictionNode <= self.item <= Item.RangeRestrictionNode
 
     ####################################################################################################################
     #                                                                                                                  #

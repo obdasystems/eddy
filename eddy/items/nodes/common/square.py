@@ -37,7 +37,7 @@ from abc import ABCMeta
 from PyQt5.QtCore import QRectF, QPointF, Qt
 from PyQt5.QtGui import QColor, QPainterPath, QPen
 
-from eddy.datatypes import DiagramMode, Identity, RestrictionType
+from eddy.datatypes import DiagramMode, Identity, Restriction
 from eddy.exceptions import ParseError
 from eddy.items.nodes.common.base import AbstractNode
 from eddy.items.nodes.common.label import Label
@@ -50,24 +50,24 @@ class SquaredNode(AbstractNode):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, width=20, height=20, brush='#fcfcfc', restriction_type=None, cardinality=None, **kwargs):
+    def __init__(self, width=20, height=20, brush='#fcfcfc', restriction=None, cardinality=None, **kwargs):
         """
         Initialize the Squared shaped node.
         :param width: the shape width (unused in current implementation).
         :param height: the shape height (unused in current implementation).
         :param brush: the brush used to paint the node.
-        :param restriction_type: the restriction type of the node.
+        :param restriction: the restriction type of the node.
         :param cardinality: the cardinality of the node (if it's a cardinality restriction).
         """
         super().__init__(**kwargs)
 
-        self._restriction_type = restriction_type or RestrictionType.exists
-        self._cardinality = cardinality if self.restriction_type is RestrictionType.cardinality else dict(min=None, max=None)
+        self._restriction = restriction or Restriction.exists
+        self._cardinality = cardinality if self.restriction is Restriction.cardinality else dict(min=None, max=None)
 
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.polygon = self.createRect(20, 20)
-        self.label = Label(self.restriction_type.label, centered=False, editable=False, parent=self)
+        self.label = Label(self.restriction.label, centered=False, editable=False, parent=self)
         self.label.updatePos()
 
     ####################################################################################################################
@@ -110,25 +110,25 @@ class SquaredNode(AbstractNode):
         :param cardinality: the cardinality of the node.
         """
         self._cardinality = cardinality
-        if self.restriction_type is not RestrictionType.cardinality:
+        if self.restriction is not Restriction.cardinality:
             self._cardinality = dict(min=None, max=None)
 
     @property
-    def restriction_type(self):
+    def restriction(self):
         """
         Returns the restriction type of the node.
-        :rtype: RestrictionType
+        :rtype: Restriction
         """
-        return self._restriction_type
+        return self._restriction
 
-    @restriction_type.setter
-    def restriction_type(self, restriction_type):
+    @restriction.setter
+    def restriction(self, restriction):
         """
-        Set the restriction type of this node.
+        Set the restriction of this node.
         Setting the restriction type will also reset the cardinality which would need to be set again.
-        :param restriction_type: the restriction type.
+        :param restriction: the restriction type.
         """
-        self._restriction_type = restriction_type
+        self._restriction = restriction
         self._cardinality = dict(min=None, max=None)
 
     ####################################################################################################################
@@ -148,9 +148,9 @@ class SquaredNode(AbstractNode):
         menu.addSeparator()
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRestrictionChange)
 
-        # switch the check on the currently active restriction_type
+        # switch the check on the currently active restriction
         for action in scene.mainwindow.actionsRestrictionChange:
-            action.setChecked(self.restriction_type is action.data())
+            action.setChecked(self.restriction is action.data())
 
         collection = self.label.contextMenuAdd()
         if collection:
@@ -347,25 +347,25 @@ class SquaredNode(AbstractNode):
 
     def setLabelText(self, text):
         """
-        Set the label text: will additionally parse the text value and set the restriction_type type accordingly.
+        Set the label text: will additionally parse the text value and set the restriction type accordingly.
         :raise ParseError: if an invalid text value is supplied.
         :param text: the text value to set.
         """
         value = text.strip().lower()
-        if value == RestrictionType.exists.label:
+        if value == Restriction.exists.label:
             self.label.setText(value)
-            self.restriction_type = RestrictionType.exists
-        elif value == RestrictionType.forall.label:
+            self.restriction = Restriction.exists
+        elif value == Restriction.forall.label:
             self.label.setText(value)
-            self.restriction_type = RestrictionType.forall
-        elif value == RestrictionType.self.label:
+            self.restriction = Restriction.forall
+        elif value == Restriction.self.label:
             self.label.setText(value)
-            self.restriction_type = RestrictionType.self
+            self.restriction = Restriction.self
         else:
             match = RE_CARDINALITY.match(value)
             if match:
                 self.label.setText(value)
-                self.restriction_type = RestrictionType.cardinality
+                self.restriction = Restriction.cardinality
                 self.cardinality = {
                     'min': None if match.group('min') == '-' else int(match.group('min')),
                     'max': None if match.group('max') == '-' else int(match.group('max')),

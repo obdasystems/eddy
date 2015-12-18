@@ -43,7 +43,7 @@ from PyQt5.QtXml import QDomDocument
 
 from eddy import __appname__ as appname, __organization__ as organization
 from eddy.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
-from eddy.datatypes import DiagramMode, DistinctList, File, Item, RestrictionType, SpecialType
+from eddy.datatypes import DiagramMode, DistinctList, File, Item, Restriction, Special
 from eddy.functions import rangeF, snapF
 from eddy.items import ConceptNode, ComplementNode, DomainRestrictionNode, InputEdge, InclusionEdge
 from eddy.items import RangeRestrictionNode, RoleChainNode, RoleInverseNode, ValueDomainNode
@@ -427,7 +427,7 @@ class DiagramScene(QGraphicsScene):
         :param source: the node source of the composition.
         :rtype: set
         """
-        node1 = DomainRestrictionNode(scene=self, restriction_type=RestrictionType.exists)
+        node1 = DomainRestrictionNode(scene=self, restriction=Restriction.exists)
         edge1 = InputEdge(scene=self, source=source, target=node1, functional=True)
 
         size = DiagramScene.GridSize
@@ -463,7 +463,7 @@ class DiagramScene(QGraphicsScene):
         :param source: the node source of the composition.
         :rtype: set
         """
-        node1 = RangeRestrictionNode(scene=self, restriction_type=RestrictionType.exists)
+        node1 = RangeRestrictionNode(scene=self, restriction=Restriction.exists)
         edge1 = InputEdge(scene=self, source=source, target=node1, functional=True)
         
         size = DiagramScene.GridSize
@@ -503,11 +503,11 @@ class DiagramScene(QGraphicsScene):
         x2 = snapF(source.pos().x() + source.width() / 2 + 120, DiagramScene.GridSize, snap=True)
         x3 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize, snap=True)
 
-        node1 = DomainRestrictionNode(scene=self, restriction_type=RestrictionType.self)
+        node1 = DomainRestrictionNode(scene=self, restriction=Restriction.self)
         node1.setPos(QPointF(x1, source.pos().y()))
         node2 = ComplementNode(scene=self)
         node2.setPos(QPointF(x2, source.pos().y()))
-        node3 = ConceptNode(scene=self, special=SpecialType.TOP)
+        node3 = ConceptNode(scene=self, special=Special.TOP)
         node3.setPos(QPointF(x3, source.pos().y()))
         edge1 = InputEdge(scene=self, source=source, target=node1)
         edge2 = InputEdge(scene=self, source=node1, target=node2)
@@ -521,7 +521,7 @@ class DiagramScene(QGraphicsScene):
         :param source: the node source of the composition.
         :rtype: set
         """
-        node1 = DomainRestrictionNode(scene=self, restriction_type=RestrictionType.exists)
+        node1 = DomainRestrictionNode(scene=self, restriction=Restriction.exists)
         edge1 = InputEdge(scene=self, source=source, target=node1)
         
         size = DiagramScene.GridSize
@@ -557,7 +557,7 @@ class DiagramScene(QGraphicsScene):
         :param source: the node source of the composition.
         :rtype: set
         """
-        node1 = RangeRestrictionNode(scene=self, restriction_type=RestrictionType.exists)
+        node1 = RangeRestrictionNode(scene=self, restriction=Restriction.exists)
         edge1 = InputEdge(scene=self, source=source, target=node1)
 
         if source.isItem(Item.AttributeNode):
@@ -634,9 +634,9 @@ class DiagramScene(QGraphicsScene):
         x1 = snapF(source.pos().x() + source.width() / 2 + 40, DiagramScene.GridSize, snap=True)
         x2 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize, snap=True)
 
-        node1 = DomainRestrictionNode(scene=self, restriction_type=RestrictionType.self)
+        node1 = DomainRestrictionNode(scene=self, restriction=Restriction.self)
         node1.setPos(QPointF(x1, source.pos().y()))
-        node2 = ConceptNode(scene=self, special=SpecialType.TOP)
+        node2 = ConceptNode(scene=self, special=Special.TOP)
         node2.setPos(QPointF(x2, source.pos().y()))
         edge1 = InputEdge(scene=self, source=source, target=node1)
         edge2 = InclusionEdge(scene=self, source=node2, target=node1)

@@ -35,7 +35,7 @@
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPixmap, QPainter, QPen, QColor
 
-from eddy.datatypes import Font, Item, RestrictionType, SpecialType, DiagramMode, Identity
+from eddy.datatypes import Font, Item, Restriction, Special, DiagramMode, Identity
 from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.functions import snapF
 from eddy.items.nodes.common.base import AbstractResizableNode
@@ -104,7 +104,7 @@ class RoleNode(AbstractResizableNode):
     def special(self):
         """
         Returns the special type of this node.
-        :rtype: SpecialType
+        :rtype: Special
         """
         return self._special
 
@@ -112,7 +112,7 @@ class RoleNode(AbstractResizableNode):
     def special(self, special):
         """
         Set the special type of this node.
-        :type special: SpecialType
+        :type special: Special
         """
         self._special = special
         self.label.editable = self._special is None
@@ -178,14 +178,14 @@ class RoleNode(AbstractResizableNode):
             if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
                     e1.target.isItem(Item.DomainRestrictionNode) and \
-                        e1.target.restriction_type is RestrictionType.self:
+                        e1.target.restriction is Restriction.self:
                 for e2 in e1.target.edges:
                     if e2.isItem(Item.InputEdge) and \
                         e2.source is e1.target and \
                             e2.target.isItem(Item.ComplementNode):
                         for e3 in e2.target.edges:
                             if e3.source.isItem(Item.ConceptNode) and \
-                                e3.source.special is SpecialType.TOP and \
+                                e3.source.special is Special.TOP and \
                                     e3.target is e2.target:
                                 return True
         return False
@@ -202,7 +202,7 @@ class RoleNode(AbstractResizableNode):
             if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
                     e1.target.isItem(Item.DomainRestrictionNode) and \
-                        e1.target.restriction_type is RestrictionType.self and \
+                        e1.target.restriction is Restriction.self and \
                             all(x not in paths for x in {e1, e1.target}):
                 path |= {e1, e1.target}
                 for e2 in e1.target.edges:
@@ -213,7 +213,7 @@ class RoleNode(AbstractResizableNode):
                         path |= {e2, e2.target}
                         for e3 in e2.target.edges:
                             if e3.source.isItem(Item.ConceptNode) and \
-                                e3.source.special is SpecialType.TOP and \
+                                e3.source.special is Special.TOP and \
                                     e3.target is e2.target and \
                                         all(x not in paths for x in {e3, e3.source}):
                                 paths |= path | {e3, e3.source}
@@ -229,10 +229,10 @@ class RoleNode(AbstractResizableNode):
             if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
                     e1.target.isItem(Item.DomainRestrictionNode) and \
-                        e1.target.restriction_type is RestrictionType.self:
+                        e1.target.restriction is Restriction.self:
                 for e2 in e1.target.edges:
                     if e2.source.isItem(Item.ConceptNode) and \
-                        e2.source.special is SpecialType.TOP and \
+                        e2.source.special is Special.TOP and \
                             e2.target is e1.target:
                         return True
         return False
@@ -249,12 +249,12 @@ class RoleNode(AbstractResizableNode):
             if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
                     e1.target.isItem(Item.DomainRestrictionNode) and \
-                        e1.target.restriction_type is RestrictionType.self and \
+                        e1.target.restriction is Restriction.self and \
                             all(x not in paths for x in {e1, e1.target}):
                 path |= {e1, e1.target}
                 for e2 in e1.target.edges:
                     if e2.source.isItem(Item.ConceptNode) and \
-                        e2.source.special is SpecialType.TOP and \
+                        e2.source.special is Special.TOP and \
                             e2.target is e1.target and \
                                 all(x not in paths for x in {e2, e2.source}):
                         paths |= path | {e2, e2.source}
@@ -478,7 +478,7 @@ class RoleNode(AbstractResizableNode):
             'height': int(G.attribute('height')),
             'id': E.attribute('id'),
             'scene': scene,
-            'special': SpecialType.forValue(L.text()),
+            'special': Special.forValue(L.text()),
             'url': U.text(),
             'width': int(G.attribute('width')),
         }

@@ -36,7 +36,7 @@ from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QPolygonF
 from PyQt5.QtWidgets import QUndoCommand
 
-from eddy.datatypes import RestrictionType, DistinctList, Item
+from eddy.datatypes import Restriction, DistinctList, Item
 from eddy.functions import identify
 
 
@@ -446,19 +446,19 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
     """
     This command is used to change the restriction of square based constructor nodes.
     """
-    def __init__(self, scene, node, restriction_type, cardinality=None):
+    def __init__(self, scene, node, restriction, cardinality=None):
         """
         Initialize the command.
         :param scene: the scene where this command is being performed.
         :param node: the node whose restriction is being changed.
-        :param restriction_type: the new restriction type.
+        :param restriction: the new restriction.
         """
         self.node = node
         self.scene = scene
-        self.restriction = {'redo': restriction_type, 'undo': self.node.restriction_type}
+        self.restriction = {'redo': restriction, 'undo': self.node.restriction}
         self.cardinality = {'redo': dict(min=None, max=None) if not cardinality else cardinality, 'undo': self.node.cardinality}
-        value = restriction_type.label
-        if restriction_type is RestrictionType.cardinality:
+        value = restriction.label
+        if restriction is Restriction.cardinality:
             value = value.format(min=self.s(cardinality['min']), max=self.s(cardinality['max']))
         super().__init__('change {} to {}'.format(node.name, value))
 
@@ -472,30 +472,30 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        if self.restriction['redo'] is RestrictionType.cardinality:
-            self.node.restriction_type = self.restriction['redo']
+        if self.restriction['redo'] is Restriction.cardinality:
+            self.node.restriction = self.restriction['redo']
             self.node.cardinality = self.cardinality['redo']
-            self.node.label.setText(self.node.restriction_type.label.format(min=self.s(self.node.cardinality['min']),
-                                                                            max=self.s(self.node.cardinality['max'])))
+            self.node.label.setText(self.node.restriction.label.format(min=self.s(self.node.cardinality['min']),
+                                                                       max=self.s(self.node.cardinality['max'])))
         else:
-            self.node.restriction_type = self.restriction['redo']
+            self.node.restriction = self.restriction['redo']
             self.node.cardinality = dict(min=None, max=None)
-            self.node.label.setText(self.node.restriction_type.label)
+            self.node.label.setText(self.node.restriction.label)
 
         # emit updated signal
         self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        if self.restriction['undo'] is RestrictionType.cardinality:
-            self.node.restriction_type = self.restriction['undo']
+        if self.restriction['undo'] is Restriction.cardinality:
+            self.node.restriction = self.restriction['undo']
             self.node.cardinality = self.cardinality['undo']
-            self.node.label.setText(self.node.restriction_type.label.format(min=self.s(self.node.cardinality['min']),
-                                                                            max=self.s(self.node.cardinality['max'])))
+            self.node.label.setText(self.node.restriction.label.format(min=self.s(self.node.cardinality['min']),
+                                                                       max=self.s(self.node.cardinality['max'])))
         else:
-            self.node.restriction_type = self.restriction['undo']
+            self.node.restriction = self.restriction['undo']
             self.node.cardinality = dict(min=None, max=None)
-            self.node.label.setText(self.node.restriction_type.label)
+            self.node.label.setText(self.node.restriction.label)
 
         # emit updated signal
         self.scene.updated.emit()

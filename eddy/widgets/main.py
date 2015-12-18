@@ -53,7 +53,7 @@ from eddy.commands import CommandNodeLabelMove, CommandNodeLabelEdit, CommandEdg
 from eddy.commands import CommandNodeSetZValue, CommandNodeHexagonSwitchTo, CommandNodeValueDomainSelectDatatype
 from eddy.commands import CommandNodeSquareChangeRestriction, CommandNodeSetSpecial, CommandNodeChangeBrush
 from eddy.commands import CommandEdgeInclusionToggleComplete, CommandEdgeInputToggleFunctional, CommandEdgeSwap
-from eddy.datatypes import Color, File, DiagramMode, FileType, RestrictionType, SpecialType, XsdDatatype
+from eddy.datatypes import Color, File, DiagramMode, FileType, Restriction, Special, XsdDatatype
 from eddy.dialogs import AboutDialog, CardinalityRestrictionForm, RenameForm
 from eddy.dialogs import OpenFileDialog, PreferencesDialog, SaveFileDialog, ScenePropertiesDialog
 from eddy.exceptions import ParseError
@@ -351,7 +351,7 @@ class MainWindow(QMainWindow):
         connect(self.actionResetLabelPosition.triggered, self.resetLabelPosition)
 
         self.actionsNodeSetSpecial = []
-        for special in SpecialType:
+        for special in Special:
             action = QAction(special.value, self)
             action.setCheckable(True)
             action.setData(special)
@@ -405,7 +405,7 @@ class MainWindow(QMainWindow):
 
         ## DOMAIN / RANGE RESTRICTION
         self.actionsRestrictionChange = []
-        for restriction in RestrictionType:
+        for restriction in Restriction:
             action = QAction(restriction.value, self)
             action.setCheckable(True)
             action.setData(restriction)
@@ -708,7 +708,7 @@ class MainWindow(QMainWindow):
                                                   Item.RangeRestrictionNode), scene.selectedNodes()), None)
             if node:
                 restriction = action.data()
-                if restriction == RestrictionType.cardinality:
+                if restriction == Restriction.cardinality:
                     form = CardinalityRestrictionForm()
                     if form.exec_() == CardinalityRestrictionForm.Accepted:
                         cardinality = dict(min=form.minCardinalityValue, max=form.maxCardinalityValue)

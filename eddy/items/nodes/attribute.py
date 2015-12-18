@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath
 
-from eddy.datatypes import Font, Item, SpecialType, DiagramMode, Identity
+from eddy.datatypes import Font, Item, Special, DiagramMode, Identity
 from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.items.nodes.common.base import AbstractNode
 from eddy.items.nodes.common.label import Label
@@ -94,7 +94,7 @@ class AttributeNode(AbstractNode):
     def special(self):
         """
         Returns the special type of this node.
-        :rtype: SpecialType
+        :rtype: Special
         """
         return self._special
 
@@ -102,7 +102,7 @@ class AttributeNode(AbstractNode):
     def special(self, special):
         """
         Set the special type of this node.
-        :type special: SpecialType
+        :type special: Special
         """
         self._special = special
         self.label.editable = self._special is None
@@ -223,7 +223,7 @@ class AttributeNode(AbstractNode):
             'height': int(G.attribute('height')),
             'id': E.attribute('id'),
             'scene': scene,
-            'special': SpecialType.forValue(L.text()),
+            'special': Special.forValue(L.text()),
             'url': U.text(),
             'width': int(G.attribute('width')),
         }
