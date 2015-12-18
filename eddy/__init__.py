@@ -74,8 +74,10 @@ class Eddy(QApplication):
         :return: the application main window.
         :rtype: MainWindow
         """
-        self.setStyle(Style.forName(self.settings.value('appearance/style', 'light', str)))
-        self.setStyleSheet(self.style().qss())
+        style = Style.forName(self.settings.value('appearance/style', 'light', str))
+
+        self.setStyle(style)
+        self.setStyleSheet(style.qss())
 
         if not self.settings.contains('document/recent_documents'):
             # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
