@@ -51,7 +51,7 @@ from PyQt5.QtWidgets import QApplication
 
 from eddy.functions.fsystem import getPath
 from eddy.functions.misc import QSS
-from eddy.styles import DefaultStyle
+from eddy.styles import LightStyle, Style
 from eddy.widgets.main import MainWindow
 from eddy.widgets.misc import SplashScreen
 
@@ -74,8 +74,8 @@ class Eddy(QApplication):
         :return: the application main window.
         :rtype: MainWindow
         """
-        self.setStyle(DefaultStyle())
-        self.setStyleSheet(QSS(getPath('@eddy/styles/default.qss')))
+        self.setStyle(Style.forName(self.settings.value('appearance/style', 'light', str)))
+        self.setStyleSheet(self.style().qss())
 
         if not self.settings.contains('document/recent_documents'):
             # From PyQt5 documentation: if the value of the setting is a container (corresponding to either

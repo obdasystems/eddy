@@ -32,4 +32,43 @@
 ##########################################################################
 
 
-from eddy.styles.default import DefaultStyle
+from abc import ABCMeta, abstractmethod
+
+from PyQt5.QtWidgets import QProxyStyle
+
+
+class Style(QProxyStyle):
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self, *args):
+        """
+        Initialize the Light style (using Fusion as base).
+        """
+        super().__init__(*args)
+
+    @abstractmethod
+    def qss(self):
+        """
+        Returns the stylesheet associated with this style.
+        :rtype: unicode
+        """
+        pass
+
+    @classmethod
+    def forName(cls, name):
+        """
+        Returns an initialized style matching the given name. If the given name is not
+        a valid style name will return the default one (currently set on Light style).
+        :type name: T <= bytes | unicode
+        :rtype: Style
+        """
+        return __mapping__.get(name, LightStyle)()
+
+
+from eddy.styles.light import LightStyle
+
+
+__mapping__ = {
+    'light': LightStyle,
+}

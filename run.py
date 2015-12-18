@@ -58,7 +58,6 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
     :param exc_traceback: the exception traceback
     """
     if issubclass(exc_type, KeyboardInterrupt):
-        global app
         app.quit()
     else:
         box = QMessageBox()

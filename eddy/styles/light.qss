@@ -34,10 +34,10 @@
  * MAIN WINDOW
  */
 QMainWindow::separator {
-    width: 10px;
     height: 0;
     margin: -10px;
     padding: 0;
+    width: 10px;
 }
 /**
  * TOOLBAR
@@ -74,7 +74,9 @@ QDockWidget {
     titlebar-close-icon: url(:/icons/close);
 }
 QDockWidget::title {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #E0E0E0, stop: 0.3 #DCDCDC, stop: 0.7 #DBDBDB, stop: 1.0 #D3D3D3);
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0.0 #E0E0E0, stop: 0.3 #DCDCDC,
+                                stop: 0.7 #DBDBDB, stop: 1.0 #D3D3D3);
     border-top: 1px solid #BABABA;
     border-bottom: 1px solid #BABABA;
     padding: 4px;
@@ -87,7 +89,9 @@ QDockWidget::close-button {
     top: 3px;
 }
 QDockWidget::close-button:hover {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #D0D0D0, stop: 0.3 #CCCCCC, stop: 0.7 #CBCBCB, stop: 1.0 #C3C3C3);
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0.0 #D0D0D0, stop: 0.3 #CCCCCC,
+                                stop: 0.7 #CBCBCB, stop: 1.0 #C3C3C3);
     border-color: #BABABA;
     border-radius: 2px;
 }
@@ -124,7 +128,9 @@ QTabBar::close-button  {
 QTabBar::close-button:hover {
     border-color: #BABABA;
     border-radius: 2px;
-    background: qlineargradient(x1:0, y1 : 0, x2 : 0, y2 : 1, stop : 0.0 #D0D0D0, stop : 0.3 #CCCCCC, stop : 0.7 #CBCBCB, stop : 1.0 #C3C3C3);
+    background: qlineargradient(x1:0, y1 : 0, x2 : 0, y2 : 1,
+                                stop : 0.0 #D0D0D0, stop : 0.3 #CCCCCC,
+                                stop : 0.7 #CBCBCB, stop : 1.0 #C3C3C3);
 }
 QTabBar::tab:top {
     border: 1px solid #BABABA;
@@ -134,10 +140,14 @@ QTabBar::tab:top {
     padding: 0 10px;
 }
 QTabBar::tab:top:selected {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #F8F8F8, stop: 0.3 #F4F4F4, stop: 0.7 #F0F0F0, stop: 1.0 #EDEDED);
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0.0 #F8F8F8, stop: 0.3 #F4F4F4,
+                                stop: 0.7 #F0F0F0, stop: 1.0 #EDEDED);
 }
 QTabBar::tab:top:!selected {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0.0 #E0E0E0, stop: 0.3 #DCDCDC, stop: 0.7 #DBDBDB, stop: 1.0 #D3D3D3);
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0.0 #E0E0E0, stop: 0.3 #DCDCDC,
+                                stop: 0.7 #DBDBDB, stop: 1.0 #D3D3D3);
 }
 QTabBar::tab:top:!last {
     border: 1px solid #BABABA;
@@ -282,6 +292,37 @@ QCheckBox::indicator:checked {
 }
 QCheckBox::indicator:indeterminate {
     image: url(:/icons/checkbox-indeterminate);
+}
+QComboBox {
+    background: #F2F2F2;
+    border: 1px solid #BABABA;
+    padding: 1px 18px 1px 3px;
+    selection-background-color: #D0D0D0;
+    selection-color: #000000;
+}
+QComboBox:editable {
+    background: white;
+}
+QComboBox:!editable, QComboBox::drop-down:editable {
+     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0.0 #E0E0E0, stop: 0.3 #DCDCDC,
+                                stop: 0.7 #DBDBDB, stop: 1.0 #D3D3D3);
+}
+QComboBox:!editable:on, QComboBox::drop-down:editable:on {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0.0 #F8F8F8, stop: 0.3 #F4F4F4,
+                                stop: 0.7 #F0F0F0, stop: 1.0 #EDEDED);
+}
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    border-left: 1px solid #BABABA;
+}
+QComboBox::down-arrow {
+    image: url(:/icons/arrow-drop-down);
+}
+QComboBox QAbstractItemView {
+    background: #F2F2F2;
 }
 QRadioButton {
     spacing: 4px;

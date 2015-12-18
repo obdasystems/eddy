@@ -1128,7 +1128,7 @@ class MainWindow(QMainWindow):
         """
         Create a new empty document and add it to the MDI Area.
         """
-        size = self.settings.value('scene/size', 5000, int)
+        size = self.settings.value('diagram/size', 5000, int)
         scene = self.createScene(size, size)
         mainview = self.createView(scene)
         subwindow = self.createSubWindow(mainview)
@@ -1679,8 +1679,8 @@ class MainWindow(QMainWindow):
 
             # read graph initialization data
             graph = root.firstChildElement('graph')
-            w = int(graph.attribute('width', self.settings.value('scene/size', '5000', str)))
-            h = int(graph.attribute('height', self.settings.value('scene/size', '5000', str)))
+            w = int(graph.attribute('width', self.settings.value('diagram/size', '5000', str)))
+            h = int(graph.attribute('height', self.settings.value('diagram/size', '5000', str)))
 
             # create the scene
             scene = self.createScene(width=w, height=h)
@@ -1833,9 +1833,10 @@ class MainWindow(QMainWindow):
     def saveSceneToGrapholFile(scene, filepath):
         """
         Save the given scene to the corresponding given filepath.
+        Will return True if the save has been performed, False otherwise.
         :param scene: the scene to be saved.
         :param filepath: the path where to save the scene.
-        :return: True if the save has been performed, False otherwise.
+        :rtype: bool
         """
         try:
             document = scene.toGraphol()

@@ -34,7 +34,26 @@
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIntValidator, QDoubleValidator
-from PyQt5.QtWidgets import QLineEdit, QPlainTextEdit, QSpinBox
+from PyQt5.QtWidgets import QLineEdit, QPlainTextEdit, QSpinBox, QComboBox
+
+
+class ComboBox(QComboBox):
+    """
+    This class implements a multi selection box.
+    """
+    def __init__(self, parent=None):
+        """
+        Initialize the spin box.
+        """
+        super().__init__(parent)
+        self.setAttribute(Qt.WA_MacShowFocusRect, 0)
+
+    def value(self):
+        """
+        Returns the currently selected value.
+        :rtype: QVariant
+        """
+        return self.itemData(self.currentIndex())
 
 
 class DoubleEditField(QLineEdit):
@@ -52,7 +71,7 @@ class DoubleEditField(QLineEdit):
     def setValue(self, value):
         """
         Set the value of the field.
-        :param value: the value to set.
+        :type value: float.
         """
         self.setText(str(value).strip())
 
@@ -79,7 +98,7 @@ class IntEditField(QLineEdit):
     def setValue(self, value):
         """
         Set the value of the field.
-        :param value: the value to set.
+        :type value: int.
         """
         self.setText(str(value).strip())
 
@@ -105,7 +124,7 @@ class StringEditField(QLineEdit):
     def setValue(self, value):
         """
         Set the value of the field.
-        :param value: the value to set.
+        :type value: T <= bytes | unicode.
         """
         self.setText(value.strip())
 
@@ -131,7 +150,7 @@ class TextEditField(QPlainTextEdit):
     def setValue(self, value):
         """
         Set the value of the field.
-        :param value: the value to set.
+        :type value: T <= bytes | unicode.
         """
         self.setPlainText(value.strip())
 

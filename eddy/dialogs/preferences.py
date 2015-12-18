@@ -33,12 +33,11 @@
 
 
 from PyQt5.QtCore import Qt, QSettings
-from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
 
-from eddy.fields import SpinBox
+from eddy.fields import SpinBox, ComboBox
 from eddy.functions import connect
-from eddy import __appname__, __organization__
+from eddy import __appname__ as appname, __organization__ as organization
 
 
 class PreferencesDialog(QDialog):
@@ -47,12 +46,12 @@ class PreferencesDialog(QDialog):
     """
     def __init__(self, parent=None):
         """
-        Initialize the preferences dialog.
+        Initialize the Preferences dialog.
         :param parent: the parent widget.
         """
         super().__init__(parent)
 
-        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, __organization__, __appname__)
+        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, organization, appname)
 
         ################################################################################################################
         #                                                                                                              #
@@ -60,15 +59,29 @@ class PreferencesDialog(QDialog):
         #                                                                                                              #
         ################################################################################################################
 
-        # TODO: make size dependent from DiagramScene constants
-        self.sceneSizeField = SpinBox(self)
-        self.sceneSizeField.setRange(2000, 1000000)
-        self.sceneSizeField.setSingleStep(100)
-        self.sceneSizeField.setValue(self.settings.value('scene/size', 5000, int))
+        self.styleF = ComboBox(self)
+        self.styleF.addItem('Light', 'light')
+        self.styleF.setCurrentIndex(0)
+        self.styleF.setEnabled(False)
 
         self.appearanceWidget = QWidget()
         self.appearanceLayout = QFormLayout(self.appearanceWidget)
-        self.appearanceLayout.addRow('Scene size', self.sceneSizeField)
+        self.appearanceLayout.addRow('Style', self.styleF)
+
+        ################################################################################################################
+        #                                                                                                              #
+        #   EDITOR TAB                                                                                                 #
+        #                                                                                                              #
+        ################################################################################################################
+
+        self.diagramSizeF = SpinBox(self)
+        self.diagramSizeF.setRange(2000, 1000000)
+        self.diagramSizeF.setSingleStep(100)
+        self.diagramSizeF.setValue(self.settings.value('diagram/size', 5000, int))
+
+        self.editorWidget = QWidget()
+        self.editorLayout = QFormLayout(self.editorWidget)
+        self.editorLayout.addRow('Diagram size', self.diagramSizeF)
 
         ################################################################################################################
         #                                                                                                              #
@@ -77,7 +90,8 @@ class PreferencesDialog(QDialog):
         ################################################################################################################
 
         self.mainWidget = QTabWidget(self)
-        self.mainWidget.addTab(self.appearanceWidget, QIcon(':/icons/appearance.png'), 'Appearance')
+        self.mainWidget.addTab(self.appearanceWidget, 'Appearance')
+        self.mainWidget.addTab(self.editorWidget, 'Editor')
 
         ################################################################################################################
         #                                                                                                              #
@@ -121,5 +135,6 @@ class PreferencesDialog(QDialog):
         Executed when the dialog is terminated.
         :param code: the result code.
         """
-        if code == QDialog.Accepted:
-            self.settings.setValue('scene/size', self.sceneSizeField.value())
+        if code == PreferencesDialog.Accepted:
+            self.settings.setValue('appearance/style', self.styleF.value())
+            self.settings.setValue('diagram/size', self.diagramSizeF.value())

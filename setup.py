@@ -530,7 +530,7 @@ setup(
             'include_files': [
                 ('docs', 'docs'),
                 ('examples', 'examples'),
-                ('eddy/styles/default.qss', 'styles/default.qss'),
+                ('eddy/styles/light.qss', 'styles/light.qss'),
                 ('LICENSE', 'LICENSE'),
                 ('CONTRIBUTING.md', 'CONTRIBUTING.md'),
                 ('PACKAGING.md', 'PACKAGING.md'),

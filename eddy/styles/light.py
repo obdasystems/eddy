@@ -32,29 +32,48 @@
 ##########################################################################
 
 
-from PyQt5.QtWidgets import QProxyStyle, QStyle
+from PyQt5.QtWidgets import QStyle
+
+from eddy import QSS, getPath
+from eddy.styles import Style
 
 
-class DefaultStyle(QProxyStyle):
+class LightStyle(Style):
 
     PM = {
         QStyle.PM_SmallIconSize: 18,
         QStyle.PM_TabBarIconSize: 14,
-        QStyle.PM_ToolBarIconSize: 24 ,
+        QStyle.PM_ToolBarIconSize: 24,
     }
 
     def __init__(self):
         """
-        Initialize the Default style (using Fusion as base).
+        Initialize the Light style (using Fusion as base).
         """
         super().__init__('Fusion')
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def pixelMetric(self, metric, option=None, widget=None):
         """
         Returns the value for the given pixel metric.
+        :type metric: int
+        :type option: int
+        :type widget: QWidget
         :rtype: int
         """
         try:
-            return DefaultStyle.PM[metric]
+            return LightStyle.PM[metric]
         except KeyError:
             return super().pixelMetric(metric, option, widget)
+
+    def qss(self):
+        """
+        Returns the stylesheet associated with this style.
+        :rtype: unicode
+        """
+        return QSS(getPath('@eddy/styles/light.qss'))
