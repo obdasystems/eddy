@@ -2,8 +2,11 @@
 
 ### Description
 
-Eddy is an an editor for the construction of Graphol ontologies which is designed for use by people who have no 
-experience in the use of software for computer design. 
+Eddy is a graphical editor for the construction of Graphol ontologies. Eddy features a design environment specifically 
+thought out for generating Graphol ontologies through ad-hoc functionalities. Drawing features allow designers to 
+comfortably edit ontologies in a central viewport area, while two lateral docking areas contains specifically-tailored 
+widgets for editing, navigation and inspection of the diagram. Eddy is written in [Python 3] and the GUI is implemented 
+through the [PyQt5] bindings for the [Qt5] framework. Eddy is licensed under the GNU General Public License v3.
 
 ### About Graphol
 
@@ -25,7 +28,7 @@ similar diagrammatic shape.
 
 ### License
 
-See the LICENSE file included with the distribution.
+Eddy is licensed under the GNU General Public License v3. See the LICENSE file included with the distribution.
 
 ### Build status
 
@@ -42,3 +45,6 @@ See the LICENSE file included with the distribution.
 [Dipartimento di Ingegneria Informatica, Automatica e Gestionale "A.Ruberti"]: http://www.dis.uniroma1.it/en
 [Sapienza]: http://en.uniroma1.it/
 [Graphol]: http://www.dis.uniroma1.it/~graphol/
+[Python 3]: https://www.python.org/
+[PyQt5]: https://riverbankcomputing.com/software/pyqt/intro
+[Qt5]: http://www.qt.io/
