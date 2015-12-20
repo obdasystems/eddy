@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
-from eddy.datatypes import Font, Item, Identity
+from eddy.datatypes import Font, Item, Identity, Restriction
 from eddy.items.nodes.common.square import SquaredNode
 
 
@@ -76,6 +76,45 @@ class DomainRestrictionNode(SquaredNode):
         :type identity: Identity
         """
         pass
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def contextMenu(self):
+        """
+        Returns the basic nodes context menu.
+        :rtype: QMenu
+        """
+        scene = self.scene()
+
+        menu = super().contextMenu()
+
+        # See if we can add the restriction change menu: we prevent the user from switching the restriction
+        # in case it is a Qualified Existential Restriction, which is the only one accepting 2 input edges.
+        f1 = lambda x: x.isItem(Item.InputEdge) and x.target is self
+        f2 = lambda x: x.identity is Identity.Concept
+
+        if self.restriction is not Restriction.exists or \
+            not [n for n in [e.other(self) for e in self.edges if f1(e)] if f2(n)]:
+            # Not a Restriction node or no Concept attached in input => no Qualified Existential Restriction.
+            menu.addSeparator()
+            menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRestrictionChange)
+            # Switch the check on the currently active restriction.
+            for action in scene.mainwindow.actionsRestrictionChange:
+                action.setChecked(self.restriction is action.data())
+
+        # Add actions from the label (if any)
+        collection = self.label.contextMenuAdd()
+        if collection:
+            menu.addSeparator()
+            for action in collection:
+                menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
+
+        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
+        return menu
 
     ####################################################################################################################
     #                                                                                                                  #

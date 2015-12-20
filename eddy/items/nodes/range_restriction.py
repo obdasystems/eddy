@@ -87,6 +87,30 @@ class RangeRestrictionNode(SquaredNode):
     #                                                                                                                  #
     ####################################################################################################################
 
+    def contextMenu(self):
+        """
+        Returns the basic nodes context menu.
+        :rtype: QMenu
+        """
+        scene = self.scene()
+
+        menu = super().contextMenu()
+        menu.addSeparator()
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRestrictionChange)
+
+        # switch the check on the currently active restriction
+        for action in scene.mainwindow.actionsRestrictionChange:
+            action.setChecked(self.restriction is action.data())
+
+        collection = self.label.contextMenuAdd()
+        if collection:
+            menu.addSeparator()
+            for action in collection:
+                menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
+
+        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
+        return menu
+
     def addEdge(self, edge):
         """
         Add the given edge to the current node.
