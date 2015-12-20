@@ -38,7 +38,7 @@ from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
 from PyQt5.QtWidgets import QMenu
 
-from eddy.datatypes import DiagramMode, Item, Identity
+from eddy.datatypes import DiagramMode, Item, Identity, Restriction
 from eddy.items.edges.common.base import AbstractEdge
 from eddy.items.edges.common.label import Label
 
@@ -155,22 +155,22 @@ class InputEdge(AbstractEdge):
         #                                                                                                              #
         ################################################################################################################
 
-        if target.isItem(Item.ComplementNode,
-                         Item.DisjointUnionNode,
-                         Item.IntersectionNode,
-                         Item.UnionNode):
+        if target.isItem(Item.ComplementNode, Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode):
 
             if source.identity not in target.identities:
                 # Source node identity is not supported by this node despite the currently set identity.
+                print("identity is not among the ones available")
                 return False
 
             if source.isItem(Item.ValueRestrictionNode):
                 # Exclude unsupported nodes despite identity matching.
+                print("unsupported node")
                 return False
 
             if source.identity is not Identity.Neutral and \
                 target.identity is not Identity.Neutral and \
                     source.identity is not target.identity:
+                print("identity mismatch")
                 # Identity mismatch.
                 return False
 
@@ -186,6 +186,7 @@ class InputEdge(AbstractEdge):
                     if e.isItem(Item.InputEdge) and \
                         e.target is target and e is not self]) > 0:
                     # The Complement operator may have at most one node connected to it.
+                    print("too many inputs")
                     return False
 
                 if source.isItem(Item.RoleNode, Item.RoleInverseNode) and \
@@ -194,7 +195,7 @@ class InputEdge(AbstractEdge):
                             e.source is target]) > 0:
                     # If the source of the node is a Role (ObjectPropertyExpression => chain is not included)
                     # check for the node not to have any outgoing Input edge: the only supported expression
-                    # is `R1 ISA NOT R2 (this prenvents the connection of Role expressions to Complement nodes
+                    # is `R1 ISA NOT R2` (this prevents the connection of Role expressions to Complement nodes
                     # that are given as inputs to Enumeration, Union and Disjoint Union operatore nodes.
                     return False
 
@@ -325,8 +326,8 @@ class InputEdge(AbstractEdge):
             # See if the source we are connecting to the Link is consistent with the instanceOf expression
             # if there is such expression (else we do not care since we check this in the instanceOf edge.
             node = next(iter(e.other(target) for e in target.edges \
-                             if e.isItem(Item.InstanceOfEdge) and \
-                             e.source is target), None)
+                         if e.isItem(Item.InstanceOfEdge) and \
+                            e.source is target), None)
 
             if node:
 
@@ -346,32 +347,100 @@ class InputEdge(AbstractEdge):
 
         ################################################################################################################
         #                                                                                                              #
-        #   DOMAIN / RANGE RESTRICTION                                                                                 #
+        #   DOMAIN RESTRICTION                                                                                         #
         #                                                                                                              #
         ################################################################################################################
 
-        elif target.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode):
+        elif target.isItem(Item.DomainRestrictionNode):
 
-            if not source.isItem(Item.AttributeNode, Item.RoleNode, Item.RoleChainNode):
-                # Domain and Range Restriction node takes as input a Role (which in OWL 2 is represented
-                # by ObjectPropertyExpression which excludes the RoleChain) or an Attribute node.
+            if len([e for e in target.edges \
+                if e.isItem(Item.InputEdge) and \
+                    e.target is target and e is not self]) >= 2:
+                # Domain Restriction node can have at most 2 inputs.
                 return False
 
-            ############################################################################################################
-            #                                                                                                          #
-            #   RANGE RESTRICTION                                                                                      #
-            #                                                                                                          #
-            ############################################################################################################
+            if source.identity not in {Identity.Neutral, Identity.Concept, Identity.Attribute, Identity.Role}:
+                # Domain Restriction node takes as input:
+                #  - Role => OWL 2 ObjectPropertyExpression
+                #  - Attribute => OWL 2 DataPropertyExpression
+                #  - Concept => Qualified Existential Restriction i.e: A ISA EXISTS R.C
+                return False
 
-            if target.isItem(Item.RangeRestrictionNode):
+            if source.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode):
+                # Exclude incompatible sources: not that while RoleChain has a correct identity
+                # it is excluded because it doesn't represent the OWL 2 ObjectPropertyExpression.
+                return False
 
-                if target.identity is not Identity.Neutral:
-                    # If the identity of the target node has been already computed check for mismatch.
-                    if target.identity is Identity.Concept and source.isItem(Item.AttributeNode) or \
-                        target.identity is Identity.DataRange and source.isItem(Item.RoleNode,
-                                                                                Item.RoleChainNode):
-                        # Identity mismatch.
+            # SOURCE => CONCEPT EXPRESSION || NEUTRAL
+
+            if source.identity in {Identity.Concept, Identity.Neutral}:
+
+                if target.restriction is not Restriction.exists:
+                    # Not a Qualified Existential Restriction.
+                    return False
+
+                # We can connect a Concept in input only if there
+                # is no other input or if the other input is a Role.
+                node = next(iter(e.other(target) for e in target.edges \
+                         if e.isItem(Item.InputEdge) and \
+                            e.target is target and e is not self), None)
+
+                if node:
+
+                    if node.identity is not Identity.Role:
+                        # We found another input on this node which is not a Role
+                        # so we can't construct a Qualified Existential Restriction.
                         return False
+
+            # SOURCE => ROLE EXPRESSION
+
+            elif source.identity is Identity.Role:
+
+                # We can connect a Role in input only if there is no other input or if the
+                # other input is a Concept and the node specify an Existential Restriction.
+                node = next(iter(e.other(target) for e in target.edges \
+                         if e.isItem(Item.InputEdge) and \
+                            e.target is target and e is not self), None)
+
+                if node:
+
+                    if node.identity is not Identity.Concept or target.restriction is not Restriction.exists:
+                        # Not a Qualified Existential Restriction.
+                        return False
+
+            # SOURCE => ATTRIBUTE NODE
+
+            elif source.identity is Identity.Attribute:
+
+                if len([e.other(target) for e in target.edges \
+                         if e.isItem(Item.InputEdge) and \
+                            e.target is target and e is not self]) > 0:
+                    # We can connect an Attribute in input only if there is no other input.
+                    return False
+        ################################################################################################################
+        #                                                                                                              #
+        #   RANGE RESTRICTION                                                                                          #
+        #                                                                                                              #
+        ################################################################################################################
+
+        elif target.isItem(Item.RangeRestrictionNode):
+
+            if source.identity not in {Identity.Neutral, Identity.Attribute, Identity.Role}:
+                # Range Restriction node takes as input:
+                #  - Role => OWL 2 ObjectPropertyExpression
+                #  - Attribute => OWL 2 DataPropertyExpression.
+                return False
+
+            if source.isItem(Item.RoleChainNode):
+                # Role Chain is excluded since it doesn't match OWL 2 ObjectPropertyExpression
+                return False
+
+            if target.identity is not Identity.Neutral:
+                # Identity mismatch: check particular case for this node since there is no identity inheritance
+                if target.identity is Identity.Concept and source.isItem(Item.AttributeNode) or \
+                    target.identity is Identity.DataRange and source.isItem(Item.RoleNode, Item.RoleChainNode):
+                    # Identity mismatch.
+                    return False
 
         return True
 

@@ -117,17 +117,17 @@ def dfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None
     return visited
 
 
-def identify(node):
+def identify(source):
     """
     Perform node identification by traversing all the nodes in the graph which are directly/indirectly
     connected with the given one. This function will also update the identity of all the other related
     nodes which are specifying a "WEAK" identity.
-    :type node: Node
+    :type source: Node
     """
     f1 = lambda x: x.isItem(Item.InclusionEdge, Item.InputEdge)
     f2 = lambda x: Identity.Neutral in x.identities
 
-    collection = bfs(source=node, filter_on_edges=f1, filter_on_visit=f2)
+    collection = bfs(source=source, filter_on_edges=f1, filter_on_visit=f2)
     generators = partition(f2, collection)
     strong = set(generators[1])
     weak = set(generators[0])
@@ -143,9 +143,9 @@ def identify(node):
             #   - if it has INDIVIDUALS as inputs => identity is Concept
             #   - if it has LITERALS as inputs => identity is DataRange
             #
-            # We compute the identity for this node: if such identity is NEUTRAL we put it in
-            # among the ones specifying a WEAK identity, otherwise we treat is as if it were
-            # a node specifying a STRONG identity => computed identity >>> inherited identity.
+            # We compute the identity for this node: if such identity is not NEUTRAL we put it
+            # among the nodes specifying a STRONG identity so it will be excluded later when
+            # computing inherited identity: computed identity >>> inherited identity.
 
             f3 = lambda x: x.isItem(Item.InputEdge) and x.target is node
             f4 = lambda x: x.isItem(Item.IndividualNode)
@@ -164,14 +164,15 @@ def identify(node):
 
             node.identity = identity
 
-            collection = strong if node.identity is not Identity.Neutral else weak
-            collection.add(node)
+            # If it has been identified then consider it as STRONG.
+            if node.identity is not Identity.Neutral:
+                strong.add(node)
 
             # Remove all the nodes used to compute the Enumeration identity from the STRONG set
             # since we don't need them: they may lead to errors when computing the identity since
             # they do not contribute with inheritance to the identity of the Enumeration node.
-            for i in individuals:
-                strong.discard(i)
+            for k in individuals:
+                strong.discard(k)
 
         elif node.isItem(Item.RangeRestrictionNode):
 
@@ -181,14 +182,14 @@ def identify(node):
             #   - if it has ATTRIBUTES as inputs => identity is DataRange
             #   - if it has ROLES as inputs => identity is Concept
             #
-            # We compute the identity for this node: if such identity is NEUTRAL we put it in
-            # among the ones specifying a WEAK identity, otherwise we treat is as if it were
-            # a node specifying a STRONG identity => computed identity >>> inherited identity.
+            # We compute the identity for this node: if such identity is not NEUTRAL we put it
+            # among the nodes specifying a STRONG identity so it will be excluded later when
+            # computing inherited identity: computed identity >>> inherited identity.
 
             f3 = lambda x: x.isItem(Item.InputEdge) and x.target is node
-            f5 = lambda x: x.identity in {Identity.Role, Identity.Attribute} and Identity.Neutral not in x.identities
+            f4 = lambda x: x.identity in {Identity.Role, Identity.Attribute} and Identity.Neutral not in x.identities
 
-            mixed = [n for n in [e.other(node) for e in node.edges if f3(e)] if f5(n)]
+            mixed = [n for n in [e.other(node) for e in node.edges if f3(e)] if f4(n)]
             identity = [n.identity for n in mixed]
 
             if not identity:
@@ -202,17 +203,19 @@ def identify(node):
 
             node.identity = identity
 
-            collection = strong if node.identity is not Identity.Neutral else weak
-            collection.add(node)
+            # If it has been identified then consider it as STRONG.
+            if node.identity is not Identity.Neutral:
+                strong.add(node)
 
-            # Remove all the nodes used to compute the RangeRestriction identity from the STRONG set
+            # Remove all the nodes used to compute the Range Restriction identity from the STRONG set
             # since  we don't need them: they may lead to errors when computing the identity since
-            # they do not contribute with inheritance to the identity of the RangeRestriction node.
-            for i in mixed:
-                strong.discard(i)
+            # they do not contribute with inheritance to the identity of the Range Restriction node.
+            for k in mixed:
+                strong.discard(k)
 
     v = [n.identity for n in strong]
     v = Identity.Neutral if not v else Identity.Unknown if v.count(v[0]) != len(v) else v[0]
 
-    for node in weak:
+    for node in weak - strong:
+        # Identify WEAK nodes using the computed identity.
         node.identity = v
