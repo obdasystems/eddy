@@ -55,15 +55,15 @@ OPTS['DIST_DIR'] = os.path.join(OPTS['PROJECT_DIR'], 'dist')
 
 if sys.platform.startswith('darwin'):
     OPTS['EXEC_NAME'] = APPNAME
-    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'images', 'eddy.icns')
+    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'artwork', 'eddy.icns')
     OPTS['DIST_NAME'] = '{}-{}-{}-darwin'.format(APPNAME, VERSION, LICENSE.lower())
 elif sys.platform.startswith('win32'):
     OPTS['EXEC_NAME'] = '{}.exe'.format(APPNAME)
-    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'images', 'eddy.ico')
+    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'artwork', 'eddy.ico')
     OPTS['DIST_NAME'] = '{}-{}-{}-win{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
 else:
     OPTS['EXEC_NAME'] = APPNAME
-    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'images', 'eddy.png')
+    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'artwork', 'eddy.png')
     OPTS['DIST_NAME'] = '{}-{}-{}-linux{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
 
 
