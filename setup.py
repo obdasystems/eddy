@@ -451,17 +451,20 @@ setup(
     cmdclass=cmdclass,
     name=APPNAME,
     version=VERSION,
-    author='Daniele Pantaleone',
+    author="Daniele Pantaleone",
     author_email="danielepantaleone@me.com",
     description="Eddy is an editor for the Graphol ontology language.",
-    long_description="Eddy is an editor for the Graphol ontology language. Graphol is developed by members of the "
-                     "DASI-lab group of the Dipartimento di Informatica e Sistemistica \"A.Ruberti\" at Sapienza "
-                     "University of Rome. Graphol offers a completely visual representation of ontologies to users, "
-                     "in order to help understanding by people who are not skilled in logic. Graphol provides "
-                     "designers with simple graphical primitives for ontology editing, avoiding complex textual "
-                     "syntax. Graphol's basic components are inspired by Entity Relationship(ER) diagrams, thus "
-                     "ontologies that can be rendered as ER diagrams have in Graphol a similar diagrammatic shape.",
+    long_description="Eddy is a graphical editor for the construction of Graphol ontologies. Eddy features a "
+                     "design environment specifically thought out for generating Graphol ontologies through ad-hoc "
+                     "functionalities. Drawing features allow designers to comfortably edit ontologies in a central "
+                     "viewport area, while two lateral docking areas contains specifically-tailored widgets for "
+                     "editing, navigation and inspection of the diagram. Eddy is written in [Python 3] and the GUI is "
+                     "implemented through the PyQt5 bindings for the Qt5 framework. Eddy is licensed under the GNU "
+                     "General Public License v3.",
+    keywords = "eddy graphol sapienza",
     license=LICENSE,
+    maintainer="Daniele Pantaleone",
+    maintainer_email="danielepantaleone@me.com",
     url="https://github.com/danielepantaleone/eddy",
     classifiers=[
         'Development Status :: 1 - Planning',
