@@ -57,14 +57,17 @@ if sys.platform.startswith('darwin'):
     OPTS['EXEC_NAME'] = APPNAME
     OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'artwork', 'eddy.icns')
     OPTS['DIST_NAME'] = '{}-{}-{}-darwin'.format(APPNAME, VERSION, LICENSE.lower())
+    OPTS['APPEND_SCRIPT_TO_EXE'] = False # KEEP THIS FALSE: https://bitbucket.org/anthony_tuininga/cx_freeze/issues/118
 elif sys.platform.startswith('win32'):
     OPTS['EXEC_NAME'] = '{}.exe'.format(APPNAME)
     OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'artwork', 'eddy.ico')
     OPTS['DIST_NAME'] = '{}-{}-{}-win{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
+    OPTS['APPEND_SCRIPT_TO_EXE'] = True
 else:
     OPTS['EXEC_NAME'] = APPNAME
     OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'artwork', 'eddy.png')
     OPTS['DIST_NAME'] = '{}-{}-{}-linux{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
+    OPTS['APPEND_SCRIPT_TO_EXE'] = True
 
 
 OPTS['BUILD_PATH'] = os.path.join(OPTS['BUILD_DIR'], OPTS['DIST_NAME'])
@@ -513,7 +516,7 @@ setup(
             'optimize': 1,
             'compressed': True,
             'create_shared_zip': False,
-            'append_script_to_exe': True,
+            'append_script_to_exe': OPTS['APPEND_SCRIPT_TO_EXE'],
             'packages': [
                 'eddy.commands',
                 'eddy.dialogs',
