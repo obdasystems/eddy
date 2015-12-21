@@ -363,7 +363,7 @@ class InputEdge(AbstractEdge):
                 # Domain Restriction node takes as input:
                 #  - Role => OWL 2 ObjectPropertyExpression
                 #  - Attribute => OWL 2 DataPropertyExpression
-                #  - Concept => Qualified Existential Restriction i.e: A ISA EXISTS R.C
+                #  - Concept => Qualified Existential/Universal Restriction i.e: A ISA EXISTS R.C || A ISA FORALL R.C
                 return False
 
             if source.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode):
@@ -375,8 +375,8 @@ class InputEdge(AbstractEdge):
 
             if source.identity in {Identity.Concept, Identity.Neutral}:
 
-                if target.restriction is not Restriction.exists:
-                    # Not a Qualified Existential Restriction.
+                if target.restriction not in {Restriction.exists, Restriction.forall}:
+                    # Not a Qualified Existential/Universal Restriction.
                     return False
 
                 # We can connect a Concept in input only if there
