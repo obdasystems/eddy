@@ -191,6 +191,7 @@ fi
 LD_LIBRARY_PATH=$DIRNAME
 export LD_LIBRARY_PATH
 echo "Starting $APP $VERSION ..."
+chmod +x $DIRNAME/$EXEC
 $DIRNAME/$EXEC "$@"
 echo "... bye!"
 """.format(APPNAME, OPTS['EXEC_NAME'], VERSION))
@@ -257,42 +258,42 @@ if sys.platform.startswith('darwin'):
             self.run_command('build')
             build = self.get_finalized_command('build')
 
-            # Define the paths within the application bundle
+            # Define the paths within the application bundle.
             self.bundleDir = os.path.join(build.build_base, self.bundle_name + ".app")
             self.contentsDir = os.path.join(self.bundleDir, 'Contents')
             self.resourcesDir = os.path.join(self.contentsDir, 'Resources')
             self.binDir = os.path.join(self.contentsDir, 'MacOS')
             self.frameworksDir = os.path.join(self.contentsDir, 'Frameworks')
 
-            # Find the executable name
+            # Find the executable name.
             executable = self.distribution.executables[0].targetName
             _, self.bundle_executable = os.path.split(executable)
 
-            # Build the app directory structure
+            # Build the app directory structure.
             self.mkpath(self.resourcesDir)
             self.mkpath(self.binDir)
             self.mkpath(self.frameworksDir)
 
             self.copy_tree(OPTS['BUILD_PATH'], self.binDir)
 
-            # Copy the icon
+            # Copy the icon.
             if self.iconfile:
                 self.copy_file(self.iconfile, os.path.join(self.resourcesDir, 'icon.icns'))
 
-            # Copy in Frameworks
+            # Copy in Frameworks.
             for framework in self.include_frameworks:
                 self.copy_tree(framework, os.path.join(self.frameworksDir, os.path.basename(framework)))
 
-            # Create the Info.plist file
+            # Create the Info.plist file.
             self.execute(self.create_plist, ())
 
-            # Make all references to libraries relative
+            # Make all references to libraries relative.
             self.execute(self.setRelativeReferencePaths, ())
 
-            # For a Qt application, run some tweaks
+            # For a Qt application, run some tweaks.
             self.execute(self.prepare_qt_app, ())
 
-            # Sign the app bundle if a key is specified
+            # Sign the app bundle if a key is specified.
             if self.codesign_identity:
 
                 signargs = ['codesign', '-s', self.codesign_identity]
@@ -377,9 +378,9 @@ if sys.platform.startswith('darwin'):
 
             self.mkpath(tmp)
 
-            # move the app bundle into a separate folder since hdutil copies in the dmg
+            # Move the app bundle into a separate folder since hdutil copies in the dmg
             # the content of the folder specified in the -srcfolder folder parameter, and if we
-            # specify as input the app bundle itself, its content will be copied and not the bundle
+            # specify as input the app bundle itself, its content will be copied and not the bundle.
             if os.spawnvp(os.P_WAIT, 'cp', ['cp', '-R', self.bundleDir, tmp]):
                 raise OSError('could not move app bundle in staging directory')
 
@@ -393,11 +394,11 @@ if sys.platform.startswith('darwin'):
                 tmp, '-volname', self.volume_label
             ]
 
-            # create the dmg
+            # Create the dmg.
             if os.spawnvp(os.P_WAIT, 'hdiutil', createargs) != 0:
                 raise OSError('creation of the dmg failed')
 
-            # remove the temporary folder
+            # Remove the temporary folder.
             shutil.rmtree(tmp)
 
         def make_dist(self):
@@ -408,32 +409,74 @@ if sys.platform.startswith('darwin'):
                 os.mkdir(self.dist_dir)
 
         def run(self):
-            # create dist directory if needed
+            # Create dist directory if needed.
             self.make_dist()
 
-            # create the application bundle
+            # Create the application bundle.
             self.run_command('bdist_mac')
 
-            # find the location of the application bundle and the build dir
+            # Find the location of the application bundle and the build dir.
             self.bundleDir = self.get_finalized_command('bdist_mac').bundleDir
             self.buildDir = self.get_finalized_command('build').build_base
 
-            # set the file name of the DMG to be built
+            # Set the file name of the DMG to be built
             self.dmgName = os.path.join(self.buildDir, OPTS['DIST_NAME'] + '.dmg')
 
             self.execute(self.buildDMG, ())
 
-            # move the file into the dist directory
+            # Move the file into the dist directory
             self.move_file(self.dmgName, self.dist_dir)
 
     commands['bdist_mac'] = BDistMac
     commands['bdist_dmg'] = BDistDmg
+
 
 ########################################################################################################################
 #                                                                                                                      #
 #   SETUP                                                                                                              #
 #                                                                                                                      #
 ########################################################################################################################
+
+packages = [
+    'eddy.commands',
+    'eddy.dialogs',
+    'eddy.functions',
+    'eddy.items',
+    'eddy.styles',
+    'eddy.widgets',
+]
+
+excludes = [
+    'tcl',
+    'ttk',
+    'tkinter',
+    'Tkinter'
+]
+
+includes = [
+    'PyQt5.QtCore',
+    'PyQt5.QtGui',
+    'PyQt5.QtPrintSupport',
+    'PyQt5.QtWidgets',
+    'PyQt5.QtXml',
+]
+
+include_files = [
+    (os.path.join(OPTS['QT_PLUGINS_PATH'], 'printsupport'), 'printsupport'),
+    ('docs', 'docs'),
+    ('examples', 'examples'),
+    ('eddy/styles/light.qss', 'styles/light.qss'),
+    ('LICENSE', 'LICENSE'),
+    ('CONTRIBUTING.md', 'CONTRIBUTING.md'),
+    ('PACKAGING.md', 'PACKAGING.md'),
+    ('README.md', 'README.md'),
+]
+
+if sys.platform.startswith('linux'):
+    include_files.extend([
+        (os.path.join(OPTS['QT_LIB_PATH'], 'libQt5DBus.so.5'), 'libQt5DBus.so.5'),
+        (os.path.join(OPTS['QT_LIB_PATH'], 'libQt5XcbQpa.so.5'), 'libQt5XcbQpa.so.5'),
+    ])
 
 
 setup(
@@ -471,8 +514,8 @@ setup(
     ],
     options={
         'bdist_mac': {
-            'iconfile': OPTS['EXEC_ICON'],
             'bundle_name': '{} {}'.format(APPNAME, VERSION),
+            'iconfile': OPTS['EXEC_ICON'],
             # 'include_frameworks': [
             #     os.path.join(OPTS['QT_LIB_PATH'], 'QtCore.framework'),
             #     os.path.join(OPTS['QT_LIB_PATH'], 'QtDBus.framework'),
@@ -483,42 +526,20 @@ setup(
             # ]
         },
         'bdist_dmg': {
+            'applications_shortcut': True,
             'dist_dir': OPTS['DIST_DIR'],
             'volume_label': '{} {}'.format(APPNAME, VERSION),
-            'applications_shortcut': True,
         },
         'build_exe': {
-            'dist_dir': OPTS['DIST_DIR'],
-            'build_exe': OPTS['BUILD_PATH'],
             'append_script_to_exe': OPTS['AS_TO_EXE'],
-            'silent': False,
+            'build_exe': OPTS['BUILD_PATH'],
+            'dist_dir': OPTS['DIST_DIR'],
+            'excludes': excludes,
+            'includes': includes,
+            'include_files': include_files,
             'optimize': 1,
-            'packages': [
-                'eddy.commands',
-                'eddy.dialogs',
-                'eddy.functions',
-                'eddy.items',
-                'eddy.styles',
-                'eddy.widgets',
-            ],
-            'excludes': ['tcl', 'ttk', 'tkinter', 'Tkinter'],
-            'includes': [
-                'PyQt5.QtCore',
-                'PyQt5.QtGui',
-                'PyQt5.QtPrintSupport',
-                'PyQt5.QtWidgets',
-                'PyQt5.QtXml',
-            ],
-            'include_files': [
-                (os.path.join(OPTS['QT_PLUGINS_PATH'], 'printsupport'), 'printsupport'),
-                ('docs', 'docs'),
-                ('examples', 'examples'),
-                ('eddy/styles/light.qss', 'styles/light.qss'),
-                ('LICENSE', 'LICENSE'),
-                ('CONTRIBUTING.md', 'CONTRIBUTING.md'),
-                ('PACKAGING.md', 'PACKAGING.md'),
-                ('README.md', 'README.md'),
-            ],
+            'packages': packages,
+            'silent': False,
         }
     },
     executables=[
