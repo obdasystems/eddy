@@ -39,6 +39,7 @@ import platform
 import re
 import shutil
 import stat
+import subprocess
 import sys
 import zipfile
 
@@ -53,6 +54,7 @@ from eddy import __version__ as VERSION
 from PyQt5 import QtCore
 
 
+# noinspection PyArgumentList
 OPTS = {
     'BUILD_DIR': os.path.join(os.path.abspath(os.path.dirname(__file__)), 'build'),
     'DIST_DIR': os.path.join(os.path.abspath(os.path.dirname(__file__)), 'dist'),
@@ -251,6 +253,59 @@ if sys.platform.startswith('darwin'):
 
             raise IOError("could not find qt_menu.nib: please install Qt5 source components")
 
+        def setRelativeReferencePaths(self):
+            """
+            For all files in Contents/MacOS, check if they are binaries with references to other files in that dir.
+            If so, make those references relative. The appropriate commands are applied to all files; they will just
+            fail for files on which they do not apply.
+            """
+            files = []
+
+            for root, dirs, dir_files in os.walk(self.binDir):
+                files.extend([os.path.join(root, f).replace(self.binDir + '/', '') for f in dir_files])
+
+            for filename in files:
+
+                # Skip ZIP files since install_name_tool can't handle them.
+                filepath = os.path.join(self.binDir, filename)
+                if filename.endswith('.zip'):
+                    continue
+
+                # Ensure write permissions.
+                mode = os.stat(filepath).st_mode
+                if not mode & stat.S_IWUSR:
+                    os.chmod(filepath, mode | stat.S_IWUSR)
+
+                # Let the file itself know its place.
+                subprocess.call(('install_name_tool', '-id', '@executable_path/{}'.format(filename), filepath))
+
+                # Find the references: call otool -L on the file.
+                otool = subprocess.Popen(('otool', '-L', filepath), stdout=subprocess.PIPE)
+                references = otool.stdout.readlines()[1:]
+
+                for reference in references:
+
+                    # Find the actual referenced file name.
+                    referenced_file = reference.decode().strip().split()[0]
+
+                    if referenced_file.startswith('@executable_path/'):
+                        # The referenced_file is already a relative path.
+                        continue
+
+                    path, name = os.path.split(referenced_file)
+
+                    # Some referenced files have not previously been copied to the executable directory - the
+                    # assumption  is that you don't need to copy anything fro /usr or /System, just from folders
+                    # like /opt this fix should probably be elsewhere though
+                    if name not in files and not path.startswith('/usr') and not path.startswith('/System'):
+                        self.copy_file(referenced_file, os.path.join(self.binDir, name))
+                        files.append(name)
+
+                    # See if we provide the referenced file; if so, change the reference
+                    if name in files:
+                        new_reference = '@executable_path/{}'.format(name)
+                        subprocess.call(('install_name_tool', '-change', referenced_file, new_reference, filepath))
+
         def run(self):
             """
             Command execution.
@@ -258,42 +313,31 @@ if sys.platform.startswith('darwin'):
             self.run_command('build')
             build = self.get_finalized_command('build')
 
-            # Define the paths within the application bundle.
             self.bundleDir = os.path.join(build.build_base, self.bundle_name + ".app")
             self.contentsDir = os.path.join(self.bundleDir, 'Contents')
             self.resourcesDir = os.path.join(self.contentsDir, 'Resources')
             self.binDir = os.path.join(self.contentsDir, 'MacOS')
             self.frameworksDir = os.path.join(self.contentsDir, 'Frameworks')
 
-            # Find the executable name.
             executable = self.distribution.executables[0].targetName
             _, self.bundle_executable = os.path.split(executable)
 
-            # Build the app directory structure.
             self.mkpath(self.resourcesDir)
             self.mkpath(self.binDir)
             self.mkpath(self.frameworksDir)
 
             self.copy_tree(OPTS['BUILD_PATH'], self.binDir)
 
-            # Copy the icon.
             if self.iconfile:
                 self.copy_file(self.iconfile, os.path.join(self.resourcesDir, 'icon.icns'))
 
-            # Copy in Frameworks.
             for framework in self.include_frameworks:
                 self.copy_tree(framework, os.path.join(self.frameworksDir, os.path.basename(framework)))
 
-            # Create the Info.plist file.
             self.execute(self.create_plist, ())
-
-            # Make all references to libraries relative.
             self.execute(self.setRelativeReferencePaths, ())
-
-            # For a Qt application, run some tweaks.
             self.execute(self.prepare_qt_app, ())
 
-            # Sign the app bundle if a key is specified.
             if self.codesign_identity:
 
                 signargs = ['codesign', '-s', self.codesign_identity]
@@ -368,7 +412,6 @@ if sys.platform.startswith('darwin'):
             """
             Build the DMG image.
             """
-            # remove DMG if it already exists
             if os.path.exists(self.dmgName):
                 os.unlink(self.dmgName)
 
@@ -394,11 +437,9 @@ if sys.platform.startswith('darwin'):
                 tmp, '-volname', self.volume_label
             ]
 
-            # Create the dmg.
             if os.spawnvp(os.P_WAIT, 'hdiutil', createargs) != 0:
                 raise OSError('creation of the dmg failed')
 
-            # Remove the temporary folder.
             shutil.rmtree(tmp)
 
         def make_dist(self):
@@ -409,22 +450,20 @@ if sys.platform.startswith('darwin'):
                 os.mkdir(self.dist_dir)
 
         def run(self):
-            # Create dist directory if needed.
+            """
+            Command execution.
+            """
             self.make_dist()
 
-            # Create the application bundle.
             self.run_command('bdist_mac')
 
-            # Find the location of the application bundle and the build dir.
             self.bundleDir = self.get_finalized_command('bdist_mac').bundleDir
             self.buildDir = self.get_finalized_command('build').build_base
 
-            # Set the file name of the DMG to be built
             self.dmgName = os.path.join(self.buildDir, OPTS['DIST_NAME'] + '.dmg')
 
             self.execute(self.buildDMG, ())
 
-            # Move the file into the dist directory
             self.move_file(self.dmgName, self.dist_dir)
 
     commands['bdist_mac'] = BDistMac
@@ -436,6 +475,7 @@ if sys.platform.startswith('darwin'):
 #   SETUP                                                                                                              #
 #                                                                                                                      #
 ########################################################################################################################
+
 
 packages = [
     'eddy.commands',
@@ -455,8 +495,10 @@ excludes = [
 
 includes = [
     'PyQt5.QtCore',
+    'PyQt5.QtDBus',
     'PyQt5.QtGui',
     'PyQt5.QtPrintSupport',
+    'PyQt5.QtSvg',
     'PyQt5.QtWidgets',
     'PyQt5.QtXml',
 ]
@@ -495,8 +537,6 @@ setup(
                      "General Public License v3.",
     keywords = "eddy graphol sapienza",
     license=LICENSE,
-    maintainer="Daniele Pantaleone",
-    maintainer_email="danielepantaleone@me.com",
     url="https://github.com/danielepantaleone/eddy",
     classifiers=[
         'Development Status :: 1 - Planning',
@@ -516,14 +556,6 @@ setup(
         'bdist_mac': {
             'bundle_name': '{} {}'.format(APPNAME, VERSION),
             'iconfile': OPTS['EXEC_ICON'],
-            # 'include_frameworks': [
-            #     os.path.join(OPTS['QT_LIB_PATH'], 'QtCore.framework'),
-            #     os.path.join(OPTS['QT_LIB_PATH'], 'QtDBus.framework'),
-            #     os.path.join(OPTS['QT_LIB_PATH'], 'QtGui.framework'),
-            #     os.path.join(OPTS['QT_LIB_PATH'], 'QtPrintSupport.framework'),
-            #     os.path.join(OPTS['QT_LIB_PATH'], 'QtWidgets.framework'),
-            #     os.path.join(OPTS['QT_LIB_PATH'], 'QtXml.framework'),
-            # ]
         },
         'bdist_dmg': {
             'applications_shortcut': True,
