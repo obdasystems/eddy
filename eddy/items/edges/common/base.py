@@ -344,11 +344,8 @@ class AbstractEdge(AbstractItem):
         :param x: the x delta.
         :param y: the y delta.
         """
-        delta = QPointF(x, y)
-        self.breakpoints = [p + delta for p in self.breakpoints]
-        self.source.setAnchor(self, self.source.anchor(self) + delta)
-        if self.target:
-            self.target.setAnchor(self, self.target.anchor(self) + delta)
+        move = QPointF(x, y)
+        self.breakpoints = [p + move for p in self.breakpoints]
 
     def other(self, node):
         """

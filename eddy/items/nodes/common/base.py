@@ -257,6 +257,16 @@ class AbstractNode(AbstractItem):
 
         return None
 
+    def moveBy(self, x, y):
+        """
+        Move the node by the given deltas.
+        :param x: the x delta.
+        :param y: the y delta.
+        """
+        move = QPointF(x, y)
+        self.setPos(self.pos() + move)
+        self.anchors = {edge: pos + move for edge, pos in self.anchors.items()}
+
     def pos(self):
         """
         Returns the position of this node in scene coordinates.
