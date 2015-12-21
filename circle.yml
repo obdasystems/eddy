@@ -38,6 +38,7 @@ dependencies:
   ## Install PIP packages
   post:
     - pip install -U pip
+    - pip install -r build-requirements.txt
     - pip install -r test-requirements.txt
 
 
