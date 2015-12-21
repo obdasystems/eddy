@@ -145,7 +145,6 @@ class BuildExe(build_exe):
         """
         super().run()
         self.make_dist()
-        self.copy_qt5_deps()
         self.unix_2_dos()
         self.unix_exec()
         self.make_zip()
@@ -156,20 +155,6 @@ class BuildExe(build_exe):
         """
         if not os.path.isdir(self.dist_dir):
             os.mkdir(self.dist_dir)
-
-    def copy_qt5_deps(self):
-        """
-        Copy necessary Qt5 dependencies.
-        """
-        if sys.platform.startswith('linux'):
-            for lib in ['libQt5DBus.so.5', 'libQt5XcbQpa.so.5']:
-                self.copy_file(os.path.join(OPTS['QT_LIB_PATH'], lib), self.build_exe )
-
-        for plugin in ['printsupport']:
-            src = os.path.join(OPTS['QT_PLUGINS_PATH'], plugin)
-            dst = os.path.join(self.build_exe, plugin)
-            self.mkpath(dst)
-            self.copy_tree(src, dst)
 
     def unix_2_dos(self):
         """
@@ -525,6 +510,7 @@ setup(
                 'PyQt5.QtXml',
             ],
             'include_files': [
+                (os.path.join(OPTS['QT_PLUGINS_PATH'], 'printsupport'), 'printsupport'),
                 ('docs', 'docs'),
                 ('examples', 'examples'),
                 ('eddy/styles/light.qss', 'styles/light.qss'),
