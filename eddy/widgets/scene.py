@@ -254,8 +254,8 @@ class DiagramScene(QGraphicsScene):
 
                     # calculate the delta and adjust the value if the snap to grid feature is enabled: we'll use the
                     # position of the node acting as mouse grabber to determine the new delta to and move other items
-                    snapped = self.snapToGrid(self.mousePressNodePos + mouseEvent.scenePos() - self.mousePressPos)
-                    delta = snapped - self.mousePressNodePos
+                    point = self.snapToGrid(self.mousePressNodePos + mouseEvent.scenePos() - self.mousePressPos)
+                    delta = point - self.mousePressNodePos
 
                     # update all the breakpoints positions
                     for edge, breakpoints in self.mousePressData['edges'].items():

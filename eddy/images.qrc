@@ -7,6 +7,7 @@
     <file alias="arrow-down">artwork/icons/ic_keyboard_arrow_down_black_24dp_1x.png</file>
     <file alias="arrow-up">artwork/icons/ic_keyboard_arrow_up_black_24dp_1x.png</file>
     <file alias="bring-to-front">artwork/icons/ic_flip_to_front_black_24dp_1x.png</file>
+    <file alias="center-focus">artwork/icons/ic_center_focus_strong_black_24dp_1x.png</file>
     <file alias="checkbox-checked">artwork/icons/ic_check_box_black_24dp_1x.png</file>
     <file alias="checkbox-indeterminate">artwork/icons/ic_indeterminate_check_box_black_24dp_1x.png</file>
     <file alias="checkbox-outline">artwork/icons/ic_check_box_outline_blank_black_24dp_1x.png</file>

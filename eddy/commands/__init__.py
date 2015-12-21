@@ -60,6 +60,7 @@ from eddy.commands.common import CommandComposeAxiom
 from eddy.commands.common import CommandDecomposeAxiom
 from eddy.commands.common import CommandItemsMultiAdd
 from eddy.commands.common import CommandItemsMultiRemove
+from eddy.commands.common import CommandItemsTranslate
 from eddy.commands.common import CommandRefactor
 
 from eddy.commands.scene import CommandSceneResize

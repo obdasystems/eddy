@@ -48,7 +48,7 @@ from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup
 from PyQt5.QtXml import QDomDocument
 
 from eddy import __version__ as version, __appname__ as appname, __organization__ as organization
-from eddy.commands import CommandComposeAxiom, CommandDecomposeAxiom, CommandItemsMultiRemove
+from eddy.commands import CommandComposeAxiom, CommandDecomposeAxiom, CommandItemsMultiRemove, CommandItemsTranslate
 from eddy.commands import CommandNodeLabelMove, CommandNodeLabelEdit, CommandEdgeBreakpointDel, CommandRefactor
 from eddy.commands import CommandNodeSetZValue, CommandNodeHexagonSwitchTo, CommandNodeValueDomainSelectDatatype
 from eddy.commands import CommandNodeSquareChangeRestriction, CommandNodeSetSpecial, CommandNodeChangeBrush
@@ -57,7 +57,7 @@ from eddy.datatypes import Color, File, DiagramMode, FileType, Restriction, Spec
 from eddy.dialogs import AboutDialog, CardinalityRestrictionForm, RenameForm
 from eddy.dialogs import OpenFileDialog, PreferencesDialog, SaveFileDialog, ScenePropertiesDialog
 from eddy.exceptions import ParseError
-from eddy.functions import connect, disconnect, getPath, make_colored_icon, make_shaded_icon
+from eddy.functions import connect, disconnect, getPath, make_colored_icon, make_shaded_icon, snapF
 from eddy.items import Item, __mapping__ as mapping
 from eddy.items import UnionNode, EnumerationNode, ComplementNode, RoleChainNode, IntersectionNode
 from eddy.items import RoleInverseNode, DisjointUnionNode, DatatypeRestrictionNode
@@ -140,6 +140,7 @@ class MainWindow(QMainWindow):
         ################################################################################################################
 
         self.iconBringToFront = make_shaded_icon(':/icons/bring-to-front')
+        self.iconCenterFocus = make_shaded_icon(':/icons/center-focus')
         self.iconClose = make_shaded_icon(':/icons/close')
         self.iconColorFill = make_shaded_icon(':/icons/color-fill')
         self.iconCopy = make_shaded_icon(':/icons/copy')
@@ -280,6 +281,12 @@ class MainWindow(QMainWindow):
         self.actionSnapToGrid.setChecked(self.settings.value('scene/snap_to_grid', False, bool))
         self.actionSnapToGrid.setEnabled(False)
         connect(self.actionSnapToGrid.triggered, self.toggleSnapToGrid)
+
+        self.actionCenterDiagram = QAction('Center diagram', self)
+        self.actionCenterDiagram.setIcon(self.iconCenterFocus)
+        self.actionCenterDiagram.setStatusTip('Center the diagram in the scene')
+        self.actionCenterDiagram.setEnabled(False)
+        connect(self.actionCenterDiagram.triggered, self.centerDiagram)
 
         ## ITEM GENERIC ACTIONS
         self.actionCut = QAction('Cut', self)
@@ -502,6 +509,7 @@ class MainWindow(QMainWindow):
         self.menuEdit.addAction(self.actionSendToBack)
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionSelectAll)
+        self.menuEdit.addAction(self.actionCenterDiagram)
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionOpenPreferences)
 
@@ -632,6 +640,7 @@ class MainWindow(QMainWindow):
 
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.actionSnapToGrid)
+        self.toolbar.addAction(self.actionCenterDiagram)
 
         self.toolbar.addSeparator()
         self.toolbar.addWidget(self.zoomctrl.buttonZoomOut)
@@ -694,6 +703,27 @@ class MainWindow(QMainWindow):
                         zValue = item.zValue() + 0.2
                 if zValue != selected.zValue():
                     scene.undostack.push(CommandNodeSetZValue(scene=scene, node=selected, zValue=zValue))
+
+    @pyqtSlot()
+    def centerDiagram(self):
+        """
+        Center the diagram in the scene.
+        """
+        scene = self.mdi.activeScene
+        if scene:
+
+            scene.setMode(DiagramMode.Idle)
+            items = scene.items()
+
+            if items:
+                rect1 = scene.sceneRect()
+                rect2 = scene.visibleRect(margin=0)
+                gsize = DiagramScene.GridSize
+                moveX = snapF(((rect1.right() - rect2.right()) - (rect2.left() - rect1.left())) / 2, gsize)
+                moveY = snapF(((rect1.bottom() - rect2.bottom()) - (rect2.top() - rect1.top())) / 2, gsize)
+                if moveX and moveY:
+                    collection = [x for x in items if x.node or x.edge]
+                    scene.undostack.push(CommandItemsTranslate(scene, collection, moveX, moveY, name='center diagram'))
 
     @pyqtSlot()
     def changeDomainRangeRestriction(self):
@@ -1337,6 +1367,7 @@ class MainWindow(QMainWindow):
         self.actionSelectAll.setEnabled(wind)
         self.actionSendToBack.setEnabled(node)
         self.actionSnapToGrid.setEnabled(wind)
+        self.actionCenterDiagram.setEnabled(wind)
         self.changeNodeBrushButton.setEnabled(pred)
         self.zoomctrl.setEnabled(wind)
 

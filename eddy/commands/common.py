@@ -262,3 +262,46 @@ class CommandRefactor(QUndoCommand):
         for command in self.commands:
             command.undo()
         self.scene.updated.emit()
+
+
+class CommandItemsTranslate(QUndoCommand):
+    """
+    This command is used to translate items.
+    """
+    def __init__(self, scene, collection, moveX, moveY, name=None):
+        """
+        Initialize the command.
+        :param scene: the scene where this command is being performed.
+        :param collection: a collection of items to add to the scene.
+        :param moveX: how much to shift on the right (left if negative)
+        :param moveY: how much to shift on the bottom (top if negative)
+        :param name: optional command name.
+        """
+        self.scene = scene
+        self.collection = collection
+        self.moveX = moveX
+        self.moveY = moveY
+        name = name or 'move {} item{}'.format(len(collection), 's' if len(collection) != 1 else '')
+        super().__init__(name)
+
+    def redo(self):
+        """redo the command"""
+        moveX = self.moveX
+        moveY = self.moveY
+        for item in self.collection:
+            item.moveBy(moveX, moveY)
+        for item in self.collection:
+            if item.edge:
+                item.updateEdge()
+        self.scene.updated.emit()
+
+    def undo(self):
+        """undo the command"""
+        moveX = -self.moveX
+        moveY = -self.moveY
+        for item in self.collection:
+            item.moveBy(moveX, moveY)
+        for item in self.collection:
+            if item.edge:
+                item.updateEdge()
+        self.scene.updated.emit()
