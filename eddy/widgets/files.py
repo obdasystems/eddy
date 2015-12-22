@@ -32,17 +32,40 @@
 ##########################################################################
 
 
-from eddy.dialogs.about import AboutDialog
+from PyQt5.QtWidgets import QFileDialog
 
-from eddy.dialogs.files import SaveFileDialog
-from eddy.dialogs.files import OpenFileDialog
+from eddy.functions import getPath
 
-from eddy.dialogs.forms import CardinalityRestrictionForm
-from eddy.dialogs.forms import RenameForm
 
-from eddy.dialogs.preferences import PreferencesDialog
+class OpenFile(QFileDialog):
+    """
+    This class is used to bring up the open file dialog modal window.
+    """
+    def __init__(self, path, parent=None):
+        """
+        Initialize the open file dialog.
+        :param path: the start path where to open the file dialog.
+        :param parent: the parent widget.
+        """
+        super().__init__(parent)
+        self.setAcceptMode(QFileDialog.AcceptOpen)
+        self.setDirectory(getPath('~') if not path else getPath(path))
+        self.setFileMode(QFileDialog.AnyFile)
+        self.setViewMode(QFileDialog.Detail)
 
-from eddy.dialogs.properties import NodePropertiesDialog
-from eddy.dialogs.properties import EditableNodePropertiesDialog
-from eddy.dialogs.properties import OrderedInputNodePropertiesDialog
-from eddy.dialogs.properties import ScenePropertiesDialog
+
+class SaveFile(QFileDialog):
+    """
+    This class is used to bring up the save file dialog modal window.
+    """
+    def __init__(self, path, parent=None):
+        """
+        Initialize the save file dialog.
+        :param path: the start path where to open the file dialog.
+        :param parent: the parent widget.
+        """
+        super().__init__(parent)
+        self.setAcceptMode(QFileDialog.AcceptSave)
+        self.setDirectory(getPath('~') if not path else getPath(path))
+        self.setFileMode(QFileDialog.AnyFile)
+        self.setViewMode(QFileDialog.Detail)

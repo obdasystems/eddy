@@ -41,8 +41,8 @@ from PyQt5.QtWidgets import QMenu, QGraphicsItem
 
 from eddy.commands import CommandNodeRezize
 from eddy.datatypes import Color, DistinctList, DiagramMode, Identity, Item
-from eddy.dialogs import NodePropertiesDialog
 from eddy.items import AbstractItem
+from eddy.widgets.properties import NodeProperties
 
 
 class AbstractNode(AbstractItem):
@@ -278,7 +278,7 @@ class AbstractNode(AbstractItem):
         """
         Build and returns the node properties dialog.
         """
-        return NodePropertiesDialog(scene=self.scene(), node=self)
+        return NodeProperties(scene=self.scene(), node=self)
 
     def removeEdge(self, edge):
         """

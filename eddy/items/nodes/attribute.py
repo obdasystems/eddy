@@ -36,9 +36,9 @@ from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath
 
 from eddy.datatypes import Font, Item, Special, DiagramMode, Identity
-from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.items.nodes.common.base import AbstractNode
 from eddy.items.nodes.common.label import Label
+from eddy.widgets.properties import EditableNodeProperties
 
 
 class AttributeNode(AbstractNode):
@@ -173,7 +173,7 @@ class AttributeNode(AbstractNode):
         """
         Build and returns the node properties dialog.
         """
-        return EditableNodePropertiesDialog(scene=self.scene(), node=self)
+        return EditableNodeProperties(scene=self.scene(), node=self)
 
     def width(self):
         """

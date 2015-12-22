@@ -35,9 +35,9 @@
 from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
 
-from eddy.fields import SpinBox, ComboBox
-from eddy.functions import connect
 from eddy import __appname__ as appname, __organization__ as organization
+from eddy.functions import connect
+from eddy.widgets.fields import SpinBox, ComboBox
 
 
 class PreferencesDialog(QDialog):

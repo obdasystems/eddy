@@ -36,14 +36,14 @@ from datetime import datetime
 
 from PyQt5.QtCore import Qt, QPointF, QRectF
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
+from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
 
 from eddy.commands import CommandNodeMove, CommandNodeSetURL, CommandNodeSetDescription
 from eddy.commands import CommandSceneResize, CommandNodeLabelEdit, CommandNodeChangeInputOrder
 from eddy.datatypes import DistinctList
-from eddy.fields import StringEditField, TextEditField, SpinBox, IntEditField
 from eddy.functions import clamp, connect, isEmpty
+from eddy.widgets.fields import StringEditField, TextEditField, SpinBox, IntEditField
 
 
 ########################################################################################################################
@@ -53,7 +53,7 @@ from eddy.functions import clamp, connect, isEmpty
 ########################################################################################################################
 
 
-class ScenePropertiesDialog(QDialog):
+class SceneProperties(QDialog):
     """
     This class implements the 'Scene properties' dialog.
     """
@@ -228,7 +228,7 @@ class ScenePropertiesDialog(QDialog):
 ########################################################################################################################
 
 
-class NodePropertiesDialog(QDialog):
+class NodeProperties(QDialog):
     """
     This class implements the 'Node properties' dialog.
     """
@@ -445,7 +445,7 @@ class NodePropertiesDialog(QDialog):
 ########################################################################################################################
 
 
-class EditableNodePropertiesDialog(NodePropertiesDialog):
+class EditableNodeProperties(NodeProperties):
     """
     This class implements the properties dialog for label editable nodes.
     """
@@ -516,7 +516,7 @@ class EditableNodePropertiesDialog(NodePropertiesDialog):
 ########################################################################################################################
 
 
-class OrderedInputNodePropertiesDialog(NodePropertiesDialog):
+class OrderedInputNodeProperties(NodeProperties):
     """
     This class implements the properties dialog for constructor nodes having incoming input edges
     numbered according to source nodes partecipations to the axiom (Role chain and Property assertion).

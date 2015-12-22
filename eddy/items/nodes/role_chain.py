@@ -36,9 +36,9 @@ from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
 from eddy.datatypes import Font, Item, DistinctList, Identity
-from eddy.dialogs import OrderedInputNodePropertiesDialog
 from eddy.items.nodes.common.hexagon import HexagonNode
 from eddy.items.nodes.common.label import Label
+from eddy.widgets.properties import OrderedInputNodeProperties
 
 
 class RoleChainNode(HexagonNode):
@@ -141,7 +141,7 @@ class RoleChainNode(HexagonNode):
         """
         Build and returns the node properties dialog.
         """
-        return OrderedInputNodePropertiesDialog(scene=self.scene(), node=self)
+        return OrderedInputNodeProperties(scene=self.scene(), node=self)
 
     def removeEdge(self, edge):
         """

@@ -36,8 +36,8 @@ from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QDialogButtonBox, QMessageBox, QLabel
 
-from eddy.fields import IntEditField, StringEditField
 from eddy.functions import isEmpty, connect
+from eddy.widgets.fields import IntEditField, StringEditField
 
 
 class CardinalityRestrictionForm(QDialog):

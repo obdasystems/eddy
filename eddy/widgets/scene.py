@@ -47,7 +47,7 @@ from eddy.datatypes import DiagramMode, DistinctList, File, Item, Restriction, S
 from eddy.functions import rangeF, snapF
 from eddy.items import ConceptNode, ComplementNode, DomainRestrictionNode, InputEdge, InclusionEdge
 from eddy.items import RangeRestrictionNode, RoleChainNode, RoleInverseNode, ValueDomainNode
-from eddy.utils import Clipboard, UniqueID
+from eddy.utils import Clipboard, GUID
 
 
 class DiagramScene(QGraphicsScene):
@@ -86,7 +86,7 @@ class DiagramScene(QGraphicsScene):
         self.nodesById = {}  ## used to index nodes using their id
         self.nodesByLabel = {}  ## used to index nodes using their label text
         self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, organization, appname)  ## settings
-        self.uniqueID = UniqueID()  ## used to generate unique incremental ids
+        self.guid = GUID(self)  ## used to generate unique incremental ids
         self.undostack = QUndoStack(self)  ## use to push actions and keep history for undo/redo
         self.undostack.setUndoLimit(50)  ## TODO: make the stack configurable
         self.mode = DiagramMode.Idle  ## operation mode

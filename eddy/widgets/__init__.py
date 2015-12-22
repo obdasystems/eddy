@@ -32,12 +32,22 @@
 ##########################################################################
 
 
-from eddy.widgets.dock import DockWidget
+from eddy.widgets.about import About
+from eddy.widgets.dock import SidebarWidget
 from eddy.widgets.dock import Navigator
 from eddy.widgets.dock import Overview
 from eddy.widgets.dock import Palette
+from eddy.widgets.files import OpenFile
+from eddy.widgets.files import SaveFile
+from eddy.widgets.forms import CardinalityRestrictionForm
+from eddy.widgets.forms import RenameForm
 from eddy.widgets.mdi import MdiArea
 from eddy.widgets.mdi import MdiSubWindow
+from eddy.widgets.preferences import PreferencesDialog
+from eddy.widgets.properties import EditableNodeProperties
+from eddy.widgets.properties import NodeProperties
+from eddy.widgets.properties import OrderedInputNodeProperties
+from eddy.widgets.properties import SceneProperties
 from eddy.widgets.scene import DiagramScene
 from eddy.widgets.splash import SplashScreen
 from eddy.widgets.toolbar import ZoomControl

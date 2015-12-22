@@ -37,10 +37,10 @@ from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QColor, QPen
 from PyQt5.QtWidgets import QMenu
 
 from eddy.datatypes import Font, Item, Special, DiagramMode, Identity
-from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.functions import snapF
 from eddy.items.nodes.common.base import AbstractNode, AbstractResizableNode
 from eddy.items.nodes.common.label import Label
+from eddy.widgets.properties import EditableNodeProperties
 
 
 class ConceptNode(AbstractResizableNode):
@@ -180,7 +180,7 @@ class ConceptNode(AbstractResizableNode):
         """
         Build and returns the node properties dialog.
         """
-        return EditableNodePropertiesDialog(scene=self.scene(), node=self)
+        return EditableNodeProperties(scene=self.scene(), node=self)
 
     def width(self):
         """

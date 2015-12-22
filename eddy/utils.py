@@ -80,7 +80,7 @@ class Clipboard(QObject):
             :param node: the node to copy.
             """
             copy = node.copy(self)
-            copy.id = scene.uniqueID.next('n')
+            copy.id = scene.guid.next('n')
             return copy
 
         # create a copy of all the nodes in the clipboard and store them in a dict using the old
@@ -95,7 +95,7 @@ class Clipboard(QObject):
             :param edge: the edge to copy.
             """
             copy = edge.copy(self)
-            copy.id = scene.uniqueID.next('e')
+            copy.id = scene.guid.next('e')
             copy.source = nodes[edge.source.id]
             copy.target = nodes[edge.target.id]
             copy.source.setAnchor(copy, edge.source.anchor(edge))
@@ -185,17 +185,19 @@ class Clipboard(QObject):
         return 'Clipboard<nodes:{},edges:{}>'.format(len(self.nodes), len(self.edges))
 
 
-class UniqueID(object):
+class GUID(QObject):
     """
-    Helper class used to generate sequential IDs for GraphicScene items.
+    Class used to generate sequential IDs for DiagramScene items.
     """
-    START = 0 # the initial id number
-    STEP = 1 # incremental step
+    Start = 0
+    Step = 1
 
-    def __init__(self):
+    def __init__(self, parent=None):
         """
-        Initialize the UniqueID generator.
+        Initialize the the unique id generator.
+        :param parent: the parent object.
         """
+        super().__init__(parent)
         self.ids = dict()
 
     def next(self, prefix):
@@ -210,9 +212,9 @@ class UniqueID(object):
         try:
             last = self.ids[prefix]
         except KeyError:
-            self.ids[prefix] = UniqueID.START
+            self.ids[prefix] = GUID.Start
         else:
-            self.ids[prefix] = last + UniqueID.STEP
+            self.ids[prefix] = last + GUID.Step
         finally:
             return '{PREFIX}{ID}'.format(PREFIX=prefix, ID=self.ids[prefix])
 
@@ -242,3 +244,9 @@ class UniqueID(object):
             self.ids[prefix] = value
         else:
             self.ids[prefix] = max(last, value)
+
+    def __repr__(self):
+        """
+        Return repr(self).
+        """
+        return 'GUID<{}>'.format(','.join(['{}:{}'.format(k, v) for k, v in self.ids.items()]))

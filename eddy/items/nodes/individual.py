@@ -38,10 +38,10 @@ from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap
 
 from eddy.datatypes import DiagramMode, Font, Identity, Item
-from eddy.dialogs import EditableNodePropertiesDialog
 from eddy.functions import snapF, isQuoted
 from eddy.items.nodes.common.base import AbstractResizableNode
 from eddy.items.nodes.common.label import Label
+from eddy.widgets.properties import EditableNodeProperties
 
 
 class IndividualNode(AbstractResizableNode):
@@ -160,7 +160,7 @@ class IndividualNode(AbstractResizableNode):
         """
         Build and returns the node properties dialog.
         """
-        return EditableNodePropertiesDialog(scene=self.scene(), node=self)
+        return EditableNodeProperties(scene=self.scene(), node=self)
 
     def width(self):
         """

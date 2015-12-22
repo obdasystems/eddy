@@ -46,7 +46,7 @@ from eddy.items import DatatypeRestrictionNode, DisjointUnionNode, PropertyAsser
 from eddy.items import RangeRestrictionNode, RoleChainNode, RoleInverseNode, ValueDomainNode, IntersectionNode
 
 
-class DockWidget(QDockWidget):
+class SidebarWidget(QDockWidget):
     """
     This class can be used to add DockWidgets to the Main Window.
     """
@@ -62,7 +62,7 @@ class DockWidget(QDockWidget):
         super().__init__(title, parent, Qt.Widget)
         self.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
         self.setFeatures(QDockWidget.DockWidgetClosable)
-        self.setFixedWidth(DockWidget.Width)
+        self.setFixedWidth(SidebarWidget.Width)
         self.setWidget(widget)
 
 
@@ -110,7 +110,7 @@ class Navigator(ViewBrowser):
         Initialize the Navigator.
         """
         super().__init__(*args)
-        self.setFixedSize(DockWidget.Width, DockWidget.Width)
+        self.setFixedSize(SidebarWidget.Width, SidebarWidget.Width)
         self.navBrush = QColor(250, 140, 140, 100)
         self.navPen = QPen(QColor(250, 0, 0, 100), 1.0, Qt.SolidLine)
         self.mousepressed = False
@@ -264,7 +264,7 @@ class Overview(ViewBrowser):
         Initialize the Overview.
         """
         super().__init__(*args)
-        self.setFixedSize(DockWidget.Width, DockWidget.Width)
+        self.setFixedSize(SidebarWidget.Width, SidebarWidget.Width)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setViewportUpdateMode(QGraphicsView.NoViewportUpdate)
@@ -427,7 +427,7 @@ class Palette(QWidget):
         self.mainLayout.setContentsMargins(0, Palette.Padding, 0, Palette.Padding)
         self.mainLayout.setSpacing(Palette.Spacing)
         self.setContentsMargins(0, 0, 0, 0)
-        self.setFixedWidth(DockWidget.Width)
+        self.setFixedWidth(SidebarWidget.Width)
         self.initUI()
 
     def initUI(self):

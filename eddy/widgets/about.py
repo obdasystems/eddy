@@ -36,10 +36,14 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout, QHBoxLayout
 
-from eddy import __version__, __appname__, __copyright__, __email__, __license__
+from eddy import __version__ as VERSION
+from eddy import __appname__ as APPNAME
+from eddy import __copyright__ as COPYRIGHT
+from eddy import __email__ as EMAIL
+from eddy import __license__ as LICENSE
 
 
-class AboutDialog(QDialog):
+class About(QDialog):
     """
     This class is used to display the 'About' dialog.
     """
@@ -67,8 +71,8 @@ class AboutDialog(QDialog):
             <a href="mailto:santarelli@dis.uniroma1.it" {STYLE2}>Valerio Santarelli</a><br/>
             <a href="mailto:savo@dis.uniroma1.it" {STYLE2}>Domenico Fabio Savo</a><br/>
             <a href="mailto:console@dis.uniroma1.it" {STYLE2}>Marco Console</a>
-            """.format(TITLE=__appname__, EMAIL=__email__, VERSION=__version__,
-                       LICENSE=__license__, COPYRIGHT=__copyright__, STYLE1='style="text-decoration:none;"',
+            """.format(TITLE=APPNAME, EMAIL=EMAIL, VERSION=VERSION,
+                       LICENSE=LICENSE, COPYRIGHT=COPYRIGHT, STYLE1='style="text-decoration:none;"',
                        STYLE2='style="text-decoration:none; color: #000000;"')
 
         self.icon = QLabel(self)
@@ -98,4 +102,4 @@ class AboutDialog(QDialog):
         self.setFixedHeight(self.sizeHint().height())
         self.setModal(True)
         self.setWindowIcon(QIcon(':/images/eddy'))
-        self.setWindowTitle('About {}'.format(__appname__))
+        self.setWindowTitle('About {}'.format(APPNAME))

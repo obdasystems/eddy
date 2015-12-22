@@ -47,22 +47,22 @@ from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDial
 from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup
 from PyQt5.QtXml import QDomDocument
 
-from eddy import __version__ as version, __appname__ as appname, __organization__ as organization
+from eddy import __version__ as VERSION, __appname__ as APPNAME, __organization__ as ORGANIZATION
 from eddy.commands import CommandComposeAxiom, CommandDecomposeAxiom, CommandItemsMultiRemove, CommandItemsTranslate
 from eddy.commands import CommandNodeLabelMove, CommandNodeLabelEdit, CommandEdgeBreakpointDel, CommandRefactor
 from eddy.commands import CommandNodeSetZValue, CommandNodeHexagonSwitchTo, CommandNodeValueDomainSelectDatatype
 from eddy.commands import CommandNodeSquareChangeRestriction, CommandNodeSetSpecial, CommandNodeChangeBrush
 from eddy.commands import CommandEdgeInclusionToggleComplete, CommandEdgeInputToggleFunctional, CommandEdgeSwap
 from eddy.datatypes import Color, File, DiagramMode, FileType, Restriction, Special, XsdDatatype
-from eddy.dialogs import AboutDialog, CardinalityRestrictionForm, RenameForm
-from eddy.dialogs import OpenFileDialog, PreferencesDialog, SaveFileDialog, ScenePropertiesDialog
 from eddy.exceptions import ParseError
 from eddy.functions import connect, disconnect, getPath, make_colored_icon, make_shaded_icon, snapF
 from eddy.items import Item, __mapping__ as mapping
 from eddy.items import UnionNode, EnumerationNode, ComplementNode, RoleChainNode, IntersectionNode
 from eddy.items import RoleInverseNode, DisjointUnionNode, DatatypeRestrictionNode
 from eddy.utils import Clipboard
-from eddy.widgets import DockWidget, Navigator, Overview, Palette
+from eddy.widgets import About, OpenFile, PreferencesDialog, SaveFile, SceneProperties
+from eddy.widgets import CardinalityRestrictionForm, RenameForm
+from eddy.widgets import SidebarWidget, Navigator, Overview, Palette
 from eddy.widgets import MdiArea, MdiSubWindow
 from eddy.widgets import DiagramScene
 from eddy.widgets import MainView
@@ -90,7 +90,7 @@ class MainWindow(QMainWindow):
         self.abortQuit = False
         self.clipboard = Clipboard()
         self.undogroup = QUndoGroup()
-        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, organization, appname)
+        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, ORGANIZATION, APPNAME)
 
         ################################################################################################################
         #                                                                                                              #
@@ -129,9 +129,9 @@ class MainWindow(QMainWindow):
         #                                                                                                              #
         ################################################################################################################
 
-        self.dockNavigator = DockWidget('Navigator', self.navigator, self)
-        self.dockOverview = DockWidget('Overview', self.overview, self)
-        self.dockPalette = DockWidget('Palette', self.palette_, self)
+        self.dockNavigator = SidebarWidget('Navigator', self.navigator, self)
+        self.dockOverview = SidebarWidget('Overview', self.overview, self)
+        self.dockPalette = SidebarWidget('Palette', self.palette_, self)
 
         ################################################################################################################
         #                                                                                                              #
@@ -243,21 +243,21 @@ class MainWindow(QMainWindow):
 
         self.actionOpenPreferences = QAction('Preferences', self)
         self.actionOpenPreferences.setShortcut(QKeySequence.Preferences)
-        self.actionOpenPreferences.setStatusTip('Open {} preferences'.format(appname))
+        self.actionOpenPreferences.setStatusTip('Open {} preferences'.format(APPNAME))
         connect(self.actionOpenPreferences.triggered, self.openPreferences)
 
         if not sys.platform.startswith('darwin'):
             self.actionOpenPreferences.setIcon(self.iconPreferences)
 
         self.actionQuit = QAction('Quit', self)
-        self.actionQuit.setStatusTip('Quit {}'.format(appname))
+        self.actionQuit.setStatusTip('Quit {}'.format(APPNAME))
         self.actionQuit.setShortcut(QKeySequence.Quit)
         connect(self.actionQuit.triggered, self.close)
 
         if not sys.platform.startswith('darwin'):
             self.actionQuit.setIcon(self.iconQuit)
 
-        self.actionAbout = QAction('About {}'.format(appname), self)
+        self.actionAbout = QAction('About {}'.format(APPNAME), self)
         self.actionAbout.setShortcut(QKeySequence.HelpContents)
         connect(self.actionAbout.triggered, self.about)
 
@@ -684,7 +684,7 @@ class MainWindow(QMainWindow):
         """
         Display the about dialog.
         """
-        about = AboutDialog()
+        about = About()
         about.exec_()
 
     @pyqtSlot()
@@ -1171,7 +1171,7 @@ class MainWindow(QMainWindow):
         """
         Open a document.
         """
-        dialog = OpenFileDialog(getPath('~'))
+        dialog = OpenFile(getPath('~'))
         dialog.setNameFilters([FileType.graphol.value])
         if dialog.exec_():
             filepath = dialog.selectedFiles()[0]
@@ -1230,7 +1230,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            prop = ScenePropertiesDialog(scene=scene)
+            prop = SceneProperties(scene=scene)
             prop.exec_()
 
     @pyqtSlot(int)
@@ -1725,7 +1725,7 @@ class MainWindow(QMainWindow):
                 C = mapping[E.attribute('type')]
                 node = C.fromGraphol(scene=scene, E=E)
                 scene.addItem(node)
-                scene.uniqueID.update(node.id)
+                scene.guid.update(node.id)
 
             # add the edges
             edges_from_graphol = graph.elementsByTagName('edge')
@@ -1734,7 +1734,7 @@ class MainWindow(QMainWindow):
                 C = mapping[E.attribute('type')]
                 edge = C.fromGraphol(scene=scene, E=E)
                 scene.addItem(edge)
-                scene.uniqueID.update(edge.id)
+                scene.guid.update(edge.id)
 
         except Exception as e:
             box = QMessageBox()
@@ -1793,7 +1793,7 @@ class MainWindow(QMainWindow):
         :return: a tuple with the filepath and the selected file filter.
         :rtype: tuple
         """
-        dialog = SaveFileDialog(path)
+        dialog = SaveFile(path)
         dialog.setWindowTitle('Export')
         dialog.setNameFilters([x.value for x in FileType if x is not FileType.graphol])
         dialog.selectFile(name or 'Untitled')
@@ -1853,7 +1853,7 @@ class MainWindow(QMainWindow):
         :param name: the default name of the file.
         :rtype: str
         """
-        dialog = SaveFileDialog(path)
+        dialog = SaveFile(path)
         dialog.setNameFilters([FileType.graphol.value])
         dialog.selectFile(name or 'Untitled')
         if dialog.exec_():
@@ -1890,7 +1890,7 @@ class MainWindow(QMainWindow):
         Set the main window title.
         :param p_str: the prefix for the window title
         """
-        T = '{} - {} {}'.format(p_str, appname, version) if p_str else '{} {}'.format(appname, version)
+        T = '{} - {} {}'.format(p_str, APPNAME, VERSION) if p_str else '{} {}'.format(APPNAME, VERSION)
         super().setWindowTitle(T)
 
     def updateRecentDocuments(self):

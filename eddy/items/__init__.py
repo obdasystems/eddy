@@ -56,7 +56,7 @@ class AbstractItem(QGraphicsItem):
         :param description: the description of this item.
         :param url: the url this item is referencing.
         """
-        self._id = id or scene.uniqueID.next(self.prefix)
+        self._id = id or scene.guid.next(self.prefix)
         self._description = description
         self._url = url
 

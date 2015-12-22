@@ -479,7 +479,6 @@ if sys.platform.startswith('darwin'):
 
 packages = [
     'eddy.commands',
-    'eddy.dialogs',
     'eddy.functions',
     'eddy.items',
     'eddy.styles',

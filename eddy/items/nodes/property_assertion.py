@@ -36,8 +36,8 @@ from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QBrush
 
 from eddy.datatypes import DiagramMode, DistinctList, Item, Identity
-from eddy.dialogs import OrderedInputNodePropertiesDialog
 from eddy.items.nodes.common.base import AbstractNode
+from eddy.widgets.properties import OrderedInputNodeProperties
 
 
 class PropertyAssertionNode(AbstractNode):
@@ -135,7 +135,7 @@ class PropertyAssertionNode(AbstractNode):
         """
         Build and returns the node properties dialog.
         """
-        return OrderedInputNodePropertiesDialog(scene=self.scene(), node=self)
+        return OrderedInputNodeProperties(scene=self.scene(), node=self)
 
     def removeEdge(self, edge):
         """
