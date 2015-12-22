@@ -4,13 +4,14 @@ machine:
   ## Version of python to use
   python:
     version:
-      3.5.0
+      3.4.3
 
   ## Install Qt5
   pre:
     - sudo apt-add-repository ppa:beineri/opt-qt551 -y
     - sudo apt-get update
     - sudo apt-get install qt-latest
+    - sudo apt-get install mercurial
     - echo "source /opt/qt55/bin/qt55-env.sh" >> ~/.circlerc
 
 
@@ -34,11 +35,13 @@ dependencies:
     # Build PyQt5
     - cd /builds/PyQt-gpl-5.5.1 && python configure.py --confirm-license --no-designer-plugin -e QtCore -e QtGui -e QtWidgets -e QtPrintSupport -e QtXml -e QtTest
     - cd /builds/PyQt-gpl-5.5.1 && sudo make && sudo make install
+    # Install cx_Freeze
+    - cd /builds && hg clone https://danielepantaleone@bitbucket.org/danielepantaleone/cx_freeze
+    - cd /builds/cx_freeze && hg pull && hg update ubuntu && python setup.py build && python setup.py install
 
   ## Install PIP packages
   override:
     - pip install -U pip
-    - pip install -r build-requirements.txt
     - pip install -r test-requirements.txt
 
 
