@@ -36,7 +36,7 @@ dependencies:
     - cd /builds/PyQt-gpl-5.5.1 && sudo make && sudo make install
 
   ## Install PIP packages
-  post:
+  override:
     - pip install -U pip
     - pip install -r build-requirements.txt
     - pip install -r test-requirements.txt
