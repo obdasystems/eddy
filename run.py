@@ -43,7 +43,7 @@ from PyQt5.QtWidgets import QSpacerItem, QSizePolicy, QMessageBox
 
 from eddy import images_rc ## DO NOT REMOVE
 from eddy import Eddy
-from eddy.widgets.misc import SplashScreen
+from eddy.widgets.splash import SplashScreen
 
 
 # main application reference

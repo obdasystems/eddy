@@ -53,7 +53,7 @@ from eddy.functions.fsystem import getPath
 from eddy.functions.misc import QSS
 from eddy.styles import LightStyle, Style
 from eddy.widgets.main import MainWindow
-from eddy.widgets.misc import SplashScreen
+from eddy.widgets.splash import SplashScreen
 
 
 class Eddy(QApplication):

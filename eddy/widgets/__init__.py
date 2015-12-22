@@ -32,9 +32,13 @@
 ##########################################################################
 
 
-from eddy.widgets.dock import DockWidget, Navigator, Overview, Palette
-from eddy.widgets.mdi import MdiArea, MdiSubWindow
-from eddy.widgets.misc import SplashScreen
+from eddy.widgets.dock import DockWidget
+from eddy.widgets.dock import Navigator
+from eddy.widgets.dock import Overview
+from eddy.widgets.dock import Palette
+from eddy.widgets.mdi import MdiArea
+from eddy.widgets.mdi import MdiSubWindow
 from eddy.widgets.scene import DiagramScene
+from eddy.widgets.splash import SplashScreen
 from eddy.widgets.toolbar import ZoomControl
 from eddy.widgets.view import MainView
