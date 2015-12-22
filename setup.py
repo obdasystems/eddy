@@ -146,10 +146,10 @@ class BuildExe(build_exe):
         Command execution.
         """
         super().run()
-        self.make_dist()
-        self.unix_2_dos()
-        self.unix_exec()
-        self.make_zip()
+        self.execute(self.make_dist, ())
+        self.execute(self.unix_2_dos, ())
+        self.execute(self.unix_exec, ())
+        self.execute(self.make_zip, ())
 
     def make_dist(self):
         """
