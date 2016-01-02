@@ -173,8 +173,7 @@ class CommandNodeMove(QUndoCommand):
             # update edge anchors
             for edge, pos in data['anchors'].items():
                 node.setAnchor(edge, pos)
-        # handle edge updates in a separate cycle: calling node.updateEdges() here seems
-        # to be causing troubles, leaving the diagram scene with edges pointing nowhere
+        # update edges
         for edge in set(self.pos['redo']['edges'].keys()) | set(x for n in self.pos['redo']['nodes'].keys() for x in n.edges):
             edge.updateEdge()
         # emit updated signal
@@ -192,8 +191,7 @@ class CommandNodeMove(QUndoCommand):
             # update edge anchors
             for edge, pos in data['anchors'].items():
                 node.setAnchor(edge, pos)
-        # handle edge updates in a separate cycle: calling node.updateEdges() here seems
-        # to be causing troubles, leaving the diagram scene with edges pointing nowhere
+        # update edges
         for edge in set(self.pos['undo']['edges'].keys()) | set(x for n in self.pos['undo']['nodes'].keys() for x in n.edges):
             edge.updateEdge()
         # emit updated signal

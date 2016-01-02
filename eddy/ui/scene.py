@@ -256,6 +256,7 @@ class DiagramScene(QGraphicsScene):
                     # position of the node acting as mouse grabber to determine the new delta to and move other items
                     point = self.snapToGrid(self.mousePressNodePos + mouseEvent.scenePos() - self.mousePressPos)
                     delta = point - self.mousePressNodePos
+                    edges = set()
 
                     # update all the breakpoints positions
                     for edge, breakpoints in self.mousePressData['edges'].items():
@@ -267,7 +268,11 @@ class DiagramScene(QGraphicsScene):
                         node.setPos(data['pos'] + delta)
                         for edge, pos in data['anchors'].items():
                             node.setAnchor(edge, pos + delta)
-                        node.updateEdges()
+                            edges |= set(node.edges)
+
+                    # update edges
+                    for edge in edges:
+                        edge.updateEdge()
 
         super().mouseMoveEvent(mouseEvent)
 
