@@ -314,19 +314,23 @@ class AbstractNode(AbstractItem):
         """
         Update all the edges attached to the node.
         """
-        try:
-            # FIXME: this is slowing down the UI when moving multiple nodes
-            # update it for all the selected nodes in case we are
-            # moving multiple nodes across the whole scene
-            scene = self.scene()
-            for node in scene.selectedNodes():
-                for edge in node.edges:
-                    edge.updateEdge()
-        except AttributeError:
-            # if we don't have the scene update only local edges: this is
-            # mostly used when we load a graphol document from disk
-            for edge in self.edges:
-                edge.updateEdge()
+        # The code below seems to be causing several slow downs to
+        # the UI when moving multiple nodes across the diagram scene.
+        #
+        # try:
+        #     # update it for all the selected nodes in case we are
+        #     # moving multiple nodes across the whole scene
+        #     scene = self.scene()
+        #     for node in scene.selectedNodes():
+        #         for edge in node.edges:
+        #             edge.updateEdge()
+        # except AttributeError:
+        #     # if we don't have the scene update only local edges: this is
+        #     # mostly used when we load a graphol document from disk
+        #     for edge in self.edges:
+        #         edge.updateEdge()
+        for edge in self.edges:
+            edge.updateEdge()
 
     @abstractmethod
     def width(self):

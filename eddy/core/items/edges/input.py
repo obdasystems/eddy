@@ -392,7 +392,7 @@ class InputEdge(AbstractEdge):
             elif source.identity is Identity.Role:
 
                 # We can connect a Role in input only if there is no other input or if the
-                # other input is a Concept and the node specifies an Qialified Restriction.
+                # other input is a Concept and the node specifies a Qualified Restriction.
                 node = next(iter(e.other(target) for e in target.edges \
                          if e.isItem(Item.InputEdge) and \
                             e.target is target and e is not self), None)
