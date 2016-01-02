@@ -370,8 +370,8 @@ class InputEdge(AbstractEdge):
 
             if source.identity in {Identity.Concept, Identity.Neutral}:
 
-                if target.restriction not in {Restriction.exists, Restriction.forall}:
-                    # Not a Qualified Existential/Universal Restriction.
+                if target.restriction not in {Restriction.cardinality, Restriction.exists, Restriction.forall}:
+                    # Not a Qualified Restriction.
                     return False
 
                 # We can connect a Concept in input only if there
@@ -384,7 +384,7 @@ class InputEdge(AbstractEdge):
 
                     if node.identity is not Identity.Role:
                         # We found another input on this node which is not a Role
-                        # so we can't construct a Qualified Existential Restriction.
+                        # so we can't construct a Qualified Restriction.
                         return False
 
             # SOURCE => ROLE EXPRESSION
@@ -392,15 +392,16 @@ class InputEdge(AbstractEdge):
             elif source.identity is Identity.Role:
 
                 # We can connect a Role in input only if there is no other input or if the
-                # other input is a Concept and the node specify an Existential Restriction.
+                # other input is a Concept and the node specifies an Qialified Restriction.
                 node = next(iter(e.other(target) for e in target.edges \
                          if e.isItem(Item.InputEdge) and \
                             e.target is target and e is not self), None)
 
                 if node:
 
-                    if node.identity is not Identity.Concept or target.restriction is not Restriction.exists:
-                        # Not a Qualified Existential Restriction.
+                    if node.identity is not Identity.Concept or \
+                        target.restriction not in {Restriction.cardinality, Restriction.exists, Restriction.forall}:
+                        # Not a Qualified Restriction.
                         return False
 
             # SOURCE => ATTRIBUTE NODE
