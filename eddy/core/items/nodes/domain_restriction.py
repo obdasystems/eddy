@@ -77,6 +77,18 @@ class DomainRestrictionNode(SquaredNode):
         """
         pass
 
+    @property
+    def qualified(self):
+        """
+        Tells whether this node expresses a Qualified restriction.
+        :rtype: bool
+        """
+        f1 = lambda x: x.isItem(Item.InputEdge) and x.target is self
+        f2 = lambda x: x.identity in {Identity.Concept, Identity.Role}
+
+        return self.restriction in {Restriction.cardinality, Restriction.exists, Restriction.forall} and \
+            len([n for n in [e.other(self) for e in self.edges if f1(e)] if f2(n)]) >= 2
+
     ####################################################################################################################
     #                                                                                                                  #
     #   INTERFACE                                                                                                      #
@@ -89,22 +101,16 @@ class DomainRestrictionNode(SquaredNode):
         :rtype: QMenu
         """
         scene = self.scene()
-
         menu = super().contextMenu()
 
-        # See if we can add the restriction change menu: we prevent the user from switching the restriction
-        # in case it is a Qualified Existential Restriction, which is the only one accepting 2 input edges.
-        f1 = lambda x: x.isItem(Item.InputEdge) and x.target is self
-        f2 = lambda x: x.identity is Identity.Concept
+        menu.addSeparator()
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRestrictionChange)
 
-        if self.restriction is not Restriction.exists or \
-            not [n for n in [e.other(self) for e in self.edges if f1(e)] if f2(n)]:
-            # Not a Restriction node or no Concept attached in input => no Qualified Existential Restriction.
-            menu.addSeparator()
-            menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRestrictionChange)
-            # Switch the check on the currently active restriction.
-            for action in scene.mainwindow.actionsRestrictionChange:
-                action.setChecked(self.restriction is action.data())
+        qualified = self.qualified
+        restriction = {Restriction.cardinality, Restriction.exists, Restriction.forall}
+        for action in scene.mainwindow.actionsRestrictionChange:
+            action.setChecked(self.restriction is action.data())
+            action.setVisible(not qualified or qualified and action.data() in restriction)
 
         # Add actions from the label (if any)
         collection = self.label.contextMenuAdd()
