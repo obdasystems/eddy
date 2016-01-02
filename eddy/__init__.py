@@ -40,7 +40,7 @@ __email__ = 'danielepantaleone@me.com'
 __license__ = 'GPL'
 __organization__ = 'Sapienza - University Of Rome'
 __status__ = 'Development'
-__version__ = '0.5.1'
+__version__ = '0.5.2'
 
 
 import os
