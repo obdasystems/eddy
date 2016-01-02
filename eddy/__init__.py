@@ -43,9 +43,6 @@ __status__ = 'Development'
 __version__ = '0.5.2'
 
 
-import os
-import sys
-
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QApplication
 
@@ -85,11 +82,10 @@ class Eddy(QApplication):
             # container. So according to this we can't use an empty list as default value because PyQt5 needs
             # to know the type of the contents added to the collection: we avoid this problem by placing
             # the list of examples file in the recentDocumentList (only if there is no list defined already).
-            root = expandPath('@eddy/')
-            root = os.path.join(root, '..') if not hasattr(sys, 'frozen') else root
             self.settings.setValue('document/recent_documents', [
-                os.path.join(root, 'examples', 'Family.graphol'),
-                os.path.join(root, 'examples', 'Pizza.graphol')
+                expandPath('@root/examples/Animals.graphol'),
+                expandPath('@root/examples/Family.graphol'),
+                expandPath('@root/examples/Pizza.graphol'),
             ])
 
         self.mainwindow = MainWindow()

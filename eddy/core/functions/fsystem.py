@@ -41,8 +41,9 @@ def expandPath(path):
     Return an absolute path by expanding the given relative one.
     The following tokens will be expanded:
 
-        - @eddy => will be expanded to the eddy directory path
-        - @home => will be expanded to the eddy home directory path (.eddy in $HOME)
+        - @eddy => will be expanded to Eddy's directory
+        - @home => will be expanded to Eddy's home directory (.eddy in $HOME)
+        - @root => will be expanded to Eddy's root (matches @eddy if running a frozen application)
         - ~ => will be expanded to the user home directory ($HOME)
 
     :type path: T <= bytes | unicode
@@ -52,12 +53,16 @@ def expandPath(path):
         path = os.path.join(modulePath(), path[6:])
     elif path.startswith('@home\\') or path.startswith('@home/'):
         path = os.path.join(homePath(), path[6:])
+    elif path.startswith('@root\\') or path.startswith('@root/'):
+        root = modulePath()
+        root = os.path.join(root, '..') if not hasattr(sys, 'frozen') else root
+        path = os.path.join(root, path[6:])
     return os.path.normpath(os.path.expanduser(path))
 
 
 def homePath():
     """
-    Returns the path to the eddy home directory.
+    Returns the path to Eddy's home directory.
     :rtype: str
     """
     homepath = os.path.normpath(os.path.expanduser('~/.eddy'))
@@ -68,7 +73,7 @@ def homePath():
 
 def modulePath():
     """
-    Returns the path to the eddy directory.
+    Returns the path to Eddy's directory.
     :rtype: str
     """
     if hasattr(sys, 'frozen'):
