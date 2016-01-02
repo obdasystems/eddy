@@ -24,7 +24,7 @@ similar diagrammatic shape.
 
 ### Screenshot
 
-![screenshot](/eddy/artwork/shot01.png?raw=true)
+![screenshot](/eddy/ui/artwork/shot01.png?raw=true)
 
 ### License
 
