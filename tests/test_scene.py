@@ -37,10 +37,9 @@ from mockito import when
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtTest import QTest
 
-from eddy.commands import CommandNodeLabelEdit
-from eddy.datatypes import Item, DiagramMode, DistinctList
-from eddy.items import InclusionEdge
-
+from eddy.core.commands import CommandNodeLabelEdit
+from eddy.core.datatypes import Item, DiagramMode, DistinctList
+from eddy.core.items import InclusionEdge
 from tests import EddyTestCase
 
 

@@ -2,7 +2,7 @@
 
 ##########################################################################
 #                                                                        #
-#  Eddy: an editor for the Graphol ontology language.                    #
+#  Eddy: a graphical editor for the construction of Graphol ontologies.  #
 #  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
@@ -18,7 +18,7 @@
 #  You should have received a copy of the GNU General Public License     #
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
 #                                                                        #
-##########################################################################
+#  #####################                          #####################  #
 #                                                                        #
 #  Graphol is developed by members of the DASI-lab group of the          #
 #  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
@@ -32,49 +32,47 @@
 ##########################################################################
 
 
-import unittest
+import os
+import sys
 
-from eddy.core.datatypes import DistinctList
 
-class Test_DistinctList(unittest.TestCase):
+def expandPath(path):
+    """
+    Return an absolute path by expanding the given relative one.
+    The following tokens will be expanded:
 
-    def test_constructor_with_list(self):
-        D1 = DistinctList([1, 2, 3, 3, 4, 1, 4, 5, 6, 7, 7, 8, 2])
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8]), seq_type=DistinctList)
+        - @eddy => will be expanded to the eddy directory path
+        - @home => will be expanded to the eddy home directory path (.eddy in $HOME)
+        - ~ => will be expanded to the user home directory ($HOME)
 
-    def test_constructor_with_tuple(self):
-        D1 = DistinctList((1, 2, 3, 3, 4, 1, 4, 5, 6, 7, 7, 8, 2))
-        self.assertSequenceEqual(D1, DistinctList((1, 2, 3, 4, 5, 6, 7, 8)), seq_type=DistinctList)
+    :type path: T <= bytes | unicode
+    :rtype: str
+    """
+    if path.startswith('@eddy\\') or path.startswith('@eddy/'):
+        path = os.path.join(modulePath(), path[6:])
+    elif path.startswith('@home\\') or path.startswith('@home/'):
+        path = os.path.join(homePath(), path[6:])
+    return os.path.normpath(os.path.expanduser(path))
 
-    def test_constructor_with_set(self):
-        self.assertEqual(8, len(DistinctList({1, 2, 3, 4, 5, 6, 7, 8})))
 
-    def test_append(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.append(9)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8, 9]), seq_type=DistinctList)
+def homePath():
+    """
+    Returns the path to the eddy home directory.
+    :rtype: str
+    """
+    homepath = os.path.normpath(os.path.expanduser('~/.eddy'))
+    if not os.path.isdir(homepath):
+        os.mkdir(homepath)
+    return homepath
 
-    def test_insert(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.insert(5, 9)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 9, 6, 7, 8]), seq_type=DistinctList)
 
-    def test_extend_with_list(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.extend([9, 10, 11, 12])
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), seq_type=DistinctList)
-
-    def test_extend_with_tuple(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.extend((9, 10, 11, 12))
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), seq_type=DistinctList)
-
-    def test_remove_with_match(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.remove(4)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 5, 6, 7, 8]), seq_type=DistinctList)
-
-    def test_remove_with_no_match(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.remove(9)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8]), seq_type=DistinctList)
+def modulePath():
+    """
+    Returns the path to the eddy directory.
+    :rtype: str
+    """
+    if hasattr(sys, 'frozen'):
+        path = os.path.dirname(sys.executable)
+    else:
+        path = os.path.dirname(sys.modules['eddy'].__file__)
+    return os.path.normpath(os.path.expanduser(path))

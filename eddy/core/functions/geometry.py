@@ -2,7 +2,7 @@
 
 ##########################################################################
 #                                                                        #
-#  Eddy: an editor for the Graphol ontology language.                    #
+#  Eddy: a graphical editor for the construction of Graphol ontologies.  #
 #  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
@@ -18,7 +18,7 @@
 #  You should have received a copy of the GNU General Public License     #
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
 #                                                                        #
-##########################################################################
+#  #####################                          #####################  #
 #                                                                        #
 #  Graphol is developed by members of the DASI-lab group of the          #
 #  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
@@ -32,49 +32,77 @@
 ##########################################################################
 
 
-import unittest
+import math
 
-from eddy.core.datatypes import DistinctList
+from PyQt5.QtCore import QPointF
 
-class Test_DistinctList(unittest.TestCase):
 
-    def test_constructor_with_list(self):
-        D1 = DistinctList([1, 2, 3, 3, 4, 1, 4, 5, 6, 7, 7, 8, 2])
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8]), seq_type=DistinctList)
+def angle(p1, p2):
+    """
+    Returns the angle of the line connecting the given points.
+    :type p1: QPointF
+    :type p2: QPointF
+    :rtype: float
+    """
+    return math.atan2(p1.y() - p2.y(), p2.x() - p1.x())
 
-    def test_constructor_with_tuple(self):
-        D1 = DistinctList((1, 2, 3, 3, 4, 1, 4, 5, 6, 7, 7, 8, 2))
-        self.assertSequenceEqual(D1, DistinctList((1, 2, 3, 4, 5, 6, 7, 8)), seq_type=DistinctList)
 
-    def test_constructor_with_set(self):
-        self.assertEqual(8, len(DistinctList({1, 2, 3, 4, 5, 6, 7, 8})))
+def distanceP(p1, p2):
+    """
+    Calculate the distance between the given points.
+    :type p1: QPointF
+    :type p2: QPointF
+    :rtype: float
+    """
+    return math.sqrt(math.pow(p2.x() - p1.x(), 2) + math.pow(p2.y() - p1.y(), 2))
 
-    def test_append(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.append(9)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8, 9]), seq_type=DistinctList)
 
-    def test_insert(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.insert(5, 9)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 9, 6, 7, 8]), seq_type=DistinctList)
+def distanceL(line, p):
+    """
+    Returns a tuple containing the distance between the given line and the given point, and the intersection point.
+    :type line: QLineF
+    :type p: QPointF
+    :rtype: tuple
+    """
+    x1 = line.x1()
+    y1 = line.y1()
+    x2 = line.x2()
+    y2 = line.y2()
+    x3 = p.x()
+    y3 = p.y()
 
-    def test_extend_with_list(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.extend([9, 10, 11, 12])
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), seq_type=DistinctList)
+    kk = ((y2 - y1) * (x3 - x1) - (x2 - x1) * (y3 - y1)) / (math.pow(y2 - y1, 2) + math.pow(x2 - x1, 2))
+    x4 = x3 - kk * (y2 - y1)
+    y4 = y3 + kk * (x2 - x1)
 
-    def test_extend_with_tuple(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.extend((9, 10, 11, 12))
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), seq_type=DistinctList)
+    p1 = QPointF(x3, y3)
+    p2 = QPointF(x4, y4)
 
-    def test_remove_with_match(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.remove(4)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 5, 6, 7, 8]), seq_type=DistinctList)
+    return distanceP(p1, p2), p2
 
-    def test_remove_with_no_match(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.remove(9)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8]), seq_type=DistinctList)
+
+def intersection(l1, l2):
+    """
+    Return the intersection point of the given lines.
+    Will return None if there is no intersection point.
+    :type l1: QLineF
+    :type l2: QLineF
+    :rtype: QPointF
+    """
+    L = max(min(l1.p1().x(), l1.p2().x()), min(l2.p1().x(), l2.p2().x()))
+    R = min(max(l1.p1().x(), l1.p2().x()), max(l2.p1().x(), l2.p2().x()))
+    T = max(min(l1.p1().y(), l1.p2().y()), min(l2.p1().y(), l2.p2().y()))
+    B = min(max(l1.p1().y(), l1.p2().y()), max(l2.p1().y(), l2.p2().y()))
+    if (T, L) == (B, R):
+        return QPointF(L, T)
+    return None
+
+
+def midpoint(p1, p2):
+    """
+    Calculate the midpoint between the given points.
+    :type p1: QPointF
+    :type p2: QPointF
+    :rtype: QPointF
+    """
+    return QPointF(((p1.x() + p2.x()) / 2), ((p1.y() + p2.y()) / 2))

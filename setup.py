@@ -2,7 +2,7 @@
 
 ##########################################################################
 #                                                                        #
-#  Eddy: an editor for the Graphol ontology language.                    #
+#  Eddy: a graphical editor for the construction of Graphol ontologies.  #
 #  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
@@ -18,7 +18,7 @@
 #  You should have received a copy of the GNU General Public License     #
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
 #                                                                        #
-##########################################################################
+######################                              ######################
 #                                                                        #
 #  Graphol is developed by members of the DASI-lab group of the          #
 #  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
@@ -70,19 +70,19 @@ if sys.platform.startswith('darwin'):
     OPTS['DIST_NAME'] = '{}-{}-{}-darwin'.format(APPNAME, VERSION, LICENSE.lower())
     OPTS['EXEC_BASE'] = None
     OPTS['EXEC_NAME'] = APPNAME
-    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'artwork', 'eddy.icns')
+    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'ui', 'artwork', 'eddy.icns')
 elif sys.platform.startswith('win32'):
     OPTS['AS_TO_EXE'] = True
     OPTS['DIST_NAME'] = '{}-{}-{}-win{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
     OPTS['EXEC_BASE'] = 'Win32GUI'
     OPTS['EXEC_NAME'] = '{}.exe'.format(APPNAME)
-    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'artwork', 'eddy.ico')
+    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'ui', 'artwork', 'eddy.ico')
 else:
     OPTS['AS_TO_EXE'] = None
     OPTS['DIST_NAME'] = '{}-{}-{}-linux{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
     OPTS['EXEC_BASE'] = None
     OPTS['EXEC_NAME'] = APPNAME
-    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'artwork', 'eddy.png')
+    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'ui', 'artwork', 'eddy.png')
 
 
 OPTS['BUILD_PATH'] = os.path.join(OPTS['BUILD_DIR'], OPTS['DIST_NAME'])
@@ -478,11 +478,8 @@ if sys.platform.startswith('darwin'):
 
 
 packages = [
-    'eddy.commands',
-    'eddy.functions',
-    'eddy.items',
-    'eddy.styles',
-    'eddy.widgets',
+    'eddy.core',
+    'eddy.ui',
 ]
 
 excludes = [
@@ -506,7 +503,7 @@ include_files = [
     (os.path.join(OPTS['QT_PLUGINS_PATH'], 'printsupport'), 'printsupport'),
     ('docs', 'docs'),
     ('examples', 'examples'),
-    ('eddy/styles/light.qss', 'styles/light.qss'),
+    ('eddy/ui/styles/light.qss', 'ui/styles/light.qss'),
     ('LICENSE', 'LICENSE'),
     ('CONTRIBUTING.md', 'CONTRIBUTING.md'),
     ('PACKAGING.md', 'PACKAGING.md'),
@@ -538,8 +535,7 @@ setup(
     license=LICENSE,
     url="https://github.com/danielepantaleone/eddy",
     classifiers=[
-        'Development Status :: 1 - Planning',
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
         'Environment :: MacOS X :: Cocoa',
         'Environment :: Win32 (MS Windows)'
         'Environment :: X11 Applications :: Qt',

@@ -35,9 +35,9 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtTest import QTest
 
-from eddy.widgets.mdi import MdiSubWindow
-from eddy.widgets.scene import DiagramScene
-from eddy.widgets.view import MainView
+from eddy.ui.mdi import MdiSubWindow
+from eddy.ui.scene import DiagramScene
+from eddy.ui.view import MainView
 
 from tests import EddyTestCase
 

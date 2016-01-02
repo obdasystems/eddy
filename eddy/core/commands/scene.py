@@ -32,49 +32,27 @@
 ##########################################################################
 
 
-import unittest
+from PyQt5.QtWidgets import QUndoCommand
 
-from eddy.core.datatypes import DistinctList
 
-class Test_DistinctList(unittest.TestCase):
+class CommandSceneResize(QUndoCommand):
+    """
+    This command is used to resize the scene rect.
+    """
+    def __init__(self, scene, rect):
+        """
+        Initialize the command.
+        """
+        super().__init__('resize diagram')
+        self.scene = scene
+        self.rect = {'redo': rect, 'undo': scene.sceneRect()}
 
-    def test_constructor_with_list(self):
-        D1 = DistinctList([1, 2, 3, 3, 4, 1, 4, 5, 6, 7, 7, 8, 2])
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8]), seq_type=DistinctList)
+    def redo(self):
+        """redo the command"""
+        self.scene.setSceneRect(self.rect['redo'])
+        self.scene.updated.emit()
 
-    def test_constructor_with_tuple(self):
-        D1 = DistinctList((1, 2, 3, 3, 4, 1, 4, 5, 6, 7, 7, 8, 2))
-        self.assertSequenceEqual(D1, DistinctList((1, 2, 3, 4, 5, 6, 7, 8)), seq_type=DistinctList)
-
-    def test_constructor_with_set(self):
-        self.assertEqual(8, len(DistinctList({1, 2, 3, 4, 5, 6, 7, 8})))
-
-    def test_append(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.append(9)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8, 9]), seq_type=DistinctList)
-
-    def test_insert(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.insert(5, 9)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 9, 6, 7, 8]), seq_type=DistinctList)
-
-    def test_extend_with_list(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.extend([9, 10, 11, 12])
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), seq_type=DistinctList)
-
-    def test_extend_with_tuple(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.extend((9, 10, 11, 12))
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), seq_type=DistinctList)
-
-    def test_remove_with_match(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.remove(4)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 5, 6, 7, 8]), seq_type=DistinctList)
-
-    def test_remove_with_no_match(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.remove(9)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8]), seq_type=DistinctList)
+    def undo(self):
+        """undo the command"""
+        self.scene.setSceneRect(self.rect['undo'])
+        self.scene.updated.emit()

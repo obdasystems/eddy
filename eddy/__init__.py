@@ -33,14 +33,14 @@
 ##########################################################################
 
 
-__author__ = 'Daniele Pantaleone'
-__email__ = 'danielepantaleone@me.com'
-__copyright__ = 'Copyright © 2015 Daniele Pantaleone'
-__organization__ = 'Sapienza - University Of Rome'
 __appname__ = 'Eddy'
-__version__ = '0.5.1'
-__status__ = 'Development'
+__author__ = 'Daniele Pantaleone'
+__copyright__ = 'Copyright © 2015 Daniele Pantaleone'
+__email__ = 'danielepantaleone@me.com'
 __license__ = 'GPL'
+__organization__ = 'Sapienza - University Of Rome'
+__status__ = 'Development'
+__version__ = '0.5.1'
 
 
 import os
@@ -49,11 +49,11 @@ import sys
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QApplication
 
-from eddy.functions.fsystem import getPath
-from eddy.functions.misc import QSS
-from eddy.styles import LightStyle, Style
-from eddy.widgets.mainwindow import MainWindow
-from eddy.widgets.splash import SplashScreen
+from eddy.core.functions.fsystem import expandPath
+from eddy.core.functions.misc import QSS
+
+from eddy.ui.mainwindow import MainWindow
+from eddy.ui.styles import Style
 
 
 class Eddy(QApplication):
@@ -85,7 +85,7 @@ class Eddy(QApplication):
             # container. So according to this we can't use an empty list as default value because PyQt5 needs
             # to know the type of the contents added to the collection: we avoid this problem by placing
             # the list of examples file in the recentDocumentList (only if there is no list defined already).
-            root = getPath('@eddy/')
+            root = expandPath('@eddy/')
             root = os.path.join(root, '..') if not hasattr(sys, 'frozen') else root
             self.settings.setValue('document/recent_documents', [
                 os.path.join(root, 'examples', 'Family.graphol'),

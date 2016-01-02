@@ -3,7 +3,7 @@
 
 ##########################################################################
 #                                                                        #
-#  Eddy: an editor for the Graphol ontology language.                    #
+#  Eddy: a graphical editor for the construction of Graphol ontologies.  #
 #  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
@@ -19,7 +19,7 @@
 #  You should have received a copy of the GNU General Public License     #
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
 #                                                                        #
-##########################################################################
+######################                              ######################
 #                                                                        #
 #  Graphol is developed by members of the DASI-lab group of the          #
 #  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
@@ -41,10 +41,9 @@ from argparse import ArgumentParser
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QSpacerItem, QSizePolicy, QMessageBox
 
-from eddy import images_rc ## DO NOT REMOVE
 from eddy import Eddy
-from eddy.widgets.splash import SplashScreen
-
+from eddy.ui import images_rc ## DO NOT REMOVE
+from eddy.ui.splash import SplashScreen
 
 # main application reference
 app = None
@@ -53,9 +52,9 @@ app = None
 def base_except_hook(exc_type, exc_value, exc_traceback):
     """
     Used to handle all uncaught exceptions.
-    :param exc_type: the type of the exception.
-    :param exc_value: the exception value.
-    :param exc_traceback: the exception traceback
+    :type exc_type: int
+    :type exc_value: int
+    :type exc_traceback: object
     """
     if issubclass(exc_type, KeyboardInterrupt):
         app.quit()
@@ -88,8 +87,7 @@ def main():
     def init(application):
         """
         Initialize the application using the splash screen.
-        :param application: the application to initialize.
-        :return: the initialized main window instance.
+        :type application: Eddy
         :rtype: MainWindow
         """
         with SplashScreen(min_splash_time=4):
@@ -99,8 +97,7 @@ def main():
     def init_no_splash(application):
         """
         Initialize the application WITHOUT using the splash screen.
-        :param application: the application to initialize.
-        :return: the initialized main window instance.
+        :type application: Eddy
         :rtype: MainWindow
         """
         return application.init()

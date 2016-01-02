@@ -35,21 +35,20 @@
 import math
 import unittest
 
-from eddy.functions.misc import clamp, isEmpty, rangeF, snapF
-from eddy.functions.geometry import angleP, distanceP, distanceL, intersectionL, midpoint
-
-
 from PyQt5.QtCore import QPointF, QLineF
+
+from eddy.core.functions.misc import clamp, isEmpty, rangeF, snapF
+from eddy.core.functions.geometry import angle, distanceP, distanceL, intersection, midpoint
 
 
 class Test_AngleP(unittest.TestCase):
 
     def test_angle(self):
-        self.assertEqual(0.0, angleP(QPointF(0, 0), QPointF(+1, 0)))
-        self.assertEqual(+math.pi / 2, angleP(QPointF(0, 0), QPointF(0, -1)))
-        self.assertEqual(-math.pi / 2, angleP(QPointF(0, 0), QPointF(0, +1)))
-        self.assertEqual(math.pi, angleP(QPointF(0, 0), QPointF(-1, 0)))
-        self.assertEqual(+math.pi / 4, angleP(QPointF(0, 0), QPointF(1, -1)))
+        self.assertEqual(0.0, angle(QPointF(0, 0), QPointF(+1, 0)))
+        self.assertEqual(+math.pi / 2, angle(QPointF(0, 0), QPointF(0, -1)))
+        self.assertEqual(-math.pi / 2, angle(QPointF(0, 0), QPointF(0, +1)))
+        self.assertEqual(math.pi, angle(QPointF(0, 0), QPointF(-1, 0)))
+        self.assertEqual(+math.pi / 4, angle(QPointF(0, 0), QPointF(1, -1)))
 
 class Test_Clamp(unittest.TestCase):
 
@@ -91,9 +90,9 @@ class Test_DistanceL(unittest.TestCase):
 class Test_IntersectionL(unittest.TestCase):
 
     def test_intersection(self):
-        self.assertEqual(QPointF(0, 0), intersectionL(QLineF(QPointF(-1, 0), QPointF(1, 0)), QLineF(QPointF(0, -1), QPointF(0, 1))))
-        self.assertEqual(QPointF(-4, 0), intersectionL(QLineF(QPointF(-10, 0), QPointF(10, 0)), QLineF(QPointF(-4, -12), QPointF(-4, 14))))
-        self.assertIsNone(intersectionL(QLineF(QPointF(-1, 0), QPointF(1, 0)), QLineF(QPointF(-1, 2), QPointF(1, 2))))
+        self.assertEqual(QPointF(0, 0), intersection(QLineF(QPointF(-1, 0), QPointF(1, 0)), QLineF(QPointF(0, -1), QPointF(0, 1))))
+        self.assertEqual(QPointF(-4, 0), intersection(QLineF(QPointF(-10, 0), QPointF(10, 0)), QLineF(QPointF(-4, -12), QPointF(-4, 14))))
+        self.assertIsNone(intersection(QLineF(QPointF(-1, 0), QPointF(1, 0)), QLineF(QPointF(-1, 2), QPointF(1, 2))))
 
 
 class Test_IsEmpty(unittest.TestCase):

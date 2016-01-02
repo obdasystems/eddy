@@ -2,7 +2,7 @@
 
 ##########################################################################
 #                                                                        #
-#  Eddy: an editor for the Graphol ontology language.                    #
+#  Eddy: a graphical editor for the construction of Graphol ontologies.  #
 #  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
@@ -18,7 +18,7 @@
 #  You should have received a copy of the GNU General Public License     #
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
 #                                                                        #
-##########################################################################
+#  #####################                          #####################  #
 #                                                                        #
 #  Graphol is developed by members of the DASI-lab group of the          #
 #  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
@@ -32,49 +32,50 @@
 ##########################################################################
 
 
-import unittest
+from PyQt5.QtWidgets import QStyle
 
-from eddy.core.datatypes import DistinctList
+from eddy.core.functions.fsystem import expandPath
+from eddy.core.functions.misc import QSS
 
-class Test_DistinctList(unittest.TestCase):
+from eddy.ui.styles import Style
 
-    def test_constructor_with_list(self):
-        D1 = DistinctList([1, 2, 3, 3, 4, 1, 4, 5, 6, 7, 7, 8, 2])
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8]), seq_type=DistinctList)
 
-    def test_constructor_with_tuple(self):
-        D1 = DistinctList((1, 2, 3, 3, 4, 1, 4, 5, 6, 7, 7, 8, 2))
-        self.assertSequenceEqual(D1, DistinctList((1, 2, 3, 4, 5, 6, 7, 8)), seq_type=DistinctList)
+class LightStyle(Style):
 
-    def test_constructor_with_set(self):
-        self.assertEqual(8, len(DistinctList({1, 2, 3, 4, 5, 6, 7, 8})))
+    PM = {
+        QStyle.PM_SmallIconSize: 18,
+        QStyle.PM_TabBarIconSize: 14,
+        QStyle.PM_ToolBarIconSize: 24,
+    }
 
-    def test_append(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.append(9)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8, 9]), seq_type=DistinctList)
+    def __init__(self):
+        """
+        Initialize the Light style (using Fusion as base).
+        """
+        super().__init__('Fusion')
 
-    def test_insert(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.insert(5, 9)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 9, 6, 7, 8]), seq_type=DistinctList)
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
-    def test_extend_with_list(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.extend([9, 10, 11, 12])
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), seq_type=DistinctList)
+    def pixelMetric(self, metric, option=None, widget=None):
+        """
+        Returns the value for the given pixel metric.
+        :type metric: int
+        :type option: int
+        :type widget: QWidget
+        :rtype: int
+        """
+        try:
+            return LightStyle.PM[metric]
+        except KeyError:
+            return super().pixelMetric(metric, option, widget)
 
-    def test_extend_with_tuple(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.extend((9, 10, 11, 12))
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), seq_type=DistinctList)
-
-    def test_remove_with_match(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.remove(4)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 5, 6, 7, 8]), seq_type=DistinctList)
-
-    def test_remove_with_no_match(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.remove(9)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8]), seq_type=DistinctList)
+    def qss(self):
+        """
+        Returns the stylesheet associated with this style.
+        :rtype: unicode
+        """
+        return QSS(expandPath('@eddy/ui/styles/light.qss'))

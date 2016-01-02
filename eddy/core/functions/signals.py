@@ -2,7 +2,7 @@
 
 ##########################################################################
 #                                                                        #
-#  Eddy: an editor for the Graphol ontology language.                    #
+#  Eddy: a graphical editor for the construction of Graphol ontologies.  #
 #  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
@@ -18,7 +18,7 @@
 #  You should have received a copy of the GNU General Public License     #
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
 #                                                                        #
-##########################################################################
+#  #####################                          #####################  #
 #                                                                        #
 #  Graphol is developed by members of the DASI-lab group of the          #
 #  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
@@ -32,49 +32,41 @@
 ##########################################################################
 
 
-import unittest
+from functools import partial
 
-from eddy.core.datatypes import DistinctList
 
-class Test_DistinctList(unittest.TestCase):
+def connect(signal, slot, *args, **kwargs):
+    """
+    Connect the given signal to the specified slots passing all arguments to the slot.
+    Note that this function make use of functools.partial to hand parameters over to the function slot.
+    This ia actually highly discouraged because the the function slot will be treated as a normal python function,
+    losing all the properties of Qt slot. Whenever it's possible make use of self.sender() to retrieve the action
+    executing the slot execution, and action.data() to retrieve function slot's parameters (previously set with setData)
+    :type signal: pyqtSignal
+    :type slot: callable
+    :type args: mixed
+    :type kwargs: mixed
+    """
+    if not args and not kwargs:
+        signal.connect(slot)
+    else:
+        signal.connect(partial(slot, *args, **kwargs))
 
-    def test_constructor_with_list(self):
-        D1 = DistinctList([1, 2, 3, 3, 4, 1, 4, 5, 6, 7, 7, 8, 2])
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8]), seq_type=DistinctList)
 
-    def test_constructor_with_tuple(self):
-        D1 = DistinctList((1, 2, 3, 3, 4, 1, 4, 5, 6, 7, 7, 8, 2))
-        self.assertSequenceEqual(D1, DistinctList((1, 2, 3, 4, 5, 6, 7, 8)), seq_type=DistinctList)
-
-    def test_constructor_with_set(self):
-        self.assertEqual(8, len(DistinctList({1, 2, 3, 4, 5, 6, 7, 8})))
-
-    def test_append(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.append(9)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8, 9]), seq_type=DistinctList)
-
-    def test_insert(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.insert(5, 9)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 9, 6, 7, 8]), seq_type=DistinctList)
-
-    def test_extend_with_list(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.extend([9, 10, 11, 12])
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), seq_type=DistinctList)
-
-    def test_extend_with_tuple(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.extend((9, 10, 11, 12))
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), seq_type=DistinctList)
-
-    def test_remove_with_match(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.remove(4)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 5, 6, 7, 8]), seq_type=DistinctList)
-
-    def test_remove_with_no_match(self):
-        D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.remove(9)
-        self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8]), seq_type=DistinctList)
+def disconnect(signal, *args):
+    """
+    Disconnect the given signal.
+    :type signal: pyqtSignal
+    :type args: mixed
+    """
+    if args:
+        for slot in args:
+            try:
+                signal.disconnect(slot)
+            except (RuntimeError, TypeError, AttributeError):
+                pass
+    else:
+        try:
+            signal.disconnect()
+        except (RuntimeError, TypeError, AttributeError):
+            pass
