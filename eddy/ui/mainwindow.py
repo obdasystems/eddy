@@ -121,11 +121,11 @@ class MainWindow(QMainWindow):
         #                                                                                                              #
         ################################################################################################################
 
-        self.mdi = MdiArea()
-        self.navigator = Navigator()
-        self.overview = Overview()
-        self.palette_ = Palette()
-        self.zoomctrl = ZoomControl()
+        self.mdi = MdiArea(self)
+        self.navigator = Navigator(self)
+        self.overview = Overview(self)
+        self.palette_ = Palette(self)
+        self.zoomctrl = ZoomControl(self.toolbar)
 
         ################################################################################################################
         #                                                                                                              #
