@@ -41,9 +41,11 @@ def expandPath(path):
     Return an absolute path by expanding the given relative one.
     The following tokens will be expanded:
 
-        - @eddy => will be expanded to Eddy's directory
-        - @home => will be expanded to Eddy's home directory (.eddy in $HOME)
-        - @root => will be expanded to Eddy's root (matches @eddy if running a frozen application)
+        - @eddy => Eddy's directory
+        - @home => Eddy's home directory (.eddy in $HOME)
+        - @root => Eddy's root (matches @eddy if running a frozen application)
+        - @resources => Eddy's resources directory
+        - @examples => Eddy's examples directory
         - ~ => will be expanded to the user home directory ($HOME)
 
     :type path: T <= bytes | unicode
@@ -54,10 +56,20 @@ def expandPath(path):
     elif path.startswith('@home\\') or path.startswith('@home/'):
         path = os.path.join(homePath(), path[6:])
     elif path.startswith('@root\\') or path.startswith('@root/'):
-        root = modulePath()
-        root = os.path.join(root, '..') if not hasattr(sys, 'frozen') else root
-        path = os.path.join(root, path[6:])
+        path = os.path.join(rootPath(), path[6:])
+    elif path.startswith('@resources\\') or path.startswith('@resources/'):
+        path = os.path.join(resourcesPath(), path[11:])
+    elif path.startswith('@examples\\') or path.startswith('@examples/'):
+        path = os.path.join(examplesPath(), path[10:])
     return os.path.normpath(os.path.expanduser(path))
+
+
+def examplesPath():
+    """
+    Returns the path to the examples directory.
+    :rtype: str
+    """
+    return os.path.join(rootPath(), 'examples')
 
 
 def homePath():
@@ -80,4 +92,23 @@ def modulePath():
         path = os.path.dirname(sys.executable)
     else:
         path = os.path.dirname(sys.modules['eddy'].__file__)
+    return os.path.normpath(os.path.expanduser(path))
+
+
+def resourcesPath():
+    """
+    Returns the path to the resources directory.
+    :rtype: str
+    """
+    return os.path.join(rootPath(), 'resources')
+
+
+def rootPath():
+    """
+    Returns the path to Eddy's root directory.
+    :rtype: str
+    """
+    path = modulePath()
+    if not hasattr(sys, 'frozen'):
+        path = os.path.join(path, '..')
     return os.path.normpath(os.path.expanduser(path))
