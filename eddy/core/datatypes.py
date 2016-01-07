@@ -288,9 +288,10 @@ class FileType(Enum):
     """
     This class defines all the available file types supported for graphol document export.
     """
-    __order__ = 'graphol pdf'
+    __order__ = 'graphol owl pdf'
 
     graphol = 'Graphol (*.graphol)'
+    owl = 'Owl (*.owl)'
     pdf = 'PDF (*.pdf)'
 
     @classmethod
@@ -310,6 +311,7 @@ class FileType(Enum):
         """The suffix associated with the Enum member."""
         return {
             FileType.graphol: '.graphol',
+            FileType.owl: '.owl',
             FileType.pdf: '.pdf'
         }[self]
 
