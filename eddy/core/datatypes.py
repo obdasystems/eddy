@@ -36,6 +36,7 @@ import os
 import sys
 
 from enum import Enum, unique, IntEnum
+from memoized_property import memoized_property
 from types import DynamicClassAttribute
 
 from PyQt5.QtGui import QFont
@@ -403,6 +404,42 @@ class Item(IntEnum):
     # LABEL
     LabelEdge = 21
     LabelNode = 22
+
+
+@unique
+class Platform(Enum):
+    """
+    This class defines supported platforms.
+    """
+    __order__ = 'darwin linux windows'
+
+    darwin = 'Darwin'
+    linux = 'Linux'
+    windows = 'Windows'
+    unknown = 'Unknown'
+
+    @memoized_property
+    def id(self):
+        """
+        Returns the current platform identifier.
+        :rtype: Platform
+        """
+        return Platform.forValue(sys.platform)
+
+    @classmethod
+    def forValue(cls, value):
+        """
+        Returns the platform identified by the the given value.
+        :type value: T <= bytes | unicode
+        :rtype: Platform
+        """
+        if value.startswith('darwin'):
+            return Platform.darwin
+        if value.startswith('linux'):
+            return Platform.linux
+        if value.startswith('win'):
+            return Platform.windows
+        return Platform.unknown
 
 
 @unique
