@@ -32,9 +32,16 @@
 ##########################################################################
 
 
+from jpype import _jvmfinder
+
+
 class ParseError(Exception):
     """
     Raised whenever it's not possible to complete a document parsing.
     """
     def __init__(self, message=''):
         super().__init__(message)
+
+
+JVMNotSupportedException = _jvmfinder.JVMNotSupportedException
+JVMNotFoundException = _jvmfinder.JVMNotFoundException
