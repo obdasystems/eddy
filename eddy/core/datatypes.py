@@ -36,7 +36,6 @@ import os
 import sys
 
 from enum import Enum, unique, IntEnum
-from memoized_property import memoized_property
 from types import DynamicClassAttribute
 
 from PyQt5.QtGui import QFont
@@ -418,8 +417,8 @@ class Platform(Enum):
     windows = 'Windows'
     unknown = 'Unknown'
 
-    @memoized_property
-    def id(self):
+    @classmethod
+    def identify(cls):
         """
         Returns the current platform identifier.
         :rtype: Platform
@@ -437,7 +436,7 @@ class Platform(Enum):
             return Platform.darwin
         if value.startswith('linux'):
             return Platform.linux
-        if value.startswith('win'):
+        if value.startswith('win') or value.startswith('cygwin'):
             return Platform.windows
         return Platform.unknown
 
