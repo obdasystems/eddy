@@ -56,6 +56,7 @@ class LocalJVMFinder(object):
             # Check if the directory could be a possible JAVA_HOME.
             m = RE_JAVA_HOME.match(directory)
             if m:
+
                 # If the JAVA_HOME is named using the version number check for minimum version.
                 if m.group('major') is not None and m.group('minor') is not None:
                     if NormalizedVersion.from_parts((m.group('major'), m.group('minor'))) < NormalizedVersion('1.8.0'):

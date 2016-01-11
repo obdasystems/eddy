@@ -32,4 +32,109 @@
 ##########################################################################
 
 
-from eddy.core.java.jvm import JVM
+import jpype
+import os
+
+from memoized_property import memoized_property
+from verlib import NormalizedVersion
+
+from PyQt5.QtCore import QObject, pyqtSlot
+
+from eddy import expandPath
+from eddy.core.decorators import memoized
+from eddy.core.datatypes import Platform
+from eddy.core.regex import RE_JAVA_VERSION
+
+
+class JVM(QObject):
+    """
+    This class is used to startup and shutdown the Java Virtual Machine.
+    It serves as a bridge between PyQt5 and JPype so we can used signals to perform startup and shutdown.
+    """
+    def __init__(self, parent=None):
+        """
+        Initialize the Java Virtual Machine.
+        :type parent: QObject
+        :raise JVMNotFoundException: if no JVM could be found.
+        :raise JVMNotSupportedException: if an unsupported JVM is found.
+        """
+        super().__init__(parent)
+        self.path = self.find()
+
+    @memoized
+    def find(self):
+        """
+        Search a valid JVM in the filesystem.
+        Will attempt to search inside Eddy's path at first: if no JVM is found it will search system wide.
+        :raise JVMNotFoundException: if no JVM could be found.
+        :raise JVMNotSupportedException: if an unsupported JVM is found.
+        :rtype: str
+        """
+        platform = Platform.identify()
+        if platform is Platform.windows:
+            from eddy.core.java.windows import WindowsJVMFinder_
+            finder = WindowsJVMFinder_()
+        elif platform is Platform.darwin:
+            from eddy.core.java.darwin import DarwinJVMFinder_
+            finder = DarwinJVMFinder_()
+        else:
+            from eddy.core.java.linux import LinuxJVMFinder_
+            finder = LinuxJVMFinder_()
+        return finder.get_jvm_path()
+
+    @memoized_property
+    def version(self):
+        """
+        Returns the version of the currently running JVM.
+        :raise EnvironmentError: if the JVM is not running.
+        :rtype: NormalizedVersion
+        """
+        if not self.isRunning():
+            raise EnvironmentError('JVM is not running')
+        System = jpype.JClass("java.lang.System")
+        match = RE_JAVA_VERSION.match(System.getProperty("java.version"))
+        return NormalizedVersion.from_parts((match.group('major'), match.group('minor'), match.group('patch')))
+
+    @staticmethod
+    def isRunning():
+        """
+        Tells whether the JVM is running.
+        :rtype: bool
+        """
+        return jpype.isJVMStarted()
+
+    isStarted = isRunning
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SLOTS                                                                                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @pyqtSlot()
+    def startup(self):
+        """
+        Start the Java Virtual Machine.
+        """
+        if not self.isRunning():
+
+            # Include all the JARs in the classpath.
+            classpath = []
+            resources = expandPath('@resources/')
+            for name in os.listdir(resources):
+                path = os.path.join(resources, name)
+                if os.path.isfile(path):
+                    classpath.append(path)
+
+            # Start the Java Virtual Machine.
+            jpype.startJVM(self.path, '-Djava.class.path={}'.format(os.pathsep.join(classpath)),
+                                      '-Dfile.encoding=UTF8',
+                                      '-ea', '-Xmx512m')
+
+    @pyqtSlot()
+    def shutdown(self):
+        """
+        Shutdown the Java Virtual Machine.
+        """
+        if self.isRunning():
+            jpype.shutdownJVM()
