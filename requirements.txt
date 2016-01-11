@@ -1,3 +1,6 @@
-JPype1
+# From GitHub
+-e git+https://github.com/originell/jpype.git#egg=JPype1
+
+# From PyPi
 memoized-property
 verlib
