@@ -264,12 +264,16 @@ if sys.platform.startswith('darwin'):
             for root, dirs, dir_files in os.walk(self.binDir):
                 files.extend([os.path.join(root, f).replace(self.binDir + '/', '') for f in dir_files])
 
+            print('\n'.join(files))
+
             for filename in files:
 
                 # Skip ZIP files since install_name_tool can't handle them.
-                filepath = os.path.join(self.binDir, filename)
                 if filename.endswith('.zip'):
                     continue
+
+                # Get the absolute filepath.
+                filepath = os.path.join(self.binDir, filename)
 
                 # Ensure write permissions.
                 mode = os.stat(filepath).st_mode
@@ -295,15 +299,23 @@ if sys.platform.startswith('darwin'):
                     path, name = os.path.split(referenced_file)
 
                     # Some referenced files have not previously been copied to the executable directory - the
-                    # assumption  is that you don't need to copy anything fro /usr or /System, just from folders
-                    # like /opt this fix should probably be elsewhere though
+                    # assumption is that you don't need to copy anything from /usr or /System, just from folders
+                    # like /opt this fix should probably be elsewhere though.
                     if name not in files and not path.startswith('/usr') and not path.startswith('/System'):
-                        self.copy_file(referenced_file, os.path.join(self.binDir, name))
-                        files.append(name)
+                        if os.path.isfile(referenced_file):
+                            self.copy_file(referenced_file, os.path.join(self.binDir, name))
+                            files.append(name)
 
-                    # See if we provide the referenced file; if so, change the reference
+                    new_reference = None
                     if name in files:
                         new_reference = '@executable_path/{}'.format(name)
+                    elif path.startswith('@rpath'):
+                        for i in files:
+                            if i.endswith(name):
+                                new_reference = '@executable_path/{}'.format(i)
+
+                    if new_reference:
+                        # We provide the referenced file so change the reference.
                         subprocess.call(('install_name_tool', '-change', referenced_file, new_reference, filepath))
 
         def run(self):
@@ -503,6 +515,7 @@ include_files = [
     (os.path.join(OPTS['QT_PLUGINS_PATH'], 'printsupport'), 'printsupport'),
     ('docs', 'docs'),
     ('examples', 'examples'),
+    ('resources', 'resources'),
     ('eddy/ui/styles/light.qss', 'ui/styles/light.qss'),
     ('LICENSE', 'LICENSE'),
     ('CONTRIBUTING.md', 'CONTRIBUTING.md'),
