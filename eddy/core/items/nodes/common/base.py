@@ -186,6 +186,18 @@ class AbstractNode(AbstractItem):
         """
         self.edges.append(edge)
 
+    def adjacentNodes(self, filter_on_edges=None, filter_on_nodes=None):
+        """
+        Returns the set of adjacent nodes.
+        :type filter_on_edges: callable
+        :type filter_on_nodes: callable
+        :rtype: list
+        """
+        f0 = lambda x: True
+        f1 = filter_on_edges or f0
+        f2 = filter_on_nodes or f0
+        return [x for x in [e.other(self) for e in self.edges if f1(e)] if f2(x)]
+
     def anchor(self, edge):
         """
         Returns the anchor point of the given edge in scene coordinates.
@@ -240,6 +252,20 @@ class AbstractNode(AbstractItem):
         """
         pass
 
+    def incomingNodes(self, filter_on_edges=None, filter_on_nodes=None):
+        """
+        Returns the set of incoming nodes.
+        :type filter_on_edges: callable
+        :type filter_on_nodes: callable
+        :rtype: list
+        """
+        f0 = lambda x: True
+        f1 = filter_on_edges or f0
+        f2 = filter_on_nodes or f0
+        return [x for x in [e.other(self) for e in self.edges \
+                    if (e.target is self or e.isItem(Item.InclusionEdge) and e.complete) \
+                        and f1(e)] if f2(x)]
+
     def intersection(self, line):
         """
         Returns the intersection of the shape with the given line (in scene coordinates).
@@ -266,6 +292,20 @@ class AbstractNode(AbstractItem):
         move = QPointF(x, y)
         self.setPos(self.pos() + move)
         self.anchors = {edge: pos + move for edge, pos in self.anchors.items()}
+
+    def outgoingNodes(self, filter_on_edges=None, filter_on_nodes=None):
+        """
+        Returns the set of outgoing nodes.
+        :type filter_on_edges: callable
+        :type filter_on_nodes: callable
+        :rtype: list
+        """
+        f0 = lambda x: True
+        f1 = filter_on_edges or f0
+        f2 = filter_on_nodes or f0
+        return [x for x in [e.other(self) for e in self.edges \
+                    if (e.source is self or e.isItem(Item.InclusionEdge) and e.complete) \
+                        and f1(e)] if f2(x)]
 
     def pos(self):
         """
