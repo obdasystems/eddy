@@ -178,16 +178,12 @@ class InputEdge(AbstractEdge):
 
             if target.isItem(Item.ComplementNode):
 
-                if len([e for e in target.edges \
-                    if e.isItem(Item.InputEdge) and \
-                        e.target is target and e is not self]) > 0:
+                if len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)) > 0:
                     # The Complement operator may have at most one node connected to it.
                     return False
 
                 if source.isItem(Item.RoleNode, Item.RoleInverseNode) and \
-                    len([e for e in target.edges \
-                        if e.isItem(Item.InputEdge) and \
-                            e.source is target]) > 0:
+                    len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x.source is target)) > 0:
                     # If the source of the node is a Role (ObjectPropertyExpression => chain is not included)
                     # check for the node not to have any outgoing Input edge: the only supported expression
                     # is `R1 ISA NOT R2` (this prevents the connection of Role expressions to Complement nodes
@@ -237,9 +233,7 @@ class InputEdge(AbstractEdge):
                 # construct a new Role whose instances are {(o2,o1), (o3,o1), (o5,o4)}.
                 return False
 
-            if len([e for e in target.edges \
-                if e.isItem(Item.InputEdge) and \
-                     e.target is target and e is not self]) > 0:
+            if len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)) > 0:
                 # The Role Inverse operator may have at most one Role node connected to it: if we need to
                 # define multiple Role inverse we would need to use multiple Role Inverse operator nodes.
                 return False
@@ -279,10 +273,8 @@ class InputEdge(AbstractEdge):
                 return False
 
             if source.isItem(Item.ValueDomainNode):
-                if len([e.source for e in target.edges \
-                        if e.isItem(Item.InputEdge) and \
-                        e.target is target and e is not self and \
-                            e.source.isItem(Item.ValueDomainNode)]) > 0:
+                if len(target.incomingNodes(filter_on_edges=lambda x: x.isItem(Item.InputEdge) and x is not self,
+                                            filter_on_nodes=lambda x: x.isItem(Item.ValueDomainNode))) > 0:
                     # The Value-Domain has already been attached to the DatatypeRestriction.
                     return False
 
@@ -301,9 +293,7 @@ class InputEdge(AbstractEdge):
                 # used to construct ObjectPropertyAssertion and DataPropertyAssertion axioms.
                 return False
 
-            if len([e for e in target.edges \
-                if e.isItem(Item.InputEdge) and \
-                    e.target is target and e is not self]) >= 2:
+            if len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)) >= 2:
                 # At most 2 Individual nodes can be connected to a PropertyAssertion node. As an example
                 # we can construct ObjectPropertyAssertion(presiede M.Draghi BCE) where the individuals
                 # are identified by M.Draghi and BCE, or DataPropertyAssertion(nome M.Draghi "Mario") where
@@ -311,18 +301,14 @@ class InputEdge(AbstractEdge):
                 return False
 
             if source.identity is Identity.Literal and \
-                    len([n for n in [e.other(target) \
-                        for e in target.edges \
-                            if e.isItem(Item.InputEdge) and \
-                                e.target is target and e is not self] if n.identity is Identity.Literal]) > 0:
+                len(target.incomingNodes(filter_on_edges=lambda x: x.isItem(Item.InputEdge) and x is not self,
+                                         filter_on_nodes=lambda x: x.identity is Identity.Literal)) > 0:
                 # At most one Literal can be given as input (2 Individuals | 1 Individual + 1 Literal)
                 return False
 
             # See if the source we are connecting to the Link is consistent with the instanceOf expression
             # if there is such expression (else we do not care since we check this in the instanceOf edge.
-            node = next(iter(e.other(target) for e in target.edges \
-                         if e.isItem(Item.InstanceOfEdge) and \
-                            e.source is target), None)
+            node = next(iter(target.outgoingNodes(lambda x: x.isItem(Item.InstanceOfEdge))), None)
 
             if node:
 
@@ -333,10 +319,8 @@ class InputEdge(AbstractEdge):
 
                 if node.isItem(Item.AttributeNode):
                     if source.identity is Identity.Individual and \
-                        len([n for n in [e.other(target) \
-                            for e in target.edges \
-                                if e.isItem(Item.InputEdge) and \
-                                    e.target is target and e is not self] if n.identity is Identity.Individual]) > 0:
+                        len(target.incomingNodes(filter_on_edges=lambda x: x.isItem(Item.InputEdge) and x is not self,
+                                                 filter_on_nodes=lambda x: x.identity is Identity.Individual)) > 0:
                         # We are constructing a DataPropertyAssertion and so we can't have more than 1 Individual.
                         return False
 
@@ -348,9 +332,7 @@ class InputEdge(AbstractEdge):
 
         elif target.isItem(Item.DomainRestrictionNode):
 
-            if len([e for e in target.edges \
-                if e.isItem(Item.InputEdge) and \
-                    e.target is target and e is not self]) >= 2:
+            if len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)) >= 2:
                 # Domain Restriction node can have at most 2 inputs.
                 return False
 
@@ -371,18 +353,13 @@ class InputEdge(AbstractEdge):
 
             if source.identity in {Identity.Concept, Identity.Neutral}:
 
-                if target.restriction not in {Restriction.cardinality, Restriction.exists, Restriction.forall}:
+                if target.restriction is Restriction.self:
                     # Not a Qualified Restriction.
                     return False
 
-                # We can connect a Concept in input only if there
-                # is no other input or if the other input is a Role.
-                node = next(iter(e.other(target) for e in target.edges \
-                         if e.isItem(Item.InputEdge) and \
-                            e.target is target and e is not self), None)
-
+                # We can connect a Concept in input only if there is no other input or if the other input is a Role.
+                node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)), None)
                 if node:
-
                     if node.identity is not Identity.Role:
                         # We found another input on this node which is not a Role
                         # so we can't construct a Qualified Restriction.
@@ -394,14 +371,9 @@ class InputEdge(AbstractEdge):
 
                 # We can connect a Role in input only if there is no other input or if the
                 # other input is a Concept and the node specifies a Qualified Restriction.
-                node = next(iter(e.other(target) for e in target.edges \
-                         if e.isItem(Item.InputEdge) and \
-                            e.target is target and e is not self), None)
-
+                node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)), None)
                 if node:
-
-                    if node.identity is not Identity.Concept or \
-                        target.restriction not in {Restriction.cardinality, Restriction.exists, Restriction.forall}:
+                    if node.identity is not Identity.Concept or target.restriction is Restriction.self:
                         # Not a Qualified Restriction.
                         return False
 
@@ -415,31 +387,22 @@ class InputEdge(AbstractEdge):
 
                 # We can connect an Attribute in input only if there is no other input or if the
                 # other input is a DataRange and the node specifies a Qualified Restriction.
-                node = next(iter(e.other(target) for e in target.edges \
-                         if e.isItem(Item.InputEdge) and \
-                            e.target is target and e is not self), None)
-
+                node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)), None)
                 if node:
-
-                    if node.identity is not Identity.DataRange or \
-                        target.restriction not in {Restriction.cardinality, Restriction.exists, Restriction.forall}:
+                    if node.identity is not Identity.DataRange or target.restriction is Restriction.self:
                         # Not a Qualified Restriction.
                         return False
 
             elif source.identity is Identity.DataRange:
 
-                if target.restriction not in {Restriction.cardinality, Restriction.exists, Restriction.forall}:
+                if target.restriction is Restriction.self:
                     # Not a Qualified Restriction.
                     return False
 
                 # We can connect a DataRange in input only if there is no other input or if the
                 # other input is an Attribute and the node specifies a Qualified Restriction.
-                node = next(iter(e.other(target) for e in target.edges \
-                         if e.isItem(Item.InputEdge) and \
-                            e.target is target and e is not self), None)
-
+                node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)), None)
                 if node:
-
                     if node.identity is not Identity.Attribute:
                         # Not a Qualified Restriction.
                         return False
@@ -455,7 +418,7 @@ class InputEdge(AbstractEdge):
             if source.identity not in {Identity.Neutral, Identity.Attribute, Identity.Role}:
                 # Range Restriction node takes as input:
                 #  - Role => OWL 2 ObjectPropertyExpression
-                #  - Attribute => OWL 2 DataPropertyExpression.
+                #  - Attribute => OWL 2 DataPropertyExpression
                 return False
 
             if source.identity is Identity.Attribute:
@@ -464,11 +427,11 @@ class InputEdge(AbstractEdge):
                     return False
 
             if source.isItem(Item.RoleChainNode):
-                # Role Chain is excluded since it doesn't match OWL 2 ObjectPropertyExpression
+                # Role Chain is excluded since it doesn't match OWL 2 ObjectPropertyExpression.
                 return False
 
             if target.identity is not Identity.Neutral:
-                # Identity mismatch: check particular case for this node since there is no identity inheritance
+                # Identity mismatch: check particular case for this node since there is no identity inheritance.
                 if target.identity is Identity.Concept and source.identity is Identity.Attribute or \
                     target.identity is Identity.DataRange and source.identity is Identity.Role:
                     # Identity mismatch.

@@ -113,7 +113,7 @@ class InstanceOfEdge(AbstractEdge):
             # The source of the edge must be one of Individual or Link.
             return False
 
-        if len([e for e in source.edges if e.isItem(Item.InstanceOfEdge) and e.source is source]) > 0:
+        if len(source.outgoingNodes(lambda x: x.isItem(Item.InstanceOfEdge) and x is not self)) > 0:
             # The source node MUST be instanceOf at most of one construct.
             return False
 
@@ -134,20 +134,16 @@ class InstanceOfEdge(AbstractEdge):
                 # If the target of the edge is a Role expression then we need to check
                 # not to have Literals in input to the source node (which is a Link).
                 # OWL 2 syntax: ObjectPropertyAssertion(axiomAnnotations ObjectPropertyExpression Individual Individual)
-                if len([n for n in [e.other(source) \
-                        for e in source.edges \
-                            if e.isItem(Item.InputEdge) and \
-                                e.target is source] if n.identity is Identity.Literal]) > 0:
+                if len(source.incomingNodes(filter_on_edges=lambda x: x.isItem(Item.InputEdge),
+                                            filter_on_nodes=lambda x: x.identity is Identity.Literal)) > 0:
                     return False
 
             if target.isItem(Item.AttributeNode):
                 # If the target of the edge is an Attribute expression then we need to check
                 # not to have 2 Individuals as input to the source node (which is a link).
                 # OWL 2 syntax: DataPropertyAssertion(axiomAnnotations DataPropertyExpression Individual Literal)
-                if len([n for n in [e.other(source) \
-                        for e in source.edges \
-                            if e.isItem(Item.InputEdge) and \
-                                e.target is source] if n.identity is Identity.Individual]) > 1:
+                if len(source.incomingNodes(filter_on_edges=lambda x: x.isItem(Item.InputEdge),
+                                            filter_on_nodes=lambda x: x.identity is Identity.Individual)) > 1:
                     return False
 
         return True
