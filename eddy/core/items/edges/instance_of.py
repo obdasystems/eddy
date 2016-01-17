@@ -101,15 +101,15 @@ class InstanceOfEdge(AbstractEdge):
     def isValid(self, source, target):
         """
         Tells whether this edge is valid when being added between the given source and target nodes.
-        :type source: Node.
-        :type target: Node.
+        :type source: AbstractNode
+        :type target: AbstractNode
         :rtype: bool
         """
         if source is target:
             # Self connection is not valid.
             return False
 
-        if source.identity not in (Identity.Individual, Identity.Link):
+        if source.identity not in {Identity.Individual, Identity.Link}:
             # The source of the edge must be one of Individual or Link.
             return False
 
