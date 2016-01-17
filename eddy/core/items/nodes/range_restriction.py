@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
-from eddy.core.datatypes import Font, Item, Identity
+from eddy.core.datatypes import Font, Item, Identity, Restriction
 from eddy.core.functions import identify
 from eddy.core.items.nodes.common.square import SquaredNode
 
@@ -98,9 +98,15 @@ class RangeRestrictionNode(SquaredNode):
         menu.addSeparator()
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRestrictionChange)
 
+        f1 = lambda x: x.isItem(Item.InputEdge)
+        f2 = lambda x: x.identity is Identity.Attribute
+
+        attribute = next(iter(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
+
         # switch the check on the currently active restriction
         for action in scene.mainwindow.actionsRestrictionChange:
             action.setChecked(self.restriction is action.data())
+            action.setVisible(action.data() is not Restriction.self or not attribute)
 
         collection = self.label.contextMenuAdd()
         if collection:

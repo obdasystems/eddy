@@ -458,14 +458,19 @@ class InputEdge(AbstractEdge):
                 #  - Attribute => OWL 2 DataPropertyExpression.
                 return False
 
+            if source.identity is Identity.Attribute:
+                if target.restriction is Restriction.self:
+                    # Attributes don't have self.
+                    return False
+
             if source.isItem(Item.RoleChainNode):
                 # Role Chain is excluded since it doesn't match OWL 2 ObjectPropertyExpression
                 return False
 
             if target.identity is not Identity.Neutral:
                 # Identity mismatch: check particular case for this node since there is no identity inheritance
-                if target.identity is Identity.Concept and source.isItem(Item.AttributeNode) or \
-                    target.identity is Identity.DataRange and source.isItem(Item.RoleNode, Item.RoleChainNode):
+                if target.identity is Identity.Concept and source.identity is Identity.Attribute or \
+                    target.identity is Identity.DataRange and source.identity is Identity.Role:
                     # Identity mismatch.
                     return False
 
