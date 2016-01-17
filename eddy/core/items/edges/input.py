@@ -136,8 +136,8 @@ class InputEdge(AbstractEdge):
     def isValid(self, source, target):
         """
         Tells whether this edge is valid when being added between the given source and target nodes.
-        :type source: Node.
-        :type target: Node.
+        :type source: AbstractNode
+        :type target: AbstractNode
         :rtype: bool
         """
         if source is target:
@@ -354,11 +354,12 @@ class InputEdge(AbstractEdge):
                 # Domain Restriction node can have at most 2 inputs.
                 return False
 
-            if source.identity not in {Identity.Neutral, Identity.Concept, Identity.Attribute, Identity.Role}:
+            if source.identity not in {Identity.Neutral, Identity.Concept, Identity.Attribute, Identity.Role, Identity.DataRange}:
                 # Domain Restriction node takes as input:
                 #  - Role => OWL 2 ObjectPropertyExpression
                 #  - Attribute => OWL 2 DataPropertyExpression
-                #  - Concept => Qualified Existential/Universal Restriction i.e: A ISA EXISTS R.C || A ISA FORALL R.C
+                #  - Concept => Qualified Existential/Universal Role Restriction
+                #  - DataRange => Qualified Existential Data Restriction
                 return False
 
             if source.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode):
@@ -408,11 +409,34 @@ class InputEdge(AbstractEdge):
 
             elif source.identity is Identity.Attribute:
 
-                if len([e.other(target) for e in target.edges \
+                # We can connect an Attribute in input only if there is no other input or if the
+                # other input is a DataRange and the node specifies a Qualified Restriction.
+                node = next(iter(e.other(target) for e in target.edges \
                          if e.isItem(Item.InputEdge) and \
-                            e.target is target and e is not self]) > 0:
-                    # We can connect an Attribute in input only if there is no other input.
-                    return False
+                            e.target is target and e is not self), None)
+
+                if node:
+
+                    if node.identity is not Identity.DataRange or \
+                        target.restriction not in {Restriction.cardinality, Restriction.exists, Restriction.forall}:
+                        # Not a Qualified Restriction.
+                        return False
+
+            elif source.identity is Identity.DataRange:
+
+                # We can connect a DataRange in input only if there is no other input or if the
+                # other input is an Attribute and the node specifies a Qualified Restriction.
+                node = next(iter(e.other(target) for e in target.edges \
+                         if e.isItem(Item.InputEdge) and \
+                            e.target is target and e is not self), None)
+
+                if node:
+
+                    if node.identity is not Identity.Attribute or \
+                        target.restriction not in {Restriction.cardinality, Restriction.exists, Restriction.forall}:
+                        # Not a Qualified Restriction.
+                        return False
+
         ################################################################################################################
         #                                                                                                              #
         #   RANGE RESTRICTION                                                                                          #

@@ -128,8 +128,8 @@ class InclusionEdge(AbstractEdge):
     def isValid(self, source, target):
         """
         Tells whether this edge is valid when being added between the given source and target nodes.
-        :type source: Node.
-        :type target: Node.
+        :type source: AbstractNode
+        :type target: AbstractNode
         :rtype: bool
         """
         if source is target:
