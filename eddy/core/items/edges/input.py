@@ -424,6 +424,10 @@ class InputEdge(AbstractEdge):
 
             elif source.identity is Identity.DataRange:
 
+                if target.restriction not in {Restriction.cardinality, Restriction.exists, Restriction.forall}:
+                    # Not a Qualified Restriction.
+                    return False
+
                 # We can connect a DataRange in input only if there is no other input or if the
                 # other input is an Attribute and the node specifies a Qualified Restriction.
                 node = next(iter(e.other(target) for e in target.edges \
@@ -432,8 +436,7 @@ class InputEdge(AbstractEdge):
 
                 if node:
 
-                    if node.identity is not Identity.Attribute or \
-                        target.restriction not in {Restriction.cardinality, Restriction.exists, Restriction.forall}:
+                    if node.identity is not Identity.Attribute:
                         # Not a Qualified Restriction.
                         return False
 
