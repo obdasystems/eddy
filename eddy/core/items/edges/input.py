@@ -409,6 +409,10 @@ class InputEdge(AbstractEdge):
 
             elif source.identity is Identity.Attribute:
 
+                if target.restriction is Restriction.self:
+                    # Attributes don't have self.
+                    return False
+
                 # We can connect an Attribute in input only if there is no other input or if the
                 # other input is a DataRange and the node specifies a Qualified Restriction.
                 node = next(iter(e.other(target) for e in target.edges \

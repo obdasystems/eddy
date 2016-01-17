@@ -106,11 +106,15 @@ class DomainRestrictionNode(SquaredNode):
         menu.addSeparator()
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRestrictionChange)
 
+        f1 = lambda x: x.isItem(Item.InputEdge)
+        f2 = lambda x: x.identity is Identity.Attribute
+
         qualified = self.qualified
-        restriction = {Restriction.cardinality, Restriction.exists, Restriction.forall}
+        attribute = next(iter(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
+
         for action in scene.mainwindow.actionsRestrictionChange:
             action.setChecked(self.restriction is action.data())
-            action.setVisible(not qualified or qualified and action.data() in restriction)
+            action.setVisible(action.data() is not Restriction.self or not qualified and not attribute)
 
         # Add actions from the label (if any)
         collection = self.label.contextMenuAdd()
