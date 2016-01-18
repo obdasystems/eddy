@@ -377,7 +377,7 @@ class InputEdge(AbstractEdge):
                         # Not a Qualified Restriction.
                         return False
 
-            # SOURCE => ATTRIBUTE NODE
+            # SOURCE => ATTRIBUTE
 
             elif source.identity is Identity.Attribute:
 
@@ -389,9 +389,11 @@ class InputEdge(AbstractEdge):
                 # other input is a DataRange and the node specifies a Qualified Restriction.
                 node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)), None)
                 if node:
-                    if node.identity is not Identity.DataRange or target.restriction is Restriction.self:
+                    if node.identity is not Identity.DataRange:
                         # Not a Qualified Restriction.
                         return False
+
+            # SOURCE => DATARANGE
 
             elif source.identity is Identity.DataRange:
 
@@ -415,27 +417,82 @@ class InputEdge(AbstractEdge):
 
         elif target.isItem(Item.RangeRestrictionNode):
 
-            if source.identity not in {Identity.Neutral, Identity.Attribute, Identity.Role}:
+            if len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)) >= 2:
+                # Range Restriction node can have at most 2 inputs.
+                return False
+
+            if source.identity not in {Identity.Neutral, Identity.Concept, Identity.Attribute, Identity.Role, Identity.DataRange}:
                 # Range Restriction node takes as input:
                 #  - Role => OWL 2 ObjectPropertyExpression
                 #  - Attribute => OWL 2 DataPropertyExpression
+                #  - Concept => Qualified Existential/Universal Role Restriction
+                #  - DataRange => Qualified Existential Data Restriction
                 return False
 
-            if source.identity is Identity.Attribute:
+            if source.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode):
+                # Exclude incompatible sources: not that while RoleChain has a correct identity
+                # it is excluded because it doesn't represent the OWL 2 ObjectPropertyExpression.
+                return False
+
+            # SOURCE => CONCEPT EXPRESSION || NEUTRAL
+
+            if source.identity in {Identity.Concept, Identity.Neutral}:
+
+                if target.restriction is Restriction.self:
+                    # Not a Qualified Restriction.
+                    return False
+
+                # We can connect a Concept in input only if there is no other input or if the other input is a Role.
+                node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)), None)
+                if node:
+                    if node.identity is not Identity.Role:
+                        # We found another input on this node which is not a Role
+                        # so we can't construct a Qualified Restriction.
+                        return False
+
+            # SOURCE => ROLE EXPRESSION
+
+            elif source.identity is Identity.Role:
+
+                # We can connect a Role in input only if there is no other input or if the
+                # other input is a Concept and the node specifies a Qualified Restriction.
+                node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)), None)
+                if node:
+                    if node.identity is not Identity.Concept or target.restriction is Restriction.self:
+                        # Not a Qualified Restriction.
+                        return False
+
+            # SOURCE => ATTRIBUTE NODE
+
+            elif source.identity is Identity.Attribute:
+
                 if target.restriction is Restriction.self:
                     # Attributes don't have self.
                     return False
 
-            if source.isItem(Item.RoleChainNode):
-                # Role Chain is excluded since it doesn't match OWL 2 ObjectPropertyExpression.
-                return False
+                # We can connect an Attribute in input only if there is no other input or if the
+                # other input is a DataRange and the node specifies a Qualified Restriction.
+                node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)), None)
+                if node:
+                    if node.identity is not Identity.DataRange:
+                        # Not a Qualified Restriction.
+                        return False
 
-            if target.identity is not Identity.Neutral:
-                # Identity mismatch: check particular case for this node since there is no identity inheritance.
-                if target.identity is Identity.Concept and source.identity is Identity.Attribute or \
-                    target.identity is Identity.DataRange and source.identity is Identity.Role:
-                    # Identity mismatch.
+            # SOURCE => DATARANGE
+
+            elif source.identity is Identity.DataRange:
+
+                if target.restriction is Restriction.self:
+                    # Not a Qualified Restriction.
                     return False
+
+                # We can connect a DataRange in input only if there is no other input or if the
+                # other input is an Attribute and the node specifies a Qualified Restriction.
+                node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)), None)
+                if node:
+                    if node.identity is not Identity.Attribute:
+                        # Not a Qualified Restriction.
+                        return False
 
         return True
 
