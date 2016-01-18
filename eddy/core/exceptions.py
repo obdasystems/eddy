@@ -32,16 +32,35 @@
 ##########################################################################
 
 
-from jpype import _jvmfinder
+import jpype
+import jpype._jvmfinder
+
+
+class MalformedDiagramError(RuntimeError):
+    """
+    Raised whenever we encounter a problem while exporting a Graphol diagram.
+    """
+    def __init__(self, item, *args, **kwargs):
+        """
+        Initialize the Exception.
+        """
+        super().__init__(args, kwargs)
+        self.item = item
 
 
 class ParseError(Exception):
     """
     Raised whenever it's not possible to complete a document parsing.
     """
-    def __init__(self, message=''):
-        super().__init__(message)
+    pass
 
 
-JVMNotSupportedException = _jvmfinder.JVMNotSupportedException
-JVMNotFoundException = _jvmfinder.JVMNotFoundException
+# Local aliases for JPype exceptions
+JavaException = jpype.JavaException
+JVMNotSupportedException = jpype._jvmfinder.JVMNotSupportedException
+JVMNotFoundException = jpype._jvmfinder.JVMNotFoundException
+
+# Pythonic aliases
+JavaError = JavaException
+JVMNotSupportedError = JVMNotSupportedException
+JVMNotFoundError = JVMNotFoundException
