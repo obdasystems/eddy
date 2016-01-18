@@ -147,10 +147,10 @@ def identify(source):
             # among the nodes specifying a STRONG identity so it will be excluded later when
             # computing inherited identity: computed identity >>> inherited identity.
 
-            f3 = lambda x: x.isItem(Item.InputEdge) and x.target is node
+            f3 = lambda x: x.isItem(Item.InputEdge)
             f4 = lambda x: x.isItem(Item.IndividualNode)
 
-            individuals = [n for n in [e.other(node) for e in node.edges if f3(e)] if f4(n)]
+            individuals = node.incomingNodes(filter_on_edges=f3, filter_on_nodes=f4)
             identity = [n.identity for n in individuals]
 
             if not identity:
@@ -179,27 +179,29 @@ def identify(source):
             # RangeRestriction nodes needs to be analyzed separately since they do not inherit an identity
             # from their inputs but they compute it according to the nodes source of the inputs.
             #
-            #   - if it has ATTRIBUTES as inputs => identity is DataRange
-            #   - if it has ROLES as inputs => identity is Concept
+            #   - if it has ATTRIBUTES || DATARANGE as inputs => identity is DataRange
+            #   - if it has ROLES || CONCEPTS as inputs => identity is Concept
             #
             # We compute the identity for this node: if such identity is not NEUTRAL we put it
             # among the nodes specifying a STRONG identity so it will be excluded later when
             # computing inherited identity: computed identity >>> inherited identity.
 
-            f3 = lambda x: x.isItem(Item.InputEdge) and x.target is node
-            f4 = lambda x: x.identity in {Identity.Role, Identity.Attribute} and Identity.Neutral not in x.identities
+            f3 = lambda x: Identity.Concept if x.identity in {Identity.Role, Identity.Concept} else Identity.DataRange
+            f4 = lambda x: x.isItem(Item.InputEdge) and x.target is node
+            f5 = lambda x: x.identity in {Identity.Role,
+                                          Identity.Attribute,
+                                          Identity.Concept,
+                                          Identity.DataRange} and Identity.Neutral not in x.identities
 
-            mixed = [n for n in [e.other(node) for e in node.edges if f3(e)] if f4(n)]
-            identity = [n.identity for n in mixed]
+            mixed = node.adjacentNodes(filter_on_edges=f4, filter_on_nodes=f5)
+            identity = {f3(n) for n in mixed}
 
             if not identity:
                 identity = Identity.Neutral
-            elif identity.count(identity[0]) != len(identity):
+            elif len(identity) > 1:
                 identity = Identity.Unknown
-            elif identity[0] is Identity.Role:
-                identity = Identity.Concept
-            elif identity[0] is Identity.Attribute:
-                identity = Identity.DataRange
+            else:
+                identity = identity.pop()
 
             node.identity = identity
 
