@@ -41,3 +41,4 @@ RE_ITEM_PREFIX = re.compile("""^(?P<prefix>[^\d])(?P<value>\d+)$""") # split ite
 RE_JAVA_HOME = re.compile("""^(jvm|jdk|jre)((?P<major>\d)\.?)?((?P<minor>\d)\.?)?((?P<patch>\d)_?)?(?P<update>\d{1,3})?(\.*\w*)?$""")
 RE_JAVA_VERSION = re.compile("""^((?P<major>\d)\.?)((?P<minor>\d)\.?)((?P<patch>\d)_?)?(?P<update>\d{1,3})$""")
 RE_QUOTE_FULL = re.compile("""^".*"$""") # identify strings fully embraced into quotes
+RE_OWL_INVALID_CHAR = re.compile("""[\W]""")
