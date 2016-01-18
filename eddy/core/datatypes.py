@@ -205,12 +205,12 @@ class File(object):
     """
     This class is used to manage Files.
     """
-    def __init__(self):
+    def __init__(self, path=None):
         """
         Initialize the File.
+        :type path: T <= bytes | unicode
         """
-        self._edited = 0
-        self._path = None
+        self._path = expandPath(path) if path else None
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -222,17 +222,11 @@ class File(object):
     def edited(self):
         """
         Returns the timestamp when the file has been last modified.
-        :rtype: float
+        :rtype: int
         """
-        return self._edited
-
-    @edited.setter
-    def edited(self, edited):
-        """
-        Set the timestamp when the file has been last modified.
-        :type edited: T <= int | float
-        """
-        self._edited = float(edited)
+        if self.exists():
+            return os.path.getmtime(self.path)
+        return 0
 
     @property
     def path(self):
@@ -266,6 +260,13 @@ class File(object):
     #                                                                                                                  #
     ####################################################################################################################
 
+    def exists(self):
+        """
+        Tells whether the file exists.
+        :rtype: bool
+        """
+        return self.path and os.path.isfile(self.path)
+
     def write(self, string, path=None):
         """
         Write the content of 'string' in 'path'.
@@ -280,11 +281,10 @@ class File(object):
             if os.path.isfile(path):
                 os.remove(path)
             os.rename(temp, path)
-            self.edited = os.path.getmtime(path)
             self.path = path
 
 @unique
-class FileType(Enum):
+class Filetype(Enum):
     """
     This class defines all the available file types supported for graphol document export.
     """
@@ -299,7 +299,7 @@ class FileType(Enum):
         """
         Returns the filetype matching the given value.
         :type value: T <= bytes | unicode
-        :rtype: FileType
+        :rtype: Filetype
         """
         for x in cls:
             if x.value == value:
@@ -310,9 +310,9 @@ class FileType(Enum):
     def suffix(self):
         """The suffix associated with the Enum member."""
         return {
-            FileType.graphol: '.graphol',
-            FileType.owl: '.owl',
-            FileType.pdf: '.pdf'
+            Filetype.graphol: '.graphol',
+            Filetype.owl: '.owl',
+            Filetype.pdf: '.pdf'
         }[self]
 
 
@@ -500,52 +500,45 @@ class XsdDatatype(Enum):
     """
     This class defines all the available datatypes for the value-domain node.
     """
-    __order__ = 'anyURI base64Binary boolean byte date dateTime decimal double duration float gDay gMonth gMonthDay ' \
-                'gYear gYearMonth hexBinary ID IDREF IDREFS int integer language long Name NCName negativeInteger ' \
-                'NMTOKEN NMTOKENS nonNegativeInteger nonPositiveInteger normalizedString positiveInteger QName short ' \
-                'string time token unsignedByte unsignedInt unsignedLong unsignedShort'
+    __order__ = 'anyURI base64Binary boolean byte dateTime dateTimeStamp decimal double float hexBinary int integer ' \
+                'language literal long Name NCName negativeInteger NMTOKEN nonNegativeInteger nonPositiveInteger ' \
+                'normalizedString plainLiteral positiveInteger rational real short string token unsignedByte ' \
+                'unsignedInt unsignedLong unsignedShort xmlLiteral'
 
-    anyURI = 'xsd:anyURI' # The data must conform to the syntax of a Uniform Resource Identifier (URI).
-    base64Binary = 'xsd:base64Binary' # A sequence of binary octets (bytes) encoded according to RFC 2045.
-    boolean = 'xsd:boolean' # A boolean true or false value.
-    byte = 'xsd:byte' # A signed 8-bit integer in the range [-128, 127]. Drived from the short datatype.
-    date = 'xsd:date' # Represents a specific date. The syntax is the same as that for the date part of dateTime, with an optional time zone indicator.
-    dateTime = 'xsd:dateTime' # Represents a specific instant of time. It has the form YYYY-MM-DDThh:mm:ss folowed by an optional time-zone suffix.
-    decimal = 'xsd:decimal' # Any base-10 fixed-point number. There must be at least one digit to the left of the decimal point, and a leading "+" or "-" sign is allowed.
-    double = 'xsd:double' # A 64-bit floating-point decimal number as specified in the IEEE 754-1985 standard. The external form is the same as the float datatype.
-    duration = 'xsd:duration' # Represents a duration of time, as a composite of years, months, days, hours, minutes, and seconds.
-    float = 'xsd:float' # A 32-bit floating-point decimal number as specified in the IEEE 754-1985 standard. Allowable values are the same as in the decimal type, optionally followed by an exponent.
-    gDay = 'xsd:gDay' # A day of the month in the Gregorian calendar. The syntax is "---DD" where DD is the day of the month. Example: the 27th of each month would be represented as "---27".
-    gMonth = 'xsd:gMonth' # A month number in the Gregorian calendar. The syntax is "--MM--", where MM is the month number. For example, "--06--" represents the month of June.
-    gMonthDay = 'xsd:gMonthDay' # A Gregorian month and day as "--MM-DD". Example: "--07-04" is the Fourth of July.
-    gYear = 'xsd:gYear' # A Gregorian year, specified as YYYY. Example: "1889".
-    gYearMonth = 'xsd:gYearMonth' # A Gregorian year and month. The syntax is YYYY-MM. Example: "1995-08" represents August 1995.
-    hexBinary = 'xsd:hexBinary' # Represents a sequence of octets (bytes), each given as two hexadecimal digits. Example: "0047dedbef" is five octets.
-    ID = 'xsd:ID' # A unique identifier as in the ID attribute type from the XML standard. Derived from the NCName datatype.
-    IDREF = 'xsd:IDREF' # An IDREF value is a reference to a unique identifier as defined under attribute types in the XML standard.
-    IDREFS = 'xsd:IDREFS' # An IDREFS value is a space-separated sequence of IDREF references.
-    int = 'xsd:int' # Represents a 32-bit signed integer in the range [-2,147,483,648, 2,147,483,647]. Derived from the long datatype.
-    integer = 'xsd:integer' # Represents a signed integer. Values may begin with an optional "+" or "-" sign. Derived from the decimal datatype.
-    language = 'xsd:language' # One of the standardized language codes defined in RFC 1766. Example: "fj" for Fijian. Derived from the token type.
-    long = 'xsd:long' # A signed, extended-precision integer; at least 18 digits are guaranteed. Derived from the integer datatype.
-    Name = 'xsd:Name' # A name as defined in the XML standard. The first character can be a letter or underbar "_", and the remaining characters may be letters, underbars, digits, hyphen "-", period ".", or colon ":".
-    NCName = 'xsd:NCName' # The local part of a qualified name. See the NCName definition in the document Namespaces in XML.
-    negativeInteger = 'xsd:negativeInteger' # Represents an integer less than zero. Derived from the nonPositiveInteger datatype.
-    NMTOKEN = 'xsd:NMTOKEN' # Any sequence of name characters, defined in the XML standard: letters, underbars "_", hyphen "-", period ".", or colon ":".
-    NMTOKENS = 'xsd:NMTOKENS' # A NMTOKENS data value is a space-separated sequence of NMTOKEN values.
-    nonNegativeInteger = 'xsd:nonNegativeInteger' # An integer greater than or equal to zero. Derived from the integer datatype.
-    nonPositiveInteger = 'xsd:nonPositiveInteger' # An integer less than or equal to zero. Derived from the integer datatype.
-    normalizedString = 'xsd:normalizedString' # This datatype describes a "normalized" string, meaning that it cannot include newline (LF), return (CR), or tab (HT) characters.
-    positiveInteger = 'xsd:positiveInteger' # An extended-precision integer greater than zero. Derived from the nonNegativeInteger datatype.
-    QName = 'xsd:QName' # An XML qualified name, such as "xsl:stylesheet".
-    short = 'xsd:short' # A 16-bit signed integer in the range [-32,768, 32,767]. Derived from the int datatype.
-    string = 'xsd:string' # Any sequence of zero or more characters.
-    time = 'xsd:time' # A moment of time that repeats every day. The syntax is the same as that for dateTime, omitting everything up to and including the separator "T". Examples: "00:00:00" is midnight.
-    token = 'xsd:token' # The values of this type represent tokenized strings. They may not contain newline (LF) or tab (HT) characters. They may not start or end with whitespace.
-    unsignedByte = 'xsd:unsignedByte' # An unsigned 16-bit integer in the range [0, 255]. Derived from the unsignedShort datatype.
-    unsignedInt = 'xsd:unsignedInt' # An unsigned 32-bit integer in the range [0, 4,294,967,295]. Derived from the unsignedLong datatype.
-    unsignedLong = 'xsd:unsignedLong' # An unsigned, extended-precision integer. Derived from the nonNegativeInteger datatype.
-    unsignedShort = 'xsd:unsignedShort' # An unsigned 16-bit integer in the range [0, 65,535]. Derived from the unsignedInt datatype.
+    anyURI = 'xsd:anyURI'
+    base64Binary = 'xsd:base64Binary'
+    boolean = 'xsd:boolean'
+    byte = 'xsd:byte'
+    dateTime = 'xsd:dateTime'
+    dateTimeStamp = 'xsd:dateTimeStamp'
+    decimal = 'xsd:decimal'
+    double = 'xsd:double'
+    float = 'xsd:float'
+    hexBinary = 'xsd:hexBinary'
+    int = 'xsd:int'
+    integer = 'xsd:integer'
+    language = 'xsd:language'
+    literal = 'rdfs:Literal'
+    long = 'xsd:long'
+    Name = 'xsd:Name'
+    NCName = 'xsd:NCName'
+    negativeInteger = 'xsd:negativeInteger'
+    NMTOKEN = 'xsd:NMTOKEN'
+    nonNegativeInteger = 'xsd:nonNegativeInteger'
+    nonPositiveInteger = 'xsd:nonPositiveInteger'
+    normalizedString = 'xsd:normalizedString'
+    plainLiteral = 'rdf:PlainLiteral'
+    positiveInteger = 'xsd:positiveInteger'
+    rational = 'owl:rational'
+    real = 'owl:real'
+    short = 'xsd:short'
+    string = 'xsd:string'
+    token = 'xsd:token'
+    unsignedByte = 'xsd:unsignedByte'
+    unsignedInt = 'xsd:unsignedInt'
+    unsignedLong = 'xsd:unsignedLong'
+    unsignedShort = 'xsd:unsignedShort'
+    xmlLiteral = 'rdf:XMLLiteral'
 
     @classmethod
     def forValue(cls, value):
@@ -558,3 +551,43 @@ class XsdDatatype(Enum):
             if x.value.lower() == value.lower().strip():
                 return x
         return None
+    
+    @DynamicClassAttribute
+    def owlEnum(self):
+        """Returns the Owl API enum entry name for the current datatype."""
+        return {
+            XsdDatatype.anyURI: 'XSD_ANY_URI',
+            XsdDatatype.base64Binary: 'XSD_BASE_64_BINARY',
+            XsdDatatype.boolean: 'XSD_BOOLEAN',
+            XsdDatatype.byte: 'XSD_BYTE',
+            XsdDatatype.dateTime: 'XSD_DATE_TIME',
+            XsdDatatype.dateTimeStamp: 'XSD_DATE_TIME_STAMP',
+            XsdDatatype.decimal: 'XSD_DECIMAL',
+            XsdDatatype.double: 'XSD_DOUBLE',
+            XsdDatatype.float: 'XSD_FLOAT',
+            XsdDatatype.hexBinary: 'XSD_HEX_BINARY',
+            XsdDatatype.int: 'XSD_INT',
+            XsdDatatype.integer: 'XSD_INTEGER',
+            XsdDatatype.language: 'XSD_LANGUAGE',
+            XsdDatatype.literal: 'RDFS_LITERAL',
+            XsdDatatype.long: 'XSD_LONG',
+            XsdDatatype.Name: 'XSD_NAME',
+            XsdDatatype.NCName: 'XSD_NCNAME',
+            XsdDatatype.negativeInteger: 'XSD_NEGATIVE_INTEGER',
+            XsdDatatype.NMTOKEN: 'XSD_NMTOKEN',
+            XsdDatatype.nonNegativeInteger: 'XSD_NON_NEGATIVE_INTEGER',
+            XsdDatatype.nonPositiveInteger: 'XSD_NON_POSITIVE_INTEGER',
+            XsdDatatype.normalizedString: 'XSD_NORMALIZED_STRING',
+            XsdDatatype.plainLiteral: 'RDF_PLAIN_LITERAL',
+            XsdDatatype.positiveInteger: 'XSD_POSITIVE_INTEGER',
+            XsdDatatype.rational: 'OWL_RATIONAL',
+            XsdDatatype.real: 'OWL_REAL',
+            XsdDatatype.short: 'XSD_SHORT',
+            XsdDatatype.string: 'XSD_STRING',
+            XsdDatatype.token: 'XSD_TOKEN',
+            XsdDatatype.unsignedByte: 'XSD_UNSIGNED_BYTE',
+            XsdDatatype.unsignedInt: 'XSD_UNSIGNED_INT',
+            XsdDatatype.unsignedLong: 'XSD_UNSIGNED_LONG',
+            XsdDatatype.unsignedShort: 'XSD_UNSIGNED_SHORT',
+            XsdDatatype.xmlLiteral: 'RDF_XML_LITERAL',
+        }[self]
