@@ -406,6 +406,28 @@ class Item(IntEnum):
 
 
 @unique
+class OWLSyntax(Enum):
+    """
+    This class defines available OWL syntax for exporting ontologies.
+    """
+    __order__ = 'Functional'
+
+    Functional = 'Functional syntax'
+
+    @classmethod
+    def forValue(cls, value):
+        """
+        Returns the OWLSyntax matching the given value.
+        :type value: T <= bytes | unicode
+        :rtype: OWLSyntax
+        """
+        for x in cls:
+            if x.value == value:
+                return x
+        return None
+
+
+@unique
 class Platform(Enum):
     """
     This class defines supported platforms.
@@ -554,7 +576,7 @@ class XsdDatatype(Enum):
     
     @DynamicClassAttribute
     def owlEnum(self):
-        """Returns the Owl API enum entry name for the current datatype."""
+        """Returns the OWL api enum entry name for the current datatype."""
         return {
             XsdDatatype.anyURI: 'XSD_ANY_URI',
             XsdDatatype.base64Binary: 'XSD_BASE_64_BINARY',
