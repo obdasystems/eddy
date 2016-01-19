@@ -35,6 +35,8 @@
 from eddy.core.functions.fsystem import expandPath
 from eddy.core.functions.fsystem import homePath
 from eddy.core.functions.fsystem import modulePath
+from eddy.core.functions.fsystem import resourcesPath
+from eddy.core.functions.fsystem import rootPath
 
 from eddy.core.functions.geometry import angle
 from eddy.core.functions.geometry import distanceL
@@ -56,6 +58,9 @@ from eddy.core.functions.misc import QSS
 from eddy.core.functions.misc import rangeF
 from eddy.core.functions.misc import shaded
 from eddy.core.functions.misc import snapF
+
+from eddy.core.functions.owl import OWLText
+from eddy.core.functions.owl import OWLTranslate
 
 from eddy.core.functions.signals import connect
 from eddy.core.functions.signals import disconnect
