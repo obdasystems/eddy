@@ -473,9 +473,11 @@ class MainWindow(QMainWindow):
         self.addAction(self.actionToggleEdgeComplete)
         self.addAction(self.actionToggleEdgeFunctional)
 
-        #############################################
-        # CONFIGURE MENUS
-        #############################################
+        ################################################################################################################
+        #                                                                                                              #
+        #   CONFIGURE MENUS                                                                                            #
+        #                                                                                                              #
+        ################################################################################################################
 
         self.menuFile.addAction(self.actionNewDocument)
         self.menuFile.addAction(self.actionOpenDocument)
