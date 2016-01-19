@@ -39,7 +39,7 @@ __email__ = 'danielepantaleone@me.com'
 __license__ = 'GPL'
 __organization__ = 'Sapienza - University Of Rome'
 __status__ = 'Development'
-__version__ = '0.5.2'
+__version__ = '0.6'
 
 
 # Define some extra constants
