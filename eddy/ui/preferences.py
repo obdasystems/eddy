@@ -35,8 +35,7 @@
 from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
 
-from eddy import __appname__ as appname, __organization__ as organization
-from eddy.core.functions import connect
+from eddy.core.functions import connect, expandPath
 from eddy.ui.fields import SpinBox, ComboBox
 
 
@@ -51,7 +50,7 @@ class PreferencesDialog(QDialog):
         """
         super().__init__(parent)
 
-        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, organization, appname)
+        self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)
 
         ################################################################################################################
         #                                                                                                              #

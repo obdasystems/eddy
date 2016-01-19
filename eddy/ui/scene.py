@@ -41,12 +41,12 @@ from PyQt5.QtPrintSupport import QPrinter
 from PyQt5.QtWidgets import QGraphicsScene, QUndoStack, QMenu
 from PyQt5.QtXml import QDomDocument
 
-from eddy import __appname__ as appname, __organization__ as organization
 from eddy.core.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
 from eddy.core.datatypes import DiagramMode, DistinctList, File, Item, Restriction, Special
-from eddy.core.functions import rangeF, snapF
-from eddy.core.items import ConceptNode, ComplementNode, DomainRestrictionNode, InputEdge, InclusionEdge
-from eddy.core.items import RangeRestrictionNode, RoleChainNode, RoleInverseNode, ValueDomainNode
+from eddy.core.functions import expandPath, rangeF, snapF
+from eddy.core.items import ConceptNode, ComplementNode, RoleChainNode, RoleInverseNode
+from eddy.core.items import RangeRestrictionNode, DomainRestrictionNode, ValueDomainNode
+from eddy.core.items import InputEdge, InclusionEdge
 from eddy.core.utils import Clipboard, GUID
 
 
@@ -85,7 +85,7 @@ class DiagramScene(QGraphicsScene):
         self.edgesById = {}  ## used to index edges using their id
         self.nodesById = {}  ## used to index nodes using their id
         self.nodesByLabel = {}  ## used to index nodes using their label text
-        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, organization, appname)  ## settings
+        self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)  ## settings
         self.guid = GUID(self)  ## used to generate unique incremental ids
         self.undostack = QUndoStack(self)  ## use to push actions and keep history for undo/redo
         self.undostack.setUndoLimit(50)  ## TODO: make the stack configurable
@@ -368,7 +368,7 @@ class DiagramScene(QGraphicsScene):
 
     def toGraphol(self):
         """
-        Export the current node in Graphol format.
+        Export the current diagram in Graphol format.
         :rtype: QDomDocument
         """
         doc = QDomDocument()
@@ -393,6 +393,7 @@ class DiagramScene(QGraphicsScene):
             graph.appendChild(node.toGraphol(doc))
         for edge in self.edges():
             graph.appendChild(edge.toGraphol(doc))
+
         root.appendChild(graph)
 
         return doc

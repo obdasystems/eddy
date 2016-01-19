@@ -78,16 +78,17 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
         box.setText(message)
         box.setInformativeText(infomsg)
         box.setStandardButtons(QMessageBox.Close)
+        S = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
         L = box.layout()
-        L.addItem(QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding), L.rowCount(), 0, 1, L.columnCount())
+        L.addItem(S, L.rowCount(), 0, 1, L.columnCount())
         box.exec_()
         app.quit()
 
     else:
 
-        message = """This is embarrassing :(<br /><br />
-        A critical error has just occurred.
-        Eddy will continue to work, however a reboot is highly recommended."""
+        message = "This is embarrassing :(\n\n" \
+        "A critical error has just occurred." \
+        "Eddy will continue to work, however a reboot is highly recommended."
         box = QMessageBox()
         box.setIconPixmap(QPixmap(':/icons/error'))
         box.setWindowIcon(QIcon(':/images/eddy'))
@@ -96,8 +97,9 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
         box.setInformativeText('Please <a href="{}">submit a bug report</a> with detailed information.'.format(BUG_TRACKER))
         box.setDetailedText(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
         box.setStandardButtons(QMessageBox.Close)
+        S = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
         L = box.layout()
-        L.addItem(QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding), L.rowCount(), 0, 1, L.columnCount())
+        L.addItem(S, L.rowCount(), 0, 1, L.columnCount())
         box.exec_()
 
 

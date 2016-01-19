@@ -47,15 +47,19 @@ from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDial
 from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup
 from PyQt5.QtXml import QDomDocument
 
-from eddy import __version__ as VERSION, __appname__ as APPNAME, __organization__ as ORGANIZATION
-from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom, CommandItemsMultiRemove, CommandItemsTranslate
-from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandEdgeInputToggleFunctional, CommandEdgeSwap
-from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelEdit, CommandEdgeBreakpointDel, CommandRefactor
-from eddy.core.commands import CommandNodeSetZValue, CommandNodeHexagonSwitchTo, CommandNodeValueDomainSelectDatatype
-from eddy.core.commands import CommandNodeSquareChangeRestriction, CommandNodeSetSpecial, CommandNodeChangeBrush
-from eddy.core.datatypes import Color, File, DiagramMode, FileType, Restriction, Special, XsdDatatype
+from eddy import __version__ as VERSION, __appname__ as APPNAME
+from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom, CommandItemsMultiRemove
+from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap, CommandRefactor
+from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandEdgeInputToggleFunctional
+from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelEdit, CommandEdgeBreakpointDel
+from eddy.core.commands import CommandNodeHexagonSwitchTo, CommandNodeValueDomainSelectDatatype
+from eddy.core.commands import CommandNodeSquareChangeRestriction, CommandNodeSetSpecial
+from eddy.core.commands import CommandNodeChangeBrush, CommandNodeSetZValue
+from eddy.core.datatypes import Color, File, DiagramMode, Filetype, Restriction, Special, XsdDatatype
 from eddy.core.exceptions import ParseError
-from eddy.core.functions import connect, disconnect, expandPath, makeColoredIcon, makeShadedIcon, snapF
+from eddy.core.functions.fsystem import expandPath
+from eddy.core.functions.misc import makeColoredIcon, makeShadedIcon, snapF
+from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items import Item, __mapping__ as mapping
 from eddy.core.items import RoleInverseNode, DisjointUnionNode, DatatypeRestrictionNode
 from eddy.core.items import UnionNode, EnumerationNode, ComplementNode, RoleChainNode, IntersectionNode
@@ -64,7 +68,7 @@ from eddy.core.utils import Clipboard
 from eddy.ui.about import About
 from eddy.ui.dock import SidebarWidget, Navigator, Overview, Palette
 from eddy.ui.files import OpenFile, SaveFile
-from eddy.ui.forms import CardinalityRestrictionForm, RenameForm
+from eddy.ui.forms import CardinalityRestrictionForm, RenameForm, OWLTranslationForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
 from eddy.ui.preferences import PreferencesDialog
 from eddy.ui.properties import SceneProperties
@@ -94,7 +98,7 @@ class MainWindow(QMainWindow):
         self.abortQuit = False
         self.clipboard = Clipboard()
         self.undogroup = QUndoGroup()
-        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, ORGANIZATION, APPNAME)
+        self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)
 
         ################################################################################################################
         #                                                                                                              #
@@ -126,12 +130,6 @@ class MainWindow(QMainWindow):
         self.overview = Overview(self)
         self.palette_ = Palette(self)
         self.zoomctrl = ZoomControl(self.toolbar)
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   CREATE DOCK WIDGETS                                                                                        #
-        #                                                                                                              #
-        ################################################################################################################
 
         self.dockNavigator = SidebarWidget('Navigator', self.navigator, self)
         self.dockOverview = SidebarWidget('Overview', self.overview, self)
@@ -474,12 +472,10 @@ class MainWindow(QMainWindow):
         self.addAction(self.actionSwapEdge)
         self.addAction(self.actionToggleEdgeComplete)
         self.addAction(self.actionToggleEdgeFunctional)
-        
-        ################################################################################################################
-        #                                                                                                              #
-        #   CONFIGURE MENUS                                                                                            #
-        #                                                                                                              #
-        ################################################################################################################
+
+        #############################################
+        # CONFIGURE MENUS
+        #############################################
 
         self.menuFile.addAction(self.actionNewDocument)
         self.menuFile.addAction(self.actionOpenDocument)
@@ -715,10 +711,8 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-
             scene.setMode(DiagramMode.Idle)
             items = scene.items()
-
             if items:
                 rect1 = scene.sceneRect()
                 rect2 = scene.visibleRect(margin=0)
@@ -738,8 +732,8 @@ class MainWindow(QMainWindow):
         if scene:
             scene.setMode(DiagramMode.Idle)
             action = self.sender()
-            node = next(filter(lambda x: x.isItem(Item.DomainRestrictionNode,
-                                                  Item.RangeRestrictionNode), scene.selectedNodes()), None)
+            nodes = scene.selectedNodes()
+            node = next(filter(lambda x: x.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode), nodes), None)
             if node:
                 restriction = action.data()
                 if restriction == Restriction.cardinality:
@@ -1071,12 +1065,14 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-            res = self.exportFilePath(name=scene.document.name)
-            if res:
-                filepath = res[0]
-                filetype = FileType.forValue(res[1])
-                if filetype is FileType.pdf:
+            result = self.exportFilePath(name=scene.document.name)
+            if result:
+                filepath = result[0]
+                filetype = Filetype.forValue(result[1])
+                if filetype is Filetype.pdf:
                     self.exportSceneToPdfFile(scene, filepath)
+                elif filetype is Filetype.owl:
+                    self.exportSceneToOwlFile(scene, filepath)
 
     @pyqtSlot()
     def importDocument(self):
@@ -1092,14 +1088,11 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-
             scene.setMode(DiagramMode.Idle)
             scene.clipboardPasteOffsetX = 0
             scene.clipboardPasteOffsetY = 0
-
             self.clipboard.update(scene)
             self.refreshActionsState()
-
             selection = scene.selectedItems()
             if selection:
                 selection.extend([x for item in selection if item.node for x in item.edges if x not in selection])
@@ -1176,7 +1169,7 @@ class MainWindow(QMainWindow):
         Open a document.
         """
         dialog = OpenFile(expandPath('~'))
-        dialog.setNameFilters([FileType.graphol.value])
+        dialog.setNameFilters([Filetype.graphol.value])
         if dialog.exec_():
             filepath = dialog.selectedFiles()[0]
             if not self.focusDocument(filepath):
@@ -1282,12 +1275,8 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-
             scene.setMode(DiagramMode.Idle)
-            args = Item.ConceptNode, Item.RoleNode, \
-                   Item.AttributeNode, Item.IndividualNode, \
-                   Item.ValueRestrictionNode
-
+            args = Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode, Item.ValueRestrictionNode
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
@@ -1302,22 +1291,18 @@ class MainWindow(QMainWindow):
         if scene:
 
             scene.setMode(DiagramMode.Idle)
-            args = Item.ConceptNode, Item.RoleNode, \
-                   Item.AttributeNode, Item.IndividualNode, \
-                   Item.ValueRestrictionNode
-
+            args = Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode, Item.ValueRestrictionNode
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
 
-                form = RenameForm(node, self)
-                if form.exec_() == RenameForm.Accepted:
-
-                    if node.labelText() != form.renameField.value():
+                renameform = RenameForm(node, self)
+                if renameform.exec_() == RenameForm.Accepted:
+                    if node.labelText() != renameform.renameField.value():
 
                         commands = []
                         for n in scene.nodesByLabel[node.labelText()]:
                             command = CommandNodeLabelEdit(scene=scene, node=n)
-                            command.end(form.renameField.value())
+                            command.end(renameform.renameField.value())
                             commands.append(command)
 
                         kwargs = {
@@ -1394,7 +1379,6 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-
             scene.setMode(DiagramMode.Idle)
             node = next(filter(lambda x: hasattr(x, 'label'), scene.selectedNodes()), None)
             if node and node.label.movable:
@@ -1608,7 +1592,7 @@ class MainWindow(QMainWindow):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   EVENT HANDLERS                                                                                                 #
+    #   EVENTS                                                                                                         #
     #                                                                                                                  #
     ####################################################################################################################
 
@@ -1718,7 +1702,6 @@ class MainWindow(QMainWindow):
             # create the scene
             scene = self.createScene(width=w, height=h)
             scene.document.path = filepath
-            scene.document.edited = os.path.getmtime(filepath)
 
             # add the nodes
             nodes_from_graphol = graph.elementsByTagName('node')
@@ -1796,22 +1779,36 @@ class MainWindow(QMainWindow):
         """
         dialog = SaveFile(path)
         dialog.setWindowTitle('Export')
-        dialog.setNameFilters([x.value for x in FileType if x is not FileType.graphol])
+        dialog.setNameFilters([x.value for x in Filetype if x is not Filetype.graphol])
         dialog.selectFile(name or 'Untitled')
         if dialog.exec_():
             return dialog.selectedFiles()[0], dialog.selectedNameFilter()
         return None
 
     @staticmethod
+    def exportSceneToOwlFile(scene, filepath):
+        """
+        Export the given scene in Owl functional syntax saving it in the given filepath.
+        :type scene: DiagramScene
+        :type filepath: T <= bytes | unicode
+        :rtype: bool
+        """
+        exportForm = OWLTranslationForm(scene, filepath)
+        if exportForm.exec_() == OWLTranslationForm.Accepted:
+            return True
+        return False
+
+    @staticmethod
     def exportSceneToPdfFile(scene, filepath):
         """
         Export the given scene as PDF saving it in the given filepath.
-        :type scene: DiagramSceneam
+        :type scene: DiagramScene
         :type filepath: T <= bytes | unicode
-        :return: True if the export has been performed, False otherwise.
+        :rtype: bool
         """
         shape = scene.visibleRect(margin=20)
         if shape:
+
             printer = QPrinter(QPrinter.HighResolution)
             printer.setOutputFormat(QPrinter.PdfFormat)
             printer.setOutputFileName(filepath)
@@ -1855,7 +1852,7 @@ class MainWindow(QMainWindow):
         :rtype: str
         """
         dialog = SaveFile(path)
-        dialog.setNameFilters([FileType.graphol.value])
+        dialog.setNameFilters([Filetype.graphol.value])
         dialog.selectFile(name or 'Untitled')
         if dialog.exec_():
             return dialog.selectedFiles()[0]
