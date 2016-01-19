@@ -73,12 +73,15 @@ class OWLTranslator(QObject):
         
         self.AddAxiom = jpype.JClass('org.semanticweb.owlapi.model.AddAxiom')
         self.ByteArrayOutputStream = jpype.JClass('java.io.ByteArrayOutputStream')
+        self.FunctionalSyntaxDocumentFormat = jpype.JClass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
         self.HashSet = jpype.JClass('java.util.HashSet')
         self.IRI = jpype.JClass('org.semanticweb.owlapi.model.IRI')
         self.LinkedList = jpype.JClass('java.util.LinkedList')
-        self.OWLFunctionalSyntaxOntologyFormat = jpype.JClass('org.semanticweb.owlapi.io.OWLFunctionalSyntaxOntologyFormat')
+        self.ManchesterSyntaxDocumentFormat = jpype.JClass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
         self.OWL2Datatype = jpype.JClass('org.semanticweb.owlapi.vocab.OWL2Datatype')
         self.OWLManager = jpype.JClass('org.semanticweb.owlapi.apibinding.OWLManager')
+        self.RDFXMLDocumentFormat = jpype.JClass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
+        self.TurtleDocumentFormat = jpype.JClass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
 
         self.axioms = set()
         self.converted = dict()
@@ -620,12 +623,19 @@ class OWLTranslator(QObject):
         stream = self.ByteArrayOutputStream()
 
         if syntax is OWLSyntax.Functional:
-            syntax = self.OWLFunctionalSyntaxOntologyFormat()
-            syntax.setPrefix(self.ontoPrefix, self.ontoIRI)
+            ontoFormat = self.FunctionalSyntaxDocumentFormat()
+        elif syntax is OWLSyntax.Manchester:
+            ontoFormat = self.ManchesterSyntaxDocumentFormat()
+        elif syntax is OWLSyntax.RDF:
+            ontoFormat = self.RDFXMLDocumentFormat()
+        elif syntax is OWLSyntax.Turtle:
+            ontoFormat = self.TurtleDocumentFormat()
         else:
             raise TypeError('unsupported syntax ({})'.format(syntax))
 
-        self.man.setOntologyFormat(self.ontology, syntax)
+        ontoFormat.setPrefix(self.ontoPrefix, self.ontoIRI)
+
+        self.man.setOntologyFormat(self.ontology, ontoFormat)
         self.man.saveOntology(self.ontology, stream)
 
         return stream.toString("UTF-8")

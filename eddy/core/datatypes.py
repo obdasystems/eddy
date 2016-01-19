@@ -410,21 +410,12 @@ class OWLSyntax(Enum):
     """
     This class defines available OWL syntax for exporting ontologies.
     """
-    __order__ = 'Functional'
+    __order__ = 'Functional Manchester RDF Turtle'
 
-    Functional = 'Functional syntax'
-
-    @classmethod
-    def forValue(cls, value):
-        """
-        Returns the OWLSyntax matching the given value.
-        :type value: T <= bytes | unicode
-        :rtype: OWLSyntax
-        """
-        for x in cls:
-            if x.value == value:
-                return x
-        return None
+    Functional = 'Functional'
+    Manchester = 'Manchester'
+    RDF = 'RDF'
+    Turtle = 'Turtle'
 
 
 @unique

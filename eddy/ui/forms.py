@@ -207,7 +207,6 @@ class OWLTranslationForm(QDialog):
         for syntax in OWLSyntax:
             self.syntaxField.addItem(syntax.value, syntax)
         self.syntaxField.setCurrentIndex(0)
-        self.syntaxField.setEnabled(False)
 
         self.progressBar = QProgressBar(self)
         self.progressBar.setAlignment(Qt.AlignHCenter)
@@ -298,7 +297,7 @@ class OWLTranslationForm(QDialog):
         msgbox.setText('Translation completed!')
         msgbox.setInformativeText('Do you want to open the OWL ontology?')
         msgbox.setStandardButtons(QMessageBox.Yes|QMessageBox.No)
-        S = QSpacerItem(300, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        S = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
         L = msgbox.layout()
         L.addItem(S, L.rowCount(), 0, 1, L.columnCount())
         msgbox.exec_()
