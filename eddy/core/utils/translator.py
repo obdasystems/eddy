@@ -91,7 +91,7 @@ class OWLTranslator(QObject):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   NODES PROCESSING                                                                                               #
+    #   NODES PRE-PROCESSING                                                                                           #
     #                                                                                                                  #
     ####################################################################################################################
         
@@ -537,91 +537,6 @@ class OWLTranslator(QObject):
             elif node.special is Special.TOP:
                 self.converted[node] = self.factory.getTopDatatype()
         return self.converted[node]
-    
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   EDGES PROCESSING                                                                                               #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def buildFunctionalInput(self, edge):
-        """
-        Build and returns an OWL functional input axiom using the given Graphol node.
-        :type edge: InputEdge
-        :rtype: OWLAxiom
-        """
-        if edge not in self.converted:
-
-            if edge.source.identity is Identity.Role:
-                if edge.target.isItem(Item.DomainRestrictionNode):
-                    self.converted[edge] = self.factory.getOWLFunctionalObjectPropertyAxiom(self.converted[edge.source])
-                elif edge.target.isItem(Item.RangeRestrictionNode):
-                    self.converted[edge] = self.factory.getOWLInverseFunctionalObjectPropertyAxiom(self.converted[edge.source])
-            elif edge.source.identity is Identity.Attribute:
-                if edge.target.isItem(Item.DomainRestrictionNode):
-                    self.converted[edge] = self.factory.getOWLFunctionalDataPropertyAxiom(self.converted[edge.source])
-                else:
-                    raise MalformedDiagramError(edge, 'unsupported inverse functional edge')
-            else:
-                raise MalformedDiagramError(edge, 'type mismatch in functional edge')
-
-        return self.converted[edge]
-
-    def buildInclusion(self, edge):
-        """
-        Build and returns an OWL ISA using the given Graphol node.
-        :type edge: InclusioneEdge
-        :rtype: OWLAxiom
-        """
-        if edge not in self.converted:
-
-            if not edge.complete:
-
-                if edge.source.identity is Identity.Concept and edge.target.identity is Identity.Concept:
-                    self.converted[edge] = self.factory.getOWLSubClassOfAxiom(self.converted[edge.source], self.converted[edge.target])
-                elif edge.source.identity is Identity.Role and edge.target.identity is Identity.Role:
-                    if edge.source.isItem(Item.RoleChainNode):
-                        self.converted[edge] = self.factory.getOWLSubPropertyChainOfAxiom(self.converted[edge.source], self.converted[edge.target])
-                    elif edge.source.isItem(Item.ComplementNode) ^ edge.target.isItem(Item.ComplementNode):
-                        self.converted[edge] = self.factory.getOWLDisjointObjectPropertiesAxiom(self.converted[edge.source], self.converted[edge.target])
-                    elif edge.source.isItem(Item.RoleNode, Item.RoleInverseNode) and edge.target.isItem(Item.RoleNode, Item.RoleInverseNode):
-                        self.converted[edge] = self.factory.getOWLSubObjectPropertyOfAxiom(self.converted[edge.source], self.converted[edge.target])
-                elif edge.source.identity is Identity.Attribute and edge.target.identity is Identity.Attribute:
-                    # FIXME: what about getOWLDisjointDataPropertiesAxiom???
-                    self.converted[edge] = self.factory.getOWLSubDataPropertyOfAxiom(self.converted[edge.source], self.converted[edge.target])
-                elif edge.source.isItem(Item.RangeRestrictionNode) and edge.target.identity is Identity.DataRange:
-                    self.converted[edge] = self.factory.getOWLDataPropertyRangeAxiom(self.converted[edge.source], self.converted[edge.target])
-                else:
-                    raise MalformedDiagramError(edge, 'type mismatch in ISA')
-
-            else:
-
-                if edge.source.identity is Identity.Concept and edge.target.identity is Identity.Concept:
-                    self.converted[edge] = self.factory.getOWLEquivalentClassesAxiom(self.converted[edge.source], self.converted[edge.target])
-                elif edge.source.identity is Identity.Role and edge.target.identity is Identity.Role:
-                    self.converted[edge] = self.factory.getOWLEquivalentObjectPropertiesAxiom(self.converted[edge.source], self.converted[edge.target])
-                elif edge.source.identity is Identity.Attribute and edge.target.identity is Identity.Attribute:
-                    self.converted[edge] = self.factory.getOWLEquivalentDataPropertiesAxiom(self.converted[edge.source], self.converted[edge.target])
-                else:
-                    raise MalformedDiagramError(edge, 'type mismatch in equivalence')
-
-        return self.converted[edge]
-
-    def buildInstanceOf(self, edge):
-        """
-        Build and returns an OWL instance of axiom using the given Graphol node.
-        :type edge: InputEdge
-        :rtype: OWLAxiom
-        """
-        if edge not in self.converted:
-
-            if edge.source.identity is Identity.Individual and edge.target.identity is Identity.Concept:
-                self.converted[edge] = self.factory.getOWLClassAssertionAxiom(self.converted[edge.target], self.converted[edge.source])
-            else:
-                # FIXME: what about: if(source instanceof OWLClass && target instanceof OWLClassExpression)
-                raise MalformedDiagramError(edge, 'type mismatch in instanceOf')
-
-        return self.converted[edge]
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -705,8 +620,23 @@ class OWLTranslator(QObject):
         for n in self.scene.nodes():
 
             if n.isItem(Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.ValueDomainNode):
+
                 self.axioms.add(self.factory.getOWLDeclarationAxiom(self.converted[n]))
+
+                if n.isItem(Item.RoleNode):
+                    if n.symmetric:
+                        self.axioms.add(self.factory.getOWLSymmetricObjectPropertyAxiom(self.converted[n]))
+                    elif n.asymmetric:
+                        self.axioms.add(self.factory.getOWLAsymmetricObjectPropertyAxiom(self.converted[n]))
+                    if n.reflexive:
+                        self.axioms.add(self.factory.getOWLReflexiveObjectPropertyAxiom(self.converted[n]))
+                    elif n.irreflexive:
+                        self.axioms.add(self.factory.getOWLIrreflexiveObjectPropertyAxiom(self.converted[n]))
+                    if n.transitive:
+                        self.axioms.add(self.factory.getOWLTransitiveObjectPropertyAxiom(self.converted[n]))
+
             elif n.isItem(Item.DisjointUnionNode):
+
                 HS = self.HashSet()
                 for j in n.incomingNodes(lambda x: x.isItem(Item.InputEdge)):
                     HS.add(self.converted[j])
@@ -715,13 +645,62 @@ class OWLTranslator(QObject):
         # 3) GENERATE AXIOMS FROM EDGES
         for e in self.scene.edges():
 
-            if e.isItem(Item.InclusionEdge):                                                    # INCLUSION
-                self.axioms.add(self.buildInclusion(e))
-            elif e.isItem(Item.InputEdge):                                                     # FUNCTIONAL INPUT
+            if e.isItem(Item.InclusionEdge):
+
+                if not e.complete:
+
+                    if e.source.identity is Identity.Concept and e.target.identity is Identity.Concept:
+                        self.axioms.add(self.factory.getOWLSubClassOfAxiom(self.converted[e.source], self.converted[e.target]))
+                    elif e.source.identity is Identity.Role and e.target.identity is Identity.Role:
+                        if e.source.isItem(Item.RoleChainNode):
+                            self.axioms.add(self.factory.getOWLSubPropertyChainOfAxiom(self.converted[e.source], self.converted[e.target]))
+                        elif e.source.isItem(Item.ComplementNode) ^ e.target.isItem(Item.ComplementNode):
+                            self.axioms.add(self.factory.getOWLDisjointObjectPropertiesAxiom(self.converted[e.source], self.converted[e.target]))
+                        elif e.source.isItem(Item.RoleNode, Item.RoleInverseNode) and e.target.isItem(Item.RoleNode, Item.RoleInverseNode):
+                            self.axioms.add(self.factory.getOWLSubObjectPropertyOfAxiom(self.converted[e.source], self.converted[e.target]))
+                    elif e.source.identity is Identity.Attribute and e.target.identity is Identity.Attribute:
+                        # FIXME: what about getOWLDisjointDataPropertiesAxiom???
+                        self.axioms.add(self.factory.getOWLSubDataPropertyOfAxiom(self.converted[e.source], self.converted[e.target]))
+                    elif e.source.isItem(Item.RangeRestrictionNode) and e.target.identity is Identity.DataRange:
+                        self.axioms.add(self.factory.getOWLDataPropertyRangeAxiom(self.converted[e.source], self.converted[e.target]))
+                    else:
+                        raise MalformedDiagramError(e, 'type mismatch in ISA')
+
+                else:
+
+                    if e.source.identity is Identity.Concept and e.target.identity is Identity.Concept:
+                        self.axioms.add(self.factory.getOWLEquivalentClassesAxiom(self.converted[e.source], self.converted[e.target]))
+                    elif e.source.identity is Identity.Role and e.target.identity is Identity.Role:
+                        self.axioms.add(self.factory.getOWLEquivalentObjectPropertiesAxiom(self.converted[e.source], self.converted[e.target]))
+                    elif e.source.identity is Identity.Attribute and e.target.identity is Identity.Attribute:
+                        self.axioms.add(self.factory.getOWLEquivalentDataPropertiesAxiom(self.converted[e.source], self.converted[e.target]))
+                    else:
+                        raise MalformedDiagramError(e, 'type mismatch in equivalence')
+
+            elif e.isItem(Item.InputEdge):
+
                 if e.functional:
-                    self.axioms.add(self.buildFunctionalInput(e))
+
+                    if e.source.identity is Identity.Role:
+                        if e.target.isItem(Item.DomainRestrictionNode):
+                            self.axioms.add(self.factory.getOWLFunctionalObjectPropertyAxiom(self.converted[e.source]))
+                        elif e.target.isItem(Item.RangeRestrictionNode):
+                            self.axioms.add(self.factory.getOWLInverseFunctionalObjectPropertyAxiom(self.converted[e.source]))
+                    elif e.source.identity is Identity.Attribute:
+                        if e.target.isItem(Item.DomainRestrictionNode):
+                            self.axioms.add(self.factory.getOWLFunctionalDataPropertyAxiom(self.converted[e.source]))
+                        else:
+                            raise MalformedDiagramError(e, 'unsupported inverse functional edge')
+                    else:
+                        raise MalformedDiagramError(e, 'type mismatch in functional edge')
+
             elif e.isItem(Item.InstanceOfEdge):
-                self.axioms.add(self.buildInstanceOf(e))
+
+                if e.source.identity is Identity.Individual and e.target.identity is Identity.Concept:
+                    self.axioms.add(self.factory.getOWLClassAssertionAxiom(self.converted[e.target], self.converted[e.source]))
+                else:
+                    # FIXME: what about: if(source instanceof OWLClass && target instanceof OWLClassExpression)
+                    raise MalformedDiagramError(e, 'type mismatch in instanceOf')
 
             self.step(+1)
 
@@ -738,11 +717,13 @@ class OWLTranslator(QObject):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def step(self, count):
+    def step(self, count, increase=0):
         """
         Increments the progress by the given step and emits the progress signal.
         :type count: int
+        :type increase: int
         """
+        self.total += increase
         self.count += count
         self.count = clamp(self.count, minval=0, maxval=self.total)
         self.progress.emit(self.count, self.total)
