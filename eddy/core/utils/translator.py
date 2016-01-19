@@ -550,7 +550,22 @@ class OWLTranslator(QObject):
         :type edge: InputEdge
         :rtype: OWLAxiom
         """
-        pass
+        if edge not in self.converted:
+
+            if edge.source.identity is Identity.Role:
+                if edge.target.isItem(Item.DomainRestrictionNode):
+                    self.converted[edge] = self.factory.getOWLFunctionalObjectPropertyAxiom(self.converted[edge.source])
+                elif edge.target.isItem(Item.RangeRestrictionNode):
+                    self.converted[edge] = self.factory.getOWLInverseFunctionalObjectPropertyAxiom(self.converted[edge.source])
+            elif edge.source.identity is Identity.Attribute:
+                if edge.target.isItem(Item.DomainRestrictionNode):
+                    self.converted[edge] = self.factory.getOWLFunctionalDataPropertyAxiom(self.converted[edge.source])
+                else:
+                    raise MalformedDiagramError(edge, 'unsupported inverse functional edge')
+            else:
+                raise MalformedDiagramError(edge, 'type mismatch in functional edge')
+
+        return self.converted[edge]
 
     def buildInclusion(self, edge):
         """
@@ -702,9 +717,9 @@ class OWLTranslator(QObject):
 
             if e.isItem(Item.InclusionEdge):                                                    # INCLUSION
                 self.axioms.add(self.buildInclusion(e))
-            #elif e.isItem(Item.InputEdge):                                                     # FUNCTIONAL INPUT
-            #    if e.functional:
-            #        axioms.add(buildFunctionalInput(e))
+            elif e.isItem(Item.InputEdge):                                                     # FUNCTIONAL INPUT
+                if e.functional:
+                    self.axioms.add(self.buildFunctionalInput(e))
             elif e.isItem(Item.InstanceOfEdge):
                 self.axioms.add(self.buildInstanceOf(e))
 
