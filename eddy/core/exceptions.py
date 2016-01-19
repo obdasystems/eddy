@@ -44,7 +44,7 @@ class MalformedDiagramError(RuntimeError):
         """
         Initialize the Exception.
         """
-        super().__init__(args, kwargs)
+        super().__init__(*args, **kwargs)
         self.item = item
 
 
