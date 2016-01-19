@@ -95,6 +95,24 @@ def modulePath():
     return os.path.normpath(os.path.expanduser(path))
 
 
+def openPath(path):
+    """
+    Open the given path using the OS default program.
+    :type path: T <= bytes | unicode
+    """
+    # keep this import statement deferred
+    from eddy.core.datatypes import Platform
+    path = expandPath(path)
+    if os.path.isfile(path) or os.path.isdir(path):
+        platform = Platform.identify()
+        if platform is Platform.windows:
+            os.system('start {}'.format(path))
+        elif platform is Platform.darwin:
+            os.system('open "{}"'.format(path))
+        elif platform is Platform.linux:
+            os.system('xdg-open "{}"'.format(path))
+
+
 def resourcesPath():
     """
     Returns the path to the resources directory.
