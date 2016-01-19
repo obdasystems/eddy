@@ -1,10 +1,15 @@
 ## Customize the test machine
 machine:
 
-  ## Version of python to use
+  ## Version of Python to use
   python:
     version:
       3.4.3
+
+  ## Version of Java to use
+  java:
+    version:
+      oraclejdk8
 
   ## Install Qt5
   pre:
