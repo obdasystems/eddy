@@ -42,6 +42,12 @@ __status__ = 'Development'
 __version__ = '0.5.2'
 
 
+# Define some extra constants
+BUG_TRACKER = 'https://github.com/danielepantaleone/eddy/issues'
+PROJECT_HOME = 'https://github.com/danielepantaleone/eddy'
+GRAPHOL_HOME = 'http://www.dis.uniroma1.it/~graphol/'
+
+
 from verlib import NormalizedVersion
 
 from PyQt5.QtCore import QSettings
