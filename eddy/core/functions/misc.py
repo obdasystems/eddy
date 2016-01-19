@@ -34,11 +34,12 @@
 
 import itertools
 import os
+import re
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
 
-from eddy.core.regex import RE_QUOTE_FULL
+from eddy.core.regex import RE_QUOTE_FULL, RE_OWL_INVALID_CHAR
 
 
 def clamp(val, minval=None, maxval=None):
@@ -100,6 +101,15 @@ def makeShadedIcon(path, opacity=0.25):
     icon.addPixmap(QPixmap(path), QIcon.Normal)
     icon.addPixmap(shaded(QPixmap(path), opacity), QIcon.Disabled)
     return icon
+
+
+def OWLText(text):
+    """
+    Transform the given text returning OWL compatible text.
+    :type text: T <= bytes | unicode
+    :rtype: str
+    """
+    return re.sub(RE_OWL_INVALID_CHAR, '_', str(text))
 
 
 def partition(predicate, iterable):
