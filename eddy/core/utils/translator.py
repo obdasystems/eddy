@@ -363,6 +363,29 @@ class OWLTranslator(QObject):
 
         return self.converted[node]
 
+    def buildPropertyAssertion(self, node):
+        """
+        Build and returns a collection of Individuals that can be used to build property assertions.
+        :type node: PropertyAssertionNode
+        :rtype: tuple
+        """
+        if node not in self.converted:
+
+            if len(node.inputs) < 2:
+                raise MalformedDiagramError(node, 'missing operand(s)')
+            elif len(node.inputs) > 2:
+                raise MalformedDiagramError(node, 'too many operands')
+
+            collection = []
+            for x in [self.scene.edge(i).other(node) for i in node.inputs]:
+                if not x.isItem(Item.IndividualNode):
+                    raise MalformedDiagramError(node, 'unsupported operand ({})'.format(x))
+                collection.append(self.buildIndividual(x))
+
+            self.converted[node] = collection
+
+        return self.converted[node]
+
     def buildRangeRestriction(self, node):
         """
         Build and returns a OWL range restriction using the given Graphol node.
@@ -583,7 +606,7 @@ class OWLTranslator(QObject):
         self.axioms = set()
         self.converted = dict()
 
-        # TODO: support DatatypeRestriction, ValueRestriction and PropertyAssertion
+        # TODO: support DatatypeRestriction, ValueRestriction
         # 1) NODES CONVERSION
         for n in self.scene.nodes():
 
@@ -609,6 +632,8 @@ class OWLTranslator(QObject):
                 self.buildIntersection(n)
             elif n.isItem(Item.UnionNode, Item.DisjointUnionNode):                              # UNION / DISJOINT UNION
                 self.buildUnion(n)
+            elif n.isItem(Item.PropertyAssertionNode):                                          # PROPERTY ASSERTION
+                self.buildPropertyAssertion(n)
             elif n.isItem(Item.DomainRestrictionNode):                                          # DOMAIN RESTRICTION
                 self.buildDomainRestriction(n)
             elif n.isItem(Item.RangeRestrictionNode):                                           # RANGE RESTRICTION
@@ -698,6 +723,10 @@ class OWLTranslator(QObject):
 
                 if e.source.identity is Identity.Individual and e.target.identity is Identity.Concept:
                     self.axioms.add(self.factory.getOWLClassAssertionAxiom(self.converted[e.target], self.converted[e.source]))
+                elif e.source.identity is Identity.Link and e.target.identity is Identity.Role:
+                    self.axioms.add(self.factory.getOWLObjectPropertyAssertionAxiom(self.converted[e.target], self.converted[e.source][0], self.converted[e.source][1]))
+                elif e.source.identity is Identity.Link and e.target.identity is Identity.Attribute:
+                    self.axioms.add(self.factory.getOWLDataPropertyAssertionAxiom(self.converted[e.target], self.converted[e.source][0], self.converted[e.source][1]))
                 else:
                     # FIXME: what about: if(source instanceof OWLClass && target instanceof OWLClassExpression)
                     raise MalformedDiagramError(e, 'type mismatch in instanceOf')
