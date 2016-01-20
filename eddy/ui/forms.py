@@ -347,6 +347,6 @@ class OWLTranslationForm(QDialog):
         connect(self.worker.completed, self.completed)
         connect(self.worker.errored, self.errored)
         connect(self.worker.progress, self.progress)
-        connect(self.workerThread.started, self.worker.process)
+        connect(self.workerThread.started, self.worker.work)
 
         self.workerThread.start()

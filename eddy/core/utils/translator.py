@@ -35,6 +35,7 @@
 import jpype
 
 from PyQt5.QtCore import QObject, pyqtSlot, pyqtSignal
+from PyQt5.QtWidgets import QApplication
 
 from eddy.core.datatypes import Special, Item, Identity, Restriction, OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
@@ -763,8 +764,9 @@ class OWLTranslator(QObject):
     #                                                                                                                  #
     ####################################################################################################################
 
+    # noinspection PyArgumentList
     @pyqtSlot()
-    def process(self):
+    def work(self):
         """
         Main worker: will trigger the execution of the run() method and catch any exception raised.
         Will trigger the following signals:
@@ -777,11 +779,10 @@ class OWLTranslator(QObject):
         The errored signal will carry the instance of the Exception that caused the error.
         """
         try:
-            # This is needed so that JPype can move the JVM on the current thread whether
-            # or not this method is executed on the main thread ot a new spawned thread. If
-            # we don't attach the JVM to the thread running this worker we can run the translator
-            # only in the UI thread which will cause the whole user interface to freeze during the work.
-            jpype.attachThreadToJVM()
+            # This is needed so that JPype can move the JVM on the current thread
+            # if this method is not executed on the main thread (the UI thread).
+            if QApplication.instance().thread() is not self.thread():
+                jpype.attachThreadToJVM()
             self.started.emit()
             self.run()
         except Exception as e:
@@ -790,5 +791,6 @@ class OWLTranslator(QObject):
             self.completed.emit()
         finally:
             # Detaching is not really needed since the thread is going to be destroyed.
-            jpype.detachThreadFromJVM()
+            if QApplication.instance().thread() is not self.thread():
+                jpype.detachThreadFromJVM()
             self.finished.emit()
