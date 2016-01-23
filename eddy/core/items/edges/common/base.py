@@ -307,7 +307,7 @@ class AbstractEdge(AbstractItem):
         # exclude all the "subpaths" which are not visible (obscured by the shapes)
         return [x for x in (QLineF(points[i], points[i + 1]) for i in range(len(points) - 1)) \
                     if (not sourcePP.contains(x.p1()) or not sourcePP.contains(x.p2())) and \
-                       (not targetPP or (not targetPP.contains(x.p1()) or not targetPP.contains(x.p2())))]
+                        (not targetPP or (not targetPP.contains(x.p1()) or not targetPP.contains(x.p2())))]
 
     def contextMenu(self, pos):
         """
@@ -326,15 +326,6 @@ class AbstractEdge(AbstractItem):
             menu.addAction(scene.mainwindow.actionDelete)
             menu.addAction(scene.mainwindow.actionSwapEdge)
         return menu
-
-    def isValid(self, source, target):
-        """
-        Tells whether this edge is valid when being added between the given source and target nodes.
-        :type source: AbstractNode
-        :type target: AbstractNode
-        :rtype: bool
-        """
-        return source is not target
 
     def moveBy(self, x, y):
         """

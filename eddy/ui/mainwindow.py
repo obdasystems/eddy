@@ -1524,7 +1524,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            selected = [edge for edge in scene.selectedEdges() if edge.isValid(edge.target, edge.source)]
+            selected = [edge for edge in scene.selectedEdges() if scene.validator.check(edge.target, edge, edge.source)]
             if selected:
                 scene.undostack.push(CommandEdgeSwap(scene=scene, edges=selected))
 

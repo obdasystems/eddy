@@ -40,7 +40,7 @@ from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
 from PyQt5.QtWidgets import QMenu
 
-from eddy.core.datatypes import Font, DiagramMode, Item, Identity
+from eddy.core.datatypes import Font, DiagramMode, Item
 from eddy.core.items.edges.common.base import AbstractEdge
 from eddy.core.items.edges.common.label import Label
 
@@ -97,56 +97,6 @@ class InstanceOfEdge(AbstractEdge):
         }
 
         return self.__class__(**kwargs)
-
-    def isValid(self, source, target):
-        """
-        Tells whether this edge is valid when being added between the given source and target nodes.
-        :type source: AbstractNode
-        :type target: AbstractNode
-        :rtype: bool
-        """
-        if source is target:
-            # Self connection is not valid.
-            return False
-
-        if source.identity not in {Identity.Individual, Identity.Link}:
-            # The source of the edge must be one of Individual or Link.
-            return False
-
-        if len(source.outgoingNodes(lambda x: x.isItem(Item.InstanceOfEdge) and x is not self)) > 0:
-            # The source node MUST be instanceOf at most of one construct.
-            return False
-
-        if source.identity is Identity.Individual and target.identity is not Identity.Concept:
-            # If the source of the edge is an Individual it means that we are trying to construct a ClassAssertion
-            # construct, and so the target of the edge MUST be an axiom identified as Concept (Atomic or General).
-            # OWL 2 syntax: ClassAssertion(axiomAnnotations ClassExpression Individual)
-            return False
-
-        if source.identity is Identity.Link:
-
-            if not target.isItem(Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode):
-                # If the source of the edge is a Link then the target of the edge MUST be the
-                # OWL 2 equivalent of ObjectPropertyExpression and DataPropertyExpression.
-                return False
-
-            if target.isItem(Item.RoleNode, Item.RoleInverseNode):
-                # If the target of the edge is a Role expression then we need to check
-                # not to have Literals in input to the source node (which is a Link).
-                # OWL 2 syntax: ObjectPropertyAssertion(axiomAnnotations ObjectPropertyExpression Individual Individual)
-                if len(source.incomingNodes(filter_on_edges=lambda x: x.isItem(Item.InputEdge),
-                                            filter_on_nodes=lambda x: x.identity is Identity.Literal)) > 0:
-                    return False
-
-            if target.isItem(Item.AttributeNode):
-                # If the target of the edge is an Attribute expression then we need to check
-                # not to have 2 Individuals as input to the source node (which is a link).
-                # OWL 2 syntax: DataPropertyAssertion(axiomAnnotations DataPropertyExpression Individual Literal)
-                if len(source.incomingNodes(filter_on_edges=lambda x: x.isItem(Item.InputEdge),
-                                            filter_on_nodes=lambda x: x.identity is Identity.Individual)) > 1:
-                    return False
-
-        return True
 
     def updateLabelPos(self, points):
         """

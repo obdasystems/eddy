@@ -105,7 +105,7 @@ class InclusionEdge(AbstractEdge):
             menu.addAction(scene.mainwindow.actionSwapEdge)
             menu.addSeparator()
             menu.addAction(scene.mainwindow.actionToggleEdgeComplete)
-            scene.mainwindow.actionSwapEdge.setVisible(self.isValid(self.target, self.source))
+            scene.mainwindow.actionSwapEdge.setVisible(scene.validator.check(self.target, self, self.source))
             scene.mainwindow.actionToggleEdgeComplete.setChecked(self.complete)
         return menu
 
@@ -124,26 +124,6 @@ class InclusionEdge(AbstractEdge):
         }
 
         return self.__class__(**kwargs)
-
-    def isValid(self, source, target):
-        """
-        Tells whether this edge is valid when being added between the given source and target nodes.
-        :type source: AbstractNode
-        :type target: AbstractNode
-        :rtype: bool
-        """
-        if source is target:
-            # Self connection is not valid.
-            return False
-
-        if source.identity is not Identity.Neutral and \
-            target.identity is not Identity.Neutral and \
-                source.identity is not target.identity:
-            # If neither of the endpoints is NEUTRAL and the two nodes are specifying
-            # a different identity, then we can't create an ISA between the nodes.
-            return False
-
-        return True
 
     ####################################################################################################################
     #                                                                                                                  #

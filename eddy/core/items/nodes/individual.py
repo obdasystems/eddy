@@ -656,7 +656,7 @@ class IndividualNode(AbstractResizableNode):
             edge = scene.command.edge
 
             brush = self.brushConnectionOk
-            if not edge.isValid(edge.source, scene.mouseOverNode):
+            if not scene.validator.check(edge.source, edge, scene.mouseOverNode):
                 brush = self.brushConnectionBad
 
             boundingRect = self.boundingRect()

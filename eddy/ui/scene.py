@@ -47,6 +47,7 @@ from eddy.core.functions import expandPath, rangeF, snapF
 from eddy.core.items import ConceptNode, ComplementNode, RoleChainNode, RoleInverseNode
 from eddy.core.items import RangeRestrictionNode, DomainRestrictionNode, ValueDomainNode
 from eddy.core.items import InputEdge, InclusionEdge
+from eddy.core.syntax import OWLValidator
 from eddy.core.utils import Clipboard, GUID
 
 
@@ -89,6 +90,7 @@ class DiagramScene(QGraphicsScene):
         self.guid = GUID(self)  ## used to generate unique incremental ids
         self.undostack = QUndoStack(self)  ## use to push actions and keep history for undo/redo
         self.undostack.setUndoLimit(50)  ## TODO: make the stack configurable
+        self.validator = OWLValidator(self)
         self.mode = DiagramMode.Idle  ## operation mode
         self.modeParam = None  ## extra parameter for the operation mode (see setMode())
         self.mouseOverNode = None  ## node below the mouse cursor during edge insertion
@@ -296,7 +298,7 @@ class DiagramScene(QGraphicsScene):
                     edge = self.command.edge
                     node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False, skip={edge.source})
 
-                    if node and edge.isValid(edge.source, node):
+                    if node and self.validator.check(edge.source, edge, node):
                         self.command.end(node)
                         self.undostack.push(self.command)
                         self.updated.emit()
