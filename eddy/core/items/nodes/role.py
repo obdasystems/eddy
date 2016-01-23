@@ -179,14 +179,14 @@ class RoleNode(AbstractResizableNode):
             if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
                     e1.target.isItem(Item.DomainRestrictionNode) and \
-                        e1.target.restriction is Restriction.self:
+                        e1.target.restriction is Restriction.Self:
                 for e2 in e1.target.edges:
                     if e2.isItem(Item.InputEdge) and \
                         e2.source is e1.target and \
                             e2.target.isItem(Item.ComplementNode):
                         for e3 in e2.target.edges:
                             if e3.source.isItem(Item.ConceptNode) and \
-                                e3.source.special is Special.TOP and \
+                                e3.source.special is Special.Top and \
                                     e3.target is e2.target:
                                 return True
         return False
@@ -203,7 +203,7 @@ class RoleNode(AbstractResizableNode):
             if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
                     e1.target.isItem(Item.DomainRestrictionNode) and \
-                        e1.target.restriction is Restriction.self and \
+                        e1.target.restriction is Restriction.Self and \
                             all(x not in paths for x in {e1, e1.target}):
                 path |= {e1, e1.target}
                 for e2 in e1.target.edges:
@@ -214,7 +214,7 @@ class RoleNode(AbstractResizableNode):
                         path |= {e2, e2.target}
                         for e3 in e2.target.edges:
                             if e3.source.isItem(Item.ConceptNode) and \
-                                e3.source.special is Special.TOP and \
+                                e3.source.special is Special.Top and \
                                     e3.target is e2.target and \
                                         all(x not in paths for x in {e3, e3.source}):
                                 paths |= path | {e3, e3.source}
@@ -230,10 +230,10 @@ class RoleNode(AbstractResizableNode):
             if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
                     e1.target.isItem(Item.DomainRestrictionNode) and \
-                        e1.target.restriction is Restriction.self:
+                        e1.target.restriction is Restriction.Self:
                 for e2 in e1.target.edges:
                     if e2.source.isItem(Item.ConceptNode) and \
-                        e2.source.special is Special.TOP and \
+                        e2.source.special is Special.Top and \
                             e2.target is e1.target:
                         return True
         return False
@@ -250,12 +250,12 @@ class RoleNode(AbstractResizableNode):
             if e1.isItem(Item.InputEdge) and \
                 e1.source is self and \
                     e1.target.isItem(Item.DomainRestrictionNode) and \
-                        e1.target.restriction is Restriction.self and \
+                        e1.target.restriction is Restriction.Self and \
                             all(x not in paths for x in {e1, e1.target}):
                 path |= {e1, e1.target}
                 for e2 in e1.target.edges:
                     if e2.source.isItem(Item.ConceptNode) and \
-                        e2.source.special is Special.TOP and \
+                        e2.source.special is Special.Top and \
                             e2.target is e1.target and \
                                 all(x not in paths for x in {e2, e2.source}):
                         paths |= path | {e2, e2.source}

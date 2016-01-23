@@ -432,7 +432,7 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
         self.restriction = {'redo': restriction, 'undo': self.node.restriction}
         self.cardinality = {'redo': dict(min=None, max=None) if not cardinality else cardinality, 'undo': self.node.cardinality}
         value = restriction.label
-        if restriction is Restriction.cardinality:
+        if restriction is Restriction.Cardinality:
             value = value.format(min=self.s(cardinality['min']), max=self.s(cardinality['max']))
         super().__init__('change {} to {}'.format(node.name, value))
 
@@ -446,7 +446,7 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        if self.restriction['redo'] is Restriction.cardinality:
+        if self.restriction['redo'] is Restriction.Cardinality:
             self.node.restriction = self.restriction['redo']
             self.node.cardinality = self.cardinality['redo']
             self.node.label.setText(self.node.restriction.label.format(min=self.s(self.node.cardinality['min']),
@@ -461,7 +461,7 @@ class CommandNodeSquareChangeRestriction(QUndoCommand):
 
     def undo(self):
         """undo the command"""
-        if self.restriction['undo'] is Restriction.cardinality:
+        if self.restriction['undo'] is Restriction.Cardinality:
             self.node.restriction = self.restriction['undo']
             self.node.cardinality = self.cardinality['undo']
             self.node.label.setText(self.node.restriction.label.format(min=self.s(self.node.cardinality['min']),

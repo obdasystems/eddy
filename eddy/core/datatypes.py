@@ -288,11 +288,11 @@ class Filetype(Enum):
     """
     This class defines all the available file types supported for graphol document export.
     """
-    __order__ = 'graphol owl pdf'
+    __order__ = 'Graphol Owl Pdf'
 
-    graphol = 'Graphol (*.graphol)'
-    owl = 'Owl (*.owl)'
-    pdf = 'PDF (*.pdf)'
+    Graphol = 'Graphol (*.graphol)'
+    Owl = 'Owl (*.owl)'
+    Pdf = 'PDF (*.pdf)'
 
     @classmethod
     def forValue(cls, value):
@@ -310,9 +310,9 @@ class Filetype(Enum):
     def suffix(self):
         """The suffix associated with the Enum member."""
         return {
-            Filetype.graphol: '.graphol',
-            Filetype.owl: '.owl',
-            Filetype.pdf: '.pdf'
+            Filetype.Graphol: '.graphol',
+            Filetype.Owl: '.owl',
+            Filetype.Pdf: '.pdf'
         }[self]
 
 
@@ -367,24 +367,20 @@ class Identity(IntEnum):
 @unique
 class Item(IntEnum):
     """
-    This class defines all the available Graphol items. The enum is ordered according to Graphol
-    elements' classes. Changing the order of the enum elements (which actually means assigning a
-    different integer value) may affect node properties results such as 'predicate', 'constructor',
-    'operator', 'restriction', 'node', 'edge', etc.
+    This class defines all the available Graphol items.
+    The enum is ordered according to Graphol elements' classes.
+    Changing the order of the enum elements will affect node properties results such as 'predicate' and 'constructor'.
     """
-    # PREDICATE NODES
+    # PREDICATES
     ConceptNode = 1
     AttributeNode = 2
     RoleNode = 3
     ValueDomainNode = 4
     IndividualNode = 5
     ValueRestrictionNode = 6
-
-    # RESTRICTION NODES
+    # CONSTRUCTORS
     DomainRestrictionNode = 7
     RangeRestrictionNode = 8
-
-    # OPERATOR NODES
     UnionNode = 9
     EnumerationNode = 10
     ComplementNode = 11
@@ -394,13 +390,11 @@ class Item(IntEnum):
     DatatypeRestrictionNode = 15
     DisjointUnionNode = 16
     PropertyAssertionNode = 17
-
     # EDGES
     InclusionEdge = 18
     InputEdge = 19
     InstanceOfEdge = 20
-
-    # LABEL
+    # LABELS
     LabelEdge = 21
     LabelNode = 22
 
@@ -423,12 +417,12 @@ class Platform(Enum):
     """
     This class defines supported platforms.
     """
-    __order__ = 'darwin linux windows'
+    __order__ = 'Darwin Linux Windows'
 
-    darwin = 'Darwin'
-    linux = 'Linux'
-    windows = 'Windows'
-    unknown = 'Unknown'
+    Darwin = 'Darwin'
+    Linux = 'Linux'
+    Windows = 'Windows'
+    Unknown = 'Unknown'
 
     @classmethod
     def identify(cls):
@@ -446,12 +440,12 @@ class Platform(Enum):
         :rtype: Platform
         """
         if value.startswith('darwin'):
-            return Platform.darwin
+            return Platform.Darwin
         if value.startswith('linux'):
-            return Platform.linux
+            return Platform.Linux
         if value.startswith('win') or value.startswith('cygwin'):
-            return Platform.windows
-        return Platform.unknown
+            return Platform.Windows
+        return Platform.Unknown
 
 
 @unique
@@ -459,33 +453,33 @@ class Restriction(Enum):
     """
     This class defines all the available restrictions for the Domain and Range restriction nodes.
     """
-    __order__ = 'exists forall cardinality self'
+    __order__ = 'Exists Forall Cardinality Self'
 
-    exists = 'Existential: exists'
-    forall = 'Universal: forall'
-    cardinality = 'Cardinality: (min, max)'
-    self = 'Self: self'
+    Exists = 'Existential: exists'
+    Forall = 'Universal: forall'
+    Cardinality = 'Cardinality: (min, max)'
+    Self = 'Self: self'
 
     @DynamicClassAttribute
     def label(self):
         """The label of the Enum member."""
         return {
-            Restriction.exists: 'exists',
-            Restriction.forall: 'forall',
-            Restriction.self: 'self',
-            Restriction.cardinality: '({min},{max})',
+            Restriction.Exists: 'exists',
+            Restriction.Forall: 'forall',
+            Restriction.Self: 'self',
+            Restriction.Cardinality: '({min},{max})',
         }[self]
 
 
 @unique
 class Special(Enum):
     """
-    This class defines special Concept nodes types.
+    This class defines special nodes types.
     """
     __order__ = 'TOP BOTTOM'
 
-    TOP = 'TOP'
-    BOTTOM = 'BOTTOM'
+    Top = 'TOP'
+    Bottom = 'BOTTOM'
 
     @classmethod
     def forValue(cls, value):
@@ -498,14 +492,6 @@ class Special(Enum):
             if x.value == value.upper().strip():
                 return x
         return None
-
-    @DynamicClassAttribute
-    def owl(self):
-        """Returns the Owl corrispective of the special type."""
-        return {
-            Special.TOP: 'owl:Thing',
-            Special.BOTTOM: 'owl:Nothing',
-        }[self]
 
 
 @unique

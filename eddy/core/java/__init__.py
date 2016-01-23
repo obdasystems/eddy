@@ -71,10 +71,10 @@ class JVM(QObject):
         :rtype: str
         """
         platform = Platform.identify()
-        if platform is Platform.windows:
+        if platform is Platform.Windows:
             from eddy.core.java.windows import WindowsJVMFinder_
             finder = WindowsJVMFinder_()
-        elif platform is Platform.darwin:
+        elif platform is Platform.Darwin:
             from eddy.core.java.darwin import DarwinJVMFinder_
             finder = DarwinJVMFinder_()
         else:

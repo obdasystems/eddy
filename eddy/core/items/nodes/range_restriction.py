@@ -106,7 +106,7 @@ class RangeRestrictionNode(SquaredNode):
         # switch the check on the currently active restriction
         for action in scene.mainwindow.actionsRestrictionChange:
             action.setChecked(self.restriction is action.data())
-            action.setVisible(action.data() is not Restriction.self or not attribute)
+            action.setVisible(action.data() is not Restriction.Self or not attribute)
 
         collection = self.label.contextMenuAdd()
         if collection:

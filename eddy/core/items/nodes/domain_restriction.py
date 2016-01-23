@@ -86,7 +86,7 @@ class DomainRestrictionNode(SquaredNode):
         f1 = lambda x: x.isItem(Item.InputEdge) and x.target is self
         f2 = lambda x: x.identity in {Identity.Concept, Identity.Role}
 
-        return self.restriction in {Restriction.cardinality, Restriction.exists, Restriction.forall} and \
+        return self.restriction in {Restriction.Cardinality, Restriction.Exists, Restriction.Forall} and \
             len([n for n in [e.other(self) for e in self.edges if f1(e)] if f2(n)]) >= 2
 
     ####################################################################################################################
@@ -114,7 +114,7 @@ class DomainRestrictionNode(SquaredNode):
 
         for action in scene.mainwindow.actionsRestrictionChange:
             action.setChecked(self.restriction is action.data())
-            action.setVisible(action.data() is not Restriction.self or not qualified and not attribute)
+            action.setVisible(action.data() is not Restriction.Self or not qualified and not attribute)
 
         # Add actions from the label (if any)
         collection = self.label.contextMenuAdd()

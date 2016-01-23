@@ -353,7 +353,7 @@ class InputEdge(AbstractEdge):
 
             if source.identity in {Identity.Concept, Identity.Neutral}:
 
-                if target.restriction is Restriction.self:
+                if target.restriction is Restriction.Self:
                     # Not a Qualified Restriction.
                     return False
 
@@ -373,7 +373,7 @@ class InputEdge(AbstractEdge):
                 # other input is a Concept and the node specifies a Qualified Restriction.
                 node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)), None)
                 if node:
-                    if node.identity is not Identity.Concept or target.restriction is Restriction.self:
+                    if node.identity is not Identity.Concept or target.restriction is Restriction.Self:
                         # Not a Qualified Restriction.
                         return False
 
@@ -381,7 +381,7 @@ class InputEdge(AbstractEdge):
 
             elif source.identity is Identity.Attribute:
 
-                if target.restriction is Restriction.self:
+                if target.restriction is Restriction.Self:
                     # Attributes don't have self.
                     return False
 
@@ -397,7 +397,7 @@ class InputEdge(AbstractEdge):
 
             elif source.identity is Identity.DataRange:
 
-                if target.restriction is Restriction.self:
+                if target.restriction is Restriction.Self:
                     # Not a Qualified Restriction.
                     return False
 
@@ -438,7 +438,7 @@ class InputEdge(AbstractEdge):
 
             if source.identity in {Identity.Concept, Identity.Neutral}:
 
-                if target.restriction is Restriction.self:
+                if target.restriction is Restriction.Self:
                     # Not a Qualified Restriction.
                     return False
 
@@ -458,7 +458,7 @@ class InputEdge(AbstractEdge):
                 # other input is a Concept and the node specifies a Qualified Restriction.
                 node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not self)), None)
                 if node:
-                    if node.identity is not Identity.Concept or target.restriction is Restriction.self:
+                    if node.identity is not Identity.Concept or target.restriction is Restriction.Self:
                         # Not a Qualified Restriction.
                         return False
 
@@ -466,7 +466,7 @@ class InputEdge(AbstractEdge):
 
             elif source.identity is Identity.Attribute:
 
-                if target.restriction is Restriction.self:
+                if target.restriction is Restriction.Self:
                     # Attributes don't have self.
                     return False
 
@@ -482,7 +482,7 @@ class InputEdge(AbstractEdge):
 
             elif source.identity is Identity.DataRange:
 
-                if target.restriction is Restriction.self:
+                if target.restriction is Restriction.Self:
                     # Not a Qualified Restriction.
                     return False
 

@@ -738,7 +738,7 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode), nodes), None)
             if node:
                 restriction = action.data()
-                if restriction == Restriction.cardinality:
+                if restriction == Restriction.Cardinality:
                     form = CardinalityRestrictionForm()
                     if form.exec_() == CardinalityRestrictionForm.Accepted:
                         cardinality = dict(min=form.minCardinalityValue, max=form.maxCardinalityValue)
@@ -1071,9 +1071,9 @@ class MainWindow(QMainWindow):
             if result:
                 filepath = result[0]
                 filetype = Filetype.forValue(result[1])
-                if filetype is Filetype.pdf:
+                if filetype is Filetype.Pdf:
                     self.exportSceneToPdfFile(scene, filepath)
-                elif filetype is Filetype.owl:
+                elif filetype is Filetype.Owl:
                     self.exportSceneToOwlFile(scene, filepath)
 
     @pyqtSlot()
@@ -1171,7 +1171,7 @@ class MainWindow(QMainWindow):
         Open a document.
         """
         dialog = OpenFile(expandPath('~'))
-        dialog.setNameFilters([Filetype.graphol.value])
+        dialog.setNameFilters([Filetype.Graphol.value])
         if dialog.exec_():
             filepath = dialog.selectedFiles()[0]
             if not self.focusDocument(filepath):
@@ -1781,7 +1781,7 @@ class MainWindow(QMainWindow):
         """
         dialog = SaveFile(path)
         dialog.setWindowTitle('Export')
-        dialog.setNameFilters([x.value for x in Filetype if x is not Filetype.graphol])
+        dialog.setNameFilters([x.value for x in Filetype if x is not Filetype.Graphol])
         dialog.selectFile(name or 'Untitled')
         if dialog.exec_():
             return dialog.selectedFiles()[0], dialog.selectedNameFilter()
@@ -1854,7 +1854,7 @@ class MainWindow(QMainWindow):
         :rtype: str
         """
         dialog = SaveFile(path)
-        dialog.setNameFilters([Filetype.graphol.value])
+        dialog.setNameFilters([Filetype.Graphol.value])
         dialog.selectFile(name or 'Untitled')
         if dialog.exec_():
             return dialog.selectedFiles()[0]

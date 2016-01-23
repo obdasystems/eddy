@@ -61,8 +61,8 @@ class SquaredNode(AbstractNode):
         """
         super().__init__(**kwargs)
 
-        self._restriction = restriction or Restriction.exists
-        self._cardinality = cardinality if self.restriction is Restriction.cardinality else dict(min=None, max=None)
+        self._restriction = restriction or Restriction.Exists
+        self._cardinality = cardinality if self.restriction is Restriction.Cardinality else dict(min=None, max=None)
 
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
@@ -110,7 +110,7 @@ class SquaredNode(AbstractNode):
         :type cardinality: dict
         """
         self._cardinality = cardinality
-        if self.restriction is not Restriction.cardinality:
+        if self.restriction is not Restriction.Cardinality:
             self._cardinality = dict(min=None, max=None)
 
     @property
@@ -328,20 +328,20 @@ class SquaredNode(AbstractNode):
         :type text: T <= bytes | unicode
         """
         value = text.strip().lower()
-        if value == Restriction.exists.label:
+        if value == Restriction.Exists.label:
             self.label.setText(value)
-            self.restriction = Restriction.exists
-        elif value == Restriction.forall.label:
+            self.restriction = Restriction.Exists
+        elif value == Restriction.Forall.label:
             self.label.setText(value)
-            self.restriction = Restriction.forall
-        elif value == Restriction.self.label:
+            self.restriction = Restriction.Forall
+        elif value == Restriction.Self.label:
             self.label.setText(value)
-            self.restriction = Restriction.self
+            self.restriction = Restriction.Self
         else:
             match = RE_CARDINALITY.match(value)
             if match:
                 self.label.setText(value)
-                self.restriction = Restriction.cardinality
+                self.restriction = Restriction.Cardinality
                 self.cardinality = {
                     'min': None if match.group('min') == '-' else int(match.group('min')),
                     'max': None if match.group('max') == '-' else int(match.group('max')),

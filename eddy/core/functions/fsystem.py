@@ -105,11 +105,11 @@ def openPath(path):
     path = expandPath(path)
     if os.path.isfile(path) or os.path.isdir(path):
         platform = Platform.identify()
-        if platform is Platform.windows:
+        if platform is Platform.Windows:
             os.system('start {}'.format(path))
-        elif platform is Platform.darwin:
+        elif platform is Platform.Darwin:
             os.system('open "{}"'.format(path))
-        elif platform is Platform.linux:
+        elif platform is Platform.Linux:
             os.system('xdg-open "{}"'.format(path))
 
 
