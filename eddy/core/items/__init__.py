@@ -45,8 +45,7 @@ class AbstractItem(QGraphicsItem):
     """
     __metaclass__ = ABCMeta
 
-    item = 0  # an integer identifying this node as unique item type
-    name = 'item' # a lowercase word which identifies this object
+    item = Item.Undefined  # an integer identifying this node as unique item type
     prefix = 'i' # a prefix character to be prepended to the unique id
     xmlname = 'item' # a lowercase word used to identify this node in XML related documents
 
@@ -109,6 +108,14 @@ class AbstractItem(QGraphicsItem):
         :type value: T <= bytes | unicode
         """
         self._id = value
+
+    @property
+    def name(self):
+        """
+        Returns the item readable name.
+        :rtype: str
+        """
+        return self.item.label
 
     @property
     def node(self):
@@ -239,7 +246,7 @@ class LabelItem(QGraphicsTextItem):
     """
     __metaclass__ = ABCMeta
 
-    item = 0 # an integer identifying this label as unique item type
+    item = Item.Undefined
 
     def __init__(self, parent=None):
         """
