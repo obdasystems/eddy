@@ -369,16 +369,19 @@ class RoleNode(AbstractResizableNode):
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRoleNodeCompose)
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeSpecial)
 
-        # check currently composed axioms
+        # Check currently composed axioms
         scene.mainwindow.actionComposeAsymmetricRole.setChecked(self.asymmetric)
         scene.mainwindow.actionComposeIrreflexiveRole.setChecked(self.irreflexive)
         scene.mainwindow.actionComposeReflexiveRole.setChecked(self.reflexive)
         scene.mainwindow.actionComposeSymmetricRole.setChecked(self.symmetric)
         scene.mainwindow.actionComposeTransitiveRole.setChecked(self.transitive)
 
-        # switch the check on the currently active special
+        # Switch the check on the currently active special
         for action in scene.mainwindow.actionsNodeSetSpecial:
             action.setChecked(self.special is action.data())
+
+        # Disable refactor name if special type is set
+        scene.mainwindow.actionRefactorName.setEnabled(self.special is None)
 
         if not self.special:
             collection = self.label.contextMenuAdd()

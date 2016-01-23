@@ -127,9 +127,12 @@ class AttributeNode(AbstractNode):
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuAttributeNodeCompose)
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeSpecial)
 
-        # switch the check on the currently active special
+        # Switch the check on the currently active special
         for action in scene.mainwindow.actionsNodeSetSpecial:
             action.setChecked(self.special is action.data())
+
+        # Disable refactor name if special type is set
+        scene.mainwindow.actionRefactorName.setEnabled(self.special is None)
 
         if not self.special:
             collection = self.label.contextMenuAdd()
