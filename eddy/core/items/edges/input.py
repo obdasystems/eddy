@@ -349,7 +349,7 @@ class InputEdge(AbstractEdge):
                 return False
 
             if source.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode):
-                # Exclude incompatible sources: not that while RoleChain has a correct identity
+                # Exclude incompatible sources: note that while RoleChain has a correct identity
                 # it is excluded because it doesn't represent the OWL 2 ObjectPropertyExpression.
                 return False
 
@@ -470,8 +470,8 @@ class InputEdge(AbstractEdge):
 
             elif source.identity is Identity.Attribute:
 
-                if target.restriction is Restriction.Self:
-                    # Attributes don't have self.
+                if target.restriction is not Restriction.Exists:
+                    # RangeRestriction of Attribute => Restriction.Exists
                     return False
 
                 # We can connect an Attribute in input only if there is no other input or if the
@@ -486,8 +486,8 @@ class InputEdge(AbstractEdge):
 
             elif source.identity is Identity.DataRange:
 
-                if target.restriction is Restriction.Self:
-                    # Not a Qualified Restriction.
+                if target.restriction is not Restriction.Exists:
+                    # Qualified RangeRestriction of Attribute => Restriction.Exists
                     return False
 
                 # We can connect a DataRange in input only if there is no other input or if the
