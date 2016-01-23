@@ -45,7 +45,7 @@ class ComplementNode(HexagonNode):
     """
     This class implements the 'Complement' node.
     """
-    identities = {Identity.Concept, Identity.Role, Identity.DataRange, Identity.Neutral}
+    identities = {Identity.Attribute, Identity.Concept, Identity.Role, Identity.DataRange, Identity.Neutral}
     item = Item.ComplementNode
     name = 'complement'
     xmlname = 'complement'

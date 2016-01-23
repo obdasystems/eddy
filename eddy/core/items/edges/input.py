@@ -164,10 +164,8 @@ class InputEdge(AbstractEdge):
                 # Exclude unsupported nodes despite identity matching.
                 return False
 
-            if source.identity is not Identity.Neutral and \
-                target.identity is not Identity.Neutral and \
-                    source.identity is not target.identity:
-                # Identity mismatch.
+            if Identity.Neutral not in {source.identity, target.identity} and source.identity is not target.identity:
+                # Both are non neutral and we have identity mismatch.
                 return False
 
             ############################################################################################################
@@ -182,7 +180,13 @@ class InputEdge(AbstractEdge):
                     # The Complement operator may have at most one node connected to it.
                     return False
 
-                if source.isItem(Item.RoleNode, Item.RoleInverseNode) and \
+                # See if the source of the node matches an ObjectPropertyExpression ({Role, RoleInv}) or a
+                # DataPropertyExpression (Attribute). If that's the case check for the node not to have any
+                # outgoing Input edge: the only supported expression are NegaiveObjectPropertyAssertion,
+                # R1 ISA NOT R2, and NegativeDataPropertyAssertion, A1 ISA NOT A2. This prevents the connection
+                # of Role expressions to Complement nodes that are given as inputs to Enumeration, Union and
+                # Disjoint Union operatore nodes.
+                if source.isItem(Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode) and \
                     len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x.source is target)) > 0:
                     # If the source of the node is a Role (ObjectPropertyExpression => chain is not included)
                     # check for the node not to have any outgoing Input edge: the only supported expression
