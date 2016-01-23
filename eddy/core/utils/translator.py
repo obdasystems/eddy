@@ -406,7 +406,6 @@ class OWLTranslator(QObject):
 
                 # In this case we just create a mapping using the OWLDataPropertyExpression which
                 # is needed later when we create the ISA between this node and the DataRange.
-                # FIXME: what about exists/cardinality/forall/self?????? OK COSI
                 self.converted[node] = self.buildAttribute(o1)
 
             elif o1.identity is Identity.Role:
