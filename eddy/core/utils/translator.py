@@ -105,9 +105,9 @@ class OWLTranslator(QObject):
         if node not in self.converted:
             if not node.special:
                 self.converted[node] = self.factory.getOWLDataProperty(self.IRI.create(self.ontoIRI, OWLText(node.labelText())))
-            elif node.special is Special.TOP:
+            elif node.special is Special.Top:
                 self.converted[node] = self.factory.getOWLTopDataProperty()
-            elif node.special is Special.BOTTOM:
+            elif node.special is Special.Bottom:
                 self.converted[node] = self.factory.getOWLBottomDataProperty()
         return self.converted[node]
     
@@ -182,9 +182,9 @@ class OWLTranslator(QObject):
         if node not in self.converted:
             if not node.special:
                 self.converted[node] = self.factory.getOWLClass(self.IRI.create(self.ontoIRI, OWLText(node.labelText())))
-            elif node.special is Special.TOP:
+            elif node.special is Special.Top:
                 self.converted[node] = self.factory.getOWLThing()
-            elif node.special is Special.BOTTOM:
+            elif node.special is Special.Bottom:
                 self.converted[node] = self.factory.getOWLNothing()
         return self.converted[node]
     
@@ -226,13 +226,13 @@ class OWLTranslator(QObject):
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(o2))
 
-                if node.restriction is Restriction.self:
+                if node.restriction is Restriction.Self:
                     raise MalformedDiagramError(node, 'unsupported restriction')
-                elif node.restriction is Restriction.exists:
+                elif node.restriction is Restriction.Exists:
                     self.converted[node] = self.factory.getOWLDataSomeValuesFrom(dataPropEx, dataRangeEx)
-                elif node.restriction is Restriction.forall:
+                elif node.restriction is Restriction.Forall:
                     self.converted[node] = self.factory.getOWLDataAllValuesFrom(dataPropEx, dataRangeEx)
-                elif node.restriction is Restriction.cardinality:
+                elif node.restriction is Restriction.Cardinality:
                     HS = self.HashSet()
                     if node.cardinality['min'] is not None:
                         HS.add(self.factory.getOWLDataMinCardinality(node.cardinality['min'], dataPropEx, dataRangeEx))
@@ -274,13 +274,13 @@ class OWLTranslator(QObject):
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(o2))
 
-                if node.restriction is Restriction.self:
+                if node.restriction is Restriction.Self:
                     self.converted[node] = self.factory.getOWLObjectHasSelf(objectPropertyEx)
-                elif node.restriction is Restriction.exists:
+                elif node.restriction is Restriction.Exists:
                     self.converted[node] = self.factory.getOWLObjectSomeValuesFrom(objectPropertyEx, classEx)
-                elif node.restriction is Restriction.forall:
+                elif node.restriction is Restriction.Forall:
                     self.converted[node] = self.factory.getOWLObjectAllValuesFrom(objectPropertyEx, classEx)
-                elif node.restriction is Restriction.cardinality:
+                elif node.restriction is Restriction.Cardinality:
                     HS = self.HashSet()
                     if node.cardinality['min'] is not None:
                         HS.add(self.factory.getOWLObjectMinCardinality(node.cardinality['min'], objectPropertyEx, classEx))
@@ -406,7 +406,7 @@ class OWLTranslator(QObject):
 
                 # In this case we just create a mapping using the OWLDataPropertyExpression which
                 # is needed later when we create the ISA between this node and the DataRange.
-                # FIXME: what about exists/cardinality/forall/self??????
+                # FIXME: what about exists/cardinality/forall/self?????? OK COSI
                 self.converted[node] = self.buildAttribute(o1)
 
             elif o1.identity is Identity.Role:
@@ -436,13 +436,13 @@ class OWLTranslator(QObject):
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(o2))
 
-                if node.restriction is Restriction.self:
+                if node.restriction is Restriction.Self:
                     self.converted[node] = self.factory.getOWLObjectHasSelf(objectPropertyEx)
-                elif node.restriction is Restriction.exists:
+                elif node.restriction is Restriction.Exists:
                     self.converted[node] = self.factory.getOWLObjectSomeValuesFrom(objectPropertyEx, classEx)
-                elif node.restriction is Restriction.forall:
+                elif node.restriction is Restriction.Forall:
                     self.converted[node] = self.factory.getOWLObjectAllValuesFrom(objectPropertyEx, classEx)
-                elif node.restriction is Restriction.cardinality:
+                elif node.restriction is Restriction.Cardinality:
                     HS = self.HashSet()
                     if node.cardinality['min'] is not None:
                         HS.add(self.factory.getOWLObjectMinCardinality(node.cardinality['min'], objectPropertyEx, classEx))
@@ -466,9 +466,9 @@ class OWLTranslator(QObject):
         if node not in self.converted:
             if not node.special:
                 self.converted[node] = self.factory.getOWLObjectProperty(self.IRI.create(self.ontoIRI, OWLText(node.labelText())))
-            elif node.special is Special.TOP:
+            elif node.special is Special.Top:
                 self.converted[node] = self.factory.getOWLTopObjectProperty()
-            elif node.special is Special.BOTTOM:
+            elif node.special is Special.Bottom:
                 self.converted[node] = self.factory.getOWLBottomObjectProperty()
         return self.converted[node]
     
@@ -558,7 +558,7 @@ class OWLTranslator(QObject):
             # FIXME: what about Special.BOTTOM
             if not node.special:
                 self.converted[node] = self.factory.getOWLDatatype(self.OWL2Datatype.valueOf(node.datatype.owlEnum).getIRI())
-            elif node.special is Special.TOP:
+            elif node.special is Special.Top:
                 self.converted[node] = self.factory.getTopDatatype()
         return self.converted[node]
 
@@ -685,8 +685,10 @@ class OWLTranslator(QObject):
                         elif e.source.isItem(Item.RoleNode, Item.RoleInverseNode) and e.target.isItem(Item.RoleNode, Item.RoleInverseNode):
                             self.axioms.add(self.factory.getOWLSubObjectPropertyOfAxiom(self.converted[e.source], self.converted[e.target]))
                     elif e.source.identity is Identity.Attribute and e.target.identity is Identity.Attribute:
-                        # FIXME: what about getOWLDisjointDataPropertiesAxiom???
-                        self.axioms.add(self.factory.getOWLSubDataPropertyOfAxiom(self.converted[e.source], self.converted[e.target]))
+                        if e.source.isItem(Item.ComplementNode) ^ e.target.isItem(Item.ComplementNode):
+                            self.axioms.add(self.factory.getOWLDisjointDataPropertiesAxiom(self.converted[e.source], self.converted[e.target]))
+                        else:
+                            self.axioms.add(self.factory.getOWLSubDataPropertyOfAxiom(self.converted[e.source], self.converted[e.target]))
                     elif e.source.isItem(Item.RangeRestrictionNode) and e.target.identity is Identity.DataRange:
                         self.axioms.add(self.factory.getOWLDataPropertyRangeAxiom(self.converted[e.source], self.converted[e.target]))
                     else:
