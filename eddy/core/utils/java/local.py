@@ -34,11 +34,8 @@
 
 import os
 
-from verlib import NormalizedVersion
-
 from eddy import expandPath
 from eddy.core.exceptions import JVMNotFoundException
-from eddy.core.regex import RE_JAVA_HOME
 
 
 class LocalJVMFinder(object):
@@ -53,27 +50,17 @@ class LocalJVMFinder(object):
         """
         for directory in os.listdir(expandPath('@resources/')):
 
-            # Check if the directory could be a possible JAVA_HOME.
-            m = RE_JAVA_HOME.match(directory)
-            if m:
+            # List unsupported JVMs.
+            non_supported_jvm = {'cacao', 'jamvm'}
 
-                # If the JAVA_HOME is named using the version number check for minimum version.
-                if m.group('major') is not None and m.group('minor') is not None:
-                    if NormalizedVersion.from_parts((m.group('major'), m.group('minor'))) < NormalizedVersion('1.8.0'):
-                        # We need at least JVM 1.8 to run OWL API, so keep searching.
+            # Search the shared library file.
+            for root, _, files in os.walk(os.path.join(expandPath('@resources/'), directory)):
+                if self._libfile in files:
+                    # Found it: check for non supported JVMs.
+                    candidate = os.path.split(root)[1]
+                    if candidate in non_supported_jvm:
+                        # Found unsupported JVM, so keep searching.
                         continue
-
-                # List unsupported JVMs.
-                non_supported_jvm = {'cacao', 'jamvm'}
-
-                # Search the shared library file.
-                for root, _, files in os.walk(os.path.join(expandPath('@resources/'), directory)):
-                    if self._libfile in files:
-                        # Found it: check for non supported JVMs.
-                        candidate = os.path.split(root)[1]
-                        if candidate in non_supported_jvm:
-                            # Found unsupported JVM, so keep searching.
-                            continue
-                        return os.path.join(root, self._libfile)
+                    return os.path.join(root, self._libfile)
 
         raise JVMNotFoundException("No JVM shared library file ({0}) found inside Eddy's path.".format(self._libfile))
