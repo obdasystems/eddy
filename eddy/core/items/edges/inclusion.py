@@ -47,7 +47,6 @@ class InclusionEdge(AbstractEdge):
     This class implements the Inclusion edge.
     """
     item = Item.InclusionEdge
-    name = 'inclusion'
     xmlname = 'inclusion'
 
     def __init__(self, complete=False, **kwargs):

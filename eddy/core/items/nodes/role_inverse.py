@@ -46,7 +46,6 @@ class RoleInverseNode(HexagonNode):
     """
     identities = {Identity.Role}
     item = Item.RoleInverseNode
-    name = 'role inverse'
     xmlname = 'role-inverse'
 
     def __init__(self, brush=None, **kwargs):

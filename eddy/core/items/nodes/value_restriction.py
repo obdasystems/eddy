@@ -59,7 +59,6 @@ class ValueRestrictionNode(AbstractResizableNode):
     item = Item.ValueRestrictionNode
     minheight = 50
     minwidth = 110
-    name = 'value restriction'
     xmlname = 'value-restriction'
 
     def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc', **kwargs):
@@ -73,7 +72,7 @@ class ValueRestrictionNode(AbstractResizableNode):
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.polygon = self.createPolygon(max(width, self.minwidth), max(height, self.minheight), self.foldSize)
-        self.label = Label(self.name, parent=self)
+        self.label = Label('value restriction', parent=self)
         self.label.updatePos()
         self.updateHandlesPos()
 

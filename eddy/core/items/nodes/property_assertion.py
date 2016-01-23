@@ -50,7 +50,6 @@ class PropertyAssertionNode(AbstractNode):
     minheight = 30
     minwidth = 52
     radius = 16
-    name = 'property assertion'
     xmlname = 'property-assertion'
 
     def __init__(self, width=minwidth, height=minheight, brush=None, inputs=None, **kwargs):

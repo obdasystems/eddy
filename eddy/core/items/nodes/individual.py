@@ -63,7 +63,6 @@ class IndividualNode(AbstractResizableNode):
     item = Item.IndividualNode
     minheight = 60
     minwidth = 60
-    name = 'individual'
     xmlname = 'individual'
 
     def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc', **kwargs):
@@ -77,7 +76,7 @@ class IndividualNode(AbstractResizableNode):
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
         self.polygon = self.createPolygon(max(width, self.minwidth), max(height, self.minheight))
-        self.label = Label(self.name, parent=self)
+        self.label = Label('individual', parent=self)
         self.label.updatePos()
         self.updateHandlesPos()
 

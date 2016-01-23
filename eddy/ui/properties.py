@@ -262,7 +262,7 @@ class NodeProperties(QDialog):
         self.typeF = StringEditField(self.generalWidget)
         self.typeF.setEnabled(False)
         self.typeF.setFixedWidth(300)
-        self.typeF.setValue(self.node.name)
+        self.typeF.setValue(self.node.item.label)
 
         self.identityF = StringEditField(self.generalWidget)
         self.identityF.setEnabled(False)

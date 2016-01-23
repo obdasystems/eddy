@@ -48,7 +48,6 @@ class ValueDomainNode(AbstractNode):
     item = Item.ValueDomainNode
     minheight = 40
     minwidth = 90
-    name = 'value domain'
     padding = 16
     radius = 8
     xmlname = 'value-domain'

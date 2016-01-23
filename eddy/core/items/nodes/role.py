@@ -57,7 +57,6 @@ class RoleNode(AbstractResizableNode):
     item = Item.RoleNode
     minheight = 50
     minwidth = 70
-    name = 'role'
     xmlname = 'role'
 
     def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc',special=None, **kwargs):
@@ -75,7 +74,7 @@ class RoleNode(AbstractResizableNode):
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
         self.polygon = self.createPolygon(max(width, self.minwidth), max(height, self.minheight))
-        self.label = Label(self.name, movable=special is None, editable=special is None, parent=self)
+        self.label = Label('role', movable=special is None, editable=special is None, parent=self)
         self.updateHandlesPos()
         self.updateLabelPos()
 

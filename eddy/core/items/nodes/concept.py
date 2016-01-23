@@ -52,7 +52,6 @@ class ConceptNode(AbstractResizableNode):
     item = Item.ConceptNode
     minheight = 50
     minwidth = 110
-    name = 'concept'
     xmlname = 'concept'
 
     def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc', special=None, **kwargs):
@@ -70,7 +69,7 @@ class ConceptNode(AbstractResizableNode):
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.polygon = self.createRect(max(width, self.minwidth), max(height, self.minheight))
-        self.label = Label(self.name, movable=special is None, editable=special is None, parent=self)
+        self.label = Label('concept', movable=special is None, editable=special is None, parent=self)
         self.label.setText(self._special.value if self._special else self.label.text())
         self.updateHandlesPos()
         self.updateLabelPos()

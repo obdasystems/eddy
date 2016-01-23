@@ -45,7 +45,6 @@ class DomainRestrictionNode(SquaredNode):
     """
     identities = {Identity.Concept}
     item = Item.DomainRestrictionNode
-    name = 'domain restriction'
     xmlname = 'domain-restriction'
 
     def __init__(self, brush=None, **kwargs):

@@ -48,7 +48,6 @@ class AttributeNode(AbstractNode):
     """
     identities = {Identity.Attribute}
     item = Item.AttributeNode
-    name = 'attribute'
     xmlname = 'attribute'
 
     def __init__(self, width=20, height=20, brush='#fcfcfc', special=None, **kwargs):
@@ -66,7 +65,7 @@ class AttributeNode(AbstractNode):
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
         self.polygon = self.createRect(20, 20)
-        self.label = Label(self.name, centered=False, editable=special is None, parent=self)
+        self.label = Label('attribute', centered=False, editable=special is None, parent=self)
         self.label.updatePos()
 
     ####################################################################################################################

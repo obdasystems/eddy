@@ -371,14 +371,19 @@ class Item(IntEnum):
     The enum is ordered according to Graphol elements' classes.
     Changing the order of the enum elements will affect node properties results such as 'predicate' and 'constructor'.
     """
-    # PREDICATES
+    __order__ = 'ConceptNode AttributeNode RoleNode ValueDomainNode IndividualNode ValueRestrictionNode' \
+                'DomainRestrictionNode RangeRestrictionNode UnionNode EnumerationNode ComplementNode RoleChainNode' \
+                'RoleInverseNode DatatypeRestrictionNode DisjointUnionNode PropertyAssertionNode InclusionEdge' \
+                'InputEdge InstanceOfEdge LabelEdge LabelNode Undefined'
+
+    Undefined = 0
+
     ConceptNode = 1
     AttributeNode = 2
     RoleNode = 3
     ValueDomainNode = 4
     IndividualNode = 5
     ValueRestrictionNode = 6
-    # CONSTRUCTORS
     DomainRestrictionNode = 7
     RangeRestrictionNode = 8
     UnionNode = 9
@@ -390,13 +395,31 @@ class Item(IntEnum):
     DatatypeRestrictionNode = 15
     DisjointUnionNode = 16
     PropertyAssertionNode = 17
-    # EDGES
+
     InclusionEdge = 18
     InputEdge = 19
     InstanceOfEdge = 20
-    # LABELS
+
     LabelEdge = 21
     LabelNode = 22
+
+
+    @DynamicClassAttribute
+    def label(self):
+        """The label of the Enum member."""
+        return {
+            Item.AttributeNode: 'attribute node', Item.ComplementNode: 'complement node',
+            Item.ConceptNode: 'concept node', Item.DatatypeRestrictionNode: 'datatype restriction node',
+            Item.DisjointUnionNode: 'disjoint union node', Item.DomainRestrictionNode: 'domain restriction node',
+            Item.EnumerationNode: 'enumeration node', Item.IndividualNode: 'individual node',
+            Item.IntersectionNode: 'intersection node', Item.PropertyAssertionNode: 'property assertion node',
+            Item.RangeRestrictionNode: 'range restriction node', Item.RoleNode: 'role node',
+            Item.RoleChainNode: 'role chain node', Item.RoleInverseNode: 'role inverse node',
+            Item.UnionNode: 'union node', Item.ValueDomainNode: 'value domain node',
+            Item.ValueRestrictionNode: 'value restriction node', Item.InclusionEdge: 'inclusion edge',
+            Item.InputEdge: 'input edge', Item.InstanceOfEdge: 'instanceOf edge',
+            Item.LabelNode: 'node label', Item.LabelEdge: 'edge label', Item.Undefined: 'undefined item',
+        }[self]
 
 
 @unique

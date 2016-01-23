@@ -38,7 +38,7 @@ from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
 from PyQt5.QtWidgets import QMenu
 
-from eddy.core.datatypes import DiagramMode, Item, Identity, Restriction
+from eddy.core.datatypes import DiagramMode, Item
 from eddy.core.items.edges.common.base import AbstractEdge
 from eddy.core.items.edges.common.label import Label
 
@@ -51,7 +51,6 @@ class InputEdge(AbstractEdge):
     headBrush = QColor(252, 252, 252)
     headSize = 10
     item = Item.InputEdge
-    name = 'input'
     shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.CustomDashLine, Qt.RoundCap, Qt.RoundJoin)
     shapePen.setDashPattern([5, 5])
     xmlname = 'input'

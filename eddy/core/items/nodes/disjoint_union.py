@@ -46,7 +46,6 @@ class DisjointUnionNode(HexagonNode):
     """
     identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
     item = Item.DisjointUnionNode
-    name = 'disjoint union'
     xmlname = 'disjoint-union'
 
     def __init__(self, brush=None, **kwargs):

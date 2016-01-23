@@ -56,7 +56,6 @@ class AbstractEdge(AbstractItem):
     headPen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     headBrush = QColor(0, 0, 0)
     headSize = 12
-    name = 'edge'
     prefix = 'e'
     selectionBrush = QColor(251, 255, 148)
     selectionSize = 6

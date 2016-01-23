@@ -46,7 +46,6 @@ class DatatypeRestrictionNode(HexagonNode):
     """
     identities = {Identity.DataRange}
     item = Item.DatatypeRestrictionNode
-    name = 'datatype restriction'
     xmlname = 'datatype-restriction'
 
     def __init__(self, brush=None, **kwargs):

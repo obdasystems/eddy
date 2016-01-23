@@ -47,7 +47,6 @@ class EnumerationNode(HexagonNode):
     """
     identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
     item = Item.EnumerationNode
-    name = 'enumeration'
     xmlname = 'enumeration'
 
     def __init__(self, brush=None, **kwargs):

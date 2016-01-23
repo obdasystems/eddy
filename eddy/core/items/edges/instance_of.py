@@ -50,7 +50,6 @@ class InstanceOfEdge(AbstractEdge):
     This class implements the InstanceOf edge.
     """
     item = Item.InstanceOfEdge
-    name = 'instanceOf'
     xmlname = 'instance-of'
 
     def __init__(self, **kwargs):

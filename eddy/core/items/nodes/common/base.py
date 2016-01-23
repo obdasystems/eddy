@@ -52,7 +52,6 @@ class AbstractNode(AbstractItem):
     __metaclass__ = ABCMeta
 
     identities = {} # a set of identities this node may assume
-    name = 'node' # a string identifying this node
     prefix = 'n' # prefix to be prepended to node ids
     brushConnectionBad = QBrush(QColor(179, 12, 12, 160)) # brush used to highlight wrong connections
     brushConnectionOk = QBrush(QColor(43, 173, 63, 160)) # brush used to highlight good connections

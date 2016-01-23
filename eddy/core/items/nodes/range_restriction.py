@@ -46,7 +46,6 @@ class RangeRestrictionNode(SquaredNode):
     """
     identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
     item = Item.RangeRestrictionNode
-    name = 'range restriction'
     xmlname = 'range-restriction'
 
     def __init__(self, brush=None, **kwargs):

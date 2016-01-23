@@ -47,7 +47,6 @@ class ComplementNode(HexagonNode):
     """
     identities = {Identity.Attribute, Identity.Concept, Identity.Role, Identity.DataRange, Identity.Neutral}
     item = Item.ComplementNode
-    name = 'complement'
     xmlname = 'complement'
 
     def __init__(self, brush=None, **kwargs):

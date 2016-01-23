@@ -47,7 +47,6 @@ class IntersectionNode(HexagonNode):
     """
     identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
     item = Item.IntersectionNode
-    name = 'intersection'
     xmlname = 'intersection'
 
     def __init__(self, brush=None, **kwargs):

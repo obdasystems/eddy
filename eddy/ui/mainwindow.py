@@ -834,7 +834,7 @@ class MainWindow(QMainWindow):
                 nodes = {x for x in items if x.node}
                 edges = {x for x in items if x.edge}
                 kwargs = {
-                    'name': 'compose functional {}'.format(node.name),
+                    'name': 'compose functional {}'.format(node.item.label),
                     'scene': scene,
                     'source': node,
                     'nodes': nodes,
@@ -857,7 +857,7 @@ class MainWindow(QMainWindow):
                 nodes = {x for x in items if x.node}
                 edges = {x for x in items if x.edge}
                 kwargs = {
-                    'name': 'compose inverse functional {}'.format(node.name),
+                    'name': 'compose inverse functional {}'.format(node.item.label),
                     'scene': scene,
                     'source': node,
                     'nodes': nodes,
@@ -915,7 +915,7 @@ class MainWindow(QMainWindow):
                 nodes = {x for x in items if x.node}
                 edges = {x for x in items if x.edge}
                 kwargs = {
-                    'name': 'compose {} property domain'.format(node.name),
+                    'name': 'compose {} property domain'.format(node.item.label),
                     'scene': scene,
                     'source': node,
                     'nodes': nodes,
@@ -938,7 +938,7 @@ class MainWindow(QMainWindow):
                 nodes = {x for x in items if x.node}
                 edges = {x for x in items if x.edge}
                 kwargs = {
-                    'name': 'compose {} property range'.format(node.name),
+                    'name': 'compose {} property range'.format(node.item.label),
                     'scene': scene,
                     'source': node,
                     'nodes': nodes,

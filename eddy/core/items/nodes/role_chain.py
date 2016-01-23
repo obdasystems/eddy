@@ -48,7 +48,6 @@ class RoleChainNode(HexagonNode):
     """
     identities = {Identity.Role}
     item = Item.RoleChainNode
-    name = 'role chain'
     xmlname = 'role-chain'
 
     def __init__(self, brush=None, inputs=None, **kwargs):

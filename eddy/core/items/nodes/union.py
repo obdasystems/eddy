@@ -47,7 +47,6 @@ class UnionNode(HexagonNode):
     """
     identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
     item = Item.UnionNode
-    name = 'union'
     xmlname = 'union'
 
     def __init__(self, brush=None, **kwargs):
