@@ -32,17 +32,16 @@
 ##########################################################################
 
 
-import jpype
 import os
 
+import jpype
+from PyQt5.QtCore import QObject, pyqtSlot
 from memoized_property import memoized_property
 from verlib import NormalizedVersion
 
-from PyQt5.QtCore import QObject, pyqtSlot
-
 from eddy import expandPath
-from eddy.core.decorators import memoized
 from eddy.core.datatypes import Platform
+from eddy.core.decorators import memoized
 from eddy.core.regex import RE_JAVA_VERSION
 
 
@@ -72,13 +71,13 @@ class JVM(QObject):
         """
         platform = Platform.identify()
         if platform is Platform.Windows:
-            from eddy.core.java.windows import WindowsJVMFinder_
+            from eddy.core.utils.java.windows import WindowsJVMFinder_
             finder = WindowsJVMFinder_()
         elif platform is Platform.Darwin:
-            from eddy.core.java.darwin import DarwinJVMFinder_
+            from eddy.core.utils.java.darwin import DarwinJVMFinder_
             finder = DarwinJVMFinder_()
         else:
-            from eddy.core.java.linux import LinuxJVMFinder_
+            from eddy.core.utils.java.linux import LinuxJVMFinder_
             finder = LinuxJVMFinder_()
         return finder.get_jvm_path()
 

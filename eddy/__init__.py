@@ -48,17 +48,16 @@ PROJECT_HOME = 'https://github.com/danielepantaleone/eddy'
 GRAPHOL_HOME = 'http://www.dis.uniroma1.it/~graphol/'
 
 
-from verlib import NormalizedVersion
-
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QApplication
+
+from verlib import NormalizedVersion
 
 from eddy.core.exceptions import JVMNotSupportedException
 from eddy.core.functions.fsystem import expandPath
 from eddy.core.functions.misc import QSS
 from eddy.core.functions.signals import connect
-from eddy.core.java import JVM
-
+from eddy.core.utils.java import JVM
 from eddy.ui.mainwindow import MainWindow
 from eddy.ui.styles import Style
 

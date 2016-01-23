@@ -34,7 +34,7 @@
 
 from jpype._linux import LinuxJVMFinder
 
-from eddy.core.java.local import LocalJVMFinder
+from eddy.core.utils.java.local import LocalJVMFinder
 
 
 class LinuxJVMFinder_(LinuxJVMFinder, LocalJVMFinder):

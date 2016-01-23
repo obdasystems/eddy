@@ -32,14 +32,14 @@
 ##########################################################################
 
 
-from jpype._darwin import DarwinJVMFinder
+from jpype._windows import WindowsJVMFinder
 
-from eddy.core.java.local import LocalJVMFinder
+from eddy.core.utils.java.local import LocalJVMFinder
 
 
-class DarwinJVMFinder_(DarwinJVMFinder, LocalJVMFinder):
+class WindowsJVMFinder_(WindowsJVMFinder, LocalJVMFinder):
     """
-    Mac OS JVM library finder class.
+    Windows JVM library finder class.
     """
     def __init__(self):
         """
@@ -49,11 +49,8 @@ class DarwinJVMFinder_(DarwinJVMFinder, LocalJVMFinder):
         self._methods = [
             self._get_from_local_path,
             self._get_from_java_home,
-            self._get_from_bin,
-            self._get_from_known_locations,
-            self._pre_vm7_path,
-            self._javahome_binary
+            self._get_from_registry
         ]
 
 
-JVMFinder = DarwinJVMFinder_
+JVMFinder = WindowsJVMFinder_
