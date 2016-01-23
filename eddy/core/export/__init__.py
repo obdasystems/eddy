@@ -32,5 +32,4 @@
 ##########################################################################
 
 
-from eddy.core.utils.clipboard import Clipboard
-from eddy.core.utils.guid import GUID
+from eddy.core.export.owl import OWLExporter

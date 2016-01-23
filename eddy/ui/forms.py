@@ -42,8 +42,8 @@ from PyQt5.QtWidgets import QMessageBox, QSpacerItem, QSizePolicy
 from eddy import BUG_TRACKER
 from eddy.core.datatypes import File, OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
+from eddy.core.export import OWLExporter
 from eddy.core.functions import isEmpty, connect, openPath
-from eddy.core.utils import OWLTranslator
 
 from eddy.ui.fields import IntEditField, StringEditField, ComboBox
 from eddy.ui.view import MainView
@@ -339,7 +339,7 @@ class OWLTranslationForm(QDialog):
             ontoIRI = '{0}#'.format(ontoIRI)
 
         self.workerThread = QThread()
-        self.worker = OWLTranslator(scene=self.scene, ontoIRI=ontoIRI, ontoPrefix=ontoPrefix)
+        self.worker = OWLExporter(scene=self.scene, ontoIRI=ontoIRI, ontoPrefix=ontoPrefix)
         self.worker.moveToThread(self.workerThread)
 
         connect(self.worker.completed, self.completed)

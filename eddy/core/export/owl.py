@@ -42,9 +42,9 @@ from eddy.core.exceptions import MalformedDiagramError
 from eddy.core.functions import clamp, OWLText
 
 
-class OWLTranslator(QObject):
+class OWLExporter(QObject):
     """
-    This class can be used to translate Graphol diagrams into OWL ontologies.
+    This class can be used to export Graphol diagrams into OWL ontologies.
     Due to the deep usage of Java OWL api the worker method of this class should be run in a separate thread.
     It has not been implemented as a QThread so it's possible to change Thread affinity at runtime.
     For more information see: http://doc.qt.io/qt-5/qobject.html#moveToThread
@@ -71,7 +71,7 @@ class OWLTranslator(QObject):
 
         self.count = 0
         self.total = len(scene.nodes()) + len(scene.edges())
-        
+
         self.AddAxiom = jpype.JClass('org.semanticweb.owlapi.model.AddAxiom')
         self.ByteArrayOutputStream = jpype.JClass('java.io.ByteArrayOutputStream')
         self.FunctionalSyntaxDocumentFormat = jpype.JClass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
@@ -95,7 +95,7 @@ class OWLTranslator(QObject):
     #   NODES PRE-PROCESSING                                                                                           #
     #                                                                                                                  #
     ####################################################################################################################
-        
+
     def buildAttribute(self, node):
         """
         Build and returns a OWL attribute using the given Graphol node.
@@ -110,7 +110,7 @@ class OWLTranslator(QObject):
             elif node.special is Special.Bottom:
                 self.converted[node] = self.factory.getOWLBottomDataProperty()
         return self.converted[node]
-    
+
     def buildComplement(self, node):
         """
         Build and returns a OWL complement using the given Graphol node
@@ -172,7 +172,7 @@ class OWLTranslator(QObject):
                     self.converted[node] = self.buildRoleInverse(operand)
 
         return self.converted[node]
-    
+
     def buildConcept(self, node):
         """
         Build and returns a OWL concept using the given Graphol node.
@@ -187,7 +187,7 @@ class OWLTranslator(QObject):
             elif node.special is Special.Bottom:
                 self.converted[node] = self.factory.getOWLNothing()
         return self.converted[node]
-    
+
     def buildDomainRestriction(self, node):
         """
         Build and returns a OWL domain restriction using the given Graphol node.
@@ -294,7 +294,7 @@ class OWLTranslator(QObject):
                         self.converted[node] = HS.iterator().next()
 
         return self.converted[node]
-    
+
     def buildEnumeration(self, node):
         """
         Build and returns a OWL enumeration using the given Graphol node.
@@ -311,7 +311,7 @@ class OWLTranslator(QObject):
                 raise MalformedDiagramError(node, 'missing operand(s)')
             self.converted[node] = self.factory.getOWLObjectOneOf(collection)
         return self.converted[node]
-    
+
     def buildIndividual(self, node):
         """
         Build and returns a OWL individual using the given Graphol node.
@@ -322,7 +322,7 @@ class OWLTranslator(QObject):
         if node not in self.converted:
             self.converted[node] = self.factory.getOWLNamedIndividual(self.IRI.create(self.ontoIRI, OWLText(node.labelText())))
         return self.converted[node]
-    
+
     def buildIntersection(self, node):
         """
         Build and returns a OWL intersection using the given Graphol node.
@@ -470,7 +470,7 @@ class OWLTranslator(QObject):
             elif node.special is Special.Bottom:
                 self.converted[node] = self.factory.getOWLBottomObjectProperty()
         return self.converted[node]
-    
+
     def buildRoleChain(self, node):
         """
         Constructs and returns a chain of OWLObjectExpression (OPE => Role & RoleInverse).
@@ -490,7 +490,7 @@ class OWLTranslator(QObject):
                     collection.add(self.buildRoleInverse(x))
             self.converted[node] = collection
         return self.converted[node]
-    
+
     def buildRoleInverse(self, node):
         """
         Build and returns a OWL role inverse using the given Graphol node.

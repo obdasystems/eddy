@@ -36,9 +36,9 @@ from mockito import when
 
 from eddy.core.datatypes import OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
+from eddy.core.export import OWLExporter
 from eddy.core.functions import expandPath, isEmpty
 from eddy.core.items import ConceptNode, RoleNode, InclusionEdge, AttributeNode, RangeRestrictionNode, InputEdge
-from eddy.core.utils import OWLTranslator
 from tests import EddyTestCase
 
 
@@ -78,7 +78,7 @@ class Test_Translation(EddyTestCase):
         # GIVEN
         self.init('@examples/Animals.graphol')
         # WHEN
-        translator = OWLTranslator(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
+        translator = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
         translator.work()
         # THEN
         translation = translator.export(OWLSyntax.Functional)
@@ -89,7 +89,7 @@ class Test_Translation(EddyTestCase):
         # GIVEN
         self.init('@examples/Family.graphol')
         # WHEN
-        translator = OWLTranslator(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
+        translator = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
         translator.work()
         # THEN
         translation = translator.export(OWLSyntax.Functional)
@@ -100,7 +100,7 @@ class Test_Translation(EddyTestCase):
         # GIVEN
         self.init('@examples/Pizza.graphol')
         # WHEN
-        translator = OWLTranslator(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
+        translator = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
         translator.work()
         # THEN
         translation = translator.export(OWLSyntax.Functional)
@@ -123,7 +123,7 @@ class Test_Translation(EddyTestCase):
         self.scene.addItem(n1)
         self.scene.addItem(e0)
         # WHEN
-        translator = OWLTranslator(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
+        translator = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
         # THEN
         self.assertRaises(MalformedDiagramError, translator.run)
 
@@ -137,7 +137,7 @@ class Test_Translation(EddyTestCase):
         self.scene.addItem(n1)
         self.scene.addItem(e0)
         # WHEN
-        translator = OWLTranslator(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
+        translator = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
         # THEN
         self.assertRaises(MalformedDiagramError, translator.run)
 
@@ -151,6 +151,6 @@ class Test_Translation(EddyTestCase):
         self.scene.addItem(n1)
         self.scene.addItem(e0)
         # WHEN
-        translator = OWLTranslator(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
+        translator = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
         # THEN
         self.assertRaises(MalformedDiagramError, translator.run)
