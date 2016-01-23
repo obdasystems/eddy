@@ -646,23 +646,8 @@ class OWLTranslator(QObject):
         for n in self.scene.nodes():
 
             if n.isItem(Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.ValueDomainNode):
-
                 self.axioms.add(self.factory.getOWLDeclarationAxiom(self.converted[n]))
-
-                if n.isItem(Item.RoleNode):
-                    if n.symmetric:
-                        self.axioms.add(self.factory.getOWLSymmetricObjectPropertyAxiom(self.converted[n]))
-                    elif n.asymmetric:
-                        self.axioms.add(self.factory.getOWLAsymmetricObjectPropertyAxiom(self.converted[n]))
-                    if n.reflexive:
-                        self.axioms.add(self.factory.getOWLReflexiveObjectPropertyAxiom(self.converted[n]))
-                    elif n.irreflexive:
-                        self.axioms.add(self.factory.getOWLIrreflexiveObjectPropertyAxiom(self.converted[n]))
-                    if n.transitive:
-                        self.axioms.add(self.factory.getOWLTransitiveObjectPropertyAxiom(self.converted[n]))
-
             elif n.isItem(Item.DisjointUnionNode):
-
                 HS = self.HashSet()
                 for j in n.incomingNodes(lambda x: x.isItem(Item.InputEdge)):
                     HS.add(self.converted[j])
