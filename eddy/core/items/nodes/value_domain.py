@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath
 
-from eddy.core.datatypes import Font, Item, XsdDatatype, Special, DiagramMode, Identity
+from eddy.core.datatypes import Font, Item, XsdDatatype, DiagramMode, Identity
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import Label
 
@@ -54,18 +54,14 @@ class ValueDomainNode(AbstractNode):
     xmlname = 'value-domain'
 
     # noinspection PyTypeChecker
-    def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc', special=None, **kwargs):
+    def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc', **kwargs):
         """
         Initialize the Value-Domain node.
         :type width: int
         :type height: int
         :type brush: T <= QBrush | QColor | Color | tuple | list | bytes | unicode
-        :type special: Special
         """
         super().__init__(**kwargs)
-
-        self._special = special
-
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.datatype = XsdDatatype.string
@@ -95,24 +91,6 @@ class ValueDomainNode(AbstractNode):
         """
         pass
 
-    @property
-    def special(self):
-        """
-        Returns the special type of this node.
-        :rtype: Special
-        """
-        return self._special
-
-    @special.setter
-    def special(self, special):
-        """
-        Set the special type of this node.
-        :type special: Special
-        """
-        self._special = special
-        self.label.setText(self._special.value if self._special else self.datatype.value)
-        self.updateRect()
-
     ####################################################################################################################
     #                                                                                                                  #
     #   INTERFACE                                                                                                      #
@@ -127,19 +105,11 @@ class ValueDomainNode(AbstractNode):
         scene = self.scene()
         menu = super().contextMenu()
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
-
-        if not self.special:
-            menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeValueDomainDatatype)
-            # switch the check matching the current datatype
-            for action in scene.mainwindow.actionsChangeValueDomainDatatype:
-                action.setChecked(self.datatype == action.data())
-
-        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeSpecial)
-        # switch the check on the currently active special
-        for action in scene.mainwindow.actionsNodeSetSpecial:
-            action.setChecked(self.special is action.data())
-
+        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeValueDomainDatatype)
         menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
+        # switch the check matching the current datatype
+        for action in scene.mainwindow.actionsChangeValueDomainDatatype:
+            action.setChecked(self.datatype == action.data())
         return menu
 
     def copy(self, scene):
@@ -153,7 +123,6 @@ class ValueDomainNode(AbstractNode):
             'height': self.height(),
             'id': self.id,
             'scene': scene,
-            'special': self.special,
             'url': self.url,
             'width': self.width(),
         }
@@ -229,7 +198,6 @@ class ValueDomainNode(AbstractNode):
             'height': int(G.attribute('height')),
             'id': E.attribute('id'),
             'scene': scene,
-            'special': Special.forValue(L.text()),
             'url': U.text(),
             'width': int(G.attribute('width')),
         }
@@ -348,15 +316,9 @@ class ValueDomainNode(AbstractNode):
         :raise ParseError: if an invalid datatype is given.
         :type text: T <= bytes | unicode
         """
-        special = Special.forValue(text)
-        if special:
-            self.special = special
-            self.updateRect()
-        else:
-            datatype = XsdDatatype.forValue(text) or XsdDatatype.string
-            self.label.setText(datatype.value)
-            self.special = None
-            self.updateRect()
+        datatype = XsdDatatype.forValue(text) or XsdDatatype.string
+        self.label.setText(datatype.value)
+        self.updateRect()
 
     def updateLabelPos(self, *args, **kwargs):
         """
