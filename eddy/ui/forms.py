@@ -140,7 +140,7 @@ class RenameForm(QDialog):
 
         connect(self.buttonBox.accepted, self.validate)
         connect(self.buttonBox.rejected, self.reject)
-        connect(self.renameField.textChanged, self.textChanged)
+        connect(self.renameField.textChanged, self.nameChanged)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -149,7 +149,7 @@ class RenameForm(QDialog):
     ####################################################################################################################
 
     @pyqtSlot()
-    def textChanged(self):
+    def nameChanged(self):
         """
         Executed whenever the text in the rename field changes.
         """
@@ -229,8 +229,7 @@ class OWLTranslationForm(QDialog):
 
         connect(self.buttonBox.accepted, self.run)
         connect(self.buttonBox.rejected, self.reject)
-        connect(self.iriField.textChanged, self.refresh)
-        connect(self.prefixField.textChanged, self.refresh)
+        connect(self.prefixField.textChanged, self.prefixChanged)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -318,13 +317,12 @@ class OWLTranslationForm(QDialog):
         self.progressBar.setValue(current)
 
     @pyqtSlot()
-    def refresh(self):
+    def prefixChanged(self):
         """
-        Executed whenever the value of the text fields changes.
+        Executed whenever the value of the prefix field changes.
         """
-        enable = not isEmpty(self.iriField.value()) and not isEmpty(self.prefixField.value())
         button = self.buttonBox.button(QDialogButtonBox.Ok)
-        button.setEnabled(enable)
+        button.setEnabled(not isEmpty(self.prefixField.value()))
 
     @pyqtSlot()
     def run(self):
