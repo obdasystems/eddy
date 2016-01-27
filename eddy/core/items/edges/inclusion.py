@@ -95,17 +95,18 @@ class InclusionEdge(AbstractEdge):
         menu = QMenu()
         scene = self.scene()
         breakpoint = self.breakpointAt(pos)
+        mainwindow = scene.mainwindow
         if breakpoint is not None:
-            action = scene.mainwindow.actionRemoveEdgeBreakpoint
+            action = mainwindow.actionRemoveEdgeBreakpoint
             action.setData((self, breakpoint))
             menu.addAction(action)
         else:
-            menu.addAction(scene.mainwindow.actionDelete)
-            menu.addAction(scene.mainwindow.actionSwapEdge)
+            menu.addAction(mainwindow.actionDelete)
+            menu.addAction(mainwindow.actionSwapEdge)
             menu.addSeparator()
-            menu.addAction(scene.mainwindow.actionToggleEdgeComplete)
-            scene.mainwindow.actionSwapEdge.setVisible(scene.validator.valid(self.target, self, self.source))
-            scene.mainwindow.actionToggleEdgeComplete.setChecked(self.complete)
+            menu.addAction(mainwindow.actionToggleEdgeComplete)
+            mainwindow.actionSwapEdge.setVisible(scene.validator.valid(self.target, self, self.source))
+            mainwindow.actionToggleEdgeComplete.setChecked(self.complete)
         return menu
 
     def copy(self, scene):

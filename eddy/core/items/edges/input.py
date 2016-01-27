@@ -104,17 +104,18 @@ class InputEdge(AbstractEdge):
         menu = QMenu()
         scene = self.scene()
         breakpoint = self.breakpointAt(pos)
+        mainwindow = scene.mainwindow
         if breakpoint is not None:
-            action = scene.mainwindow.actionRemoveEdgeBreakpoint
+            action = mainwindow.actionRemoveEdgeBreakpoint
             action.setData((self, breakpoint))
             menu.addAction(action)
         else:
-            menu.addAction(scene.mainwindow.actionDelete)
-            menu.addAction(scene.mainwindow.actionSwapEdge)
+            menu.addAction(mainwindow.actionDelete)
+            menu.addAction(mainwindow.actionSwapEdge)
             menu.addSeparator()
-            menu.addAction(scene.mainwindow.actionToggleEdgeFunctional)
-            scene.mainwindow.actionSwapEdge.setVisible(scene.validator.valid(self.target, self, self.source))
-            scene.mainwindow.actionToggleEdgeFunctional.setChecked(self.functional)
+            menu.addAction(mainwindow.actionToggleEdgeFunctional)
+            mainwindow.actionSwapEdge.setVisible(scene.validator.valid(self.target, self, self.source))
+            mainwindow.actionToggleEdgeFunctional.setChecked(self.functional)
         return menu
 
     def copy(self, scene):

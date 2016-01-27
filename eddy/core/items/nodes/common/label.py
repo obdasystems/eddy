@@ -163,7 +163,8 @@ class Label(LabelItem):
         if self.movable and self.moved:
             parent = self.parentItem()
             scene = parent.scene()
-            collection.append(scene.mainwindow.actionResetLabelPosition)
+            mainwindow = scene.mainwindow
+            collection.append(mainwindow.actionResetLabelPosition)
         return collection
 
     def defaultPos(self):

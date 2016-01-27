@@ -222,17 +222,18 @@ class AbstractNode(AbstractItem):
         :rtype: QMenu
         """
         scene = self.scene()
+        mainwindow = scene.mainwindow
         menu = QMenu()
-        menu.addAction(scene.mainwindow.actionDelete)
+        menu.addAction(mainwindow.actionDelete)
         menu.addSeparator()
-        menu.addAction(scene.mainwindow.actionCut)
-        menu.addAction(scene.mainwindow.actionCopy)
-        menu.addAction(scene.mainwindow.actionPaste)
+        menu.addAction(mainwindow.actionCut)
+        menu.addAction(mainwindow.actionCopy)
+        menu.addAction(mainwindow.actionPaste)
         menu.addSeparator()
-        menu.addAction(scene.mainwindow.actionBringToFront)
-        menu.addAction(scene.mainwindow.actionSendToBack)
+        menu.addAction(mainwindow.actionBringToFront)
+        menu.addAction(mainwindow.actionSendToBack)
         menu.addSeparator()
-        menu.addAction(scene.mainwindow.actionOpenNodeProperties)
+        menu.addAction(mainwindow.actionOpenNodeProperties)
         return menu
 
     @abstractmethod

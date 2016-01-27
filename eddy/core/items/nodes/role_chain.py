@@ -108,12 +108,13 @@ class RoleChainNode(HexagonNode):
         """
         menu = super().contextMenu()
         scene = self.scene()
+        mainwindow = scene.mainwindow
         if self.edges:
             from eddy.core.items import ComplementNode, RoleInverseNode
             switch = {ComplementNode, RoleChainNode, RoleInverseNode}
             if len([e for e in self.edges if e.isItem(Item.InputEdge) and e.target is self]) > 1:
                 switch = {RoleChainNode}
-            for action in scene.mainwindow.actionsSwitchHexagonNode:
+            for action in mainwindow.actionsSwitchHexagonNode:
                 action.setVisible(action.data() in switch)
         return menu
 

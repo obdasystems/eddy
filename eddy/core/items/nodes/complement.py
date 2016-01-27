@@ -106,6 +106,7 @@ class ComplementNode(HexagonNode):
         """
         menu = super().contextMenu()
         scene = self.scene()
+        mainwindow = scene.mainwindow
         if self.edges:
 
             if self.identity is Identity.Role:
@@ -114,7 +115,7 @@ class ComplementNode(HexagonNode):
             else:
                 from eddy.core.items import DisjointUnionNode, IntersectionNode, UnionNode
                 switch = {ComplementNode, DisjointUnionNode, IntersectionNode, UnionNode}
-            for action in scene.mainwindow.actionsSwitchHexagonNode:
+            for action in mainwindow.actionsSwitchHexagonNode:
                 action.setVisible(action.data() in switch)
 
         return menu

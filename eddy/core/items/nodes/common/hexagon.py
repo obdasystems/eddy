@@ -103,15 +103,16 @@ class HexagonNode(AbstractNode):
         :rtype: QMenu
         """
         scene = self.scene()
+        mainwindow = scene.mainwindow
         menu = super().contextMenu()
-        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuHexagonNodeSwitch)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuHexagonNodeSwitch)
 
         # switch the check matching the current node
-        for action in scene.mainwindow.actionsSwitchHexagonNode:
+        for action in mainwindow.actionsSwitchHexagonNode:
             action.setChecked(isinstance(self, action.data()))
             action.setVisible(True)
 
-        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
+        menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         return menu
 
     def height(self):

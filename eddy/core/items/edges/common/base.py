@@ -317,13 +317,14 @@ class AbstractEdge(AbstractItem):
         menu = QMenu()
         scene = self.scene()
         breakpoint = self.breakpointAt(pos)
+        mainwindow = scene.mainwindow
         if breakpoint is not None:
-            action = scene.mainwindow.actionRemoveEdgeBreakpoint
+            action = mainwindow.actionRemoveEdgeBreakpoint
             action.setData((self, breakpoint))
             menu.addAction(action)
         else:
-            menu.addAction(scene.mainwindow.actionDelete)
-            menu.addAction(scene.mainwindow.actionSwapEdge)
+            menu.addAction(mainwindow.actionDelete)
+            menu.addAction(mainwindow.actionSwapEdge)
         return menu
 
     def moveBy(self, x, y):

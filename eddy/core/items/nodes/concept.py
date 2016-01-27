@@ -128,26 +128,27 @@ class ConceptNode(AbstractResizableNode):
         """
         scene = self.scene()
 
+        mainwindow = scene.mainwindow
         menu = super().contextMenu()
-        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeRefactor)
-        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
-        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeSpecial)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeNodeBrush)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeSpecial)
 
         # Switch the check on the currently active special
-        for action in scene.mainwindow.actionsNodeSetSpecial:
+        for action in mainwindow.actionsNodeSetSpecial:
             action.setChecked(self.special is action.data())
 
         # Disable refactor name if special type is set
-        scene.mainwindow.actionRefactorName.setEnabled(self.special is None)
+        mainwindow.actionRefactorName.setEnabled(self.special is None)
 
         if not self.special:
             collection = self.label.contextMenuAdd()
             if collection:
-                menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
+                menu.insertSeparator(mainwindow.actionOpenNodeProperties)
                 for action in collection:
-                    menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
+                    menu.insertAction(mainwindow.actionOpenNodeProperties, action)
 
-        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
+        menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):

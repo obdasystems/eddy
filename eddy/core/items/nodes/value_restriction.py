@@ -110,17 +110,18 @@ class ValueRestrictionNode(AbstractResizableNode):
         :rtype: QMenu
         """
         scene = self.scene()
+        mainwindow = scene.mainwindow
         menu = super().contextMenu()
-        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuNodeRefactor)
-        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeNodeBrush)
 
         collection = self.label.contextMenuAdd()
         if collection:
-            menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
+            menu.insertSeparator(mainwindow.actionOpenNodeProperties)
             for action in collection:
-                menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
+                menu.insertAction(mainwindow.actionOpenNodeProperties, action)
 
-        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
+        menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         return menu
 
     def copy(self, scene):

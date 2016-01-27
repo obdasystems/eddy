@@ -92,6 +92,7 @@ class RangeRestrictionNode(SquaredNode):
         :rtype: QMenu
         """
         scene = self.scene()
+        mainwindow = scene.mainwindow
 
         f1 = lambda x: x.isItem(Item.InputEdge)
         f2 = lambda x: x.identity is Identity.Attribute
@@ -101,8 +102,8 @@ class RangeRestrictionNode(SquaredNode):
         # Allow to change the restriction type only if it's not an Attribute range restriction
         if not next(iter(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None):
             menu.addSeparator()
-            menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRestrictionChange)
-            for action in scene.mainwindow.actionsRestrictionChange:
+            menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuRestrictionChange)
+            for action in mainwindow.actionsRestrictionChange:
                 action.setChecked(self.restriction is action.data())
                 action.setVisible(action.data() is not Restriction.Self)
 
@@ -110,9 +111,9 @@ class RangeRestrictionNode(SquaredNode):
         if collection:
             menu.addSeparator()
             for action in collection:
-                menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
+                menu.insertAction(mainwindow.actionOpenNodeProperties, action)
 
-        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
+        menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         return menu
 
     def addEdge(self, edge):

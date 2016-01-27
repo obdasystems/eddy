@@ -102,12 +102,13 @@ class ValueDomainNode(AbstractNode):
         :rtype: QMenu
         """
         scene = self.scene()
+        mainwindow = scene.mainwindow
         menu = super().contextMenu()
-        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeNodeBrush)
-        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuChangeValueDomainDatatype)
-        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeNodeBrush)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeValueDomainDatatype)
+        menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         # switch the check matching the current datatype
-        for action in scene.mainwindow.actionsChangeValueDomainDatatype:
+        for action in mainwindow.actionsChangeValueDomainDatatype:
             action.setChecked(self.datatype == action.data())
         return menu
 

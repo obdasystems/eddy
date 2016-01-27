@@ -101,9 +101,10 @@ class DisjointUnionNode(HexagonNode):
         """
         menu = super().contextMenu()
         scene = self.scene()
+        mainwindow = scene.mainwindow
         if self.edges:
             from eddy.core.items import IntersectionNode, UnionNode
-            for action in scene.mainwindow.actionsSwitchHexagonNode:
+            for action in mainwindow.actionsSwitchHexagonNode:
                 action.setVisible(action.data() in {DisjointUnionNode, IntersectionNode, UnionNode})
         return menu
 

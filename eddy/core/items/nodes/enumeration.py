@@ -106,18 +106,19 @@ class EnumerationNode(HexagonNode):
         """
         menu = super().contextMenu()
         scene = self.scene()
+        mainwindow = scene.mainwindow
         if self.edges:
 
             if [e for e in self.edges if e.isItem(Item.InputEdge) and e.target is self]:
                 # If we have input edges targeting this node keep only the Enumeration action active: individuals can
                 # be connected only to Enumeration nodes and Link, so switching to another operator would be an error.
-                for action in scene.mainwindow.actionsSwitchHexagonNode:
+                for action in mainwindow.actionsSwitchHexagonNode:
                     action.setVisible(action.data() is EnumerationNode)
             elif [e for e in self.edges if e.isItem(Item.InclusionEdge)]:
                 # We have inclusion edges attached to this edge but no input => allow switching to
                 # operators that can be identified using the identities declared by this very node.
                 from eddy.core.items import DisjointUnionNode, IntersectionNode, UnionNode
-                for action in scene.mainwindow.actionsSwitchHexagonNode:
+                for action in mainwindow.actionsSwitchHexagonNode:
                     action.setVisible(action.data() in {DisjointUnionNode, EnumerationNode, IntersectionNode, UnionNode})
 
         return menu
