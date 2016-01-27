@@ -437,10 +437,10 @@ class OWLSyntax(Enum):
     """
     __order__ = 'Functional Manchester RDF Turtle'
 
-    Functional = 'Functional'
-    Manchester = 'Manchester'
-    RDF = 'RDF'
-    Turtle = 'Turtle'
+    Functional = 'Functional-style syntax'
+    Manchester = 'Manchester OWL syntax'
+    RDF = 'RDF/XML syntax for OWL'
+    Turtle = 'Turtle syntax'
 
 
 @unique
