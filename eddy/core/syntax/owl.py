@@ -153,7 +153,8 @@ class OWL2RLValidator(AbstractValidator):
                         # Enumeration operator (oneOf) takes as inputs individuals or literals, both represented
                         # by the Individual node, and has the job of composing a set if individuals (either Concept
                         # or DataRange, but not both together).
-                        raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.identity.label))
+                        name = source.identity.label if source.identity is not Identity.Neutral else source.name
+                        raise SyntaxError('Invalid input to {}: {}'.format(target.name, name))
 
                     if target.identity is Identity.Unknown:
                         # Target node has an unkown identity: we do not allow the connection => the user MUST fix the
