@@ -49,7 +49,7 @@ class OWL2RLValidator(AbstractValidator):
 
     def run(self, source, edge, target):
         """
-        Run the validation algoritm on the given triple and generates the ValidationResult instance.
+        Run the validation algorithm on the given triple and generates the ValidationResult instance.
         :type source: AbstractNode
         :type edge: AbstractEdge
         :type target: AbstractNode
