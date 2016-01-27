@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
-from eddy.core.datatypes import Font, Item, Identity
+from eddy.core.datatypes import Font, Item, Identity, Restriction
 from eddy.core.functions import identify
 from eddy.core.items.nodes.common.square import SquaredNode
 
@@ -104,6 +104,7 @@ class RangeRestrictionNode(SquaredNode):
             menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRestrictionChange)
             for action in scene.mainwindow.actionsRestrictionChange:
                 action.setChecked(self.restriction is action.data())
+                action.setVisible(action.data() is not Restriction.Self)
 
         collection = self.label.contextMenuAdd()
         if collection:
