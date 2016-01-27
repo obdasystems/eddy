@@ -56,7 +56,7 @@ class GUID(QObject):
         """
         Returns the next id available prepending the given prefix.
         :raise ValueError: if the given prefix contains digits.
-        :type prefix: T <= bytes | unicode
+        :type prefix: str
         :rtype: str
         """
         if RE_DIGIT.search(prefix):
@@ -75,7 +75,7 @@ class GUID(QObject):
         """
         Parse the given unique id returning a tuple in the format (prefix, value).
         :raise ValueError: if the given value has an invalid format.
-        :type unique_id: T <= bytes | unicode
+        :type unique_id: str
         :rtype: tuple
         """
         match = RE_ITEM_PREFIX.match(unique_id)
@@ -87,7 +87,7 @@ class GUID(QObject):
         """
         Update the last incremental value according to the given id.
         :raise ValueError: if the given value has an invalid format.
-        :type unique_id: T <= bytes | unicode
+        :type unique_id: str
         """
         prefix, value = self.parse(unique_id)
         try:

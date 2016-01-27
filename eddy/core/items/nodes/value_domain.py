@@ -313,7 +313,7 @@ class ValueDomainNode(AbstractNode):
         """
         Set the label text.
         :raise ParseError: if an invalid datatype is given.
-        :type text: T <= bytes | unicode
+        :type text: str
         """
         datatype = XsdDatatype.forValue(text) or XsdDatatype.string
         self.label.setText(datatype.value)
@@ -347,9 +347,8 @@ class ValueDomainNode(AbstractNode):
         if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
 
             edge = scene.command.edge
-
             brush = self.brushConnectionOk
-            if not scene.validator.check(edge.source, edge, scene.mouseOverNode):
+            if not scene.validator.valid(edge.source, edge, scene.mouseOverNode):
                 brush = self.brushConnectionBad
 
             painter.setRenderHint(QPainter.Antialiasing)

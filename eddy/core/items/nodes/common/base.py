@@ -518,7 +518,7 @@ class AbstractNode(AbstractItem):
     def setLabelText(self, text):
         """
         Set the label text.
-        :type text: T <= bytes | unicode
+        :type text: str
         """
         pass
 

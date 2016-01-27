@@ -226,7 +226,7 @@ class DisjointUnionNode(HexagonNode):
     def setLabelText(self, text):
         """
         Set the label text.
-        :type text: T <= bytes | unicode
+        :type text: str
         """
         pass
 

@@ -60,8 +60,8 @@ class OWLExporter(QObject):
         Initialize the OWL translator: this class does not specify any parent otherwise
         we won't be able to move the execution of the worker method to a different thread.
         :type scene: DiagramScene
-        :type ontoIRI: T <= bytes | unicode
-        :type ontoPrefix: T <= bytes | unicode
+        :type ontoIRI: str
+        :type ontoPrefix: str
         """
         super().__init__()
 

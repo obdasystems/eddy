@@ -62,7 +62,7 @@ def clamp(val, minval=None, maxval=None):
 def isEmpty(string):
     """
     Safely detect whether the given string is empty.
-    :type string: T <= bytes | unicode | float | None
+    :type string: str | float | None
     :rtype: bool
     """
     return not string or str(string).strip() == ''
@@ -71,10 +71,22 @@ def isEmpty(string):
 def isQuoted(string):
     """
     Checks whether the given string is quoted or not.
-    :type string: T <= bytes | unicode
+    :type string: str
     :rtype: bool
     """
     return RE_QUOTE_FULL.match(string) is not None
+
+
+def lCut(text, cut):
+    """
+    Remove 'cut' from 'text' if found as starting prefix.
+    :type text: str
+    :type cut: str
+    :rtype: str
+    """
+    if text.startswith(cut):
+        return text[len(cut)+1:]
+    return text
 
 
 def makeColoredIcon(width, height, code):
@@ -82,7 +94,7 @@ def makeColoredIcon(width, height, code):
     Create and returns a QIcon filled using the given color.
     :type width: T <= int | float
     :type height: T <= int | float
-    :type code: T <= bytes | unicode
+    :type code: str
     :rtype: QIcon
     """
     pixmap = QPixmap(width, height)
@@ -93,7 +105,7 @@ def makeColoredIcon(width, height, code):
 def makeShadedIcon(path, opacity=0.25):
     """
     Create a shaded icon using the given image: the shaded copy will use the given opacity value.
-    :type path: T <= bytes | unicode
+    :type path: str
     :type opacity: T <= int | float
     :rtype: QIcon
     """
@@ -106,7 +118,7 @@ def makeShadedIcon(path, opacity=0.25):
 def OWLText(text):
     """
     Transform the given text returning OWL compatible text.
-    :type text: T <= bytes | unicode
+    :type text: str
     :rtype: str
     """
     return re.sub(RE_OWL_INVALID_CHAR, '_', str(text))
@@ -135,6 +147,18 @@ def rangeF(start, stop, step):
     while x < stop:
         yield x
         x = round(x + step, 4)
+
+
+def rCut(text, cut):
+    """
+    Remove 'cut' from 'text' if found as ending suffix.
+    :type text: str
+    :type cut: str
+    :rtype: str
+    """
+    if text.endswith(cut):
+        return text[:-len(cut)]
+    return text
 
 
 def shaded(pixmap, opacity=0.25):
@@ -172,7 +196,7 @@ def QSS(path):
     Read a QSS file matching the given name and return its content.
     :raise TypeError: if an invalid QSS file is supplied.
     :raise IOError: if there is no QSS file matching the given name.
-    :type path: T <= bytes | unicode
+    :type path: str
     :rtype: str
     """
     if not path.lower().endswith('.qss'):

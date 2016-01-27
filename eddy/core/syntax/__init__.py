@@ -32,4 +32,4 @@
 ##########################################################################
 
 
-from eddy.core.syntax.owl import OWLValidator
+from eddy.core.syntax.owl import OWL2RLValidator

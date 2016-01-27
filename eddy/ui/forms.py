@@ -187,7 +187,7 @@ class OWLTranslationForm(QDialog):
         """
         Initialize the form dialog.
         :type scene: DiagramScene
-        :type filepath: T <= bytes | unicode
+        :type filepath: str
         :type parent: QWidget
         """
         super().__init__(parent)

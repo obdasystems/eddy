@@ -53,9 +53,9 @@ class AbstractItem(QGraphicsItem):
         """
         Initialize the item.
         :type scene: DiagramScene
-        :type id: T <= bytes | unicode
-        :type description: T <= bytes | unicode
-        :type url: T <= bytes | unicode
+        :type id: str
+        :type description: str
+        :type url: str
         """
         self._id = id or scene.guid.next(self.prefix)
         self._description = description
@@ -81,7 +81,7 @@ class AbstractItem(QGraphicsItem):
     def description(self, value):
         """
         Set the description of the node.
-        :type value: T <= bytes | unicode
+        :type value: str
         """
         self._description = value.strip()
 
@@ -105,7 +105,7 @@ class AbstractItem(QGraphicsItem):
     def id(self, value):
         """
         Set the node id.
-        :type value: T <= bytes | unicode
+        :type value: str
         """
         self._id = value
 
@@ -137,7 +137,7 @@ class AbstractItem(QGraphicsItem):
     def url(self, value):
         """
         Set the url attached to the node.
-        :type value: T <= bytes | unicode
+        :type value: str
         """
         self._url = value.strip()
 

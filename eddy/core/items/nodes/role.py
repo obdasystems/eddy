@@ -810,7 +810,7 @@ class RoleNode(AbstractResizableNode):
     def setLabelText(self, text):
         """
         Set the label text.
-        :type text: T <= bytes | unicode
+        :type text: str
         """
         self.label.setText(text)
 
@@ -842,9 +842,8 @@ class RoleNode(AbstractResizableNode):
         if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
 
             edge = scene.command.edge
-
             brush = self.brushConnectionOk
-            if not scene.validator.check(edge.source, edge, scene.mouseOverNode):
+            if not scene.validator.valid(edge.source, edge, scene.mouseOverNode):
                 brush = self.brushConnectionBad
 
             boundingRect = self.boundingRect()

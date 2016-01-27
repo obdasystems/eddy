@@ -44,7 +44,7 @@ class OpenFile(QFileDialog):
     def __init__(self, path, parent=None):
         """
         Initialize the open file dialog.
-        :type path: T <= bytes | unicode
+        :type path: str
         :type parent: QWidget
         """
         super().__init__(parent)
@@ -61,7 +61,7 @@ class SaveFile(QFileDialog):
     def __init__(self, path, parent=None):
         """
         Initialize the save file dialog.
-        :type path: T <= bytes | unicode
+        :type path: str
         :type parent: QWidget
         """
         super().__init__(parent)

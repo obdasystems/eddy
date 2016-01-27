@@ -56,7 +56,7 @@ class SidebarWidget(QDockWidget):
     def __init__(self, title, widget, parent=None):
         """
         Initialize the Dock widget.
-        ::type title: T <= bytes | unicode
+        ::type title: str
         :type widget: QWidget
         :type parent: QWidget
         """

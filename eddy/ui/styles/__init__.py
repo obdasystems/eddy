@@ -60,7 +60,7 @@ class Style(QProxyStyle):
         """
         Returns an initialized style matching the given name. If the given name is not
         a valid style name will return the default one (currently set on Light style).
-        :type name: T <= bytes | unicode
+        :type name: str
         :rtype: Style
         """
         return __mapping__.get(name, LightStyle)()

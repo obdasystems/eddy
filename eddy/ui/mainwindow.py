@@ -1478,28 +1478,20 @@ class MainWindow(QMainWindow):
         :type subwindow: MdiSubWindow
         """
         if subwindow:
-
             mainview = subwindow.widget()
             scene = mainview.scene()
             scene.undostack.setActive()
-
             self.navigator.setView(mainview)
             self.overview.setView(mainview)
-
             disconnect(self.zoomctrl.zoomChanged)
             disconnect(mainview.zoomChanged)
-
             self.zoomctrl.adjustZoomLevel(mainview.zoom)
-
             connect(self.zoomctrl.zoomChanged, mainview.scaleChanged)
             connect(mainview.zoomChanged, self.zoomctrl.scaleChanged)
-
             self.setWindowTitle(scene.document.name)
-
         else:
 
             if not self.mdi.subWindowList():
-
                 self.zoomctrl.resetZoomLevel()
                 self.navigator.clearView()
                 self.overview.clearView()
@@ -1524,7 +1516,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            selected = [edge for edge in scene.selectedEdges() if scene.validator.check(edge.target, edge, edge.source)]
+            selected = [edge for edge in scene.selectedEdges() if scene.validator.run(edge.target, edge, edge.source)]
             if selected:
                 scene.undostack.push(CommandEdgeSwap(scene=scene, edges=selected))
 
@@ -1645,7 +1637,7 @@ class MainWindow(QMainWindow):
     def addRecentDocument(self, path):
         """
         Add the given document to the recent document list.
-        :type path: T <= bytes | unicode
+        :type path: str
         """
         documents = self.settings.value('document/recent_documents', None, str)
 
@@ -1680,7 +1672,7 @@ class MainWindow(QMainWindow):
     def createSceneFromGrapholFile(self, filepath):
         """
         Create a new scene by loading the given Graphol file.
-        :type filepath: T <= bytes | unicode
+        :type filepath: str
         :rtype: DiagramScene
         """
         file = QFile(filepath)
@@ -1775,8 +1767,8 @@ class MainWindow(QMainWindow):
         """
         Bring up the 'Export' file dialog and returns the selected filepath.
         Will return None in case the user hit the 'Cancel' button to abort the operation.
-        :type path: T <= bytes | unicode
-        :type name: T <= bytes | unicode
+        :type path: str
+        :type name: str
         :rtype: tuple
         """
         dialog = SaveFile(path)
@@ -1790,9 +1782,9 @@ class MainWindow(QMainWindow):
     @staticmethod
     def exportSceneToOwlFile(scene, filepath):
         """
-        Export the given scene in Owl functional syntax saving it in the given filepath.
+        Export the given scene in OWL syntax saving it in the given filepath.
         :type scene: DiagramScene
-        :type filepath: T <= bytes | unicode
+        :type filepath: str
         :rtype: bool
         """
         exportForm = OWLTranslationForm(scene, filepath)
@@ -1805,7 +1797,7 @@ class MainWindow(QMainWindow):
         """
         Export the given scene as PDF saving it in the given filepath.
         :type scene: DiagramScene
-        :type filepath: T <= bytes | unicode
+        :type filepath: str
         :rtype: bool
         """
         shape = scene.visibleRect(margin=20)
@@ -1849,8 +1841,8 @@ class MainWindow(QMainWindow):
         """
         Bring up the 'Save' file dialog and returns the selected filepath.
         Will return None in case the user hit the 'Cancel' button to abort the operation.
-        :type path: T <= bytes | unicode
-        :type name: T <= bytes | unicode
+        :type path: str
+        :type name: str
         :rtype: str
         """
         dialog = SaveFile(path)
@@ -1866,7 +1858,7 @@ class MainWindow(QMainWindow):
         Save the given scene to the corresponding given filepath.
         Will return True if the save has been performed, False otherwise.
         :type scene: DiagramScene
-        :type filepath: T <= bytes | unicode
+        :type filepath: str
         :rtype: bool
         """
         try:
@@ -1888,7 +1880,7 @@ class MainWindow(QMainWindow):
     def setWindowTitle(self, p_str=None):
         """
         Set the main window title.
-        :type p_str: T <= bytes | unicode
+        :type p_str: str
         """
         T = '{} - {} {}'.format(p_str, APPNAME, VERSION) if p_str else '{} {}'.format(APPNAME, VERSION)
         super().setWindowTitle(T)

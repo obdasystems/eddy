@@ -47,7 +47,7 @@ from eddy.core.functions import expandPath, rangeF, snapF
 from eddy.core.items import ConceptNode, ComplementNode, RoleChainNode, RoleInverseNode
 from eddy.core.items import RangeRestrictionNode, DomainRestrictionNode, ValueDomainNode
 from eddy.core.items import InputEdge, InclusionEdge
-from eddy.core.syntax import OWLValidator
+from eddy.core.syntax import OWL2RLValidator
 from eddy.core.utils import Clipboard, GUID
 
 
@@ -90,7 +90,7 @@ class DiagramScene(QGraphicsScene):
         self.guid = GUID(self)  ## used to generate unique incremental ids
         self.undostack = QUndoStack(self)  ## use to push actions and keep history for undo/redo
         self.undostack.setUndoLimit(50)  ## TODO: make the stack configurable
-        self.validator = OWLValidator(self)
+        self.validator = OWL2RLValidator(self)
         self.mode = DiagramMode.Idle  ## operation mode
         self.modeParam = None  ## extra parameter for the operation mode (see setMode())
         self.mouseOverNode = None  ## node below the mouse cursor during edge insertion
@@ -235,8 +235,16 @@ class DiagramScene(QGraphicsScene):
 
                 if self.command and self.command.edge:
                     mousePos = mouseEvent.scenePos()
+                    statusbar = self.mainwindow.statusBar()
                     self.command.edge.updateEdge(target=mousePos)
                     self.mouseOverNode = self.itemOnTopOf(mousePos, edges=False, skip={self.command.edge.source})
+                    if self.mouseOverNode:
+                        res = self.validator.result(self.command.edge.source, self.command.edge, self.mouseOverNode)
+                        statusbar.showMessage(res.message)
+                    else:
+                        # always clear the validator and the message no matter if we didn't move out from a node
+                        statusbar.clearMessage()
+                        self.validator.clear()
 
             else:
 
@@ -298,7 +306,7 @@ class DiagramScene(QGraphicsScene):
                     edge = self.command.edge
                     node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False, skip={edge.source})
 
-                    if node and self.validator.check(edge.source, edge, node):
+                    if node and self.validator.valid(edge.source, edge, node):
                         self.command.end(node)
                         self.undostack.push(self.command)
                         self.updated.emit()
@@ -310,9 +318,12 @@ class DiagramScene(QGraphicsScene):
                     # keyboard modifier is not being held (in which case the toolbox button will stay selected)
                     self.edgeInserted.emit(edge, mouseEvent.modifiers())
 
-                    self.clearSelection()
                     self.command = None
                     self.mouseOverNode = None
+                    statusbar = self.mainwindow.statusBar()
+                    statusbar.clearMessage()
+                    self.clearSelection()
+                    self.validator.clear()
 
             elif self.mode is DiagramMode.NodeMove:
 
@@ -745,7 +756,7 @@ class DiagramScene(QGraphicsScene):
     def edge(self, eid):
         """
         Returns the edge matching the given node id.
-        :type eid: T <= bytes | unicode
+        :type eid: str
         :raise KeyError: if there is no such edge in the diagram.
         """
         return self.edgesById[eid]
@@ -775,7 +786,7 @@ class DiagramScene(QGraphicsScene):
     def node(self, nid):
         """
         Returns the node matching the given node id.
-        :type nid: T <= bytes | unicode
+        :type nid: str
         :raise KeyError: if there is no such node in the diagram.
         """
         return self.nodesById[nid]

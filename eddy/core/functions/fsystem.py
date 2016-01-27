@@ -48,7 +48,7 @@ def expandPath(path):
         - @examples => Eddy's examples directory
         - ~ => will be expanded to the user home directory ($HOME)
 
-    :type path: T <= bytes | unicode
+    :type path: str
     :rtype: str
     """
     if path.startswith('@eddy\\') or path.startswith('@eddy/'):
@@ -98,7 +98,7 @@ def modulePath():
 def openPath(path):
     """
     Open the given path using the OS default program.
-    :type path: T <= bytes | unicode
+    :type path: str
     """
     # keep this import statement deferred
     from eddy.core.datatypes import Platform

@@ -124,7 +124,7 @@ class StringEditField(QLineEdit):
     def setValue(self, value):
         """
         Set the value of the field.
-        :type value: T <= bytes | unicode.
+        :type value: str.
         """
         self.setText(value.strip())
 
@@ -150,7 +150,7 @@ class TextEditField(QPlainTextEdit):
     def setValue(self, value):
         """
         Set the value of the field.
-        :type value: T <= bytes | unicode.
+        :type value: str.
         """
         self.setPlainText(value.strip())
 

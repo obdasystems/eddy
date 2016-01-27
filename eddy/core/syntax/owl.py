@@ -33,10 +33,11 @@
 
 
 from eddy.core.datatypes import Item, Identity, Restriction
-from eddy.core.syntax.common import AbstractValidator
+from eddy.core.functions import rCut
+from eddy.core.syntax.common import AbstractValidator, ValidationResult
 
 
-class OWLValidator(AbstractValidator):
+class OWL2RLValidator(AbstractValidator):
     """
     This class can be used to validate Graphol triples according to the OWL2RL profile.
     """
@@ -46,431 +47,451 @@ class OWLValidator(AbstractValidator):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def check(self, source, edge, target):
+    def run(self, source, edge, target):
         """
-        Validate the given triple.
-        Will return True if the triple is valid, False otherwise.
+        Run the validation algoritm on the given triple and generates the ValidationResult instance.
         :type source: AbstractNode
         :type edge: AbstractEdge
         :type target: AbstractNode
-        :rtype: bool
         """
-        if source is target:
-            # Self connection is not valid.
-            return False
+        try:
 
-        if edge.isItem(Item.InclusionEdge):
+            if source is target:
+                # Self connection is not valid.
+                raise SyntaxError('Self connection is not valid')
 
-            ############################################################################################################
-            #                                                                                                          #
-            #   INCLUSION EDGE                                                                                         #
-            #                                                                                                          #
-            ############################################################################################################
-
-            if Identity.Neutral not in {source.identity, target.identity} and source.identity is not target.identity:
-                # If neither of the endpoints is NEUTRAL and the two nodes are specifying
-                # a different identity, then we can't create an ISA between the nodes.
-                return False
-
-        elif edge.isItem(Item.InputEdge):
-
-            ############################################################################################################
-            #                                                                                                          #
-            #   INPUT EDGE                                                                                             #
-            #                                                                                                          #
-            ############################################################################################################
-
-            if not target.constructor:
-                # Input edges can only target constructor nodes.
-                return False
-
-            if target.isItem(Item.ComplementNode, Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode):
+            if edge.isItem(Item.InclusionEdge):
 
                 ########################################################################################################
                 #                                                                                                      #
-                #   TARGET IN { COMPLEMENT, DISJOINT UNION, INTERSECTION, UNION }                                      #
+                #   INCLUSION EDGE                                                                                     #
                 #                                                                                                      #
                 ########################################################################################################
-
-                if source.identity not in target.identities:
-                    # Source node identity is not supported by this node despite the currently set identity.
-                    return False
-
-                if source.isItem(Item.ValueRestrictionNode):
-                    # Exclude unsupported nodes despite identity matching.
-                    return False
 
                 if Identity.Neutral not in {source.identity, target.identity} and source.identity is not target.identity:
-                    # Both are non neutral and we have identity mismatch.
-                    return False
+                    # If neither of the endpoints is NEUTRAL and the two nodes are specifying
+                    # a different identity, then we can't create an ISA between the nodes.
+                    idA = source.identity.label
+                    idB = target.identity.label
+                    raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
+
+            elif edge.isItem(Item.InputEdge):
 
                 ########################################################################################################
                 #                                                                                                      #
-                #   TARGET = COMPLEMENT                                                                                #
+                #   INPUT EDGE                                                                                         #
                 #                                                                                                      #
                 ########################################################################################################
 
-                if target.isItem(Item.ComplementNode):
+                if not target.constructor:
+                    # Input edges can only target constructor nodes.
+                    raise SyntaxError('Input edges can only target constructor nodes')
+
+                if target.isItem(Item.ComplementNode, Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode):
+
+                    ####################################################################################################
+                    #                                                                                                  #
+                    #   TARGET IN { COMPLEMENT, DISJOINT UNION, INTERSECTION, UNION }                                  #
+                    #                                                                                                  #
+                    ####################################################################################################
+
+                    if source.identity not in target.identities:
+                        # Source node identity is not supported by this node despite the currently set identity.
+                        raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.identity.label))
+
+                    if source.isItem(Item.ValueRestrictionNode):
+                        # Exclude invalid nodes despite identity matching.
+                        raise SyntaxError('Invalid target: {}'.format(target.name))
+
+                    ########################################################################################################
+                    #                                                                                                      #
+                    #   TARGET = COMPLEMENT                                                                                #
+                    #                                                                                                      #
+                    ########################################################################################################
+
+                    if target.isItem(Item.ComplementNode):
+
+                        if len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)) > 0:
+                            # The Complement operator may have at most one node connected to it.
+                            raise SyntaxError('Too many inputs to {}'.format(target.name))
+
+                        if source.isItem(Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode):
+
+                            # See if the source of the node matches an ObjectPropertyExpression ({Role, RoleInv}) or a
+                            # DataPropertyExpression (Attribute). If that's the case check for the node not to have any
+                            # outgoing Input edge: the only supported expression are NegativeObjectPropertyAssertion,
+                            # R1 ISA NOT R2, and NegativeDataPropertyAssertion, A1 ISA NOT A2. This prevents the connection
+                            # of Role expressions to Complement nodes that are given as inputs to Enumeration, Union and
+                            # Disjoint Union operatore nodes.
+                            if len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x.source is target)) > 0:
+                                raise SyntaxError('Invalid negative {} expression'.format(source.identity.label))
+
+                    else:
+
+                        ################################################################################################
+                        #                                                                                              #
+                        #   TARGET IN { DISJOINT UNION, INTERSECTION, UNION }                                          #
+                        #                                                                                              #
+                        ################################################################################################
+
+                        if Identity.Neutral not in {source.identity, target.identity} and source.identity is not target.identity:
+                            # Both are non neutral and we have identity mismatch.
+                            idA = source.identity.label
+                            idB = target.identity.label
+                            composition = rCut(target.name, ' node')
+                            raise SyntaxError('Type mismatch: {} between {} and {}'.format(composition, idA, idB))
+
+                elif target.isItem(Item.EnumerationNode):
+
+                    ####################################################################################################
+                    #                                                                                                  #
+                    #   TARGET = ENUMERATION                                                                           #
+                    #                                                                                                  #
+                    ####################################################################################################
+
+                    if not source.isItem(Item.IndividualNode):
+                        # Enumeration operator (oneOf) takes as inputs individuals or literals, both represented
+                        # by the Individual node, and has the job of composing a set if individuals (either Concept
+                        # or DataRange, but not both together).
+                        raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.identity.label))
+
+                    if target.identity is Identity.Unknown:
+                        # Target node has an unkown identity: we do not allow the connection => the user MUST fix the
+                        # error first and then try to create again the connection (this should never happen actually).
+                        raise SyntaxError('Target node has an invalid identity: {}'.format(target.identity.label))
+
+                    if target.identity is not Identity.Neutral:
+
+                        if source.identity is Identity.Individual and target.identity is Identity.DataRange:
+                            raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.identity.label))
+
+                        if source.identity is Identity.Literal and target.identity is Identity.Concept:
+                            raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.identity.label))
+
+                elif target.isItem(Item.RoleInverseNode):
+
+                    ####################################################################################################
+                    #                                                                                                  #
+                    #   TARGET = ROLE INVERSE                                                                          #
+                    #                                                                                                  #
+                    ####################################################################################################
+
+                    if not source.isItem(Item.RoleNode):
+                        # The Role Inverse operator takes as input a role and constructs its inverse by switching
+                        # domain and range of the role. Assume to have a Role labelled 'is_owner_of' whose instances
+                        # are {(o1,o2), (o1,o3), (o4,o5)}: connecting this Role in input to a Role Inverse node will
+                        # construct a new Role whose instances are {(o2,o1), (o3,o1), (o5,o4)}.
+                        raise SyntaxError('Role Inverse accepts only a Role node as input')
 
                     if len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)) > 0:
-                        # The Complement operator may have at most one node connected to it.
-                        return False
+                        # The Role Inverse operator may have at most one Role node connected to it: if we need to
+                        # define multiple Role inverse we would need to use multiple Role Inverse operator nodes.
+                        raise SyntaxError('Too many inputs to {}'.format(target.name))
 
-                    # See if the source of the node matches an ObjectPropertyExpression ({Role, RoleInv}) or a
-                    # DataPropertyExpression (Attribute). If that's the case check for the node not to have any
-                    # outgoing Input edge: the only supported expression are NegaiveObjectPropertyAssertion,
-                    # R1 ISA NOT R2, and NegativeDataPropertyAssertion, A1 ISA NOT A2. This prevents the connection
-                    # of Role expressions to Complement nodes that are given as inputs to Enumeration, Union and
-                    # Disjoint Union operatore nodes.
-                    if source.isItem(Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode) and \
-                        len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x.source is target)) > 0:
-                        # If the source of the node is a Role (ObjectPropertyExpression => chain is not included)
-                        # check for the node not to have any outgoing Input edge: the only supported expression
-                        # is `R1 ISA NOT R2` (this prevents the connection of Role expressions to Complement nodes
-                        # that are given as inputs to Enumeration, Union and Disjoint Union operatore nodes.
-                        return False
+                elif target.isItem(Item.RoleChainNode):
 
-            elif target.isItem(Item.EnumerationNode):
+                    ####################################################################################################
+                    #                                                                                                  #
+                    #   TARGET = ROLE CHAIN                                                                            #
+                    #                                                                                                  #
+                    ####################################################################################################
 
-                ########################################################################################################
-                #                                                                                                      #
-                #   TARGET = ENUMERATION                                                                               #
-                #                                                                                                      #
-                ########################################################################################################
+                    if not source.isItem(Item.RoleNode, Item.RoleInverseNode):
+                        # The Role Chain operator constructs a concatenation of roles. Assume to have 2 Role nodes
+                        # defined as 'lives_in_region' and 'region_in_country': if {(o1, o2), (o3, o4)} is the
+                        # instance of 'lives_in_region' and {(o2, o6)} is the instance of 'region_in_country', then
+                        # {(o1, o6)} is the instance of the chain, which would match another Role 'lives_in_country'.
+                        # ObjectPropertyExpression := ObjectProperty | InverseObjectProperty => we need to match only
+                        # Role nodes and Role Inverse nodes as sources of our edge (it's not possible to create a chain
+                        # of chains, despite the identity matches Role in both expressions).
+                        raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.name))
 
-                if not source.isItem(Item.IndividualNode):
-                    # Enumeration operator (oneOf) takes as inputs individuals or literals, both represented by the
-                    # Individual node, and has the job of composing a set if individuals (either Concept or DataRange,
-                    # but not both together).
-                    return False
+                elif target.isItem(Item.DatatypeRestrictionNode):
 
-                if target.identity is Identity.Unknown:
-                    # Target node has an unkown identity: we do not allow the connection => the user MUST fix the
-                    # error first and then try to create again the connection (this should never happen actually).
-                    return False
+                    ####################################################################################################
+                    #                                                                                                  #
+                    #   TARGET = DATATYPE RESTRICTION                                                                  #
+                    #                                                                                                  #
+                    ####################################################################################################
 
-                if target.identity is not Identity.Neutral:
-                    # Target node identity has been computed already so check for identity mismatch
-                    if source.identity is Identity.Individual and target.identity is Identity.DataRange or \
-                        source.identity is Identity.Literal and target.identity is Identity.Concept:
-                        # Identity mismatch.
-                        return False
+                    if not source.isItem(Item.ValueDomainNode, Item.ValueRestrictionNode):
+                        # The DatatypeRestriction node is used to compose complex datatypes and
+                        # accepts as inputs a Value-Domain node together with N Value-Restriction
+                        # nodes to compose the OWL 2 equivalent DatatypeRestriction.
+                        raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.name))
 
-            elif target.isItem(Item.RoleInverseNode):
+                    if source.isItem(Item.ValueDomainNode):
 
-                ########################################################################################################
-                #                                                                                                      #
-                #   TARGET = ROLE INVERSE                                                                              #
-                #                                                                                                      #
-                ########################################################################################################
+                        f1 = lambda x: x.isItem(Item.InputEdge) and x is not edge
+                        f2 = lambda x: x.isItem(Item.ValueDomainNode)
+                        if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
+                            # The Value-Domain has already been attached to the DatatypeRestriction.
+                            raise SyntaxError('Too many value-domain nodes in input to {}'.format(target.name))
 
-                if not source.isItem(Item.RoleNode):
-                    # The Role Inverse operator takes as input a role and constructs its inverse by switching
-                    # domain and range of the role. Assume to have a Role labelled 'is_owner_of' whose instances
-                    # are {(o1,o2), (o1,o3), (o4,o5)}: connecting this Role in input to a Role Inverse node will
-                    # construct a new Role whose instances are {(o2,o1), (o3,o1), (o5,o4)}.
-                    return False
+                elif target.isItem(Item.PropertyAssertionNode):
 
-                if len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)) > 0:
-                    # The Role Inverse operator may have at most one Role node connected to it: if we need to
-                    # define multiple Role inverse we would need to use multiple Role Inverse operator nodes.
-                    return False
+                    ####################################################################################################
+                    #                                                                                                  #
+                    #   TARGET = PROPERTY ASSERTION                                                                    #
+                    #                                                                                                  #
+                    ####################################################################################################
 
-            elif target.isItem(Item.RoleChainNode):
+                    if not source.isItem(Item.IndividualNode):
+                        # Property Assertion operators accepts only Individual nodes as input: they are
+                        # used to construct ObjectPropertyAssertion and DataPropertyAssertion axioms.
+                        raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.identity.label))
 
-                ########################################################################################################
-                #                                                                                                      #
-                #   TARGET = ROLE CHAIN                                                                                #
-                #                                                                                                      #
-                ########################################################################################################
+                    if len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)) >= 2:
+                        # At most 2 Individual nodes can be connected to a PropertyAssertion node. As an example
+                        # we can construct ObjectPropertyAssertion(presiede M.Draghi BCE) where the individuals
+                        # are identified by M.Draghi and BCE, or DataPropertyAssertion(nome M.Draghi "Mario") where
+                        # the individuals are identified by M.Draghi and "Mario".
+                        raise SyntaxError('Too many inputs to {}'.format(target.name))
 
-                if not source.isItem(Item.RoleNode, Item.RoleInverseNode):
-                    # The Role Chain operator constructs a concatenation of roles. Assume to have 2 Role nodes
-                    # defined as 'lives_in_region' and 'region_in_country': if {(o1, o2), (o3, o4)} is the
-                    # instance of 'lives_in_region' and {(o2, o6)} is the instance of 'region_in_country', then
-                    # {(o1, o6)} is the instance of the chain, which would match another Role 'lives_in_country'.
-                    # ObjectPropertyExpression := ObjectProperty | InverseObjectProperty => we need to match only
-                    # Role nodes and Role Inverse nodes as sources of our edge (it's not possible to create a chain
-                    # of chains, despite the identity matches Role in both expressions).
-                    return False
+                    if source.identity is Identity.Literal:
 
-            elif target.isItem(Item.DatatypeRestrictionNode):
+                        f1 = lambda x: x.isItem(Item.InputEdge) and x is not edge
+                        f2 = lambda x: x.identity is Identity.Literal
+                        if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
+                            # At most one Literal can be given as input (2 Individuals | 1 Individual + 1 Literal)
+                            raise SyntaxError('Too many literals in input to {}'.format(target.name))
 
-                ########################################################################################################
-                #                                                                                                      #
-                #   TARGET = DATATYPE RESTRICTION                                                                      #
-                #                                                                                                      #
-                ########################################################################################################
+                    # See if the source we are connecting to the Link is consistent with the instanceOf expression
+                    # if there is such expression (else we do not care since we check this in the instanceOf edge.
+                    node = next(iter(target.outgoingNodes(lambda x: x.isItem(Item.InstanceOfEdge))), None)
 
-                if not source.isItem(Item.ValueDomainNode, Item.ValueRestrictionNode):
-                    # The DatatypeRestriction node is used to compose complex datatypes and
-                    # accepts as inputs a Value-Domain node together with N Value-Restriction
-                    # nodes to compose the OWL 2 equivalent DatatypeRestriction.
-                    return False
-
-                if source.isItem(Item.ValueDomainNode):
-                    if len(target.incomingNodes(filter_on_edges=lambda x: x.isItem(Item.InputEdge) and x is not edge,
-                                                filter_on_nodes=lambda x: x.isItem(Item.ValueDomainNode))) > 0:
-                        # The Value-Domain has already been attached to the DatatypeRestriction.
-                        return False
-
-            elif target.isItem(Item.PropertyAssertionNode):
-
-                ########################################################################################################
-                #                                                                                                      #
-                #   TARGET = PROPERTY ASSERTION                                                                        #
-                #                                                                                                      #
-                ########################################################################################################
-
-                if not source.isItem(Item.IndividualNode):
-                    # Property Assertion operators accepts only Individual nodes as input: they are
-                    # used to construct ObjectPropertyAssertion and DataPropertyAssertion axioms.
-                    return False
-
-                if len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)) >= 2:
-                    # At most 2 Individual nodes can be connected to a PropertyAssertion node. As an example
-                    # we can construct ObjectPropertyAssertion(presiede M.Draghi BCE) where the individuals
-                    # are identified by M.Draghi and BCE, or DataPropertyAssertion(nome M.Draghi "Mario") where
-                    # the individuals are identified by M.Draghi and "Mario".
-                    return False
-
-                if source.identity is Identity.Literal and \
-                    len(target.incomingNodes(filter_on_edges=lambda x: x.isItem(Item.InputEdge) and x is not edge,
-                                             filter_on_nodes=lambda x: x.identity is Identity.Literal)) > 0:
-                    # At most one Literal can be given as input (2 Individuals | 1 Individual + 1 Literal)
-                    return False
-
-                # See if the source we are connecting to the Link is consistent with the instanceOf expression
-                # if there is such expression (else we do not care since we check this in the instanceOf edge.
-                node = next(iter(target.outgoingNodes(lambda x: x.isItem(Item.InstanceOfEdge))), None)
-
-                if node:
-
-                    if node.isItem(Item.RoleNode, Item.RoleInverseNode):
-                        if source.identity is Identity.Literal:
-                            # We are constructing an ObjectPropertyAssertion expression so we can't connect a Literal.
-                            return False
-
-                    if node.isItem(Item.AttributeNode):
-                        if source.identity is Identity.Individual and \
-                            len(target.incomingNodes(filter_on_edges=lambda x: x.isItem(Item.InputEdge) and x is not edge,
-                                                     filter_on_nodes=lambda x: x.identity is Identity.Individual)) > 0:
-                            # We are constructing a DataPropertyAssertion and so we can't have more than 1 Individual.
-                            return False
-
-            elif target.isItem(Item.DomainRestrictionNode):
-
-                ########################################################################################################
-                #                                                                                                      #
-                #   TARGET = DOMAIN RESTRICTION                                                                        #
-                #                                                                                                      #
-                ########################################################################################################
-
-                if len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)) >= 2:
-                    # Domain Restriction node can have at most 2 inputs.
-                    return False
-
-                if source.identity not in {Identity.Neutral, Identity.Concept, Identity.Attribute, Identity.Role, Identity.DataRange}:
-                    # Domain Restriction node takes as input:
-                    #  - Role => OWL 2 ObjectPropertyExpression
-                    #  - Attribute => OWL 2 DataPropertyExpression
-                    #  - Concept => Qualified Existential/Universal Role Restriction
-                    #  - DataRange => Qualified Existential Data Restriction
-                    return False
-
-                if source.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode):
-                    # Exclude incompatible sources: note that while RoleChain has a correct identity
-                    # it is excluded because it doesn't represent the OWL 2 ObjectPropertyExpression.
-                    return False
-
-                # SOURCE => CONCEPT EXPRESSION || NEUTRAL
-
-                if source.identity in {Identity.Concept, Identity.Neutral}:
-
-                    if target.restriction is Restriction.Self:
-                        # Not a Qualified Restriction.
-                        return False
-
-                    # We can connect a Concept in input only if there is no other input or if the other input is a Role.
-                    node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
                     if node:
-                        if node.identity is not Identity.Role:
+
+                        if node.isItem(Item.RoleNode, Item.RoleInverseNode):
+
+                            if source.identity is Identity.Literal:
+                                # We are constructing an ObjectPropertyAssertion expression so we can't connect a Literal.
+                                raise SyntaxError('Invalid input to Role assertion: Literal')
+
+                        if node.isItem(Item.AttributeNode):
+
+                            if source.identity is Identity.Individual:
+
+                                f1 = lambda x: x.isItem(Item.InputEdge) and x is not edge
+                                f2 = lambda x: x.identity is Identity.Individual
+                                if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
+                                    # We are constructing a DataPropertyAssertion and so we can't have more than 1 Individual.
+                                    raise SyntaxError('Too many individuals in input to Attribute assertion')
+
+                elif target.isItem(Item.DomainRestrictionNode):
+
+                    ####################################################################################################
+                    #                                                                                                  #
+                    #   TARGET = DOMAIN RESTRICTION                                                                    #
+                    #                                                                                                  #
+                    ####################################################################################################
+
+                    if len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)) >= 2:
+                        # Domain Restriction node can have at most 2 inputs.
+                        raise SyntaxError('Too many inputs to {}'.format(target.name))
+
+                    if source.identity not in {Identity.Neutral, Identity.Concept, Identity.Attribute, Identity.Role, Identity.DataRange}:
+                        # Domain Restriction node takes as input:
+                        #  - Role => OWL 2 ObjectPropertyExpression
+                        #  - Attribute => OWL 2 DataPropertyExpression
+                        #  - Concept => Qualified Existential/Universal Role Restriction
+                        #  - DataRange => Qualified Existential Data Restriction
+                        raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.identity.label))
+
+                    if source.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode):
+                        # Exclude incompatible sources: note that while RoleChain has a correct identity
+                        # it is excluded because it doesn't represent the OWL 2 ObjectPropertyExpression.
+                        raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.name))
+
+                    # SOURCE => CONCEPT EXPRESSION || NEUTRAL
+
+                    if source.identity in {Identity.Concept, Identity.Neutral}:
+
+                        if target.restriction is Restriction.Self:
+                            # Not a Qualified Restriction.
+                            raise SyntaxError('Invalid restriction (self) for qualified restriction')
+
+                        # We can connect a Concept in input only if there is no other input or if the other input is a Role.
+                        node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
+                        if node and node.identity is not Identity.Role:
                             # We found another input on this node which is not a Role
                             # so we can't construct a Qualified Restriction.
-                            return False
+                            idA = source.identity.label
+                            idB = node.identity.label
+                            raise SyntaxError('Invalid inputs ({} + {}) for qualified restriction'.format(idA, idB))
 
-                # SOURCE => ROLE EXPRESSION
+                    # SOURCE => ROLE EXPRESSION
 
-                elif source.identity is Identity.Role:
+                    elif source.identity is Identity.Role:
 
-                    # We can connect a Role in input only if there is no other input or if the
-                    # other input is a Concept and the node specifies a Qualified Restriction.
-                    node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
-                    if node:
-                        if node.identity is not Identity.Concept or target.restriction is Restriction.Self:
+                        # We can connect a Role in input only if there is no other input or if the
+                        # other input is a Concept and the node specifies a Qualified Restriction.
+                        node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
+                        if node and node.identity is not Identity.Concept:
                             # Not a Qualified Restriction.
-                            return False
+                            idA = source.identity.label
+                            idB = node.identity.label
+                            raise SyntaxError('Invalid inputs ({} + {}) for qualified restriction'.format(idA, idB))
 
-                # SOURCE => ATTRIBUTE
+                    # SOURCE => ATTRIBUTE
 
-                elif source.identity is Identity.Attribute:
+                    elif source.identity is Identity.Attribute:
 
-                    if target.restriction is Restriction.Self:
-                        # Attributes don't have edge.
-                        return False
+                        if target.restriction is Restriction.Self:
+                            # Attributes don't have self.
+                            raise SyntaxError('Attributes don\'t have self')
 
-                    # We can connect an Attribute in input only if there is no other input or if the
-                    # other input is a DataRange and the node specifies a Qualified Restriction.
-                    node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
-                    if node:
-                        if node.identity is not Identity.DataRange:
+                        # We can connect an Attribute in input only if there is no other input or if the
+                        # other input is a DataRange and the node specifies a Qualified Restriction.
+                        node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
+                        if node and node.identity is not Identity.DataRange:
                             # Not a Qualified Restriction.
-                            return False
+                            idA = source.identity.label
+                            idB = node.identity.label
+                            raise SyntaxError('Invalid inputs ({} + {}) for qualified restriction'.format(idA, idB))
 
-                # SOURCE => DATARANGE
+                    # SOURCE => DATARANGE
 
-                elif source.identity is Identity.DataRange:
+                    elif source.identity is Identity.DataRange:
 
-                    if target.restriction is Restriction.Self:
-                        # Not a Qualified Restriction.
-                        return False
-
-                    # We can connect a DataRange in input only if there is no other input or if the
-                    # other input is an Attribute and the node specifies a Qualified Restriction.
-                    node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
-                    if node:
-                        if node.identity is not Identity.Attribute:
+                        if target.restriction is Restriction.Self:
                             # Not a Qualified Restriction.
-                            return False
+                            raise SyntaxError('Invalid restriction (self) for qualified restriction')
 
-            elif target.isItem(Item.RangeRestrictionNode):
+                        # We can connect a DataRange in input only if there is no other input or if the
+                        # other input is an Attribute and the node specifies a Qualified Restriction.
+                        node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
+                        if node and node.identity is not Identity.Attribute:
+                            # Not a Qualified Restriction.
+                            idA = source.identity.label
+                            idB = node.identity.label
+                            raise SyntaxError('Invalid inputs ({} + {}) for qualified restriction'.format(idA, idB))
 
-                ########################################################################################################
-                #                                                                                                      #
-                #   TARGET = RANGE RESTRICTION                                                                         #
-                #                                                                                                      #
-                ########################################################################################################
+                elif target.isItem(Item.RangeRestrictionNode):
 
-                if len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)) >= 2:
-                    # Range Restriction node can have at most 2 inputs.
-                    return False
+                    ####################################################################################################
+                    #                                                                                                  #
+                    #   TARGET = RANGE RESTRICTION                                                                     #
+                    #                                                                                                  #
+                    ####################################################################################################
 
-                if source.identity not in {Identity.Neutral, Identity.Concept, Identity.Attribute, Identity.Role, Identity.DataRange}:
-                    # Range Restriction node takes as input:
-                    #  - Role => OWL 2 ObjectPropertyExpression
-                    #  - Attribute => OWL 2 DataPropertyExpression
-                    #  - Concept => Qualified Existential/Universal Role Restriction
-                    #  - DataRange => Qualified Existential Data Restriction
-                    return False
+                    if len(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)) >= 2:
+                        # Range Restriction node can have at most 2 inputs.
+                        raise SyntaxError('Too many inputs to {}'.format(target.name))
 
-                if source.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode):
-                    # Exclude incompatible sources: not that while RoleChain has a correct identity
-                    # it is excluded because it doesn't represent the OWL 2 ObjectPropertyExpression.
-                    return False
+                    if source.identity not in {Identity.Neutral, Identity.Concept, Identity.Attribute, Identity.Role, Identity.DataRange}:
+                        # Range Restriction node takes as input:
+                        #  - Role => OWL 2 ObjectPropertyExpression
+                        #  - Attribute => OWL 2 DataPropertyExpression
+                        #  - Concept => Qualified Existential/Universal Role Restriction
+                        #  - DataRange => Qualified Existential Data Restriction
+                        raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.identity.label))
 
-                # SOURCE => CONCEPT EXPRESSION || NEUTRAL
+                    if source.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode):
+                        # Exclude incompatible sources: not that while RoleChain has a correct identity
+                        # it is excluded because it doesn't represent the OWL 2 ObjectPropertyExpression.
+                        raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.name))
 
-                if source.identity in {Identity.Concept, Identity.Neutral}:
+                    # SOURCE => CONCEPT EXPRESSION || NEUTRAL
 
-                    if target.restriction is Restriction.Self:
-                        # Not a Qualified Restriction.
-                        return False
+                    if source.identity in {Identity.Concept, Identity.Neutral}:
 
-                    # We can connect a Concept in input only if there is no other input or if the other input is a Role.
-                    node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
-                    if node:
-                        if node.identity is not Identity.Role:
+                        # We can connect a Concept in input only if there is no other input or if the other input is a Role.
+                        node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
+                        if node and node.identity is not Identity.Role:
                             # We found another input on this node which is not a Role
                             # so we can't construct a Qualified Restriction.
-                            return False
+                            idA = source.identity.label
+                            idB = node.identity.label
+                            raise SyntaxError('Invalid inputs ({} + {}) for qualified restriction'.format(idA, idB))
 
-                # SOURCE => ROLE EXPRESSION
+                    # SOURCE => ROLE EXPRESSION
 
-                elif source.identity is Identity.Role:
+                    if source.identity is Identity.Role:
 
-                    # We can connect a Role in input only if there is no other input or if the
-                    # other input is a Concept and the node specifies a Qualified Restriction.
-                    node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
-                    if node:
-                        if node.identity is not Identity.Concept or target.restriction is Restriction.Self:
+                        # We can connect a Role in input only if there is no other input or if the
+                        # other input is a Concept and the node specifies a Qualified Restriction.
+                        node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
+                        if node and node.identity is not Identity.Concept:
                             # Not a Qualified Restriction.
-                            return False
+                            idA = source.identity.label
+                            idB = node.identity.label
+                            raise SyntaxError('Invalid inputs ({} + {}) for qualified restriction'.format(idA, idB))
 
-                # SOURCE => ATTRIBUTE NODE
+                    # SOURCE => ATTRIBUTE NODE
 
-                elif source.identity is Identity.Attribute:
+                    elif source.identity is Identity.Attribute:
 
-                    if target.restriction is not Restriction.Exists:
-                        # RangeRestriction of Attribute => Restriction.Exists
-                        return False
-
-                    # We can connect an Attribute in input only if there is no other input or if the
-                    # other input is a DataRange and the node specifies a Qualified Restriction.
-                    node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
-                    if node:
-                        if node.identity is not Identity.DataRange:
+                        # We can connect an Attribute in input only if there is no other input or if the
+                        # other input is a DataRange and the node specifies a Qualified Restriction.
+                        node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
+                        if node and node.identity is not Identity.DataRange:
                             # Not a Qualified Restriction.
-                            return False
+                            idA = source.identity.label
+                            idB = node.identity.label
+                            raise SyntaxError('Invalid inputs ({} + {}) for qualified restriction'.format(idA, idB))
 
-                # SOURCE => DATARANGE
+                    # SOURCE => DATARANGE
 
-                elif source.identity is Identity.DataRange:
+                    elif source.identity is Identity.DataRange:
 
-                    if target.restriction is not Restriction.Exists:
-                        # Qualified RangeRestriction of Attribute => Restriction.Exists
-                        return False
-
-                    # We can connect a DataRange in input only if there is no other input or if the
-                    # other input is an Attribute and the node specifies a Qualified Restriction.
-                    node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
-                    if node:
-                        if node.identity is not Identity.Attribute:
+                        # We can connect a DataRange in input only if there is no other input or if the
+                        # other input is an Attribute and the node specifies a Qualified Restriction.
+                        node = next(iter(target.incomingNodes(lambda x: x.isItem(Item.InputEdge) and x is not edge)), None)
+                        if node and node.identity is not Identity.Attribute:
                             # Not a Qualified Restriction.
-                            return False
+                            idA = source.identity.label
+                            idB = node.identity.label
+                            raise SyntaxError('Invalid inputs ({} + {}) for qualified restriction'.format(idA, idB))
 
-        elif edge.isItem(Item.InstanceOfEdge):
+            elif edge.isItem(Item.InstanceOfEdge):
 
-            ############################################################################################################
-            #                                                                                                          #
-            #   INSTANCE OF EDGE                                                                                       #
-            #                                                                                                          #
-            ############################################################################################################
+                ########################################################################################################
+                #                                                                                                      #
+                #   INSTANCE OF EDGE                                                                                   #
+                #                                                                                                      #
+                ########################################################################################################
 
-            if source.identity not in {Identity.Individual, Identity.Link}:
-                # The source of the edge must be one of Individual or Link.
-                return False
+                if source.identity not in {Identity.Individual, Identity.Link}:
+                    # The source of the edge must be one of Individual or Link.
+                    raise SyntaxError('Invalid source for instanceOf edge: {}'.format(source.identity.label))
 
-            if len(source.outgoingNodes(lambda x: x.isItem(Item.InstanceOfEdge) and x is not edge)) > 0:
-                # The source node MUST be instanceOf at most of one construct.
-                return False
+                if len(source.outgoingNodes(lambda x: x.isItem(Item.InstanceOfEdge) and x is not edge)) > 0:
+                    # The source node MUST be instanceOf at most of one construct.
+                    raise SyntaxError('Too many outputs from {}'.format(source.name))
 
-            if source.identity is Identity.Individual and target.identity is not Identity.Concept:
-                # If the source of the edge is an Individual it means that we are trying to construct a ClassAssertion
-                # construct, and so the target of the edge MUST be an axiom identified as Concept (Atomic or General).
-                # OWL 2 syntax: ClassAssertion(axiomAnnotations ClassExpression Individual)
-                return False
+                if source.identity is Identity.Individual and target.identity is not Identity.Concept:
+                    # If the source of the edge is an Individual it means that we are trying to construct a ClassAssertion
+                    # construct, and so the target of the edge MUST be an axiom identified as Concept (Atomic or General).
+                    # OWL 2: ClassAssertion(axiomAnnotations ClassExpression Individual)
+                    raise SyntaxError('Invalid target for Concept assertion: {}'.format(target.identity.label))
 
-            if source.identity is Identity.Link:
+                if source.identity is Identity.Link:
 
-                if not target.isItem(Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode):
-                    # If the source of the edge is a Link then the target of the edge MUST be the
-                    # OWL 2 equivalent of ObjectPropertyExpression and DataPropertyExpression.
-                    return False
+                    if not target.isItem(Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode):
+                        # If the source of the edge is a Link then the target of the edge MUST be the
+                        # OWL 2 equivalent of ObjectPropertyExpression and DataPropertyExpression.
+                        raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.identity.label))
 
-                if target.isItem(Item.RoleNode, Item.RoleInverseNode):
-                    # If the target of the edge is a Role expression then we need to check
-                    # not to have Literals in input to the source node (which is a Link).
-                    # OWL 2 syntax: ObjectPropertyAssertion(axiomAnnotations ObjectPropertyExpression Individual Individual)
-                    if len(source.incomingNodes(filter_on_edges=lambda x: x.isItem(Item.InputEdge),
-                                                filter_on_nodes=lambda x: x.identity is Identity.Literal)) > 0:
-                        return False
+                    if target.isItem(Item.RoleNode, Item.RoleInverseNode):
+                        # If the target of the edge is a Role expression then we need to check
+                        # not to have Literals in input to the source node (which is a Link).
+                        # OWL 2: ObjectPropertyAssertion(axiomAnnotations ObjectPropertyExpression Individual Individual)
+                        f1 = lambda x: x.isItem(Item.InputEdge)
+                        f2 = lambda x: x.identity is Identity.Literal
+                        if len(source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
+                            raise SyntaxError('Invalid in input to {} for Role assertion'.format(source.name))
 
-                if target.isItem(Item.AttributeNode):
-                    # If the target of the edge is an Attribute expression then we need to check
-                    # not to have 2 Individuals as input to the source node (which is a link).
-                    # OWL 2 syntax: DataPropertyAssertion(axiomAnnotations DataPropertyExpression Individual Literal)
-                    if len(source.incomingNodes(filter_on_edges=lambda x: x.isItem(Item.InputEdge),
-                                                filter_on_nodes=lambda x: x.identity is Identity.Individual)) > 1:
-                        return False
+                    if target.isItem(Item.AttributeNode):
+                        # If the target of the edge is an Attribute expression then we need to check
+                        # not to have 2 Individuals as input to the source node (which is a link).
+                        # OWL 2: DataPropertyAssertion(axiomAnnotations DataPropertyExpression Individual Literal)
+                        f1 = lambda x: x.isItem(Item.InputEdge)
+                        f2 = lambda x: x.identity is Identity.Individual
+                        if len(source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 1:
+                            raise SyntaxError('Invalid in input to {} for Attribute assertion'.format(source.name))
 
-        return True
+        except SyntaxError as e:
+            self._result = ValidationResult(source, edge, target, False, e.msg)
+        else:
+            self._result = ValidationResult(source, edge, target, True, 'OK')

@@ -325,7 +325,7 @@ class SquaredNode(AbstractNode):
         """
         Set the label text: will additionally parse the text value and set the restriction type accordingly.
         :raise ParseError: if an invalid text value is supplied.
-        :type text: T <= bytes | unicode
+        :type text: str
         """
         value = text.strip().lower()
         if value == Restriction.Exists.label:
@@ -377,9 +377,8 @@ class SquaredNode(AbstractNode):
         if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
 
             edge = scene.command.edge
-
             brush = self.brushConnectionOk
-            if not scene.validator.check(edge.source, edge, scene.mouseOverNode):
+            if not scene.validator.valid(edge.source, edge, scene.mouseOverNode):
                 brush = self.brushConnectionBad
 
             painter.setPen(Qt.NoPen)

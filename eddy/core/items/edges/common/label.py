@@ -51,7 +51,7 @@ class Label(LabelItem):
     def __init__(self, text='', centered=True, parent=None):
         """
         Initialize the label.
-        :type text: T <= bytes | unicode
+        :type text: str
         :type centered: bool
         :type parent: QObject
         """
@@ -130,7 +130,7 @@ class Label(LabelItem):
     def setText(self, text):
         """
         Set the given text as plain text.
-        :type text: T <= bytes | unicode
+        :type text: str
         """
         self.setPlainText(text)
 

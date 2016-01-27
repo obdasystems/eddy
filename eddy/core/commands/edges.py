@@ -45,7 +45,7 @@ class CommandEdgeAdd(QUndoCommand):
         """
         Initialize the command.
         """
-        super().__init__('add {}'.format(edge.item.label))
+        super().__init__('add {}'.format(edge.name))
         self.edge = edge
         self.scene = scene
         self.inputs = {'redo': [], 'undo': []}
@@ -106,7 +106,7 @@ class CommandEdgeBreakpointAdd(QUndoCommand):
         """
         Initialize the command.
         """
-        super().__init__('add {} breakpoint'.format(edge.item.label))
+        super().__init__('add {} breakpoint'.format(edge.name))
         self.edge = edge
         self.scene = scene
         self.index = index
@@ -133,7 +133,7 @@ class CommandEdgeAnchorMove(QUndoCommand):
         """
         Initialize the command.
         """
-        super().__init__('move {} anchor point'.format(edge.item.label))
+        super().__init__('move {} anchor point'.format(edge.name))
         self.scene = scene
         self.edge = edge
         self.node = node
@@ -167,7 +167,7 @@ class CommandEdgeBreakpointMove(QUndoCommand):
         """
         Initialize the command.
         """
-        super().__init__('move {} breakpoint'.format(edge.item.label))
+        super().__init__('move {} breakpoint'.format(edge.name))
         self.edge = edge
         self.scene = scene
         self.index = index
@@ -202,7 +202,7 @@ class CommandEdgeBreakpointDel(QUndoCommand):
         """
         Initialize the command.
         """
-        super().__init__('remove {} breakpoint'.format(edge.item.label))
+        super().__init__('remove {} breakpoint'.format(edge.name))
         self.edge = edge
         self.scene = scene
         self.index = index
@@ -230,7 +230,7 @@ class CommandEdgeInclusionToggleComplete(QUndoCommand):
         Initialize the command.
         """
         if len(data) == 1:
-            super().__init__('toggle {} completness'.format(next(iter(data.keys())).item.label))
+            super().__init__('toggle {} completness'.format(next(iter(data.keys())).name))
         else:
             super().__init__('toggle completness for {} edges'.format(len(data)))
 
@@ -261,7 +261,7 @@ class CommandEdgeInputToggleFunctional(QUndoCommand):
         Initialize the command.
         """
         if len(data) == 1:
-            super().__init__('toggle {} functionality'.format(next(iter(data.keys())).item.label))
+            super().__init__('toggle {} functionality'.format(next(iter(data.keys())).name))
         else:
             super().__init__('toggle functionality for {} edges'.format(len(data)))
 
@@ -292,7 +292,7 @@ class CommandEdgeSwap(QUndoCommand):
         Initialize the command.
         """
         if len(edges) == 1:
-            super().__init__('swap {}'.format(next(iter(edges)).item.label))
+            super().__init__('swap {}'.format(next(iter(edges)).name))
         else:
             super().__init__('swap {} edges'.format(len(edges)))
 

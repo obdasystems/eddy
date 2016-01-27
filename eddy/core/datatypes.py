@@ -64,7 +64,7 @@ class Color(Enum):
     def forValue(cls, value):
         """
         Returns the color matching the given HEX code.
-        :type value: T <= bytes | unicode
+        :type value: str
         :rtype: Color
         """
         for x in cls:
@@ -208,7 +208,7 @@ class File(object):
     def __init__(self, path=None):
         """
         Initialize the File.
-        :type path: T <= bytes | unicode
+        :type path: str
         """
         self._path = expandPath(path) if path else None
 
@@ -232,7 +232,7 @@ class File(object):
     def path(self):
         """
         Returns the path of the File.
-        :rtype: unicode
+        :rtype: str
         """
         return self._path
 
@@ -240,7 +240,7 @@ class File(object):
     def path(self, path):
         """
         Set the path of the File.
-        :type path: T <= bytes | unicode.
+        :type path: str.
         """
         self._path = expandPath(path)
 
@@ -270,8 +270,8 @@ class File(object):
     def write(self, string, path=None):
         """
         Write the content of 'string' in 'path'.
-        :type string: T <= bytes | unicode.
-        :type path: T <= bytes | unicode.
+        :type string: str
+        :type path: str
         """
         path = path or self.path
         temp = expandPath('@home/.{}'.format(os.path.basename(os.path.normpath(path))))
@@ -298,7 +298,7 @@ class Filetype(Enum):
     def forValue(cls, value):
         """
         Returns the filetype matching the given value.
-        :type value: T <= bytes | unicode
+        :type value: str
         :rtype: Filetype
         """
         for x in cls:
@@ -308,7 +308,10 @@ class Filetype(Enum):
 
     @DynamicClassAttribute
     def suffix(self):
-        """The suffix associated with the Enum member."""
+        """
+        The suffix associated with the Enum member.
+        :rtype: str
+        """
         return {
             Filetype.Graphol: '.graphol',
             Filetype.Owl: '.owl',
@@ -323,7 +326,7 @@ class Font(QFont):
     def __init__(self, family, size=12, weight=-1, italic=False):
         """
         Contruct a new Font instance using the given parameters.
-        :type family: T <= bytes | unicode
+        :type family: str
         :type size: float
         :type weight: float
         :type italic: bool
@@ -350,17 +353,20 @@ class Identity(IntEnum):
 
     @DynamicClassAttribute
     def label(self):
-        """The label of the Enum member."""
+        """
+        The label of the Enum member.
+        :rtype: str
+        """
         return {
-            Identity.Neutral: 'neutral',
-            Identity.Concept: 'concept',
-            Identity.Role: 'role',
-            Identity.Attribute: 'attribute',
-            Identity.DataRange: 'data range',
-            Identity.Individual: 'individual',
-            Identity.Literal: 'literal',
-            Identity.Link: 'link',
-            Identity.Unknown: 'unknown',
+            Identity.Neutral: 'Neutral',
+            Identity.Concept: 'Concept',
+            Identity.Role: 'Role',
+            Identity.Attribute: 'Attribute',
+            Identity.DataRange: 'DataRange',
+            Identity.Individual: 'Individual',
+            Identity.Literal: 'Literal',
+            Identity.Link: 'Link',
+            Identity.Unknown: 'Unknown',
         }[self]
 
 
@@ -403,10 +409,12 @@ class Item(IntEnum):
     LabelEdge = 21
     LabelNode = 22
 
-
     @DynamicClassAttribute
     def label(self):
-        """The label of the Enum member."""
+        """
+        The label of the Enum member.
+        :rtype: str
+        """
         return {
             Item.AttributeNode: 'attribute node', Item.ComplementNode: 'complement node',
             Item.ConceptNode: 'concept node', Item.DatatypeRestrictionNode: 'datatype restriction node',
@@ -459,7 +467,7 @@ class Platform(Enum):
     def forValue(cls, value):
         """
         Returns the platform identified by the the given value.
-        :type value: T <= bytes | unicode
+        :type value: str
         :rtype: Platform
         """
         if value.startswith('darwin'):
@@ -485,7 +493,10 @@ class Restriction(Enum):
 
     @DynamicClassAttribute
     def label(self):
-        """The label of the Enum member."""
+        """
+        The label of the Enum member.
+        :rtype: str
+        """
         return {
             Restriction.Exists: 'exists',
             Restriction.Forall: 'forall',
@@ -508,7 +519,7 @@ class Special(Enum):
     def forValue(cls, value):
         """
         Returns the special type matching the given value.
-        :type value: T <= bytes | unicode
+        :type value: str
         :rtype: Special
         """
         for x in cls:
@@ -566,7 +577,7 @@ class XsdDatatype(Enum):
     def forValue(cls, value):
         """
         Returns the XsdDatatype matching the given value.
-        :type value: T <= bytes | unicode
+        :type value: str
         :rtype: XsdDatatype
         """
         for x in cls:

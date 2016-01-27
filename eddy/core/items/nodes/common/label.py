@@ -51,7 +51,7 @@ class Label(LabelItem):
     def __init__(self, default='', centered=True, movable=True, editable=True, parent=None):
         """
         Initialize the label.
-        :type default: T <= bytes | unicode
+        :type default: str
         :type centered: bool
         :type movable: bool
         :type editable: bool
@@ -208,7 +208,7 @@ class Label(LabelItem):
     def setText(self, text):
         """
         Set the given text as plain text.
-        :type text: T <= bytes | unicode.
+        :type text: str.
         """
         moved = self.moved
         self.setPlainText(text)
