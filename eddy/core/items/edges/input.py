@@ -113,7 +113,7 @@ class InputEdge(AbstractEdge):
             menu.addAction(scene.mainwindow.actionSwapEdge)
             menu.addSeparator()
             menu.addAction(scene.mainwindow.actionToggleEdgeFunctional)
-            scene.mainwindow.actionSwapEdge.setVisible(scene.validator.run(self.target, self, self.source))
+            scene.mainwindow.actionSwapEdge.setVisible(scene.validator.valid(self.target, self, self.source))
             scene.mainwindow.actionToggleEdgeFunctional.setChecked(self.functional)
         return menu
 
