@@ -86,7 +86,12 @@ class NodeProperty(QDialog):
         self.itemField = StringEditField(self.generalWidget)
         self.itemField.setEnabled(False)
         self.itemField.setFixedWidth(300)
-        self.itemField.setValue(' '.join(i.capitalize() for i in rCut(self.node.item.label, ' node').split()))
+        self.itemField.setValue(' '.join(i.capitalize() for i in rCut(self.node.name, ' node').split()))
+
+        self.showIdentityField = StringEditField(self.generalWidget)
+        self.showIdentityField.setEnabled(False)
+        self.showIdentityField.setFixedWidth(300)
+        self.showIdentityField.setValue(self.node.identity.label)
 
         self.urlField = StringEditField(self.generalWidget)
         self.urlField.setFixedWidth(300)
@@ -98,6 +103,7 @@ class NodeProperty(QDialog):
 
         self.generalLayout.addRow('ID', self.idField)
         self.generalLayout.addRow('Type', self.itemField)
+        self.generalLayout.addRow('Identity', self.showIdentityField)
         self.generalLayout.addRow('URL', self.urlField)
         self.generalLayout.addRow('Description', self.descriptionField)
 
