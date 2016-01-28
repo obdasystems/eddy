@@ -50,17 +50,17 @@ from eddy.core.functions.graph import dfs
 from eddy.core.functions.graph import identify
 
 from eddy.core.functions.misc import clamp
+from eddy.core.functions.misc import coloredIcon
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.misc import isQuoted
 from eddy.core.functions.misc import lCut
-from eddy.core.functions.misc import makeColoredIcon
-from eddy.core.functions.misc import makeShadedIcon
 from eddy.core.functions.misc import OWLText
 from eddy.core.functions.misc import partition
 from eddy.core.functions.misc import QSS
 from eddy.core.functions.misc import rangeF
 from eddy.core.functions.misc import rCut
 from eddy.core.functions.misc import shaded
+from eddy.core.functions.misc import shadedIcon
 from eddy.core.functions.misc import snapF
 
 from eddy.core.functions.signals import connect

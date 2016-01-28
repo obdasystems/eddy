@@ -58,7 +58,7 @@ from eddy.core.commands import CommandNodeChangeBrush, CommandNodeSetZValue
 from eddy.core.datatypes import Color, File, DiagramMode, Filetype, Restriction, Special, XsdDatatype
 from eddy.core.exceptions import ParseError
 from eddy.core.functions.fsystem import expandPath
-from eddy.core.functions.misc import makeColoredIcon, makeShadedIcon, snapF
+from eddy.core.functions.misc import coloredIcon, shadedIcon, snapF
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items import Item, __mapping__ as mapping
 from eddy.core.items import RoleInverseNode, DisjointUnionNode, DatatypeRestrictionNode
@@ -142,38 +142,38 @@ class MainWindow(QMainWindow):
         #                                                                                                              #
         ################################################################################################################
 
-        self.iconBringToFront = makeShadedIcon(':/icons/bring-to-front')
-        self.iconCenterFocus = makeShadedIcon(':/icons/center-focus')
-        self.iconClose = makeShadedIcon(':/icons/close')
-        self.iconColorFill = makeShadedIcon(':/icons/color-fill')
-        self.iconCopy = makeShadedIcon(':/icons/copy')
-        self.iconCreate = makeShadedIcon(':/icons/create')
-        self.iconCut = makeShadedIcon(':/icons/cut')
-        self.iconDelete = makeShadedIcon(':/icons/delete')
-        self.iconGrid = makeShadedIcon(':/icons/grid')
-        self.iconLabel = makeShadedIcon(':/icons/label')
-        self.iconLink = makeShadedIcon(':/icons/link')
-        self.iconNew = makeShadedIcon(':/icons/new')
-        self.iconOpen = makeShadedIcon(':/icons/open')
-        self.iconPaste = makeShadedIcon(':/icons/paste')
-        self.iconPalette = makeShadedIcon(':/icons/appearance')
-        self.iconPreferences = makeShadedIcon(':/icons/preferences')
-        self.iconPrint = makeShadedIcon(':/icons/print')
-        self.iconQuit = makeShadedIcon(':/icons/quit')
-        self.iconRedo = makeShadedIcon(':/icons/redo')
-        self.iconRefactor = makeShadedIcon(':/icons/refactor')
-        self.iconRefresh = makeShadedIcon(':/icons/refresh')
-        self.iconSave = makeShadedIcon(':/icons/save')
-        self.iconSaveAs = makeShadedIcon(':/icons/save')
-        self.iconSelectAll = makeShadedIcon(':/icons/select-all')
-        self.iconSendToBack = makeShadedIcon(':/icons/send-to-back')
-        self.iconStarFilled = makeShadedIcon(':/icons/star-filled')
-        self.iconSwapHorizontal = makeShadedIcon(':/icons/swap-horizontal')
-        self.iconSwapVertical = makeShadedIcon(':/icons/swap-vertical')
-        self.iconUndo = makeShadedIcon(':/icons/undo')
-        self.iconZoom = makeShadedIcon(':/icons/zoom')
-        self.iconZoomIn = makeShadedIcon(':/icons/zoom-in')
-        self.iconZoomOut = makeShadedIcon(':/icons/zoom-out')
+        self.iconBringToFront = shadedIcon(':/icons/bring-to-front')
+        self.iconCenterFocus = shadedIcon(':/icons/center-focus')
+        self.iconClose = shadedIcon(':/icons/close')
+        self.iconColorFill = shadedIcon(':/icons/color-fill')
+        self.iconCopy = shadedIcon(':/icons/copy')
+        self.iconCreate = shadedIcon(':/icons/create')
+        self.iconCut = shadedIcon(':/icons/cut')
+        self.iconDelete = shadedIcon(':/icons/delete')
+        self.iconGrid = shadedIcon(':/icons/grid')
+        self.iconLabel = shadedIcon(':/icons/label')
+        self.iconLink = shadedIcon(':/icons/link')
+        self.iconNew = shadedIcon(':/icons/new')
+        self.iconOpen = shadedIcon(':/icons/open')
+        self.iconPaste = shadedIcon(':/icons/paste')
+        self.iconPalette = shadedIcon(':/icons/appearance')
+        self.iconPreferences = shadedIcon(':/icons/preferences')
+        self.iconPrint = shadedIcon(':/icons/print')
+        self.iconQuit = shadedIcon(':/icons/quit')
+        self.iconRedo = shadedIcon(':/icons/redo')
+        self.iconRefactor = shadedIcon(':/icons/refactor')
+        self.iconRefresh = shadedIcon(':/icons/refresh')
+        self.iconSave = shadedIcon(':/icons/save')
+        self.iconSaveAs = shadedIcon(':/icons/save')
+        self.iconSelectAll = shadedIcon(':/icons/select-all')
+        self.iconSendToBack = shadedIcon(':/icons/send-to-back')
+        self.iconStarFilled = shadedIcon(':/icons/star-filled')
+        self.iconSwapHorizontal = shadedIcon(':/icons/swap-horizontal')
+        self.iconSwapVertical = shadedIcon(':/icons/swap-vertical')
+        self.iconUndo = shadedIcon(':/icons/undo')
+        self.iconZoom = shadedIcon(':/icons/zoom')
+        self.iconZoomIn = shadedIcon(':/icons/zoom-in')
+        self.iconZoomOut = shadedIcon(':/icons/zoom-out')
 
         ################################################################################################################
         #                                                                                                              #
@@ -350,7 +350,7 @@ class MainWindow(QMainWindow):
         self.actionsChangeNodeBrush = []
         for color in Color:
             action = QAction(color.name, self)
-            action.setIcon(makeColoredIcon(size, size, color.value))
+            action.setIcon(coloredIcon(size, size, color.value))
             action.setCheckable(False)
             action.setData(color)
             connect(action.triggered, self.changeNodeBrush)
@@ -375,7 +375,7 @@ class MainWindow(QMainWindow):
         self.actionsRefactorBrush = []
         for color in Color:
             action = QAction(color.name, self)
-            action.setIcon(makeColoredIcon(size, size, color.value))
+            action.setIcon(coloredIcon(size, size, color.value))
             action.setCheckable(False)
             action.setData(color)
             connect(action.triggered, self.refactorBrush)

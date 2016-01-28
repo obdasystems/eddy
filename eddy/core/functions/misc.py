@@ -59,6 +59,19 @@ def clamp(val, minval=None, maxval=None):
     return val
 
 
+def coloredIcon(width, height, code):
+    """
+    Create and returns a QIcon filled using the given color.
+    :type width: T <= int | float
+    :type height: T <= int | float
+    :type code: str
+    :rtype: QIcon
+    """
+    pixmap = QPixmap(width, height)
+    pixmap.fill(QColor(code))
+    return QIcon(pixmap)
+
+
 def isEmpty(string):
     """
     Safely detect whether the given string is empty.
@@ -87,32 +100,6 @@ def lCut(text, cut):
     if text.startswith(cut):
         return text[len(cut)+1:]
     return text
-
-
-def makeColoredIcon(width, height, code):
-    """
-    Create and returns a QIcon filled using the given color.
-    :type width: T <= int | float
-    :type height: T <= int | float
-    :type code: str
-    :rtype: QIcon
-    """
-    pixmap = QPixmap(width, height)
-    pixmap.fill(QColor(code))
-    return QIcon(pixmap)
-
-
-def makeShadedIcon(path, opacity=0.25):
-    """
-    Create a shaded icon using the given image: the shaded copy will use the given opacity value.
-    :type path: str
-    :type opacity: T <= int | float
-    :rtype: QIcon
-    """
-    icon = QIcon()
-    icon.addPixmap(QPixmap(path), QIcon.Normal)
-    icon.addPixmap(shaded(QPixmap(path), opacity), QIcon.Disabled)
-    return icon
 
 
 def OWLText(text):
@@ -175,6 +162,19 @@ def shaded(pixmap, opacity=0.25):
     p.drawPixmap(0, 0, pixmap)
     p.end()
     return o
+
+
+def shadedIcon(path, opacity=0.25):
+    """
+    Create a shaded icon using the given image: the shaded copy will use the given opacity value.
+    :type path: str
+    :type opacity: T <= int | float
+    :rtype: QIcon
+    """
+    icon = QIcon()
+    icon.addPixmap(QPixmap(path), QIcon.Normal)
+    icon.addPixmap(shaded(QPixmap(path), opacity), QIcon.Disabled)
+    return icon
 
 
 def snapF(value, gridsize, offset=0, snap=True):
