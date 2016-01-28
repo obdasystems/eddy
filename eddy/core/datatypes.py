@@ -510,7 +510,7 @@ class Special(Enum):
     """
     This class defines special nodes types.
     """
-    __order__ = 'TOP BOTTOM'
+    __order__ = 'Top Bottom'
 
     Top = 'TOP'
     Bottom = 'BOTTOM'
