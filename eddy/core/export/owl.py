@@ -37,7 +37,7 @@ import jpype
 from PyQt5.QtCore import QObject, pyqtSlot, pyqtSignal
 from PyQt5.QtWidgets import QApplication
 
-from eddy.core.datatypes import Special, Item, Identity, Restriction, OWLSyntax, XsdDatatype
+from eddy.core.datatypes import Special, Item, Identity, Restriction, OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
 from eddy.core.functions import clamp, OWLText
 
@@ -318,9 +318,14 @@ class OWLExporter(QObject):
         :type node: IndividualNode
         :rtype: OWLNamedIndividual
         """
-        # FIXME: what about Individual/Literals?
         if node not in self.converted:
-            self.converted[node] = self.factory.getOWLNamedIndividual(self.IRI.create(self.ontoIRI, OWLText(node.labelText())))
+            if node.identity is Identity.Individual:
+                IRI = self.IRI.create(self.ontoIRI, OWLText(node.labelText()))
+                self.converted[node] = self.factory.getOWLNamedIndividual(IRI)
+            elif node.identity is Identity.Literal:
+                value = node.literal
+                datatype = self.OWL2Datatype.valueOf(node.datatype.owlapi)
+                self.converted[node] = self.factory.getOWLLiteral(value, datatype)
         return self.converted[node]
 
     def buildIntersection(self, node):
@@ -554,26 +559,7 @@ class OWLExporter(QObject):
         :rtype: OWLDatatype
         """
         if node not in self.converted:
-
-            __mapping__ = {
-                XsdDatatype.anyURI: 'XSD_ANY_URI', XsdDatatype.base64Binary: 'XSD_BASE_64_BINARY',
-                XsdDatatype.boolean: 'XSD_BOOLEAN', XsdDatatype.byte: 'XSD_BYTE', XsdDatatype.dateTime: 'XSD_DATE_TIME',
-                XsdDatatype.dateTimeStamp: 'XSD_DATE_TIME_STAMP', XsdDatatype.decimal: 'XSD_DECIMAL',
-                XsdDatatype.double: 'XSD_DOUBLE', XsdDatatype.float: 'XSD_FLOAT', XsdDatatype.hexBinary: 'XSD_HEX_BINARY',
-                XsdDatatype.int: 'XSD_INT', XsdDatatype.integer: 'XSD_INTEGER', XsdDatatype.language: 'XSD_LANGUAGE',
-                XsdDatatype.literal: 'RDFS_LITERAL', XsdDatatype.long: 'XSD_LONG', XsdDatatype.Name: 'XSD_NAME',
-                XsdDatatype.NCName: 'XSD_NCNAME', XsdDatatype.negativeInteger: 'XSD_NEGATIVE_INTEGER',
-                XsdDatatype.NMTOKEN: 'XSD_NMTOKEN', XsdDatatype.nonNegativeInteger: 'XSD_NON_NEGATIVE_INTEGER',
-                XsdDatatype.nonPositiveInteger: 'XSD_NON_POSITIVE_INTEGER', XsdDatatype.normalizedString: 'XSD_NORMALIZED_STRING',
-                XsdDatatype.plainLiteral: 'RDF_PLAIN_LITERAL', XsdDatatype.positiveInteger: 'XSD_POSITIVE_INTEGER',
-                XsdDatatype.rational: 'OWL_RATIONAL', XsdDatatype.real: 'OWL_REAL', XsdDatatype.short: 'XSD_SHORT',
-                XsdDatatype.string: 'XSD_STRING', XsdDatatype.token: 'XSD_TOKEN', XsdDatatype.unsignedByte: 'XSD_UNSIGNED_BYTE',
-                XsdDatatype.unsignedInt: 'XSD_UNSIGNED_INT', XsdDatatype.unsignedLong: 'XSD_UNSIGNED_LONG',
-                XsdDatatype.unsignedShort: 'XSD_UNSIGNED_SHORT', XsdDatatype.xmlLiteral: 'RDF_XML_LITERAL',
-            }
-
-            self.converted[node] = self.factory.getOWLDatatype(self.OWL2Datatype.valueOf(__mapping__[node.datatype]).getIRI())
-
+            self.converted[node] = self.factory.getOWLDatatype(self.OWL2Datatype.valueOf(node.datatype.owlapi).getIRI())
         return self.converted[node]
 
     ####################################################################################################################
