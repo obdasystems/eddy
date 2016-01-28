@@ -1146,12 +1146,16 @@ class MainWindow(QMainWindow):
         :type item: AbstractItem
         :type modifiers: int
         """
-        if not modifiers & Qt.ControlModifier:
+        scene = self.mdi.activeScene
+        if not modifiers & Qt.ControlModifier or item.isItem(Item.IndividualNode):
             self.palette_.button(item.item).setChecked(False)
-            scene = self.mdi.activeScene
-            if scene:
-                scene.setMode(DiagramMode.Idle)
-                scene.command = None
+            scene.setMode(DiagramMode.Idle)
+            scene.command = None
+
+        if item.isItem(Item.IndividualNode):
+            prop = self.propertyFactory.create(scene=scene, node=item)
+            prop.mainWidget.setCurrentWidget(prop.identityWidget)
+            prop.exec_()
 
     @pyqtSlot()
     def newDocument(self):
