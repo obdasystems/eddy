@@ -40,7 +40,7 @@ from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTa
 from eddy.core.commands import CommandNodeSetURL, CommandNodeSetDescription
 from eddy.core.commands import CommandNodeLabelEdit, CommandNodeMove
 from eddy.core.commands import CommandNodeChangeInputOrder
-from eddy.core.datatypes import DistinctList, Identity, XsdDatatype
+from eddy.core.datatypes import DistinctList, Identity, XsdDatatype, Item
 from eddy.core.functions import clamp, connect, isEmpty, lCut, rCut
 
 from eddy.ui.fields import StringEditField, TextEditField, SpinBox, ComboBox
@@ -440,8 +440,20 @@ class IndividualNodeProperty(NodeProperty):
 
         # IDENTITY COMBO BOX
         self.identityField = ComboBox(self)
-        self.identityField.addItem('Individual', Identity.Individual)
-        self.identityField.addItem('Literal', Identity.Literal)
+
+        f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
+        f2 = lambda x: x.isItem(Item.EnumerationNode)
+        enumeration = next(iter(self.node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
+
+        f3 = lambda x: x.isItem(Item.InputEdge) and x.target is enumeration
+        f4 = lambda x: x.isItem(Item.IndividualNode)
+        num = len(enumeration.incomingNodes(filter_on_edges=f3, filter_on_nodes=f4)) if enumeration else 0
+
+        if not enumeration or enumeration.identity is Identity.Concept or num < 2:
+            self.identityField.addItem('Individual', Identity.Individual)
+
+        if not enumeration or enumeration.identity is Identity.DataRange or num < 2:
+            self.identityField.addItem('Literal', Identity.Literal)
 
         for i in range(self.identityField.count()):
             if self.identityField.itemData(i) is self.node.identity:
@@ -541,7 +553,7 @@ class IndividualNodeProperty(NodeProperty):
             value = self.valueField.value().strip()
             value = '"{}"^^{}'.format(rCut(lCut(value, '"'), '"'), datatype.value)
         else:
-            value = self.labelF.value().strip()
+            value = self.valueField.value().strip()
             value = value if not isEmpty(value) else self.node.label.defaultText
 
         command = CommandNodeLabelEdit(self.scene, self.node)
