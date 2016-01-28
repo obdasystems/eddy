@@ -42,7 +42,7 @@ from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTa
 from eddy.core.commands import CommandNodeMove, CommandNodeSetURL, CommandNodeSetDescription
 from eddy.core.commands import CommandSceneResize, CommandNodeLabelEdit, CommandNodeChangeInputOrder
 from eddy.core.datatypes import DistinctList
-from eddy.core.functions import clamp, connect, isEmpty
+from eddy.core.functions import clamp, connect, isEmpty, rCut
 
 from eddy.ui.fields import StringEditField, TextEditField, SpinBox, IntEditField
 
@@ -262,7 +262,7 @@ class NodeProperties(QDialog):
         self.typeF = StringEditField(self.generalWidget)
         self.typeF.setEnabled(False)
         self.typeF.setFixedWidth(300)
-        self.typeF.setValue(self.node.item.label)
+        self.typeF.setValue(' '.join(i.capitalize() for i in rCut(self.node.item.label, ' node').split()))
 
         self.identityF = StringEditField(self.generalWidget)
         self.identityF.setEnabled(False)
