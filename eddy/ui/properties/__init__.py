@@ -2,7 +2,7 @@
 
 ##########################################################################
 #                                                                        #
-#  Eddy: an editor for the Graphol ontology language.                    #
+#  Eddy: a graphical editor for the construction of Graphol ontologies.  #
 #  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
@@ -18,7 +18,7 @@
 #  You should have received a copy of the GNU General Public License     #
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
 #                                                                        #
-##########################################################################
+#  #####################                          #####################  #
 #                                                                        #
 #  Graphol is developed by members of the DASI-lab group of the          #
 #  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
@@ -32,14 +32,4 @@
 ##########################################################################
 
 
-import re
-
-
-RE_CARDINALITY = re.compile("""^\(\s*(?P<min>[\d-]+)\s*,\s*(?P<max>[\d-]+)\s*\)$""") # parse cardinality restriction
-RE_DIGIT = re.compile("""\d""") # identify strings composed of only digits
-RE_ITEM_PREFIX = re.compile("""^(?P<prefix>[^\d])(?P<value>\d+)$""") # split items prefix/id
-RE_LITERAL = re.compile("""^"(?P<literal>.*)"\^\^(?P<datatype>.*)$""") # tokenize a string extracting literal and datatype
-RE_JAVA_HOME = re.compile("""^(jvm|jdk|jre)((?P<major>\d)\.?)?((?P<minor>\d)\.?)?((?P<patch>\d)_?)?(?P<update>\d{1,3})?(\.*\w*)?$""")
-RE_JAVA_VERSION = re.compile("""^((?P<major>\d)\.?)((?P<minor>\d)\.?)((?P<patch>\d)_?)?(?P<update>\d{1,3})$""")
-RE_QUOTED = re.compile("""^".*"$""") # identify strings fully embraced into quotes
-RE_OWL_INVALID_CHAR = re.compile("""[\W]""") # identify OWL invalid characters
+from eddy.ui.properties.factory import PropertyFactory

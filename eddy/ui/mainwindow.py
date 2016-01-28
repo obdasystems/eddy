@@ -71,7 +71,7 @@ from eddy.ui.files import OpenFile, SaveFile
 from eddy.ui.forms import CardinalityRestrictionForm, RenameForm, OWLTranslationForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
 from eddy.ui.preferences import PreferencesDialog
-from eddy.ui.properties import SceneProperties
+from eddy.ui.properties import PropertyFactory
 from eddy.ui.scene import DiagramScene
 from eddy.ui.toolbar import ZoomControl
 from eddy.ui.view import MainView
@@ -96,8 +96,9 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
 
         self.abortQuit = False
-        self.clipboard = Clipboard()
-        self.undogroup = QUndoGroup()
+        self.clipboard = Clipboard(self)
+        self.propertyFactory = PropertyFactory(self)
+        self.undogroup = QUndoGroup(self)
         self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)
 
         ################################################################################################################
@@ -1191,10 +1192,9 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            collection = scene.selectedNodes()
-            if collection:
-                node = collection[0]
-                prop = node.propertiesDialog()
+            node = next(iter(scene.selectedNodes()), None)
+            if node:
+                prop = self.propertyFactory.create(scene=scene, node=node)
                 prop.exec_()
 
     @pyqtSlot()
@@ -1229,7 +1229,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            prop = SceneProperties(scene=scene)
+            prop = self.propertyFactory.create(scene=scene)
             prop.exec_()
 
     @pyqtSlot(int)

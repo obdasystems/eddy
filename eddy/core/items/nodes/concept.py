@@ -41,8 +41,6 @@ from eddy.core.functions import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import Label
 
-from eddy.ui.properties import EditableNodeProperties
-
 
 class ConceptNode(AbstractResizableNode):
     """
@@ -179,13 +177,6 @@ class ConceptNode(AbstractResizableNode):
         :rtype: int
         """
         return self.polygon.height()
-
-    def propertiesDialog(self):
-        """
-        Build and returns the node properties dialog.
-        :rtype: QDialog
-        """
-        return EditableNodeProperties(scene=self.scene(), node=self)
 
     def width(self):
         """

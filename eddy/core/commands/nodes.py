@@ -268,7 +268,7 @@ class CommandNodeLabelEdit(QUndoCommand):
                     del self.scene.nodesByLabel[self.text['undo']]
 
             # update the label text
-            self.node.label.setText(self.text['redo'])
+            self.node.setLabelText(self.text['redo'])
 
             # map the item over the new index
             if not self.text['redo'] in self.scene.nodesByLabel:
@@ -294,7 +294,7 @@ class CommandNodeLabelEdit(QUndoCommand):
                 del self.scene.nodesByLabel[self.text['redo']]
 
         # update the label text
-        self.node.label.setText(self.text['undo'])
+        self.node.setLabelText(self.text['undo'])
 
         # map the item over the new index
         if not self.text['undo'] in self.scene.nodesByLabel:

@@ -37,12 +37,11 @@ import math
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap
 
-from eddy.core.datatypes import DiagramMode, Font, Identity, Item
-from eddy.core.functions import snapF, isQuoted
+from eddy.core.datatypes import DiagramMode, Font, Identity, Item, XsdDatatype
+from eddy.core.functions import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import Label
-
-from eddy.ui.properties import EditableNodeProperties
+from eddy.core.regex import RE_LITERAL
 
 
 class IndividualNode(AbstractResizableNode):
@@ -87,22 +86,38 @@ class IndividualNode(AbstractResizableNode):
     ####################################################################################################################
 
     @property
+    def datatype(self):
+        """
+        Returns the datatype associated with this node or None if the node is not a Literal.
+        :rtype: XsdDatatype
+        """
+        match = RE_LITERAL.match(self.labelText())
+        if match:
+            return XsdDatatype.forValue(match.group('datatype'))
+        return None
+
+    @property
     def identity(self):
         """
         Returns the identity of the current node.
         :rtype: Identity
         """
-        if isQuoted(self.labelText()):
+        match = RE_LITERAL.match(self.labelText())
+        if match:
             return Identity.Literal
         return Identity.Individual
 
-    @identity.setter
-    def identity(self, identity):
+    @property
+    def literal(self):
         """
-        Set the identity of the current node.
-        :type identity: Identity
+        Returns the literal value associated with this node.
+        If the node is not a literal it will return None.
+        :rtype: str
         """
-        pass
+        match = RE_LITERAL.match(self.labelText())
+        if match:
+            return match.group('literal')
+        return None
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -156,13 +171,6 @@ class IndividualNode(AbstractResizableNode):
         :rtype: int
         """
         return self.boundingRect().height() - 2 * (self.handleSize + self.handleSpace)
-
-    def propertiesDialog(self):
-        """
-        Build and returns the node properties dialog.
-        :rtype: QDialog
-        """
-        return EditableNodeProperties(scene=self.scene(), node=self)
 
     def width(self):
         """
@@ -277,7 +285,7 @@ class IndividualNode(AbstractResizableNode):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   IMPORT / EXPORT                                                                                                #
+    #   GEOMETRY                                                                                                       #
     #                                                                                                                  #
     ####################################################################################################################
 
@@ -621,9 +629,10 @@ class IndividualNode(AbstractResizableNode):
 
     def setLabelText(self, text):
         """
-        Set the label text.
+        Set the label text: will additionally block label editing if a literal is being.
         :type text: str
         """
+        self.label.editable = RE_LITERAL.match(text) is None
         self.label.setText(text)
 
     def updateLabelPos(self, *args, **kwargs):

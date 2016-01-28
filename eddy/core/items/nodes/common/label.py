@@ -60,9 +60,9 @@ class Label(LabelItem):
         super().__init__(parent)
 
         self._centered = centered
-        self._defaultText = default
         self._editable = editable
         self._movable = movable
+        self._defaultText = default
 
         self.commandEdit = None
         self.commandMove = None

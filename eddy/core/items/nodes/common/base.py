@@ -42,8 +42,6 @@ from eddy.core.commands import CommandNodeRezize
 from eddy.core.datatypes import Color, DistinctList, DiagramMode, Identity, Item
 from eddy.core.items import AbstractItem
 
-from eddy.ui.properties import NodeProperties
-
 
 class AbstractNode(AbstractItem):
     """
@@ -313,13 +311,6 @@ class AbstractNode(AbstractItem):
         :rtype: QPointF
         """
         return self.mapToScene(self.center())
-
-    def propertiesDialog(self):
-        """
-        Build and returns the node properties dialog.
-        :rtype: QDialog
-        """
-        return NodeProperties(scene=self.scene(), node=self)
 
     def removeEdge(self, edge):
         """

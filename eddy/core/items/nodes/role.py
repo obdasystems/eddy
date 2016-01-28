@@ -40,8 +40,6 @@ from eddy.core.functions import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import Label
 
-from eddy.ui.properties import EditableNodeProperties
-
 
 class RoleNode(AbstractResizableNode):
     """
@@ -421,12 +419,6 @@ class RoleNode(AbstractResizableNode):
         :rtype: int
         """
         return self.boundingRect().height() - 2 * (self.handleSize + self.handleSpace)
-
-    def propertiesDialog(self):
-        """
-        Build and returns the node properties dialog.
-        """
-        return EditableNodeProperties(scene=self.scene(), node=self)
 
     def width(self):
         """

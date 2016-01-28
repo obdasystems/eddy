@@ -39,8 +39,6 @@ from eddy.core.datatypes import Font, Item, Special, DiagramMode, Identity
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import Label
 
-from eddy.ui.properties import EditableNodeProperties
-
 
 class AttributeNode(AbstractNode):
     """
@@ -172,13 +170,6 @@ class AttributeNode(AbstractNode):
         :rtype: int
         """
         return self.polygon.height()
-
-    def propertiesDialog(self):
-        """
-        Build and returns the node properties dialog.
-        :rtype: QDialog
-        """
-        return EditableNodeProperties(scene=self.scene(), node=self)
 
     def width(self):
         """

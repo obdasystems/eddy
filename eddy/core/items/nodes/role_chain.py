@@ -39,8 +39,6 @@ from eddy.core.datatypes import Font, Item, DistinctList, Identity
 from eddy.core.items.nodes.common.operator import OperatorNode
 from eddy.core.items.nodes.common.label import Label
 
-from eddy.ui.properties import OrderedInputNodeProperties
-
 
 class RoleChainNode(OperatorNode):
     """
@@ -137,12 +135,6 @@ class RoleChainNode(OperatorNode):
         node.setLabelText(self.labelText())
         node.setLabelPos(node.mapFromScene(self.mapToScene(self.labelPos())))
         return node
-
-    def propertiesDialog(self):
-        """
-        Build and returns the node properties dialog.
-        """
-        return OrderedInputNodeProperties(scene=self.scene(), node=self)
 
     def removeEdge(self, edge):
         """

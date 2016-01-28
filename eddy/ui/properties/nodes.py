@@ -32,194 +32,18 @@
 ##########################################################################
 
 
-from datetime import datetime
-
-from PyQt5.QtCore import Qt, QPointF, QRectF
+from PyQt5.QtCore import Qt, QPointF, pyqtSlot
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
+from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QLabel
 from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
 
-from eddy.core.commands import CommandNodeMove, CommandNodeSetURL, CommandNodeSetDescription
-from eddy.core.commands import CommandSceneResize, CommandNodeLabelEdit, CommandNodeChangeInputOrder
-from eddy.core.datatypes import DistinctList
-from eddy.core.functions import clamp, connect, isEmpty, rCut
+from eddy.core.commands import CommandNodeSetURL, CommandNodeSetDescription
+from eddy.core.commands import CommandNodeLabelEdit, CommandNodeMove
+from eddy.core.commands import CommandNodeChangeInputOrder
+from eddy.core.datatypes import DistinctList, Identity, XsdDatatype
+from eddy.core.functions import clamp, connect, isEmpty, lCut, rCut
 
-from eddy.ui.fields import StringEditField, TextEditField, SpinBox, IntEditField
-
-
-########################################################################################################################
-#                                                                                                                      #
-#   DIAGRAM SCENE                                                                                                      #
-#                                                                                                                      #
-########################################################################################################################
-
-
-class SceneProperties(QDialog):
-    """
-    This class implements the 'Scene properties' dialog.
-    """
-    def __init__(self, scene, parent=None):
-        """
-        Initialize the scene properties dialog.
-        :type scene: DiagramScene
-        :type parent: QWidget
-        """
-        super().__init__(parent)
-        self.scene = scene
-        self.mainWidget = QTabWidget(self)
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   GENERAL TAB                                                                                                #
-        #                                                                                                              #
-        ################################################################################################################
-
-        self.generalWidget = QWidget()
-        self.generalLayout = QFormLayout(self.generalWidget)
-
-        # amount of nodes in the scene
-        self.nodesF = IntEditField(self.generalWidget)
-        self.nodesF.setEnabled(False)
-        self.nodesF.setFixedWidth(300)
-        self.nodesF.setValue(len(self.scene.nodes()))
-
-        # amount of edges in the scene
-        self.edgesF = IntEditField(self.generalWidget)
-        self.edgesF.setEnabled(False)
-        self.edgesF.setFixedWidth(300)
-        self.edgesF.setValue(len(self.scene.edges()))
-
-        self.generalLayout.addRow('N° nodes', self.nodesF)
-        self.generalLayout.addRow('N° edges', self.edgesF)
-
-        self.mainWidget.addTab(self.generalWidget, 'General')
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   GEOMETRY TAB                                                                                               #
-        #                                                                                                              #
-        ################################################################################################################
-
-        self.geometryWidget = QWidget()
-        self.geometryLayout = QFormLayout(self.geometryWidget)
-
-        R = self.scene.sceneRect()
-
-        self.sceneSizeF = SpinBox(self)
-        self.sceneSizeF.setRange(self.scene.MinSize, self.scene.MaxSize)
-        self.sceneSizeF.setSingleStep(100)
-        self.sceneSizeF.setValue(R.width())
-
-        self.geometryLayout.addRow('Size', self.sceneSizeF)
-
-        self.mainWidget.addTab(self.geometryWidget, 'Geometry')
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   DOCUMENT WIDGET                                                                                            #
-        #                                                                                                              #
-        ################################################################################################################
-
-        if self.scene.document.path:
-
-            self.documentWidget = QWidget()
-            self.documentLayout = QFormLayout(self.documentWidget)
-
-            # filepath of the saved document
-            self.pathF = StringEditField(self.documentWidget)
-            self.pathF.setEnabled(False)
-            self.pathF.setFixedWidth(300)
-            self.pathF.setValue(self.scene.document.path)
-
-            # timestamp when the document has been last modified
-            self.editedF = StringEditField(self.documentWidget)
-            self.editedF.setEnabled(False)
-            self.editedF.setFixedWidth(300)
-            self.editedF.setValue(datetime.fromtimestamp(int(self.scene.document.edited)).strftime('%Y/%m/%d %H:%M:%S'))
-
-            self.documentLayout.addRow('File', self.pathF)
-            self.documentLayout.addRow('Last edit', self.editedF)
-
-            self.mainWidget.addTab(self.documentWidget, 'Document')
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   BUTTON BOX                                                                                                 #
-        #                                                                                                              #
-        ################################################################################################################
-
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   MAIN LAYOUT                                                                                                #
-        #                                                                                                              #
-        ################################################################################################################
-
-        self.mainLayout = QVBoxLayout(self)
-        self.mainLayout.addWidget(self.mainWidget)
-        self.mainLayout.addWidget(self.buttonBox, 0, Qt.AlignRight)
-
-        self.setFixedSize(self.sizeHint())
-        self.setWindowTitle('Scene properties')
-        self.setWindowIcon(QIcon(':/images/eddy'))
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   CONFIGURE SIGNALS                                                                                          #
-        #                                                                                                              #
-        ################################################################################################################
-
-        connect(self.finished, self.handleFinished)
-        connect(self.buttonBox.accepted, self.accept)
-        connect(self.buttonBox.rejected, self.reject)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SLOTS                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def handleFinished(self, code):
-        """
-        Executed when the dialog is terminated.
-        :type code: int
-        """
-        if code == QDialog.Accepted:
-            self.handleSceneSizeChanged()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def handleSceneSizeChanged(self):
-        """
-        Change the sice of the scene rect.
-        """
-        size1 = self.scene.sceneRect().width()
-        size2 = self.sceneSizeF.value()
-
-        if size1 != size2:
-
-            # see if the new size is sufficient to contain all the elements in the scene
-            items = self.scene.items()
-
-            if len(items) > 0:
-
-                X = set()
-                Y = set()
-
-                for item in items:
-                    B = item.mapRectToScene(item.boundingRect())
-                    X |= {B.left(), B.right()}
-                    Y |= {B.top(), B.bottom()}
-
-                # clamp size2 so that all the elements in the scene stays visible
-                size2 = max(size2, abs(min(X) * 2), abs(max(X) * 2), abs(min(Y) * 2), abs(max(Y) * 2))
-
-            self.scene.undostack.push(CommandSceneResize(self.scene, QRectF(-size2 / 2, -size2 / 2, size2, size2)))
+from eddy.ui.fields import StringEditField, TextEditField, SpinBox, ComboBox
 
 
 ########################################################################################################################
@@ -229,9 +53,9 @@ class SceneProperties(QDialog):
 ########################################################################################################################
 
 
-class NodeProperties(QDialog):
+class NodeProperty(QDialog):
     """
-    This class implements the 'Node properties' dialog.
+    This class implements the 'Node property' dialog.
     """
     def __init__(self, scene, node, parent=None):
         """
@@ -250,45 +74,39 @@ class NodeProperties(QDialog):
         #   GENERAL TAB                                                                                                #
         #                                                                                                              #
         ################################################################################################################
-        
+
         self.generalWidget = QWidget()
         self.generalLayout = QFormLayout(self.generalWidget)
 
-        self.idF = StringEditField(self.generalWidget)
-        self.idF.setEnabled(False)
-        self.idF.setFixedWidth(300)
-        self.idF.setValue(self.node.id)
+        self.idField = StringEditField(self.generalWidget)
+        self.idField.setEnabled(False)
+        self.idField.setFixedWidth(300)
+        self.idField.setValue(self.node.id)
 
-        self.typeF = StringEditField(self.generalWidget)
-        self.typeF.setEnabled(False)
-        self.typeF.setFixedWidth(300)
-        self.typeF.setValue(' '.join(i.capitalize() for i in rCut(self.node.item.label, ' node').split()))
+        self.itemField = StringEditField(self.generalWidget)
+        self.itemField.setEnabled(False)
+        self.itemField.setFixedWidth(300)
+        self.itemField.setValue(' '.join(i.capitalize() for i in rCut(self.node.item.label, ' node').split()))
 
-        self.identityF = StringEditField(self.generalWidget)
-        self.identityF.setEnabled(False)
-        self.identityF.setFixedWidth(300)
-        self.identityF.setValue(self.node.identity.label)
+        self.urlField = StringEditField(self.generalWidget)
+        self.urlField.setFixedWidth(300)
+        self.urlField.setValue(self.node.url)
 
-        self.urlF = StringEditField(self.generalWidget)
-        self.urlF.setFixedWidth(300)
-        self.urlF.setValue(self.node.url)
+        self.descriptionField = TextEditField(self.generalWidget)
+        self.descriptionField.setFixedSize(300, 160)
+        self.descriptionField.setValue(self.node.description)
 
-        self.descriptionF = TextEditField(self.generalWidget)
-        self.descriptionF.setFixedSize(300, 160)
-        self.descriptionF.setValue(self.node.description)
+        self.generalLayout.addRow('ID', self.idField)
+        self.generalLayout.addRow('Type', self.itemField)
+        self.generalLayout.addRow('URL', self.urlField)
+        self.generalLayout.addRow('Description', self.descriptionField)
 
-        self.generalLayout.addRow('ID', self.idF)
-        self.generalLayout.addRow('Type', self.typeF)
-        self.generalLayout.addRow('Identity', self.identityF)
-        self.generalLayout.addRow('URL', self.urlF)
-        self.generalLayout.addRow('Description', self.descriptionF)
-        
         ################################################################################################################
         #                                                                                                              #
         #   GEOMETRY TAB                                                                                               #
         #                                                                                                              #
         ################################################################################################################
-        
+
         self.geometryWidget = QWidget()
         self.geometryLayout = QFormLayout(self.geometryWidget)
 
@@ -360,7 +178,7 @@ class NodeProperties(QDialog):
         #                                                                                                              #
         ################################################################################################################
 
-        connect(self.finished, self.handleFinished)
+        connect(self.finished, self.completed)
         connect(self.buttonBox.accepted, self.accept)
         connect(self.buttonBox.rejected, self.reject)
 
@@ -370,15 +188,16 @@ class NodeProperties(QDialog):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def handleFinished(self, code):
+    @pyqtSlot(int)
+    def completed(self, code):
         """
         Executed when the dialog is terminated.
         :type code: int
         """
         if code == QDialog.Accepted:
-            self.handlePositionChanged()
-            self.handleURLChanged()
-            self.handleDescriptionChanged()
+            self.positionChanged()
+            self.descriptionChanged()
+            self.urlChanged()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -386,23 +205,15 @@ class NodeProperties(QDialog):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def handleURLChanged(self):
+    def descriptionChanged(self):
         """
         Change the url property of the node.
         """
-        url = self.urlF.value()
-        if self.node.url != url:
-            self.scene.undostack.push(CommandNodeSetURL(self.node, url))
-
-    def handleDescriptionChanged(self):
-        """
-        Change the url property of the node.
-        """
-        description = self.descriptionF.value()
+        description = self.descriptionField.value()
         if self.node.description != description:
             self.scene.undostack.push(CommandNodeSetDescription(self.node, description))
 
-    def handlePositionChanged(self):
+    def positionChanged(self):
         """
         Move the node properly if the position has been changed.
         """
@@ -438,6 +249,14 @@ class NodeProperties(QDialog):
 
             self.scene.undostack.push(CommandNodeMove(scene=self.scene, pos1=data1, pos2=data2))
 
+    def urlChanged(self):
+        """
+        Change the url property of the node.
+        """
+        url = self.urlField.value()
+        if self.node.url != url:
+            self.scene.undostack.push(CommandNodeSetURL(self.node, url))
+
 
 ########################################################################################################################
 #                                                                                                                      #
@@ -446,9 +265,9 @@ class NodeProperties(QDialog):
 ########################################################################################################################
 
 
-class EditableNodeProperties(NodeProperties):
+class EditableNodeProperty(NodeProperty):
     """
-    This class implements the properties dialog for label editable nodes.
+    This class implements the property dialog for label editable nodes.
     """
     def __init__(self, scene, node, parent=None):
         """
@@ -468,12 +287,12 @@ class EditableNodeProperties(NodeProperties):
         self.labelWidget = QWidget()
         self.labelLayout = QFormLayout(self.labelWidget)
 
-        self.labelF = StringEditField(self.labelWidget)
-        self.labelF.setFixedWidth(300)
-        self.labelF.setValue(self.node.labelText())
-        self.labelF.setEnabled(self.node.label.editable)
+        self.labelField = StringEditField(self.labelWidget)
+        self.labelField.setFixedWidth(300)
+        self.labelField.setValue(self.node.labelText())
+        self.labelField.setEnabled(self.node.label.editable)
 
-        self.labelLayout.addRow('Text', self.labelF)
+        self.labelLayout.addRow('Text', self.labelField)
 
         self.mainWidget.addTab(self.labelWidget, 'Label')
 
@@ -483,14 +302,14 @@ class EditableNodeProperties(NodeProperties):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def handleFinished(self, code):
+    def completed(self, code):
         """
         Executed when the dialog is terminated.
         :type code: int
         """
         if code == QDialog.Accepted:
-            super().handleFinished(code)
-            self.handleLabelChanged()
+            super().completed(code)
+            self.labelChanged()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -498,11 +317,11 @@ class EditableNodeProperties(NodeProperties):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def handleLabelChanged(self):
+    def labelChanged(self):
         """
         Change the label of the node.
         """
-        value = self.labelF.value().strip()
+        value = self.labelField.value().strip()
         if self.node.labelText().strip() != value:
             value = value if not isEmpty(value) else self.node.label.defaultText
             command = CommandNodeLabelEdit(self.scene, self.node)
@@ -512,14 +331,14 @@ class EditableNodeProperties(NodeProperties):
 
 ########################################################################################################################
 #                                                                                                                      #
-#   ORDERED INPUT NODES                                                                                                #
+#   ORDERED INPUT NODES => {ROLE CHAIN, PROPERTY ASSERTION}                                                            #
 #                                                                                                                      #
 ########################################################################################################################
 
 
-class OrderedInputNodeProperties(NodeProperties):
+class OrderedInputNodeProperty(NodeProperty):
     """
-    This class implements the properties dialog for constructor nodes having incoming input edges
+    This class implements the propertiy dialog for constructor nodes having incoming input edges
     numbered according to source nodes partecipations to the axiom (Role chain and Property assertion).
     """
     def __init__(self, scene, node, parent=None):
@@ -551,6 +370,7 @@ class OrderedInputNodeProperties(NodeProperties):
                 self.listWidget.addItem(item)
 
             self.orderingLayout.addRow('Sort', self.listWidget)
+
             self.mainWidget.addTab(self.orderingWidget, 'Ordering')
 
     ####################################################################################################################
@@ -559,14 +379,14 @@ class OrderedInputNodeProperties(NodeProperties):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def handleFinished(self, code):
+    def completed(self, code):
         """
         Executed when the dialog is terminated.
         :type code: int
         """
         if code == QDialog.Accepted:
-            super().handleFinished(code)
-            self.handleInputsOrderChanged()
+            super().completed(code)
+            self.inputsOrderChanged()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -574,7 +394,7 @@ class OrderedInputNodeProperties(NodeProperties):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def handleInputsOrderChanged(self):
+    def inputsOrderChanged(self):
         """
         Change the order of inputs edges.
         """
@@ -587,3 +407,144 @@ class OrderedInputNodeProperties(NodeProperties):
 
             if self.node.inputs != inputs:
                 self.scene.undostack.push(CommandNodeChangeInputOrder(self.scene, self.node, inputs))
+
+
+########################################################################################################################
+#                                                                                                                      #
+#   INDIVIDUAL NODE SPECIFIC DIALOG                                                                                    #
+#                                                                                                                      #
+########################################################################################################################
+
+
+class IndividualNodeProperty(NodeProperty):
+    """
+    This class implements the property dialog for Individual nodes.
+    """
+    def __init__(self, scene, node, parent=None):
+        """
+        Initialize the individual node properties dialog.
+        :type scene: DiagramScene
+        :type node: IndividualNode
+        :type parent: QWidget
+        """
+        super().__init__(scene, node, parent)
+
+        ################################################################################################################
+        #                                                                                                              #
+        #   IDENTITY TAB                                                                                               #
+        #                                                                                                              #
+        ################################################################################################################
+
+        self.identityWidget = QWidget()
+        self.identityLayout = QFormLayout(self.identityWidget)
+
+        # IDENTITY COMBO BOX
+        self.identityField = ComboBox(self)
+        self.identityField.addItem('Individual', Identity.Individual)
+        self.identityField.addItem('Literal', Identity.Literal)
+
+        for i in range(self.identityField.count()):
+            if self.identityField.itemData(i) is self.node.identity:
+                self.identityField.setCurrentIndex(i)
+                break
+
+        # DATATYPE COMBO BOX (DISPLAYED ONLY FOR LITERALS)
+        self.datatypeLabel = QLabel(self)
+        self.datatypeLabel.setText('Datatype')
+
+        self.datatypeField = ComboBox(self)
+        for datatype in XsdDatatype:
+            self.datatypeField.addItem(datatype.value, datatype)
+
+        # VALUE STRING FIELD (DISPLAYED FOR BOTH LITERALS AND INDIVIDUALS)
+        self.valueField = StringEditField(self.identityWidget)
+        self.valueField.setFixedWidth(300)
+
+        # ADD THE FIELDS TO THE LAYOUT
+        self.identityLayout.addRow('Identity', self.identityField)
+        self.identityLayout.addRow('Value', self.valueField)
+
+        if self.node.identity is Identity.Literal:
+
+            # Insert the datatype widget only if it's needed.
+            self.identityLayout.insertRow(1, self.datatypeLabel, self.datatypeField)
+            self.datatypeLabel.show()
+            self.datatypeField.show()
+
+            # Select the current datatype
+            datatype = self.node.datatype
+            for i in range(self.datatypeField.count()):
+                if self.datatypeField.itemData(i) is datatype:
+                    self.datatypeField.setCurrentIndex(i)
+                    break
+
+            # Set the value using just the literal and not the whole label.
+            self.valueField.setValue(self.node.literal)
+
+        else:
+
+            # Use default datatype and set the value using the whole label.
+            self.datatypeField.setCurrentIndex(0)
+            self.datatypeField.hide()
+            self.datatypeLabel.hide()
+            self.valueField.setValue(self.node.labelText())
+
+        self.mainWidget.addTab(self.identityWidget, 'Identity')
+
+        # noinspection PyUnresolvedReferences
+        connect(self.identityField.currentIndexChanged[int], self.identityFieldChanged)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SLOTS                                                                                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @pyqtSlot(int)
+    def identityFieldChanged(self, index):
+        """
+        Executed whenever the index of the identity field changes.
+        :type index: int
+        """
+        if self.identityField.itemData(index) is Identity.Literal:
+            self.datatypeField.show()
+            self.datatypeLabel.show()
+            self.identityLayout.insertRow(1, self.datatypeLabel, self.datatypeField)
+        else:
+            self.datatypeField.hide()
+            self.datatypeLabel.hide()
+            self.identityLayout.removeWidget(self.datatypeField)
+            self.identityLayout.removeWidget(self.datatypeLabel)
+
+    @pyqtSlot(int)
+    def completed(self, code):
+        """
+        Executed when the dialog is terminated.
+        :type code: int
+        """
+        if code == QDialog.Accepted:
+            super().completed(code)
+            self.labelChanged()
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def labelChanged(self):
+        """
+        Change the label of the node.
+        """
+        if self.identityField.currentData() is Identity.Literal:
+            datatype = self.datatypeField.currentData()
+            value = self.valueField.value().strip()
+            value = '"{}"^^{}'.format(rCut(lCut(value, '"'), '"'), datatype.value)
+        else:
+            value = self.labelF.value().strip()
+            value = value if not isEmpty(value) else self.node.label.defaultText
+
+        command = CommandNodeLabelEdit(self.scene, self.node)
+        command.end(value)
+        if command.isTextChanged(value):
+            self.scene.undostack.push(command)

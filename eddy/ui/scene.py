@@ -88,7 +88,7 @@ class DiagramScene(QGraphicsScene):
         self.nodesByLabel = {}  ## used to index nodes using their label text
         self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)  ## settings
         self.guid = GUID(self)  ## used to generate unique incremental ids
-        self.undostack = QUndoStack(self)  ## use to push actions and keep history for undo/redo
+        self.undostack = QUndoStack(self)  ## used to push actions and keep history for undo/redo
         self.undostack.setUndoLimit(50)  ## TODO: make the stack configurable
         self.validator = OWL2RLValidator(self)
         self.mode = DiagramMode.Idle  ## operation mode

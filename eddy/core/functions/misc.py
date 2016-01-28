@@ -39,7 +39,7 @@ import re
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
 
-from eddy.core.regex import RE_QUOTE_FULL, RE_OWL_INVALID_CHAR
+from eddy.core.regex import RE_QUOTED, RE_OWL_INVALID_CHAR
 
 
 def clamp(val, minval=None, maxval=None):
@@ -74,7 +74,7 @@ def isQuoted(string):
     :type string: str
     :rtype: bool
     """
-    return RE_QUOTE_FULL.match(string) is not None
+    return RE_QUOTED.match(string) is not None
 
 
 def lCut(text, cut):
