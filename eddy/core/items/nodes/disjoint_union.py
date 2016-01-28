@@ -37,10 +37,10 @@ from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
 from eddy.core.datatypes import Item, Identity
 from eddy.core.functions import identify
-from eddy.core.items.nodes.common.hexagon import HexagonNode
+from eddy.core.items.nodes.common.operator import OperatorNode
 
 
-class DisjointUnionNode(HexagonNode):
+class DisjointUnionNode(OperatorNode):
     """
     This class implements the 'Disjoint Union' node.
     """

@@ -36,10 +36,10 @@ from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
 from eddy.core.datatypes import Font, Item, Identity, Restriction
-from eddy.core.items.nodes.common.square import SquaredNode
+from eddy.core.items.nodes.common.restriction import RestrictionNode
 
 
-class DomainRestrictionNode(SquaredNode):
+class DomainRestrictionNode(RestrictionNode):
     """
     This class implements the 'Domain Restriction' node.
     """

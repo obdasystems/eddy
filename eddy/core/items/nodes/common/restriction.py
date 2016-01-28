@@ -32,40 +32,43 @@
 ##########################################################################
 
 
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 
-from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QPolygonF
+from PyQt5.QtCore import QRectF, QPointF, Qt
+from PyQt5.QtGui import QColor, QPainterPath, QPen
 
-from eddy.core.datatypes import DiagramMode
+from eddy.core.datatypes import DiagramMode, Identity, Restriction
+from eddy.core.exceptions import ParseError
 from eddy.core.items.nodes.common.base import AbstractNode
+from eddy.core.items.nodes.common.label import Label
+from eddy.core.regex import RE_CARDINALITY
 
 
-class HexagonNode(AbstractNode):
+class RestrictionNode(AbstractNode):
     """
-    This is the base class for all the Hexagon shaped nodes.
+    This is the base class for all the Squared shaped nodes.
     """
     __metaclass__ = ABCMeta
 
-    indexML = 0
-    indexBL = 1
-    indexBR = 2
-    indexMR = 3
-    indexTR = 4
-    indexTL = 5
-    indexEE = 6
-
-    def __init__(self, width=50, height=30, brush='#fcfcfc', **kwargs):
+    def __init__(self, width=20, height=20, brush='#fcfcfc', restriction=None, cardinality=None, **kwargs):
         """
         Initialize the node.
         :type width: int
         :type height: int
         :type brush: T <= QBrush | QColor | Color | tuple | list | bytes | unicode
+        :type restriction: Restriction
+        :type cardinality: dict
         """
         super().__init__(**kwargs)
+
+        self._restriction = restriction or Restriction.Exists
+        self._cardinality = cardinality if self.restriction is Restriction.Cardinality else dict(min=None, max=None)
+
         self.brush = brush
-        self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
-        self.polygon = self.createPolygon(shape_w=50, shape_h=30, oblique=6)
+        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
+        self.polygon = self.createRect(20, 20)
+        self.label = Label(self.restriction.label, centered=False, editable=False, parent=self)
+        self.label.updatePos()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -74,16 +77,14 @@ class HexagonNode(AbstractNode):
     ####################################################################################################################
 
     @property
-    @abstractmethod
     def identity(self):
         """
         Returns the identity of the current node.
         :rtype: Identity
         """
-        pass
+        return Identity.Concept
 
     @identity.setter
-    @abstractmethod
     def identity(self, identity):
         """
         Set the identity of the current node.
@@ -91,43 +92,83 @@ class HexagonNode(AbstractNode):
         """
         pass
 
+    @property
+    def cardinality(self):
+        """
+        Returns the cardinality of the node.
+        :rtype: dict
+        """
+        if self._cardinality is not None:
+            return self._cardinality
+        return dict(min=None, max=None)
+
+    @cardinality.setter
+    def cardinality(self, cardinality):
+        """
+        Set the cardinality restriction of this node.
+        If the restriction type of this node is not RestrictionType.cardinality the cardinality will be set to default.
+        :type cardinality: dict
+        """
+        self._cardinality = cardinality
+        if self.restriction is not Restriction.Cardinality:
+            self._cardinality = dict(min=None, max=None)
+
+    @property
+    def restriction(self):
+        """
+        Returns the restriction type of the node.
+        :rtype: Restriction
+        """
+        return self._restriction
+
+    @restriction.setter
+    def restriction(self, restriction):
+        """
+        Set the restriction of this node.
+        Setting the restriction type will also reset the cardinality which would need to be set again.
+        :type restriction: Restriction
+        """
+        self._restriction = restriction
+        self._cardinality = dict(min=None, max=None)
+
     ####################################################################################################################
     #                                                                                                                  #
     #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
 
-    def contextMenu(self):
+    def copy(self, scene):
         """
-        Returns the basic nodes context menu.
-        :rtype: QMenu
+        Create a copy of the current item.
+        :type scene: DiagramScene
         """
-        scene = self.scene()
-        mainwindow = scene.mainwindow
-        menu = super().contextMenu()
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuHexagonNodeSwitch)
-
-        # switch the check matching the current node
-        for action in mainwindow.actionsSwitchHexagonNode:
-            action.setChecked(isinstance(self, action.data()))
-            action.setVisible(True)
-
-        menu.insertSeparator(mainwindow.actionOpenNodeProperties)
-        return menu
+        kwargs = {
+            'description': self.description,
+            'height': self.height(),
+            'id': self.id,
+            'scene': scene,
+            'url': self.url,
+            'width': self.width(),
+        }
+        node = self.__class__(**kwargs)
+        node.setPos(self.pos())
+        node.setLabelText(self.labelText())
+        node.setLabelPos(node.mapFromScene(self.mapToScene(self.labelPos())))
+        return node
 
     def height(self):
         """
         Returns the height of the shape.
         :rtype: int
         """
-        return self.polygon[self.indexBL].y() - self.polygon[self.indexTL].y()
+        return self.polygon.height()
 
     def width(self):
         """
         Returns the width of the shape.
         :rtype: int
         """
-        return self.polygon[self.indexMR].x() - self.polygon[self.indexML].x()
+        return self.polygon.width()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -136,23 +177,90 @@ class HexagonNode(AbstractNode):
     ####################################################################################################################
 
     @staticmethod
-    def createPolygon(shape_w, shape_h, oblique):
+    def createRect(shape_w, shape_h):
         """
-        Returns the initialized polygon according to the given width/height.
+        Returns the initialized rect according to the given width/height.
         :type shape_w: int
         :type shape_h: int
-        :type oblique: int
-        :rtype: QPolygonF
+        :rtype: QRectF
         """
-        return QPolygonF([
-            QPointF(-shape_w / 2, 0),                       # 0
-            QPointF(-shape_w / 2 + oblique, +shape_h / 2),  # 1
-            QPointF(+shape_w / 2 - oblique, +shape_h / 2),  # 2
-            QPointF(+shape_w / 2, 0),                       # 3
-            QPointF(+shape_w / 2 - oblique, -shape_h / 2),  # 4
-            QPointF(-shape_w / 2 + oblique, -shape_h / 2),  # 5
-            QPointF(-shape_w / 2, 0)                        # 6
-        ])
+        return QRectF(-shape_w / 2, -shape_h / 2, shape_w, shape_h)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   IMPORT / EXPORT                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @classmethod
+    def fromGraphol(cls, scene, E):
+        """
+        Create a new item instance by parsing a Graphol document item entry.
+        :type scene: DiagramScene
+        :type E: QDomElement
+        :rtype: AbstractNode
+        """
+        U = E.elementsByTagName('data:url').at(0).toElement()
+        D = E.elementsByTagName('data:description').at(0).toElement()
+        G = E.elementsByTagName('shape:geometry').at(0).toElement()
+        L = E.elementsByTagName('shape:label').at(0).toElement()
+
+        kwargs = {
+            'description': D.text(),
+            'height': int(G.attribute('height')),
+            'id': E.attribute('id'),
+            'scene': scene,
+            'url': U.text(),
+            'width': int(G.attribute('width')),
+        }
+
+        node = cls(**kwargs)
+        node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
+        node.setLabelText(L.text())
+        node.setLabelPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
+        return node
+
+    def toGraphol(self, document):
+        """
+        Export the current item in Graphol format.
+        :type document: QDomDocument
+        :rtype: QDomElement
+        """
+        pos1 = self.pos()
+        pos2 = self.mapToScene(self.labelPos())
+
+        # create the root element for this node
+        node = document.createElement('node')
+        node.setAttribute('id', self.id)
+        node.setAttribute('type', self.xmlname)
+
+        # add node attributes
+        url = document.createElement('data:url')
+        url.appendChild(document.createTextNode(self.url))
+        description = document.createElement('data:description')
+        description.appendChild(document.createTextNode(self.description))
+
+        # add the shape geometry
+        geometry = document.createElement('shape:geometry')
+        geometry.setAttribute('height', self.height())
+        geometry.setAttribute('width', self.width())
+        geometry.setAttribute('x', pos1.x())
+        geometry.setAttribute('y', pos1.y())
+
+        # add the shape label
+        label = document.createElement('shape:label')
+        label.setAttribute('height', self.label.height())
+        label.setAttribute('width', self.label.width())
+        label.setAttribute('x', pos2.x())
+        label.setAttribute('y', pos2.y())
+        label.appendChild(document.createTextNode(self.label.text()))
+
+        node.appendChild(url)
+        node.appendChild(description)
+        node.appendChild(geometry)
+        node.appendChild(label)
+
+        return node
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -166,11 +274,7 @@ class HexagonNode(AbstractNode):
         :rtype: QRectF
         """
         o = self.selectionOffset
-        x = self.polygon[self.indexML].x()
-        y = self.polygon[self.indexTL].y()
-        w = self.polygon[self.indexMR].x() - x
-        h = self.polygon[self.indexBL].y() - y
-        return QRectF(x, y, w, h).adjusted(-o, -o, o, o)
+        return self.polygon.adjusted(-o, -o, o, o)
 
     def painterPath(self):
         """
@@ -178,16 +282,16 @@ class HexagonNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addPolygon(self.polygon)
+        path.addRect(self.polygon)
         return path
 
-    def shape(self):
+    def shape(self, *args, **kwargs):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addPolygon(self.polygon)
+        path.addRect(self.polygon)
         return path
 
     ####################################################################################################################
@@ -198,37 +302,58 @@ class HexagonNode(AbstractNode):
 
     def labelPos(self):
         """
-        Returns the current label position in item coordinates.
+        Returns the current label position.
         :rtype: QPointF
         """
-        pass
+        return self.label.pos()
 
     def labelText(self):
         """
         Returns the label text.
         :rtype: str
         """
-        pass
+        return self.label.text()
 
     def setLabelPos(self, pos):
         """
         Set the label position.
         :type pos: QPointF
         """
-        pass
+        self.label.setPos(pos)
 
     def setLabelText(self, text):
         """
-        Set the label text.
+        Set the label text: will additionally parse the text value and set the restriction type accordingly.
+        :raise ParseError: if an invalid text value is supplied.
         :type text: str
         """
-        pass
+        value = text.strip().lower()
+        if value == Restriction.Exists.label:
+            self.label.setText(value)
+            self.restriction = Restriction.Exists
+        elif value == Restriction.Forall.label:
+            self.label.setText(value)
+            self.restriction = Restriction.Forall
+        elif value == Restriction.Self.label:
+            self.label.setText(value)
+            self.restriction = Restriction.Self
+        else:
+            match = RE_CARDINALITY.match(value)
+            if match:
+                self.label.setText(value)
+                self.restriction = Restriction.Cardinality
+                self.cardinality = {
+                    'min': None if match.group('min') == '-' else int(match.group('min')),
+                    'max': None if match.group('max') == '-' else int(match.group('max')),
+                }
+            else:
+                raise ParseError('invalid restriction supplied: {}'.format(text))
 
     def updateLabelPos(self, *args, **kwargs):
         """
         Update the label position.
         """
-        pass
+        self.label.updatePos(*args, **kwargs)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -256,13 +381,10 @@ class HexagonNode(AbstractNode):
             if not scene.validator.valid(edge.source, edge, scene.mouseOverNode):
                 brush = self.brushConnectionBad
 
-            boundingRect = self.boundingRect()
-            painter.setRenderHint(QPainter.Antialiasing)
             painter.setPen(Qt.NoPen)
             painter.setBrush(brush)
-            painter.drawPolygon(self.createPolygon(boundingRect.width(), boundingRect.height(), 6))
+            painter.drawRect(self.boundingRect())
 
-        painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(self.brush)
         painter.setPen(self.pen)
-        painter.drawPolygon(self.polygon)
+        painter.drawRect(self.polygon)

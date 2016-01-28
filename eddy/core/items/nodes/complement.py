@@ -37,11 +37,11 @@ from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
 from eddy.core.datatypes import Font, Identity, Item
 from eddy.core.functions import identify
-from eddy.core.items.nodes.common.hexagon import HexagonNode
+from eddy.core.items.nodes.common.operator import OperatorNode
 from eddy.core.items.nodes.common.label import Label
 
 
-class ComplementNode(HexagonNode):
+class ComplementNode(OperatorNode):
     """
     This class implements the 'Complement' node.
     """

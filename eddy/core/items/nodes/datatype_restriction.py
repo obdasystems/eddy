@@ -36,11 +36,11 @@ from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
 from eddy.core.datatypes import Font, Item, Identity
-from eddy.core.items.nodes.common.hexagon import HexagonNode
+from eddy.core.items.nodes.common.operator import OperatorNode
 from eddy.core.items.nodes.common.label import Label
 
 
-class DatatypeRestrictionNode(HexagonNode):
+class DatatypeRestrictionNode(OperatorNode):
     """
     This class implements the 'Datatype Restriction' node.
     """
