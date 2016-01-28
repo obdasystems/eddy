@@ -541,7 +541,7 @@ setup(
                      "design environment specifically thought out for generating Graphol ontologies through ad-hoc "
                      "functionalities. Drawing features allow designers to comfortably edit ontologies in a central "
                      "viewport area, while two lateral docking areas contains specifically-tailored widgets for "
-                     "editing, navigation and inspection of the diagram. Eddy is written in [Python 3] and the GUI is "
+                     "editing, navigation and inspection of the diagram. Eddy is written in [Python 3] and the UI is "
                      "implemented through the PyQt5 bindings for the Qt5 framework. Eddy is licensed under the GNU "
                      "General Public License v3.",
     keywords = "eddy graphol sapienza",
