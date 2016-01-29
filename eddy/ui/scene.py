@@ -110,16 +110,13 @@ class DiagramScene(QGraphicsScene):
         Bring up the context menu if necessary.
         :type menuEvent: QGraphicsSceneContextMenuEvent
         """
-        if not self.items(menuEvent.scenePos()):
-            menu = QMenu()
-            if not self.mainwindow.clipboard.empty():
-                menu.addAction(self.mainwindow.actionPaste)
-            menu.addAction(self.mainwindow.actionSelectAll)
-            menu.addSeparator()
-            menu.addAction(self.mainwindow.actionOpenSceneProperties)
-            menu.exec_(menuEvent.screenPos())
-        else:
-            super().contextMenuEvent(menuEvent)
+        item = self.itemOnTopOf(menuEvent.scenePos())
+        if item:
+            self.clearSelection()
+            item.setSelected(True)
+
+        menu = self.mainwindow.menuFactory.create(self.mainwindow, self, item, menuEvent.scenePos())
+        menu.exec_(menuEvent.screenPos())
 
     def mousePressEvent(self, mouseEvent):
         """

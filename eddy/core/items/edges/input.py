@@ -95,29 +95,6 @@ class InputEdge(AbstractEdge):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def contextMenu(self, pos):
-        """
-        Returns the basic edge context menu.
-        :type pos: QPointF
-        :rtype: QMenu
-        """
-        menu = QMenu()
-        scene = self.scene()
-        breakpoint = self.breakpointAt(pos)
-        mainwindow = scene.mainwindow
-        if breakpoint is not None:
-            action = mainwindow.actionRemoveEdgeBreakpoint
-            action.setData((self, breakpoint))
-            menu.addAction(action)
-        else:
-            menu.addAction(mainwindow.actionDelete)
-            menu.addAction(mainwindow.actionSwapEdge)
-            menu.addSeparator()
-            menu.addAction(mainwindow.actionToggleEdgeFunctional)
-            mainwindow.actionSwapEdge.setVisible(scene.validator.valid(self.target, self, self.source))
-            mainwindow.actionToggleEdgeFunctional.setChecked(self.functional)
-        return menu
-
     def copy(self, scene):
         """
         Create a copy of the current edge.

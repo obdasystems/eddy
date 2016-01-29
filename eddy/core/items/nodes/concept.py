@@ -34,7 +34,6 @@
 
 from PyQt5.QtCore import QRectF, QPointF, Qt
 from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QColor, QPen
-from PyQt5.QtWidgets import QMenu
 
 from eddy.core.datatypes import Font, Item, Special, DiagramMode, Identity
 from eddy.core.functions import snapF
@@ -118,36 +117,6 @@ class ConceptNode(AbstractResizableNode):
     #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
-
-    def contextMenu(self):
-        """
-        Returns the basic nodes context menu.
-        :rtype: QMenu
-        """
-        scene = self.scene()
-
-        mainwindow = scene.mainwindow
-        menu = super().contextMenu()
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeNodeBrush)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeSpecial)
-
-        # Switch the check on the currently active special
-        for action in mainwindow.actionsNodeSetSpecial:
-            action.setChecked(self.special is action.data())
-
-        # Disable refactor name if special type is set
-        mainwindow.actionRefactorName.setEnabled(self.special is None)
-
-        if not self.special:
-            collection = self.label.contextMenuAdd()
-            if collection:
-                menu.insertSeparator(mainwindow.actionOpenNodeProperties)
-                for action in collection:
-                    menu.insertAction(mainwindow.actionOpenNodeProperties, action)
-
-        menu.insertSeparator(mainwindow.actionOpenNodeProperties)
-        return menu
 
     def copy(self, scene):
         """

@@ -214,26 +214,6 @@ class AbstractNode(AbstractItem):
         """
         return self.boundingRect().center()
 
-    def contextMenu(self):
-        """
-        Returns the basic nodes context menu.
-        :rtype: QMenu
-        """
-        scene = self.scene()
-        mainwindow = scene.mainwindow
-        menu = QMenu()
-        menu.addAction(mainwindow.actionDelete)
-        menu.addSeparator()
-        menu.addAction(mainwindow.actionCut)
-        menu.addAction(mainwindow.actionCopy)
-        menu.addAction(mainwindow.actionPaste)
-        menu.addSeparator()
-        menu.addAction(mainwindow.actionBringToFront)
-        menu.addAction(mainwindow.actionSendToBack)
-        menu.addSeparator()
-        menu.addAction(mainwindow.actionOpenNodeProperties)
-        return menu
-
     @abstractmethod
     def copy(self, scene):
         """
@@ -402,19 +382,6 @@ class AbstractNode(AbstractItem):
     #   EVENTS                                                                                                         #
     #                                                                                                                  #
     ####################################################################################################################
-
-    def contextMenuEvent(self, menuEvent):
-        """
-        Bring up the context menu for the given node.
-        :type menuEvent: QGraphicsSceneContextMenuEvent
-        """
-        scene = self.scene()
-        scene.clearSelection()
-
-        self.setSelected(True)
-
-        contextMenu = self.contextMenu()
-        contextMenu.exec_(menuEvent.screenPos())
 
     def mousePressEvent(self, mouseEvent):
         """

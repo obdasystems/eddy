@@ -32,42 +32,4 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QObject
-
-from eddy.core.datatypes import Item
-
-from eddy.ui.properties.nodes import NodeProperty, EditableNodeProperty
-from eddy.ui.properties.nodes import IndividualNodeProperty, OrderedInputNodeProperty
-from eddy.ui.properties.scene import SceneProperty
-
-
-class PropertyFactory(QObject):
-    """
-    This class can be used to produce properties dialog windows.
-    """
-    def __init__(self, parent=None):
-        """
-        Initialize the factory.
-        :type parent: QObject
-        """
-        super().__init__(parent)
-
-    @staticmethod
-    def create(scene, node=None):
-        """
-        Build and return a property dialog according to the given parameters.
-        :type scene: DiagramScene
-        :type node: AbstractNode
-        :rtype: QDialog
-        """
-        if not node:
-            return SceneProperty(scene=scene)
-        if node.isItem(Item.IndividualNode):
-            return IndividualNodeProperty(scene=scene, node=node)
-        if node.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
-            return OrderedInputNodeProperty(scene=scene, node=node)
-        if node.predicate and node.label.editable:
-            return EditableNodeProperty(scene=scene, node=node)
-        return NodeProperty(scene=scene, node=node)
-
-
+from eddy.ui.menus.factory import MenuFactory

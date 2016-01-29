@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 
-from eddy.core.datatypes import Font, Item, Identity, Restriction
+from eddy.core.datatypes import Font, Item, Identity
 from eddy.core.functions import identify
 from eddy.core.items.nodes.common.restriction import RestrictionNode
 
@@ -85,36 +85,6 @@ class RangeRestrictionNode(RestrictionNode):
     #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
-
-    def contextMenu(self):
-        """
-        Returns the basic nodes context menu.
-        :rtype: QMenu
-        """
-        scene = self.scene()
-        mainwindow = scene.mainwindow
-
-        f1 = lambda x: x.isItem(Item.InputEdge)
-        f2 = lambda x: x.identity is Identity.Attribute
-
-        menu = super().contextMenu()
-
-        # Allow to change the restriction type only if it's not an Attribute range restriction
-        if not next(iter(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None):
-            menu.addSeparator()
-            menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuRestrictionChange)
-            for action in mainwindow.actionsRestrictionChange:
-                action.setChecked(self.restriction is action.data())
-                action.setVisible(action.data() is not Restriction.Self)
-
-        collection = self.label.contextMenuAdd()
-        if collection:
-            menu.addSeparator()
-            for action in collection:
-                menu.insertAction(mainwindow.actionOpenNodeProperties, action)
-
-        menu.insertSeparator(mainwindow.actionOpenNodeProperties)
-        return menu
 
     def addEdge(self, edge):
         """

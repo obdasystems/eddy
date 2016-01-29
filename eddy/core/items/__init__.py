@@ -148,14 +148,6 @@ class AbstractItem(QGraphicsItem):
     ####################################################################################################################
 
     @abstractmethod
-    def contextMenu(self, *args, **kwargs):
-        """
-        Returns the basic node context menu.
-        :rtype: QMenu
-        """
-        pass
-
-    @abstractmethod
     def copy(self, scene):
         """
         Create a copy of the current item.

@@ -308,25 +308,6 @@ class AbstractEdge(AbstractItem):
                     if (not sourcePP.contains(x.p1()) or not sourcePP.contains(x.p2())) and \
                         (not targetPP or (not targetPP.contains(x.p1()) or not targetPP.contains(x.p2())))]
 
-    def contextMenu(self, pos):
-        """
-        Returns the basic edge context menu.
-        :type pos: QPointF
-        :rtype: QMenu
-        """
-        menu = QMenu()
-        scene = self.scene()
-        breakpoint = self.breakpointAt(pos)
-        mainwindow = scene.mainwindow
-        if breakpoint is not None:
-            action = mainwindow.actionRemoveEdgeBreakpoint
-            action.setData((self, breakpoint))
-            menu.addAction(action)
-        else:
-            menu.addAction(mainwindow.actionDelete)
-            menu.addAction(mainwindow.actionSwapEdge)
-        return menu
-
     def moveBy(self, x, y):
         """
         Move the edge by the given deltas.
@@ -354,19 +335,6 @@ class AbstractEdge(AbstractItem):
     #   EVENTS                                                                                                         #
     #                                                                                                                  #
     ####################################################################################################################
-
-    def contextMenuEvent(self, menuEvent):
-        """
-        Bring up the context menu for the given node.
-        :type menuEvent: QGraphicsSceneContextMenuEvent
-        """
-        scene = self.scene()
-        scene.clearSelection()
-
-        self.setSelected(True)
-
-        contextMenu = self.contextMenu(menuEvent.pos())
-        contextMenu.exec_(menuEvent.screenPos())
 
     def hoverEnterEvent(self, hoverEvent):
         """

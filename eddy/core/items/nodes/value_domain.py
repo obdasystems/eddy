@@ -96,22 +96,6 @@ class ValueDomainNode(AbstractNode):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def contextMenu(self):
-        """
-        Returns the basic nodes context menu.
-        :rtype: QMenu
-        """
-        scene = self.scene()
-        mainwindow = scene.mainwindow
-        menu = super().contextMenu()
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeNodeBrush)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeValueDomainDatatype)
-        menu.insertSeparator(mainwindow.actionOpenNodeProperties)
-        # switch the check matching the current datatype
-        for action in mainwindow.actionsChangeValueDomainDatatype:
-            action.setChecked(self.datatype == action.data())
-        return menu
-
     def copy(self, scene):
         """
         Create a copy of the current item.

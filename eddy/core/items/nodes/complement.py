@@ -99,27 +99,6 @@ class ComplementNode(OperatorNode):
         super().addEdge(edge)
         identify(self)
 
-    def contextMenu(self):
-        """
-        Returns the basic nodes context menu.
-        :rtype: QMenu
-        """
-        menu = super().contextMenu()
-        scene = self.scene()
-        mainwindow = scene.mainwindow
-        if self.edges:
-
-            if self.identity is Identity.Role:
-                from eddy.core.items import RoleChainNode, RoleInverseNode
-                switch = {ComplementNode, RoleChainNode, RoleInverseNode}
-            else:
-                from eddy.core.items import DisjointUnionNode, IntersectionNode, UnionNode
-                switch = {ComplementNode, DisjointUnionNode, IntersectionNode, UnionNode}
-            for action in mainwindow.actionsSwitchHexagonNode:
-                action.setVisible(action.data() in switch)
-
-        return menu
-
     def copy(self, scene):
         """
         Create a copy of the current item.

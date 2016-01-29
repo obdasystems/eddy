@@ -84,46 +84,10 @@ class DomainRestrictionNode(RestrictionNode):
         """
         f1 = lambda x: x.isItem(Item.InputEdge) and x.target is self
         f2 = lambda x: x.identity in {Identity.Concept, Identity.Role}
-
-        return self.restriction in {Restriction.Cardinality, Restriction.Exists, Restriction.Forall} and \
-            len([n for n in [e.other(self) for e in self.edges if f1(e)] if f2(n)]) >= 2
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def contextMenu(self):
-        """
-        Returns the basic nodes context menu.
-        :rtype: QMenu
-        """
-        scene = self.scene()
-        menu = super().contextMenu()
-
-        menu.addSeparator()
-        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRestrictionChange)
-
-        f1 = lambda x: x.isItem(Item.InputEdge)
-        f2 = lambda x: x.identity is Identity.Attribute
-
-        qualified = self.qualified
-        attribute = next(iter(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
-
-        for action in scene.mainwindow.actionsRestrictionChange:
-            action.setChecked(self.restriction is action.data())
-            action.setVisible(action.data() is not Restriction.Self or not qualified and not attribute)
-
-        # Add actions from the label (if any)
-        collection = self.label.contextMenuAdd()
-        if collection:
-            menu.addSeparator()
-            for action in collection:
-                menu.insertAction(scene.mainwindow.actionOpenNodeProperties, action)
-
-        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
-        return menu
+        if self.restriction in {Restriction.Cardinality, Restriction.Exists, Restriction.Forall}:
+            if len([n for n in [e.other(self) for e in self.edges if f1(e)] if f2(n)]) >= 2:
+                return True
+        return False
 
     ####################################################################################################################
     #                                                                                                                  #

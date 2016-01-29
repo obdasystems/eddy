@@ -85,20 +85,6 @@ class RoleInverseNode(OperatorNode):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def contextMenu(self):
-        """
-        Returns the basic nodes context menu.
-        :rtype: QMenu
-        """
-        menu = super().contextMenu()
-        scene = self.scene()
-        mainwindow = scene.mainwindow
-        if self.edges:
-            from eddy.core.items import ComplementNode, RoleChainNode
-            for action in mainwindow.actionsSwitchHexagonNode:
-                action.setVisible(action.data() in {ComplementNode, RoleChainNode, RoleInverseNode})
-        return menu
-
     def copy(self, scene):
         """
         Create a copy of the current item.

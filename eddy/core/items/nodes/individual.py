@@ -125,26 +125,6 @@ class IndividualNode(AbstractResizableNode):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def contextMenu(self):
-        """
-        Returns the basic nodes context menu.
-        :rtype: QMenu
-        """
-        scene = self.scene()
-        mainwindow = scene.mainwindow
-        menu = super().contextMenu()
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeNodeBrush)
-
-        collection = self.label.contextMenuAdd()
-        if collection:
-            menu.insertSeparator(mainwindow.actionOpenNodeProperties)
-            for action in collection:
-                menu.insertAction(mainwindow.actionOpenNodeProperties, action)
-
-        menu.insertSeparator(mainwindow.actionOpenNodeProperties)
-        return menu
-
     def copy(self, scene):
         """
         Create a copy of the current item.

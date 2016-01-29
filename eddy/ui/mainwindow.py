@@ -70,6 +70,7 @@ from eddy.ui.dock import SidebarWidget, Navigator, Overview, Palette
 from eddy.ui.files import OpenFile, SaveFile
 from eddy.ui.forms import CardinalityRestrictionForm, RenameForm, OWLTranslationForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
+from eddy.ui.menus import MenuFactory
 from eddy.ui.preferences import PreferencesDialog
 from eddy.ui.properties import PropertyFactory
 from eddy.ui.scene import DiagramScene
@@ -97,6 +98,7 @@ class MainWindow(QMainWindow):
 
         self.abortQuit = False
         self.clipboard = Clipboard(self)
+        self.menuFactory = MenuFactory(self)
         self.propertyFactory = PropertyFactory(self)
         self.undogroup = QUndoGroup(self)
         self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)
@@ -442,13 +444,13 @@ class MainWindow(QMainWindow):
         data[RoleInverseNode] = 'Role inverse'
         data[UnionNode] = 'Union'
 
-        self.actionsSwitchHexagonNode = []
+        self.actionsSwitchOperatorNode = []
         for k, v in data.items():
             action = QAction(v, self)
             action.setCheckable(True)
             action.setData(k)
             connect(action.triggered, self.switchHexagonNode)
-            self.actionsSwitchHexagonNode.append(action)
+            self.actionsSwitchOperatorNode.append(action)
 
         ## EDGES
         self.actionRemoveEdgeBreakpoint = QAction('Remove breakpoint', self)
@@ -591,10 +593,10 @@ class MainWindow(QMainWindow):
             self.menuRestrictionChange.addAction(action)
 
         ## HEXAGON BASED NODES
-        self.menuHexagonNodeSwitch = QMenu('Switch to')
-        self.menuHexagonNodeSwitch.setIcon(self.iconRefresh)
-        for action in self.actionsSwitchHexagonNode:
-            self.menuHexagonNodeSwitch.addAction(action)
+        self.menuOperatorNodeSwitch = QMenu('Switch to')
+        self.menuOperatorNodeSwitch.setIcon(self.iconRefresh)
+        for action in self.actionsSwitchOperatorNode:
+            self.menuOperatorNodeSwitch.addAction(action)
 
         ################################################################################################################
         #                                                                                                              #

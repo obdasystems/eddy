@@ -65,24 +65,6 @@ class InstanceOfEdge(AbstractEdge):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def contextMenu(self, pos):
-        """
-        Returns the basic edge context menu.
-        :type pos: QPointF
-        :rtype: QMenu
-        """
-        menu = QMenu()
-        scene = self.scene()
-        breakpoint = self.breakpointAt(pos)
-        mainwindow = scene.mainwindow
-        if breakpoint is not None:
-            action = mainwindow.actionRemoveEdgeBreakpoint
-            action.setData((self, breakpoint))
-            menu.addAction(action)
-        else:
-            menu.addAction(mainwindow.actionDelete)
-        return menu
-
     def copy(self, scene):
         """
         Create a copy of the current edge.

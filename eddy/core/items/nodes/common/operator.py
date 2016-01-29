@@ -97,24 +97,6 @@ class OperatorNode(AbstractNode):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def contextMenu(self):
-        """
-        Returns the basic nodes context menu.
-        :rtype: QMenu
-        """
-        scene = self.scene()
-        mainwindow = scene.mainwindow
-        menu = super().contextMenu()
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuHexagonNodeSwitch)
-
-        # switch the check matching the current node
-        for action in mainwindow.actionsSwitchHexagonNode:
-            action.setChecked(isinstance(self, action.data()))
-            action.setVisible(True)
-
-        menu.insertSeparator(mainwindow.actionOpenNodeProperties)
-        return menu
-
     def height(self):
         """
         Returns the height of the shape.

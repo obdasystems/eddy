@@ -154,19 +154,6 @@ class Label(LabelItem):
         """
         return self.boundingRect().center()
 
-    def contextMenuAdd(self):
-        """
-        Returns a list of actions for the item shape context menu.
-        :rtype: list
-        """
-        collection = []
-        if self.movable and self.moved:
-            parent = self.parentItem()
-            scene = parent.scene()
-            mainwindow = scene.mainwindow
-            collection.append(mainwindow.actionResetLabelPosition)
-        return collection
-
     def defaultPos(self):
         """
         Returns the label default position in parent's item coordinates.
