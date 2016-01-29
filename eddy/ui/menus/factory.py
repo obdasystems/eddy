@@ -381,6 +381,46 @@ class MenuFactory(QObject):
         menu = self.buildGenericNodeMenu(mainwindow, scene, node)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeNodeBrush)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetIndividualNodeAs)
+
+        ##################################
+        ## BEGIN CONSTRAIN IDENTITY SWITCH
+        ##################################
+
+        I = True
+        L = True
+
+        f1 = lambda x: x.isItem(Item.InputEdge)
+        f2 = lambda x: x.isItem(Item.EnumerationNode)
+        f3 = lambda x: x.isItem(Item.IndividualNode)
+        f4 = lambda x: x.isItem(Item.PropertyAssertionNode)
+        f5 = lambda x: x.isItem(Item.InstanceOfEdge)
+        f6 = lambda x: x.identity in {Identity.Attribute, Identity.Role}
+
+        enumeration = next(iter(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
+
+        if enumeration:
+            num = len(enumeration.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
+            I = enumeration.identity is Identity.Concept or num < 2
+            L = enumeration.identity is Identity.DataRange or num < 2
+
+        assertion = next(iter(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f4)), None)
+        if assertion:
+            operand = next(iter(assertion.outgoingNodes(filter_on_edges=f5, filter_on_nodes=f6)), None)
+            if operand:
+                if operand.identity is Identity.Role:
+                    L = False
+                elif operand.identity is Identity.Attribute:
+                    num = len(assertion.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
+                    I = I and (node.identity is Identity.Individual or num < 2)
+                    L = L and (node.identity is Identity.Literal or num < 2)
+
+        for a in mainwindow.actionsSetIndividualNodeAs:
+            a.setVisible(a.data() is Identity.Individual and I or a.data() is Identity.Literal and L)
+
+        ################################
+        ## END CONSTRAIN IDENTITY SWITCH
+        ################################
 
         # Append label specific actions.
         collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)

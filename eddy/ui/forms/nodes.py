@@ -37,9 +37,10 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QDialogButtonBox, QLabel
 from PyQt5.QtWidgets import QMessageBox
 
+from eddy.core.datatypes import XsdDatatype, Identity
 from eddy.core.functions import isEmpty, connect
 
-from eddy.ui.fields import IntEditField, StringEditField
+from eddy.ui.fields import IntEditField, StringEditField, ComboBox
 
 
 class CardinalityRestrictionForm(QDialog):
@@ -102,6 +103,56 @@ class CardinalityRestrictionForm(QDialog):
             self.maxCardinalityValue = int(self.maxCardinalityField.text())
 
         self.accept()
+
+
+class LiteralForm(QDialog):
+    """
+    This class implements the form used to select the Literal value of an Individual node.
+    """
+    def __init__(self, node, parent=None):
+        """
+        Initialize the form dialog.
+        :type node: IndividualNode
+        :type parent: QWidget
+        """
+        super().__init__(parent)
+
+        # DATATYPE COMBO BOX
+        self.datatypeField = ComboBox(self)
+        for datatype in XsdDatatype:
+            self.datatypeField.addItem(datatype.value, datatype)
+
+        # VALUE STRING FIELD
+        self.valueField = StringEditField(self)
+        self.valueField.setFixedWidth(300)
+
+        # FILL FIELDS WITH DATA
+        if node.identity is Identity.Literal:
+            datatype = node.datatype
+            for i in range(self.datatypeField.count()):
+                if self.datatypeField.itemData(i) is datatype:
+                    self.datatypeField.setCurrentIndex(i)
+                    break
+            self.valueField.setValue(node.literal)
+
+        else:
+            self.datatypeField.setCurrentIndex(0)
+            self.valueField.setValue('')
+
+        # CONFIRMATION BOX
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+
+        self.mainLayout = QFormLayout(self)
+        self.mainLayout.addRow('Datatype', self.datatypeField)
+        self.mainLayout.addRow('Value', self.valueField)
+        self.mainLayout.addRow(self.buttonBox)
+
+        self.setWindowTitle('Compose literal')
+        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setFixedSize(self.sizeHint())
+
+        connect(self.buttonBox.accepted, self.accept)
+        connect(self.buttonBox.rejected, self.reject)
 
 
 class RenameForm(QDialog):

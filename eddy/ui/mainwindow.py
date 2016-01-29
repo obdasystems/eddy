@@ -55,11 +55,11 @@ from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelEdit, Comma
 from eddy.core.commands import CommandNodeHexagonSwitchTo, CommandNodeValueDomainSelectDatatype
 from eddy.core.commands import CommandNodeSquareChangeRestriction, CommandNodeSetSpecial
 from eddy.core.commands import CommandNodeChangeBrush, CommandNodeSetZValue
-from eddy.core.datatypes import Color, File, DiagramMode, Filetype, Restriction, Special, XsdDatatype
+from eddy.core.datatypes import Color, File, DiagramMode, Filetype
+from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
 from eddy.core.exceptions import ParseError
-from eddy.core.functions.fsystem import expandPath
-from eddy.core.functions.misc import coloredIcon, shadedIcon, snapF
-from eddy.core.functions.signals import connect, disconnect
+from eddy.core.functions import expandPath, coloredIcon, shadedIcon, snapF, rCut, lCut
+from eddy.core.functions import connect, disconnect
 from eddy.core.items import Item, __mapping__ as mapping
 from eddy.core.items import RoleInverseNode, DisjointUnionNode, DatatypeRestrictionNode
 from eddy.core.items import UnionNode, EnumerationNode, ComplementNode, RoleChainNode, IntersectionNode
@@ -68,7 +68,7 @@ from eddy.core.utils import Clipboard
 from eddy.ui.about import About
 from eddy.ui.dock import SidebarWidget, Navigator, Overview, Palette
 from eddy.ui.files import OpenFile, SaveFile
-from eddy.ui.forms import CardinalityRestrictionForm, RenameForm, OWLTranslationForm
+from eddy.ui.forms import CardinalityRestrictionForm, LiteralForm, RenameForm, OWLTranslationForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
 from eddy.ui.menus import MenuFactory
 from eddy.ui.preferences import PreferencesDialog
@@ -433,7 +433,7 @@ class MainWindow(QMainWindow):
             connect(action.triggered, self.changeValueDomainDatatype)
             self.actionsChangeValueDomainDatatype.append(action)
 
-        ## HEXAGON BASED CONSTRUCTOR NODES
+        ## OPERATOR NODES
         data = OrderedDict()
         data[ComplementNode] = 'Complement'
         data[DisjointUnionNode] = 'Disjoint union'
@@ -451,6 +451,14 @@ class MainWindow(QMainWindow):
             action.setData(k)
             connect(action.triggered, self.switchHexagonNode)
             self.actionsSwitchOperatorNode.append(action)
+
+        ## INDIVIDUAL NODE
+        self.actionsSetIndividualNodeAs = []
+        for identity in (Identity.Individual, Identity.Literal):
+            action = QAction(identity.label, self)
+            action.setData(identity)
+            connect(action.triggered, self.setIndividualNodeAs)
+            self.actionsSetIndividualNodeAs.append(action)
 
         ## EDGES
         self.actionRemoveEdgeBreakpoint = QAction('Remove breakpoint', self)
@@ -592,11 +600,17 @@ class MainWindow(QMainWindow):
         for action in self.actionsRestrictionChange:
             self.menuRestrictionChange.addAction(action)
 
-        ## HEXAGON BASED NODES
+        ## OPERATOR NODES
         self.menuOperatorNodeSwitch = QMenu('Switch to')
         self.menuOperatorNodeSwitch.setIcon(self.iconRefresh)
         for action in self.actionsSwitchOperatorNode:
             self.menuOperatorNodeSwitch.addAction(action)
+
+        ## INDIVIDUAL NODE
+        self.menuSetIndividualNodeAs = QMenu('Set as')
+        self.menuSetIndividualNodeAs.setIcon(self.iconRefresh)
+        for action in self.actionsSetIndividualNodeAs:
+            self.menuSetIndividualNodeAs.addAction(action)
 
         ################################################################################################################
         #                                                                                                              #
@@ -1149,15 +1163,10 @@ class MainWindow(QMainWindow):
         :type modifiers: int
         """
         scene = self.mdi.activeScene
-        if not modifiers & Qt.ControlModifier or item.isItem(Item.IndividualNode):
+        if not modifiers & Qt.ControlModifier:
             self.palette_.button(item.item).setChecked(False)
             scene.setMode(DiagramMode.Idle)
             scene.command = None
-
-        if item.isItem(Item.IndividualNode):
-            prop = self.propertyFactory.create(scene=scene, node=item)
-            prop.mainWidget.setCurrentWidget(prop.identityWidget)
-            prop.exec_()
 
     @pyqtSlot()
     def newDocument(self):
@@ -1303,14 +1312,14 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
 
-                renameform = RenameForm(node, self)
-                if renameform.exec_() == RenameForm.Accepted:
-                    if node.labelText() != renameform.renameField.value():
+                form = RenameForm(node, self)
+                if form.exec_() == RenameForm.Accepted:
+                    if node.labelText() != form.renameField.value():
 
                         commands = []
                         for n in scene.nodesByLabel[node.labelText()]:
                             command = CommandNodeLabelEdit(scene=scene, node=n)
-                            command.end(renameform.renameField.value())
+                            command.end(form.renameField.value())
                             commands.append(command)
 
                         kwargs = {
@@ -1461,6 +1470,37 @@ class MainWindow(QMainWindow):
                         zValue = item.zValue() - 0.2
                 if zValue != selected.zValue():
                     scene.undostack.push(CommandNodeSetZValue(scene=scene, node=selected, zValue=zValue))
+
+    @pyqtSlot()
+    def setIndividualNodeAs(self):
+        """
+        Set an invididual node either to Individual or Literal.
+        Will bring up the Literal Form if needed.
+        """
+        scene = self.mdi.activeScene
+        if scene:
+            scene.setMode(DiagramMode.Idle)
+            selected = scene.selectedNodes()
+            node = next(filter(lambda x: x.isItem(Item.IndividualNode), selected), None)
+            if node:
+                action = self.sender()
+                if action.data() is Identity.Individual:
+                    if node.identity is Identity.Literal:
+                        # Switch Literal -> Individual => set default text
+                        command = CommandNodeLabelEdit(scene, node)
+                        command.end(node.label.defaultText)
+                        scene.undostack.push(command)
+                elif action.data() is Identity.Literal:
+                    # We need to bring up the form here
+                    form = LiteralForm(node, self)
+                    if form.exec_() == LiteralForm.Accepted:
+                        datatype = form.datatypeField.currentData()
+                        value = form.valueField.value().strip()
+                        value = '"{}"^^{}'.format(rCut(lCut(value, '"'), '"'), datatype.value)
+                        command = CommandNodeLabelEdit(scene, node)
+                        command.end(value)
+                        if command.isTextChanged(value):
+                            scene.undostack.push(command)
 
     @pyqtSlot()
     def setSpecialNode(self):

@@ -34,16 +34,16 @@
 
 from PyQt5.QtCore import Qt, QPointF, pyqtSlot
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QLabel
+from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
 from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
 
 from eddy.core.commands import CommandNodeSetURL, CommandNodeSetDescription
 from eddy.core.commands import CommandNodeLabelEdit, CommandNodeMove
 from eddy.core.commands import CommandNodeChangeInputOrder
-from eddy.core.datatypes import DistinctList, Identity, XsdDatatype, Item
-from eddy.core.functions import clamp, connect, isEmpty, lCut, rCut
+from eddy.core.datatypes import DistinctList
+from eddy.core.functions import clamp, connect, isEmpty, rCut
 
-from eddy.ui.fields import StringEditField, TextEditField, SpinBox, ComboBox
+from eddy.ui.fields import StringEditField, TextEditField, SpinBox
 
 
 ########################################################################################################################
@@ -413,156 +413,3 @@ class OrderedInputNodeProperty(NodeProperty):
 
             if self.node.inputs != inputs:
                 self.scene.undostack.push(CommandNodeChangeInputOrder(self.scene, self.node, inputs))
-
-
-########################################################################################################################
-#                                                                                                                      #
-#   INDIVIDUAL NODE SPECIFIC DIALOG                                                                                    #
-#                                                                                                                      #
-########################################################################################################################
-
-
-class IndividualNodeProperty(NodeProperty):
-    """
-    This class implements the property dialog for Individual nodes.
-    """
-    def __init__(self, scene, node, parent=None):
-        """
-        Initialize the individual node properties dialog.
-        :type scene: DiagramScene
-        :type node: IndividualNode
-        :type parent: QWidget
-        """
-        super().__init__(scene, node, parent)
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   IDENTITY TAB                                                                                               #
-        #                                                                                                              #
-        ################################################################################################################
-
-        self.identityWidget = QWidget()
-        self.identityLayout = QFormLayout(self.identityWidget)
-
-        # IDENTITY COMBO BOX
-        self.identityField = ComboBox(self)
-
-        f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
-        f2 = lambda x: x.isItem(Item.EnumerationNode)
-        enumeration = next(iter(self.node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
-
-        f3 = lambda x: x.isItem(Item.InputEdge) and x.target is enumeration
-        f4 = lambda x: x.isItem(Item.IndividualNode)
-        num = len(enumeration.incomingNodes(filter_on_edges=f3, filter_on_nodes=f4)) if enumeration else 0
-
-        if not enumeration or enumeration.identity is Identity.Concept or num < 2:
-            self.identityField.addItem('Individual', Identity.Individual)
-
-        if not enumeration or enumeration.identity is Identity.DataRange or num < 2:
-            self.identityField.addItem('Literal', Identity.Literal)
-
-        for i in range(self.identityField.count()):
-            if self.identityField.itemData(i) is self.node.identity:
-                self.identityField.setCurrentIndex(i)
-                break
-
-        # DATATYPE COMBO BOX (DISPLAYED ONLY FOR LITERALS)
-        self.datatypeLabel = QLabel(self)
-        self.datatypeLabel.setText('Datatype')
-
-        self.datatypeField = ComboBox(self)
-        for datatype in XsdDatatype:
-            self.datatypeField.addItem(datatype.value, datatype)
-
-        # VALUE STRING FIELD (DISPLAYED FOR BOTH LITERALS AND INDIVIDUALS)
-        self.valueField = StringEditField(self.identityWidget)
-        self.valueField.setFixedWidth(300)
-
-        # ADD THE FIELDS TO THE LAYOUT
-        self.identityLayout.addRow('Identity', self.identityField)
-        self.identityLayout.addRow('Value', self.valueField)
-
-        if self.node.identity is Identity.Literal:
-
-            # Insert the datatype widget only if it's needed.
-            self.identityLayout.insertRow(1, self.datatypeLabel, self.datatypeField)
-            self.datatypeLabel.show()
-            self.datatypeField.show()
-
-            # Select the current datatype
-            datatype = self.node.datatype
-            for i in range(self.datatypeField.count()):
-                if self.datatypeField.itemData(i) is datatype:
-                    self.datatypeField.setCurrentIndex(i)
-                    break
-
-            # Set the value using just the literal and not the whole label.
-            self.valueField.setValue(self.node.literal)
-
-        else:
-
-            # Use default datatype and set the value using the whole label.
-            self.datatypeField.setCurrentIndex(0)
-            self.datatypeField.hide()
-            self.datatypeLabel.hide()
-            self.valueField.setValue(self.node.labelText())
-
-        self.mainWidget.addTab(self.identityWidget, 'Identity')
-
-        # noinspection PyUnresolvedReferences
-        connect(self.identityField.currentIndexChanged[int], self.identityFieldChanged)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SLOTS                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @pyqtSlot(int)
-    def identityFieldChanged(self, index):
-        """
-        Executed whenever the index of the identity field changes.
-        :type index: int
-        """
-        if self.identityField.itemData(index) is Identity.Literal:
-            self.datatypeField.show()
-            self.datatypeLabel.show()
-            self.identityLayout.insertRow(1, self.datatypeLabel, self.datatypeField)
-        else:
-            self.datatypeField.hide()
-            self.datatypeLabel.hide()
-            self.identityLayout.removeWidget(self.datatypeField)
-            self.identityLayout.removeWidget(self.datatypeLabel)
-
-    @pyqtSlot(int)
-    def completed(self, code):
-        """
-        Executed when the dialog is terminated.
-        :type code: int
-        """
-        if code == QDialog.Accepted:
-            super().completed(code)
-            self.labelChanged()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def labelChanged(self):
-        """
-        Change the label of the node.
-        """
-        if self.identityField.currentData() is Identity.Literal:
-            datatype = self.datatypeField.currentData()
-            value = self.valueField.value().strip()
-            value = '"{}"^^{}'.format(rCut(lCut(value, '"'), '"'), datatype.value)
-        else:
-            value = self.valueField.value().strip()
-            value = value if not isEmpty(value) else self.node.label.defaultText
-
-        command = CommandNodeLabelEdit(self.scene, self.node)
-        command.end(value)
-        if command.isTextChanged(value):
-            self.scene.undostack.push(command)
