@@ -33,9 +33,10 @@
 
 
 import os
-
 import jpype
+
 from PyQt5.QtCore import QObject, pyqtSlot
+
 from memoized_property import memoized_property
 from verlib import NormalizedVersion
 
@@ -59,6 +60,7 @@ class JVM(QObject):
         """
         super().__init__(parent)
         self.path = self.find()
+        print(self.path)
 
     @memoized
     def find(self):
