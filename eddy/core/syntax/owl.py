@@ -75,6 +75,13 @@ class OWL2RLValidator(AbstractValidator):
                     idB = target.identity.label
                     raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
 
+                if Identity.DataRange in {source.identity, target.identity} and not source.isItem(Item.RangeRestrictionNode):
+                    # If we are creating an ISA between 2 DataRange check whether the source of the node is a
+                    # range restriction: we allow to create an inclusion only if will express a DataPropertyRange.
+                    idA = source.identity.label
+                    idB = target.identity.label
+                    raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
+
             elif edge.isItem(Item.InputEdge):
 
                 ########################################################################################################
