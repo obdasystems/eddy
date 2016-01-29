@@ -537,8 +537,8 @@ class DiagramScene(QGraphicsScene):
         :type source: AbstractNode
         :rtype: set
         """
-        node1 = DomainRestrictionNode(scene=self, restriction=Restriction.Exists)
-        edge1 = InputEdge(scene=self, source=source, target=node1)
+        node = DomainRestrictionNode(scene=self, restriction=Restriction.Exists)
+        edge = InputEdge(scene=self, source=source, target=node)
         
         size = DiagramScene.GridSize
         
@@ -555,7 +555,7 @@ class DiagramScene(QGraphicsScene):
 
         pos = None
         num = sys.maxsize
-        rad = QPointF(node1.width() / 2, node1.height() / 2)
+        rad = QPointF(node.width() / 2, node.height() / 2)
 
         for o in offsets:
             count = len(self.items(QRectF(source.pos() + o - rad, source.pos() + o + rad)))
@@ -563,9 +563,9 @@ class DiagramScene(QGraphicsScene):
                 num = count
                 pos = source.pos() + o
 
-        node1.setPos(pos)
+        node.setPos(pos)
 
-        return {node1, edge1}
+        return {node, edge}
 
     def propertyRangeAxiomComposition(self, source):
         """
@@ -573,73 +573,35 @@ class DiagramScene(QGraphicsScene):
         :type source: AbstractNode
         :rtype: set
         """
-        node1 = RangeRestrictionNode(scene=self, restriction=Restriction.Exists)
-        edge1 = InputEdge(scene=self, source=source, target=node1)
-
-        if source.isItem(Item.AttributeNode):
-            node2 = ValueDomainNode(scene=self)
-            edge2 = InclusionEdge(scene=self, source=node1, target=node2)
-        else:
-            node2 = None
-            edge2 = None
+        node = RangeRestrictionNode(scene=self, restriction=Restriction.Exists)
+        edge = InputEdge(scene=self, source=source, target=node)
 
         size = DiagramScene.GridSize
 
         offsets = (
-            (
-                QPointF(snapF(+source.width() / 2 + 90, size), 0),
-                QPointF(snapF(-source.width() / 2 - 90, size), 0),
-                QPointF(0, snapF(-source.height() / 2 - 70, size)),
-                QPointF(0, snapF(+source.height() / 2 + 70, size)),
-                QPointF(snapF(+source.width() / 2 + 90, size), snapF(-source.height() / 2 - 70, size)),
-                QPointF(snapF(-source.width() / 2 - 90, size), snapF(-source.height() / 2 - 70, size)),
-                QPointF(snapF(+source.width() / 2 + 90, size), snapF(+source.height() / 2 + 70, size)),
-                QPointF(snapF(-source.width() / 2 - 90, size), snapF(+source.height() / 2 + 70, size)),
-            ),
-            (
-                QPointF(snapF(+node1.width() / 2 + 120, size), 0),
-                QPointF(snapF(-node1.width() / 2 - 120, size), 0),
-                QPointF(0, snapF(-node1.height() / 2 - 80, size)),
-                QPointF(0, snapF(+node1.height() / 2 + 80, size)),
-            )
+            QPointF(snapF(+source.width() / 2 + 90, size), 0),
+            QPointF(snapF(-source.width() / 2 - 90, size), 0),
+            QPointF(0, snapF(-source.height() / 2 - 70, size)),
+            QPointF(0, snapF(+source.height() / 2 + 70, size)),
+            QPointF(snapF(+source.width() / 2 + 90, size), snapF(-source.height() / 2 - 70, size)),
+            QPointF(snapF(-source.width() / 2 - 90, size), snapF(-source.height() / 2 - 70, size)),
+            QPointF(snapF(+source.width() / 2 + 90, size), snapF(+source.height() / 2 + 70, size)),
+            QPointF(snapF(-source.width() / 2 - 90, size), snapF(+source.height() / 2 + 70, size)),
         )
 
-        pos1 = None
-        pos2 = None
-        num1 = sys.maxsize
-        num2 = sys.maxsize
-        rad1 = QPointF(node1.width() / 2, node1.height() / 2)
-        rad2 = None if source.isItem(Item.RoleNode) else QPointF(node2.width() / 2, node2.height() / 2)
+        pos = None
+        num = sys.maxsize
+        rad = QPointF(node.width() / 2, node.height() / 2)
 
-        if source.isItem(Item.RoleNode):
+        for o in offsets:
+            count = len(self.items(QRectF(source.pos() + o - rad, source.pos() + o + rad)))
+            if count < num:
+                num = count
+                pos = source.pos() + o
 
-            for o1, o2 in itertools.product(*offsets):
-                count1 = len(self.items(QRectF(source.pos() + o1 - rad1, source.pos() + o1 + rad1)))
-                if count1 < num1:
-                    num1 = count1
-                    pos1 = source.pos() + o1
+        node.setPos(pos)
 
-        elif source.isItem(Item.AttributeNode):
-
-            for o1, o2 in itertools.product(*offsets):
-                count1 = len(self.items(QRectF(source.pos() + o1 - rad1, source.pos() + o1 + rad1)))
-                count2 = len(self.items(QRectF(source.pos() + o1 + o2 - rad2, source.pos() + o1 + o2 + rad2)))
-                if count1 + count2 < num1 + num2:
-                    num1 = count1
-                    num2 = count2
-                    pos1 = source.pos() + o1
-                    pos2 = source.pos() + o1 + o2
-
-        node1.setPos(pos1)
-        nodes = {node1}
-        edges = {edge1}
-
-        if source.isItem(Item.AttributeNode):
-            node2.setPos(pos2)
-            nodes.add(node2)
-            edges.add(edge2)
-
-        return nodes | edges
+        return {node, edge}
             
     def reflexiveRoleAxiomComposition(self, source):
         """
