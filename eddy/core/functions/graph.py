@@ -51,7 +51,7 @@ def bfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None
                            connected through some other nodes for which the callable returns True).
         * filter_on_visit: a callable which takes as input a node and returns True iff the search algoritm should visit
                            the given node neighbours; else the callable MUST return False (NOTE: the node IS included in
-                           the returned set of visited nodes, but its neighbours are not being vistied, unless they are
+                           the returned set of visited nodes, but its neighbours are not being visited, unless they are
                            connected through some other nodes for which the callable returns True).
 
     :type source: Node
@@ -90,7 +90,7 @@ def dfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None
                            connected through some other nodes for which the callable returns True).
         * filter_on_visit: a callable which takes as input a node and returns True iff the search algoritm should visit
                            the given node neighbours; else the callable MUST return False (NOTE: the node IS included in
-                           the returned set of visited nodes, but its neighbours are not being vistied, unless they are
+                           the returned set of visited nodes, but its neighbours are not being visited, unless they are
                            connected through some other nodes for which the callable returns True).
 
     :type source: Node
