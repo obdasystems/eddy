@@ -32,20 +32,19 @@
 ##########################################################################
 
 
-import itertools
 import sys
 
 from PyQt5.QtCore import Qt, QPointF, QSettings, QRectF, pyqtSignal
 from PyQt5.QtGui import QPen, QColor
 from PyQt5.QtPrintSupport import QPrinter
-from PyQt5.QtWidgets import QGraphicsScene, QUndoStack, QMenu
+from PyQt5.QtWidgets import QGraphicsScene, QUndoStack
 from PyQt5.QtXml import QDomDocument
 
 from eddy.core.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
 from eddy.core.datatypes import DiagramMode, DistinctList, File, Item, Restriction, Special
 from eddy.core.functions import expandPath, rangeF, snapF
 from eddy.core.items import ConceptNode, ComplementNode, RoleChainNode, RoleInverseNode
-from eddy.core.items import RangeRestrictionNode, DomainRestrictionNode, ValueDomainNode
+from eddy.core.items import RangeRestrictionNode, DomainRestrictionNode
 from eddy.core.items import InputEdge, InclusionEdge
 from eddy.core.syntax import OWL2RLValidator
 from eddy.core.utils import Clipboard, GUID
