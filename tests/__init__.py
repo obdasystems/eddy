@@ -39,7 +39,8 @@ from unittest.util import safe_repr
 
 from PyQt5.QtTest import QTest
 
-from eddy import Eddy
+from eddy.core.application import Eddy
+from eddy.ui import images_rc ## DO NOT REMOVE
 
 
 # noinspection PyTypeChecker,PyCallByClass
