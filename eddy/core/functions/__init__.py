@@ -32,12 +32,12 @@
 ##########################################################################
 
 
-from eddy.core.functions.fsystem import expandPath
-from eddy.core.functions.fsystem import homePath
-from eddy.core.functions.fsystem import modulePath
-from eddy.core.functions.fsystem import openPath
-from eddy.core.functions.fsystem import resourcesPath
-from eddy.core.functions.fsystem import rootPath
+from eddy.core.functions.system import expandPath
+from eddy.core.functions.system import homePath
+from eddy.core.functions.system import modulePath
+from eddy.core.functions.system import openPath
+from eddy.core.functions.system import resourcesPath
+from eddy.core.functions.system import rootPath
 
 from eddy.core.functions.geometry import angle
 from eddy.core.functions.geometry import distanceL

@@ -32,40 +32,23 @@
 ##########################################################################
 
 
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtGui import QFont
 
-from eddy.core.functions.system import expandPath
+from eddy.core.datatypes.system import Platform
 
 
-class OpenFile(QFileDialog):
+class Font(QFont):
     """
-    This class is used to bring up the open file dialog modal window.
+    This class extends PyQt5.QtGui.QFont providing better font rendering on different platforms.
     """
-    def __init__(self, path, parent=None):
+    def __init__(self, family, size=12, weight=-1, italic=False):
         """
-        Initialize the open file dialog.
-        :type path: str
-        :type parent: QWidget
+        Contruct a new Font instance using the given parameters.
+        :type family: str
+        :type size: float
+        :type weight: float
+        :type italic: bool
         """
-        super().__init__(parent)
-        self.setAcceptMode(QFileDialog.AcceptOpen)
-        self.setDirectory(expandPath('~') if not path else expandPath(path))
-        self.setFileMode(QFileDialog.AnyFile)
-        self.setViewMode(QFileDialog.Detail)
-
-
-class SaveFile(QFileDialog):
-    """
-    This class is used to bring up the save file dialog modal window.
-    """
-    def __init__(self, path, parent=None):
-        """
-        Initialize the save file dialog.
-        :type path: str
-        :type parent: QWidget
-        """
-        super().__init__(parent)
-        self.setAcceptMode(QFileDialog.AcceptSave)
-        self.setDirectory(expandPath('~') if not path else expandPath(path))
-        self.setFileMode(QFileDialog.AnyFile)
-        self.setViewMode(QFileDialog.Detail)
+        if Platform.identify() is not Platform.Darwin:
+            size = int(round(size * 0.75))
+        super().__init__(family, size, weight, italic)

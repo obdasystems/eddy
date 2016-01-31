@@ -34,7 +34,7 @@
 
 from PyQt5.QtWidgets import QStyle
 
-from eddy.core.functions.fsystem import expandPath
+from eddy.core.functions.system import expandPath
 from eddy.core.functions.misc import QSS
 
 from eddy.ui.styles import Style

@@ -32,40 +32,52 @@
 ##########################################################################
 
 
-from PyQt5.QtWidgets import QFileDialog
-
-from eddy.core.functions.system import expandPath
+from enum import Enum, unique, IntEnum
 
 
-class OpenFile(QFileDialog):
+@unique
+class Color(Enum):
     """
-    This class is used to bring up the open file dialog modal window.
+    This class defines predicate nodes available colors.
     """
-    def __init__(self, path, parent=None):
+    __order__ = 'White Yellow Orange Red Purple Blue Teal Green Lime'
+
+    White = '#fcfcfc'
+    Yellow = '#f0e50c'
+    Orange = '#f29210'
+    Red = '#e41b20'
+    Purple = '#724e9d'
+    Blue = '#1760ab'
+    Teal = '#16ccef'
+    Green = '#2da735'
+    Lime = '#86f42e'
+
+    @classmethod
+    def forValue(cls, value):
         """
-        Initialize the open file dialog.
-        :type path: str
-        :type parent: QWidget
+        Returns the color matching the given HEX code.
+        :type value: str
+        :rtype: Color
         """
-        super().__init__(parent)
-        self.setAcceptMode(QFileDialog.AcceptOpen)
-        self.setDirectory(expandPath('~') if not path else expandPath(path))
-        self.setFileMode(QFileDialog.AnyFile)
-        self.setViewMode(QFileDialog.Detail)
+        for x in cls:
+            if x.value == value.lower():
+                return x
+        return None
 
 
-class SaveFile(QFileDialog):
+@unique
+class DiagramMode(IntEnum):
     """
-    This class is used to bring up the save file dialog modal window.
+    This class defines the diagram scene operational modes.
     """
-    def __init__(self, path, parent=None):
-        """
-        Initialize the save file dialog.
-        :type path: str
-        :type parent: QWidget
-        """
-        super().__init__(parent)
-        self.setAcceptMode(QFileDialog.AcceptSave)
-        self.setDirectory(expandPath('~') if not path else expandPath(path))
-        self.setFileMode(QFileDialog.AnyFile)
-        self.setViewMode(QFileDialog.Detail)
+    Idle = 0 # idle mode
+    NodeInsert = 1 # node insertion
+    NodeMove = 2 # node movement
+    NodeResize = 3 # node interactive resize
+    EdgeInsert = 4 # edge insertion
+    EdgeAnchorPointMove = 5 # edge anchor point movement
+    EdgeBreakPointMove = 6 # edge breakpoint movement
+    LabelMove = 7 # text label edit
+    LabelEdit = 8 # text label movement
+    RubberBandDrag = 9 # multi selection
+    SceneDrag = 10 # scene being dragged by the mouse

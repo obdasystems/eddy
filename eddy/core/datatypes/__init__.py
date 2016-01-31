@@ -32,40 +32,21 @@
 ##########################################################################
 
 
-from PyQt5.QtWidgets import QFileDialog
+from eddy.core.datatypes.collections import DistinctList
 
-from eddy.core.functions.system import expandPath
+from eddy.core.datatypes.graphol import Identity
+from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.graphol import Restriction
+from eddy.core.datatypes.graphol import Special
 
+from eddy.core.datatypes.misc import Color
+from eddy.core.datatypes.misc import DiagramMode
 
-class OpenFile(QFileDialog):
-    """
-    This class is used to bring up the open file dialog modal window.
-    """
-    def __init__(self, path, parent=None):
-        """
-        Initialize the open file dialog.
-        :type path: str
-        :type parent: QWidget
-        """
-        super().__init__(parent)
-        self.setAcceptMode(QFileDialog.AcceptOpen)
-        self.setDirectory(expandPath('~') if not path else expandPath(path))
-        self.setFileMode(QFileDialog.AnyFile)
-        self.setViewMode(QFileDialog.Detail)
+from eddy.core.datatypes.owl import OWLSyntax
+from eddy.core.datatypes.owl import XsdDatatype
 
+from eddy.core.datatypes.qt import Font
 
-class SaveFile(QFileDialog):
-    """
-    This class is used to bring up the save file dialog modal window.
-    """
-    def __init__(self, path, parent=None):
-        """
-        Initialize the save file dialog.
-        :type path: str
-        :type parent: QWidget
-        """
-        super().__init__(parent)
-        self.setAcceptMode(QFileDialog.AcceptSave)
-        self.setDirectory(expandPath('~') if not path else expandPath(path))
-        self.setFileMode(QFileDialog.AnyFile)
-        self.setViewMode(QFileDialog.Detail)
+from eddy.core.datatypes.system import File
+from eddy.core.datatypes.system import Filetype
+from eddy.core.datatypes.system import Platform

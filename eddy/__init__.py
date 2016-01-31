@@ -54,7 +54,7 @@ from PyQt5.QtWidgets import QApplication
 from verlib import NormalizedVersion
 
 from eddy.core.exceptions import JVMNotSupportedException
-from eddy.core.functions.fsystem import expandPath
+from eddy.core.functions.system import expandPath
 from eddy.core.functions.misc import QSS
 from eddy.core.functions.signals import connect
 from eddy.core.utils.java import JVM
