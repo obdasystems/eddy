@@ -435,7 +435,7 @@ class MainWindow(QMainWindow):
             self.actionsChangeValueDomainDatatype.append(action)
 
         ## VALUE RESTRICTION
-        self.actionChangeValueRestriction = QAction('Change restriction...', self)
+        self.actionChangeValueRestriction = QAction('Select restriction...', self)
         self.actionChangeValueRestriction.setIcon(self.iconRefresh)
         connect(self.actionChangeValueRestriction.triggered, self.changeValueRestriction)
 
