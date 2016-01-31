@@ -385,7 +385,7 @@ class OWLExporter(QObject):
 
                 if item.isItem(Item.ConceptNode):
                     collection.add(self.buildConcept(item))
-                if item.isItem(Item.ValueDomainNode):
+                elif item.isItem(Item.ValueDomainNode):
                     collection.add(self.buildValueDomain(item))
                 elif item.isItem(Item.ComplementNode):
                     collection.add(self.buildComplement(item))
@@ -571,7 +571,7 @@ class OWLExporter(QObject):
 
                 if item.isItem(Item.ConceptNode):
                     collection.add(self.buildConcept(item))
-                if item.isItem(Item.ValueDomainNode):
+                elif item.isItem(Item.ValueDomainNode):
                     collection.add(self.buildValueDomain(item))
                 elif item.isItem(Item.ComplementNode):
                     collection.add(self.buildComplement(item))
