@@ -37,6 +37,7 @@ import re
 
 RE_CARDINALITY = re.compile("""^\(\s*(?P<min>[\d-]+)\s*,\s*(?P<max>[\d-]+)\s*\)$""") # parse cardinality restriction
 RE_DIGIT = re.compile("""\d""") # identify strings composed of only digits
+RE_FACET = re.compile("""^(?P<facet>.*)\s*"(?P<value>.*)"\^\^(?P<datatype>.*)$""") # tokenize facet restrictions
 RE_ITEM_PREFIX = re.compile("""^(?P<prefix>[^\d])(?P<value>\d+)$""") # split items prefix/id
 RE_LITERAL = re.compile("""^"(?P<literal>.*)"\^\^(?P<datatype>.*)$""") # tokenize a string extracting literal and datatype
 RE_JAVA_HOME = re.compile("""^(jvm|jdk|jre)((?P<major>\d)\.?)?((?P<minor>\d)\.?)?((?P<patch>\d)_?)?(?P<update>\d{1,3})?(\.*\w*)?$""")
