@@ -38,6 +38,7 @@ import jnius_config
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QApplication
 
+from eddy.core.datatypes import Platform
 from eddy.core.functions.system import expandPath
 
 ########################################################
@@ -45,6 +46,13 @@ from eddy.core.functions.system import expandPath
 ########################################################
 
 os.environ['JAVA_HOME'] = expandPath('@resources/java/')
+
+if Platform.identify() is Platform.Windows:
+    # on windows we must ass the jvm.dll to system path
+    path = os.getenv('Path', '')
+    path = path.split(os.pathsep)
+    path.insert(0, expandPath('@resources/java/bin/client'))
+    os.environ['Path'] = os.pathsep.join(path)
 
 classpath = []
 resources = expandPath('@resources/lib/')
