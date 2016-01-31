@@ -54,18 +54,6 @@ class Facet(Enum):
     pattern = 'xsd:pattern'
 
     @classmethod
-    def forValue(cls, value):
-        """
-        Returns the Facet matching the given value.
-        :type value: str
-        :rtype: XsdDatatype
-        """
-        for x in cls:
-            if x.value.lower() == value.lower().strip():
-                return x
-        return None
-
-    @classmethod
     def forDatatype(cls, value):
         """
         Returns a collection of Facets for the given datatype
@@ -115,6 +103,38 @@ class Facet(Enum):
             XsdDatatype.xmlLiteral: []
             
         }[value]
+
+    @classmethod
+    def forValue(cls, value):
+        """
+        Returns the Facet matching the given value.
+        :type value: str
+        :rtype: XsdDatatype
+        """
+        for x in cls:
+            if x.value.lower() == value.lower().strip():
+                return x
+        return None
+
+    @DynamicClassAttribute
+    def owlapi(self):
+        """
+        Returns the name of the OWL api facet enum entry.
+        :rtype: str
+        """
+        # FIXME: missing Xsd:totalDigits and Xsd:fractionDigits
+        return {
+            Facet.maxExclusive: 'MAX_EXCLUSIVE',
+            Facet.maxInclusive: 'MAX_INCLUSIVE',
+            Facet.minExclusive: 'MIN_EXCLUSIVE',
+            Facet.minInclusive: 'MIN_INCLUSIVE',
+            Facet.langRange: 'LANG_RANGE',
+            Facet.length: 'LENGTH',
+            Facet.maxLength: 'MIN_LENGTH',
+            Facet.minLength: 'MIN_LENGTH',
+            Facet.pattern: 'PATTERN',
+        }[self]
+
 
 @unique
 class OWLSyntax(Enum):
@@ -189,7 +209,7 @@ class XsdDatatype(Enum):
     @DynamicClassAttribute
     def owlapi(self):
         """
-        Returns the name of the OWL api datatype enum entry
+        Returns the name of the OWL api datatype enum entry.
         :rtype: str
         """
         return {

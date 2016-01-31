@@ -79,6 +79,7 @@ class OWLExporter(QObject):
         self.IRI = jpype.JClass('org.semanticweb.owlapi.model.IRI')
         self.LinkedList = jpype.JClass('java.util.LinkedList')
         self.ManchesterSyntaxDocumentFormat = jpype.JClass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
+        self.OWLFacet = jpype.JClass('org.semanticweb.owlapi.vocab.OWLFacet')
         self.OWL2Datatype = jpype.JClass('org.semanticweb.owlapi.vocab.OWL2Datatype')
         self.OWLManager = jpype.JClass('org.semanticweb.owlapi.apibinding.OWLManager')
         self.RDFXMLDocumentFormat = jpype.JClass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
@@ -146,10 +147,11 @@ class OWLExporter(QObject):
                     self.converted[node] = self.factory.getOWLObjectComplementOf(self.buildUnion(operand))
                 elif operand.isItem(Item.DomainRestrictionNode):
                     self.converted[node] = self.factory.getOWLObjectComplementOf(self.buildDomainRestriction(operand))
+                else:
+                    raise MalformedDiagramError(node, 'unsupported operand ({})'.format(operand))
 
             elif operand.identity is Identity.DataRange:
 
-                # TODO: support DatatypeRestriction
                 if operand.isItem(Item.ValueDomainNode):
                     self.converted[node] = self.factory.getOWLDataComplementOf(self.buildValueDomain(operand))
                 elif operand.isItem(Item.ComplementNode):
@@ -160,6 +162,10 @@ class OWLExporter(QObject):
                     self.converted[node] = self.factory.getOWLDataComplementOf(self.buildIntersection(operand))
                 elif operand.isItem(Item.UnionNode, Item.DisjointUnionNode):
                     self.converted[node] = self.factory.getOWLDataComplementOf(self.buildUnion(operand))
+                elif operand.isItem(Item.DatatypeRestrictionNode):
+                    self.converted[node] = self.factory.getOWLDataComplementOf(self.buildDatatypeRestriction(operand))
+                else:
+                    raise MalformedDiagramError(node, 'unsupported operand ({})'.format(operand))
 
             elif operand.identity is Identity.Role:
 
@@ -170,6 +176,8 @@ class OWLExporter(QObject):
                     self.converted[node] = self.buildRole(operand)
                 elif operand.isItem(Item.RoleInverseNode):
                     self.converted[node] = self.buildRoleInverse(operand)
+                else:
+                    raise MalformedDiagramError(node, 'unsupported operand ({})'.format(operand))
 
         return self.converted[node]
 
@@ -187,6 +195,37 @@ class OWLExporter(QObject):
             elif node.special is Special.Bottom:
                 self.converted[node] = self.factory.getOWLNothing()
         return self.converted[node]
+
+    def buildDatatypeRestriction(self, node):
+        """
+        Build and returns a OWL datatype restriction using the given Graphol node.
+        :type node: DatatypeRestrictionNode
+        :rtype: OWLDatatypeRestriction
+        """
+        if node not in self.converted:
+
+            f1 = lambda x: x.isItem(Item.InputEdge)
+            f2 = lambda x: x.isItem(Item.ValueDomainNode)
+            f3 = lambda x: x.isItem(Item.ValueRestrictionNode)
+
+            o1 = next(iter(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
+            if not o1:
+                raise MalformedDiagramError(node, 'missing value domain node')
+
+            datatypeEx = self.buildValueDomain(o1)
+
+            collection = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)
+            if not collection:
+                raise MalformedDiagramError(node, 'missing value restriction node(s)')
+
+            restrictions = self.HashSet()
+            for i in collection:
+                restrictions.add(self.buildValueRestriction(i))
+
+            self.converted[node] = self.factory.getOWLDatatypeRestriction(datatypeEx, restrictions)
+
+        return self.converted[node]
+
 
     def buildDomainRestriction(self, node):
         """
@@ -210,7 +249,6 @@ class OWLExporter(QObject):
 
                 dataPropEx = self.buildAttribute(o1)
 
-                # TODO: support DatatypeRestriction
                 if not o2:
                     dataRangeEx = self.factory.getTopDatatype()
                 elif o2.isItem(Item.ValueDomainNode):
@@ -223,6 +261,8 @@ class OWLExporter(QObject):
                     dataRangeEx = self.buildIntersection(o2)
                 elif o2.isItem(Item.UnionNode, Item.DisjointUnionNode):
                     dataRangeEx = self.buildComplement(o2)
+                elif o2.isItem(Item.DatatypeRestrictionNode):
+                    dataRangeEx = self.buildDatatypeRestriction(o2)
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(o2))
 
@@ -343,7 +383,6 @@ class OWLExporter(QObject):
 
             for item in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
 
-                # TODO: support DatatypeRestriction
                 if item.isItem(Item.ConceptNode):
                     collection.add(self.buildConcept(item))
                 if item.isItem(Item.ValueDomainNode):
@@ -358,6 +397,10 @@ class OWLExporter(QObject):
                     collection.add(self.buildUnion(item))
                 elif item.isItem(Item.DomainRestrictionNode):
                     collection.add(self.buildDomainRestriction(item))
+                elif item.isItem(Item.DatatypeRestrictionNode):
+                    collection.add(self.buildDatatypeRestriction(item))
+                else:
+                    raise MalformedDiagramError(node, 'unsupported operand ({})'.format(item))
 
             if collection.isEmpty():
                 raise MalformedDiagramError(node, 'missing operand(s)')
@@ -526,7 +569,6 @@ class OWLExporter(QObject):
 
             for item in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
 
-                # TODO: support DatatypeRestriction
                 if item.isItem(Item.ConceptNode):
                     collection.add(self.buildConcept(item))
                 if item.isItem(Item.ValueDomainNode):
@@ -541,6 +583,10 @@ class OWLExporter(QObject):
                     collection.add(self.buildUnion(item))
                 elif item.isItem(Item.DomainRestrictionNode):
                     collection.add(self.buildDomainRestriction(item))
+                elif item.isItem(Item.DatatypeRestrictionNode):
+                    collection.add(self.buildDatatypeRestriction(item))
+                else:
+                    raise MalformedDiagramError(node, 'unsupported operand ({})'.format(item))
 
             if not collection.size():
                 raise MalformedDiagramError(node, 'missing operand(s)')
@@ -560,6 +606,18 @@ class OWLExporter(QObject):
         """
         if node not in self.converted:
             self.converted[node] = self.factory.getOWLDatatype(self.OWL2Datatype.valueOf(node.datatype.owlapi).getIRI())
+        return self.converted[node]
+
+    def buildValueRestriction(self, node):
+        """
+        Build and returns a OWL value restriction using the given Graphol node.
+        :type node: ValueRestrictionNode
+        :rtype: OWLFacetRestriction
+        """
+        if node not in self.converted:
+            facetEx = self.OWLFacet.valueOf(node.facet.owlapi)
+            literalEx = self.factory.getOWLLiteral(node.value, self.OWL2Datatype.valueOf(node.datatype.owlapi))
+            self.converted[node] = self.factory.getOWLFacetRestriction(facetEx, literalEx)
         return self.converted[node]
 
     ####################################################################################################################
@@ -607,7 +665,6 @@ class OWLExporter(QObject):
         self.axioms = set()
         self.converted = dict()
 
-        # TODO: support DatatypeRestriction, ValueRestriction
         # 1) NODES CONVERSION
         for n in self.scene.nodes():
 
@@ -619,6 +676,8 @@ class OWLExporter(QObject):
                 self.buildRole(n)
             elif n.isItem(Item.ValueDomainNode):                                                # VALUE-DOMAIN
                 self.buildValueDomain(n)
+            elif n.isItem(Item.ValueRestrictionNode):                                           # VALUE-RESTRICTION
+                self.buildValueRestriction(n)
             elif n.isItem(Item.IndividualNode):                                                 # INDIVIDUAL
                 self.buildIndividual(n)
             elif n.isItem(Item.RoleInverseNode):                                                # ROLE INVERSE
@@ -633,6 +692,8 @@ class OWLExporter(QObject):
                 self.buildIntersection(n)
             elif n.isItem(Item.UnionNode, Item.DisjointUnionNode):                              # UNION / DISJOINT UNION
                 self.buildUnion(n)
+            elif n.isItem(Item.DatatypeRestrictionNode):                                        # DATATYPE RESTRICTION
+                self.buildDatatypeRestriction(n)
             elif n.isItem(Item.PropertyAssertionNode):                                          # PROPERTY ASSERTION
                 self.buildPropertyAssertion(n)
             elif n.isItem(Item.DomainRestrictionNode):                                          # DOMAIN RESTRICTION
@@ -716,7 +777,6 @@ class OWLExporter(QObject):
                 elif e.source.identity is Identity.Link and e.target.identity is Identity.Attribute:
                     self.axioms.add(self.factory.getOWLDataPropertyAssertionAxiom(self.converted[e.target], self.converted[e.source][0], self.converted[e.source][1]))
                 else:
-                    # FIXME: what about: if(source instanceof OWLClass && target instanceof OWLClassExpression)
                     raise MalformedDiagramError(e, 'type mismatch in instanceOf')
 
             self.step(+1)
