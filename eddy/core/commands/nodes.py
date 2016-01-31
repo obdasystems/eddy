@@ -313,36 +313,6 @@ class CommandNodeLabelEdit(QUndoCommand):
         self.scene.updated.emit()
 
 
-class CommandNodeValueDomainSelectDatatype(QUndoCommand):
-    """
-    This command is used to change the datatype of a value-domain node.
-    """
-    def __init__(self, scene, node, datatype):
-        """
-        Initialize the command.
-        """
-        super().__init__('change {} datatype'.format(node.name))
-        self.scene = scene
-        self.node = node
-        self.data = {'redo': datatype, 'undo': node.datatype}
-
-    def redo(self):
-        """redo the command"""
-        self.node.datatype = self.data['redo']
-        self.node.label.setText(self.node.datatype.value)
-        self.node.updateRect()
-        self.node.updateEdges()
-        self.scene.updated.emit()
-
-    def undo(self):
-        """undo the command"""
-        self.node.datatype = self.data['undo']
-        self.node.label.setText(self.node.datatype.value)
-        self.node.updateRect()
-        self.node.updateEdges()
-        self.scene.updated.emit()
-
-
 class CommandNodeOperatorSwitchTo(QUndoCommand):
     """
     This command is used to change the class of hexagon based constructor nodes.

@@ -63,9 +63,8 @@ class ValueDomainNode(AbstractNode):
         super().__init__(**kwargs)
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
-        self.datatype = XsdDatatype.string
         self.polygon = self.createRect(self.minwidth, self.minheight)
-        self.label = Label(self.datatype.value, movable=False, editable=False, parent=self)
+        self.label = Label('xsd:string', movable=False, editable=False, parent=self)
         self.updateRect()
 
     ####################################################################################################################
@@ -73,6 +72,14 @@ class ValueDomainNode(AbstractNode):
     #   PROPERTIES                                                                                                     #
     #                                                                                                                  #
     ####################################################################################################################
+
+    @property
+    def datatype(self):
+        """
+        Returns the datatype associated with this node.
+        :rtype: XsdDatatype
+        """
+        return XsdDatatype.forValue(self.labelText())
 
     @property
     def identity(self):
@@ -297,7 +304,6 @@ class ValueDomainNode(AbstractNode):
     def setLabelText(self, text):
         """
         Set the label text.
-        :raise ParseError: if an invalid datatype is given.
         :type text: str
         """
         datatype = XsdDatatype.forValue(text) or XsdDatatype.string

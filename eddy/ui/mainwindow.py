@@ -52,9 +52,8 @@ from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom, Comma
 from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap, CommandRefactor
 from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandEdgeInputToggleFunctional
 from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelEdit, CommandEdgeBreakpointDel
-from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeValueDomainSelectDatatype
-from eddy.core.commands import CommandNodeRestrictionChange, CommandNodeSetSpecial
-from eddy.core.commands import CommandNodeChangeBrush, CommandNodeSetZValue
+from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeRestrictionChange
+from eddy.core.commands import CommandNodeSetSpecial, CommandNodeChangeBrush, CommandNodeSetZValue
 from eddy.core.datatypes import Color, File, DiagramMode, Filetype
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
 from eddy.core.exceptions import ParseError
@@ -794,7 +793,11 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isItem(Item.ValueDomainNode), selected), None)
             if node:
                 action = self.sender()
-                scene.undostack.push(CommandNodeValueDomainSelectDatatype(scene, node, action.data()))
+                datatype = action.data()
+                value = datatype.value
+                command = CommandNodeLabelEdit(scene, node, value, 'change {} datatype to {}'.format(node.name, value))
+                if command.changed(value):
+                    scene.undostack.push(command)
 
     @pyqtSlot()
     def changeValueRestriction(self):

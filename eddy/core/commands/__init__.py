@@ -61,6 +61,5 @@ from eddy.core.commands.nodes import CommandNodeSetSpecial
 from eddy.core.commands.nodes import CommandNodeSetURL
 from eddy.core.commands.nodes import CommandNodeSetZValue
 from eddy.core.commands.nodes import CommandNodeRestrictionChange
-from eddy.core.commands.nodes import CommandNodeValueDomainSelectDatatype
 
 from eddy.core.commands.scene import CommandSceneResize
