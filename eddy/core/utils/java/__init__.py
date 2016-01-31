@@ -60,7 +60,6 @@ class JVM(QObject):
         """
         super().__init__(parent)
         self.path = self.find()
-        print(self.path)
 
     @memoized
     def find(self):
