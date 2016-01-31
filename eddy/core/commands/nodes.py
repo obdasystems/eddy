@@ -234,81 +234,82 @@ class CommandNodeLabelEdit(QUndoCommand):
     """
     This command is used to edit nodes labels.
     """
-    def __init__(self, scene, node):
+    def __init__(self, scene, node, value=None, name=None):
         """
         Initialize the command.
         """
-        super().__init__('edit {} label'.format(node.name))
-        self.node = node
+        message = name or 'edit {} label'.format(node.name)
+        super().__init__(message)
         self.scene = scene
-        self.text = {'undo': node.label.text().strip()}
+        self.node = node
+        self.data = {'undo': node.label.text().strip(), 'redo': value}
 
     def end(self, text):
         """
         End the command collecting new data.
         :type text: str
         """
-        self.text['redo'] = text.strip()
+        self.data['redo'] = text.strip()
 
-    def isTextChanged(self, text):
+    def changed(self, text):
         """
-        Checks whether the given text is different from the old value.
+        Checks whether the given value is different from the old one.
         :type text: str
         """
-        return self.text['undo'] != text.strip()
+        return self.data['undo'] != text.strip()
 
     def redo(self):
         """redo the command"""
-        if 'redo' in self.text:
+        if 'redo' in self.data:
 
-            # remove the item from the old index
-            if self.text['undo'] in self.scene.nodesByLabel:
-                self.scene.nodesByLabel[self.text['undo']].remove(self.node)
-                if not self.scene.nodesByLabel[self.text['undo']]:
-                    del self.scene.nodesByLabel[self.text['undo']]
+            # Remove the item from the old index.
+            if self.data['undo'] in self.scene.nodesByLabel:
+                self.scene.nodesByLabel[self.data['undo']].remove(self.node)
+                if not self.scene.nodesByLabel[self.data['undo']]:
+                    del self.scene.nodesByLabel[self.data['undo']]
 
-            # update the label text
-            self.node.setLabelText(self.text['redo'])
+            # Update the label text.
+            self.node.setLabelText(self.data['redo'])
 
-            # map the item over the new index
-            if not self.text['redo'] in self.scene.nodesByLabel:
-                self.scene.nodesByLabel[self.text['redo']] = DistinctList()
-            self.scene.nodesByLabel[self.text['redo']].append(self.node)
+            # Map the item over the new index.
+            if not self.data['redo'] in self.scene.nodesByLabel:
+                self.scene.nodesByLabel[self.data['redo']] = DistinctList()
+            self.scene.nodesByLabel[self.data['redo']].append(self.node)
 
-            # if the label belongs to an individual identify all the connected enumeration nodes
+            # If the label belongs to an individual identify all the connected enumeration nodes.
             if self.node.isItem(Item.IndividualNode):
                 f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
                 f2 = lambda x: x.isItem(Item.EnumerationNode)
                 for node in {n for n in [e.other(self.node) for e in self.node.edges if f1(e)] if f2(n)}:
                     identify(node)
 
-            # emit update signal
+            # Emit update signal.
             self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        # remove the item from the old index
-        if self.text['redo'] in self.scene.nodesByLabel:
-            self.scene.nodesByLabel[self.text['redo']].remove(self.node)
-            if not self.scene.nodesByLabel[self.text['redo']]:
-                del self.scene.nodesByLabel[self.text['redo']]
+        # Remove the item from the old index.
+        if self.data['redo'] in self.scene.nodesByLabel:
+            self.scene.nodesByLabel[self.data['redo']].remove(self.node)
+            if not self.scene.nodesByLabel[self.data['redo']]:
+                del self.scene.nodesByLabel[self.data['redo']]
 
-        # update the label text
-        self.node.setLabelText(self.text['undo'])
+        # Update the label text.
+        self.node.setLabelText(self.data['undo'])
 
-        # map the item over the new index
-        if not self.text['undo'] in self.scene.nodesByLabel:
-            self.scene.nodesByLabel[self.text['undo']] = DistinctList()
-        self.scene.nodesByLabel[self.text['undo']].append(self.node)
+        # Map the item over the new index.
+        if not self.data['undo'] in self.scene.nodesByLabel:
+            self.scene.nodesByLabel[self.data['undo']] = DistinctList()
+        self.scene.nodesByLabel[self.data['undo']].append(self.node)
 
-        # if the label belongs to an individual identify all the connected enumeration nodes
+        # If the label belongs to an individual identify all the connected enumeration nodes.
         if self.node.isItem(Item.IndividualNode):
             f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
             f2 = lambda x: x.isItem(Item.EnumerationNode)
             for node in {n for n in [e.other(self.node) for e in self.node.edges if f1(e)] if f2(n)}:
                 identify(node)
 
-        # emit update signal
+        # Emit update signal.
         self.scene.updated.emit()
 
 
@@ -342,7 +343,7 @@ class CommandNodeValueDomainSelectDatatype(QUndoCommand):
         self.scene.updated.emit()
 
 
-class CommandNodeHexagonSwitchTo(QUndoCommand):
+class CommandNodeOperatorSwitchTo(QUndoCommand):
     """
     This command is used to change the class of hexagon based constructor nodes.
     """
@@ -419,7 +420,7 @@ class CommandNodeHexagonSwitchTo(QUndoCommand):
         self.scene.updated.emit()
 
 
-class CommandNodeSquareChangeRestriction(QUndoCommand):
+class CommandNodeRestrictionChange(QUndoCommand):
     """
     This command is used to change the restriction of square based constructor nodes.
     """
