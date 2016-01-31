@@ -236,6 +236,19 @@ class OWL2RLValidator(AbstractValidator):
                             # The Value-Domain has already been attached to the DatatypeRestriction.
                             raise SyntaxError('Too many value-domain nodes in input to {}'.format(target.name))
 
+                    # We need to check whether the DatatypeRestriction node has already datatype
+                    # inferred: if that's the case and the datatype doesn't match the datatype of
+                    # the source node, we deny the connection to prevent inconsistencies.
+                    f1 = lambda x: x.isItem(Item.InputEdge) and x is not edge
+                    f2 = lambda x: x.isItem(Item.ValueDomainNode, Item.ValueRestrictionNode) and x is not source
+                    collection = target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+                    if collection:
+                        datatype = next(iter(collection)).datatype
+                        if  datatype is not source.datatype:
+                            d1 = source.datatype.value
+                            d2 = datatype.value
+                            raise SyntaxError('Datatype mismatch: restriction between {} and {}'.format(d1, d2))
+
                 elif target.isItem(Item.PropertyAssertionNode):
 
                     ####################################################################################################
