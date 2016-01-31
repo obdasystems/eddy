@@ -259,7 +259,7 @@ class Label(LabelItem):
                 self.setText(self.defaultText)
 
             # push the edit command in the stack only if the label actually changed
-            if self.commandEdit.isTextChanged(self.text()):
+            if self.commandEdit.changed(self.text()):
                 self.commandEdit.end(self.text())
                 scene.undostack.push(self.commandEdit)
 

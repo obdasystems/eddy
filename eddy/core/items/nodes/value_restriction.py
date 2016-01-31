@@ -35,10 +35,11 @@
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap
 
-from eddy.core.datatypes import DiagramMode, Font, Identity, Item
+from eddy.core.datatypes import DiagramMode, Facet, Font, Identity, Item, XsdDatatype
 from eddy.core.functions import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import Label
+from eddy.core.regex import RE_FACET
 
 
 class ValueRestrictionNode(AbstractResizableNode):
@@ -56,7 +57,7 @@ class ValueRestrictionNode(AbstractResizableNode):
     identities = {Identity.DataRange}
     item = Item.ValueRestrictionNode
     minheight = 50
-    minwidth = 110
+    minwidth = 180
     xmlname = 'value-restriction'
 
     def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc', **kwargs):
@@ -70,7 +71,7 @@ class ValueRestrictionNode(AbstractResizableNode):
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.polygon = self.createPolygon(max(width, self.minwidth), max(height, self.minheight), self.foldSize)
-        self.label = Label('value restriction', parent=self)
+        self.label = Label('xsd:length "32"^^xsd:string', editable=False, parent=self)
         self.label.updatePos()
         self.updateHandlesPos()
 
@@ -79,6 +80,28 @@ class ValueRestrictionNode(AbstractResizableNode):
     #   PROPERTIES                                                                                                     #
     #                                                                                                                  #
     ####################################################################################################################
+
+    @property
+    def datatype(self):
+        """
+        Returns the datatype associated with this node.
+        :rtype: XsdDatatype
+        """
+        match = RE_FACET.match(self.labelText())
+        if match:
+            return XsdDatatype.forValue(match.group('datatype'))
+        return None
+
+    @property
+    def facet(self):
+        """
+        Returns the facet associated with this node.
+        :rtype: Facet
+        """
+        match = RE_FACET.match(self.labelText())
+        if match:
+            return Facet.forValue(match.group('facet'))
+        return None
 
     @property
     def identity(self):
@@ -95,6 +118,17 @@ class ValueRestrictionNode(AbstractResizableNode):
         :type identity: Identity
         """
         pass
+
+    @property
+    def value(self):
+        """
+        Returns the value of the restriction.
+        :rtype: str
+        """
+        match = RE_FACET.match(self.labelText())
+        if match:
+            return match.group('value')
+        return ''
 
     ####################################################################################################################
     #                                                                                                                  #

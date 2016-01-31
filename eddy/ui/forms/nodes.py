@@ -37,7 +37,7 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QDialogButtonBox, QLabel
 from PyQt5.QtWidgets import QMessageBox
 
-from eddy.core.datatypes import XsdDatatype, Identity
+from eddy.core.datatypes import XsdDatatype, Identity, Facet
 from eddy.core.functions import isEmpty, connect
 
 from eddy.ui.fields import IntEditField, StringEditField, ComboBox
@@ -221,3 +221,87 @@ class RenameForm(QDialog):
         # This will strip out leading/trailing whitespaces.
         self.renameField.setValue(self.renameField.value())
         self.accept()
+
+
+class ValueRestrictionForm(QDialog):
+    """
+    This class implements the form used to select the restriction of a datatype.
+    """
+    # noinspection PyUnresolvedReferences
+    def __init__(self, node, parent=None):
+        """
+        Initialize the form dialog.
+        :type node: ValueRestrictionNode
+        :type parent: QWidget
+        """
+        super().__init__(parent)
+
+        # DATATYPE COMBO BOX
+        self.datatypeField = ComboBox(self)
+        for datatype in XsdDatatype:
+            # hide unrestrictable elements.
+            if Facet.forDatatype(datatype):
+                self.datatypeField.addItem(datatype.value, datatype)
+
+        datatype = node.datatype
+        for i in range(self.datatypeField.count()):
+            if self.datatypeField.itemData(i) is datatype:
+                self.datatypeField.setCurrentIndex(i)
+                break
+
+        # FACET COMBO BOX
+        self.facetField = ComboBox(self)
+        for facet in Facet.forDatatype(datatype):
+            self.facetField.addItem(facet.value, facet)
+
+        facet = node.facet
+        for i in range(self.facetField.count()):
+            if self.facetField.itemData(i) is facet:
+                self.facetField.setCurrentIndex(i)
+                break
+
+        # VALUE STRING FIELD
+        self.valueField = StringEditField(self)
+        self.valueField.setFixedWidth(300)
+        self.valueField.setValue(node.value)
+
+        # CONFIRMATION BOX
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+
+        self.mainLayout = QFormLayout(self)
+        self.mainLayout.addRow('Datatype', self.datatypeField)
+        self.mainLayout.addRow('Facet', self.facetField)
+        self.mainLayout.addRow('Value', self.valueField)
+        self.mainLayout.addRow(self.buttonBox)
+
+        self.setWindowTitle('Compose value restriction')
+        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setFixedSize(self.sizeHint())
+
+        connect(self.buttonBox.accepted, self.accept)
+        connect(self.buttonBox.rejected, self.reject)
+        connect(self.datatypeField.currentIndexChanged[int], self.datatypeFieldChanged)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SLOTS                                                                                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @pyqtSlot(int)
+    def datatypeFieldChanged(self, index):
+        """
+        Executed whenever the index of the datatype field changes.
+        :type index: int
+        """
+        currentFacet = self.facetField.currentData()
+        self.facetField.clear()
+        for facet in Facet.forDatatype(self.datatypeField.itemData(index)):
+            self.facetField.addItem(facet.value, facet)
+
+        for i in range(self.facetField.count()):
+            if self.facetField.itemData(i) is currentFacet:
+                self.facetField.setCurrentIndex(i)
+                break
+        else:
+            self.facetField.setCurrentIndex(0)

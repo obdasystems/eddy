@@ -37,6 +37,86 @@ from types import DynamicClassAttribute
 
 
 @unique
+class Facet(Enum):
+    """
+    This class defines available Facet restrictions for the value-restriction node.
+    """
+    __order__ = 'maxExclusive maxInclusive minExclusive minInclusive langRange length maxLength minLength pattern'
+
+    maxExclusive = 'xsd:maxExclusive'
+    maxInclusive = 'xsd:maxInclusive'
+    minExclusive = 'xsd:minExclusive'
+    minInclusive = 'xsd:minInclusive'
+    langRange = 'rdf:langRange'
+    length = 'xsd:length'
+    maxLength = 'xsd:maxLength'
+    minLength = 'xsd:minLength'
+    pattern = 'xsd:pattern'
+
+    @classmethod
+    def forValue(cls, value):
+        """
+        Returns the Facet matching the given value.
+        :type value: str
+        :rtype: XsdDatatype
+        """
+        for x in cls:
+            if x.value.lower() == value.lower().strip():
+                return x
+        return None
+
+    @classmethod
+    def forDatatype(cls, value):
+        """
+        Returns a collection of Facets for the given datatype
+        :type value: XsdDatatype
+        :rtype: list
+        """
+        allvalues = [x for x in cls]
+        numbers = [Facet.maxExclusive, Facet.maxInclusive, Facet.minExclusive, Facet.minInclusive]
+        strings = [Facet.langRange, Facet.length, Facet.maxLength, Facet.minLength, Facet.pattern]
+        binary = [Facet.length, Facet.maxLength, Facet.minLength]
+        anyuri = [Facet.length, Facet.maxLength, Facet.minLength, Facet.pattern]
+        
+        return {
+            XsdDatatype.anyURI: anyuri,
+            XsdDatatype.base64Binary: binary,
+            XsdDatatype.boolean: [],
+            XsdDatatype.byte: numbers,
+            XsdDatatype.dateTime: numbers,
+            XsdDatatype.dateTimeStamp: numbers,
+            XsdDatatype.decimal: numbers,
+            XsdDatatype.double: numbers,
+            XsdDatatype.float: numbers,
+            XsdDatatype.hexBinary: binary,
+            XsdDatatype.int: numbers,
+            XsdDatatype.integer: numbers,
+            XsdDatatype.language: strings,
+            XsdDatatype.literal: allvalues,
+            XsdDatatype.long: numbers,
+            XsdDatatype.Name: strings,
+            XsdDatatype.NCName: strings,
+            XsdDatatype.negativeInteger: numbers,
+            XsdDatatype.NMTOKEN: strings,
+            XsdDatatype.nonNegativeInteger: numbers,
+            XsdDatatype.nonPositiveInteger: numbers,
+            XsdDatatype.normalizedString: strings,
+            XsdDatatype.plainLiteral: strings,
+            XsdDatatype.positiveInteger: numbers,
+            XsdDatatype.rational: numbers,
+            XsdDatatype.real: numbers,
+            XsdDatatype.short: numbers,
+            XsdDatatype.string: strings,
+            XsdDatatype.token: strings,
+            XsdDatatype.unsignedByte: numbers,
+            XsdDatatype.unsignedInt: numbers,
+            XsdDatatype.unsignedLong: numbers,
+            XsdDatatype.unsignedShort: numbers,
+            XsdDatatype.xmlLiteral: []
+            
+        }[value]
+
+@unique
 class OWLSyntax(Enum):
     """
     This class defines available OWL syntax for exporting ontologies.

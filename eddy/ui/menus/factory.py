@@ -624,6 +624,7 @@ class MenuFactory(QObject):
         menu = self.buildGenericNodeMenu(mainwindow, scene, node)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeNodeBrush)
+        menu.insertAction(mainwindow.actionOpenNodeProperties, mainwindow.actionChangeValueRestriction)
 
         # Append label specific actions.
         collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)

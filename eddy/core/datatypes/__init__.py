@@ -42,6 +42,7 @@ from eddy.core.datatypes.graphol import Special
 from eddy.core.datatypes.misc import Color
 from eddy.core.datatypes.misc import DiagramMode
 
+from eddy.core.datatypes.owl import Facet
 from eddy.core.datatypes.owl import OWLSyntax
 from eddy.core.datatypes.owl import XsdDatatype
 

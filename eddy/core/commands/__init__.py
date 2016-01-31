@@ -51,7 +51,7 @@ from eddy.core.commands.edges import CommandEdgeSwap
 from eddy.core.commands.nodes import CommandNodeAdd
 from eddy.core.commands.nodes import CommandNodeChangeBrush
 from eddy.core.commands.nodes import CommandNodeChangeInputOrder
-from eddy.core.commands.nodes import CommandNodeHexagonSwitchTo
+from eddy.core.commands.nodes import CommandNodeOperatorSwitchTo
 from eddy.core.commands.nodes import CommandNodeLabelEdit
 from eddy.core.commands.nodes import CommandNodeLabelMove
 from eddy.core.commands.nodes import CommandNodeMove
@@ -60,7 +60,7 @@ from eddy.core.commands.nodes import CommandNodeSetDescription
 from eddy.core.commands.nodes import CommandNodeSetSpecial
 from eddy.core.commands.nodes import CommandNodeSetURL
 from eddy.core.commands.nodes import CommandNodeSetZValue
-from eddy.core.commands.nodes import CommandNodeSquareChangeRestriction
+from eddy.core.commands.nodes import CommandNodeRestrictionChange
 from eddy.core.commands.nodes import CommandNodeValueDomainSelectDatatype
 
 from eddy.core.commands.scene import CommandSceneResize

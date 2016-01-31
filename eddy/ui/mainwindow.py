@@ -52,8 +52,8 @@ from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom, Comma
 from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap, CommandRefactor
 from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandEdgeInputToggleFunctional
 from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelEdit, CommandEdgeBreakpointDel
-from eddy.core.commands import CommandNodeHexagonSwitchTo, CommandNodeValueDomainSelectDatatype
-from eddy.core.commands import CommandNodeSquareChangeRestriction, CommandNodeSetSpecial
+from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeValueDomainSelectDatatype
+from eddy.core.commands import CommandNodeRestrictionChange, CommandNodeSetSpecial
 from eddy.core.commands import CommandNodeChangeBrush, CommandNodeSetZValue
 from eddy.core.datatypes import Color, File, DiagramMode, Filetype
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
@@ -68,7 +68,8 @@ from eddy.core.utils import Clipboard
 from eddy.ui.about import About
 from eddy.ui.dock import SidebarWidget, Navigator, Overview, Palette
 from eddy.ui.files import OpenFile, SaveFile
-from eddy.ui.forms import CardinalityRestrictionForm, LiteralForm, RenameForm, OWLTranslationForm
+from eddy.ui.forms import OWLTranslationForm, LiteralForm, RenameForm
+from eddy.ui.forms import CardinalityRestrictionForm, ValueRestrictionForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
 from eddy.ui.menus import MenuFactory
 from eddy.ui.preferences import PreferencesDialog
@@ -433,6 +434,11 @@ class MainWindow(QMainWindow):
             connect(action.triggered, self.changeValueDomainDatatype)
             self.actionsChangeValueDomainDatatype.append(action)
 
+        ## VALUE RESTRICTION
+        self.actionChangeValueRestriction = QAction('Change restriction...', self)
+        self.actionChangeValueRestriction.setIcon(self.iconRefresh)
+        connect(self.actionChangeValueRestriction.triggered, self.changeValueRestriction)
+
         ## OPERATOR NODES
         data = OrderedDict()
         data[ComplementNode] = 'Complement'
@@ -750,18 +756,18 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            action = self.sender()
             nodes = scene.selectedNodes()
             node = next(filter(lambda x: x.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode), nodes), None)
             if node:
+                action = self.sender()
                 restriction = action.data()
                 if restriction == Restriction.Cardinality:
                     form = CardinalityRestrictionForm()
                     if form.exec_() == CardinalityRestrictionForm.Accepted:
                         cardinality = dict(min=form.minCardinalityValue, max=form.maxCardinalityValue)
-                        scene.undostack.push(CommandNodeSquareChangeRestriction(scene, node, restriction, cardinality))
+                        scene.undostack.push(CommandNodeRestrictionChange(scene, node, restriction, cardinality))
                 else:
-                    scene.undostack.push(CommandNodeSquareChangeRestriction(scene, node, action.data()))
+                    scene.undostack.push(CommandNodeRestrictionChange(scene, node, action.data()))
 
     @pyqtSlot()
     def changeNodeBrush(self):
@@ -771,12 +777,9 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            action = self.sender()
-            selected = scene.selectedNodes()
-            selected = [x for x in selected if x.isItem(Item.AttributeNode, Item.ConceptNode,
-                                                        Item.IndividualNode, Item.RoleNode,
-                                                        Item.ValueDomainNode, Item.ValueRestrictionNode)]
+            selected = [x for x in scene.selectedNodes() if x.predicate]
             if selected:
+                action = self.sender()
                 scene.undostack.push(CommandNodeChangeBrush(scene, selected, action.data()))
 
     @pyqtSlot()
@@ -787,10 +790,47 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            action = self.sender()
-            node = next(filter(lambda x: x.isItem(Item.ValueDomainNode), scene.selectedNodes()), None)
+            selected = scene.selectedNodes()
+            node = next(filter(lambda x: x.isItem(Item.ValueDomainNode), selected), None)
             if node:
+                action = self.sender()
                 scene.undostack.push(CommandNodeValueDomainSelectDatatype(scene, node, action.data()))
+
+    @pyqtSlot()
+    def changeValueRestriction(self):
+        """
+        Set an invididual node either to Individual or Literal.
+        Will bring up the Literal Form if needed.
+        """
+        scene = self.mdi.activeScene
+        if scene:
+            scene.setMode(DiagramMode.Idle)
+            selected = scene.selectedNodes()
+            node = next(filter(lambda x: x.isItem(Item.ValueRestrictionNode), selected), None)
+            if node:
+
+                form = ValueRestrictionForm(node, self)
+
+                # We need to disable the datatype switch if this restriction is already
+                # connected to a datatype restriction node that already specifies a value domain.
+                f1 = lambda x: x.isItem(Item.InputEdge)
+                f2 = lambda x: x.isItem(Item.DatatypeRestrictionNode)
+                f3 = lambda x: x.isItem(Item.ValueDomainNode)
+
+                DR = next(iter(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
+                if DR:
+                    VD = next(iter(DR.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)), None)
+                    if VD:
+                        form.datatypeField.setEnabled(False)
+
+                if form.exec() == ValueRestrictionForm.Accepted:
+                    datatype = form.datatypeField.currentData()
+                    facet = form.facetField.currentData()
+                    value = rCut(lCut(form.valueField.value().strip(), '"'), '"')
+                    value = '{} "{}"^^{}'.format(facet.value, value, datatype.value)
+                    command = CommandNodeLabelEdit(scene, node, value, 'change value restriction to {}'.format(value))
+                    if command.changed(value):
+                        scene.undostack.push(command)
 
     @pyqtSlot()
     def closeActiveSubWindow(self):
@@ -1487,8 +1527,7 @@ class MainWindow(QMainWindow):
                 if action.data() is Identity.Individual:
                     if node.identity is Identity.Literal:
                         # Switch Literal -> Individual => set default text
-                        command = CommandNodeLabelEdit(scene, node)
-                        command.end(node.label.defaultText)
+                        command = CommandNodeLabelEdit(scene, node, node.label.defaultText, 'change literal to individual')
                         scene.undostack.push(command)
                 elif action.data() is Identity.Literal:
                     # We need to bring up the form here
@@ -1497,9 +1536,9 @@ class MainWindow(QMainWindow):
                         datatype = form.datatypeField.currentData()
                         value = form.valueField.value().strip()
                         value = '"{}"^^{}'.format(rCut(lCut(value, '"'), '"'), datatype.value)
-                        command = CommandNodeLabelEdit(scene, node)
-                        command.end(value)
-                        if command.isTextChanged(value):
+                        name = 'change {} node to {}'.format(node.identity.label.lower(), value)
+                        command = CommandNodeLabelEdit(scene, node, value, name)
+                        if command.changed(value):
                             scene.undostack.push(command)
 
     @pyqtSlot()
@@ -1582,7 +1621,7 @@ class MainWindow(QMainWindow):
                 if not isinstance(node, clazz):
                     xnode = clazz(scene=scene)
                     xnode.setPos(node.pos())
-                    scene.undostack.push(CommandNodeHexagonSwitchTo(scene=scene, node1=node, node2=xnode))
+                    scene.undostack.push(CommandNodeOperatorSwitchTo(scene=scene, node1=node, node2=xnode))
 
     @pyqtSlot()
     def toggleEdgeComplete(self):
