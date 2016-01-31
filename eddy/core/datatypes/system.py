@@ -118,10 +118,11 @@ class File(object):
 
         with open(temp, mode='wb') as file:
             file.write(string.encode(encoding='UTF-8'))
-            if os.path.isfile(path):
-                os.remove(path)
-            os.rename(temp, path)
-            self.path = path
+
+        if os.path.isfile(path):
+            os.remove(path)
+        os.rename(temp, path)
+        self.path = path
 
 @unique
 class Filetype(Enum):
