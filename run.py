@@ -41,8 +41,8 @@ from argparse import ArgumentParser
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QSpacerItem, QSizePolicy, QMessageBox
 
-from eddy import Eddy, __appname__, BUG_TRACKER
-from eddy.core.exceptions import JVMNotFoundError, JVMNotSupportedError
+from eddy import BUG_TRACKER
+from eddy.core.application import Eddy
 from eddy.ui import images_rc ## DO NOT REMOVE
 from eddy.ui.splash import SplashScreen
 
@@ -60,28 +60,6 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
     """
     if issubclass(exc_type, KeyboardInterrupt):
 
-        app.quit()
-
-    elif issubclass(exc_type, JVMNotFoundError) or issubclass(exc_type, JVMNotSupportedError):
-
-        if issubclass(exc_type, JVMNotFoundError):
-            message = "No Java Virtual Machine detected!"
-            infomsg = "Please install Java SE Runtime Environment 8 and reboot {}.".format(__appname__)
-        else:
-            message = "Eddy cannot work with the Java Virtual Machine installed on this system: {}!".format(exc_value)
-            infomsg = "Please install Java SE Runtime Environment 8 and reboot {}.".format(__appname__)
-
-        box = QMessageBox()
-        box.setIconPixmap(QPixmap(':/icons/error'))
-        box.setWindowIcon(QIcon(':/images/eddy'))
-        box.setWindowTitle('Startup failed!')
-        box.setText(message)
-        box.setInformativeText(infomsg)
-        box.setStandardButtons(QMessageBox.Close)
-        S = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        L = box.layout()
-        L.addItem(S, L.rowCount(), 0, 1, L.columnCount())
-        box.exec_()
         app.quit()
 
     else:

@@ -32,9 +32,6 @@
 ##########################################################################
 
 
-import jpype
-import jpype._jvmfinder
-
 
 class MalformedDiagramError(RuntimeError):
     """
@@ -53,14 +50,3 @@ class ParseError(Exception):
     Raised whenever it's not possible to complete a document parsing.
     """
     pass
-
-
-# Local aliases for JPype exceptions
-JavaException = jpype.JavaException
-JVMNotSupportedException = jpype._jvmfinder.JVMNotSupportedException
-JVMNotFoundException = jpype._jvmfinder.JVMNotFoundException
-
-# Pythonic aliases
-JavaError = JavaException
-JVMNotSupportedError = JVMNotSupportedException
-JVMNotFoundError = JVMNotFoundException

@@ -32,10 +32,9 @@
 ##########################################################################
 
 
-import jpype
+import jnius
 
 from PyQt5.QtCore import QObject, pyqtSlot, pyqtSignal
-from PyQt5.QtWidgets import QApplication
 
 from eddy.core.datatypes import Special, Item, Identity, Restriction, OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
@@ -72,18 +71,19 @@ class OWLExporter(QObject):
         self.count = 0
         self.total = len(scene.nodes()) + len(scene.edges())
 
-        self.AddAxiom = jpype.JClass('org.semanticweb.owlapi.model.AddAxiom')
-        self.ByteArrayOutputStream = jpype.JClass('java.io.ByteArrayOutputStream')
-        self.FunctionalSyntaxDocumentFormat = jpype.JClass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
-        self.HashSet = jpype.JClass('java.util.HashSet')
-        self.IRI = jpype.JClass('org.semanticweb.owlapi.model.IRI')
-        self.LinkedList = jpype.JClass('java.util.LinkedList')
-        self.ManchesterSyntaxDocumentFormat = jpype.JClass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
-        self.OWLFacet = jpype.JClass('org.semanticweb.owlapi.vocab.OWLFacet')
-        self.OWL2Datatype = jpype.JClass('org.semanticweb.owlapi.vocab.OWL2Datatype')
-        self.OWLManager = jpype.JClass('org.semanticweb.owlapi.apibinding.OWLManager')
-        self.RDFXMLDocumentFormat = jpype.JClass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
-        self.TurtleDocumentFormat = jpype.JClass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
+        self.AddAxiom = jnius.autoclass('org.semanticweb.owlapi.model.AddAxiom')
+        self.ByteArrayOutputStream = jnius.autoclass('java.io.ByteArrayOutputStream')
+        self.FunctionalSyntaxDocumentFormat = jnius.autoclass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
+        self.HashSet = jnius.autoclass('java.util.HashSet')
+        self.IRI = jnius.autoclass('org.semanticweb.owlapi.model.IRI')
+        self.LinkedList = jnius.autoclass('java.util.LinkedList')
+        self.ManchesterSyntaxDocumentFormat = jnius.autoclass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
+        self.OWLFacet = jnius.autoclass('org.semanticweb.owlapi.vocab.OWLFacet')
+        self.OWL2Datatype = jnius.autoclass('org.semanticweb.owlapi.vocab.OWL2Datatype')
+        self.OWLManager = jnius.autoclass('org.semanticweb.owlapi.apibinding.OWLManager')
+        self.OutputStream = jnius.autoclass('java.io.OutputStream')
+        self.RDFXMLDocumentFormat = jnius.autoclass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
+        self.TurtleDocumentFormat = jnius.autoclass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
 
         self.axioms = set()
         self.converted = dict()
@@ -632,8 +632,6 @@ class OWLExporter(QObject):
         :type syntax: OWLSyntax
         :rtype: str
         """
-        stream = self.ByteArrayOutputStream()
-
         if syntax is OWLSyntax.Functional:
             ontoFormat = self.FunctionalSyntaxDocumentFormat()
         elif syntax is OWLSyntax.Manchester:
@@ -647,9 +645,15 @@ class OWLExporter(QObject):
 
         ontoFormat.setPrefix(self.ontoPrefix, self.ontoIRI)
 
+        # FIXME: this ugly hack is needed so that Java reflection can find the reference to the correct method.
+        # Hopefully this will be fixed by the maintainer one day: https://github.com/kivy/pyjnius/issues/196
+        stream = self.ByteArrayOutputStream()
+        stream.__class__ = self.OutputStream
+
         self.man.setOntologyFormat(self.ontology, ontoFormat)
         self.man.saveOntology(self.ontology, stream)
 
+        stream.__class__ = self.ByteArrayOutputStream
         return stream.toString("UTF-8")
 
     ####################################################################################################################
@@ -826,10 +830,6 @@ class OWLExporter(QObject):
         The errored signal will carry the instance of the Exception that caused the error.
         """
         try:
-            # This is needed so that JPype can move the JVM on the current thread
-            # if this method is not executed on the main thread (the UI thread).
-            if QApplication.instance().thread() is not self.thread():
-                jpype.attachThreadToJVM()
             self.started.emit()
             self.run()
         except Exception as e:
@@ -837,7 +837,5 @@ class OWLExporter(QObject):
         else:
             self.completed.emit()
         finally:
-            # Detaching is not really needed since the thread is going to be destroyed.
-            if QApplication.instance().thread() is not self.thread():
-                jpype.detachThreadFromJVM()
+            jnius.detach()
             self.finished.emit()
