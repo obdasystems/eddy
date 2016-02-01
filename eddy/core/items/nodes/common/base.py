@@ -598,6 +598,25 @@ class AbstractResizableNode(AbstractNode):
                 return k
         return None
 
+    @abstractmethod
+    def interactiveResize(self, mousePos):
+        """
+        Handle the interactive resize of the node.
+        :type mousePos: QPointF
+        """
+        pass
+
+    # noinspection PyTypeChecker
+    def updateAnchors(self, data, diff):
+        """
+        Update anchor points.
+        :type data: dict
+        :type diff: QPointF
+        """
+        if data:
+            for edge, pos in self.mousePressData.items():
+                self.setAnchor(edge, pos + diff * 0.5)
+
     def updateHandlesPos(self):
         """
         Update current resize handles according to the shape size and position.
@@ -698,20 +717,6 @@ class AbstractResizableNode(AbstractNode):
         self.mousePressRect = None
         self.updateEdges()
         self.update()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   GEOMETRY                                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @abstractmethod
-    def interactiveResize(self, mousePos):
-        """
-        Handle the interactive resize of the node.
-        :type mousePos: QPointF
-        """
-        pass
 
     ####################################################################################################################
     #                                                                                                                  #

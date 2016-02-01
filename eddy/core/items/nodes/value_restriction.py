@@ -164,150 +164,6 @@ class ValueRestrictionNode(AbstractResizableNode):
         """
         return self.boundingRect().height() - 2 * (self.handleSize + self.handleSpace)
 
-    def width(self):
-        """
-        Returns the width of the shape.
-        :rtype: int
-        """
-        return self.boundingRect().width() - 2 * (self.handleSize + self.handleSpace)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @staticmethod
-    def createPolygon(shape_w, shape_h, fold_size):
-        """
-        Returns the initialized polygon according to the given width/height.
-        :type shape_w: int
-        :type shape_h: int
-        :type fold_size: the width of the fold.
-        :rtype: QPolygonF
-        """
-        return QPolygonF([
-            QPointF(+(shape_w / 2) - fold_size, -(shape_h / 2)),  # 0
-            QPointF(-(shape_w / 2), -(shape_h / 2)),              # 1
-            QPointF(-(shape_w / 2), +(shape_h / 2)),              # 2
-            QPointF(+(shape_w / 2), +(shape_h / 2)),              # 3
-            QPointF(+(shape_w / 2), -(shape_h / 2) + fold_size),  # 4
-            QPointF(+(shape_w / 2) - fold_size, -(shape_h / 2)),  # 5
-        ])
-
-    @staticmethod
-    def createFold(polygon, indexTR, indexRT, foldsize):
-        """
-        Returns the initialized fold polygon.
-        :type polygon: QPolygonF
-        :type indexTR: int
-        :type indexRT: int
-        :type foldsize: int
-        :rtype: QPolygonF
-        """
-        return QPolygonF([
-            QPointF(polygon[indexTR].x(), polygon[indexTR].y()),
-            QPointF(polygon[indexTR].x(), polygon[indexTR].y() + foldsize),
-            QPointF(polygon[indexRT].x(), polygon[indexRT].y()),
-            QPointF(polygon[indexTR].x(), polygon[indexTR].y()),
-        ])
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   IMPORT / EXPORT                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @classmethod
-    def fromGraphol(cls, scene, E):
-        """
-        Create a new item instance by parsing a Graphol document item entry.
-        :type scene: DiagramScene
-        :type E: QDomElement
-        :rtype: Node
-        """
-        U = E.elementsByTagName('data:url').at(0).toElement()
-        D = E.elementsByTagName('data:description').at(0).toElement()
-        G = E.elementsByTagName('shape:geometry').at(0).toElement()
-        L = E.elementsByTagName('shape:label').at(0).toElement()
-
-        kwargs = {
-            'brush': E.attribute('color', '#fcfcfc'),
-            'description': D.text(),
-            'height': int(G.attribute('height')),
-            'id': E.attribute('id'),
-            'scene': scene,
-            'url': U.text(),
-            'width': int(G.attribute('width')),
-        }
-
-        node = cls(**kwargs)
-        node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
-        node.setText(L.text())
-        node.setTextPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
-        return node
-
-    def toGraphol(self, document):
-        """
-        Export the current item in Graphol format.
-        :type document: QDomDocument
-        :rtype: QDomElement
-        """
-        pos1 = self.pos()
-        pos2 = self.mapToScene(self.textPos())
-
-        # create the root element for this node
-        node = document.createElement('node')
-        node.setAttribute('id', self.id)
-        node.setAttribute('type', self.xmlname)
-        node.setAttribute('color', self.brush.color().name())
-
-        # add node attributes
-        url = document.createElement('data:url')
-        url.appendChild(document.createTextNode(self.url))
-        description = document.createElement('data:description')
-        description.appendChild(document.createTextNode(self.description))
-
-        # add the shape geometry
-        geometry = document.createElement('shape:geometry')
-        geometry.setAttribute('height', self.height())
-        geometry.setAttribute('width', self.width())
-        geometry.setAttribute('x', pos1.x())
-        geometry.setAttribute('y', pos1.y())
-
-        # add the shape label
-        label = document.createElement('shape:label')
-        label.setAttribute('height', self.label.height())
-        label.setAttribute('width', self.label.width())
-        label.setAttribute('x', pos2.x())
-        label.setAttribute('y', pos2.y())
-        label.appendChild(document.createTextNode(self.label.text()))
-
-        node.appendChild(url)
-        node.appendChild(description)
-        node.appendChild(geometry)
-        node.appendChild(label)
-
-        return node
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   GEOMETRY                                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def boundingRect(self):
-        """
-        Returns the shape bounding rectangle.
-        :rtype: QRectF
-        """
-        o = self.handleSize + self.handleSpace
-        x = self.polygon[self.indexTL].x()
-        y = self.polygon[self.indexTL].y()
-        w = self.polygon[self.indexBR].x() - x
-        h = self.polygon[self.indexBL].y() - y
-        return QRectF(x - o, y - o, w + o * 2, h + o * 2)
-
     # noinspection PyTypeChecker
     def interactiveResize(self, mousePos):
         """
@@ -503,11 +359,151 @@ class ValueRestrictionNode(AbstractResizableNode):
 
         self.updateHandlesPos()
         self.updateTextPos(moved=moved)
+        self.updateAnchors(self.mousePressData, diff)
 
-        # update edge anchors
-        if self.mousePressData:
-            for edge, pos in self.mousePressData.items():
-                self.setAnchor(edge, pos + diff * 0.5)
+    def width(self):
+        """
+        Returns the width of the shape.
+        :rtype: int
+        """
+        return self.boundingRect().width() - 2 * (self.handleSize + self.handleSpace)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @staticmethod
+    def createPolygon(shape_w, shape_h, fold_size):
+        """
+        Returns the initialized polygon according to the given width/height.
+        :type shape_w: int
+        :type shape_h: int
+        :type fold_size: the width of the fold.
+        :rtype: QPolygonF
+        """
+        return QPolygonF([
+            QPointF(+(shape_w / 2) - fold_size, -(shape_h / 2)),  # 0
+            QPointF(-(shape_w / 2), -(shape_h / 2)),              # 1
+            QPointF(-(shape_w / 2), +(shape_h / 2)),              # 2
+            QPointF(+(shape_w / 2), +(shape_h / 2)),              # 3
+            QPointF(+(shape_w / 2), -(shape_h / 2) + fold_size),  # 4
+            QPointF(+(shape_w / 2) - fold_size, -(shape_h / 2)),  # 5
+        ])
+
+    @staticmethod
+    def createFold(polygon, indexTR, indexRT, foldsize):
+        """
+        Returns the initialized fold polygon.
+        :type polygon: QPolygonF
+        :type indexTR: int
+        :type indexRT: int
+        :type foldsize: int
+        :rtype: QPolygonF
+        """
+        return QPolygonF([
+            QPointF(polygon[indexTR].x(), polygon[indexTR].y()),
+            QPointF(polygon[indexTR].x(), polygon[indexTR].y() + foldsize),
+            QPointF(polygon[indexRT].x(), polygon[indexRT].y()),
+            QPointF(polygon[indexTR].x(), polygon[indexTR].y()),
+        ])
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   IMPORT / EXPORT                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @classmethod
+    def fromGraphol(cls, scene, E):
+        """
+        Create a new item instance by parsing a Graphol document item entry.
+        :type scene: DiagramScene
+        :type E: QDomElement
+        :rtype: Node
+        """
+        U = E.elementsByTagName('data:url').at(0).toElement()
+        D = E.elementsByTagName('data:description').at(0).toElement()
+        G = E.elementsByTagName('shape:geometry').at(0).toElement()
+        L = E.elementsByTagName('shape:label').at(0).toElement()
+
+        kwargs = {
+            'brush': E.attribute('color', '#fcfcfc'),
+            'description': D.text(),
+            'height': int(G.attribute('height')),
+            'id': E.attribute('id'),
+            'scene': scene,
+            'url': U.text(),
+            'width': int(G.attribute('width')),
+        }
+
+        node = cls(**kwargs)
+        node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
+        node.setText(L.text())
+        node.setTextPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
+        return node
+
+    def toGraphol(self, document):
+        """
+        Export the current item in Graphol format.
+        :type document: QDomDocument
+        :rtype: QDomElement
+        """
+        pos1 = self.pos()
+        pos2 = self.mapToScene(self.textPos())
+
+        # create the root element for this node
+        node = document.createElement('node')
+        node.setAttribute('id', self.id)
+        node.setAttribute('type', self.xmlname)
+        node.setAttribute('color', self.brush.color().name())
+
+        # add node attributes
+        url = document.createElement('data:url')
+        url.appendChild(document.createTextNode(self.url))
+        description = document.createElement('data:description')
+        description.appendChild(document.createTextNode(self.description))
+
+        # add the shape geometry
+        geometry = document.createElement('shape:geometry')
+        geometry.setAttribute('height', self.height())
+        geometry.setAttribute('width', self.width())
+        geometry.setAttribute('x', pos1.x())
+        geometry.setAttribute('y', pos1.y())
+
+        # add the shape label
+        label = document.createElement('shape:label')
+        label.setAttribute('height', self.label.height())
+        label.setAttribute('width', self.label.width())
+        label.setAttribute('x', pos2.x())
+        label.setAttribute('y', pos2.y())
+        label.appendChild(document.createTextNode(self.label.text()))
+
+        node.appendChild(url)
+        node.appendChild(description)
+        node.appendChild(geometry)
+        node.appendChild(label)
+
+        return node
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   GEOMETRY                                                                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def boundingRect(self):
+        """
+        Returns the shape bounding rectangle.
+        :rtype: QRectF
+        """
+        o = self.handleSize + self.handleSpace
+        x = self.polygon[self.indexTL].x()
+        y = self.polygon[self.indexTL].y()
+        w = self.polygon[self.indexBR].x() - x
+        h = self.polygon[self.indexBL].y() - y
+        return QRectF(x - o, y - o, w + o * 2, h + o * 2)
 
     def painterPath(self):
         """
