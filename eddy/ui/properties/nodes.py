@@ -131,12 +131,14 @@ class NodeProperty(QDialog):
 
         # TODO: allow to modify shape width from properties dialog
         self.wField = SpinBox(self.geometryWidget)
+        self.wField.setRange(20, R.width())
         self.wField.setEnabled(False)
         self.wField.setFixedWidth(60)
         self.wField.setValue(int(self.node.width()))
 
         # TODO: allow to modify shape height from properties dialog
         self.hField = SpinBox(self.geometryWidget)
+        self.hField.setRange(20, R.height())
         self.hField.setEnabled(False)
         self.hField.setFixedWidth(60)
         self.hField.setValue(int(self.node.height()))
