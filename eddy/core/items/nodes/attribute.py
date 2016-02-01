@@ -48,7 +48,7 @@ class AttributeNode(AbstractNode):
     item = Item.AttributeNode
     xmlname = 'attribute'
 
-    def __init__(self, width=20, height=20, brush='#fcfcfc', special=None, **kwargs):
+    def __init__(self, width=20, height=20, brush='#fcfcfc', **kwargs):
         """
         Initialize the node.
         :type width: int
@@ -57,13 +57,10 @@ class AttributeNode(AbstractNode):
         :type special: Special
         """
         super().__init__(**kwargs)
-
-        self._special = special
-
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
         self.polygon = self.createRect(20, 20)
-        self.label = Label('attribute', centered=False, editable=special is None, parent=self)
+        self.label = Label('attribute', centered=False, parent=self)
         self.label.updatePos()
 
     ####################################################################################################################
@@ -94,17 +91,7 @@ class AttributeNode(AbstractNode):
         Returns the special type of this node.
         :rtype: Special
         """
-        return self._special
-
-    @special.setter
-    def special(self, special):
-        """
-        Set the special type of this node.
-        :type special: Special
-        """
-        self._special = special
-        self.label.editable = self._special is None
-        self.label.setText(self._special.value if self._special else self.label.defaultText)
+        return Special.forValue(self.text())
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -123,7 +110,6 @@ class AttributeNode(AbstractNode):
             'height': self.height(),
             'id': self.id,
             'scene': scene,
-            'special': self.special,
             'url': self.url,
             'width': self.width(),
         }
@@ -189,7 +175,6 @@ class AttributeNode(AbstractNode):
             'height': int(G.attribute('height')),
             'id': E.attribute('id'),
             'scene': scene,
-            'special': Special.forValue(L.text()),
             'url': U.text(),
             'width': int(G.attribute('width')),
         }
@@ -307,6 +292,7 @@ class AttributeNode(AbstractNode):
         Set the label text.
         :type text: str
         """
+        self.label.editable = Special.forValue(text) is None
         self.label.setText(text)
 
     def updateTextPos(self, *args, **kwargs):

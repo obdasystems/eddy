@@ -57,7 +57,6 @@ from eddy.core.commands.nodes import CommandNodeLabelMove
 from eddy.core.commands.nodes import CommandNodeMove
 from eddy.core.commands.nodes import CommandNodeRezize
 from eddy.core.commands.nodes import CommandNodeSetDescription
-from eddy.core.commands.nodes import CommandNodeSetSpecial
 from eddy.core.commands.nodes import CommandNodeSetURL
 from eddy.core.commands.nodes import CommandNodeSetZValue
 

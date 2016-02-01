@@ -57,24 +57,20 @@ class RoleNode(AbstractResizableNode):
     minwidth = 70
     xmlname = 'role'
 
-    def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc',special=None, **kwargs):
+    def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc', **kwargs):
         """
         Initialize the node.
         :type width: int
         :type height: int
         :type brush: T <= QBrush | QColor | Color | tuple | list | bytes | unicode
-        :type special: Special
         """
         super().__init__(**kwargs)
-
-        self._special = special
-
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
         self.polygon = self.createPolygon(max(width, self.minwidth), max(height, self.minheight))
-        self.label = Label('role', movable=special is None, editable=special is None, parent=self)
+        self.label = Label('role', parent=self)
+        self.label.updatePos()
         self.updateHandlesPos()
-        self.updateTextPos()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -104,18 +100,7 @@ class RoleNode(AbstractResizableNode):
         Returns the special type of this node.
         :rtype: Special
         """
-        return self._special
-
-    @special.setter
-    def special(self, special):
-        """
-        Set the special type of this node.
-        :type special: Special
-        """
-        self._special = special
-        self.label.editable = self._special is None
-        self.label.movable = self._special is None
-        self.label.setText(self._special.value if self._special else self.label.defaultText)
+        return Special.forValue(self.text())
 
     @property
     def asymmetric(self):
@@ -364,7 +349,6 @@ class RoleNode(AbstractResizableNode):
             'height': self.height(),
             'id': self.id,
             'scene': scene,
-            'special': self.special,
             'url': self.url,
             'width': self.width(),
         }
@@ -436,7 +420,6 @@ class RoleNode(AbstractResizableNode):
             'height': int(G.attribute('height')),
             'id': E.attribute('id'),
             'scene': scene,
-            'special': Special.forValue(L.text()),
             'url': U.text(),
             'width': int(G.attribute('width')),
         }
@@ -768,6 +751,7 @@ class RoleNode(AbstractResizableNode):
         Set the label text.
         :type text: str
         """
+        self.label.editable = Special.forValue(text) is None
         self.label.setText(text)
 
     def updateTextPos(self, *args, **kwargs):

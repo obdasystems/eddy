@@ -52,8 +52,7 @@ from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom, Comma
 from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap, CommandRefactor
 from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandEdgeInputToggleFunctional
 from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelEdit, CommandEdgeBreakpointDel
-from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeSetZValue
-from eddy.core.commands import CommandNodeSetSpecial, CommandNodeSetBrush
+from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeSetZValue, CommandNodeSetBrush
 from eddy.core.datatypes import Color, File, DiagramMode, Filetype
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
 from eddy.core.exceptions import ParseError
@@ -1465,7 +1464,9 @@ class MainWindow(QMainWindow):
                 if value:
                     item = 'range' if node.isItem(Item.RangeRestrictionNode) else 'domain'
                     name = 'change {} restriction to {}'.format(item, value)
-                    scene.undostack.push(CommandNodeLabelEdit(scene, node, value, name))
+                    command = CommandNodeLabelEdit(scene, node, value, name)
+                    if command.changed(value):
+                        scene.undostack.push(command)
 
     @pyqtSlot()
     def setIndividualNodeAs(self):
@@ -1506,11 +1507,15 @@ class MainWindow(QMainWindow):
         if scene:
             scene.setMode(DiagramMode.Idle)
             action = self.sender()
-            args = Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.ValueDomainNode
+            args = Item.ConceptNode, Item.RoleNode, Item.AttributeNode
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
                 special = action.data() if node.special is not action.data() else None
-                scene.undostack.push(CommandNodeSetSpecial(scene, node, special))
+                value = special.value if special else node.label.defaultText
+                name = 'change {} label to "{}"'.format(node.name, value)
+                command = CommandNodeLabelEdit(scene, node, value, name)
+                if command.changed(value):
+                    scene.undostack.push(command)
 
     @pyqtSlot()
     def setValueDomainDatatype(self):

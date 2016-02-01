@@ -220,14 +220,12 @@ class MenuFactory(QObject):
         # Disable refactor name if special type is set.
         mainwindow.actionRefactorName.setEnabled(node.special is None)
 
-        if not node.special:
-
-            # Append label specific actions.
-            collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
-            if collection:
-                menu.insertSeparator(mainwindow.actionOpenNodeProperties)
-                for action in collection:
-                    menu.insertAction(mainwindow.actionOpenNodeProperties, action)
+        # Append label specific actions.
+        collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
+        if collection:
+            menu.insertSeparator(mainwindow.actionOpenNodeProperties)
+            for action in collection:
+                menu.insertAction(mainwindow.actionOpenNodeProperties, action)
 
         menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         return menu
@@ -275,14 +273,12 @@ class MenuFactory(QObject):
         # Disable refactor name if special type is set.
         mainwindow.actionRefactorName.setEnabled(node.special is None)
 
-        if not node.special:
-
-            # Append label specific actions.
-            collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
-            if collection:
-                menu.insertSeparator(mainwindow.actionOpenNodeProperties)
-                for action in collection:
-                    menu.insertAction(mainwindow.actionOpenNodeProperties, action)
+        # Append label specific actions.
+        collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
+        if collection:
+            menu.insertSeparator(mainwindow.actionOpenNodeProperties)
+            for action in collection:
+                menu.insertAction(mainwindow.actionOpenNodeProperties, action)
 
         menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         return menu
@@ -534,14 +530,12 @@ class MenuFactory(QObject):
         # Disable refactor name if special type is set
         mainwindow.actionRefactorName.setEnabled(node.special is None)
 
-        if not node.special:
-
-            # Append label specific actions.
-            collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
-            if collection:
-                menu.insertSeparator(mainwindow.actionOpenNodeProperties)
-                for action in collection:
-                    menu.insertAction(mainwindow.actionOpenNodeProperties, action)
+        # Append label specific actions.
+        collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
+        if collection:
+            menu.insertSeparator(mainwindow.actionOpenNodeProperties)
+            for action in collection:
+                menu.insertAction(mainwindow.actionOpenNodeProperties, action)
 
         menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         return menu

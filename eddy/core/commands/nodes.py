@@ -432,55 +432,6 @@ class CommandNodeSetDescription(QUndoCommand):
         self.node.description = self.description['undo']
 
 
-class CommandNodeSetSpecial(QUndoCommand):
-    """
-    This command is used to change the special attribute of nodes.
-    """
-    def __init__(self, scene, node, special):
-        """
-        Initilize the command.
-        """
-        self.node = node
-        self.scene = scene
-
-        if not special:
-            # remove special: TOP|BOTTOM -> None
-            super().__init__('remove {} from {}'.format(node.special.value, node.name))
-            self.data = {
-                'undo': {'special': node.special, 'text': node.special.value, 'pos': node.label.defaultPos()},
-                'redo': {'special': None, 'text': node.label.defaultText, 'pos': node.label.defaultPos()}
-            }
-        else:
-            if node.special:
-                # change special TOP <-> BOTTOM
-                super().__init__('change {} from {} to {}'.format(node.name, node.special.value, special.value))
-                self.data = {
-                    'undo': {'special': node.special, 'text': node.special.value, 'pos': node.label.defaultPos()},
-                    'redo': {'special': special, 'text': special.value, 'pos': node.label.defaultPos()}
-                }
-            else:
-                # set as special: None -> TOP|BOTTOM
-                super().__init__('set {} as {}'.format(node.name, special.value))
-                self.data = {
-                    'undo': {'special': None, 'text': node.label.text(), 'pos': node.label.pos()},
-                    'redo': {'special': special, 'text': special.value, 'pos': node.label.defaultPos()}
-                }
-
-    def redo(self):
-        """redo the command"""
-        self.node.special = self.data['redo']['special']
-        self.node.setText(self.data['redo']['text'])
-        self.node.setTextPos(self.data['redo']['pos'])
-        self.scene.updated.emit()
-
-    def undo(self):
-        """redo the command"""
-        self.node.special = self.data['undo']['special']
-        self.node.setText(self.data['undo']['text'])
-        self.node.setTextPos(self.data['undo']['pos'])
-        self.scene.updated.emit()
-
-
 class CommandNodeChangeInputOrder(QUndoCommand):
     """
     This command is used to change the order of Role chain and Property assertion inputs.
