@@ -178,35 +178,35 @@ class OperatorNode(AbstractNode):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def labelPos(self):
+    def textPos(self):
         """
         Returns the current label position in item coordinates.
         :rtype: QPointF
         """
         pass
 
-    def labelText(self):
+    def text(self):
         """
         Returns the label text.
         :rtype: str
         """
         pass
 
-    def setLabelPos(self, pos):
+    def setTextPos(self, pos):
         """
         Set the label position.
         :type pos: QPointF
         """
         pass
 
-    def setLabelText(self, text):
+    def setText(self, text):
         """
         Set the label text.
         :type text: str
         """
         pass
 
-    def updateLabelPos(self, *args, **kwargs):
+    def updateTextPos(self, *args, **kwargs):
         """
         Update the label position.
         """

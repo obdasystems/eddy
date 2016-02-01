@@ -519,7 +519,7 @@ class DiagramScene(QGraphicsScene):
         x3 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize, snap=True)
 
         node1 = DomainRestrictionNode(scene=self)
-        node1.setLabelText('self')
+        node1.setText('self')
         node1.setPos(QPointF(x1, source.pos().y()))
         node2 = ComplementNode(scene=self)
         node2.setPos(QPointF(x2, source.pos().y()))
@@ -694,7 +694,7 @@ class DiagramScene(QGraphicsScene):
         try:
             # map the item in the nodesByLabel index if needed
             if item.node and item.label.editable:
-                index = item.labelText()
+                index = item.text()
                 if not index in self.nodesByLabel:
                     self.nodesByLabel[index] = DistinctList()
                 self.nodesByLabel[index].append(item)
@@ -771,7 +771,7 @@ class DiagramScene(QGraphicsScene):
         try:
             # remove the item from the nodesByLabel index if needed
             if item.node and item.label.editable:
-                index = item.labelText()
+                index = item.text()
                 if index in self.nodesByLabel:
                     self.nodesByLabel[index].remove(item)
                     if not self.nodesByLabel[index]:

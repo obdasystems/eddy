@@ -169,7 +169,7 @@ class RenameForm(QDialog):
         self.node = node
         self.renameField = StringEditField(self)
         self.renameField.setFixedWidth(200)
-        self.renameField.setValue(self.node.labelText())
+        self.renameField.setValue(self.node.text())
         self.invalidLabel = QLabel('\'\' is not a valid label', self)
         self.invalidLabel.setProperty('class', 'invalid')
         self.invalidLabel.setVisible(False)

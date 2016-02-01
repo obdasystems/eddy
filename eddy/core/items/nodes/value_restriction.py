@@ -87,7 +87,7 @@ class ValueRestrictionNode(AbstractResizableNode):
         Returns the datatype associated with this node.
         :rtype: XsdDatatype
         """
-        match = RE_FACET.match(self.labelText())
+        match = RE_FACET.match(self.text())
         if match:
             return XsdDatatype.forValue(match.group('datatype'))
         return None
@@ -98,7 +98,7 @@ class ValueRestrictionNode(AbstractResizableNode):
         Returns the facet associated with this node.
         :rtype: Facet
         """
-        match = RE_FACET.match(self.labelText())
+        match = RE_FACET.match(self.text())
         if match:
             return Facet.forValue(match.group('facet'))
         return None
@@ -125,7 +125,7 @@ class ValueRestrictionNode(AbstractResizableNode):
         Returns the value of the restriction.
         :rtype: str
         """
-        match = RE_FACET.match(self.labelText())
+        match = RE_FACET.match(self.text())
         if match:
             return match.group('value')
         return ''
@@ -153,8 +153,8 @@ class ValueRestrictionNode(AbstractResizableNode):
 
         node = self.__class__(**kwargs)
         node.setPos(self.pos())
-        node.setLabelText(self.labelText())
-        node.setLabelPos(node.mapFromScene(self.mapToScene(self.labelPos())))
+        node.setText(self.text())
+        node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
     def height(self):
@@ -243,8 +243,8 @@ class ValueRestrictionNode(AbstractResizableNode):
 
         node = cls(**kwargs)
         node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
-        node.setLabelText(L.text())
-        node.setLabelPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
+        node.setText(L.text())
+        node.setTextPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
         return node
 
     def toGraphol(self, document):
@@ -254,7 +254,7 @@ class ValueRestrictionNode(AbstractResizableNode):
         :rtype: QDomElement
         """
         pos1 = self.pos()
-        pos2 = self.mapToScene(self.labelPos())
+        pos2 = self.mapToScene(self.textPos())
 
         # create the root element for this node
         node = document.createElement('node')
@@ -502,7 +502,7 @@ class ValueRestrictionNode(AbstractResizableNode):
             self.polygon[self.indexEE] = QPointF(rect.right() + offset - fold, self.polygon[self.indexEE].y())
 
         self.updateHandlesPos()
-        self.updateLabelPos(moved=moved)
+        self.updateTextPos(moved=moved)
 
         # update edge anchors
         if self.mousePressData:
@@ -538,35 +538,35 @@ class ValueRestrictionNode(AbstractResizableNode):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def labelPos(self):
+    def textPos(self):
         """
         Returns the current label position in item coordinates.
         :rtype: QPointF
         """
         return self.label.pos()
 
-    def labelText(self):
+    def text(self):
         """
         Returns the label text.
         :rtype: str
         """
         return self.label.text()
 
-    def setLabelPos(self, pos):
+    def setTextPos(self, pos):
         """
         Set the label position.
         :type pos: QPointF
         """
         self.label.setPos(pos)
 
-    def setLabelText(self, text):
+    def setText(self, text):
         """
         Set the label text.
         :type text: str
         """
         self.label.setText(text)
 
-    def updateLabelPos(self, *args, **kwargs):
+    def updateTextPos(self, *args, **kwargs):
         """
         Update the label position.
         """

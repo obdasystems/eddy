@@ -80,7 +80,7 @@ class InstanceOfEdge(AbstractEdge):
 
         return self.__class__(**kwargs)
 
-    def updateLabelPos(self, points):
+    def updateTextPos(self, points):
         """
         Update the label text position.
         :type points: T <= tuple | list
@@ -328,7 +328,7 @@ class InstanceOfEdge(AbstractEdge):
                 self.head = createHead(p22, subpathN.angle(), headSize)
 
         self.updateZValue()
-        self.updateLabelPos(points)
+        self.updateTextPos(points)
         self.update()
 
     ####################################################################################################################

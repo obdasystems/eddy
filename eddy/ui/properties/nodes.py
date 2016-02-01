@@ -295,7 +295,7 @@ class EditableNodeProperty(NodeProperty):
 
         self.labelField = StringEditField(self.labelWidget)
         self.labelField.setFixedWidth(300)
-        self.labelField.setValue(self.node.labelText())
+        self.labelField.setValue(self.node.text())
         self.labelField.setEnabled(self.node.label.editable)
 
         self.labelLayout.addRow('Text', self.labelField)
@@ -328,7 +328,7 @@ class EditableNodeProperty(NodeProperty):
         Change the label of the node.
         """
         value = self.labelField.value().strip()
-        if self.node.labelText().strip() != value:
+        if self.node.text().strip() != value:
             value = value if not isEmpty(value) else self.node.label.defaultText
             command = CommandNodeLabelEdit(self.scene, self.node)
             command.end(value)
@@ -371,7 +371,7 @@ class OrderedInputNodeProperty(NodeProperty):
             self.listWidget.setDragDropMode(QAbstractItemView.InternalMove)
             for i in self.node.inputs:
                 edge = self.scene.edge(i)
-                item = QListWidgetItem('{} ({})'.format(edge.source.labelText(), edge.source.id))
+                item = QListWidgetItem('{} ({})'.format(edge.source.text(), edge.source.id))
                 item.setData(Qt.UserRole, edge.id)
                 self.listWidget.addItem(item)
 

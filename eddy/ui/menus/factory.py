@@ -653,7 +653,7 @@ class MenuFactory(QObject):
         """
         collection = []
         if node.label.movable and node.label.moved:
-            collection.append(mainwindow.actionResetLabelPosition)
+            collection.append(mainwindow.actionResetTextPosition)
         return collection
 
     ####################################################################################################################

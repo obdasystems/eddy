@@ -358,9 +358,9 @@ class MainWindow(QMainWindow):
             connect(action.triggered, self.setNodeBrush)
             self.actionsChangeNodeBrush.append(action)
 
-        self.actionResetLabelPosition = QAction('Reset label position', self)
-        self.actionResetLabelPosition.setIcon(self.iconRefresh)
-        connect(self.actionResetLabelPosition.triggered, self.resetLabelPosition)
+        self.actionResetTextPosition = QAction('Reset label position', self)
+        self.actionResetTextPosition.setIcon(self.iconRefresh)
+        connect(self.actionResetTextPosition.triggered, self.resetTextPosition)
 
         self.actionsNodeSetSpecial = []
         for special in Special:
@@ -1252,7 +1252,7 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
-                scene.undostack.push(CommandNodeSetBrush(scene, scene.nodesByLabel[node.labelText()], action.data()))
+                scene.undostack.push(CommandNodeSetBrush(scene, scene.nodesByLabel[node.text()], action.data()))
 
     @pyqtSlot()
     def refactorName(self):
@@ -1269,10 +1269,10 @@ class MainWindow(QMainWindow):
 
                 form = RenameForm(node, self)
                 if form.exec_() == RenameForm.Accepted:
-                    if node.labelText() != form.renameField.value():
+                    if node.text() != form.renameField.value():
 
                         commands = []
-                        for n in scene.nodesByLabel[node.labelText()]:
+                        for n in scene.nodesByLabel[node.text()]:
                             command = CommandNodeLabelEdit(scene=scene, node=n)
                             command.end(form.renameField.value())
                             commands.append(command)
@@ -1345,7 +1345,7 @@ class MainWindow(QMainWindow):
                 scene.undostack.push(CommandEdgeBreakpointDel(scene=scene, edge=edge, index=breakpoint))
 
     @pyqtSlot()
-    def resetLabelPosition(self):
+    def resetTextPosition(self):
         """
         Reset selected node label to default position.
         """

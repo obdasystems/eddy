@@ -126,7 +126,7 @@ class CommandNodeRezize(QUndoCommand):
             for edge, pos in self.data['redo']['anchors'].items():
                 self.node.setAnchor(edge, pos)
             self.node.updateHandlesPos()
-            self.node.updateLabelPos(moved=self.data['redo']['label']['moved'])
+            self.node.updateTextPos(moved=self.data['redo']['label']['moved'])
             self.node.updateEdges()
             self.node.update()
             self.scene.updated.emit()
@@ -137,7 +137,7 @@ class CommandNodeRezize(QUndoCommand):
         for edge, pos in self.data['undo']['anchors'].items():
             self.node.setAnchor(edge, pos)
         self.node.updateHandlesPos()
-        self.node.updateLabelPos(moved=self.data['undo']['label']['moved'])
+        self.node.updateTextPos(moved=self.data['undo']['label']['moved'])
         self.node.updateEdges()
         self.node.update()
         self.scene.updated.emit()
@@ -269,7 +269,7 @@ class CommandNodeLabelEdit(QUndoCommand):
                     del self.scene.nodesByLabel[self.data['undo']]
 
             # Update the label text.
-            self.node.setLabelText(self.data['redo'])
+            self.node.setText(self.data['redo'])
 
             # Map the item over the new index.
             if not self.data['redo'] in self.scene.nodesByLabel:
@@ -295,7 +295,7 @@ class CommandNodeLabelEdit(QUndoCommand):
                 del self.scene.nodesByLabel[self.data['redo']]
 
         # Update the label text.
-        self.node.setLabelText(self.data['undo'])
+        self.node.setText(self.data['undo'])
 
         # Map the item over the new index.
         if not self.data['undo'] in self.scene.nodesByLabel:
@@ -469,15 +469,15 @@ class CommandNodeSetSpecial(QUndoCommand):
     def redo(self):
         """redo the command"""
         self.node.special = self.data['redo']['special']
-        self.node.setLabelText(self.data['redo']['text'])
-        self.node.setLabelPos(self.data['redo']['pos'])
+        self.node.setText(self.data['redo']['text'])
+        self.node.setTextPos(self.data['redo']['pos'])
         self.scene.updated.emit()
 
     def undo(self):
         """redo the command"""
         self.node.special = self.data['undo']['special']
-        self.node.setLabelText(self.data['undo']['text'])
-        self.node.setLabelPos(self.data['undo']['pos'])
+        self.node.setText(self.data['undo']['text'])
+        self.node.setTextPos(self.data['undo']['pos'])
         self.scene.updated.emit()
 
 

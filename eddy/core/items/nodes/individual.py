@@ -91,7 +91,7 @@ class IndividualNode(AbstractResizableNode):
         Returns the datatype associated with this node or None if the node is not a Literal.
         :rtype: XsdDatatype
         """
-        match = RE_LITERAL.match(self.labelText())
+        match = RE_LITERAL.match(self.text())
         if match:
             return XsdDatatype.forValue(match.group('datatype'))
         return None
@@ -102,7 +102,7 @@ class IndividualNode(AbstractResizableNode):
         Returns the identity of the current node.
         :rtype: Identity
         """
-        match = RE_LITERAL.match(self.labelText())
+        match = RE_LITERAL.match(self.text())
         if match:
             return Identity.Literal
         return Identity.Individual
@@ -114,7 +114,7 @@ class IndividualNode(AbstractResizableNode):
         If the node is not a literal it will return None.
         :rtype: str
         """
-        match = RE_LITERAL.match(self.labelText())
+        match = RE_LITERAL.match(self.text())
         if match:
             return match.group('literal')
         return None
@@ -141,8 +141,8 @@ class IndividualNode(AbstractResizableNode):
 
         node = self.__class__(**kwargs)
         node.setPos(self.pos())
-        node.setLabelText(self.labelText())
-        node.setLabelPos(node.mapFromScene(self.mapToScene(self.labelPos())))
+        node.setText(self.text())
+        node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
     def height(self):
@@ -216,8 +216,8 @@ class IndividualNode(AbstractResizableNode):
 
         node = cls(**kwargs)
         node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
-        node.setLabelText(L.text())
-        node.setLabelPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
+        node.setText(L.text())
+        node.setTextPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
         return node
 
     def toGraphol(self, document):
@@ -227,7 +227,7 @@ class IndividualNode(AbstractResizableNode):
         :rtype: QDomElement
         """
         pos1 = self.pos()
-        pos2 = self.mapToScene(self.labelPos())
+        pos2 = self.mapToScene(self.textPos())
 
         # create the root element for this node
         node = document.createElement('node')
@@ -551,7 +551,7 @@ class IndividualNode(AbstractResizableNode):
             self.polygon[self.indexEE] = QPointF(rect.left() + offset, newLeftRightTopY)
 
         self.updateHandlesPos()
-        self.updateLabelPos(moved=moved)
+        self.updateTextPos(moved=moved)
 
         # update edge anchors
         if self.mousePressData:
@@ -587,28 +587,28 @@ class IndividualNode(AbstractResizableNode):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def labelPos(self):
+    def textPos(self):
         """
         Returns the current label position in item coordinates.
         :rtype: QPointF
         """
         return self.label.pos()
 
-    def labelText(self):
+    def text(self):
         """
         Returns the label text.
         :rtype: str
         """
         return self.label.text()
 
-    def setLabelPos(self, pos):
+    def setTextPos(self, pos):
         """
         Set the label position.
         :type pos: QPointF
         """
         self.label.setPos(pos)
 
-    def setLabelText(self, text):
+    def setText(self, text):
         """
         Set the label text: will additionally block label editing if a literal is being.
         :type text: str
@@ -616,7 +616,7 @@ class IndividualNode(AbstractResizableNode):
         self.label.editable = RE_LITERAL.match(text) is None
         self.label.setText(text)
 
-    def updateLabelPos(self, *args, **kwargs):
+    def updateTextPos(self, *args, **kwargs):
         """
         Update the label position.
         """

@@ -101,8 +101,8 @@ class RoleInverseNode(OperatorNode):
 
         node = self.__class__(**kwargs)
         node.setPos(self.pos())
-        node.setLabelText(self.labelText())
-        node.setLabelPos(node.mapFromScene(self.mapToScene(self.labelPos())))
+        node.setText(self.text())
+        node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
     ####################################################################################################################
@@ -135,8 +135,8 @@ class RoleInverseNode(OperatorNode):
 
         node = cls(**kwargs)
         node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
-        node.setLabelText(L.text())
-        node.setLabelPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
+        node.setText(L.text())
+        node.setTextPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
         return node
 
     def toGraphol(self, document):
@@ -146,7 +146,7 @@ class RoleInverseNode(OperatorNode):
         :rtype: QDomElement
         """
         pos1 = self.pos()
-        pos2 = self.mapToScene(self.labelPos())
+        pos2 = self.mapToScene(self.textPos())
 
         # create the root element for this node
         node = document.createElement('node')
@@ -187,35 +187,35 @@ class RoleInverseNode(OperatorNode):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def labelPos(self):
+    def textPos(self):
         """
         Returns the current label position in item coordinates.
         :rtype: QPointF
         """
         return self.label.pos()
 
-    def labelText(self):
+    def text(self):
         """
         Returns the label text.
         :rtype: str
         """
         return self.label.text()
 
-    def setLabelPos(self, pos):
+    def setTextPos(self, pos):
         """
         Set the label position.
         :type pos: QPointF
         """
         self.label.setPos(pos)
 
-    def setLabelText(self, text):
+    def setText(self, text):
         """
         Set the label text.
         :type text: str
         """
         pass
 
-    def updateLabelPos(self, *args, **kwargs):
+    def updateTextPos(self, *args, **kwargs):
         """
         Update the label position.
         """

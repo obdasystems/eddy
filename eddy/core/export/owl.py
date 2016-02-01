@@ -108,7 +108,7 @@ class OWLExporter(QObject):
         """
         if node not in self.converted:
             if not node.special:
-                self.converted[node] = self.factory.getOWLDataProperty(self.IRI.create(self.ontoIRI, OWLText(node.labelText())))
+                self.converted[node] = self.factory.getOWLDataProperty(self.IRI.create(self.ontoIRI, OWLText(node.text())))
             elif node.special is Special.Top:
                 self.converted[node] = self.factory.getOWLTopDataProperty()
             elif node.special is Special.Bottom:
@@ -196,7 +196,7 @@ class OWLExporter(QObject):
         """
         if node not in self.converted:
             if not node.special:
-                self.converted[node] = self.factory.getOWLClass(self.IRI.create(self.ontoIRI, OWLText(node.labelText())))
+                self.converted[node] = self.factory.getOWLClass(self.IRI.create(self.ontoIRI, OWLText(node.text())))
             elif node.special is Special.Top:
                 self.converted[node] = self.factory.getOWLThing()
             elif node.special is Special.Bottom:
@@ -374,7 +374,7 @@ class OWLExporter(QObject):
         """
         if node not in self.converted:
             if node.identity is Identity.Individual:
-                IRI = self.IRI.create(self.ontoIRI, OWLText(node.labelText()))
+                IRI = self.IRI.create(self.ontoIRI, OWLText(node.text()))
                 self.converted[node] = self.factory.getOWLNamedIndividual(IRI)
             elif node.identity is Identity.Literal:
                 value = node.literal
@@ -531,7 +531,7 @@ class OWLExporter(QObject):
         """
         if node not in self.converted:
             if not node.special:
-                self.converted[node] = self.factory.getOWLObjectProperty(self.IRI.create(self.ontoIRI, OWLText(node.labelText())))
+                self.converted[node] = self.factory.getOWLObjectProperty(self.IRI.create(self.ontoIRI, OWLText(node.text())))
             elif node.special is Special.Top:
                 self.converted[node] = self.factory.getOWLTopObjectProperty()
             elif node.special is Special.Bottom:
