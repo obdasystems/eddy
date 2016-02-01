@@ -101,14 +101,13 @@ class InputEdge(AbstractEdge):
         :type scene: DiagramScene
         """
         kwargs = {
-            'scene': scene,
             'id': self.id,
             'source': self.source,
             'target': self.target,
             'breakpoints': self.breakpoints[:],
             'functional': self.functional,
         }
-        return self.__class__(**kwargs)
+        return scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
 
     def updateLabel(self, points):
         """
@@ -146,7 +145,6 @@ class InputEdge(AbstractEdge):
             points.append(point)
 
         kwargs = {
-            'scene': scene,
             'id': E.attribute('id'),
             'source': scene.node(E.attribute('source')),
             'target': scene.node(E.attribute('target')),
@@ -154,7 +152,7 @@ class InputEdge(AbstractEdge):
             'functional': bool(int(E.attribute('functional', '0'))),
         }
 
-        edge = cls(**kwargs)
+        edge = scene.itemFactory.create(item=cls.item, scene=scene, **kwargs)
 
         # set the anchor points only if they are inside the endpoint shape: users can modify the .graphol file manually,
         # changing anchor points coordinates, which will result in an edge floating in the scene without being bounded

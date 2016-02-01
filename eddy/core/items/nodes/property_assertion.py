@@ -113,12 +113,10 @@ class PropertyAssertionNode(AbstractNode):
             'description': self.description,
             'id': self.id,
             'height': self.height(),
-            'scene': scene,
             'url': self.url,
             'width': self.width(),
         }
-
-        node = self.__class__(**kwargs)
+        node = scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
         node.setPos(self.pos())
         return node
 
@@ -194,12 +192,11 @@ class PropertyAssertionNode(AbstractNode):
             'height': int(G.attribute('height')),
             'id': E.attribute('id'),
             'inputs': DistinctList(I.split(',') if I else []),
-            'scene': scene,
             'url': U.text(),
             'width': int(G.attribute('width')),
         }
 
-        node = cls(**kwargs)
+        node = scene.itemFactory.create(item=cls.item, scene=scene, **kwargs)
         node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
         return node
 

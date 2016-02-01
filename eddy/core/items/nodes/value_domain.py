@@ -113,12 +113,10 @@ class ValueDomainNode(AbstractNode):
             'description': self.description,
             'height': self.height(),
             'id': self.id,
-            'scene': scene,
             'url': self.url,
             'width': self.width(),
         }
-
-        node = self.__class__(**kwargs)
+        node = scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
@@ -188,12 +186,11 @@ class ValueDomainNode(AbstractNode):
             'description': D.text(),
             'height': int(G.attribute('height')),
             'id': E.attribute('id'),
-            'scene': scene,
             'url': U.text(),
             'width': int(G.attribute('width')),
         }
 
-        node = cls(**kwargs)
+        node = scene.itemFactory.create(item=cls.item, scene=scene, **kwargs)
         node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
         node.setText(L.text())
         node.setTextPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))

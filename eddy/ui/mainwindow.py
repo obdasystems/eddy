@@ -1202,25 +1202,25 @@ class MainWindow(QMainWindow):
             prop.exec_()
 
     @pyqtSlot(int)
-    def paletteButtonClicked(self, button_id):
+    def paletteButtonClicked(self, item):
         """
         Executed whenever a Palette button is clicked.
-        :type button_id: Item
+        :type item: Item
         """
         scene = self.mdi.activeScene
         if not scene:
             self.palette_.clear()
         else:
             scene.clearSelection()
-            button = self.palette_.button(button_id)
+            button = self.palette_.button(item)
             self.palette_.clear(button)
             if not button.isChecked():
                 scene.setMode(DiagramMode.Idle)
             else:
-                if Item.ConceptNode <= button_id < Item.InclusionEdge:
-                    scene.setMode(DiagramMode.NodeInsert, button.property('item'))
-                elif Item.InclusionEdge <= button_id <= Item.InstanceOfEdge:
-                    scene.setMode(DiagramMode.EdgeInsert, button.property('item'))
+                if Item.ConceptNode <= item < Item.InclusionEdge:
+                    scene.setMode(DiagramMode.NodeInsert, item)
+                elif Item.InclusionEdge <= item <= Item.InstanceOfEdge:
+                    scene.setMode(DiagramMode.EdgeInsert, item)
 
     @pyqtSlot()
     def printDocument(self):

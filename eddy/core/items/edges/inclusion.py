@@ -92,15 +92,13 @@ class InclusionEdge(AbstractEdge):
         :type scene: DiagramScene
         """
         kwargs = {
-            'scene': scene,
             'id': self.id,
             'source': self.source,
             'target': self.target,
             'breakpoints': self.breakpoints[:],
             'complete': self.complete,
         }
-
-        return self.__class__(**kwargs)
+        return scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -126,7 +124,6 @@ class InclusionEdge(AbstractEdge):
             points.append(point)
 
         kwargs = {
-            'scene': scene,
             'id': E.attribute('id'),
             'source': scene.node(E.attribute('source')),
             'target': scene.node(E.attribute('target')),
@@ -134,7 +131,7 @@ class InclusionEdge(AbstractEdge):
             'complete': bool(int(E.attribute('complete', '0'))),
         }
 
-        edge = cls(**kwargs)
+        edge = scene.itemFactory.create(item=cls.item, scene=scene, **kwargs)
 
         # set the anchor points only if they are inside the endpoint shape: users can modify
         # the .graphol file manually, changing anchor points coordinates, which will result

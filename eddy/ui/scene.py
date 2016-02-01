@@ -43,9 +43,10 @@ from PyQt5.QtXml import QDomDocument
 from eddy.core.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
 from eddy.core.datatypes import DiagramMode, DistinctList, File, Item, Special
 from eddy.core.functions import expandPath, rangeF, snapF
-from eddy.core.items import ConceptNode, ComplementNode, RoleChainNode, RoleInverseNode
-from eddy.core.items import RangeRestrictionNode, DomainRestrictionNode
-from eddy.core.items import InputEdge, InclusionEdge
+from eddy.core.items.edges import InputEdge, InclusionEdge
+from eddy.core.items.nodes import ConceptNode, ComplementNode, RoleChainNode, RoleInverseNode
+from eddy.core.items.nodes import RangeRestrictionNode, DomainRestrictionNode
+from eddy.core.items.factory import ItemFactory
 from eddy.core.syntax import OWL2RLValidator
 from eddy.core.utils import Clipboard, GUID
 
@@ -87,6 +88,7 @@ class DiagramScene(QGraphicsScene):
         self.nodesByLabel = {}  ## used to index nodes using their label text
         self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)  ## settings
         self.guid = GUID(self)  ## used to generate unique incremental ids
+        self.itemFactory = ItemFactory(self)  ## used to produce graphol items
         self.undostack = QUndoStack(self)  ## used to push actions and keep history for undo/redo
         self.undostack.setUndoLimit(50)  ## TODO: make the stack configurable
         self.validator = OWL2RLValidator(self)
@@ -133,8 +135,8 @@ class DiagramScene(QGraphicsScene):
                 ########################################################################################################
 
                 # create a new node and place it under the mouse position
-                func = self.modeParam
-                node = func(scene=self)
+                # noinspection PyTypeChecker
+                node = self.itemFactory.create(item=self.modeParam, scene=self)
                 node.setPos(self.snapToGrid(mouseEvent.scenePos()))
 
                 # no need to switch back the operation mode here: the signal handlers already does that and takes
@@ -156,8 +158,8 @@ class DiagramScene(QGraphicsScene):
                 node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
                 if node:
 
-                    func = self.modeParam
-                    edge = func(scene=self, source=node)
+                    # noinspection PyTypeChecker
+                    edge = self.itemFactory.create(item=self.modeParam, scene=self, source=node)
                     edge.updateEdge(target=mouseEvent.scenePos())
                     self.command = CommandEdgeAdd(scene=self, edge=edge)
                     self.addItem(self.command.edge)
@@ -805,7 +807,7 @@ class DiagramScene(QGraphicsScene):
         """
         Set the operation mode.
         :type mode: DiagramMode
-        :type param: mixed
+        :type param: int
         """
         if self.mode != mode or self.modeParam != param:
             self.mode = mode
