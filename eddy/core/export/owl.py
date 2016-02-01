@@ -77,12 +77,14 @@ class OWLExporter(QObject):
         self.HashSet = jnius.autoclass('java.util.HashSet')
         self.IRI = jnius.autoclass('org.semanticweb.owlapi.model.IRI')
         self.LinkedList = jnius.autoclass('java.util.LinkedList')
+        self.List = jnius.autoclass('java.util.List')
         self.ManchesterSyntaxDocumentFormat = jnius.autoclass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
         self.OWLFacet = jnius.autoclass('org.semanticweb.owlapi.vocab.OWLFacet')
         self.OWL2Datatype = jnius.autoclass('org.semanticweb.owlapi.vocab.OWL2Datatype')
         self.OWLManager = jnius.autoclass('org.semanticweb.owlapi.apibinding.OWLManager')
         self.OutputStream = jnius.autoclass('java.io.OutputStream')
         self.RDFXMLDocumentFormat = jnius.autoclass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
+        self.Set = jnius.autoclass('java.util.Set')
         self.TurtleDocumentFormat = jnius.autoclass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
 
         self.axioms = set()
@@ -147,6 +149,8 @@ class OWLExporter(QObject):
                     self.converted[node] = self.factory.getOWLObjectComplementOf(self.buildUnion(operand))
                 elif operand.isItem(Item.DomainRestrictionNode):
                     self.converted[node] = self.factory.getOWLObjectComplementOf(self.buildDomainRestriction(operand))
+                elif operand.isItem(Item.RangeRestrictionNode):
+                    self.converted[node] = self.factory.getOWLObjectComplementOf(self.buildRangeRestriction(operand))
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(operand))
 
@@ -164,6 +168,8 @@ class OWLExporter(QObject):
                     self.converted[node] = self.factory.getOWLDataComplementOf(self.buildUnion(operand))
                 elif operand.isItem(Item.DatatypeRestrictionNode):
                     self.converted[node] = self.factory.getOWLDataComplementOf(self.buildDatatypeRestriction(operand))
+                elif operand.isItem(Item.RangeRestrictionNode):
+                    self.converted[node] = self.factory.getOWLObjectComplementOf(self.buildRangeRestriction(operand))
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(operand))
 
@@ -222,10 +228,10 @@ class OWLExporter(QObject):
             for i in collection:
                 restrictions.add(self.buildValueRestriction(i))
 
+            restrictions.__class__ = self.Set
             self.converted[node] = self.factory.getOWLDatatypeRestriction(datatypeEx, restrictions)
 
         return self.converted[node]
-
 
     def buildDomainRestriction(self, node):
         """
@@ -263,6 +269,8 @@ class OWLExporter(QObject):
                     dataRangeEx = self.buildComplement(o2)
                 elif o2.isItem(Item.DatatypeRestrictionNode):
                     dataRangeEx = self.buildDatatypeRestriction(o2)
+                elif o2.isItem(Item.RangeRestrictionNode):
+                    dataRangeEx = self.buildRangeRestriction(o2)
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(o2))
 
@@ -281,6 +289,7 @@ class OWLExporter(QObject):
                     if HS.isEmpty():
                         raise MalformedDiagramError(node, 'missing cardinality')
                     elif HS.size() >= 1:
+                        HS.__class__ = self.Set
                         self.converted[node] = self.factory.getOWLDataIntersectionOf(HS)
                     else:
                         self.converted[node] = HS.iterator().next()
@@ -311,6 +320,8 @@ class OWLExporter(QObject):
                     classEx = self.buildUnion(o2)
                 elif o2.isItem(Item.DomainRestrictionNode):
                     classEx = self.buildDomainRestriction(o2)
+                elif o2.isItem(Item.RangeRestrictionNode):
+                    classEx = self.buildRangeRestriction(o2)
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(o2))
 
@@ -329,6 +340,7 @@ class OWLExporter(QObject):
                     if HS.isEmpty():
                         raise MalformedDiagramError(node, 'missing cardinality')
                     elif HS.size() >= 1:
+                        HS.__class__ = self.Set
                         self.converted[node] = self.factory.getOWLObjectIntersectionOf(HS)
                     else:
                         self.converted[node] = HS.iterator().next()
@@ -349,6 +361,7 @@ class OWLExporter(QObject):
                 collection.add(self.buildIndividual(i))
             if collection.isEmpty():
                 raise MalformedDiagramError(node, 'missing operand(s)')
+            collection.__class__ = self.Set
             self.converted[node] = self.factory.getOWLObjectOneOf(collection)
         return self.converted[node]
 
@@ -397,6 +410,8 @@ class OWLExporter(QObject):
                     collection.add(self.buildUnion(item))
                 elif item.isItem(Item.DomainRestrictionNode):
                     collection.add(self.buildDomainRestriction(item))
+                elif item.isItem(Item.RangeRestrictionNode):
+                    collection.add(self.buildRangeRestriction(item))
                 elif item.isItem(Item.DatatypeRestrictionNode):
                     collection.add(self.buildDatatypeRestriction(item))
                 else:
@@ -404,6 +419,8 @@ class OWLExporter(QObject):
 
             if collection.isEmpty():
                 raise MalformedDiagramError(node, 'missing operand(s)')
+
+            collection.__class__ = self.Set
 
             if node.identity is Identity.Concept:
                 self.converted[node] = self.factory.getOWLObjectIntersectionOf(collection)
@@ -490,17 +507,18 @@ class OWLExporter(QObject):
                 elif node.restriction is Restriction.Forall:
                     self.converted[node] = self.factory.getOWLObjectAllValuesFrom(objectPropertyEx, classEx)
                 elif node.restriction is Restriction.Cardinality:
-                    HS = self.HashSet()
+                    collection = self.HashSet()
                     if node.cardinality['min'] is not None:
-                        HS.add(self.factory.getOWLObjectMinCardinality(node.cardinality['min'], objectPropertyEx, classEx))
+                        collection.add(self.factory.getOWLObjectMinCardinality(node.cardinality['min'], objectPropertyEx, classEx))
                     if node.cardinality['max'] is not None:
-                        HS.add(self.factory.getOWLObjectMaxCardinality(node.cardinality['max'], objectPropertyEx, classEx))
-                    if HS.isEmpty():
+                        collection.add(self.factory.getOWLObjectMaxCardinality(node.cardinality['max'], objectPropertyEx, classEx))
+                    if collection.isEmpty():
                         raise MalformedDiagramError(node, 'missing cardinality')
-                    if HS.size() >= 1:
-                        self.converted[node] = self.factory.getOWLObjectIntersectionOf(HS)
+                    if collection.size() >= 1:
+                        collection.__class__ = self.Set
+                        self.converted[node] = self.factory.getOWLObjectIntersectionOf(collection)
                     else:
-                        self.converted[node] = HS.iterator().next()
+                        self.converted[node] = collection.iterator().next()
 
         return self.converted[node]
 
@@ -536,6 +554,7 @@ class OWLExporter(QObject):
                     collection.add(self.buildRole(x))
                 elif x.isItem(Item.RoleInverseNode):
                     collection.add(self.buildRoleInverse(x))
+            collection.__class__ = self.List
             self.converted[node] = collection
         return self.converted[node]
 
@@ -583,6 +602,8 @@ class OWLExporter(QObject):
                     collection.add(self.buildUnion(item))
                 elif item.isItem(Item.DomainRestrictionNode):
                     collection.add(self.buildDomainRestriction(item))
+                elif item.isItem(Item.RangeRestrictionNode):
+                    collection.add(self.buildRangeRestriction(item))
                 elif item.isItem(Item.DatatypeRestrictionNode):
                     collection.add(self.buildDatatypeRestriction(item))
                 else:
@@ -590,6 +611,8 @@ class OWLExporter(QObject):
 
             if not collection.size():
                 raise MalformedDiagramError(node, 'missing operand(s)')
+
+            collection.__class__ = self.Set
 
             if node.identity is Identity.Concept:
                 self.converted[node] = self.factory.getOWLObjectUnionOf(collection)
@@ -622,6 +645,166 @@ class OWLExporter(QObject):
 
     ####################################################################################################################
     #                                                                                                                  #
+    #   AXIOMS GENERATION                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def axiomClassAssertion(self, edge):
+        """
+        Generate a OWL ClassAssertion axiom.
+        :type edge: InstanceOf
+        """
+        self.axioms.add(self.factory.getOWLClassAssertionAxiom(self.converted[edge.target], self.converted[edge.source]))
+
+    def axiomDataPropertyAssertion(self, edge):
+        """
+        Generate a OWL DataPropertyAssertion axiom.
+        :type edge: InstanceOf
+        """
+        op1 = self.converted[edge.source][0]
+        op2 = self.converted[edge.source][1]
+        self.axioms.add(self.factory.getOWLDataPropertyAssertionAxiom(self.converted[edge.target], op1, op2))
+
+    def axiomDataPropertyRange(self, edge):
+        """
+        Generate a OWL DataPropertyRange axiom.
+        :type edge: InclusionEdge
+        """
+        self.axioms.add(self.factory.getOWLDataPropertyRangeAxiom(self.converted[edge.source], self.converted[edge.target]))
+
+    def axiomDeclaration(self, node):
+        """
+        Generate a OWL Declaration axiom.
+        :type node: AbstractNode
+        """
+        self.axioms.add(self.factory.getOWLDeclarationAxiom(self.converted[node]))
+
+    def axiomDisjointClasses(self, node):
+        """
+        Generate a OWL DisjointClasses axiom.
+        :type node: DisjointUnionNode
+        """
+        collection = self.HashSet()
+        for j in node.incomingNodes(lambda x: x.isItem(Item.InputEdge)):
+            collection.add(self.converted[j])
+        collection.__class__ = self.Set
+        self.axioms.add(self.factory.getOWLDisjointClassesAxiom(collection))
+
+    def axiomDisjointDataProperties(self, edge):
+        """
+        Generate a OWL DisjointDataProperties axiom.
+        :type edge: InclusionEdge
+        """
+        collection = self.HashSet()
+        collection.add(self.converted[edge.source])
+        collection.add(self.converted[edge.target])
+        collection.__class__ = self.Set
+        self.axioms.add(self.factory.getOWLDisjointDataPropertiesAxiom(collection))
+
+    def axiomDisjointObjectProperties(self, edge):
+        """
+        Generate a OWL DisjointObjectProperties axiom.
+        :type edge: InclusionEdge
+        """
+        collection = self.HashSet()
+        collection.add(self.converted[edge.source])
+        collection.add(self.converted[edge.target])
+        collection.__class__ = self.Set
+        self.axioms.add(self.factory.getOWLDisjointObjectPropertiesAxiom(collection))
+
+    def axiomEquivalentClasses(self, edge):
+        """
+        Generate a OWL EquivalentClasses axiom.
+        :type edge: InclusionEdge
+        """
+        collection = self.HashSet()
+        collection.add(self.converted[edge.source])
+        collection.add(self.converted[edge.target])
+        collection.__class__ = self.Set
+        self.axioms.add(self.factory.getOWLEquivalentClassesAxiom(collection))
+
+    def axiomEquivalentDataProperties(self, edge):
+        """
+        Generate a OWL EquivalentDataProperties axiom.
+        :type edge: InclusionEdge
+        """
+        collection = self.HashSet()
+        collection.add(self.converted[edge.source])
+        collection.add(self.converted[edge.target])
+        collection.__class__ = self.Set
+        self.axioms.add(self.factory.getOWLEquivalentDataPropertiesAxiom(collection))
+
+    def axiomEquivalentObjectProperties(self, edge):
+        """
+        Generate a OWL EquivalentObjectProperties axiom.
+        :type edge: InclusionEdge
+        """
+        collection = self.HashSet()
+        collection.add(self.converted[edge.source])
+        collection.add(self.converted[edge.target])
+        collection.__class__ = self.Set
+        self.axioms.add(self.factory.getOWLEquivalentObjectPropertiesAxiom(collection))
+
+    def axiomFunctionalDataProperty(self, edge):
+        """
+        Generate a OWL FunctionalDataProperty axiom.
+        :type edge: InputEdge
+        """
+        self.axioms.add(self.factory.getOWLFunctionalDataPropertyAxiom(self.converted[edge.source]))
+
+    def axiomFunctionalObjectProperty(self, edge):
+        """
+        Generate a OWL FunctionalObjectProperty axiom.
+        :type edge: InputEdge
+        """
+        self.axioms.add(self.factory.getOWLFunctionalObjectPropertyAxiom(self.converted[edge.source]))
+
+    def axiomInverseFunctionalObjectProperty(self, edge):
+        """
+        Generate a OWL InverseFunctionalObjectProperty axiom.
+        :type edge: InputEdge
+        """
+        self.axioms.add(self.factory.getOWLInverseFunctionalObjectPropertyAxiom(self.converted[edge.source]))
+
+    def axiomObjectPropertyAssertion(self, edge):
+        """
+        Generate a OWL ObjectPropertyAssertion axiom.
+        :type edge: InstanceOf
+        """
+        op1 = self.converted[edge.source][0]
+        op2 = self.converted[edge.source][1]
+        self.axioms.add(self.factory.getOWLObjectPropertyAssertionAxiom(self.converted[edge.target], op1, op2))
+
+    def axiomSubclassOf(self, edge):
+        """
+        Generate a OWL SubclassOf axiom.
+        :type edge: InclusionEdge
+        """
+        self.axioms.add(self.factory.getOWLSubClassOfAxiom(self.converted[edge.source], self.converted[edge.target]))
+
+    def axiomSubDataPropertyOfAxiom(self, edge):
+        """
+        Generate a OWL SubDataPropertyOf axiom.
+        :type edge: InclusionEdge
+        """
+        self.axioms.add(self.factory.getOWLSubDataPropertyOfAxiom(self.converted[edge.source], self.converted[edge.target]))
+
+    def axiomSubObjectPropertyOf(self, edge):
+        """
+        Generate a OWL SubObjectPropertyOf axiom.
+        :type edge: InclusionEdge
+        """
+        self.axioms.add(self.factory.getOWLSubObjectPropertyOfAxiom(self.converted[edge.source], self.converted[edge.target]))
+
+    def axiomSubPropertyChainOf(self, edge):
+        """
+        Generate a OWL SubPropertyChainOf axiom.
+        :type edge: InclusionEdge
+        """
+        self.axioms.add(self.factory.getOWLSubPropertyChainOfAxiom(self.converted[edge.source], self.converted[edge.target]))
+
+    ####################################################################################################################
+    #                                                                                                                  #
     #   ONTOLOGY EXPORT                                                                                                #
     #                                                                                                                  #
     ####################################################################################################################
@@ -645,8 +828,7 @@ class OWLExporter(QObject):
 
         ontoFormat.setPrefix(self.ontoPrefix, self.ontoIRI)
 
-        # FIXME: this ugly hack is needed so that Java reflection can find the reference to the correct method.
-        # Hopefully this will be fixed by the maintainer one day: https://github.com/kivy/pyjnius/issues/196
+        # FIXME: https://github.com/kivy/pyjnius/issues/196
         stream = self.ByteArrayOutputStream()
         stream.__class__ = self.OutputStream
 
@@ -711,12 +893,9 @@ class OWLExporter(QObject):
         for n in self.scene.nodes():
 
             if n.isItem(Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.ValueDomainNode):
-                self.axioms.add(self.factory.getOWLDeclarationAxiom(self.converted[n]))
+                self.axiomDeclaration(n)
             elif n.isItem(Item.DisjointUnionNode):
-                HS = self.HashSet()
-                for j in n.incomingNodes(lambda x: x.isItem(Item.InputEdge)):
-                    HS.add(self.converted[j])
-                self.axioms.add(self.factory.getOWLDisjointClassesAxiom(HS))
+                self.axiomDisjointClasses(n)
 
         # 3) GENERATE AXIOMS FROM EDGES
         for e in self.scene.edges():
@@ -726,32 +905,32 @@ class OWLExporter(QObject):
                 if not e.complete:
 
                     if e.source.identity is Identity.Concept and e.target.identity is Identity.Concept:
-                        self.axioms.add(self.factory.getOWLSubClassOfAxiom(self.converted[e.source], self.converted[e.target]))
+                        self.axiomSubclassOf(e)
                     elif e.source.identity is Identity.Role and e.target.identity is Identity.Role:
                         if e.source.isItem(Item.RoleChainNode):
-                            self.axioms.add(self.factory.getOWLSubPropertyChainOfAxiom(self.converted[e.source], self.converted[e.target]))
+                            self.axiomSubPropertyChainOf(e)
                         elif e.source.isItem(Item.ComplementNode) ^ e.target.isItem(Item.ComplementNode):
-                            self.axioms.add(self.factory.getOWLDisjointObjectPropertiesAxiom(self.converted[e.source], self.converted[e.target]))
+                            self.axiomDisjointObjectProperties(e)
                         elif e.source.isItem(Item.RoleNode, Item.RoleInverseNode) and e.target.isItem(Item.RoleNode, Item.RoleInverseNode):
-                            self.axioms.add(self.factory.getOWLSubObjectPropertyOfAxiom(self.converted[e.source], self.converted[e.target]))
+                            self.axiomSubObjectPropertyOf(e)
                     elif e.source.identity is Identity.Attribute and e.target.identity is Identity.Attribute:
                         if e.source.isItem(Item.ComplementNode) ^ e.target.isItem(Item.ComplementNode):
-                            self.axioms.add(self.factory.getOWLDisjointDataPropertiesAxiom(self.converted[e.source], self.converted[e.target]))
+                            self.axiomDisjointDataProperties(e)
                         else:
-                            self.axioms.add(self.factory.getOWLSubDataPropertyOfAxiom(self.converted[e.source], self.converted[e.target]))
+                            self.axiomSubDataPropertyOfAxiom(e)
                     elif e.source.isItem(Item.RangeRestrictionNode) and e.target.identity is Identity.DataRange:
-                        self.axioms.add(self.factory.getOWLDataPropertyRangeAxiom(self.converted[e.source], self.converted[e.target]))
+                        self.axiomDataPropertyRange(e)
                     else:
                         raise MalformedDiagramError(e, 'type mismatch in ISA')
 
                 else:
 
                     if e.source.identity is Identity.Concept and e.target.identity is Identity.Concept:
-                        self.axioms.add(self.factory.getOWLEquivalentClassesAxiom(self.converted[e.source], self.converted[e.target]))
+                        self.axiomEquivalentClasses(e)
                     elif e.source.identity is Identity.Role and e.target.identity is Identity.Role:
-                        self.axioms.add(self.factory.getOWLEquivalentObjectPropertiesAxiom(self.converted[e.source], self.converted[e.target]))
+                        self.axiomEquivalentObjectProperties(e)
                     elif e.source.identity is Identity.Attribute and e.target.identity is Identity.Attribute:
-                        self.axioms.add(self.factory.getOWLEquivalentDataPropertiesAxiom(self.converted[e.source], self.converted[e.target]))
+                        self.axiomEquivalentDataProperties(e)
                     else:
                         raise MalformedDiagramError(e, 'type mismatch in equivalence')
 
@@ -761,12 +940,12 @@ class OWLExporter(QObject):
 
                     if e.source.identity is Identity.Role:
                         if e.target.isItem(Item.DomainRestrictionNode):
-                            self.axioms.add(self.factory.getOWLFunctionalObjectPropertyAxiom(self.converted[e.source]))
+                            self.axiomFunctionalObjectProperty(e)
                         elif e.target.isItem(Item.RangeRestrictionNode):
-                            self.axioms.add(self.factory.getOWLInverseFunctionalObjectPropertyAxiom(self.converted[e.source]))
+                            self.axiomInverseFunctionalObjectProperty(e)
                     elif e.source.identity is Identity.Attribute:
                         if e.target.isItem(Item.DomainRestrictionNode):
-                            self.axioms.add(self.factory.getOWLFunctionalDataPropertyAxiom(self.converted[e.source]))
+                            self.axiomFunctionalDataProperty(e)
                         else:
                             raise MalformedDiagramError(e, 'unsupported inverse functional edge')
                     else:
@@ -775,11 +954,11 @@ class OWLExporter(QObject):
             elif e.isItem(Item.InstanceOfEdge):
 
                 if e.source.identity is Identity.Individual and e.target.identity is Identity.Concept:
-                    self.axioms.add(self.factory.getOWLClassAssertionAxiom(self.converted[e.target], self.converted[e.source]))
+                    self.axiomClassAssertion(e)
                 elif e.source.identity is Identity.Link and e.target.identity is Identity.Role:
-                    self.axioms.add(self.factory.getOWLObjectPropertyAssertionAxiom(self.converted[e.target], self.converted[e.source][0], self.converted[e.source][1]))
+                    self.axiomObjectPropertyAssertion(e)
                 elif e.source.identity is Identity.Link and e.target.identity is Identity.Attribute:
-                    self.axioms.add(self.factory.getOWLDataPropertyAssertionAxiom(self.converted[e.target], self.converted[e.source][0], self.converted[e.source][1]))
+                    self.axiomDataPropertyAssertion(e)
                 else:
                     raise MalformedDiagramError(e, 'type mismatch in instanceOf')
 
