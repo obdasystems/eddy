@@ -78,7 +78,7 @@ class Clipboard(QObject):
             Create a copy of the given node generating a new id.
             :type node: AbstractNode
             """
-            copy = node.copy(self)
+            copy = node.copy(scene)
             copy.id = scene.guid.next('n')
             return copy
 
@@ -93,7 +93,7 @@ class Clipboard(QObject):
             copied edge to the correspondent previously copied source/target nodes.
             :type edge: AbstractEdge
             """
-            copy = edge.copy(self)
+            copy = edge.copy(scene)
             copy.id = scene.guid.next('e')
             copy.source = nodes[edge.source.id]
             copy.target = nodes[edge.target.id]
