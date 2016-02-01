@@ -129,8 +129,9 @@ class Filetype(Enum):
     """
     This class defines all the available file types supported for graphol document export.
     """
-    __order__ = 'Graphol Owl Pdf'
+    __order__ = 'Graphml Graphol Owl Pdf'
 
+    Graphml = 'Graphml (*.graphml)'
     Graphol = 'Graphol (*.graphol)'
     Owl = 'Owl (*.owl)'
     Pdf = 'PDF (*.pdf)'
@@ -154,6 +155,7 @@ class Filetype(Enum):
         :rtype: str
         """
         return {
+            Filetype.Graphml: '.graphml',
             Filetype.Graphol: '.graphol',
             Filetype.Owl: '.owl',
             Filetype.Pdf: '.pdf'

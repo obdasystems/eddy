@@ -36,7 +36,6 @@ from math import sin, cos, radians, pi as M_PI
 
 from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
-from PyQt5.QtWidgets import QMenu
 
 from eddy.core.datatypes import DiagramMode, Item
 from eddy.core.items.edges.common.base import AbstractEdge

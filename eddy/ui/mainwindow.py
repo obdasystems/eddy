@@ -36,7 +36,6 @@ import os
 import sys
 import traceback
 import webbrowser
-
 from collections import OrderedDict
 
 from PyQt5.QtCore import Qt, QSettings, QFile, QIODevice, QSizeF, QRectF
@@ -49,25 +48,25 @@ from PyQt5.QtXml import QDomDocument
 
 from eddy import __version__ as VERSION, __appname__ as APPNAME
 from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom, CommandItemsMultiRemove
-from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap, CommandRefactor
 from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandEdgeInputToggleFunctional
+from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap, CommandRefactor
 from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelEdit, CommandEdgeBreakpointDel
 from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeSetZValue, CommandNodeSetBrush
 from eddy.core.datatypes import Color, File, DiagramMode, Filetype
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
 from eddy.core.exceptions import ParseError
-from eddy.core.functions import expandPath, coloredIcon, shadedIcon, snapF, rCut, lCut
 from eddy.core.functions import connect, disconnect
+from eddy.core.functions import expandPath, coloredIcon, shadedIcon, snapF, rCut, lCut
 from eddy.core.items import Item, __mapping__ as mapping
 from eddy.core.items import RoleInverseNode, DisjointUnionNode, DatatypeRestrictionNode
 from eddy.core.items import UnionNode, EnumerationNode, ComplementNode, RoleChainNode, IntersectionNode
+from eddy.core.loaders import GraphmlLoader
 from eddy.core.utils import Clipboard
-
 from eddy.ui.about import About
 from eddy.ui.dock import SidebarWidget, Navigator, Overview, Palette
 from eddy.ui.files import OpenFile, SaveFile
-from eddy.ui.forms import OWLTranslationForm, LiteralForm, RenameForm
 from eddy.ui.forms import CardinalityRestrictionForm, ValueRestrictionForm
+from eddy.ui.forms import OWLTranslationForm, LiteralForm, RenameForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
 from eddy.ui.menus import MenuFactory
 from eddy.ui.preferences import PreferencesDialog
@@ -1052,7 +1051,33 @@ class MainWindow(QMainWindow):
         """
         Import a document from a different file format.
         """
-        pass
+        dialog = OpenFile(expandPath('~'))
+        dialog.setNameFilters([Filetype.Graphml.value])
+
+        if dialog.exec_():
+
+            filepath = dialog.selectedFiles()[0]
+
+            try:
+                loader = GraphmlLoader(mainwindow=self, filepath=filepath)
+                loader.run()
+            except Exception as e:
+                msgbox = QMessageBox(self)
+                msgbox.setIconPixmap(QPixmap(':/icons/error'))
+                msgbox.setWindowIcon(QIcon(':/images/eddy'))
+                msgbox.setWindowTitle('Load failed!')
+                msgbox.setStandardButtons(QMessageBox.Close)
+                msgbox.setText('Failed to load {}!'.format(os.path.basename(filepath)))
+                msgbox.setDetailedText(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+                msgbox.exec_()
+            else:
+                scene = loader.scene
+                scene.setMode(DiagramMode.Idle)
+                mainview = self.createView(scene)
+                subwindow = self.createSubWindow(mainview)
+                subwindow.showMaximized()
+                self.mdi.setActiveSubWindow(subwindow)
+                self.mdi.update()
 
     @pyqtSlot()
     def itemCut(self):
@@ -1784,7 +1809,7 @@ class MainWindow(QMainWindow):
 
             document = QDomDocument()
             if not document.setContent(file):
-                raise ParseError('could not initialized DOM document')
+                raise ParseError('could not initialize DOM document')
 
             root = document.documentElement()
 

@@ -32,9 +32,4 @@
 ##########################################################################
 
 
-from eddy.ui.forms.export import OWLTranslationForm
-
-from eddy.ui.forms.nodes import CardinalityRestrictionForm
-from eddy.ui.forms.nodes import LiteralForm
-from eddy.ui.forms.nodes import RenameForm
-from eddy.ui.forms.nodes import ValueRestrictionForm
+from eddy.core.loaders.graphml import GraphmlLoader

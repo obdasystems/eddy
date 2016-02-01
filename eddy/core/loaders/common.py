@@ -32,9 +32,31 @@
 ##########################################################################
 
 
-from eddy.ui.forms.export import OWLTranslationForm
+from abc import ABCMeta, abstractmethod
 
-from eddy.ui.forms.nodes import CardinalityRestrictionForm
-from eddy.ui.forms.nodes import LiteralForm
-from eddy.ui.forms.nodes import RenameForm
-from eddy.ui.forms.nodes import ValueRestrictionForm
+from PyQt5.QtCore import QObject
+
+
+class AbstractLoader(QObject):
+    """
+    Base class for file loaders.
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, mainwindow, filepath, parent=None):
+        """
+        Initialize the loader.
+        :type mainwindow: MainWindow
+        :type filepath: str
+        :type parent: QObject
+        """
+        super().__init__(parent)
+        self.mainwindow = mainwindow
+        self.filepath = filepath
+
+    @abstractmethod
+    def run(self):
+        """
+        Perform file loading.
+        """
+        pass
