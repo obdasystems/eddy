@@ -38,7 +38,7 @@ from PyQt5.QtCore import QObject, pyqtSlot, pyqtSignal
 
 from eddy.core.datatypes import Special, Item, Identity, Restriction, OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
-from eddy.core.functions import clamp, OWLText
+from eddy.core.functions import clamp, OWLText, isEmpty
 
 
 class OWLExporter(QObject):
@@ -79,6 +79,7 @@ class OWLExporter(QObject):
         self.LinkedList = jnius.autoclass('java.util.LinkedList')
         self.List = jnius.autoclass('java.util.List')
         self.ManchesterSyntaxDocumentFormat = jnius.autoclass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
+        self.OWLAnnotationValue = jnius.autoclass('org.semanticweb.owlapi.model.OWLAnnotationValue')
         self.OWLFacet = jnius.autoclass('org.semanticweb.owlapi.vocab.OWLFacet')
         self.OWL2Datatype = jnius.autoclass('org.semanticweb.owlapi.vocab.OWL2Datatype')
         self.OWLManager = jnius.autoclass('org.semanticweb.owlapi.apibinding.OWLManager')
@@ -649,6 +650,27 @@ class OWLExporter(QObject):
     #                                                                                                                  #
     ####################################################################################################################
 
+    def axiomAnnotation(self, node):
+        """
+        Generate a OWL annotation axiom.
+        :type node: AbstractNode
+        """
+        if not isEmpty(node.description):
+
+            subject = self.converted[node]
+
+            cleaned = node.description.lower()
+            cleaned.replace('\n', '')
+            cleaned.replace('\r\n', '')
+            cleaned.strip()
+
+            annotationProp = self.factory.getOWLAnnotationProperty(self.IRI.create("Description"))
+            annotationVal = self.factory.getOWLLiteral(cleaned)
+            annotationVal.__class__ = self.OWLAnnotationValue
+            annotation = self.factory.getOWLAnnotation(annotationProp, annotationVal)
+
+            self.axioms.add(self.factory.getOWLAnnotationAssertionAxiom(subject.getIRI(), annotation))
+
     def axiomClassAssertion(self, edge):
         """
         Generate a OWL ClassAssertion axiom.
@@ -896,6 +918,9 @@ class OWLExporter(QObject):
                 self.axiomDeclaration(n)
             elif n.isItem(Item.DisjointUnionNode):
                 self.axiomDisjointClasses(n)
+
+            if n.predicate:
+                self.axiomAnnotation(n)
 
         # 3) GENERATE AXIOMS FROM EDGES
         for e in self.scene.edges():
