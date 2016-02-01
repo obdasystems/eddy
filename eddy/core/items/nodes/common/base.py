@@ -615,7 +615,11 @@ class AbstractResizableNode(AbstractNode):
         """
         if data:
             for edge, pos in self.mousePressData.items():
-                self.setAnchor(edge, pos + diff * 0.5)
+                newPos = pos + diff * 0.5
+                painterPath = self.painterPath()
+                if not painterPath.contains(self.mapFromScene(newPos)):
+                    newPos = self.intersection(QLineF(newPos, self.pos()))
+                self.setAnchor(edge, newPos)
 
     def updateHandlesPos(self):
         """
