@@ -38,7 +38,6 @@ from PyQt5.QtCore import QRectF, QPointF, Qt
 from PyQt5.QtGui import QColor, QPainterPath, QPen
 
 from eddy.core.datatypes import DiagramMode, Identity, Restriction
-from eddy.core.exceptions import ParseError
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import Label
 from eddy.core.regex import RE_CARDINALITY
@@ -50,24 +49,18 @@ class RestrictionNode(AbstractNode):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, width=20, height=20, brush='#fcfcfc', restriction=None, cardinality=None, **kwargs):
+    def __init__(self, width=20, height=20, brush='#fcfcfc', **kwargs):
         """
         Initialize the node.
         :type width: int
         :type height: int
         :type brush: T <= QBrush | QColor | Color | tuple | list | bytes | unicode
-        :type restriction: Restriction
-        :type cardinality: dict
         """
         super().__init__(**kwargs)
-
-        self._restriction = restriction or Restriction.Exists
-        self._cardinality = cardinality if self.restriction is Restriction.Cardinality else dict(min=None, max=None)
-
         self.brush = brush
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.polygon = self.createRect(20, 20)
-        self.label = Label(self.restriction.label, centered=False, editable=False, parent=self)
+        self.label = Label(Restriction.Exists.label, centered=False, editable=False, parent=self)
         self.label.updatePos()
 
     ####################################################################################################################
@@ -98,20 +91,14 @@ class RestrictionNode(AbstractNode):
         Returns the cardinality of the node.
         :rtype: dict
         """
-        if self._cardinality is not None:
-            return self._cardinality
-        return dict(min=None, max=None)
-
-    @cardinality.setter
-    def cardinality(self, cardinality):
-        """
-        Set the cardinality restriction of this node.
-        If the restriction type of this node is not RestrictionType.cardinality the cardinality will be set to default.
-        :type cardinality: dict
-        """
-        self._cardinality = cardinality
-        if self.restriction is not Restriction.Cardinality:
-            self._cardinality = dict(min=None, max=None)
+        cardinality = {'min': None, 'max': None}
+        match = RE_CARDINALITY.match(self.labelText())
+        if match:
+            if match.group('min') != '-':
+                cardinality['min'] = int(match.group('min'))
+            if match.group('max') != '-':
+                cardinality['max'] = int(match.group('max'))
+        return cardinality
 
     @property
     def restriction(self):
@@ -119,17 +106,7 @@ class RestrictionNode(AbstractNode):
         Returns the restriction type of the node.
         :rtype: Restriction
         """
-        return self._restriction
-
-    @restriction.setter
-    def restriction(self, restriction):
-        """
-        Set the restriction of this node.
-        Setting the restriction type will also reset the cardinality which would need to be set again.
-        :type restriction: Restriction
-        """
-        self._restriction = restriction
-        self._cardinality = dict(min=None, max=None)
+        return Restriction.forLabel(self.labelText())
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -323,31 +300,13 @@ class RestrictionNode(AbstractNode):
 
     def setLabelText(self, text):
         """
-        Set the label text: will additionally parse the text value and set the restriction type accordingly.
-        :raise ParseError: if an invalid text value is supplied.
+        Set the label text: will additionally parse the given value checking for a consistent restriction type.
         :type text: str
         """
-        value = text.strip().lower()
-        if value == Restriction.Exists.label:
-            self.label.setText(value)
-            self.restriction = Restriction.Exists
-        elif value == Restriction.Forall.label:
-            self.label.setText(value)
-            self.restriction = Restriction.Forall
-        elif value == Restriction.Self.label:
-            self.label.setText(value)
-            self.restriction = Restriction.Self
-        else:
-            match = RE_CARDINALITY.match(value)
-            if match:
-                self.label.setText(value)
-                self.restriction = Restriction.Cardinality
-                self.cardinality = {
-                    'min': None if match.group('min') == '-' else int(match.group('min')),
-                    'max': None if match.group('max') == '-' else int(match.group('max')),
-                }
-            else:
-                raise ParseError('invalid restriction supplied: {}'.format(text))
+        restriction = Restriction.forLabel(text)
+        if not restriction:
+            text = Restriction.Exists.label
+        self.label.setText(text)
 
     def updateLabelPos(self, *args, **kwargs):
         """

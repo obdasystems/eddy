@@ -36,7 +36,7 @@ from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QPolygonF
 from PyQt5.QtWidgets import QUndoCommand
 
-from eddy.core.datatypes import Restriction, DistinctList, Item
+from eddy.core.datatypes import DistinctList, Item
 from eddy.core.functions import identify
 
 
@@ -390,62 +390,6 @@ class CommandNodeOperatorSwitchTo(QUndoCommand):
         self.scene.updated.emit()
 
 
-class CommandNodeRestrictionChange(QUndoCommand):
-    """
-    This command is used to change the restriction of square based constructor nodes.
-    """
-    def __init__(self, scene, node, restriction, cardinality=None):
-        """
-        Initialize the command.
-        """
-        self.node = node
-        self.scene = scene
-        self.restriction = {'redo': restriction, 'undo': self.node.restriction}
-        self.cardinality = {'redo': dict(min=None, max=None) if not cardinality else cardinality, 'undo': self.node.cardinality}
-        value = restriction.label
-        if restriction is Restriction.Cardinality:
-            value = value.format(min=self.s(cardinality['min']), max=self.s(cardinality['max']))
-        super().__init__('change {} restriction to {}'.format(node.name, value))
-
-    @staticmethod
-    def s(x):
-        """
-        Return a valid string representation for the cardinality value.
-        :type x: str | int | None
-        """
-        return str(x) if x is not None else '-'
-
-    def redo(self):
-        """redo the command"""
-        if self.restriction['redo'] is Restriction.Cardinality:
-            self.node.restriction = self.restriction['redo']
-            self.node.cardinality = self.cardinality['redo']
-            self.node.label.setText(self.node.restriction.label.format(min=self.s(self.node.cardinality['min']),
-                                                                       max=self.s(self.node.cardinality['max'])))
-        else:
-            self.node.restriction = self.restriction['redo']
-            self.node.cardinality = dict(min=None, max=None)
-            self.node.label.setText(self.node.restriction.label)
-
-        # emit updated signal
-        self.scene.updated.emit()
-
-    def undo(self):
-        """undo the command"""
-        if self.restriction['undo'] is Restriction.Cardinality:
-            self.node.restriction = self.restriction['undo']
-            self.node.cardinality = self.cardinality['undo']
-            self.node.label.setText(self.node.restriction.label.format(min=self.s(self.node.cardinality['min']),
-                                                                       max=self.s(self.node.cardinality['max'])))
-        else:
-            self.node.restriction = self.restriction['undo']
-            self.node.cardinality = dict(min=None, max=None)
-            self.node.label.setText(self.node.restriction.label)
-
-        # emit updated signal
-        self.scene.updated.emit()
-
-
 class CommandNodeSetURL(QUndoCommand):
     """
     This command is used to change the url attached to a node.
@@ -563,7 +507,7 @@ class CommandNodeChangeInputOrder(QUndoCommand):
         self.scene.updated.emit()
 
 
-class CommandNodeChangeBrush(QUndoCommand):
+class CommandNodeSetBrush(QUndoCommand):
     """
     This command is used to change the brush of predicate nodes.
     """

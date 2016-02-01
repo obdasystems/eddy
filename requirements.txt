@@ -2,4 +2,3 @@
 -e git+https://github.com/kivy/pyjnius.git#egg=pyjnius
 
 # From PyPi
-verlib

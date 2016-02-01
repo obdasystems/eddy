@@ -52,8 +52,8 @@ from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom, Comma
 from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap, CommandRefactor
 from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandEdgeInputToggleFunctional
 from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelEdit, CommandEdgeBreakpointDel
-from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeRestrictionChange
-from eddy.core.commands import CommandNodeSetSpecial, CommandNodeChangeBrush, CommandNodeSetZValue
+from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeSetZValue
+from eddy.core.commands import CommandNodeSetSpecial, CommandNodeSetBrush
 from eddy.core.datatypes import Color, File, DiagramMode, Filetype
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
 from eddy.core.exceptions import ParseError
@@ -355,7 +355,7 @@ class MainWindow(QMainWindow):
             action.setIcon(coloredIcon(size, size, color.value))
             action.setCheckable(False)
             action.setData(color)
-            connect(action.triggered, self.changeNodeBrush)
+            connect(action.triggered, self.setNodeBrush)
             self.actionsChangeNodeBrush.append(action)
 
         self.actionResetLabelPosition = QAction('Reset label position', self)
@@ -421,7 +421,7 @@ class MainWindow(QMainWindow):
             action = QAction(restriction.value, self)
             action.setCheckable(True)
             action.setData(restriction)
-            connect(action.triggered, self.changeDomainRangeRestriction)
+            connect(action.triggered, self.setDomainRangeRestriction)
             self.actionsRestrictionChange.append(action)
 
         ## VALUE DOMAIN NODE
@@ -430,13 +430,13 @@ class MainWindow(QMainWindow):
             action = QAction(datatype.value, self)
             action.setCheckable(True)
             action.setData(datatype)
-            connect(action.triggered, self.changeValueDomainDatatype)
+            connect(action.triggered, self.setValueDomainDatatype)
             self.actionsChangeValueDomainDatatype.append(action)
 
         ## VALUE RESTRICTION
         self.actionChangeValueRestriction = QAction('Select restriction...', self)
         self.actionChangeValueRestriction.setIcon(self.iconRefresh)
-        connect(self.actionChangeValueRestriction.triggered, self.changeValueRestriction)
+        connect(self.actionChangeValueRestriction.triggered, self.setValueRestriction)
 
         ## OPERATOR NODES
         data = OrderedDict()
@@ -746,94 +746,6 @@ class MainWindow(QMainWindow):
                 if moveX and moveY:
                     collection = [x for x in items if x.node or x.edge]
                     scene.undostack.push(CommandItemsTranslate(scene, collection, moveX, moveY, name='center diagram'))
-
-    @pyqtSlot()
-    def changeDomainRangeRestriction(self):
-        """
-        Change domain/range restriction types.
-        """
-        scene = self.mdi.activeScene
-        if scene:
-            scene.setMode(DiagramMode.Idle)
-            nodes = scene.selectedNodes()
-            node = next(filter(lambda x: x.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode), nodes), None)
-            if node:
-                action = self.sender()
-                restriction = action.data()
-                if restriction == Restriction.Cardinality:
-                    form = CardinalityRestrictionForm()
-                    if form.exec_() == CardinalityRestrictionForm.Accepted:
-                        cardinality = dict(min=form.minCardinalityValue, max=form.maxCardinalityValue)
-                        scene.undostack.push(CommandNodeRestrictionChange(scene, node, restriction, cardinality))
-                else:
-                    scene.undostack.push(CommandNodeRestrictionChange(scene, node, action.data()))
-
-    @pyqtSlot()
-    def changeNodeBrush(self):
-        """
-        Change the brush of selected nodes.
-        """
-        scene = self.mdi.activeScene
-        if scene:
-            scene.setMode(DiagramMode.Idle)
-            selected = [x for x in scene.selectedNodes() if x.predicate]
-            if selected:
-                action = self.sender()
-                scene.undostack.push(CommandNodeChangeBrush(scene, selected, action.data()))
-
-    @pyqtSlot()
-    def changeValueDomainDatatype(self):
-        """
-        Change the datatype of the selected value-domain node.
-        """
-        scene = self.mdi.activeScene
-        if scene:
-            scene.setMode(DiagramMode.Idle)
-            selected = scene.selectedNodes()
-            node = next(filter(lambda x: x.isItem(Item.ValueDomainNode), selected), None)
-            if node:
-                action = self.sender()
-                datatype = action.data()
-                value = datatype.value
-                command = CommandNodeLabelEdit(scene, node, value, 'change {} datatype to {}'.format(node.name, value))
-                if command.changed(value):
-                    scene.undostack.push(command)
-
-    @pyqtSlot()
-    def changeValueRestriction(self):
-        """
-        Set an invididual node either to Individual or Literal.
-        Will bring up the Literal Form if needed.
-        """
-        scene = self.mdi.activeScene
-        if scene:
-            scene.setMode(DiagramMode.Idle)
-            selected = scene.selectedNodes()
-            node = next(filter(lambda x: x.isItem(Item.ValueRestrictionNode), selected), None)
-            if node:
-
-                form = ValueRestrictionForm(node, self)
-
-                # We need to disable the datatype switch if this restriction is already
-                # connected to a datatype restriction node that already specifies a value domain.
-                f1 = lambda x: x.isItem(Item.InputEdge)
-                f2 = lambda x: x.isItem(Item.DatatypeRestrictionNode)
-                f3 = lambda x: x.isItem(Item.ValueDomainNode)
-
-                DR = next(iter(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
-                if DR:
-                    VD = next(iter(DR.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)), None)
-                    if VD:
-                        form.datatypeField.setEnabled(False)
-
-                if form.exec() == ValueRestrictionForm.Accepted:
-                    datatype = form.datatypeField.currentData()
-                    facet = form.facetField.currentData()
-                    value = rCut(lCut(form.valueField.value().strip(), '"'), '"')
-                    value = '{} "{}"^^{}'.format(facet.value, value, datatype.value)
-                    command = CommandNodeLabelEdit(scene, node, value, 'change value restriction to {}'.format(value))
-                    if command.changed(value):
-                        scene.undostack.push(command)
 
     @pyqtSlot()
     def closeActiveSubWindow(self):
@@ -1340,7 +1252,7 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
-                scene.undostack.push(CommandNodeChangeBrush(scene, scene.nodesByLabel[node.labelText()], action.data()))
+                scene.undostack.push(CommandNodeSetBrush(scene, scene.nodesByLabel[node.labelText()], action.data()))
 
     @pyqtSlot()
     def refactorName(self):
@@ -1515,6 +1427,47 @@ class MainWindow(QMainWindow):
                     scene.undostack.push(CommandNodeSetZValue(scene=scene, node=selected, zValue=zValue))
 
     @pyqtSlot()
+    def setNodeBrush(self):
+        """
+        Set the brush of selected nodes.
+        """
+        scene = self.mdi.activeScene
+        if scene:
+            scene.setMode(DiagramMode.Idle)
+            selected = [x for x in scene.selectedNodes() if x.predicate]
+            if selected:
+                action = self.sender()
+                scene.undostack.push(CommandNodeSetBrush(scene, selected, action.data()))
+
+    @pyqtSlot()
+    def setDomainRangeRestriction(self):
+        """
+        Set a domain/range restriction.
+        """
+        scene = self.mdi.activeScene
+        if scene:
+            scene.setMode(DiagramMode.Idle)
+            nodes = scene.selectedNodes()
+            node = next(filter(lambda x: x.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode), nodes), None)
+            if node:
+
+                action = self.sender()
+                restriction = action.data()
+
+                value = None
+                if restriction is not Restriction.Cardinality:
+                    value = restriction.label
+                else:
+                    form = CardinalityRestrictionForm()
+                    if form.exec_() == CardinalityRestrictionForm.Accepted:
+                        value = '({},{})'.format(form.minCardinalityValue or '-', form.maxCardinalityValue or '-')
+
+                if value:
+                    item = 'range' if node.isItem(Item.RangeRestrictionNode) else 'domain'
+                    name = 'change {} restriction to {}'.format(item, value)
+                    scene.undostack.push(CommandNodeLabelEdit(scene, node, value, name))
+
+    @pyqtSlot()
     def setIndividualNodeAs(self):
         """
         Set an invididual node either to Individual or Literal.
@@ -1558,6 +1511,60 @@ class MainWindow(QMainWindow):
             if node:
                 special = action.data() if node.special is not action.data() else None
                 scene.undostack.push(CommandNodeSetSpecial(scene, node, special))
+
+    @pyqtSlot()
+    def setValueDomainDatatype(self):
+        """
+        Set the datatype of the selected value-domain node.
+        """
+        scene = self.mdi.activeScene
+        if scene:
+            scene.setMode(DiagramMode.Idle)
+            selected = scene.selectedNodes()
+            node = next(filter(lambda x: x.isItem(Item.ValueDomainNode), selected), None)
+            if node:
+                action = self.sender()
+                datatype = action.data()
+                value = datatype.value
+                command = CommandNodeLabelEdit(scene, node, value, 'change {} datatype to {}'.format(node.name, value))
+                if command.changed(value):
+                    scene.undostack.push(command)
+
+    @pyqtSlot()
+    def setValueRestriction(self):
+        """
+        Set an invididual node either to Individual or Literal.
+        Will bring up the Literal Form if needed.
+        """
+        scene = self.mdi.activeScene
+        if scene:
+            scene.setMode(DiagramMode.Idle)
+            selected = scene.selectedNodes()
+            node = next(filter(lambda x: x.isItem(Item.ValueRestrictionNode), selected), None)
+            if node:
+
+                form = ValueRestrictionForm(node, self)
+
+                # We need to disable the datatype switch if this restriction is already
+                # connected to a datatype restriction node that already specifies a value domain.
+                f1 = lambda x: x.isItem(Item.InputEdge)
+                f2 = lambda x: x.isItem(Item.DatatypeRestrictionNode)
+                f3 = lambda x: x.isItem(Item.ValueDomainNode)
+
+                DR = next(iter(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
+                if DR:
+                    VD = next(iter(DR.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)), None)
+                    if VD:
+                        form.datatypeField.setEnabled(False)
+
+                if form.exec() == ValueRestrictionForm.Accepted:
+                    datatype = form.datatypeField.currentData()
+                    facet = form.facetField.currentData()
+                    value = rCut(lCut(form.valueField.value().strip(), '"'), '"')
+                    value = '{} "{}"^^{}'.format(facet.value, value, datatype.value)
+                    command = CommandNodeLabelEdit(scene, node, value, 'change value restriction to {}'.format(value))
+                    if command.changed(value):
+                        scene.undostack.push(command)
 
     @pyqtSlot('QMdiSubWindow')
     def subWindowActivated(self, subwindow):

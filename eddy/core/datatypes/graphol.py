@@ -35,6 +35,8 @@
 from enum import unique, IntEnum, Enum
 from types import DynamicClassAttribute
 
+from eddy.core.regex import RE_CARDINALITY
+
 
 @unique
 class Identity(IntEnum):
@@ -141,6 +143,22 @@ class Restriction(Enum):
     Forall = 'Universal: forall'
     Cardinality = 'Cardinality: (min, max)'
     Self = 'Self: self'
+
+    @classmethod
+    def forLabel(cls, label):
+        """
+        Returns the restriction matching the given label.
+        :type label: str
+        :rtype: Restriction
+        """
+        label = label.lower().strip()
+        for x in {Restriction.Exists, Restriction.Forall, Restriction.Self}:
+            if label == x.label:
+                return x
+        match = RE_CARDINALITY.match(label)
+        if match:
+            return Restriction.Cardinality
+        return None
 
     @DynamicClassAttribute
     def label(self):

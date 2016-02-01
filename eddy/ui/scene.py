@@ -41,7 +41,7 @@ from PyQt5.QtWidgets import QGraphicsScene, QUndoStack
 from PyQt5.QtXml import QDomDocument
 
 from eddy.core.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
-from eddy.core.datatypes import DiagramMode, DistinctList, File, Item, Restriction, Special
+from eddy.core.datatypes import DiagramMode, DistinctList, File, Item, Special
 from eddy.core.functions import expandPath, rangeF, snapF
 from eddy.core.items import ConceptNode, ComplementNode, RoleChainNode, RoleInverseNode
 from eddy.core.items import RangeRestrictionNode, DomainRestrictionNode
@@ -442,7 +442,7 @@ class DiagramScene(QGraphicsScene):
         :type source: AbstractNode
         :rtype: set
         """
-        node1 = DomainRestrictionNode(scene=self, restriction=Restriction.Exists)
+        node1 = DomainRestrictionNode(scene=self)
         edge1 = InputEdge(scene=self, source=source, target=node1, functional=True)
 
         size = DiagramScene.GridSize
@@ -478,7 +478,7 @@ class DiagramScene(QGraphicsScene):
         :type source: AbstractNode
         :rtype: set
         """
-        node1 = RangeRestrictionNode(scene=self, restriction=Restriction.Exists)
+        node1 = RangeRestrictionNode(scene=self)
         edge1 = InputEdge(scene=self, source=source, target=node1, functional=True)
         
         size = DiagramScene.GridSize
@@ -518,7 +518,8 @@ class DiagramScene(QGraphicsScene):
         x2 = snapF(source.pos().x() + source.width() / 2 + 120, DiagramScene.GridSize, snap=True)
         x3 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize, snap=True)
 
-        node1 = DomainRestrictionNode(scene=self, restriction=Restriction.Self)
+        node1 = DomainRestrictionNode(scene=self)
+        node1.setLabelText('self')
         node1.setPos(QPointF(x1, source.pos().y()))
         node2 = ComplementNode(scene=self)
         node2.setPos(QPointF(x2, source.pos().y()))
@@ -536,7 +537,7 @@ class DiagramScene(QGraphicsScene):
         :type source: AbstractNode
         :rtype: set
         """
-        node = DomainRestrictionNode(scene=self, restriction=Restriction.Exists)
+        node = DomainRestrictionNode(scene=self)
         edge = InputEdge(scene=self, source=source, target=node)
         
         size = DiagramScene.GridSize
@@ -572,7 +573,7 @@ class DiagramScene(QGraphicsScene):
         :type source: AbstractNode
         :rtype: set
         """
-        node = RangeRestrictionNode(scene=self, restriction=Restriction.Exists)
+        node = RangeRestrictionNode(scene=self)
         edge = InputEdge(scene=self, source=source, target=node)
 
         size = DiagramScene.GridSize
@@ -611,7 +612,7 @@ class DiagramScene(QGraphicsScene):
         x1 = snapF(source.pos().x() + source.width() / 2 + 40, DiagramScene.GridSize, snap=True)
         x2 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize, snap=True)
 
-        node1 = DomainRestrictionNode(scene=self, restriction=Restriction.Self)
+        node1 = DomainRestrictionNode(scene=self)
         node1.setPos(QPointF(x1, source.pos().y()))
         node2 = ConceptNode(scene=self, special=Special.Top)
         node2.setPos(QPointF(x2, source.pos().y()))
