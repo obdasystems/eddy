@@ -111,6 +111,7 @@ class Eddy(QApplication):
             # the list of examples file in the recentDocumentList (only if there is no list defined already).
             self.settings.setValue('document/recent_documents', [
                 expandPath('@examples/Animals.graphol'),
+                expandPath('@examples/Diet.graphol'),
                 expandPath('@examples/Family.graphol'),
                 expandPath('@examples/Pizza.graphol'),
             ])
