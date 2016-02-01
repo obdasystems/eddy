@@ -36,7 +36,7 @@ from abc import ABCMeta, abstractmethod
 
 from PyQt5.QtCore import QPointF, QLineF, Qt, QRectF
 from PyQt5.QtGui import QColor, QPen, QPainter, QBrush
-from PyQt5.QtWidgets import QMenu, QGraphicsItem
+from PyQt5.QtWidgets import QGraphicsItem
 
 from eddy.core.commands import CommandNodeRezize
 from eddy.core.datatypes import Color, DistinctList, DiagramMode, Identity, Item
