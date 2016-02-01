@@ -38,7 +38,7 @@ from PyQt5.QtCore import QObject, pyqtSlot, pyqtSignal
 
 from eddy.core.datatypes import Special, Item, Identity, Restriction, OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
-from eddy.core.functions import clamp, OWLText, isEmpty
+from eddy.core.functions import clamp, OWLText, isEmpty, OWLAnnotationText
 
 
 class OWLExporter(QObject):
@@ -656,20 +656,11 @@ class OWLExporter(QObject):
         :type node: AbstractNode
         """
         if not isEmpty(node.description):
-
-            subject = self.converted[node]
-
-            cleaned = node.description.lower()
-            cleaned.replace('\n', '')
-            cleaned.replace('\r\n', '')
-            cleaned.strip()
-
             annotationProp = self.factory.getOWLAnnotationProperty(self.IRI.create("Description"))
-            annotationVal = self.factory.getOWLLiteral(cleaned)
+            annotationVal = self.factory.getOWLLiteral(OWLAnnotationText(node.description))
             annotationVal.__class__ = self.OWLAnnotationValue
             annotation = self.factory.getOWLAnnotation(annotationProp, annotationVal)
-
-            self.axioms.add(self.factory.getOWLAnnotationAssertionAxiom(subject.getIRI(), annotation))
+            self.axioms.add(self.factory.getOWLAnnotationAssertionAxiom(self.converted[node].getIRI(), annotation))
 
     def axiomClassAssertion(self, edge):
         """

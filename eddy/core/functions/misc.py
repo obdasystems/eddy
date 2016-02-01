@@ -102,6 +102,19 @@ def lCut(text, cut):
     return text
 
 
+def OWLAnnotationText(text):
+    """
+    Transform the given text returning OWL Annotation compatible text.
+    :type text: str
+    :rtype: str
+    """
+    cleaned = text.lower()
+    cleaned.replace('\n', '')
+    cleaned.replace('\r\n', '')
+    cleaned.strip()
+    return cleaned
+
+
 def OWLText(text):
     """
     Transform the given text returning OWL compatible text.

@@ -54,6 +54,7 @@ from eddy.core.functions.misc import coloredIcon
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.misc import isQuoted
 from eddy.core.functions.misc import lCut
+from eddy.core.functions.misc import OWLAnnotationText
 from eddy.core.functions.misc import OWLText
 from eddy.core.functions.misc import partition
 from eddy.core.functions.misc import QSS
