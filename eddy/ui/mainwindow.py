@@ -34,9 +34,7 @@
 
 import os
 import sys
-
 import webbrowser
-
 from collections import OrderedDict
 from traceback import format_exception
 
@@ -63,9 +61,8 @@ from eddy.core.items import RoleInverseNode, DisjointUnionNode, DatatypeRestrict
 from eddy.core.items import UnionNode, EnumerationNode, ComplementNode, RoleChainNode, IntersectionNode
 from eddy.core.loaders import GraphmlLoader, GrapholLoader
 from eddy.core.utils import Clipboard
-from eddy.ui.about import About
+from eddy.ui.dialogs import About, OpenFile, SaveFile
 from eddy.ui.dock import SidebarWidget, Navigator, Overview, Palette
-from eddy.ui.files import OpenFile, SaveFile
 from eddy.ui.forms import CardinalityRestrictionForm, ValueRestrictionForm
 from eddy.ui.forms import OWLTranslationForm, LiteralForm, RenameForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
