@@ -1873,8 +1873,7 @@ class MainWindow(QMainWindow):
         view.setDragMode(MainView.NoDrag)
         return view
 
-    @staticmethod
-    def exportFilePath(path=None, name=None):
+    def exportFilePath(self, path=None, name=None):
         """
         Bring up the 'Export' file dialog and returns the selected filepath.
         Will return None in case the user hit the 'Cancel' button to abort the operation.
@@ -1882,7 +1881,7 @@ class MainWindow(QMainWindow):
         :type name: str
         :rtype: tuple
         """
-        dialog = SaveFile(path)
+        dialog = SaveFile(path=path, parent=self)
         dialog.setWindowTitle('Export')
         dialog.setNameFilters([Filetype.Owl.value, Filetype.Pdf.value])
         dialog.selectFile(name or 'Untitled')
@@ -1890,15 +1889,14 @@ class MainWindow(QMainWindow):
             return dialog.selectedFiles()[0], dialog.selectedNameFilter()
         return None
 
-    @staticmethod
-    def exportSceneToOwlFile(scene, filepath):
+    def exportSceneToOwlFile(self, scene, filepath):
         """
         Export the given scene in OWL syntax saving it in the given filepath.
         :type scene: DiagramScene
         :type filepath: str
         :rtype: bool
         """
-        exportForm = OWLTranslationForm(scene, filepath)
+        exportForm = OWLTranslationForm(scene=scene, filepath=filepath, parent=self)
         if exportForm.exec_() == OWLTranslationForm.Accepted:
             return True
         return False
@@ -1947,8 +1945,7 @@ class MainWindow(QMainWindow):
                 return True
         return False
 
-    @staticmethod
-    def saveFilePath(path=None, name=None):
+    def saveFilePath(self, path=None, name=None):
         """
         Bring up the 'Save' file dialog and returns the selected filepath.
         Will return None in case the user hit the 'Cancel' button to abort the operation.
@@ -1956,7 +1953,7 @@ class MainWindow(QMainWindow):
         :type name: str
         :rtype: str
         """
-        dialog = SaveFile(path)
+        dialog = SaveFile(path=path, parent=self)
         dialog.setNameFilters([Filetype.Graphol.value])
         dialog.selectFile(name or 'Untitled')
         if dialog.exec_():
