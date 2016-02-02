@@ -36,7 +36,7 @@ from mockito import when
 
 from eddy.core.datatypes import OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
-from eddy.core.export import OWLExporter
+from eddy.core.exporters import OWLExporter
 from eddy.core.functions import expandPath, isEmpty
 from eddy.core.items import ConceptNode, RoleNode, InclusionEdge, AttributeNode, RangeRestrictionNode, InputEdge
 from tests import EddyTestCase
