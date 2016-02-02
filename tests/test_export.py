@@ -36,7 +36,7 @@ from mockito import when
 
 from eddy.core.datatypes import OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
-from eddy.core.exporters import OWLExporter
+from eddy.core.exporters import OWLExporter, GrapholExporter
 from eddy.core.functions import expandPath, isEmpty
 from eddy.core.items import ConceptNode, RoleNode, InclusionEdge, AttributeNode, RangeRestrictionNode, InputEdge
 from tests import EddyTestCase
@@ -70,7 +70,7 @@ class Test_Translation(EddyTestCase):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   EXAMPLE FILES                                                                                                  #
+    #   EXAMPLE FILES -> OWL                                                                                           #
     #                                                                                                                  #
     ####################################################################################################################
 
@@ -78,10 +78,10 @@ class Test_Translation(EddyTestCase):
         # GIVEN
         self.init('@examples/Animals.graphol')
         # WHEN
-        translator = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
-        translator.work()
+        exporter = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
+        exporter.work()
         # THEN
-        translation = translator.export(OWLSyntax.Functional)
+        translation = exporter.export(OWLSyntax.Functional)
         self.assertIsInstance(translation, str)
         self.assertFalse(isEmpty(translation))
 
@@ -89,10 +89,10 @@ class Test_Translation(EddyTestCase):
         # GIVEN
         self.init('@examples/Family.graphol')
         # WHEN
-        translator = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
-        translator.work()
+        exporter = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
+        exporter.work()
         # THEN
-        translation = translator.export(OWLSyntax.Functional)
+        translation = exporter.export(OWLSyntax.Functional)
         self.assertIsInstance(translation, str)
         self.assertFalse(isEmpty(translation))
 
@@ -100,10 +100,71 @@ class Test_Translation(EddyTestCase):
         # GIVEN
         self.init('@examples/Pizza.graphol')
         # WHEN
-        translator = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
-        translator.work()
+        exporter = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
+        exporter.work()
         # THEN
-        translation = translator.export(OWLSyntax.Functional)
+        translation = exporter.export(OWLSyntax.Functional)
+        self.assertIsInstance(translation, str)
+        self.assertFalse(isEmpty(translation))
+
+    def test_diet_graphol_to_owl(self):
+        # GIVEN
+        self.init('@examples/Diet.graphol')
+        # WHEN
+        exporter = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
+        exporter.work()
+        # THEN
+        translation = exporter.export(OWLSyntax.Functional)
+        self.assertIsInstance(translation, str)
+        self.assertFalse(isEmpty(translation))
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   EXAMPLE FILES -> GRAPHOL                                                                                           #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def test_animals_graphol_to_graphol(self):
+        # GIVEN
+        self.init('@examples/Animals.graphol')
+        # WHEN
+        exporter = GrapholExporter(scene=self.scene)
+        exporter.run()
+        # THEN
+        translation = exporter.export(indent=2)
+        self.assertIsInstance(translation, str)
+        self.assertFalse(isEmpty(translation))
+
+    def test_family_graphol_to_graphol(self):
+        # GIVEN
+        self.init('@examples/Family.graphol')
+        # WHEN
+        exporter = GrapholExporter(scene=self.scene)
+        exporter.run()
+        # THEN
+        translation = exporter.export(indent=2)
+        self.assertIsInstance(translation, str)
+        self.assertFalse(isEmpty(translation))
+
+    def test_pizza_graphol_to_graphol(self):
+        # GIVEN
+        self.init('@examples/Pizza.graphol')
+        # WHEN
+        exporter = GrapholExporter(scene=self.scene)
+        exporter.run()
+        # THEN
+        translation = exporter.export(indent=2)
+        self.assertIsInstance(translation, str)
+        self.assertFalse(isEmpty(translation))
+
+    def test_diet_graphol_to_graphol(self):
+        # GIVEN
+        self.init('@examples/Diet.graphol')
+        # WHEN
+        exporter = GrapholExporter(scene=self.scene)
+        exporter.run()
+        # THEN
+        translation = exporter.export(indent=2)
         self.assertIsInstance(translation, str)
         self.assertFalse(isEmpty(translation))
 
@@ -123,9 +184,9 @@ class Test_Translation(EddyTestCase):
         self.scene.addItem(n1)
         self.scene.addItem(e0)
         # WHEN
-        translator = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
+        exporter = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
         # THEN
-        self.assertRaises(MalformedDiagramError, translator.run)
+        self.assertRaises(MalformedDiagramError, exporter.run)
 
     def test_invalid_equivalence(self):
         # GIVEN
@@ -137,9 +198,9 @@ class Test_Translation(EddyTestCase):
         self.scene.addItem(n1)
         self.scene.addItem(e0)
         # WHEN
-        translator = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
+        exporter = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
         # THEN
-        self.assertRaises(MalformedDiagramError, translator.run)
+        self.assertRaises(MalformedDiagramError, exporter.run)
 
     def test_invalid_functional(self):
         # GIVEN
@@ -151,6 +212,6 @@ class Test_Translation(EddyTestCase):
         self.scene.addItem(n1)
         self.scene.addItem(e0)
         # WHEN
-        translator = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
+        exporter = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
         # THEN
-        self.assertRaises(MalformedDiagramError, translator.run)
+        self.assertRaises(MalformedDiagramError, exporter.run)
