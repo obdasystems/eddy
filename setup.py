@@ -148,9 +148,9 @@ class BuildExe(build_exe):
         super().run()
         self.execute(self.make_dist, ())
         self.execute(self.unix_2_dos, ())
+        self.execute(self.unix_exec, ())
         self.execute(self.clean_build, ())
         self.execute(self.make_zip, ())
-        self.execute(self.unix_exec, ())
 
     def clean_build(self):
         """
