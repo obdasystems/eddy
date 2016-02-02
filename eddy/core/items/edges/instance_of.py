@@ -49,7 +49,6 @@ class InstanceOfEdge(AbstractEdge):
     This class implements the InstanceOf edge.
     """
     item = Item.InstanceOfEdge
-    xmlname = 'instance-of'
 
     def __init__(self, **kwargs):
         """
@@ -90,50 +89,6 @@ class InstanceOfEdge(AbstractEdge):
     #                                                                                                                  #
     ####################################################################################################################
 
-    @classmethod
-    def fromGraphol(cls, scene, E):
-        """
-        Create a new item instance by parsing a Graphol document item entry.
-        :type scene: DiagramScene
-        :type E: QDomElement
-        :rtype: AbstractEdge
-        """
-        points = []
-
-        # extract all the breakpoints from the edge children
-        children = E.elementsByTagName('line:point')
-        for i in range(0, children.count()):
-            P = children.at(i).toElement()
-            point = QPointF(int(P.attribute('x')), int(P.attribute('y')))
-            points.append(point)
-
-        kwargs = {
-            'id': E.attribute('id'),
-            'source': scene.node(E.attribute('source')),
-            'target': scene.node(E.attribute('target')),
-            'breakpoints': points[1:-1],
-        }
-
-        edge = scene.itemFactory.create(item=cls.item, scene=scene, **kwargs)
-
-        # set the anchor points only if they are inside the endpoint shape: users can modify the .graphol file manually,
-        # changing anchor points coordinates, which will result in an edge floating in the scene without being bounded
-        # by endpoint shapes. Not setting the anchor point will make the edge use the default one (node center point)
-
-        path = edge.source.painterPath()
-        if path.contains(edge.source.mapFromScene(points[0])):
-            edge.source.setAnchor(edge, points[0])
-
-        path = edge.target.painterPath()
-        if path.contains(edge.target.mapFromScene(points[-1])):
-            edge.target.setAnchor(edge, points[-1])
-
-        # map the edge over the source and target nodes
-        edge.source.addEdge(edge)
-        edge.target.addEdge(edge)
-        edge.updateEdge()
-        return edge
-
     def toGraphol(self, document):
         """
         Export the current item in Graphol format.
@@ -145,7 +100,7 @@ class InstanceOfEdge(AbstractEdge):
         edge.setAttribute('source', self.source.id)
         edge.setAttribute('target', self.target.id)
         edge.setAttribute('id', self.id)
-        edge.setAttribute('type', self.xmlname)
+        edge.setAttribute('type', 'instance-of')
 
         ## LINE GEOMETRY
         source = self.source.anchor(self)

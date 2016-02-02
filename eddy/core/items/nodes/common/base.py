@@ -55,7 +55,6 @@ class AbstractNode(AbstractItem):
     brushConnectionOk = QBrush(QColor(43, 173, 63, 160)) # brush used to highlight good connections
     selectionOffset = 4 # used in non-resizable nodes to space the bounding rect from the shape
     selectionPen = QPen(QColor(0, 0, 0), 1.0, Qt.DashLine) # used to draw the bounding rect when the item is selected
-    xmlname = 'node' # a string identifying this node in XML documents
 
     def __init__(self, **kwargs):
         """
@@ -356,17 +355,6 @@ class AbstractNode(AbstractItem):
     #   IMPORT / EXPORT                                                                                                #
     #                                                                                                                  #
     ####################################################################################################################
-
-    @classmethod
-    @abstractmethod
-    def fromGraphol(cls, scene, E):
-        """
-        Create a new item instance by parsing a Graphol document item entry.
-        :type scene: DiagramScene
-        :type E: QDomElement
-        :rtype: AbstractNode
-        """
-        pass
 
     @abstractmethod
     def toGraphol(self, document):

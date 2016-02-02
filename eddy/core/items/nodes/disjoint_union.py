@@ -46,7 +46,6 @@ class DisjointUnionNode(OperatorNode):
     """
     identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
     item = Item.DisjointUnionNode
-    xmlname = 'disjoint-union'
 
     def __init__(self, brush=None, **kwargs):
         """
@@ -124,30 +123,6 @@ class DisjointUnionNode(OperatorNode):
     #                                                                                                                  #
     ####################################################################################################################
 
-    @classmethod
-    def fromGraphol(cls, scene, E):
-        """
-        Create a new item instance by parsing a Graphol document item entry.
-        :type scene: DiagramScene
-        :type E: QDomElement
-        :rtype: Node
-        """
-        U = E.elementsByTagName('data:url').at(0).toElement()
-        D = E.elementsByTagName('data:description').at(0).toElement()
-        G = E.elementsByTagName('shape:geometry').at(0).toElement()
-
-        kwargs = {
-            'description': D.text(),
-            'height': int(G.attribute('height')),
-            'id': E.attribute('id'),
-            'url': U.text(),
-            'width': int(G.attribute('width')),
-        }
-
-        node = scene.itemFactory.create(item=cls.item, scene=scene, **kwargs)
-        node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
-        return node
-
     def toGraphol(self, document):
         """
         Export the current item in Graphol format.
@@ -159,7 +134,7 @@ class DisjointUnionNode(OperatorNode):
         # create the root element for this node
         node = document.createElement('node')
         node.setAttribute('id', self.id)
-        node.setAttribute('type', self.xmlname)
+        node.setAttribute('type', 'disjoint-union')
 
         # add node attributes
         url = document.createElement('data:url')

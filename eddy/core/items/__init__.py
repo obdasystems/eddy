@@ -47,7 +47,6 @@ class AbstractItem(QGraphicsItem):
 
     item = Item.Undefined  # an integer identifying this node as unique item type
     prefix = 'i' # a prefix character to be prepended to the unique id
-    xmlname = 'item' # a lowercase word used to identify this node in XML related documents
 
     def __init__(self, scene, id=None, description='', url='', **kwargs):
         """
@@ -178,17 +177,6 @@ class AbstractItem(QGraphicsItem):
         """
         pass
 
-    @classmethod
-    @abstractmethod
-    def fromGraphol(cls, scene, E):
-        """
-        Create a new item instance by parsing a Graphol document item entry.
-        :type scene: DiagramScene
-        :type E: QDomElement
-        :rtype: AbstractItem
-        """
-        pass
-
     ####################################################################################################################
     #                                                                                                                  #
     #   DRAWING                                                                                                        #
@@ -296,32 +284,23 @@ class LabelItem(QGraphicsTextItem):
         return '{}:{}'.format(self.__class__.__name__, self.id)
 
 
-from eddy.core.items.nodes import AttributeNode, ConceptNode, ComplementNode, DatatypeRestrictionNode, DisjointUnionNode
-from eddy.core.items.nodes import DomainRestrictionNode, EnumerationNode, IndividualNode, IntersectionNode
-from eddy.core.items.nodes import PropertyAssertionNode, RangeRestrictionNode, RoleNode, RoleChainNode
-from eddy.core.items.nodes import RoleInverseNode, UnionNode, ValueDomainNode, ValueRestrictionNode
-from eddy.core.items.edges import InputEdge, InclusionEdge, InstanceOfEdge
-
-
-__mapping__ = {
-    ConceptNode.xmlname: ConceptNode,
-    ValueDomainNode.xmlname: ValueDomainNode,
-    RoleNode.xmlname: RoleNode,
-    IndividualNode.xmlname: IndividualNode,
-    AttributeNode.xmlname: AttributeNode,
-    ValueRestrictionNode.xmlname: ValueRestrictionNode,
-    DomainRestrictionNode.xmlname: DomainRestrictionNode,
-    RangeRestrictionNode.xmlname: RangeRestrictionNode,
-    UnionNode.xmlname: UnionNode,
-    EnumerationNode.xmlname: EnumerationNode,
-    ComplementNode.xmlname: ComplementNode,
-    RoleChainNode.xmlname: RoleChainNode,
-    IntersectionNode.xmlname: IntersectionNode,
-    RoleInverseNode.xmlname: RoleInverseNode,
-    DatatypeRestrictionNode.xmlname: DatatypeRestrictionNode,
-    DisjointUnionNode.xmlname: DisjointUnionNode,
-    PropertyAssertionNode.xmlname: PropertyAssertionNode,
-    InclusionEdge.xmlname: InclusionEdge,
-    InputEdge.xmlname: InputEdge,
-    InstanceOfEdge.xmlname: InstanceOfEdge,
-}
+from eddy.core.items.nodes import AttributeNode
+from eddy.core.items.nodes import ComplementNode
+from eddy.core.items.nodes import ConceptNode
+from eddy.core.items.nodes import DatatypeRestrictionNode
+from eddy.core.items.nodes import DisjointUnionNode
+from eddy.core.items.nodes import DomainRestrictionNode
+from eddy.core.items.nodes import EnumerationNode
+from eddy.core.items.nodes import IndividualNode
+from eddy.core.items.nodes import IntersectionNode
+from eddy.core.items.nodes import PropertyAssertionNode
+from eddy.core.items.nodes import RangeRestrictionNode
+from eddy.core.items.nodes import RoleNode
+from eddy.core.items.nodes import RoleChainNode
+from eddy.core.items.nodes import RoleInverseNode
+from eddy.core.items.nodes import UnionNode
+from eddy.core.items.nodes import ValueDomainNode
+from eddy.core.items.nodes import ValueRestrictionNode
+from eddy.core.items.edges import InclusionEdge
+from eddy.core.items.edges import InputEdge
+from eddy.core.items.edges import InstanceOfEdge

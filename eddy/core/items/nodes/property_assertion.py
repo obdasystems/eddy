@@ -48,7 +48,6 @@ class PropertyAssertionNode(AbstractNode):
     minheight = 30
     minwidth = 52
     radius = 16
-    xmlname = 'property-assertion'
 
     def __init__(self, width=minwidth, height=minheight, brush=None, inputs=None, **kwargs):
         """
@@ -173,33 +172,6 @@ class PropertyAssertionNode(AbstractNode):
     #                                                                                                                  #
     ####################################################################################################################
 
-    @classmethod
-    def fromGraphol(cls, scene, E):
-        """
-        Create a new item instance by parsing a Graphol document item entry.
-        :type scene: DiagramScene
-        :type E: QDomElement
-        :rtype: AbstractNode
-        """
-        U = E.elementsByTagName('data:url').at(0).toElement()
-        D = E.elementsByTagName('data:description').at(0).toElement()
-        G = E.elementsByTagName('shape:geometry').at(0).toElement()
-        I = E.attribute('inputs', '').strip()
-
-
-        kwargs = {
-            'description': D.text(),
-            'height': int(G.attribute('height')),
-            'id': E.attribute('id'),
-            'inputs': DistinctList(I.split(',') if I else []),
-            'url': U.text(),
-            'width': int(G.attribute('width')),
-        }
-
-        node = scene.itemFactory.create(item=cls.item, scene=scene, **kwargs)
-        node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
-        return node
-
     def toGraphol(self, document):
         """
         Export the current item in Graphol format.
@@ -211,7 +183,7 @@ class PropertyAssertionNode(AbstractNode):
         # create the root element for this node
         node = document.createElement('node')
         node.setAttribute('id', self.id)
-        node.setAttribute('type', self.xmlname)
+        node.setAttribute('type', 'property-assertion')
         node.setAttribute('inputs', ','.join(self.inputs))
 
         # add node attributes

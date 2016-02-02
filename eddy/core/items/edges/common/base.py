@@ -60,7 +60,6 @@ class AbstractEdge(AbstractItem):
     selectionBrush = QColor(251, 255, 148)
     selectionSize = 6
     shapePen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-    xmlname = 'edge'
 
     def __init__(self, source, target=None, breakpoints=None, **kwargs):
         """

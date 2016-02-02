@@ -38,15 +38,14 @@ import sys
 import webbrowser
 
 from collections import OrderedDict
-from traceback import format_exc, format_exception, format_tb
+from traceback import format_exc, format_exception
 
-from PyQt5.QtCore import Qt, QSettings, QFile, QIODevice, QSizeF, QRectF
+from PyQt5.QtCore import Qt, QSettings, QSizeF, QRectF
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter, QPageSize
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDialog, QStyle
 from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup
-from PyQt5.QtXml import QDomDocument
 
 from eddy import __version__ as VERSION, __appname__ as APPNAME, BUG_TRACKER
 from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom, CommandItemsMultiRemove
@@ -56,13 +55,12 @@ from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelEdit, Comma
 from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeSetZValue, CommandNodeSetBrush
 from eddy.core.datatypes import Color, File, DiagramMode, Filetype
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
-from eddy.core.exceptions import ParseError
 from eddy.core.functions import connect, disconnect
 from eddy.core.functions import expandPath, coloredIcon, shadedIcon, snapF, rCut, lCut
-from eddy.core.items import Item, __mapping__ as mapping
+from eddy.core.items import Item
 from eddy.core.items import RoleInverseNode, DisjointUnionNode, DatatypeRestrictionNode
 from eddy.core.items import UnionNode, EnumerationNode, ComplementNode, RoleChainNode, IntersectionNode
-from eddy.core.loaders import GraphmlLoader
+from eddy.core.loaders import GraphmlLoader, GrapholLoader
 from eddy.core.utils import Clipboard
 from eddy.ui.about import About
 from eddy.ui.dock import SidebarWidget, Navigator, Overview, Palette
@@ -1086,7 +1084,7 @@ class MainWindow(QMainWindow):
 
                     # If some errors have been generated during the import process, display
                     # them into a popup so the user can check whether the problem is in the
-                    # .graphmldocument ot Eddy is not handling the import properly.
+                    # .graphml document ot Eddy is not handling the import properly.
                     m1 = 'Document {} has been imported! However some errors ({}) have been generated ' \
                          'during the import process. You can inspect detailed information by expanding the ' \
                          'box below.'.format(os.path.basename(filepath), len(loader.errors))
@@ -1830,65 +1828,22 @@ class MainWindow(QMainWindow):
         :type filepath: str
         :rtype: DiagramScene
         """
-        file = QFile(filepath)
+        loader = GrapholLoader(mainwindow=self, filepath=filepath)
 
         try:
-
-            if not file.open(QIODevice.ReadOnly):
-                raise IOError('file not found: {}'.format(filepath))
-
-            document = QDomDocument()
-            if not document.setContent(file):
-                raise ParseError('could not initialize DOM document')
-
-            root = document.documentElement()
-
-            # read graph initialization data
-            graph = root.firstChildElement('graph')
-            w = int(graph.attribute('width', self.settings.value('diagram/size', '5000', str)))
-            h = int(graph.attribute('height', self.settings.value('diagram/size', '5000', str)))
-
-            # create the scene
-            scene = self.createScene(width=w, height=h)
-            scene.document.path = filepath
-
-            # add the nodes
-            nodes_from_graphol = graph.elementsByTagName('node')
-            for i in range(nodes_from_graphol.count()):
-                E = nodes_from_graphol.at(i).toElement()
-                C = mapping[E.attribute('type')]
-                node = C.fromGraphol(scene=scene, E=E)
-                scene.addItem(node)
-                scene.guid.update(node.id)
-
-            # add the edges
-            edges_from_graphol = graph.elementsByTagName('edge')
-            for i in range(edges_from_graphol.count()):
-                E = edges_from_graphol.at(i).toElement()
-                C = mapping[E.attribute('type')]
-                edge = C.fromGraphol(scene=scene, E=E)
-                scene.addItem(edge)
-                scene.guid.update(edge.id)
-
+            loader.run()
         except Exception as e:
-            box = QMessageBox()
-            box.setIconPixmap(QPixmap(':/icons/warning'))
-            box.setWindowIcon(QIcon(':/images/eddy'))
-            box.setWindowTitle('Load FAILED')
-            box.setText('Could not open Graphol document: {}!'.format(filepath))
-            # format the traceback so it prints nice
-            most_recent_calls = format_tb(sys.exc_info()[2])
-            most_recent_calls = [x.strip().replace('\n', '') for x in most_recent_calls]
-            # set the traceback as detailed text so it won't occupy too much space in the dialog box
-            box.setDetailedText('{}: {}\n\n{}'.format(e.__class__.__name__, str(e), '\n'.join(most_recent_calls)))
-            box.setStandardButtons(QMessageBox.Ok)
-            box.exec_()
+            msgbox = QMessageBox(self)
+            msgbox.setIconPixmap(QPixmap(':/icons/error'))
+            msgbox.setWindowIcon(QIcon(':/images/eddy'))
+            msgbox.setWindowTitle('Load failed!')
+            msgbox.setStandardButtons(QMessageBox.Close)
+            msgbox.setText('Failed to load {}!'.format(os.path.basename(filepath)))
+            msgbox.setDetailedText(''.join(format_exception(type(e), e, e.__traceback__)))
+            msgbox.exec_()
             return None
         else:
-            self.documentLoaded.emit(scene)
-            return scene
-        finally:
-            file.close()
+            return loader.scene
 
     def createSubWindow(self, mainview):
         """

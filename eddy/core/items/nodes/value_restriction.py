@@ -58,7 +58,6 @@ class ValueRestrictionNode(AbstractResizableNode):
     item = Item.ValueRestrictionNode
     minheight = 50
     minwidth = 180
-    xmlname = 'value-restriction'
 
     def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc', **kwargs):
         """
@@ -413,34 +412,6 @@ class ValueRestrictionNode(AbstractResizableNode):
     #                                                                                                                  #
     ####################################################################################################################
 
-    @classmethod
-    def fromGraphol(cls, scene, E):
-        """
-        Create a new item instance by parsing a Graphol document item entry.
-        :type scene: DiagramScene
-        :type E: QDomElement
-        :rtype: Node
-        """
-        U = E.elementsByTagName('data:url').at(0).toElement()
-        D = E.elementsByTagName('data:description').at(0).toElement()
-        G = E.elementsByTagName('shape:geometry').at(0).toElement()
-        L = E.elementsByTagName('shape:label').at(0).toElement()
-
-        kwargs = {
-            'brush': E.attribute('color', '#fcfcfc'),
-            'description': D.text(),
-            'height': int(G.attribute('height')),
-            'id': E.attribute('id'),
-            'url': U.text(),
-            'width': int(G.attribute('width')),
-        }
-
-        node = scene.itemFactory.create(item=cls.item, scene=scene, **kwargs)
-        node.setPos(QPointF(int(G.attribute('x')), int(G.attribute('y'))))
-        node.setText(L.text())
-        node.setTextPos(node.mapFromScene(QPointF(int(L.attribute('x')), int(L.attribute('y')))))
-        return node
-
     def toGraphol(self, document):
         """
         Export the current item in Graphol format.
@@ -453,7 +424,7 @@ class ValueRestrictionNode(AbstractResizableNode):
         # create the root element for this node
         node = document.createElement('node')
         node.setAttribute('id', self.id)
-        node.setAttribute('type', self.xmlname)
+        node.setAttribute('type', 'value-restriction')
         node.setAttribute('color', self.brush.color().name())
 
         # add node attributes
