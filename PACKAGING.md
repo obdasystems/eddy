@@ -40,6 +40,11 @@ Navigate using the command prompt to the uncompressed PyQt5.5.1 directory:
     >>> python configure.py --spec win32-g++
     >>> mingw32-make && mingw32-make install
 
+Install python required packages:
+
+    >>> pip install -r build-requirements.txt
+    >>> pip install -r requirements.txt
+
 Change the current active directory and type the following:
 
     >>> git clone https://github.com/danielepantaleone/eddy.git
@@ -65,19 +70,21 @@ Bring up a terminal window and type the following:
     >>> wget http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.tar.gz
     >>> tar xf sip-4.17.tar.gz
     >>> cd sip-4.17
-    >>> python3 configure.py
+    >>> python configure.py
     >>> make
     >>> make install
     >>> cd ~/Downloads
     >>> wget http://skylink.dl.sourceforge.net/project/pyqt/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
     >>> tar xf PyQt-gpl-5.5.1.tar.gz
     >>> cd PyQt-gpl-5.5.1
-    >>> python3 configure.py --qmake ~/Qt/5.5/clang_64/bin/qmake --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
+    >>> python configure.py --qmake ~/Qt/5.5/clang_64/bin/qmake --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
     >>> make
     >>> make install
     >>> cd ~/Downloads
     >>> git clone https://github.com/danielepantaleone/eddy.git
     >>> cd ~/Downloads/eddy
+    >>> pip install -r build-requirements.txt
+    >>> pip install -r requirements.txt
     >>> python setup.py bdist_dmg
 
 ## Linux 32 (debian based distro)
@@ -101,26 +108,28 @@ Bring up a terminal window and type the following:
     >>> wget http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.tar.gz
     >>> tar xf sip-4.17.tar.gz
     >>> cd sip-4.17
-    >>> python3 configure.py
+    >>> python configure.py
     >>> make -j 3
     >>> sudo make install
     >>> cd ~/Downloads
     >>> wget http://skylink.dl.sourceforge.net/project/pyqt/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
     >>> tar xf PyQt-gpl-5.5.1.tar.gz
     >>> cd PyQt-gpl-5.5.1
-    >>> python3 configure.py --qmake ~/Qt5.5.1/5.5/gcc/bin/qmake --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
+    >>> python configure.py --qmake ~/Qt5.5.1/5.5/gcc/bin/qmake --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
     >>> make -j 3
     >>> sudo make install
     >>> cd ~/Downloads
     >>> hg clone https://danielepantaleone@bitbucket.org/danielepantaleone/cx_freeze
     >>> cd cx_freeze
     >>> hg pull && hg update ubuntu
-    >>> python3 setup.py build
-    >>> python3 setup.py install
+    >>> python setup.py build
+    >>> python setup.py install
     >>> cd ~/Downloads
     >>> git clone https://github.com/danielepantaleone/eddy.git
     >>> cd eddy
-    >>> python3 setup.py build_exe
+    >>> pip install -r build-requirements.txt
+    >>> pip install -r requirements.txt
+    >>> python setup.py build_exe
     
 ## Linux 64 (debian based distro)
 
@@ -143,23 +152,25 @@ Bring up a terminal window and type the following:
     >>> wget http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.tar.gz
     >>> tar xf sip-4.17.tar.gz
     >>> cd sip-4.17
-    >>> python3 configure.py
+    >>> python configure.py
     >>> make -j 3
     >>> sudo make install
     >>> cd ~/Downloads
     >>> wget http://skylink.dl.sourceforge.net/project/pyqt/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
     >>> tar xf PyQt-gpl-5.5.1.tar.gz
     >>> cd PyQt-gpl-5.5.1
-    >>> python3 configure.py --qmake ~/Qt5.5.1/5.5/gcc_64/bin/qmake --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
+    >>> python configure.py --qmake ~/Qt5.5.1/5.5/gcc_64/bin/qmake --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
     >>> make -j 3
     >>> sudo make install
     >>> cd ~/Downloads
     >>> hg clone https://danielepantaleone@bitbucket.org/danielepantaleone/cx_freeze
     >>> cd cx_freeze
     >>> hg pull && hg update ubuntu
-    >>> python3 setup.py build
-    >>> python3 setup.py install
+    >>> python setup.py build
+    >>> python setup.py install
     >>> cd ~/Downloads
     >>> git clone https://github.com/danielepantaleone/eddy.git
     >>> cd eddy
-    >>> python3 setup.py build_exe
+    >>> pip install -r build-requirements.txt
+    >>> pip install -r requirements.txt
+    >>> python setup.py build_exe
