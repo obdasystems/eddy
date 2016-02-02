@@ -1,0 +1,7 @@
+# List of InnoSetup script to compile
+scripts:
+ - eddy.iss
+
+# Where to find the InnoSetup compiler
+# You can override this value setting the environment variable ISCC_EXE
+iscc:  C:\Program Files (x86)\Inno Setup 5\ISCC.exe

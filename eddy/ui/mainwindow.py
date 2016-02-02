@@ -35,6 +35,7 @@
 import os
 import sys
 import webbrowser
+
 from collections import OrderedDict
 from traceback import format_exception
 
@@ -45,7 +46,7 @@ from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDialog, QStyle
 from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup
 
-from eddy import __version__ as VERSION, __appname__ as APPNAME, BUG_TRACKER
+from eddy import __version__ as VERSION, __appname__ as APPNAME, BUG_TRACKER, GRAPHOL_HOME, DIAG_HOME
 from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom, CommandItemsMultiRemove
 from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandEdgeInputToggleFunctional
 from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap, CommandRefactor
@@ -264,11 +265,11 @@ class MainWindow(QMainWindow):
 
         self.actionSapienzaWeb = QAction('DIAG - Sapienza university', self)
         self.actionSapienzaWeb.setIcon(self.iconLink)
-        connect(self.actionSapienzaWeb.triggered, lambda: webbrowser.open('http://www.diag.uniroma1.it/en'))
+        connect(self.actionSapienzaWeb.triggered, lambda: webbrowser.open(DIAG_HOME))
 
         self.actionGrapholWeb = QAction('Graphol homepage', self)
         self.actionGrapholWeb.setIcon(self.iconLink)
-        connect(self.actionGrapholWeb.triggered, lambda: webbrowser.open('http://www.diag.uniroma1.it/~graphol/'))
+        connect(self.actionGrapholWeb.triggered, lambda: webbrowser.open(GRAPHOL_HOME))
 
         ## DIAGRAM SCENE
         self.actionOpenSceneProperties = QAction('Properties...', self)

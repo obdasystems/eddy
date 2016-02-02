@@ -43,5 +43,6 @@ __version__ = '0.6'
 
 
 BUG_TRACKER = 'https://github.com/danielepantaleone/eddy/issues'
-GRAPHOL_HOME = 'http://www.dis.uniroma1.it/~graphol/'
+DIAG_HOME = 'http://www.diag.uniroma1.it/en'
+GRAPHOL_HOME = 'http://www.diag.uniroma1.it/~graphol/'
 PROJECT_HOME = 'https://github.com/danielepantaleone/eddy'

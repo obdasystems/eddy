@@ -41,6 +41,7 @@ import shutil
 import stat
 import subprocess
 import sys
+import yaml
 import zipfile
 
 from cx_Freeze import setup
@@ -50,6 +51,9 @@ from cx_Freeze import build_exe
 from eddy import __appname__ as APPNAME
 from eddy import __license__ as LICENSE
 from eddy import __version__ as VERSION
+from eddy import __copyright__ as COPYRIGHT
+from eddy import __organization__ as ORGANIZATION
+from eddy import BUG_TRACKER, DIAG_HOME, GRAPHOL_HOME, PROJECT_HOME
 
 from PyQt5 import QtCore
 
@@ -151,6 +155,7 @@ class BuildExe(build_exe):
         self.execute(self.unix_exec, ())
         self.execute(self.clean_build, ())
         self.execute(self.make_zip, ())
+        self.execute(self.make_installer, ())
 
     def clean_build(self):
         """
@@ -223,6 +228,63 @@ echo "... bye!"
                 path = os.path.abspath(os.path.join(root, filename))
                 zipf.write(path, arcname=os.path.join(APPNAME, path[len(self.build_exe):]))
         zipf.close()
+
+    def make_installer(self):
+        """
+        Create a Windows installer using InnoSetup
+        """
+        if sys.platform.startswith('win32'):
+
+            with open(os.path.join('installer', 'build.yaml'), 'r') as f:
+                config = yaml.load(f)
+            if 'scripts' not in config:
+                print("ERROR: invalid config file: could not find 'scripts' section")
+                sys.exit(1)
+            if not len(config['scripts']):
+                print("ERROR: invalid config file: no entry found in 'scripts' section")
+                sys.exit(1)
+            if 'iscc' not in config:
+                print("ERROR: invalid config file: could not find 'iscc' entry")
+                sys.exit(1)
+            if not os.path.isfile(os.path.join('installer', config['iscc'])):
+                print("ERROR: invalid config file: '{}' is not a file".format(config['iscc']))
+                sys.exit(1)
+
+            # Location of the InnoSetup Compiler program taken from environment.
+            config['iscc'] = os.environ.get('ISCC_EXE', config['iscc'])
+            if not config['iscc'].lower().endswith('iscc.exe'):
+                print("ERROR: invalid location for the ISCC.exe program: {}".format(config['iscc']))
+                sys.exit(1)
+
+            # Build each given innosetup script
+            for filename in config['scripts']:
+
+                script_file = os.path.join('installer', filename)
+                print("building: {}".format(script_file))
+
+                try:
+                    cmd = [
+                        config['iscc'],
+                        script_file,
+                        '/Q',
+                        '/O{}'.format(OPTS['DIST_DIR']),
+                        '/dEDDY_APPNAME={}'.format(APPNAME),
+                        '/dEDDY_ARCHITECTURE={}'.format(platform.architecture()[0][:-3]),
+                        '/dEDDY_BUGTRACKER={}'.format(BUG_TRACKER),
+                        '/dEDDY_BUILD_PATH={}'.format(self.build_exe),
+                        '/dEDDY_COPYRIGHT={}'.format(COPYRIGHT),
+                        '/dEDDY_DOWNLOAD_URL={}'.format(GRAPHOL_HOME),
+                        '/dEDDY_EXECUTABLE={}'.format(OPTS['EXEC_NAME']),
+                        '/dEDDY_GRAPHOL_URL={}'.format(GRAPHOL_HOME),
+                        '/dEDDY_LICENSE={}'.format(LICENSE.lower()),
+                        '/dEDDY_ORGANIZATION={}'.format(ORGANIZATION),
+                        '/dEDDY_ORGANIZATION_URL={}'.format(DIAG_HOME),
+                        '/dEDDY_PROJECT_HOME={}'.format(PROJECT_HOME),
+                        '/dEDDY_VERSION={}'.format(VERSION),
+                    ]
+                    subprocess.call(cmd)
+                except Exception as e:
+                    print('ERROR: failed to build {}: {}'.format(script_file, e))
 
 
 commands = {
