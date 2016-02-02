@@ -38,7 +38,6 @@ from PyQt5.QtXml import QDomDocument
 from eddy.core.datatypes import Item
 from eddy.core.exceptions import ParseError
 from eddy.core.functions import snapF
-from eddy.core.items.factory import ItemFactory
 from eddy.core.loaders.common import AbstractLoader
 from eddy.ui.scene import DiagramScene
 
@@ -55,8 +54,6 @@ class GraphmlLoader(AbstractLoader):
         :type parent: QObject
         """
         super().__init__(mainwindow, filepath, parent)
-        self.itemFactory = ItemFactory(self)
-        self.scene = None
         self.keys = dict()
 
     ####################################################################################################################
@@ -119,7 +116,6 @@ class GraphmlLoader(AbstractLoader):
                     shapeNode = data.firstChildElement('y:ShapeNode')
                     nodeLabel = shapeNode.firstChildElement('y:NodeLabel')
                     item.setText(nodeLabel.text())
-                    #item.setTextPos(item.label.mapFromItem(item, QPointF(float(nodeLabel.attribute('x')), float(nodeLabel.attribute('y')))))
                 data = data.nextSiblingElement('data')
         return item
 
@@ -145,7 +141,6 @@ class GraphmlLoader(AbstractLoader):
                     shapeNode = data.firstChildElement('y:ShapeNode')
                     nodeLabel = shapeNode.firstChildElement('y:NodeLabel')
                     item.setText(nodeLabel.text())
-                    #item.setTextPos(item.label.mapFromItem(item, QPointF(float(nodeLabel.attribute('x')), float(nodeLabel.attribute('y')))))
                 data = data.nextSiblingElement('data')
         return item
 
@@ -171,7 +166,6 @@ class GraphmlLoader(AbstractLoader):
                     shapeNode = data.firstChildElement('y:ShapeNode')
                     nodeLabel = shapeNode.firstChildElement('y:NodeLabel')
                     item.setText(nodeLabel.text())
-                    #item.setTextPos(item.label.mapFromItem(item, QPointF(float(nodeLabel.attribute('x')), float(nodeLabel.attribute('y')))))
                 data = data.nextSiblingElement('data')
         return item
 
@@ -213,7 +207,6 @@ class GraphmlLoader(AbstractLoader):
                     shapeNode = data.firstChildElement('y:ShapeNode')
                     nodeLabel = shapeNode.firstChildElement('y:NodeLabel')
                     item.setText(nodeLabel.text())
-                    #item.setTextPos(item.label.mapFromItem(item, QPointF(float(nodeLabel.attribute('x')), float(nodeLabel.attribute('y')))))
                 data = data.nextSiblingElement('data')
         return item
 
@@ -295,10 +288,9 @@ class GraphmlLoader(AbstractLoader):
 
             if data.attribute('key', '') == self.keys['edge_key']:
 
+                points = []
                 polyLineEdge = data.firstChildElement('y:PolyLineEdge')
                 path = polyLineEdge.firstChildElement('y:Path')
-
-                points = []
                 collection = path.elementsByTagName('y:Point')
                 for i in range(0, collection.count()):
                     point = collection.at(i).toElement()
@@ -314,7 +306,6 @@ class GraphmlLoader(AbstractLoader):
                 }
 
                 item = self.itemFactory.create(item=item, scene=self.scene, **kwargs)
-
                 # yEd, differently from the node pos whose origin matches the TOP-LEFT corner,
                 # consider the center of the shape as original anchor point (0,0). So if the
                 # anchor point hs a negative X it's moved a bit on the left with respect to
@@ -338,7 +329,6 @@ class GraphmlLoader(AbstractLoader):
                 item.source.addEdge(item)
                 item.target.addEdge(item)
                 item.updateEdge()
-
                 return item
 
             data = data.nextSiblingElement('data')
@@ -368,7 +358,6 @@ class GraphmlLoader(AbstractLoader):
                 }
 
                 item = self.itemFactory.create(item=item, scene=self.scene, **kwargs)
-
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
                 # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
@@ -376,11 +365,8 @@ class GraphmlLoader(AbstractLoader):
                 pos = QPointF(float(geometry.attribute('x')), float(geometry.attribute('y')))
                 pos = pos + QPointF(item.width() / 2, item.height() / 2)
                 pos = QPointF(snapF(pos.x(), DiagramScene.GridSize), snapF(pos.y(), DiagramScene.GridSize))
-
                 item.setPos(pos)
                 item.setText(nodeLabel.text())
-                #item.setTextPos(item.label.mapFromItem(item, QPointF(float(nodeLabel.attribute('x')), float(nodeLabel.attribute('y')))))
-
                 return item
 
             data = data.nextSiblingElement('data')
@@ -409,7 +395,6 @@ class GraphmlLoader(AbstractLoader):
                 }
 
                 item = self.itemFactory.create(item=item, scene=self.scene, **kwargs)
-
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
                 # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
@@ -417,9 +402,7 @@ class GraphmlLoader(AbstractLoader):
                 pos = QPointF(float(geometry.attribute('x')), float(geometry.attribute('y')))
                 pos = pos + QPointF(item.width() / 2, item.height() / 2)
                 pos = QPointF(snapF(pos.x(), DiagramScene.GridSize), snapF(pos.y(), DiagramScene.GridSize))
-
                 item.setPos(pos)
-
                 return item
 
             data = data.nextSiblingElement('data')
@@ -449,7 +432,6 @@ class GraphmlLoader(AbstractLoader):
                 }
 
                 item = self.itemFactory.create(item=item, scene=self.scene, **kwargs)
-
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
                 # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
@@ -460,7 +442,6 @@ class GraphmlLoader(AbstractLoader):
 
                 item.setPos(pos)
                 item.setText(nodeLabel.text())
-                #item.setTextPos(item.label.mapFromItem(item, QPointF(float(nodeLabel.attribute('x')), float(nodeLabel.attribute('y')))))
 
                 return item
 
@@ -523,8 +504,11 @@ class GraphmlLoader(AbstractLoader):
                                     return Item.RoleInverseNode
                                 if nodeText == 'data':
                                     return Item.DatatypeRestrictionNode
-                                if nodeText == '':
-                                    return Item.DisjointUnionNode
+                                # When no label matches consider it as a Disjoint Union: it should have no label
+                                # at all but it may happen that users added a label on this node since the logical
+                                # meaning of the node is highlighted by the shape and the color of the node, while
+                                # changing the label of other operator nodes will make them meaningless.
+                                return Item.DisjointUnionNode
 
                         if shapeType == 'rectangle':
                             fill = shapeNode.firstChildElement('y:Fill')
@@ -588,9 +572,6 @@ class GraphmlLoader(AbstractLoader):
                     self.keys['edge_key'] = key.attribute('id')
                 key = key.nextSiblingElement('key')
 
-            print("NODE KEY = {}".format(self.keys['node_key']))
-            print("EDGE KEY = {}".format(self.keys['edge_key']))
-
             # 3) GENERATE ARBITRARY DIAGRAM SCENE
             self.scene = self.mainwindow.createScene(DiagramScene.MaxSize, DiagramScene.MaxSize)
 
@@ -604,46 +585,51 @@ class GraphmlLoader(AbstractLoader):
                 temp = None
                 item = self.itemFromGraphmlNode(node)
 
-                print("FOUND NODE = {} -> ID = {}".format(item, node.attribute('id')))
+                try:
 
-                if item is Item.AttributeNode:
-                    temp = self.buildAttributeNode(node)
-                elif item is Item.ComplementNode:
-                    temp = self.buildComplementNode(node)
-                elif item is Item.ConceptNode:
-                    temp = self.buildConceptNode(node)
-                elif item is Item.DatatypeRestrictionNode:
-                    temp = self.buildDatatypeRestrictionNode(node)
-                elif item is Item.DisjointUnionNode:
-                    temp = self.buildDisjointUnionNode(node)
-                elif item is Item.DomainRestrictionNode:
-                    temp = self.buildDomainRestrictionNode(node)
-                elif item is Item.EnumerationNode:
-                    temp = self.buildEnumerationNode(node)
-                elif item is Item.IndividualNode:
-                    temp = self.buildIndividualNode(node)
-                elif item is Item.IntersectionNode:
-                    temp = self.buildIntersectionNode(node)
-                elif item is Item.RangeRestrictionNode:
-                    temp = self.buildRangeRestrictionNode(node)
-                elif item is Item.RoleNode:
-                    temp = self.buildRoleNode(node)
-                elif item is Item.RoleChainNode:
-                    temp = self.buildRoleChainNode(node)
-                elif item is Item.RoleInverseNode:
-                    temp = self.buildRoleInverseNode(node)
-                elif item is Item.UnionNode:
-                    temp = self.buildUnionNode(node)
-                elif item is Item.ValueDomainNode:
-                    temp = self.buildValueDomainNode(node)
-                elif item is Item.ValueRestrictionNode:
-                    temp = self.buildValueRestrictionNode(node)
+                    if item is Item.AttributeNode:
+                        temp = self.buildAttributeNode(node)
+                    elif item is Item.ComplementNode:
+                        temp = self.buildComplementNode(node)
+                    elif item is Item.ConceptNode:
+                        temp = self.buildConceptNode(node)
+                    elif item is Item.DatatypeRestrictionNode:
+                        temp = self.buildDatatypeRestrictionNode(node)
+                    elif item is Item.DisjointUnionNode:
+                        temp = self.buildDisjointUnionNode(node)
+                    elif item is Item.DomainRestrictionNode:
+                        temp = self.buildDomainRestrictionNode(node)
+                    elif item is Item.EnumerationNode:
+                        temp = self.buildEnumerationNode(node)
+                    elif item is Item.IndividualNode:
+                        temp = self.buildIndividualNode(node)
+                    elif item is Item.IntersectionNode:
+                        temp = self.buildIntersectionNode(node)
+                    elif item is Item.RangeRestrictionNode:
+                        temp = self.buildRangeRestrictionNode(node)
+                    elif item is Item.RoleNode:
+                        temp = self.buildRoleNode(node)
+                    elif item is Item.RoleChainNode:
+                        temp = self.buildRoleChainNode(node)
+                    elif item is Item.RoleInverseNode:
+                        temp = self.buildRoleInverseNode(node)
+                    elif item is Item.UnionNode:
+                        temp = self.buildUnionNode(node)
+                    elif item is Item.ValueDomainNode:
+                        temp = self.buildValueDomainNode(node)
+                    elif item is Item.ValueRestrictionNode:
+                        temp = self.buildValueRestrictionNode(node)
 
-                if temp:
+                    if not temp:
+                        raise ValueError('unknown node with id {}'.format(node.attribute('id')))
+
+                except Exception as e:
+                    self.errors.append(e)
+                else:
                     self.scene.addItem(temp)
                     self.scene.guid.update(temp.id)
-
-                node = node.nextSiblingElement('node')
+                finally:
+                    node = node.nextSiblingElement('node')
 
             # 6) GENERATE EDGES
             edge = graph.firstChildElement('edge')
@@ -652,18 +638,23 @@ class GraphmlLoader(AbstractLoader):
                 temp = None
                 item = self.itemFromGraphmlNode(edge)
 
-                print("FOUND EDGE = {} -> ID = {}".format(item, edge.attribute('id')))
+                try:
 
-                if item is Item.InclusionEdge:
-                    temp = self.buildInclusionEdge(edge)
-                elif item is Item.InputEdge:
-                    temp = self.buildInputEdge(edge)
+                    if item is Item.InclusionEdge:
+                        temp = self.buildInclusionEdge(edge)
+                    elif item is Item.InputEdge:
+                        temp = self.buildInputEdge(edge)
 
-                if temp:
+                    if not temp:
+                        raise ValueError('unknown edge with id {}'.format(edge.attribute('id')))
+
+                except Exception as e:
+                    self.errors.append(e)
+                else:
                     self.scene.addItem(temp)
                     self.scene.guid.update(temp.id)
-
-                edge = edge.nextSiblingElement('edge')
+                finally:
+                    edge = edge.nextSiblingElement('edge')
 
             # 7) RESIZE DIAGRAM SCENE
             size = DiagramScene.MinSize

@@ -34,9 +34,11 @@
 
 import os
 import sys
-import traceback
+
 import webbrowser
+
 from collections import OrderedDict
+from traceback import format_exc, format_exception, format_tb
 
 from PyQt5.QtCore import Qt, QSettings, QFile, QIODevice, QSizeF, QRectF
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
@@ -46,7 +48,7 @@ from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDial
 from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup
 from PyQt5.QtXml import QDomDocument
 
-from eddy import __version__ as VERSION, __appname__ as APPNAME
+from eddy import __version__ as VERSION, __appname__ as APPNAME, BUG_TRACKER
 from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom, CommandItemsMultiRemove
 from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandEdgeInputToggleFunctional
 from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap, CommandRefactor
@@ -1057,18 +1059,18 @@ class MainWindow(QMainWindow):
         if dialog.exec_():
 
             filepath = dialog.selectedFiles()[0]
+            loader = GraphmlLoader(mainwindow=self, filepath=filepath)
 
             try:
-                loader = GraphmlLoader(mainwindow=self, filepath=filepath)
                 loader.run()
             except Exception as e:
                 msgbox = QMessageBox(self)
                 msgbox.setIconPixmap(QPixmap(':/icons/error'))
                 msgbox.setWindowIcon(QIcon(':/images/eddy'))
-                msgbox.setWindowTitle('Load failed!')
+                msgbox.setWindowTitle('Import failed!')
                 msgbox.setStandardButtons(QMessageBox.Close)
-                msgbox.setText('Failed to load {}!'.format(os.path.basename(filepath)))
-                msgbox.setDetailedText(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+                msgbox.setText('Failed to import {}!'.format(os.path.basename(filepath)))
+                msgbox.setDetailedText(''.join(format_exception(type(e), e, e.__traceback__)))
                 msgbox.exec_()
             else:
                 scene = loader.scene
@@ -1078,6 +1080,35 @@ class MainWindow(QMainWindow):
                 subwindow.showMaximized()
                 self.mdi.setActiveSubWindow(subwindow)
                 self.mdi.update()
+            finally:
+
+                if loader.errors:
+
+                    # If some errors have been generated during the import process, display
+                    # them into a popup so the user can check whether the problem is in the
+                    # .graphmldocument ot Eddy is not handling the import properly.
+                    m1 = 'Document {} has been imported! However some errors ({}) have been generated ' \
+                         'during the import process. You can inspect detailed information by expanding the ' \
+                         'box below.'.format(os.path.basename(filepath), len(loader.errors))
+
+                    m2 = 'If needed, <a href="{}">submit a bug report</a> with detailed information.'.format(BUG_TRACKER)
+
+                    parts = []
+                    for k, v in enumerate(loader.errors, start=1):
+                        parts.append('{}) {}'.format(k, ''.join(format_exception(type(v), v, v.__traceback__))))
+
+                    m3 = '\n\n'.join(parts)
+
+                    msgbox = QMessageBox(self)
+                    msgbox.setIconPixmap(QPixmap(':/icons/warning'))
+                    msgbox.setWindowIcon(QIcon(':/images/eddy'))
+                    msgbox.setWindowTitle('Partial document import!')
+                    msgbox.setStandardButtons(QMessageBox.Close)
+                    msgbox.setText(m1)
+                    msgbox.setInformativeText(m2)
+                    msgbox.setDetailedText(m3)
+                    msgbox.exec_()
+
 
     @pyqtSlot()
     def itemCut(self):
@@ -1847,7 +1878,7 @@ class MainWindow(QMainWindow):
             box.setWindowTitle('Load FAILED')
             box.setText('Could not open Graphol document: {}!'.format(filepath))
             # format the traceback so it prints nice
-            most_recent_calls = traceback.format_tb(sys.exc_info()[2])
+            most_recent_calls = format_tb(sys.exc_info()[2])
             most_recent_calls = [x.strip().replace('\n', '') for x in most_recent_calls]
             # set the traceback as detailed text so it won't occupy too much space in the dialog box
             box.setDetailedText('{}: {}\n\n{}'.format(e.__class__.__name__, str(e), '\n'.join(most_recent_calls)))
@@ -1995,7 +2026,7 @@ class MainWindow(QMainWindow):
             box.setWindowIcon(QIcon(':/images/eddy'))
             box.setWindowTitle('Save FAILED')
             box.setText('Could not export diagram!')
-            box.setDetailedText(traceback.format_exc())
+            box.setDetailedText(format_exc())
             box.setStandardButtons(QMessageBox.Ok)
             box.exec_()
             return False

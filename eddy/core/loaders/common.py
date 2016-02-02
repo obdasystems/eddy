@@ -36,6 +36,8 @@ from abc import ABCMeta, abstractmethod
 
 from PyQt5.QtCore import QObject
 
+from eddy.core.items.factory import ItemFactory
+
 
 class AbstractLoader(QObject):
     """
@@ -53,6 +55,9 @@ class AbstractLoader(QObject):
         super().__init__(parent)
         self.mainwindow = mainwindow
         self.filepath = filepath
+        self.itemFactory = ItemFactory(self)
+        self.scene = None
+        self.errors = []
 
     @abstractmethod
     def run(self):
