@@ -1109,7 +1109,6 @@ class MainWindow(QMainWindow):
                     msgbox.setDetailedText(m3)
                     msgbox.exec_()
 
-
     @pyqtSlot()
     def itemCut(self):
         """
@@ -1929,7 +1928,7 @@ class MainWindow(QMainWindow):
         """
         dialog = SaveFile(path)
         dialog.setWindowTitle('Export')
-        dialog.setNameFilters([x.value for x in Filetype if x is not Filetype.Graphol])
+        dialog.setNameFilters([Filetype.Owl.value, Filetype.Pdf.value])
         dialog.selectFile(name or 'Untitled')
         if dialog.exec_():
             return dialog.selectedFiles()[0], dialog.selectedNameFilter()
