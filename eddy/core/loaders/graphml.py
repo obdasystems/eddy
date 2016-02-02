@@ -33,6 +33,7 @@
 
 
 from PyQt5.QtCore import QFile, QIODevice, QPointF, QRectF
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtXml import QDomDocument
 
 from eddy.core.datatypes import Item
@@ -582,6 +583,9 @@ class GraphmlLoader(AbstractLoader):
             node = graph.firstChildElement('node')
             while not node.isNull():
 
+                # noinspection PyArgumentList
+                QApplication.processEvents()
+
                 temp = None
                 item = self.itemFromGraphmlNode(node)
 
@@ -634,6 +638,9 @@ class GraphmlLoader(AbstractLoader):
             # 6) GENERATE EDGES
             edge = graph.firstChildElement('edge')
             while not edge.isNull():
+
+                # noinspection PyArgumentList
+                QApplication.processEvents()
 
                 temp = None
                 item = self.itemFromGraphmlNode(edge)

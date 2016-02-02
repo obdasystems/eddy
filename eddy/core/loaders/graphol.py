@@ -33,13 +33,13 @@
 
 
 from PyQt5.QtCore import QFile, QIODevice, QPointF, QSettings
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtXml import QDomDocument
 
 from eddy.core.datatypes import Item, DistinctList
 from eddy.core.exceptions import ParseError
 from eddy.core.functions import expandPath
 from eddy.core.loaders.common import AbstractLoader
-
 
 
 class GrapholLoader(AbstractLoader):
@@ -418,6 +418,9 @@ class GrapholLoader(AbstractLoader):
             node = graph.firstChildElement('node')
             while not node.isNull():
 
+                # noinspection PyArgumentList
+                QApplication.processEvents()
+
                 temp = None
                 item = self.itemFromGrapholNode(node)
 
@@ -469,6 +472,9 @@ class GrapholLoader(AbstractLoader):
             # 5) GENERATE EDGES
             edge = graph.firstChildElement('edge')
             while not edge.isNull():
+
+                # noinspection PyArgumentList
+                QApplication.processEvents()
 
                 temp = None
                 item = self.itemFromGrapholNode(edge)
