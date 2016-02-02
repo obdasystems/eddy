@@ -20,47 +20,47 @@
 
 [Setup]
 AppID=60119D28-5488-4663-879E-34FCD9C5C38C
+AppCopyright={#EDDY_COPYRIGHT}
 AppName={#EDDY_APPNAME}
-AppVerName={#EDDY_APPNAME} {#EDDY_VERSION}
 AppPublisher={#EDDY_ORGANIZATION}
 AppPublisherURL={#EDDY_ORGANIZATION_URL}
 AppSupportURL={#EDDY_PROJECT_HOME}
 AppUpdatesURL={#EDDY_DOWNLOAD_URL}
-AppCopyright={#EDDY_COPYRIGHT}
+AppVerName={#EDDY_APPNAME} {#EDDY_VERSION}
 
-DefaultDirName={pf32}\{#EDDY_APPNAME}
-DefaultGroupName={#EDDY_APPNAME}
-LicenseFile=../LICENSE
-OutputBaseFilename={#EDDY_APPNAME}-{#EDDY_VERSION}-{#EDDY_LICENSE}-win{#EDDY_ARCHITECTURE}
-Compression=lzma/Ultra64
-SolidCompression=yes
-InternalCompressLevel=Normal
-DisableStartupPrompt=yes
-SetupLogging=true
-VersionInfoVersion=1.0
-VersionInfoDescription=Eddy setup
-VersionInfoCopyright={#EDDY_COPYRIGHT}
-VersionInfoTextVersion=1.0
-VersionInfoProductName={#EDDY_APPNAME}
-VersionInfoProductVersion={#EDDY_VERSION}
-ExtraDiskSpaceRequired=0
-RestartIfNeededByRun=no
-PrivilegesRequired=admin
-WindowVisible=no
-BackColor=clBlack
-BackColor2=clGray
-WizardSmallImageFile=../eddy\ui\artwork\eddy_wizard_small.bmp
-WizardImageFile=../eddy\ui\artwork\eddy_wizard.bmp
-UsePreviousAppDir=yes
 AlwaysShowDirOnReadyPage=yes
 AlwaysShowGroupOnReadyPage=yes
-VersionInfoCompany={#EDDY_ORGANIZATION}
-WindowShowCaption=no
-WindowResizable=no
-SetupIconFile=../eddy\ui\artwork\eddy.ico
-EnableDirDoesntExistWarning=no
+BackColor=clBlack
+BackColor2=clGray
+Compression=lzma/Ultra64
+DefaultDirName={pf32}\{#EDDY_APPNAME}
+DefaultGroupName={#EDDY_APPNAME}
 DirExistsWarning=yes
 DisableProgramGroupPage=auto
+DisableStartupPrompt=yes
+EnableDirDoesntExistWarning=no
+ExtraDiskSpaceRequired=0
+InternalCompressLevel=normal
+LicenseFile=../LICENSE
+OutputBaseFilename={#EDDY_APPNAME}-{#EDDY_VERSION}-{#EDDY_LICENSE}-win{#EDDY_ARCHITECTURE}
+SetupLogging=no
+SolidCompression=yes
+VersionInfoCompany={#EDDY_ORGANIZATION}
+VersionInfoCopyright={#EDDY_COPYRIGHT}
+VersionInfoDescription={#EDDY_APPNAME} setup
+VersionInfoProductName={#EDDY_APPNAME}
+VersionInfoProductVersion={#EDDY_VERSION}
+VersionInfoTextVersion=1.0
+VersionInfoVersion=1.0
+RestartIfNeededByRun=no
+PrivilegesRequired=admin
+SetupIconFile=../eddy\ui\artwork\eddy.ico
+UsePreviousAppDir=yes
+WindowResizable=no
+WindowShowCaption=no
+WindowVisible=no
+WizardImageFile=../eddy\ui\artwork\eddy_wizard.bmp
+WizardSmallImageFile=../eddy\ui\artwork\eddy_wizard_small.bmp
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -69,8 +69,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "{commondesktop}\{#EDDY_APPNAME}"; Filename: "{app}\{#EDDY_EXECUTABLE}"; WorkingDir: "{app}"; IconFilename: "{app}\{#EDDY_EXECUTABLE}"; Comment: "Run {#EDDY_APPNAME} {#EDDY_VERSION}"
 Name: "{group}\{#EDDY_APPNAME}"; Filename: "{app}\{#EDDY_EXECUTABLE}"; WorkingDir: "{app}"; IconFilename: "{app}\{#EDDY_EXECUTABLE}"; Comment: "Run {#EDDY_APPNAME} {#EDDY_VERSION}"
 Name: "{group}\Bugtracker"; Filename: "{#EDDY_BUGTRACKER}"; Comment: "Open {#EDDY_APPNAME} bugtracker"
-Name: "{group}\Graphol website"; Filename: "{#EDDY_GRAPHOL_URL}"; Comment: "Visit the Graphol website"
 Name: "{group}\DIAG - Sapienza university"; Filename: "{#EDDY_ORGANIZATION_URL}"; Comment: "Visit the DIAG website"
+Name: "{group}\Graphol website"; Filename: "{#EDDY_GRAPHOL_URL}"; Comment: "Visit the Graphol website"
 Name: "{group}\Uninstall"; Filename: "{uninstallexe}"; Comment: "Uninstall {#EDDY_APPNAME}"
 
 [Files]
@@ -78,3 +78,6 @@ Source: {#EDDY_BUILD_PATH}\*; DestDir: {app}; Flags: recursesubdirs
 
 [UninstallDelete]
 Name: {app}\*; Type: filesandordirs
+
+[Run]
+Filename: {app}\{#EDDY_EXECUTABLE}; Description: Run {#EDDY_APPNAME}; Flags: postinstall nowait skipifsilent unchecked
