@@ -235,16 +235,23 @@ class Label(LabelItem):
         Executed when the text item is focused.
         :type focusEvent: QFocusEvent
         """
-        scene = self.scene()
-        scene.setMode(DiagramMode.LabelEdit)
-        parent = self.parentItem()
-        cursor = self.textCursor()
-        cursor.select(QTextCursor.BlockUnderCursor)
-        self.setTextCursor(cursor)
-        self.commandEdit = self.commandEdit or CommandNodeLabelEdit(scene, parent)
-        scene.clearSelection()
-        self.setSelected(True)
-        super().focusInEvent(focusEvent)
+        # Make the label focusable only by performing a double click on the
+        # text: this will exclude any other type of focus action (dunno why
+        # but sometime the label gets the focus when hovering the mouse cursor
+        # on the text: mostly happens when loading diagram scenes from file)
+        if focusEvent.reason() == Qt.OtherFocusReason:
+            scene = self.scene()
+            scene.setMode(DiagramMode.LabelEdit)
+            parent = self.parentItem()
+            cursor = self.textCursor()
+            cursor.select(QTextCursor.BlockUnderCursor)
+            self.setTextCursor(cursor)
+            self.commandEdit = self.commandEdit or CommandNodeLabelEdit(scene, parent)
+            scene.clearSelection()
+            self.setSelected(True)
+            super().focusInEvent(focusEvent)
+        else:
+            self.clearFocus()
 
     def focusOutEvent(self, focusEvent):
         """
@@ -254,6 +261,7 @@ class Label(LabelItem):
         scene = self.scene()
 
         if scene.mode is DiagramMode.LabelEdit:
+
             # make sure we have something in the label
             if isEmpty(self.text()):
                 self.setText(self.defaultText)
@@ -269,7 +277,7 @@ class Label(LabelItem):
             self.setTextCursor(cursor)
             self.setTextInteractionFlags(Qt.NoTextInteraction)
 
-            # go back idle so we can perform another operation
+            # Go back idle so we can perform another operation.
             scene.setMode(DiagramMode.Idle)
 
         super().focusOutEvent(focusEvent)
