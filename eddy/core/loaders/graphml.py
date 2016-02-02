@@ -315,16 +315,25 @@ class GraphmlLoader(AbstractLoader):
 
                 item = self.itemFactory.create(item=item, scene=self.scene, **kwargs)
 
-                # sourceP = QPointF(float(path.attribute('sx')), float(path.attribute('sy')))
-                # targetP = QPointF(float(path.attribute('tx')), float(path.attribute('ty')))
-                #
-                # painterPath = item.source.painterPath()
-                # if painterPath.contains(sourceP):
-                #     item.source.setAnchor(item, item.mapToScene(sourceP))
-                #
-                # painterPath = item.target.painterPath()
-                # if painterPath.contains(targetP):
-                #     item.target.setAnchor(item, item.mapToScene(targetP))
+                # yEd, differently from the node pos whose origin matches the TOP-LEFT corner,
+                # consider the center of the shape as original anchor point (0,0). So if the
+                # anchor point hs a negative X it's moved a bit on the left with respect to
+                # the center of the shape (the same applies for the Y axis)
+                sourceP = QPointF(float(path.attribute('sx')), float(path.attribute('sy')))
+                sourceP = item.source.pos() + sourceP
+                sourceP = QPointF(snapF(sourceP.x(), DiagramScene.GridSize), snapF(sourceP.y(), DiagramScene.GridSize))
+
+                targetP = QPointF(float(path.attribute('tx')), float(path.attribute('ty')))
+                targetP = item.target.pos() + targetP
+                targetP = QPointF(snapF(targetP.x(), DiagramScene.GridSize), snapF(targetP.y(), DiagramScene.GridSize))
+
+                painterPath = item.source.painterPath()
+                if painterPath.contains(item.source.mapFromScene(sourceP)):
+                    item.source.setAnchor(item, sourceP)
+
+                painterPath = item.target.painterPath()
+                if painterPath.contains(item.target.mapFromScene(targetP)):
+                    item.target.setAnchor(item, targetP)
 
                 item.source.addEdge(item)
                 item.target.addEdge(item)
