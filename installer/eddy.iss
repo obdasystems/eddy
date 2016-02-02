@@ -49,10 +49,8 @@ PrivilegesRequired=admin
 WindowVisible=no
 BackColor=clBlack
 BackColor2=clGray
-
-WizardSmallImageFile=../eddy\ui\artwork\WizB3SmallImage.bmp
-WizardImageFile=../eddy\ui\artwork\WizB3Image.bmp
-
+WizardSmallImageFile=../eddy\ui\artwork\eddy_wizard_small.bmp
+WizardImageFile=../eddy\ui\artwork\eddy_wizard.bmp
 UsePreviousAppDir=yes
 AlwaysShowDirOnReadyPage=yes
 AlwaysShowGroupOnReadyPage=yes
