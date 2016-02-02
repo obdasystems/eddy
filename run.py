@@ -39,12 +39,14 @@ import traceback
 from argparse import ArgumentParser
 
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QSpacerItem, QSizePolicy, QMessageBox
+from PyQt5.QtWidgets import QMessageBox
 
 from eddy import BUG_TRACKER
 from eddy.core.application import Eddy
 from eddy.core.datatypes import Platform
-from eddy.ui import images_rc ## DO NOT REMOVE
+
+# noinspection PyUnresolvedReferences
+from eddy.ui import images_rc
 from eddy.ui.splash import SplashScreen
 
 
@@ -65,20 +67,23 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
 
     else:
 
-        message = "This is embarrassing :(\n\n" \
-        "A critical error has just occurred." \
-        "Eddy will continue to work, however a reboot is highly recommended."
+        m1 = 'This is embarrassing ...\n\n' \
+             'A critical error has just occurred. ' \
+             'Eddy will continue to work, however a reboot is highly recommended.'
+
+        m2 = 'If the problem persists please <a href="{}">submit a bug report</a> ' \
+             'with detailed information.'.format(BUG_TRACKER)
+
+        m3 = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+
         box = QMessageBox()
-        box.setIconPixmap(QPixmap(':/icons/error'))
+        box.setIconPixmap(QPixmap(':/images/eddy-sad'))
         box.setWindowIcon(QIcon(':/images/eddy'))
         box.setWindowTitle('Unhandled exception!')
-        box.setText(message)
-        box.setInformativeText('Please <a href="{}">submit a bug report</a> with detailed information.'.format(BUG_TRACKER))
-        box.setDetailedText(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+        box.setText(m1)
+        box.setInformativeText(m2)
+        box.setDetailedText(m3)
         box.setStandardButtons(QMessageBox.Close)
-        S = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        L = box.layout()
-        L.addItem(S, L.rowCount(), 0, 1, L.columnCount())
         box.exec_()
 
 
@@ -109,13 +114,24 @@ def main():
         """
         return application.init()
 
-    global app
-
     sys.excepthook = base_except_hook
+
+    global app
     app = Eddy(sys.argv)
-    func = init_no_splash if options.nosplash or Platform.identify() is Platform.Linux else init
-    window = func(app)
+
+    if options.nosplash or Platform.identify() is Platform.Linux:
+        # Here we inizialize the application without displaying the splashscreen. The splashscreen is
+        # hidden if the user decides not to show it using the --nosplash command argument, or if Eddy
+        # is running under the Linux OS: there is a known limitation in Qt5 which prevents from displaying
+        # a QLabel outside of a QMainWindow... hopefully this will be fixed one day.
+        window = init_no_splash(app)
+    else:
+        # Normal application initialization using the splashscreen.
+        window = init(app)
+
     window.show()
+
+    # Enter app main loop.
     sys.exit(app.exec_())
 
 

@@ -47,6 +47,7 @@
 </qresource>
 <qresource prefix="/images">
     <file alias="eddy">artwork/eddy.png</file>
+    <file alias="eddy-sad">artwork/eddy_sad.png</file>
     <file alias="splash">artwork/splash.png</file>
 </qresource>
 </RCC>
