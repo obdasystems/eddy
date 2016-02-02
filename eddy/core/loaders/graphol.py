@@ -278,6 +278,7 @@ class GrapholLoader(AbstractLoader):
         """
         item = self.buildGenericEdge(Item.InclusionEdge, edge)
         item.complete = bool(int(edge.attribute('complete', '0')))
+        item.updateEdge()
         return item
 
     def buildInputEdge(self, edge):
@@ -288,6 +289,7 @@ class GrapholLoader(AbstractLoader):
         """
         item = self.buildGenericEdge(Item.InputEdge, edge)
         item.functional = bool(int(edge.attribute('functional', '0')))
+        item.updateEdge()
         return item
 
     def buildInstanceOfEdge(self, edge):
