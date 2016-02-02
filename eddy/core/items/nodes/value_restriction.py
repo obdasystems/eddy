@@ -408,55 +408,6 @@ class ValueRestrictionNode(AbstractResizableNode):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   IMPORT / EXPORT                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def toGraphol(self, document):
-        """
-        Export the current item in Graphol format.
-        :type document: QDomDocument
-        :rtype: QDomElement
-        """
-        pos1 = self.pos()
-        pos2 = self.mapToScene(self.textPos())
-
-        # create the root element for this node
-        node = document.createElement('node')
-        node.setAttribute('id', self.id)
-        node.setAttribute('type', 'value-restriction')
-        node.setAttribute('color', self.brush.color().name())
-
-        # add node attributes
-        url = document.createElement('data:url')
-        url.appendChild(document.createTextNode(self.url))
-        description = document.createElement('data:description')
-        description.appendChild(document.createTextNode(self.description))
-
-        # add the shape geometry
-        geometry = document.createElement('shape:geometry')
-        geometry.setAttribute('height', self.height())
-        geometry.setAttribute('width', self.width())
-        geometry.setAttribute('x', pos1.x())
-        geometry.setAttribute('y', pos1.y())
-
-        # add the shape label
-        label = document.createElement('shape:label')
-        label.setAttribute('height', self.label.height())
-        label.setAttribute('width', self.label.width())
-        label.setAttribute('x', pos2.x())
-        label.setAttribute('y', pos2.y())
-        label.appendChild(document.createTextNode(self.label.text()))
-
-        node.appendChild(url)
-        node.appendChild(description)
-        node.appendChild(geometry)
-        node.appendChild(label)
-
-        return node
-
-    ####################################################################################################################
-    #                                                                                                                  #
     #   GEOMETRY                                                                                                       #
     #                                                                                                                  #
     ####################################################################################################################

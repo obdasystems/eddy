@@ -36,7 +36,7 @@ from abc import ABCMeta, abstractmethod
 
 from PyQt5.QtCore import Qt, QPointF, QLineF, QRectF
 from PyQt5.QtGui import QColor, QPen, QPolygonF, QPainterPath
-from PyQt5.QtWidgets import QGraphicsItem, QMenu
+from PyQt5.QtWidgets import QGraphicsItem
 
 from eddy.core.commands import CommandEdgeBreakpointAdd, CommandEdgeBreakpointMove, CommandEdgeAnchorMove
 from eddy.core.datatypes import DiagramMode

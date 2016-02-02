@@ -121,38 +121,6 @@ class InputEdge(AbstractEdge):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   IMPORT / EXPORT                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def toGraphol(self, document):
-        """
-        Export the current item in Graphol format.
-        :type document: QDomDocument
-        :rtype: QDomElement
-        """
-        ## ROOT ELEMENT
-        edge = document.createElement('edge')
-        edge.setAttribute('source', self.source.id)
-        edge.setAttribute('target', self.target.id)
-        edge.setAttribute('id', self.id)
-        edge.setAttribute('type', 'input')
-        edge.setAttribute('functional', int(self.functional))
-
-        ## LINE GEOMETRY
-        source = self.source.anchor(self)
-        target = self.target.anchor(self)
-
-        for p in [source] + self.breakpoints + [target]:
-            point = document.createElement('line:point')
-            point.setAttribute('x', p.x())
-            point.setAttribute('y', p.y())
-            edge.appendChild(point)
-
-        return edge
-
-    ####################################################################################################################
-    #                                                                                                                  #
     #   GEOMETRY                                                                                                       #
     #                                                                                                                  #
     ####################################################################################################################

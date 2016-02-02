@@ -34,14 +34,15 @@
 
 import jnius
 
-from PyQt5.QtCore import QObject, pyqtSlot, pyqtSignal
+from PyQt5.QtCore import pyqtSlot, pyqtSignal
 
 from eddy.core.datatypes import Special, Item, Identity, Restriction, OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
+from eddy.core.exporters.common import AbstractExporter
 from eddy.core.functions import clamp, OWLText, isEmpty, OWLAnnotationText
 
 
-class OWLExporter(QObject):
+class OWLExporter(AbstractExporter):
     """
     This class can be used to export Graphol diagrams into OWL ontologies.
     Due to the deep usage of Java OWL api the worker method of this class should be run in a separate thread.
@@ -62,9 +63,8 @@ class OWLExporter(QObject):
         :type ontoIRI: str
         :type ontoPrefix: str
         """
-        super().__init__()
+        super().__init__(scene)
 
-        self.scene = scene
         self.ontoIRI = ontoIRI
         self.ontoPrefix = ontoPrefix
 

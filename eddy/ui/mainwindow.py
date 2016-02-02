@@ -38,7 +38,7 @@ import sys
 import webbrowser
 
 from collections import OrderedDict
-from traceback import format_exc, format_exception
+from traceback import format_exception
 
 from PyQt5.QtCore import Qt, QSettings, QSizeF, QRectF
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
@@ -55,6 +55,7 @@ from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelEdit, Comma
 from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeSetZValue, CommandNodeSetBrush
 from eddy.core.datatypes import Color, File, DiagramMode, Filetype
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
+from eddy.core.exporters import GrapholExporter
 from eddy.core.functions import connect, disconnect
 from eddy.core.functions import expandPath, coloredIcon, shadedIcon, snapF, rCut, lCut
 from eddy.core.items import Item
@@ -1962,8 +1963,7 @@ class MainWindow(QMainWindow):
             return dialog.selectedFiles()[0]
         return None
 
-    @staticmethod
-    def saveSceneToGrapholFile(scene, filepath):
+    def saveSceneToGrapholFile(self, scene, filepath):
         """
         Save the given scene to the corresponding given filepath.
         Will return True if the save has been performed, False otherwise.
@@ -1971,18 +1971,20 @@ class MainWindow(QMainWindow):
         :type filepath: str
         :rtype: bool
         """
+        worker = GrapholExporter(scene=scene)
+
         try:
-            document = scene.toGraphol()
-            scene.document.write(document.toString(4), filepath)
-        except Exception:
-            box = QMessageBox()
-            box.setIconPixmap(QPixmap(':/icons/warning'))
-            box.setWindowIcon(QIcon(':/images/eddy'))
-            box.setWindowTitle('Save FAILED')
-            box.setText('Could not export diagram!')
-            box.setDetailedText(format_exc())
-            box.setStandardButtons(QMessageBox.Ok)
-            box.exec_()
+            worker.run()
+            scene.document.write(worker.export(indent=2), filepath)
+        except Exception as e:
+            msgbox = QMessageBox(self)
+            msgbox.setIconPixmap(QPixmap(':/icons/error'))
+            msgbox.setWindowIcon(QIcon(':/images/eddy'))
+            msgbox.setWindowTitle('Save failed!')
+            msgbox.setStandardButtons(QMessageBox.Close)
+            msgbox.setText('Failed to save document to {}!'.format(os.path.basename(filepath)))
+            msgbox.setDetailedText(''.join(format_exception(type(e), e, e.__traceback__)))
+            msgbox.exec_()
             return False
         else:
             return True

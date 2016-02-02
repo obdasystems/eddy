@@ -38,7 +38,6 @@ from PyQt5.QtCore import Qt, QPointF, QSettings, QRectF, pyqtSignal
 from PyQt5.QtGui import QPen, QColor
 from PyQt5.QtPrintSupport import QPrinter
 from PyQt5.QtWidgets import QGraphicsScene, QUndoStack
-from PyQt5.QtXml import QDomDocument
 
 from eddy.core.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
 from eddy.core.datatypes import DiagramMode, DistinctList, File, Item, Special
@@ -370,44 +369,6 @@ class DiagramScene(QGraphicsScene):
             painter.setPen(DiagramScene.GridPen)
             painter.drawPoints(*(QPointF(x, y) for x in rangeF(startX, rect.right(), DiagramScene.GridSize) \
                                                  for y in rangeF(startY, rect.bottom(), DiagramScene.GridSize)))
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   EXPORT                                                                                                         #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def toGraphol(self):
-        """
-        Export the current diagram in Graphol format.
-        :rtype: QDomDocument
-        """
-        doc = QDomDocument()
-        doc.appendChild(doc.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8" standalone="no"'))
-
-        root = doc.createElement('graphol')
-        root.setAttribute('xmlns', 'http://www.dis.uniroma1.it/~graphol/schema')
-        root.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
-        root.setAttribute('xmlns:data', 'http://www.dis.uniroma1.it/~graphol/schema/data')
-        root.setAttribute('xmlns:line', 'http://www.dis.uniroma1.it/~graphol/schema/line')
-        root.setAttribute('xmlns:shape', 'http://www.dis.uniroma1.it/~graphol/schema/shape')
-        root.setAttribute('xsi:schemaLocation', 'http://www.dis.uniroma1.it/~graphol/schema '
-                                                'http://www.dis.uniroma1.it/~graphol/schema/graphol.xsd')
-
-        doc.appendChild(root)
-
-        graph = doc.createElement('graph')
-        graph.setAttribute('width', self.sceneRect().width())
-        graph.setAttribute('height', self.sceneRect().height())
-
-        for node in self.nodes():
-            graph.appendChild(node.toGraphol(doc))
-        for edge in self.edges():
-            graph.appendChild(edge.toGraphol(doc))
-
-        root.appendChild(graph)
-
-        return doc
 
     ####################################################################################################################
     #                                                                                                                  #

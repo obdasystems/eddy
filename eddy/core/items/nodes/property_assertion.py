@@ -172,45 +172,6 @@ class PropertyAssertionNode(AbstractNode):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def toGraphol(self, document):
-        """
-        Export the current item in Graphol format.
-        :type document: QDomDocument
-        :rtype: QDomElement
-        """
-        pos = self.pos()
-
-        # create the root element for this node
-        node = document.createElement('node')
-        node.setAttribute('id', self.id)
-        node.setAttribute('type', 'property-assertion')
-        node.setAttribute('inputs', ','.join(self.inputs))
-
-        # add node attributes
-        url = document.createElement('data:url')
-        url.appendChild(document.createTextNode(self.url))
-        description = document.createElement('data:description')
-        description.appendChild(document.createTextNode(self.description))
-
-        # add the shape geometry
-        geometry = document.createElement('shape:geometry')
-        geometry.setAttribute('height', self.height())
-        geometry.setAttribute('width', self.width())
-        geometry.setAttribute('x', pos.x())
-        geometry.setAttribute('y', pos.y())
-
-        node.appendChild(url)
-        node.appendChild(description)
-        node.appendChild(geometry)
-
-        return node
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   IMPORT / EXPORT                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
     def boundingRect(self):
         """
         Returns the shape bounding rectangle.

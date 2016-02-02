@@ -32,5 +32,42 @@
 ##########################################################################
 
 
-from eddy.core.exporters.graphol import GrapholExporter
-from eddy.core.exporters.owl import OWLExporter
+from abc import abstractmethod, ABCMeta
+
+from PyQt5.QtCore import QObject
+
+
+class AbstractExporter(QObject):
+    """
+    Base class for DiagramScene exporters.
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, scene):
+        """
+        Initialize the DiagramScene exporter.
+        :type scene: DiagramScene
+        """
+        super().__init__()
+        self.scene = scene
+
+    @abstractmethod
+    def export(self, *args, **kwargs):
+        """
+        Export the coverted ontology using the provided syntax.
+        :rtype: str
+        """
+        pass
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   ONTOLOGY GENERATION                                                                                            #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @abstractmethod
+    def run(self):
+        """
+        Perform DiagramScene export.
+        """
+        pass
