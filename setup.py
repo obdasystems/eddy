@@ -273,8 +273,6 @@ if sys.platform.startswith('darwin'):
             for root, dirs, dir_files in os.walk(self.binDir):
                 files.extend([os.path.join(root, f).replace(self.binDir + '/', '') for f in dir_files])
 
-            print('\n'.join(files))
-
             for filename in files:
 
                 # Skip ZIP files since install_name_tool can't handle them.
