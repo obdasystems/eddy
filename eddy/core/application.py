@@ -45,10 +45,13 @@ from eddy.core.functions.system import expandPath
 ##         BEGIN JAVA VIRTUAL MACHINE SETUP           ##
 ########################################################
 
-os.environ['JAVA_HOME'] = expandPath('@resources/java/')
+
+if os.path.isdir(expandPath('@resources/java/')):
+    # if we are shipping the jvm then set the JAVA_HOME
+    os.environ['JAVA_HOME'] = expandPath('@resources/java/')
 
 if Platform.identify() is Platform.Windows:
-    # on windows we must ass the jvm.dll to system path
+    # on windows we must add the jvm.dll to system path
     path = os.getenv('Path', '')
     path = path.split(os.pathsep)
     path.insert(0, expandPath('@resources/java/bin/client'))
