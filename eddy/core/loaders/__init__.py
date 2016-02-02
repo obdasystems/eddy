@@ -33,3 +33,4 @@
 
 
 from eddy.core.loaders.graphml import GraphmlLoader
+from eddy.core.loaders.graphol import GrapholLoader
