@@ -48,8 +48,8 @@ dependencies:
   override:
     - pip install -U pip
     - pip install -r build-requirements.txt
-    - pip install -r requirements.txt
     - pip install -r test-requirements.txt
+    - pip install -e git+https://github.com/danielepantaleone/pyjnius.git@i386#egg=pyjnius
 
 
 ## Customize test suite
