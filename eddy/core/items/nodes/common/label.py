@@ -279,6 +279,7 @@ class Label(LabelItem):
 
             # Go back idle so we can perform another operation.
             scene.setMode(DiagramMode.Idle)
+            scene.updated.emit()
 
         super().focusOutEvent(focusEvent)
 
