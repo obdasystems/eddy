@@ -50,7 +50,7 @@ class OpenFile(QFileDialog):
         super().__init__(parent)
         self.setAcceptMode(QFileDialog.AcceptOpen)
         self.setDirectory(expandPath('~') if not path else expandPath(path))
-        self.setFileMode(QFileDialog.AnyFile)
+        self.setFileMode(QFileDialog.ExistingFile)
         self.setViewMode(QFileDialog.Detail)
 
 
@@ -67,5 +67,5 @@ class SaveFile(QFileDialog):
         super().__init__(parent)
         self.setAcceptMode(QFileDialog.AcceptSave)
         self.setDirectory(expandPath('~') if not path else expandPath(path))
-        self.setFileMode(QFileDialog.AnyFile)
+        self.setFileMode(QFileDialog.ExistingFile)
         self.setViewMode(QFileDialog.Detail)
