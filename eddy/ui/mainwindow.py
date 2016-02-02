@@ -40,7 +40,7 @@ from traceback import format_exception
 
 from PyQt5.QtCore import Qt, QSettings, QSizeF, QRectF
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter, QPageSize
+from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter, QPageSize, QCursor
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDialog, QStyle
 from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup
@@ -51,7 +51,7 @@ from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandEdgeIn
 from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap, CommandRefactor
 from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelEdit, CommandEdgeBreakpointDel
 from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeSetZValue, CommandNodeSetBrush
-from eddy.core.datatypes import Color, File, DiagramMode, Filetype
+from eddy.core.datatypes import Color, File, DiagramMode, Filetype, Platform
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
 from eddy.core.exporters import GrapholExporter
 from eddy.core.functions import connect, disconnect
@@ -689,6 +689,7 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, self.dockNavigator)
         self.addDockWidget(Qt.RightDockWidgetArea, self.dockOverview)
         self.setCentralWidget(self.mdi)
+        self.setAcceptDrops(True)
         self.setMinimumSize(MainWindow.MinWidth, MainWindow.MinHeight)
         self.setWindowIcon(QIcon(':/images/eddy'))
         self.setWindowTitle()
@@ -1759,6 +1760,67 @@ class MainWindow(QMainWindow):
             if self.abortQuit:
                 closeEvent.ignore()
                 break
+
+    def dragEnterEvent(self, dragEvent):
+        """
+        Executed when a drag is in progress and the mouse enter this widget.
+        :type dragEvent: QDragEnterEvent
+        """
+        if dragEvent.mimeData().hasUrls():
+            self.setCursor(QCursor(Qt.DragCopyCursor))
+            dragEvent.setDropAction(Qt.CopyAction)
+            dragEvent.accept()
+        else:
+            dragEvent.ignore()
+
+    def dragMoveEvent(self, dragEvent):
+        """
+        Executed when a drag is in progress and the mouse moves onto this widget.
+        :type dragEvent: QDragMoveEvent
+        """
+        dragEvent.accept()
+
+    def dragLeaveEvent(self, dragEvent):
+        """
+        Executed when a drag is in progress and the mouse leave this widget.
+        :type dragEvent: QDragEnterEvent
+        """
+        self.unsetCursor()
+
+    def dropEvent(self, dropEvent):
+        """
+        Executed when the drag is dropped on this widget.
+        :type dropEvent: QDropEvent
+        """
+        if dropEvent.mimeData().hasUrls():
+
+            self.unsetCursor()
+            dropEvent.setDropAction(Qt.CopyAction)
+
+            platform = Platform.identify()
+            for url in dropEvent.mimeData().urls():
+
+                path = url.path()
+                if platform is Platform.Windows:
+                    # On Windows the absolute path returned for each URL has a
+                    # leading slash: this obviously is not correct on windows
+                    # platform when absolute url have the form C:\\Programs\\... (Qt bug?)
+                    path = path.lstrip('/').lstrip('\\')
+
+                if os.path.isfile(path) and path.endswith(Filetype.Graphol.suffix):
+                    # If the file exists and is a Graphol file then open it!
+                    if not self.focusDocument(path):
+                        scene = self.createSceneFromGrapholFile(path)
+                        if scene:
+                            mainview = self.createView(scene)
+                            subwindow = self.createSubWindow(mainview)
+                            subwindow.showMaximized()
+                            self.mdi.setActiveSubWindow(subwindow)
+                            self.mdi.update()
+
+            dropEvent.accept()
+        else:
+            dropEvent.ignore()
 
     def keyReleaseEvent(self, keyEvent):
         """
