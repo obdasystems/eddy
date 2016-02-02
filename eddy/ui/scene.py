@@ -40,7 +40,7 @@ from PyQt5.QtPrintSupport import QPrinter
 from PyQt5.QtWidgets import QGraphicsScene, QUndoStack
 
 from eddy.core.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
-from eddy.core.datatypes import DiagramMode, DistinctList, File, Item, Special
+from eddy.core.datatypes import DiagramMode, DistinctList, File, Item
 from eddy.core.functions import expandPath, rangeF, snapF
 from eddy.core.items.edges import InputEdge, InclusionEdge
 from eddy.core.items.nodes import ConceptNode, ComplementNode, RoleChainNode, RoleInverseNode
@@ -486,7 +486,8 @@ class DiagramScene(QGraphicsScene):
         node1.setPos(QPointF(x1, source.pos().y()))
         node2 = ComplementNode(scene=self)
         node2.setPos(QPointF(x2, source.pos().y()))
-        node3 = ConceptNode(scene=self, special=Special.Top)
+        node3 = ConceptNode(scene=self)
+        node3.setText('TOP')
         node3.setPos(QPointF(x3, source.pos().y()))
         edge1 = InputEdge(scene=self, source=source, target=node1)
         edge2 = InputEdge(scene=self, source=node1, target=node2)
@@ -576,8 +577,10 @@ class DiagramScene(QGraphicsScene):
         x2 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize, snap=True)
 
         node1 = DomainRestrictionNode(scene=self)
+        node1.setText('self')
         node1.setPos(QPointF(x1, source.pos().y()))
-        node2 = ConceptNode(scene=self, special=Special.Top)
+        node2 = ConceptNode(scene=self)
+        node2.setText('TOP')
         node2.setPos(QPointF(x2, source.pos().y()))
         edge1 = InputEdge(scene=self, source=source, target=node1)
         edge2 = InclusionEdge(scene=self, source=node2, target=node1)
