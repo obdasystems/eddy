@@ -43,6 +43,7 @@ from PyQt5.QtWidgets import QSpacerItem, QSizePolicy, QMessageBox
 
 from eddy import BUG_TRACKER
 from eddy.core.application import Eddy
+from eddy.core.datatypes import Platform
 from eddy.ui import images_rc ## DO NOT REMOVE
 from eddy.ui.splash import SplashScreen
 
@@ -112,7 +113,7 @@ def main():
 
     sys.excepthook = base_except_hook
     app = Eddy(sys.argv)
-    func = init_no_splash if options.nosplash or sys.platform.startswith('linux') else init
+    func = init_no_splash if options.nosplash or Platform.identify() is Platform.Linux else init
     window = func(app)
     window.show()
     sys.exit(app.exec_())
