@@ -61,7 +61,7 @@ from eddy.core.items import RoleInverseNode, DisjointUnionNode, DatatypeRestrict
 from eddy.core.items import UnionNode, EnumerationNode, ComplementNode, RoleChainNode, IntersectionNode
 from eddy.core.loaders import GraphmlLoader, GrapholLoader
 from eddy.core.utils import Clipboard
-from eddy.ui.dialogs import About, OpenFile, SaveFile
+from eddy.ui.dialogs import About, OpenFile, SaveFile, BusyProgressDialog
 from eddy.ui.dock import SidebarWidget, Navigator, Overview, Palette
 from eddy.ui.forms import CardinalityRestrictionForm, ValueRestrictionForm
 from eddy.ui.forms import OWLTranslationForm, LiteralForm, RenameForm
@@ -1057,53 +1057,55 @@ class MainWindow(QMainWindow):
             filepath = dialog.selectedFiles()[0]
             loader = GraphmlLoader(mainwindow=self, filepath=filepath)
 
-            try:
-                loader.run()
-            except Exception as e:
-                msgbox = QMessageBox(self)
-                msgbox.setIconPixmap(QPixmap(':/icons/error'))
-                msgbox.setWindowIcon(QIcon(':/images/eddy'))
-                msgbox.setWindowTitle('Import failed!')
-                msgbox.setStandardButtons(QMessageBox.Close)
-                msgbox.setText('Failed to import {}!'.format(os.path.basename(filepath)))
-                msgbox.setDetailedText(''.join(format_exception(type(e), e, e.__traceback__)))
-                msgbox.exec_()
-            else:
-                scene = loader.scene
-                scene.setMode(DiagramMode.Idle)
-                mainview = self.createView(scene)
-                subwindow = self.createSubWindow(mainview)
-                subwindow.showMaximized()
-                self.mdi.setActiveSubWindow(subwindow)
-                self.mdi.update()
-            finally:
+            with BusyProgressDialog('Importing {}'.format(os.path.basename(filepath)), self):
 
-                if loader.errors:
-
-                    # If some errors have been generated during the import process, display
-                    # them into a popup so the user can check whether the problem is in the
-                    # .graphml document ot Eddy is not handling the import properly.
-                    m1 = 'Document {} has been imported! However some errors ({}) have been generated ' \
-                         'during the import process. You can inspect detailed information by expanding the ' \
-                         'box below.'.format(os.path.basename(filepath), len(loader.errors))
-
-                    m2 = 'If needed, <a href="{}">submit a bug report</a> with detailed information.'.format(BUG_TRACKER)
-
-                    parts = []
-                    for k, v in enumerate(loader.errors, start=1):
-                        parts.append('{}) {}'.format(k, ''.join(format_exception(type(v), v, v.__traceback__))))
-
-                    m3 = '\n\n'.join(parts)
-
+                try:
+                    loader.run()
+                except Exception as e:
                     msgbox = QMessageBox(self)
-                    msgbox.setIconPixmap(QPixmap(':/icons/warning'))
+                    msgbox.setIconPixmap(QPixmap(':/icons/error'))
                     msgbox.setWindowIcon(QIcon(':/images/eddy'))
-                    msgbox.setWindowTitle('Partial document import!')
+                    msgbox.setWindowTitle('Import failed!')
                     msgbox.setStandardButtons(QMessageBox.Close)
-                    msgbox.setText(m1)
-                    msgbox.setInformativeText(m2)
-                    msgbox.setDetailedText(m3)
+                    msgbox.setText('Failed to import {}!'.format(os.path.basename(filepath)))
+                    msgbox.setDetailedText(''.join(format_exception(type(e), e, e.__traceback__)))
                     msgbox.exec_()
+                else:
+                    scene = loader.scene
+                    scene.setMode(DiagramMode.Idle)
+                    mainview = self.createView(scene)
+                    subwindow = self.createSubWindow(mainview)
+                    subwindow.showMaximized()
+                    self.mdi.setActiveSubWindow(subwindow)
+                    self.mdi.update()
+
+
+            if loader.errors:
+
+                # If some errors have been generated during the import process, display
+                # them into a popup so the user can check whether the problem is in the
+                # .graphml document ot Eddy is not handling the import properly.
+                m1 = 'Document {} has been imported! However some errors ({}) have been generated ' \
+                     'during the import process. You can inspect detailed information by expanding the ' \
+                     'box below.'.format(os.path.basename(filepath), len(loader.errors))
+
+                m2 = 'If needed, <a href="{}">submit a bug report</a> with detailed information.'.format(BUG_TRACKER)
+
+                parts = []
+                for k, v in enumerate(loader.errors, start=1):
+                    parts.append('{}) {}'.format(k, ''.join(format_exception(type(v), v, v.__traceback__))))
+
+                m3 = '\n\n'.join(parts)
+
+                msgbox = QMessageBox(self)
+                msgbox.setIconPixmap(QPixmap(':/icons/warning'))
+                msgbox.setWindowIcon(QIcon(':/images/eddy'))
+                msgbox.setWindowTitle('Partial document import!')
+                msgbox.setStandardButtons(QMessageBox.Close)
+                msgbox.setText(m1)
+                msgbox.setInformativeText(m2)
+                msgbox.setDetailedText(m3)
+                msgbox.exec_()
 
     @pyqtSlot()
     def itemCut(self):

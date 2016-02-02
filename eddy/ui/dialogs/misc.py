@@ -32,9 +32,48 @@
 ##########################################################################
 
 
-from eddy.ui.dialogs.about import About
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import  QIcon
+from PyQt5.QtWidgets import QDialog, QProgressBar, QVBoxLayout
 
-from eddy.ui.dialogs.files import OpenFile
-from eddy.ui.dialogs.files import SaveFile
 
-from eddy.ui.dialogs.misc import BusyProgressDialog
+class BusyProgressDialog(QDialog):
+    """
+    This class implements a dialog showing a busy progress bar.
+    """
+    def __init__(self, title='', parent=None):
+        """
+        Initialize the form dialog.
+        :type title: str
+        :type parent: QWidget
+        """
+        super().__init__(parent)
+        self.progressBar = QProgressBar(self)
+        self.progressBar.setAlignment(Qt.AlignHCenter)
+        self.progressBar.setRange(0, 0)
+        self.progressBar.setFixedSize(300, 30)
+        self.progressBar.setTextVisible(True)
+        self.progressBar.setFormat(title or 'Busy ...')
+        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout.addWidget(self.progressBar)
+        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowTitle(title or 'Busy ...')
+        self.setFixedSize(self.sizeHint())
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   CONTEXT MANAGER                                                                                                #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def __enter__(self):
+        """
+        Draw the dialog.
+        """
+        self.show()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """
+        Close the dialog.
+        """
+        self.close()
