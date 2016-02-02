@@ -49,7 +49,7 @@ dependencies:
     - pip install -U pip
     - pip install -r build-requirements.txt
     - pip install -r test-requirements.txt
-    - pip install -e git+https://github.com/danielepantaleone/pyjnius.git@i386#egg=pyjnius
+    - pip install -e git+https://github.com/danielepantaleone/pyjnius.git@i386#egg=pyjnius --exists-action i
 
 
 ## Customize test suite
