@@ -74,18 +74,21 @@ if sys.platform.startswith('darwin'):
     OPTS['EXEC_BASE'] = None
     OPTS['EXEC_NAME'] = APPNAME
     OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'ui', 'artwork', 'eddy.icns')
+    OPTS['FILE_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'ui', 'artwork', 'document.icns')
 elif sys.platform.startswith('win32'):
     OPTS['AS_TO_EXE'] = True
     OPTS['DIST_NAME'] = '{}-{}-{}-win{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
     OPTS['EXEC_BASE'] = 'Win32GUI'
     OPTS['EXEC_NAME'] = '{}.exe'.format(APPNAME)
     OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'ui', 'artwork', 'eddy.ico')
+    OPTS['FILE_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'ui', 'artwork', 'document.ico')
 else:
     OPTS['AS_TO_EXE'] = None
     OPTS['DIST_NAME'] = '{}-{}-{}-linux{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
     OPTS['EXEC_BASE'] = None
     OPTS['EXEC_NAME'] = APPNAME
     OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'ui', 'artwork', 'eddy.png')
+    OPTS['FILE_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'ui', 'artwork', 'document.png')
 
 
 OPTS['BUILD_PATH'] = os.path.join(OPTS['BUILD_DIR'], OPTS['DIST_NAME'])
@@ -412,6 +415,9 @@ if sys.platform.startswith('darwin'):
             if self.iconfile:
                 self.copy_file(self.iconfile, os.path.join(self.resourcesDir, 'icon.icns'))
 
+            if os.path.isfile(OPTS['FILE_ICON']):
+                self.copy_file(OPTS['FILE_ICON'], os.path.join(self.resourcesDir, os.path.basename(OPTS['FILE_ICON'])))
+
             for framework in self.include_frameworks:
                 self.copy_tree(framework, os.path.join(self.frameworksDir, os.path.basename(framework)))
 
@@ -457,16 +463,19 @@ if sys.platform.startswith('darwin'):
                 'CFBundleExecutable': self.bundle_executable,
 
                 'CFBundleDocumentTypes': [{
-                    'CFBundleTypeName': 'Graphol File',
+                    'CFBundleTypeExtensions': ['graphol'],
+                    'CFBundleTypeName': 'Graphol document (.graphol)',
                     'CFBundleTypeRole': 'Editor',
-                    'LSItemContentTypes': ['it.uniroma1.graphol'],
+                    'CFBundleTypeIconFile': 'document.icns',
                     'LSHandlerRank': 'Owner',
+                    'LSItemContentTypes': ['it.uniroma1.graphol'],
                 }],
 
                 'UTExportedTypeDeclarations': [{
                     'UTTypeConformsTo': ['public.data'],
-                    'UTTypeDescription': 'Graphol File',
+                    'UTTypeDescription': 'Graphol document (.graphol)',
                     'UTTypeIdentifier': 'it.uniroma1.graphol',
+                    'UTTypeIconFile': 'document.icns',
                     'UTTypeTagSpecification': {
                         'public.filename-extension': 'graphol',
                         'public.mime-type': 'application/octet-stream',
@@ -593,18 +602,18 @@ includes = [
     'PyQt5.QtDBus',
     'PyQt5.QtGui',
     'PyQt5.QtPrintSupport',
+    'from PyQt5.QtNetwork',
     'PyQt5.QtSvg',
     'PyQt5.QtWidgets',
     'PyQt5.QtXml',
 ]
 
 include_files = [
+    (OPTS['FILE_ICON'], os.path.basename(OPTS['FILE_ICON'])),
     (os.path.join(OPTS['QT_PLUGINS_PATH'], 'printsupport'), 'printsupport'),
     ('docs', 'docs'),
     ('examples', 'examples'),
     ('resources', 'resources'),
-    ('eddy/ui/artwork/document.ico', 'document.ico'),
-    ('eddy/ui/artwork/document.png', 'document.png'),
     ('eddy/ui/styles/light.qss', 'ui/styles/light.qss'),
     ('LICENSE', 'LICENSE'),
     ('CONTRIBUTING.md', 'CONTRIBUTING.md'),

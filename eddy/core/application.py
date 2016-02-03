@@ -44,6 +44,7 @@ from PyQt5.QtWidgets import QApplication
 from eddy.core.datatypes import Platform, Filetype
 from eddy.core.functions import isEmpty, expandPath, connect, disconnect
 
+
 ########################################################
 ##         BEGIN JAVA VIRTUAL MACHINE SETUP           ##
 ########################################################
@@ -99,8 +100,6 @@ class Eddy(QApplication):
         options, args = parser.parse_known_args(args=argv)
 
         self._id = '60119D28-5488-4663-879E-34FCD9C5C38C'
-        self._activationWindow = None
-        self._activateOnMessage = False
         self._localServer = None
         self._inSocket = None
         self._inStream = None
@@ -108,6 +107,7 @@ class Eddy(QApplication):
         self._outSocket.connectToServer(self._id)
         self._outStream = None
         self._isRunning = self._outSocket.waitForConnected()
+        self._mainWindow = None
 
         # We do not initialize a new instance of Eddy if there is a process running
         # and we are not executing the tests suite: we'll create a socket instead so we can
@@ -159,7 +159,7 @@ class Eddy(QApplication):
                 ])
 
             # Create the main window.
-            self.setActivationWindow(activationWindow=MainWindow(), activateOnMessage=True)
+            self._mainWindow = MainWindow()
 
             # Close the splashscreen.
             if self._splashScreen:
@@ -167,8 +167,7 @@ class Eddy(QApplication):
                 self._splashScreen.close()
 
             # Display the mainwindow.
-            window = self.activationWindow()
-            window.show()
+            self._mainWindow.show()
 
             if Platform.identify() is not Platform.Darwin:
                 # Perform document opening if files have been added to sys.argv. This is not
@@ -201,17 +200,17 @@ class Eddy(QApplication):
         """
         Activate the activation window.
         """
-        if self._activationWindow:
-            self._activationWindow.setWindowState((self._activationWindow.windowState() & ~Qt.WindowMinimized) | Qt.WindowActive)
-            self._activationWindow.activateWindow()
-            self._activationWindow.raise_()
+        if self._mainWindow:
+            self._mainWindow.setWindowState((self._mainWindow.windowState() & ~Qt.WindowMinimized) | Qt.WindowActive)
+            self._mainWindow.activateWindow()
+            self._mainWindow.raise_()
 
     def activationWindow(self):
         """
         Returns the reference to the window that needs to be activated when the process is already running.
         :type: MainWindow
         """
-        return self._activationWindow
+        return self._mainWindow
 
     def id(self):
         """
@@ -233,9 +232,9 @@ class Eddy(QApplication):
         :type filepath: str
         :rtype: bool
         """
-        if self._activationWindow:
+        if self._mainWindow:
             if not isEmpty(filepath) and os.path.isfile(filepath) and filepath.endswith(Filetype.Graphol.suffix):
-                self._activationWindow.openFile(filepath)
+                self._mainWindow.openFile(filepath)
                 return True
         return False
 
@@ -250,15 +249,6 @@ class Eddy(QApplication):
             self._outStream.flush()
             return self._outSocket.waitForBytesWritten()
         return False
-
-    def setActivationWindow(self, activationWindow, activateOnMessage=True):
-        """
-        Set the activation window.
-        :type activationWindow: MainWindow
-        :type activateOnMessage: bool
-        """
-        self._activationWindow = activationWindow
-        self._activateOnMessage = activateOnMessage
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -282,10 +272,7 @@ class Eddy(QApplication):
             self._inStream = QTextStream(self._inSocket)
             self._inStream.setCodec('UTF-8')
             connect(self._inSocket.readyRead, self.readyRead)
-
-            self._inSocket.readyRead.connect(self.readyRead)
-            if self._activateOnMessage:
-                self.activateWindow()
+            self.activateWindow()
 
     @pyqtSlot()
     def readyRead(self):
@@ -293,13 +280,9 @@ class Eddy(QApplication):
         Executed whenever we need to read a message.
         """
         while True:
-            # QTextStream.readLine() blocks so we don't loop indefinitely here.
             message = self._inStream.readLine()
-
-            # Exit the loop if we get an empty message.
             if isEmpty(message):
                 break
-
             self.messageReceived.emit(message)
 
     @pyqtSlot(str)

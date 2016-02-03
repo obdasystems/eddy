@@ -38,7 +38,7 @@ dependencies:
     - cd /builds/sip-4.17 && python configure.py
     - cd /builds/sip-4.17 && sudo make && sudo make install
     # Build PyQt5
-    - cd /builds/PyQt-gpl-5.5.1 && python configure.py --confirm-license --no-designer-plugin -e QtCore -e QtGui -e QtWidgets -e QtPrintSupport -e QtXml -e QtTest
+    - cd /builds/PyQt-gpl-5.5.1 && python configure.py --confirm-license --no-designer-plugin -e QtCore -e QtGui -e QtWidgets -e QtPrintSupport -e QtXml -e QtTest -e QtNetwork
     - cd /builds/PyQt-gpl-5.5.1 && sudo make && sudo make install
     # Install cx_Freeze
     - cd /builds && hg clone https://danielepantaleone@bitbucket.org/danielepantaleone/cx_freeze
