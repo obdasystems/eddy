@@ -90,6 +90,21 @@ class SplashScreen(QLabel):
 
     ####################################################################################################################
     #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @staticmethod
+    def wait(amount):
+        """
+        Sleep for the given amount of time.
+        :type amount: float
+        """
+        if amount > 0:
+            sleep(amount)
+
+    ####################################################################################################################
+    #                                                                                                                  #
     #   CONTEXT MANAGER                                                                                                #
     #                                                                                                                  #
     ####################################################################################################################
@@ -105,9 +120,7 @@ class SplashScreen(QLabel):
         Remove the splash screen from the screen.
         This will make sure that the splash screen is displayed for at least min_splash_time seconds.
         """
-        remaining = self.remaining
-        if remaining:
-            sleep(remaining)
+        self.wait(self.remaining)
         self.close()
 
     ####################################################################################################################

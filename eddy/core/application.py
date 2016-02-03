@@ -35,6 +35,8 @@
 import os
 import jnius_config
 
+from argparse import ArgumentParser
+
 from PyQt5.QtCore import QSettings, QEvent
 from PyQt5.QtWidgets import QApplication
 
@@ -88,32 +90,46 @@ class Eddy(QApplication):
         """
         super().__init__(argv)
 
-        with SplashScreen(min_splash_time=2):
+        parser = ArgumentParser()
+        parser.add_argument('--nosplash', dest='nosplash', action='store_true')
 
-            # Initialize application settings.
-            self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)
+        options, args = parser.parse_known_args(args=argv)
 
-            # Setup layout.
-            style = Style.forName(self.settings.value('appearance/style', 'light', str))
-            self.setStyle(style)
-            self.setStyleSheet(style.qss())
+        # Draw the splashscreen.
+        splash = None
+        if not options.nosplash:
+            splash = SplashScreen(min_splash_time=4)
+            splash.show()
 
-            # Initialize recent documents.
-            if not self.settings.contains('document/recent_documents'):
-                # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
-                # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
-                # container. So according to this we can't use an empty list as default value because PyQt5 needs
-                # to know the type of the contents added to the collection: we avoid this problem by placing
-                # the list of examples file in the recentDocumentList (only if there is no list defined already).
-                self.settings.setValue('document/recent_documents', [
-                    expandPath('@examples/Animals.graphol'),
-                    expandPath('@examples/Diet.graphol'),
-                    expandPath('@examples/Family.graphol'),
-                    expandPath('@examples/Pizza.graphol'),
-                ])
+        # Initialize application settings.
+        self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)
 
-            # Create the main window.
-            self.mainwindow = MainWindow()
+        # Setup layout.
+        style = Style.forName(self.settings.value('appearance/style', 'light', str))
+        self.setStyle(style)
+        self.setStyleSheet(style.qss())
+
+        # Initialize recent documents.
+        if not self.settings.contains('document/recent_documents'):
+            # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
+            # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
+            # container. So according to this we can't use an empty list as default value because PyQt5 needs
+            # to know the type of the contents added to the collection: we avoid this problem by placing
+            # the list of examples file in the recentDocumentList (only if there is no list defined already).
+            self.settings.setValue('document/recent_documents', [
+                expandPath('@examples/Animals.graphol'),
+                expandPath('@examples/Diet.graphol'),
+                expandPath('@examples/Family.graphol'),
+                expandPath('@examples/Pizza.graphol'),
+            ])
+
+        # Create the main window.
+        self.mainwindow = MainWindow()
+
+        # Close the splashscreen.
+        if splash:
+            splash.wait(splash.remaining)
+            splash.close()
 
         # Display the mainwindow.
         self.mainwindow.show()
