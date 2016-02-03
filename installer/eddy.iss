@@ -33,6 +33,7 @@ AlwaysShowGroupOnReadyPage=yes
 BackColor=clBlack
 BackColor2=clGray
 Compression=lzma/Ultra64
+ChangesAssociations=yes
 DefaultDirName={pf32}\{#EDDY_APPNAME}
 DefaultGroupName={#EDDY_APPNAME}
 DirExistsWarning=yes
@@ -81,3 +82,9 @@ Name: {app}\*; Type: filesandordirs
 
 [Run]
 Filename: {app}\{#EDDY_EXECUTABLE}; Description: Run {#EDDY_APPNAME}; Flags: postinstall nowait skipifsilent unchecked
+
+[Registry]
+Root: HKCR; Subkey: ".graphol"; ValueType: string; ValueName: ""; ValueData: "{#EDDY_APPNAME}"; Flags: uninsdeletevalue
+Root: HKCR; Subkey: "{#EDDY_APPNAME}"; ValueType: string; ValueName: ""; ValueData: "{#EDDY_APPNAME}"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "{#EDDY_APPNAME}\DefaultIcon";  ValueData: "{app}\document.ico,0";  ValueType: string;  ValueName: ""
+Root: HKCR; Subkey: "{#EDDY_APPNAME}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#EDDY_EXECUTABLE}"" ""%1"""
