@@ -602,7 +602,7 @@ includes = [
     'PyQt5.QtDBus',
     'PyQt5.QtGui',
     'PyQt5.QtPrintSupport',
-    'from PyQt5.QtNetwork',
+    'PyQt5.QtNetwork',
     'PyQt5.QtSvg',
     'PyQt5.QtWidgets',
     'PyQt5.QtXml',
