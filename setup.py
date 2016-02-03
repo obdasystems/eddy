@@ -41,7 +41,6 @@ import shutil
 import stat
 import subprocess
 import sys
-import yaml
 import zipfile
 
 from cx_Freeze import setup
@@ -235,6 +234,7 @@ echo "... bye!"
         """
         if sys.platform.startswith('win32'):
 
+            import yaml
             with open(os.path.join('installer', 'build.yaml'), 'r') as f:
                 config = yaml.load(f)
             if 'scripts' not in config:
