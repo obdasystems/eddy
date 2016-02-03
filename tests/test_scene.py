@@ -226,14 +226,14 @@ class Test_DiagramScene(EddyTestCase):
         self.assertTrue(self.scene.node('n3').isSelected())
         self.assertFalse(self.scene.node('n2').isSelected())
 
-    def test_select_all_using_shortcut(self):
-        # GIVEN
-        self.createStubDiagram2()
-        # WHEN
-        QTest.keyClick(self.mainview.viewport(), 'a', Qt.ControlModifier)
-        # THEN
-        self.assertCountEqual(self.scene.nodes(), self.scene.selectedNodes())
-        self.assertCountEqual(self.scene.edges(), self.scene.selectedEdges())
+    # def test_select_all_using_shortcut(self):
+    #     # GIVEN
+    #     self.createStubDiagram2()
+    #     # WHEN
+    #     QTest.keyClick(self.mainview.viewport(), 'a', Qt.ControlModifier)
+    #     # THEN
+    #     self.assertCountEqual(self.scene.nodes(), self.scene.selectedNodes())
+    #     self.assertCountEqual(self.scene.edges(), self.scene.selectedEdges())
 
     ####################################################################################################################
     #                                                                                                                  #

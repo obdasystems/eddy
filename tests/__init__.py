@@ -51,8 +51,8 @@ class EddyTestCase(unittest.TestCase):
         """
         Initialize test case environment.
         """
-        self.app = Eddy(['--nosplash'])
-        self.mainwindow = self.app.mainwindow
+        self.app = Eddy(['--nosplash', '--tests'])
+        self.mainwindow = self.app.activationWindow()
         self.mainwindow.activateWindow()
         QTest.qWaitForWindowActive(self.mainwindow)
 
