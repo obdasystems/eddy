@@ -40,7 +40,9 @@ from unittest.util import safe_repr
 from PyQt5.QtTest import QTest
 
 from eddy.core.application import Eddy
-from eddy.ui import images_rc ## DO NOT REMOVE
+
+# noinspection PyUnresolvedReferences
+from eddy.ui import images_rc
 
 
 # noinspection PyTypeChecker,PyCallByClass
@@ -51,8 +53,7 @@ class EddyTestCase(unittest.TestCase):
         Initialize test case environment.
         """
         self.app = Eddy(sys.argv)
-        self.mainwindow = self.app.init()
-        self.mainwindow.show()
+        self.mainwindow = self.app.mainwindow
         self.mainwindow.activateWindow()
         QTest.qWaitForWindowActive(self.mainwindow)
 
