@@ -34,6 +34,8 @@
 
 from eddy.ui.dialogs.about import About
 
+from eddy.ui.dialogs.license import License
+
 from eddy.ui.dialogs.files import OpenFile
 from eddy.ui.dialogs.files import SaveFile
 

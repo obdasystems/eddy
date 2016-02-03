@@ -61,7 +61,7 @@ from eddy.core.items import RoleInverseNode, DisjointUnionNode, DatatypeRestrict
 from eddy.core.items import UnionNode, EnumerationNode, ComplementNode, RoleChainNode, IntersectionNode
 from eddy.core.loaders import GraphmlLoader, GrapholLoader
 from eddy.core.utils import Clipboard
-from eddy.ui.dialogs import About, OpenFile, SaveFile, BusyProgressDialog
+from eddy.ui.dialogs import About, OpenFile, SaveFile, BusyProgressDialog, License
 from eddy.ui.dock import SidebarWidget, Navigator, Overview, Palette
 from eddy.ui.forms import CardinalityRestrictionForm, ValueRestrictionForm
 from eddy.ui.forms import OWLTranslationForm, LiteralForm, RenameForm
@@ -269,6 +269,10 @@ class MainWindow(QMainWindow):
 
         if platform is not Platform.Darwin:
             self.actionAbout.setIcon(self.iconHelp)
+
+        self.actionLicense = QAction('License', self)
+        self.actionLicense.setData(License)
+        connect(self.actionLicense.triggered, self.openDialog)
 
         self.actionSapienzaWeb = QAction('DIAG - Sapienza university', self)
         self.actionSapienzaWeb.setIcon(self.iconLink)
@@ -544,10 +548,8 @@ class MainWindow(QMainWindow):
         self.menuView.addAction(self.dockPalette.toggleViewAction())
 
         self.menuHelp.addAction(self.actionAbout)
-
-        if platform is not Platform.Darwin:
-            self.menuHelp.addSeparator()
-
+        self.menuHelp.addAction(self.actionLicense)
+        self.menuHelp.addSeparator()
         self.menuHelp.addAction(self.actionSapienzaWeb)
         self.menuHelp.addAction(self.actionGrapholWeb)
 
