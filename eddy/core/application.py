@@ -100,14 +100,15 @@ class Eddy(QApplication):
         options, args = parser.parse_known_args(args=argv)
 
         self._id = '60119D28-5488-4663-879E-34FCD9C5C38C'
-        self._localServer = None
         self._inSocket = None
         self._inStream = None
+        self._localServer = None
         self._outSocket = QLocalSocket()
         self._outSocket.connectToServer(self._id)
         self._outStream = None
         self._isRunning = self._outSocket.waitForConnected()
         self._mainWindow = None
+        self._pendingOpen = []
 
         # We do not initialize a new instance of Eddy if there is a process running
         # and we are not executing the tests suite: we'll create a socket instead so we can
@@ -169,7 +170,13 @@ class Eddy(QApplication):
             # Display the mainwindow.
             self._mainWindow.show()
 
-            if Platform.identify() is not Platform.Darwin:
+            if Platform.identify() is Platform.Darwin:
+                # On MacOS files being opened are handled as a QFileOpenEvent but since we don't
+                # have a Main Window initialized we store them locally and we open them here.
+                for filepath in self._pendingOpen:
+                    self.openFile(filepath)
+                self._pendingOpen = []
+            else:
                 # Perform document opening if files have been added to sys.argv. This is not
                 # executed on Mac OS since this is already handled as a QFileOpenEvent instance.
                 for filepath in argv:
@@ -187,7 +194,8 @@ class Eddy(QApplication):
         :type event: T <= QEvent | QFileOpenEvent
         """
         if event.type() == QEvent.FileOpen:
-            return self.openFile(event.file())
+            self._pendingOpen = [event.file()]
+            return True
         return super().event(event)
 
     ####################################################################################################################
