@@ -38,7 +38,7 @@ import jnius_config
 from PyQt5.QtCore import QSettings, QEvent
 from PyQt5.QtWidgets import QApplication
 
-from eddy.core.datatypes import Platform
+from eddy.core.datatypes import Platform, Filetype
 from eddy.core.functions import isEmpty, expandPath
 
 
@@ -121,7 +121,7 @@ class Eddy(QApplication):
         if Platform.identify() is not Platform.Darwin:
             # Perform document opening if files have been added to sys.argv. This is not
             # executed on Mac OS since this is already handled as a QFileOpenEvent instance.
-            for filepath in [x for x in argv if os.path.isfile(x)]:
+            for filepath in [x for x in argv if os.path.isfile(x) and x.endswith(Filetype.Graphol.suffix)]:
                 self.mainwindow.openFile(filepath)
 
     ####################################################################################################################
@@ -137,8 +137,7 @@ class Eddy(QApplication):
         """
         if event.type() == QEvent.FileOpen:
             filepath = event.file()
-            if not isEmpty(filepath) and os.path.isfile(filepath):
+            if not isEmpty(filepath) and os.path.isfile(filepath) and filepath.endswith(Filetype.Graphol.suffix):
                 self.mainwindow.openFile(path)
                 return True
-
         return super().event(event)
