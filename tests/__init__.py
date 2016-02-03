@@ -32,7 +32,6 @@
 ##########################################################################
 
 
-import sys
 import unittest
 
 from unittest.util import safe_repr
@@ -52,7 +51,7 @@ class EddyTestCase(unittest.TestCase):
         """
         Initialize test case environment.
         """
-        self.app = Eddy(sys.argv)
+        self.app = Eddy(['--nosplash'])
         self.mainwindow = self.app.mainwindow
         self.mainwindow.activateWindow()
         QTest.qWaitForWindowActive(self.mainwindow)
@@ -68,29 +67,29 @@ class EddyTestCase(unittest.TestCase):
     def assertDictHasKey(self, key, container, msg=None):
         """Check for a given key to be in the given dictionary."""
         if key not in container.keys():
-            standardMsg = '%s not found in %s' % (safe_repr(key), safe_repr(container))
+            standardMsg = '{} not found in {}'.format(safe_repr(key), safe_repr(container))
             self.fail(self._formatMessage(msg, standardMsg))
 
     def assertDictHasValue(self, value, container, msg=None):
         """Check for a given value to be in the given dictionary."""
         if value not in container.value():
-            standardMsg = '%s not found in %s' % (safe_repr(value), safe_repr(container))
+            standardMsg = '{} not found in {}'.format(safe_repr(value), safe_repr(container))
             self.fail(self._formatMessage(msg, standardMsg))
 
     def assertEmpty(self, container, msg=None):
         """Assert for a given container to be empty."""
         if len(container) != 0:
-            standardMsg = '%s is not empty: found %s elements' % (safe_repr(container), len(container))
+            standardMsg = '{} is not empty: found {} elements'.format(safe_repr(container), len(container))
             self.fail(self._formatMessage(msg, standardMsg))
 
     def assertLen(self, count, container, msg=None):
         """Check for a given container to have the specified length."""
         if len(container) != count:
-            standardMsg = 'found %s elements in %s: expecting %s' % (len(container), safe_repr(container), count)
+            standardMsg = 'found {} elements in {}: expecting {}'.format(len(container), safe_repr(container), count)
             self.fail(self._formatMessage(msg, standardMsg))
 
     def assertNotEmpty(self, container, msg=None):
         """Assert for a given container to be empty."""
         if len(container) == 0:
-            standardMsg = '%s unexpectedly empty: found %s elements' % (safe_repr(container), len(container))
+            standardMsg = '{} unexpectedly empty: found {} elements'.format(safe_repr(container), len(container))
             self.fail(self._formatMessage(msg, standardMsg))
