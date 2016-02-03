@@ -454,7 +454,25 @@ if sys.platform.startswith('darwin'):
                 'CFBundleInfoDictionaryVersion': '6.0',
                 'CFBundleDevelopmentRegion': 'English',
                 'CFBundleSpokenName': APPNAME,
-                'CFBundleExecutable': self.bundle_executable
+                'CFBundleExecutable': self.bundle_executable,
+
+                'CFBundleDocumentTypes': [{
+                    'CFBundleTypeName': 'Graphol File',
+                    'CFBundleTypeRole': 'Editor',
+                    'LSItemContentTypes': ['it.uniroma1.graphol'],
+                    'LSHandlerRank': 'Owner',
+                }],
+
+                'UTExportedTypeDeclarations': [{
+                    'UTTypeConformsTo': ['public.data'],
+                    'UTTypeDescription': 'Graphol File',
+                    'UTTypeIdentifier': 'it.uniroma1.graphol',
+                    'UTTypeTagSpecification': {
+                        'public.filename-extension': 'graphol',
+                        'public.mime-type': 'application/octet-stream',
+                    }
+                }]
+
             }
 
             plist = open(os.path.join(self.contentsDir, 'Info.plist'), 'wb')

@@ -36,18 +36,14 @@
 import sys
 import traceback
 
-from argparse import ArgumentParser
-
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QMessageBox
 
 from eddy import BUG_TRACKER
 from eddy.core.application import Eddy
-from eddy.core.datatypes import Platform
 
 # noinspection PyUnresolvedReferences
 from eddy.ui import images_rc
-from eddy.ui.splash import SplashScreen
 
 
 # main application reference
@@ -70,16 +66,14 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
         m1 = 'This is embarrassing ...\n\n' \
              'A critical error has just occurred. ' \
              'Eddy will continue to work, however a reboot is highly recommended.'
-
         m2 = 'If the problem persists please <a href="{}">submit a bug report</a> ' \
              'with detailed information.'.format(BUG_TRACKER)
-
         m3 = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
 
         box = QMessageBox()
         box.setIconPixmap(QPixmap(':/images/eddy-sad'))
         box.setWindowIcon(QIcon(':/images/eddy'))
-        box.setWindowTitle('Unhandled exception!')
+        box.setWindowTitle('Unhandled error!')
         box.setText(m1)
         box.setInformativeText(m2)
         box.setDetailedText(m3)
@@ -91,47 +85,9 @@ def main():
     """
     Application entry point.
     """
-    parser = ArgumentParser(description='parse Eddy\'s command line options')
-    parser.add_argument('--nosplash', dest='nosplash', action='store_true')
-
-    options, args = parser.parse_known_args()
-
-    def init(application):
-        """
-        Initialize the application using the splash screen.
-        :type application: Eddy
-        :rtype: MainWindow
-        """
-        with SplashScreen(min_splash_time=4):
-            mainwindow = application.init()
-        return mainwindow
-
-    def init_no_splash(application):
-        """
-        Initialize the application WITHOUT using the splash screen.
-        :type application: Eddy
-        :rtype: MainWindow
-        """
-        return application.init()
-
-    sys.excepthook = base_except_hook
-
     global app
+    sys.excepthook = base_except_hook
     app = Eddy(sys.argv)
-
-    if options.nosplash or Platform.identify() is Platform.Linux:
-        # Here we inizialize the application without displaying the splashscreen. The splashscreen is
-        # hidden if the user decides not to show it using the --nosplash command argument, or if Eddy
-        # is running under the Linux OS: there is a known limitation in Qt5 which prevents from displaying
-        # a QLabel outside of a QMainWindow... hopefully this will be fixed one day.
-        window = init_no_splash(app)
-    else:
-        # Normal application initialization using the splashscreen.
-        window = init(app)
-
-    window.show()
-
-    # Enter app main loop.
     sys.exit(app.exec_())
 
 

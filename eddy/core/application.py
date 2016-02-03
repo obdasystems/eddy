@@ -35,11 +35,12 @@
 import os
 import jnius_config
 
-from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QSettings, QEvent
 from PyQt5.QtWidgets import QApplication
 
 from eddy.core.datatypes import Platform
-from eddy.core.functions.system import expandPath
+from eddy.core.functions import isEmpty, expandPath
+
 
 ########################################################
 ##         BEGIN JAVA VIRTUAL MACHINE SETUP           ##
@@ -70,7 +71,9 @@ jnius_config.set_classpath(*classpath)
 ##          END JAVA VIRTUAL MACHINE SETUP            ##
 ########################################################
 
+
 from eddy.ui.mainwindow import MainWindow
+from eddy.ui.splash import SplashScreen
 from eddy.ui.styles import Style
 
 
@@ -78,48 +81,64 @@ class Eddy(QApplication):
     """
     This class implements the main Qt application.
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, argv):
         """
         Initialize Eddy.
+        :type argv: list
         """
-        super().__init__(*args, **kwargs)
-        self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)
+        super().__init__(argv)
 
-    def init(self):
+        with SplashScreen(min_splash_time=2):
+
+            # Initialize application settings.
+            self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)
+
+            # Setup layout.
+            style = Style.forName(self.settings.value('appearance/style', 'light', str))
+            self.setStyle(style)
+            self.setStyleSheet(style.qss())
+
+            # Initialize recent documents.
+            if not self.settings.contains('document/recent_documents'):
+                # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
+                # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
+                # container. So according to this we can't use an empty list as default value because PyQt5 needs
+                # to know the type of the contents added to the collection: we avoid this problem by placing
+                # the list of examples file in the recentDocumentList (only if there is no list defined already).
+                self.settings.setValue('document/recent_documents', [
+                    expandPath('@examples/Animals.graphol'),
+                    expandPath('@examples/Diet.graphol'),
+                    expandPath('@examples/Family.graphol'),
+                    expandPath('@examples/Pizza.graphol'),
+                ])
+
+            # Create the main window.
+            self.mainwindow = MainWindow()
+
+        # Display the mainwindow.
+        self.mainwindow.show()
+
+        if Platform.identify() is not Platform.Darwin:
+            # Perform document opening if files have been added to sys.argv. This is not
+            # executed on Mac OS since this is already handled as a QFileOpenEvent instance.
+            for filepath in [x for x in argv if os.path.isfile(x)]:
+                self.mainwindow.openFile(filepath)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   EVENTS                                                                                                         #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def event(self, event):
         """
-        Run initialization tasks for Eddy.
-        :raise JVMNotFoundException: if the JVM could not be found on the system.
-        :raise JVMNotSupportedException: if the JVM found in the system is not supported.
-        :rtype: MainWindow
+        Executed when an event is received.
+        :type event: T <= QEvent | QFileOpenEvent
         """
-        ######################################
-        ## SETUP LAYOUT
-        ######################################
+        if event.type() == QEvent.FileOpen:
+            filepath = event.file()
+            if not isEmpty(filepath) and os.path.isfile(filepath):
+                self.mainwindow.openFile(path)
+                return True
 
-        style = Style.forName(self.settings.value('appearance/style', 'light', str))
-
-        self.setStyle(style)
-        self.setStyleSheet(style.qss())
-
-        ######################################
-        ## INITIALIZE RECENT DOCUMENTS
-        ######################################
-
-        if not self.settings.contains('document/recent_documents'):
-            # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
-            # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
-            # container. So according to this we can't use an empty list as default value because PyQt5 needs
-            # to know the type of the contents added to the collection: we avoid this problem by placing
-            # the list of examples file in the recentDocumentList (only if there is no list defined already).
-            self.settings.setValue('document/recent_documents', [
-                expandPath('@examples/Animals.graphol'),
-                expandPath('@examples/Diet.graphol'),
-                expandPath('@examples/Family.graphol'),
-                expandPath('@examples/Pizza.graphol'),
-            ])
-
-        ######################################
-        ## CREATE THE MAIN WINDOW
-        ######################################
-
-        return MainWindow()
+        return super().event(event)
