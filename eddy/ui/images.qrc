@@ -22,6 +22,7 @@
     <file alias="help">artwork/icons/ic_help_outline_black_24dp_1x.png</file>
     <file alias="info">artwork/icons/ic_info_outline_black_48dp_1x.png</file>
     <file alias="label">artwork/icons/ic_label_outline_black_24dp_1x.png</file>
+    <file alias="license">artwork/icons/ic_bookmark_black_24dp_1x.png</file>
     <file alias="link">artwork/icons/ic_link_black_24dp_1x.png</file>
     <file alias="new">artwork/icons/ic_add_document_black_24dp_1x.png</file>
     <file alias="open">artwork/icons/ic_folder_open_black_24dp_1x.png</file>

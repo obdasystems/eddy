@@ -153,6 +153,7 @@ class MainWindow(QMainWindow):
         self.iconGrid = shadedIcon(':/icons/grid')
         self.iconHelp = shadedIcon(':/icons/help')
         self.iconLabel = shadedIcon(':/icons/label')
+        self.iconLicense = shadedIcon(':/icons/license')
         self.iconLink = shadedIcon(':/icons/link')
         self.iconNew = shadedIcon(':/icons/new')
         self.iconOpen = shadedIcon(':/icons/open')
@@ -271,6 +272,7 @@ class MainWindow(QMainWindow):
             self.actionAbout.setIcon(self.iconHelp)
 
         self.actionLicense = QAction('License', self)
+        self.actionLicense.setIcon(self.iconLicense)
         self.actionLicense.setData(License)
         connect(self.actionLicense.triggered, self.openDialog)
 
