@@ -73,6 +73,23 @@ class SplashScreen(QLabel):
 
     ####################################################################################################################
     #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def remaining(self):
+        """
+        Returns the amount of extra time the splashscreen needs to stay visible on the screen.
+        :rtype: float
+        """
+        now = time()
+        if now < self.min_splash_time:
+            return self.min_splash_time - now
+        return 0
+
+    ####################################################################################################################
+    #                                                                                                                  #
     #   CONTEXT MANAGER                                                                                                #
     #                                                                                                                  #
     ####################################################################################################################
@@ -88,9 +105,9 @@ class SplashScreen(QLabel):
         Remove the splash screen from the screen.
         This will make sure that the splash screen is displayed for at least min_splash_time seconds.
         """
-        now = time()
-        if now < self.min_splash_time:
-            sleep(self.min_splash_time - now)
+        remaining = self.remaining
+        if remaining:
+            sleep(remaining)
         self.close()
 
     ####################################################################################################################
