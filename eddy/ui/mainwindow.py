@@ -33,7 +33,6 @@
 
 
 import os
-import sys
 import webbrowser
 
 from collections import OrderedDict
@@ -93,6 +92,8 @@ class MainWindow(QMainWindow):
         """
         super().__init__(parent)
 
+        platform = Platform.identify()
+
         self.abortQuit = False
         self.clipboard = Clipboard(self)
         self.menuFactory = MenuFactory(self)
@@ -150,6 +151,7 @@ class MainWindow(QMainWindow):
         self.iconCut = shadedIcon(':/icons/cut')
         self.iconDelete = shadedIcon(':/icons/delete')
         self.iconGrid = shadedIcon(':/icons/grid')
+        self.iconHelp = shadedIcon(':/icons/help')
         self.iconLabel = shadedIcon(':/icons/label')
         self.iconLink = shadedIcon(':/icons/link')
         self.iconNew = shadedIcon(':/icons/new')
@@ -249,7 +251,7 @@ class MainWindow(QMainWindow):
         self.actionOpenPreferences.setData(PreferencesDialog)
         connect(self.actionOpenPreferences.triggered, self.openDialog)
 
-        if not sys.platform.startswith('darwin'):
+        if platform is not Platform.Darwin:
             self.actionOpenPreferences.setIcon(self.iconPreferences)
 
         self.actionQuit = QAction('Quit', self)
@@ -257,13 +259,16 @@ class MainWindow(QMainWindow):
         self.actionQuit.setShortcut(QKeySequence.Quit)
         connect(self.actionQuit.triggered, self.close)
 
-        if not sys.platform.startswith('darwin'):
+        if platform is not Platform.Darwin:
             self.actionQuit.setIcon(self.iconQuit)
 
         self.actionAbout = QAction('About {}'.format(APPNAME), self)
         self.actionAbout.setShortcut(QKeySequence.HelpContents)
         self.actionAbout.setData(About)
         connect(self.actionAbout.triggered, self.openDialog)
+
+        if platform is not Platform.Darwin:
+            self.actionAbout.setIcon(self.iconHelp)
 
         self.actionSapienzaWeb = QAction('DIAG - Sapienza university', self)
         self.actionSapienzaWeb.setIcon(self.iconLink)
@@ -471,16 +476,16 @@ class MainWindow(QMainWindow):
 
         self.actionSwapEdge = QAction('Swap', self)
         self.actionSwapEdge.setIcon(self.iconSwapHorizontal)
-        self.actionSwapEdge.setShortcut('CTRL+ALT+S' if sys.platform.startswith('win32') else 'ALT+S')
+        self.actionSwapEdge.setShortcut('CTRL+ALT+S' if platform is Platform.Windows else 'ALT+S')
         connect(self.actionSwapEdge.triggered, self.swapEdge)
 
         self.actionToggleEdgeComplete = QAction('Complete', self)
-        self.actionToggleEdgeComplete.setShortcut('CTRL+ALT+C' if sys.platform.startswith('win32') else 'ALT+C')
+        self.actionToggleEdgeComplete.setShortcut('CTRL+ALT+C' if platform is Platform.Windows else 'ALT+C')
         self.actionToggleEdgeComplete.setCheckable(True)
         connect(self.actionToggleEdgeComplete.triggered, self.toggleEdgeComplete)
 
         self.actionToggleEdgeFunctional = QAction('Functional', self)
-        self.actionToggleEdgeFunctional.setShortcut('CTRL+ALT+F' if sys.platform.startswith('win32') else 'ALT+F')
+        self.actionToggleEdgeFunctional.setShortcut('CTRL+ALT+F' if platform is Platform.Windows else 'ALT+F')
         self.actionToggleEdgeFunctional.setCheckable(True)
         connect(self.actionToggleEdgeFunctional.triggered, self.toggleEdgeFunctional)
 
@@ -540,7 +545,7 @@ class MainWindow(QMainWindow):
 
         self.menuHelp.addAction(self.actionAbout)
 
-        if not sys.platform.startswith('darwin'):
+        if platform is not Platform.Darwin:
             self.menuHelp.addSeparator()
 
         self.menuHelp.addAction(self.actionSapienzaWeb)

@@ -19,6 +19,7 @@
     <file alias="delete">artwork/icons/ic_delete_black_24dp_1x.png</file>
     <file alias="error">artwork/icons/ic_error_outline_black_48dp_1x.png</file>
     <file alias="grid">artwork/icons/ic_grid_on_black_24dp_1x.png</file>
+    <file alias="help">artwork/icons/ic_help_outline_black_24dp_1x.png</file>
     <file alias="info">artwork/icons/ic_info_outline_black_48dp_1x.png</file>
     <file alias="label">artwork/icons/ic_label_outline_black_24dp_1x.png</file>
     <file alias="link">artwork/icons/ic_link_black_24dp_1x.png</file>
