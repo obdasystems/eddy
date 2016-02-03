@@ -36,16 +36,17 @@ from time import time, sleep
 
 from PyQt5.QtCore import Qt, QRect
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QPen
-from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QSplashScreen, QApplication
 
 from eddy import __appname__ as APPNAME
 from eddy import __copyright__ as COPYRIGHT
 from eddy import __version__ as VERSION
 
 from eddy.core.datatypes import Font
+from eddy.core.functions import rangeF
 
 
-class SplashScreen(QLabel):
+class SplashScreen(QSplashScreen):
     """
     This class implements Eddy's splash screen.
     It can be used with the context manager, i.e:
@@ -61,13 +62,12 @@ class SplashScreen(QLabel):
     """
     def __init__(self, min_splash_time=2):
         """
-        Initialize the Eddy's splash screen.
+        Initialize Eddy's splash screen.
         :type min_splash_time: float
         """
-        super().__init__(None, Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint|Qt.SplashScreen)
+        super().__init__(QPixmap(':/images/splash'), Qt.WindowStaysOnTopHint)
         self.min_splash_time = time() + min_splash_time
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setPixmap(QPixmap(':/images/splash'))
         self.setMask(self.pixmap().mask())
         self.setFixedSize(self.pixmap().width(), self.pixmap().height())
 
@@ -101,7 +101,10 @@ class SplashScreen(QLabel):
         :type amount: float
         """
         if amount > 0:
-            sleep(amount)
+            for _ in rangeF(start=0, stop=amount, step=0.1):
+                # noinspection PyArgumentList
+                QApplication.processEvents()
+                sleep(0.1)
 
     ####################################################################################################################
     #                                                                                                                  #
