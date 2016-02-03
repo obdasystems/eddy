@@ -246,7 +246,8 @@ class MainWindow(QMainWindow):
         self.actionOpenPreferences = QAction('Preferences', self)
         self.actionOpenPreferences.setShortcut(QKeySequence.Preferences)
         self.actionOpenPreferences.setStatusTip('Open {} preferences'.format(APPNAME))
-        connect(self.actionOpenPreferences.triggered, self.openPreferences)
+        self.actionOpenPreferences.setData(PreferencesDialog)
+        connect(self.actionOpenPreferences.triggered, self.openDialog)
 
         if not sys.platform.startswith('darwin'):
             self.actionOpenPreferences.setIcon(self.iconPreferences)
@@ -261,7 +262,8 @@ class MainWindow(QMainWindow):
 
         self.actionAbout = QAction('About {}'.format(APPNAME), self)
         self.actionAbout.setShortcut(QKeySequence.HelpContents)
-        connect(self.actionAbout.triggered, self.about)
+        self.actionAbout.setData(About)
+        connect(self.actionAbout.triggered, self.openDialog)
 
         self.actionSapienzaWeb = QAction('DIAG - Sapienza university', self)
         self.actionSapienzaWeb.setIcon(self.iconLink)
@@ -451,7 +453,7 @@ class MainWindow(QMainWindow):
             action = QAction(v, self)
             action.setCheckable(True)
             action.setData(k)
-            connect(action.triggered, self.switchHexagonNode)
+            connect(action.triggered, self.switchOperatorNode)
             self.actionsSwitchOperatorNode.append(action)
 
         ## INDIVIDUAL NODE
@@ -700,14 +702,6 @@ class MainWindow(QMainWindow):
     #   SLOTS                                                                                                          #
     #                                                                                                                  #
     ####################################################################################################################
-
-    @pyqtSlot()
-    def about(self):
-        """
-        Display the about dialog.
-        """
-        about = About()
-        about.exec_()
 
     @pyqtSlot()
     def bringToFront(self):
@@ -1081,7 +1075,6 @@ class MainWindow(QMainWindow):
                     self.mdi.setActiveSubWindow(subwindow)
                     self.mdi.update()
 
-
             if loader.errors:
 
                 # If some errors have been generated during the import process, display
@@ -1201,6 +1194,16 @@ class MainWindow(QMainWindow):
             self.openFile(dialog.selectedFiles()[0])
 
     @pyqtSlot()
+    def openDialog(self):
+        """
+        Open a dialog window by initializing it using the class stored in action data.
+        """
+        action = self.sender()
+        dialog = action.data()
+        window = dialog(parent=self.centralWidget())
+        window.exec_()
+
+    @pyqtSlot()
     def openNodeProperties(self):
         """
         Executed when node properties needs to be displayed.
@@ -1212,14 +1215,6 @@ class MainWindow(QMainWindow):
             if node:
                 prop = self.propertyFactory.create(scene=scene, node=node)
                 prop.exec_()
-
-    @pyqtSlot()
-    def openPreferences(self):
-        """
-        Open the preferences dialog.
-        """
-        preferences = PreferencesDialog(self.centralWidget())
-        preferences.exec_()
         
     @pyqtSlot()
     def openRecentDocument(self):
@@ -1541,7 +1536,7 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def setSpecialNode(self):
         """
-        Set the special type of the selected concept node.
+        Set the special type of the selected node.
         """
         scene = self.mdi.activeScene
         if scene:
@@ -1661,9 +1656,9 @@ class MainWindow(QMainWindow):
                 scene.undostack.push(CommandEdgeSwap(scene=scene, edges=selected))
 
     @pyqtSlot()
-    def switchHexagonNode(self):
+    def switchOperatorNode(self):
         """
-        Switch the selected hexagon based constructor node to a different type.
+        Switch the selected operator node to a different type.
         """
         scene = self.mdi.activeScene
         if scene:
