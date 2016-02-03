@@ -54,13 +54,13 @@ VersionInfoTextVersion=1.0
 VersionInfoVersion=1.0
 RestartIfNeededByRun=no
 PrivilegesRequired=admin
-SetupIconFile=../eddy\ui\artwork\eddy.ico
+SetupIconFile=setup.ico
 UsePreviousAppDir=yes
 WindowResizable=no
 WindowShowCaption=no
 WindowVisible=no
-WizardImageFile=../eddy\ui\artwork\eddy_wizard.bmp
-WizardSmallImageFile=../eddy\ui\artwork\eddy_wizard_small.bmp
+WizardImageFile=eddy_wizard.bmp
+WizardSmallImageFile=eddy_wizard_small.bmp
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
