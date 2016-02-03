@@ -34,7 +34,7 @@
 
 __appname__ = 'Eddy'
 __author__ = 'Daniele Pantaleone'
-__copyright__ = 'Copyright © 2015 Daniele Pantaleone'
+__copyright__ = 'Copyright © 2016 Daniele Pantaleone'
 __email__ = 'danielepantaleone@me.com'
 __license__ = 'GPL'
 __organization__ = 'Sapienza - University Of Rome'
@@ -46,3 +46,4 @@ BUG_TRACKER = 'https://github.com/danielepantaleone/eddy/issues'
 DIAG_HOME = 'http://www.diag.uniroma1.it/en'
 GRAPHOL_HOME = 'http://www.diag.uniroma1.it/~graphol/'
 PROJECT_HOME = 'https://github.com/danielepantaleone/eddy'
+SAPIENZA_HOME = 'http://en.uniroma1.it/'

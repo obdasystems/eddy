@@ -38,9 +38,9 @@ from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout, QHBoxLayout
 
 from eddy import __version__ as VERSION
 from eddy import __appname__ as APPNAME
-from eddy import __copyright__ as COPYRIGHT
-from eddy import __email__ as EMAIL
+from eddy import __author__ as AUTHOR
 from eddy import __license__ as LICENSE
+from eddy import GRAPHOL_HOME, DIAG_HOME, SAPIENZA_HOME
 
 
 class About(QDialog):
@@ -55,51 +55,43 @@ class About(QDialog):
         """
         super().__init__(parent)
 
-        message = """
-            {TITLE}<br/>
-            <a href="mailto:{EMAIL}" {STYLE2}>{COPYRIGHT}</a><br/>
-            <br/>
-            Version: {VERSION}<br/>
-            License: {LICENSE}<br/>
-            <br />
-            <a href="http://www.dis.uniroma1.it/~graphol/" {STYLE1}>Graphol</a> is developed by members of
-            the DASI-lab group of the <a href="http://www.diag.uniroma1.it/en" {STYLE1}> Dipartimento di
-            Ingegneria Informatica, Automatica e Gestionale "A.Ruberti"</a> at <a href="http://en.uniroma1.it/"
-            {STYLE1}>Sapienza</a> University of Rome:<br/>
-            <br/>
-            <a href="mailto:lembo@dis.uniroma1.it" {STYLE2}>Domenico Lembo</a><br/>
-            <a href="mailto:santarelli@dis.uniroma1.it" {STYLE2}>Valerio Santarelli</a><br/>
-            <a href="mailto:savo@dis.uniroma1.it" {STYLE2}>Domenico Fabio Savo</a><br/>
-            <a href="mailto:console@dis.uniroma1.it" {STYLE2}>Marco Console</a>
-            """.format(TITLE=APPNAME, EMAIL=EMAIL, VERSION=VERSION,
-                       LICENSE=LICENSE, COPYRIGHT=COPYRIGHT,
-                       STYLE1='style="text-decoration:none;"',
-                       STYLE2='style="text-decoration:none; color: #000000;"')
+        message = '{TITLE}<br/>' \
+            'Version: {VERSION}<br/>' \
+            'Author: {AUTHOR}<br/>' \
+            'Copyright: © 2016 {AUTHOR}<br/>' \
+            'License: {LICENSE}<br/>' \
+            '<br/>' \
+            '<a href="{GRAPHOL_HOME}" {STYLE}>Graphol</a> is developed by ' \
+            'members of the DASI-lab group of the <a href="{DIAG_HOME}" {STYLE}>DIAG</a> ' \
+            'at <a href="{SAPIENZA_HOME}" {STYLE}>Sapienza</a> University of Rome.'.format(
+                TITLE=APPNAME, VERSION=VERSION, AUTHOR=AUTHOR, LICENSE=LICENSE,
+                GRAPHOL_HOME=GRAPHOL_HOME, DIAG_HOME=DIAG_HOME, SAPIENZA_HOME=SAPIENZA_HOME,
+                STYLE='style="text-decoration:none;"')
 
         self.icon = QLabel(self)
-        self.icon.setPixmap(QPixmap(':/images/eddy'))
+        self.icon.setPixmap(QPixmap(':/images/eddy-smile'))
 
         self.text = QLabel(message, self)
         self.text.setWordWrap(True)
         self.text.setOpenExternalLinks(True)
-        self.text.setAlignment(Qt.AlignHCenter)
+        self.text.setAlignment(Qt.AlignLeft)
         self.text.setFixedWidth(340)
 
-        topLayout = QHBoxLayout()
-        topLayout.addWidget(self.icon)
-        topLayout.setAlignment(Qt.AlignTop)
-        topLayout.setContentsMargins(105, 20, 0, 0)
+        leftLayout = QVBoxLayout()
+        leftLayout.addWidget(self.icon)
+        leftLayout.setAlignment(Qt.AlignTop|Qt.AlignLeft)
+        leftLayout.setContentsMargins(0, 0, 0, 0)
 
-        bottomLayout = QHBoxLayout()
-        bottomLayout.addWidget(self.text)
-        bottomLayout.setAlignment(Qt.AlignTop)
-        bottomLayout.setContentsMargins(0, 20, 0, 20)
+        rightLayout = QVBoxLayout()
+        rightLayout.addWidget(self.text)
+        rightLayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        rightLayout.setContentsMargins(0, 0, 0, 0)
 
-        self.mainLayout = QVBoxLayout(self)
-        self.mainLayout.addLayout(topLayout)
-        self.mainLayout.addLayout(bottomLayout)
+        self.mainLayout = QHBoxLayout(self)
+        self.mainLayout.addLayout(leftLayout)
+        self.mainLayout.addLayout(rightLayout)
 
-        self.setFixedWidth(360)
+        self.setFixedWidth(520)
         self.setFixedHeight(self.sizeHint().height())
         self.setModal(True)
         self.setWindowIcon(QIcon(':/images/eddy'))
