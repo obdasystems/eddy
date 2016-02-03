@@ -1198,15 +1198,7 @@ class MainWindow(QMainWindow):
         dialog = OpenFile(expandPath('~'))
         dialog.setNameFilters([Filetype.Graphol.value])
         if dialog.exec_():
-            filepath = dialog.selectedFiles()[0]
-            if not self.focusDocument(filepath):
-                scene = self.createSceneFromGrapholFile(filepath)
-                if scene:
-                    mainview = self.createView(scene)
-                    subwindow = self.createSubWindow(mainview)
-                    subwindow.showMaximized()
-                    self.mdi.setActiveSubWindow(subwindow)
-                    self.mdi.update()
+            self.openFile(dialog.selectedFiles()[0])
 
     @pyqtSlot()
     def openNodeProperties(self):
@@ -1236,14 +1228,7 @@ class MainWindow(QMainWindow):
         """
         action = self.sender()
         if action:
-            if not self.focusDocument(action.data()):
-                scene = self.createSceneFromGrapholFile(action.data())
-                if scene:
-                    mainview = self.createView(scene)
-                    subwindow = self.createSubWindow(mainview)
-                    subwindow.showMaximized()
-                    self.mdi.setActiveSubWindow(subwindow)
-                    self.mdi.update()
+            self.openFile(action.data())
 
     @pyqtSlot()
     def openSceneProperties(self):
@@ -1992,7 +1977,7 @@ class MainWindow(QMainWindow):
         """
         Move the focus on the subwindow containing the given document.
         Will return True if the subwindow has been focused, False otherwise.
-        :type document: T <= DiagramScene | File
+        :type document: T <= DiagramScene | File | str
         :rtype: bool
         """
         if isinstance(document, DiagramScene):
@@ -2006,6 +1991,20 @@ class MainWindow(QMainWindow):
                 self.mdi.update()
                 return True
         return False
+
+    def openFile(self, filepath):
+        """
+        Open a Graphol document creating the scene and attaching it to the MDI area.
+        :type filepath: str
+        """
+        if not self.focusDocument(filepath):
+            scene = self.createSceneFromGrapholFile(filepath)
+            if scene:
+                mainview = self.createView(scene)
+                subwindow = self.createSubWindow(mainview)
+                subwindow.showMaximized()
+                self.mdi.setActiveSubWindow(subwindow)
+                self.mdi.update()
 
     def saveFilePath(self, path=None, name=None):
         """
