@@ -603,6 +603,8 @@ include_files = [
     ('docs', 'docs'),
     ('examples', 'examples'),
     ('resources', 'resources'),
+    ('eddy/ui/artwork/icons/document.ico', 'document.ico'),
+    ('eddy/ui/artwork/icons/document.png', 'document.png'),
     ('eddy/ui/styles/light.qss', 'ui/styles/light.qss'),
     ('LICENSE', 'LICENSE'),
     ('CONTRIBUTING.md', 'CONTRIBUTING.md'),
