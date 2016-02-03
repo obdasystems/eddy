@@ -69,13 +69,13 @@ class SceneProperty(QDialog):
 
         # Amount of nodes in the scene
         self.nodesField = IntEditField(self.generalWidget)
-        self.nodesField.setEnabled(False)
+        self.nodesField.setReadOnly(True)
         self.nodesField.setFixedWidth(300)
         self.nodesField.setValue(len(self.scene.nodes()))
 
         # Amount of edges in the scene
         self.edgesField = IntEditField(self.generalWidget)
-        self.edgesField.setEnabled(False)
+        self.nodesField.setReadOnly(True)
         self.edgesField.setFixedWidth(300)
         self.edgesField.setValue(len(self.scene.edges()))
 
@@ -117,13 +117,13 @@ class SceneProperty(QDialog):
 
             # Filepath of the saved document.
             self.pathField = StringEditField(self.documentWidget)
-            self.pathField.setEnabled(False)
+            self.pathField.setReadOnly(True)
             self.pathField.setFixedWidth(300)
             self.pathField.setValue(self.scene.document.path)
 
             # Timestamp when the document has been last modified.
             self.editedField = StringEditField(self.documentWidget)
-            self.editedField.setEnabled(False)
+            self.editedField.setReadOnly(True)
             self.editedField.setFixedWidth(300)
             self.editedField.setValue(datetime.fromtimestamp(int(self.scene.document.edited)).strftime('%Y/%m/%d %H:%M:%S'))
 

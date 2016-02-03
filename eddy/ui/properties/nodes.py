@@ -79,17 +79,17 @@ class NodeProperty(QDialog):
         self.generalLayout = QFormLayout(self.generalWidget)
 
         self.idField = StringEditField(self.generalWidget)
-        self.idField.setEnabled(False)
+        self.idField.setReadOnly(True)
         self.idField.setFixedWidth(300)
         self.idField.setValue(self.node.id)
 
         self.itemField = StringEditField(self.generalWidget)
-        self.itemField.setEnabled(False)
+        self.itemField.setReadOnly(True)
         self.itemField.setFixedWidth(300)
         self.itemField.setValue(' '.join(i.capitalize() for i in rCut(self.node.name, ' node').split()))
 
         self.showIdentityField = StringEditField(self.generalWidget)
-        self.showIdentityField.setEnabled(False)
+        self.showIdentityField.setReadOnly(True)
         self.showIdentityField.setFixedWidth(300)
         self.showIdentityField.setValue(self.node.identity.label)
 
@@ -132,14 +132,14 @@ class NodeProperty(QDialog):
         # TODO: allow to modify shape width from properties dialog
         self.wField = SpinBox(self.geometryWidget)
         self.wField.setRange(20, R.width())
-        self.wField.setEnabled(False)
+        self.wField.setReadOnly(True)
         self.wField.setFixedWidth(60)
         self.wField.setValue(int(self.node.width()))
 
         # TODO: allow to modify shape height from properties dialog
         self.hField = SpinBox(self.geometryWidget)
         self.hField.setRange(20, R.height())
-        self.hField.setEnabled(False)
+        self.hField.setReadOnly(True)
         self.hField.setFixedWidth(60)
         self.hField.setValue(int(self.node.height()))
 
