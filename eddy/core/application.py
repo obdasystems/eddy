@@ -187,9 +187,8 @@ class Eddy(QApplication):
         Executed when an event is received.
         :type event: T <= QEvent | QFileOpenEvent
         """
-        if not self.isRunning():
-            if event.type() == QEvent.FileOpen:
-                return self.openFile(event.file())
+        if event.type() == QEvent.FileOpen:
+            return self.openFile(event.file())
         return super().event(event)
 
     ####################################################################################################################
@@ -263,7 +262,7 @@ class Eddy(QApplication):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
+    #   SLOTS                                                                                                          #
     #                                                                                                                  #
     ####################################################################################################################
 
