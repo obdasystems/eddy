@@ -36,7 +36,6 @@ import sys
 
 from PyQt5.QtCore import Qt, QPointF, QSettings, QRectF, pyqtSignal
 from PyQt5.QtGui import QPen, QColor
-from PyQt5.QtPrintSupport import QPrinter
 from PyQt5.QtWidgets import QGraphicsScene, QUndoStack
 
 from eddy.core.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
@@ -361,9 +360,12 @@ class DiagramScene(QGraphicsScene):
         :type painter: QPainter
         :type rect: QRectF
         """
-        # do not draw the background grid if we are printing the scene
-        # TODO: replace isinstance with something smarter since this may be resource consuming
-        if self.settings.value('scene/snap_to_grid', False, bool) and not isinstance(painter.device(), QPrinter):
+        # Previously we were hiding the grid if the user was rendering the diagram on a PDF
+        # or printing it. However profiling the application revealed that checking the type of
+        # the active paint device using isinstance() was time consuming, therefore we removed
+        # such feature => the user can always disable the grid before printing or exporting to PDF:
+
+        if self.settings.value('scene/snap_to_grid', False, bool):
             startX = int(rect.left()) - (int(rect.left()) % DiagramScene.GridSize)
             startY = int(rect.top()) - (int(rect.top()) % DiagramScene.GridSize)
             painter.setPen(DiagramScene.GridPen)
