@@ -40,7 +40,7 @@ from traceback import format_exception
 
 from PyQt5.QtCore import Qt, QSettings, QSizeF, QRectF
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter, QPageSize, QCursor
+from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter, QPageSize, QCursor, QBrush, QColor
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDialog, QStyle
 from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup
@@ -1295,7 +1295,9 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
-                scene.undostack.push(CommandNodeSetBrush(scene, scene.nodesByLabel[node.text()], action.data()))
+                color = action.data()
+                command = CommandNodeSetBrush(scene, scene.nodesByLabel[node.text()], QBrush(QColor(color.value)))
+                scene.undostack.push(command)
 
     @pyqtSlot()
     def refactorName(self):
@@ -1480,7 +1482,9 @@ class MainWindow(QMainWindow):
             selected = [x for x in scene.selectedNodes() if x.predicate]
             if selected:
                 action = self.sender()
-                scene.undostack.push(CommandNodeSetBrush(scene, selected, action.data()))
+                color = action.data()
+                command = CommandNodeSetBrush(scene, selected, QBrush(QColor(color.value)))
+                scene.undostack.push(command)
 
     @pyqtSlot()
     def setDomainRangeRestriction(self):
