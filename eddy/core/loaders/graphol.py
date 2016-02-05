@@ -280,7 +280,6 @@ class GrapholLoader(AbstractLoader):
         """
         item = self.buildGenericEdge(Item.InclusionEdge, edge)
         item.complete = bool(int(edge.attribute('complete', '0')))
-        item.updateEdge()
         return item
 
     def buildInputEdge(self, edge):
@@ -291,7 +290,6 @@ class GrapholLoader(AbstractLoader):
         """
         item = self.buildGenericEdge(Item.InputEdge, edge)
         item.functional = bool(int(edge.attribute('functional', '0')))
-        item.updateEdge()
         return item
 
     def buildInstanceOfEdge(self, edge):
@@ -346,7 +344,6 @@ class GrapholLoader(AbstractLoader):
         # map the edge over the source and target nodes
         item.source.addEdge(item)
         item.target.addEdge(item)
-        item.updateEdge()
         return item
 
     def buildGenericNode(self, item, node):
@@ -423,51 +420,51 @@ class GrapholLoader(AbstractLoader):
                 # noinspection PyArgumentList
                 QApplication.processEvents()
 
-                temp = None
+                arch = None
                 item = self.itemFromGrapholNode(node)
 
                 try:
 
                     if item is Item.AttributeNode:
-                        temp = self.buildAttributeNode(node)
+                        arch = self.buildAttributeNode(node)
                     elif item is Item.ComplementNode:
-                        temp = self.buildComplementNode(node)
+                        arch = self.buildComplementNode(node)
                     elif item is Item.ConceptNode:
-                        temp = self.buildConceptNode(node)
+                        arch = self.buildConceptNode(node)
                     elif item is Item.DatatypeRestrictionNode:
-                        temp = self.buildDatatypeRestrictionNode(node)
+                        arch = self.buildDatatypeRestrictionNode(node)
                     elif item is Item.DisjointUnionNode:
-                        temp = self.buildDisjointUnionNode(node)
+                        arch = self.buildDisjointUnionNode(node)
                     elif item is Item.DomainRestrictionNode:
-                        temp = self.buildDomainRestrictionNode(node)
+                        arch = self.buildDomainRestrictionNode(node)
                     elif item is Item.EnumerationNode:
-                        temp = self.buildEnumerationNode(node)
+                        arch = self.buildEnumerationNode(node)
                     elif item is Item.IndividualNode:
-                        temp = self.buildIndividualNode(node)
+                        arch = self.buildIndividualNode(node)
                     elif item is Item.IntersectionNode:
-                        temp = self.buildIntersectionNode(node)
+                        arch = self.buildIntersectionNode(node)
                     elif item is Item.PropertyAssertionNode:
-                        temp = self.buildPropertyAssertionNode(node)
+                        arch = self.buildPropertyAssertionNode(node)
                     elif item is Item.RangeRestrictionNode:
-                        temp = self.buildRangeRestrictionNode(node)
+                        arch = self.buildRangeRestrictionNode(node)
                     elif item is Item.RoleNode:
-                        temp = self.buildRoleNode(node)
+                        arch = self.buildRoleNode(node)
                     elif item is Item.RoleChainNode:
-                        temp = self.buildRoleChainNode(node)
+                        arch = self.buildRoleChainNode(node)
                     elif item is Item.RoleInverseNode:
-                        temp = self.buildRoleInverseNode(node)
+                        arch = self.buildRoleInverseNode(node)
                     elif item is Item.UnionNode:
-                        temp = self.buildUnionNode(node)
+                        arch = self.buildUnionNode(node)
                     elif item is Item.ValueDomainNode:
-                        temp = self.buildValueDomainNode(node)
+                        arch = self.buildValueDomainNode(node)
                     elif item is Item.ValueRestrictionNode:
-                        temp = self.buildValueRestrictionNode(node)
+                        arch = self.buildValueRestrictionNode(node)
 
-                    if not temp:
+                    if not arch:
                         raise ValueError('unknown node: {}'.format(node.attribute('type')))
 
-                    self.scene.addItem(temp)
-                    self.scene.guid.update(temp.id)
+                    self.scene.addItem(arch)
+                    self.scene.guid.update(arch.id)
                 finally:
                     node = node.nextSiblingElement('node')
 
@@ -478,23 +475,24 @@ class GrapholLoader(AbstractLoader):
                 # noinspection PyArgumentList
                 QApplication.processEvents()
 
-                temp = None
+                arch = None
                 item = self.itemFromGrapholNode(edge)
 
                 try:
 
                     if item is Item.InclusionEdge:
-                        temp = self.buildInclusionEdge(edge)
+                        arch = self.buildInclusionEdge(edge)
                     elif item is Item.InputEdge:
-                        temp = self.buildInputEdge(edge)
+                        arch = self.buildInputEdge(edge)
                     elif item is Item.InstanceOfEdge:
-                        temp = self.buildInstanceOfEdge(edge)
+                        arch = self.buildInstanceOfEdge(edge)
 
-                    if not temp:
+                    if not arch:
                         raise ValueError('unknown edge: {}'.format(edge.attribute('type')))
 
-                    self.scene.addItem(temp)
-                    self.scene.guid.update(temp.id)
+                    self.scene.addItem(arch)
+                    self.scene.guid.update(arch.id)
+                    arch.updateEdge()
                 finally:
                     edge = edge.nextSiblingElement('edge')
 

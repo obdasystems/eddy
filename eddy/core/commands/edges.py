@@ -123,7 +123,7 @@ class CommandEdgeAnchorMove(QUndoCommand):
     """
     This command is used to move edge anchor points.
     """
-    def __init__(self, scene, edge, node):
+    def __init__(self, scene, edge, node, data):
         """
         Initialize the command.
         """
@@ -131,24 +131,17 @@ class CommandEdgeAnchorMove(QUndoCommand):
         self.scene = scene
         self.edge = edge
         self.node = node
-        self.pos = {'undo': node.anchor(edge)}
-
-    def end(self):
-        """
-        Complete the command collecting new data.
-        """
-        self.pos['redo'] = self.node.anchor(self.edge)
+        self.data = data
 
     def redo(self):
         """redo the command"""
-        if 'redo' in self.pos:
-            self.node.setAnchor(self.edge, self.pos['redo'])
-            self.edge.updateEdge()
-            self.scene.updated.emit()
+        self.node.setAnchor(self.edge, self.data['redo'])
+        self.edge.updateEdge()
+        self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        self.node.setAnchor(self.edge, self.pos['undo'])
+        self.node.setAnchor(self.edge, self.data['undo'])
         self.edge.updateEdge()
         self.scene.updated.emit()
 
@@ -157,33 +150,25 @@ class CommandEdgeBreakpointMove(QUndoCommand):
     """
     This command is used to move edge breakpoints.
     """
-    def __init__(self, scene, edge, index):
+    def __init__(self, scene, edge, index, data):
         """
         Initialize the command.
         """
         super().__init__('move {} breakpoint'.format(edge.name))
+        self.data = data
         self.edge = edge
-        self.scene = scene
         self.index = index
-        self.pos = {'undo': edge.breakpoints[self.index] }
-
-    def end(self, pos):
-        """
-        Complete the command collecting new data.
-        :type pos: QPointF
-        """
-        self.pos['redo'] = pos
+        self.scene = scene
 
     def redo(self):
         """redo the command"""
-        if 'redo' in self.pos:
-            self.edge.breakpoints[self.index] = self.pos['redo']
-            self.edge.updateEdge()
-            self.scene.updated.emit()
+        self.edge.breakpoints[self.index] = self.data['redo']
+        self.edge.updateEdge()
+        self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        self.edge.breakpoints[self.index] = self.pos['undo']
+        self.edge.breakpoints[self.index] = self.data['undo']
         self.edge.updateEdge()
         self.scene.updated.emit()
 

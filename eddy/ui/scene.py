@@ -158,8 +158,8 @@ class DiagramScene(QGraphicsScene):
                     # noinspection PyTypeChecker
                     edge = self.itemFactory.create(item=self.modeParam, scene=self, source=node)
                     edge.updateEdge(target=mouseEvent.scenePos())
-                    self.addItem(edge)
                     self.mousePressEdge = edge
+                    self.addItem(edge)
 
                 super().mousePressEvent(mouseEvent)
 

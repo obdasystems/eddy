@@ -325,22 +325,24 @@ class AbstractNode(AbstractItem):
         :type selected: bool
         :type valid: bool
         """
-        bBrushOkPattern = QBrush(QColor(43, 173, 63, 160))
-        bBrushBadPattern = QBrush(QColor(179, 12, 12, 160))
-        sPenPattern = QPen(QColor(0, 0, 0), 1.0, Qt.DashLine)
+        backgroundBrushOkPattern = QBrush(QColor(43, 173, 63, 160))
+        backgroundBrushBadPattern = QBrush(QColor(179, 12, 12, 160))
+        selectionPenPattern = QPen(QColor(0, 0, 0), 1.0, Qt.DashLine)
+        noBrush = QBrush(Qt.NoBrush)
+        noPen = QPen(Qt.NoPen)
 
-        bBrush = Qt.NoBrush
-        sPen = Qt.NoPen
+        backgroundBrush = noBrush
+        selectionPen = noPen
 
         # ITEM SELECTION
         if selected:
-            sPen = sPenPattern
-        self.setSelectionPen(sPen)
+            selectionPen = selectionPenPattern
+        self.setSelectionPen(selectionPen)
 
         # SYNTAX VALIDATION
         if valid is not None:
-            bBrush = bBrushOkPattern if valid else bBrushBadPattern
-        self.setBackgroundBrush(bBrush)
+            backgroundBrush = backgroundBrushOkPattern if valid else backgroundBrushBadPattern
+        self.setBackgroundBrush(backgroundBrush)
 
     @abstractmethod
     def width(self):
@@ -659,38 +661,40 @@ class AbstractResizableNode(AbstractNode):
         """
         num = self.handleNum
 
-        bBrushOkPattern = QBrush(QColor(43, 173, 63, 160))
-        bBrushBadPattern = QBrush(QColor(179, 12, 12, 160))
-        hBrushPattern = QBrush(QColor(168, 168, 168, 255))
-        hPenPattern = QPen(QColor(0, 0, 0, 255), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-        sPenPattern = QPen(QColor(0, 0, 0), 1.0, Qt.DashLine)
+        backgroundBrushOkPattern = QBrush(QColor(43, 173, 63, 160))
+        backgroundBrushBadPattern = QBrush(QColor(179, 12, 12, 160))
+        handleBrushPattern = QBrush(QColor(168, 168, 168, 255))
+        handlePenPattern = QPen(QColor(0, 0, 0, 255), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+        selectionPenPattern = QPen(QColor(0, 0, 0), 1.0, Qt.DashLine)
+        noBrush = QBrush(Qt.NoBrush)
+        noPen = QPen(Qt.NoPen)
 
-        hBrush = [Qt.NoBrush] * num
-        hPen = [Qt.NoPen] * num
-        sPen = Qt.NoPen
+        handleBrush = [noBrush] * num
+        handlePen = [noPen] * num
+        selectionPen = noPen
 
         # ITEM SELECTION & RESIZE HANDLES
         if selected:
             if handle is None:
-                hBrush = [hBrushPattern] * num
-                hPen = [hPenPattern] * num
-                sPen = sPenPattern
+                handleBrush = [handleBrushPattern] * num
+                handlePen = [handlePenPattern] * num
+                selectionPen = selectionPenPattern
             else:
                 for i in range(num):
                     if i == handle:
-                        hBrush[i] = hBrushPattern
-                        hPen[i] = hPenPattern
+                        handleBrush[i] = handleBrushPattern
+                        handlePen[i] = handlePenPattern
 
         for i in range(num):
-            self.setHandleBrush(i, hBrush[i])
-            self.setHandlePen(i, hPen[i])
+            self.setHandleBrush(i, handleBrush[i])
+            self.setHandlePen(i, handlePen[i])
 
-        self.setSelectionPen(sPen)
+        self.setSelectionPen(selectionPen)
 
         # SYNTAX VALIDATION
-        brush = Qt.NoBrush
+        brush = noBrush
         if valid is not None:
-            brush = bBrushOkPattern if valid else bBrushBadPattern
+            brush = backgroundBrushOkPattern if valid else backgroundBrushBadPattern
         self.setBackgroundBrush(brush)
 
     def updateHandles(self):
@@ -833,7 +837,7 @@ class AbstractResizableNode(AbstractNode):
 
             scene.setMode(DiagramMode.Idle)
 
-        self.updatePenAndBrush(selected=True)
+        self.updatePenAndBrush(selected=self.isSelected())
 
         super().mouseReleaseEvent(mouseEvent)
 

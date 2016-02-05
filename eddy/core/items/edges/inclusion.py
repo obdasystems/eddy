@@ -37,7 +37,7 @@ from math import sin, cos, radians, pi as M_PI
 from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
 
-from eddy.core.datatypes import DiagramMode, Item
+from eddy.core.datatypes import Item
 from eddy.core.items.edges.common.base import AbstractEdge
 
 
@@ -52,8 +52,8 @@ class InclusionEdge(AbstractEdge):
         Initialize the edge.
         :type complete: bool
         """
-        super().__init__(**kwargs)
         self._complete = complete
+        super().__init__(**kwargs)
         self.tail = QPolygonF()
 
     ####################################################################################################################
@@ -98,6 +98,34 @@ class InclusionEdge(AbstractEdge):
         }
         return scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
 
+    @staticmethod
+    def createHead(pos1, angle, size):
+        """
+        Create the head polygon.
+        :type pos1: QPointF
+        :type angle: float
+        :type size: int
+        :rtype: QPolygonF
+        """
+        rad = radians(angle)
+        pos2 = pos1 - QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+        pos3 = pos1 - QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+        return QPolygonF([pos1, pos2, pos3])
+
+    @staticmethod
+    def createTail(pos1, angle, size):
+        """
+        Create the tail polygon.
+        :type pos1: QPointF
+        :type angle: float
+        :type size: int
+        :rtype: QPolygonF
+        """
+        rad = radians(angle)
+        pos2 = pos1 + QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+        pos3 = pos1 + QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+        return QPolygonF([pos1, pos2, pos3])
+
     ####################################################################################################################
     #                                                                                                                  #
     #   GEOMETRY                                                                                                       #
@@ -112,11 +140,9 @@ class InclusionEdge(AbstractEdge):
         path = QPainterPath()
         path.addPath(self.selection)
         path.addPolygon(self.head)
+        path.addPolygon(self.tail)
 
-        if self.complete:
-            path.addPolygon(self.tail)
-
-        for shape in self.handles.values():
+        for shape in self.handles:
             path.addEllipse(shape)
         for shape in self.anchors.values():
             path.addEllipse(shape)
@@ -131,10 +157,7 @@ class InclusionEdge(AbstractEdge):
         path = QPainterPath()
         path.addPath(self.path)
         path.addPolygon(self.head)
-
-        if self.complete:
-            path.addPolygon(self.tail)
-
+        path.addPolygon(self.tail)
         return path
 
     def shape(self):
@@ -145,12 +168,10 @@ class InclusionEdge(AbstractEdge):
         path = QPainterPath()
         path.addPath(self.selection)
         path.addPolygon(self.head)
-
-        if self.complete:
-            path.addPolygon(self.tail)
+        path.addPolygon(self.tail)
 
         if self.isSelected():
-            for shape in self.handles.values():
+            for shape in self.handles:
                 path.addEllipse(shape)
             for shape in self.anchors.values():
                 path.addEllipse(shape)
@@ -176,7 +197,12 @@ class InclusionEdge(AbstractEdge):
         targetPos = target or self.target.anchor(self)
 
         self.updateAnchors()
-        self.updateHandles()
+        self.updateBreakPoints()
+        self.updateZValue()
+
+        createSelectionArea = self.createSelectionArea
+        createHead = self.createHead
+        createTail = self.createTail
 
         ################################################################################################################
         #                                                                                                              #
@@ -186,57 +212,12 @@ class InclusionEdge(AbstractEdge):
 
         collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
 
-        def createSelectionBox(pos1, pos2, angle, size):
-            """
-            Constructs the selection polygon between pos1 and pos2 according to the given angle.
-            :type pos1: QPointF
-            :type pos2: QPointF
-            :type angle: float
-            :type size: int
-            :rtype: QPolygonF
-            """
-            rad = radians(angle)
-            x = size / 2 * sin(rad)
-            y = size / 2 * cos(rad)
-            a = QPointF(+x, +y)
-            b = QPointF(-x, -y)
-            return QPolygonF([pos1 + a, pos1 + b, pos2 + b, pos2 + a])
-
-        def createHead(pos1, angle, size):
-            """
-            Create the head polygon.
-            :type pos1: QPointF
-            :type angle: float
-            :type size: int
-            :rtype: QPolygonF
-            """
-            rad = radians(angle)
-            pos2 = pos1 - QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-            pos3 = pos1 - QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-            return QPolygonF([pos1, pos2, pos3])
-
-        def createTail(pos1, angle, size):
-            """
-            Create the tail polygon.
-            :type pos1: QPointF
-            :type angle: float
-            :type size: int
-            :rtype: QPolygonF
-            """
-            rad = radians(angle)
-            pos2 = pos1 + QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-            pos3 = pos1 + QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-            return QPolygonF([pos1, pos2, pos3])
-
         self.path = QPainterPath()
         self.selection = QPainterPath()
+        self.head = QPolygonF()
+        self.tail = QPolygonF()
 
-        if len(collection) == 0:
-
-            self.head = QPolygonF()
-            self.tail = QPolygonF()
-
-        elif len(collection) == 1:
+        if len(collection) == 1:
 
             subpath = collection[0]
             p1 = sourceNode.intersection(subpath)
@@ -244,7 +225,7 @@ class InclusionEdge(AbstractEdge):
             if p1 is not None and p2 is not None:
                 self.path.moveTo(p1)
                 self.path.lineTo(p2)
-                self.selection.addPolygon(createSelectionBox(p1, p2, subpath.angle(), boxSize))
+                self.selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), boxSize))
                 self.head = createHead(p2, subpath.angle(), headSize)
                 if self.complete:
                     self.tail = createTail(p1, subpath.angle(), headSize)
@@ -263,24 +244,24 @@ class InclusionEdge(AbstractEdge):
 
                 self.path.moveTo(p11)
                 self.path.lineTo(p12)
-                self.selection.addPolygon(createSelectionBox(p11, p12, subpath1.angle(), boxSize))
+                self.selection.addPolygon(createSelectionArea(p11, p12, subpath1.angle(), boxSize))
 
                 for subpath in collection[1:-1]:
                     p1 = subpath.p1()
                     p2 = subpath.p2()
                     self.path.moveTo(p1)
                     self.path.lineTo(p2)
-                    self.selection.addPolygon(createSelectionBox(p1, p2, subpath.angle(), boxSize))
+                    self.selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), boxSize))
 
                 self.path.moveTo(p21)
                 self.path.lineTo(p22)
-                self.selection.addPolygon(createSelectionBox(p21, p22, subpathN.angle(), boxSize))
+                self.selection.addPolygon(createSelectionArea(p21, p22, subpathN.angle(), boxSize))
 
                 self.head = createHead(p22, subpathN.angle(), headSize)
                 if self.complete:
                     self.tail = createTail(p11, subpath1.angle(), headSize)
 
-        self.updateZValue()
+        self.updatePenAndBrush(selected=self.isSelected(), visible=self.canDraw())
         self.update()
 
     ####################################################################################################################
@@ -289,50 +270,6 @@ class InclusionEdge(AbstractEdge):
     #                                                                                                                  #
     ####################################################################################################################
 
-    @classmethod
-    def image(cls, **kwargs):
-        """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
-        """
-        lineWidth = 54
-        headSize = 8  # length of the head side
-        headSpan = 4  # offset between line end and head end (this is needed
-                      # to prevent artifacts to be visible on low res screens)
-
-        # Initialize the pixmap
-        pixmap = QPixmap(kwargs['w'], kwargs['h'])
-        pixmap.fill(Qt.transparent)
-        painter = QPainter(pixmap)
-
-        # Initialize the line
-        line_p1 = QPointF(((kwargs['w'] - lineWidth) / 2), kwargs['h'] / 2)
-        line_p2 = QPointF(((kwargs['w'] - lineWidth) / 2) + lineWidth - (headSpan / 2), kwargs['h'] / 2)
-        line = QLineF(line_p1, line_p2)
-
-        angle = line.angle()
-
-        # Calculate head coordinates
-        p1 = QPointF(line.p2().x() + (headSpan / 2), line.p2().y())
-        p2 = p1 - QPointF(sin(angle + M_PI / 3.0) * headSize, cos(angle + M_PI / 3.0) * headSize)
-        p3 = p1 - QPointF(sin(angle + M_PI - M_PI / 3.0) * headSize, cos(angle + M_PI - M_PI / 3.0) * headSize)
-
-        # Initialize edge head
-        head = QPolygonF([p1, p2, p3])
-
-        # Draw the polygon
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-        painter.drawLine(line)
-
-        # Draw the head
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-        painter.setBrush(QColor(0, 0, 0))
-        painter.drawPolygon(head)
-
-        return pixmap
-
     def paint(self, painter, option, widget=None):
         """
         Paint the edge in the diagram scene.
@@ -340,46 +277,52 @@ class InclusionEdge(AbstractEdge):
         :type option: int
         :type widget: QWidget
         """
-        if self.canDraw():
+        # SELECTION AREA
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.fillPath(self.selection, self.selectionBrush())
+        # EDGE LINE
+        painter.setPen(self.pen())
+        painter.drawPath(self.path)
+        # HEAD/TAIL POLYGON
+        painter.setPen(self.headPen())
+        painter.setBrush(self.headBrush())
+        painter.drawPolygon(self.head)
+        painter.drawPolygon(self.tail)
+        # BREAKPOINTS AND ANCHOR POINTS
+        painter.setPen(self.handlePen())
+        painter.setBrush(self.handleBrush())
+        for shape in self.handles:
+            painter.drawEllipse(shape)
+        for shape in self.anchors.values():
+            painter.drawEllipse(shape)
 
-            scene = self.scene()
-
-            # Draw the selection path if needed
-            if scene.mode in (DiagramMode.Idle, DiagramMode.NodeMove) and self.isSelected():
-                painter.setRenderHint(QPainter.Antialiasing)
-                painter.fillPath(self.selection, self.selectionBrush)
-
-            # Draw the edge path
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(self.shapePen)
-            painter.drawPath(self.path)
-
-            # Draw the head polygon
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(self.headPen)
-            painter.setBrush(self.headBrush)
-            painter.drawPolygon(self.head)
-
-            # Draw the tail polygon
-            if self.complete:
-                painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(self.headPen)
-                painter.setBrush(self.headBrush)
-                painter.drawPolygon(self.tail)
-
-            if self.isSelected():
-
-                # Draw breakpoint handles
-                painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(self.handlePen)
-                painter.setBrush(self.handleBrush)
-                for rect in self.handles.values():
-                    painter.drawEllipse(rect)
-
-                # Draw anchor points
-                if self.target:
-                    painter.setRenderHint(QPainter.Antialiasing)
-                    painter.setPen(self.handlePen)
-                    painter.setBrush(self.handleBrush)
-                    for rect in self.anchors.values():
-                        painter.drawEllipse(rect)
+    @classmethod
+    def image(cls, **kwargs):
+        """
+        Returns an image suitable for the palette.
+        :rtype: QPixmap
+        """
+        # INITIALIZATION
+        pixmap = QPixmap(kwargs['w'], kwargs['h'])
+        pixmap.fill(Qt.transparent)
+        painter = QPainter(pixmap)
+        # INIT THE LINE
+        p1 = QPointF(((kwargs['w'] - 54) / 2), kwargs['h'] / 2)
+        p2 = QPointF(((kwargs['w'] - 54) / 2) + 54 - 2, kwargs['h'] / 2)
+        line = QLineF(p1, p2)
+        # CLACULATE HEAD COORDS
+        angle = line.angle()
+        p1 = QPointF(line.p2().x() + 2, line.p2().y())
+        p2 = p1 - QPointF(sin(angle + M_PI / 3.0) * 8, cos(angle + M_PI / 3.0) * 8)
+        p3 = p1 - QPointF(sin(angle + M_PI - M_PI / 3.0) * 8, cos(angle + M_PI - M_PI / 3.0) * 8)
+        # INITIALIZE HEAD
+        head = QPolygonF([p1, p2, p3])
+        # DRAW EDGE LINE
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        painter.drawLine(line)
+        # DRAW EDGE HEAD
+        painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        painter.setBrush(QColor(0, 0, 0))
+        painter.drawPolygon(head)
+        return pixmap

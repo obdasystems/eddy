@@ -329,7 +329,6 @@ class GraphmlLoader(AbstractLoader):
 
                 item.source.addEdge(item)
                 item.target.addEdge(item)
-                item.updateEdge()
                 return item
 
             data = data.nextSiblingElement('data')
@@ -642,24 +641,25 @@ class GraphmlLoader(AbstractLoader):
                 # noinspection PyArgumentList
                 QApplication.processEvents()
 
-                temp = None
+                arch = None
                 item = self.itemFromGraphmlNode(edge)
 
                 try:
 
                     if item is Item.InclusionEdge:
-                        temp = self.buildInclusionEdge(edge)
+                        arch = self.buildInclusionEdge(edge)
                     elif item is Item.InputEdge:
-                        temp = self.buildInputEdge(edge)
+                        arch = self.buildInputEdge(edge)
 
-                    if not temp:
+                    if not arch:
                         raise ValueError('unknown edge with id {}'.format(edge.attribute('id')))
 
                 except Exception as e:
                     self.errors.append(e)
                 else:
-                    self.scene.addItem(temp)
-                    self.scene.guid.update(temp.id)
+                    self.scene.addItem(arch)
+                    self.scene.guid.update(arch.id)
+                    arch.updateEdge()
                 finally:
                     edge = edge.nextSiblingElement('edge')
 

@@ -32,14 +32,12 @@
 ##########################################################################
 
 
-import sys
-
 from math import sin, cos, radians, pi as M_PI
 
 from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
 
-from eddy.core.datatypes import Font, DiagramMode, Item
+from eddy.core.datatypes import Font, Item, Platform
 from eddy.core.items.edges.common.base import AbstractEdge
 from eddy.core.items.edges.common.label import Label
 
@@ -76,7 +74,21 @@ class InstanceOfEdge(AbstractEdge):
         }
         return scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
 
-    def updateTextPos(self, points):
+    @staticmethod
+    def createHead(pos1, angle, size):
+        """
+        Create the head polygon.
+        :type pos1: QPointF
+        :type angle: float
+        :type size: int
+        :rtype: QPolygonF
+        """
+        rad = radians(angle)
+        pos2 = pos1 - QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+        pos3 = pos1 - QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+        return QPolygonF([pos1, pos2, pos3])
+
+    def updateLabel(self, points):
         """
         Update the label text position.
         :type points: T <= tuple | list
@@ -98,7 +110,7 @@ class InstanceOfEdge(AbstractEdge):
         path.addPath(self.selection)
         path.addPolygon(self.head)
 
-        for shape in self.handles.values():
+        for shape in self.handles:
             path.addEllipse(shape)
         for shape in self.anchors.values():
             path.addEllipse(shape)
@@ -126,7 +138,7 @@ class InstanceOfEdge(AbstractEdge):
         path.addPolygon(self.head)
 
         if self.isSelected():
-            for shape in self.handles.values():
+            for shape in self.handles:
                 path.addEllipse(shape)
             for shape in self.anchors.values():
                 path.addEllipse(shape)
@@ -152,7 +164,11 @@ class InstanceOfEdge(AbstractEdge):
         targetPos = target or self.target.anchor(self)
 
         self.updateAnchors()
-        self.updateHandles()
+        self.updateBreakPoints()
+        self.updateZValue()
+
+        createSelectionArea = self.createSelectionArea
+        createHead = self.createHead
 
         ################################################################################################################
         #                                                                                                              #
@@ -163,47 +179,15 @@ class InstanceOfEdge(AbstractEdge):
         # get the list of visible subpaths for this edge
         collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
 
-        def createSelectionBox(pos1, pos2, angle, size):
-            """
-            Constructs the selection polygon between pos1 and pos2 according to the given angle.
-            :type pos1: QPointF
-            :type pos2: QPointF
-            :type angle: float
-            :type size: int
-            :rtype: QPolygonF
-            """
-            rad = radians(angle)
-            x = size / 2 * sin(rad)
-            y = size / 2 * cos(rad)
-            a = QPointF(+x, +y)
-            b = QPointF(-x, -y)
-            return QPolygonF([pos1 + a, pos1 + b, pos2 + b, pos2 + a])
-
-        def createHead(pos1, angle, size):
-            """
-            Create the head polygon.
-            :type pos1: QPointF
-            :type angle: float
-            :type size: int
-            :rtype: QPolygonF
-            """
-            rad = radians(angle)
-            pos2 = pos1 - QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-            pos3 = pos1 - QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-            return QPolygonF([pos1, pos2, pos3])
-
         self.path = QPainterPath()
         self.selection = QPainterPath()
+        self.head = QPolygonF()
 
         points = [] # will store all the points defining the edge not to recompute the path to update the label
         append = points.append  # keep this shortcut and the one below since it saves a lot of computation
         extend = points.extend  # more: http://blog.cdleary.com/2010/04/efficiency-of-list-comprehensions/
 
-        if len(collection) == 0:
-
-            self.head = QPolygonF()
-
-        elif len(collection) == 1:
+        if len(collection) == 1:
 
             subpath = collection[0]
             p1 = sourceNode.intersection(subpath)
@@ -211,7 +195,7 @@ class InstanceOfEdge(AbstractEdge):
             if p1 is not None and p2 is not None:
                 self.path.moveTo(p1)
                 self.path.lineTo(p2)
-                self.selection.addPolygon(createSelectionBox(p1, p2, subpath.angle(), boxSize))
+                self.selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), boxSize))
                 self.head = createHead(p2, subpath.angle(), headSize)
                 extend((p1, p2))
 
@@ -229,7 +213,7 @@ class InstanceOfEdge(AbstractEdge):
 
                 self.path.moveTo(p11)
                 self.path.lineTo(p12)
-                self.selection.addPolygon(createSelectionBox(p11, p12, subpath1.angle(), boxSize))
+                self.selection.addPolygon(createSelectionArea(p11, p12, subpath1.angle(), boxSize))
                 extend((p11, p12))
 
                 for subpath in collection[1:-1]:
@@ -237,18 +221,18 @@ class InstanceOfEdge(AbstractEdge):
                     p2 = subpath.p2()
                     self.path.moveTo(p1)
                     self.path.lineTo(p2)
-                    self.selection.addPolygon(createSelectionBox(p1, p2, subpath.angle(), boxSize))
+                    self.selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), boxSize))
                     append(p2)
 
                 self.path.moveTo(p21)
                 self.path.lineTo(p22)
-                self.selection.addPolygon(createSelectionBox(p21, p22, subpathN.angle(), boxSize))
+                self.selection.addPolygon(createSelectionArea(p21, p22, subpathN.angle(), boxSize))
                 append(p22)
 
                 self.head = createHead(p22, subpathN.angle(), headSize)
 
-        self.updateZValue()
-        self.updateTextPos(points)
+        self.updatePenAndBrush(selected=self.isSelected(), visible=self.canDraw())
+        self.updateLabel(points)
         self.update()
 
     ####################################################################################################################
@@ -257,55 +241,6 @@ class InstanceOfEdge(AbstractEdge):
     #                                                                                                                  #
     ####################################################################################################################
 
-    @classmethod
-    def image(cls, **kwargs):
-        """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
-        """
-        lineWidth = 54
-        headSize = 8  # length of the head side
-        headSpan = 4  # offset between line end and head end (this is needed
-                      # to prevent artifacts to be visible on low res screens)
-
-        # Initialize the pixmap
-        pixmap = QPixmap(kwargs['w'], kwargs['h'])
-        pixmap.fill(Qt.transparent)
-        painter = QPainter(pixmap)
-
-        # Initialize the line
-        line_p1 = QPointF(((kwargs['w'] - lineWidth) / 2), kwargs['h'] / 2)
-        line_p2 = QPointF(((kwargs['w'] - lineWidth) / 2) + lineWidth - (headSpan / 2), kwargs['h'] / 2)
-        line = QLineF(line_p1, line_p2)
-
-        angle = radians(line.angle())
-
-        # Calculate head coordinates
-        p1 = QPointF(line.p2().x() + (headSpan / 2), line.p2().y())
-        p2 = p1 - QPointF(sin(angle + M_PI / 3.0) * headSize, cos(angle + M_PI / 3.0) * headSize)
-        p3 = p1 - QPointF(sin(angle + M_PI - M_PI / 3.0) * headSize, cos(angle + M_PI - M_PI / 3.0) * headSize)
-
-        # Initialize edge head
-        head = QPolygonF([p1, p2, p3])
-
-        # Draw the polygon
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-        painter.drawLine(line)
-
-        # Draw the head
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-        painter.setBrush(QColor(0, 0, 0))
-        painter.drawPolygon(head)
-
-        # Draw the text on top of the edge
-        space = 2 if sys.platform.startswith('darwin') else 0
-        painter.setFont(Font('Arial', 9, Font.Light))
-        painter.drawText(line_p1.x() + space, (kwargs['h'] / 2) - 4, 'instanceOf')
-
-        return pixmap
-
     def paint(self, painter, option, widget=None):
         """
         Paint the edge in the diagram scene.
@@ -313,39 +248,56 @@ class InstanceOfEdge(AbstractEdge):
         :type option: int
         :type widget: QWidget
         """
-        if self.canDraw():
+        # SELECTION AREA
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.fillPath(self.selection, self.selectionBrush())
+        # EDGE LINE
+        painter.setPen(self.pen())
+        painter.drawPath(self.path)
+        # HEAD POLYGON
+        painter.setPen(self.headPen())
+        painter.setBrush(self.headBrush())
+        painter.drawPolygon(self.head)
+        # BREAKPOINTS AND ANCHOR POINTS
+        painter.setPen(self.handlePen())
+        painter.setBrush(self.handleBrush())
+        for shape in self.handles:
+            painter.drawEllipse(shape)
+        for shape in self.anchors.values():
+            painter.drawEllipse(shape)
 
-            scene = self.scene()
+    @classmethod
+    def image(cls, **kwargs):
+        """
+        Returns an image suitable for the palette.
+        :rtype: QPixmap
+        """
+        # INITIALIZATION
+        pixmap = QPixmap(kwargs['w'], kwargs['h'])
+        pixmap.fill(Qt.transparent)
+        painter = QPainter(pixmap)
+        # INITIALIZE EDGE LINE
+        pp1 = QPointF(((kwargs['w'] - 52) / 2), kwargs['h'] / 2)
+        pp2 = QPointF(((kwargs['w'] - 52) / 2) + 52 - 2, kwargs['h'] / 2)
+        line = QLineF(pp1, pp2)
+        # CALCULATE HEAD COORDINATES
+        angle = radians(line.angle())
+        p1 = QPointF(line.p2().x() + 2, line.p2().y())
+        p2 = p1 - QPointF(sin(angle + M_PI / 3.0) * 8, cos(angle + M_PI / 3.0) * 8)
+        p3 = p1 - QPointF(sin(angle + M_PI - M_PI / 3.0) * 8, cos(angle + M_PI - M_PI / 3.0) * 8)
+        # INITIALIZE EDGE HEAD
+        head = QPolygonF([p1, p2, p3])
+        # DRAW THE POLYGON
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        painter.drawLine(line)
+        # DRAW HEAD
+        painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        painter.setBrush(QColor(0, 0, 0))
+        painter.drawPolygon(head)
+        # DRAW THE TEXT ON TOP OF THE EDGE
+        space = 2 if Platform.identify() is Platform.Darwin else 0
+        painter.setFont(Font('Arial', 9, Font.Light))
+        painter.drawText(pp1.x() + space, (kwargs['h'] / 2) - 4, 'instanceOf')
 
-            # Draw the selection path if needed
-            if scene.mode in (DiagramMode.Idle, DiagramMode.NodeMove) and self.isSelected():
-                painter.setRenderHint(QPainter.Antialiasing)
-                painter.fillPath(self.selection, self.selectionBrush)
-
-            # Draw the edge path
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(self.shapePen)
-            painter.drawPath(self.path)
-
-            # Draw the head polygon
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(self.headPen)
-            painter.setBrush(self.headBrush)
-            painter.drawPolygon(self.head)
-
-            if self.isSelected():
-
-                # Draw breakpoint handles
-                painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(self.handlePen)
-                painter.setBrush(self.handleBrush)
-                for rect in self.handles.values():
-                    painter.drawEllipse(rect)
-
-                # Draw anchor points
-                if self.target:
-                    painter.setRenderHint(QPainter.Antialiasing)
-                    painter.setPen(self.handlePen)
-                    painter.setBrush(self.handleBrush)
-                    for rect in self.anchors.values():
-                        painter.drawEllipse(rect)
+        return pixmap
