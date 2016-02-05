@@ -58,10 +58,9 @@ class DiagramScene(QGraphicsScene):
     MinSize = 2000
     MaxSize = 1000000
 
-    edgeInserted = pyqtSignal('QGraphicsItem', int)  # emitted when a edge is inserted in the scene
-    nodeInserted = pyqtSignal('QGraphicsItem', int)  # emitted when a node is inserted in the scene
-    modeChanged = pyqtSignal(DiagramMode)  # emitted when the operational mode changes
-    updated = pyqtSignal()  # emitted when the scene is updated
+    itemAdded = pyqtSignal('QGraphicsItem', int)
+    modeChanged = pyqtSignal(DiagramMode)
+    updated = pyqtSignal()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -77,7 +76,6 @@ class DiagramScene(QGraphicsScene):
         """
         super().__init__(parent)
         self.mainwindow = mainwindow  ## main window reference
-        self.command = None  ## undo/redo command to be added in the stack
         self.clipboardPasteOffsetX = Clipboard.PasteOffsetX  ## X offset to be added to item position upon paste
         self.clipboardPasteOffsetY = Clipboard.PasteOffsetY  ## Y offset to be added to item position upon paste
         self.document = File()  ## file associated with the current scene
@@ -92,6 +90,7 @@ class DiagramScene(QGraphicsScene):
         self.validator = OWL2RLValidator(self)
         self.mode = DiagramMode.Idle  ## operation mode
         self.modeParam = None  ## extra parameter for the operation mode (see setMode())
+        self.mousePressEdge = None  ## edge being inserted from a mouse press/move/release combo
         self.mouseOverNode = None  ## node below the mouse cursor during edge insertion
         self.mousePressPos = None  ## scene position where the mouse has been pressed
         self.mousePressNode = None  ## node acting as mouse grabber during mouse move events
@@ -140,7 +139,7 @@ class DiagramScene(QGraphicsScene):
                 # no need to switch back the operation mode here: the signal handlers already does that and takes
                 # care of the keyboard modifiers being held (if CTRL is being held the operation mode doesn't change)
                 self.undostack.push(CommandNodeAdd(scene=self, node=node))
-                self.nodeInserted.emit(node, mouseEvent.modifiers())
+                self.itemAdded.emit(node, mouseEvent.modifiers())
 
                 super().mousePressEvent(mouseEvent)
 
@@ -159,8 +158,8 @@ class DiagramScene(QGraphicsScene):
                     # noinspection PyTypeChecker
                     edge = self.itemFactory.create(item=self.modeParam, scene=self, source=node)
                     edge.updateEdge(target=mouseEvent.scenePos())
-                    self.command = CommandEdgeAdd(scene=self, edge=edge)
-                    self.addItem(self.command.edge)
+                    self.addItem(edge)
+                    self.mousePressEdge = edge
 
                 super().mousePressEvent(mouseEvent)
 
@@ -229,23 +228,33 @@ class DiagramScene(QGraphicsScene):
                 #                                                                                                      #
                 ########################################################################################################
 
-                if self.command and self.command.edge:
+                if self.mousePressEdge:
+
+                    edge = self.mousePressEdge
                     mousePos = mouseEvent.scenePos()
-                    statusbar = self.mainwindow.statusBar()
-                    self.command.edge.updateEdge(target=mousePos)
-                    self.mouseOverNode = self.itemOnTopOf(mousePos, edges=False, skip={self.command.edge.source})
-                    if self.mouseOverNode:
-                        res = self.validator.result(self.command.edge.source, self.command.edge, self.mouseOverNode)
-                        statusbar.showMessage(res.message)
+                    currentNode = self.itemOnTopOf(mousePos, edges=False, skip={edge.source})
+                    previousNode = self.mouseOverNode
+                    statusBar = self.mainwindow.statusBar()
+
+                    edge.updateEdge(target=mousePos)
+
+                    if previousNode:
+                        previousNode.updatePenAndBrush(selected=False)
+
+                    if currentNode:
+                        res = self.validator.result(edge.source, edge, currentNode)
+                        currentNode.updatePenAndBrush(selected=False, valid=res.valid)
+                        statusBar.showMessage(res.message)
+                        self.mouseOverNode = currentNode
                     else:
-                        # always clear the validator and the message no matter if we didn't move out from a node
-                        statusbar.clearMessage()
+                        statusBar.clearMessage()
+                        self.mouseOverNode = None
                         self.validator.clear()
 
             else:
 
-                # if we are still idle we are probably going to start a node(s) move: if that's
-                # the case change the operational mode before actually computing delta movements
+                # If we are still idle we are probably going to start a node(s) move: if that's
+                # the case change the operational mode before actually computing delta movements.
                 if self.mode is DiagramMode.Idle:
                     if self.mousePressNode:
                         self.setMode(DiagramMode.NodeMove)
@@ -258,25 +267,25 @@ class DiagramScene(QGraphicsScene):
                     #                                                                                                  #
                     ####################################################################################################
 
-                    # calculate the delta and adjust the value if the snap to grid feature is enabled: we'll use the
-                    # position of the node acting as mouse grabber to determine the new delta to and move other items
+                    # Calculate the delta and adjust the value if the snap to grid feature is enabled: we'll use the
+                    # position of the node acting as mouse grabber to determine the new delta to and move other items.
                     point = self.snapToGrid(self.mousePressNodePos + mouseEvent.scenePos() - self.mousePressPos)
                     delta = point - self.mousePressNodePos
                     edges = set()
 
-                    # update all the breakpoints positions
+                    # Update all the breakpoints positions.
                     for edge, breakpoints in self.mousePressData['edges'].items():
                         for i in range(len(breakpoints)):
                             edge.breakpoints[i] = breakpoints[i] + delta
 
-                    # move all the selected nodes
+                    # Move all the selected nodes.
                     for node, data in self.mousePressData['nodes'].items():
                         node.setPos(data['pos'] + delta)
                         for edge, pos in data['anchors'].items():
                             node.setAnchor(edge, pos + delta)
                             edges |= set(node.edges)
 
-                    # update edges
+                    # Update edges.
                     for edge in edges:
                         edge.updateEdge()
 
@@ -297,29 +306,39 @@ class DiagramScene(QGraphicsScene):
                 #                                                                                                      #
                 ########################################################################################################
 
-                if self.command and self.command.edge:
+                if self.mousePressEdge:
 
-                    edge = self.command.edge
-                    node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False, skip={edge.source})
+                    edge = self.mousePressEdge
+                    edge.source.updatePenAndBrush(selected=False)
+                    mousePos = mouseEvent.scenePos()
+                    mouseModifiers = mouseEvent.modifiers()
+                    currentNode = self.itemOnTopOf(mousePos, edges=False, skip={edge.source})
+                    insertEdge = False
 
-                    if node and self.validator.valid(edge.source, edge, node):
-                        self.command.end(node)
-                        self.undostack.push(self.command)
+                    if currentNode:
+                        currentNode.updatePenAndBrush(selected=False)
+                        if self.validator.valid(edge.source, edge, currentNode):
+                            edge.target = currentNode
+                            insertEdge = True
+
+                    if insertEdge:
+                        self.undostack.push(CommandEdgeAdd(scene=self, edge=edge))
                         self.updated.emit()
                     else:
+                        edge.source.removeEdge(edge)
                         self.removeItem(edge)
 
-                    # always emit this signal even if the edge has not been inserted since this will clear
-                    # also the toolbox switching back the operation mode to DiagramMode.Idle in case the CTRL
-                    # keyboard modifier is not being held (in which case the toolbox button will stay selected)
-                    self.edgeInserted.emit(edge, mouseEvent.modifiers())
-
-                    self.command = None
                     self.mouseOverNode = None
-                    statusbar = self.mainwindow.statusBar()
-                    statusbar.clearMessage()
+                    self.mousePressEdge = None
                     self.clearSelection()
                     self.validator.clear()
+                    statusBar = self.mainwindow.statusBar()
+                    statusBar.clearMessage()
+
+                    # Always emit this signal even if the edge has not been inserted since this will clear
+                    # also the palette switching back the operation mode to DiagramMode.Idle in case the CTRL
+                    # keyboard modifier is not being held (in which case the palette button will stay selected).
+                    self.itemAdded.emit(edge, mouseModifiers)
 
             elif self.mode is DiagramMode.NodeMove:
 
@@ -364,7 +383,6 @@ class DiagramScene(QGraphicsScene):
         # or printing it. However profiling the application revealed that checking the type of
         # the active paint device using isinstance() was time consuming, therefore we removed
         # such feature => the user can always disable the grid before printing or exporting to PDF:
-
         if self.settings.value('scene/snap_to_grid', False, bool):
             startX = int(rect.left()) - (int(rect.left()) % DiagramScene.GridSize)
             startY = int(rect.top()) - (int(rect.top()) % DiagramScene.GridSize)

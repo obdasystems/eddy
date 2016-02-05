@@ -33,7 +33,7 @@
 
 
 from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QBrush
 
 from eddy.core.datatypes import Item, Identity
 from eddy.core.functions import identify
@@ -50,10 +50,10 @@ class DisjointUnionNode(OperatorNode):
     def __init__(self, brush=None, **kwargs):
         """
         Initialize the node.
-        :type brush: T <= QBrush | QColor | Color | tuple | list | bytes | unicode
+        :type brush: QBrush
         """
-        super().__init__(brush='#000000', **kwargs)
         self._identity = Identity.Neutral
+        super().__init__(brush=QBrush(QColor(0, 0, 0)), **kwargs)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -99,11 +99,11 @@ class DisjointUnionNode(OperatorNode):
         :type scene: DiagramScene
         """
         kwargs = {
-            'description': self.description,
-            'height': self.height(),
             'id': self.id,
-            'url': self.url,
+            'height': self.height(),
             'width': self.width(),
+            'description': self.description,
+            'url': self.url,
         }
         node = scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
         node.setPos(self.pos())
@@ -169,19 +169,15 @@ class DisjointUnionNode(OperatorNode):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        # Initialize the pixmap
+        # INITIALIZATION
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
-
-        # Initialize the shape
-        polygon = cls.createPolygon(48, 30, 6)
-
-        # Draw the polygon
+        polygon = cls.createPolygon(48, 30)
+        # ITEM SHAPE
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
         painter.setBrush(QColor(0, 0, 0))
         painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
         painter.drawPolygon(polygon)
-
         return pixmap

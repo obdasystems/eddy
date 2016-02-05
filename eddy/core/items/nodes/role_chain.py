@@ -33,7 +33,7 @@
 
 
 from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QBrush
 
 from eddy.core.datatypes import Font, Item, DistinctList, Identity
 from eddy.core.items.nodes.common.operator import OperatorNode
@@ -50,10 +50,10 @@ class RoleChainNode(OperatorNode):
     def __init__(self, brush=None, inputs=None, **kwargs):
         """
         Initialize the node.
-        :type brush: T <= QBrush | QColor | Color | tuple | list | bytes | unicode
+        :type brush: QBrush
         :type inputs: DistinctList
         """
-        super().__init__(brush='#fcfcfc', **kwargs)
+        super().__init__(brush=QBrush(QColor(252, 252, 252)), **kwargs)
         self.inputs = inputs or DistinctList()
         self.label = Label('chain', movable=False, editable=False, parent=self)
         self.label.updatePos()
@@ -104,11 +104,11 @@ class RoleChainNode(OperatorNode):
         :type scene: DiagramScene
         """
         kwargs = {
-            'description': self.description,
-            'height': self.height(),
             'id': self.id,
-            'url': self.url,
+            'height': self.height(),
             'width': self.width(),
+            'description': self.description,
+            'url': self.url,
         }
         node = scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
         node.setPos(self.pos())
@@ -185,23 +185,18 @@ class RoleChainNode(OperatorNode):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        # Initialize the pixmap
+        # INITIALIZATION
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
-
-        # Initialize the shape
-        polygon = cls.createPolygon(48, 30, 6)
-
-        # Draw the polygon
+        polygon = cls.createPolygon(48, 30)
+        # ITEM SHAPE
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
         painter.setBrush(QColor(252, 252, 252))
         painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
         painter.drawPolygon(polygon)
-
-        # Draw the text within the polygon
+        # TEXT WITHIN THE SHAPE
         painter.setFont(Font('Arial', 11, Font.Light))
         painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'chain')
-
         return pixmap

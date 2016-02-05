@@ -33,6 +33,8 @@
 
 
 from PyQt5.QtCore import QFile, QIODevice, QPointF, QSettings
+from PyQt5.QtGui import QBrush
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtXml import QDomDocument
 
@@ -92,7 +94,7 @@ class GrapholLoader(AbstractLoader):
         """
         label = node.firstChildElement('shape:label')
         item = self.buildGenericNode(Item.AttributeNode, node)
-        item.brush = node.attribute('color', '#fcfcfc')
+        item.setBrush(QBrush(QColor(node.attribute('color', '#fcfcfc'))))
         item.setText(label.text())
         item.setTextPos(item.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return item
@@ -113,7 +115,7 @@ class GrapholLoader(AbstractLoader):
         """
         label = node.firstChildElement('shape:label')
         item = self.buildGenericNode(Item.ConceptNode, node)
-        item.brush = node.attribute('color', '#fcfcfc')
+        item.setBrush(QBrush(QColor(node.attribute('color', '#fcfcfc'))))
         item.setText(label.text())
         item.setTextPos(item.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return item
@@ -162,7 +164,7 @@ class GrapholLoader(AbstractLoader):
         """
         label = node.firstChildElement('shape:label')
         item = self.buildGenericNode(Item.IndividualNode, node)
-        item.brush = node.attribute('color', '#fcfcfc')
+        item.setBrush(QBrush(QColor(node.attribute('color', '#fcfcfc'))))
         item.setText(label.text())
         item.setTextPos(item.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return item
@@ -206,7 +208,7 @@ class GrapholLoader(AbstractLoader):
         """
         label = node.firstChildElement('shape:label')
         item = self.buildGenericNode(Item.RoleNode, node)
-        item.brush = node.attribute('color', '#fcfcfc')
+        item.setBrush(QBrush(QColor(node.attribute('color', '#fcfcfc'))))
         item.setText(label.text())
         item.setTextPos(item.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return item
@@ -238,7 +240,7 @@ class GrapholLoader(AbstractLoader):
         """
         label = node.firstChildElement('shape:label')
         item = self.buildGenericNode(Item.ValueDomainNode, node)
-        item.brush = node.attribute('color', '#fcfcfc')
+        item.setBrush(QBrush(QColor(node.attribute('color', '#fcfcfc'))))
         item.setText(label.text())
         item.setTextPos(item.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return item
@@ -259,7 +261,7 @@ class GrapholLoader(AbstractLoader):
         """
         label = node.firstChildElement('shape:label')
         item = self.buildGenericNode(Item.ValueRestrictionNode, node)
-        item.brush = node.attribute('color', '#fcfcfc')
+        item.setBrush(QBrush(QColor(node.attribute('color', '#fcfcfc'))))
         item.setText(label.text())
         item.setTextPos(item.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return item

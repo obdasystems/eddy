@@ -46,22 +46,16 @@ class CommandEdgeAdd(QUndoCommand):
         Initialize the command.
         """
         super().__init__('add {}'.format(edge.name))
-        self.edge = edge
-        self.scene = scene
-        self.inputs = {'redo': [], 'undo': []}
 
-    def end(self, node):
-        """
-        Complete the Edge insertion command.
-        :type node: AbstractNode
-        """
-        self.edge.target = node
+        self.edge = edge
         self.edge.source.addEdge(self.edge)
         self.edge.target.addEdge(self.edge)
         self.edge.updateEdge()
+        self.scene = scene
+        self.inputs = {'redo': [], 'undo': []}
 
         if self.edge.isItem(Item.InputEdge):
-            # if we are adding an input edge targeting a role chain or a property
+            # If we are adding an input edge targeting a role chain or a property
             # assertion node we need to save the new inputs order and compute the
             # old one by removing the current edge id from the input list.
             if self.edge.target.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):

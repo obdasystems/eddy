@@ -34,19 +34,21 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QBrush
+from PyQt5.QtWidgets import QAbstractGraphicsShapeItem, QGraphicsTextItem
 
 from eddy.core.datatypes import Item
 
 
-class AbstractItem(QGraphicsItem):
+class AbstractItem(QAbstractGraphicsShapeItem):
     """
     Base class for all the diagram items.
     """
     __metaclass__ = ABCMeta
 
-    item = Item.Undefined  # an integer identifying this node as unique item type
-    prefix = 'i' # a prefix character to be prepended to the unique id
+    item = Item.Undefined
+    prefix = 'i'
 
     def __init__(self, scene, id=None, description='', url='', **kwargs):
         """
@@ -59,6 +61,9 @@ class AbstractItem(QGraphicsItem):
         self._id = id or scene.guid.next(self.prefix)
         self._description = description
         self._url = url
+
+        self._selectionBrush = Qt.NoBrush
+        self._selectionPen = Qt.NoPen
 
         super().__init__(**kwargs)
 
@@ -161,6 +166,41 @@ class AbstractItem(QGraphicsItem):
         :rtype: bool
         """
         return self.item in args
+
+    def selectionBrush(self):
+        """
+        Returns the brush used to draw the selection area of the item.
+        :rtype: QBrush
+        """
+        return self._selectionBrush
+
+    def selectionPen(self):
+        """
+        Returns the pen used to draw the selection area of the item.
+        :rtype: QPen
+        """
+        return self._selectionPen
+
+    def setSelectionBrush(self, brush):
+        """
+        Sets the brush used to draw the selection area of the item.
+        :type brush: QBrush
+        """
+        self._selectionBrush = brush
+
+    def setSelectionPen(self, pen):
+        """
+        Sets the pen used to draw the selection area of the item.
+        :type pen: QPen
+        """
+        self._selectionPen = pen
+
+    @abstractmethod
+    def updatePenAndBrush(self, **kwargs):
+         """
+         Perform updates on pens and brushes needed by the paint() method.
+         """
+         pass
 
     ####################################################################################################################
     #                                                                                                                  #

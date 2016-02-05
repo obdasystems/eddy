@@ -33,7 +33,7 @@
 
 
 from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QBrush
 
 from eddy.core.datatypes import Font, Item, Identity, Restriction
 from eddy.core.items.nodes.common.restriction import RestrictionNode
@@ -49,9 +49,9 @@ class DomainRestrictionNode(RestrictionNode):
     def __init__(self, brush=None, **kwargs):
         """
         Initialize the node.
-        :type brush: T <= QBrush | QColor | Color | tuple | list | bytes | unicode
+        :type brush: QBrush
         """
-        super().__init__(brush='#fcfcfc', **kwargs)
+        super().__init__(brush=QBrush(QColor(252, 252, 252)), **kwargs)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -78,7 +78,7 @@ class DomainRestrictionNode(RestrictionNode):
     @property
     def qualified(self):
         """
-        Tells whether this node expresses a Qualified restriction.
+        Tells whether this node expresses a qualified restriction.
         :rtype: bool
         """
         f1 = lambda x: x.isItem(Item.InputEdge) and x.target is self
@@ -100,23 +100,17 @@ class DomainRestrictionNode(RestrictionNode):
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        shape_w = 18
-        shape_h = 18
-
-        # Initialize the pixmap
+        # INITIALIZATION
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
-
-        # Draw the text above the shape
+        # TEXT ABOVE THE SHAPE
         painter.setFont(Font('Arial', 9, Font.Light))
         painter.translate(0, 0)
         painter.drawText(QRectF(0, 0, kwargs['w'], kwargs['h'] / 2), Qt.AlignCenter, 'restriction')
-
-        # Draw the rectangle
+        # ITEM SHAPE
         painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
         painter.setBrush(QColor(252, 252, 252))
         painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
-        painter.drawRect(QRectF(-shape_w / 2, -shape_h / 2 + 6, shape_w, shape_h))
-
+        painter.drawRect(QRectF(-18 / 2, -18 / 2 + 6, 18, 18))
         return pixmap

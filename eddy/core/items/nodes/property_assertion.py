@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QBrush
 
-from eddy.core.datatypes import DiagramMode, DistinctList, Item, Identity
+from eddy.core.datatypes import DistinctList, Item, Identity
 from eddy.core.items.nodes.common.base import AbstractNode
 
 
@@ -45,23 +45,21 @@ class PropertyAssertionNode(AbstractNode):
     """
     identities = {Identity.Link}
     item = Item.PropertyAssertionNode
-    minheight = 30
-    minwidth = 52
-    radius = 16
 
-    def __init__(self, width=minwidth, height=minheight, brush=None, inputs=None, **kwargs):
+    def __init__(self, width=52, height=30, brush=None, inputs=None, **kwargs):
         """
         Initialize the node.
         :type width: int
         :type height: int
-        :type brush: T <= QBrush | QColor | Color | tuple | list | bytes | unicode
+        :type brush: QBrush
         :type inputs: DistinctList
         """
         super().__init__(**kwargs)
-        self.brush = QBrush(QColor(252, 252, 252))
-        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
+        self.setBrush(brush or QBrush(QColor(252, 252, 252)))
+        self.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
         self.inputs = inputs or DistinctList()
-        self.polygon = self.createRect(self.minwidth, self.minheight)
+        self.backgroundPolygon = self.createPolygon(60, 38)
+        self.polygon = self.createPolygon(52, 30)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -98,8 +96,6 @@ class PropertyAssertionNode(AbstractNode):
         """
         super().addEdge(edge)
         if edge.isItem(Item.InputEdge) and edge.target is self:
-            # FIXME: this cause troubles when loading a document from a graphol file since it doesn't preserve ordering
-            # self.inputs.sanitize(lambda x: x in {e.id for e in self.edges if e.target is self})
             self.inputs.append(edge.id)
             edge.updateEdge()
 
@@ -109,15 +105,25 @@ class PropertyAssertionNode(AbstractNode):
         :type scene: DiagramScene
         """
         kwargs = {
-            'description': self.description,
             'id': self.id,
             'height': self.height(),
-            'url': self.url,
             'width': self.width(),
+            'description': self.description,
+            'url': self.url,
         }
         node = scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
         node.setPos(self.pos())
         return node
+
+    @staticmethod
+    def createPolygon(width, height):
+        """
+        Returns the initialized polygon according to the given width/height.
+        :type width: int
+        :type height: int
+        :rtype: QRectF
+        """
+        return QRectF(-width / 2, -height / 2, width, height)
 
     def height(self):
         """
@@ -134,8 +140,6 @@ class PropertyAssertionNode(AbstractNode):
         super().removeEdge(edge)
         scene = self.scene()
         self.inputs.remove(edge.id)
-        # FIXME: this cause troubles when loading a document from a graphol file since it doesn't preserve ordering
-        # self.inputs.sanitize(lambda x: x in {e.id for e in self.edges if e.target is self})
         for i in self.inputs:
             try:
                 edge = scene.edge(i)
@@ -152,22 +156,6 @@ class PropertyAssertionNode(AbstractNode):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @staticmethod
-    def createRect(shape_w, shape_h):
-        """
-        Returns the initialized rect according to the given width/height.
-        :type shape_w: int
-        :type shape_h: int
-        :rtype: QRectF
-        """
-        return QRectF(-shape_w / 2, -shape_h / 2, shape_w, shape_h)
-
-    ####################################################################################################################
-    #                                                                                                                  #
     #   IMPORT / EXPORT                                                                                                #
     #                                                                                                                  #
     ####################################################################################################################
@@ -177,8 +165,7 @@ class PropertyAssertionNode(AbstractNode):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        o = self.selectionOffset
-        return self.polygon.adjusted(-o, -o, o, o)
+        return self.polygon.adjusted(-4, -4, +4, +4)
 
     def painterPath(self):
         """
@@ -186,7 +173,7 @@ class PropertyAssertionNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRoundedRect(self.polygon, self.radius, self.radius)
+        path.addRoundedRect(self.polygon, 16, 16)
         return path
 
     def shape(self):
@@ -195,7 +182,7 @@ class PropertyAssertionNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRoundedRect(self.polygon, self.radius, self.radius)
+        path.addRoundedRect(self.polygon, 16, 16)
         return path
 
     ####################################################################################################################
@@ -244,55 +231,42 @@ class PropertyAssertionNode(AbstractNode):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def paint(self, painter, option, widget=None):
-        """
-        Paint the node in the graphic view.
-        :type painter: QPainter
-        :type option: int
-        :type widget: QWidget
-        """
-        scene = self.scene()
-
-        if self.isSelected():
-            painter.setPen(self.selectionPen)
-            painter.drawRect(self.boundingRect())
-
-        if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
-
-            edge = scene.command.edge
-            brush = self.brushConnectionOk
-            if not scene.validator.valid(edge.source, edge, scene.mouseOverNode):
-                brush = self.brushConnectionBad
-
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(Qt.NoPen)
-            painter.setBrush(brush)
-            painter.drawRoundedRect(self.boundingRect(), self.radius, self.radius)
-
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(self.brush)
-        painter.setPen(self.pen)
-        painter.drawRoundedRect(self.polygon, self.radius, self.radius)
-
     @classmethod
     def image(cls, **kwargs):
         """
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        # Initialize the pixmap
+        # INITIALIZATION
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
-
-        # Initialize the shape
-        rect = cls.createRect(50, 30)
-
-        # Draw the rectangle
+        # ITEM SHAPE
+        rect = cls.createPolygon(50, 30)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin))
         painter.setBrush(QColor(252, 252, 252))
         painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
         painter.drawRoundedRect(rect, 14, 14)
-
         return pixmap
+
+    def paint(self, painter, option, widget=None):
+        """
+        Paint the node in the diagram scene.
+        :type painter: QPainter
+        :type option: int
+        :type widget: QWidget
+        """
+        # SELECTION AREA
+        painter.setPen(self.selectionPen())
+        painter.setBrush(self.selectionBrush())
+        painter.drawRect(self.backgroundPolygon)
+        # SYNTAX VALIDATION
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(self.backgroundPen())
+        painter.setBrush(self.backgroundBrush())
+        painter.drawRoundedRect(self.backgroundPolygon, 16, 16)
+        # SHAPE
+        painter.setPen(self.pen())
+        painter.setBrush(self.brush())
+        painter.drawRoundedRect(self.polygon, 16, 16)

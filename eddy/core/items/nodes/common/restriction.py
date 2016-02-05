@@ -32,12 +32,12 @@
 ##########################################################################
 
 
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 
 from PyQt5.QtCore import QRectF, QPointF, Qt
-from PyQt5.QtGui import QColor, QPainterPath, QPen
+from PyQt5.QtGui import QColor, QPainterPath, QPen, QBrush
 
-from eddy.core.datatypes import DiagramMode, Identity, Restriction
+from eddy.core.datatypes import Identity, Restriction
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import Label
 from eddy.core.regex import RE_CARDINALITY
@@ -45,21 +45,23 @@ from eddy.core.regex import RE_CARDINALITY
 
 class RestrictionNode(AbstractNode):
     """
-    This is the base class for all the Squared shaped nodes.
+    This is the base class for all the Restriction nodes.
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, width=20, height=20, brush='#fcfcfc', **kwargs):
+    def __init__(self, width=20, height=20, brush=None, **kwargs):
         """
         Initialize the node.
         :type width: int
         :type height: int
-        :type brush: T <= QBrush | QColor | Color | tuple | list | bytes | unicode
+        :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.brush = brush
-        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
-        self.polygon = self.createRect(20, 20)
+        self.setBrush(brush or QBrush(QColor(252, 252, 252)))
+        self.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+        self.polygon = self.createPolygon(20, 20)
+        self.backgroundArea = self.boundingRect()
+        self.selectionArea = self.boundingRect()
         self.label = Label(Restriction.Exists.label, centered=False, editable=False, parent=self)
         self.label.updatePos()
 
@@ -120,17 +122,27 @@ class RestrictionNode(AbstractNode):
         :type scene: DiagramScene
         """
         kwargs = {
-            'description': self.description,
-            'height': self.height(),
             'id': self.id,
-            'url': self.url,
+            'height': self.height(),
             'width': self.width(),
+            'description': self.description,
+            'url': self.url,
         }
         node = scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
+
+    @staticmethod
+    def createPolygon(width, height):
+        """
+        Returns the initialized polygon according to the given width/height.
+        :type width: int
+        :type height: int
+        :rtype: QRectF
+        """
+        return QRectF(-width / 2, -height / 2, width, height)
 
     def height(self):
         """
@@ -148,22 +160,6 @@ class RestrictionNode(AbstractNode):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @staticmethod
-    def createRect(shape_w, shape_h):
-        """
-        Returns the initialized rect according to the given width/height.
-        :type shape_w: int
-        :type shape_h: int
-        :rtype: QRectF
-        """
-        return QRectF(-shape_w / 2, -shape_h / 2, shape_w, shape_h)
-
-    ####################################################################################################################
-    #                                                                                                                  #
     #   GEOMETRY                                                                                                       #
     #                                                                                                                  #
     ####################################################################################################################
@@ -173,8 +169,7 @@ class RestrictionNode(AbstractNode):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        o = self.selectionOffset
-        return self.polygon.adjusted(-o, -o, o, o)
+        return self.polygon.adjusted(-4, -4, 4, 4)
 
     def painterPath(self):
         """
@@ -243,30 +238,31 @@ class RestrictionNode(AbstractNode):
     #                                                                                                                  #
     ####################################################################################################################
 
+    @classmethod
+    @abstractmethod
+    def image(cls, **kwargs):
+        """
+        Returns an image suitable for the palette.
+        :rtype: QPixmap
+        """
+        pass
+
     def paint(self, painter, option, widget=None):
         """
-        Paint the node in the graphic view.
+        Paint the node in the diagram scene.
         :type painter: QPainter
         :type option: int
         :type widget: QWidget
         """
-        scene = self.scene()
-
-        if self.isSelected():
-            painter.setPen(self.selectionPen)
-            painter.drawRect(self.boundingRect())
-
-        if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
-
-            edge = scene.command.edge
-            brush = self.brushConnectionOk
-            if not scene.validator.valid(edge.source, edge, scene.mouseOverNode):
-                brush = self.brushConnectionBad
-
-            painter.setPen(Qt.NoPen)
-            painter.setBrush(brush)
-            painter.drawRect(self.boundingRect())
-
-        painter.setBrush(self.brush)
-        painter.setPen(self.pen)
+        # SELECTION AREA
+        painter.setPen(self.selectionPen())
+        painter.setBrush(self.selectionBrush())
+        painter.drawRect(self.selectionArea)
+        # SYNTAX VALIDATION
+        painter.setPen(self.backgroundPen())
+        painter.setBrush(self.backgroundBrush())
+        painter.drawRect(self.backgroundArea)
+        # SHAPE
+        painter.setPen(self.pen())
+        painter.setBrush(self.brush())
         painter.drawRect(self.polygon)

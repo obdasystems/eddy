@@ -335,7 +335,7 @@ class InclusionEdge(AbstractEdge):
 
     def paint(self, painter, option, widget=None):
         """
-        Paint the edge in the graphic view.
+        Paint the edge in the diagram scene.
         :type painter: QPainter
         :type option: int
         :type widget: QWidget

@@ -1111,6 +1111,19 @@ class MainWindow(QMainWindow):
                 msgbox.setDetailedText(m3)
                 msgbox.exec_()
 
+    @pyqtSlot('QGraphicsItem', int)
+    def itemAdded(self, item, modifiers):
+        """
+        Executed after an item insertion process ends (even if the item has not been truly inserted).
+        :type item: AbstractItem
+        :type modifiers: int
+        """
+        scene = self.mdi.activeScene
+        if not modifiers & Qt.ControlModifier:
+            self.palette_.button(item.item).setChecked(False)
+            scene.setMode(DiagramMode.Idle)
+            scene.command = None
+
     @pyqtSlot()
     def itemCut(self):
         """
@@ -1165,19 +1178,6 @@ class MainWindow(QMainWindow):
             if selection:
                 selection.extend([x for item in selection if item.node for x in item.edges if x not in selection])
                 scene.undostack.push(CommandItemsMultiRemove(scene=scene, collection=selection))
-
-    @pyqtSlot('QGraphicsItem', int)
-    def itemInserted(self, item, modifiers):
-        """
-        Executed after an item insertion process ends.
-        :type item: AbstractItem
-        :type modifiers: int
-        """
-        scene = self.mdi.activeScene
-        if not modifiers & Qt.ControlModifier:
-            self.palette_.button(item.item).setChecked(False)
-            scene.setMode(DiagramMode.Idle)
-            scene.command = None
 
     @pyqtSlot()
     def newDocument(self):
@@ -1867,8 +1867,7 @@ class MainWindow(QMainWindow):
         scene = DiagramScene(self)
         scene.setSceneRect(QRectF(-width / 2, -height / 2, width, height))
         scene.setItemIndexMethod(DiagramScene.NoIndex)
-        connect(scene.nodeInserted, self.itemInserted)
-        connect(scene.edgeInserted, self.itemInserted)
+        connect(scene.itemAdded, self.itemAdded)
         connect(scene.modeChanged, self.sceneModeChanged)
         connect(scene.selectionChanged, self.refreshActionsState)
         self.undogroup.addStack(scene.undostack)

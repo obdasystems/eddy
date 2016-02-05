@@ -32,8 +32,6 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QRectF
-from PyQt5.QtGui import QPolygonF
 from PyQt5.QtWidgets import QUndoCommand
 
 from eddy.core.datatypes import DistinctList, Item
@@ -93,51 +91,37 @@ class CommandNodeRezize(QUndoCommand):
     """
     This command is used to resize nodes.
     """
-    def __init__(self, scene, node):
+    def __init__(self, scene, node, data):
         """
         Initialize the command.
         """
         super().__init__('resize {}'.format(node.name))
         self.node = node
         self.scene = scene
-        self.data = {
-            'undo': {
-                'polygon': QRectF(node.polygon) if isinstance(node.polygon, QRectF) else QPolygonF(node.polygon),
-                'anchors': {edge: pos for edge, pos in node.anchors.items()},
-                'label': {'moved': node.label.moved}
-            }
-        }
-
-    def end(self):
-        """
-        End the command collecting new data.
-        """
-        node = self.node
-        self.data['redo'] = {
-            'polygon': QRectF(node.polygon) if isinstance(node.polygon, QRectF) else QPolygonF(node.polygon),
-            'anchors': {edge: pos for edge, pos in node.anchors.items()},
-            'label': {'moved': node.label.moved}
-        }
+        self.data = data
 
     def redo(self):
         """redo the command"""
-        if 'redo' in self.data:
-            self.node.polygon = self.data['redo']['polygon']
-            for edge, pos in self.data['redo']['anchors'].items():
-                self.node.setAnchor(edge, pos)
-            self.node.updateHandlesPos()
-            self.node.updateTextPos(moved=self.data['redo']['label']['moved'])
-            self.node.updateEdges()
-            self.node.update()
-            self.scene.updated.emit()
+        self.node.backgroundArea = self.data['redo']['backgroundArea']
+        self.node.selectionArea = self.data['redo']['selectionArea']
+        self.node.polygon = self.data['redo']['polygon']
+        for edge, pos in self.data['redo']['anchors'].items():
+            self.node.setAnchor(edge, pos)
+        self.node.updateHandles()
+        self.node.updateTextPos(moved=self.data['redo']['moved'])
+        self.node.updateEdges()
+        self.node.update()
+        self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
+        self.node.backgroundArea = self.data['undo']['backgroundArea']
+        self.node.selectionArea = self.data['undo']['selectionArea']
         self.node.polygon = self.data['undo']['polygon']
         for edge, pos in self.data['undo']['anchors'].items():
             self.node.setAnchor(edge, pos)
-        self.node.updateHandlesPos()
-        self.node.updateTextPos(moved=self.data['undo']['label']['moved'])
+        self.node.updateHandles()
+        self.node.updateTextPos(moved=self.data['undo']['moved'])
         self.node.updateEdges()
         self.node.update()
         self.scene.updated.emit()
@@ -477,13 +461,13 @@ class CommandNodeSetBrush(QUndoCommand):
     def redo(self):
         """redo the command"""
         for node in self.nodes:
-            node.brush = self.brush[node]['redo']
+            node.setBrush(self.brush[node]['redo'])
             node.update()
         self.scene.updated.emit()
 
     def undo(self):
         """redo the command"""
         for node in self.nodes:
-            node.brush = self.brush[node]['undo']
+            node.setBrush(self.brush[node]['undo'])
             node.update()
         self.scene.updated.emit()

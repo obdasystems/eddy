@@ -33,9 +33,9 @@
 
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
-from PyQt5.QtGui import QPolygonF, QPainterPath, QPixmap, QPainter, QPen, QColor
+from PyQt5.QtGui import QPolygonF, QPainterPath, QPixmap, QPainter, QPen, QColor, QBrush
 
-from eddy.core.datatypes import Font, Item, Restriction, Special, DiagramMode, Identity
+from eddy.core.datatypes import Font, Item, Restriction, Special, Identity
 from eddy.core.functions import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import Label
@@ -56,20 +56,24 @@ class RoleNode(AbstractResizableNode):
     minheight = 50
     minwidth = 70
 
-    def __init__(self, width=minwidth, height=minheight, brush='#fcfcfc', **kwargs):
+    def __init__(self, width=minwidth, height=minheight, brush=None, **kwargs):
         """
         Initialize the node.
         :type width: int
         :type height: int
-        :type brush: T <= QBrush | QColor | Color | tuple | list | bytes | unicode
+        :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.brush = brush
-        self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
-        self.polygon = self.createPolygon(max(width, self.minwidth), max(height, self.minheight))
+        w = max(width, self.minwidth)
+        h = max(height, self.minheight)
+        self.setBrush(brush or QBrush(QColor(252, 252, 252)))
+        self.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine))
+        self.polygon = self.createPolygon(w, h)
+        self.backgroundArea = self.createPolygon(w + 8, h + 8)
+        self.selectionArea = self.boundingRect()
         self.label = Label('role', parent=self)
         self.label.updatePos()
-        self.updateHandlesPos()
+        self.updateHandles()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -343,12 +347,12 @@ class RoleNode(AbstractResizableNode):
         :type scene: DiagramScene
         """
         kwargs = {
-            'brush': self.brush,
-            'description': self.description,
-            'height': self.height(),
             'id': self.id,
-            'url': self.url,
+            'brush': self.brush(),
+            'height': self.height(),
             'width': self.width(),
+            'description': self.description,
+            'url': self.url,
         }
         node = scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
         node.setPos(self.pos())
@@ -356,242 +360,299 @@ class RoleNode(AbstractResizableNode):
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
+    @staticmethod
+    def createPolygon(width, height):
+        """
+        Returns the initialized polygon according to the given width/height.
+        :type width: int
+        :type height: int
+        :rtype: QPolygonF
+        """
+        return QPolygonF([
+            QPointF(-width / 2, 0),
+            QPointF(0, +height / 2),
+            QPointF(+width / 2, 0),
+            QPointF(0, -height / 2),
+            QPointF(-width / 2, 0)
+        ])
+
     def height(self):
         """
         Returns the height of the shape.
         :rtype: int
         """
-        return self.boundingRect().height() - 2 * (self.handleSize + self.handleSpace)
+        return self.boundingRect().height() - 2 * (self.handleSize + self.handleMove)
 
-    # noinspection PyTypeChecker
     def interactiveResize(self, mousePos):
         """
         Handle the interactive resize of the shape.
         :type mousePos: QPointF
         """
-        offset = self.handleSize + self.handleSpace
-        moved = self.label.moved
         scene = self.scene()
         snap = scene.settings.value('scene/snap_to_grid', False, bool)
-        rect = self.boundingRect()
-        diff = QPointF(0, 0)
 
-        minBoundingRectW = self.minwidth + offset * 2
-        minBoundingRectH = self.minheight + offset * 2
+        O = self.handleSize + self.handleMove
+        M = self.label.moved
+        R = self.boundingRect()
+        D = QPointF(0, 0)
+
+        minBoundW = self.minwidth + O * 2
+        minBoundH = self.minheight + O * 2
 
         self.prepareGeometryChange()
 
-        if self.handleSelected == self.handleTL:
+        if self.mousePressHandle == self.handleTL:
 
-            fromX = self.mousePressRect.left()
-            fromY = self.mousePressRect.top()
+            fromX = self.mousePressBound.left()
+            fromY = self.mousePressBound.top()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, -offset, snap)
-            toY = snapF(toY, scene.GridSize, -offset, snap)
-            diff.setX(toX - fromX)
-            diff.setY(toY - fromY)
-            rect.setLeft(toX)
-            rect.setTop(toY)
+            toX = snapF(toX, scene.GridSize, -O, snap)
+            toY = snapF(toY, scene.GridSize, -O, snap)
+            D.setX(toX - fromX)
+            D.setY(toY - fromY)
+            R.setLeft(toX)
+            R.setTop(toY)
 
             ## CLAMP SIZE
-            if rect.width() < minBoundingRectW:
-                diff.setX(diff.x() - minBoundingRectW + rect.width())
-                rect.setLeft(rect.left() - minBoundingRectW + rect.width())
-            if rect.height() < minBoundingRectH:
-                diff.setY(diff.y() - minBoundingRectH + rect.height())
-                rect.setTop(rect.top() - minBoundingRectH + rect.height())
+            if R.width() < minBoundW:
+                D.setX(D.x() - minBoundW + R.width())
+                R.setLeft(R.left() - minBoundW + R.width())
+            if R.height() < minBoundH:
+                D.setY(D.y() - minBoundH + R.height())
+                R.setTop(R.top() - minBoundH + R.height())
+            
+            self.selectionArea.setLeft(R.left())
+            self.selectionArea.setTop(R.top())
+            
+            self.backgroundArea[self.indexT] = QPointF(R.left() + R.width() / 2, R.top())
+            self.backgroundArea[self.indexB] = QPointF(R.left() + R.width() / 2, self.backgroundArea[self.indexB].y())
+            self.backgroundArea[self.indexL] = QPointF(R.left(), R.top() + R.height() / 2)
+            self.backgroundArea[self.indexE] = QPointF(R.left(), R.top() + R.height() / 2)
+            self.backgroundArea[self.indexR] = QPointF(self.backgroundArea[self.indexR].x(), R.top() + R.height() / 2)
+            
+            self.polygon[self.indexT] = QPointF(R.left() + R.width() / 2, R.top() + O)
+            self.polygon[self.indexB] = QPointF(R.left() + R.width() / 2, self.polygon[self.indexB].y())
+            self.polygon[self.indexL] = QPointF(R.left() + O, R.top() + R.height() / 2)
+            self.polygon[self.indexE] = QPointF(R.left() + O, R.top() + R.height() / 2)
+            self.polygon[self.indexR] = QPointF(self.polygon[self.indexR].x(), R.top() + R.height() / 2)
 
-            self.polygon[self.indexT] = QPointF(rect.left() + rect.width() / 2, rect.top() + offset)
-            self.polygon[self.indexB] = QPointF(rect.left() + rect.width() / 2, self.polygon[self.indexB].y())
-            self.polygon[self.indexL] = QPointF(rect.left() + offset, rect.top() + rect.height() / 2)
-            self.polygon[self.indexE] = QPointF(rect.left() + offset, rect.top() + rect.height() / 2)
-            self.polygon[self.indexR] = QPointF(self.polygon[self.indexR].x(), rect.top() + rect.height() / 2)
+        elif self.mousePressHandle == self.handleTM:
 
-        elif self.handleSelected == self.handleTM:
-
-            fromY = self.mousePressRect.top()
+            fromY = self.mousePressBound.top()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapF(toY, scene.GridSize, -offset, snap)
-            diff.setY(toY - fromY)
-            rect.setTop(toY)
+            toY = snapF(toY, scene.GridSize, -O, snap)
+            D.setY(toY - fromY)
+            R.setTop(toY)
 
             ## CLAMP SIZE
-            if rect.height() < minBoundingRectH:
-                diff.setY(diff.y() - minBoundingRectH + rect.height())
-                rect.setTop(rect.top() - minBoundingRectH + rect.height())
+            if R.height() < minBoundH:
+                D.setY(D.y() - minBoundH + R.height())
+                R.setTop(R.top() - minBoundH + R.height())
+            
+            self.selectionArea.setTop(R.top())
+            
+            self.backgroundArea[self.indexT] = QPointF(self.backgroundArea[self.indexT].x(), R.top())
+            self.backgroundArea[self.indexL] = QPointF(self.backgroundArea[self.indexL].x(), R.top() + R.height() / 2)
+            self.backgroundArea[self.indexE] = QPointF(self.backgroundArea[self.indexE].x(), R.top() + R.height() / 2)
+            self.backgroundArea[self.indexR] = QPointF(self.backgroundArea[self.indexR].x(), R.top() + R.height() / 2)
+            
+            self.polygon[self.indexT] = QPointF(self.polygon[self.indexT].x(), R.top() + O)
+            self.polygon[self.indexL] = QPointF(self.polygon[self.indexL].x(), R.top() + R.height() / 2)
+            self.polygon[self.indexE] = QPointF(self.polygon[self.indexE].x(), R.top() + R.height() / 2)
+            self.polygon[self.indexR] = QPointF(self.polygon[self.indexR].x(), R.top() + R.height() / 2)
 
-            self.polygon[self.indexT] = QPointF(self.polygon[self.indexT].x(), rect.top() + offset)
-            self.polygon[self.indexL] = QPointF(self.polygon[self.indexL].x(), rect.top() + rect.height() / 2)
-            self.polygon[self.indexE] = QPointF(self.polygon[self.indexE].x(), rect.top() + rect.height() / 2)
-            self.polygon[self.indexR] = QPointF(self.polygon[self.indexR].x(), rect.top() + rect.height() / 2)
+        elif self.mousePressHandle == self.handleTR:
 
-        elif self.handleSelected == self.handleTR:
-
-            fromX = self.mousePressRect.right()
-            fromY = self.mousePressRect.top()
+            fromX = self.mousePressBound.right()
+            fromY = self.mousePressBound.top()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, +offset, snap)
-            toY = snapF(toY, scene.GridSize, -offset, snap)
-            diff.setX(toX - fromX)
-            diff.setY(toY - fromY)
-            rect.setRight(toX)
-            rect.setTop(toY)
+            toX = snapF(toX, scene.GridSize, +O, snap)
+            toY = snapF(toY, scene.GridSize, -O, snap)
+            D.setX(toX - fromX)
+            D.setY(toY - fromY)
+            R.setRight(toX)
+            R.setTop(toY)
 
             ## CLAMP SIZE
-            if rect.width() < minBoundingRectW:
-                diff.setX(diff.x() + minBoundingRectW - rect.width())
-                rect.setRight(rect.right() + minBoundingRectW - rect.width())
-            if rect.height() < minBoundingRectH:
-                diff.setY(diff.y() - minBoundingRectH + rect.height())
-                rect.setTop(rect.top() - minBoundingRectH + rect.height())
+            if R.width() < minBoundW:
+                D.setX(D.x() + minBoundW - R.width())
+                R.setRight(R.right() + minBoundW - R.width())
+            if R.height() < minBoundH:
+                D.setY(D.y() - minBoundH + R.height())
+                R.setTop(R.top() - minBoundH + R.height())
+            
+            self.selectionArea.setRight(R.right())
+            self.selectionArea.setTop(R.top())
+            
+            self.backgroundArea[self.indexT] = QPointF(R.right() - R.width() / 2, R.top())
+            self.backgroundArea[self.indexB] = QPointF(R.right() - R.width() / 2, self.backgroundArea[self.indexB].y())
+            self.backgroundArea[self.indexL] = QPointF(self.backgroundArea[self.indexL].x(), R.top() + R.height() / 2)
+            self.backgroundArea[self.indexE] = QPointF(self.backgroundArea[self.indexE].x(), R.top() + R.height() / 2)
+            self.backgroundArea[self.indexR] = QPointF(R.right(), R.top() + R.height() / 2)
+            
+            self.polygon[self.indexT] = QPointF(R.right() - R.width() / 2, R.top() + O)
+            self.polygon[self.indexB] = QPointF(R.right() - R.width() / 2, self.polygon[self.indexB].y())
+            self.polygon[self.indexL] = QPointF(self.polygon[self.indexL].x(), R.top() + R.height() / 2)
+            self.polygon[self.indexE] = QPointF(self.polygon[self.indexE].x(), R.top() + R.height() / 2)
+            self.polygon[self.indexR] = QPointF(R.right() - O, R.top() + R.height() / 2)
 
-            self.polygon[self.indexT] = QPointF(rect.right() - rect.width() / 2, rect.top() + offset)
-            self.polygon[self.indexB] = QPointF(rect.right() - rect.width() / 2, self.polygon[self.indexB].y())
-            self.polygon[self.indexL] = QPointF(self.polygon[self.indexL].x(), rect.top() + rect.height() / 2)
-            self.polygon[self.indexE] = QPointF(self.polygon[self.indexE].x(), rect.top() + rect.height() / 2)
-            self.polygon[self.indexR] = QPointF(rect.right() - offset, rect.top() + rect.height() / 2)
+        elif self.mousePressHandle == self.handleML:
 
-        elif self.handleSelected == self.handleML:
-
-            fromX = self.mousePressRect.left()
+            fromX = self.mousePressBound.left()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapF(toX, scene.GridSize, -offset, snap)
-            diff.setX(toX - fromX)
-            rect.setLeft(toX)
+            toX = snapF(toX, scene.GridSize, -O, snap)
+            D.setX(toX - fromX)
+            R.setLeft(toX)
 
             ## CLAMP SIZE
-            if rect.width() < minBoundingRectW:
-                diff.setX(diff.x() - minBoundingRectW + rect.width())
-                rect.setLeft(rect.left() - minBoundingRectW + rect.width())
+            if R.width() < minBoundW:
+                D.setX(D.x() - minBoundW + R.width())
+                R.setLeft(R.left() - minBoundW + R.width())
+            
+            self.selectionArea.setLeft(R.left())
+            
+            self.backgroundArea[self.indexL] = QPointF(R.left(), self.mousePressBound.top() + self.mousePressBound.height() / 2)
+            self.backgroundArea[self.indexE] = QPointF(R.left(), self.mousePressBound.top() + self.mousePressBound.height() / 2)
+            self.backgroundArea[self.indexT] = QPointF(R.left() + R.width() / 2, self.backgroundArea[self.indexT].y())
+            self.backgroundArea[self.indexB] = QPointF(R.left() + R.width() / 2, self.backgroundArea[self.indexB].y())
+            
+            self.polygon[self.indexL] = QPointF(R.left() + O, self.mousePressBound.top() + self.mousePressBound.height() / 2)
+            self.polygon[self.indexE] = QPointF(R.left() + O, self.mousePressBound.top() + self.mousePressBound.height() / 2)
+            self.polygon[self.indexT] = QPointF(R.left() + R.width() / 2, self.polygon[self.indexT].y())
+            self.polygon[self.indexB] = QPointF(R.left() + R.width() / 2, self.polygon[self.indexB].y())
 
-            self.polygon[self.indexL] = QPointF(rect.left() + offset, self.mousePressRect.top() + self.mousePressRect.height() / 2)
-            self.polygon[self.indexE] = QPointF(rect.left() + offset, self.mousePressRect.top() + self.mousePressRect.height() / 2)
-            self.polygon[self.indexT] = QPointF(rect.left() + rect.width() / 2, self.polygon[self.indexT].y())
-            self.polygon[self.indexB] = QPointF(rect.left() + rect.width() / 2, self.polygon[self.indexB].y())
+        elif self.mousePressHandle == self.handleMR:
 
-        elif self.handleSelected == self.handleMR:
-
-            fromX = self.mousePressRect.right()
+            fromX = self.mousePressBound.right()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapF(toX, scene.GridSize, +offset, snap)
-            diff.setX(toX - fromX)
-            rect.setRight(toX)
+            toX = snapF(toX, scene.GridSize, +O, snap)
+            D.setX(toX - fromX)
+            R.setRight(toX)
 
             ## CLAMP SIZE
-            if rect.width() < minBoundingRectW:
-                diff.setX(diff.x() + minBoundingRectW - rect.width())
-                rect.setRight(rect.right() + minBoundingRectW - rect.width())
+            if R.width() < minBoundW:
+                D.setX(D.x() + minBoundW - R.width())
+                R.setRight(R.right() + minBoundW - R.width())
+            
+            self.selectionArea.setRight(R.right())
+            
+            self.backgroundArea[self.indexR] = QPointF(R.right(), self.mousePressBound.top() + self.mousePressBound.height() / 2)
+            self.backgroundArea[self.indexT] = QPointF(R.right() - R.width() / 2, self.backgroundArea[self.indexT].y())
+            self.backgroundArea[self.indexB] = QPointF(R.right() - R.width() / 2, self.backgroundArea[self.indexB].y())
+            
+            self.polygon[self.indexR] = QPointF(R.right() - O, self.mousePressBound.top() + self.mousePressBound.height() / 2)
+            self.polygon[self.indexT] = QPointF(R.right() - R.width() / 2, self.polygon[self.indexT].y())
+            self.polygon[self.indexB] = QPointF(R.right() - R.width() / 2, self.polygon[self.indexB].y())
 
-            self.polygon[self.indexR] = QPointF(rect.right() - offset, self.mousePressRect.top() + self.mousePressRect.height() / 2)
-            self.polygon[self.indexT] = QPointF(rect.right() - rect.width() / 2, self.polygon[self.indexT].y())
-            self.polygon[self.indexB] = QPointF(rect.right() - rect.width() / 2, self.polygon[self.indexB].y())
+        elif self.mousePressHandle == self.handleBL:
 
-        elif self.handleSelected == self.handleBL:
-
-            fromX = self.mousePressRect.left()
-            fromY = self.mousePressRect.bottom()
-            toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, -offset, snap)
-            toY = snapF(toY, scene.GridSize, +offset, snap)
-            diff.setX(toX - fromX)
-            diff.setY(toY - fromY)
-            rect.setLeft(toX)
-            rect.setBottom(toY)
-
-            ## CLAMP SIZE
-            if rect.width() < minBoundingRectW:
-                diff.setX(diff.x() - minBoundingRectW + rect.width())
-                rect.setLeft(rect.left() - minBoundingRectW + rect.width())
-            if rect.height() < minBoundingRectH:
-                diff.setY(diff.y() + minBoundingRectH - rect.height())
-                rect.setBottom(rect.bottom() + minBoundingRectH - rect.height())
-
-            self.polygon[self.indexT] = QPointF(rect.left() + rect.width() / 2, self.polygon[self.indexT].y())
-            self.polygon[self.indexB] = QPointF(rect.left() + rect.width() / 2, rect.bottom() - offset)
-            self.polygon[self.indexL] = QPointF(rect.left() + offset, rect.bottom() - rect.height() / 2)
-            self.polygon[self.indexE] = QPointF(rect.left() + offset, rect.bottom() - rect.height() / 2)
-            self.polygon[self.indexR] = QPointF(self.polygon[self.indexR].x(), rect.bottom() - rect.height() / 2)
-
-        elif self.handleSelected == self.handleBM:
-
-            fromY = self.mousePressRect.bottom()
-            toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapF(toY, scene.GridSize, +offset, snap)
-            diff.setY(toY - fromY)
-            rect.setBottom(toY)
-
-            ## CLAMP SIZE
-            if rect.height() < minBoundingRectH:
-                diff.setY(diff.y() + minBoundingRectH - rect.height())
-                rect.setBottom(rect.bottom() + minBoundingRectH - rect.height())
-
-            self.polygon[self.indexB] = QPointF(self.polygon[self.indexB].x(), rect.bottom() - offset)
-            self.polygon[self.indexL] = QPointF(self.polygon[self.indexL].x(), rect.top() + rect.height() / 2)
-            self.polygon[self.indexE] = QPointF(self.polygon[self.indexE].x(), rect.top() + rect.height() / 2)
-            self.polygon[self.indexR] = QPointF(self.polygon[self.indexR].x(), rect.top() + rect.height() / 2)
-
-        elif self.handleSelected == self.handleBR:
-
-            fromX = self.mousePressRect.right()
-            fromY = self.mousePressRect.bottom()
+            fromX = self.mousePressBound.left()
+            fromY = self.mousePressBound.bottom()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, +offset, snap)
-            toY = snapF(toY, scene.GridSize, +offset, snap)
-            diff.setX(toX - fromX)
-            diff.setY(toY - fromY)
-            rect.setRight(toX)
-            rect.setBottom(toY)
+            toX = snapF(toX, scene.GridSize, -O, snap)
+            toY = snapF(toY, scene.GridSize, +O, snap)
+            D.setX(toX - fromX)
+            D.setY(toY - fromY)
+            R.setLeft(toX)
+            R.setBottom(toY)
 
             ## CLAMP SIZE
-            if rect.width() < minBoundingRectW:
-                diff.setX(diff.x() + minBoundingRectW - rect.width())
-                rect.setRight(rect.right() + minBoundingRectW - rect.width())
-            if rect.height() < minBoundingRectH:
-                diff.setY(diff.y() + minBoundingRectH - rect.height())
-                rect.setBottom(rect.bottom() + minBoundingRectH - rect.height())
+            if R.width() < minBoundW:
+                D.setX(D.x() - minBoundW + R.width())
+                R.setLeft(R.left() - minBoundW + R.width())
+            if R.height() < minBoundH:
+                D.setY(D.y() + minBoundH - R.height())
+                R.setBottom(R.bottom() + minBoundH - R.height())
+            
+            self.selectionArea.setLeft(R.left())
+            self.selectionArea.setBottom(R.bottom())
+            
+            self.backgroundArea[self.indexT] = QPointF(R.left() + R.width() / 2, self.backgroundArea[self.indexT].y())
+            self.backgroundArea[self.indexB] = QPointF(R.left() + R.width() / 2, R.bottom())
+            self.backgroundArea[self.indexL] = QPointF(R.left(), R.bottom() - R.height() / 2)
+            self.backgroundArea[self.indexE] = QPointF(R.left(), R.bottom() - R.height() / 2)
+            self.backgroundArea[self.indexR] = QPointF(self.backgroundArea[self.indexR].x(), R.bottom() - R.height() / 2)
+            
+            self.polygon[self.indexT] = QPointF(R.left() + R.width() / 2, self.polygon[self.indexT].y())
+            self.polygon[self.indexB] = QPointF(R.left() + R.width() / 2, R.bottom() - O)
+            self.polygon[self.indexL] = QPointF(R.left() + O, R.bottom() - R.height() / 2)
+            self.polygon[self.indexE] = QPointF(R.left() + O, R.bottom() - R.height() / 2)
+            self.polygon[self.indexR] = QPointF(self.polygon[self.indexR].x(), R.bottom() - R.height() / 2)
 
-            self.polygon[self.indexT] = QPointF(rect.right() - rect.width() / 2, self.polygon[self.indexT].y())
-            self.polygon[self.indexB] = QPointF(rect.right() - rect.width() / 2, rect.bottom() - offset)
-            self.polygon[self.indexL] = QPointF(self.polygon[self.indexL].x(), rect.bottom() - rect.height() / 2)
-            self.polygon[self.indexE] = QPointF(self.polygon[self.indexE].x(), rect.bottom() - rect.height() / 2)
-            self.polygon[self.indexR] = QPointF(rect.right() - offset, rect.bottom() - rect.height() / 2)
+        elif self.mousePressHandle == self.handleBM:
 
-        self.updateHandlesPos()
-        self.updateTextPos(moved=moved)
-        self.updateAnchors(self.mousePressData, diff)
+            fromY = self.mousePressBound.bottom()
+            toY = fromY + mousePos.y() - self.mousePressPos.y()
+            toY = snapF(toY, scene.GridSize, +O, snap)
+            D.setY(toY - fromY)
+            R.setBottom(toY)
+
+            ## CLAMP SIZE
+            if R.height() < minBoundH:
+                D.setY(D.y() + minBoundH - R.height())
+                R.setBottom(R.bottom() + minBoundH - R.height())
+            
+            self.selectionArea.setBottom(R.bottom())
+            
+            self.backgroundArea[self.indexB] = QPointF(self.backgroundArea[self.indexB].x(), R.bottom())
+            self.backgroundArea[self.indexL] = QPointF(self.backgroundArea[self.indexL].x(), R.top() + R.height() / 2)
+            self.backgroundArea[self.indexE] = QPointF(self.backgroundArea[self.indexE].x(), R.top() + R.height() / 2)
+            self.backgroundArea[self.indexR] = QPointF(self.backgroundArea[self.indexR].x(), R.top() + R.height() / 2)
+            
+            self.polygon[self.indexB] = QPointF(self.polygon[self.indexB].x(), R.bottom() - O)
+            self.polygon[self.indexL] = QPointF(self.polygon[self.indexL].x(), R.top() + R.height() / 2)
+            self.polygon[self.indexE] = QPointF(self.polygon[self.indexE].x(), R.top() + R.height() / 2)
+            self.polygon[self.indexR] = QPointF(self.polygon[self.indexR].x(), R.top() + R.height() / 2)
+
+        elif self.mousePressHandle == self.handleBR:
+
+            fromX = self.mousePressBound.right()
+            fromY = self.mousePressBound.bottom()
+            toX = fromX + mousePos.x() - self.mousePressPos.x()
+            toY = fromY + mousePos.y() - self.mousePressPos.y()
+            toX = snapF(toX, scene.GridSize, +O, snap)
+            toY = snapF(toY, scene.GridSize, +O, snap)
+            D.setX(toX - fromX)
+            D.setY(toY - fromY)
+            R.setRight(toX)
+            R.setBottom(toY)
+
+            ## CLAMP SIZE
+            if R.width() < minBoundW:
+                D.setX(D.x() + minBoundW - R.width())
+                R.setRight(R.right() + minBoundW - R.width())
+            if R.height() < minBoundH:
+                D.setY(D.y() + minBoundH - R.height())
+                R.setBottom(R.bottom() + minBoundH - R.height())
+
+            self.selectionArea.setRight(R.right())
+            self.selectionArea.setBottom(R.bottom())
+
+            self.backgroundArea[self.indexT] = QPointF(R.right() - R.width() / 2, self.backgroundArea[self.indexT].y())
+            self.backgroundArea[self.indexB] = QPointF(R.right() - R.width() / 2, R.bottom())
+            self.backgroundArea[self.indexL] = QPointF(self.backgroundArea[self.indexL].x(), R.bottom() - R.height() / 2)
+            self.backgroundArea[self.indexE] = QPointF(self.backgroundArea[self.indexE].x(), R.bottom() - R.height() / 2)
+            self.backgroundArea[self.indexR] = QPointF(R.right(), R.bottom() - R.height() / 2)
+            
+            self.polygon[self.indexT] = QPointF(R.right() - R.width() / 2, self.polygon[self.indexT].y())
+            self.polygon[self.indexB] = QPointF(R.right() - R.width() / 2, R.bottom() - O)
+            self.polygon[self.indexL] = QPointF(self.polygon[self.indexL].x(), R.bottom() - R.height() / 2)
+            self.polygon[self.indexE] = QPointF(self.polygon[self.indexE].x(), R.bottom() - R.height() / 2)
+            self.polygon[self.indexR] = QPointF(R.right() - O, R.bottom() - R.height() / 2)
+
+        self.updateHandles()
+        self.updateTextPos(moved=M)
+        self.updateAnchors(self.mousePressData, D)
 
     def width(self):
         """
         Returns the width of the shape.
         :rtype: int
         """
-        return self.boundingRect().width() - 2 * (self.handleSize + self.handleSpace)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @staticmethod
-    def createPolygon(shape_w, shape_h):
-        """
-        Returns the initialized polygon according to the given width/height.
-        :type shape_w: int
-        :type shape_h: int
-        :rtype: QPolygonF
-        """
-        return QPolygonF([
-            QPointF(-shape_w / 2, 0),
-            QPointF(0, +shape_h / 2),
-            QPointF(+shape_w / 2, 0),
-            QPointF(0, -shape_h / 2),
-            QPointF(-shape_w / 2, 0)
-        ])
+        return self.boundingRect().width() - 2 * (self.handleSize + self.handleMove)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -604,7 +665,7 @@ class RoleNode(AbstractResizableNode):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        o = self.handleSize + self.handleSpace
+        o = self.handleSize + self.handleMove
         x = self.polygon[self.indexL].x()
         y = self.polygon[self.indexT].y()
         w = self.polygon[self.indexR].x() - x
@@ -627,11 +688,8 @@ class RoleNode(AbstractResizableNode):
         """
         path = QPainterPath()
         path.addPolygon(self.polygon)
-
-        if self.isSelected():
-            for shape in self.handles.values():
-                path.addEllipse(shape)
-
+        for shape in self._handleRect:
+            path.addEllipse(shape)
         return path
 
     ####################################################################################################################
@@ -681,61 +739,51 @@ class RoleNode(AbstractResizableNode):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def paint(self, painter, option, widget=None):
-        """
-        Paint the node in the graphic view.
-        :type painter: QPainter
-        :type option: int
-        :type widget: QWidget
-        """
-        scene = self.scene()
-
-        if scene.mode is not DiagramMode.NodeResize and self.isSelected():
-            painter.setPen(self.selectionPen)
-            painter.drawRect(self.boundingRect())
-
-        if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
-
-            edge = scene.command.edge
-            brush = self.brushConnectionOk
-            if not scene.validator.valid(edge.source, edge, scene.mouseOverNode):
-                brush = self.brushConnectionBad
-
-            boundingRect = self.boundingRect()
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(Qt.NoPen)
-            painter.setBrush(brush)
-            painter.drawPolygon(self.createPolygon(boundingRect.width(), boundingRect.height()))
-
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(self.brush)
-        painter.setPen(self.pen)
-        painter.drawPolygon(self.polygon)
-        self.paintHandles(painter)
-
     @classmethod
     def image(cls, **kwargs):
         """
         Returns an image suitable for the palette.
         :rtype: QPixmap
         """
-        # Initialize the pixmap
+        # INITIALIZATION
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
-
-        # Initialize the shape
         polygon = cls.createPolygon(46, 34)
-
-        # Draw the polygon
+        # ITEM SHAPE
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine))
         painter.setBrush(QColor(252, 252, 252))
         painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
         painter.drawPolygon(polygon)
-
-        # Draw the text within the rectangle
+        # TEXT WITHIN SHAPE
         painter.setFont(Font('Arial', 11, Font.Light))
         painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'role')
-
         return pixmap
+
+    def paint(self, painter, option, widget=None):
+        """
+        Paint the node in the diagram scene.
+        :type painter: QPainter
+        :type option: int
+        :type widget: QWidget
+        """
+        # SELECTION AREA
+        painter.setPen(self.selectionPen())
+        painter.setBrush(self.selectionBrush())
+        painter.drawRect(self.selectionArea)
+        # SYNTAX VALIDATION
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(self.backgroundPen())
+        painter.setBrush(self.backgroundBrush())
+        painter.drawPolygon(self.backgroundArea)
+        # ITEM SHAPE
+        painter.setPen(self.pen())
+        painter.setBrush(self.brush())
+        painter.drawPolygon(self.polygon)
+        # RESIZE HANDLES
+        painter.setRenderHint(QPainter.Antialiasing)
+        for i in range(self.handleNum):
+            painter.setBrush(self.handleBrush(i))
+            painter.setPen(self.handlePen(i))
+            painter.drawEllipse(self._handleRect[i])

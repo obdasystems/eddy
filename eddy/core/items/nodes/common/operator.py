@@ -35,9 +35,8 @@
 from abc import ABCMeta, abstractmethod
 
 from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QPolygonF
+from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QPolygonF, QBrush
 
-from eddy.core.datatypes import DiagramMode
 from eddy.core.items.nodes.common.base import AbstractNode
 
 
@@ -55,17 +54,19 @@ class OperatorNode(AbstractNode):
     indexTL = 5
     indexEE = 6
 
-    def __init__(self, width=50, height=30, brush='#fcfcfc', **kwargs):
+    def __init__(self, width=50, height=30, brush=None, **kwargs):
         """
         Initialize the node.
         :type width: int
         :type height: int
-        :type brush: T <= QBrush | QColor | Color | tuple | list | bytes | unicode
+        :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.brush = brush
-        self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
-        self.polygon = self.createPolygon(shape_w=50, shape_h=30, oblique=6)
+        self.setBrush(brush or QBrush(QColor(252, 252, 252)))
+        self.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine))
+        self.polygon = self.createPolygon(50, 30)
+        self.backgroundArea = self.createPolygon(58, 38)
+        self.selectionArea = self.boundingRect()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -97,6 +98,24 @@ class OperatorNode(AbstractNode):
     #                                                                                                                  #
     ####################################################################################################################
 
+    @staticmethod
+    def createPolygon(width, height):
+        """
+        Returns the initialized polygon according to the given width/height.
+        :type width: int
+        :type height: int
+        :rtype: QPolygonF
+        """
+        return QPolygonF([
+            QPointF(-width / 2, 0),                # 0
+            QPointF(-width / 2 + 6, +height / 2),  # 1
+            QPointF(+width / 2 - 6, +height / 2),  # 2
+            QPointF(+width / 2, 0),                # 3
+            QPointF(+width / 2 - 6, -height / 2),  # 4
+            QPointF(-width / 2 + 6, -height / 2),  # 5
+            QPointF(-width / 2, 0)                 # 6
+        ])
+
     def height(self):
         """
         Returns the height of the shape.
@@ -113,31 +132,6 @@ class OperatorNode(AbstractNode):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @staticmethod
-    def createPolygon(shape_w, shape_h, oblique):
-        """
-        Returns the initialized polygon according to the given width/height.
-        :type shape_w: int
-        :type shape_h: int
-        :type oblique: int
-        :rtype: QPolygonF
-        """
-        return QPolygonF([
-            QPointF(-shape_w / 2, 0),                       # 0
-            QPointF(-shape_w / 2 + oblique, +shape_h / 2),  # 1
-            QPointF(+shape_w / 2 - oblique, +shape_h / 2),  # 2
-            QPointF(+shape_w / 2, 0),                       # 3
-            QPointF(+shape_w / 2 - oblique, -shape_h / 2),  # 4
-            QPointF(-shape_w / 2 + oblique, -shape_h / 2),  # 5
-            QPointF(-shape_w / 2, 0)                        # 6
-        ])
-
-    ####################################################################################################################
-    #                                                                                                                  #
     #   GEOMETRY                                                                                                       #
     #                                                                                                                  #
     ####################################################################################################################
@@ -147,12 +141,11 @@ class OperatorNode(AbstractNode):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        o = self.selectionOffset
         x = self.polygon[self.indexML].x()
         y = self.polygon[self.indexTL].y()
         w = self.polygon[self.indexMR].x() - x
         h = self.polygon[self.indexBL].y() - y
-        return QRectF(x, y, w, h).adjusted(-o, -o, o, o)
+        return QRectF(x, y, w, h).adjusted(-4, -4, +4, +4)
 
     def painterPath(self):
         """
@@ -220,31 +213,21 @@ class OperatorNode(AbstractNode):
 
     def paint(self, painter, option, widget=None):
         """
-        Paint the node in the graphic view.
+        Paint the node in the diagram scene.
         :type painter: QPainter
         :type option: int
         :type widget: QWidget
         """
-        scene = self.scene()
-
-        if self.isSelected():
-            painter.setPen(self.selectionPen)
-            painter.drawRect(self.boundingRect())
-
-        if scene.mode is DiagramMode.EdgeInsert and scene.mouseOverNode is self:
-
-            edge = scene.command.edge
-            brush = self.brushConnectionOk
-            if not scene.validator.valid(edge.source, edge, scene.mouseOverNode):
-                brush = self.brushConnectionBad
-
-            boundingRect = self.boundingRect()
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(Qt.NoPen)
-            painter.setBrush(brush)
-            painter.drawPolygon(self.createPolygon(boundingRect.width(), boundingRect.height(), 6))
-
+        # SELECTION AREA
+        painter.setPen(self.selectionPen())
+        painter.setBrush(self.selectionBrush())
+        painter.drawRect(self.selectionArea)
+        # SYNTAX VALIDATION
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(self.brush)
-        painter.setPen(self.pen)
+        painter.setPen(self.backgroundPen())
+        painter.setBrush(self.backgroundBrush())
+        painter.drawPolygon(self.backgroundArea)
+        # SHAPE
+        painter.setPen(self.pen())
+        painter.setBrush(self.brush())
         painter.drawPolygon(self.polygon)
