@@ -61,7 +61,7 @@ class AbstractEdge(AbstractItem):
     handleSize = 8
     headSize = 12
     prefix = 'e'
-    selectionSize = 6
+    selectionSize = 12
 
     def __init__(self, source, target=None, breakpoints=None, **kwargs):
         """
@@ -372,7 +372,7 @@ class AbstractEdge(AbstractItem):
         self.selectionBrush = selectionBrush
 
         # SCHEDULE REPAINT
-        self.update()
+        self.update(self.boundingRect())
 
     ####################################################################################################################
     #                                                                                                                  #

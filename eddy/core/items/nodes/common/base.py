@@ -333,7 +333,7 @@ class AbstractNode(AbstractItem):
         self.backgroundBrush = backgroundBrush
 
         # SCHEDULE REPAINT
-        self.update()
+        self.update(self.boundingRect())
 
     def updateEdges(self):
         """
@@ -665,7 +665,7 @@ class AbstractResizableNode(AbstractNode):
         self.backgroundBrush = backgroundBrush
 
         # SCHEDULE REPAINT
-        self.update()
+        self.update(self.boundingRect())
 
     def updateHandles(self):
         """

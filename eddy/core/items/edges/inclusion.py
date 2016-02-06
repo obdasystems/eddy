@@ -269,32 +269,6 @@ class InclusionEdge(AbstractEdge):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def paint(self, painter, option, widget=None):
-        """
-        Paint the edge in the diagram scene.
-        :type painter: QPainter
-        :type option: int
-        :type widget: QWidget
-        """
-        # SELECTION AREA
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillPath(self.selection, self.selectionBrush)
-        # EDGE LINE
-        painter.setPen(self.pen)
-        painter.drawPath(self.path)
-        # HEAD/TAIL POLYGON
-        painter.setPen(self.headPen)
-        painter.setBrush(self.headBrush)
-        painter.drawPolygon(self.head)
-        painter.drawPolygon(self.tail)
-        # BREAKPOINTS AND ANCHOR POINTS
-        painter.setPen(self.handlePen)
-        painter.setBrush(self.handleBrush)
-        for shape in self.handles:
-            painter.drawEllipse(shape)
-        for shape in self.anchors.values():
-            painter.drawEllipse(shape)
-
     @classmethod
     def image(cls, **kwargs):
         """
@@ -325,3 +299,29 @@ class InclusionEdge(AbstractEdge):
         painter.setBrush(QColor(0, 0, 0))
         painter.drawPolygon(head)
         return pixmap
+
+    def paint(self, painter, option, widget=None):
+        """
+        Paint the edge in the diagram scene.
+        :type painter: QPainter
+        :type option: int
+        :type widget: QWidget
+        """
+        # SELECTION AREA
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.fillPath(self.selection, self.selectionBrush)
+        # EDGE LINE
+        painter.setPen(self.pen)
+        painter.drawPath(self.path)
+        # HEAD/TAIL POLYGON
+        painter.setPen(self.headPen)
+        painter.setBrush(self.headBrush)
+        painter.drawPolygon(self.head)
+        painter.drawPolygon(self.tail)
+        # BREAKPOINTS AND ANCHOR POINTS
+        painter.setPen(self.handlePen)
+        painter.setBrush(self.handleBrush)
+        for shape in self.handles:
+            painter.drawEllipse(shape)
+        for shape in self.anchors.values():
+            painter.drawEllipse(shape)
