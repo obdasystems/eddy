@@ -102,8 +102,8 @@ class CommandNodeRezize(QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        self.node.backgroundArea = self.data['redo']['backgroundArea']
-        self.node.selectionArea = self.data['redo']['selectionArea']
+        self.node.background = self.data['redo']['background']
+        self.node.selection = self.data['redo']['selection']
         self.node.polygon = self.data['redo']['polygon']
         for edge, pos in self.data['redo']['anchors'].items():
             self.node.setAnchor(edge, pos)
@@ -115,8 +115,8 @@ class CommandNodeRezize(QUndoCommand):
 
     def undo(self):
         """undo the command"""
-        self.node.backgroundArea = self.data['undo']['backgroundArea']
-        self.node.selectionArea = self.data['undo']['selectionArea']
+        self.node.background = self.data['undo']['background']
+        self.node.selection = self.data['undo']['selection']
         self.node.polygon = self.data['undo']['polygon']
         for edge, pos in self.data['undo']['anchors'].items():
             self.node.setAnchor(edge, pos)
@@ -461,13 +461,13 @@ class CommandNodeSetBrush(QUndoCommand):
     def redo(self):
         """redo the command"""
         for node in self.nodes:
-            node.setBrush(self.brush[node]['redo'])
+            node.brush = self.brush[node]['redo']
             node.update()
         self.scene.updated.emit()
 
     def undo(self):
         """redo the command"""
         for node in self.nodes:
-            node.setBrush(self.brush[node]['undo'])
+            node.brush = self.brush[node]['undo']
             node.update()
         self.scene.updated.emit()
