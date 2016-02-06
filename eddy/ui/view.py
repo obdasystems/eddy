@@ -61,6 +61,10 @@ class MainView(QGraphicsView):
         :type scene: DiagramScene
         """
         super().__init__(scene)
+        self.setDragMode(QGraphicsView.NoDrag)
+        self.setOptimizationFlags(QGraphicsView.DontAdjustForAntialiasing)
+        self.setOptimizationFlags(QGraphicsView.DontSavePainterState)
+        self.setViewportUpdateMode(QGraphicsView.MinimalViewportUpdate)
         self.viewMove = None
         self.settings = scene.settings
         self.mousePressCenterPos = None

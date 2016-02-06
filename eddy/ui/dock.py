@@ -112,6 +112,8 @@ class Navigator(ViewBrowser):
         """
         super().__init__(*args)
         self.setFixedSize(SidebarWidget.Width, SidebarWidget.Width)
+        self.setOptimizationFlags(QGraphicsView.DontAdjustForAntialiasing)
+        self.setOptimizationFlags(QGraphicsView.DontSavePainterState)
         self.navBrush = QColor(250, 140, 140, 100)
         self.navPen = QPen(QColor(250, 0, 0, 100), 1.0, Qt.SolidLine)
         self.mousepressed = False
@@ -259,6 +261,8 @@ class Overview(ViewBrowser):
         super().__init__(*args)
         self.setFixedSize(SidebarWidget.Width, SidebarWidget.Width)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setOptimizationFlags(QGraphicsView.DontAdjustForAntialiasing)
+        self.setOptimizationFlags(QGraphicsView.DontSavePainterState)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setViewportUpdateMode(QGraphicsView.NoViewportUpdate)
         self.mousepressed = False
