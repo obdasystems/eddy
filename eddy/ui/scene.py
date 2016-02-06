@@ -89,9 +89,9 @@ class DiagramScene(QGraphicsScene):
         self.undostack.setUndoLimit(50)  ## TODO: make the stack configurable
         self.validator = OWL2RLValidator(self)
         self.mode = DiagramMode.Idle  ## operation mode
-        self.modeParam = None  ## extra parameter for the operation mode (see setMode())
-        self.mousePressEdge = None  ## edge being inserted from a mouse press/move/release combo
+        self.modeParam = None  ## extra parameter for the operation mode (see setMode()
         self.mouseOverNode = None  ## node below the mouse cursor during edge insertion
+        self.mousePressEdge = None  ## edge being inserted from a mouse press/move/release combo
         self.mousePressPos = None  ## scene position where the mouse has been pressed
         self.mousePressNode = None  ## node acting as mouse grabber during mouse move events
         self.mousePressNodePos = None  ## position of the shape acting as mouse grabber during mouse move events
