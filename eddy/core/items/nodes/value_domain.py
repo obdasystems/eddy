@@ -57,11 +57,11 @@ class ValueDomainNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.setBrush(brush or QBrush(QColor(252, 252, 252)))
-        self.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+        self.brush = brush or QBrush(QColor(252, 252, 252))
+        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.polygon = self.createPolygon(self.minwidth, self.minheight)
-        self.backgroundArea = self.boundingRect()
-        self.selectionArea = self.boundingRect()
+        self.background = self.createBackground(self.minwidth + 8, self.minheight + 8)
+        self.selection = self.createSelection(self.minwidth + 8, self.minheight + 8)
         self.label = Label('xsd:string', movable=False, editable=False, parent=self)
         self.updateLayout()
 
@@ -108,17 +108,27 @@ class ValueDomainNode(AbstractNode):
         """
         kwargs = {
             'id': self.id,
-            'brush': self.brush(),
-            'height': self.height(),
-            'width': self.width(),
+            'brush': self.brush,
             'description': self.description,
             'url': self.url,
+            'height': self.height(),
+            'width': self.width(),
         }
         node = scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
+
+    @staticmethod
+    def createBackground(width, height):
+        """
+        Returns the initialized background polygon according to the given width/height.
+        :type width: int
+        :type height: int
+        :rtype: QRectF
+        """
+        return QRectF(-width / 2, -height / 2, width, height)
 
     @staticmethod
     def createPolygon(width, height):
@@ -143,8 +153,8 @@ class ValueDomainNode(AbstractNode):
         """
         width = max(self.label.width() + 16, self.minwidth)
         self.polygon = self.createPolygon(width, self.minheight)
-        self.backgroundArea = self.boundingRect()
-        self.selectionArea = self.boundingRect()
+        self.background = self.createBackground(width + 8, self.minheight + 8)
+        self.selection = self.createSelection(width + 8, self.minheight + 8)
         self.updateTextPos()
         self.updateEdges()
 
@@ -166,7 +176,7 @@ class ValueDomainNode(AbstractNode):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        return self.polygon.adjusted(-4, -4, +4, +4)
+        return self.selection
 
     def painterPath(self):
         """
@@ -264,15 +274,15 @@ class ValueDomainNode(AbstractNode):
         :type widget: QWidget
         """
         # SELECTION AREA
-        painter.setPen(self.selectionPen())
-        painter.setBrush(self.selectionBrush())
-        painter.drawRect(self.selectionArea)
+        painter.setPen(self.selectionPen)
+        painter.setBrush(self.selectionBrush)
+        painter.drawRect(self.selection)
         # SYNTAX VALIDATION
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(self.backgroundPen())
-        painter.setBrush(self.backgroundBrush())
-        painter.drawRoundedRect(self.backgroundArea, 8, 8)
+        painter.setPen(self.backgroundPen)
+        painter.setBrush(self.backgroundBrush)
+        painter.drawRoundedRect(self.background, 8, 8)
         # SHAPE
-        painter.setBrush(self.brush())
-        painter.setPen(self.pen())
+        painter.setBrush(self.brush)
+        painter.setPen(self.pen)
         painter.drawRoundedRect(self.polygon, 8, 8)

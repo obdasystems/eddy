@@ -100,10 +100,10 @@ class DisjointUnionNode(OperatorNode):
         """
         kwargs = {
             'id': self.id,
-            'height': self.height(),
-            'width': self.width(),
             'description': self.description,
             'url': self.url,
+            'height': self.height(),
+            'width': self.width(),
         }
         node = scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
         node.setPos(self.pos())

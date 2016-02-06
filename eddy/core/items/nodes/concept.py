@@ -58,13 +58,16 @@ class ConceptNode(AbstractResizableNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
+
         w = max(width, self.minwidth)
         h = max(height, self.minheight)
-        self.setBrush(brush or QBrush(QColor(252, 252, 252)))
-        self.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+        s = self.handleSize
+
+        self.brush = brush or QBrush(QColor(252, 252, 252))
+        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.polygon = self.createPolygon(w, h)
-        self.backgroundArea = self.boundingRect()
-        self.selectionArea = self.boundingRect()
+        self.background = self.createBackground(w + s, h + s)
+        self.selection = self.createSelection(w + s, h + s)
         self.label = Label('concept', parent=self)
         self.label.updatePos()
         self.updateHandles()
@@ -112,17 +115,27 @@ class ConceptNode(AbstractResizableNode):
         """
         kwargs = {
             'id': self.id,
-            'brush': self.brush(),
-            'height': self.height(),
-            'width': self.width(),
+            'brush': self.brush,
             'description': self.description,
             'url': self.url,
+            'height': self.height(),
+            'width': self.width(),
         }
         node = scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
+
+    @staticmethod
+    def createBackground(width, height):
+        """
+        Returns the initialized background polygon according to the given width/height.
+        :type width: int
+        :type height: int
+        :rtype: QRectF
+        """
+        return QRectF(-width / 2, -height / 2, width, height)
 
     @staticmethod
     def createPolygon(width, height):
@@ -151,7 +164,7 @@ class ConceptNode(AbstractResizableNode):
 
         O = self.handleSize + self.handleMove
         M = self.label.moved
-        R = self.boundingRect()
+        R = QRectF(self.boundingRect())
         D = QPointF(0, 0)
 
         minBoundW = self.minwidth + O * 2
@@ -180,10 +193,10 @@ class ConceptNode(AbstractResizableNode):
                 D.setY(D.y() - minBoundH + R.height())
                 R.setTop(R.top() - minBoundH + R.height())
 
-            self.backgroundArea.setLeft(R.left())
-            self.backgroundArea.setTop(R.top())
-            self.selectionArea.setLeft(R.left())
-            self.selectionArea.setTop(R.top())
+            self.background.setLeft(R.left())
+            self.background.setTop(R.top())
+            self.selection.setLeft(R.left())
+            self.selection.setTop(R.top())
             self.polygon.setLeft(R.left() + O)
             self.polygon.setTop(R.top() + O)
 
@@ -200,8 +213,8 @@ class ConceptNode(AbstractResizableNode):
                 D.setY(D.y() - minBoundH + R.height())
                 R.setTop(R.top() - minBoundH + R.height())
 
-            self.backgroundArea.setTop(R.top())
-            self.selectionArea.setTop(R.top())
+            self.background.setTop(R.top())
+            self.selection.setTop(R.top())
             self.polygon.setTop(R.top() + O)
 
         elif self.mousePressHandle == self.handleTR:
@@ -225,10 +238,10 @@ class ConceptNode(AbstractResizableNode):
                 D.setY(D.y() - minBoundH + R.height())
                 R.setTop(R.top() - minBoundH + R.height())
 
-            self.backgroundArea.setRight(R.right())
-            self.backgroundArea.setTop(R.top())
-            self.selectionArea.setRight(R.right())
-            self.selectionArea.setTop(R.top())
+            self.background.setRight(R.right())
+            self.background.setTop(R.top())
+            self.selection.setRight(R.right())
+            self.selection.setTop(R.top())
             self.polygon.setRight(R.right() - O)
             self.polygon.setTop(R.top() + O)
 
@@ -245,8 +258,8 @@ class ConceptNode(AbstractResizableNode):
                 D.setX(D.x() - minBoundW + R.width())
                 R.setLeft(R.left() - minBoundW + R.width())
 
-            self.backgroundArea.setLeft(R.left())
-            self.selectionArea.setLeft(R.left())
+            self.background.setLeft(R.left())
+            self.selection.setLeft(R.left())
             self.polygon.setLeft(R.left() + O)
 
         elif self.mousePressHandle == self.handleMR:
@@ -262,8 +275,8 @@ class ConceptNode(AbstractResizableNode):
                 D.setX(D.x() + minBoundW - R.width())
                 R.setRight(R.right() + minBoundW - R.width())
 
-            self.backgroundArea.setRight(R.right())
-            self.selectionArea.setRight(R.right())
+            self.background.setRight(R.right())
+            self.selection.setRight(R.right())
             self.polygon.setRight(R.right() - O)
 
         elif self.mousePressHandle == self.handleBL:
@@ -287,10 +300,10 @@ class ConceptNode(AbstractResizableNode):
                 D.setY(D.y() + minBoundH - R.height())
                 R.setBottom(R.bottom() + minBoundH - R.height())
 
-            self.backgroundArea.setLeft(R.left())
-            self.backgroundArea.setBottom(R.bottom())
-            self.selectionArea.setLeft(R.left())
-            self.selectionArea.setBottom(R.bottom())
+            self.background.setLeft(R.left())
+            self.background.setBottom(R.bottom())
+            self.selection.setLeft(R.left())
+            self.selection.setBottom(R.bottom())
             self.polygon.setLeft(R.left() + O)
             self.polygon.setBottom(R.bottom() - O)
 
@@ -307,8 +320,8 @@ class ConceptNode(AbstractResizableNode):
                 D.setY(D.y() + minBoundH - R.height())
                 R.setBottom(R.bottom() + minBoundH - R.height())
 
-            self.backgroundArea.setBottom(R.bottom())
-            self.selectionArea.setBottom(R.bottom())
+            self.background.setBottom(R.bottom())
+            self.selection.setBottom(R.bottom())
             self.polygon.setBottom(R.bottom() - O)
 
         elif self.mousePressHandle == self.handleBR:
@@ -332,10 +345,10 @@ class ConceptNode(AbstractResizableNode):
                 D.setY(D.y() + minBoundH - R.height())
                 R.setBottom(R.bottom() + minBoundH - R.height())
 
-            self.backgroundArea.setRight(R.right())
-            self.backgroundArea.setBottom(R.bottom())
-            self.selectionArea.setRight(R.right())
-            self.selectionArea.setBottom(R.bottom())
+            self.background.setRight(R.right())
+            self.background.setBottom(R.bottom())
+            self.selection.setRight(R.right())
+            self.selection.setBottom(R.bottom())
             self.polygon.setRight(R.right() - O)
             self.polygon.setBottom(R.bottom() - O)
 
@@ -361,7 +374,7 @@ class ConceptNode(AbstractResizableNode):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        return self.polygon.adjusted(-4, -4, +4, +4)
+        return self.selection
 
     def painterPath(self):
         """
@@ -379,7 +392,7 @@ class ConceptNode(AbstractResizableNode):
         """
         path = QPainterPath()
         path.addRect(self.polygon)
-        for shape in self._handleRect:
+        for shape in self.handleBound:
             path.addEllipse(shape)
         return path
 
@@ -459,20 +472,20 @@ class ConceptNode(AbstractResizableNode):
         :type widget: QWidget
         """
         # SELECTION AREA
-        painter.setPen(self.selectionPen())
-        painter.setBrush(self.selectionBrush())
-        painter.drawRect(self.selectionArea)
+        painter.setPen(self.selectionPen)
+        painter.setBrush(self.selectionBrush)
+        painter.drawRect(self.selection)
         # SYNTAX VALIDATION
-        painter.setPen(self.backgroundPen())
-        painter.setBrush(self.backgroundBrush())
-        painter.drawRect(self.backgroundArea)
+        painter.setPen(self.backgroundPen)
+        painter.setBrush(self.backgroundBrush)
+        painter.drawRect(self.background)
         # ITEM SHAPE
-        painter.setPen(self.pen())
-        painter.setBrush(self.brush())
+        painter.setPen(self.pen)
+        painter.setBrush(self.brush)
         painter.drawRect(self.polygon)
         # RESIZE HANDLES
         painter.setRenderHint(QPainter.Antialiasing)
         for i in range(self.handleNum):
-            painter.setBrush(self.handleBrush(i))
-            painter.setPen(self.handlePen(i))
-            painter.drawEllipse(self._handleRect[i])
+            painter.setBrush(self.handleBrush[i])
+            painter.setPen(self.handlePen[i])
+            painter.drawEllipse(self.handleBound[i])

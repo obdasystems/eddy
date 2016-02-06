@@ -55,11 +55,12 @@ class PropertyAssertionNode(AbstractNode):
         :type inputs: DistinctList
         """
         super().__init__(**kwargs)
-        self.setBrush(brush or QBrush(QColor(252, 252, 252)))
-        self.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+        self.brush = QBrush(QColor(252, 252, 252))
+        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.inputs = inputs or DistinctList()
-        self.backgroundPolygon = self.createPolygon(60, 38)
         self.polygon = self.createPolygon(52, 30)
+        self.background = self.createBackground(60, 38)
+        self.selection = self.createSelection(60, 38)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -106,14 +107,24 @@ class PropertyAssertionNode(AbstractNode):
         """
         kwargs = {
             'id': self.id,
-            'height': self.height(),
-            'width': self.width(),
             'description': self.description,
             'url': self.url,
+            'height': self.height(),
+            'width': self.width(),
         }
         node = scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
         node.setPos(self.pos())
         return node
+
+    @staticmethod
+    def createBackground(width, height):
+        """
+        Returns the initialized background polygon according to the given width/height.
+        :type width: int
+        :type height: int
+        :rtype: QRectF
+        """
+        return QRectF(-width / 2, -height / 2, width, height)
 
     @staticmethod
     def createPolygon(width, height):
@@ -165,7 +176,7 @@ class PropertyAssertionNode(AbstractNode):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        return self.polygon.adjusted(-4, -4, +4, +4)
+        return self.selection
 
     def painterPath(self):
         """
@@ -258,15 +269,15 @@ class PropertyAssertionNode(AbstractNode):
         :type widget: QWidget
         """
         # SELECTION AREA
-        painter.setPen(self.selectionPen())
-        painter.setBrush(self.selectionBrush())
-        painter.drawRect(self.backgroundPolygon)
+        painter.setPen(self.selectionPen)
+        painter.setBrush(self.selectionBrush)
+        painter.drawRect(self.background)
         # SYNTAX VALIDATION
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(self.backgroundPen())
-        painter.setBrush(self.backgroundBrush())
-        painter.drawRoundedRect(self.backgroundPolygon, 16, 16)
+        painter.setPen(self.backgroundPen)
+        painter.setBrush(self.backgroundBrush)
+        painter.drawRoundedRect(self.background, 16, 16)
         # SHAPE
-        painter.setPen(self.pen())
-        painter.setBrush(self.brush())
+        painter.setPen(self.pen)
+        painter.setBrush(self.brush)
         painter.drawRoundedRect(self.polygon, 16, 16)

@@ -58,17 +58,18 @@ class AbstractNode(AbstractItem):
         """
         super().__init__(**kwargs)
 
-        self._backgroundBrush = Qt.NoBrush
-        self._backgroundPen = Qt.NoPen
-
         self.anchors = {}
         self.edges = DistinctList()
 
+        self.backgroundBrush = QBrush(Qt.NoBrush)
+        self.backgroundPen = QPen(Qt.NoPen)
+
+        self.background = None
+        self.selection = None
         self.polygon = None
-        self.backgroundArea = None
-        self.selectionArea = None
 
         self.setAcceptHoverEvents(True)
+        self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
@@ -159,20 +160,6 @@ class AbstractNode(AbstractItem):
             self.anchors[edge] = self.mapToScene(self.center())
             return self.anchors[edge]
 
-    def backgroundBrush(self):
-        """
-        Returns the brush used to draw the background of the item.
-        :rtype: QBrush
-        """
-        return self._backgroundBrush
-
-    def backgroundPen(self):
-        """
-        Returns the pen used to draw the background of the item.
-        :rtype: QPen
-        """
-        return self._backgroundPen
-
     def center(self):
         """
         Returns the point at the center of the shape in item's coordinate.
@@ -190,6 +177,17 @@ class AbstractNode(AbstractItem):
 
     @staticmethod
     @abstractmethod
+    def createBackground(width, height):
+        """
+        Returns the initialized background polygon according to the given width/height.
+        :type width: int
+        :type height: int
+        :rtype: T <= QRectF | QPolygonF
+        """
+        pass
+
+    @staticmethod
+    @abstractmethod
     def createPolygon(width, height):
         """
         Returns the initialized polygon according to the given width/height.
@@ -198,6 +196,16 @@ class AbstractNode(AbstractItem):
         :rtype: T <= QRectF | QPolygonF
         """
         pass
+
+    @staticmethod
+    def createSelection(width, height):
+        """
+        Returns the initialized selection polygon according to the given width/height.
+        :type width: int
+        :type height: int
+        :rtype: QRectF
+        """
+        return QRectF(-width / 2, -height / 2, width, height)
 
     @abstractmethod
     def height(self):
@@ -284,20 +292,6 @@ class AbstractNode(AbstractItem):
         """
         self.anchors[edge] = pos
 
-    def setBackgroundBrush(self, brush):
-        """
-        Sets the brush used to draw the background of the item.
-        :type brush: QBrush
-        """
-        self._backgroundBrush = brush
-
-    def setBackgroundPen(self, pen):
-        """
-        Sets the pen used to draw the background of the item.
-        :type pen: QPen
-        """
-        self._backgroundPen = pen
-
     def setPos(self, *__args):
         """
         Set the item position.
@@ -312,37 +306,38 @@ class AbstractNode(AbstractItem):
             raise TypeError('too many arguments; expected {}, got {}'.format(2, len(__args)))
         super().setPos(pos + super().pos() - self.pos())
 
+    def updateBrush(self, selected=None, valid=None, **kwargs):
+        """
+        Perform updates on pens and brushes needed by the paint() method.
+        :type selected: bool
+        :type valid: bool
+        """
+        brush0 = QBrush(Qt.NoBrush)
+        brush1 = QBrush(QColor(43, 173, 63, 160))
+        brush2 = QBrush(QColor(179, 12, 12, 160))
+
+        pen0 = QPen(Qt.NoPen)
+        pen1 = QPen(QColor(0, 0, 0), 1.0, Qt.DashLine)
+
+        backgroundBrush = brush0
+        selectionPen = pen0
+
+        # ITEM SELECTION
+        if selected:
+            selectionPen = pen1
+        self.selectionPen = selectionPen
+
+        # SYNTAX VALIDATION
+        if valid is not None:
+            backgroundBrush = brush1 if valid else brush2
+        self.backgroundBrush = backgroundBrush
+
     def updateEdges(self):
         """
         Update all the edges attached to the node.
         """
         for edge in self.edges:
             edge.updateEdge()
-
-    def updatePenAndBrush(self, selected=None, valid=None, **kwargs):
-        """
-        Perform updates on pens and brushes needed by the paint() method.
-        :type selected: bool
-        :type valid: bool
-        """
-        backgroundBrushOkPattern = QBrush(QColor(43, 173, 63, 160))
-        backgroundBrushBadPattern = QBrush(QColor(179, 12, 12, 160))
-        selectionPenPattern = QPen(QColor(0, 0, 0), 1.0, Qt.DashLine)
-        noBrush = QBrush(Qt.NoBrush)
-        noPen = QPen(Qt.NoPen)
-
-        backgroundBrush = noBrush
-        selectionPen = noPen
-
-        # ITEM SELECTION
-        if selected:
-            selectionPen = selectionPenPattern
-        self.setSelectionPen(selectionPen)
-
-        # SYNTAX VALIDATION
-        if valid is not None:
-            backgroundBrush = backgroundBrushOkPattern if valid else backgroundBrushBadPattern
-        self.setBackgroundBrush(backgroundBrush)
 
     @abstractmethod
     def width(self):
@@ -366,7 +361,7 @@ class AbstractNode(AbstractItem):
         :rtype: QVariant
         """
         if change == AbstractNode.ItemSelectedHasChanged:
-            self.updatePenAndBrush(selected=value)
+            self.updateBrush(selected=value)
         return super(AbstractNode, self).itemChange(change, value)
 
     def mousePressEvent(self, mouseEvent):
@@ -526,12 +521,12 @@ class AbstractResizableNode(AbstractNode):
         """
         super().__init__(**kwargs)
 
-        self._handleBrush = [Qt.NoBrush] * self.handleNum
-        self._handlePen = [Qt.NoPen] * self.handleNum
-        self._handleRect = [None] * self.handleNum
+        self.handleBound = [QRectF()] * self.handleNum
+        self.handleBrush = [QBrush(Qt.NoBrush)] * self.handleNum
+        self.handlePen = [QPen(Qt.NoPen)] * self.handleNum
 
-        self.mousePressBackgroundArea = None
-        self.mousePressSelectionArea = None
+        self.mousePressBackground = None
+        self.mousePressSelection = None
         self.mousePressPolygon = None
         self.mousePressBound = None
         self.mousePressData = None
@@ -593,26 +588,10 @@ class AbstractResizableNode(AbstractNode):
         :type point: QPointF
         :rtype: int
         """
-        for i in range(len(self._handleRect)):
-            if self._handleRect[i].contains(point):
+        for i in range(len(self.handleBound)):
+            if self.handleBound[i].contains(point):
                 return i
         return None
-
-    def handleBrush(self, index):
-        """
-        Returns the brush used to draw the given resizing handle.
-        :type index: int
-        :rtype: QBrush
-        """
-        return self._handleBrush[index]
-
-    def handlePen(self, index):
-        """
-        Returns the pen used to draw the given resizing handle.
-        :type index: int
-        :rtype: QPen
-        """
-        return self._handlePen[index]
 
     @abstractmethod
     def interactiveResize(self, mousePos):
@@ -621,22 +600,6 @@ class AbstractResizableNode(AbstractNode):
         :type mousePos: QPointF
         """
         pass
-
-    def setHandleBrush(self, index, brush):
-        """
-        Sets the brush used to draw the given resizing handle.
-        :type index: int
-        :type brush: QBrush
-        """
-        self._handleBrush[index] = brush
-
-    def setHandlePen(self, index, pen):
-        """
-        Sets the pen used to draw the given resizing handle.
-        :type index: int
-        :type pen: QPen
-        """
-        self._handlePen[index] = pen
 
     def updateAnchors(self, data, diff):
         """
@@ -652,7 +615,7 @@ class AbstractResizableNode(AbstractNode):
                     newPos = self.intersection(QLineF(newPos, self.pos()))
                 self.setAnchor(edge, newPos)
 
-    def updatePenAndBrush(self, selected=None, valid=None, handle=None, **kwargs):
+    def updateBrush(self, selected=None, valid=None, handle=None, **kwargs):
         """
         Perform updates on pens and brushes needed by the paint() method.
         :type selected: bool
@@ -661,41 +624,42 @@ class AbstractResizableNode(AbstractNode):
         """
         num = self.handleNum
 
-        backgroundBrushOkPattern = QBrush(QColor(43, 173, 63, 160))
-        backgroundBrushBadPattern = QBrush(QColor(179, 12, 12, 160))
-        handleBrushPattern = QBrush(QColor(168, 168, 168, 255))
-        handlePenPattern = QPen(QColor(0, 0, 0, 255), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-        selectionPenPattern = QPen(QColor(0, 0, 0), 1.0, Qt.DashLine)
-        noBrush = QBrush(Qt.NoBrush)
-        noPen = QPen(Qt.NoPen)
+        brush0 = QBrush(Qt.NoBrush)
+        brush1 = QBrush(QColor(43, 173, 63, 160))
+        brush2 = QBrush(QColor(179, 12, 12, 160))
+        brush3 = QBrush(QColor(168, 168, 168, 255))
 
-        handleBrush = [noBrush] * num
-        handlePen = [noPen] * num
-        selectionPen = noPen
+        pen0 = QPen(Qt.NoPen)
+        pen1 = QPen(QColor(0, 0, 0, 255), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+        pen2 = QPen(QColor(0, 0, 0), 1.0, Qt.DashLine)
+
+        backgroundBrush = brush0
+        handleBrush = [brush0] * num
+        handlePen = [pen0] * num
+        selectionPen = pen0
 
         # ITEM SELECTION & RESIZE HANDLES
         if selected:
             if handle is None:
-                handleBrush = [handleBrushPattern] * num
-                handlePen = [handlePenPattern] * num
-                selectionPen = selectionPenPattern
+                handleBrush = [brush3] * num
+                handlePen = [pen1] * num
+                selectionPen = pen2
             else:
                 for i in range(num):
                     if i == handle:
-                        handleBrush[i] = handleBrushPattern
-                        handlePen[i] = handlePenPattern
+                        handleBrush[i] = brush3
+                        handlePen[i] = pen1
 
         for i in range(num):
-            self.setHandleBrush(i, handleBrush[i])
-            self.setHandlePen(i, handlePen[i])
+            self.handleBrush[i] = handleBrush[i]
+            self.handlePen[i] = handlePen[i]
 
-        self.setSelectionPen(selectionPen)
+        self.selectionPen = selectionPen
 
         # SYNTAX VALIDATION
-        brush = noBrush
         if valid is not None:
-            brush = backgroundBrushOkPattern if valid else backgroundBrushBadPattern
-        self.setBackgroundBrush(brush)
+            backgroundBrush = brush1 if valid else brush2
+        self.backgroundBrush = backgroundBrush
 
     def updateHandles(self):
         """
@@ -703,14 +667,14 @@ class AbstractResizableNode(AbstractNode):
         """
         s = self.handleSize
         b = self.boundingRect()
-        self._handleRect[self.handleTL] = QRectF(b.left(), b.top(), s, s)
-        self._handleRect[self.handleTM] = QRectF(b.center().x() - s / 2, b.top(), s, s)
-        self._handleRect[self.handleTR] = QRectF(b.right() - s, b.top(), s, s)
-        self._handleRect[self.handleML] = QRectF(b.left(), b.center().y() - s / 2, s, s)
-        self._handleRect[self.handleMR] = QRectF(b.right() - s, b.center().y() - s / 2, s, s)
-        self._handleRect[self.handleBL] = QRectF(b.left(), b.bottom() - s, s, s)
-        self._handleRect[self.handleBM] = QRectF(b.center().x() - s / 2, b.bottom() - s, s, s)
-        self._handleRect[self.handleBR] = QRectF(b.right() - s, b.bottom() - s, s, s)
+        self.handleBound[self.handleTL] = QRectF(b.left(), b.top(), s, s)
+        self.handleBound[self.handleTM] = QRectF(b.center().x() - s / 2, b.top(), s, s)
+        self.handleBound[self.handleTR] = QRectF(b.right() - s, b.top(), s, s)
+        self.handleBound[self.handleML] = QRectF(b.left(), b.center().y() - s / 2, s, s)
+        self.handleBound[self.handleMR] = QRectF(b.right() - s, b.center().y() - s / 2, s, s)
+        self.handleBound[self.handleBL] = QRectF(b.left(), b.bottom() - s, s, s)
+        self.handleBound[self.handleBM] = QRectF(b.center().x() - s / 2, b.bottom() - s, s, s)
+        self.handleBound[self.handleBR] = QRectF(b.right() - s, b.bottom() - s, s, s)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -747,7 +711,7 @@ class AbstractResizableNode(AbstractNode):
         if change == AbstractNode.ItemSelectedHasChanged:
             scene = self.scene()
             if scene.mode is not DiagramMode.NodeResize:
-                self.updatePenAndBrush(selected=value)
+                self.updateBrush(selected=value)
         return super(AbstractNode, self).itemChange(change, value)
 
     def mousePressEvent(self, mouseEvent):
@@ -766,19 +730,19 @@ class AbstractResizableNode(AbstractNode):
                 scene.setMode(DiagramMode.NodeResize)
                 self.setSelected(True)
 
-                BC = QRectF if isinstance(self.backgroundArea, QRectF) else QPolygonF
-                SC = QRectF if isinstance(self.selectionArea, QRectF) else QPolygonF
+                BC = QRectF if isinstance(self.background, QRectF) else QPolygonF
+                SC = QRectF if isinstance(self.selection, QRectF) else QPolygonF
                 PC = QRectF if isinstance(self.polygon, QRectF) else QPolygonF
 
-                self.mousePressBackgroundArea = BC(self.backgroundArea)
-                self.mousePressSelectionArea = SC(self.selectionArea)
+                self.mousePressBackground = BC(self.background)
+                self.mousePressSelection = SC(self.selection)
                 self.mousePressPolygon = PC(self.polygon)
-                self.mousePressBound = self.boundingRect()
+                self.mousePressBound = SC(self.selection)
                 self.mousePressData = {edge: pos for edge, pos in self.anchors.items()}
                 self.mousePressHandle = handle
                 self.mousePressPos = mousePos
 
-                self.updatePenAndBrush(selected=True, handle=handle)
+                self.updateBrush(selected=True, handle=handle)
 
         super().mousePressEvent(mouseEvent)
 
@@ -808,25 +772,25 @@ class AbstractResizableNode(AbstractNode):
 
             if bound.size() != self.mousePressBound.size():
 
-                BC = QRectF if isinstance(self.backgroundArea, QRectF) else QPolygonF
-                SC = QRectF if isinstance(self.selectionArea, QRectF) else QPolygonF
+                BC = QRectF if isinstance(self.background, QRectF) else QPolygonF
+                SC = QRectF if isinstance(self.selection, QRectF) else QPolygonF
                 PC = QRectF if isinstance(self.polygon, QRectF) else QPolygonF
 
-                backgroundArea = BC(self.backgroundArea)
-                selectionArea = SC(self.selectionArea)
+                background = BC(self.background)
+                selection = SC(self.selection)
                 polygon = PC(self.polygon)
 
                 commandData = {
                     'undo': {
-                        'backgroundArea': self.mousePressBackgroundArea,
-                        'selectionArea': self.mousePressSelectionArea,
+                        'background': self.mousePressBackground,
+                        'selection': self.mousePressSelection,
                         'polygon': self.mousePressPolygon,
                         'anchors': self.mousePressData,
                         'moved': hasattr(self, 'label') and self.label.moved,
                     },
                     'redo': {
-                        'backgroundArea': backgroundArea,
-                        'selectionArea': selectionArea,
+                        'background': background,
+                        'selection': selection,
                         'polygon': polygon,
                         'anchors': {edge: pos for edge, pos in self.anchors.items()},
                         'moved': hasattr(self, 'label') and self.label.moved,
@@ -837,12 +801,12 @@ class AbstractResizableNode(AbstractNode):
 
             scene.setMode(DiagramMode.Idle)
 
-        self.updatePenAndBrush(selected=self.isSelected())
+        self.updateBrush(selected=self.isSelected())
 
         super().mouseReleaseEvent(mouseEvent)
 
-        self.mousePressBackgroundArea = None
-        self.mousePressSelectionArea = None
+        self.mousePressBackground = None
+        self.mousePressSelection = None
         self.mousePressPolygon = None
         self.mousePressBound = None
         self.mousePressData = None

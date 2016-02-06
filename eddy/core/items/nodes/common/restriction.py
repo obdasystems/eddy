@@ -57,11 +57,11 @@ class RestrictionNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.setBrush(brush or QBrush(QColor(252, 252, 252)))
-        self.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+        self.brush = brush or QBrush(QColor(252, 252, 252))
+        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.polygon = self.createPolygon(20, 20)
-        self.backgroundArea = self.boundingRect()
-        self.selectionArea = self.boundingRect()
+        self.background = self.createBackground(28, 28)
+        self.selection = self.createSelection(28, 28)
         self.label = Label(Restriction.Exists.label, centered=False, editable=False, parent=self)
         self.label.updatePos()
 
@@ -123,9 +123,9 @@ class RestrictionNode(AbstractNode):
         """
         kwargs = {
             'id': self.id,
-            'height': self.height(),
             'width': self.width(),
             'description': self.description,
+            'height': self.height(),
             'url': self.url,
         }
         node = scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
@@ -133,6 +133,16 @@ class RestrictionNode(AbstractNode):
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
+
+    @staticmethod
+    def createBackground(width, height):
+        """
+        Returns the initialized background polygon according to the given width/height.
+        :type width: int
+        :type height: int
+        :rtype: QRectF
+        """
+        return QRectF(-width / 2, -height / 2, width, height)
 
     @staticmethod
     def createPolygon(width, height):
@@ -169,7 +179,7 @@ class RestrictionNode(AbstractNode):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        return self.polygon.adjusted(-4, -4, 4, 4)
+        return self.selection
 
     def painterPath(self):
         """
@@ -255,14 +265,14 @@ class RestrictionNode(AbstractNode):
         :type widget: QWidget
         """
         # SELECTION AREA
-        painter.setPen(self.selectionPen())
-        painter.setBrush(self.selectionBrush())
-        painter.drawRect(self.selectionArea)
+        painter.setPen(self.selectionPen)
+        painter.setBrush(self.selectionBrush)
+        painter.drawRect(self.selection)
         # SYNTAX VALIDATION
-        painter.setPen(self.backgroundPen())
-        painter.setBrush(self.backgroundBrush())
-        painter.drawRect(self.backgroundArea)
+        painter.setPen(self.backgroundPen)
+        painter.setBrush(self.backgroundBrush)
+        painter.drawRect(self.background)
         # SHAPE
-        painter.setPen(self.pen())
-        painter.setBrush(self.brush())
+        painter.setPen(self.pen)
+        painter.setBrush(self.brush)
         painter.drawRect(self.polygon)

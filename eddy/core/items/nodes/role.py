@@ -66,11 +66,12 @@ class RoleNode(AbstractResizableNode):
         super().__init__(**kwargs)
         w = max(width, self.minwidth)
         h = max(height, self.minheight)
-        self.setBrush(brush or QBrush(QColor(252, 252, 252)))
-        self.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine))
+        s = self.handleSize
+        self.brush = brush or QBrush(QColor(252, 252, 252))
+        self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
         self.polygon = self.createPolygon(w, h)
-        self.backgroundArea = self.createPolygon(w + 8, h + 8)
-        self.selectionArea = self.boundingRect()
+        self.background = self.createBackground(w + s, h + s)
+        self.selection = self.createSelection(w + s, h + s)
         self.label = Label('role', parent=self)
         self.label.updatePos()
         self.updateHandles()
@@ -348,18 +349,34 @@ class RoleNode(AbstractResizableNode):
         """
         kwargs = {
             'id': self.id,
-            'brush': self.brush(),
-            'height': self.height(),
-            'width': self.width(),
+            'brush': self.brush,
             'description': self.description,
             'url': self.url,
+            'height': self.height(),
+            'width': self.width(),
         }
         node = scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
-
+    
+    @staticmethod
+    def createBackground(width, height):
+        """
+        Returns the initialized background polygon according to the given width/height.
+        :type width: int
+        :type height: int
+        :rtype: QPolygonF
+        """
+        return QPolygonF([
+            QPointF(-width / 2, 0),
+            QPointF(0, +height / 2),
+            QPointF(+width / 2, 0),
+            QPointF(0, -height / 2),
+            QPointF(-width / 2, 0)
+        ])
+    
     @staticmethod
     def createPolygon(width, height):
         """
@@ -381,7 +398,7 @@ class RoleNode(AbstractResizableNode):
         Returns the height of the shape.
         :rtype: int
         """
-        return self.boundingRect().height() - 2 * (self.handleSize + self.handleMove)
+        return self.polygon[self.indexB].y() - self.polygon[self.indexT].y()
 
     def interactiveResize(self, mousePos):
         """
@@ -393,7 +410,7 @@ class RoleNode(AbstractResizableNode):
 
         O = self.handleSize + self.handleMove
         M = self.label.moved
-        R = self.boundingRect()
+        R = QRectF(self.boundingRect())
         D = QPointF(0, 0)
 
         minBoundW = self.minwidth + O * 2
@@ -422,14 +439,14 @@ class RoleNode(AbstractResizableNode):
                 D.setY(D.y() - minBoundH + R.height())
                 R.setTop(R.top() - minBoundH + R.height())
             
-            self.selectionArea.setLeft(R.left())
-            self.selectionArea.setTop(R.top())
+            self.selection.setLeft(R.left())
+            self.selection.setTop(R.top())
             
-            self.backgroundArea[self.indexT] = QPointF(R.left() + R.width() / 2, R.top())
-            self.backgroundArea[self.indexB] = QPointF(R.left() + R.width() / 2, self.backgroundArea[self.indexB].y())
-            self.backgroundArea[self.indexL] = QPointF(R.left(), R.top() + R.height() / 2)
-            self.backgroundArea[self.indexE] = QPointF(R.left(), R.top() + R.height() / 2)
-            self.backgroundArea[self.indexR] = QPointF(self.backgroundArea[self.indexR].x(), R.top() + R.height() / 2)
+            self.background[self.indexT] = QPointF(R.left() + R.width() / 2, R.top())
+            self.background[self.indexB] = QPointF(R.left() + R.width() / 2, self.background[self.indexB].y())
+            self.background[self.indexL] = QPointF(R.left(), R.top() + R.height() / 2)
+            self.background[self.indexE] = QPointF(R.left(), R.top() + R.height() / 2)
+            self.background[self.indexR] = QPointF(self.background[self.indexR].x(), R.top() + R.height() / 2)
             
             self.polygon[self.indexT] = QPointF(R.left() + R.width() / 2, R.top() + O)
             self.polygon[self.indexB] = QPointF(R.left() + R.width() / 2, self.polygon[self.indexB].y())
@@ -450,12 +467,12 @@ class RoleNode(AbstractResizableNode):
                 D.setY(D.y() - minBoundH + R.height())
                 R.setTop(R.top() - minBoundH + R.height())
             
-            self.selectionArea.setTop(R.top())
+            self.selection.setTop(R.top())
             
-            self.backgroundArea[self.indexT] = QPointF(self.backgroundArea[self.indexT].x(), R.top())
-            self.backgroundArea[self.indexL] = QPointF(self.backgroundArea[self.indexL].x(), R.top() + R.height() / 2)
-            self.backgroundArea[self.indexE] = QPointF(self.backgroundArea[self.indexE].x(), R.top() + R.height() / 2)
-            self.backgroundArea[self.indexR] = QPointF(self.backgroundArea[self.indexR].x(), R.top() + R.height() / 2)
+            self.background[self.indexT] = QPointF(self.background[self.indexT].x(), R.top())
+            self.background[self.indexL] = QPointF(self.background[self.indexL].x(), R.top() + R.height() / 2)
+            self.background[self.indexE] = QPointF(self.background[self.indexE].x(), R.top() + R.height() / 2)
+            self.background[self.indexR] = QPointF(self.background[self.indexR].x(), R.top() + R.height() / 2)
             
             self.polygon[self.indexT] = QPointF(self.polygon[self.indexT].x(), R.top() + O)
             self.polygon[self.indexL] = QPointF(self.polygon[self.indexL].x(), R.top() + R.height() / 2)
@@ -483,14 +500,14 @@ class RoleNode(AbstractResizableNode):
                 D.setY(D.y() - minBoundH + R.height())
                 R.setTop(R.top() - minBoundH + R.height())
             
-            self.selectionArea.setRight(R.right())
-            self.selectionArea.setTop(R.top())
+            self.selection.setRight(R.right())
+            self.selection.setTop(R.top())
             
-            self.backgroundArea[self.indexT] = QPointF(R.right() - R.width() / 2, R.top())
-            self.backgroundArea[self.indexB] = QPointF(R.right() - R.width() / 2, self.backgroundArea[self.indexB].y())
-            self.backgroundArea[self.indexL] = QPointF(self.backgroundArea[self.indexL].x(), R.top() + R.height() / 2)
-            self.backgroundArea[self.indexE] = QPointF(self.backgroundArea[self.indexE].x(), R.top() + R.height() / 2)
-            self.backgroundArea[self.indexR] = QPointF(R.right(), R.top() + R.height() / 2)
+            self.background[self.indexT] = QPointF(R.right() - R.width() / 2, R.top())
+            self.background[self.indexB] = QPointF(R.right() - R.width() / 2, self.background[self.indexB].y())
+            self.background[self.indexL] = QPointF(self.background[self.indexL].x(), R.top() + R.height() / 2)
+            self.background[self.indexE] = QPointF(self.background[self.indexE].x(), R.top() + R.height() / 2)
+            self.background[self.indexR] = QPointF(R.right(), R.top() + R.height() / 2)
             
             self.polygon[self.indexT] = QPointF(R.right() - R.width() / 2, R.top() + O)
             self.polygon[self.indexB] = QPointF(R.right() - R.width() / 2, self.polygon[self.indexB].y())
@@ -511,12 +528,12 @@ class RoleNode(AbstractResizableNode):
                 D.setX(D.x() - minBoundW + R.width())
                 R.setLeft(R.left() - minBoundW + R.width())
             
-            self.selectionArea.setLeft(R.left())
+            self.selection.setLeft(R.left())
             
-            self.backgroundArea[self.indexL] = QPointF(R.left(), self.mousePressBound.top() + self.mousePressBound.height() / 2)
-            self.backgroundArea[self.indexE] = QPointF(R.left(), self.mousePressBound.top() + self.mousePressBound.height() / 2)
-            self.backgroundArea[self.indexT] = QPointF(R.left() + R.width() / 2, self.backgroundArea[self.indexT].y())
-            self.backgroundArea[self.indexB] = QPointF(R.left() + R.width() / 2, self.backgroundArea[self.indexB].y())
+            self.background[self.indexL] = QPointF(R.left(), self.mousePressBound.top() + self.mousePressBound.height() / 2)
+            self.background[self.indexE] = QPointF(R.left(), self.mousePressBound.top() + self.mousePressBound.height() / 2)
+            self.background[self.indexT] = QPointF(R.left() + R.width() / 2, self.background[self.indexT].y())
+            self.background[self.indexB] = QPointF(R.left() + R.width() / 2, self.background[self.indexB].y())
             
             self.polygon[self.indexL] = QPointF(R.left() + O, self.mousePressBound.top() + self.mousePressBound.height() / 2)
             self.polygon[self.indexE] = QPointF(R.left() + O, self.mousePressBound.top() + self.mousePressBound.height() / 2)
@@ -536,11 +553,11 @@ class RoleNode(AbstractResizableNode):
                 D.setX(D.x() + minBoundW - R.width())
                 R.setRight(R.right() + minBoundW - R.width())
             
-            self.selectionArea.setRight(R.right())
+            self.selection.setRight(R.right())
             
-            self.backgroundArea[self.indexR] = QPointF(R.right(), self.mousePressBound.top() + self.mousePressBound.height() / 2)
-            self.backgroundArea[self.indexT] = QPointF(R.right() - R.width() / 2, self.backgroundArea[self.indexT].y())
-            self.backgroundArea[self.indexB] = QPointF(R.right() - R.width() / 2, self.backgroundArea[self.indexB].y())
+            self.background[self.indexR] = QPointF(R.right(), self.mousePressBound.top() + self.mousePressBound.height() / 2)
+            self.background[self.indexT] = QPointF(R.right() - R.width() / 2, self.background[self.indexT].y())
+            self.background[self.indexB] = QPointF(R.right() - R.width() / 2, self.background[self.indexB].y())
             
             self.polygon[self.indexR] = QPointF(R.right() - O, self.mousePressBound.top() + self.mousePressBound.height() / 2)
             self.polygon[self.indexT] = QPointF(R.right() - R.width() / 2, self.polygon[self.indexT].y())
@@ -567,14 +584,14 @@ class RoleNode(AbstractResizableNode):
                 D.setY(D.y() + minBoundH - R.height())
                 R.setBottom(R.bottom() + minBoundH - R.height())
             
-            self.selectionArea.setLeft(R.left())
-            self.selectionArea.setBottom(R.bottom())
+            self.selection.setLeft(R.left())
+            self.selection.setBottom(R.bottom())
             
-            self.backgroundArea[self.indexT] = QPointF(R.left() + R.width() / 2, self.backgroundArea[self.indexT].y())
-            self.backgroundArea[self.indexB] = QPointF(R.left() + R.width() / 2, R.bottom())
-            self.backgroundArea[self.indexL] = QPointF(R.left(), R.bottom() - R.height() / 2)
-            self.backgroundArea[self.indexE] = QPointF(R.left(), R.bottom() - R.height() / 2)
-            self.backgroundArea[self.indexR] = QPointF(self.backgroundArea[self.indexR].x(), R.bottom() - R.height() / 2)
+            self.background[self.indexT] = QPointF(R.left() + R.width() / 2, self.background[self.indexT].y())
+            self.background[self.indexB] = QPointF(R.left() + R.width() / 2, R.bottom())
+            self.background[self.indexL] = QPointF(R.left(), R.bottom() - R.height() / 2)
+            self.background[self.indexE] = QPointF(R.left(), R.bottom() - R.height() / 2)
+            self.background[self.indexR] = QPointF(self.background[self.indexR].x(), R.bottom() - R.height() / 2)
             
             self.polygon[self.indexT] = QPointF(R.left() + R.width() / 2, self.polygon[self.indexT].y())
             self.polygon[self.indexB] = QPointF(R.left() + R.width() / 2, R.bottom() - O)
@@ -595,12 +612,12 @@ class RoleNode(AbstractResizableNode):
                 D.setY(D.y() + minBoundH - R.height())
                 R.setBottom(R.bottom() + minBoundH - R.height())
             
-            self.selectionArea.setBottom(R.bottom())
+            self.selection.setBottom(R.bottom())
             
-            self.backgroundArea[self.indexB] = QPointF(self.backgroundArea[self.indexB].x(), R.bottom())
-            self.backgroundArea[self.indexL] = QPointF(self.backgroundArea[self.indexL].x(), R.top() + R.height() / 2)
-            self.backgroundArea[self.indexE] = QPointF(self.backgroundArea[self.indexE].x(), R.top() + R.height() / 2)
-            self.backgroundArea[self.indexR] = QPointF(self.backgroundArea[self.indexR].x(), R.top() + R.height() / 2)
+            self.background[self.indexB] = QPointF(self.background[self.indexB].x(), R.bottom())
+            self.background[self.indexL] = QPointF(self.background[self.indexL].x(), R.top() + R.height() / 2)
+            self.background[self.indexE] = QPointF(self.background[self.indexE].x(), R.top() + R.height() / 2)
+            self.background[self.indexR] = QPointF(self.background[self.indexR].x(), R.top() + R.height() / 2)
             
             self.polygon[self.indexB] = QPointF(self.polygon[self.indexB].x(), R.bottom() - O)
             self.polygon[self.indexL] = QPointF(self.polygon[self.indexL].x(), R.top() + R.height() / 2)
@@ -628,14 +645,14 @@ class RoleNode(AbstractResizableNode):
                 D.setY(D.y() + minBoundH - R.height())
                 R.setBottom(R.bottom() + minBoundH - R.height())
 
-            self.selectionArea.setRight(R.right())
-            self.selectionArea.setBottom(R.bottom())
+            self.selection.setRight(R.right())
+            self.selection.setBottom(R.bottom())
 
-            self.backgroundArea[self.indexT] = QPointF(R.right() - R.width() / 2, self.backgroundArea[self.indexT].y())
-            self.backgroundArea[self.indexB] = QPointF(R.right() - R.width() / 2, R.bottom())
-            self.backgroundArea[self.indexL] = QPointF(self.backgroundArea[self.indexL].x(), R.bottom() - R.height() / 2)
-            self.backgroundArea[self.indexE] = QPointF(self.backgroundArea[self.indexE].x(), R.bottom() - R.height() / 2)
-            self.backgroundArea[self.indexR] = QPointF(R.right(), R.bottom() - R.height() / 2)
+            self.background[self.indexT] = QPointF(R.right() - R.width() / 2, self.background[self.indexT].y())
+            self.background[self.indexB] = QPointF(R.right() - R.width() / 2, R.bottom())
+            self.background[self.indexL] = QPointF(self.background[self.indexL].x(), R.bottom() - R.height() / 2)
+            self.background[self.indexE] = QPointF(self.background[self.indexE].x(), R.bottom() - R.height() / 2)
+            self.background[self.indexR] = QPointF(R.right(), R.bottom() - R.height() / 2)
             
             self.polygon[self.indexT] = QPointF(R.right() - R.width() / 2, self.polygon[self.indexT].y())
             self.polygon[self.indexB] = QPointF(R.right() - R.width() / 2, R.bottom() - O)
@@ -652,7 +669,7 @@ class RoleNode(AbstractResizableNode):
         Returns the width of the shape.
         :rtype: int
         """
-        return self.boundingRect().width() - 2 * (self.handleSize + self.handleMove)
+        return self.polygon[self.indexR].x() - self.polygon[self.indexL].x()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -665,12 +682,7 @@ class RoleNode(AbstractResizableNode):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        o = self.handleSize + self.handleMove
-        x = self.polygon[self.indexL].x()
-        y = self.polygon[self.indexT].y()
-        w = self.polygon[self.indexR].x() - x
-        h = self.polygon[self.indexB].y() - y
-        return QRectF(x - o, y - o, w + o * 2, h + o * 2)
+        return self.selection
 
     def painterPath(self):
         """
@@ -688,7 +700,7 @@ class RoleNode(AbstractResizableNode):
         """
         path = QPainterPath()
         path.addPolygon(self.polygon)
-        for shape in self._handleRect:
+        for shape in self.handleBound:
             path.addEllipse(shape)
         return path
 
@@ -769,21 +781,21 @@ class RoleNode(AbstractResizableNode):
         :type widget: QWidget
         """
         # SELECTION AREA
-        painter.setPen(self.selectionPen())
-        painter.setBrush(self.selectionBrush())
-        painter.drawRect(self.selectionArea)
+        painter.setPen(self.selectionPen)
+        painter.setBrush(self.selectionBrush)
+        painter.drawRect(self.selection)
         # SYNTAX VALIDATION
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(self.backgroundPen())
-        painter.setBrush(self.backgroundBrush())
-        painter.drawPolygon(self.backgroundArea)
+        painter.setPen(self.backgroundPen)
+        painter.setBrush(self.backgroundBrush)
+        painter.drawPolygon(self.background)
         # ITEM SHAPE
-        painter.setPen(self.pen())
-        painter.setBrush(self.brush())
+        painter.setPen(self.pen)
+        painter.setBrush(self.brush)
         painter.drawPolygon(self.polygon)
         # RESIZE HANDLES
         painter.setRenderHint(QPainter.Antialiasing)
         for i in range(self.handleNum):
-            painter.setBrush(self.handleBrush(i))
-            painter.setPen(self.handlePen(i))
-            painter.drawEllipse(self._handleRect[i])
+            painter.setBrush(self.handleBrush[i])
+            painter.setPen(self.handlePen[i])
+            painter.drawEllipse(self.handleBound[i])

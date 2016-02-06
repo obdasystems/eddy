@@ -62,11 +62,11 @@ class OperatorNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.setBrush(brush or QBrush(QColor(252, 252, 252)))
-        self.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine))
+        self.brush = brush or QBrush(QColor(252, 252, 252))
+        self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
         self.polygon = self.createPolygon(50, 30)
-        self.backgroundArea = self.createPolygon(58, 38)
-        self.selectionArea = self.boundingRect()
+        self.background = self.createBackground(58, 38)
+        self.selection = self.createSelection(58, 38)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -97,6 +97,24 @@ class OperatorNode(AbstractNode):
     #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
+
+    @staticmethod
+    def createBackground(width, height):
+        """
+        Returns the initialized background polygon according to the given width/height.
+        :type width: int
+        :type height: int
+        :rtype: QPolygonF
+        """
+        return QPolygonF([
+            QPointF(-width / 2, 0),                # 0
+            QPointF(-width / 2 + 6, +height / 2),  # 1
+            QPointF(+width / 2 - 6, +height / 2),  # 2
+            QPointF(+width / 2, 0),                # 3
+            QPointF(+width / 2 - 6, -height / 2),  # 4
+            QPointF(-width / 2 + 6, -height / 2),  # 5
+            QPointF(-width / 2, 0)                 # 6
+        ])
 
     @staticmethod
     def createPolygon(width, height):
@@ -141,11 +159,7 @@ class OperatorNode(AbstractNode):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        x = self.polygon[self.indexML].x()
-        y = self.polygon[self.indexTL].y()
-        w = self.polygon[self.indexMR].x() - x
-        h = self.polygon[self.indexBL].y() - y
-        return QRectF(x, y, w, h).adjusted(-4, -4, +4, +4)
+        return self.selection
 
     def painterPath(self):
         """
@@ -219,15 +233,15 @@ class OperatorNode(AbstractNode):
         :type widget: QWidget
         """
         # SELECTION AREA
-        painter.setPen(self.selectionPen())
-        painter.setBrush(self.selectionBrush())
-        painter.drawRect(self.selectionArea)
+        painter.setPen(self.selectionPen)
+        painter.setBrush(self.selectionBrush)
+        painter.drawRect(self.selection)
         # SYNTAX VALIDATION
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(self.backgroundPen())
-        painter.setBrush(self.backgroundBrush())
-        painter.drawPolygon(self.backgroundArea)
+        painter.setPen(self.backgroundPen)
+        painter.setBrush(self.backgroundBrush)
+        painter.drawPolygon(self.background)
         # SHAPE
-        painter.setPen(self.pen())
-        painter.setBrush(self.brush())
+        painter.setPen(self.pen)
+        painter.setBrush(self.brush)
         painter.drawPolygon(self.polygon)

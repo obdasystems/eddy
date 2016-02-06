@@ -93,8 +93,6 @@ class RoleChainNode(OperatorNode):
         """
         super().addEdge(edge)
         if edge.isItem(Item.InputEdge) and edge.target is self:
-            # FIXME: this cause troubles when loading a document from a graphol file since it doesn't preserve ordering
-            # self.inputs.sanitize(lambda x: x in {e.id for e in self.edges if e.target is self})
             self.inputs.append(edge.id)
             edge.updateEdge()
 
@@ -105,10 +103,10 @@ class RoleChainNode(OperatorNode):
         """
         kwargs = {
             'id': self.id,
-            'height': self.height(),
-            'width': self.width(),
             'description': self.description,
             'url': self.url,
+            'height': self.height(),
+            'width': self.width(),
         }
         node = scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
         node.setPos(self.pos())
@@ -124,8 +122,6 @@ class RoleChainNode(OperatorNode):
         super().removeEdge(edge)
         scene = self.scene()
         self.inputs.remove(edge.id)
-        # FIXME: this cause troubles when loading a document from a graphol file since it doesn't preserve ordering
-        # self.inputs.sanitize(lambda x: x in {e.id for e in self.edges if e.target is self})
         for i in self.inputs:
             try:
                 edge = scene.edge(i)
