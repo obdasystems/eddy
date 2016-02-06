@@ -62,7 +62,7 @@ from eddy.core.items import UnionNode, EnumerationNode, ComplementNode, RoleChai
 from eddy.core.loaders import GraphmlLoader, GrapholLoader
 from eddy.core.utils import Clipboard
 from eddy.ui.dialogs import About, OpenFile, SaveFile, BusyProgressDialog, License
-from eddy.ui.dock import SidebarWidget, Navigator, Overview, Palette
+from eddy.ui.dock import SidebarWidget, Overview, Palette
 from eddy.ui.forms import CardinalityRestrictionForm, ValueRestrictionForm
 from eddy.ui.forms import OWLTranslationForm, LiteralForm, RenameForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
@@ -127,12 +127,10 @@ class MainWindow(QMainWindow):
         ################################################################################################################
 
         self.mdi = MdiArea(self)
-        self.navigator = Navigator(self)
         self.overview = Overview(self)
         self.palette_ = Palette(self)
         self.zoomctrl = ZoomControl(self.toolbar)
 
-        self.dockNavigator = SidebarWidget('Navigator', self.navigator, self)
         self.dockOverview = SidebarWidget('Overview', self.overview, self)
         self.dockPalette = SidebarWidget('Palette', self.palette_, self)
 
@@ -545,7 +543,6 @@ class MainWindow(QMainWindow):
         self.menuView.addSeparator()
         self.menuView.addAction(self.toolbar.toggleViewAction())
         self.menuView.addSeparator()
-        self.menuView.addAction(self.dockNavigator.toggleViewAction())
         self.menuView.addAction(self.dockOverview.toggleViewAction())
         self.menuView.addAction(self.dockPalette.toggleViewAction())
 
@@ -698,7 +695,6 @@ class MainWindow(QMainWindow):
         ################################################################################################################
 
         self.addDockWidget(Qt.LeftDockWidgetArea, self.dockPalette)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.dockNavigator)
         self.addDockWidget(Qt.RightDockWidgetArea, self.dockOverview)
         self.setCentralWidget(self.mdi)
         self.setAcceptDrops(True)
@@ -1629,7 +1625,6 @@ class MainWindow(QMainWindow):
             mainview = subwindow.widget()
             scene = mainview.scene()
             scene.undostack.setActive()
-            self.navigator.setView(mainview)
             self.overview.setView(mainview)
             disconnect(self.zoomctrl.zoomChanged)
             disconnect(mainview.zoomChanged)
@@ -1641,7 +1636,6 @@ class MainWindow(QMainWindow):
 
             if not self.mdi.subWindowList():
                 self.zoomctrl.resetZoomLevel()
-                self.navigator.clearView()
                 self.overview.clearView()
                 self.setWindowTitle()
 

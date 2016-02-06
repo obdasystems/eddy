@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QRectF, QEvent, QPointF, QTimer, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import Qt, QRectF, QPointF, QTimer, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QColor, QPen
 from PyQt5.QtWidgets import QGraphicsView
 
@@ -52,7 +52,6 @@ class MainView(QGraphicsView):
     RubberBandDragBrush = QColor(97, 153, 242, 40)
     RubberBandDragPen = QPen(QColor(46, 97, 179), 1.0, Qt.SolidLine)
 
-    updated = pyqtSignal()
     zoomChanged = pyqtSignal(float)
 
     def __init__(self, scene):
@@ -247,17 +246,6 @@ class MainView(QGraphicsView):
         if scene.mode in {DiagramMode.SceneDrag, DiagramMode.RubberBandDrag}:
             # reset scene mode to idle only if the main view changed mode in the first place
             scene.setMode(DiagramMode.Idle)
-
-    def viewportEvent(self, event):
-        """
-        Executed whenever the viewport changes.
-        :type event: QEvent
-        """
-        # if the main view has been repainted, emit a
-        # signal so that also the navigator can update
-        if event.type() == QEvent.Paint:
-            self.updated.emit()
-        return super().viewportEvent(event)
 
     def wheelEvent(self, wheelEvent):
         """
