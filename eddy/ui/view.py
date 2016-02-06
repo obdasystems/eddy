@@ -37,8 +37,9 @@ from PyQt5.QtGui import QColor, QPen
 from PyQt5.QtWidgets import QGraphicsView
 
 from eddy.core.datatypes import DiagramMode
-from eddy.core.functions import clamp, connect, disconnect
+from eddy.core.functions import clamp, connect, disconnect, rangeF
 
+from eddy.ui.scene import DiagramScene
 from eddy.ui.toolbar import ZoomControl
 
 
@@ -61,6 +62,7 @@ class MainView(QGraphicsView):
         """
         super().__init__(scene)
         self.viewMove = None
+        self.settings = scene.settings
         self.mousePressCenterPos = None
         self.mousePressPos = None
         self.mousePressRect = None
@@ -85,6 +87,19 @@ class MainView(QGraphicsView):
     #   DRAWING                                                                                                        #
     #                                                                                                                  #
     ####################################################################################################################
+
+    def drawBackground(self, painter, rect):
+        """
+        Draw the scene background.
+        :type painter: QPainter
+        :type rect: QRectF
+        """
+        if self.settings.value('scene/snap_to_grid', False, bool):
+            startX = int(rect.left()) - (int(rect.left()) % DiagramScene.GridSize)
+            startY = int(rect.top()) - (int(rect.top()) % DiagramScene.GridSize)
+            painter.setPen(DiagramScene.GridPen)
+            painter.drawPoints(*(QPointF(x, y) for x in rangeF(startX, rect.right(), DiagramScene.GridSize) \
+                                                 for y in rangeF(startY, rect.bottom(), DiagramScene.GridSize)))
 
     def drawForeground(self, painter, rect):
         """
