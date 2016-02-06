@@ -87,7 +87,7 @@ class DiagramScene(QGraphicsScene):
         self.itemFactory = ItemFactory(self)  ## used to produce graphol items
         self.undostack = QUndoStack(self)  ## used to push actions and keep history for undo/redo
         self.undostack.setUndoLimit(50)  ## TODO: make the stack configurable
-        self.validator = OWL2RLValidator(self)
+        self.validator = OWL2RLValidator(self)  ## validator to be used to validate graphol triples
         self.mode = DiagramMode.Idle  ## operation mode
         self.modeParam = None  ## extra parameter for the operation mode (see setMode()
         self.mouseOverNode = None  ## node below the mouse cursor during edge insertion
@@ -280,10 +280,10 @@ class DiagramScene(QGraphicsScene):
 
                     # Move all the selected nodes.
                     for node, data in self.mousePressData['nodes'].items():
+                        edges |= set(node.edges)
                         node.setPos(data['pos'] + delta)
                         for edge, pos in data['anchors'].items():
                             node.setAnchor(edge, pos + delta)
-                            edges |= set(node.edges)
 
                     # Update edges.
                     for edge in edges:
@@ -348,16 +348,19 @@ class DiagramScene(QGraphicsScene):
                 #                                                                                                      #
                 ########################################################################################################
 
-                data = {
-                    'nodes': {
-                        node: {
-                            'anchors': {k: v for k, v in node.anchors.items()},
-                            'pos': node.pos(),
-                        } for node in self.mousePressData['nodes']},
-                    'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}
+                commandData = {
+                    'undo': self.mousePressData,
+                    'redo': {
+                        'nodes': {
+                            node: {
+                                'anchors': {k: v for k, v in node.anchors.items()},
+                                'pos': node.pos(),
+                            } for node in self.mousePressData['nodes']},
+                        'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}
+                    }
                 }
 
-                self.undostack.push(CommandNodeMove(scene=self, pos1=self.mousePressData, pos2=data))
+                self.undostack.push(CommandNodeMove(scene=self, data=commandData))
                 self.setMode(DiagramMode.Idle)
 
         super().mouseReleaseEvent(mouseEvent)

@@ -233,29 +233,28 @@ class NodeProperty(QDialog):
 
         if pos1 != pos2:
 
-            diff = pos2 - pos1
-
-            data1 = {
-                'nodes': {
-                    self.node: {
-                        'anchors': {k: v for k, v in self.node.anchors.items()},
-                        'pos': pos1,
-                    }
+            commandData = {
+                'redo': {
+                    'nodes': {
+                        self.node: {
+                            'anchors': {k: v + pos2 - pos1 for k, v in self.node.anchors.items()},
+                            'pos': pos2,
+                        }
+                    },
+                    'edges': {},
                 },
-                'edges': {}
+                'undo': {
+                    'nodes': {
+                        self.node: {
+                            'anchors': {k: v for k, v in self.node.anchors.items()},
+                            'pos': pos1,
+                        }
+                    },
+                    'edges': {}
+                }
             }
 
-            data2 = {
-                'nodes': {
-                    self.node: {
-                        'anchors': {k: v + diff for k, v in self.node.anchors.items()},
-                        'pos': pos2,
-                    }
-                },
-                'edges': {}
-            }
-
-            self.scene.undostack.push(CommandNodeMove(scene=self.scene, pos1=data1, pos2=data2))
+            self.scene.undostack.push(CommandNodeMove(scene=self.scene, data=commandData))
 
     def urlChanged(self):
         """

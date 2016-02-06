@@ -61,7 +61,7 @@ class AbstractEdge(AbstractItem):
     handleSize = 8
     headSize = 12
     prefix = 'e'
-    selectionSize = 12
+    selectionSize = 8
 
     def __init__(self, source, target=None, breakpoints=None, **kwargs):
         """

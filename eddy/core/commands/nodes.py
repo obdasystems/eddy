@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from PyQt5.QtWidgets import QUndoCommand
+from PyQt5.QtWidgets import QUndoCommand, QGraphicsItem
 
 from eddy.core.datatypes import DistinctList, Item
 from eddy.core.functions import identify
@@ -96,34 +96,56 @@ class CommandNodeRezize(QUndoCommand):
         Initialize the command.
         """
         super().__init__('resize {}'.format(node.name))
-        self.node = node
         self.scene = scene
+        self.node = node
         self.data = data
 
     def redo(self):
         """redo the command"""
+        # Turn caching OFF.
+        for edge in self.node.edges:
+            edge.setCacheMode(QGraphicsItem.NoCache)
+
         self.node.background = self.data['redo']['background']
         self.node.selection = self.data['redo']['selection']
         self.node.polygon = self.data['redo']['polygon']
+
         for edge, pos in self.data['redo']['anchors'].items():
             self.node.setAnchor(edge, pos)
+
         self.node.updateHandles()
         self.node.updateTextPos(moved=self.data['redo']['moved'])
         self.node.updateEdges()
         self.node.update()
+
+        # Turn caching ON.
+        for edge in self.node.edges:
+            edge.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+
         self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
+        # Turn caching OFF.
+        for edge in self.node.edges:
+            edge.setCacheMode(QGraphicsItem.NoCache)
+
         self.node.background = self.data['undo']['background']
         self.node.selection = self.data['undo']['selection']
         self.node.polygon = self.data['undo']['polygon']
+
         for edge, pos in self.data['undo']['anchors'].items():
             self.node.setAnchor(edge, pos)
+
         self.node.updateHandles()
         self.node.updateTextPos(moved=self.data['undo']['moved'])
         self.node.updateEdges()
         self.node.update()
+
+        # Turn caching ON.
+        for edge in self.node.edges:
+            edge.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+
         self.scene.updated.emit()
 
 
@@ -131,54 +153,70 @@ class CommandNodeMove(QUndoCommand):
     """
     This command is used to move nodes (1 or more).
     """
-    def __init__(self, scene, pos1, pos2):
+    def __init__(self, scene, data):
         """
         Initialize the command.
         """
+        self.data = data
         self.scene = scene
-        self.pos = {'redo': pos2, 'undo': pos1}
+        self.edges = set()
 
-        if len(pos1['nodes']) != 1:
-            params = 'move {} nodes'.format(len(pos1['nodes']))
+        for node in data['redo']['nodes']:
+            self.edges |= set(node.edges)
+
+        if len(data['redo']['nodes']) != 1:
+            params = 'move {} nodes'.format(len(data['redo']['nodes']))
         else:
-            params = 'move {}'.format(next(iter(pos1['nodes'].keys())).name)
+            params = 'move {}'.format(next(iter(data['redo']['nodes'].keys())).name)
 
         super().__init__(params)
 
     def redo(self):
         """redo the command"""
-        # update edges breakpoints
-        for edge, breakpoints in self.pos['redo']['edges'].items():
+        # Turn off caching.
+        for edge in self.edges:
+            edge.setCacheMode(QGraphicsItem.NoCache)
+        # Update edges breakpoints.
+        for edge, breakpoints in self.data['redo']['edges'].items():
             for i in range(len(breakpoints)):
                 edge.breakpoints[i] = breakpoints[i]
-        # update nodes positions
-        for node, data in self.pos['redo']['nodes'].items():
+        # Update nodes positions.
+        for node, data in self.data['redo']['nodes'].items():
             node.setPos(data['pos'])
-            # update edge anchors
+            # Update edge anchors.
             for edge, pos in data['anchors'].items():
                 node.setAnchor(edge, pos)
-        # update edges
-        for edge in set(self.pos['redo']['edges'].keys()) | set(x for n in self.pos['redo']['nodes'].keys() for x in n.edges):
+        # Update edges.
+        for edge in self.edges:
             edge.updateEdge()
-        # emit updated signal
+        # Turn on caching.
+        for edge in self.edges:
+            edge.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+        # Emit updated signal.
         self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        # update edges breakpoints
-        for edge, breakpoints in self.pos['undo']['edges'].items():
+        # Turn off caching.
+        for edge in self.edges:
+            edge.setCacheMode(QGraphicsItem.NoCache)
+        # Update edges breakpoints.
+        for edge, breakpoints in self.data['undo']['edges'].items():
             for i in range(len(breakpoints)):
                 edge.breakpoints[i] = breakpoints[i]
-        # update nodes positions
-        for node, data in self.pos['undo']['nodes'].items():
+        # Update nodes positions.
+        for node, data in self.data['undo']['nodes'].items():
             node.setPos(data['pos'])
-            # update edge anchors
+            # Update edge anchors.
             for edge, pos in data['anchors'].items():
                 node.setAnchor(edge, pos)
-        # update edges
-        for edge in set(self.pos['undo']['edges'].keys()) | set(x for n in self.pos['undo']['nodes'].keys() for x in n.edges):
+        # Update edges.
+        for edge in self.edges:
             edge.updateEdge()
-        # emit updated signal
+        # Turn caching ON.
+        for edge in self.edges:
+            edge.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+        # Emit updated signal.
         self.scene.updated.emit()
 
 
@@ -226,7 +264,7 @@ class CommandNodeLabelEdit(QUndoCommand):
         super().__init__(message)
         self.scene = scene
         self.node = node
-        self.data = {'undo': node.label.text().strip(), 'redo': value}
+        self.data = {'undo': node.text().strip(), 'redo': value}
 
     def end(self, text):
         """

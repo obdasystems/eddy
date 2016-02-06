@@ -196,6 +196,8 @@ class InclusionEdge(AbstractEdge):
         sourcePos = sourceNode.anchor(self)
         targetPos = target or targetNode.anchor(self)
 
+        self.prepareGeometryChange()
+
         self.updateAnchors()
         self.updateBreakPoints()
         self.updateZValue()
