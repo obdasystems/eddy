@@ -70,10 +70,7 @@ class AbstractNode(AbstractItem):
 
         self.setAcceptHoverEvents(True)
         self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
-        self.setFlag(QGraphicsItem.ItemIsFocusable, True)
-        self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
-        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
 
     ####################################################################################################################
     #                                                                                                                  #
