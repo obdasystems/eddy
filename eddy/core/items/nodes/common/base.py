@@ -332,6 +332,9 @@ class AbstractNode(AbstractItem):
             backgroundBrush = brush1 if valid else brush2
         self.backgroundBrush = backgroundBrush
 
+        # SCHEDULE REPAINT
+        self.update()
+
     def updateEdges(self):
         """
         Update all the edges attached to the node.
@@ -660,6 +663,9 @@ class AbstractResizableNode(AbstractNode):
         if valid is not None:
             backgroundBrush = brush1 if valid else brush2
         self.backgroundBrush = backgroundBrush
+
+        # SCHEDULE REPAINT
+        self.update()
 
     def updateHandles(self):
         """

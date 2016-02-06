@@ -35,13 +35,13 @@
 from abc import ABCMeta, abstractmethod
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QBrush
-from PyQt5.QtWidgets import QAbstractGraphicsShapeItem, QGraphicsTextItem
+from PyQt5.QtGui import QBrush, QPen
+from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem
 
 from eddy.core.datatypes import Item
 
 
-class AbstractItem(QAbstractGraphicsShapeItem):
+class AbstractItem(QGraphicsItem):
     """
     Base class for all the diagram items.
     """
@@ -62,8 +62,10 @@ class AbstractItem(QAbstractGraphicsShapeItem):
         self._description = description
         self._url = url
 
-        self._selectionBrush = Qt.NoBrush
-        self._selectionPen = Qt.NoPen
+        self.selectionBrush = QBrush(Qt.NoBrush)
+        self.selectionPen = QPen(Qt.NoPen)
+        self.brush = QBrush(Qt.NoBrush)
+        self.pen = QPen(Qt.NoPen)
 
         super().__init__(**kwargs)
 
@@ -167,36 +169,8 @@ class AbstractItem(QAbstractGraphicsShapeItem):
         """
         return self.item in args
 
-    def selectionBrush(self):
-        """
-        Returns the brush used to draw the selection area of the item.
-        :rtype: QBrush
-        """
-        return self._selectionBrush
-
-    def selectionPen(self):
-        """
-        Returns the pen used to draw the selection area of the item.
-        :rtype: QPen
-        """
-        return self._selectionPen
-
-    def setSelectionBrush(self, brush):
-        """
-        Sets the brush used to draw the selection area of the item.
-        :type brush: QBrush
-        """
-        self._selectionBrush = brush
-
-    def setSelectionPen(self, pen):
-        """
-        Sets the pen used to draw the selection area of the item.
-        :type pen: QPen
-        """
-        self._selectionPen = pen
-
     @abstractmethod
-    def updatePenAndBrush(self, **kwargs):
+    def updateBrush(self, **kwargs):
          """
          Perform updates on pens and brushes needed by the paint() method.
          """

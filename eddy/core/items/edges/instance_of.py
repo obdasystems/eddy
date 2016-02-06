@@ -160,8 +160,8 @@ class InstanceOfEdge(AbstractEdge):
         headSize = self.headSize
         sourceNode = self.source
         targetNode = self.target
-        sourcePos = self.source.anchor(self)
-        targetPos = target or self.target.anchor(self)
+        sourcePos = sourceNode.anchor(self)
+        targetPos = target or targetNode.anchor(self)
 
         self.updateAnchors()
         self.updateBreakPoints()
@@ -231,9 +231,8 @@ class InstanceOfEdge(AbstractEdge):
 
                 self.head = createHead(p22, subpathN.angle(), headSize)
 
-        self.updatePenAndBrush(selected=self.isSelected(), visible=self.canDraw())
         self.updateLabel(points)
-        self.update()
+        self.updateBrush(selected=self.isSelected(), visible=self.canDraw())
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -250,17 +249,17 @@ class InstanceOfEdge(AbstractEdge):
         """
         # SELECTION AREA
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillPath(self.selection, self.selectionBrush())
+        painter.fillPath(self.selection, self.selectionBrush)
         # EDGE LINE
-        painter.setPen(self.pen())
+        painter.setPen(self.pen)
         painter.drawPath(self.path)
         # HEAD POLYGON
-        painter.setPen(self.headPen())
-        painter.setBrush(self.headBrush())
+        painter.setPen(self.headPen)
+        painter.setBrush(self.headBrush)
         painter.drawPolygon(self.head)
         # BREAKPOINTS AND ANCHOR POINTS
-        painter.setPen(self.handlePen())
-        painter.setBrush(self.handleBrush())
+        painter.setPen(self.handlePen)
+        painter.setBrush(self.handleBrush)
         for shape in self.handles:
             painter.drawEllipse(shape)
         for shape in self.anchors.values():

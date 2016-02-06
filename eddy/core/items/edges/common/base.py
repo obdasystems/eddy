@@ -55,8 +55,8 @@ class AbstractEdge(AbstractItem):
     headPenPattern = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     handleBrushPattern = QBrush(QColor(168, 168, 168, 255))
     handlePenPattern = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+    penPattern = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     selectionBrushPattern = QBrush(QColor(251, 255, 148))
-    shapePenPattern = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
 
     handleSize = 8
     headSize = 12
@@ -75,12 +75,12 @@ class AbstractEdge(AbstractItem):
         self._source = source
         self._target = target
 
-        self._handleBrush = Qt.NoBrush
-        self._handlePen = Qt.NoPen
-        self._headBrush = Qt.NoBrush
-        self._headPen = Qt.NoPen
-        self._selectionBrush = Qt.NoBrush
-        self._selectionPen = Qt.NoPen
+        self.handleBrush = QBrush(Qt.NoBrush)
+        self.handlePen = QPen(Qt.NoPen)
+        self.headBrush = QBrush(Qt.NoBrush)
+        self.headPen = QPen(Qt.NoPen)
+        self.selectionBrush = QBrush(Qt.NoBrush)
+        self.selectionPen = QPen(Qt.NoPen)
 
         self.anchors = {}
         self.breakpoints = breakpoints or []
@@ -255,9 +255,12 @@ class AbstractEdge(AbstractItem):
             return False
 
         if self.target:
+            
+            S = self.source
+            T = self.target
 
-            SP = self.mapFromItem(self.source, self.source.painterPath())
-            TP = self.mapFromItem(self.target, self.target.painterPath())
+            SP = self.mapFromItem(S, S.painterPath())
+            TP = self.mapFromItem(T, T.painterPath())
 
             if SP.intersects(TP):
 
@@ -269,8 +272,7 @@ class AbstractEdge(AbstractItem):
                 for point in self.breakpoints:
                     # Loop through all the breakpoints: if there is at least one breakpoint
                     # which is not inside the connected shapes then draw the edges
-                    if not self.source.contains(self.mapToItem(self.source, point)) and \
-                       not self.target.contains(self.mapToItem(self.target, point)):
+                    if not S.contains(self.mapToItem(S, point)) and not T.contains(self.mapToItem(T, point)):
                         return True
 
                 return False
@@ -311,34 +313,6 @@ class AbstractEdge(AbstractItem):
                     if (not SP.contains(x.p1()) or not SP.contains(x.p2())) and \
                         (not TP or (not TP.contains(x.p1()) or not TP.contains(x.p2())))]
 
-    def handleBrush(self):
-        """
-        Returns the brush used to draw breakpoint handles.
-        :rtype: QBrush
-        """
-        return self._handleBrush
-
-    def handlePen(self):
-        """
-        Returns the pen used to draw breakpoint handles.
-        :rtype: QPen
-        """
-        return self._handlePen
-
-    def headBrush(self):
-        """
-        Returns the brush used to the head of the edge.
-        :rtype: QBrush
-        """
-        return self._headBrush
-
-    def headPen(self):
-        """
-        Returns the pen used to draw the head of the edge.
-        :rtype: QPen
-        """
-        return self._headPen
-
     def moveBy(self, x, y):
         """
         Move the edge by the given deltas.
@@ -361,35 +335,7 @@ class AbstractEdge(AbstractItem):
             return self.source
         raise AttributeError('node {} is not attached to edge {}'.format(node, self))
 
-    def setHandleBrush(self, brush):
-        """
-        Sets the brush used to draw breakpoint handles.
-        :type brush: QBrush
-        """
-        self._handleBrush = brush
-
-    def setHandlePen(self, pen):
-        """
-        Sets the pen used to draw breakpoint handles.
-        :type pen: QPen
-        """
-        self._handlePen = pen
-
-    def setHeadBrush(self, brush):
-        """
-        Sets the brush used to draw the head of the edge.
-        :type brush: QBrush
-        """
-        self._headBrush = brush
-
-    def setHeadPen(self, pen):
-        """
-        Sets the pen used to draw the head of the edge.
-        :type pen: QPen
-        """
-        self._headPen = pen
-
-    def updatePenAndBrush(self, selected=None, visible=None, breakpoint=None, anchor=None, **kwargs):
+    def updateBrush(self, selected=None, visible=None, breakpoint=None, anchor=None, **kwargs):
         """
         Perform updates on pens and brushes needed by the paint() method.
         :type selected: bool
@@ -400,29 +346,32 @@ class AbstractEdge(AbstractItem):
         noBrush = QBrush(Qt.NoBrush)
         noPen = QPen(Qt.NoPen)
 
-        arrowBrush = noBrush
-        arrowPen = noPen
+        headBrush = noBrush
+        headPen = noPen
         handleBrush = noBrush
         handlePen = noPen
         selectionBrush = noBrush
-        shapePen = noPen
+        pen = noPen
 
         if visible:
-            arrowBrush = self.headBrushPattern
-            arrowPen = self.headPenPattern
-            shapePen = self.shapePenPattern
+            headBrush = self.headBrushPattern
+            headPen = self.headPenPattern
+            pen = self.penPattern
             if selected:
                 handleBrush = self.handleBrushPattern
                 handlePen = self.handlePenPattern
                 if breakpoint is None and anchor is None:
                     selectionBrush = self.selectionBrushPattern
 
-        self.setHeadBrush(arrowBrush)
-        self.setHeadPen(arrowPen)
-        self.setHandleBrush(handleBrush)
-        self.setHandlePen(handlePen)
-        self.setPen(shapePen)
-        self.setSelectionBrush(selectionBrush)
+        self.headBrush = headBrush
+        self.headPen = headPen
+        self.handleBrush = handleBrush
+        self.handlePen = handlePen
+        self.pen = pen
+        self.selectionBrush = selectionBrush
+
+        # SCHEDULE REPAINT
+        self.update()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -462,7 +411,7 @@ class AbstractEdge(AbstractItem):
         :rtype: QVariant
         """
         if change == AbstractEdge.ItemSelectedHasChanged:
-            self.updatePenAndBrush(selected=value, visible=self.canDraw())
+            self.updateBrush(selected=value, visible=self.canDraw())
         return super(AbstractEdge, self).itemChange(change, value)
 
     def mousePressEvent(self, mouseEvent):
@@ -485,7 +434,7 @@ class AbstractEdge(AbstractItem):
                 self.setSelected(True)
                 self.mousePressAnchorNode = anchorNode
                 self.mousePressAnchorNodePos = QPointF(anchorNode.anchor(self))
-                self.updatePenAndBrush(selected=True, visible=self.canDraw(), anchor=anchorNode)
+                self.updateBrush(selected=True, visible=self.canDraw(), anchor=anchorNode)
             else:
                 breakPoint = self.breakpointAt(mousePos)
                 if breakPoint is not None:
@@ -494,7 +443,7 @@ class AbstractEdge(AbstractItem):
                     self.setSelected(True)
                     self.mousePressBreakPoint = breakPoint
                     self.mousePressBreakPointPos = QPointF(self.breakpoints[breakPoint])
-                    self.updatePenAndBrush(selected=True, visible=self.canDraw(), breakpoint=breakPoint)
+                    self.updateBrush(selected=True, visible=self.canDraw(), breakpoint=breakPoint)
 
         self.mousePressPos = mousePos
         super().mousePressEvent(mouseEvent)

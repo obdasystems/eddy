@@ -239,11 +239,11 @@ class DiagramScene(QGraphicsScene):
                     edge.updateEdge(target=mousePos)
 
                     if previousNode:
-                        previousNode.updatePenAndBrush(selected=False)
+                        previousNode.updateBrush(selected=False)
 
                     if currentNode:
                         res = self.validator.result(edge.source, edge, currentNode)
-                        currentNode.updatePenAndBrush(selected=False, valid=res.valid)
+                        currentNode.updateBrush(selected=False, valid=res.valid)
                         statusBar.showMessage(res.message)
                         self.mouseOverNode = currentNode
                     else:
@@ -309,14 +309,14 @@ class DiagramScene(QGraphicsScene):
                 if self.mousePressEdge:
 
                     edge = self.mousePressEdge
-                    edge.source.updatePenAndBrush(selected=False)
+                    edge.source.updateBrush(selected=False)
                     mousePos = mouseEvent.scenePos()
                     mouseModifiers = mouseEvent.modifiers()
                     currentNode = self.itemOnTopOf(mousePos, edges=False, skip={edge.source})
                     insertEdge = False
 
                     if currentNode:
-                        currentNode.updatePenAndBrush(selected=False)
+                        currentNode.updateBrush(selected=False)
                         if self.validator.valid(edge.source, edge, currentNode):
                             edge.target = currentNode
                             insertEdge = True

@@ -193,8 +193,8 @@ class InclusionEdge(AbstractEdge):
         headSize = self.headSize
         sourceNode = self.source
         targetNode = self.target
-        sourcePos = self.source.anchor(self)
-        targetPos = target or self.target.anchor(self)
+        sourcePos = sourceNode.anchor(self)
+        targetPos = target or targetNode.anchor(self)
 
         self.updateAnchors()
         self.updateBreakPoints()
@@ -261,8 +261,7 @@ class InclusionEdge(AbstractEdge):
                 if self.complete:
                     self.tail = createTail(p11, subpath1.angle(), headSize)
 
-        self.updatePenAndBrush(selected=self.isSelected(), visible=self.canDraw())
-        self.update()
+        self.updateBrush(selected=self.isSelected(), visible=self.canDraw())
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -279,18 +278,18 @@ class InclusionEdge(AbstractEdge):
         """
         # SELECTION AREA
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillPath(self.selection, self.selectionBrush())
+        painter.fillPath(self.selection, self.selectionBrush)
         # EDGE LINE
-        painter.setPen(self.pen())
+        painter.setPen(self.pen)
         painter.drawPath(self.path)
         # HEAD/TAIL POLYGON
-        painter.setPen(self.headPen())
-        painter.setBrush(self.headBrush())
+        painter.setPen(self.headPen)
+        painter.setBrush(self.headBrush)
         painter.drawPolygon(self.head)
         painter.drawPolygon(self.tail)
         # BREAKPOINTS AND ANCHOR POINTS
-        painter.setPen(self.handlePen())
-        painter.setBrush(self.handleBrush())
+        painter.setPen(self.handlePen)
+        painter.setBrush(self.handleBrush)
         for shape in self.handles:
             painter.drawEllipse(shape)
         for shape in self.anchors.values():

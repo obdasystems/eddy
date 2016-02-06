@@ -47,8 +47,8 @@ class InputEdge(AbstractEdge):
     This class implements the Input edge.
     """
     headBrushPattern = QBrush(QColor(252, 252, 252))
-    shapePenPattern = QPen(QColor(0, 0, 0), 1.1, Qt.CustomDashLine, Qt.RoundCap, Qt.RoundJoin)
-    shapePenPattern.setDashPattern([5, 5])
+    penPattern = QPen(QColor(0, 0, 0), 1.1, Qt.CustomDashLine, Qt.RoundCap, Qt.RoundJoin)
+    penPattern.setDashPattern([5, 5])
 
     headSize = 10
     item = Item.InputEdge
@@ -216,8 +216,8 @@ class InputEdge(AbstractEdge):
         headSize = self.headSize
         sourceNode = self.source
         targetNode = self.target
-        sourcePos = self.source.anchor(self)
-        targetPos = target or self.target.anchor(self)
+        sourcePos = sourceNode.anchor(self)
+        targetPos = target or targetNode.anchor(self)
 
         self.updateAnchors()
         self.updateBreakPoints()
@@ -293,9 +293,8 @@ class InputEdge(AbstractEdge):
                 if self.functional:
                     self.tail = createTail(p11, subpath1.angle(), headSize)
 
-        self.updatePenAndBrush(selected=self.isSelected(), visible=self.canDraw())
         self.updateLabel(points)
-        self.update()
+        self.updateBrush(selected=self.isSelected(), visible=self.canDraw())
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -312,18 +311,18 @@ class InputEdge(AbstractEdge):
         """
         # SELECTION AREA
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillPath(self.selection, self.selectionBrush())
+        painter.fillPath(self.selection, self.selectionBrush)
         # EDGE LINE
-        painter.setPen(self.pen())
+        painter.setPen(self.pen)
         painter.drawPath(self.path)
         # HEAD/TAIL POLYGON
-        painter.setPen(self.headPen())
-        painter.setBrush(self.headBrush())
+        painter.setPen(self.headPen)
+        painter.setBrush(self.headBrush)
         painter.drawPolygon(self.head)
         painter.drawLine(self.tail)
         # BREAKPOINTS AND ANCHOR POINTS
-        painter.setPen(self.handlePen())
-        painter.setBrush(self.handleBrush())
+        painter.setPen(self.handlePen)
+        painter.setBrush(self.handleBrush)
         for shape in self.handles:
             painter.drawEllipse(shape)
         for shape in self.anchors.values():
