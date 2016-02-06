@@ -123,14 +123,6 @@ class Navigator(ViewBrowser):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def drawBackground(self, painter, rect):
-        """
-        Override scene drawBackground method so the grid is not rendered in the overview.
-        :type painter: QPainter
-        :type rect: QRectF
-        """
-        pass
-
     def drawForeground(self, painter, rect):
         """
         Draw the navigation cursor.
@@ -277,14 +269,6 @@ class Overview(ViewBrowser):
     #   DRAWING                                                                                                        #
     #                                                                                                                  #
     ####################################################################################################################
-
-    def drawBackground(self, painter, rect):
-        """
-        Override scene drawBackground method so the grid is not rendered in the overview.
-        :type painter: QPainter
-        :type rect: QRectF
-        """
-        pass
 
     def drawForeground(self, painter, rect):
         """

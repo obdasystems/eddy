@@ -42,7 +42,7 @@ from PyQt5.QtCore import Qt, QSettings, QSizeF, QRectF
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter, QPageSize, QCursor, QBrush, QColor
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
-from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDialog, QStyle
+from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDialog, QStyle, QGraphicsItem
 from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup
 
 from eddy import __version__ as VERSION, __appname__ as APPNAME, BUG_TRACKER, GRAPHOL_HOME, DIAG_HOME
@@ -1040,7 +1040,7 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-            result = self.exportFilePath(name=scene.document.name)
+            result = self.exportFilePath(name=rCut(scene.document.name, Filetype.Graphol.suffix))
             if result:
                 filepath = result[0]
                 filetype = Filetype.forValue(result[1])
@@ -1965,7 +1965,6 @@ class MainWindow(QMainWindow):
         """
         shape = scene.visibleRect(margin=20)
         if shape:
-
             printer = QPrinter(QPrinter.HighResolution)
             printer.setOutputFormat(QPrinter.PdfFormat)
             printer.setOutputFileName(filepath)
@@ -1974,7 +1973,20 @@ class MainWindow(QMainWindow):
 
             painter = QPainter()
             if painter.begin(printer):
+
+                # TURN OFF CACHING.
+                for item in scene.items():
+                    if item.node or item.edge:
+                        item.setCacheMode(QGraphicsItem.NoCache)
+
+                # RENDER THE SCENE
                 scene.render(painter, source=shape)
+
+                # TURN ON CACHING.
+                for item in scene.items():
+                    if item.node or item.edge:
+                        item.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+
                 painter.end()
                 return True
 

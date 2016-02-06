@@ -35,12 +35,12 @@
 import sys
 
 from PyQt5.QtCore import Qt, QPointF, QSettings, QRectF, pyqtSignal
-from PyQt5.QtGui import QPen, QColor
+from PyQt5.QtGui import QColor, QPen
 from PyQt5.QtWidgets import QGraphicsScene, QUndoStack
 
 from eddy.core.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
 from eddy.core.datatypes import DiagramMode, DistinctList, File, Item
-from eddy.core.functions import expandPath, rangeF, snapF
+from eddy.core.functions import expandPath, snapF
 from eddy.core.items.edges import InputEdge, InclusionEdge
 from eddy.core.items.nodes import ConceptNode, ComplementNode, RoleChainNode, RoleInverseNode
 from eddy.core.items.nodes import RangeRestrictionNode, DomainRestrictionNode
@@ -369,29 +369,6 @@ class DiagramScene(QGraphicsScene):
         self.mousePressNode = None
         self.mousePressNodePos = None
         self.mousePressData = None
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def drawBackground(self, painter, rect):
-        """
-        Draw the scene background.
-        :type painter: QPainter
-        :type rect: QRectF
-        """
-        # Previously we were hiding the grid if the user was rendering the diagram on a PDF
-        # or printing it. However profiling the application revealed that checking the type of
-        # the active paint device using isinstance() was time consuming, therefore we removed
-        # such feature => the user can always disable the grid before printing or exporting to PDF:
-        if self.settings.value('scene/snap_to_grid', False, bool):
-            startX = int(rect.left()) - (int(rect.left()) % DiagramScene.GridSize)
-            startY = int(rect.top()) - (int(rect.top()) % DiagramScene.GridSize)
-            painter.setPen(DiagramScene.GridPen)
-            painter.drawPoints(*(QPointF(x, y) for x in rangeF(startX, rect.right(), DiagramScene.GridSize) \
-                                                 for y in rangeF(startY, rect.bottom(), DiagramScene.GridSize)))
 
     ####################################################################################################################
     #                                                                                                                  #
