@@ -1720,9 +1720,9 @@ class MainWindow(QMainWindow):
         Toggle snap to grid setting.
         """
         self.settings.setValue('scene/snap_to_grid', self.actionSnapToGrid.isChecked())
-        scene = self.mdi.activeScene
-        if scene:
-            scene.update()
+        view = self.mdi.activeView
+        if view:
+            view.viewport().update()
 
     @pyqtSlot(bool)
     def undoGroupCleanChanged(self, clean):
@@ -1922,9 +1922,7 @@ class MainWindow(QMainWindow):
         :rtype: MainView
         """
         view = MainView(scene)
-        view.setViewportUpdateMode(MainView.FullViewportUpdate)
         view.centerOn(0, 0)
-        view.setDragMode(MainView.NoDrag)
         return view
 
     def exportFilePath(self, path=None, name=None):
