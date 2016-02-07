@@ -99,30 +99,30 @@ class Eddy(QApplication):
 
         options, args = parser.parse_known_args(args=argv)
 
-        self._id = '60119D28-5488-4663-879E-34FCD9C5C38C'
-        self._inSocket = None
-        self._inStream = None
-        self._localServer = None
-        self._outSocket = QLocalSocket()
-        self._outSocket.connectToServer(self._id)
-        self._outStream = None
-        self._isRunning = self._outSocket.waitForConnected()
-        self._mainWindow = None
-        self._pendingOpen = []
+        self.appid = '60119D28-5488-4663-879E-34FCD9C5C38C'
+        self.inSocket = None
+        self.inStream = None
+        self.outSocket = QLocalSocket()
+        self.outSocket.connectToServer(self.appid)
+        self.outStream = None
+        self.isRunning = self.outSocket.waitForConnected()
+        self.mainwindow = None
+        self.pendingOpen = []
+        self.server = None
 
         # We do not initialize a new instance of Eddy if there is a process running
         # and we are not executing the tests suite: we'll create a socket instead so we can
         # exchange messages between the 2 processes (this one and the already running one).
-        if self._isRunning and not options.tests:
-            self._outStream = QTextStream(self._outSocket)
-            self._outStream.setCodec('UTF-8')
+        if self.isRunning and not options.tests:
+            self.outStream = QTextStream(self.outSocket)
+            self.outStream.setCodec('UTF-8')
         else:
-            self._localServer = QLocalServer()
-            self._localServer.listen(self._id)
-            self._outSocket = None
-            self._outStream = None
+            self.server = QLocalServer()
+            self.server.listen(self.appid)
+            self.outSocket = None
+            self.outStream = None
 
-            connect(self._localServer.newConnection, self.newConnection)
+            connect(self.server.newConnection, self.newConnection)
             connect(self.messageReceived, self.readMessage)
 
             ############################################################################################################
@@ -132,27 +132,27 @@ class Eddy(QApplication):
             ############################################################################################################
 
             # Draw the splashscreen.
-            self._splashScreen = None
+            self.splashscreen = None
             if not options.nosplash:
-                self._splashScreen = SplashScreen(min_splash_time=4)
-                self._splashScreen.show()
+                self.splashscreen = SplashScreen(min_splash_time=4)
+                self.splashscreen.show()
 
             # Initialize application settings.
-            self._appSettings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)
+            self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)
 
             # Setup layout.
-            style = Style.forName(self._appSettings.value('appearance/style', 'light', str))
+            style = Style.forName(self.settings.value('appearance/style', 'light', str))
             self.setStyle(style)
             self.setStyleSheet(style.qss())
 
             # Initialize recent documents.
-            if not self._appSettings.contains('document/recent_documents'):
+            if not self.settings.contains('document/recent_documents'):
                 # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
                 # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
                 # container. So according to this we can't use an empty list as default value because PyQt5 needs
                 # to know the type of the contents added to the collection: we avoid this problem by placing
                 # the list of examples file in the recentDocumentList (only if there is no list defined already).
-                self._appSettings.setValue('document/recent_documents', [
+                self.settings.setValue('document/recent_documents', [
                     expandPath('@examples/Animals.graphol'),
                     expandPath('@examples/Diet.graphol'),
                     expandPath('@examples/Family.graphol'),
@@ -160,22 +160,22 @@ class Eddy(QApplication):
                 ])
 
             # Create the main window.
-            self._mainWindow = MainWindow()
+            self.mainwindow = MainWindow()
 
             # Close the splashscreen.
-            if self._splashScreen:
-                self._splashScreen.wait(self._splashScreen.remaining)
-                self._splashScreen.close()
+            if self.splashscreen:
+                self.splashscreen.wait(self.splashscreen.remaining)
+                self.splashscreen.close()
 
             # Display the mainwindow.
-            self._mainWindow.show()
+            self.mainwindow.show()
 
             if Platform.identify() is Platform.Darwin:
                 # On MacOS files being opened are handled as a QFileOpenEvent but since we don't
                 # have a Main Window initialized we store them locally and we open them here.
-                for filepath in self._pendingOpen:
+                for filepath in self.pendingOpen:
                     self.openFile(filepath)
-                self._pendingOpen = []
+                self.pendingOpen = []
             else:
                 # Perform document opening if files have been added to sys.argv. This is not
                 # executed on Mac OS since this is already handled as a QFileOpenEvent instance.
@@ -194,7 +194,7 @@ class Eddy(QApplication):
         :type event: T <= QEvent | QFileOpenEvent
         """
         if event.type() == QEvent.FileOpen:
-            self._pendingOpen = [event.file()]
+            self.pendingOpen = [event.file()]
             return True
         return super().event(event)
 
@@ -208,31 +208,17 @@ class Eddy(QApplication):
         """
         Activate the activation window.
         """
-        if self._mainWindow:
-            self._mainWindow.setWindowState((self._mainWindow.windowState() & ~Qt.WindowMinimized) | Qt.WindowActive)
-            self._mainWindow.activateWindow()
-            self._mainWindow.raise_()
+        if self.mainwindow:
+            self.mainwindow.setWindowState((self.mainwindow.windowState() & ~Qt.WindowMinimized) | Qt.WindowActive)
+            self.mainwindow.activateWindow()
+            self.mainwindow.raise_()
 
     def activationWindow(self):
         """
         Returns the reference to the window that needs to be activated when the process is already running.
         :type: MainWindow
         """
-        return self._mainWindow
-
-    def id(self):
-        """
-        Returns the application id.
-        :rtype: str
-        """
-        return self._id
-
-    def isRunning(self):
-        """
-        Tells whether this application is already running by checking the AppId.
-        :rtype: bool
-        """
-        return self._isRunning
+        return self.mainwindow
 
     def openFile(self, filepath):
         """
@@ -240,9 +226,9 @@ class Eddy(QApplication):
         :type filepath: str
         :rtype: bool
         """
-        if self._mainWindow:
+        if self.mainwindow:
             if not isEmpty(filepath) and os.path.isfile(filepath) and filepath.endswith(Filetype.Graphol.suffix):
-                self._mainWindow.openFile(filepath)
+                self.mainwindow.openFile(filepath)
                 return True
         return False
 
@@ -252,10 +238,10 @@ class Eddy(QApplication):
         :type message: str
         :rtype: bool
         """
-        if self._outStream:
-            self._outStream = self._outStream << message << '\n'
-            self._outStream.flush()
-            return self._outSocket.waitForBytesWritten()
+        if self.outStream:
+            self.outStream = self.outStream << message << '\n'
+            self.outStream.flush()
+            return self.outSocket.waitForBytesWritten()
         return False
 
     ####################################################################################################################
@@ -269,17 +255,17 @@ class Eddy(QApplication):
         """
         Executed whenever a message is received.
         """
-        if self._inSocket:
+        if self.inSocket:
             # Disconnect previously connected signal slot.
-            disconnect(self._inSocket.readyRead, self.readyRead)
+            disconnect(self.inSocket.readyRead, self.readyRead)
 
         # Create a new socket.
-        self._inSocket = self._localServer.nextPendingConnection()
+        self.inSocket = self.server.nextPendingConnection()
 
-        if self._inSocket:
-            self._inStream = QTextStream(self._inSocket)
-            self._inStream.setCodec('UTF-8')
-            connect(self._inSocket.readyRead, self.readyRead)
+        if self.inSocket:
+            self.inStream = QTextStream(self.inSocket)
+            self.inStream.setCodec('UTF-8')
+            connect(self.inSocket.readyRead, self.readyRead)
             self.activateWindow()
 
     @pyqtSlot()
@@ -288,7 +274,7 @@ class Eddy(QApplication):
         Executed whenever we need to read a message.
         """
         while True:
-            message = self._inStream.readLine()
+            message = self.inStream.readLine()
             if isEmpty(message):
                 break
             self.messageReceived.emit(message)

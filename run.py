@@ -105,7 +105,7 @@ def main():
     sys.excepthook = base_except_hook
     app = Eddy(sys.argv)
 
-    if app.isRunning():
+    if app.isRunning:
         # If the application is already running in another process send a message to the
         # process containing all the sys.argv elements joined into a string. This will
         # cause the other process to activate itself and handle the received message.
