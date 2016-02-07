@@ -39,7 +39,7 @@ __email__ = 'danielepantaleone@me.com'
 __license__ = 'GPL'
 __organization__ = 'Sapienza - University Of Rome'
 __status__ = 'Development'
-__version__ = '0.6'
+__version__ = '0.7'
 
 
 BUG_TRACKER = 'https://github.com/danielepantaleone/eddy/issues'
