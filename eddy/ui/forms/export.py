@@ -69,6 +69,7 @@ class OWLTranslationForm(QDialog):
 
         self.iriField = StringEditField(self)
         self.iriField.setFixedWidth(300)
+        self.iriField.setValidator(QRegExpValidator(QRegExp('[\w:\/\[\]=?%#~\.\-\+]*'), self))
 
         self.prefixField = StringEditField(self)
         self.prefixField.setFixedWidth(300)
