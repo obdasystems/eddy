@@ -66,6 +66,7 @@ class MainView(QGraphicsView):
         self.setOptimizationFlags(QGraphicsView.DontSavePainterState)
         self.setViewportUpdateMode(QGraphicsView.MinimalViewportUpdate)
         self.settings = scene.settings
+        self.snapToGrid = scene.settings.value('scene/snap_to_grid', False, bool)
         self.mousePressCenterPos = None
         self.mousePressPos = None
         self.mousePressRubberBand = None
@@ -106,7 +107,7 @@ class MainView(QGraphicsView):
         :type painter: QPainter
         :type rect: QRectF
         """
-        if self.settings.value('scene/snap_to_grid', False, bool):
+        if self.snapToGrid:
             x = int(rect.left()) - (int(rect.left()) % DiagramScene.GridSize)
             y = int(rect.top()) - (int(rect.top()) % DiagramScene.GridSize)
             painter.setPen(DiagramScene.GridPen)

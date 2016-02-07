@@ -1713,10 +1713,14 @@ class MainWindow(QMainWindow):
         """
         Toggle snap to grid setting.
         """
-        self.settings.setValue('scene/snap_to_grid', self.actionSnapToGrid.isChecked())
-        view = self.mdi.activeView
-        if view:
-            view.viewport().update()
+        snapToGrid = self.actionSnapToGrid.isChecked()
+        self.settings.setValue('scene/snap_to_grid', snapToGrid)
+        for subwindow in self.mdi.subWindowList():
+            mainview = subwindow.widget()
+            mainview.snapToGrid = snapToGrid
+            viewport = mainview.viewport()
+            if viewport:
+                viewport.update()
 
     @pyqtSlot(bool)
     def undoGroupCleanChanged(self, clean):
