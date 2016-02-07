@@ -107,11 +107,11 @@ class MainView(QGraphicsView):
         :type rect: QRectF
         """
         if self.settings.value('scene/snap_to_grid', False, bool):
-            startX = int(rect.left()) - (int(rect.left()) % DiagramScene.GridSize)
-            startY = int(rect.top()) - (int(rect.top()) % DiagramScene.GridSize)
+            x = int(rect.left()) - (int(rect.left()) % DiagramScene.GridSize)
+            y = int(rect.top()) - (int(rect.top()) % DiagramScene.GridSize)
             painter.setPen(DiagramScene.GridPen)
-            painter.drawPoints(*(QPointF(x, y) for x in rangeF(startX, rect.right(), DiagramScene.GridSize) \
-                                                 for y in rangeF(startY, rect.bottom(), DiagramScene.GridSize)))
+            painter.drawPoints(*(QPointF(i, j) for i in rangeF(x, rect.right(), DiagramScene.GridSize) \
+                                                 for j in rangeF(y, rect.bottom(), DiagramScene.GridSize)))
 
     def drawForeground(self, painter, rect):
         """
@@ -163,6 +163,7 @@ class MainView(QGraphicsView):
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
         scene = self.scene()
+        mousePos = mouseEvent.pos()
         viewport = self.viewport()
 
         if mouseEvent.buttons() & Qt.RightButton:
@@ -171,7 +172,7 @@ class MainView(QGraphicsView):
                 scene.setMode(DiagramMode.SceneDrag)
                 viewport.setCursor(Qt.ClosedHandCursor)
 
-            self.centerOn(self.mousePressCenterPos - mouseEvent.pos() + self.mousePressPos)
+            self.centerOn(self.mousePressCenterPos - mousePos + self.mousePressPos)
 
         else:
 
@@ -193,8 +194,8 @@ class MainView(QGraphicsView):
 
                     x = self.mousePressPos.x()
                     y = self.mousePressPos.y()
-                    w = self.mapToScene(mouseEvent.pos()).x() - x
-                    h = self.mapToScene(mouseEvent.pos()).y() - y
+                    w = self.mapToScene(mousePos).x() - x
+                    h = self.mapToScene(mousePos).y() - y
 
                     self.mousePressRubberBand = QRectF(x, y, w, h)
 
@@ -216,25 +217,25 @@ class MainView(QGraphicsView):
                     #                                                                                                  #
                     ####################################################################################################
 
-                    viewportRect = viewport.rect()
-                    if not viewportRect.contains(mouseEvent.pos()):
+                    R = viewport.rect()
+                    if not R.contains(mousePos):
 
-                        delta = QPointF()
+                        move = QPointF()
 
-                        if mouseEvent.pos().x() < viewportRect.left():
-                            delta.setX(mouseEvent.pos().x() - viewportRect.left())
-                        elif mouseEvent.pos().x() > viewportRect.right():
-                            delta.setX(mouseEvent.pos().x() - viewportRect.right())
+                        if mousePos.x() < R.left():
+                            move.setX(mousePos.x() - R.left())
+                        elif mousePos.x() > R.right():
+                            move.setX(mousePos.x() - R.right())
 
-                        if mouseEvent.pos().y() < viewportRect.top():
-                            delta.setY(mouseEvent.pos().y() - viewportRect.top())
-                        elif mouseEvent.pos().y() > viewportRect.bottom():
-                            delta.setY(mouseEvent.pos().y() - viewportRect.bottom())
+                        if mousePos.y() < R.top():
+                            move.setY(mousePos.y() - R.top())
+                        elif mousePos.y() > R.bottom():
+                            move.setY(mousePos.y() - R.bottom())
 
-                        if delta:
-                            delta.setX(clamp(delta.x(), -MainView.MoveBound, +MainView.MoveBound))
-                            delta.setY(clamp(delta.y(), -MainView.MoveBound, +MainView.MoveBound))
-                            self.startViewMove(delta, MainView.MoveRate)
+                        if move:
+                            move.setX(clamp(move.x(), -MainView.MoveBound, +MainView.MoveBound))
+                            move.setY(clamp(move.y(), -MainView.MoveBound, +MainView.MoveBound))
+                            self.startViewMove(move, MainView.MoveRate)
 
     def mouseReleaseEvent(self, mouseEvent):
         """
