@@ -81,6 +81,7 @@ class Overview(QGraphicsView):
         Initialize the Overview.
         """
         super().__init__(*args)
+        self.setContextMenuPolicy(Qt.PreventContextMenu)
         self.setFixedSize(SidebarWidget.Width, SidebarWidget.Width)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setOptimizationFlags(QGraphicsView.DontAdjustForAntialiasing)
@@ -95,13 +96,6 @@ class Overview(QGraphicsView):
     #   EVENTS                                                                                                         #
     #                                                                                                                  #
     ####################################################################################################################
-
-    def contextMenuEvent(self, menuEvent):
-        """
-        Turn off the context menu for this view.
-        :type menuEvent: QGraphicsSceneContextMenuEvent
-        """
-        pass
 
     def mouseDoubleClickEvent(self, mouseEvent):
         """
