@@ -34,8 +34,8 @@
 
 import traceback
 
-from PyQt5.QtCore import Qt, QThread, pyqtSlot
-from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtCore import Qt, QThread, pyqtSlot, QRegExp
+from PyQt5.QtGui import QPixmap, QIcon, QRegExpValidator
 from PyQt5.QtWidgets import QDialog, QFormLayout, QDialogButtonBox, QProgressBar
 from PyQt5.QtWidgets import QMessageBox, QSpacerItem, QSizePolicy
 
@@ -72,6 +72,7 @@ class OWLTranslationForm(QDialog):
 
         self.prefixField = StringEditField(self)
         self.prefixField.setFixedWidth(300)
+        self.prefixField.setValidator(QRegExpValidator(QRegExp('[\w]*'), self))
 
         self.syntaxField = ComboBox(self)
         for syntax in OWLSyntax:
