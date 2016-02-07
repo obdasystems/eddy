@@ -32,10 +32,8 @@
 ##########################################################################
 
 
-from abc import ABCMeta, abstractmethod
-
 from PyQt5.QtCore import Qt, QSize, pyqtSlot
-from PyQt5.QtGui import QColor, QPen, QIcon, QPainter
+from PyQt5.QtGui import QIcon, QPainter
 from PyQt5.QtWidgets import QGraphicsView, QDockWidget, QWidget, QGridLayout, QButtonGroup, QToolButton
 from PyQt5.QtWidgets import QStyleOption, QStyle
 
@@ -74,183 +72,7 @@ class SidebarWidget(QDockWidget):
 ########################################################################################################################
 
 
-class ViewBrowser(QGraphicsView):
-    """
-    Base class for all the Dock widgets used to inspect the Main View.
-    """
-    __metaclass__ = ABCMeta
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @abstractmethod
-    def clearView(self):
-        """
-        Clear the widget from browsing the current view.
-        """
-        pass
-
-    @abstractmethod
-    def setView(self, view):
-        """
-        Set the widget to browse the given view.
-        :type view: QGraphicsView
-        """
-        pass
-
-
-class Navigator(ViewBrowser):
-    """
-    This class implements the main view Navigator.
-    """
-    def __init__(self, *args):
-        """
-        Initialize the Navigator.
-        """
-        super().__init__(*args)
-        self.setFixedSize(SidebarWidget.Width, SidebarWidget.Width)
-        self.setOptimizationFlags(QGraphicsView.DontAdjustForAntialiasing)
-        self.setOptimizationFlags(QGraphicsView.DontSavePainterState)
-        self.navBrush = QColor(250, 140, 140, 100)
-        self.navPen = QPen(QColor(250, 0, 0, 100), 1.0, Qt.SolidLine)
-        self.mousepressed = False
-        self.mainview = None
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def drawForeground(self, painter, rect):
-        """
-        Draw the navigation cursor.
-        :type painter: QPainter
-        :type rect: QRectF
-        """
-        if self.mainview:
-            painter.setPen(self.navPen)
-            painter.setBrush(self.navBrush)
-            painter.drawRect(self.mainview.visibleRect())
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   EVENTS                                                                                                         #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def contextMenuEvent(self, menuEvent):
-        """
-        Turn off the context menu for this view.
-        :type menuEvent: QGraphicsSceneContextMenuEvent
-        """
-        pass
-
-    def mouseDoubleClickEvent(self, mouseEvent):
-        """
-        Executed when the mouse is double clicked on the view.
-        :type mouseEvent: QGraphicsSceneMouseEvent
-        """
-        pass
-
-    def mousePressEvent(self, mouseEvent):
-        """
-        Executed when the mouse is pressed on the view.
-        :type mouseEvent: QGraphicsSceneMouseEvent
-        """
-        if mouseEvent.buttons() & Qt.LeftButton:
-            if self.mainview:
-                self.mousepressed = True
-                self.mainview.centerOn(self.mapToScene(mouseEvent.pos()))
-
-    def mouseMoveEvent(self, mouseEvent):
-        """
-        Executed when the mouse is moved on the view.
-        :type mouseEvent: QGraphicsSceneMouseEvent
-        """
-        if mouseEvent.buttons() & Qt.LeftButton:
-            if self.mainview and self.mousepressed:
-                self.mainview.centerOn(self.mapToScene(mouseEvent.pos()))
-
-    def mouseReleaseEvent(self, mouseEvent):
-        """
-        Executed when the mouse is released from the view.
-        :type mouseEvent: QGraphicsSceneMouseEvent
-        """
-        if mouseEvent.buttons() & Qt.LeftButton:
-            if self.mainview:
-                self.mousepressed = False
-
-    def wheelEvent(self, wheelEvent):
-        """
-        Turn off wheel event since we don't need to scroll anything.
-        :type wheelEvent: QGraphicsSceneWheelEvent
-        """
-        pass
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def clearView(self):
-        """
-        Clear the widget from browsing the current view.
-        """
-        if self.mainview:
-
-            try:
-                scene = self.mainview.scene()
-                disconnect(scene.sceneRectChanged, self.fitRectInView)
-                disconnect(self.mainview.updated, self.updateView)
-            except RuntimeError:
-                # subwindow closed => we don't have the scene reference anymore
-                pass
-            finally:
-                self.mainview = None
-
-        self.updateView()
-
-    @pyqtSlot('QRectF')
-    def fitRectInView(self, rect):
-        """
-        Make sure that the given rectangle is fully visible in the navigator.
-        :type rect: QRectF
-        """
-        self.fitInView(rect, Qt.KeepAspectRatio)
-
-    def setView(self, view):
-        """
-        Set the widget to browse the given view.
-        :type view: QGraphicsView
-        """
-        self.clearView()
-
-        if view:
-            scene = view.scene()
-            # attach signals to new slots
-            connect(scene.sceneRectChanged, self.fitRectInView)
-            connect(view.updated, self.updateView)
-            # fit the scene in the view
-            self.setScene(scene)
-            self.fitRectInView(view.sceneRect())
-
-        self.mainview = view
-        self.updateView()
-
-    @pyqtSlot()
-    def updateView(self):
-        """
-        Update the Navigator.
-        """
-        self.viewport().update()
-
-
-class Overview(ViewBrowser):
+class Overview(QGraphicsView):
     """
     This class is used to display the active scene overview.
     """
@@ -270,20 +92,6 @@ class Overview(ViewBrowser):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def drawForeground(self, painter, rect):
-        """
-        Draw the navigation cursor.
-        :type painter: QPainter
-        :type rect: QRectF
-        """
-        pass
-
-    ####################################################################################################################
-    #                                                                                                                  #
     #   EVENTS                                                                                                         #
     #                                                                                                                  #
     ####################################################################################################################
@@ -351,18 +159,18 @@ class Overview(ViewBrowser):
 
             try:
                 scene = self.mainview.scene()
-                # make sure to disconnect only the signals connected to the slots provided by this
+                # Make sure to disconnect only the signals connected to the slots provided by this
                 # widget otherwise we will experiences bugs when the MainWindow goes out of focus: for more
                 # details on the matter read: https://github.com/danielepantaleone/eddy/issues/15
                 disconnect(scene.selectionChanged, self.updateView)
                 disconnect(scene.updated, self.updateView)
             except RuntimeError:
-                # subwindow closed => we don't have the scene reference anymore
                 pass
             finally:
                 self.mainview = None
 
-        self.viewport().update()
+        viewport = self.viewport()
+        viewport.update()
 
     def setView(self, view):
         """
@@ -386,11 +194,14 @@ class Overview(ViewBrowser):
         Update the Overview.
         """
         if self.mainview:
+
             scene = self.mainview.scene()
             shape = scene.visibleRect(margin=10)
             if shape:
                 self.fitInView(shape, Qt.KeepAspectRatio)
-        self.viewport().update()
+
+        viewport = self.viewport()
+        viewport.update()
 
 
 class Palette(QWidget):
