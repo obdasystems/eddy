@@ -99,7 +99,7 @@ class OWLTranslationForm(QDialog):
 
         connect(self.buttonBox.accepted, self.run)
         connect(self.buttonBox.rejected, self.reject)
-        connect(self.prefixField.textChanged, self.prefixChanged)
+        connect(self.iriField.textChanged, self.iriChanged)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -187,12 +187,12 @@ class OWLTranslationForm(QDialog):
         self.progressBar.setValue(current)
 
     @pyqtSlot()
-    def prefixChanged(self):
+    def iriChanged(self):
         """
         Executed whenever the value of the prefix field changes.
         """
         button = self.buttonBox.button(QDialogButtonBox.Ok)
-        button.setEnabled(not isEmpty(self.prefixField.value()))
+        button.setEnabled(not isEmpty(self.iriField.value()))
 
     @pyqtSlot()
     def run(self):
