@@ -363,6 +363,26 @@ class DiagramScene(QGraphicsScene):
                 self.undostack.push(CommandNodeMove(scene=self, data=commandData))
                 self.setMode(DiagramMode.Idle)
 
+
+        elif mouseEvent.button() == Qt.RightButton:
+
+            if self.mode is not DiagramMode.SceneDrag:
+
+                ########################################################################################################
+                #                                                                                                      #
+                #                                     CUSTOM CONTEXT MENU                                              #
+                #                                                                                                      #
+                ########################################################################################################
+
+                item = self.itemOnTopOf(mouseEvent.scenePos())
+                if item:
+                    self.clearSelection()
+                    item.setSelected(True)
+
+                menu = self.mainwindow.menuFactory.create(self.mainwindow, self, item, mouseEvent.scenePos())
+                menu.exec_(mouseEvent.screenPos())
+
+
         super().mouseReleaseEvent(mouseEvent)
 
         self.mousePressPos = None

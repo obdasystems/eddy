@@ -60,6 +60,7 @@ class MainView(QGraphicsView):
         :type scene: DiagramScene
         """
         super().__init__(scene)
+        self.setContextMenuPolicy(Qt.PreventContextMenu)
         self.setDragMode(QGraphicsView.NoDrag)
         self.setOptimizationFlags(QGraphicsView.DontAdjustForAntialiasing)
         self.setOptimizationFlags(QGraphicsView.DontSavePainterState)
@@ -67,7 +68,7 @@ class MainView(QGraphicsView):
         self.settings = scene.settings
         self.mousePressCenterPos = None
         self.mousePressPos = None
-        self.mousePressRect = None
+        self.mousePressRubberBand = None
         self.viewMove = None
         self.zoom = 1.00
 
@@ -121,10 +122,10 @@ class MainView(QGraphicsView):
         scene = self.scene()
 
         if scene.mode is DiagramMode.RubberBandDrag:
-            if self.mousePressRect is not None:
+            if self.mousePressRubberBand is not None:
                 painter.setPen(MainView.RubberBandDragPen)
                 painter.setBrush(MainView.RubberBandDragBrush)
-                painter.drawRect(self.mousePressRect)
+                painter.drawRect(self.mousePressRubberBand)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -138,21 +139,20 @@ class MainView(QGraphicsView):
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
         scene = self.scene()
-        if mouseEvent.buttons() & Qt.MidButton:
 
-            self.mousePressCenterPos = self.visibleRect().center()
+        if mouseEvent.buttons() & Qt.RightButton:
+
+            visibleRect = self.visibleRect()
+            self.mousePressCenterPos = visibleRect.center()
             self.mousePressPos = mouseEvent.pos()
-            self.mousePressRect = None
-            scene.setMode(DiagramMode.SceneDrag)
-            viewport = self.viewport()
-            viewport.setCursor(Qt.ClosedHandCursor)
+            self.mousePressRubberBand = None
 
         else:
 
             if mouseEvent.buttons() & Qt.LeftButton:
                 if scene.mode is DiagramMode.Idle and not self.itemAt(mouseEvent.pos()):
                     self.mousePressPos = self.mapToScene(mouseEvent.pos())
-                    self.mousePressRect = None
+                    self.mousePressRubberBand = None
                     scene.setMode(DiagramMode.RubberBandDrag)
 
             super().mousePressEvent(mouseEvent)
@@ -165,11 +165,13 @@ class MainView(QGraphicsView):
         scene = self.scene()
         viewport = self.viewport()
 
-        if mouseEvent.buttons() & Qt.MidButton:
+        if mouseEvent.buttons() & Qt.RightButton:
 
-            if scene.mode is DiagramMode.SceneDrag:
+            if scene.mode is not DiagramMode.SceneDrag:
+                scene.setMode(DiagramMode.SceneDrag)
                 viewport.setCursor(Qt.ClosedHandCursor)
-                self.centerOn(self.mousePressCenterPos - mouseEvent.pos() + self.mousePressPos)
+
+            self.centerOn(self.mousePressCenterPos - mouseEvent.pos() + self.mousePressPos)
 
         else:
 
@@ -177,8 +179,8 @@ class MainView(QGraphicsView):
 
             if mouseEvent.buttons() & Qt.LeftButton:
 
-                # always call this before doing anything else: if we miss this call we may end up
-                # with multiple move timers running and we won't be able to stop the view move
+                # Always call this before doing anything else: if we miss this call we may end up
+                # with multiple move timers running and we won't be able to stop the view move.
                 self.stopViewMove()
 
                 if scene.mode is DiagramMode.RubberBandDrag:
@@ -194,10 +196,10 @@ class MainView(QGraphicsView):
                     w = self.mapToScene(mouseEvent.pos()).x() - x
                     h = self.mapToScene(mouseEvent.pos()).y() - y
 
-                    self.mousePressRect = QRectF(x, y, w, h)
+                    self.mousePressRubberBand = QRectF(x, y, w, h)
 
                     items = scene.items()
-                    selected = {x for x in scene.items(self.mousePressRect) if x.node or x.edge}
+                    selected = {x for x in scene.items(self.mousePressRubberBand) if x.node or x.edge}
 
                     for item in items:
                         item.setSelected(item in selected)
@@ -241,7 +243,7 @@ class MainView(QGraphicsView):
         """
         self.mousePressCenterPos = None
         self.mousePressPos = None
-        self.mousePressRect = None
+        self.mousePressRubberBand = None
         self.stopViewMove()
 
         scene = self.scene()
