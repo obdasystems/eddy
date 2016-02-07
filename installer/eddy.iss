@@ -4,6 +4,7 @@
 ;#define Debug
 
 ; NOTE: uncomment these constant or call the InnoSetup PreProcessor with the /d<name>=<value> command
+;#define public EDDY_APPID ""
 ;#define public EDDY_APPNAME ""
 ;#define public EDDY_ARCHITECTURE ""
 ;#define public EDDY_BUGTRACKER ""
@@ -19,7 +20,7 @@
 ;#define public EDDY_VERSION ""
 
 [Setup]
-AppID=60119D28-5488-4663-879E-34FCD9C5C38C
+AppID={#EDDY_APPID}
 AppCopyright={#EDDY_COPYRIGHT}
 AppName={#EDDY_APPNAME}
 AppPublisher={#EDDY_ORGANIZATION}

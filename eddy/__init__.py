@@ -42,6 +42,7 @@ __status__ = 'Development'
 __version__ = '0.7'
 
 
+APP_ID = "60119D28-5488-4663-879E-34FCD9C5C38C"
 BUG_TRACKER = 'https://github.com/danielepantaleone/eddy/issues'
 DIAG_HOME = 'http://www.diag.uniroma1.it/en'
 GRAPHOL_HOME = 'http://www.diag.uniroma1.it/~graphol/'

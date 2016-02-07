@@ -41,6 +41,7 @@ from PyQt5.QtCore import QSettings, QEvent, pyqtSignal, pyqtSlot, QTextStream, Q
 from PyQt5.QtNetwork import QLocalSocket, QLocalServer
 from PyQt5.QtWidgets import QApplication
 
+from eddy import APP_ID
 from eddy.core.datatypes import Platform, Filetype
 from eddy.core.functions import isEmpty, expandPath, connect, disconnect
 
@@ -99,11 +100,10 @@ class Eddy(QApplication):
 
         options, args = parser.parse_known_args(args=argv)
 
-        self.appid = '60119D28-5488-4663-879E-34FCD9C5C38C'
         self.inSocket = None
         self.inStream = None
         self.outSocket = QLocalSocket()
-        self.outSocket.connectToServer(self.appid)
+        self.outSocket.connectToServer(APP_ID)
         self.outStream = None
         self.isRunning = self.outSocket.waitForConnected()
         self.mainwindow = None
@@ -118,7 +118,7 @@ class Eddy(QApplication):
             self.outStream.setCodec('UTF-8')
         else:
             self.server = QLocalServer()
-            self.server.listen(self.appid)
+            self.server.listen(APP_ID)
             self.outSocket = None
             self.outStream = None
 
