@@ -487,6 +487,16 @@ class GraphmlLoader(AbstractLoader):
                             return Item.ValueDomainNode
 
                         if shapeType == 'hexagon':
+
+                            # We need to identify DisjointUnion from the color and not by checking the empty label
+                            # because in some ontologies created under yEd another operator node has been copied
+                            # over and the background color has been changed despite the label not being removed.
+                            fill = shapeNode.firstChildElement('y:Fill')
+                            if not fill.isNull():
+                                color = fill.attribute('color', '')
+                                if color == '#000000':
+                                    return Item.DisjointUnionNode
+
                             nodeLabel = shapeNode.firstChildElement('y:NodeLabel')
                             if not nodeLabel.isNull():
                                 nodeText = nodeLabel.text().strip()
@@ -504,11 +514,6 @@ class GraphmlLoader(AbstractLoader):
                                     return Item.RoleInverseNode
                                 if nodeText == 'data':
                                     return Item.DatatypeRestrictionNode
-                                # When no label matches consider it as a Disjoint Union: it should have no label
-                                # at all but it may happen that users added a label on this node since the logical
-                                # meaning of the node is highlighted by the shape and the color of the node, while
-                                # changing the label of other operator nodes will make them meaningless.
-                                return Item.DisjointUnionNode
 
                         if shapeType == 'rectangle':
                             fill = shapeNode.firstChildElement('y:Fill')
