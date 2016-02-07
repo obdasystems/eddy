@@ -46,8 +46,8 @@ from eddy.core.application import Eddy
 from eddy.ui import images_rc
 
 
-# main application reference
 app = None
+box = None
 
 
 def base_except_hook(exc_type, exc_value, exc_traceback):
@@ -57,28 +57,33 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
     :type exc_value: Exception
     :type exc_traceback: Traceback
     """
+    global app
+    global box
+
     if issubclass(exc_type, KeyboardInterrupt):
 
         app.quit()
 
     else:
 
-        m1 = 'This is embarrassing ...\n\n' \
-             'A critical error has just occurred. ' \
-             'Eddy will continue to work, however a reboot is highly recommended.'
-        m2 = 'If the problem persists please <a href="{}">submit a bug report</a> ' \
-             'with detailed information.'.format(BUG_TRACKER)
-        m3 = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+        if not box:
 
-        box = QMessageBox()
-        box.setIconPixmap(QPixmap(':/images/eddy-sad'))
-        box.setWindowIcon(QIcon(':/images/eddy'))
-        box.setWindowTitle('Unhandled error!')
-        box.setText(m1)
-        box.setInformativeText(m2)
-        box.setDetailedText(m3)
-        box.setStandardButtons(QMessageBox.Close)
-        box.exec_()
+            m1 = 'This is embarrassing ...\n\n' \
+                 'A critical error has just occurred. ' \
+                 'Eddy will continue to work, however a reboot is highly recommended.'
+            m2 = 'If the problem persists please <a href="{}">submit a bug report</a>.'.format(BUG_TRACKER)
+            m3 = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+
+            box = QMessageBox()
+            box.setIconPixmap(QPixmap(':/images/eddy-sad'))
+            box.setWindowIcon(QIcon(':/images/eddy'))
+            box.setWindowTitle('Unhandled error!')
+            box.setText(m1)
+            box.setInformativeText(m2)
+            box.setDetailedText(m3)
+            box.setStandardButtons(QMessageBox.Close)
+            box.exec_()
+            box = None
 
 
 def main():
