@@ -369,6 +369,10 @@ class AbstractEdge(AbstractItem):
         self.pen = pen
         self.selectionBrush = selectionBrush
 
+        # FORCE CACHE REGENERATION
+        self.setCacheMode(QGraphicsItem.NoCache)
+        self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+
         # SCHEDULE REPAINT
         self.update(self.boundingRect())
 
