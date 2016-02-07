@@ -216,7 +216,7 @@ class Label(LabelItem):
         """
         Paint the label in the graphic view.
         :type painter: QPainter
-        :type option: int
+        :type option: QStyleOptionGraphicsItem
         :type widget: QWidget
         """
         parent = self.parentItem()

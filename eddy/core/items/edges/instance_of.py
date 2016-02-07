@@ -282,9 +282,11 @@ class InstanceOfEdge(AbstractEdge):
         """
         Paint the edge in the diagram scene.
         :type painter: QPainter
-        :type option: int
+        :type option: QStyleOptionGraphicsItem
         :type widget: QWidget
         """
+        # SET THE RECT THAT NEEDS TO BE REPAINTED
+        painter.setClipRect(option.exposedRect)
         # SELECTION AREA
         painter.setRenderHint(QPainter.Antialiasing)
         painter.fillPath(self.selection, self.selectionBrush)

@@ -261,7 +261,7 @@ class RestrictionNode(AbstractNode):
         """
         Paint the node in the diagram scene.
         :type painter: QPainter
-        :type option: int
+        :type option: QStyleOptionGraphicsItem
         :type widget: QWidget
         """
         # SELECTION AREA

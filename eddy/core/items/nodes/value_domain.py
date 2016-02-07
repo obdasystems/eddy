@@ -270,9 +270,11 @@ class ValueDomainNode(AbstractNode):
         """
         Paint the node in the diagram scene.
         :type painter: QPainter
-        :type option: int
+        :type option: QStyleOptionGraphicsItem
         :type widget: QWidget
         """
+        # SET THE RECT THAT NEEDS TO BE REPAINTED
+        painter.setClipRect(option.exposedRect)
         # SELECTION AREA
         painter.setPen(self.selectionPen)
         painter.setBrush(self.selectionBrush)
