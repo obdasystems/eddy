@@ -40,7 +40,9 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QMessageBox
 
 from eddy import BUG_TRACKER
+from eddy import __appname__ as APPNAME
 from eddy.core.application import Eddy
+from eddy.core.functions import connect
 
 # noinspection PyUnresolvedReferences
 from eddy.ui import images_rc
@@ -81,7 +83,16 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
             box.setText(m1)
             box.setInformativeText(m2)
             box.setDetailedText(m3)
-            box.setStandardButtons(QMessageBox.Close)
+            box.setStandardButtons(QMessageBox.Close|QMessageBox.Ok)
+
+            buttonOk = box.button(QMessageBox.Ok)
+            buttonOk.setText('Close')
+            buttonQuit = box.button(QMessageBox.Close)
+            buttonQuit.setText('Quit {}'.format(APPNAME))
+
+            connect(buttonOk.clicked, box.close)
+            connect(buttonQuit.clicked, app.quit)
+
             box.exec_()
             box = None
 
