@@ -1131,7 +1131,7 @@ class MainWindow(QMainWindow):
             scene.clipboardPasteOffsetX = 0
             scene.clipboardPasteOffsetY = 0
             self.clipboard.update(scene)
-            self.refreshActionsState()
+            self.sceneSelectionChanged()
             selection = scene.selectedItems()
             if selection:
                 selection.extend([x for item in selection if item.node for x in item.edges if x not in selection])
@@ -1148,7 +1148,7 @@ class MainWindow(QMainWindow):
             scene.clipboardPasteOffsetX = Clipboard.PasteOffsetX
             scene.clipboardPasteOffsetY = Clipboard.PasteOffsetY
             self.clipboard.update(scene)
-            self.refreshActionsState()
+            self.sceneSelectionChanged()
 
     @pyqtSlot()
     def itemPaste(self):
@@ -1327,53 +1327,6 @@ class MainWindow(QMainWindow):
                         scene.undostack.push(CommandRefactor(**kwargs))
 
     @pyqtSlot()
-    def refreshActionsState(self):
-        """
-        Update actions enabling/disabling them when needed.
-        """
-        wind = undo = clip = edge = node = pred = False
-
-        # we need to check if we have at least one subwindow because if the program
-        # simply lose the focus, self.mdi.activeScene will return None even though we
-        # do not need to disable actions because we will have scene in the background
-        if self.mdi.subWindowList():
-
-            scene = self.mdi.activeScene
-            if scene:
-
-                nodes = scene.selectedNodes()
-                edges = scene.selectedEdges()
-
-                wind = True
-                undo = not self.undogroup.isClean()
-                clip = not self.clipboard.empty()
-                edge = len(edges) != 0
-                node = len(nodes) != 0
-                pred = next(filter(lambda x: x.isItem(Item.AttributeNode,
-                                                      Item.ConceptNode,
-                                                      Item.IndividualNode,
-                                                      Item.RoleNode,
-                                                      Item.ValueDomainNode,
-                                                      Item.ValueRestrictionNode), nodes), None) is not None
-
-        self.actionBringToFront.setEnabled(node)
-        self.actionCloseActiveSubWindow.setEnabled(wind)
-        self.actionCut.setEnabled(node)
-        self.actionCopy.setEnabled(node)
-        self.actionDelete.setEnabled(node or edge)
-        self.actionExportDocument.setEnabled(wind)
-        self.actionPaste.setEnabled(clip)
-        self.actionPrintDocument.setEnabled(wind)
-        self.actionSaveDocument.setEnabled(undo)
-        self.actionSaveDocumentAs.setEnabled(wind)
-        self.actionSelectAll.setEnabled(wind)
-        self.actionSendToBack.setEnabled(node)
-        self.actionSnapToGrid.setEnabled(wind)
-        self.actionCenterDiagram.setEnabled(wind)
-        self.changeNodeBrushButton.setEnabled(pred)
-        self.zoomctrl.setEnabled(wind)
-
-    @pyqtSlot()
     def removeBreakpoint(self):
         """
         Remove the edge breakpoint specified in the action triggering this slot.
@@ -1436,6 +1389,53 @@ class MainWindow(QMainWindow):
         """
         if mode not in (DiagramMode.NodeInsert, DiagramMode.EdgeInsert):
             self.palette_.clear()
+
+    @pyqtSlot()
+    def sceneSelectionChanged(self):
+        """
+        Update actions enabling/disabling them when needed.
+        """
+        wind = undo = clip = edge = node = pred = False
+
+        # we need to check if we have at least one subwindow because if Eddy simply
+        # lose the focus, self.mdi.activeScene will return None even though we do
+        # not need to disable actions because we will have scene in the background.
+        if self.mdi.subWindowList():
+
+            scene = self.mdi.activeScene
+            if scene:
+
+                nodes = scene.selectedNodes()
+                edges = scene.selectedEdges()
+
+                wind = True
+                undo = not self.undogroup.isClean()
+                clip = not self.clipboard.empty()
+                edge = len(edges) != 0
+                node = len(nodes) != 0
+                pred = next(filter(lambda x: x.isItem(Item.AttributeNode,
+                                                      Item.ConceptNode,
+                                                      Item.IndividualNode,
+                                                      Item.RoleNode,
+                                                      Item.ValueDomainNode,
+                                                      Item.ValueRestrictionNode), nodes), None) is not None
+
+        self.actionBringToFront.setEnabled(node)
+        self.actionCloseActiveSubWindow.setEnabled(wind)
+        self.actionCut.setEnabled(node)
+        self.actionCopy.setEnabled(node)
+        self.actionDelete.setEnabled(node or edge)
+        self.actionExportDocument.setEnabled(wind)
+        self.actionPaste.setEnabled(clip)
+        self.actionPrintDocument.setEnabled(wind)
+        self.actionSaveDocument.setEnabled(undo)
+        self.actionSaveDocumentAs.setEnabled(wind)
+        self.actionSelectAll.setEnabled(wind)
+        self.actionSendToBack.setEnabled(node)
+        self.actionSnapToGrid.setEnabled(wind)
+        self.actionCenterDiagram.setEnabled(wind)
+        self.changeNodeBrushButton.setEnabled(pred)
+        self.zoomctrl.setEnabled(wind)
 
     @pyqtSlot()
     def selectAll(self):
@@ -1639,7 +1639,7 @@ class MainWindow(QMainWindow):
                 self.overview.clearView()
                 self.setWindowTitle()
 
-        self.refreshActionsState()
+        self.sceneSelectionChanged()
 
     @pyqtSlot('QMdiSubWindow')
     def subWindowCloseEventIgnored(self, subwindow):
@@ -1867,7 +1867,7 @@ class MainWindow(QMainWindow):
         scene.setItemIndexMethod(DiagramScene.NoIndex)
         connect(scene.itemAdded, self.itemAdded)
         connect(scene.modeChanged, self.sceneModeChanged)
-        connect(scene.selectionChanged, self.refreshActionsState)
+        connect(scene.selectionChanged, self.sceneSelectionChanged)
         self.undogroup.addStack(scene.undostack)
         return scene
 
@@ -1917,6 +1917,7 @@ class MainWindow(QMainWindow):
         """
         view = MainView(scene)
         view.centerOn(0, 0)
+        connect(scene.updated, view.updateView)
         return view
 
     def exportFilePath(self, path=None, name=None):

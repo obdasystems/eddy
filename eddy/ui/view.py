@@ -64,11 +64,11 @@ class MainView(QGraphicsView):
         self.setOptimizationFlags(QGraphicsView.DontAdjustForAntialiasing)
         self.setOptimizationFlags(QGraphicsView.DontSavePainterState)
         self.setViewportUpdateMode(QGraphicsView.MinimalViewportUpdate)
-        self.viewMove = None
         self.settings = scene.settings
         self.mousePressCenterPos = None
         self.mousePressPos = None
         self.mousePressRect = None
+        self.viewMove = None
         self.zoom = 1.00
 
     ####################################################################################################################
@@ -84,6 +84,14 @@ class MainView(QGraphicsView):
         :type zoom: float
         """
         self.scaleView(zoom)
+
+    @pyqtSlot()
+    def updateView(self):
+        """
+        Update the Overview.
+        """
+        viewport = self.viewport()
+        viewport.update()
 
     ####################################################################################################################
     #                                                                                                                  #
