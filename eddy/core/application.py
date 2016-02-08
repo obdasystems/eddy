@@ -146,13 +146,13 @@ class Eddy(QApplication):
             self.setStyleSheet(style.qss())
 
             # Initialize recent documents.
-            if not self.settings.contains('document/recent_documents'):
+            if not self.settings.contains('document/recent'):
                 # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
                 # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
                 # container. So according to this we can't use an empty list as default value because PyQt5 needs
                 # to know the type of the contents added to the collection: we avoid this problem by placing
                 # the list of examples file in the recentDocumentList (only if there is no list defined already).
-                self.settings.setValue('document/recent_documents', [
+                self.settings.setValue('document/recent', [
                     expandPath('@examples/Animals.graphol'),
                     expandPath('@examples/Diet.graphol'),
                     expandPath('@examples/Family.graphol'),

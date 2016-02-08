@@ -57,6 +57,7 @@ class DiagramScene(QGraphicsScene):
     GridSize = 20
     MinSize = 2000
     MaxSize = 1000000
+    RecentNum = 5
 
     itemAdded = pyqtSignal('QGraphicsItem', int)
     modeChanged = pyqtSignal(DiagramMode)
@@ -64,13 +65,13 @@ class DiagramScene(QGraphicsScene):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   SCENE IMPLEMENTATION                                                                                           #
+    #   DIAGRAM SCENE IMPLEMENTATION                                                                                   #
     #                                                                                                                  #
     ####################################################################################################################
 
     def __init__(self, mainwindow, parent=None):
         """
-        Initialize the graphic scene.
+        Initialize the diagram scene.
         :type mainwindow: MainWindow
         :type parent: QWidget
         """
@@ -804,7 +805,7 @@ class DiagramScene(QGraphicsScene):
         :type point: QPointF
         :rtype: QPointF
         """
-        if self.settings.value('scene/snap_to_grid', False, bool):
+        if self.settings.value('diagram/grid', False, bool):
             newX = snapF(point.x(), DiagramScene.GridSize)
             newY = snapF(point.y(), DiagramScene.GridSize)
             return QPointF(newX, newY)

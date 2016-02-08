@@ -78,7 +78,6 @@ class MainWindow(QMainWindow):
     """
     This class implements Eddy's main window.
     """
-    MaxRecentDocuments = 5
     MinHeight = 600
     MinWidth = 1024
 
@@ -211,7 +210,7 @@ class MainWindow(QMainWindow):
         connect(self.actionOpenDocument.triggered, self.openDocument)
 
         self.actionsOpenRecentDocument = []
-        for i in range(MainWindow.MaxRecentDocuments):
+        for i in range(DiagramScene.RecentNum):
             action = QAction(self)
             action.setVisible(False)
             connect(action.triggered, self.openRecentDocument)
@@ -300,7 +299,7 @@ class MainWindow(QMainWindow):
         self.actionSnapToGrid.setIcon(self.iconGrid)
         self.actionSnapToGrid.setStatusTip('Snap diagram elements to the grid')
         self.actionSnapToGrid.setCheckable(True)
-        self.actionSnapToGrid.setChecked(self.settings.value('scene/snap_to_grid', False, bool))
+        self.actionSnapToGrid.setChecked(self.settings.value('diagram/grid', False, bool))
         self.actionSnapToGrid.setEnabled(False)
         connect(self.actionSnapToGrid.triggered, self.toggleSnapToGrid)
 
@@ -523,7 +522,7 @@ class MainWindow(QMainWindow):
         self.menuFile.addAction(self.actionExportDocument)
 
         self.recentDocumentSeparator = self.menuFile.addSeparator()
-        for i in range(MainWindow.MaxRecentDocuments):
+        for i in range(DiagramScene.RecentNum):
             self.menuFile.addAction(self.actionsOpenRecentDocument[i])
         self.updateRecentDocuments()
 
@@ -1723,7 +1722,7 @@ class MainWindow(QMainWindow):
         Toggle snap to grid setting.
         """
         snapToGrid = self.actionSnapToGrid.isChecked()
-        self.settings.setValue('scene/snap_to_grid', snapToGrid)
+        self.settings.setValue('diagram/grid', snapToGrid)
         for subwindow in self.mdi.subWindowList():
             mainview = subwindow.widget()
             mainview.snapToGrid = snapToGrid
@@ -1856,8 +1855,8 @@ class MainWindow(QMainWindow):
         :type area: int
         :type widget: QDockWidget
         """
-        area = self.settings.value('Dock.Area/{}'.format(widget.objectName()), area, int)
-        view = self.settings.value('Dock.View/{}'.format(widget.objectName()), True, bool)
+        area = self.settings.value('dock/{}/area'.format(widget.objectName()), area, int)
+        view = self.settings.value('dock/{}/view'.format(widget.objectName()), True, bool)
         super().addDockWidget(area, widget, *args, **kwargs)
         widget.setVisible(view)
 
@@ -1866,17 +1865,17 @@ class MainWindow(QMainWindow):
         Add the given document to the recent document list.
         :type path: str
         """
-        documents = self.settings.value('document/recent_documents', None, str)
+        documents = self.settings.value('document/recent', None, str)
 
         try:
             documents.remove(path)
         except ValueError:
             pass
         finally:
-            documents.insert(0, path) # insert on top of the list
-            documents = documents[:MainWindow.MaxRecentDocuments]
+            documents.insert(0, path)
+            documents = documents[:DiagramScene.RecentNum]
 
-        self.settings.setValue('document/recent_documents', documents)
+        self.settings.setValue('document/recent', documents)
         self.updateRecentDocuments()
 
     def createScene(self, width, height):
@@ -2095,18 +2094,18 @@ class MainWindow(QMainWindow):
         """
         Update the recent document action list.
         """
-        documents = self.settings.value('document/recent_documents', None, str)
-        numRecentDocuments = min(len(documents), MainWindow.MaxRecentDocuments)
+        documents = self.settings.value('document/recent', None, str)
+        num = min(len(documents), DiagramScene.RecentNum)
 
-        for i in range(numRecentDocuments):
+        for i in range(num):
             filename = '&{} {}'.format(i + 1, os.path.basename(os.path.normpath(documents[i])))
             self.actionsOpenRecentDocument[i].setText(filename)
             self.actionsOpenRecentDocument[i].setData(documents[i])
             self.actionsOpenRecentDocument[i].setVisible(True)
 
         # turn off actions that we don't need
-        for i in range(numRecentDocuments, MainWindow.MaxRecentDocuments):
+        for i in range(num, DiagramScene.RecentNum):
             self.actionsOpenRecentDocument[i].setVisible(False)
 
         # show the separator only if we got at least one recent document
-        self.recentDocumentSeparator.setVisible(numRecentDocuments > 0)
+        self.recentDocumentSeparator.setVisible(num > 0)

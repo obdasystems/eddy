@@ -160,7 +160,7 @@ class ConceptNode(AbstractResizableNode):
         :type mousePos: QPointF
         """
         scene = self.scene()
-        snap = scene.settings.value('scene/snap_to_grid', False, bool)
+        snap = scene.settings.value('diagram/grid', False, bool)
 
         O = self.handleSize + self.handleMove
         M = self.label.moved

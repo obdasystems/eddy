@@ -66,7 +66,7 @@ class MainView(QGraphicsView):
         self.setOptimizationFlags(QGraphicsView.DontSavePainterState)
         self.setViewportUpdateMode(QGraphicsView.MinimalViewportUpdate)
         self.settings = scene.settings
-        self.snapToGrid = scene.settings.value('scene/snap_to_grid', False, bool)
+        self.snapToGrid = scene.settings.value('diagram/grid', False, bool)
         self.mousePressCenterPos = None
         self.mousePressPos = None
         self.mousePressRubberBand = None

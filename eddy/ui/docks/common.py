@@ -90,7 +90,7 @@ class DockWidget(QDockWidget):
         Executed when the dock widget is moved into a different area.
         :type area: int
         """
-        self.settings.setValue('Dock.Area/{}'.format(self.objectName()), area)
+        self.settings.setValue('dock/{}/area'.format(self.objectName()), area)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -103,4 +103,4 @@ class DockWidget(QDockWidget):
         Executed when the dock widget is hidden/displayed.
         :type view: bool
         """
-        self.settings.setValue('Dock.View/{}'.format(self.objectName()), view)
+        self.settings.setValue('dock/{}/view'.format(self.objectName()), view)
