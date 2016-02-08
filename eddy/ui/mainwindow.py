@@ -66,6 +66,7 @@ from eddy.core.items import UnionNode, EnumerationNode, ComplementNode
 from eddy.core.items import RoleChainNode, IntersectionNode
 from eddy.core.loaders import GraphmlLoader, GrapholLoader
 from eddy.core.utils import Clipboard
+
 from eddy.ui.dialogs import About, OpenFile, SaveFile, License
 from eddy.ui.dialogs import BusyProgressDialog, PreferencesDialog
 from eddy.ui.docks import DockWidget, Overview, Palette
