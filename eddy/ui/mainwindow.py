@@ -1079,7 +1079,7 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-            result = self.exportPath(name=rCut(scene.document.name, Filetype.Graphol.suffix))
+            result = self.exportPath(name=rCut(scene.document.name, Filetype.Graphol.extension))
             if result:
                 filepath = result[0]
                 filetype = Filetype.forValue(result[1])
@@ -1865,7 +1865,7 @@ class MainWindow(QMainWindow):
                     # platform when absolute url have the form C:\\Programs\\... (Qt bug?)
                     path = path.lstrip('/').lstrip('\\')
 
-                if os.path.isfile(path) and path.endswith(Filetype.Graphol.suffix):
+                if os.path.isfile(path) and path.endswith(Filetype.Graphol.extension):
                     # If the file exists and is a Graphol file then open it!
                     if not self.focusDocument(path):
                         scene = self.createSceneFromGrapholFile(path)

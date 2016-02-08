@@ -210,7 +210,7 @@ class Eddy(QApplication):
         :rtype: bool
         """
         if self.mainwindow:
-            if not isEmpty(filepath) and os.path.isfile(filepath) and filepath.endswith(Filetype.Graphol.suffix):
+            if not isEmpty(filepath) and os.path.isfile(filepath) and filepath.endswith(Filetype.Graphol.extension):
                 self.mainwindow.openFile(filepath)
                 return True
         return False

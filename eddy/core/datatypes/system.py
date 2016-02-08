@@ -149,9 +149,9 @@ class Filetype(Enum):
         return None
 
     @DynamicClassAttribute
-    def suffix(self):
+    def extension(self):
         """
-        The suffix associated with the Enum member.
+        The extension associated with the Enum member.
         :rtype: str
         """
         return {
