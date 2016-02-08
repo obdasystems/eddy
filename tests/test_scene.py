@@ -32,8 +32,6 @@
 ##########################################################################
 
 
-from mockito import when
-
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtTest import QTest
 
@@ -57,8 +55,6 @@ class Test_DiagramScene(EddyTestCase):
         self.subwindow.showMaximized()
         self.mainwindow.mdi.setActiveSubWindow(self.subwindow)
         self.mainwindow.mdi.update()
-
-        when(self.scene.settings).value('scene/snap_to_grid', False, bool).thenReturn(False)
 
     ####################################################################################################################
     #                                                                                                                  #

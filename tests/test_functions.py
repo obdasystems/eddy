@@ -123,16 +123,16 @@ class Test_RangeF(unittest.TestCase):
 class Test_SnapF(unittest.TestCase):
 
     def test_snap_to_grid(self):
-        self.assertEqual(10.0, snapF(value=8.0, gridsize=10.0))
-        self.assertEqual(10.0, snapF(value=6.0, gridsize=10.0))
-        self.assertEqual(0.0, snapF(value=5.0, gridsize=10.0))
-        self.assertEqual(0.0, snapF(value=4.0, gridsize=10.0))
-        self.assertEqual(0.0, snapF(value=2.0, gridsize=10.0))
+        self.assertEqual(10.0, snapF(value=8.0, size=10.0))
+        self.assertEqual(10.0, snapF(value=6.0, size=10.0))
+        self.assertEqual(0.0, snapF(value=5.0, size=10.0))
+        self.assertEqual(0.0, snapF(value=4.0, size=10.0))
+        self.assertEqual(0.0, snapF(value=2.0, size=10.0))
         
     def test_snap_to_grid_with_offset(self):
-        self.assertEqual(12.0, snapF(value=8.0, gridsize=10.0, offset=2.0))
-        self.assertEqual(6.0, snapF(value=6.0, gridsize=10.0, offset=-4.0))
+        self.assertEqual(12.0, snapF(value=8.0, size=10.0, offset=2.0))
+        self.assertEqual(6.0, snapF(value=6.0, size=10.0, offset=-4.0))
 
     def test_snap_to_grid_with_skip(self):
-        self.assertEqual(8.0, snapF(value=8.0, gridsize=10.0, snap=False))
-        self.assertEqual(6.0, snapF(value=6.0, gridsize=10.0, snap=False))
+        self.assertEqual(8.0, snapF(value=8.0, size=10.0, snap=False))
+        self.assertEqual(6.0, snapF(value=6.0, size=10.0, snap=False))

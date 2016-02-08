@@ -66,8 +66,6 @@ class Test_Translation(EddyTestCase):
         self.mainwindow.mdi.setActiveSubWindow(self.subwindow)
         self.mainwindow.mdi.update()
 
-        when(self.scene.settings).value('scene/snap_to_grid', False, bool).thenReturn(False)
-
     ####################################################################################################################
     #                                                                                                                  #
     #   EXAMPLE FILES -> OWL                                                                                           #

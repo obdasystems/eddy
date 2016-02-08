@@ -53,6 +53,7 @@ class EddyTestCase(unittest.TestCase):
         """
         self.app = Eddy(['--nosplash', '--tests'])
         self.mainwindow = self.app.activationWindow()
+        self.mainwindow.snapToGrid = False
         self.mainwindow.activateWindow()
         QTest.qWaitForWindowActive(self.mainwindow)
 
