@@ -62,7 +62,7 @@ from eddy.core.items import UnionNode, EnumerationNode, ComplementNode, RoleChai
 from eddy.core.loaders import GraphmlLoader, GrapholLoader
 from eddy.core.utils import Clipboard
 from eddy.ui.dialogs import About, OpenFile, SaveFile, BusyProgressDialog, License
-from eddy.ui.dock import SidebarWidget, Overview, Palette
+from eddy.ui.docks import DockWidget, Overview, Palette
 from eddy.ui.forms import CardinalityRestrictionForm, ValueRestrictionForm
 from eddy.ui.forms import OWLTranslationForm, LiteralForm, RenameForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
@@ -131,8 +131,17 @@ class MainWindow(QMainWindow):
         self.palette_ = Palette(self)
         self.zoomctrl = ZoomControl(self.toolbar)
 
-        self.dockOverview = SidebarWidget('Overview', self.overview, self)
-        self.dockPalette = SidebarWidget('Palette', self.palette_, self)
+        self.dockOverview = DockWidget('Overview', self)
+        self.dockOverview.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        self.dockOverview.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
+        self.dockOverview.setFixedWidth(self.overview.width())
+        self.dockOverview.setWidget(self.overview)
+
+        self.dockPalette = DockWidget('Palette', self)
+        self.dockPalette.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        self.dockPalette.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
+        self.dockPalette.setFixedWidth(self.palette_.width())
+        self.dockPalette.setWidget(self.palette_)
 
         ################################################################################################################
         #                                                                                                              #
@@ -1840,6 +1849,17 @@ class MainWindow(QMainWindow):
     #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
+
+    def addDockWidget(self, area, widget, *args, **kwargs):
+        """
+        Add a widget to the dock area.
+        :type area: int
+        :type widget: QDockWidget
+        """
+        area = self.settings.value('Dock.Area/{}'.format(widget.objectName()), area, int)
+        view = self.settings.value('Dock.View/{}'.format(widget.objectName()), True, bool)
+        super().addDockWidget(area, widget, *args, **kwargs)
+        widget.setVisible(view)
 
     def addRecentDocument(self, path):
         """

@@ -47,7 +47,6 @@ class About(QDialog):
     """
     This class is used to display the 'About' dialog.
     """
-
     def __init__(self, parent=None):
         """
         Initialize the dialog.
