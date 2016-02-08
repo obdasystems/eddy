@@ -39,8 +39,7 @@ import traceback
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QMessageBox
 
-from eddy import BUG_TRACKER
-from eddy import __appname__ as APPNAME
+from eddy import APPNAME, BUG_TRACKER
 from eddy.core.application import Eddy
 from eddy.core.functions import connect
 

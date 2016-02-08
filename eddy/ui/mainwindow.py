@@ -45,8 +45,7 @@ from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDialog
 from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup, QStyle, QGraphicsItem
 
-from eddy import __version__ as VERSION, __appname__ as APPNAME
-from eddy import BUG_TRACKER, GRAPHOL_HOME, DIAG_HOME
+from eddy import APPNAME, VERSION, BUG_TRACKER, GRAPHOL_HOME, DIAG_HOME
 
 from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom
 from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandRefactor
@@ -67,7 +66,7 @@ from eddy.core.items import RoleChainNode, IntersectionNode
 from eddy.core.loaders import GraphmlLoader, GrapholLoader
 from eddy.core.utils import Clipboard
 
-from eddy.ui.dialogs import About, OpenFile, SaveFile, License
+from eddy.ui.dialogs import About, OpenFile, SaveFile
 from eddy.ui.dialogs import BusyProgressDialog, PreferencesDialog
 from eddy.ui.docks import DockWidget, Overview, Palette
 from eddy.ui.forms import CardinalityRestrictionForm, ValueRestrictionForm
@@ -332,11 +331,6 @@ class MainWindow(QMainWindow):
 
         if platform is not Platform.Darwin:
             self.actionAbout.setIcon(self.iconHelp)
-
-        self.actionLicense = QAction('License', self)
-        self.actionLicense.setIcon(self.iconLicense)
-        self.actionLicense.setData(License)
-        connect(self.actionLicense.triggered, self.openDialog)
 
         self.actionSapienzaWeb = QAction('DIAG - Sapienza university', self)
         self.actionSapienzaWeb.setIcon(self.iconLink)
@@ -611,7 +605,6 @@ class MainWindow(QMainWindow):
         self.menuView.addAction(self.dockPalette.toggleViewAction())
 
         self.menuHelp.addAction(self.actionAbout)
-        self.menuHelp.addAction(self.actionLicense)
         self.menuHelp.addSeparator()
         self.menuHelp.addAction(self.actionSapienzaWeb)
         self.menuHelp.addAction(self.actionGrapholWeb)

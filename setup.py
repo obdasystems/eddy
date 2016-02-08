@@ -47,12 +47,8 @@ from cx_Freeze import setup
 from cx_Freeze import Executable
 from cx_Freeze import build_exe
 
-from eddy import __appname__ as APPNAME
-from eddy import __license__ as LICENSE
-from eddy import __version__ as VERSION
-from eddy import __copyright__ as COPYRIGHT
-from eddy import __organization__ as ORGANIZATION
-from eddy import APP_ID, BUG_TRACKER, DIAG_HOME, GRAPHOL_HOME, PROJECT_HOME
+from eddy import APPNAME, LICENSE, VERSION, COPYRIGHT, ORGANIZATION
+from eddy import APPID, BUG_TRACKER, DIAG_HOME, GRAPHOL_HOME, PROJECT_HOME
 
 from PyQt5 import QtCore
 
@@ -271,7 +267,7 @@ echo "... bye!"
                         script_file,
                         '/Q',
                         '/O{}'.format(OPTS['DIST_DIR']),
-                        '/dEDDY_APPID={}'.format(APP_ID),
+                        '/dEDDY_APPID={}'.format(APPID),
                         '/dEDDY_APPNAME={}'.format(APPNAME),
                         '/dEDDY_ARCHITECTURE={}'.format(platform.architecture()[0][:-3]),
                         '/dEDDY_BUGTRACKER={}'.format(BUG_TRACKER),

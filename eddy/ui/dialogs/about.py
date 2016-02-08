@@ -36,11 +36,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout, QHBoxLayout
 
-from eddy import __version__ as VERSION
-from eddy import __appname__ as APPNAME
-from eddy import __author__ as AUTHOR
-from eddy import __license__ as LICENSE
-from eddy import GRAPHOL_HOME, DIAG_HOME, SAPIENZA_HOME
+from eddy import APPNAME, AUTHOR, VERSION, LICENSE, GRAPHOL_HOME, DIAG_HOME, SAPIENZA_HOME
 
 
 class About(QDialog):

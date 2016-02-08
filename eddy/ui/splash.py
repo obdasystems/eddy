@@ -38,9 +38,7 @@ from PyQt5.QtCore import Qt, QRect
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QPen
 from PyQt5.QtWidgets import QSplashScreen, QApplication
 
-from eddy import __appname__ as APPNAME
-from eddy import __copyright__ as COPYRIGHT
-from eddy import __version__ as VERSION
+from eddy import APPNAME, COPYRIGHT, VERSION
 
 from eddy.core.datatypes import Font
 from eddy.core.functions import rangeF

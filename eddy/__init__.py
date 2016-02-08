@@ -42,9 +42,17 @@ __status__ = 'Development'
 __version__ = '0.7'
 
 
-APP_ID = "60119D28-5488-4663-879E-34FCD9C5C38C"
+APPID = "60119D28-5488-4663-879E-34FCD9C5C38C"
+APPNAME = __appname__
+AUTHOR = __author__
 BUG_TRACKER = 'https://github.com/danielepantaleone/eddy/issues'
+COPYRIGHT = __copyright__
 DIAG_HOME = 'http://www.diag.uniroma1.it/en'
+EMAIL = __email__
 GRAPHOL_HOME = 'http://www.diag.uniroma1.it/~graphol/'
+LICENSE = __license__
+ORGANIZATION = __organization__
 PROJECT_HOME = 'https://github.com/danielepantaleone/eddy'
 SAPIENZA_HOME = 'http://en.uniroma1.it/'
+STATUS = __status__
+VERSION = __version__
