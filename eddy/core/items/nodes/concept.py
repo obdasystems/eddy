@@ -160,15 +160,16 @@ class ConceptNode(AbstractResizableNode):
         :type mousePos: QPointF
         """
         scene = self.scene()
-        snap = scene.settings.value('diagram/grid', False, bool)
+        snap = scene.mainwindow.snapToGrid
+        size = scene.GridSize
+        offset = self.handleSize + self.handleMove
+        moved = self.label.moved
 
-        O = self.handleSize + self.handleMove
-        M = self.label.moved
         R = QRectF(self.boundingRect())
         D = QPointF(0, 0)
 
-        minBoundW = self.minwidth + O * 2
-        minBoundH = self.minheight + O * 2
+        minBoundW = self.minwidth + offset * 2
+        minBoundH = self.minheight + offset * 2
 
         self.prepareGeometryChange()
 
@@ -178,8 +179,8 @@ class ConceptNode(AbstractResizableNode):
             fromY = self.mousePressBound.top()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, -O, snap)
-            toY = snapF(toY, scene.GridSize, -O, snap)
+            toX = snapF(toX, size, -offset, snap)
+            toY = snapF(toY, size, -offset, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setLeft(toX)
@@ -197,14 +198,14 @@ class ConceptNode(AbstractResizableNode):
             self.background.setTop(R.top())
             self.selection.setLeft(R.left())
             self.selection.setTop(R.top())
-            self.polygon.setLeft(R.left() + O)
-            self.polygon.setTop(R.top() + O)
+            self.polygon.setLeft(R.left() + offset)
+            self.polygon.setTop(R.top() + offset)
 
         elif self.mousePressHandle == self.handleTM:
 
             fromY = self.mousePressBound.top()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapF(toY, scene.GridSize, -O, snap)
+            toY = snapF(toY, size, -offset, snap)
             D.setY(toY - fromY)
             R.setTop(toY)
 
@@ -215,7 +216,7 @@ class ConceptNode(AbstractResizableNode):
 
             self.background.setTop(R.top())
             self.selection.setTop(R.top())
-            self.polygon.setTop(R.top() + O)
+            self.polygon.setTop(R.top() + offset)
 
         elif self.mousePressHandle == self.handleTR:
 
@@ -223,8 +224,8 @@ class ConceptNode(AbstractResizableNode):
             fromY = self.mousePressBound.top()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, +O, snap)
-            toY = snapF(toY, scene.GridSize, -O, snap)
+            toX = snapF(toX, size, +offset, snap)
+            toY = snapF(toY, size, -offset, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setRight(toX)
@@ -242,14 +243,14 @@ class ConceptNode(AbstractResizableNode):
             self.background.setTop(R.top())
             self.selection.setRight(R.right())
             self.selection.setTop(R.top())
-            self.polygon.setRight(R.right() - O)
-            self.polygon.setTop(R.top() + O)
+            self.polygon.setRight(R.right() - offset)
+            self.polygon.setTop(R.top() + offset)
 
         elif self.mousePressHandle == self.handleML:
 
             fromX = self.mousePressBound.left()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapF(toX, scene.GridSize, -O, snap)
+            toX = snapF(toX, size, -offset, snap)
             D.setX(toX - fromX)
             R.setLeft(toX)
 
@@ -260,13 +261,13 @@ class ConceptNode(AbstractResizableNode):
 
             self.background.setLeft(R.left())
             self.selection.setLeft(R.left())
-            self.polygon.setLeft(R.left() + O)
+            self.polygon.setLeft(R.left() + offset)
 
         elif self.mousePressHandle == self.handleMR:
 
             fromX = self.mousePressBound.right()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapF(toX, scene.GridSize, +O, snap)
+            toX = snapF(toX, size, +offset, snap)
             D.setX(toX - fromX)
             R.setRight(toX)
 
@@ -277,7 +278,7 @@ class ConceptNode(AbstractResizableNode):
 
             self.background.setRight(R.right())
             self.selection.setRight(R.right())
-            self.polygon.setRight(R.right() - O)
+            self.polygon.setRight(R.right() - offset)
 
         elif self.mousePressHandle == self.handleBL:
 
@@ -285,8 +286,8 @@ class ConceptNode(AbstractResizableNode):
             fromY = self.mousePressBound.bottom()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, -O, snap)
-            toY = snapF(toY, scene.GridSize, +O, snap)
+            toX = snapF(toX, size, -offset, snap)
+            toY = snapF(toY, size, +offset, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setLeft(toX)
@@ -304,14 +305,14 @@ class ConceptNode(AbstractResizableNode):
             self.background.setBottom(R.bottom())
             self.selection.setLeft(R.left())
             self.selection.setBottom(R.bottom())
-            self.polygon.setLeft(R.left() + O)
-            self.polygon.setBottom(R.bottom() - O)
+            self.polygon.setLeft(R.left() + offset)
+            self.polygon.setBottom(R.bottom() - offset)
 
         elif self.mousePressHandle == self.handleBM:
 
             fromY = self.mousePressBound.bottom()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapF(toY, scene.GridSize, +O, snap)
+            toY = snapF(toY, size, +offset, snap)
             D.setY(toY - fromY)
             R.setBottom(toY)
 
@@ -322,7 +323,7 @@ class ConceptNode(AbstractResizableNode):
 
             self.background.setBottom(R.bottom())
             self.selection.setBottom(R.bottom())
-            self.polygon.setBottom(R.bottom() - O)
+            self.polygon.setBottom(R.bottom() - offset)
 
         elif self.mousePressHandle == self.handleBR:
 
@@ -330,8 +331,8 @@ class ConceptNode(AbstractResizableNode):
             fromY = self.mousePressBound.bottom()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, +O, snap)
-            toY = snapF(toY, scene.GridSize, +O, snap)
+            toX = snapF(toX, size, +offset, snap)
+            toY = snapF(toY, size, +offset, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setRight(toX)
@@ -349,11 +350,11 @@ class ConceptNode(AbstractResizableNode):
             self.background.setBottom(R.bottom())
             self.selection.setRight(R.right())
             self.selection.setBottom(R.bottom())
-            self.polygon.setRight(R.right() - O)
-            self.polygon.setBottom(R.bottom() - O)
+            self.polygon.setRight(R.right() - offset)
+            self.polygon.setBottom(R.bottom() - offset)
 
         self.updateHandles()
-        self.updateTextPos(moved=M)
+        self.updateTextPos(moved=moved)
         self.updateAnchors(self.mousePressData, D)
 
     def width(self):

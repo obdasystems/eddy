@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QFile, QIODevice, QPointF, QSettings
+from PyQt5.QtCore import QFile, QIODevice, QPointF
 from PyQt5.QtGui import QBrush
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QApplication
@@ -40,7 +40,6 @@ from PyQt5.QtXml import QDomDocument
 
 from eddy.core.datatypes import Item, DistinctList
 from eddy.core.exceptions import ParseError
-from eddy.core.functions import expandPath
 from eddy.core.loaders.common import AbstractLoader
 
 
@@ -56,7 +55,6 @@ class GrapholLoader(AbstractLoader):
         :type parent: QObject
         """
         super().__init__(mainwindow, filepath, parent)
-        self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)
         self.itemFromXml = {
             'attribute': Item.AttributeNode,
             'complement': Item.ComplementNode,
@@ -406,8 +404,8 @@ class GrapholLoader(AbstractLoader):
 
             # 2) READ GRAPH INITIALIZATION DATA
             graph = root.firstChildElement('graph')
-            w = int(graph.attribute('width', self.settings.value('diagram/size', '5000', str)))
-            h = int(graph.attribute('height', self.settings.value('diagram/size', '5000', str)))
+            w = int(graph.attribute('width', str(self.mainwindow.diagramSize)))
+            h = int(graph.attribute('height', str(self.mainwindow.diagramSize)))
 
             # 3) GENERATE DIAGRAM SCENE
             self.scene = self.mainwindow.createScene(width=w, height=h)

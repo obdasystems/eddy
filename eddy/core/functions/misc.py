@@ -36,7 +36,7 @@ import itertools
 import os
 import re
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
 
 from eddy.core.regex import RE_QUOTED, RE_OWL_INVALID_CHAR
@@ -190,18 +190,33 @@ def shadedIcon(path, opacity=0.25):
     return icon
 
 
-def snapF(value, gridsize, offset=0, snap=True):
+def snapF(value, size, offset=0, snap=True):
     """
     Snap the given value according to the given grid size.
     :type value: float
-    :type gridsize: float
+    :type size: float
     :type offset: float
     :type snap: bool
     :rtype: float
     """
     if snap:
-        return float(round(value / gridsize) * gridsize) + offset
+        return float(round(value / size) * size) + offset
     return value
+
+
+def snapPT(point, size, snap=True):
+    """
+    Snap the given point according to the given grid size.
+    :type point: QPointF
+    :type size: float
+    :type snap: bool
+    :rtype: QPointF
+    """
+    if snap:
+        x = snapF(point.x(), size, 0, snap)
+        y = snapF(point.y(), size, 0, snap)
+        return QPointF(x, y)
+    return point
 
 
 def QSS(path):

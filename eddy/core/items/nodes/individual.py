@@ -201,15 +201,16 @@ class IndividualNode(AbstractResizableNode):
         :type mousePos: QPointF
         """
         scene = self.scene()
-        snap = scene.settings.value('diagram/grid', False, bool)
-
-        O = self.handleSize + self.handleMove
-        M = self.label.moved
+        snap = scene.mainwindow.snapToGrid
+        size = scene.GridSize
+        offset = self.handleSize + self.handleMove
+        moved = self.label.moved
+        
         R = QRectF(self.boundingRect())
         D = QPointF(0, 0)
 
-        minBoundW = self.minwidth + O * 2
-        minBoundH = self.minheight + O * 2
+        minBoundW = self.minwidth + offset * 2
+        minBoundH = self.minheight + offset * 2
 
         self.prepareGeometryChange()
 
@@ -219,8 +220,8 @@ class IndividualNode(AbstractResizableNode):
             fromY = self.mousePressBound.top()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, -O, snap)
-            toY = snapF(toY, scene.GridSize, -O, snap)
+            toX = snapF(toX, size, -offset, snap)
+            toY = snapF(toY, size, -offset, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setLeft(toX)
@@ -234,8 +235,8 @@ class IndividualNode(AbstractResizableNode):
                 D.setY(D.y() - minBoundH + R.height())
                 R.setTop(R.top() - minBoundH + R.height())
 
-            newSideY = (R.height() - O * 2) / (1 + math.sqrt(2))
-            newSideX = (R.width() - O * 2) / (1 + math.sqrt(2))
+            newSideY = (R.height() - offset * 2) / (1 + math.sqrt(2))
+            newSideX = (R.width() - offset * 2) / (1 + math.sqrt(2))
             newLeftRightBottomY = (R.y() + R.height() / 2) + newSideY / 2
             newLeftRightTopY = (R.y() + R.height() / 2) - newSideY / 2
             newTopBottomLeftX = (R.x() + R.width() / 2) - newSideX / 2
@@ -254,21 +255,21 @@ class IndividualNode(AbstractResizableNode):
             self.background[self.indexBR] = QPointF(newTopBottomRightX, R.bottom())
             self.background[self.indexEE] = QPointF(R.left(), newLeftRightTopY)
 
-            self.polygon[self.indexLT] = QPointF(R.left() + O, newLeftRightTopY)
-            self.polygon[self.indexLB] = QPointF(R.left() + O, newLeftRightBottomY)
-            self.polygon[self.indexRT] = QPointF(R.right() - O, newLeftRightTopY)
-            self.polygon[self.indexRB] = QPointF(R.right() - O, newLeftRightBottomY)
-            self.polygon[self.indexTL] = QPointF(newTopBottomLeftX, R.top() + O)
-            self.polygon[self.indexTR] = QPointF(newTopBottomRightX, R.top() + O)
-            self.polygon[self.indexBL] = QPointF(newTopBottomLeftX, R.bottom() - O)
-            self.polygon[self.indexBR] = QPointF(newTopBottomRightX, R.bottom() - O)
-            self.polygon[self.indexEE] = QPointF(R.left() + O, newLeftRightTopY)
+            self.polygon[self.indexLT] = QPointF(R.left() + offset, newLeftRightTopY)
+            self.polygon[self.indexLB] = QPointF(R.left() + offset, newLeftRightBottomY)
+            self.polygon[self.indexRT] = QPointF(R.right() - offset, newLeftRightTopY)
+            self.polygon[self.indexRB] = QPointF(R.right() - offset, newLeftRightBottomY)
+            self.polygon[self.indexTL] = QPointF(newTopBottomLeftX, R.top() + offset)
+            self.polygon[self.indexTR] = QPointF(newTopBottomRightX, R.top() + offset)
+            self.polygon[self.indexBL] = QPointF(newTopBottomLeftX, R.bottom() - offset)
+            self.polygon[self.indexBR] = QPointF(newTopBottomRightX, R.bottom() - offset)
+            self.polygon[self.indexEE] = QPointF(R.left() + offset, newLeftRightTopY)
 
         elif self.mousePressHandle == self.handleTM:
 
             fromY = self.mousePressBound.top()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapF(toY, scene.GridSize, -O, snap)
+            toY = snapF(toY, size, -offset, snap)
             D.setY(toY - fromY)
             R.setTop(toY)
 
@@ -277,7 +278,7 @@ class IndividualNode(AbstractResizableNode):
                 D.setY(D.y() - minBoundH + R.height())
                 R.setTop(R.top() - minBoundH + R.height())
 
-            newSide = (R.height() - O * 2) / (1 + math.sqrt(2))
+            newSide = (R.height() - offset * 2) / (1 + math.sqrt(2))
             newLeftRightBottomY = (R.y() + R.height() / 2) + newSide / 2
             newLeftRightTopY = (R.y() + R.height() / 2) - newSide / 2
             
@@ -291,8 +292,8 @@ class IndividualNode(AbstractResizableNode):
             self.background[self.indexRT] = QPointF(self.background[self.indexRT].x(), newLeftRightTopY)
             self.background[self.indexEE] = QPointF(self.background[self.indexEE].x(), newLeftRightTopY)
             
-            self.polygon[self.indexTL] = QPointF(self.polygon[self.indexTL].x(), R.top() + O)
-            self.polygon[self.indexTR] = QPointF(self.polygon[self.indexTR].x(), R.top() + O)
+            self.polygon[self.indexTL] = QPointF(self.polygon[self.indexTL].x(), R.top() + offset)
+            self.polygon[self.indexTR] = QPointF(self.polygon[self.indexTR].x(), R.top() + offset)
             self.polygon[self.indexLB] = QPointF(self.polygon[self.indexLB].x(), newLeftRightBottomY)
             self.polygon[self.indexRB] = QPointF(self.polygon[self.indexRB].x(), newLeftRightBottomY)
             self.polygon[self.indexLT] = QPointF(self.polygon[self.indexLT].x(), newLeftRightTopY)
@@ -305,8 +306,8 @@ class IndividualNode(AbstractResizableNode):
             fromY = self.mousePressBound.top()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, +O, snap)
-            toY = snapF(toY, scene.GridSize, -O, snap)
+            toX = snapF(toX, size, +offset, snap)
+            toY = snapF(toY, size, -offset, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setRight(toX)
@@ -320,8 +321,8 @@ class IndividualNode(AbstractResizableNode):
                 D.setY(D.y() - minBoundH + R.height())
                 R.setTop(R.top() - minBoundH + R.height())
 
-            newSideY = (R.height() - O * 2) / (1 + math.sqrt(2))
-            newSideX = (R.width() - O * 2) / (1 + math.sqrt(2))
+            newSideY = (R.height() - offset * 2) / (1 + math.sqrt(2))
+            newSideX = (R.width() - offset * 2) / (1 + math.sqrt(2))
             newLeftRightBottomY = (R.y() + R.height() / 2) + newSideY / 2
             newLeftRightTopY = (R.y() + R.height() / 2) - newSideY / 2
             newTopBottomLeftX = (R.x() + R.width() / 2) - newSideX / 2
@@ -340,21 +341,21 @@ class IndividualNode(AbstractResizableNode):
             self.background[self.indexBR] = QPointF(newTopBottomRightX, R.bottom())
             self.background[self.indexEE] = QPointF(R.left(), newLeftRightTopY)
             
-            self.polygon[self.indexLT] = QPointF(R.left() + O, newLeftRightTopY)
-            self.polygon[self.indexLB] = QPointF(R.left() + O, newLeftRightBottomY)
-            self.polygon[self.indexRT] = QPointF(R.right() - O, newLeftRightTopY)
-            self.polygon[self.indexRB] = QPointF(R.right() - O, newLeftRightBottomY)
-            self.polygon[self.indexTL] = QPointF(newTopBottomLeftX, R.top() + O)
-            self.polygon[self.indexTR] = QPointF(newTopBottomRightX, R.top() + O)
-            self.polygon[self.indexBL] = QPointF(newTopBottomLeftX, R.bottom() - O)
-            self.polygon[self.indexBR] = QPointF(newTopBottomRightX, R.bottom() - O)
-            self.polygon[self.indexEE] = QPointF(R.left() + O, newLeftRightTopY)
+            self.polygon[self.indexLT] = QPointF(R.left() + offset, newLeftRightTopY)
+            self.polygon[self.indexLB] = QPointF(R.left() + offset, newLeftRightBottomY)
+            self.polygon[self.indexRT] = QPointF(R.right() - offset, newLeftRightTopY)
+            self.polygon[self.indexRB] = QPointF(R.right() - offset, newLeftRightBottomY)
+            self.polygon[self.indexTL] = QPointF(newTopBottomLeftX, R.top() + offset)
+            self.polygon[self.indexTR] = QPointF(newTopBottomRightX, R.top() + offset)
+            self.polygon[self.indexBL] = QPointF(newTopBottomLeftX, R.bottom() - offset)
+            self.polygon[self.indexBR] = QPointF(newTopBottomRightX, R.bottom() - offset)
+            self.polygon[self.indexEE] = QPointF(R.left() + offset, newLeftRightTopY)
 
         elif self.mousePressHandle == self.handleML:
 
             fromX = self.mousePressBound.left()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapF(toX, scene.GridSize, -O, snap)
+            toX = snapF(toX, size, -offset, snap)
             D.setX(toX - fromX)
             R.setLeft(toX)
 
@@ -363,7 +364,7 @@ class IndividualNode(AbstractResizableNode):
                 D.setX(D.x() - minBoundW + R.width())
                 R.setLeft(R.left() - minBoundW + R.width())
 
-            newSide = (R.width() - O * 2) / (1 + math.sqrt(2))
+            newSide = (R.width() - offset * 2) / (1 + math.sqrt(2))
             newTopBottomLeftX = (R.x() + R.width() / 2) - newSide / 2
             newTopBottomRightX = (R.x() + R.width() / 2) + newSide / 2
 
@@ -377,9 +378,9 @@ class IndividualNode(AbstractResizableNode):
             self.background[self.indexBL] = QPointF(newTopBottomLeftX, self.background[self.indexBL].y())
             self.background[self.indexBR] = QPointF(newTopBottomRightX, self.background[self.indexBR].y())
             
-            self.polygon[self.indexLT] = QPointF(R.left() + O, self.polygon[self.indexLT].y())
-            self.polygon[self.indexLB] = QPointF(R.left() + O, self.polygon[self.indexLB].y())
-            self.polygon[self.indexEE] = QPointF(R.left() + O, self.polygon[self.indexEE].y())
+            self.polygon[self.indexLT] = QPointF(R.left() + offset, self.polygon[self.indexLT].y())
+            self.polygon[self.indexLB] = QPointF(R.left() + offset, self.polygon[self.indexLB].y())
+            self.polygon[self.indexEE] = QPointF(R.left() + offset, self.polygon[self.indexEE].y())
             self.polygon[self.indexTL] = QPointF(newTopBottomLeftX, self.polygon[self.indexTL].y())
             self.polygon[self.indexTR] = QPointF(newTopBottomRightX, self.polygon[self.indexTR].y())
             self.polygon[self.indexBL] = QPointF(newTopBottomLeftX, self.polygon[self.indexBL].y())
@@ -389,7 +390,7 @@ class IndividualNode(AbstractResizableNode):
 
             fromX = self.mousePressBound.right()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapF(toX, scene.GridSize, +O, snap)
+            toX = snapF(toX, size, +offset, snap)
             D.setX(toX - fromX)
             R.setRight(toX)
 
@@ -398,7 +399,7 @@ class IndividualNode(AbstractResizableNode):
                 D.setX(D.x() + minBoundW - R.width())
                 R.setRight(R.right() + minBoundW - R.width())
 
-            newSide = (R.width() - O * 2) / (1 + math.sqrt(2))
+            newSide = (R.width() - offset * 2) / (1 + math.sqrt(2))
             newTopBottomRightX = (R.x() + R.width() / 2) + newSide / 2
             newTopBottomLeftX = (R.x() + R.width() / 2) - newSide / 2
             
@@ -411,8 +412,8 @@ class IndividualNode(AbstractResizableNode):
             self.background[self.indexBL] = QPointF(newTopBottomLeftX, self.background[self.indexBL].y())
             self.background[self.indexBR] = QPointF(newTopBottomRightX, self.background[self.indexBR].y())
             
-            self.polygon[self.indexRT] = QPointF(R.right() - O, self.polygon[self.indexRT].y())
-            self.polygon[self.indexRB] = QPointF(R.right() - O, self.polygon[self.indexRB].y())
+            self.polygon[self.indexRT] = QPointF(R.right() - offset, self.polygon[self.indexRT].y())
+            self.polygon[self.indexRB] = QPointF(R.right() - offset, self.polygon[self.indexRB].y())
             self.polygon[self.indexTL] = QPointF(newTopBottomLeftX, self.polygon[self.indexTL].y())
             self.polygon[self.indexTR] = QPointF(newTopBottomRightX, self.polygon[self.indexTR].y())
             self.polygon[self.indexBL] = QPointF(newTopBottomLeftX, self.polygon[self.indexBL].y())
@@ -424,8 +425,8 @@ class IndividualNode(AbstractResizableNode):
             fromY = self.mousePressBound.bottom()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, -O, snap)
-            toY = snapF(toY, scene.GridSize, +O, snap)
+            toX = snapF(toX, size, -offset, snap)
+            toY = snapF(toY, size, +offset, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setLeft(toX)
@@ -439,8 +440,8 @@ class IndividualNode(AbstractResizableNode):
                 D.setY(D.y() + minBoundH - R.height())
                 R.setBottom(R.bottom() + minBoundH - R.height())
 
-            newSideY = (R.height() - O * 2) / (1 + math.sqrt(2))
-            newSideX = (R.width() - O * 2) / (1 + math.sqrt(2))
+            newSideY = (R.height() - offset * 2) / (1 + math.sqrt(2))
+            newSideX = (R.width() - offset * 2) / (1 + math.sqrt(2))
             newLeftRightBottomY = (R.y() + R.height() / 2) + newSideY / 2
             newLeftRightTopY = (R.y() + R.height() / 2) - newSideY / 2
             newTopBottomLeftX = (R.x() + R.width() / 2) - newSideX / 2
@@ -459,21 +460,21 @@ class IndividualNode(AbstractResizableNode):
             self.background[self.indexBR] = QPointF(newTopBottomRightX, R.bottom())
             self.background[self.indexEE] = QPointF(R.left(), newLeftRightTopY)
             
-            self.polygon[self.indexLT] = QPointF(R.left() + O, newLeftRightTopY)
-            self.polygon[self.indexLB] = QPointF(R.left() + O, newLeftRightBottomY)
-            self.polygon[self.indexRT] = QPointF(R.right() - O, newLeftRightTopY)
-            self.polygon[self.indexRB] = QPointF(R.right() - O, newLeftRightBottomY)
-            self.polygon[self.indexTL] = QPointF(newTopBottomLeftX, R.top() + O)
-            self.polygon[self.indexTR] = QPointF(newTopBottomRightX, R.top() + O)
-            self.polygon[self.indexBL] = QPointF(newTopBottomLeftX, R.bottom() - O)
-            self.polygon[self.indexBR] = QPointF(newTopBottomRightX, R.bottom() - O)
-            self.polygon[self.indexEE] = QPointF(R.left() + O, newLeftRightTopY)
+            self.polygon[self.indexLT] = QPointF(R.left() + offset, newLeftRightTopY)
+            self.polygon[self.indexLB] = QPointF(R.left() + offset, newLeftRightBottomY)
+            self.polygon[self.indexRT] = QPointF(R.right() - offset, newLeftRightTopY)
+            self.polygon[self.indexRB] = QPointF(R.right() - offset, newLeftRightBottomY)
+            self.polygon[self.indexTL] = QPointF(newTopBottomLeftX, R.top() + offset)
+            self.polygon[self.indexTR] = QPointF(newTopBottomRightX, R.top() + offset)
+            self.polygon[self.indexBL] = QPointF(newTopBottomLeftX, R.bottom() - offset)
+            self.polygon[self.indexBR] = QPointF(newTopBottomRightX, R.bottom() - offset)
+            self.polygon[self.indexEE] = QPointF(R.left() + offset, newLeftRightTopY)
 
         elif self.mousePressHandle == self.handleBM:
 
             fromY = self.mousePressBound.bottom()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapF(toY, scene.GridSize, +O, snap)
+            toY = snapF(toY, size, +offset, snap)
             D.setY(toY - fromY)
             R.setBottom(toY)
 
@@ -482,7 +483,7 @@ class IndividualNode(AbstractResizableNode):
                 D.setY(D.y() + minBoundH - R.height())
                 R.setBottom(R.bottom() + minBoundH - R.height())
 
-            newSide = (R.height() - O * 2) / (1 + math.sqrt(2))
+            newSide = (R.height() - offset * 2) / (1 + math.sqrt(2))
             newLeftRightTopY = (R.y() + R.height() / 2) - newSide / 2
             newLeftRightBottomY = (R.y() + R.height() / 2) + newSide / 2
             
@@ -496,8 +497,8 @@ class IndividualNode(AbstractResizableNode):
             self.background[self.indexRT] = QPointF(self.background[self.indexRT].x(), newLeftRightTopY)
             self.background[self.indexEE] = QPointF(self.background[self.indexEE].x(), newLeftRightTopY)
             
-            self.polygon[self.indexBL] = QPointF(self.polygon[self.indexBL].x(), R.bottom() - O)
-            self.polygon[self.indexBR] = QPointF(self.polygon[self.indexBR].x(), R.bottom() - O)
+            self.polygon[self.indexBL] = QPointF(self.polygon[self.indexBL].x(), R.bottom() - offset)
+            self.polygon[self.indexBR] = QPointF(self.polygon[self.indexBR].x(), R.bottom() - offset)
             self.polygon[self.indexLB] = QPointF(self.polygon[self.indexLB].x(), newLeftRightBottomY)
             self.polygon[self.indexRB] = QPointF(self.polygon[self.indexRB].x(), newLeftRightBottomY)
             self.polygon[self.indexLT] = QPointF(self.polygon[self.indexLT].x(), newLeftRightTopY)
@@ -510,8 +511,8 @@ class IndividualNode(AbstractResizableNode):
             fromY = self.mousePressBound.bottom()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, +O, snap)
-            toY = snapF(toY, scene.GridSize, +O, snap)
+            toX = snapF(toX, size, +offset, snap)
+            toY = snapF(toY, size, +offset, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setRight(toX)
@@ -525,8 +526,8 @@ class IndividualNode(AbstractResizableNode):
                 D.setY(D.y() + minBoundH - R.height())
                 R.setBottom(R.bottom() + minBoundH - R.height())
 
-            newSideY = (R.height() - O * 2) / (1 + math.sqrt(2))
-            newSideX = (R.width() - O * 2) / (1 + math.sqrt(2))
+            newSideY = (R.height() - offset * 2) / (1 + math.sqrt(2))
+            newSideX = (R.width() - offset * 2) / (1 + math.sqrt(2))
             newLeftRightBottomY = (R.y() + R.height() / 2) + newSideY / 2
             newLeftRightTopY = (R.y() + R.height() / 2) - newSideY / 2
             newTopBottomLeftX = (R.x() + R.width() / 2) - newSideX / 2
@@ -545,18 +546,18 @@ class IndividualNode(AbstractResizableNode):
             self.background[self.indexBR] = QPointF(newTopBottomRightX, R.bottom())
             self.background[self.indexEE] = QPointF(R.left(), newLeftRightTopY)
             
-            self.polygon[self.indexLT] = QPointF(R.left() + O, newLeftRightTopY)
-            self.polygon[self.indexLB] = QPointF(R.left() + O, newLeftRightBottomY)
-            self.polygon[self.indexRT] = QPointF(R.right() - O, newLeftRightTopY)
-            self.polygon[self.indexRB] = QPointF(R.right() - O, newLeftRightBottomY)
-            self.polygon[self.indexTL] = QPointF(newTopBottomLeftX, R.top() + O)
-            self.polygon[self.indexTR] = QPointF(newTopBottomRightX, R.top() + O)
-            self.polygon[self.indexBL] = QPointF(newTopBottomLeftX, R.bottom() - O)
-            self.polygon[self.indexBR] = QPointF(newTopBottomRightX, R.bottom() - O)
-            self.polygon[self.indexEE] = QPointF(R.left() + O, newLeftRightTopY)
+            self.polygon[self.indexLT] = QPointF(R.left() + offset, newLeftRightTopY)
+            self.polygon[self.indexLB] = QPointF(R.left() + offset, newLeftRightBottomY)
+            self.polygon[self.indexRT] = QPointF(R.right() - offset, newLeftRightTopY)
+            self.polygon[self.indexRB] = QPointF(R.right() - offset, newLeftRightBottomY)
+            self.polygon[self.indexTL] = QPointF(newTopBottomLeftX, R.top() + offset)
+            self.polygon[self.indexTR] = QPointF(newTopBottomRightX, R.top() + offset)
+            self.polygon[self.indexBL] = QPointF(newTopBottomLeftX, R.bottom() - offset)
+            self.polygon[self.indexBR] = QPointF(newTopBottomRightX, R.bottom() - offset)
+            self.polygon[self.indexEE] = QPointF(R.left() + offset, newLeftRightTopY)
 
         self.updateHandles()
-        self.updateTextPos(moved=M)
+        self.updateTextPos(moved=moved)
         self.updateAnchors(self.mousePressData, D)
 
     def width(self):

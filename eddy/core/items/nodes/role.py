@@ -406,15 +406,16 @@ class RoleNode(AbstractResizableNode):
         :type mousePos: QPointF
         """
         scene = self.scene()
-        snap = scene.settings.value('diagram/grid', False, bool)
-
-        O = self.handleSize + self.handleMove
-        M = self.label.moved
+        snap = scene.mainwindow.snapToGrid
+        size = scene.GridSize
+        offset = self.handleSize + self.handleMove
+        moved = self.label.moved
+        
         R = QRectF(self.boundingRect())
         D = QPointF(0, 0)
 
-        minBoundW = self.minwidth + O * 2
-        minBoundH = self.minheight + O * 2
+        minBoundW = self.minwidth + offset * 2
+        minBoundH = self.minheight + offset * 2
 
         self.prepareGeometryChange()
 
@@ -424,8 +425,8 @@ class RoleNode(AbstractResizableNode):
             fromY = self.mousePressBound.top()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, -O, snap)
-            toY = snapF(toY, scene.GridSize, -O, snap)
+            toX = snapF(toX, size, -offset, snap)
+            toY = snapF(toY, size, -offset, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setLeft(toX)
@@ -448,17 +449,17 @@ class RoleNode(AbstractResizableNode):
             self.background[self.indexE] = QPointF(R.left(), R.top() + R.height() / 2)
             self.background[self.indexR] = QPointF(self.background[self.indexR].x(), R.top() + R.height() / 2)
             
-            self.polygon[self.indexT] = QPointF(R.left() + R.width() / 2, R.top() + O)
+            self.polygon[self.indexT] = QPointF(R.left() + R.width() / 2, R.top() + offset)
             self.polygon[self.indexB] = QPointF(R.left() + R.width() / 2, self.polygon[self.indexB].y())
-            self.polygon[self.indexL] = QPointF(R.left() + O, R.top() + R.height() / 2)
-            self.polygon[self.indexE] = QPointF(R.left() + O, R.top() + R.height() / 2)
+            self.polygon[self.indexL] = QPointF(R.left() + offset, R.top() + R.height() / 2)
+            self.polygon[self.indexE] = QPointF(R.left() + offset, R.top() + R.height() / 2)
             self.polygon[self.indexR] = QPointF(self.polygon[self.indexR].x(), R.top() + R.height() / 2)
 
         elif self.mousePressHandle == self.handleTM:
 
             fromY = self.mousePressBound.top()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapF(toY, scene.GridSize, -O, snap)
+            toY = snapF(toY, size, -offset, snap)
             D.setY(toY - fromY)
             R.setTop(toY)
 
@@ -474,7 +475,7 @@ class RoleNode(AbstractResizableNode):
             self.background[self.indexE] = QPointF(self.background[self.indexE].x(), R.top() + R.height() / 2)
             self.background[self.indexR] = QPointF(self.background[self.indexR].x(), R.top() + R.height() / 2)
             
-            self.polygon[self.indexT] = QPointF(self.polygon[self.indexT].x(), R.top() + O)
+            self.polygon[self.indexT] = QPointF(self.polygon[self.indexT].x(), R.top() + offset)
             self.polygon[self.indexL] = QPointF(self.polygon[self.indexL].x(), R.top() + R.height() / 2)
             self.polygon[self.indexE] = QPointF(self.polygon[self.indexE].x(), R.top() + R.height() / 2)
             self.polygon[self.indexR] = QPointF(self.polygon[self.indexR].x(), R.top() + R.height() / 2)
@@ -485,8 +486,8 @@ class RoleNode(AbstractResizableNode):
             fromY = self.mousePressBound.top()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, +O, snap)
-            toY = snapF(toY, scene.GridSize, -O, snap)
+            toX = snapF(toX, size, +offset, snap)
+            toY = snapF(toY, size, -offset, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setRight(toX)
@@ -509,17 +510,17 @@ class RoleNode(AbstractResizableNode):
             self.background[self.indexE] = QPointF(self.background[self.indexE].x(), R.top() + R.height() / 2)
             self.background[self.indexR] = QPointF(R.right(), R.top() + R.height() / 2)
             
-            self.polygon[self.indexT] = QPointF(R.right() - R.width() / 2, R.top() + O)
+            self.polygon[self.indexT] = QPointF(R.right() - R.width() / 2, R.top() + offset)
             self.polygon[self.indexB] = QPointF(R.right() - R.width() / 2, self.polygon[self.indexB].y())
             self.polygon[self.indexL] = QPointF(self.polygon[self.indexL].x(), R.top() + R.height() / 2)
             self.polygon[self.indexE] = QPointF(self.polygon[self.indexE].x(), R.top() + R.height() / 2)
-            self.polygon[self.indexR] = QPointF(R.right() - O, R.top() + R.height() / 2)
+            self.polygon[self.indexR] = QPointF(R.right() - offset, R.top() + R.height() / 2)
 
         elif self.mousePressHandle == self.handleML:
 
             fromX = self.mousePressBound.left()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapF(toX, scene.GridSize, -O, snap)
+            toX = snapF(toX, size, -offset, snap)
             D.setX(toX - fromX)
             R.setLeft(toX)
 
@@ -535,8 +536,8 @@ class RoleNode(AbstractResizableNode):
             self.background[self.indexT] = QPointF(R.left() + R.width() / 2, self.background[self.indexT].y())
             self.background[self.indexB] = QPointF(R.left() + R.width() / 2, self.background[self.indexB].y())
             
-            self.polygon[self.indexL] = QPointF(R.left() + O, self.mousePressBound.top() + self.mousePressBound.height() / 2)
-            self.polygon[self.indexE] = QPointF(R.left() + O, self.mousePressBound.top() + self.mousePressBound.height() / 2)
+            self.polygon[self.indexL] = QPointF(R.left() + offset, self.mousePressBound.top() + self.mousePressBound.height() / 2)
+            self.polygon[self.indexE] = QPointF(R.left() + offset, self.mousePressBound.top() + self.mousePressBound.height() / 2)
             self.polygon[self.indexT] = QPointF(R.left() + R.width() / 2, self.polygon[self.indexT].y())
             self.polygon[self.indexB] = QPointF(R.left() + R.width() / 2, self.polygon[self.indexB].y())
 
@@ -544,7 +545,7 @@ class RoleNode(AbstractResizableNode):
 
             fromX = self.mousePressBound.right()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapF(toX, scene.GridSize, +O, snap)
+            toX = snapF(toX, size, +offset, snap)
             D.setX(toX - fromX)
             R.setRight(toX)
 
@@ -559,7 +560,7 @@ class RoleNode(AbstractResizableNode):
             self.background[self.indexT] = QPointF(R.right() - R.width() / 2, self.background[self.indexT].y())
             self.background[self.indexB] = QPointF(R.right() - R.width() / 2, self.background[self.indexB].y())
             
-            self.polygon[self.indexR] = QPointF(R.right() - O, self.mousePressBound.top() + self.mousePressBound.height() / 2)
+            self.polygon[self.indexR] = QPointF(R.right() - offset, self.mousePressBound.top() + self.mousePressBound.height() / 2)
             self.polygon[self.indexT] = QPointF(R.right() - R.width() / 2, self.polygon[self.indexT].y())
             self.polygon[self.indexB] = QPointF(R.right() - R.width() / 2, self.polygon[self.indexB].y())
 
@@ -569,8 +570,8 @@ class RoleNode(AbstractResizableNode):
             fromY = self.mousePressBound.bottom()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, -O, snap)
-            toY = snapF(toY, scene.GridSize, +O, snap)
+            toX = snapF(toX, size, -offset, snap)
+            toY = snapF(toY, size, +offset, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setLeft(toX)
@@ -594,16 +595,16 @@ class RoleNode(AbstractResizableNode):
             self.background[self.indexR] = QPointF(self.background[self.indexR].x(), R.bottom() - R.height() / 2)
             
             self.polygon[self.indexT] = QPointF(R.left() + R.width() / 2, self.polygon[self.indexT].y())
-            self.polygon[self.indexB] = QPointF(R.left() + R.width() / 2, R.bottom() - O)
-            self.polygon[self.indexL] = QPointF(R.left() + O, R.bottom() - R.height() / 2)
-            self.polygon[self.indexE] = QPointF(R.left() + O, R.bottom() - R.height() / 2)
+            self.polygon[self.indexB] = QPointF(R.left() + R.width() / 2, R.bottom() - offset)
+            self.polygon[self.indexL] = QPointF(R.left() + offset, R.bottom() - R.height() / 2)
+            self.polygon[self.indexE] = QPointF(R.left() + offset, R.bottom() - R.height() / 2)
             self.polygon[self.indexR] = QPointF(self.polygon[self.indexR].x(), R.bottom() - R.height() / 2)
 
         elif self.mousePressHandle == self.handleBM:
 
             fromY = self.mousePressBound.bottom()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapF(toY, scene.GridSize, +O, snap)
+            toY = snapF(toY, size, +offset, snap)
             D.setY(toY - fromY)
             R.setBottom(toY)
 
@@ -619,7 +620,7 @@ class RoleNode(AbstractResizableNode):
             self.background[self.indexE] = QPointF(self.background[self.indexE].x(), R.top() + R.height() / 2)
             self.background[self.indexR] = QPointF(self.background[self.indexR].x(), R.top() + R.height() / 2)
             
-            self.polygon[self.indexB] = QPointF(self.polygon[self.indexB].x(), R.bottom() - O)
+            self.polygon[self.indexB] = QPointF(self.polygon[self.indexB].x(), R.bottom() - offset)
             self.polygon[self.indexL] = QPointF(self.polygon[self.indexL].x(), R.top() + R.height() / 2)
             self.polygon[self.indexE] = QPointF(self.polygon[self.indexE].x(), R.top() + R.height() / 2)
             self.polygon[self.indexR] = QPointF(self.polygon[self.indexR].x(), R.top() + R.height() / 2)
@@ -630,8 +631,8 @@ class RoleNode(AbstractResizableNode):
             fromY = self.mousePressBound.bottom()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, scene.GridSize, +O, snap)
-            toY = snapF(toY, scene.GridSize, +O, snap)
+            toX = snapF(toX, size, +offset, snap)
+            toY = snapF(toY, size, +offset, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setRight(toX)
@@ -655,13 +656,13 @@ class RoleNode(AbstractResizableNode):
             self.background[self.indexR] = QPointF(R.right(), R.bottom() - R.height() / 2)
             
             self.polygon[self.indexT] = QPointF(R.right() - R.width() / 2, self.polygon[self.indexT].y())
-            self.polygon[self.indexB] = QPointF(R.right() - R.width() / 2, R.bottom() - O)
+            self.polygon[self.indexB] = QPointF(R.right() - R.width() / 2, R.bottom() - offset)
             self.polygon[self.indexL] = QPointF(self.polygon[self.indexL].x(), R.bottom() - R.height() / 2)
             self.polygon[self.indexE] = QPointF(self.polygon[self.indexE].x(), R.bottom() - R.height() / 2)
-            self.polygon[self.indexR] = QPointF(R.right() - O, R.bottom() - R.height() / 2)
+            self.polygon[self.indexR] = QPointF(R.right() - offset, R.bottom() - R.height() / 2)
 
         self.updateHandles()
-        self.updateTextPos(moved=M)
+        self.updateTextPos(moved=moved)
         self.updateAnchors(self.mousePressData, D)
 
     def width(self):

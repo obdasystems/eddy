@@ -34,13 +34,13 @@
 
 import sys
 
-from PyQt5.QtCore import Qt, QPointF, QSettings, QRectF, pyqtSignal
+from PyQt5.QtCore import Qt, QPointF, QRectF, pyqtSignal
 from PyQt5.QtGui import QColor, QPen
 from PyQt5.QtWidgets import QGraphicsScene, QUndoStack
 
 from eddy.core.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
 from eddy.core.datatypes import DiagramMode, DistinctList, File, Item
-from eddy.core.functions import expandPath, snapF
+from eddy.core.functions import snapF, snapPT
 from eddy.core.items.edges import InputEdge, InclusionEdge
 from eddy.core.items.nodes import ConceptNode, ComplementNode, RoleChainNode, RoleInverseNode
 from eddy.core.items.nodes import RangeRestrictionNode, DomainRestrictionNode
@@ -76,19 +76,18 @@ class DiagramScene(QGraphicsScene):
         :type parent: QWidget
         """
         super().__init__(parent)
-        self.mainwindow = mainwindow  ## main window reference
         self.clipboardPasteOffsetX = Clipboard.PasteOffsetX  ## X offset to be added to item position upon paste
         self.clipboardPasteOffsetY = Clipboard.PasteOffsetY  ## Y offset to be added to item position upon paste
         self.document = File()  ## file associated with the current scene
         self.edgesById = {}  ## used to index edges using their id
         self.nodesById = {}  ## used to index nodes using their id
         self.nodesByLabel = {}  ## used to index nodes using their label text
-        self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)  ## settings
         self.guid = GUID(self)  ## used to generate unique incremental ids
         self.itemFactory = ItemFactory(self)  ## used to produce graphol items
         self.undostack = QUndoStack(self)  ## used to push actions and keep history for undo/redo
         self.undostack.setUndoLimit(50)  ## TODO: make the stack configurable
         self.validator = OWL2RLValidator(self)  ## validator to be used to validate graphol triples
+        self.mainwindow = mainwindow  ## main window reference
         self.mode = DiagramMode.Idle  ## operation mode
         self.modeParam = None  ## extra parameter for the operation mode (see setMode()
         self.mouseOverNode = None  ## node below the mouse cursor during edge insertion
@@ -135,7 +134,7 @@ class DiagramScene(QGraphicsScene):
                 # create a new node and place it under the mouse position
                 # noinspection PyTypeChecker
                 node = self.itemFactory.create(item=self.modeParam, scene=self)
-                node.setPos(self.snapToGrid(mouseEvent.scenePos()))
+                node.setPos(snapPT(mouseEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
 
                 # no need to switch back the operation mode here: the signal handlers already does that and takes
                 # care of the keyboard modifiers being held (if CTRL is being held the operation mode doesn't change)
@@ -268,9 +267,8 @@ class DiagramScene(QGraphicsScene):
                     #                                                                                                  #
                     ####################################################################################################
 
-                    # Calculate the delta and adjust the value if the snap to grid feature is enabled: we'll use the
-                    # position of the node acting as mouse grabber to determine the new delta to and move other items.
-                    point = self.snapToGrid(self.mousePressNodePos + mouseEvent.scenePos() - self.mousePressPos)
+                    point = self.mousePressNodePos + mouseEvent.scenePos() - self.mousePressPos
+                    point = snapPT(point, DiagramScene.GridSize, self.mainwindow.snapToGrid)
                     delta = point - self.mousePressNodePos
                     edges = set()
 
@@ -798,19 +796,6 @@ class DiagramScene(QGraphicsScene):
             self.mode = mode
             self.modeParam = param
             self.modeChanged.emit(mode)
-
-    def snapToGrid(self, point):
-        """
-        Snap the shape position to the grid.
-        :type point: QPointF
-        :rtype: QPointF
-        """
-        if self.settings.value('diagram/grid', False, bool):
-            newX = snapF(point.x(), DiagramScene.GridSize)
-            newY = snapF(point.y(), DiagramScene.GridSize)
-            return QPointF(newX, newY)
-        else:
-            return point
 
     def visibleRect(self, margin=0):
         """

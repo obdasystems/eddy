@@ -54,9 +54,10 @@ class MainView(QGraphicsView):
 
     zoomChanged = pyqtSignal(float)
 
-    def __init__(self, scene):
+    def __init__(self, mainwindow, scene):
         """
         Initialize the main scene.
+        :type mainwindow: MainWindow
         :type scene: DiagramScene
         """
         super().__init__(scene)
@@ -65,8 +66,7 @@ class MainView(QGraphicsView):
         self.setOptimizationFlags(QGraphicsView.DontAdjustForAntialiasing)
         self.setOptimizationFlags(QGraphicsView.DontSavePainterState)
         self.setViewportUpdateMode(QGraphicsView.MinimalViewportUpdate)
-        self.settings = scene.settings
-        self.snapToGrid = scene.settings.value('diagram/grid', False, bool)
+        self.mainwindow = mainwindow
         self.mousePressCenterPos = None
         self.mousePressPos = None
         self.mousePressRubberBand = None
@@ -107,7 +107,7 @@ class MainView(QGraphicsView):
         :type painter: QPainter
         :type rect: QRectF
         """
-        if self.snapToGrid:
+        if self.mainwindow.snapToGrid:
             x = int(rect.left()) - (int(rect.left()) % DiagramScene.GridSize)
             y = int(rect.top()) - (int(rect.top()) % DiagramScene.GridSize)
             painter.setPen(DiagramScene.GridPen)

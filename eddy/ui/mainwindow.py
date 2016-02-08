@@ -42,32 +42,37 @@ from PyQt5.QtCore import Qt, QSettings, QSizeF, QRectF
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter, QPageSize, QCursor, QBrush, QColor
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
-from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDialog, QStyle, QGraphicsItem
-from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup
+from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDialog
+from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup, QStyle, QGraphicsItem
 
-from eddy import __version__ as VERSION, __appname__ as APPNAME, BUG_TRACKER, GRAPHOL_HOME, DIAG_HOME
-from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom, CommandItemsMultiRemove
-from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandEdgeInputToggleFunctional
-from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap, CommandRefactor
-from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelEdit, CommandEdgeBreakpointDel
-from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeSetZValue, CommandNodeSetBrush
+from eddy import __version__ as VERSION, __appname__ as APPNAME
+from eddy import BUG_TRACKER, GRAPHOL_HOME, DIAG_HOME
+
+from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom
+from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandRefactor
+from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap
+from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelEdit
+from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeSetZValue
+from eddy.core.commands import CommandNodeSetBrush, CommandEdgeBreakpointDel
+from eddy.core.commands import CommandItemsMultiRemove, CommandEdgeInputToggleFunctional
 from eddy.core.datatypes import Color, File, DiagramMode, Filetype, Platform
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
 from eddy.core.exporters import GrapholExporter
 from eddy.core.functions import connect, disconnect
 from eddy.core.functions import expandPath, coloredIcon, shadedIcon, snapF, rCut, lCut
-from eddy.core.items import Item
-from eddy.core.items import RoleInverseNode, DisjointUnionNode, DatatypeRestrictionNode
-from eddy.core.items import UnionNode, EnumerationNode, ComplementNode, RoleChainNode, IntersectionNode
+from eddy.core.items import Item, DatatypeRestrictionNode
+from eddy.core.items import RoleInverseNode, DisjointUnionNode
+from eddy.core.items import UnionNode, EnumerationNode, ComplementNode
+from eddy.core.items import RoleChainNode, IntersectionNode
 from eddy.core.loaders import GraphmlLoader, GrapholLoader
 from eddy.core.utils import Clipboard
-from eddy.ui.dialogs import About, OpenFile, SaveFile, BusyProgressDialog, License
+from eddy.ui.dialogs import About, OpenFile, SaveFile, License
+from eddy.ui.dialogs import BusyProgressDialog, PreferencesDialog
 from eddy.ui.docks import DockWidget, Overview, Palette
 from eddy.ui.forms import CardinalityRestrictionForm, ValueRestrictionForm
 from eddy.ui.forms import OWLTranslationForm, LiteralForm, RenameForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
 from eddy.ui.menus import MenuFactory
-from eddy.ui.preferences import PreferencesDialog
 from eddy.ui.properties import PropertyFactory
 from eddy.ui.scene import DiagramScene
 from eddy.ui.toolbar import ZoomControl
@@ -93,12 +98,15 @@ class MainWindow(QMainWindow):
 
         platform = Platform.identify()
 
-        self.abortQuit = False
         self.clipboard = Clipboard(self)
         self.menuFactory = MenuFactory(self)
         self.propertyFactory = PropertyFactory(self)
         self.undogroup = QUndoGroup(self)
-        self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)
+
+        self.abortQuit = False
+        self.diagramSize = 5000
+        self.recentDocument = []
+        self.snapToGrid = False
 
         ################################################################################################################
         #                                                                                                              #
@@ -132,15 +140,62 @@ class MainWindow(QMainWindow):
 
         self.dockOverview = DockWidget('Overview', self)
         self.dockOverview.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        self.dockOverview.setDefaultArea(Qt.RightDockWidgetArea)
+        self.dockOverview.setDefaultVisible(True)
         self.dockOverview.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
         self.dockOverview.setFixedWidth(self.overview.width())
         self.dockOverview.setWidget(self.overview)
 
         self.dockPalette = DockWidget('Palette', self)
         self.dockPalette.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        self.dockPalette.setDefaultArea(Qt.LeftDockWidgetArea)
+        self.dockPalette.setDefaultVisible(True)
         self.dockPalette.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
         self.dockPalette.setFixedWidth(self.palette_.width())
         self.dockPalette.setWidget(self.palette_)
+
+        ################################################################################################################
+        #                                                                                                              #
+        #   CONFIGURE MAIN WINDOW UI [LOAD SETTINGS]                                                                   #
+        #                                                                                                              #
+        ################################################################################################################
+
+        settings = QSettings(expandPath('@home/{}.ini'.format(APPNAME)), QSettings.IniFormat)
+
+        # DIAGRAM
+        settings.beginGroup('diagram')
+        self.diagramSize = settings.value('size', 5000, int)
+        self.snapToGrid = settings.value('grid', False, bool)
+
+        if not settings.contains('recent'):
+            # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
+            # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
+            # container. So according to this we can't use an empty list as default value because PyQt5 needs
+            # to know the type of the contents added to the collection: we avoid this problem by placing
+            # the list of examples file in the recentDocumentList (only if there is no list defined already).
+            settings.setValue('recent', [
+                expandPath('@examples/Animals.graphol'),
+                expandPath('@examples/Diet.graphol'),
+                expandPath('@examples/Family.graphol'),
+                expandPath('@examples/Pizza.graphol'),
+            ])
+
+        self.recentDocument = settings.value('recent', None, str)
+        settings.endGroup()
+
+        # DOCK AREA
+        settings.beginGroup('dock')
+        for widget in (self.dockPalette, self.dockOverview):
+            self.addDockWidget(settings.value('{}/area'.format(widget.objectName()), widget.defaultArea(), int), widget)
+            widget.setVisible(settings.value('{}/view'.format(widget.objectName()), widget.defaultVisible(), bool))
+        settings.endGroup()
+
+        # MAIN SETTINGS
+        self.setAcceptDrops(True)
+        self.setCentralWidget(self.mdi)
+        self.setMinimumSize(MainWindow.MinWidth, MainWindow.MinHeight)
+        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowTitle()
 
         ################################################################################################################
         #                                                                                                              #
@@ -299,7 +354,7 @@ class MainWindow(QMainWindow):
         self.actionSnapToGrid.setIcon(self.iconGrid)
         self.actionSnapToGrid.setStatusTip('Snap diagram elements to the grid')
         self.actionSnapToGrid.setCheckable(True)
-        self.actionSnapToGrid.setChecked(self.settings.value('diagram/grid', False, bool))
+        self.actionSnapToGrid.setChecked(self.snapToGrid)
         self.actionSnapToGrid.setEnabled(False)
         connect(self.actionSnapToGrid.triggered, self.toggleSnapToGrid)
 
@@ -524,7 +579,7 @@ class MainWindow(QMainWindow):
         self.recentDocumentSeparator = self.menuFile.addSeparator()
         for i in range(DiagramScene.RecentNum):
             self.menuFile.addAction(self.actionsOpenRecentDocument[i])
-        self.updateRecentDocuments()
+        self.refreshRecentDocument()
 
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionPrintDocument)
@@ -695,20 +750,6 @@ class MainWindow(QMainWindow):
         connect(self.mdi.subWindowActivated, self.subWindowActivated)
         connect(self.palette_.buttonClicked[int], self.paletteButtonClicked)
         connect(self.undogroup.cleanChanged, self.undoGroupCleanChanged)
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   CONFIGURE MAIN WINDOW                                                                                      #
-        #                                                                                                              #
-        ################################################################################################################
-
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.dockPalette)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.dockOverview)
-        self.setCentralWidget(self.mdi)
-        self.setAcceptDrops(True)
-        self.setMinimumSize(MainWindow.MinWidth, MainWindow.MinHeight)
-        self.setWindowIcon(QIcon(':/images/eddy'))
-        self.setWindowTitle()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -1034,7 +1075,7 @@ class MainWindow(QMainWindow):
         Executed when a document is loaded or saved from/to a Graphol file.
         :type scene: DiagramScene
         """
-        self.addRecentDocument(scene.document.path)
+        self.insertRecentDocument(scene.document.path)
         self.setWindowTitle(scene.document.name)
 
     @pyqtSlot()
@@ -1044,14 +1085,14 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-            result = self.exportFilePath(name=rCut(scene.document.name, Filetype.Graphol.suffix))
+            result = self.exportPath(name=rCut(scene.document.name, Filetype.Graphol.suffix))
             if result:
                 filepath = result[0]
                 filetype = Filetype.forValue(result[1])
                 if filetype is Filetype.Pdf:
-                    self.exportSceneToPdfFile(scene, filepath)
+                    self.exportToPdf(scene, filepath)
                 elif filetype is Filetype.Owl:
-                    self.exportSceneToOwlFile(scene, filepath)
+                    self.exportToOwl(scene, filepath)
 
     @pyqtSlot()
     def importDocument(self):
@@ -1188,8 +1229,7 @@ class MainWindow(QMainWindow):
         """
         Create a new empty document and add it to the MDI Area.
         """
-        size = self.settings.value('diagram/size', 5000, int)
-        scene = self.createScene(size, size)
+        scene = self.createScene(self.diagramSize, self.diagramSize)
         mainview = self.createView(scene)
         subwindow = self.createSubWindow(mainview)
         subwindow.showMaximized()
@@ -1213,7 +1253,7 @@ class MainWindow(QMainWindow):
         """
         action = self.sender()
         dialog = action.data()
-        window = dialog(parent=self.centralWidget())
+        window = dialog(parent=self)
         window.exec_()
 
     @pyqtSlot()
@@ -1368,9 +1408,9 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-            filepath = scene.document.path or self.saveFilePath(name=scene.document.name)
+            filepath = scene.document.path or self.savePath(name=scene.document.name)
             if filepath:
-                saved = self.saveSceneToGrapholFile(scene, filepath)
+                saved = self.saveFile(scene, filepath)
                 if saved:
                     scene.undostack.setClean()
                     self.documentSaved.emit(scene)
@@ -1382,9 +1422,9 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-            filepath = self.saveFilePath(name=scene.document.name)
+            filepath = self.savePath(name=scene.document.name)
             if filepath:
-                saved = self.saveSceneToGrapholFile(scene, filepath)
+                saved = self.saveFile(scene, filepath)
                 if saved:
                     scene.undostack.setClean()
                     self.documentSaved.emit(scene)
@@ -1721,11 +1761,10 @@ class MainWindow(QMainWindow):
         """
         Toggle snap to grid setting.
         """
-        snapToGrid = self.actionSnapToGrid.isChecked()
-        self.settings.setValue('diagram/grid', snapToGrid)
+        self.snapToGrid = self.actionSnapToGrid.isChecked()
         for subwindow in self.mdi.subWindowList():
             mainview = subwindow.widget()
-            mainview.snapToGrid = snapToGrid
+            mainview.snapToGrid = self.snapToGrid
             viewport = mainview.viewport()
             if viewport:
                 viewport.update()
@@ -1760,6 +1799,31 @@ class MainWindow(QMainWindow):
             if self.abortQuit:
                 closeEvent.ignore()
                 break
+
+        ################################################################################################################
+        #                                                                                                              #
+        #   EXPORT CURRENT SETTINGS                                                                                    #
+        #                                                                                                              #
+        ################################################################################################################
+
+        settings = QSettings(expandPath('@home/{}.ini'.format(APPNAME)), QSettings.IniFormat)
+
+        # DIAGRAM
+        settings.beginGroup('diagram')
+        settings.setValue('grid', self.snapToGrid)
+        settings.setValue('recent', self.recentDocument)
+        settings.setValue('size', self.diagramSize)
+        settings.endGroup()
+
+        # DOCK AREA
+        settings.beginGroup('dock')
+        for widget in (self.dockPalette, self.dockOverview):
+            settings.setValue('{}/area'.format(widget.objectName()), self.dockWidgetArea(widget))
+            settings.setValue('{}/view'.format(widget.objectName()), widget.isVisible())
+        settings.endGroup()
+
+        # SAVE TO DISK
+        settings.sync()
 
     def dragEnterEvent(self, dragEvent):
         """
@@ -1849,35 +1913,6 @@ class MainWindow(QMainWindow):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def addDockWidget(self, area, widget, *args, **kwargs):
-        """
-        Add a widget to the dock area.
-        :type area: int
-        :type widget: QDockWidget
-        """
-        area = self.settings.value('dock/{}/area'.format(widget.objectName()), area, int)
-        view = self.settings.value('dock/{}/view'.format(widget.objectName()), True, bool)
-        super().addDockWidget(area, widget, *args, **kwargs)
-        widget.setVisible(view)
-
-    def addRecentDocument(self, path):
-        """
-        Add the given document to the recent document list.
-        :type path: str
-        """
-        documents = self.settings.value('document/recent', None, str)
-
-        try:
-            documents.remove(path)
-        except ValueError:
-            pass
-        finally:
-            documents.insert(0, path)
-            documents = documents[:DiagramScene.RecentNum]
-
-        self.settings.setValue('document/recent', documents)
-        self.updateRecentDocuments()
-
     def createScene(self, width, height):
         """
         Create and return an empty scene.
@@ -1900,10 +1935,10 @@ class MainWindow(QMainWindow):
         :type filepath: str
         :rtype: DiagramScene
         """
-        loader = GrapholLoader(mainwindow=self, filepath=filepath)
+        worker = GrapholLoader(mainwindow=self, filepath=filepath)
 
         try:
-            loader.run()
+            worker.run()
         except Exception as e:
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(QPixmap(':/icons/error'))
@@ -1915,7 +1950,7 @@ class MainWindow(QMainWindow):
             msgbox.exec_()
             return None
         else:
-            return loader.scene
+            return worker.scene
 
     def createSubWindow(self, mainview):
         """
@@ -1931,19 +1966,18 @@ class MainWindow(QMainWindow):
         connect(subwindow.closeEventIgnored, self.subWindowCloseEventIgnored)
         return subwindow
 
-    @staticmethod
-    def createView(scene):
+    def createView(self, scene):
         """
         Create a new main view displaying the given scene.
         :type scene: DiagramScene
         :rtype: MainView
         """
-        view = MainView(scene)
+        view = MainView(self, scene)
         view.centerOn(0, 0)
         connect(scene.updated, view.updateView)
         return view
 
-    def exportFilePath(self, path=None, name=None):
+    def exportPath(self, path=None, name=None):
         """
         Bring up the 'Export' file dialog and returns the selected filepath.
         Will return None in case the user hit the 'Cancel' button to abort the operation.
@@ -1959,7 +1993,7 @@ class MainWindow(QMainWindow):
             return dialog.selectedFiles()[0], dialog.selectedNameFilter()
         return None
 
-    def exportSceneToOwlFile(self, scene, filepath):
+    def exportToOwl(self, scene, filepath):
         """
         Export the given scene in OWL syntax saving it in the given filepath.
         :type scene: DiagramScene
@@ -1972,7 +2006,7 @@ class MainWindow(QMainWindow):
         return False
 
     @staticmethod
-    def exportSceneToPdfFile(scene, filepath):
+    def exportToPdf(scene, filepath):
         """
         Export the given scene as PDF saving it in the given filepath.
         :type scene: DiagramScene
@@ -1981,6 +2015,7 @@ class MainWindow(QMainWindow):
         """
         shape = scene.visibleRect(margin=20)
         if shape:
+            
             printer = QPrinter(QPrinter.HighResolution)
             printer.setOutputFormat(QPrinter.PdfFormat)
             printer.setOutputFileName(filepath)
@@ -1990,7 +2025,7 @@ class MainWindow(QMainWindow):
             painter = QPainter()
             if painter.begin(printer):
 
-                # TURN OFF CACHING.
+                # TURN CACHING OFF!
                 for item in scene.items():
                     if item.node or item.edge:
                         item.setCacheMode(QGraphicsItem.NoCache)
@@ -1998,7 +2033,7 @@ class MainWindow(QMainWindow):
                 # RENDER THE SCENE
                 scene.render(painter, source=shape)
 
-                # TURN ON CACHING.
+                # TURN CACHING ON!
                 for item in scene.items():
                     if item.node or item.edge:
                         item.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
@@ -2027,6 +2062,20 @@ class MainWindow(QMainWindow):
                 return True
         return False
 
+    def insertRecentDocument(self, path):
+        """
+        Add the given document to the recent document list.
+        :type path: str
+        """
+        try:
+            self.recentDocument.remove(path)
+        except ValueError:
+            pass
+        finally:
+            self.recentDocument.insert(0, path)
+            self.recentDocument = self.recentDocument[:DiagramScene.RecentNum]
+            self.refreshRecentDocument()
+
     def openFile(self, filepath):
         """
         Open a Graphol document creating the scene and attaching it to the MDI area.
@@ -2041,22 +2090,21 @@ class MainWindow(QMainWindow):
                 self.mdi.setActiveSubWindow(subwindow)
                 self.mdi.update()
 
-    def saveFilePath(self, path=None, name=None):
+    def refreshRecentDocument(self):
         """
-        Bring up the 'Save' file dialog and returns the selected filepath.
-        Will return None in case the user hit the 'Cancel' button to abort the operation.
-        :type path: str
-        :type name: str
-        :rtype: str
+        Update the recent document action list.
         """
-        dialog = SaveFile(path=path, parent=self)
-        dialog.setNameFilters([Filetype.Graphol.value])
-        dialog.selectFile(name or 'Untitled')
-        if dialog.exec_():
-            return dialog.selectedFiles()[0]
-        return None
+        num = min(len(self.recentDocument), DiagramScene.RecentNum)
+        for i in range(num):
+            name = '&{} {}'.format(i + 1, os.path.basename(os.path.normpath(self.recentDocument[i])))
+            self.actionsOpenRecentDocument[i].setText(name)
+            self.actionsOpenRecentDocument[i].setData(self.recentDocument[i])
+            self.actionsOpenRecentDocument[i].setVisible(True)
+        for i in range(num, DiagramScene.RecentNum):
+            self.actionsOpenRecentDocument[i].setVisible(False)
+        self.recentDocumentSeparator.setVisible(num > 0)
 
-    def saveSceneToGrapholFile(self, scene, filepath):
+    def saveFile(self, scene, filepath):
         """
         Save the given scene to the corresponding given filepath.
         Will return True if the save has been performed, False otherwise.
@@ -2082,6 +2130,21 @@ class MainWindow(QMainWindow):
         else:
             return True
 
+    def savePath(self, path=None, name=None):
+        """
+        Bring up the 'Save' file dialog and returns the selected filepath.
+        Will return None in case the user hit the 'Cancel' button to abort the operation.
+        :type path: str
+        :type name: str
+        :rtype: str
+        """
+        dialog = SaveFile(path=path, parent=self)
+        dialog.setNameFilters([Filetype.Graphol.value])
+        dialog.selectFile(name or 'Untitled')
+        if dialog.exec_():
+            return dialog.selectedFiles()[0]
+        return None
+
     def setWindowTitle(self, p_str=None):
         """
         Set the main window title.
@@ -2089,23 +2152,3 @@ class MainWindow(QMainWindow):
         """
         T = '{} - {} {}'.format(p_str, APPNAME, VERSION) if p_str else '{} {}'.format(APPNAME, VERSION)
         super().setWindowTitle(T)
-
-    def updateRecentDocuments(self):
-        """
-        Update the recent document action list.
-        """
-        documents = self.settings.value('document/recent', None, str)
-        num = min(len(documents), DiagramScene.RecentNum)
-
-        for i in range(num):
-            filename = '&{} {}'.format(i + 1, os.path.basename(os.path.normpath(documents[i])))
-            self.actionsOpenRecentDocument[i].setText(filename)
-            self.actionsOpenRecentDocument[i].setData(documents[i])
-            self.actionsOpenRecentDocument[i].setVisible(True)
-
-        # turn off actions that we don't need
-        for i in range(num, DiagramScene.RecentNum):
-            self.actionsOpenRecentDocument[i].setVisible(False)
-
-        # show the separator only if we got at least one recent document
-        self.recentDocumentSeparator.setVisible(num > 0)

@@ -32,10 +32,8 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, pyqtSlot, QSettings
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDockWidget
-
-from eddy.core.functions import connect, expandPath
 
 
 class DockWidget(QDockWidget):
@@ -54,53 +52,33 @@ class DockWidget(QDockWidget):
         name = name.replace(' ', '_')
         self.setObjectName(name)
 
-        self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)
+        self._defaultArea = Qt.LeftDockWidgetArea
+        self._defaultVisible = True
 
-        connect(self.dockLocationChanged, self.saveArea)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   EVENTS                                                                                                         #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def closeEvent(self, event):
+    def defaultArea(self):
         """
-        Executed when the dock widget is closed.
-        :param event: QCloseEvent
+        Returns the default area for this dock widget.
+        :rtype: int
         """
-        self.saveView(False)
+        return self._defaultArea
 
-    def showEvent(self, event):
+    def defaultVisible(self):
         """
-        Executed when the dock widget is shown.
-        :type event: QShowEvent
+        Returns the default visibility for this dock widget.
+        :rtype: bool
         """
-        self.saveView(True)
+        return self._defaultVisible
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SLOTS                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @pyqtSlot(int)
-    def saveArea(self, area):
+    def setDefaultArea(self, area):
         """
-        Executed when the dock widget is moved into a different area.
+        Set the default area for this dock widget.
         :type area: int
         """
-        self.settings.setValue('dock/{}/area'.format(self.objectName()), area)
+        self._defaultArea = area
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def saveView(self, view):
+    def setDefaultVisible(self, visible):
         """
-        Executed when the dock widget is hidden/displayed.
-        :type view: bool
+        Set the default visibility for this dock widget.
+        :type visible: bool
         """
-        self.settings.setValue('dock/{}/view'.format(self.objectName()), view)
+        self._defaultVisible = visible

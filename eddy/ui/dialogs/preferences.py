@@ -32,10 +32,11 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QSettings
-from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout
+from PyQt5.QtWidgets import QDialogButtonBox, QTabWidget, QFormLayout
 
-from eddy.core.functions import connect, expandPath
+from eddy.core.functions import connect
 from eddy.ui.fields import SpinBox, ComboBox
 
 
@@ -43,14 +44,14 @@ class PreferencesDialog(QDialog):
     """
     This class implements the 'Preferences' dialog.
     """
-    def __init__(self, parent=None):
+    def __init__(self, mainwindow):
         """
         Initialize the Preferences dialog.
-        :type parent: QWidget
+        :type mainwindow: QMainWindow
         """
-        super().__init__(parent)
+        super().__init__(mainwindow)
 
-        self.settings = QSettings(expandPath('@home/Eddy.ini'), QSettings.IniFormat)
+        self.mainwindow = mainwindow
 
         ################################################################################################################
         #                                                                                                              #
@@ -76,7 +77,7 @@ class PreferencesDialog(QDialog):
         self.diagramSizeF = SpinBox(self)
         self.diagramSizeF.setRange(2000, 1000000)
         self.diagramSizeF.setSingleStep(100)
-        self.diagramSizeF.setValue(self.settings.value('diagram/size', 5000, int))
+        self.diagramSizeF.setValue(self.mainwindow.diagramSize)
 
         self.editorWidget = QWidget()
         self.editorLayout = QFormLayout(self.editorWidget)
@@ -121,7 +122,7 @@ class PreferencesDialog(QDialog):
 
         connect(self.buttonBox.accepted, self.accept)
         connect(self.buttonBox.rejected, self.reject)
-        connect(self.finished, self.handleFinished)
+        connect(self.finished, self.completed)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -129,11 +130,10 @@ class PreferencesDialog(QDialog):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def handleFinished(self, code):
+    def completed(self, code):
         """
         Executed when the dialog is terminated.
         :type code: int
         """
         if code == PreferencesDialog.Accepted:
-            self.settings.setValue('appearance/style', self.styleF.value())
-            self.settings.setValue('diagram/size', self.diagramSizeF.value())
+            self.mainwindow.diagramSize = self.diagramSizeF.value()
