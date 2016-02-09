@@ -37,7 +37,7 @@ import sys
 import traceback
 
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QApplication
 
 from eddy import APPNAME, BUG_TRACKER
 from eddy.core.application import Eddy
@@ -91,6 +91,9 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
 
             connect(buttonOk.clicked, box.close)
             connect(buttonQuit.clicked, app.quit)
+
+            # noinspection PyArgumentList
+            QApplication.beep()
 
             box.exec_()
             box = None
