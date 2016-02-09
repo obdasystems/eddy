@@ -324,7 +324,7 @@ class GrapholLoader(AbstractLoader):
             'breakpoints': points[1:-1],
         }
 
-        item = self.itemFactory.create(item=item, scene=self.scene, **kwargs)
+        item = self.factory.create(item=item, scene=self.scene, **kwargs)
 
         # set the anchor points only if they are inside the endpoint shape: users can modify
         # the .graphol file manually, changing anchor points coordinates, which will result
@@ -363,7 +363,7 @@ class GrapholLoader(AbstractLoader):
             'width': int(geometry.attribute('width')),
         }
 
-        item = self.itemFactory.create(item=item, scene=self.scene, **kwargs)
+        item = self.factory.create(item=item, scene=self.scene, **kwargs)
         item.setPos(QPointF(int(geometry.attribute('x')), int(geometry.attribute('y'))))
         return item
 

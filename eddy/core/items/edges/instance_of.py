@@ -72,7 +72,7 @@ class InstanceOfEdge(AbstractEdge):
             'target': self.target,
             'breakpoints': self.breakpoints[:],
         }
-        return scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
+        return scene.factory.create(item=self.item, scene=scene, **kwargs)
 
     @staticmethod
     def createHead(pos1, angle, size):

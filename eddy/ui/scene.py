@@ -80,9 +80,9 @@ class DiagramScene(QGraphicsScene):
         self.clipboardPasteOffsetX = Clipboard.PasteOffsetX  ## X offset to be added to item position upon paste
         self.clipboardPasteOffsetY = Clipboard.PasteOffsetY  ## Y offset to be added to item position upon paste
         self.document = File()  ## file associated with the current scene
+        self.factory = ItemFactory(self)  ## used to produce graphol items
         self.guid = GUID(self)  ## used to generate unique incremental ids
         self.index = ItemIndex(self)  ## used to index graphol items
-        self.itemFactory = ItemFactory(self)  ## used to produce graphol items
         self.undostack = QUndoStack(self)  ## used to push actions and keep history for undo/redo
         self.undostack.setUndoLimit(50)  ## TODO: make the stack configurable
         self.validator = OWL2RLValidator(self)  ## validator to be used to validate graphol triples
@@ -133,7 +133,7 @@ class DiagramScene(QGraphicsScene):
         """
         super().dropEvent(dropEvent)
         if dropEvent.mimeData().hasFormat('text/plain'):
-            node = self.itemFactory.create(item=Item.forValue(dropEvent.mimeData().text()), scene=self)
+            node = self.factory.create(item=Item.forValue(dropEvent.mimeData().text()), scene=self)
             node.setPos(snapPT(dropEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
             self.undostack.push(CommandNodeAdd(scene=self, node=node))
             self.itemAdded.emit(node, dropEvent.modifiers())
@@ -158,7 +158,7 @@ class DiagramScene(QGraphicsScene):
                 ########################################################################################################
 
                 # create a new node and place it under the mouse position
-                node = self.itemFactory.create(item=Item.forValue(self.modeParam), scene=self)
+                node = self.factory.create(item=Item.forValue(self.modeParam), scene=self)
                 node.setPos(snapPT(mouseEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
 
                 # no need to switch back the operation mode here: the signal handlers already does that and takes
@@ -180,7 +180,7 @@ class DiagramScene(QGraphicsScene):
                 node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
                 if node:
 
-                    edge = self.itemFactory.create(item=Item.forValue(self.modeParam), scene=self, source=node)
+                    edge = self.factory.create(item=Item.forValue(self.modeParam), scene=self, source=node)
                     edge.updateEdge(target=mouseEvent.scenePos())
                     self.mousePressEdge = edge
                     self.addItem(edge)

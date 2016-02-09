@@ -96,7 +96,7 @@ class DatatypeRestrictionNode(OperatorNode):
             'height': self.height(),
             'width': self.width(),
         }
-        node = scene.itemFactory.create(item=self.item, scene=scene, **kwargs)
+        node = scene.factory.create(item=self.item, scene=scene, **kwargs)
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))

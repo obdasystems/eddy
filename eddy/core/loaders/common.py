@@ -55,7 +55,7 @@ class AbstractLoader(QObject):
         super().__init__(parent)
         self.mainwindow = mainwindow
         self.filepath = filepath
-        self.itemFactory = ItemFactory(self)
+        self.factory = ItemFactory(self)
         self.scene = None
         self.errors = []
 

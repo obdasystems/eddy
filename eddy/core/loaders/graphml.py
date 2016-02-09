@@ -306,7 +306,7 @@ class GraphmlLoader(AbstractLoader):
                     'breakpoints': points,
                 }
 
-                item = self.itemFactory.create(item=item, scene=self.scene, **kwargs)
+                item = self.factory.create(item=item, scene=self.scene, **kwargs)
                 # yEd, differently from the node pos whose origin matches the TOP-LEFT corner,
                 # consider the center of the shape as original anchor point (0,0). So if the
                 # anchor point hs a negative X it's moved a bit on the left with respect to
@@ -357,7 +357,7 @@ class GraphmlLoader(AbstractLoader):
                     'width': float(geometry.attribute('width')),
                 }
 
-                item = self.itemFactory.create(item=item, scene=self.scene, **kwargs)
+                item = self.factory.create(item=item, scene=self.scene, **kwargs)
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
                 # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
@@ -394,7 +394,7 @@ class GraphmlLoader(AbstractLoader):
                     'width': float(geometry.attribute('width')),
                 }
 
-                item = self.itemFactory.create(item=item, scene=self.scene, **kwargs)
+                item = self.factory.create(item=item, scene=self.scene, **kwargs)
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
                 # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
@@ -431,7 +431,7 @@ class GraphmlLoader(AbstractLoader):
                     'width': float(geometry.attribute('width')),
                 }
 
-                item = self.itemFactory.create(item=item, scene=self.scene, **kwargs)
+                item = self.factory.create(item=item, scene=self.scene, **kwargs)
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
                 # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
