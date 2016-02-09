@@ -1247,7 +1247,7 @@ class MainWindow(QMainWindow):
         """
         action = self.sender()
         dialog = action.data()
-        window = dialog(parent=self)
+        window = dialog(self)
         window.exec_()
 
     @pyqtSlot()
