@@ -89,7 +89,7 @@ class DiagramScene(QGraphicsScene):
         self.validator = OWL2RLValidator(self)  ## validator to be used to validate graphol triples
         self.mainwindow = mainwindow  ## main window reference
         self.mode = DiagramMode.Idle  ## operation mode
-        self.modeParam = None  ## extra parameter for the operation mode (see setMode()
+        self.modeParam = Item.Undefined  ## extra parameter which specified the graphics item being added
         self.mouseOverNode = None  ## node below the mouse cursor during edge insertion
         self.mousePressEdge = None  ## edge being inserted from a mouse press/move/release combo
         self.mousePressPos = None  ## scene position where the mouse has been pressed
@@ -102,19 +102,6 @@ class DiagramScene(QGraphicsScene):
     #   EVENTS                                                                                                         #
     #                                                                                                                  #
     ####################################################################################################################
-
-    def contextMenuEvent(self, menuEvent):
-        """
-        Bring up the context menu if necessary.
-        :type menuEvent: QGraphicsSceneContextMenuEvent
-        """
-        item = self.itemOnTopOf(menuEvent.scenePos())
-        if item:
-            self.clearSelection()
-            item.setSelected(True)
-
-        menu = self.mainwindow.menuFactory.create(self.mainwindow, self, item, menuEvent.scenePos())
-        menu.exec_(menuEvent.screenPos())
 
     def mousePressEvent(self, mouseEvent):
         """
@@ -132,7 +119,6 @@ class DiagramScene(QGraphicsScene):
                 ########################################################################################################
 
                 # create a new node and place it under the mouse position
-                # noinspection PyTypeChecker
                 node = self.itemFactory.create(item=self.modeParam, scene=self)
                 node.setPos(snapPT(mouseEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
 
@@ -155,7 +141,6 @@ class DiagramScene(QGraphicsScene):
                 node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
                 if node:
 
-                    # noinspection PyTypeChecker
                     edge = self.itemFactory.create(item=self.modeParam, scene=self, source=node)
                     edge.updateEdge(target=mouseEvent.scenePos())
                     self.mousePressEdge = edge
