@@ -38,11 +38,11 @@ import webbrowser
 from collections import OrderedDict
 from traceback import format_exception
 
-from PyQt5.QtCore import Qt, QSettings, QSizeF, QRectF
+from PyQt5.QtCore import Qt, QPoint, QSettings, QSizeF, QRectF, QSize
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter, QPageSize, QCursor, QBrush, QColor
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
-from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDialog
+from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDialog, QDesktopWidget
 from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup, QStyle, QGraphicsItem
 
 from eddy import APPNAME, VERSION, BUG_TRACKER, GRAPHOL_HOME, DIAG_HOME
@@ -164,8 +164,8 @@ class MainWindow(QMainWindow):
 
         # DIAGRAM
         settings.beginGroup('diagram')
-        self.diagramSize = settings.value('size', 5000, int)
-        self.snapToGrid = settings.value('grid', False, bool)
+        self.diagramSize = settings.value('size', self.diagramSize, int)
+        self.snapToGrid = settings.value('grid', self.snapToGrid, bool)
 
         if not settings.contains('recent'):
             # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
@@ -196,6 +196,15 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(MainWindow.MinWidth, MainWindow.MinHeight)
         self.setWindowIcon(QIcon(':/images/eddy'))
         self.setWindowTitle()
+
+        settings.beginGroup('mainwindow')
+        self.resize(settings.value('size', QSize(MainWindow.MinWidth, MainWindow.MinHeight)))
+        widget = QDesktopWidget()
+        screen = widget.screenGeometry()
+        posX = (screen.width() - self.width()) / 2
+        posY = (screen.height() - self.height()) / 2
+        self.move(settings.value('pos', QPoint(posX, posY)))
+        settings.endGroup()
 
         ################################################################################################################
         #                                                                                                              #
@@ -1127,7 +1136,7 @@ class MainWindow(QMainWindow):
 
                 # If some errors have been generated during the import process, display
                 # them into a popup so the user can check whether the problem is in the
-                # .graphml document ot Eddy is not handling the import properly.
+                # .graphml document or Eddy is not handling the import properly.
                 m1 = 'Document {} has been imported! However some errors ({}) have been generated ' \
                      'during the import process. You can inspect detailed information by expanding the ' \
                      'box below.'.format(os.path.basename(filepath), len(loader.errors))
@@ -1138,7 +1147,7 @@ class MainWindow(QMainWindow):
                 for k, v in enumerate(loader.errors, start=1):
                     parts.append('{}) {}'.format(k, ''.join(format_exception(type(v), v, v.__traceback__))))
 
-                m3 = '\n\n'.join(parts)
+                m3 = '\n'.join(parts)
 
                 msgbox = QMessageBox(self)
                 msgbox.setIconPixmap(QPixmap(':/icons/warning'))
@@ -1814,6 +1823,12 @@ class MainWindow(QMainWindow):
         for widget in (self.dockPalette, self.dockOverview):
             settings.setValue('{}/area'.format(widget.objectName()), self.dockWidgetArea(widget))
             settings.setValue('{}/view'.format(widget.objectName()), widget.isVisible())
+        settings.endGroup()
+
+        # MAIN WINDOW
+        settings.beginGroup('mainwindow')
+        settings.setValue('pos', self.pos())
+        settings.setValue('size', self.size())
         settings.endGroup()
 
         # SAVE TO DISK

@@ -48,12 +48,12 @@ class DockWidget(QDockWidget):
         """
         super().__init__(name, parent, Qt.Widget)
 
+        self._defaultArea = Qt.LeftDockWidgetArea
+        self._defaultVisible = True
+
         name = name.lower()
         name = name.replace(' ', '_')
         self.setObjectName(name)
-
-        self._defaultArea = Qt.LeftDockWidgetArea
-        self._defaultVisible = True
 
     def defaultArea(self):
         """
