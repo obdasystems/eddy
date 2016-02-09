@@ -795,6 +795,8 @@ class MainWindow(QMainWindow):
                 if moveX and moveY:
                     collection = [x for x in items if x.node or x.edge]
                     scene.undostack.push(CommandItemsTranslate(scene, collection, moveX, moveY, name='center diagram'))
+                    mainview = self.mdi.activeView
+                    mainview.centerOn(0, 0)
 
     @pyqtSlot()
     def closeActiveSubWindow(self):
