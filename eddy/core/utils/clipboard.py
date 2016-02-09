@@ -129,14 +129,14 @@ class Clipboard(QObject):
                     item.updateEdge()
 
             # adjust scene offsets for a possible next paste using shortcuts
-            scene.clipboardPasteOffsetX = offset.x() + Clipboard.PasteOffsetX
-            scene.clipboardPasteOffsetY = offset.y() + Clipboard.PasteOffsetY
+            scene.pasteOffsetX = offset.x() + Clipboard.PasteOffsetX
+            scene.pasteOffsetY = offset.y() + Clipboard.PasteOffsetY
 
         else:
 
             # no paste position given => use offsets set in the scene instance
             for item in items:
-                item.moveBy(scene.clipboardPasteOffsetX, scene.clipboardPasteOffsetY)
+                item.moveBy(scene.pasteOffsetX, scene.pasteOffsetY)
                 if item.node:
                     item.setZValue(zValue + 0.1)
                     zValue += 0.1
@@ -144,8 +144,8 @@ class Clipboard(QObject):
                     item.updateEdge()
 
             # adjust scene offsets for a possible next paste using shortcuts
-            scene.clipboardPasteOffsetX += Clipboard.PasteOffsetX
-            scene.clipboardPasteOffsetY += Clipboard.PasteOffsetY
+            scene.pasteOffsetX += Clipboard.PasteOffsetX
+            scene.pasteOffsetY += Clipboard.PasteOffsetY
 
         scene.undostack.push(CommandItemsMultiAdd(scene=scene, collection=items))
 

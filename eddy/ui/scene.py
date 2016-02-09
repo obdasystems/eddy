@@ -77,24 +77,24 @@ class DiagramScene(QGraphicsScene):
         :type parent: QWidget
         """
         super().__init__(parent)
-        self.clipboardPasteOffsetX = Clipboard.PasteOffsetX  ## X offset to be added to item position upon paste
-        self.clipboardPasteOffsetY = Clipboard.PasteOffsetY  ## Y offset to be added to item position upon paste
-        self.document = File()  ## file associated with the current scene
-        self.factory = ItemFactory(self)  ## used to produce graphol items
-        self.guid = GUID(self)  ## used to generate unique incremental ids
-        self.index = ItemIndex(self)  ## used to index graphol items
-        self.undostack = QUndoStack(self)  ## used to push actions and keep history for undo/redo
-        self.undostack.setUndoLimit(50)  ## TODO: make the stack configurable
-        self.validator = OWL2RLValidator(self)  ## validator to be used to validate graphol triples
-        self.mainwindow = mainwindow  ## main window reference
-        self.mode = DiagramMode.Idle  ## operation mode
-        self.modeParam = Item.Undefined  ## extra parameter which specified the graphics item being added
-        self.mouseOverNode = None  ## node below the mouse cursor during edge insertion
-        self.mousePressEdge = None  ## edge being inserted from a mouse press/move/release combo
-        self.mousePressPos = None  ## scene position where the mouse has been pressed
-        self.mousePressNode = None  ## node acting as mouse grabber during mouse move events
-        self.mousePressNodePos = None  ## position of the shape acting as mouse grabber during mouse move events
-        self.mousePressData = {}  ## extra data needed to process item interactive movements
+        self.document = File()  # file associated with the current scene
+        self.factory = ItemFactory(self)  # used to produce graphol items
+        self.guid = GUID(self)  # used to generate unique incremental ids
+        self.index = ItemIndex(self)  # used to index graphol items
+        self.undostack = QUndoStack(self)  # used to push actions and keep history for undo/redo
+        self.undostack.setUndoLimit(50)  # TODO: make the stack configurable
+        self.validator = OWL2RLValidator(self)  # validator to be used to validate graphol triples
+        self.mainwindow = mainwindow  # main window reference
+        self.pasteOffsetX = Clipboard.PasteOffsetX  # X offset to be added to item position upon paste
+        self.pasteOffsetY = Clipboard.PasteOffsetY  # Y offset to be added to item position upon paste
+        self.mode = DiagramMode.Idle  # operation mode
+        self.modeParam = Item.Undefined  # extra parameter which specified the graphics item being added
+        self.mouseOverNode = None  # node below the mouse cursor during edge insertion
+        self.mousePressEdge = None  # edge being inserted from a mouse press/move/release combo
+        self.mousePressPos = None  # scene position where the mouse has been pressed
+        self.mousePressNode = None  # node acting as mouse grabber during mouse move events
+        self.mousePressNodePos = None  # position of the shape acting as mouse grabber during mouse move events
+        self.mousePressData = {}  # extra data needed to process item interactive movements
 
     ####################################################################################################################
     #                                                                                                                  #

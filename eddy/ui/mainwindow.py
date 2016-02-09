@@ -1182,8 +1182,8 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            scene.clipboardPasteOffsetX = 0
-            scene.clipboardPasteOffsetY = 0
+            scene.pasteOffsetX = 0
+            scene.pasteOffsetY = 0
             self.clipboard.update(scene)
             self.sceneSelectionChanged()
             selection = scene.selectedItems()
@@ -1199,8 +1199,8 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            scene.clipboardPasteOffsetX = Clipboard.PasteOffsetX
-            scene.clipboardPasteOffsetY = Clipboard.PasteOffsetY
+            scene.pasteOffsetX = Clipboard.PasteOffsetX
+            scene.pasteOffsetY = Clipboard.PasteOffsetY
             self.clipboard.update(scene)
             self.sceneSelectionChanged()
 
