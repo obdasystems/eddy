@@ -1869,7 +1869,6 @@ class MainWindow(QMainWindow):
 
             self.unsetCursor()
             dropEvent.setDropAction(Qt.CopyAction)
-
             platform = Platform.identify()
             for url in dropEvent.mimeData().urls():
 

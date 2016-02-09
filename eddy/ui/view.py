@@ -108,11 +108,11 @@ class MainView(QGraphicsView):
         :type rect: QRectF
         """
         if self.mainwindow.snapToGrid:
-            x = int(rect.left()) - (int(rect.left()) % DiagramScene.GridSize)
-            y = int(rect.top()) - (int(rect.top()) % DiagramScene.GridSize)
+            s = DiagramScene.GridSize
+            x = int(rect.left()) - (int(rect.left()) % s)
+            y = int(rect.top()) - (int(rect.top()) % s)
             painter.setPen(DiagramScene.GridPen)
-            painter.drawPoints(*(QPointF(i, j) for i in rangeF(x, rect.right(), DiagramScene.GridSize) \
-                                                 for j in rangeF(y, rect.bottom(), DiagramScene.GridSize)))
+            painter.drawPoints(*(QPointF(i, j) for i in rangeF(x, rect.right(), s) for j in rangeF(y, rect.bottom(), s)))
 
     def drawForeground(self, painter, rect):
         """
@@ -121,7 +121,6 @@ class MainView(QGraphicsView):
         :type rect: QRectF
         """
         scene = self.scene()
-
         if scene.mode is DiagramMode.RubberBandDrag:
             if self.mousePressRubberBand is not None:
                 painter.setPen(MainView.RubberBandDragPen)
