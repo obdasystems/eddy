@@ -283,7 +283,7 @@ class MainWindow(QMainWindow):
         self.actionSaveDocument = QAction('Save', self)
         self.actionSaveDocument.setIcon(self.iconSave)
         self.actionSaveDocument.setShortcut(QKeySequence.Save)
-        self.actionSaveDocument.setStatusTip('Save the current diagram')
+        self.actionSaveDocument.setStatusTip('Save the active diagram')
         self.actionSaveDocument.setEnabled(False)
         connect(self.actionSaveDocument.triggered, self.saveDocument)
 

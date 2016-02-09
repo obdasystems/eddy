@@ -32,11 +32,12 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QIcon, QPainter
-from PyQt5.QtWidgets import QWidget, QGridLayout, QButtonGroup, QToolButton
+from PyQt5.QtCore import Qt, QSize, QMimeData
+from PyQt5.QtGui import QIcon, QPainter, QDrag
+from PyQt5.QtWidgets import QWidget, QGridLayout, QButtonGroup, QToolButton, QApplication
 from PyQt5.QtWidgets import QStyleOption, QStyle
 
+from eddy.core.datatypes import Item
 from eddy.core.items import ConceptNode, ComplementNode, DomainRestrictionNode
 from eddy.core.items import InputEdge, InclusionEdge, RoleNode, ValueDomainNode
 from eddy.core.items import DatatypeRestrictionNode, DisjointUnionNode
@@ -50,8 +51,6 @@ class Palette(QWidget):
     """
     This class implements the Graphol palette.
     """
-    ButtonWidth = 60
-    ButtonHeight = 44
     Padding = 6
     Spacing = 4
 
@@ -60,6 +59,8 @@ class Palette(QWidget):
         Initialize the Palette.
         """
         super().__init__(*args)
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setFixedWidth(216)
         self.buttonById = {}
         self.buttonGroup = QButtonGroup()
         self.buttonGroup.setExclusive(False)
@@ -68,8 +69,6 @@ class Palette(QWidget):
         self.mainLayout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
         self.mainLayout.setContentsMargins(0, Palette.Padding, 0, Palette.Padding)
         self.mainLayout.setSpacing(Palette.Spacing)
-        self.setContentsMargins(0, 0, 0, 0)
-        self.setFixedWidth(216)
         self.addButton(ConceptNode, 0, 0)
         self.addButton(RoleNode, 0, 1)
         self.addButton(ValueDomainNode, 0, 2)
@@ -114,27 +113,24 @@ class Palette(QWidget):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def addButton(self, item, row, col):
+    def addButton(self, item, row, column):
         """
         Add a button to the palette.
         :type item: class
         :type row: int
-        :type col: int
+        :type column: int
         """
-        button = QToolButton()
-        button.setIcon(QIcon(item.image(w=Palette.ButtonWidth, h=Palette.ButtonHeight)))
-        button.setIconSize(QSize(60, 44))
-        button.setCheckable(True)
-        button.setContentsMargins(0, 0, 0, 0)
+        button = PaletteButton(item)
         self.buttonById[item.item] = button
         self.buttonGroup.addButton(button, item.item)
-        self.mainLayout.addWidget(button, row, col)
+        self.mainLayout.addWidget(button, row, column)
         self.setFixedHeight(self.mainLayout.sizeHint().height() - 2 * self.mainLayout.rowCount())
 
     def button(self, button_id):
         """
         Returns the button matching the given id.
         :type button_id: Item
+        :rtype: PaletteButton
         """
         return self.buttonById[button_id]
 
@@ -152,3 +148,74 @@ class Palette(QWidget):
         for button in self.buttonById.values():
             if button not in args:
                 button.setChecked(False)
+
+
+class PaletteButton(QToolButton):
+    """
+    This class implements a single palette button.
+    """
+    Width = 60
+    Height = 44
+
+    def __init__(self, item, parent=None):
+        """
+        Initialize the palette button.
+        :type item: class
+        :type parent: QWidget
+        """
+        super().__init__(parent)
+        self.item = item.item
+        self.pixmap = item.image(w=PaletteButton.Width, h=PaletteButton.Height)
+        self.startPos = None
+        self.setCheckable(True)
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setIcon(QIcon(self.pixmap))
+        self.setIconSize(QSize(60, 44))
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   EVENTS                                                                                                         #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def mousePressEvent(self, mouseEvent):
+        """
+        Executed when the mouse is pressed on the button..
+        :type mouseEvent: QMouseEvent
+        """
+        if mouseEvent.buttons() & Qt.LeftButton:
+            self.startPos = mouseEvent.pos()
+        super().mousePressEvent(mouseEvent)
+
+    # noinspection PyArgumentList
+    def mouseMoveEvent(self, mouseEvent):
+        """
+        Executed when the mouse if moved while a button is being pressed.
+        :type mouseEvent: QMouseEvent
+        """
+        if mouseEvent.buttons() & Qt.LeftButton:
+
+            # Exclude edges from drag&drop since we need to source and edge to insert it in the diagram.
+            if Item.ConceptNode <= self.item <= Item.PropertyAssertionNode:
+
+                distance = (mouseEvent.pos() - self.startPos).manhattanLength()
+                if distance >= QApplication.startDragDistance():
+
+                    mimeData = QMimeData()
+                    mimeData.setText(str(self.item.value))
+
+                    drag = QDrag(self)
+                    drag.setMimeData(mimeData)
+                    drag.setPixmap(self.pixmap)
+                    drag.setHotSpot(self.startPos - self.rect().topLeft())
+                    drag.exec_(Qt.MoveAction)
+
+        super().mouseMoveEvent(mouseEvent)
+
+
+    def mouseReleaseEvent(self, mouseEvent):
+        """
+        Executed when a mouse button is released.
+        :type mouseEvent: QMouseEvent
+        """
+        super().mouseReleaseEvent(mouseEvent)

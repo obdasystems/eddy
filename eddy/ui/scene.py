@@ -103,6 +103,46 @@ class DiagramScene(QGraphicsScene):
     #                                                                                                                  #
     ####################################################################################################################
 
+    def dragEnterEvent(self, dragEvent):
+        """
+        Executed when a dragged element enters the scene area.
+        :type dragEvent: QGraphicsSceneDragDropEvent
+        """
+        super().dragEnterEvent(dragEvent)
+        if dragEvent.mimeData().hasFormat('text/plain'):
+            dragEvent.setDropAction(Qt.MoveAction)
+            dragEvent.accept()
+        else:
+            dragEvent.ignore()
+
+    def dragMoveEvent(self, dragEvent):
+        """
+        Executed when an element is dragged over the scene.
+        :type dragEvent: QGraphicsSceneDragDropEvent
+        """
+        super().dragMoveEvent(dragEvent)
+        if dragEvent.mimeData().hasFormat('text/plain'):
+            dragEvent.setDropAction(Qt.MoveAction)
+            dragEvent.accept()
+        else:
+            dragEvent.ignore()
+
+    def dropEvent(self, dropEvent):
+        """
+        Executed when a dragged element is dropped on the scene.
+        :type dropEvent: QGraphicsSceneDragDropEvent
+        """
+        super().dropEvent(dropEvent)
+        if dropEvent.mimeData().hasFormat('text/plain'):
+            node = self.itemFactory.create(item=Item.forValue(dropEvent.mimeData().text()), scene=self)
+            node.setPos(snapPT(dropEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
+            self.undostack.push(CommandNodeAdd(scene=self, node=node))
+            self.itemAdded.emit(node, dropEvent.modifiers())
+            dropEvent.setDropAction(Qt.MoveAction)
+            dropEvent.accept()
+        else:
+            dropEvent.ignore()
+
     def mousePressEvent(self, mouseEvent):
         """
         Executed when a mouse button is clicked on the scene.
@@ -119,7 +159,7 @@ class DiagramScene(QGraphicsScene):
                 ########################################################################################################
 
                 # create a new node and place it under the mouse position
-                node = self.itemFactory.create(item=self.modeParam, scene=self)
+                node = self.itemFactory.create(item=Item.forValue(self.modeParam), scene=self)
                 node.setPos(snapPT(mouseEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
 
                 # no need to switch back the operation mode here: the signal handlers already does that and takes
@@ -141,7 +181,7 @@ class DiagramScene(QGraphicsScene):
                 node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
                 if node:
 
-                    edge = self.itemFactory.create(item=self.modeParam, scene=self, source=node)
+                    edge = self.itemFactory.create(item=Item.forValue(self.modeParam), scene=self, source=node)
                     edge.updateEdge(target=mouseEvent.scenePos())
                     self.mousePressEdge = edge
                     self.addItem(edge)

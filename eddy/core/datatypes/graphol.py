@@ -111,6 +111,22 @@ class Item(IntEnum):
     LabelEdge = 21
     LabelNode = 22
 
+    @classmethod
+    def forValue(cls, value):
+        """
+        Returns the Item matching the given value.
+        :type value: T <= int | str | Item
+        :rtype: Item
+        """
+        if isinstance(value, Item):
+            return value
+        else:
+            value = int(value)
+            for x in cls:
+                if x.value == value:
+                    return x
+        return None
+
     @DynamicClassAttribute
     def label(self):
         """
