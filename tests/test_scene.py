@@ -35,9 +35,9 @@
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtTest import QTest
 
-from eddy.core.commands import CommandNodeLabelChange
-from eddy.core.datatypes import Item, DiagramMode, DistinctList
+from eddy.core.datatypes import Item, DiagramMode
 from eddy.core.items import InclusionEdge
+
 from tests import EddyTestCase
 
 
@@ -74,9 +74,7 @@ class Test_DiagramScene(EddyTestCase):
         self.assertFalse(button.isChecked())
         self.assertIs(self.scene.mode, DiagramMode.Idle)
         self.assertLen(2, self.scene.items())
-        self.assertEmpty(self.scene.edgesById)
-        self.assertNotEmpty(self.scene.nodesById)
-        self.assertDictHasKey('n0', self.scene.nodesById)
+        self.assertIsNotNone(self.scene.index.nodeForId('n0'))
         self.assertEqual(1, self.scene.undostack.count())
         self.assertTrue(self.scene.node('n0').isSelected())
         self.assertEquals(self.scene.node('n0').pos(), self.mainview.mapToScene(QPoint(100, 100)))
@@ -92,10 +90,8 @@ class Test_DiagramScene(EddyTestCase):
         self.assertTrue(button.isChecked())
         self.assertIs(self.scene.mode, DiagramMode.NodeInsert)
         self.assertLen(4, self.scene.items())
-        self.assertEmpty(self.scene.edgesById)
-        self.assertNotEmpty(self.scene.nodesById)
-        self.assertDictHasKey('n0', self.scene.nodesById)
-        self.assertDictHasKey('n1', self.scene.nodesById)
+        self.assertIsNotNone(self.scene.index.nodeForId('n0'))
+        self.assertIsNotNone(self.scene.index.nodeForId('n1'))
         self.assertEqual(2, self.scene.undostack.count())
         self.assertEquals(self.scene.node('n0').pos(), self.mainview.mapToScene(QPoint(0, 100)))
         self.assertEquals(self.scene.node('n1').pos(), self.mainview.mapToScene(QPoint(400, 100)))
@@ -126,8 +122,7 @@ class Test_DiagramScene(EddyTestCase):
         # THEN
         self.assertLen(9, self.scene.items())
         self.assertIsNone(self.scene.command)
-        self.assertNotEmpty(self.scene.edgesById)
-        self.assertDictHasKey('e0', self.scene.edgesById)
+        self.assertIsNotNone(self.scene.index.edgeForId('e0'))
         self.assertIs(self.scene.edge('e0').source, self.scene.node('n0'))
         self.assertIs(self.scene.edge('e0').target, self.scene.node('n1'))
         self.assertEqual(1, self.scene.undostack.count())
@@ -150,7 +145,7 @@ class Test_DiagramScene(EddyTestCase):
         # THEN
         self.assertLen(8, self.scene.items())
         self.assertIsNone(self.scene.command)
-        self.assertEmpty(self.scene.edgesById)
+        self.assertEqual(4, self.scene.index.size())
         self.assertEqual(0, self.scene.undostack.count())
         self.assertIs(self.scene.mode, DiagramMode.Idle)
 
@@ -168,10 +163,9 @@ class Test_DiagramScene(EddyTestCase):
         QTest.mouseRelease(self.mainview.viewport(), Qt.LeftButton, Qt.ControlModifier, self.mainview.mapFromScene(QPoint(+200, +200)))
         # THEN
         self.assertLen(11, self.scene.items())
-        self.assertNotEmpty(self.scene.edgesById)
-        self.assertDictHasKey('e0', self.scene.edgesById)
-        self.assertDictHasKey('e1', self.scene.edgesById)
-        self.assertDictHasKey('e2', self.scene.edgesById)
+        self.assertIsNotNone(self.scene.index.edgeForId('e0'))
+        self.assertIsNotNone(self.scene.index.edgeForId('e1'))
+        self.assertIsNotNone(self.scene.index.edgeForId('e2'))
         self.assertIs(self.scene.edge('e0').source, self.scene.node('n0'))
         self.assertIs(self.scene.edge('e0').target, self.scene.node('n1'))
         self.assertIs(self.scene.edge('e1').source, self.scene.node('n0'))
@@ -429,49 +423,6 @@ class Test_DiagramScene(EddyTestCase):
         self.mainwindow.actionComposeTransitiveRole.trigger()
         # THEN
         self.assertFalse(self.scene.node('n0').transitive)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   NODE LABEL INDEX                                                                                               #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def test_node_label_index_update_upon_label_edit(self):
-        # GIVEN
-        self.createStubDiagram1()
-        self.assertIn('concept', self.scene.nodesByLabel)
-        self.assertIsInstance(self.scene.nodesByLabel['concept'], DistinctList)
-        self.assertLen(4, self.scene.nodesByLabel['concept'])
-        # WHEN
-        command = CommandNodeLabelChange(self.scene, self.scene.node('n0'), 'label1')
-        self.scene.undostack.push(command)
-        # THEN
-        self.assertEqual(1, self.scene.undostack.count())
-        self.assertIn('concept', self.scene.nodesByLabel)
-        self.assertLen(3, self.scene.nodesByLabel['concept'])
-        self.assertNotIn(self.scene.node('n0'), self.scene.nodesByLabel['concept'])
-        self.assertIn('label1', self.scene.nodesByLabel)
-        self.assertLen(1, self.scene.nodesByLabel['label1'])
-        self.assertIn(self.scene.node('n0'), self.scene.nodesByLabel['label1'])
-        # WHEN
-        self.scene.undostack.undo()
-        # THEN
-        self.assertIn('concept', self.scene.nodesByLabel)
-        self.assertLen(4, self.scene.nodesByLabel['concept'])
-        self.assertIn(self.scene.node('n0'), self.scene.nodesByLabel['concept'])
-        self.assertNotIn('label1', self.scene.nodesByLabel)
-
-    def test_node_label_index_update_upon_node_removal(self):
-        # GIVEN
-        self.createStubDiagram1()
-        self.assertIn('concept', self.scene.nodesByLabel)
-        self.assertIsInstance(self.scene.nodesByLabel['concept'], DistinctList)
-        self.assertLen(4, self.scene.nodesByLabel['concept'])
-        # WHEN
-        self.scene.removeItem(self.scene.node('n2'))
-        # THEN
-        self.assertIn('concept', self.scene.nodesByLabel)
-        self.assertLen(3, self.scene.nodesByLabel['concept'])
 
     ####################################################################################################################
     #                                                                                                                  #

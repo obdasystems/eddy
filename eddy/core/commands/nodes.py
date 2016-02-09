@@ -34,7 +34,7 @@
 
 from PyQt5.QtWidgets import QUndoCommand, QGraphicsItem
 
-from eddy.core.datatypes import DistinctList, Item
+from eddy.core.datatypes import Item
 from eddy.core.functions import identify
 
 
@@ -260,54 +260,30 @@ class CommandNodeLabelChange(QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        # Remove the item from the old index.
-        if self.data['undo'] in self.scene.nodesByLabel:
-            self.scene.nodesByLabel[self.data['undo']].remove(self.node)
-            if not self.scene.nodesByLabel[self.data['undo']]:
-                del self.scene.nodesByLabel[self.data['undo']]
-
-        # Update the label text.
+        self.scene.index.remove(self.node)
         self.node.setText(self.data['redo'])
+        self.scene.index.add(self.node)
 
-        # Map the item over the new index.
-        if not self.data['redo'] in self.scene.nodesByLabel:
-            self.scene.nodesByLabel[self.data['redo']] = DistinctList()
-        self.scene.nodesByLabel[self.data['redo']].append(self.node)
-
-        # If the label belongs to an individual identify all the connected enumeration nodes.
         if self.node.isItem(Item.IndividualNode):
             f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
             f2 = lambda x: x.isItem(Item.EnumerationNode)
             for node in {n for n in [e.other(self.node) for e in self.node.edges if f1(e)] if f2(n)}:
                 identify(node)
 
-        # Emit update signal.
         self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        # Remove the item from the old index.
-        if self.data['redo'] in self.scene.nodesByLabel:
-            self.scene.nodesByLabel[self.data['redo']].remove(self.node)
-            if not self.scene.nodesByLabel[self.data['redo']]:
-                del self.scene.nodesByLabel[self.data['redo']]
-
-        # Update the label text.
+        self.scene.index.remove(self.node)
         self.node.setText(self.data['undo'])
+        self.scene.index.add(self.node)
 
-        # Map the item over the new index.
-        if not self.data['undo'] in self.scene.nodesByLabel:
-            self.scene.nodesByLabel[self.data['undo']] = DistinctList()
-        self.scene.nodesByLabel[self.data['undo']].append(self.node)
-
-        # If the label belongs to an individual identify all the connected enumeration nodes.
         if self.node.isItem(Item.IndividualNode):
             f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
             f2 = lambda x: x.isItem(Item.EnumerationNode)
             for node in {n for n in [e.other(self.node) for e in self.node.edges if f1(e)] if f2(n)}:
                 identify(node)
 
-        # Emit update signal.
         self.scene.updated.emit()
 
 

@@ -66,7 +66,7 @@ class CommandEdgeAdd(QUndoCommand):
     def redo(self):
         """redo the command"""
         # IMPORTANT: don't remove this check!
-        if self.edge.id not in self.scene.edgesById:
+        if not self.scene.edge(self.edge.id):
             # map source/target over the edge
             self.edge.source.addEdge(self.edge)
             self.edge.target.addEdge(self.edge)
@@ -80,7 +80,7 @@ class CommandEdgeAdd(QUndoCommand):
     def undo(self):
         """undo the command"""
         # IMPORTANT: don't remove this check!
-        if self.edge.id in self.scene.edgesById:
+        if self.scene.edge(self.edge.id):
             # remove source/target from the edge
             self.edge.source.removeEdge(self.edge)
             self.edge.target.removeEdge(self.edge)

@@ -1366,7 +1366,7 @@ class MainWindow(QMainWindow):
                     if node.text() != form.renameField.value():
 
                         commands = []
-                        for n in scene.nodesByLabel[node.text()]:
+                        for n in scene.index.nodesForLabel(node.text()):
                             command = CommandNodeLabelChange(scene, n, form.renameField.value())
                             commands.append(command)
 
@@ -1464,12 +1464,7 @@ class MainWindow(QMainWindow):
                 clip = not self.clipboard.empty()
                 edge = len(edges) != 0
                 node = len(nodes) != 0
-                pred = next(filter(lambda x: x.isItem(Item.AttributeNode,
-                                                      Item.ConceptNode,
-                                                      Item.IndividualNode,
-                                                      Item.RoleNode,
-                                                      Item.ValueDomainNode,
-                                                      Item.ValueRestrictionNode), nodes), None) is not None
+                pred = next(filter(lambda x: x.predicate, nodes), None) is not None
 
         self.actionBringToFront.setEnabled(node)
         self.actionCloseActiveSubWindow.setEnabled(wind)

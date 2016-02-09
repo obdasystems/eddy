@@ -39,12 +39,13 @@ from PyQt5.QtGui import QColor, QPen
 from PyQt5.QtWidgets import QGraphicsScene, QUndoStack
 
 from eddy.core.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
-from eddy.core.datatypes import DiagramMode, DistinctList, File, Item
+from eddy.core.datatypes import DiagramMode, File, Item
 from eddy.core.functions import snapF, snapPT
 from eddy.core.items.edges import InputEdge, InclusionEdge
 from eddy.core.items.nodes import ConceptNode, ComplementNode, RoleChainNode, RoleInverseNode
 from eddy.core.items.nodes import RangeRestrictionNode, DomainRestrictionNode
 from eddy.core.items.factory import ItemFactory
+from eddy.core.items.index import ItemIndex
 from eddy.core.syntax import OWL2RLValidator
 from eddy.core.utils import Clipboard, GUID
 
@@ -79,10 +80,8 @@ class DiagramScene(QGraphicsScene):
         self.clipboardPasteOffsetX = Clipboard.PasteOffsetX  ## X offset to be added to item position upon paste
         self.clipboardPasteOffsetY = Clipboard.PasteOffsetY  ## Y offset to be added to item position upon paste
         self.document = File()  ## file associated with the current scene
-        self.edgesById = {}  ## used to index edges using their id
-        self.nodesById = {}  ## used to index nodes using their id
-        self.nodesByLabel = {}  ## used to index nodes using their label text
         self.guid = GUID(self)  ## used to generate unique incremental ids
+        self.index = ItemIndex(self)  ## used to index graphol items
         self.itemFactory = ItemFactory(self)  ## used to produce graphol items
         self.undostack = QUndoStack(self)  ## used to push actions and keep history for undo/redo
         self.undostack.setUndoLimit(50)  ## TODO: make the stack configurable
@@ -696,46 +695,29 @@ class DiagramScene(QGraphicsScene):
         :type item: AbstractItem
         """
         super().addItem(item)
-
-        # map the item over the index matching its type
-        collection = self.nodesById if item.node else self.edgesById
-        collection[item.id] = item
-
-        try:
-            # map the item in the nodesByLabel index if needed
-            if item.node and item.label.editable:
-                index = item.text()
-                if not index in self.nodesByLabel:
-                    self.nodesByLabel[index] = DistinctList()
-                self.nodesByLabel[index].append(item)
-        except AttributeError:
-            # some nodes have no label hence we don't have to index them
-            pass
+        self.index.add(item)
 
     def clear(self):
         """
         Clear the Diagram Scene by removing all the elements.
         """
-        self.edgesById.clear()
-        self.nodesById.clear()
-        self.nodesByLabel.clear()
+        self.index.clear()
         self.undostack.clear()
         super().clear()
 
     def edge(self, eid):
         """
-        Returns the edge matching the given node id.
+        Returns the edge matching the given edge id.
         :type eid: str
-        :raise KeyError: if there is no such edge in the diagram.
         """
-        return self.edgesById[eid]
+        return self.index.edgeForId(eid)
 
     def edges(self):
         """
         Returns a view on all the edges of the diagram.
         :rtype: view
         """
-        return self.edgesById.values()
+        return self.index.edges()
 
     def itemOnTopOf(self, point, nodes=True, edges=True, skip=None):
         """
@@ -756,16 +738,15 @@ class DiagramScene(QGraphicsScene):
         """
         Returns the node matching the given node id.
         :type nid: str
-        :raise KeyError: if there is no such node in the diagram.
         """
-        return self.nodesById[nid]
+        return self.index.nodeForId(nid)
 
     def nodes(self):
         """
         Returns a view on all the nodes in the diagram.
         :rtype: view
         """
-        return self.nodesById.values()
+        return self.index.nodes()
 
     def removeItem(self, item):
         """
@@ -773,22 +754,7 @@ class DiagramScene(QGraphicsScene):
         :type item: AbstractItem
         """
         super().removeItem(item)
-
-        # remove the item from the index matching its type
-        collection = self.nodesById if item.node else self.edgesById
-        collection.pop(item.id, None)
-
-        try:
-            # remove the item from the nodesByLabel index if needed
-            if item.node and item.label.editable:
-                index = item.text()
-                if index in self.nodesByLabel:
-                    self.nodesByLabel[index].remove(item)
-                    if not self.nodesByLabel[index]:
-                        del self.nodesByLabel[index]
-        except AttributeError:
-            # some nodes have no label hence we don't have to index them
-            pass
+        self.index.remove(item)
 
     def selectedEdges(self):
         """
