@@ -616,7 +616,6 @@ class MenuFactory(QObject):
         :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(mainwindow, scene, node)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeNodeBrush)
         menu.insertAction(mainwindow.actionOpenNodeProperties, mainwindow.actionChangeValueRestriction)
 

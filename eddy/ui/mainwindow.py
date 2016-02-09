@@ -1338,7 +1338,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            args = Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode, Item.ValueRestrictionNode
+            args = Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
                 action = self.sender()
@@ -1355,7 +1355,7 @@ class MainWindow(QMainWindow):
         if scene:
 
             scene.setMode(DiagramMode.Idle)
-            args = Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode, Item.ValueRestrictionNode
+            args = Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
 
