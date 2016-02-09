@@ -1213,8 +1213,7 @@ class MainWindow(QMainWindow):
         if scene:
             scene.setMode(DiagramMode.Idle)
             if not self.clipboard.empty():
-                # TODO: figure out how to send context menu position to the clipboard
-                self.clipboard.paste(scene)
+                self.clipboard.paste(scene, scene.mousePressPos)
 
     @pyqtSlot()
     def itemDelete(self):

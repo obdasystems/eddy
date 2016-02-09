@@ -402,6 +402,7 @@ class DiagramScene(QGraphicsScene):
                     self.clearSelection()
                     item.setSelected(True)
 
+                self.mousePressPos = mouseEvent.scenePos()
                 menu = self.mainwindow.menuFactory.create(self.mainwindow, self, item, mouseEvent.scenePos())
                 menu.exec_(mouseEvent.screenPos())
 
