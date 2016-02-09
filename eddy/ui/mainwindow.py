@@ -1398,8 +1398,7 @@ class MainWindow(QMainWindow):
             scene.setMode(DiagramMode.Idle)
             node = next(filter(lambda x: hasattr(x, 'label'), scene.selectedNodes()), None)
             if node and node.label.movable:
-                command = CommandNodeLabelMove(scene=scene, node=node, label=node.label)
-                command.end(pos=node.label.defaultPos())
+                command = CommandNodeLabelMove(scene, node, node.label.pos(), node.label.defaultPos())
                 scene.undostack.push(command)
                 node.label.updatePos()
 

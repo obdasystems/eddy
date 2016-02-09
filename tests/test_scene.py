@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtTest import QTest
 
-from eddy.core.commands import CommandNodeLabelEdit
+from eddy.core.commands import CommandNodeLabelChange
 from eddy.core.datatypes import Item, DiagramMode, DistinctList
 from eddy.core.items import InclusionEdge
 from tests import EddyTestCase
@@ -443,8 +443,7 @@ class Test_DiagramScene(EddyTestCase):
         self.assertIsInstance(self.scene.nodesByLabel['concept'], DistinctList)
         self.assertLen(4, self.scene.nodesByLabel['concept'])
         # WHEN
-        command = CommandNodeLabelEdit(self.scene, self.scene.node('n0'))
-        command.end('label1')
+        command = CommandNodeLabelChange(self.scene, self.scene.node('n0'), 'label1')
         self.scene.undostack.push(command)
         # THEN
         self.assertEqual(1, self.scene.undostack.count())

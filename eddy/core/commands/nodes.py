@@ -224,31 +224,23 @@ class CommandNodeLabelMove(QUndoCommand):
     """
     This command is used to move nodes labels.
     """
-    def __init__(self, scene, node, label):
+    def __init__(self, scene, node, pos1, pos2):
         """
         Initialize the command.
         """
         super().__init__('move {} label'.format(node.name))
         self.scene = scene
-        self.label = label
-        self.pos = {'undo': label.pos()}
-
-    def end(self, pos):
-        """
-        End the command collecting new data.
-        :type pos: QPointF
-        """
-        self.pos['redo'] = pos
+        self.node = node
+        self.data = {'undo': pos1, 'redo': pos2}
 
     def redo(self):
         """redo the command"""
-        if 'redo' in self.pos:
-            self.label.setPos(self.pos['redo'])
-            self.scene.updated.emit()
+        self.node.setTextPos(self.data['redo'])
+        self.scene.updated.emit()
 
     def undo(self):
         """undo the command"""
-        self.label.setPos(self.pos['undo'])
+        self.node.setTextPos(self.data['undo'])
         self.scene.updated.emit()
 
 

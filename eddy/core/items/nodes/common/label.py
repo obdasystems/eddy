@@ -65,9 +65,7 @@ class Label(LabelItem):
         self._template = default
 
         self.focusInData = None
-
-        self.commandEdit = None
-        self.commandMove = None
+        self.mousePressPos = None
 
         self.setFlag(QGraphicsItem.ItemIsMovable, self.movable)
         self.setFlag(QGraphicsItem.ItemIsSelectable, self.movable)
@@ -342,13 +340,14 @@ class Label(LabelItem):
         if scene.mode is DiagramMode.Idle:
 
             if mouseEvent.modifiers() & Qt.ControlModifier:
-                # allow the moving of the label if the CTRL modifier is being held.
+                # Allow the moving of the label if the CTRL modifier is being held.
                 scene.clearSelection()
                 scene.setMode(DiagramMode.LabelMove)
                 self.setSelected(True)
+                self.mousePressPos = self.pos()
                 super().mousePressEvent(mouseEvent)
             else:
-                # see if the mouse is hovering the parent item: if so see if the
+                # See if the mouse is hovering the parent item: if so see if the
                 # item is not selected and in case select it so the mouseMoveEvent
                 # in DiagramScene can perform the node movement.
                 parent = self.parentItem()
@@ -359,7 +358,7 @@ class Label(LabelItem):
 
         elif scene.mode is DiagramMode.LabelEdit:
 
-            # call super method in this case so we can move the mouse
+            # Call super method in this case so we can move the mouse
             # ibeam cursor within the label while being in EDIT mode.
             super().mousePressEvent(mouseEvent)
 
@@ -368,14 +367,7 @@ class Label(LabelItem):
         Executed when the text is moved with the mouse.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        scene = self.scene()
-        if scene.mode is DiagramMode.LabelMove:
-            super().mouseMoveEvent(mouseEvent)
-            self.commandMove = self.commandMove or CommandNodeLabelMove(scene, self.parentItem(), self)
-        elif scene.mode is DiagramMode.LabelEdit:
-            # call super method also in this case so we can select
-            # text within the label while being in EDIT mode.
-            super().mouseMoveEvent(mouseEvent)
+        super().mouseMoveEvent(mouseEvent)
 
     def mouseReleaseEvent(self, mouseEvent):
         """
@@ -386,16 +378,17 @@ class Label(LabelItem):
         super().mouseReleaseEvent(mouseEvent)
 
         if scene.mode is DiagramMode.LabelMove:
+            if self.mousePressPos is not None:
+                pos = self.pos()
+                if self.mousePressPos != pos:
+                    command = CommandNodeLabelMove(scene, self.parentItem(), self.mousePressPos, pos)
+                    scene.undostack.push(command)
+                    scene.setMode(DiagramMode.Idle)
 
-            if self.commandMove:
-                self.commandMove.end(pos=self.pos())
-                scene.undostack.push(self.commandMove)
-                scene.setMode(DiagramMode.Idle)
-
-        # always remove the selected flag so that the dotted outline disappears also
+        # Always remove the selected flag so that the dotted outline disappears also
         # if we release the CTRL keyboard modifier before the mouse left button.
         self.setSelected(False)
-        self.commandMove = None
+        self.mousePressPos = None
 
     ####################################################################################################################
     #                                                                                                                  #
