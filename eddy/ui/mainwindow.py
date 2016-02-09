@@ -50,7 +50,7 @@ from eddy import APPNAME, VERSION, BUG_TRACKER, GRAPHOL_HOME, DIAG_HOME
 from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom
 from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandRefactor
 from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap
-from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelEdit
+from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelChange
 from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeSetZValue
 from eddy.core.commands import CommandNodeSetBrush, CommandEdgeBreakpointDel
 from eddy.core.commands import CommandItemsMultiRemove, CommandEdgeInputToggleFunctional
@@ -1365,8 +1365,7 @@ class MainWindow(QMainWindow):
 
                         commands = []
                         for n in scene.nodesByLabel[node.text()]:
-                            command = CommandNodeLabelEdit(scene=scene, node=n)
-                            command.end(form.renameField.value())
+                            command = CommandNodeLabelChange(scene, n, form.renameField.value())
                             commands.append(command)
 
                         kwargs = {
@@ -1548,19 +1547,19 @@ class MainWindow(QMainWindow):
                 action = self.sender()
                 restriction = action.data()
 
-                value = None
+                data = None
                 if restriction is not Restriction.Cardinality:
-                    value = restriction.label
+                    data = restriction.label
                 else:
                     form = CardinalityRestrictionForm()
                     if form.exec_() == CardinalityRestrictionForm.Accepted:
-                        value = '({},{})'.format(form.minCardinalityValue or '-', form.maxCardinalityValue or '-')
+                        data = '({},{})'.format(form.minCardinalityValue or '-', form.maxCardinalityValue or '-')
 
-                if value:
+                if data:
                     item = 'range' if node.isItem(Item.RangeRestrictionNode) else 'domain'
-                    name = 'change {} restriction to {}'.format(item, value)
-                    command = CommandNodeLabelEdit(scene, node, value, name)
-                    if command.changed(value):
+                    name = 'change {} restriction to {}'.format(item, data)
+                    if node.text().strip() != data:
+                        command = CommandNodeLabelChange(scene, node, data, name)
                         scene.undostack.push(command)
 
     @pyqtSlot()
@@ -1578,19 +1577,20 @@ class MainWindow(QMainWindow):
                 action = self.sender()
                 if action.data() is Identity.Individual:
                     if node.identity is Identity.Literal:
-                        # Switch Literal -> Individual => set default text
-                        command = CommandNodeLabelEdit(scene, node, node.label.defaultText, 'change literal to individual')
+                        # Switch Literal -> Individual => set default template
+                        name = 'change literal to individual'
+                        command = CommandNodeLabelChange(scene, node, node.label.template, name)
                         scene.undostack.push(command)
                 elif action.data() is Identity.Literal:
                     # We need to bring up the form here
                     form = LiteralForm(node, self)
                     if form.exec_() == LiteralForm.Accepted:
                         datatype = form.datatypeField.currentData()
-                        value = form.valueField.value().strip()
-                        value = '"{}"^^{}'.format(rCut(lCut(value, '"'), '"'), datatype.value)
-                        name = 'change {} node to {}'.format(node.identity.label.lower(), value)
-                        command = CommandNodeLabelEdit(scene, node, value, name)
-                        if command.changed(value):
+                        data = form.valueField.value().strip()
+                        data = '"{}"^^{}'.format(rCut(lCut(data, '"'), '"'), datatype.value)
+                        if node.text().strip() != data:
+                            name = 'change {} node to {}'.format(node.identity.label.lower(), data)
+                            command = CommandNodeLabelChange(scene, node, data, name)
                             scene.undostack.push(command)
 
     @pyqtSlot()
@@ -1606,10 +1606,10 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
                 special = action.data() if node.special is not action.data() else None
-                value = special.value if special else node.label.defaultText
-                name = 'change {} label to "{}"'.format(node.name, value)
-                command = CommandNodeLabelEdit(scene, node, value, name)
-                if command.changed(value):
+                data = special.value if special else node.label.template
+                if node.text().strip() != data:
+                    name = 'change {} label to "{}"'.format(node.name, data)
+                    command = CommandNodeLabelChange(scene, node, data, name)
                     scene.undostack.push(command)
 
     @pyqtSlot()
@@ -1625,9 +1625,10 @@ class MainWindow(QMainWindow):
             if node:
                 action = self.sender()
                 datatype = action.data()
-                value = datatype.value
-                command = CommandNodeLabelEdit(scene, node, value, 'change {} datatype to {}'.format(node.name, value))
-                if command.changed(value):
+                data = datatype.value
+                if node.text().strip() != data:
+                    name = 'change {} datatype to {}'.format(node.name, data)
+                    command = CommandNodeLabelChange(scene, node, data, name)
                     scene.undostack.push(command)
 
     @pyqtSlot()
@@ -1660,10 +1661,11 @@ class MainWindow(QMainWindow):
                 if form.exec() == ValueRestrictionForm.Accepted:
                     datatype = form.datatypeField.currentData()
                     facet = form.facetField.currentData()
-                    value = rCut(lCut(form.valueField.value().strip(), '"'), '"')
-                    value = '{} "{}"^^{}'.format(facet.value, value, datatype.value)
-                    command = CommandNodeLabelEdit(scene, node, value, 'change value restriction to {}'.format(value))
-                    if command.changed(value):
+                    data = rCut(lCut(form.valueField.value().strip(), '"'), '"')
+                    data = '{} "{}"^^{}'.format(facet.value, data, datatype.value)
+                    if node.text().strip() != data:
+                        name = 'change value restriction to {}'.format(data)
+                        command = CommandNodeLabelChange(scene, node, data, name)
                         scene.undostack.push(command)
 
     @pyqtSlot('QMdiSubWindow')

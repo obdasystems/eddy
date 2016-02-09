@@ -52,7 +52,7 @@ from eddy.core.commands.nodes import CommandNodeAdd
 from eddy.core.commands.nodes import CommandNodeSetBrush
 from eddy.core.commands.nodes import CommandNodeChangeInputOrder
 from eddy.core.commands.nodes import CommandNodeOperatorSwitchTo
-from eddy.core.commands.nodes import CommandNodeLabelEdit
+from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.commands.nodes import CommandNodeLabelMove
 from eddy.core.commands.nodes import CommandNodeMove
 from eddy.core.commands.nodes import CommandNodeRezize

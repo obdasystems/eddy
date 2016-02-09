@@ -38,7 +38,7 @@ from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
 from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
 
 from eddy.core.commands import CommandNodeSetURL, CommandNodeSetDescription
-from eddy.core.commands import CommandNodeLabelEdit, CommandNodeMove
+from eddy.core.commands import CommandNodeLabelChange, CommandNodeMove
 from eddy.core.commands import CommandNodeChangeInputOrder
 from eddy.core.datatypes import DistinctList
 from eddy.core.functions import clamp, connect, isEmpty, rCut
@@ -294,12 +294,12 @@ class EditableNodeProperty(NodeProperty):
         self.labelWidget = QWidget()
         self.labelLayout = QFormLayout(self.labelWidget)
 
-        self.labelField = StringEditField(self.labelWidget)
-        self.labelField.setFixedWidth(300)
-        self.labelField.setValue(self.node.text())
-        self.labelField.setEnabled(self.node.label.editable)
+        self.textField = StringEditField(self.labelWidget)
+        self.textField.setFixedWidth(300)
+        self.textField.setValue(self.node.text())
+        self.textField.setEnabled(self.node.label.editable)
 
-        self.labelLayout.addRow('Text', self.labelField)
+        self.labelLayout.addRow('Text', self.textField)
 
         self.mainWidget.addTab(self.labelWidget, 'Label')
 
@@ -316,7 +316,7 @@ class EditableNodeProperty(NodeProperty):
         """
         if code == QDialog.Accepted:
             super().completed(code)
-            self.labelChanged()
+            self.textChanged()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -324,15 +324,14 @@ class EditableNodeProperty(NodeProperty):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def labelChanged(self):
+    def textChanged(self):
         """
         Change the label of the node.
         """
-        value = self.labelField.value().strip()
-        if self.node.text().strip() != value:
-            value = value if not isEmpty(value) else self.node.label.defaultText
-            command = CommandNodeLabelEdit(self.scene, self.node)
-            command.end(value)
+        data = self.textField.value().strip()
+        data = data if not isEmpty(data) else self.node.label.template
+        if self.node.text().strip() != data:
+            command = CommandNodeLabelChange(self.scene, self.node, data)
             self.scene.undostack.push(command)
 
 

@@ -36,7 +36,7 @@ from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QColor, QTextCursor, QPainterPath
 from PyQt5.QtWidgets import QGraphicsItem
 
-from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelEdit
+from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelChange
 from eddy.core.datatypes import Font, DiagramMode, Item
 from eddy.core.functions import isEmpty, distanceP
 from eddy.core.items import LabelItem
@@ -62,7 +62,9 @@ class Label(LabelItem):
         self._centered = centered
         self._editable = editable
         self._movable = movable
-        self._defaultText = default
+        self._template = default
+
+        self.focusInData = None
 
         self.commandEdit = None
         self.commandMove = None
@@ -72,7 +74,7 @@ class Label(LabelItem):
         self.setFlag(QGraphicsItem.ItemIsFocusable, self.editable)
         self.setDefaultTextColor(QColor(0, 0, 0, 255))
         self.setFont(Font('Arial', 12, Font.Light))
-        self.setText(self.defaultText)
+        self.setText(self.template)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
         self.setPos(self.defaultPos())
 
@@ -91,12 +93,12 @@ class Label(LabelItem):
         return self._centered
 
     @property
-    def defaultText(self):
+    def template(self):
         """
-        Returns the label default text.
+        Returns the label default template.
         :rtype: str
         """
-        return self._defaultText
+        return self._template
  
     @property
     def editable(self):
@@ -242,11 +244,10 @@ class Label(LabelItem):
         if focusEvent.reason() == Qt.OtherFocusReason:
             scene = self.scene()
             scene.setMode(DiagramMode.LabelEdit)
-            parent = self.parentItem()
             cursor = self.textCursor()
             cursor.select(QTextCursor.BlockUnderCursor)
             self.setTextCursor(cursor)
-            self.commandEdit = self.commandEdit or CommandNodeLabelEdit(scene, parent)
+            self.focusInData = self.text()
             scene.clearSelection()
             self.setSelected(True)
             super().focusInEvent(focusEvent)
@@ -262,22 +263,24 @@ class Label(LabelItem):
 
         if scene.mode is DiagramMode.LabelEdit:
 
-            # make sure we have something in the label
+            # Make sure we have something in the label.
             if isEmpty(self.text()):
-                self.setText(self.defaultText)
+                self.setText(self.template)
 
-            # push the edit command in the stack only if the label actually changed
-            if self.commandEdit.changed(self.text()):
-                self.commandEdit.end(self.text())
-                scene.undostack.push(self.commandEdit)
+            focusInData = self.focusInData
+            currentData = self.text().strip()
+
+            # Push the edit command in the stack only if the label actually changed.
+            if focusInData and focusInData != currentData:
+                command = CommandNodeLabelChange(scene, self.parentItem(), currentData)
+                scene.undostack.push(command)
 
             cursor = self.textCursor()
             cursor.clearSelection()
-            self.commandEdit = None
+            self.focusInData = None
             self.setTextCursor(cursor)
             self.setTextInteractionFlags(Qt.NoTextInteraction)
 
-            # Go back idle so we can perform another operation.
             scene.setMode(DiagramMode.Idle)
             scene.updated.emit()
 
