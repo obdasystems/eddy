@@ -28,7 +28,7 @@ Bring up a terminal window (or command prompt if on win32 platform) and type the
 Install [Qt 5.5](http://download.qt.io/official_releases/qt/5.5/5.5.1/qt-opensource-windows-x86-mingw492-5.5.1.exe).    
 Install [cx_Freeze](https://pypi.python.org/pypi/cx_Freeze/4.3.4).  
 Download and uncompress [SIP 4.17](http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.zip).  
-Download and uncompress [PyQt5.5](http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5/PyQt-gpl-5.5.zip).  
+Download and uncompress [PyQt5.5](http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.zip).  
 Bring up command prompt window and navigate to the uncompressed SIP 4.17 directory:
 
     >>> PATH=C:\Qt\5.5\mingw492_32\bin;C:\Qt\Tools\mingw492_32\bin;%PATH%

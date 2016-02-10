@@ -30,7 +30,7 @@ dependencies:
     - sudo mkdir -p /downloads && sudo chmod a+rw /downloads
     # Downloads
     - curl -L -o /downloads/sip.tar.gz http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.tar.gz
-    - curl -L -o /downloads/pyqt.tar.gz http://skylink.dl.sourceforge.net/project/pyqt/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
+    - curl -L -o /downloads/pyqt.tar.gz http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
     # Extract archives
     - tar xzf /downloads/sip.tar.gz -C /builds --keep-newer-files
     - tar xzf /downloads/pyqt.tar.gz -C /builds --keep-newer-files
