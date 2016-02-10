@@ -1840,7 +1840,7 @@ class MainWindow(QMainWindow):
 
         # DOCK AREA
         settings.beginGroup('dock')
-        for widget in (self.dockPalette, self.dockOverview):
+        for widget in self.dockPalette, self.dockOverview, self.dockExplorer:
             settings.setValue('{}/area'.format(widget.objectName()), self.dockWidgetArea(widget))
             settings.setValue('{}/view'.format(widget.objectName()), widget.isVisible())
         settings.endGroup()
