@@ -88,7 +88,8 @@ class MdiSubWindow(QMdiSubWindow):
     """
     This class implements the MDI area subwindow.
     """
-    closeEventIgnored = pyqtSignal('QMdiSubWindow')
+    closeAborted = pyqtSignal('QMdiSubWindow')
+    closed = pyqtSignal('QMdiSubWindow')
 
     def __init__(self, view, parent=None):
         """
@@ -127,10 +128,11 @@ class MdiSubWindow(QMdiSubWindow):
 
             if result == QMessageBox.Cancel:
                 closeEvent.ignore()
-                self.closeEventIgnored.emit(self)
+                self.closeAborted.emit(self)
             elif result == QMessageBox.Yes:
                 if not self.saveScene():
                     closeEvent.ignore()
+                    self.closeAborted.emit(self)
 
         if closeEvent.isAccepted():
             # NOTE: it is possible to have some minor memory leak here. Upon closing of a
@@ -143,6 +145,7 @@ class MdiSubWindow(QMdiSubWindow):
             #
             # Setting the Qt.WA_DeleteOnClose attribute on the MdiSubWindow should remove
             # all those references after the close event is processed.
+            self.closed.emit(self)
             scene.clear()
 
     ####################################################################################################################

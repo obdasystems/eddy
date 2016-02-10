@@ -41,9 +41,9 @@ class ItemIndex(QObject):
     """
     This class can be used to index Diagram Scene items for easy/fast retrieval.
     """
-    added = pyqtSignal('QGraphicsItem')
     cleared = pyqtSignal()
-    removed = pyqtSignal('QGraphicsItem')
+    itemAdded = pyqtSignal('QGraphicsItem')
+    itemRemoved = pyqtSignal('QGraphicsItem')
 
     def __init__(self, parent=None):
         """
@@ -71,7 +71,7 @@ class ItemIndex(QObject):
                 if not key in self.nodesByTx:
                     self.nodesByTx[key] = DistinctList()
                 self.nodesByTx[key].append(item)
-        self.added.emit(item)
+        self.itemAdded.emit(item)
 
     def clear(self):
         """
@@ -168,7 +168,7 @@ class ItemIndex(QObject):
                     self.nodesByTx[key].remove(item)
                     if not self.nodesByTx[key]:
                         del self.nodesByTx[key]
-        self.removed.emit(item)
+        self.itemRemoved.emit(item)
 
     def size(self):
         """
@@ -182,4 +182,4 @@ class ItemIndex(QObject):
         Index visual representation.
         :rtype: str
         """
-        return 'items:{},edges:{},nodes:{}'.format(len(self.itemsById), len(self.edgesById), len(self.nodesById))
+        return 'Index<edges:{},nodes:{}>'.format(len(self.edgesById), len(self.nodesById))

@@ -74,13 +74,13 @@ QDockWidget {
     titlebar-close-icon: url(:/icons/close);
 }
 QDockWidget::title {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                stop: 0.0 #E0E0E0, stop: 0.3 #DCDCDC,
-                                stop: 0.7 #DBDBDB, stop: 1.0 #D3D3D3);
     border-top: 1px solid #BABABA;
     border-bottom: 1px solid #BABABA;
     padding: 4px;
     text-align: center;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0.0 #E0E0E0, stop: 0.3 #DCDCDC,
+                                stop: 0.7 #DBDBDB, stop: 1.0 #D3D3D3);
 }
 QDockWidget::close-button {
     border: 1px solid transparent;
@@ -89,11 +89,11 @@ QDockWidget::close-button {
     top: 3px;
 }
 QDockWidget::close-button:hover {
+    border-color: #BABABA;
+    border-radius: 2px;
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                 stop: 0.0 #D0D0D0, stop: 0.3 #CCCCCC,
                                 stop: 0.7 #CBCBCB, stop: 1.0 #C3C3C3);
-    border-color: #BABABA;
-    border-radius: 2px;
 }
 QDockWidget QWidget {
     border: 0;
@@ -102,8 +102,6 @@ QDockWidget Palette {
     background: #FFFFFF;
 }
 QDockWidget Palette QToolButton {
-    /*background: transparent;*/
-    /*border: 1px solid transparent;*/
     background: #E0E0E0;
     border: 1px solid #BABABA;
 }
@@ -345,4 +343,46 @@ QLineEdit {
  */
 QStatusBar {
     background: #BBBBBB;
+}
+/**
+ * TREE VIEW
+ */
+QTreeView::item {
+    border: 0;
+}
+QTreeView::item:hover {
+    border: 0;
+}
+QTreeView::item:selected {
+    background: #4FC3F7;
+    color: #000000;
+}
+QTreeView::item:!selected {
+    background: #FFFFFF;
+    color: #000000;
+}
+QTreeView::branch:selected {
+    background: #4FC3F7;
+}
+QTreeView::branch:!selected {
+    background: #FFFFFF;
+}
+QTreeView::branch:has-siblings:!adjoins-item {
+    border-image: url(:/icons/treeview-vline) 0;
+}
+QTreeView::branch:has-siblings:adjoins-item {
+    border-image: url(:/icons/treeview-branch-more) 0;
+}
+QTreeView::branch:!has-children:!has-siblings:adjoins-item {
+    border-image: url(:/icons/treeview-branch-end) 0;
+}
+QTreeView::branch:has-children:!has-siblings:closed,
+QTreeView::branch:closed:has-children:has-siblings {
+    border-image: none;
+    image: url(:/icons/treeview-branch-closed);
+}
+QTreeView::branch:open:has-children:!has-siblings,
+QTreeView::branch:open:has-children:has-siblings  {
+    border-image: none;
+    image: url(:/icons/treeview-branch-open);
 }

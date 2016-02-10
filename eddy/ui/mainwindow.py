@@ -69,6 +69,7 @@ from eddy.core.utils import Clipboard
 from eddy.ui.dialogs import About, OpenFile, SaveFile
 from eddy.ui.dialogs import BusyProgressDialog, PreferencesDialog
 from eddy.ui.docks import DockWidget, Overview, Palette
+from eddy.ui.docks.explorer import Explorer
 from eddy.ui.forms import CardinalityRestrictionForm, ValueRestrictionForm
 from eddy.ui.forms import OWLTranslationForm, LiteralForm, RenameForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
@@ -133,10 +134,19 @@ class MainWindow(QMainWindow):
         #                                                                                                              #
         ################################################################################################################
 
+        self.explorer = Explorer(self)
         self.mdi = MdiArea(self)
         self.overview = Overview(self)
         self.palette_ = Palette(self)
         self.zoomctrl = ZoomControl(self.toolbar)
+
+        self.dockExplorer = DockWidget('Explorer', self)
+        self.dockExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        self.dockExplorer.setDefaultArea(Qt.RightDockWidgetArea)
+        self.dockExplorer.setDefaultVisible(True)
+        self.dockExplorer.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
+        self.dockExplorer.setFixedWidth(self.explorer.width())
+        self.dockExplorer.setWidget(self.explorer)
 
         self.dockOverview = DockWidget('Overview', self)
         self.dockOverview.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
@@ -185,7 +195,7 @@ class MainWindow(QMainWindow):
 
         # DOCK AREA
         settings.beginGroup('dock')
-        for widget in (self.dockPalette, self.dockOverview):
+        for widget in self.dockPalette, self.dockOverview, self.dockExplorer:
             self.addDockWidget(settings.value('{}/area'.format(widget.objectName()), widget.defaultArea(), int), widget)
             widget.setVisible(settings.value('{}/view'.format(widget.objectName()), widget.defaultVisible(), bool))
         settings.endGroup()
@@ -610,6 +620,7 @@ class MainWindow(QMainWindow):
         self.menuView.addSeparator()
         self.menuView.addAction(self.toolbar.toggleViewAction())
         self.menuView.addSeparator()
+        self.menuView.addAction(self.dockExplorer.toggleViewAction())
         self.menuView.addAction(self.dockOverview.toggleViewAction())
         self.menuView.addAction(self.dockPalette.toggleViewAction())
 
@@ -1366,7 +1377,7 @@ class MainWindow(QMainWindow):
 
                         commands = []
                         for n in scene.index.nodesForLabel(node.text()):
-                            command = CommandNodeLabelChange(scene, n, form.renameField.value())
+                            command = CommandNodeLabelChange(scene, n, n.text(), form.renameField.value())
                             commands.append(command)
 
                         kwargs = {
@@ -1553,8 +1564,8 @@ class MainWindow(QMainWindow):
                 if data:
                     item = 'range' if node.isItem(Item.RangeRestrictionNode) else 'domain'
                     name = 'change {} restriction to {}'.format(item, data)
-                    if node.text().strip() != data:
-                        command = CommandNodeLabelChange(scene, node, data, name)
+                    if node.text() != data:
+                        command = CommandNodeLabelChange(scene, node, node.text(), data, name)
                         scene.undostack.push(command)
 
     @pyqtSlot()
@@ -1574,7 +1585,7 @@ class MainWindow(QMainWindow):
                     if node.identity is Identity.Literal:
                         # Switch Literal -> Individual => set default template
                         name = 'change literal to individual'
-                        command = CommandNodeLabelChange(scene, node, node.label.template, name)
+                        command = CommandNodeLabelChange(scene, node, node.text(), node.label.template, name)
                         scene.undostack.push(command)
                 elif action.data() is Identity.Literal:
                     # We need to bring up the form here
@@ -1583,9 +1594,9 @@ class MainWindow(QMainWindow):
                         datatype = form.datatypeField.currentData()
                         data = form.valueField.value().strip()
                         data = '"{}"^^{}'.format(rCut(lCut(data, '"'), '"'), datatype.value)
-                        if node.text().strip() != data:
+                        if node.text() != data:
                             name = 'change {} node to {}'.format(node.identity.label.lower(), data)
-                            command = CommandNodeLabelChange(scene, node, data, name)
+                            command = CommandNodeLabelChange(scene, node, node.text(), data, name)
                             scene.undostack.push(command)
 
     @pyqtSlot()
@@ -1602,9 +1613,9 @@ class MainWindow(QMainWindow):
             if node:
                 special = action.data() if node.special is not action.data() else None
                 data = special.value if special else node.label.template
-                if node.text().strip() != data:
+                if node.text() != data:
                     name = 'change {} label to "{}"'.format(node.name, data)
-                    command = CommandNodeLabelChange(scene, node, data, name)
+                    command = CommandNodeLabelChange(scene, node, node.text(), data, name)
                     scene.undostack.push(command)
 
     @pyqtSlot()
@@ -1621,9 +1632,9 @@ class MainWindow(QMainWindow):
                 action = self.sender()
                 datatype = action.data()
                 data = datatype.value
-                if node.text().strip() != data:
+                if node.text() != data:
                     name = 'change {} datatype to {}'.format(node.name, data)
-                    command = CommandNodeLabelChange(scene, node, data, name)
+                    command = CommandNodeLabelChange(scene, node, node.text(), data, name)
                     scene.undostack.push(command)
 
     @pyqtSlot()
@@ -1658,9 +1669,9 @@ class MainWindow(QMainWindow):
                     facet = form.facetField.currentData()
                     data = rCut(lCut(form.valueField.value().strip(), '"'), '"')
                     data = '{} "{}"^^{}'.format(facet.value, data, datatype.value)
-                    if node.text().strip() != data:
+                    if node.text() != data:
                         name = 'change value restriction to {}'.format(data)
-                        command = CommandNodeLabelChange(scene, node, data, name)
+                        command = CommandNodeLabelChange(scene, node, node.text(), data, name)
                         scene.undostack.push(command)
 
     @pyqtSlot('QMdiSubWindow')
@@ -1673,6 +1684,7 @@ class MainWindow(QMainWindow):
             mainview = subwindow.widget()
             scene = mainview.scene()
             scene.undostack.setActive()
+            self.explorer.setView(mainview)
             self.overview.setView(mainview)
             disconnect(self.zoomctrl.zoomChanged)
             disconnect(mainview.zoomChanged)
@@ -1684,19 +1696,30 @@ class MainWindow(QMainWindow):
 
             if not self.mdi.subWindowList():
                 self.zoomctrl.resetZoomLevel()
-                self.overview.clearView()
+                self.explorer.clear()
+                self.overview.clear()
                 self.setWindowTitle()
 
         self.sceneSelectionChanged()
 
     @pyqtSlot('QMdiSubWindow')
-    def subWindowCloseEventIgnored(self, subwindow):
+    def subWindowCloseAborted(self, subwindow):
         """
         Executed when the close event of an MDI subwindow is aborted.
         :type subwindow: MdiSubWindow
         """
         self.abortQuit = True
         self.mdi.setActiveSubWindow(subwindow)
+
+    @pyqtSlot('QMdiSubWindow')
+    def subWindowClosed(self, subwindow):
+        """
+        Executed when an MDI subwindow is closed.
+        :type subwindow: MdiSubWindow
+        """
+        mainview = subwindow.widget()
+        if mainview:
+            self.explorer.flush(mainview)
 
     @pyqtSlot()
     def swapEdge(self):
@@ -1968,7 +1991,8 @@ class MainWindow(QMainWindow):
         scene = mainview.scene()
         connect(self.documentSaved, subwindow.documentSaved)
         connect(scene.undostack.cleanChanged, subwindow.undoStackCleanChanged)
-        connect(subwindow.closeEventIgnored, self.subWindowCloseEventIgnored)
+        connect(subwindow.closeAborted, self.subWindowCloseAborted)
+        connect(subwindow.closed, self.subWindowClosed)
         return subwindow
 
     def createView(self, scene):

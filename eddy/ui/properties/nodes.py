@@ -330,8 +330,8 @@ class EditableNodeProperty(NodeProperty):
         """
         data = self.textField.value().strip()
         data = data if not isEmpty(data) else self.node.label.template
-        if self.node.text().strip() != data:
-            command = CommandNodeLabelChange(self.scene, self.node, data)
+        if self.node.text() != data:
+            command = CommandNodeLabelChange(self.scene, self.node, self.node.text(), data)
             self.scene.undostack.push(command)
 
 

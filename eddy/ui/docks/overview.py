@@ -111,7 +111,7 @@ class Overview(QGraphicsView):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def clearView(self):
+    def clear(self):
         """
         Clear the widget from browsing the current view.
         """
@@ -120,8 +120,8 @@ class Overview(QGraphicsView):
             try:
                 scene = self.mainview.scene()
                 # Make sure to disconnect only the signals connected to the slots provided by this
-                # widget otherwise we will experiences bugs when the MainWindow goes out of focus: for more
-                # details on the matter read: https://github.com/danielepantaleone/eddy/issues/15
+                # widget otherwise we will experiences bugs when the MainWindow goes out of focus: for
+                # more details on the matter read: https://github.com/danielepantaleone/eddy/issues/15
                 disconnect(scene.selectionChanged, self.updateView)
                 disconnect(scene.updated, self.updateView)
             except RuntimeError:
@@ -137,7 +137,7 @@ class Overview(QGraphicsView):
         Set the widget to browse the given view.
         :type view: QGraphicsView
         """
-        self.clearView()
+        self.clear()
 
         if view:
             scene = view.scene()

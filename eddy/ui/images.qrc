@@ -41,6 +41,18 @@
     <file alias="star-filled">artwork/icons/ic_star_black_24dp_1x.png</file>
     <file alias="swap-horizontal">artwork/icons/ic_swap_horiz_black_24dp_1x.png</file>
     <file alias="swap-vertical">artwork/icons/ic_swap_vert_black_24dp_1x.png</file>
+    <file alias="treeview-branch-closed">artwork/icons/treeview-branch-closed.png</file>
+    <file alias="treeview-branch-end">artwork/icons/treeview-branch-end.png</file>
+    <file alias="treeview-branch-more">artwork/icons/treeview-branch-more.png</file>
+    <file alias="treeview-branch-open">artwork/icons/treeview-branch-open.png</file>
+    <file alias="treeview-vline">artwork/icons/treeview-vline.png</file>
+    <file alias="treeview-attribute">artwork/icons/treeview-attribute.png</file>
+    <file alias="treeview-concept">artwork/icons/treeview-concept.png</file>
+    <file alias="treeview-datarange">artwork/icons/treeview-datarange.png</file>
+    <file alias="treeview-individual">artwork/icons/treeview-individual.png</file>
+    <file alias="treeview-literal">artwork/icons/treeview-literal.png</file>
+    <file alias="treeview-role">artwork/icons/treeview-role.png</file>
+
     <file alias="undo">artwork/icons/ic_undo_black_24dp_1x.png</file>
     <file alias="warning">artwork/icons/ic_warning_black_48dp_1x.png</file>
     <file alias="zoom">artwork/icons/ic_zoom_black_24dp_1x.png</file>
