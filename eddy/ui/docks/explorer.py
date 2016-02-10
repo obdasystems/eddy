@@ -34,7 +34,7 @@
 
 from PyQt5.QtCore import pyqtSlot, QSortFilterProxyModel, Qt
 from PyQt5.QtGui import QPainter, QStandardItemModel, QStandardItem, QIcon
-from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QHeaderView
 from PyQt5.QtWidgets import QStyleOption, QStyle
 
 from eddy.core.datatypes import Item, Identity
@@ -69,7 +69,7 @@ class Explorer(QWidget):
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.view)
         self.setContentsMargins(0, 0, 0, 0)
-        self.setFixedWidth(216)
+        self.setMinimumWidth(216)
 
         connect(self.view.doubleClicked, self.itemDoubleClicked)
         connect(self.view.pressed, self.itemPressed)
@@ -211,7 +211,7 @@ class Explorer(QWidget):
 
     def flush(self, view):
         """
-        Flush the cache of the given mainview
+        Flush the cache of the given mainview.
         :type view: MainView
         """
         self.expanded.pop(view, None)
@@ -293,8 +293,13 @@ class ExplorerView(QTreeView):
         self.setEditTriggers(QTreeView.NoEditTriggers)
         self.setFocusPolicy(Qt.NoFocus)
         self.setHeaderHidden(True)
+        self.setHorizontalScrollMode(QTreeView.ScrollPerPixel)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setSelectionMode(QTreeView.SingleSelection)
         self.setSortingEnabled(True)
+        self.setWordWrap(True)
+        self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.header().setStretchLastSection(False)
         self.mainwindow = mainwindow
 
     ####################################################################################################################
@@ -349,7 +354,7 @@ class ParentItem(QStandardItem):
         :type node: AbstractNode
         :rtype: str
         """
-        return node.text()
+        return node.text().replace('\n', '')
 
 
 class ChildItem(QStandardItem):
@@ -370,4 +375,4 @@ class ChildItem(QStandardItem):
         :type node: AbstractNode
         :rtype: str
         """
-        return '{}:{}'.format(node.text(), node.id)
+        return '{}:{}'.format(node.text().replace('\n', ''), node.id)
