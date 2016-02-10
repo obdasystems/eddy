@@ -72,7 +72,7 @@ class Explorer(QWidget):
         self.setFixedWidth(216)
 
         connect(self.view.doubleClicked, self.itemDoubleClicked)
-        connect(self.view.clicked, self.itemClicked)
+        connect(self.view.pressed, self.itemPressed)
         connect(self.view.collapsed, self.itemCollapsed)
         connect(self.view.expanded, self.itemExpanded)
 
@@ -98,17 +98,6 @@ class Explorer(QWidget):
     #   SLOTS                                                                                                          #
     #                                                                                                                  #
     ####################################################################################################################
-
-    @pyqtSlot('QModelIndex')
-    def itemClicked(self, index):
-        """
-        Executed when an item in the tree view is clicked.
-        :type index: QModelIndex
-        """
-        item = self.model.itemFromIndex(index)
-        node = item.data()
-        if node:
-            self.selectNode(node)
 
     @pyqtSlot('QModelIndex')
     def itemCollapsed(self, index):
@@ -146,6 +135,17 @@ class Explorer(QWidget):
                 self.expanded[self.mainview] = set()
             expanded = self.expanded[self.mainview]
             expanded.add(item.text())
+
+    @pyqtSlot('QModelIndex')
+    def itemPressed(self, index):
+        """
+        Executed when an item in the tree view is clicked.
+        :type index: QModelIndex
+        """
+        item = self.model.itemFromIndex(index)
+        node = item.data()
+        if node:
+            self.selectNode(node)
 
     @pyqtSlot('QGraphicsItem')
     def insert(self, item):
