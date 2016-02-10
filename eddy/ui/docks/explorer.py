@@ -45,11 +45,12 @@ class Explorer(QWidget):
     """
     This class implements the diagram predicate node explorer.
     """
-    def __init__(self, *args):
+    def __init__(self, mainwindow):
         """
         Initialize the Explorer.
+        :type mainwindow: MainWindow
         """
-        super().__init__(*args)
+        super().__init__(mainwindow)
         self.expanded = {}
         self.mainview = None
         self.iconA = QIcon(':/icons/treeview-attribute')
@@ -62,7 +63,7 @@ class Explorer(QWidget):
         self.proxy = QSortFilterProxyModel(self)
         self.proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.proxy.setSourceModel(self.model)
-        self.view = ExplorerView(self)
+        self.view = ExplorerView(mainwindow, self)
         self.view.setModel(self.model)
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
@@ -280,18 +281,53 @@ class ExplorerView(QTreeView):
     """
     This class implements the explorer tree view.
     """
-    def __init__(self, parent=None):
+    def __init__(self, mainwindow, parent=None):
         """
         Initialize the explorer view.
+        :type mainwindow: MainWindow
         :type parent: QWidget
         """
         super().__init__(parent)
         self.setAnimated(True)
+        self.setContextMenuPolicy(Qt.PreventContextMenu)
         self.setEditTriggers(QTreeView.NoEditTriggers)
         self.setFocusPolicy(Qt.NoFocus)
         self.setHeaderHidden(True)
         self.setSelectionMode(QTreeView.SingleSelection)
         self.setSortingEnabled(True)
+        self.mainwindow = mainwindow
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   EVENTS                                                                                                         #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def mousePressEvent(self, mouseEvent):
+        """
+        Executed when the mouse is pressed on the tree view
+        :type mouseEvent: QMouseEvent
+        """
+        self.clearSelection()
+        # We call super after clearing the selection so that we click off an
+        # item it will be deselected by clearSelection here above and the default
+        # mousePressEvent will not evit the clicked signal that will select the item.
+        super().mousePressEvent(mouseEvent)
+
+    def mouseReleaseEvent(self, mouseEvent):
+        """
+        Executed when the mouse is pressed on the tree view
+        :type mouseEvent: QMouseEvent
+        """
+        if mouseEvent.button() == Qt.RightButton:
+            index = next(iter(self.selectedIndexes()), None)
+            if index:
+                item = self.model().itemFromIndex(index)
+                node = item.data()
+                if node:
+                    menu = self.mainwindow.menuFactory.create(self.mainwindow, node.scene(), node)
+                    menu.exec_(mouseEvent.screenPos().toPoint())
+        super().mouseReleaseEvent(mouseEvent)
 
 
 class ParentItem(QStandardItem):

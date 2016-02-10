@@ -655,7 +655,7 @@ class MenuFactory(QObject):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def create(self, mainwindow, scene, item, pos):
+    def create(self, mainwindow, scene, item, pos=None):
         """
         Build and return a QMenu instance according to the given parameters.
         :type mainwindow: MainWindow
