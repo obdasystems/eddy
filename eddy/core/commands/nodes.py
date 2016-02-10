@@ -248,7 +248,7 @@ class CommandNodeLabelChange(QUndoCommand):
     """
     This command is used to edit nodes labels.
     """
-    def __init__(self, scene, node, data, name=None):
+    def __init__(self, scene, node, undo, redo, name=None):
         """
         Initialize the command.
         """
@@ -256,7 +256,7 @@ class CommandNodeLabelChange(QUndoCommand):
         super().__init__(message)
         self.scene = scene
         self.node = node
-        self.data = {'undo': node.text().strip(), 'redo': data}
+        self.data = {'undo': undo, 'redo': redo}
 
     def redo(self):
         """redo the command"""

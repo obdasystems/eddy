@@ -207,7 +207,7 @@ class Label(LabelItem):
         Returns the current shape text (shortcut for self.toPlainText()).
         :rtype: str
         """
-        return self.toPlainText()
+        return self.toPlainText().strip()
 
     def updatePos(self, moved=False):
         """
@@ -266,11 +266,20 @@ class Label(LabelItem):
                 self.setText(self.template)
 
             focusInData = self.focusInData
-            currentData = self.text().strip()
+            currentData = self.text()
 
-            # Push the edit command in the stack only if the label actually changed.
             if focusInData and focusInData != currentData:
-                command = CommandNodeLabelChange(scene, self.parentItem(), currentData)
+                # The code below is a bit tricky: to be able to properly update the node index in
+                # the diagram scene we need to force the value of the label to it's previous one
+                # and let the undo command implementation update the index by applying the redo.
+                # We won't notice any glitch since the back and forth change is going to happen
+                # within a frame and Qt will only draw the new text. This is the only place where
+                # this trick is necessary since both the refactor name dialog and the node properties
+                # tab perform the edit on an external QTextField and oly later they will push the
+                # change in the label, while here we have realtime edit of the label.
+                self.setText(focusInData)
+                node = self.parentItem()
+                command = CommandNodeLabelChange(scene, node, focusInData, currentData)
                 scene.undostack.push(command)
 
             cursor = self.textCursor()
