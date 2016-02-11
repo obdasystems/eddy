@@ -1781,6 +1781,7 @@ class MainWindow(QMainWindow):
             busy = BusyProgressDialog('Syntax check...', self)
             busy.show()
 
+            placeholder = None
             message = 'No syntax error found!'
             pixmap = QPixmap(':/icons/info')
 
@@ -1791,6 +1792,7 @@ class MainWindow(QMainWindow):
                     S = res.source
                     T = res.target
                     M = uncapitalize(res.message)
+                    placeholder = res.edge
                     sname = '{} "{}"'.format(S.name, S.id if not S.predicate else '{}:{}'.format(S.text(), S.id))
                     tname = '{} "{}"'.format(T.name, T.id if not T.predicate else '{}:{}'.format(T.text(), T.id))
                     message = 'Syntax error detected on {} from {} to {}: <i>{}</i>'.format(E.name, sname, tname, M)
@@ -1799,9 +1801,11 @@ class MainWindow(QMainWindow):
             else:
                 for n in scene.nodes():
                     if n.identity is Identity.Unknown:
+                        placeholder = n
                         name = '{} "{}"'.format(n.name, n.id if not n.predicate else '{}:{}'.format(n.text(), n.id))
                         message = 'Unkown node identity detected on {}'.format(name)
                         pixmap = QPixmap(':/icons/warning')
+                        break
 
             busy.close()
 
@@ -1812,6 +1816,10 @@ class MainWindow(QMainWindow):
             msgbox.setStandardButtons(QMessageBox.Close)
             msgbox.setText(message)
             msgbox.exec_()
+
+            if placeholder:
+                mainview = self.mdi.activeView
+                mainview.centerOn(placeholder)
 
     @pyqtSlot()
     def toggleEdgeComplete(self):
