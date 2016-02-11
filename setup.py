@@ -447,7 +447,7 @@ if sys.platform.startswith('darwin'):
             """
             import plistlib
             contents = {
-                'CFBundleName': '{} {}'.format(APPNAME, VERSION),
+                'CFBundleName': APPNAME,
                 'CFBundleGetInfoString': VERSION,
                 'CFBundleShortVersionString': VERSION,
                 'CFBundleVersion': VERSION,
@@ -657,7 +657,7 @@ setup(
     ],
     options={
         'bdist_mac': {
-            'bundle_name': '{} {}'.format(APPNAME, VERSION),
+            'bundle_name': APPNAME,
             'iconfile': OPTS['EXEC_ICON'],
         },
         'bdist_dmg': {
