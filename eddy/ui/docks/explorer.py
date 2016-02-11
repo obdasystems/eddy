@@ -63,6 +63,7 @@ class Explorer(QWidget):
         self.iconL = QIcon(':/icons/treeview-literal')
         self.iconR = QIcon(':/icons/treeview-role')
         self.search = StringField(self)
+        self.search.setClearButtonEnabled(True)
         self.search.setPlaceholderText('Search...')
         self.search.setFixedHeight(30)
         self.model = QStandardItemModel(self)
