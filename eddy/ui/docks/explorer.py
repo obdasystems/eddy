@@ -40,6 +40,8 @@ from PyQt5.QtWidgets import QStyleOption, QStyle
 from eddy.core.datatypes import Item, Identity
 from eddy.core.functions import disconnect, connect
 
+from eddy.ui.fields import StringField
+
 
 class Explorer(QWidget):
     """
@@ -52,6 +54,7 @@ class Explorer(QWidget):
         """
         super().__init__(mainwindow)
         self.expanded = {}
+        self.searched = {}
         self.mainview = None
         self.iconA = QIcon(':/icons/treeview-attribute')
         self.iconC = QIcon(':/icons/treeview-concept')
@@ -59,6 +62,9 @@ class Explorer(QWidget):
         self.iconI = QIcon(':/icons/treeview-individual')
         self.iconL = QIcon(':/icons/treeview-literal')
         self.iconR = QIcon(':/icons/treeview-role')
+        self.search = StringField(self)
+        self.search.setPlaceholderText('Search...')
+        self.search.setFixedHeight(30)
         self.model = QStandardItemModel(self)
         self.proxy = QSortFilterProxyModel(self)
         self.proxy.setDynamicSortFilter(False)
@@ -69,6 +75,7 @@ class Explorer(QWidget):
         self.view.setModel(self.proxy)
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.addWidget(self.search)
         self.mainLayout.addWidget(self.view)
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumWidth(216)
@@ -77,6 +84,7 @@ class Explorer(QWidget):
         connect(self.view.pressed, self.itemPressed)
         connect(self.view.collapsed, self.itemCollapsed)
         connect(self.view.expanded, self.itemExpanded)
+        connect(self.search.textChanged, self.filterItem)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -100,6 +108,17 @@ class Explorer(QWidget):
     #   SLOTS                                                                                                          #
     #                                                                                                                  #
     ####################################################################################################################
+
+    @pyqtSlot(str)
+    def filterItem(self, key):
+        """
+        Executed when the search box is filled with data.
+        :type key: str
+        """
+        if self.mainview:
+            self.proxy.setFilterFixedString(key)
+            self.proxy.sort(Qt.AscendingOrder)
+            self.searched[self.mainview] = key
 
     @pyqtSlot('QModelIndex')
     def itemCollapsed(self, index):
@@ -217,6 +236,7 @@ class Explorer(QWidget):
         :type view: MainView
         """
         self.expanded.pop(view, None)
+        self.searched.pop(view, None)
 
     def iconFor(self, node):
         """
@@ -280,6 +300,11 @@ class Explorer(QWidget):
                     item = self.model.item(i)
                     index = self.proxy.mapFromSource(self.model.indexFromItem(item))
                     self.view.setExpanded(index, item.text() in expanded)
+
+            key = ''
+            if self.mainview in self.searched:
+                key = self.searched[self.mainview]
+            self.search.setText(key)
 
 
 class ExplorerView(QTreeView):

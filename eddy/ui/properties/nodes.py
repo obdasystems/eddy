@@ -43,7 +43,7 @@ from eddy.core.commands import CommandNodeChangeInputOrder
 from eddy.core.datatypes import DistinctList
 from eddy.core.functions import clamp, connect, isEmpty, rCut
 
-from eddy.ui.fields import StringEditField, TextEditField, SpinBox
+from eddy.ui.fields import StringField, TextField, SpinBox
 
 
 ########################################################################################################################
@@ -78,26 +78,26 @@ class NodeProperty(QDialog):
         self.generalWidget = QWidget()
         self.generalLayout = QFormLayout(self.generalWidget)
 
-        self.idField = StringEditField(self.generalWidget)
+        self.idField = StringField(self.generalWidget)
         self.idField.setReadOnly(True)
         self.idField.setFixedWidth(300)
         self.idField.setValue(self.node.id)
 
-        self.itemField = StringEditField(self.generalWidget)
+        self.itemField = StringField(self.generalWidget)
         self.itemField.setReadOnly(True)
         self.itemField.setFixedWidth(300)
         self.itemField.setValue(' '.join(i.capitalize() for i in rCut(self.node.name, ' node').split()))
 
-        self.showIdentityField = StringEditField(self.generalWidget)
+        self.showIdentityField = StringField(self.generalWidget)
         self.showIdentityField.setReadOnly(True)
         self.showIdentityField.setFixedWidth(300)
         self.showIdentityField.setValue(self.node.identity.label)
 
-        self.urlField = StringEditField(self.generalWidget)
+        self.urlField = StringField(self.generalWidget)
         self.urlField.setFixedWidth(300)
         self.urlField.setValue(self.node.url)
 
-        self.descriptionField = TextEditField(self.generalWidget)
+        self.descriptionField = TextField(self.generalWidget)
         self.descriptionField.setFixedSize(300, 160)
         self.descriptionField.setValue(self.node.description)
 
@@ -294,7 +294,7 @@ class EditableNodeProperty(NodeProperty):
         self.labelWidget = QWidget()
         self.labelLayout = QFormLayout(self.labelWidget)
 
-        self.textField = StringEditField(self.labelWidget)
+        self.textField = StringField(self.labelWidget)
         self.textField.setFixedWidth(300)
         self.textField.setValue(self.node.text())
         self.textField.setEnabled(self.node.label.editable)

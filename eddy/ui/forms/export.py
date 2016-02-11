@@ -45,7 +45,7 @@ from eddy.core.exceptions import MalformedDiagramError
 from eddy.core.exporters import OWLExporter
 from eddy.core.functions import isEmpty, connect, openPath
 
-from eddy.ui.fields import StringEditField, ComboBox
+from eddy.ui.fields import StringField, ComboBox
 from eddy.ui.view import MainView
 
 
@@ -67,11 +67,11 @@ class OWLTranslationForm(QDialog):
         self.worker = None
         self.workerThread = None
 
-        self.iriField = StringEditField(self)
+        self.iriField = StringField(self)
         self.iriField.setFixedWidth(300)
         self.iriField.setValidator(QRegExpValidator(QRegExp('[\w:\/\[\]=?%#~\.\-\+]*'), self))
 
-        self.prefixField = StringEditField(self)
+        self.prefixField = StringField(self)
         self.prefixField.setFixedWidth(300)
         self.prefixField.setValidator(QRegExpValidator(QRegExp('[\w]*'), self))
 

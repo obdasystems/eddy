@@ -41,7 +41,7 @@ from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTa
 from eddy.core.commands import CommandSceneResize
 from eddy.core.functions import connect
 
-from eddy.ui.fields import StringEditField, SpinBox, IntEditField
+from eddy.ui.fields import StringField, SpinBox, IntField
 
 
 class SceneProperty(QDialog):
@@ -68,13 +68,13 @@ class SceneProperty(QDialog):
         self.generalLayout = QFormLayout(self.generalWidget)
 
         # Amount of nodes in the scene
-        self.nodesField = IntEditField(self.generalWidget)
+        self.nodesField = IntField(self.generalWidget)
         self.nodesField.setReadOnly(True)
         self.nodesField.setFixedWidth(300)
         self.nodesField.setValue(len(self.scene.nodes()))
 
         # Amount of edges in the scene
-        self.edgesField = IntEditField(self.generalWidget)
+        self.edgesField = IntField(self.generalWidget)
         self.nodesField.setReadOnly(True)
         self.edgesField.setFixedWidth(300)
         self.edgesField.setValue(len(self.scene.edges()))
@@ -116,13 +116,13 @@ class SceneProperty(QDialog):
             self.documentLayout = QFormLayout(self.documentWidget)
 
             # Filepath of the saved document.
-            self.pathField = StringEditField(self.documentWidget)
+            self.pathField = StringField(self.documentWidget)
             self.pathField.setReadOnly(True)
             self.pathField.setFixedWidth(300)
             self.pathField.setValue(self.scene.document.path)
 
             # Timestamp when the document has been last modified.
-            self.editedField = StringEditField(self.documentWidget)
+            self.editedField = StringField(self.documentWidget)
             self.editedField.setReadOnly(True)
             self.editedField.setFixedWidth(300)
             self.editedField.setValue(datetime.fromtimestamp(int(self.scene.document.edited)).strftime('%Y/%m/%d %H:%M:%S'))

@@ -40,7 +40,7 @@ from PyQt5.QtWidgets import QMessageBox
 from eddy.core.datatypes import XsdDatatype, Identity, Facet
 from eddy.core.functions import isEmpty, connect
 
-from eddy.ui.fields import IntEditField, StringEditField, ComboBox
+from eddy.ui.fields import IntField, StringField, ComboBox
 
 
 class CardinalityRestrictionForm(QDialog):
@@ -55,8 +55,8 @@ class CardinalityRestrictionForm(QDialog):
         super().__init__(parent)
         self.minCardinalityValue = None
         self.maxCardinalityValue = None
-        self.minCardinalityField = IntEditField(self)
-        self.maxCardinalityField = IntEditField(self)
+        self.minCardinalityField = IntField(self)
+        self.maxCardinalityField = IntField(self)
         self.minCardinalityField.setFixedWidth(80)
         self.maxCardinalityField.setFixedWidth(80)
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
@@ -123,7 +123,7 @@ class LiteralForm(QDialog):
             self.datatypeField.addItem(datatype.value, datatype)
 
         # VALUE STRING FIELD
-        self.valueField = StringEditField(self)
+        self.valueField = StringField(self)
         self.valueField.setFixedWidth(300)
 
         # FILL FIELDS WITH DATA
@@ -167,7 +167,7 @@ class RenameForm(QDialog):
         """
         super().__init__(parent)
         self.node = node
-        self.renameField = StringEditField(self)
+        self.renameField = StringField(self)
         self.renameField.setFixedWidth(200)
         self.renameField.setValue(self.node.text())
         self.invalidLabel = QLabel('\'\' is not a valid label', self)
@@ -261,7 +261,7 @@ class ValueRestrictionForm(QDialog):
                 break
 
         # VALUE STRING FIELD
-        self.valueField = StringEditField(self)
+        self.valueField = StringField(self)
         self.valueField.setFixedWidth(300)
         self.valueField.setValue(node.value)
 

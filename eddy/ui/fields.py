@@ -56,7 +56,7 @@ class ComboBox(QComboBox):
         return self.itemData(self.currentIndex())
 
 
-class DoubleEditField(QLineEdit):
+class DoubleField(QLineEdit):
     """
     This class implements an input field where the user can enter float values.
     """
@@ -83,7 +83,7 @@ class DoubleEditField(QLineEdit):
         return float(self.text())
 
 
-class IntEditField(QLineEdit):
+class IntField(QLineEdit):
     """
     This class implements an input field where the user can enter only integer values.
     """
@@ -110,7 +110,7 @@ class IntEditField(QLineEdit):
         return int(self.text())
 
 
-class StringEditField(QLineEdit):
+class StringField(QLineEdit):
     """
     This class implements an input field where the user can enter strings.
     """
@@ -136,7 +136,7 @@ class StringEditField(QLineEdit):
         return self.text().strip()
 
 
-class TextEditField(QPlainTextEdit):
+class TextField(QPlainTextEdit):
     """
     This class implements a textarea field where the user can enter strings.
     """
