@@ -429,4 +429,4 @@ class ChildItem(QStandardItem):
         :type node: AbstractNode
         :rtype: str
         """
-        return '{}:{}'.format(node.text().replace('\n', ''), node.id)
+        return '{} ({})'.format(node.text().replace('\n', ''), node.id)
