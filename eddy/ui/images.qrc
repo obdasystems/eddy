@@ -45,7 +45,7 @@
     <file alias="treeview-branch-end">artwork/icons/treeview-branch-end.png</file>
     <file alias="treeview-branch-more">artwork/icons/treeview-branch-more.png</file>
     <file alias="treeview-branch-open">artwork/icons/treeview-branch-open.png</file>
-    <file alias="treeview-vline">artwork/icons/treeview-vline.png</file>
+    <file alias="treeview-branch-vline">artwork/icons/treeview-branch-vline.png</file>
     <file alias="treeview-attribute">artwork/icons/treeview-attribute.png</file>
     <file alias="treeview-concept">artwork/icons/treeview-concept.png</file>
     <file alias="treeview-datarange">artwork/icons/treeview-datarange.png</file>

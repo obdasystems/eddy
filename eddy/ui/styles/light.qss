@@ -368,7 +368,7 @@ QTreeView::branch:!selected {
     background: #FFFFFF;
 }
 QTreeView::branch:has-siblings:!adjoins-item {
-    border-image: url(:/icons/treeview-vline) 0;
+    border-image: url(:/icons/treeview-branch-vline) 0;
 }
 QTreeView::branch:has-siblings:adjoins-item {
     border-image: url(:/icons/treeview-branch-more) 0;
