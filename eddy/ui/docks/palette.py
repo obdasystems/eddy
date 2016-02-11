@@ -208,7 +208,7 @@ class PaletteButton(QToolButton):
                     drag.setMimeData(mimeData)
                     drag.setPixmap(self.pixmap)
                     drag.setHotSpot(self.startPos - self.rect().topLeft())
-                    drag.exec_(Qt.MoveAction)
+                    drag.exec_(Qt.CopyAction)
 
         super().mouseMoveEvent(mouseEvent)
 

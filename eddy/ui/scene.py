@@ -109,7 +109,7 @@ class DiagramScene(QGraphicsScene):
         """
         super().dragEnterEvent(dragEvent)
         if dragEvent.mimeData().hasFormat('text/plain'):
-            dragEvent.setDropAction(Qt.MoveAction)
+            dragEvent.setDropAction(Qt.CopyAction)
             dragEvent.accept()
         else:
             dragEvent.ignore()
@@ -121,7 +121,7 @@ class DiagramScene(QGraphicsScene):
         """
         super().dragMoveEvent(dragEvent)
         if dragEvent.mimeData().hasFormat('text/plain'):
-            dragEvent.setDropAction(Qt.MoveAction)
+            dragEvent.setDropAction(Qt.CopyAction)
             dragEvent.accept()
         else:
             dragEvent.ignore()
@@ -137,7 +137,7 @@ class DiagramScene(QGraphicsScene):
             node.setPos(snapPT(dropEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
             self.undostack.push(CommandNodeAdd(scene=self, node=node))
             self.itemAdded.emit(node, dropEvent.modifiers())
-            dropEvent.setDropAction(Qt.MoveAction)
+            dropEvent.setDropAction(Qt.CopyAction)
             dropEvent.accept()
         else:
             dropEvent.ignore()
