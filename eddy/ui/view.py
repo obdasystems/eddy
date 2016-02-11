@@ -34,7 +34,7 @@
 
 from PyQt5.QtCore import Qt, QRectF, QPointF, QTimer, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QColor, QPen
-from PyQt5.QtWidgets import QGraphicsView
+from PyQt5.QtWidgets import QGraphicsView, QApplication
 
 from eddy.core.datatypes import DiagramMode
 from eddy.core.functions import clamp, connect, disconnect, rangeF
@@ -157,6 +157,7 @@ class MainView(QGraphicsView):
 
             super().mousePressEvent(mouseEvent)
 
+    # noinspection PyArgumentList
     def mouseMoveEvent(self, mouseEvent):
         """
         Executed when then mouse is moved on the view.
@@ -168,11 +169,14 @@ class MainView(QGraphicsView):
 
         if mouseEvent.buttons() & Qt.RightButton:
 
-            if scene.mode is not DiagramMode.SceneDrag:
-                scene.setMode(DiagramMode.SceneDrag)
-                viewport.setCursor(Qt.ClosedHandCursor)
+            distance = (mouseEvent.pos() - self.mousePressPos).manhattanLength()
+            if distance >= QApplication.startDragDistance():
 
-            self.centerOn(self.mousePressCenterPos - mousePos + self.mousePressPos)
+                if scene.mode is not DiagramMode.SceneDrag:
+                    scene.setMode(DiagramMode.SceneDrag)
+                    viewport.setCursor(Qt.ClosedHandCursor)
+
+                self.centerOn(self.mousePressCenterPos - mousePos + self.mousePressPos)
 
         else:
 
