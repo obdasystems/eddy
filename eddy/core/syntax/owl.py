@@ -82,6 +82,12 @@ class OWL2RLValidator(AbstractValidator):
                     idB = target.identity.label
                     raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
 
+                if Identity.Individual in {source.identity, target.identity}:
+                    # Individual doesn't match OWL ClassExpression so we can't allow the connection.
+                    idA = source.identity.label
+                    idB = target.identity.label
+                    raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
+
             elif edge.isItem(Item.InputEdge):
 
                 ########################################################################################################
