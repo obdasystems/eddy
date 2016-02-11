@@ -1,6 +1,7 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
 <qresource prefix="/icons">
+    <file alias="abc">artwork/icons/ic_abc_black_24dp_1x.png</file>
     <file alias="appearance">artwork/icons/ic_palette_black_24dp_1x.png</file>
     <file alias="arrow-drop-down">artwork/icons/ic_arrow_drop_down_black_18dp_1x.png</file>
     <file alias="arrow-drop-up">artwork/icons/ic_arrow_drop_up_black_18dp_1x.png</file>

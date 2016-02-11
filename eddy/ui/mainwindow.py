@@ -57,7 +57,7 @@ from eddy.core.commands import CommandItemsMultiRemove, CommandEdgeInputToggleFu
 from eddy.core.datatypes import Color, File, DiagramMode, Filetype, Platform
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
 from eddy.core.exporters import GrapholExporter
-from eddy.core.functions import connect, disconnect
+from eddy.core.functions import connect, disconnect, uncapitalize
 from eddy.core.functions import expandPath, coloredIcon, shadedIcon, snapF, rCut, lCut
 from eddy.core.items import Item, DatatypeRestrictionNode
 from eddy.core.items import RoleInverseNode, DisjointUnionNode
@@ -118,6 +118,7 @@ class MainWindow(QMainWindow):
         self.menuFile = self.menuBar().addMenu("&File")
         self.menuEdit = self.menuBar().addMenu("&Edit")
         self.menuView = self.menuBar().addMenu("&View")
+        self.menuTools = self.menuBar().addMenu("&Tools")
         self.menuHelp = self.menuBar().addMenu("&Help")
 
         ################################################################################################################
@@ -222,6 +223,7 @@ class MainWindow(QMainWindow):
         #                                                                                                              #
         ################################################################################################################
 
+        self.iconAbc = shadedIcon(':/icons/abc')
         self.iconBringToFront = shadedIcon(':/icons/bring-to-front')
         self.iconCenterFocus = shadedIcon(':/icons/center-focus')
         self.iconClose = shadedIcon(':/icons/close')
@@ -377,6 +379,12 @@ class MainWindow(QMainWindow):
         self.actionCenterDiagram.setStatusTip('Center the diagram in the scene')
         self.actionCenterDiagram.setEnabled(False)
         connect(self.actionCenterDiagram.triggered, self.centerDiagram)
+
+        self.actionSyntaxCheck = QAction('Run syntax check', self)
+        self.actionSyntaxCheck.setIcon(self.iconAbc)
+        self.actionSyntaxCheck.setStatusTip('Run syntax check on the active diagram')
+        self.actionSyntaxCheck.setEnabled(False)
+        connect(self.actionSyntaxCheck.triggered, self.syntaxCheck)
 
         ## ITEM GENERIC ACTIONS
         self.actionCut = QAction('Cut', self)
@@ -624,6 +632,8 @@ class MainWindow(QMainWindow):
         self.menuView.addAction(self.dockOverview.toggleViewAction())
         self.menuView.addAction(self.dockPalette.toggleViewAction())
 
+        self.menuTools.addAction(self.actionSyntaxCheck)
+
         self.menuHelp.addAction(self.actionAbout)
         self.menuHelp.addSeparator()
         self.menuHelp.addAction(self.actionSapienzaWeb)
@@ -747,6 +757,9 @@ class MainWindow(QMainWindow):
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.actionSnapToGrid)
         self.toolbar.addAction(self.actionCenterDiagram)
+
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.actionSyntaxCheck)
 
         self.toolbar.addSeparator()
         self.toolbar.addWidget(self.zoomctrl.buttonZoomOut)
@@ -1456,7 +1469,12 @@ class MainWindow(QMainWindow):
         """
         Update actions enabling/disabling them when needed.
         """
-        wind = undo = clip = edge = node = pred = False
+        window = False
+        undo = False
+        clipboard = False
+        edge = False
+        node = False
+        predicate = False
 
         # we need to check if we have at least one subwindow because if Eddy simply
         # lose the focus, self.mdi.activeScene will return None even though we do
@@ -1469,29 +1487,30 @@ class MainWindow(QMainWindow):
                 nodes = scene.selectedNodes()
                 edges = scene.selectedEdges()
 
-                wind = True
+                window = True
                 undo = not self.undogroup.isClean()
-                clip = not self.clipboard.empty()
+                clipboard = not self.clipboard.empty()
                 edge = len(edges) != 0
                 node = len(nodes) != 0
-                pred = next(filter(lambda x: x.predicate, nodes), None) is not None
+                predicate = next(filter(lambda x: x.predicate, nodes), None) is not None
 
         self.actionBringToFront.setEnabled(node)
-        self.actionCloseActiveSubWindow.setEnabled(wind)
+        self.actionCenterDiagram.setEnabled(window)
+        self.actionCloseActiveSubWindow.setEnabled(window)
         self.actionCut.setEnabled(node)
         self.actionCopy.setEnabled(node)
         self.actionDelete.setEnabled(node or edge)
-        self.actionExportDocument.setEnabled(wind)
-        self.actionPaste.setEnabled(clip)
-        self.actionPrintDocument.setEnabled(wind)
+        self.actionExportDocument.setEnabled(window)
+        self.actionPaste.setEnabled(clipboard)
+        self.actionPrintDocument.setEnabled(window)
         self.actionSaveDocument.setEnabled(undo)
-        self.actionSaveDocumentAs.setEnabled(wind)
-        self.actionSelectAll.setEnabled(wind)
+        self.actionSaveDocumentAs.setEnabled(window)
+        self.actionSelectAll.setEnabled(window)
         self.actionSendToBack.setEnabled(node)
-        self.actionSnapToGrid.setEnabled(wind)
-        self.actionCenterDiagram.setEnabled(wind)
-        self.changeNodeBrushButton.setEnabled(pred)
-        self.zoomctrl.setEnabled(wind)
+        self.actionSnapToGrid.setEnabled(window)
+        self.actionSyntaxCheck.setEnabled(window)
+        self.changeNodeBrushButton.setEnabled(predicate)
+        self.zoomctrl.setEnabled(window)
 
     @pyqtSlot()
     def selectAll(self):
@@ -1750,6 +1769,49 @@ class MainWindow(QMainWindow):
                     xnode = clazz(scene=scene)
                     xnode.setPos(node.pos())
                     scene.undostack.push(CommandNodeOperatorSwitchTo(scene=scene, node1=node, node2=xnode))
+
+    @pyqtSlot()
+    def syntaxCheck(self):
+        """
+        Perform syntax checking on the active diagram.
+        """
+        scene = self.mdi.activeScene
+        if scene:
+
+            busy = BusyProgressDialog('Syntax check...', self)
+            busy.show()
+
+            message = 'No syntax error found!'
+            pixmap = QPixmap(':/icons/info')
+
+            for edge in scene.edges():
+                res = scene.validator.result(edge.source, edge, edge.target)
+                if not res.valid:
+                    E = res.edge
+                    S = res.source
+                    T = res.target
+                    M = uncapitalize(res.message)
+                    sname = '{} "{}"'.format(S.name, S.id if not S.predicate else '{}:{}'.format(S.text(), S.id))
+                    tname = '{} "{}"'.format(T.name, T.id if not T.predicate else '{}:{}'.format(T.text(), T.id))
+                    message = 'Syntax error detected on {} from {} to {}: <i>{}</i>'.format(E.name, sname, tname, M)
+                    pixmap = QPixmap(':/icons/warning')
+                    break
+            else:
+                for n in scene.nodes():
+                    if n.identity is Identity.Unknown:
+                        name = '{} "{}"'.format(n.name, n.id if not n.predicate else '{}:{}'.format(n.text(), n.id))
+                        message = 'Unkown node identity detected on {}'.format(name)
+                        pixmap = QPixmap(':/icons/warning')
+
+            busy.close()
+
+            msgbox = QMessageBox(self)
+            msgbox.setIconPixmap(pixmap)
+            msgbox.setWindowIcon(QIcon(':/images/eddy'))
+            msgbox.setWindowTitle('Syntax check completed!')
+            msgbox.setStandardButtons(QMessageBox.Close)
+            msgbox.setText(message)
+            msgbox.exec_()
 
     @pyqtSlot()
     def toggleEdgeComplete(self):

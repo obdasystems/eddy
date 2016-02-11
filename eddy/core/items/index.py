@@ -87,6 +87,7 @@ class ItemIndex(QObject):
         """
         Returns the edge matching the given edge id.
         :type eid: str
+        :rtype: AbstractEdge
         """
         try:
             return self.edgesById[eid]
@@ -100,10 +101,32 @@ class ItemIndex(QObject):
         """
         return self.edgesById.values()
 
+    def hasEdges(self):
+        """
+        Tells whether there are edges in the index.
+        :rtype: bool
+        """
+        return len(self.edgesById) != 0
+
+    def hasItems(self):
+        """
+        Tells whether there are items in the index.
+        :rtype: bool
+        """
+        return len(self.itemsById) != 0
+
+    def hasNodes(self):
+        """
+        Tells whether there are nodes in the index.
+        :rtype: bool
+        """
+        return len(self.nodesById) != 0
+
     def itemForId(self, iid):
         """
         Returns the item matching the given item id.
         :type iid: str
+        :rtype: AbstractItem
         """
         try:
             return self.itemById[iid]
@@ -121,6 +144,7 @@ class ItemIndex(QObject):
         """
         Returns the node matching the given node id.
         :type nid: str
+        :rtype: AbstractNode
         """
         try:
             return self.nodesById[nid]

@@ -233,3 +233,12 @@ def QSS(path):
         raise IOError('could not load QSS file ({}): file no found'.format(path))
     with open(path) as qss:
         return qss.read()
+
+
+def uncapitalize(s):
+    """
+    Returns a copy of the given string with the first characted uncapitalized.
+    :type s: str
+    :rtype: str
+    """
+    return '{}{}'.format(s[:1].lower(), s[1:])

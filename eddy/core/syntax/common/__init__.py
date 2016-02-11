@@ -50,7 +50,9 @@ class ValidationResult(object):
         :type valid: bool
         :type message: str
         """
-        self.triple = (source, edge, target)
+        self.source = source
+        self.edge = edge
+        self.target = target
         self.message = message
         self.valid = valid
 
@@ -59,7 +61,7 @@ class ValidationResult(object):
         Implement membership operator 'in'.
         :type item: tuple
         """
-        return self.triple == item
+        return self.source, self.edge, self.target == item
 
 
 class AbstractValidator(QObject):

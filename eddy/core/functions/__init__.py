@@ -64,6 +64,7 @@ from eddy.core.functions.misc import shaded
 from eddy.core.functions.misc import shadedIcon
 from eddy.core.functions.misc import snapF
 from eddy.core.functions.misc import snapPT
+from eddy.core.functions.misc import uncapitalize
 
 from eddy.core.functions.signals import connect
 from eddy.core.functions.signals import disconnect
