@@ -61,10 +61,12 @@ class Explorer(QWidget):
         self.iconR = QIcon(':/icons/treeview-role')
         self.model = QStandardItemModel(self)
         self.proxy = QSortFilterProxyModel(self)
+        self.proxy.setDynamicSortFilter(False)
         self.proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.proxy.setSortCaseSensitivity(Qt.CaseSensitive)
         self.proxy.setSourceModel(self.model)
         self.view = ExplorerView(mainwindow, self)
-        self.view.setModel(self.model)
+        self.view.setModel(self.proxy)
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.view)
@@ -107,7 +109,7 @@ class Explorer(QWidget):
         """
         if self.mainview:
             if self.mainview in self.expanded:
-                item = self.model.itemFromIndex(index)
+                item = self.model.itemFromIndex(self.proxy.mapToSource(index))
                 expanded = self.expanded[self.mainview]
                 expanded.remove(item.text())
 
@@ -117,7 +119,7 @@ class Explorer(QWidget):
         Executed when an item in the tree view is double clicked.
         :type index: QModelIndex
         """
-        item = self.model.itemFromIndex(index)
+        item = self.model.itemFromIndex(self.proxy.mapToSource(index))
         node = item.data()
         if node:
             self.selectNode(node)
@@ -130,7 +132,7 @@ class Explorer(QWidget):
         :type index: QModelIndex
         """
         if self.mainview:
-            item = self.model.itemFromIndex(index)
+            item = self.model.itemFromIndex(self.proxy.mapToSource(index))
             if self.mainview not in self.expanded:
                 self.expanded[self.mainview] = set()
             expanded = self.expanded[self.mainview]
@@ -142,7 +144,7 @@ class Explorer(QWidget):
         Executed when an item in the tree view is clicked.
         :type index: QModelIndex
         """
-        item = self.model.itemFromIndex(index)
+        item = self.model.itemFromIndex(self.proxy.mapToSource(index))
         node = item.data()
         if node:
             self.selectNode(node)
@@ -159,11 +161,11 @@ class Explorer(QWidget):
                 parent = ParentItem(item)
                 parent.setIcon(self.iconFor(item))
                 self.model.appendRow(parent)
-                self.model.sort(0)
+                self.proxy.sort(Qt.AscendingOrder)
             child = ChildItem(item)
             child.setData(item)
             parent.appendRow(child)
-            parent.sortChildren(0)
+            parent.sortChildren(Qt.AscendingOrder)
 
     @pyqtSlot('QGraphicsItem')
     def remove(self, item):
@@ -264,9 +266,11 @@ class Explorer(QWidget):
         self.mainview = view
 
         if self.mainview:
+
             scene = self.mainview.scene()
             connect(scene.index.itemAdded, self.insert)
             connect(scene.index.itemRemoved, self.remove)
+
             for item in scene.index.nodes():
                 self.insert(item)
 
@@ -274,7 +278,8 @@ class Explorer(QWidget):
                 expanded = self.expanded[self.mainview]
                 for i in range(self.model.rowCount()):
                     item = self.model.item(i)
-                    self.view.setExpanded(self.model.indexFromItem(item), item.text() in expanded)
+                    index = self.proxy.mapFromSource(self.model.indexFromItem(item))
+                    self.view.setExpanded(index, item.text() in expanded)
 
 
 class ExplorerView(QTreeView):
