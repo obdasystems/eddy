@@ -358,7 +358,9 @@ class ExplorerView(QTreeView):
         if mouseEvent.button() == Qt.RightButton:
             index = next(iter(self.selectedIndexes()), None)
             if index:
-                item = self.model().itemFromIndex(index)
+                model = self.model().sourceModel()
+                index = self.model().mapToSource(index)
+                item = model.itemFromIndex(index)
                 node = item.data()
                 if node:
                     menu = self.mainwindow.menuFactory.create(self.mainwindow, node.scene(), node)
