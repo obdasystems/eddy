@@ -55,6 +55,7 @@ class Explorer(QWidget):
         super().__init__(mainwindow)
         self.expanded = {}
         self.searched = {}
+        self.scrolled = {}
         self.mainview = None
         self.iconA = QIcon(':/icons/treeview-attribute')
         self.iconC = QIcon(':/icons/treeview-concept')
@@ -217,6 +218,16 @@ class Explorer(QWidget):
         """
         if self.mainview:
 
+            # Backup current scoll index.
+            rect = self.rect()
+            item = self.model.itemFromIndex(self.proxy.mapToSource(self.view.indexAt(rect.topLeft())))
+            if item:
+                node = item.data()
+                key = ParentItem.key(node) if node else item.text()
+                self.scrolled[self.mainview] = key
+            else:
+                self.scrolled.pop(self.mainview, None)
+
             try:
                 scene = self.mainview.scene()
                 # Make sure to disconnect only the signals connected to the slots provided by this
@@ -238,6 +249,7 @@ class Explorer(QWidget):
         """
         self.expanded.pop(view, None)
         self.searched.pop(view, None)
+        self.scrolled.pop(view, None)
 
     def iconFor(self, node):
         """
@@ -306,6 +318,15 @@ class Explorer(QWidget):
             if self.mainview in self.searched:
                 key = self.searched[self.mainview]
             self.search.setText(key)
+
+            if self.mainview in self.scrolled:
+                rect = self.rect()
+                item = next(iter(self.model.findItems(self.scrolled[self.mainview])), None)
+                for i in range(self.model.rowCount()):
+                    self.view.scrollTo(self.proxy.mapFromSource(self.model.indexFromItem(self.model.item(i))))
+                    index = self.proxy.mapToSource(self.view.indexAt(rect.topLeft()))
+                    if self.model.itemFromIndex(index) is item:
+                        break
 
 
 class ExplorerView(QTreeView):
