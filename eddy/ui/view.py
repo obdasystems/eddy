@@ -176,7 +176,9 @@ class MainView(QGraphicsView):
                     scene.setMode(DiagramMode.SceneDrag)
                     viewport.setCursor(Qt.ClosedHandCursor)
 
-                self.centerOn(self.mousePressCenterPos - mousePos + self.mousePressPos)
+                mousePos /= self.zoom
+                mousePressPos = self.mousePressPos / self.zoom
+                self.centerOn(self.mousePressCenterPos - mousePos + mousePressPos)
 
         else:
 
@@ -211,8 +213,10 @@ class MainView(QGraphicsView):
 
                     viewport.update()
 
-                if scene.mode in {DiagramMode.EdgeInsert, DiagramMode.NodeMove,
-                                  DiagramMode.NodeResize, DiagramMode.EdgeBreakPointMove,
+                if scene.mode in {DiagramMode.EdgeBreakPointMove,
+                                  DiagramMode.EdgeInsert,
+                                  DiagramMode.NodeMove,
+                                  DiagramMode.NodeResize,
                                   DiagramMode.RubberBandDrag}:
 
                     ####################################################################################################
@@ -224,7 +228,7 @@ class MainView(QGraphicsView):
                     R = viewport.rect()
                     if not R.contains(mousePos):
 
-                        move = QPointF()
+                        move = QPointF(0, 0)
 
                         if mousePos.x() < R.left():
                             move.setX(mousePos.x() - R.left())
@@ -268,29 +272,19 @@ class MainView(QGraphicsView):
         :type wheelEvent: QWheelEvent
         """
         if wheelEvent.modifiers() & Qt.ControlModifier:
-
-            # allow zooming with the mouse wheel
             zoom = self.zoom
             zoom += +ZoomControl.Step if wheelEvent.angleDelta().y() > 0 else -ZoomControl.Step
             zoom = clamp(zoom, ZoomControl.MinScale, ZoomControl.MaxScale)
-
             if zoom != self.zoom:
-                # set transformations anchors
                 self.setTransformationAnchor(QGraphicsView.NoAnchor)
                 self.setResizeAnchor(QGraphicsView.NoAnchor)
-                # save the old position
-                old = self.mapToScene(wheelEvent.pos())
-                # change the zoom level
+                p1 = self.mapToScene(wheelEvent.pos())
                 self.scaleView(zoom)
                 self.zoomChanged.emit(zoom)
-                # get the new position
-                new = self.mapToScene(wheelEvent.pos())
-                # move the scene so the mouse is centered
-                move = new - old
+                p2 = self.mapToScene(wheelEvent.pos())
+                move = p2 - p1
                 self.translate(move.x(), move.y())
-
         else:
-            # handle default behavior (view scrolling)
             super().wheelEvent(wheelEvent)
 
     ####################################################################################################################
