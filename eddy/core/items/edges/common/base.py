@@ -228,8 +228,10 @@ class AbstractEdge(AbstractItem):
         :type point: QPointF
         :rtype: int
         """
+        size = QPointF(3, 3)
+        area = QRectF(point - size, point + size)
         for i in range(len(self.handles)):
-            if self.handles[i].contains(point):
+            if self.handles[i].intersects(area):
                 return i
         return None
 
