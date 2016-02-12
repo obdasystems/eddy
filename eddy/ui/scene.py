@@ -792,20 +792,10 @@ class DiagramScene(QGraphicsScene):
     def visibleRect(self, margin=0):
         """
         Returns a rectangle matching the area of visible items.
-        Will return None if there is no item in the diagram.
         :type margin: float
         :rtype: QRectF
         """
-        items = self.items()
-        if items:
-
-            X = set()
-            Y = set()
-            for item in items:
-                B = item.mapRectToScene(item.boundingRect())
-                X |= {B.left(), B.right()}
-                Y |= {B.top(), B.bottom()}
-
-            return QRectF(QPointF(min(X) - margin, min(Y) - margin), QPointF(max(X) + margin, max(Y) + margin))
-
-        return None
+        bound = self.itemsBoundingRect()
+        topLeft = QPointF(bound.left() - margin, bound.top() - margin)
+        bottomRight = QPointF(bound.right() + margin, bound.bottom() + margin)
+        return QRectF(topLeft, bottomRight)
