@@ -38,18 +38,22 @@ import sys
 from enum import unique, Enum
 from types import DynamicClassAttribute
 
+from PyQt5.QtCore import QObject
+
 from eddy.core.functions.system import expandPath
 
 
-class File(object):
+class File(QObject):
     """
     This class is used to manage Files.
     """
-    def __init__(self, path=None):
+    def __init__(self, path=None, parent=None):
         """
         Initialize the File.
         :type path: str
+        :type parent: QObject
         """
+        super().__init__(parent)
         self._path = expandPath(path) if path else None
 
     ####################################################################################################################
