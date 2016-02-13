@@ -111,6 +111,16 @@ class File(QObject):
         """
         return self.path and os.path.isfile(self.path)
 
+    def read(self, path=None):
+        """
+        Read the content of 'path' returning it as a 'string'.
+        :type path: str
+        :rtype: str
+        """
+        path = path or self.path
+        with open(path, 'r') as file:
+            return file.read()
+
     def write(self, string, path=None):
         """
         Write the content of 'string' in 'path'.
@@ -127,6 +137,7 @@ class File(QObject):
             os.remove(path)
         os.rename(temp, path)
         self.path = path
+
 
 @unique
 class Filetype(Enum):
