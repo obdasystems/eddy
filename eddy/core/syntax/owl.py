@@ -69,11 +69,17 @@ class OWL2RLValidator(AbstractValidator):
                 ########################################################################################################
 
                 if Identity.Neutral not in {source.identity, target.identity} and source.identity is not target.identity:
-                    # If neither of the endpoints is NEUTRAL and the two nodes are specifying
-                    # a different identity, then we can't create an ISA between the nodes.
+                    # If neither of the endpoints is NEUTRAL and the two nodes specify a
+                    # different identity, then we can't create an ISA between the nodes.
                     idA = source.identity.label
                     idB = target.identity.label
                     raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
+
+                if source.identity is not Identity.Neutral and source.identity not in target.identities:
+                    # If source is not NEUTRAL and target does not support this identity then we can't create an ISA.
+                    nameA = source.name
+                    nameB = target.name
+                    raise SyntaxError('Type mismatch: {} and {} are incompatible'.format(nameA, nameB))
 
                 if Identity.DataRange in {source.identity, target.identity} and not source.isItem(Item.RangeRestrictionNode):
                     # If we are creating an ISA between 2 DataRange check whether the source of the node is a
