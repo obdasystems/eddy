@@ -34,8 +34,8 @@
 
 from PyQt5.QtCore import Qt, QPointF, pyqtSlot
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
-from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
+from PyQt5.QtWidgets import QWidget, QDialog, QPushButton, QHBoxLayout, QListWidget, QAbstractItemView
+from PyQt5.QtWidgets import QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout, QListWidgetItem
 
 from eddy.core.commands import CommandNodeSetURL, CommandNodeSetDescription
 from eddy.core.commands import CommandNodeLabelChange, CommandNodeMove
@@ -75,37 +75,37 @@ class NodeProperty(QDialog):
         #                                                                                                              #
         ################################################################################################################
 
-        self.generalWidget = QWidget()
-        self.generalLayout = QFormLayout(self.generalWidget)
+        genWidget = QWidget()
+        genLayout = QFormLayout(genWidget)
 
-        self.idField = StringField(self.generalWidget)
+        self.idField = StringField(genWidget)
         self.idField.setReadOnly(True)
         self.idField.setFixedWidth(300)
         self.idField.setValue(self.node.id)
 
-        self.itemField = StringField(self.generalWidget)
+        self.itemField = StringField(genWidget)
         self.itemField.setReadOnly(True)
         self.itemField.setFixedWidth(300)
         self.itemField.setValue(' '.join(i.capitalize() for i in rCut(self.node.name, ' node').split()))
 
-        self.showIdentityField = StringField(self.generalWidget)
+        self.showIdentityField = StringField(genWidget)
         self.showIdentityField.setReadOnly(True)
         self.showIdentityField.setFixedWidth(300)
         self.showIdentityField.setValue(self.node.identity.label)
 
-        self.urlField = StringField(self.generalWidget)
+        self.urlField = StringField(genWidget)
         self.urlField.setFixedWidth(300)
         self.urlField.setValue(self.node.url)
 
-        self.descriptionField = TextField(self.generalWidget)
+        self.descriptionField = TextField(genWidget)
         self.descriptionField.setFixedSize(300, 160)
         self.descriptionField.setValue(self.node.description)
 
-        self.generalLayout.addRow('ID', self.idField)
-        self.generalLayout.addRow('Type', self.itemField)
-        self.generalLayout.addRow('Identity', self.showIdentityField)
-        self.generalLayout.addRow('URL', self.urlField)
-        self.generalLayout.addRow('Description', self.descriptionField)
+        genLayout.addRow('ID', self.idField)
+        genLayout.addRow('Type', self.itemField)
+        genLayout.addRow('Identity', self.showIdentityField)
+        genLayout.addRow('URL', self.urlField)
+        genLayout.addRow('Description', self.descriptionField)
 
         ################################################################################################################
         #                                                                                                              #
@@ -113,40 +113,38 @@ class NodeProperty(QDialog):
         #                                                                                                              #
         ################################################################################################################
 
-        self.geometryWidget = QWidget()
-        self.geometryLayout = QFormLayout(self.geometryWidget)
+        geoWidget = QWidget()
+        geoLayout = QFormLayout(geoWidget)
 
         P = self.node.pos()
         R = self.scene.sceneRect()
 
-        self.xField = SpinBox(self.geometryWidget)
+        self.xField = SpinBox(geoWidget)
         self.xField.setFixedWidth(60)
         self.xField.setRange(R.left(), R.right())
         self.xField.setValue(int(P.x()))
 
-        self.yField = SpinBox(self.geometryWidget)
+        self.yField = SpinBox(geoWidget)
         self.yField.setFixedWidth(60)
         self.yField.setRange(R.top(), R.bottom())
         self.yField.setValue(int(P.y()))
 
-        # TODO: allow to modify shape width from properties dialog
-        self.wField = SpinBox(self.geometryWidget)
+        self.wField = SpinBox(geoWidget)
         self.wField.setRange(20, R.width())
         self.wField.setReadOnly(True)
         self.wField.setFixedWidth(60)
         self.wField.setValue(int(self.node.width()))
 
-        # TODO: allow to modify shape height from properties dialog
-        self.hField = SpinBox(self.geometryWidget)
+        self.hField = SpinBox(geoWidget)
         self.hField.setRange(20, R.height())
         self.hField.setReadOnly(True)
         self.hField.setFixedWidth(60)
         self.hField.setValue(int(self.node.height()))
 
-        self.geometryLayout.addRow('X', self.xField)
-        self.geometryLayout.addRow('Y', self.yField)
-        self.geometryLayout.addRow('Width', self.wField)
-        self.geometryLayout.addRow('Height', self.hField)
+        geoLayout.addRow('X', self.xField)
+        geoLayout.addRow('Y', self.yField)
+        geoLayout.addRow('Width', self.wField)
+        geoLayout.addRow('Height', self.hField)
 
         ################################################################################################################
         #                                                                                                              #
@@ -155,8 +153,8 @@ class NodeProperty(QDialog):
         ################################################################################################################
 
         self.mainWidget = QTabWidget(self)
-        self.mainWidget.addTab(self.generalWidget, 'General')
-        self.mainWidget.addTab(self.geometryWidget, 'Geometry')
+        self.mainWidget.addTab(genWidget, 'General')
+        self.mainWidget.addTab(geoWidget, 'Geometry')
 
         ################################################################################################################
         #                                                                                                              #
@@ -203,9 +201,8 @@ class NodeProperty(QDialog):
         :type code: int
         """
         if code == QDialog.Accepted:
+            self.metaDataChanged()
             self.positionChanged()
-            self.descriptionChanged()
-            self.urlChanged()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -213,13 +210,16 @@ class NodeProperty(QDialog):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def descriptionChanged(self):
+    def metaDataChanged(self):
         """
-        Change the url property of the node.
+        Change the url and description of the node.
         """
         description = self.descriptionField.value()
         if self.node.description != description:
             self.scene.undostack.push(CommandNodeSetDescription(self.node, description))
+        url = self.urlField.value()
+        if self.node.url != url:
+            self.scene.undostack.push(CommandNodeSetURL(self.node, url))
 
     def positionChanged(self):
         """
@@ -255,15 +255,7 @@ class NodeProperty(QDialog):
             }
 
             self.scene.undostack.push(CommandNodeMove(scene=self.scene, data=commandData))
-
-    def urlChanged(self):
-        """
-        Change the url property of the node.
-        """
-        url = self.urlField.value()
-        if self.node.url != url:
-            self.scene.undostack.push(CommandNodeSetURL(self.node, url))
-
+            
 
 ########################################################################################################################
 #                                                                                                                      #
@@ -291,17 +283,17 @@ class EditableNodeProperty(NodeProperty):
         #                                                                                                              #
         ################################################################################################################
 
-        self.labelWidget = QWidget()
-        self.labelLayout = QFormLayout(self.labelWidget)
+        txtWidget = QWidget()
+        txtLayout = QFormLayout(txtWidget)
 
-        self.textField = StringField(self.labelWidget)
+        self.textField = StringField(txtWidget)
         self.textField.setFixedWidth(300)
         self.textField.setValue(self.node.text())
         self.textField.setEnabled(self.node.label.editable)
 
-        self.labelLayout.addRow('Text', self.textField)
+        txtLayout.addRow('Text', self.textField)
 
-        self.mainWidget.addTab(self.labelWidget, 'Label')
+        self.mainWidget.addTab(txtWidget, 'Label')
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -364,20 +356,40 @@ class OrderedInputNodeProperty(NodeProperty):
 
         if self.node.inputs:
 
-            self.orderingWidget = QWidget()
-            self.orderingLayout = QFormLayout(self.orderingWidget)
+            ordWidget = QWidget()
+            ordLayout = QFormLayout(ordWidget)
 
-            self.listWidget = QListWidget(self.orderingWidget)
-            self.listWidget.setDragDropMode(QAbstractItemView.InternalMove)
+            self.list = QListWidget(ordWidget)
             for i in self.node.inputs:
                 edge = self.scene.edge(i)
                 item = QListWidgetItem('{} ({})'.format(edge.source.text(), edge.source.id))
                 item.setData(Qt.UserRole, edge.id)
-                self.listWidget.addItem(item)
+                self.list.addItem(item)
 
-            self.orderingLayout.addRow('Sort', self.listWidget)
+            self.list.setCurrentRow(0)
+            self.list.setDragDropMode(QAbstractItemView.NoDragDrop)
 
-            self.mainWidget.addTab(self.orderingWidget, 'Ordering')
+            self.buttonUp = QPushButton(self)
+            self.buttonUp.setIcon(QIcon(':/icons/arrow-up'))
+            self.buttonUp.setFixedSize(20, 20)
+            connect(self.buttonUp.clicked, self.moveUp)
+
+            self.buttonDown = QPushButton(self)
+            self.buttonDown.setIcon(QIcon(':/icons/arrow-down'))
+            self.buttonDown.setFixedSize(20, 20)
+
+            inLayout = QVBoxLayout()
+            inLayout.addWidget(self.buttonUp)
+            inLayout.addWidget(self.buttonDown)
+            connect(self.buttonDown.clicked, self.moveDown)
+
+            outLayout = QHBoxLayout()
+            outLayout.addWidget(self.list)
+            outLayout.addLayout(inLayout)
+
+            ordLayout.addRow('Sort', outLayout)
+
+            self.mainWidget.addTab(ordWidget, 'Ordering')
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -385,6 +397,29 @@ class OrderedInputNodeProperty(NodeProperty):
     #                                                                                                                  #
     ####################################################################################################################
 
+    @pyqtSlot()
+    def moveUp(self):
+        """
+        Move the currently selected row up.
+        """
+        row = self.list.currentRow()
+        if row > 0:
+            item = self.list.takeItem(row)
+            self.list.insertItem(row - 1, item)
+            self.list.setCurrentRow(row -1)
+
+    @pyqtSlot()
+    def moveDown(self):
+        """
+        Move the currently selected row down.
+        """
+        row = self.list.currentRow()
+        if row < self.list.count() - 1:
+            item = self.list.takeItem(row)
+            self.list.insertItem(row + 1, item)
+            self.list.setCurrentRow(row + 1)
+
+    @pyqtSlot(int)
     def completed(self, code):
         """
         Executed when the dialog is terminated.
@@ -407,8 +442,8 @@ class OrderedInputNodeProperty(NodeProperty):
         if self.node.inputs:
 
             inputs = DistinctList()
-            for i in range(0, self.listWidget.count()):
-                item = self.listWidget.item(i)
+            for i in range(0, self.list.count()):
+                item = self.list.item(i)
                 inputs.append(item.data(Qt.UserRole))
 
             if self.node.inputs != inputs:
