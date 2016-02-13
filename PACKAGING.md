@@ -2,7 +2,7 @@
 
 Eddy is distributed as different packages:
 
-* Python `sources` distribution
+* `Win32` installer (built with InnoSetup)
 * `Win32` zip package
 * `Mac OS` .dmg disk image
 * `Linux32` zip package
