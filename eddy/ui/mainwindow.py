@@ -1795,7 +1795,7 @@ class MainWindow(QMainWindow):
                     placeholder = res.edge
                     sname = '{} "{}"'.format(S.name, S.id if not S.predicate else '{}:{}'.format(S.text(), S.id))
                     tname = '{} "{}"'.format(T.name, T.id if not T.predicate else '{}:{}'.format(T.text(), T.id))
-                    message = 'Syntax error detected on {} from {} to {}: <i>{}</i>'.format(E.name, sname, tname, M)
+                    message = 'Syntax error detected on {} from {} to {}: <i>{}</i>.'.format(E.name, sname, tname, M)
                     pixmap = QPixmap(':/icons/warning')
                     break
             else:
@@ -1803,7 +1803,7 @@ class MainWindow(QMainWindow):
                     if n.identity is Identity.Unknown:
                         placeholder = n
                         name = '{} "{}"'.format(n.name, n.id if not n.predicate else '{}:{}'.format(n.text(), n.id))
-                        message = 'Unkown node identity detected on {}'.format(name)
+                        message = 'Unkown node identity detected on {}.'.format(name)
                         pixmap = QPixmap(':/icons/warning')
                         break
 
@@ -1815,6 +1815,7 @@ class MainWindow(QMainWindow):
             msgbox.setWindowTitle('Syntax check completed!')
             msgbox.setStandardButtons(QMessageBox.Close)
             msgbox.setText(message)
+            msgbox.setTextFormat(Qt.RichText)
             msgbox.exec_()
 
             if placeholder:
