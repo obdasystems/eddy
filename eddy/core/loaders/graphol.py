@@ -40,6 +40,7 @@ from PyQt5.QtXml import QDomDocument
 
 from eddy.core.datatypes import Item, DistinctList
 from eddy.core.exceptions import ParseError
+from eddy.core.items.nodes.common.meta import MetaFactory
 from eddy.core.loaders.common import AbstractLoader
 
 
@@ -55,6 +56,7 @@ class GrapholLoader(AbstractLoader):
         :type parent: QObject
         """
         super().__init__(mainwindow, filepath, parent)
+        self.metaFactory = MetaFactory(self)
         self.itemFromXml = {
             'attribute': Item.AttributeNode,
             'complement': Item.ComplementNode,
@@ -84,185 +86,185 @@ class GrapholLoader(AbstractLoader):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def buildAttributeNode(self, node):
+    def buildAttributeNode(self, element):
         """
         Build an Attribute node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: AttributeNode
         """
-        label = node.firstChildElement('shape:label')
-        item = self.buildGenericNode(Item.AttributeNode, node)
-        item.brush = QBrush(QColor(node.attribute('color', '#fcfcfc')))
-        item.setText(label.text())
-        item.setTextPos(item.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
-        return item
+        label = element.firstChildElement('shape:label')
+        node = self.buildGenericNode(Item.AttributeNode, element)
+        node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
+        node.setText(label.text())
+        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        return node
 
-    def buildComplementNode(self, node):
+    def buildComplementNode(self, element):
         """
         Build a Complement node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: ComplementNode
         """
-        return self.buildGenericNode(Item.ComplementNode, node)
+        return self.buildGenericNode(Item.ComplementNode, element)
 
-    def buildConceptNode(self, node):
+    def buildConceptNode(self, element):
         """
         Build a Concept node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: ConceptNode
         """
-        label = node.firstChildElement('shape:label')
-        item = self.buildGenericNode(Item.ConceptNode, node)
-        item.brush = QBrush(QColor(node.attribute('color', '#fcfcfc')))
-        item.setText(label.text())
-        item.setTextPos(item.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
-        return item
+        label = element.firstChildElement('shape:label')
+        node = self.buildGenericNode(Item.ConceptNode, element)
+        node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
+        node.setText(label.text())
+        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        return node
 
-    def buildDatatypeRestrictionNode(self, node):
+    def buildDatatypeRestrictionNode(self, element):
         """
         Build a DatatypeRestriction node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: DatatypeRestrictionNode
         """
-        return self.buildGenericNode(Item.DatatypeRestrictionNode, node)
+        return self.buildGenericNode(Item.DatatypeRestrictionNode, element)
 
-    def buildDisjointUnionNode(self, node):
+    def buildDisjointUnionNode(self, element):
         """
         Build a DisjointUnion node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: DisjointUnionNode
         """
-        return self.buildGenericNode(Item.DisjointUnionNode, node)
+        return self.buildGenericNode(Item.DisjointUnionNode, element)
 
-    def buildDomainRestrictionNode(self, node):
+    def buildDomainRestrictionNode(self, element):
         """
         Build a DomainRestriction node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: DomainRestrictionNode
         """
-        label = node.firstChildElement('shape:label')
-        item = self.buildGenericNode(Item.DomainRestrictionNode, node)
-        item.setText(label.text())
-        item.setTextPos(item.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
-        return item
+        label = element.firstChildElement('shape:label')
+        node = self.buildGenericNode(Item.DomainRestrictionNode, element)
+        node.setText(label.text())
+        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        return node
 
-    def buildEnumerationNode(self, node):
+    def buildEnumerationNode(self, element):
         """
         Build an Enumeration node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: EnumerationNode
         """
-        return self.buildGenericNode(Item.EnumerationNode, node)
+        return self.buildGenericNode(Item.EnumerationNode, element)
 
-    def buildIndividualNode(self, node):
+    def buildIndividualNode(self, element):
         """
         Build an Individual node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: IndividualNode
         """
-        label = node.firstChildElement('shape:label')
-        item = self.buildGenericNode(Item.IndividualNode, node)
-        item.brush = QBrush(QColor(node.attribute('color', '#fcfcfc')))
-        item.setText(label.text())
-        item.setTextPos(item.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
-        return item
+        label = element.firstChildElement('shape:label')
+        node = self.buildGenericNode(Item.IndividualNode, element)
+        node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
+        node.setText(label.text())
+        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        return node
 
-    def buildIntersectionNode(self, node):
+    def buildIntersectionNode(self, element):
         """
         Build an Intersection node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: IntersectionNode
         """
-        return self.buildGenericNode(Item.IntersectionNode, node)
+        return self.buildGenericNode(Item.IntersectionNode, element)
 
-    def buildPropertyAssertionNode(self, node):
+    def buildPropertyAssertionNode(self, element):
         """
         Build a PropertyAssertion node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: PropertyAssertionNode
         """
-        inputs = node.attribute('inputs', '').strip()
-        item = self.buildGenericNode(Item.PropertyAssertionNode, node)
-        item.inputs = DistinctList(inputs.split(',') if inputs else [])
-        return item
+        inputs = element.attribute('inputs', '').strip()
+        node = self.buildGenericNode(Item.PropertyAssertionNode, element)
+        node.inputs = DistinctList(inputs.split(',') if inputs else [])
+        return node
 
-    def buildRangeRestrictionNode(self, node):
+    def buildRangeRestrictionNode(self, element):
         """
         Build a RangeRestriction node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: RangeRestrictionNode
         """
-        label = node.firstChildElement('shape:label')
-        item = self.buildGenericNode(Item.RangeRestrictionNode, node)
-        item.setText(label.text())
-        item.setTextPos(item.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
-        return item
+        label = element.firstChildElement('shape:label')
+        node = self.buildGenericNode(Item.RangeRestrictionNode, element)
+        node.setText(label.text())
+        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        return node
 
-    def buildRoleNode(self, node):
+    def buildRoleNode(self, element):
         """
         Build a Role node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: RoleNode
         """
-        label = node.firstChildElement('shape:label')
-        item = self.buildGenericNode(Item.RoleNode, node)
-        item.brush = QBrush(QColor(node.attribute('color', '#fcfcfc')))
-        item.setText(label.text())
-        item.setTextPos(item.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
-        return item
+        label = element.firstChildElement('shape:label')
+        node = self.buildGenericNode(Item.RoleNode, element)
+        node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
+        node.setText(label.text())
+        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        return node
 
-    def buildRoleChainNode(self, node):
+    def buildRoleChainNode(self, element):
         """
         Build a RoleChain node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: RoleChainNode
         """
-        inputs = node.attribute('inputs', '').strip()
-        item = self.buildGenericNode(Item.RoleChainNode, node)
-        item.inputs = DistinctList(inputs.split(',') if inputs else [])
-        return item
+        inputs = element.attribute('inputs', '').strip()
+        node = self.buildGenericNode(Item.RoleChainNode, element)
+        node.inputs = DistinctList(inputs.split(',') if inputs else [])
+        return node
 
-    def buildRoleInverseNode(self, node):
+    def buildRoleInverseNode(self, element):
         """
         Build a RoleInverse node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: RoleInverseNode
         """
-        return self.buildGenericNode(Item.RoleInverseNode, node)
+        return self.buildGenericNode(Item.RoleInverseNode, element)
 
-    def buildValueDomainNode(self, node):
+    def buildValueDomainNode(self, element):
         """
         Build a Value-Domain node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: ValueDomainNode
         """
-        label = node.firstChildElement('shape:label')
-        item = self.buildGenericNode(Item.ValueDomainNode, node)
-        item.brush = QBrush(QColor(node.attribute('color', '#fcfcfc')))
-        item.setText(label.text())
-        item.setTextPos(item.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
-        return item
+        label = element.firstChildElement('shape:label')
+        node = self.buildGenericNode(Item.ValueDomainNode, element)
+        node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
+        node.setText(label.text())
+        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        return node
 
-    def buildUnionNode(self, node):
+    def buildUnionNode(self, element):
         """
         Build a Union node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: UnionNode
         """
-        return self.buildGenericNode(Item.UnionNode, node)
+        return self.buildGenericNode(Item.UnionNode, element)
 
-    def buildValueRestrictionNode(self, node):
+    def buildValueRestrictionNode(self, element):
         """
         Build a ValueRestriction node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: ValueRestrictionNode
         """
-        label = node.firstChildElement('shape:label')
-        item = self.buildGenericNode(Item.ValueRestrictionNode, node)
-        item.brush = QBrush(QColor(node.attribute('color', '#fcfcfc')))
-        item.setText(label.text())
-        item.setTextPos(item.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
-        return item
+        label = element.firstChildElement('shape:label')
+        node = self.buildGenericNode(Item.ValueRestrictionNode, element)
+        node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
+        node.setText(label.text())
+        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        return node
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -270,33 +272,54 @@ class GrapholLoader(AbstractLoader):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def buildInclusionEdge(self, edge):
+    def buildInclusionEdge(self, element):
         """
         Build an Inclusion edge using the given QDomElement.
-        :type edge: QDomElement
+        :type element: QDomElement
         :rtype: InclusionEdge
         """
-        item = self.buildGenericEdge(Item.InclusionEdge, edge)
-        item.complete = bool(int(edge.attribute('complete', '0')))
-        return item
+        edge = self.buildGenericEdge(Item.InclusionEdge, element)
+        edge.complete = bool(int(element.attribute('complete', '0')))
+        return edge
 
-    def buildInputEdge(self, edge):
+    def buildInputEdge(self, element):
         """
         Build an Input edge using the given QDomElement.
-        :type edge: QDomElement
+        :type element: QDomElement
         :rtype: InputEdge
         """
-        item = self.buildGenericEdge(Item.InputEdge, edge)
-        item.functional = bool(int(edge.attribute('functional', '0')))
-        return item
+        edge = self.buildGenericEdge(Item.InputEdge, element)
+        edge.functional = bool(int(element.attribute('functional', '0')))
+        return edge
 
-    def buildInstanceOfEdge(self, edge):
+    def buildInstanceOfEdge(self, element):
         """
         Build an InstanceOf edge using the given QDomElement.
-        :type edge: QDomElement
+        :type element: QDomElement
         :rtype: InstanceOfEdge
         """
-        return self.buildGenericEdge(Item.InputEdge, edge)
+        return self.buildGenericEdge(Item.InputEdge, element)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   METADATA                                                                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def buildPredicateMetadata(self, element):
+        """
+        Build predicate metadata using the given QDomElement.
+        :type element: QDomElement
+        :rtype: PredicateMetaData
+        """
+        item = self.itemFromXml[element.attribute('type')]
+        predicate = element.attribute('predicate')
+        url = element.firstChildElement('data:url')
+        description = element.firstChildElement('data:description')
+        meta = self.metaFactory.create(item, predicate)
+        meta.url = url.text()
+        meta.description = description.text()
+        return meta
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -408,87 +431,104 @@ class GrapholLoader(AbstractLoader):
             self.scene.document.path = self.filepath
 
             # 4) GENERATE NODES
-            node = graph.firstChildElement('node')
-            while not node.isNull():
+            element = graph.firstChildElement('node')
+            while not element.isNull():
 
                 # noinspection PyArgumentList
                 QApplication.processEvents()
 
-                arch = None
-                item = self.itemFromGrapholNode(node)
+                node = None
+                item = self.itemFromGrapholNode(element)
 
                 try:
 
                     if item is Item.AttributeNode:
-                        arch = self.buildAttributeNode(node)
+                        node = self.buildAttributeNode(element)
                     elif item is Item.ComplementNode:
-                        arch = self.buildComplementNode(node)
+                        node = self.buildComplementNode(element)
                     elif item is Item.ConceptNode:
-                        arch = self.buildConceptNode(node)
+                        node = self.buildConceptNode(element)
                     elif item is Item.DatatypeRestrictionNode:
-                        arch = self.buildDatatypeRestrictionNode(node)
+                        node = self.buildDatatypeRestrictionNode(element)
                     elif item is Item.DisjointUnionNode:
-                        arch = self.buildDisjointUnionNode(node)
+                        node = self.buildDisjointUnionNode(element)
                     elif item is Item.DomainRestrictionNode:
-                        arch = self.buildDomainRestrictionNode(node)
+                        node = self.buildDomainRestrictionNode(element)
                     elif item is Item.EnumerationNode:
-                        arch = self.buildEnumerationNode(node)
+                        node = self.buildEnumerationNode(element)
                     elif item is Item.IndividualNode:
-                        arch = self.buildIndividualNode(node)
+                        node = self.buildIndividualNode(element)
                     elif item is Item.IntersectionNode:
-                        arch = self.buildIntersectionNode(node)
+                        node = self.buildIntersectionNode(element)
                     elif item is Item.PropertyAssertionNode:
-                        arch = self.buildPropertyAssertionNode(node)
+                        node = self.buildPropertyAssertionNode(element)
                     elif item is Item.RangeRestrictionNode:
-                        arch = self.buildRangeRestrictionNode(node)
+                        node = self.buildRangeRestrictionNode(element)
                     elif item is Item.RoleNode:
-                        arch = self.buildRoleNode(node)
+                        node = self.buildRoleNode(element)
                     elif item is Item.RoleChainNode:
-                        arch = self.buildRoleChainNode(node)
+                        node = self.buildRoleChainNode(element)
                     elif item is Item.RoleInverseNode:
-                        arch = self.buildRoleInverseNode(node)
+                        node = self.buildRoleInverseNode(element)
                     elif item is Item.UnionNode:
-                        arch = self.buildUnionNode(node)
+                        node = self.buildUnionNode(element)
                     elif item is Item.ValueDomainNode:
-                        arch = self.buildValueDomainNode(node)
+                        node = self.buildValueDomainNode(element)
                     elif item is Item.ValueRestrictionNode:
-                        arch = self.buildValueRestrictionNode(node)
+                        node = self.buildValueRestrictionNode(element)
 
-                    if not arch:
-                        raise ValueError('unknown node: {}'.format(node.attribute('type')))
+                    if not node:
+                        raise ValueError('unknown node: {}'.format(element.attribute('type')))
 
-                    self.scene.addItem(arch)
-                    self.scene.guid.update(arch.id)
+                    self.scene.addItem(node)
+                    self.scene.guid.update(node.id)
                 finally:
-                    node = node.nextSiblingElement('node')
+                    element = element.nextSiblingElement('node')
 
             # 5) GENERATE EDGES
-            edge = graph.firstChildElement('edge')
-            while not edge.isNull():
+            element = graph.firstChildElement('edge')
+            while not element.isNull():
 
                 # noinspection PyArgumentList
                 QApplication.processEvents()
 
-                arch = None
-                item = self.itemFromGrapholNode(edge)
+                edge = None
+                item = self.itemFromGrapholNode(element)
 
                 try:
 
                     if item is Item.InclusionEdge:
-                        arch = self.buildInclusionEdge(edge)
+                        edge = self.buildInclusionEdge(element)
                     elif item is Item.InputEdge:
-                        arch = self.buildInputEdge(edge)
+                        edge = self.buildInputEdge(element)
                     elif item is Item.InstanceOfEdge:
-                        arch = self.buildInstanceOfEdge(edge)
+                        edge = self.buildInstanceOfEdge(element)
 
-                    if not arch:
-                        raise ValueError('unknown edge: {}'.format(edge.attribute('type')))
+                    if not edge:
+                        raise ValueError('unknown edge: {}'.format(element.attribute('type')))
 
-                    self.scene.addItem(arch)
-                    self.scene.guid.update(arch.id)
-                    arch.updateEdge()
+                    self.scene.addItem(edge)
+                    self.scene.guid.update(edge.id)
+                    edge.updateEdge()
                 finally:
-                    edge = edge.nextSiblingElement('edge')
+                    element = element.nextSiblingElement('edge')
+
+            # 6) GENERATE PREDICATE METADATA
+            metadata = root.firstChildElement('metadata')
+            if not metadata.isNull():
+
+                element = metadata.firstChildElement('meta')
+                while not element.isNull():
+
+                    # noinspection PyArgumentList
+                    QApplication.processEvents()
+
+                    try:
+                        meta = self.buildPredicateMetadata(element)
+                        if meta:
+                            self.scene.meta.add(meta.item, meta.predicate, meta)
+                    finally:
+                        element = element.nextSiblingElement('meta')
 
         finally:
 
