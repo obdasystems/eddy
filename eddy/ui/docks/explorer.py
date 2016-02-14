@@ -177,7 +177,7 @@ class Explorer(QWidget):
         :type item: AbstractItem
         """
         if item.node and item.predicate:
-            parent = next(iter(self.model.findItems(ParentItem.key(item))), None)
+            parent = self.parentForNode(item)
             if not parent:
                 parent = ParentItem(item)
                 parent.setIcon(self.iconFor(item))
@@ -195,16 +195,46 @@ class Explorer(QWidget):
         :type item: AbstractItem
         """
         if item.node and item.predicate:
-            parent = next(iter(self.model.findItems(ParentItem.key(item))), None)
+            parent = self.parentForNode(item)
             if parent:
-                compound = ChildItem.key(item)
-                for i in range(parent.rowCount()):
-                    child = parent.child(i)
-                    if child.text() == compound:
-                        parent.removeRow(i)
-                        break
+                child = self.childForNode(parent, item)
+                if child:
+                    parent.removeRow(child.index().row())
                 if not parent.rowCount():
                     self.model.removeRow(parent.index().row())
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @staticmethod
+    def childForNode(parent, node):
+        """
+        Search the item representing this node among parent children.
+        :type parent: QStandardItem
+        :type node: AbstractNode
+        """
+        key = ChildItem.key(node)
+        for i in range(parent.rowCount()):
+            child = parent.child(i)
+            if child.text() == key:
+                return child
+        return None
+
+    def parentForNode(self, node):
+        """
+        Search the parent element of the given node.
+        :type node: AbstractNode
+        :rtype: QStandardItem
+        """
+        key = ParentItem.key(node)
+        for i in self.model.findItems(key, Qt.MatchExactly):
+            n = i.child(0).data()
+            if node.item is n.item:
+                return i
+        return None
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -218,7 +248,6 @@ class Explorer(QWidget):
         """
         if self.mainview:
 
-            # Backup current scoll index.
             rect = self.rect()
             item = self.model.itemFromIndex(self.proxy.mapToSource(self.view.indexAt(rect.topLeft())))
             if item:
@@ -230,11 +259,8 @@ class Explorer(QWidget):
 
             try:
                 scene = self.mainview.scene()
-                # Make sure to disconnect only the signals connected to the slots provided by this
-                # widget otherwise we will experiences bugs when the MainWindow goes out of focus: for
-                # more details on the matter read: https://github.com/danielepantaleone/eddy/issues/15
-                disconnect(scene.index.itemAdded, self.insert)
-                disconnect(scene.index.itemRemoved, self.remove)
+                disconnect(scene.itemIndex.added, self.insert)
+                disconnect(scene.itemIndex.removed, self.remove)
             except RuntimeError:
                 pass
             finally:
@@ -301,10 +327,10 @@ class Explorer(QWidget):
         if self.mainview:
 
             scene = self.mainview.scene()
-            connect(scene.index.itemAdded, self.insert)
-            connect(scene.index.itemRemoved, self.remove)
+            connect(scene.itemIndex.added, self.insert)
+            connect(scene.itemIndex.removed, self.remove)
 
-            for item in scene.index.nodes():
+            for item in scene.itemIndex.nodes():
                 self.insert(item)
 
             if self.mainview in self.expanded:
