@@ -430,10 +430,6 @@
       <line:point x="-480" y="60"/>
       <line:point x="-480" y="120"/>
     </edge>
-    <edge source="n8" type="input" target="n8" id="e7" functional="0">
-      <line:point x="-860" y="-60"/>
-      <line:point x="-860" y="-60"/>
-    </edge>
     <edge complete="0" source="n46" type="inclusion" target="n0" id="e57">
       <line:point x="-120" y="-440"/>
       <line:point x="-120" y="-160"/>
@@ -450,10 +446,6 @@
       <line:point x="160" y="260"/>
       <line:point x="260" y="260"/>
       <line:point x="260" y="-380"/>
-    </edge>
-    <edge source="n7" type="input" target="n7" id="e6" functional="0">
-      <line:point x="-1020" y="-60"/>
-      <line:point x="-1020" y="-60"/>
     </edge>
     <edge complete="0" source="n58" type="inclusion" target="n55" id="e72">
       <line:point x="60" y="-500"/>
@@ -494,10 +486,6 @@
     <edge source="n4" type="input" target="n5" id="e4" functional="0">
       <line:point x="-940" y="-160"/>
       <line:point x="-840" y="-160"/>
-    </edge>
-    <edge source="n34" type="input" target="n34" id="e36" functional="0">
-      <line:point x="900" y="40"/>
-      <line:point x="900" y="40"/>
     </edge>
     <edge source="n36" type="input" target="n33" id="e34" functional="0">
       <line:point x="820" y="-160"/>
@@ -551,10 +539,6 @@
       <line:point x="-80" y="-80"/>
       <line:point x="760" y="-80"/>
     </edge>
-    <edge source="n4" type="input" target="n4" id="e3" functional="0">
-      <line:point x="-940" y="-160"/>
-      <line:point x="-940" y="-160"/>
-    </edge>
     <edge complete="0" source="n6" type="inclusion" target="n0" id="e11">
       <line:point x="-940" y="-240"/>
       <line:point x="-180" y="-240"/>
@@ -564,17 +548,9 @@
       <line:point x="740" y="40"/>
       <line:point x="740" y="140"/>
     </edge>
-    <edge source="n40" type="input" target="n40" id="e46" functional="0">
-      <line:point x="820" y="-40"/>
-      <line:point x="820" y="-40"/>
-    </edge>
     <edge complete="0" source="n13" type="inclusion" target="n14" id="e17">
       <line:point x="-680" y="20"/>
       <line:point x="-680" y="240"/>
-    </edge>
-    <edge source="n36" type="input" target="n36" id="e32" functional="0">
-      <line:point x="820" y="-160"/>
-      <line:point x="820" y="-160"/>
     </edge>
     <edge complete="1" source="n20" type="inclusion" target="n0" id="e27">
       <line:point x="360" y="0"/>
@@ -607,10 +583,6 @@
     <edge complete="0" source="n44" type="inclusion" target="n45" id="e52">
       <line:point x="-300" y="-380"/>
       <line:point x="-420" y="-380"/>
-    </edge>
-    <edge source="n37" type="input" target="n37" id="e37" functional="0">
-      <line:point x="740" y="40"/>
-      <line:point x="740" y="40"/>
     </edge>
     <edge source="n7" type="input" target="n51" id="e63" functional="0">
       <line:point x="-1020" y="-60"/>
