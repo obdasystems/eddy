@@ -98,12 +98,15 @@ class PredicateMetaIndex(QObject):
         Remove predicate metadata from the index.
         :type item: Item
         :type predicate: str
+        :rtype: PredicateMetaData
         """
+        meta = None
         if item in self.index:
-            self.index[item].pop(predicate, None)
+            meta = self.index[item].pop(predicate, None)
             if not self.index[item]:
                 del self.index[item]
-        self.removed.emit(item, predicate)
+                self.removed.emit(item, predicate)
+        return meta
 
 
 ########################################################################################################################
