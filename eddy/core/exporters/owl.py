@@ -655,7 +655,7 @@ class OWLExporter(AbstractExporter):
         Generate a OWL annotation axiom.
         :type node: AbstractNode
         """
-        meta = self.scene.metaIndex.metaFor(node.item, node.text())
+        meta = self.scene.meta.metaFor(node.item, node.text())
         if not isEmpty(meta.description):
             annotationP = self.factory.getOWLAnnotationProperty(self.IRI.create("Description"))
             annotationV = self.factory.getOWLLiteral(OWLAnnotationText(meta.description))

@@ -214,7 +214,7 @@ class PredicateNodeProperty(NodeProperty):
         """
         super().__init__(scene, node, parent)
 
-        meta = scene.metaIndex.metaFor(node.item, node.text())
+        meta = scene.meta.metaFor(node.item, node.text())
 
         self.urlField = StringField(self.generalWidget)
         self.urlField.setFixedWidth(300)
@@ -247,7 +247,7 @@ class PredicateNodeProperty(NodeProperty):
         """
         Change the url and description of the node.
         """
-        meta = self.scene.metaIndex.metaFor(self.node.item, self.node.text())
+        meta = self.scene.meta.metaFor(self.node.item, self.node.text())
 
         copy = meta.copy()
         copy.description = self.descriptionField.value()

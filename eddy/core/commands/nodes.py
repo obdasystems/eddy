@@ -260,9 +260,9 @@ class CommandNodeLabelChange(QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        self.scene.itemIndex.remove(self.node)
+        self.scene.index.remove(self.node)
         self.node.setText(self.data['redo'])
-        self.scene.itemIndex.add(self.node)
+        self.scene.index.add(self.node)
 
         if self.node.isItem(Item.IndividualNode):
             f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
@@ -274,9 +274,9 @@ class CommandNodeLabelChange(QUndoCommand):
 
     def undo(self):
         """undo the command"""
-        self.scene.itemIndex.remove(self.node)
+        self.scene.index.remove(self.node)
         self.node.setText(self.data['undo'])
-        self.scene.itemIndex.add(self.node)
+        self.scene.index.add(self.node)
 
         if self.node.isItem(Item.IndividualNode):
             f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
@@ -374,16 +374,16 @@ class CommandNodeChangeMeta(QUndoCommand):
         """
         super().__init__('change {} metadata'.format(node.name))
         self.scene = scene
-        self.meta = {'redo': redo, 'undo': undo}
+        self.data = {'redo': redo, 'undo': undo}
         self.node = node
 
     def redo(self):
         """redo the command"""
-        self.scene.metaIndex.add(self.node.item, self.node.text(), self.meta['redo'])
+        self.scene.meta.add(self.node.item, self.node.text(), self.data['redo'])
 
     def undo(self):
         """undo the command"""
-        self.scene.metaIndex.add(self.node.item, self.node.text(), self.meta['undo'])
+        self.scene.meta.add(self.node.item, self.node.text(), self.data['undo'])
 
 
 class CommandNodeChangeInputOrder(QUndoCommand):

@@ -80,9 +80,9 @@ class DiagramScene(QGraphicsScene):
         super().__init__(parent)
         self.document = File(parent=self)
         self.guid = GUID(self)
-        self.itemFactory = ItemFactory(self)
-        self.itemIndex = ItemIndex(self)
-        self.metaIndex = PredicateMetaIndex(self)
+        self.factory = ItemFactory(self)
+        self.index = ItemIndex(self)
+        self.meta = PredicateMetaIndex(self)
         self.undostack = QUndoStack(self)
         self.undostack.setUndoLimit(50)
         self.validator = OWL2RLValidator(self)
@@ -136,7 +136,7 @@ class DiagramScene(QGraphicsScene):
         super().dropEvent(dropEvent)
         if dropEvent.mimeData().hasFormat('text/plain'):
             item = Item.forValue(dropEvent.mimeData().text())
-            node = self.itemFactory.create(item=item, scene=self)
+            node = self.factory.create(item=item, scene=self)
             node.setPos(snapPT(dropEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
             self.undostack.push(CommandNodeAdd(scene=self, node=node))
             self.itemAdded.emit(node, dropEvent.modifiers())
@@ -162,7 +162,7 @@ class DiagramScene(QGraphicsScene):
 
                 # create a new node and place it under the mouse position
                 item = Item.forValue(self.modeParam)
-                node = self.itemFactory.create(item=item, scene=self)
+                node = self.factory.create(item=item, scene=self)
                 node.setPos(snapPT(mouseEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
 
                 # no need to switch back the operation mode here: the signal handlers already does that and takes
@@ -185,7 +185,7 @@ class DiagramScene(QGraphicsScene):
                 if node:
 
                     item = Item.forValue(self.modeParam)
-                    edge = self.itemFactory.create(item=item, scene=self, source=node)
+                    edge = self.factory.create(item=item, scene=self, source=node)
                     edge.updateEdge(target=mouseEvent.scenePos())
                     self.mousePressEdge = edge
                     self.addItem(edge)
@@ -701,13 +701,13 @@ class DiagramScene(QGraphicsScene):
         :type item: AbstractItem
         """
         super().addItem(item)
-        self.itemIndex.add(item)
+        self.index.add(item)
 
     def clear(self):
         """
         Clear the Diagram Scene by removing all the elements.
         """
-        self.itemIndex.clear()
+        self.index.clear()
         self.undostack.clear()
         super().clear()
 
@@ -716,14 +716,14 @@ class DiagramScene(QGraphicsScene):
         Returns the edge matching the given edge id.
         :type eid: str
         """
-        return self.itemIndex.edgeForId(eid)
+        return self.index.edgeForId(eid)
 
     def edges(self):
         """
         Returns a view on all the edges of the diagram.
         :rtype: view
         """
-        return self.itemIndex.edges()
+        return self.index.edges()
 
     def itemOnTopOf(self, point, nodes=True, edges=True, skip=None):
         """
@@ -745,14 +745,14 @@ class DiagramScene(QGraphicsScene):
         Returns the node matching the given node id.
         :type nid: str
         """
-        return self.itemIndex.nodeForId(nid)
+        return self.index.nodeForId(nid)
 
     def nodes(self):
         """
         Returns a view on all the nodes in the diagram.
         :rtype: view
         """
-        return self.itemIndex.nodes()
+        return self.index.nodes()
 
     def removeItem(self, item):
         """
@@ -760,7 +760,7 @@ class DiagramScene(QGraphicsScene):
         :type item: AbstractItem
         """
         super().removeItem(item)
-        self.itemIndex.remove(item)
+        self.index.remove(item)
 
     def selectedEdges(self):
         """

@@ -259,8 +259,8 @@ class Explorer(QWidget):
 
             try:
                 scene = self.mainview.scene()
-                disconnect(scene.itemIndex.added, self.insert)
-                disconnect(scene.itemIndex.removed, self.remove)
+                disconnect(scene.index.added, self.insert)
+                disconnect(scene.index.removed, self.remove)
             except RuntimeError:
                 pass
             finally:
@@ -327,10 +327,10 @@ class Explorer(QWidget):
         if self.mainview:
 
             scene = self.mainview.scene()
-            connect(scene.itemIndex.added, self.insert)
-            connect(scene.itemIndex.removed, self.remove)
+            connect(scene.index.added, self.insert)
+            connect(scene.index.removed, self.remove)
 
-            for item in scene.itemIndex.nodes():
+            for item in scene.index.nodes():
                 self.insert(item)
 
             if self.mainview in self.expanded:
