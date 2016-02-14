@@ -53,6 +53,7 @@ class PredicateMetaIndex(QObject):
         """
         super().__init__(parent)
         self.index = {}
+        self.metaFactory = MetaFactory(self)
 
     def add(self, item, predicate, metadata):
         """
@@ -73,6 +74,13 @@ class PredicateMetaIndex(QObject):
         self.index.clear()
         self.cleared.emit()
 
+    def entries(self):
+        """
+        Returns a list of pairs 'item', 'predicate' for all the elements in the index.
+        :rtype: generator
+        """
+        return ((k1, k2) for k1 in self.index.keys() for k2 in self.index[k1].keys())
+
     def metaFor(self, item, predicate):
         """
         Returns predicate metadata.
@@ -85,7 +93,7 @@ class PredicateMetaIndex(QObject):
         except KeyError:
             if item not in self.index:
                 self.index[item] = {}
-            self.index[item][predicate] = MetaFactory.create(item, predicate)
+            self.index[item][predicate] = self.metaFactory.create(item, predicate)
             return self.index[item][predicate]
 
     def remove(self, item, predicate):
@@ -127,7 +135,7 @@ class MetaFactory(QObject):
         :type predicate: str
         :rtype: AbstractItem
         """
-        return PredicateMetaData(predicate)
+        return PredicateMetaData(item, predicate)
 
 
 ########################################################################################################################
@@ -141,13 +149,15 @@ class PredicateMetaData(QObject):
     """
     This class implements the basic predicate node metadata container.
     """
-    def __init__(self, predicate, parent=None):
+    def __init__(self, item, predicate, parent=None):
         """
         Initialize the metadata container.
+        :type item: Item
         :type predicate: str
         :type parent: QObject
         """
         super().__init__(parent)
+        self._item = item
         self._predicate = predicate
         self._description = ''
         self._url = ''
@@ -162,7 +172,7 @@ class PredicateMetaData(QObject):
         """
         Returns a copy of this predicate metadata.
         """
-        meta = PredicateMetaData(self.predicate)
+        meta = PredicateMetaData(self.item, self.predicate)
         meta.description = self.description
         meta.url = self.url
         return meta
@@ -172,11 +182,19 @@ class PredicateMetaData(QObject):
     #   PROPERTIES                                                                                                     #
     #                                                                                                                  #
     ####################################################################################################################
-
+    
+    @property
+    def item(self):
+        """
+        Returns the item type of the predicate.
+        :rtype: Item
+        """
+        return self._item
+    
     @property
     def description(self):
         """
-        Returns the description of the predicated.
+        Returns the description of the predicate.
         :rtype: str
         """
         return self._description

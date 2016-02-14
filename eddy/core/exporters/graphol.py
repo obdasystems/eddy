@@ -254,6 +254,33 @@ class GrapholExporter(AbstractExporter):
 
     ####################################################################################################################
     #                                                                                                                  #
+    #   METADATA                                                                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def exportPredicateMetadata(self, item, predicate):
+        """
+        Export given predicate metadata.
+        :type item: Item
+        :type predicate: str
+        :rtype: QDomElement
+        """
+        meta = self.scene.meta.metaFor(item, predicate)
+        if meta:
+            element = self.document.createElement('meta')
+            element.setAttribute('type', self.itemToXml[item])
+            element.setAttribute('predicate', predicate)
+            url = self.document.createElement('data:url')
+            url.appendChild(self.document.createTextNode(meta.url))
+            description = self.document.createElement('data:description')
+            description.appendChild(self.document.createTextNode(meta.description))
+            element.appendChild(url)
+            element.appendChild(description)
+            return element
+        return None
+
+    ####################################################################################################################
+    #                                                                                                                  #
     #   AUXILIARY METHODS                                                                                              #
     #                                                                                                                  #
     ####################################################################################################################
@@ -421,3 +448,16 @@ class GrapholExporter(AbstractExporter):
 
         # 6) APPEND THE GRAPH TO THE DOCUMENT
         root.appendChild(graph)
+
+        # 7) GENERATE NODES META DATA
+        collection = []
+        for item, predicate in self.scene.meta.entries():
+            element = self.exportPredicateMetadata(item, predicate)
+            if element:
+                collection.append(element)
+
+        if collection:
+            metadata = self.document.createElement('metadata')
+            for element in collection:
+                metadata.appendChild(element)
+            root.appendChild(metadata)
