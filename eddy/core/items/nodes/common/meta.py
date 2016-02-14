@@ -91,10 +91,7 @@ class PredicateMetaIndex(QObject):
         try:
             return self.index[item][predicate]
         except KeyError:
-            if item not in self.index:
-                self.index[item] = {}
-            self.index[item][predicate] = self.metaFactory.create(item, predicate)
-            return self.index[item][predicate]
+            return self.metaFactory.create(item, predicate)
 
     def remove(self, item, predicate):
         """
