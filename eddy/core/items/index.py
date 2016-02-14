@@ -41,9 +41,9 @@ class ItemIndex(QObject):
     """
     This class can be used to index Diagram Scene items for easy/fast retrieval.
     """
+    added = pyqtSignal('QGraphicsItem')
     cleared = pyqtSignal()
-    itemAdded = pyqtSignal('QGraphicsItem')
-    itemRemoved = pyqtSignal('QGraphicsItem')
+    removed = pyqtSignal('QGraphicsItem')
 
     def __init__(self, parent=None):
         """
@@ -68,10 +68,12 @@ class ItemIndex(QObject):
             self.nodesById[item.id] = item
             if item.predicate:
                 key = item.text()
-                if not key in self.nodesByTx:
-                    self.nodesByTx[key] = DistinctList()
-                self.nodesByTx[key].append(item)
-        self.itemAdded.emit(item)
+                if item.item not in self.nodesByTx:
+                    self.nodesByTx[item.item] = {}
+                if not key in self.nodesByTx[item.item]:
+                    self.nodesByTx[item.item][key] = DistinctList()
+                self.nodesByTx[item.item][key].append(item)
+        self.added.emit(item)
 
     def clear(self):
         """
@@ -158,23 +160,17 @@ class ItemIndex(QObject):
         """
         return self.nodesById.values()
 
-    def nodesForLabel(self, key):
+    def nodesForLabel(self, item, key):
         """
-        Returns the list of nodes sharing the given label (only for predicate nodes).
+        Returns the list of nodes of the given item type sharing the given label (only for predicate nodes).
+        :type item: Item
         :type key: str
         :rtype: DistinctList
         """
         try:
-            return self.nodesByTx[key]
+            return self.nodesByTx[item][key]
         except KeyError:
             return DistinctList()
-
-    def predicates(self):
-        """
-        Returns a list of predicates in the index.
-        :rtype: str
-        """
-        return list(self.nodesByTx.keys())
 
     def remove(self, item):
         """
@@ -188,11 +184,14 @@ class ItemIndex(QObject):
             self.nodesById.pop(item.id, None)
             if item.predicate:
                 key = item.text()
-                if key in self.nodesByTx:
-                    self.nodesByTx[key].remove(item)
-                    if not self.nodesByTx[key]:
-                        del self.nodesByTx[key]
-        self.itemRemoved.emit(item)
+                if item.item in self.nodesByTx:
+                    if key in self.nodesByTx[item.item]:
+                        self.nodesByTx[item.item][key].remove(item)
+                        if not self.nodesByTx[item.item][key]:
+                            del self.nodesByTx[item.item][key]
+                    if not self.nodesByTx[item.item]:
+                        del self.nodesByTx[item.item]
+        self.removed.emit(item)
 
     def size(self):
         """
