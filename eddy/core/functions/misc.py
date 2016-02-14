@@ -36,8 +36,8 @@ import itertools
 import os
 import re
 
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
+from PyQt5.QtCore import Qt, QPointF, QRectF
+from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap, QPen, QBrush, QPainterPath
 
 from eddy.core.regex import RE_QUOTED, RE_OWL_INVALID_CHAR
 
@@ -59,16 +59,25 @@ def clamp(val, minval=None, maxval=None):
     return val
 
 
-def coloredIcon(width, height, code):
+def coloredIcon(width, height, color, border=None):
     """
     Create and returns a QIcon filled using the given color.
     :type width: T <= int | float
     :type height: T <= int | float
-    :type code: str
+    :type color: str
+    :type border: str
     :rtype: QIcon
     """
     pixmap = QPixmap(width, height)
-    pixmap.fill(QColor(code))
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.Antialiasing)
+    path = QPainterPath()
+    path.addRect(QRectF(QPointF(0, 0), QPointF(width, height)))
+    painter.fillPath(path, QBrush(QColor(color)))
+    if border:
+        painter.setPen(QPen(QColor(border), 0, Qt.SolidLine))
+        painter.drawPath(path)
+    painter.end()
     return QIcon(pixmap)
 
 
