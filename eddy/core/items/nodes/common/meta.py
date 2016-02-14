@@ -223,16 +223,16 @@ class PredicateMetaData(QObject):
 
     ####################################################################################################################
     #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
+    #   MAGIC METHODS                                                                                                  #
     #                                                                                                                  #
     ####################################################################################################################
 
-    def isEmpty(self):
+    def __bool__(self):
         """
-        Returns True if this predicate metadata is filled with values, otherwise it returns False.
+        Boolean operator implementation.
         :rtype: bool
         """
-        return isEmpty(self.description) and isEmpty(self.url)
+        return not isEmpty(self.description) or not isEmpty(self.url)
 
     def __eq__(self, other):
         """
