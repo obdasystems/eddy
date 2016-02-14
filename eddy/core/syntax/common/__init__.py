@@ -60,8 +60,12 @@ class ValidationResult(object):
         """
         Implement membership operator 'in'.
         :type item: tuple
+        :rtype: bool
         """
-        return self.source, self.edge, self.target == item
+        try:
+            return self.source is item[0] and self.edge is item[1] and self.target is item[2]
+        except IndexError:
+            return False
 
 
 class AbstractValidator(QObject):
@@ -101,7 +105,7 @@ class AbstractValidator(QObject):
         :type target: AbstractNode
         :rtype: ValidationResult
         """
-        if not self._result or not (source, edge, target) in self._result:
+        if not self._result or (source, edge, target) not in self._result:
             self.run(source, edge, target)
         return self._result
 
@@ -123,6 +127,6 @@ class AbstractValidator(QObject):
         :type target: AbstractNode
         :rtype: bool
         """
-        if not self._result or not (source, edge, target) in self._result:
+        if not self._result or (source, edge, target) not in self._result:
             self.run(source, edge, target)
         return self._result.valid
