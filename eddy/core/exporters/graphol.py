@@ -366,7 +366,9 @@ class GrapholExporter(AbstractExporter):
         """
         # 1) CREATE THE DOCUMENT
         self.document = QDomDocument()
-        self.document.appendChild(self.document.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8" standalone="no"'))
+        self.document.appendChild(self.document.createProcessingInstruction('xml', 'version="1.0" '
+                                                                                   'encoding="UTF-8" '
+                                                                                   'standalone="no"'))
         
         # 2) CREATE ROOT ELEMENT
         root = self.document.createElement('graphol')
@@ -375,7 +377,8 @@ class GrapholExporter(AbstractExporter):
         root.setAttribute('xmlns:data', 'http://www.dis.uniroma1.it/~graphol/schema/data')
         root.setAttribute('xmlns:line', 'http://www.dis.uniroma1.it/~graphol/schema/line')
         root.setAttribute('xmlns:shape', 'http://www.dis.uniroma1.it/~graphol/schema/shape')
-        root.setAttribute('xsi:schemaLocation', 'http://www.dis.uniroma1.it/~graphol/schema http://www.dis.uniroma1.it/~graphol/schema/graphol.xsd')
+        root.setAttribute('xsi:schemaLocation', 'http://www.dis.uniroma1.it/~graphol/schema '
+                                                'http://www.dis.uniroma1.it/~graphol/schema/graphol.xsd')
         
         self.document.appendChild(root)
         
