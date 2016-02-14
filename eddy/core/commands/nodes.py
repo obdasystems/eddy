@@ -260,9 +260,20 @@ class CommandNodeLabelChange(QUndoCommand):
 
     def redo(self):
         """redo the command"""
+        # If the command is executed in a "refactor" command we won't have
+        # any meta except for the first node in the refactored collection
+        # so we don't have to remove nor add predicates from the meta index.
+        meta = self.scene.meta.metaFor(self.node.item, self.data['undo'])
+        if meta:
+            self.scene.meta.remove(self.node.item, self.data['undo'])
+
         self.scene.index.remove(self.node)
         self.node.setText(self.data['redo'])
         self.scene.index.add(self.node)
+
+        if meta:
+            meta.predicate = self.data['redo']
+            self.scene.meta.add(self.node.item, self.data['redo'], meta)
 
         if self.node.isItem(Item.IndividualNode):
             f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
@@ -274,9 +285,20 @@ class CommandNodeLabelChange(QUndoCommand):
 
     def undo(self):
         """undo the command"""
+        # If the command is executed in a "refactor" command we won't have
+        # any meta except for the first node in the refactored collection
+        # so we don't have to remove nor add predicates from the meta index.
+        meta = self.scene.meta.metaFor(self.node.item, self.data['redo'])
+        if meta:
+            self.scene.meta.remove(self.node.item, self.data['redo'])
+
         self.scene.index.remove(self.node)
         self.node.setText(self.data['undo'])
         self.scene.index.add(self.node)
+
+        if meta:
+            meta.predicate = self.data['undo']
+            self.scene.meta.add(self.node.item, self.data['undo'], meta)
 
         if self.node.isItem(Item.IndividualNode):
             f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
