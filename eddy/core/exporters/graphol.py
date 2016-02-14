@@ -305,17 +305,11 @@ class GrapholExporter(AbstractExporter):
         element.setAttribute('id', node.id)
         element.setAttribute('type', self.itemToXml[node.item])
         element.setAttribute('color', node.brush.color().name())
-        url = self.document.createElement('data:url')
-        url.appendChild(self.document.createTextNode(node.url))
-        description = self.document.createElement('data:description')
-        description.appendChild(self.document.createTextNode(node.description))
         geometry = self.document.createElement('shape:geometry')
         geometry.setAttribute('height', node.height())
         geometry.setAttribute('width', node.width())
         geometry.setAttribute('x', node.pos().x())
         geometry.setAttribute('y', node.pos().y())
-        element.appendChild(url)
-        element.appendChild(description)
         element.appendChild(geometry)
         return element
 

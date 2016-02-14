@@ -56,8 +56,7 @@ from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.commands.nodes import CommandNodeLabelMove
 from eddy.core.commands.nodes import CommandNodeMove
 from eddy.core.commands.nodes import CommandNodeRezize
-from eddy.core.commands.nodes import CommandNodeSetDescription
-from eddy.core.commands.nodes import CommandNodeSetURL
+from eddy.core.commands.nodes import CommandNodeChangeMeta
 from eddy.core.commands.nodes import CommandNodeSetZValue
 
 from eddy.core.commands.scene import CommandSceneResize

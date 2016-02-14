@@ -1,0 +1,259 @@
+# -*- coding: utf-8 -*-
+
+##########################################################################
+#                                                                        #
+#  Eddy: a graphical editor for the construction of Graphol ontologies.  #
+#  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
+#                                                                        #
+#  This program is free software: you can redistribute it and/or modify  #
+#  it under the terms of the GNU General Public License as published by  #
+#  the Free Software Foundation, either version 3 of the License, or     #
+#  (at your option) any later version.                                   #
+#                                                                        #
+#  This program is distributed in the hope that it will be useful,       #
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          #
+#  GNU General Public License for more details.                          #
+#                                                                        #
+#  You should have received a copy of the GNU General Public License     #
+#  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
+#                                                                        #
+#  #####################                          #####################  #
+#                                                                        #
+#  Graphol is developed by members of the DASI-lab group of the          #
+#  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
+#  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it/ #
+#                                                                        #
+#     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
+#     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
+#     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
+#     - Marco Console <console@dis.uniroma1.it>                          #
+#                                                                        #
+##########################################################################
+
+
+from PyQt5.QtCore import QObject, pyqtSignal
+
+from eddy.core.datatypes import Item
+from eddy.core.functions import isEmpty
+
+
+class PredicateMetaIndex(QObject):
+    """
+    This class is used to index predicate metadata.
+    """
+    added = pyqtSignal(Item, str)
+    removed = pyqtSignal(Item, str)
+    cleared = pyqtSignal()
+
+    def __init__(self, parent=None):
+        """
+        Initialize the metadata index.
+        :type parent: QObject
+        """
+        super().__init__(parent)
+        self.index = {}
+
+    def add(self, item, predicate, metadata):
+        """
+        Insert predicate metadata in the index.
+        :type item: Item
+        :type predicate: str
+        :type metadata: PredicateMetaData
+        """
+        if item not in self.index:
+            self.index[item] = {}
+        self.index[item][predicate] = metadata
+        self.added.emit(item, predicate)
+
+    def clear(self):
+        """
+        Clear the metadata index.
+        """
+        self.index.clear()
+        self.cleared.emit()
+
+    def metaFor(self, item, predicate):
+        """
+        Returns predicate metadata.
+        :type item: Item
+        :type predicate: str
+        :rtype: PredicateMetaData
+        """
+        try:
+            return self.index[item][predicate]
+        except KeyError:
+            if item not in self.index:
+                self.index[item] = {}
+            self.index[item][predicate] = MetaFactory.create(item, predicate)
+            return self.index[item][predicate]
+
+    def remove(self, item, predicate):
+        """
+        Remove predicate metadata from the index.
+        :type item: Item
+        :type predicate: str
+        """
+        if item in self.index:
+            self.index[item].pop(predicate, None)
+            if not self.index[item]:
+                del self.index[item]
+        self.removed.emit(item, predicate)
+
+
+########################################################################################################################
+#                                                                                                                      #
+#   FACTORY IMPLEMENTATION                                                                                             #
+#                                                                                                                      #
+########################################################################################################################
+
+
+class MetaFactory(QObject):
+    """
+    This class can be used to produce predicate meta data containers.
+    """
+    def __init__(self, parent=None):
+        """
+        Initialize the factory.
+        :type parent: QObject
+        """
+        super().__init__(parent)
+
+    @staticmethod
+    def create(item, predicate):
+        """
+        Build and return a predicate meta data container using to the given parameters.
+        :type item: Item
+        :type predicate: str
+        :rtype: AbstractItem
+        """
+        return PredicateMetaData(predicate)
+
+
+########################################################################################################################
+#                                                                                                                      #
+#   PREDICATE METADATA CONTAINERS                                                                                      #
+#                                                                                                                      #
+########################################################################################################################
+
+
+class PredicateMetaData(QObject):
+    """
+    This class implements the basic predicate node metadata container.
+    """
+    def __init__(self, predicate, parent=None):
+        """
+        Initialize the metadata container.
+        :type predicate: str
+        :type parent: QObject
+        """
+        super().__init__(parent)
+        self._predicate = predicate
+        self._description = ''
+        self._url = ''
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def copy(self):
+        """
+        Returns a copy of this predicate metadata.
+        """
+        meta = PredicateMetaData(self.predicate)
+        meta.description = self.description
+        meta.url = self.url
+        return meta
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PROPERTIES                                                                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @property
+    def description(self):
+        """
+        Returns the description of the predicated.
+        :rtype: str
+        """
+        return self._description
+
+    @description.setter
+    def description(self, description):
+        """
+        Set the description of the predicate.
+        :type description: str
+        """
+        self._description = description.strip()
+
+    @property
+    def predicate(self):
+        """
+        Returns the predicate identifier.
+        :rtype: str
+        """
+        return self._predicate
+
+    @predicate.setter
+    def predicate(self, predicate):
+        """
+        Set the identifier of the predicate.
+        :type predicate: str
+        """
+        self._predicate = predicate.strip()
+
+    @property
+    def url(self):
+        """
+        Returns the URL of the predicate.
+        :rtype: str
+        """
+        return self._url
+
+    @url.setter
+    def url(self, url):
+        """
+        Set the URL of the predicate.
+        :type url: str
+        """
+        self._url = url.strip()
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   AUXILIARY METHODS                                                                                              #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def isEmpty(self):
+        """
+        Returns True if this predicate metadata is filled with values, otherwise it returns False.
+        :rtype: bool
+        """
+        return isEmpty(self.description) and isEmpty(self.url)
+
+    def __eq__(self, other):
+        """
+        Equality operator implementation.
+        :type other: PredicateMetaData
+        :rtype: bool
+        """
+        if isinstance(other, PredicateMetaData):
+            return self.url == other.url and \
+                   self.description == other.description and \
+                   self.predicate == other.predicate
+        return False
+
+    def __ne__(self, other):
+        """
+        Inequality operator implementation.
+        :type other: PredicateMetaData
+        :rtype: bool
+        """
+        if isinstance(other, PredicateMetaData):
+            return self.url != other.url or \
+                   self.description != other.description or \
+                   self.predicate != other.predicate
+        return True

@@ -386,20 +386,3 @@ QTreeView::branch:open:has-children:has-siblings  {
     border-image: none;
     image: url(:/icons/treeview-branch-open);
 }
-/**
- * LIST VIEW
- */
-QListView::item {
-    border: 0;
-}
-QListView::item:hover {
-    border: 0;
-}
-QListView::item:selected {
-    background: #4FC3F7;
-    color: #000000;
-}
-QListView::item:!selected {
-    background: #FFFFFF;
-    color: #000000;
-}

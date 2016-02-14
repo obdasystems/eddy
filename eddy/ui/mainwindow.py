@@ -1389,7 +1389,7 @@ class MainWindow(QMainWindow):
                     if node.text() != form.renameField.value():
 
                         commands = []
-                        for n in scene.index.nodesForLabel(node.text()):
+                        for n in scene.itemIndex.nodesForLabel(node.item, node.text()):
                             command = CommandNodeLabelChange(scene, n, n.text(), form.renameField.value())
                             commands.append(command)
 

@@ -351,15 +351,11 @@ class GrapholLoader(AbstractLoader):
         :type node: QDomElement
         :rtype: AbstractNode
         """
-        url = node.firstChildElement('data:url')
-        description = node.firstChildElement('data:description')
         geometry = node.firstChildElement('shape:geometry')
 
         kwargs = {
-            'description': description.text(),
-            'height': int(geometry.attribute('height')),
             'id': node.attribute('id'),
-            'url': url.text(),
+            'height': int(geometry.attribute('height')),
             'width': int(geometry.attribute('width')),
         }
 
@@ -386,7 +382,7 @@ class GrapholLoader(AbstractLoader):
 
     def run(self):
         """
-        Perform ontology import from .graphml file format.
+        Perform ontology import from .graphol file format.
         """
         file = QFile(self.filepath)
 

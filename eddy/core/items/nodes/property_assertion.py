@@ -107,8 +107,6 @@ class PropertyAssertionNode(AbstractNode):
         """
         kwargs = {
             'id': self.id,
-            'description': self.description,
-            'url': self.url,
             'height': self.height(),
             'width': self.width(),
         }

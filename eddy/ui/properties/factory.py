@@ -36,7 +36,7 @@ from PyQt5.QtCore import QObject
 
 from eddy.core.datatypes import Item
 
-from eddy.ui.properties.nodes import NodeProperty, EditableNodeProperty
+from eddy.ui.properties.nodes import NodeProperty, PredicateNodeProperty, EditableNodeProperty
 from eddy.ui.properties.nodes import OrderedInputNodeProperty
 from eddy.ui.properties.scene import SceneProperty
 
@@ -61,11 +61,16 @@ class PropertyFactory(QObject):
         :rtype: QDialog
         """
         if not node:
-            return SceneProperty(scene=scene)
-        if node.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
-            return OrderedInputNodeProperty(scene=scene, node=node)
-        if node.predicate and node.label.editable:
-            return EditableNodeProperty(scene=scene, node=node)
-        return NodeProperty(scene=scene, node=node)
-
-
+            window = SceneProperty(scene=scene)
+        else:
+            if node.predicate:
+                if node.label.editable:
+                    window = EditableNodeProperty(scene=scene, node=node)
+                else:
+                    window = PredicateNodeProperty(scene=scene, node=node)
+            elif node.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
+                window = OrderedInputNodeProperty(scene=scene, node=node)
+            else:
+                window = NodeProperty(scene=scene, node=node)
+        window.setFixedSize(window.sizeHint())
+        return window

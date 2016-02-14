@@ -50,7 +50,7 @@ class AbstractItem(QGraphicsItem):
     item = Item.Undefined
     prefix = 'i'
 
-    def __init__(self, scene, id=None, description='', url='', **kwargs):
+    def __init__(self, scene, id=None, **kwargs):
         """
         Initialize the item.
         :type scene: DiagramScene
@@ -59,14 +59,10 @@ class AbstractItem(QGraphicsItem):
         :type url: str
         """
         self._id = id or scene.guid.next(self.prefix)
-        self._description = description
-        self._url = url
-
         self.selectionBrush = QBrush(Qt.NoBrush)
         self.selectionPen = QPen(Qt.NoPen)
         self.brush = QBrush(Qt.NoBrush)
         self.pen = QPen(Qt.NoPen)
-
         super().__init__(**kwargs)
 
     ####################################################################################################################
@@ -74,22 +70,6 @@ class AbstractItem(QGraphicsItem):
     #   PROPERTIES                                                                                                     #
     #                                                                                                                  #
     ####################################################################################################################
-
-    @property
-    def description(self):
-        """
-        Returns the description of the node.
-        :rtype: str
-        """
-        return self._description.strip()
-
-    @description.setter
-    def description(self, value):
-        """
-        Set the description of the node.
-        :type value: str
-        """
-        self._description = value.strip()
 
     @property
     def edge(self):
@@ -130,22 +110,6 @@ class AbstractItem(QGraphicsItem):
         :rtype: bool
         """
         return Item.ConceptNode <= self.item <= Item.PropertyAssertionNode
-
-    @property
-    def url(self):
-        """
-        Returns the url attached to the node.
-        :rtype: str
-        """
-        return self._url.strip()
-
-    @url.setter
-    def url(self, value):
-        """
-        Set the url attached to the node.
-        :type value: str
-        """
-        self._url = value.strip()
 
     ####################################################################################################################
     #                                                                                                                  #

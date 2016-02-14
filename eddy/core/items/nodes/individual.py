@@ -137,8 +137,6 @@ class IndividualNode(AbstractResizableNode):
         kwargs = {
             'id': self.id,
             'brush': self.brush,
-            'description': self.description,
-            'url': self.url,
             'height': self.height(),
             'width': self.width(),
         }

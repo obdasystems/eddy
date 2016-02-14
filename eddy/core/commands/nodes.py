@@ -260,9 +260,9 @@ class CommandNodeLabelChange(QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        self.scene.index.remove(self.node)
+        self.scene.itemIndex.remove(self.node)
         self.node.setText(self.data['redo'])
-        self.scene.index.add(self.node)
+        self.scene.itemIndex.add(self.node)
 
         if self.node.isItem(Item.IndividualNode):
             f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
@@ -274,9 +274,9 @@ class CommandNodeLabelChange(QUndoCommand):
 
     def undo(self):
         """undo the command"""
-        self.scene.index.remove(self.node)
+        self.scene.itemIndex.remove(self.node)
         self.node.setText(self.data['undo'])
-        self.scene.index.add(self.node)
+        self.scene.itemIndex.add(self.node)
 
         if self.node.isItem(Item.IndividualNode):
             f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
@@ -364,46 +364,26 @@ class CommandNodeOperatorSwitchTo(QUndoCommand):
         self.scene.updated.emit()
 
 
-class CommandNodeSetURL(QUndoCommand):
+class CommandNodeChangeMeta(QUndoCommand):
     """
-    This command is used to change the url attached to a node.
+    This command is used to change predicate nodes metadata.
     """
-    def __init__(self, node, url):
+    def __init__(self, scene, node, undo, redo):
         """
         Initialize the command.
         """
-        super().__init__('change {} URL'.format(node.name))
-        self.url = {'redo': url, 'undo': node.url}
+        super().__init__('change {} metadata'.format(node.name))
+        self.scene = scene
+        self.meta = {'redo': redo, 'undo': undo}
         self.node = node
 
     def redo(self):
         """redo the command"""
-        self.node.url = self.url['redo']
+        self.scene.metaIndex.add(self.node.item, self.node.text(), self.meta['redo'])
 
     def undo(self):
         """undo the command"""
-        self.node.url = self.url['undo']
-
-
-class CommandNodeSetDescription(QUndoCommand):
-    """
-    This command is used to change the description attached to a node.
-    """
-    def __init__(self, node, description):
-        """
-        Initialize the command.
-        """
-        super().__init__('change {} description'.format(node.name))
-        self.description = {'redo': description, 'undo': node.description}
-        self.node = node
-
-    def redo(self):
-        """redo the command"""
-        self.node.description = self.description['redo']
-
-    def undo(self):
-        """undo the command"""
-        self.node.description = self.description['undo']
+        self.scene.metaIndex.add(self.node.item, self.node.text(), self.meta['undo'])
 
 
 class CommandNodeChangeInputOrder(QUndoCommand):

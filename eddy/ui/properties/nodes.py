@@ -37,9 +37,8 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QDialog, QPushButton, QHBoxLayout, QListWidget, QAbstractItemView
 from PyQt5.QtWidgets import QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout, QListWidgetItem
 
-from eddy.core.commands import CommandNodeSetURL, CommandNodeSetDescription
+from eddy.core.commands import CommandNodeChangeMeta, CommandNodeChangeInputOrder
 from eddy.core.commands import CommandNodeLabelChange, CommandNodeMove
-from eddy.core.commands import CommandNodeChangeInputOrder
 from eddy.core.datatypes import DistinctList
 from eddy.core.functions import clamp, connect, isEmpty, rCut
 
@@ -69,120 +68,76 @@ class NodeProperty(QDialog):
         self.node = node
         self.scene = scene
 
-        ################################################################################################################
-        #                                                                                                              #
-        #   GENERAL TAB                                                                                                #
-        #                                                                                                              #
-        ################################################################################################################
+        # GENERAL
+        self.generalWidget = QWidget()
+        self.generalLayout = QFormLayout(self.generalWidget)
 
-        genWidget = QWidget()
-        genLayout = QFormLayout(genWidget)
-
-        self.idField = StringField(genWidget)
+        self.idField = StringField(self.generalWidget)
         self.idField.setReadOnly(True)
         self.idField.setFixedWidth(300)
         self.idField.setValue(self.node.id)
 
-        self.itemField = StringField(genWidget)
+        self.itemField = StringField(self.generalWidget)
         self.itemField.setReadOnly(True)
         self.itemField.setFixedWidth(300)
         self.itemField.setValue(' '.join(i.capitalize() for i in rCut(self.node.name, ' node').split()))
 
-        self.showIdentityField = StringField(genWidget)
+        self.showIdentityField = StringField(self.generalWidget)
         self.showIdentityField.setReadOnly(True)
         self.showIdentityField.setFixedWidth(300)
         self.showIdentityField.setValue(self.node.identity.label)
 
-        self.urlField = StringField(genWidget)
-        self.urlField.setFixedWidth(300)
-        self.urlField.setValue(self.node.url)
+        self.generalLayout.addRow('ID', self.idField)
+        self.generalLayout.addRow('Type', self.itemField)
+        self.generalLayout.addRow('Identity', self.showIdentityField)
 
-        self.descriptionField = TextField(genWidget)
-        self.descriptionField.setFixedSize(300, 160)
-        self.descriptionField.setValue(self.node.description)
-
-        genLayout.addRow('ID', self.idField)
-        genLayout.addRow('Type', self.itemField)
-        genLayout.addRow('Identity', self.showIdentityField)
-        genLayout.addRow('URL', self.urlField)
-        genLayout.addRow('Description', self.descriptionField)
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   GEOMETRY TAB                                                                                               #
-        #                                                                                                              #
-        ################################################################################################################
-
-        geoWidget = QWidget()
-        geoLayout = QFormLayout(geoWidget)
+        # GEOMETRY
+        self.geometryWidget = QWidget()
+        self.geometryLayout = QFormLayout(self.geometryWidget)
 
         P = self.node.pos()
         R = self.scene.sceneRect()
 
-        self.xField = SpinBox(geoWidget)
+        self.xField = SpinBox(self.geometryWidget)
         self.xField.setFixedWidth(60)
         self.xField.setRange(R.left(), R.right())
         self.xField.setValue(int(P.x()))
 
-        self.yField = SpinBox(geoWidget)
+        self.yField = SpinBox(self.geometryWidget)
         self.yField.setFixedWidth(60)
         self.yField.setRange(R.top(), R.bottom())
         self.yField.setValue(int(P.y()))
 
-        self.wField = SpinBox(geoWidget)
+        self.wField = SpinBox(self.geometryWidget)
         self.wField.setRange(20, R.width())
         self.wField.setReadOnly(True)
         self.wField.setFixedWidth(60)
         self.wField.setValue(int(self.node.width()))
 
-        self.hField = SpinBox(geoWidget)
+        self.hField = SpinBox(self.geometryWidget)
         self.hField.setRange(20, R.height())
         self.hField.setReadOnly(True)
         self.hField.setFixedWidth(60)
         self.hField.setValue(int(self.node.height()))
 
-        geoLayout.addRow('X', self.xField)
-        geoLayout.addRow('Y', self.yField)
-        geoLayout.addRow('Width', self.wField)
-        geoLayout.addRow('Height', self.hField)
+        self.geometryLayout.addRow('X', self.xField)
+        self.geometryLayout.addRow('Y', self.yField)
+        self.geometryLayout.addRow('Width', self.wField)
+        self.geometryLayout.addRow('Height', self.hField)
 
-        ################################################################################################################
-        #                                                                                                              #
-        #   MAIN WIDGET                                                                                                #
-        #                                                                                                              #
-        ################################################################################################################
-
+        # MAIN
         self.mainWidget = QTabWidget(self)
-        self.mainWidget.addTab(genWidget, 'General')
-        self.mainWidget.addTab(geoWidget, 'Geometry')
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   BUTTON BOX                                                                                                 #
-        #                                                                                                              #
-        ################################################################################################################
+        self.mainWidget.addTab(self.generalWidget, 'General')
+        self.mainWidget.addTab(self.geometryWidget, 'Geometry')
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   MAIN LAYOUT                                                                                                #
-        #                                                                                                              #
-        ################################################################################################################
 
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.addWidget(self.mainWidget)
         self.mainLayout.addWidget(self.buttonBox, 0, Qt.AlignRight)
 
-        self.setFixedSize(self.sizeHint())
         self.setWindowTitle('Properties')
         self.setWindowIcon(QIcon(':/images/eddy'))
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   CONFIGURE SIGNALS                                                                                          #
-        #                                                                                                              #
-        ################################################################################################################
 
         connect(self.finished, self.completed)
         connect(self.buttonBox.accepted, self.accept)
@@ -201,25 +156,7 @@ class NodeProperty(QDialog):
         :type code: int
         """
         if code == QDialog.Accepted:
-            self.metaDataChanged()
             self.positionChanged()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def metaDataChanged(self):
-        """
-        Change the url and description of the node.
-        """
-        description = self.descriptionField.value()
-        if self.node.description != description:
-            self.scene.undostack.push(CommandNodeSetDescription(self.node, description))
-        url = self.urlField.value()
-        if self.node.url != url:
-            self.scene.undostack.push(CommandNodeSetURL(self.node, url))
 
     def positionChanged(self):
         """
@@ -259,14 +196,78 @@ class NodeProperty(QDialog):
 
 ########################################################################################################################
 #                                                                                                                      #
+#   PREDICATE NODES                                                                                                    #
+#                                                                                                                      #
+########################################################################################################################
+
+
+class PredicateNodeProperty(NodeProperty):
+    """
+    This class implements the property dialog for predicate nodes.
+    """
+    def __init__(self, scene, node, parent=None):
+        """
+        Initialize the predicate node properties dialog.
+        :type scene: DiagramScene
+        :type node: AbstractNode
+        :type parent: QWidget
+        """
+        super().__init__(scene, node, parent)
+
+        meta = scene.metaIndex.metaFor(node.item, node.text())
+
+        self.urlField = StringField(self.generalWidget)
+        self.urlField.setFixedWidth(300)
+        self.urlField.setValue(meta.url)
+
+        self.descriptionField = TextField(self.generalWidget)
+        self.descriptionField.setFixedSize(300, 160)
+        self.descriptionField.setValue(meta.description)
+
+        self.generalLayout.addRow('URL', self.urlField)
+        self.generalLayout.addRow('Description', self.descriptionField)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SLOTS                                                                                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @pyqtSlot(int)
+    def completed(self, code):
+        """
+        Executed when the dialog is terminated.
+        :type code: int
+        """
+        if code == QDialog.Accepted:
+            super().completed(code)
+            self.metaDataChanged()
+
+    def metaDataChanged(self):
+        """
+        Change the url and description of the node.
+        """
+        meta = self.scene.metaIndex.metaFor(self.node.item, self.node.text())
+
+        copy = meta.copy()
+        copy.description = self.descriptionField.value()
+        copy.url = self.urlField.value()
+
+        if copy != meta:
+            command = CommandNodeChangeMeta(self.scene, self.node, meta, copy)
+            self.scene.undostack.push(command)
+
+
+########################################################################################################################
+#                                                                                                                      #
 #   EDITABLE NODES                                                                                                     #
 #                                                                                                                      #
 ########################################################################################################################
 
 
-class EditableNodeProperty(NodeProperty):
+class EditableNodeProperty(PredicateNodeProperty):
     """
-    This class implements the property dialog for label editable nodes.
+    This class implements the property dialog for label editable predicate nodes.
     """
     def __init__(self, scene, node, parent=None):
         """
@@ -283,17 +284,17 @@ class EditableNodeProperty(NodeProperty):
         #                                                                                                              #
         ################################################################################################################
 
-        txtWidget = QWidget()
-        txtLayout = QFormLayout(txtWidget)
+        self.labelWidget = QWidget()
+        self.labelLayout = QFormLayout(self.labelWidget)
 
-        self.textField = StringField(txtWidget)
+        self.textField = StringField(self.labelWidget)
         self.textField.setFixedWidth(300)
         self.textField.setValue(self.node.text())
         self.textField.setEnabled(self.node.label.editable)
 
-        txtLayout.addRow('Text', self.textField)
+        self.labelLayout.addRow('Text', self.textField)
 
-        self.mainWidget.addTab(txtWidget, 'Label')
+        self.mainWidget.addTab(self.labelWidget, 'Label')
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -308,15 +309,9 @@ class EditableNodeProperty(NodeProperty):
         """
         if code == QDialog.Accepted:
             super().completed(code)
-            self.textChanged()
+            self.labelEdited()
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def textChanged(self):
+    def labelEdited(self):
         """
         Change the label of the node.
         """
@@ -356,10 +351,10 @@ class OrderedInputNodeProperty(NodeProperty):
 
         if self.node.inputs:
 
-            ordWidget = QWidget()
-            ordLayout = QFormLayout(ordWidget)
+            self.orderWidget = QWidget()
+            self.orderLayout = QFormLayout(self.orderWidget)
 
-            self.list = QListWidget(ordWidget)
+            self.list = QListWidget(self.orderWidget)
             for i in self.node.inputs:
                 edge = self.scene.edge(i)
                 item = QListWidgetItem('{} ({})'.format(edge.source.text(), edge.source.id))
@@ -387,9 +382,9 @@ class OrderedInputNodeProperty(NodeProperty):
             outLayout.addWidget(self.list)
             outLayout.addLayout(inLayout)
 
-            ordLayout.addRow('Sort', outLayout)
+            self.orderLayout.addRow('Sort', outLayout)
 
-            self.mainWidget.addTab(ordWidget, 'Ordering')
+            self.mainWidget.addTab(self.orderWidget, 'Ordering')
 
     ####################################################################################################################
     #                                                                                                                  #

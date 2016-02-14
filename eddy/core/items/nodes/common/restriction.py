@@ -123,10 +123,8 @@ class RestrictionNode(AbstractNode):
         """
         kwargs = {
             'id': self.id,
-            'width': self.width(),
-            'description': self.description,
             'height': self.height(),
-            'url': self.url,
+            'width': self.width(),
         }
         node = scene.factory.create(item=self.item, scene=scene, **kwargs)
         node.setPos(self.pos())

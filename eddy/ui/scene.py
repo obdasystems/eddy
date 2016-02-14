@@ -46,6 +46,7 @@ from eddy.core.items.nodes import ConceptNode, ComplementNode, RoleChainNode, Ro
 from eddy.core.items.nodes import RangeRestrictionNode, DomainRestrictionNode
 from eddy.core.items.factory import ItemFactory
 from eddy.core.items.index import ItemIndex
+from eddy.core.items.nodes.common.meta import PredicateMetaIndex
 from eddy.core.syntax import OWL2RLValidator
 from eddy.core.utils import Clipboard, GUID
 
@@ -78,9 +79,10 @@ class DiagramScene(QGraphicsScene):
         """
         super().__init__(parent)
         self.document = File(parent=self)
-        self.factory = ItemFactory(self)
         self.guid = GUID(self)
-        self.index = ItemIndex(self)
+        self.itemFactory = ItemFactory(self)
+        self.itemIndex = ItemIndex(self)
+        self.metaIndex = PredicateMetaIndex(self)
         self.undostack = QUndoStack(self)
         self.undostack.setUndoLimit(50)
         self.validator = OWL2RLValidator(self)
@@ -133,7 +135,8 @@ class DiagramScene(QGraphicsScene):
         """
         super().dropEvent(dropEvent)
         if dropEvent.mimeData().hasFormat('text/plain'):
-            node = self.factory.create(item=Item.forValue(dropEvent.mimeData().text()), scene=self)
+            item = Item.forValue(dropEvent.mimeData().text())
+            node = self.itemFactory.create(item=item, scene=self)
             node.setPos(snapPT(dropEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
             self.undostack.push(CommandNodeAdd(scene=self, node=node))
             self.itemAdded.emit(node, dropEvent.modifiers())
@@ -158,7 +161,8 @@ class DiagramScene(QGraphicsScene):
                 ########################################################################################################
 
                 # create a new node and place it under the mouse position
-                node = self.factory.create(item=Item.forValue(self.modeParam), scene=self)
+                item = Item.forValue(self.modeParam)
+                node = self.itemFactory.create(item=item, scene=self)
                 node.setPos(snapPT(mouseEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
 
                 # no need to switch back the operation mode here: the signal handlers already does that and takes
@@ -180,7 +184,8 @@ class DiagramScene(QGraphicsScene):
                 node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
                 if node:
 
-                    edge = self.factory.create(item=Item.forValue(self.modeParam), scene=self, source=node)
+                    item = Item.forValue(self.modeParam)
+                    edge = self.itemFactory.create(item=item, scene=self, source=node)
                     edge.updateEdge(target=mouseEvent.scenePos())
                     self.mousePressEdge = edge
                     self.addItem(edge)
@@ -696,13 +701,13 @@ class DiagramScene(QGraphicsScene):
         :type item: AbstractItem
         """
         super().addItem(item)
-        self.index.add(item)
+        self.itemIndex.add(item)
 
     def clear(self):
         """
         Clear the Diagram Scene by removing all the elements.
         """
-        self.index.clear()
+        self.itemIndex.clear()
         self.undostack.clear()
         super().clear()
 
@@ -711,14 +716,14 @@ class DiagramScene(QGraphicsScene):
         Returns the edge matching the given edge id.
         :type eid: str
         """
-        return self.index.edgeForId(eid)
+        return self.itemIndex.edgeForId(eid)
 
     def edges(self):
         """
         Returns a view on all the edges of the diagram.
         :rtype: view
         """
-        return self.index.edges()
+        return self.itemIndex.edges()
 
     def itemOnTopOf(self, point, nodes=True, edges=True, skip=None):
         """
@@ -740,14 +745,14 @@ class DiagramScene(QGraphicsScene):
         Returns the node matching the given node id.
         :type nid: str
         """
-        return self.index.nodeForId(nid)
+        return self.itemIndex.nodeForId(nid)
 
     def nodes(self):
         """
         Returns a view on all the nodes in the diagram.
         :rtype: view
         """
-        return self.index.nodes()
+        return self.itemIndex.nodes()
 
     def removeItem(self, item):
         """
@@ -755,7 +760,7 @@ class DiagramScene(QGraphicsScene):
         :type item: AbstractItem
         """
         super().removeItem(item)
-        self.index.remove(item)
+        self.itemIndex.remove(item)
 
     def selectedEdges(self):
         """
