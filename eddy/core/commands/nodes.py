@@ -454,12 +454,12 @@ class CommandNodeSetBrush(QUndoCommand):
         """redo the command"""
         for node in self.nodes:
             node.brush = self.brush[node]['redo']
-            node.update()
+            node.updateBrush(selected=node.isSelected())
         self.scene.updated.emit()
 
     def undo(self):
         """redo the command"""
         for node in self.nodes:
             node.brush = self.brush[node]['undo']
-            node.update()
+            node.updateBrush(selected=node.isSelected())
         self.scene.updated.emit()
