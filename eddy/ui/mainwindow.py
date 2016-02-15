@@ -40,25 +40,27 @@ from traceback import format_exception
 
 from PyQt5.QtCore import Qt, QPoint, QSettings, QSizeF, QRectF, QSize
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter, QPageSize, QCursor, QBrush, QColor
+from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter
+from PyQt5.QtGui import QPageSize, QCursor, QBrush, QColor
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
-from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDialog, QDesktopWidget
-from PyQt5.QtWidgets import QMenu, QToolButton, QUndoGroup, QStyle, QGraphicsItem
+from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox
+from PyQt5.QtWidgets import QDialog, QDesktopWidget, QMenu, QToolButton
+from PyQt5.QtWidgets import QUndoGroup, QStyle, QGraphicsItem
 
 from eddy import APPNAME, VERSION, BUG_TRACKER, GRAPHOL_HOME, DIAG_HOME
 
 from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom
 from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandRefactor
+from eddy.core.commands import CommandItemsMultiRemove, CommandEdgeInputToggleFunctional
 from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap
 from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelChange
 from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeSetZValue
 from eddy.core.commands import CommandNodeSetBrush, CommandEdgeBreakpointDel
-from eddy.core.commands import CommandItemsMultiRemove, CommandEdgeInputToggleFunctional
 from eddy.core.datatypes import Color, File, DiagramMode, Filetype, Platform
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
 from eddy.core.exporters import GrapholExporter
-from eddy.core.functions import connect, disconnect, uncapitalize
-from eddy.core.functions import expandPath, coloredIcon, shadedIcon, snapF, rCut, lCut
+from eddy.core.functions import connect, disconnect, uncapitalize, rCut, lCut
+from eddy.core.functions import expandPath, coloredIcon, shadedIcon, snapF
 from eddy.core.items import Item, DatatypeRestrictionNode
 from eddy.core.items import RoleInverseNode, DisjointUnionNode
 from eddy.core.items import UnionNode, EnumerationNode, ComplementNode
@@ -68,9 +70,7 @@ from eddy.core.utils import Clipboard
 
 from eddy.ui.dialogs import About, OpenFile, SaveFile
 from eddy.ui.dialogs import BusyProgressDialog, PreferencesDialog
-from eddy.ui.docks import DockWidget, Overview, Palette
-from eddy.ui.docks.explorer import Explorer
-from eddy.ui.docks.info import Info
+from eddy.ui.docks import DockWidget, Overview, Palette, Explorer, Info
 from eddy.ui.forms import CardinalityRestrictionForm, ValueRestrictionForm
 from eddy.ui.forms import OWLTranslationForm, LiteralForm, RenameForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
