@@ -82,6 +82,21 @@ class ValueRestrictionNode(AbstractNode):
     ####################################################################################################################
 
     @property
+    def constrained(self):
+        """
+        Tells whether the datatype of this restriction is constrained by graph composition.
+        :rtype: bool
+        """
+        f1 = lambda x: x.isItem(Item.InputEdge)
+        f2 = lambda x: x.isItem(Item.DatatypeRestrictionNode)
+        f3 = lambda x: x.isItem(Item.ValueDomainNode)
+
+        X = next(iter(self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
+        if X:
+            return next(iter(X.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)), None) is not None
+        return False
+
+    @property
     def datatype(self):
         """
         Returns the datatype associated with this node.

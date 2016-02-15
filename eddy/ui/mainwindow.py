@@ -1687,18 +1687,7 @@ class MainWindow(QMainWindow):
             if node:
 
                 form = ValueRestrictionForm(node, self)
-
-                # We need to disable the datatype switch if this restriction is already
-                # connected to a datatype restriction node that already specifies a value domain.
-                f1 = lambda x: x.isItem(Item.InputEdge)
-                f2 = lambda x: x.isItem(Item.DatatypeRestrictionNode)
-                f3 = lambda x: x.isItem(Item.ValueDomainNode)
-
-                DR = next(iter(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
-                if DR:
-                    VD = next(iter(DR.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)), None)
-                    if VD:
-                        form.datatypeField.setEnabled(False)
+                form.datatypeField.setEnabled(not node.constrained)
 
                 if form.exec() == ValueRestrictionForm.Accepted:
                     datatype = form.datatypeField.currentData()
