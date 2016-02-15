@@ -44,7 +44,7 @@ from eddy.core.datatypes import Item
 from eddy.core.functions import disconnect, connect, coloredIcon, isEmpty
 from eddy.core.qt import Font, StackedWidget
 
-from eddy.ui.fields import IntField, DoubleField, StringField, CheckBox
+from eddy.ui.fields import IntField, StringField, CheckBox
 
 
 class Info(QScrollArea):
@@ -399,13 +399,13 @@ class NodeInfo(AbstractInfo):
         self.xLabel = QLabel('X', self)
         self.xLabel.setFixedWidth(AbstractInfo.LabelWidth)
         self.xLabel.setObjectName('index')
-        self.xField = DoubleField(self)
+        self.xField = IntField(self)
         self.xField.setReadOnly(True)
 
         self.yLabel = QLabel('Y', self)
         self.yLabel.setFixedWidth(AbstractInfo.LabelWidth)
         self.yLabel.setObjectName('index')
-        self.yField = DoubleField(self)
+        self.yField = IntField(self)
         self.yField.setReadOnly(True)
 
         self.wLabel = QLabel('Width', self)
@@ -440,8 +440,8 @@ class NodeInfo(AbstractInfo):
         :type node: AbstractNode
         """
         pos = node.pos()
-        self.xField.setValue(pos.x())
-        self.yField.setValue(pos.y())
+        self.xField.setValue(int(pos.x()))
+        self.yField.setValue(int(pos.y()))
         self.wField.setValue(int(node.width()))
         self.hField.setValue(int(node.height()))
         self.idField.setValue(node.id)
