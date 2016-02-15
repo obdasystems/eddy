@@ -611,7 +611,7 @@ include_files = [
     ('docs', 'docs'),
     ('examples', 'examples'),
     ('resources', 'resources'),
-    ('eddy/ui/styles/light.qss', 'ui/styles/light.qss'),
+    ('eddy/ui/style.qss', 'ui/style.qss'),
     ('LICENSE', 'LICENSE'),
     ('CONTRIBUTING.md', 'CONTRIBUTING.md'),
     ('PACKAGING.md', 'PACKAGING.md'),

@@ -32,43 +32,33 @@
 ##########################################################################
 
 
-from abc import ABCMeta, abstractmethod
-
-from PyQt5.QtWidgets import QProxyStyle
+from PyQt5.QtWidgets import QStyle, QProxyStyle
 
 
 class Style(QProxyStyle):
 
-    __metaclass__ = ABCMeta
+    PM = {
+        QStyle.PM_SmallIconSize: 18,
+        QStyle.PM_TabBarIconSize: 14,
+        QStyle.PM_ToolBarIconSize: 24,
+    }
 
-    def __init__(self, *args):
+    def __init__(self, base):
         """
         Initialize the Light style (using Fusion as base).
+        :type base: str
         """
-        super().__init__(*args)
+        super().__init__(base)
 
-    @abstractmethod
-    def qss(self):
+    def pixelMetric(self, metric, option=None, widget=None):
         """
-        Returns the stylesheet associated with this style.
-        :rtype: unicode
+        Returns the value for the given pixel metric.
+        :type metric: int
+        :type option: int
+        :type widget: QWidget
+        :rtype: int
         """
-        pass
-
-    @classmethod
-    def forName(cls, name):
-        """
-        Returns an initialized style matching the given name. If the given name is not
-        a valid style name will return the default one (currently set on Light style).
-        :type name: str
-        :rtype: Style
-        """
-        return __mapping__.get(name, LightStyle)()
-
-
-from eddy.ui.styles.light import LightStyle
-
-
-__mapping__ = {
-    'light': LightStyle,
-}
+        try:
+            return Style.PM[metric]
+        except KeyError:
+            return super().pixelMetric(metric, option, widget)

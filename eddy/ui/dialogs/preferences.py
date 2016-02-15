@@ -37,7 +37,7 @@ from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout
 from PyQt5.QtWidgets import QDialogButtonBox, QTabWidget, QFormLayout
 
 from eddy.core.functions import connect
-from eddy.ui.fields import SpinBox, ComboBox
+from eddy.ui.fields import SpinBox
 
 
 class PreferencesDialog(QDialog):
@@ -52,21 +52,6 @@ class PreferencesDialog(QDialog):
         super().__init__(mainwindow)
 
         self.mainwindow = mainwindow
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   APPEARANCE TAB                                                                                             #
-        #                                                                                                              #
-        ################################################################################################################
-
-        self.styleF = ComboBox(self)
-        self.styleF.addItem('Light', 'light')
-        self.styleF.setCurrentIndex(0)
-        self.styleF.setEnabled(False)
-
-        self.appearanceWidget = QWidget()
-        self.appearanceLayout = QFormLayout(self.appearanceWidget)
-        self.appearanceLayout.addRow('Style', self.styleF)
 
         ################################################################################################################
         #                                                                                                              #
@@ -90,7 +75,6 @@ class PreferencesDialog(QDialog):
         ################################################################################################################
 
         self.mainWidget = QTabWidget(self)
-        self.mainWidget.addTab(self.appearanceWidget, 'Appearance')
         self.mainWidget.addTab(self.editorWidget, 'Editor')
 
         ################################################################################################################
