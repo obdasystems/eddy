@@ -591,6 +591,10 @@ class MainWindow(QMainWindow):
         posX = (screen.width() - self.width()) / 2
         posY = (screen.height() - self.height()) / 2
         self.move(settings.value('pos', QPoint(posX, posY)))
+
+        if settings.value('fullscreen', False, bool):
+            self.setWindowState(Qt.WindowMaximized)
+
         settings.endGroup()
 
         ################################################################################################################
@@ -1915,6 +1919,7 @@ class MainWindow(QMainWindow):
         #                                                                                                              #
         ################################################################################################################
 
+        platform = Platform.identify()
         settings = QSettings(expandPath('@home/{}.ini'.format(APPNAME)), QSettings.IniFormat)
 
         # DIAGRAM
@@ -1933,6 +1938,7 @@ class MainWindow(QMainWindow):
 
         # MAIN WINDOW
         settings.beginGroup('mainwindow')
+        settings.setValue('fullscreen', self.isMaximized())
         settings.setValue('pos', self.pos())
         settings.setValue('size', self.size())
         settings.endGroup()
