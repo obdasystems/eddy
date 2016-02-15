@@ -39,9 +39,11 @@ from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtWidgets import QWidget, QFormLayout, QLabel, QVBoxLayout, QPushButton
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QScrollArea
 
+from eddy.core.commands import CommandNodeLabelChange
 from eddy.core.datatypes import Item
-from eddy.core.functions import disconnect, connect, coloredIcon
+from eddy.core.functions import disconnect, connect, coloredIcon, isEmpty
 from eddy.core.qt import Font, StackedWidget
+
 from eddy.ui.fields import IntField, DoubleField, StringField, CheckBox
 
 
@@ -68,6 +70,7 @@ class Info(QScrollArea):
         self.infoInclusionEdge = InclusionEdgeInfo(mainwindow, self.stacked)
         self.infoNode = NodeInfo(mainwindow, self.stacked)
         self.infoPredicateNode = PredicateNodeInfo(mainwindow, self.stacked)
+        self.infoEditableNode = EditableNodeInfo(mainwindow, self.stacked)
         self.infoValueDomainNode = ValueDomainNodeInfo(mainwindow, self.stacked)
         self.stacked.addWidget(self.infoEmpty)
         self.stacked.addWidget(self.infoDiagram)
@@ -75,6 +78,7 @@ class Info(QScrollArea):
         self.stacked.addWidget(self.infoInclusionEdge)
         self.stacked.addWidget(self.infoNode)
         self.stacked.addWidget(self.infoPredicateNode)
+        self.stacked.addWidget(self.infoEditableNode)
         self.stacked.addWidget(self.infoValueDomainNode)
         self.setWidget(self.stacked)
         self.setWidgetResizable(True)
@@ -102,6 +106,9 @@ class Info(QScrollArea):
                     if item.predicate:
                         if item.item is Item.ValueDomainNode:
                             show = self.infoValueDomainNode
+                            show.updateData(item)
+                        elif item.label.editable:
+                            show = self.infoEditableNode
                             show.updateData(item)
                         else:
                             show = self.infoPredicateNode
@@ -346,6 +353,8 @@ class NodeInfo(AbstractInfo):
         """
         super().__init__(mainwindow, parent)
 
+        self.node = None
+
         self.h1 = QLabel('GENERAL', self)
         self.h1.setAlignment(Qt.AlignCenter)
         self.h1.setFixedHeight(24)
@@ -441,6 +450,7 @@ class NodeInfo(AbstractInfo):
         self.typeField.setValue(node.shortname.capitalize())
         self.typeField.home(True)
         self.typeField.deselect()
+        self.node = node
 
 
 class PredicateNodeInfo(NodeInfo):
@@ -528,3 +538,45 @@ class ValueDomainNodeInfo(PredicateNodeInfo):
         for action in self.mainwindow.actionsChangeValueDomainDatatype:
             action.setChecked(action.data() is datatype)
         self.datatypeButton.setText(datatype.value)
+
+
+class EditableNodeInfo(PredicateNodeInfo):
+    """
+    This class implements the information box for the predicate nodes with editable label.
+    """
+    def __init__(self, mainwindow, parent=None):
+        """
+        Initialize the editable node information box.
+        """
+        super().__init__(mainwindow, parent)
+
+        self.textLabel = QLabel('Label', self)
+        self.textLabel.setFixedWidth(AbstractInfo.LabelWidth)
+        self.textLabel.setObjectName('index')
+        self.textField = StringField(self)
+        self.textField.setReadOnly(False)
+        connect(self.textField.editingFinished, self.editingFinished)
+
+        self.predicateLayout.addRow(self.textLabel, self.textField)
+
+    @pyqtSlot()
+    def editingFinished(self):
+        """
+        Executed when the Return or Enter key is pressed or the line edit loses focus.
+        """
+        if self.node:
+            node = self.node
+            data = self.textField.value()
+            data = data if not isEmpty(data) else node.label.template
+            if data != node.text():
+                scene = node.scene()
+                scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data))
+
+
+    def updateData(self, node):
+        """
+        Fetch new information and fill the widget with data.
+        :type node: AbstractNode
+        """
+        super().updateData(node)
+        self.textField.setValue(node.text())
