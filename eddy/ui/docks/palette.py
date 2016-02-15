@@ -88,7 +88,7 @@ class Palette(QWidget):
         self.addButton(InputEdge, 6, 0)
         self.addButton(InstanceOfEdge, 6, 1)
         self.setContentsMargins(0, 0, 0, 0)
-        self.setFixedSize(216, 406)
+        self.setFixedSize(216, 394)
 
     ####################################################################################################################
     #                                                                                                                  #
