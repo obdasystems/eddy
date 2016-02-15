@@ -59,8 +59,6 @@ class Palette(QWidget):
         Initialize the Palette.
         """
         super().__init__(*args)
-        self.setContentsMargins(0, 0, 0, 0)
-        self.setFixedWidth(216)
         self.buttonById = {}
         self.buttonGroup = QButtonGroup()
         self.buttonGroup.setExclusive(False)
@@ -89,6 +87,8 @@ class Palette(QWidget):
         self.addButton(InclusionEdge, 5, 2)
         self.addButton(InputEdge, 6, 0)
         self.addButton(InstanceOfEdge, 6, 1)
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setFixedWidth(216)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -124,7 +124,6 @@ class Palette(QWidget):
         self.buttonById[item.item] = button
         self.buttonGroup.addButton(button, item.item)
         self.mainLayout.addWidget(button, row, column)
-        self.setFixedHeight(self.mainLayout.sizeHint().height() - 2 * self.mainLayout.rowCount())
 
     def button(self, button_id):
         """
