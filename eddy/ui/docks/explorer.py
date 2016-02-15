@@ -319,7 +319,7 @@ class Explorer(QWidget):
     def setView(self, view):
         """
         Set the widget to inspect the given view.
-        :type view: QGraphicsView
+        :type view: MainView
         """
         self.clear()
         self.mainview = view

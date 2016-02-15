@@ -70,6 +70,7 @@ from eddy.ui.dialogs import About, OpenFile, SaveFile
 from eddy.ui.dialogs import BusyProgressDialog, PreferencesDialog
 from eddy.ui.docks import DockWidget, Overview, Palette
 from eddy.ui.docks.explorer import Explorer
+from eddy.ui.docks.info import Info
 from eddy.ui.forms import CardinalityRestrictionForm, ValueRestrictionForm
 from eddy.ui.forms import OWLTranslationForm, LiteralForm, RenameForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
@@ -128,94 +129,6 @@ class MainWindow(QMainWindow):
         ################################################################################################################
 
         self.toolbar = self.addToolBar('Toolbar')
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   CREATE WIDGETS                                                                                             #
-        #                                                                                                              #
-        ################################################################################################################
-
-        self.explorer = Explorer(self)
-        self.mdi = MdiArea(self)
-        self.overview = Overview(self)
-        self.palette_ = Palette(self)
-        self.zoomctrl = ZoomControl(self.toolbar)
-
-        self.dockExplorer = DockWidget('Explorer', self)
-        self.dockExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockExplorer.setDefaultArea(Qt.RightDockWidgetArea)
-        self.dockExplorer.setDefaultVisible(True)
-        self.dockExplorer.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
-        self.dockExplorer.setFixedWidth(self.explorer.width())
-        self.dockExplorer.setWidget(self.explorer)
-
-        self.dockOverview = DockWidget('Overview', self)
-        self.dockOverview.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockOverview.setDefaultArea(Qt.RightDockWidgetArea)
-        self.dockOverview.setDefaultVisible(True)
-        self.dockOverview.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
-        self.dockOverview.setFixedWidth(self.overview.width())
-        self.dockOverview.setWidget(self.overview)
-
-        self.dockPalette = DockWidget('Palette', self)
-        self.dockPalette.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockPalette.setDefaultArea(Qt.LeftDockWidgetArea)
-        self.dockPalette.setDefaultVisible(True)
-        self.dockPalette.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
-        self.dockPalette.setFixedWidth(self.palette_.width())
-        self.dockPalette.setWidget(self.palette_)
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   CONFIGURE MAIN WINDOW UI [LOAD SETTINGS]                                                                   #
-        #                                                                                                              #
-        ################################################################################################################
-
-        settings = QSettings(expandPath('@home/{}.ini'.format(APPNAME)), QSettings.IniFormat)
-
-        # DIAGRAM
-        settings.beginGroup('diagram')
-        self.diagramSize = settings.value('size', self.diagramSize, int)
-        self.snapToGrid = settings.value('grid', self.snapToGrid, bool)
-
-        if not settings.contains('recent'):
-            # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
-            # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
-            # container. So according to this we can't use an empty list as default value because PyQt5 needs
-            # to know the type of the contents added to the collection: we avoid this problem by placing
-            # the list of examples file in the recentDocumentList (only if there is no list defined already).
-            settings.setValue('recent', [
-                expandPath('@examples/Animals.graphol'),
-                expandPath('@examples/Diet.graphol'),
-                expandPath('@examples/Family.graphol'),
-                expandPath('@examples/Pizza.graphol'),
-            ])
-
-        self.recentDocument = settings.value('recent', None, str)
-        settings.endGroup()
-
-        # DOCK AREA
-        settings.beginGroup('dock')
-        for widget in self.dockPalette, self.dockOverview, self.dockExplorer:
-            self.addDockWidget(settings.value('{}/area'.format(widget.objectName()), widget.defaultArea(), int), widget)
-            widget.setVisible(settings.value('{}/view'.format(widget.objectName()), widget.defaultVisible(), bool))
-        settings.endGroup()
-
-        # MAIN SETTINGS
-        self.setAcceptDrops(True)
-        self.setCentralWidget(self.mdi)
-        self.setMinimumSize(MainWindow.MinWidth, MainWindow.MinHeight)
-        self.setWindowIcon(QIcon(':/images/eddy'))
-        self.setWindowTitle()
-
-        settings.beginGroup('mainwindow')
-        self.resize(settings.value('size', QSize(MainWindow.MinWidth, MainWindow.MinHeight)))
-        widget = QDesktopWidget()
-        screen = widget.screenGeometry()
-        posX = (screen.width() - self.width()) / 2
-        posY = (screen.height() - self.height()) / 2
-        self.move(settings.value('pos', QPoint(posX, posY)))
-        settings.endGroup()
 
         ################################################################################################################
         #                                                                                                              #
@@ -584,6 +497,104 @@ class MainWindow(QMainWindow):
 
         ################################################################################################################
         #                                                                                                              #
+        #   CREATE WIDGETS                                                                                             #
+        #                                                                                                              #
+        ################################################################################################################
+
+        self.explorer = Explorer(self)
+        self.info = Info(self)
+        self.mdi = MdiArea(self)
+        self.overview = Overview(self)
+        self.palette_ = Palette(self)
+        self.zoomctrl = ZoomControl(self.toolbar)
+
+        self.dockExplorer = DockWidget('Explorer', self)
+        self.dockExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        self.dockExplorer.setDefaultArea(Qt.RightDockWidgetArea)
+        self.dockExplorer.setDefaultVisible(True)
+        self.dockExplorer.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
+        self.dockExplorer.setFixedWidth(self.explorer.width())
+        self.dockExplorer.setWidget(self.explorer)
+
+        self.dockInfo = DockWidget('Info', self)
+        self.dockInfo.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        self.dockInfo.setDefaultArea(Qt.LeftDockWidgetArea)
+        self.dockInfo.setDefaultVisible(True)
+        self.dockInfo.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
+        self.dockInfo.setFixedWidth(self.info.width())
+        self.dockInfo.setWidget(self.info)
+
+        self.dockOverview = DockWidget('Overview', self)
+        self.dockOverview.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        self.dockOverview.setDefaultArea(Qt.RightDockWidgetArea)
+        self.dockOverview.setDefaultVisible(True)
+        self.dockOverview.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
+        self.dockOverview.setFixedWidth(self.overview.width())
+        self.dockOverview.setWidget(self.overview)
+
+        self.dockPalette = DockWidget('Palette', self)
+        self.dockPalette.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        self.dockPalette.setDefaultArea(Qt.LeftDockWidgetArea)
+        self.dockPalette.setDefaultVisible(True)
+        self.dockPalette.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
+        self.dockPalette.setFixedSize(self.palette_.size())
+        self.dockPalette.setWidget(self.palette_)
+
+        ################################################################################################################
+        #                                                                                                              #
+        #   CONFIGURE MAIN WINDOW UI [LOAD SETTINGS]                                                                   #
+        #                                                                                                              #
+        ################################################################################################################
+
+        settings = QSettings(expandPath('@home/{}.ini'.format(APPNAME)), QSettings.IniFormat)
+
+        # DIAGRAM
+        settings.beginGroup('diagram')
+        self.diagramSize = settings.value('size', self.diagramSize, int)
+        self.snapToGrid = settings.value('grid', self.snapToGrid, bool)
+
+        if not settings.contains('recent'):
+            # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
+            # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
+            # container. So according to this we can't use an empty list as default value because PyQt5 needs
+            # to know the type of the contents added to the collection: we avoid this problem by placing
+            # the list of examples file in the recentDocumentList (only if there is no list defined already).
+            settings.setValue('recent', [
+                expandPath('@examples/Animals.graphol'),
+                expandPath('@examples/Diet.graphol'),
+                expandPath('@examples/Family.graphol'),
+                expandPath('@examples/Pizza.graphol'),
+            ])
+
+        self.recentDocument = settings.value('recent', None, str)
+        settings.endGroup()
+
+        # DOCK AREA
+        settings.beginGroup('dock')
+        for widget in self.dockPalette, self.dockInfo, self.dockOverview, self.dockExplorer:
+            self.addDockWidget(settings.value('{}/area'.format(widget.objectName()), widget.defaultArea(), int), widget)
+            widget.setVisible(settings.value('{}/view'.format(widget.objectName()), widget.defaultVisible(), bool))
+        settings.endGroup()
+
+        # MAIN SETTINGS
+        self.setAcceptDrops(True)
+        self.setCentralWidget(self.mdi)
+        self.setDockOptions(MainWindow.AnimatedDocks|MainWindow.AllowTabbedDocks)
+        self.setMinimumSize(MainWindow.MinWidth, MainWindow.MinHeight)
+        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowTitle()
+
+        settings.beginGroup('mainwindow')
+        self.resize(settings.value('size', QSize(MainWindow.MinWidth, MainWindow.MinHeight)))
+        widget = QDesktopWidget()
+        screen = widget.screenGeometry()
+        posX = (screen.width() - self.width()) / 2
+        posY = (screen.height() - self.height()) / 2
+        self.move(settings.value('pos', QPoint(posX, posY)))
+        settings.endGroup()
+
+        ################################################################################################################
+        #                                                                                                              #
         #   CONFIGURE MENUS                                                                                            #
         #                                                                                                              #
         ################################################################################################################
@@ -629,6 +640,7 @@ class MainWindow(QMainWindow):
         self.menuView.addAction(self.toolbar.toggleViewAction())
         self.menuView.addSeparator()
         self.menuView.addAction(self.dockExplorer.toggleViewAction())
+        self.menuView.addAction(self.dockInfo.toggleViewAction())
         self.menuView.addAction(self.dockOverview.toggleViewAction())
         self.menuView.addAction(self.dockPalette.toggleViewAction())
 
@@ -1550,11 +1562,12 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            selected = [x for x in scene.selectedNodes() if x.predicate]
+            action = self.sender()
+            color = action.data()
+            brush = QBrush(QColor(color.value))
+            selected = [x for x in scene.selectedNodes() if x.predicate and x.brush != brush]
             if selected:
-                action = self.sender()
-                color = action.data()
-                command = CommandNodeSetBrush(scene, selected, QBrush(QColor(color.value)))
+                command = CommandNodeSetBrush(scene, selected, brush)
                 scene.undostack.push(command)
 
     @pyqtSlot()
@@ -1703,6 +1716,7 @@ class MainWindow(QMainWindow):
             mainview = subwindow.widget()
             scene = mainview.scene()
             scene.undostack.setActive()
+            self.info.setScene(scene)
             self.explorer.setView(mainview)
             self.overview.setView(mainview)
             disconnect(self.zoomctrl.zoomChanged)
@@ -1715,6 +1729,7 @@ class MainWindow(QMainWindow):
 
             if not self.mdi.subWindowList():
                 self.zoomctrl.resetZoomLevel()
+                self.info.clear()
                 self.explorer.clear()
                 self.overview.clear()
                 self.setWindowTitle()
@@ -1832,8 +1847,8 @@ class MainWindow(QMainWindow):
             scene.setMode(DiagramMode.Idle)
             selected = [item for item in scene.selectedEdges() if item.isItem(Item.InclusionEdge)]
             if selected:
-                func = sum(edge.complete for edge in selected) <= len(selected) / 2
-                data = {edge: {'from': edge.complete, 'to': func} for edge in selected}
+                comp = sum(edge.complete for edge in selected) <= len(selected) / 2
+                data = {edge: {'from': edge.complete, 'to': comp} for edge in selected}
                 scene.undostack.push(CommandEdgeInclusionToggleComplete(scene=scene, data=data))
 
     @pyqtSlot()
@@ -1911,7 +1926,7 @@ class MainWindow(QMainWindow):
 
         # DOCK AREA
         settings.beginGroup('dock')
-        for widget in self.dockPalette, self.dockOverview, self.dockExplorer:
+        for widget in self.dockPalette, self.dockInfo, self.dockOverview, self.dockExplorer:
             settings.setValue('{}/area'.format(widget.objectName()), self.dockWidgetArea(widget))
             settings.setValue('{}/view'.format(widget.objectName()), widget.isVisible())
         settings.endGroup()

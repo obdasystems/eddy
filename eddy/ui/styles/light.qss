@@ -275,7 +275,7 @@ QLabel.invalid {
 /**
  * FIELDS
  */
-QCheckBox {
+/*QCheckBox {
     spacing: 4px;
 }
 QCheckBox::indicator {
@@ -290,7 +290,7 @@ QCheckBox::indicator:checked {
 }
 QCheckBox::indicator:indeterminate {
     image: url(:/icons/checkbox-indeterminate);
-}
+}*/
 QComboBox {
     background: #F2F2F2;
     border: 1px solid #BABABA;
@@ -385,4 +385,31 @@ QTreeView::branch:open:has-children:!has-siblings,
 QTreeView::branch:open:has-children:has-siblings  {
     border-image: none;
     image: url(:/icons/treeview-branch-open);
+}
+/**
+ * INFO
+ */
+Info {
+    background: #FFFFFF;
+}
+Info QLabel#heading {
+    background: #CACACA;
+}
+Info QLabel#index {
+    background: #EAEAEA;
+    border-bottom: 1px solid #BABABA;
+}
+Info QLineEdit,
+Info QToolButton,
+Info QCheckBox {
+    border-bottom: 1px solid #BABABA;
+    border-left: 1px solid #BABABA;
+    padding-left: 4px;
+}
+Info QCheckBox {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+Info QToolButton::menu-indicator {
+    image: none;
 }

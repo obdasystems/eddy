@@ -39,6 +39,7 @@ from PyQt5.QtGui import QBrush, QPen
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem
 
 from eddy.core.datatypes import Item
+from eddy.core.functions import rCut
 
 
 class AbstractItem(QGraphicsItem):
@@ -102,6 +103,16 @@ class AbstractItem(QGraphicsItem):
         :rtype: str
         """
         return self.item.label
+
+    @property
+    def shortname(self):
+        """
+        Returns the item readable short name, i.e:
+        * .name = datatype restriction node | .shortname = datatype restriction
+        * .name = inclusion edge | .shortname = inclusion edge
+        :rtype: str
+        """
+        return rCut(rCut(self.name, ' node'), ' edge')
 
     @property
     def node(self):

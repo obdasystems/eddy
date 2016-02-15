@@ -34,7 +34,7 @@
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIntValidator, QDoubleValidator
-from PyQt5.QtWidgets import QLineEdit, QPlainTextEdit, QSpinBox, QComboBox
+from PyQt5.QtWidgets import QLineEdit, QPlainTextEdit, QSpinBox, QComboBox, QCheckBox
 
 
 class ComboBox(QComboBox):
@@ -54,6 +54,18 @@ class ComboBox(QComboBox):
         :rtype: QVariant
         """
         return self.itemData(self.currentIndex())
+
+
+class CheckBox(QCheckBox):
+    """
+    This class implements a check box.
+    """
+    def __init__(self, parent=None):
+        """
+        Initialize the check box.
+        """
+        super().__init__(parent)
+        self.setAttribute(Qt.WA_MacShowFocusRect, 0)
 
 
 class DoubleField(QLineEdit):

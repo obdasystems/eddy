@@ -135,7 +135,7 @@ class Overview(QGraphicsView):
     def setView(self, view):
         """
         Set the widget to browse the given view.
-        :type view: QGraphicsView
+        :type view: MainView
         """
         self.clear()
 

@@ -193,12 +193,20 @@ class ItemIndex(QObject):
                         del self.nodesByTx[item.item]
         self.removed.emit(item)
 
-    def size(self):
+    def size(self, nodes=True, edges=True):
         """
         Returns the amount of items in the index.
+        :type nodes: bool
+        :type edges: bool
         :rtype: int
         """
-        return len(self.itemsById)
+        if nodes and edges:
+            return len(self.itemsById)
+        if nodes and not edges:
+            return len(self.nodesById)
+        if edges and not nodes:
+            return len(self.edgesById)
+        return 0
 
     def __repr__(self):
         """
