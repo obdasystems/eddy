@@ -2257,6 +2257,6 @@ class MainWindow(QMainWindow):
     def setWindowTitle(self, s=None):
         """
         Set the main window title.
-        :type s: str
+        :type s: T <= str | None
         """
         super().setWindowTitle('{} - {} {}'.format(s, APPNAME, VERSION) if s else '{} {}'.format(APPNAME, VERSION))
