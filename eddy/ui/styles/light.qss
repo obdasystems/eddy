@@ -400,16 +400,19 @@ Info QLabel#index {
     border-bottom: 1px solid #BABABA;
 }
 Info QLineEdit,
-Info QToolButton,
+Info QPushButton,
 Info QCheckBox {
     border-bottom: 1px solid #BABABA;
     border-left: 1px solid #BABABA;
     padding-left: 4px;
 }
+Info QPushButton {
+    text-align:left;
+}
+Info QPushButton::menu-indicator {
+    image: none;
+}
 Info QCheckBox {
     padding-top: 2px;
     padding-bottom: 2px;
-}
-Info QToolButton::menu-indicator {
-    image: none;
 }

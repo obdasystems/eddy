@@ -36,8 +36,8 @@ from abc import ABCMeta, abstractmethod
 
 from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QBrush, QColor
-from PyQt5.QtWidgets import QWidget, QFormLayout, QLabel, QVBoxLayout
-from PyQt5.QtWidgets import QMenu, QToolButton, QSizePolicy, QScrollArea
+from PyQt5.QtWidgets import QWidget, QFormLayout, QLabel, QVBoxLayout, QPushButton
+from PyQt5.QtWidgets import QMenu, QSizePolicy, QScrollArea
 
 from eddy.core.datatypes import Item
 from eddy.core.functions import disconnect, connect, coloredIcon
@@ -68,12 +68,14 @@ class Info(QScrollArea):
         self.infoInclusionEdge = InclusionEdgeInfo(mainwindow, self.stacked)
         self.infoNode = NodeInfo(mainwindow, self.stacked)
         self.infoPredicateNode = PredicateNodeInfo(mainwindow, self.stacked)
+        self.infoValueDomainNode = ValueDomainNodeInfo(mainwindow, self.stacked)
         self.stacked.addWidget(self.infoEmpty)
         self.stacked.addWidget(self.infoDiagram)
         self.stacked.addWidget(self.infoEdge)
         self.stacked.addWidget(self.infoInclusionEdge)
         self.stacked.addWidget(self.infoNode)
         self.stacked.addWidget(self.infoPredicateNode)
+        self.stacked.addWidget(self.infoValueDomainNode)
         self.setWidget(self.stacked)
         self.setWidgetResizable(True)
         self.updateLayout()
@@ -98,8 +100,12 @@ class Info(QScrollArea):
                 item = selected[0]
                 if item.node:
                     if item.predicate:
-                        show = self.infoPredicateNode
-                        show.updateData(item)
+                        if item.item is Item.ValueDomainNode:
+                            show = self.infoValueDomainNode
+                            show.updateData(item)
+                        else:
+                            show = self.infoPredicateNode
+                            show.updateData(item)
                     else:
                         show = self.infoNode
                         show.updateData(item)
@@ -460,12 +466,10 @@ class PredicateNodeInfo(NodeInfo):
         for action in self.mainwindow.actionsChangeNodeBrush:
             self.brushMenu.addAction(action)
 
-        self.brushButton = QToolButton()
+        self.brushButton = QPushButton()
         self.brushButton.setFont(Font('Arial', 12))
         self.brushButton.setMenu(self.brushMenu)
-        self.brushButton.setPopupMode(QToolButton.InstantPopup)
         self.brushButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        self.brushButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
 
         self.predicateLayout = QFormLayout()
         self.predicateLayout.setSpacing(0)
@@ -487,3 +491,40 @@ class PredicateNodeInfo(NodeInfo):
                 self.brushButton.setIcon(coloredIcon(12, 12, color.value, '#000000'))
                 self.brushButton.setText(color.value)
                 break
+
+
+class ValueDomainNodeInfo(PredicateNodeInfo):
+    """
+    This class implements the information box for the Value Domain node.
+    """
+    def __init__(self, mainwindow, parent=None):
+        """
+        Initialize the Value Domain node information box.
+        """
+        super().__init__(mainwindow, parent)
+
+        self.datatypeLabel = QLabel('Datatype', self)
+        self.datatypeLabel.setFixedWidth(AbstractInfo.LabelWidth)
+        self.datatypeLabel.setObjectName('index')
+
+        self.datatypeMenu = QMenu(self)
+        for action in self.mainwindow.actionsChangeValueDomainDatatype:
+            self.datatypeMenu.addAction(action)
+
+        self.datatypeButton = QPushButton()
+        self.datatypeButton.setFont(Font('Arial', 12))
+        self.datatypeButton.setMenu(self.datatypeMenu)
+        self.datatypeButton.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+
+        self.predicateLayout.addRow(self.datatypeLabel, self.datatypeButton)
+
+    def updateData(self, node):
+        """
+        Fetch new information and fill the widget with data.
+        :type node: AbstractNode
+        """
+        super().updateData(node)
+        datatype = node.datatype
+        for action in self.mainwindow.actionsChangeValueDomainDatatype:
+            action.setChecked(action.data() is datatype)
+        self.datatypeButton.setText(datatype.value)
