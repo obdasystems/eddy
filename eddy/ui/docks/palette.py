@@ -153,9 +153,6 @@ class PaletteButton(QToolButton):
     """
     This class implements a single palette button.
     """
-    Width = 60
-    Height = 44
-
     def __init__(self, item, parent=None):
         """
         Initialize the palette button.
@@ -164,7 +161,7 @@ class PaletteButton(QToolButton):
         """
         super().__init__(parent)
         self.item = item.item
-        self.pixmap = item.image(w=PaletteButton.Width, h=PaletteButton.Height)
+        self.pixmap = item.image(w=60, h=44)
         self.startPos = None
         self.setCheckable(True)
         self.setContentsMargins(0, 0, 0, 0)
