@@ -168,16 +168,6 @@ class MdiSubWindow(QMdiSubWindow):
                     self.closeAborted.emit(self)
 
         if closeEvent.isAccepted():
-            # NOTE: it is possible to have some minor memory leak here. Upon closing of a
-            # subwindow sys.getrefcount still shows 4 references to the scene being destroyed:
-            #
-            #   1. inside the Main View
-            #   2. inside the MdiSubWindow which holds a reference of the Main View
-            #   3. here below
-            #   4. extra value which is the temporary argument of sys.getrefcount
-            #
-            # Setting the Qt.WA_DeleteOnClose attribute on the MdiSubWindow should remove
-            # all those references after the close event is processed.
             self.closed.emit(self)
             scene.clear()
 
