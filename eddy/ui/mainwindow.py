@@ -1908,7 +1908,6 @@ class MainWindow(QMainWindow):
         #                                                                                                              #
         ################################################################################################################
 
-        platform = Platform.identify()
         settings = QSettings(expandPath('@home/{}.ini'.format(APPNAME)), QSettings.IniFormat)
 
         # DIAGRAM
