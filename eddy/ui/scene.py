@@ -767,21 +767,21 @@ class DiagramScene(QGraphicsScene):
         Returns the edges selected in the scene.
         :rtype: list
         """
-        return [x for x in self.selectedItems() if x.edge]
+        return [x for x in super(DiagramScene, self).selectedItems() if x.edge]
 
     def selectedItems(self):
         """
         Returns the items selected in the scene (will filter out labels since we don't need them).
         :rtype: list
         """
-        return [x for x in super().selectedItems() if x.node or x.edge]
+        return [x for x in super(DiagramScene, self).selectedItems() if x.node or x.edge]
 
     def selectedNodes(self):
         """
         Returns the nodes selected in the scene.
         :rtype: list
         """
-        return [x for x in self.selectedItems() if x.node]
+        return [x for x in super(DiagramScene, self).selectedItems() if x.node]
 
     def setMode(self, mode, param=None):
         """
