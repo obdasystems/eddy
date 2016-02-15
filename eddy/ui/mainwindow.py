@@ -827,12 +827,11 @@ class MainWindow(QMainWindow):
             scene.setMode(DiagramMode.Idle)
             items = scene.items()
             if items:
-                rect1 = scene.sceneRect()
-                rect2 = scene.visibleRect(margin=0)
-                gsize = DiagramScene.GridSize
-                moveX = snapF(((rect1.right() - rect2.right()) - (rect2.left() - rect1.left())) / 2, gsize)
-                moveY = snapF(((rect1.bottom() - rect2.bottom()) - (rect2.top() - rect1.top())) / 2, gsize)
-                if moveX and moveY:
+                R1 = scene.sceneRect()
+                R2 = scene.visibleRect(margin=0)
+                moveX = snapF(((R1.right() - R2.right()) - (R2.left() - R1.left())) / 2, DiagramScene.GridSize)
+                moveY = snapF(((R1.bottom() - R2.bottom()) - (R2.top() - R1.top())) / 2, DiagramScene.GridSize)
+                if moveX or moveY:
                     collection = [x for x in items if x.node or x.edge]
                     scene.undostack.push(CommandItemsTranslate(scene, collection, moveX, moveY, name='center diagram'))
                     mainview = self.mdi.activeView
