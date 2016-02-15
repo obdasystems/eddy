@@ -1692,8 +1692,8 @@ class MainWindow(QMainWindow):
                 if form.exec() == ValueRestrictionForm.Accepted:
                     datatype = form.datatypeField.currentData()
                     facet = form.facetField.currentData()
-                    data = rCut(lCut(form.valueField.value().strip(), '"'), '"')
-                    data = '{} "{}"^^{}'.format(facet.value, data, datatype.value)
+                    value = form.valueField.value()
+                    data = node.compose(facet, value, datatype)
                     if node.text() != data:
                         name = 'change value restriction to {}'.format(data)
                         command = CommandNodeLabelChange(scene, node, node.text(), data, name)

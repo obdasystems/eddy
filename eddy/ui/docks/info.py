@@ -40,11 +40,11 @@ from PyQt5.QtWidgets import QWidget, QFormLayout, QLabel, QVBoxLayout, QPushButt
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QScrollArea
 
 from eddy.core.commands import CommandNodeLabelChange
-from eddy.core.datatypes import Item
+from eddy.core.datatypes import Item, XsdDatatype, Facet
 from eddy.core.functions import disconnect, connect, coloredIcon, isEmpty
 from eddy.core.qt import Font, StackedWidget
 
-from eddy.ui.fields import IntField, StringField, CheckBox
+from eddy.ui.fields import IntField, StringField, CheckBox, ComboBox
 
 
 class Info(QScrollArea):
@@ -72,6 +72,7 @@ class Info(QScrollArea):
         self.infoPredicateNode = PredicateNodeInfo(mainwindow, self.stacked)
         self.infoEditableNode = EditableNodeInfo(mainwindow, self.stacked)
         self.infoValueDomainNode = ValueDomainNodeInfo(mainwindow, self.stacked)
+        self.infoValueRestrictionNode = ValueRestrictionNodeInfo(mainwindow, self.stacked)
         self.stacked.addWidget(self.infoEmpty)
         self.stacked.addWidget(self.infoDiagram)
         self.stacked.addWidget(self.infoEdge)
@@ -80,6 +81,7 @@ class Info(QScrollArea):
         self.stacked.addWidget(self.infoPredicateNode)
         self.stacked.addWidget(self.infoEditableNode)
         self.stacked.addWidget(self.infoValueDomainNode)
+        self.stacked.addWidget(self.infoValueRestrictionNode)
         self.setWidget(self.stacked)
         self.setWidgetResizable(True)
         self.updateLayout()
@@ -106,6 +108,9 @@ class Info(QScrollArea):
                     if item.predicate:
                         if item.item is Item.ValueDomainNode:
                             show = self.infoValueDomainNode
+                            show.updateData(item)
+                        elif item.item is Item.ValueRestrictionNode:
+                            show = self.infoValueRestrictionNode
                             show.updateData(item)
                         elif item.label.editable:
                             show = self.infoEditableNode
@@ -503,43 +508,6 @@ class PredicateNodeInfo(NodeInfo):
                 break
 
 
-class ValueDomainNodeInfo(PredicateNodeInfo):
-    """
-    This class implements the information box for the Value Domain node.
-    """
-    def __init__(self, mainwindow, parent=None):
-        """
-        Initialize the Value Domain node information box.
-        """
-        super().__init__(mainwindow, parent)
-
-        self.datatypeLabel = QLabel('Datatype', self)
-        self.datatypeLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.datatypeLabel.setObjectName('index')
-
-        self.datatypeMenu = QMenu(self)
-        for action in self.mainwindow.actionsChangeValueDomainDatatype:
-            self.datatypeMenu.addAction(action)
-
-        self.datatypeButton = QPushButton()
-        self.datatypeButton.setFont(Font('Arial', 12))
-        self.datatypeButton.setMenu(self.datatypeMenu)
-        self.datatypeButton.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
-
-        self.predicateLayout.addRow(self.datatypeLabel, self.datatypeButton)
-
-    def updateData(self, node):
-        """
-        Fetch new information and fill the widget with data.
-        :type node: AbstractNode
-        """
-        super().updateData(node)
-        datatype = node.datatype
-        for action in self.mainwindow.actionsChangeValueDomainDatatype:
-            action.setChecked(action.data() is datatype)
-        self.datatypeButton.setText(datatype.value)
-
-
 class EditableNodeInfo(PredicateNodeInfo):
     """
     This class implements the information box for the predicate nodes with editable label.
@@ -580,3 +548,147 @@ class EditableNodeInfo(PredicateNodeInfo):
         """
         super().updateData(node)
         self.textField.setValue(node.text())
+
+
+class ValueDomainNodeInfo(PredicateNodeInfo):
+    """
+    This class implements the information box for the Value Domain node.
+    """
+    def __init__(self, mainwindow, parent=None):
+        """
+        Initialize the Value Domain node information box.
+        """
+        super().__init__(mainwindow, parent)
+
+        self.datatypeLabel = QLabel('Datatype', self)
+        self.datatypeLabel.setFixedWidth(AbstractInfo.LabelWidth)
+        self.datatypeLabel.setObjectName('index')
+
+        self.datatypeMenu = QMenu(self)
+        for action in self.mainwindow.actionsChangeValueDomainDatatype:
+            self.datatypeMenu.addAction(action)
+
+        self.datatypeButton = QPushButton()
+        self.datatypeButton.setFont(Font('Arial', 12))
+        self.datatypeButton.setMenu(self.datatypeMenu)
+        self.datatypeButton.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+
+        self.predicateLayout.addRow(self.datatypeLabel, self.datatypeButton)
+
+    def updateData(self, node):
+        """
+        Fetch new information and fill the widget with data.
+        :type node: AbstractNode
+        """
+        super().updateData(node)
+        datatype = node.datatype
+        for action in self.mainwindow.actionsChangeValueDomainDatatype:
+            action.setChecked(action.data() is datatype)
+        self.datatypeButton.setText(datatype.value)
+
+
+class ValueRestrictionNodeInfo(PredicateNodeInfo):
+    """
+    This class implements the information box for the Value Restriction node.
+    """
+    def __init__(self, mainwindow, parent=None):
+        """
+        Initialize the Value Restriction node information box.
+        """
+        super().__init__(mainwindow, parent)
+
+        self.datatypeLabel = QLabel('Datatype', self)
+        self.datatypeLabel.setFixedWidth(AbstractInfo.LabelWidth)
+        self.datatypeLabel.setObjectName('index')
+        self.datatypeField = ComboBox(self)
+        self.datatypeField.setFont(Font('Arial', 12))
+        self.datatypeField.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        self.datatypeField.setFocusPolicy(Qt.StrongFocus)
+        self.datatypeField.setScrollEnabled(False)
+        connect(self.datatypeField.activated, self.restrictionChanged)
+
+        self.facetLabel = QLabel('Facet', self)
+        self.facetLabel.setFixedWidth(AbstractInfo.LabelWidth)
+        self.facetLabel.setObjectName('index')
+        self.facetField = ComboBox(self)
+        self.facetField.setFont(Font('Arial', 12))
+        self.facetField.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        self.facetField.setFocusPolicy(Qt.StrongFocus)
+        self.facetField.setScrollEnabled(False)
+        connect(self.facetField.activated, self.restrictionChanged)
+
+        self.restrictionLabel = QLabel('Restriction', self)
+        self.restrictionLabel.setFixedWidth(AbstractInfo.LabelWidth)
+        self.restrictionLabel.setObjectName('index')
+        self.restrictionField = StringField(self)
+        self.restrictionField.setReadOnly(False)
+        connect(self.restrictionField.editingFinished, self.restrictionChanged)
+
+        for datatype in XsdDatatype:
+            if Facet.forDatatype(datatype):
+                self.datatypeField.addItem(datatype.value, datatype)
+
+        self.predicateLayout.addRow(self.datatypeLabel, self.datatypeField)
+        self.predicateLayout.addRow(self.facetLabel, self.facetField)
+        self.predicateLayout.addRow(self.restrictionLabel, self.restrictionField)
+
+    @pyqtSlot()
+    def restrictionChanged(self):
+        """
+        Executed when we need to recompute the restriction of the node.
+        """
+        if self.node:
+
+            try:
+
+                node = self.node
+                scene = node.scene()
+                datatype = self.datatypeField.currentData()
+                facet = self.facetField.currentData()
+                value = self.restrictionField.value()
+
+                allowed = Facet.forDatatype(datatype)
+                if facet not in allowed:
+                    facet = allowed[0]
+
+                data = node.compose(facet, value, datatype)
+                if node.text() != data:
+                    name = 'change value restriction to {}'.format(data)
+                    command = CommandNodeLabelChange(scene, node, node.text(), data, name)
+                    scene.undostack.push(command)
+
+            except RuntimeError:
+                # We need to catch this exception because sometime when we close the active
+                # scene while having a combobox active this slot is triggered but we don't
+                # have a scene object anymore, so we'll end up with an exception.
+                pass
+
+
+    def updateData(self, node):
+        """
+        Fetch new information and fill the widget with data.
+        :type node: AbstractNode
+        """
+        super().updateData(node)
+
+        datatype = node.datatype
+        for i in range(self.datatypeField.count()):
+            if self.datatypeField.itemData(i) is datatype:
+                self.datatypeField.setCurrentIndex(i)
+                break
+
+        self.datatypeField.setEnabled(not node.constrained)
+
+        self.facetField.clear()
+        for facet in Facet.forDatatype(datatype):
+            self.facetField.addItem(facet.value, facet)
+
+        facet = node.facet
+        for i in range(self.facetField.count()):
+            if self.facetField.itemData(i) is facet:
+                self.facetField.setCurrentIndex(i)
+                break
+        else:
+            self.facetField.setCurrentIndex(0)
+
+        self.restrictionField.setValue(node.value)

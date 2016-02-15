@@ -47,6 +47,7 @@ class ComboBox(QComboBox):
         """
         super().__init__(parent)
         self.setAttribute(Qt.WA_MacShowFocusRect, 0)
+        self._scrollEnabled = True
 
     def value(self):
         """
@@ -54,6 +55,28 @@ class ComboBox(QComboBox):
         :rtype: QVariant
         """
         return self.itemData(self.currentIndex())
+
+    def setScrollEnabled(self, enabled=True):
+        """
+        Enable the selection of the option by scrolling the mouse wheel.
+        :type enabled: bool
+        """
+        self._scrollEnabled = enabled
+
+    def scrollEnabled(self):
+        """
+        Tells whether the selection of the option by scrolling the mouse wheel is enabled.
+        :rtype: bool
+        """
+        return self._scrollEnabled
+
+    def wheelEvent(self, wheelEvent):
+        """
+        Executed when the mouse wheel is rotated on the item.
+        :type wheelEvent: QWheelEvent
+        """
+        if self.scrollEnabled():
+            super().wheelEvent(wheelEvent)
 
 
 class CheckBox(QCheckBox):

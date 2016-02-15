@@ -401,7 +401,8 @@ Info QLabel#index {
 }
 Info QLineEdit,
 Info QPushButton,
-Info QCheckBox {
+Info QCheckBox,
+Info QComboBox {
     border-bottom: 1px solid #BABABA;
     border-left: 1px solid #BABABA;
     padding-left: 4px;
@@ -411,6 +412,12 @@ Info QPushButton {
 }
 Info QPushButton::menu-indicator {
     image: none;
+}
+Info QComboBox:!editable, QComboBox::drop-down:editable {
+     background: #FFFFFF;
+}
+Info QComboBox:!editable:on, QComboBox::drop-down:editable:on {
+    background: #FFFFFF;
 }
 Info QCheckBox {
     padding-top: 2px;
