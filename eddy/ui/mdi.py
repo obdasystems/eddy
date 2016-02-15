@@ -160,7 +160,7 @@ class MdiSubWindow(QMdiSubWindow):
         Executed when a document contained in the scene rendered in this subwindow is saved.
         :type scene: DiagramScene
         """
-        self.updateTitle()
+        self.updateWindowTitle()
 
     @pyqtSlot(bool)
     def undoStackCleanChanged(self, clean):
@@ -168,7 +168,7 @@ class MdiSubWindow(QMdiSubWindow):
         Executed when the clean state of undo stack of the scene displayed in the MDI subwindow changes.
         :type clean: bool
         """
-        self.updateTitle(clean)
+        self.updateWindowTitle(clean)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -176,7 +176,7 @@ class MdiSubWindow(QMdiSubWindow):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def updateTitle(self, clean=True):
+    def updateWindowTitle(self, clean=True):
         """
         Updated the subwindow title.
         :type clean: bool

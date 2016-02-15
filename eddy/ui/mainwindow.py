@@ -582,7 +582,7 @@ class MainWindow(QMainWindow):
         self.setDockOptions(MainWindow.AnimatedDocks|MainWindow.AllowTabbedDocks)
         self.setMinimumSize(MainWindow.MinWidth, MainWindow.MinHeight)
         self.setWindowIcon(QIcon(':/images/eddy'))
-        self.setWindowTitle()
+        self.setWindowTitle(None)
 
         settings.beginGroup('mainwindow')
         self.resize(settings.value('size', QSize(MainWindow.MinWidth, MainWindow.MinHeight)))
@@ -1725,7 +1725,7 @@ class MainWindow(QMainWindow):
                 self.info.clear()
                 self.explorer.clear()
                 self.overview.clear()
-                self.setWindowTitle()
+                self.setWindowTitle(None)
 
         self.sceneSelectionChanged()
 
@@ -2068,7 +2068,7 @@ class MainWindow(QMainWindow):
         :rtype: MdiSubWindow
         """
         subwindow = self.mdi.addSubWindow(MdiSubWindow(mainview))
-        subwindow.updateTitle()
+        subwindow.updateWindowTitle()
         scene = mainview.scene()
         connect(self.documentSaved, subwindow.documentSaved)
         connect(scene.undostack.cleanChanged, subwindow.undoStackCleanChanged)
@@ -2255,10 +2255,9 @@ class MainWindow(QMainWindow):
             return dialog.selectedFiles()[0]
         return None
 
-    def setWindowTitle(self, p_str=None):
+    def setWindowTitle(self, s=None):
         """
         Set the main window title.
-        :type p_str: str
+        :type s: str
         """
-        T = '{} - {} {}'.format(p_str, APPNAME, VERSION) if p_str else '{} {}'.format(APPNAME, VERSION)
-        super().setWindowTitle(T)
+        super().setWindowTitle('{} - {} {}'.format(s, APPNAME, VERSION) if s else '{} {}'.format(APPNAME, VERSION))
