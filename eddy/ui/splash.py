@@ -40,8 +40,8 @@ from PyQt5.QtWidgets import QSplashScreen, QApplication
 
 from eddy import APPNAME, COPYRIGHT, VERSION
 
-from eddy.core.datatypes import Font
 from eddy.core.functions import rangeF
+from eddy.core.qt import Font
 
 
 class SplashScreen(QSplashScreen):

@@ -35,10 +35,11 @@
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QBrush
 
-from eddy.core.datatypes import Font, Item, Identity
+from eddy.core.datatypes import Item, Identity
 from eddy.core.functions import identify
 from eddy.core.items.nodes.common.operator import OperatorNode
 from eddy.core.items.nodes.common.label import Label
+from eddy.core.qt import Font
 
 
 class EnumerationNode(OperatorNode):

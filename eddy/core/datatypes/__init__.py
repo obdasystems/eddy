@@ -46,8 +46,6 @@ from eddy.core.datatypes.owl import Facet
 from eddy.core.datatypes.owl import OWLSyntax
 from eddy.core.datatypes.owl import XsdDatatype
 
-from eddy.core.datatypes.qt import Font
-
 from eddy.core.datatypes.system import File
 from eddy.core.datatypes.system import Filetype
 from eddy.core.datatypes.system import Platform

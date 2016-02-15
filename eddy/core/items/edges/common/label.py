@@ -37,9 +37,10 @@ from math import sin, cos, pi as M_PI
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QColor, QPainterPath
 
-from eddy.core.datatypes import Font, Item
+from eddy.core.datatypes import Item
 from eddy.core.functions import midpoint, angle
 from eddy.core.items import LabelItem
+from eddy.core.qt import Font
 
 
 class Label(LabelItem):

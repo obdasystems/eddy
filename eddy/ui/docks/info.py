@@ -37,11 +37,11 @@ from abc import ABCMeta, abstractmethod
 from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtWidgets import QWidget, QFormLayout, QLabel, QVBoxLayout
-from PyQt5.QtWidgets import QMenu, QToolButton, QSizePolicy, QScrollArea, QStackedWidget
+from PyQt5.QtWidgets import QMenu, QToolButton, QSizePolicy, QScrollArea
 
 from eddy.core.datatypes import Item
 from eddy.core.functions import disconnect, connect, coloredIcon
-from eddy.core.qt import Font
+from eddy.core.qt import Font, StackedWidget
 from eddy.ui.fields import IntField, DoubleField, StringField, CheckBox
 
 
@@ -60,7 +60,7 @@ class Info(QScrollArea):
         self.setMinimumWidth(216)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.stacked = QStackedWidget(self)
+        self.stacked = StackedWidget(self)
         self.stacked.setContentsMargins(0, 0, 0, 0)
         self.infoEmpty = QWidget(self.stacked)
         self.infoDiagram = DiagramInfo(mainwindow, self.stacked)

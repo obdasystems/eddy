@@ -35,9 +35,10 @@
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap, QBrush
 
-from eddy.core.datatypes import Facet, Font, Identity, Item, XsdDatatype
+from eddy.core.datatypes import Facet, Identity, Item, XsdDatatype
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import Label
+from eddy.core.qt import Font
 from eddy.core.regex import RE_FACET
 
 

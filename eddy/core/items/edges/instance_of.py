@@ -37,9 +37,10 @@ from math import sin, cos, radians, pi as M_PI
 from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
 
-from eddy.core.datatypes import Font, Item, Platform
+from eddy.core.datatypes import Item, Platform
 from eddy.core.items.edges.common.base import AbstractEdge
 from eddy.core.items.edges.common.label import Label
+from eddy.core.qt import Font
 
 
 class InstanceOfEdge(AbstractEdge):

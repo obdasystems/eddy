@@ -37,9 +37,10 @@ from PyQt5.QtGui import QColor, QTextCursor, QPainterPath
 from PyQt5.QtWidgets import QGraphicsItem
 
 from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelChange
-from eddy.core.datatypes import Font, DiagramMode, Item
+from eddy.core.datatypes import DiagramMode, Item
 from eddy.core.functions import isEmpty, distanceP
 from eddy.core.items import LabelItem
+from eddy.core.qt import Font
 
 
 class Label(LabelItem):

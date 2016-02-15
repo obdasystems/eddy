@@ -37,10 +37,11 @@ import math
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap, QBrush
 
-from eddy.core.datatypes import Font, Identity, Item, XsdDatatype
+from eddy.core.datatypes import Identity, Item, XsdDatatype
 from eddy.core.functions import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import Label
+from eddy.core.qt import Font
 from eddy.core.regex import RE_LITERAL
 
 

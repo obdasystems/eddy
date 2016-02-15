@@ -35,9 +35,10 @@
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QBrush
 
-from eddy.core.datatypes import Font, Item, Special, Identity
+from eddy.core.datatypes import Item, Special, Identity
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import Label
+from eddy.core.qt import Font
 
 
 class AttributeNode(AbstractNode):

@@ -30,11 +30,12 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-
-
+from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QStackedWidget, QSizePolicy
 
 from eddy.core.datatypes.system import Platform
+from eddy.core.functions import connect
 
 
 class Font(QFont):
@@ -52,3 +53,34 @@ class Font(QFont):
         if Platform.identify() is not Platform.Darwin:
             size = int(round(size * 0.75))
         super().__init__(family, size, weight, italic)
+
+
+class StackedWidget(QStackedWidget):
+    """
+    This class implements a stacked widget with variable page size.
+    """
+    def __init__(self, parent=None):
+        """
+        Initialize the stacked widget.
+        :type parent: QWidget
+        """
+        super().__init__(parent)
+        connect(self.currentChanged, self.currentIndexChanged)
+
+    def addWidget(self, widget):
+        """
+        Add a widget in the stack.
+        :type widget: QWidget
+        """
+        widget.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        super().addWidget(widget)
+
+    @pyqtSlot(int)
+    def currentIndexChanged(self, index):
+        """
+        Executed whenever the currently displayed widget changes.
+        :type index: int
+        """
+        widget = self.widget(index)
+        widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        widget.adjustSize()

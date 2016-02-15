@@ -35,8 +35,8 @@
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QToolButton, QAction, QMenu
 
-from eddy.core.datatypes import Font
 from eddy.core.functions import clamp, connect, shadedIcon, rangeF
+from eddy.core.qt import Font
 
 
 class ZoomControl(QWidget):

@@ -35,10 +35,11 @@
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPixmap, QPainter, QPen, QColor, QBrush
 
-from eddy.core.datatypes import Font, Item, Restriction, Special, Identity
+from eddy.core.datatypes import Item, Restriction, Special, Identity
 from eddy.core.functions import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import Label
+from eddy.core.qt import Font
 
 
 class RoleNode(AbstractResizableNode):
