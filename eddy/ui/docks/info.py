@@ -113,6 +113,7 @@ class Info(QScrollArea):
             show = self.infoEmpty
 
         self.stacked.setCurrentWidget(show)
+        self.verticalScrollBar().setValue(0)
 
     ####################################################################################################################
     #                                                                                                                  #
