@@ -39,8 +39,9 @@ from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtWidgets import QWidget, QFormLayout, QLabel, QVBoxLayout
 from PyQt5.QtWidgets import QMenu, QToolButton, QSizePolicy, QScrollArea, QStackedWidget
 
-from eddy.core.datatypes import Font, Item
+from eddy.core.datatypes import Item
 from eddy.core.functions import disconnect, connect, coloredIcon
+from eddy.core.qt import Font
 from eddy.ui.fields import IntField, DoubleField, StringField, CheckBox
 
 
@@ -113,6 +114,7 @@ class Info(QScrollArea):
             show = self.infoEmpty
 
         self.stacked.setCurrentWidget(show)
+        self.stacked.setFixedHeight(show.height())
         self.verticalScrollBar().setValue(0)
 
     ####################################################################################################################
@@ -313,7 +315,7 @@ class InclusionEdgeInfo(EdgeInfo):
 
         self.completeBox = CheckBox(self)
         self.completeBox.setCheckable(True)
-        connect(self.completeBox.stateChanged, self.mainwindow.toggleEdgeComplete)
+        connect(self.completeBox.clicked, self.mainwindow.toggleEdgeComplete)
 
         self.generalLayout.addRow(self.completeLabel, self.completeBox)
 
@@ -322,7 +324,7 @@ class InclusionEdgeInfo(EdgeInfo):
         Fetch new information and fill the widget with data.
         :type edge: AbstractEdge
         """
-        super(InclusionEdgeInfo, self).updateData(edge)
+        super().updateData(edge)
         self.completeBox.setChecked(edge.complete)
 
 
