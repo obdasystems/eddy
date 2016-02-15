@@ -34,7 +34,9 @@
 
 from PyQt5.QtCore import pyqtSlot, Qt, pyqtSignal
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QMdiArea, QMdiSubWindow, QMessageBox, QTabWidget
+from PyQt5.QtWidgets import QMdiArea, QMdiSubWindow, QMessageBox, QTabWidget, QAction
+
+from eddy.core.functions import connect
 
 
 class MdiArea(QMdiArea):
@@ -82,6 +84,37 @@ class MdiArea(QMdiArea):
         if subwindow:
             return subwindow.widget()
         return None
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def addSubWindow(self, subwindow, flags=0):
+        """
+        Add a subwindow to the MDI area.
+        :type subwindow: MdiSubWindow
+        :type flags: int
+        """
+        menu = subwindow.systemMenu()
+
+        close = menu.actions()[0]
+        closeAll = QAction('Close All', menu)
+        closeAll.setIcon(close.icon())
+        closeAll.setShortcut(Qt.CTRL|Qt.SHIFT|Qt.Key_W)
+        connect(closeAll.triggered, self.closeAllSubWindows)
+
+        menu.addAction(closeAll)
+
+        return super().addSubWindow(subwindow)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SLOTS                                                                                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
+
 
 
 class MdiSubWindow(QMdiSubWindow):
