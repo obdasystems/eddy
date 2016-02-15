@@ -98,23 +98,11 @@ class MdiArea(QMdiArea):
         :type flags: int
         """
         menu = subwindow.systemMenu()
-
-        close = menu.actions()[0]
         closeAll = QAction('Close All', menu)
-        closeAll.setIcon(close.icon())
-        closeAll.setShortcut(Qt.CTRL|Qt.SHIFT|Qt.Key_W)
+        closeAll.setIcon(menu.actions()[7].icon())
         connect(closeAll.triggered, self.closeAllSubWindows)
-
         menu.addAction(closeAll)
-
         return super().addSubWindow(subwindow)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SLOTS                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
-
 
 
 class MdiSubWindow(QMdiSubWindow):
