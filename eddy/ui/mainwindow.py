@@ -574,7 +574,6 @@ class MainWindow(QMainWindow):
         self.recentDocumentSeparator = self.menuFile.addSeparator()
         for i in range(DiagramScene.RecentNum):
             self.menuFile.addAction(self.actionsOpenRecentDocument[i])
-        self.refreshRecentDocument()
 
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionPrintDocument)
@@ -766,6 +765,7 @@ class MainWindow(QMainWindow):
             ])
 
         self.recentDocument = settings.value('recent', None, str)
+        self.refreshRecentDocument()
         settings.endGroup()
 
         settings.beginGroup('mainwindow')
