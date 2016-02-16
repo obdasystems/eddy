@@ -34,9 +34,9 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtGui import QBrush, QColor
-from PyQt5.QtWidgets import QWidget, QFormLayout, QLabel, QVBoxLayout, QPushButton
+from PyQt5.QtCore import pyqtSlot, Qt, QEvent
+from PyQt5.QtGui import QBrush, QColor, QPainter
+from PyQt5.QtWidgets import QWidget, QFormLayout, QLabel, QVBoxLayout, QPushButton, QScrollBar, QStyleOption, QStyle
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QScrollArea
 
 from eddy.core.commands import CommandNodeLabelChange
@@ -51,6 +51,8 @@ class Info(QScrollArea):
     """
     This class implements the information box.
     """
+    Width = 216
+
     def __init__(self, mainwindow):
         """
         Initialize the info box.
@@ -59,8 +61,8 @@ class Info(QScrollArea):
         super().__init__(mainwindow)
         self.scene = None
         self.setContentsMargins(0, 0, 0, 0)
-        self.setMinimumWidth(216)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.setFixedWidth(Info.Width)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.stacked = StackedWidget(self)
         self.stacked.setContentsMargins(0, 0, 0, 0)
@@ -84,7 +86,32 @@ class Info(QScrollArea):
         self.stacked.addWidget(self.infoValueRestrictionNode)
         self.setWidget(self.stacked)
         self.setWidgetResizable(True)
+        scrollbar = self.verticalScrollBar()
+        scrollbar.installEventFilter(self)
         self.updateLayout()
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   EVENTS                                                                                                         #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def eventFilter(self, source, event):
+        """
+        Filter incoming events.
+        :type source: QObject
+        :type event: QEvent
+        """
+        if isinstance(source, QScrollBar):
+            if event.type() == QEvent.Show:
+                widget = self.stacked.currentWidget()
+                widget.setFixedWidth(Info.Width - source.width())
+                self.stacked.setFixedWidth(Info.Width - source.width())
+            elif event.type() == QEvent.Hide:
+                widget = self.stacked.currentWidget()
+                widget.setFixedWidth(Info.Width)
+                self.stacked.setFixedWidth(Info.Width)
+        return super().eventFilter(source, event)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -132,8 +159,9 @@ class Info(QScrollArea):
             show = self.infoEmpty
 
         self.stacked.setCurrentWidget(show)
-        self.stacked.setFixedHeight(show.height())
-        self.verticalScrollBar().setValue(0)
+        self.stacked.setFixedSize(show.size())
+        scrollbar = self.verticalScrollBar()
+        scrollbar.setValue(0)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -179,6 +207,112 @@ class Info(QScrollArea):
 
 ########################################################################################################################
 #                                                                                                                      #
+#   COMPONENTS                                                                                                         #
+#                                                                                                                      #
+########################################################################################################################
+
+
+class Header(QLabel):
+    """
+    This class implements the header of properties section.
+    """
+    def __init__(self, *args):
+        """
+        Initialize the header.
+        """
+        super().__init__(*args)
+        self.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
+        self.setFixedHeight(24)
+
+
+class Key(QLabel):
+    """
+    This class implements the key of an info field.
+    """
+    def __init__(self, *args):
+        """
+        Initialize the key.
+        """
+        super().__init__(*args)
+        self.setFixedSize(80, 20)
+
+
+class Button(QPushButton):
+    """
+    This class implements the button to which associate a QMenu instance of an info field.
+    """
+    def __init__(self,  *args):
+        """
+        Initialize the button.
+        """
+        super().__init__(*args)
+        self.setFont(Font('Arial', 12))
+
+
+class Int(IntField):
+    """
+    This class implements the integer value of an info field.
+    """
+    def __init__(self,  *args):
+        """
+        Initialize the field.
+        """
+        super().__init__(*args)
+        self.setFixedHeight(20)
+
+
+class Str(StringField):
+    """
+    This class implements the string value of an info field.
+    """
+    def __init__(self,  *args):
+        """
+        Initialize the field.
+        """
+        super().__init__(*args)
+        self.setFixedHeight(20)
+
+
+class Select(ComboBox):
+    """
+    This class implements the selection box of an info field.
+    """
+    def __init__(self,  *args):
+        """
+        Initialize the field.
+        """
+        super().__init__(*args)
+        self.setFont(Font('Arial', 12))
+        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.setScrollEnabled(False)
+
+
+class Parent(QWidget):
+    """
+    This class implements the parent placeholder to be used to store checkbox and radio button value fields.
+    """
+    def __init__(self,  *args):
+        """
+        Initialize the field.
+        """
+        super().__init__(*args)
+        self.setFixedHeight(20)
+
+    def paintEvent(self, paintEvent):
+        """
+        This is needed for the widget to pick the stylesheet.
+        :type paintEvent: QPaintEvent
+        """
+        option = QStyleOption()
+        option.initFrom(self)
+        painter = QPainter(self)
+        style = self.style()
+        style.drawPrimitive(QStyle.PE_Widget, option, painter, self)
+
+
+########################################################################################################################
+#                                                                                                                      #
 #   INFO WIDGETS                                                                                                       #
 #                                                                                                                      #
 ########################################################################################################################
@@ -190,6 +324,7 @@ class AbstractInfo(QWidget):
     """
     __metaclass__ = ABCMeta
 
+    Height = 20
     LabelWidth = 80
 
     def __init__(self, mainwindow, parent=None):
@@ -199,6 +334,7 @@ class AbstractInfo(QWidget):
         :type parent: QWidget
         """
         super().__init__(parent)
+        self.setFixedWidth(Info.Width)
         self.mainwindow = mainwindow
 
     @abstractmethod
@@ -221,30 +357,25 @@ class DiagramInfo(AbstractInfo):
         """
         super().__init__(mainwindow, parent)
 
-        self.h1 = QLabel('DIAGRAM', self)
-        self.h1.setAlignment(Qt.AlignCenter)
-        self.h1.setFixedHeight(24)
-        self.h1.setObjectName('heading')
+        self.h1 = Header('Diagram', self)
 
-        self.nodesLabel = QLabel('N° nodes', self)
-        self.nodesLabel.setObjectName('index')
-        self.nodesLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.nodesField = IntField(self)
+        self.nodesKey = Key('N° nodes', self)
+        self.nodesField = Int(self)
         self.nodesField.setReadOnly(True)
 
-        self.edgesLabel = QLabel('N° edges', self)
-        self.edgesLabel.setObjectName('index')
-        self.edgesLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.edgesField = IntField(self)
+        self.edgesKey = Key('N° edges', self)
+        self.edgesField = Int(self)
         self.edgesField.setReadOnly(True)
 
         self.diagramLayout = QFormLayout()
         self.diagramLayout.setSpacing(0)
-        self.diagramLayout.addRow(self.nodesLabel, self.nodesField)
-        self.diagramLayout.addRow(self.edgesLabel, self.edgesField)
+        self.diagramLayout.addRow(self.nodesKey, self.nodesField)
+        self.diagramLayout.addRow(self.edgesKey, self.edgesField)
 
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setAlignment(Qt.AlignTop)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.setSpacing(0)
         self.mainLayout.addWidget(self.h1)
         self.mainLayout.addLayout(self.diagramLayout)
 
@@ -269,37 +400,30 @@ class EdgeInfo(AbstractInfo):
         """
         super().__init__(mainwindow, parent)
 
-        self.h1 = QLabel('GENERAL', self)
-        self.h1.setAlignment(Qt.AlignCenter)
-        self.h1.setFixedHeight(24)
-        self.h1.setObjectName('heading')
+        self.h1 = Header('General', self)
 
-        self.typeLabel = QLabel('Type', self)
-        self.typeLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.typeLabel.setObjectName('index')
-        self.typeField = StringField(self)
+        self.typeKey = Key('Type', self)
+        self.typeField = Str(self)
         self.typeField.setReadOnly(True)
 
-        self.sourceLabel = QLabel('Source', self)
-        self.sourceLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.sourceLabel.setObjectName('index')
-        self.sourceField = StringField(self)
+        self.sourceKey = Key('Source', self)
+        self.sourceField = Str(self)
         self.sourceField.setReadOnly(True)
 
-        self.targetLabel = QLabel('Target', self)
-        self.targetLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.targetLabel.setObjectName('index')
-        self.targetField = StringField(self)
+        self.targetKey = Key('Target', self)
+        self.targetField = Str(self)
         self.targetField.setReadOnly(True)
 
         self.generalLayout = QFormLayout()
         self.generalLayout.setSpacing(0)
-        self.generalLayout.addRow(self.typeLabel, self.typeField)
-        self.generalLayout.addRow(self.sourceLabel, self.sourceField)
-        self.generalLayout.addRow(self.targetLabel, self.targetField)
+        self.generalLayout.addRow(self.typeKey, self.typeField)
+        self.generalLayout.addRow(self.sourceKey, self.sourceField)
+        self.generalLayout.addRow(self.targetKey, self.targetField)
 
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setAlignment(Qt.AlignTop)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.setSpacing(0)
         self.mainLayout.addWidget(self.h1)
         self.mainLayout.addLayout(self.generalLayout)
 
@@ -327,15 +451,13 @@ class InclusionEdgeInfo(EdgeInfo):
         """
         super().__init__(mainwindow, parent)
 
-        self.completeLabel = QLabel('Complete', self)
-        self.completeLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.completeLabel.setObjectName('index')
-
-        self.completeBox = CheckBox(self)
+        self.completeKey = Key('Complete', self)
+        parent = Parent(self)
+        self.completeBox = CheckBox(parent)
         self.completeBox.setCheckable(True)
         connect(self.completeBox.clicked, self.mainwindow.toggleEdgeComplete)
 
-        self.generalLayout.addRow(self.completeLabel, self.completeBox)
+        self.generalLayout.addRow(self.completeKey, parent)
 
     def updateData(self, edge):
         """
@@ -360,80 +482,60 @@ class NodeInfo(AbstractInfo):
 
         self.node = None
 
-        self.h1 = QLabel('GENERAL', self)
-        self.h1.setAlignment(Qt.AlignCenter)
-        self.h1.setFixedHeight(24)
-        self.h1.setObjectName('heading')
+        self.h1 = Header('General', self)
 
-        self.idLabel = QLabel('ID', self)
-        self.idLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.idLabel.setObjectName('index')
-        self.idField = StringField(self)
+        self.idKey = Key('ID', self)
+        self.idField = Str(self)
         self.idField.setReadOnly(True)
 
-        self.typeLabel = QLabel('Type', self)
-        self.typeLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.typeLabel.setObjectName('index')
-        self.typeField = StringField(self)
+        self.typeKey = Key('Type', self)
+        self.typeField = Str(self)
         self.typeField.setReadOnly(True)
 
-        self.identityLabel = QLabel('Identity', self)
-        self.identityLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.identityLabel.setObjectName('index')
-        self.identityField = StringField(self)
+        self.identityKey = Key('Identity', self)
+        self.identityField = Str(self)
         self.identityField.setReadOnly(True)
 
-        self.neighboursLabel = QLabel('Neighbours', self)
-        self.neighboursLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.neighboursLabel.setObjectName('index')
-        self.neighboursField = IntField(self)
+        self.neighboursKey = Key('Neighbours', self)
+        self.neighboursField = Int(self)
         self.neighboursField.setReadOnly(True)
 
         self.generalLayout = QFormLayout()
         self.generalLayout.setSpacing(0)
-        self.generalLayout.addRow(self.idLabel, self.idField)
-        self.generalLayout.addRow(self.typeLabel, self.typeField)
-        self.generalLayout.addRow(self.identityLabel, self.identityField)
-        self.generalLayout.addRow(self.neighboursLabel, self.neighboursField)
+        self.generalLayout.addRow(self.idKey, self.idField)
+        self.generalLayout.addRow(self.typeKey, self.typeField)
+        self.generalLayout.addRow(self.identityKey, self.identityField)
+        self.generalLayout.addRow(self.neighboursKey, self.neighboursField)
 
-        self.h2 = QLabel('GEOMETRY', self)
-        self.h2.setAlignment(Qt.AlignCenter)
-        self.h2.setFixedHeight(24)
-        self.h2.setObjectName('heading')
+        self.h2 = Header('Geometry', self)
 
-        self.xLabel = QLabel('X', self)
-        self.xLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.xLabel.setObjectName('index')
-        self.xField = IntField(self)
+        self.xKey = Key('X', self)
+        self.xField = Int(self)
         self.xField.setReadOnly(True)
 
-        self.yLabel = QLabel('Y', self)
-        self.yLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.yLabel.setObjectName('index')
-        self.yField = IntField(self)
+        self.yKey = Key('Y', self)
+        self.yField = Int(self)
         self.yField.setReadOnly(True)
 
-        self.wLabel = QLabel('Width', self)
-        self.wLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.wLabel.setObjectName('index')
-        self.wField = IntField(self)
+        self.wKey = Key('Width', self)
+        self.wField = Int(self)
         self.wField.setReadOnly(True)
 
-        self.hLabel = QLabel('Height', self)
-        self.hLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.hLabel.setObjectName('index')
-        self.hField = IntField(self)
+        self.hKey = Key('Height', self)
+        self.hField = Int(self)
         self.hField.setReadOnly(True)
 
         self.geometryLayout = QFormLayout()
         self.geometryLayout.setSpacing(0)
-        self.geometryLayout.addRow(self.xLabel, self.xField)
-        self.geometryLayout.addRow(self.yLabel, self.yField)
-        self.geometryLayout.addRow(self.wLabel, self.wField)
-        self.geometryLayout.addRow(self.hLabel, self.hField)
+        self.geometryLayout.addRow(self.xKey, self.xField)
+        self.geometryLayout.addRow(self.yKey, self.yField)
+        self.geometryLayout.addRow(self.wKey, self.wField)
+        self.geometryLayout.addRow(self.hKey, self.hField)
 
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setAlignment(Qt.AlignTop)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.setSpacing(0)
         self.mainLayout.addWidget(self.h1)
         self.mainLayout.addLayout(self.generalLayout)
         self.mainLayout.addWidget(self.h2)
@@ -468,27 +570,19 @@ class PredicateNodeInfo(NodeInfo):
         """
         super().__init__(mainwindow, parent)
 
-        self.h3 = QLabel('PREDICATE', self)
-        self.h3.setAlignment(Qt.AlignCenter)
-        self.h3.setFixedHeight(24)
-        self.h3.setObjectName('heading')
+        self.h3 = Header('Predicate', self)
 
-        self.brushLabel = QLabel('Color', self)
-        self.brushLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.brushLabel.setObjectName('index')
-
+        self.brushKey = Key('Color', self)
         self.brushMenu = QMenu(self)
         for action in self.mainwindow.actionsChangeNodeBrush:
             self.brushMenu.addAction(action)
-
-        self.brushButton = QPushButton()
-        self.brushButton.setFont(Font('Arial', 12))
+        self.brushButton = Button()
         self.brushButton.setMenu(self.brushMenu)
         self.brushButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
         self.predicateLayout = QFormLayout()
         self.predicateLayout.setSpacing(0)
-        self.predicateLayout.addRow(self.brushLabel, self.brushButton)
+        self.predicateLayout.addRow(self.brushKey, self.brushButton)
 
         self.mainLayout.insertWidget(2, self.h3)
         self.mainLayout.insertLayout(3, self.predicateLayout)
@@ -518,14 +612,12 @@ class EditableNodeInfo(PredicateNodeInfo):
         """
         super().__init__(mainwindow, parent)
 
-        self.textLabel = QLabel('Label', self)
-        self.textLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.textLabel.setObjectName('index')
-        self.textField = StringField(self)
+        self.textKey = Key('Label', self)
+        self.textField = Str(self)
         self.textField.setReadOnly(False)
         connect(self.textField.editingFinished, self.editingFinished)
 
-        self.predicateLayout.addRow(self.textLabel, self.textField)
+        self.predicateLayout.addRow(self.textKey, self.textField)
 
     @pyqtSlot()
     def editingFinished(self):
@@ -560,20 +652,15 @@ class ValueDomainNodeInfo(PredicateNodeInfo):
         """
         super().__init__(mainwindow, parent)
 
-        self.datatypeLabel = QLabel('Datatype', self)
-        self.datatypeLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.datatypeLabel.setObjectName('index')
-
+        self.datatypeKey = Key('Datatype', self)
         self.datatypeMenu = QMenu(self)
         for action in self.mainwindow.actionsChangeValueDomainDatatype:
             self.datatypeMenu.addAction(action)
-
-        self.datatypeButton = QPushButton()
-        self.datatypeButton.setFont(Font('Arial', 12))
+        self.datatypeButton = Button()
         self.datatypeButton.setMenu(self.datatypeMenu)
         self.datatypeButton.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
 
-        self.predicateLayout.addRow(self.datatypeLabel, self.datatypeButton)
+        self.predicateLayout.addRow(self.datatypeKey, self.datatypeButton)
 
     def updateData(self, node):
         """
@@ -597,30 +684,16 @@ class ValueRestrictionNodeInfo(PredicateNodeInfo):
         """
         super().__init__(mainwindow, parent)
 
-        self.datatypeLabel = QLabel('Datatype', self)
-        self.datatypeLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.datatypeLabel.setObjectName('index')
-        self.datatypeField = ComboBox(self)
-        self.datatypeField.setFont(Font('Arial', 12))
-        self.datatypeField.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
-        self.datatypeField.setFocusPolicy(Qt.StrongFocus)
-        self.datatypeField.setScrollEnabled(False)
+        self.datatypeKey = Key('Datatype', self)
+        self.datatypeField = Select(self)
         connect(self.datatypeField.activated, self.restrictionChanged)
 
-        self.facetLabel = QLabel('Facet', self)
-        self.facetLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.facetLabel.setObjectName('index')
-        self.facetField = ComboBox(self)
-        self.facetField.setFont(Font('Arial', 12))
-        self.facetField.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
-        self.facetField.setFocusPolicy(Qt.StrongFocus)
-        self.facetField.setScrollEnabled(False)
+        self.facetKey = Key('Facet', self)
+        self.facetField = Select(self)
         connect(self.facetField.activated, self.restrictionChanged)
 
-        self.restrictionLabel = QLabel('Restriction', self)
-        self.restrictionLabel.setFixedWidth(AbstractInfo.LabelWidth)
-        self.restrictionLabel.setObjectName('index')
-        self.restrictionField = StringField(self)
+        self.restrictionKey = Key('Restriction', self)
+        self.restrictionField = Str(self)
         self.restrictionField.setReadOnly(False)
         connect(self.restrictionField.editingFinished, self.restrictionChanged)
 
@@ -628,9 +701,9 @@ class ValueRestrictionNodeInfo(PredicateNodeInfo):
             if Facet.forDatatype(datatype):
                 self.datatypeField.addItem(datatype.value, datatype)
 
-        self.predicateLayout.addRow(self.datatypeLabel, self.datatypeField)
-        self.predicateLayout.addRow(self.facetLabel, self.facetField)
-        self.predicateLayout.addRow(self.restrictionLabel, self.restrictionField)
+        self.predicateLayout.addRow(self.datatypeKey, self.datatypeField)
+        self.predicateLayout.addRow(self.facetKey, self.facetField)
+        self.predicateLayout.addRow(self.restrictionKey, self.restrictionField)
 
     @pyqtSlot()
     def restrictionChanged(self):

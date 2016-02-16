@@ -392,34 +392,43 @@ QTreeView::branch:open:has-children:has-siblings  {
 Info {
     background: #FFFFFF;
 }
-Info QLabel#heading {
-    background: #CACACA;
+Info Header {
+    background: #7d7c7b;
+    padding-left: 4px;
+    color: #FFFFFF;
 }
-Info QLabel#index {
-    background: #EAEAEA;
+Info Key {
+    background: #FCFFBB;
     border-bottom: 1px solid #BABABA;
+    padding-left: 4px;
 }
-Info QLineEdit,
-Info QPushButton,
-Info QCheckBox,
-Info QComboBox {
+Info Button,
+Info Int,
+Info Str,
+Info Select,
+Info Parent {
+    background: #FEFFDC;
     border-bottom: 1px solid #BABABA;
     border-left: 1px solid #BABABA;
     padding-left: 4px;
 }
-Info QPushButton {
+Info Button {
     text-align:left;
 }
-Info QPushButton::menu-indicator {
+Info Button::menu-indicator {
     image: none;
 }
-Info QComboBox:!editable, QComboBox::drop-down:editable {
+Info Select:!editable,
+Info Select:QComboBox::drop-down:editable {
      background: #FFFFFF;
 }
-Info QComboBox:!editable:on, QComboBox::drop-down:editable:on {
+Info Select:!editable:on,
+Info Select:QComboBox::drop-down:editable:on {
     background: #FFFFFF;
 }
 Info QCheckBox {
-    padding-top: 2px;
-    padding-bottom: 2px;
+    background: #FFFFFF;
+    spacing: 0;
+    margin-left: 4px;
+    margin-top: 2px;
 }
