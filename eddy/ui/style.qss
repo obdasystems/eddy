@@ -414,11 +414,11 @@ Info Button::menu-indicator {
     image: none;
 }
 Info Select:!editable,
-Info Select:QComboBox::drop-down:editable {
+Info Select::drop-down:editable {
      background: #FFFFFF;
 }
 Info Select:!editable:on,
-Info Select:QComboBox::drop-down:editable:on {
+Info Select::drop-down:editable:on {
     background: #FFFFFF;
 }
 Info QCheckBox {
