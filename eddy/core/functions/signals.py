@@ -39,7 +39,7 @@ def connect(signal, slot, *args, **kwargs):
     """
     Connect the given signal to the specified slots passing all arguments to the slot.
     Note that this function make use of functools.partial to hand parameters over to the function slot.
-    This ia actually highly discouraged because the the function slot will be treated as a normal python function,
+    This is actually highly discouraged because the the function slot will be treated as a normal python function,
     losing all the properties of Qt slot. Whenever it's possible make use of self.sender() to retrieve the action
     executing the slot execution, and action.data() to retrieve function slot's parameters (previously set with setData)
     :type signal: pyqtSignal
