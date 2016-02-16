@@ -99,15 +99,10 @@ QDockWidget QWidget {
     border: 0;
 }
 QDockWidget Palette {
-    background: #EAEAEA;
-}
-QDockWidget Palette QToolButton {
-    /*background: #E0E0E0;*/
-    /*border: 1px solid #BABABA;*/
+    background: #F0F0F0;
 }
 QDockWidget Palette QToolButton:checked {
     background: #4FC3F7;
-    /*border: 1px solid #455A64;*/
 }
 /**
  * TAB BAR
