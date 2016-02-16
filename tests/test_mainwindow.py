@@ -32,9 +32,6 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtTest import QTest
-
 from eddy.ui.mdi import MdiSubWindow
 from eddy.ui.scene import DiagramScene
 from eddy.ui.view import MainView
@@ -46,7 +43,7 @@ class Test_MainWindow(EddyTestCase):
 
     def test_new_document_from_toolbar(self):
         # WHEN
-        QTest.mouseClick(self.mainwindow.toolbar.widgetForAction(self.mainwindow.actionNewDocument), Qt.LeftButton)
+        self.mainwindow.actionNewDocument.trigger()
         # THEN
         self.assertEqual(1, len(self.mainwindow.mdi.subWindowList()))
         self.assertIsInstance(self.mainwindow.mdi.subWindowList()[0], MdiSubWindow)
@@ -59,27 +56,7 @@ class Test_MainWindow(EddyTestCase):
         self.assertFalse(self.mainwindow.actionDelete.isEnabled())
         self.assertFalse(self.mainwindow.actionBringToFront.isEnabled())
         self.assertFalse(self.mainwindow.actionSendToBack.isEnabled())
-        self.assertFalse(self.mainwindow.changeNodeBrushButton.isEnabled())
+        self.assertFalse(self.mainwindow.buttonChangeNodeBrush.isEnabled())
         self.assertFalse(self.mainwindow.undogroup.canRedo())
         self.assertFalse(self.mainwindow.undogroup.canUndo())
         self.assertTrue(self.mainwindow.undogroup.isClean())
-
-    # def test_new_document_from_keyboard_shortcut(self):
-    #     # WHEN
-    #     QTest.keyClick(self.mainwindow, 'n', Qt.ControlModifier)
-    #     # THEN
-    #     self.assertEqual(1, len(self.mainwindow.mdi.subWindowList()))
-    #     self.assertIsInstance(self.mainwindow.mdi.subWindowList()[0], MdiSubWindow)
-    #     self.assertIsInstance(self.mainwindow.mdi.subWindowList()[0].widget(), MainView)
-    #     self.assertIsInstance(self.mainwindow.mdi.subWindowList()[0].widget().scene(), DiagramScene)
-    #     self.assertFalse(self.mainwindow.actionSaveDocument.isEnabled())
-    #     self.assertFalse(self.mainwindow.actionCut.isEnabled())
-    #     self.assertFalse(self.mainwindow.actionCopy.isEnabled())
-    #     self.assertFalse(self.mainwindow.actionPaste.isEnabled())
-    #     self.assertFalse(self.mainwindow.actionDelete.isEnabled())
-    #     self.assertFalse(self.mainwindow.actionBringToFront.isEnabled())
-    #     self.assertFalse(self.mainwindow.actionSendToBack.isEnabled())
-    #     self.assertFalse(self.mainwindow.changeNodeBrushButton.isEnabled())
-    #     self.assertFalse(self.mainwindow.undogroup.canRedo())
-    #     self.assertFalse(self.mainwindow.undogroup.canUndo())
-    #     self.assertTrue(self.mainwindow.undogroup.isClean())
