@@ -584,100 +584,110 @@ class GraphmlLoader(AbstractLoader):
             graph = root.firstChildElement('graph')
 
             # 5) GENERATE NODES
-            node = graph.firstChildElement('node')
-            while not node.isNull():
+            element = graph.firstChildElement('node')
+            while not element.isNull():
 
                 # noinspection PyArgumentList
                 QApplication.processEvents()
 
-                temp = None
-                item = self.itemFromGraphmlNode(node)
+                node = None
+                item = self.itemFromGraphmlNode(element)
 
                 try:
 
                     if item is Item.AttributeNode:
-                        temp = self.buildAttributeNode(node)
+                        node = self.buildAttributeNode(element)
                     elif item is Item.ComplementNode:
-                        temp = self.buildComplementNode(node)
+                        node = self.buildComplementNode(element)
                     elif item is Item.ConceptNode:
-                        temp = self.buildConceptNode(node)
+                        node = self.buildConceptNode(element)
                     elif item is Item.DatatypeRestrictionNode:
-                        temp = self.buildDatatypeRestrictionNode(node)
+                        node = self.buildDatatypeRestrictionNode(element)
                     elif item is Item.DisjointUnionNode:
-                        temp = self.buildDisjointUnionNode(node)
+                        node = self.buildDisjointUnionNode(element)
                     elif item is Item.DomainRestrictionNode:
-                        temp = self.buildDomainRestrictionNode(node)
+                        node = self.buildDomainRestrictionNode(element)
                     elif item is Item.EnumerationNode:
-                        temp = self.buildEnumerationNode(node)
+                        node = self.buildEnumerationNode(element)
                     elif item is Item.IndividualNode:
-                        temp = self.buildIndividualNode(node)
+                        node = self.buildIndividualNode(element)
                     elif item is Item.IntersectionNode:
-                        temp = self.buildIntersectionNode(node)
+                        node = self.buildIntersectionNode(element)
                     elif item is Item.RangeRestrictionNode:
-                        temp = self.buildRangeRestrictionNode(node)
+                        node = self.buildRangeRestrictionNode(element)
                     elif item is Item.RoleNode:
-                        temp = self.buildRoleNode(node)
+                        node = self.buildRoleNode(element)
                     elif item is Item.RoleChainNode:
-                        temp = self.buildRoleChainNode(node)
+                        node = self.buildRoleChainNode(element)
                     elif item is Item.RoleInverseNode:
-                        temp = self.buildRoleInverseNode(node)
+                        node = self.buildRoleInverseNode(element)
                     elif item is Item.UnionNode:
-                        temp = self.buildUnionNode(node)
+                        node = self.buildUnionNode(element)
                     elif item is Item.ValueDomainNode:
-                        temp = self.buildValueDomainNode(node)
+                        node = self.buildValueDomainNode(element)
                     elif item is Item.ValueRestrictionNode:
-                        temp = self.buildValueRestrictionNode(node)
+                        node = self.buildValueRestrictionNode(element)
 
-                    if not temp:
-                        raise ValueError('unknown node with id {}'.format(node.attribute('id')))
+                    if not node:
+                        raise ValueError('unknown node with id {}'.format(element.attribute('id')))
 
                 except Exception as e:
                     self.errors.append(e)
                 else:
-                    self.scene.addItem(temp)
-                    self.scene.guid.update(temp.id)
+                    self.scene.addItem(node)
+                    self.scene.guid.update(node.id)
                 finally:
-                    node = node.nextSiblingElement('node')
+                    element = element.nextSiblingElement('node')
 
             # 6) GENERATE EDGES
-            edge = graph.firstChildElement('edge')
-            while not edge.isNull():
+            element = graph.firstChildElement('edge')
+            while not element.isNull():
 
                 # noinspection PyArgumentList
                 QApplication.processEvents()
 
-                arch = None
-                item = self.itemFromGraphmlNode(edge)
+                node = None
+                item = self.itemFromGraphmlNode(element)
 
                 try:
 
                     if item is Item.InclusionEdge:
-                        arch = self.buildInclusionEdge(edge)
+                        node = self.buildInclusionEdge(element)
                     elif item is Item.InputEdge:
-                        arch = self.buildInputEdge(edge)
+                        node = self.buildInputEdge(element)
 
-                    if not arch:
-                        raise ValueError('unknown edge with id {}'.format(edge.attribute('id')))
+                    if not node:
+                        raise ValueError('unknown edge with id {}'.format(element.attribute('id')))
 
                 except Exception as e:
                     self.errors.append(e)
                 else:
-                    self.scene.addItem(arch)
-                    self.scene.guid.update(arch.id)
-                    arch.updateEdge()
+                    self.scene.addItem(node)
+                    self.scene.guid.update(node.id)
+                    node.updateEdge()
                 finally:
-                    edge = edge.nextSiblingElement('edge')
+                    element = element.nextSiblingElement('edge')
 
-            # 7) RESIZE DIAGRAM SCENE
-            size = DiagramScene.MinSize
-            xSet = set()
-            ySet = set()
-            for item in self.scene.items():
-                B = item.mapRectToScene(item.boundingRect())
-                xSet |= {B.left(), B.right()}
-                ySet |= {B.top(), B.bottom()}
+            # 7) CENTER DIAGRAM
+            R1 = self.scene.sceneRect()
+            R2 = self.scene.visibleRect(margin=0)
+            moveX = snapF(((R1.right() - R2.right()) - (R2.left() - R1.left())) / 2, DiagramScene.GridSize)
+            moveY = snapF(((R1.bottom() - R2.bottom()) - (R2.top() - R1.top())) / 2, DiagramScene.GridSize)
+            if moveX or moveY:
+                collection = [x for x in self.scene.items() if x.node or x.edge]
+                for item in collection:
+                    # noinspection PyArgumentList
+                    QApplication.processEvents()
+                    item.moveBy(moveX, moveY)
+                for item in collection:
+                    # noinspection PyArgumentList
+                    QApplication.processEvents()
+                    if item.edge:
+                        item.updateEdge()
 
-            size = max(size, abs(min(xSet) * 2), abs(max(xSet) * 2), abs(min(ySet) * 2), abs(max(ySet) * 2))
+            # 8) RESIZE DIAGRAM SCENE
+            R3 = self.scene.visibleRect(margin=20)
+            size = max(R3.width(), R3.height(), DiagramScene.MinSize)
             self.scene.setSceneRect(QRectF(-size / 2, -size / 2, size, size))
 
         finally:
