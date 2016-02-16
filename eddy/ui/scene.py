@@ -34,7 +34,7 @@
 
 import sys
 
-from PyQt5.QtCore import Qt, QPointF, QRectF, pyqtSignal
+from PyQt5.QtCore import Qt, QPointF, QRectF, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QColor, QPen
 from PyQt5.QtWidgets import QGraphicsScene, QUndoStack
 
@@ -691,6 +691,21 @@ class DiagramScene(QGraphicsScene):
 
     ####################################################################################################################
     #                                                                                                                  #
+    #   SLOTS                                                                                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @pyqtSlot()
+    def clear(self):
+        """
+        Clear the diagram by removing all the elements.
+        """
+        self.index.clear()
+        self.undostack.clear()
+        super().clear()
+
+    ####################################################################################################################
+    #                                                                                                                  #
     #   INTERFACE                                                                                                      #
     #                                                                                                                  #
     ####################################################################################################################
@@ -702,14 +717,6 @@ class DiagramScene(QGraphicsScene):
         """
         super().addItem(item)
         self.index.add(item)
-
-    def clear(self):
-        """
-        Clear the Diagram Scene by removing all the elements.
-        """
-        self.index.clear()
-        self.undostack.clear()
-        super().clear()
 
     def edge(self, eid):
         """
