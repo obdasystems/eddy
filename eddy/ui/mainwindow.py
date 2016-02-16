@@ -38,13 +38,13 @@ import webbrowser
 from collections import OrderedDict
 from traceback import format_exception
 
-from PyQt5.QtCore import Qt, QPoint, QSettings, QSizeF, QRectF, QSize
+from PyQt5.QtCore import Qt, QSettings, QSizeF, QRectF
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter
 from PyQt5.QtGui import QPageSize, QCursor, QBrush, QColor
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
-from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox
-from PyQt5.QtWidgets import QDialog, QDesktopWidget, QMenu, QToolButton
+from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDockWidget
+from PyQt5.QtWidgets import QDialog, QMenu, QToolButton
 from PyQt5.QtWidgets import QUndoGroup, QStyle, QGraphicsItem
 
 from eddy import APPNAME, VERSION, BUG_TRACKER, GRAPHOL_HOME, DIAG_HOME
@@ -70,7 +70,7 @@ from eddy.core.utils import Clipboard
 
 from eddy.ui.dialogs import About, OpenFile, SaveFile
 from eddy.ui.dialogs import BusyProgressDialog, PreferencesDialog
-from eddy.ui.docks import DockWidget, Overview, Palette, Explorer, Info
+from eddy.ui.docks import Overview, Palette, Explorer, Info
 from eddy.ui.forms import CardinalityRestrictionForm, ValueRestrictionForm
 from eddy.ui.forms import OWLTranslationForm, LiteralForm, RenameForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
@@ -129,6 +129,7 @@ class MainWindow(QMainWindow):
         ################################################################################################################
 
         self.toolbar = self.addToolBar('Toolbar')
+        self.toolbar.setObjectName('toolbar')
 
         ################################################################################################################
         #                                                                                                              #
@@ -177,7 +178,7 @@ class MainWindow(QMainWindow):
         #   CONFIGURE ACTIONS                                                                                          #
         #                                                                                                              #
         ################################################################################################################
-        
+
         self.actionUndo = self.undogroup.createUndoAction(self)
         self.actionUndo.setIcon(self.iconUndo)
         self.actionUndo.setShortcut(QKeySequence.Undo)
@@ -185,7 +186,7 @@ class MainWindow(QMainWindow):
         self.actionRedo = self.undogroup.createRedoAction(self)
         self.actionRedo.setIcon(self.iconRedo)
         self.actionRedo.setShortcut(QKeySequence.Redo)
-        
+
         self.actionNewDocument = QAction('New', self)
         self.actionNewDocument.setIcon(self.iconNew)
         self.actionNewDocument.setShortcut(QKeySequence.New)
@@ -508,94 +509,51 @@ class MainWindow(QMainWindow):
         self.palette_ = Palette(self)
         self.zoomctrl = ZoomControl(self.toolbar)
 
-        self.dockExplorer = DockWidget('Explorer', self)
+        self.dockExplorer = QDockWidget('Explorer', self, Qt.Widget)
         self.dockExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockExplorer.setDefaultArea(Qt.RightDockWidgetArea)
-        self.dockExplorer.setDefaultVisible(True)
-        self.dockExplorer.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
+        self.dockExplorer.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
         self.dockExplorer.setFixedWidth(self.explorer.width())
+        self.dockExplorer.setObjectName('explorer')
         self.dockExplorer.setWidget(self.explorer)
 
-        self.dockInfo = DockWidget('Info', self)
+        self.dockInfo = QDockWidget('Info', self, Qt.Widget)
         self.dockInfo.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockInfo.setDefaultArea(Qt.LeftDockWidgetArea)
-        self.dockInfo.setDefaultVisible(True)
-        self.dockInfo.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
+        self.dockInfo.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
         self.dockInfo.setFixedWidth(self.info.width())
+        self.dockInfo.setObjectName('info')
         self.dockInfo.setWidget(self.info)
 
-        self.dockOverview = DockWidget('Overview', self)
+        self.dockOverview = QDockWidget('Overview', self, Qt.Widget)
         self.dockOverview.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockOverview.setDefaultArea(Qt.RightDockWidgetArea)
-        self.dockOverview.setDefaultVisible(True)
-        self.dockOverview.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
+        self.dockOverview.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
         self.dockOverview.setFixedWidth(self.overview.width())
+        self.dockOverview.setObjectName('overview')
         self.dockOverview.setWidget(self.overview)
 
-        self.dockPalette = DockWidget('Palette', self)
+        self.dockPalette = QDockWidget('Palette', self, Qt.Widget)
         self.dockPalette.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockPalette.setDefaultArea(Qt.LeftDockWidgetArea)
-        self.dockPalette.setDefaultVisible(True)
-        self.dockPalette.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
+        self.dockPalette.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
         self.dockPalette.setFixedSize(self.palette_.size())
+        self.dockPalette.setObjectName('palette')
         self.dockPalette.setWidget(self.palette_)
 
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.dockPalette)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.dockInfo)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.dockOverview)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.dockExplorer)
+
         ################################################################################################################
         #                                                                                                              #
-        #   CONFIGURE MAIN WINDOW UI [LOAD SETTINGS]                                                                   #
+        #   CONFIGURE MAIN WINDOW UI                                                                                   #
         #                                                                                                              #
         ################################################################################################################
 
-        settings = QSettings(expandPath('@home/{}.ini'.format(APPNAME)), QSettings.IniFormat)
-
-        # DIAGRAM
-        settings.beginGroup('diagram')
-        self.diagramSize = settings.value('size', self.diagramSize, int)
-        self.snapToGrid = settings.value('grid', self.snapToGrid, bool)
-
-        if not settings.contains('recent'):
-            # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
-            # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
-            # container. So according to this we can't use an empty list as default value because PyQt5 needs
-            # to know the type of the contents added to the collection: we avoid this problem by placing
-            # the list of examples file in the recentDocumentList (only if there is no list defined already).
-            settings.setValue('recent', [
-                expandPath('@examples/Animals.graphol'),
-                expandPath('@examples/Diet.graphol'),
-                expandPath('@examples/Family.graphol'),
-                expandPath('@examples/Pizza.graphol'),
-            ])
-
-        self.recentDocument = settings.value('recent', None, str)
-        settings.endGroup()
-
-        # DOCK AREA
-        settings.beginGroup('dock')
-        for widget in self.dockPalette, self.dockInfo, self.dockOverview, self.dockExplorer:
-            self.addDockWidget(settings.value('{}/area'.format(widget.objectName()), widget.defaultArea(), int), widget)
-            widget.setVisible(settings.value('{}/view'.format(widget.objectName()), widget.defaultVisible(), bool))
-        settings.endGroup()
-
-        # MAIN SETTINGS
         self.setAcceptDrops(True)
         self.setCentralWidget(self.mdi)
         self.setDockOptions(MainWindow.AnimatedDocks|MainWindow.AllowTabbedDocks)
         self.setMinimumSize(MainWindow.MinWidth, MainWindow.MinHeight)
         self.setWindowIcon(QIcon(':/images/eddy'))
         self.setWindowTitle(None)
-
-        settings.beginGroup('mainwindow')
-        self.resize(settings.value('size', QSize(MainWindow.MinWidth, MainWindow.MinHeight)))
-        widget = QDesktopWidget()
-        screen = widget.screenGeometry()
-        posX = (screen.width() - self.width()) / 2
-        posY = (screen.height() - self.height()) / 2
-        self.move(settings.value('pos', QPoint(posX, posY)))
-
-        if settings.value('fullscreen', False, bool):
-            self.setWindowState(Qt.WindowMaximized)
-
-        settings.endGroup()
 
         ################################################################################################################
         #                                                                                                              #
@@ -781,6 +739,43 @@ class MainWindow(QMainWindow):
         self.toolbar.addWidget(self.zoomctrl.buttonZoomOut)
         self.toolbar.addWidget(self.zoomctrl.buttonZoomIn)
         self.toolbar.addWidget(self.zoomctrl.buttonZoomLevelChange)
+
+        ################################################################################################################
+        #                                                                                                              #
+        #   LOAD SETTINGS [RESTORE STATE]                                                                              #
+        #                                                                                                              #
+        ################################################################################################################
+
+        settings = QSettings(expandPath('@home/{}.ini'.format(APPNAME)), QSettings.IniFormat)
+
+        settings.beginGroup('diagram')
+        self.diagramSize = settings.value('size', self.diagramSize, int)
+        self.snapToGrid = settings.value('grid', self.snapToGrid, bool)
+
+        if not settings.contains('recent'):
+            # From PyQt5 documentation: if the value of the setting is a container (corresponding to either
+            # QVariantList, QVariantMap or QVariantHash) then the type is applied to the contents of the
+            # container. So according to this we can't use an empty list as default value because PyQt5 needs
+            # to know the type of the contents added to the collection: we avoid this problem by placing
+            # the list of examples file in the recentDocumentList (only if there is no list defined already).
+            settings.setValue('recent', [
+                expandPath('@examples/Animals.graphol'),
+                expandPath('@examples/Diet.graphol'),
+                expandPath('@examples/Family.graphol'),
+                expandPath('@examples/Pizza.graphol'),
+            ])
+
+        self.recentDocument = settings.value('recent', None, str)
+        settings.endGroup()
+
+        settings.beginGroup('mainwindow')
+        geometry = settings.value('geometry')
+        state = settings.value('state')
+        if geometry:
+            self.restoreGeometry(geometry)
+        if state:
+            self.restoreState(state)
+        settings.endGroup()
 
         ################################################################################################################
         #                                                                                                              #
@@ -1817,18 +1812,10 @@ class MainWindow(QMainWindow):
         settings.setValue('size', self.diagramSize)
         settings.endGroup()
 
-        # DOCK AREA
-        settings.beginGroup('dock')
-        for widget in self.dockPalette, self.dockInfo, self.dockOverview, self.dockExplorer:
-            settings.setValue('{}/area'.format(widget.objectName()), self.dockWidgetArea(widget))
-            settings.setValue('{}/view'.format(widget.objectName()), widget.isVisible())
-        settings.endGroup()
-
         # MAIN WINDOW
         settings.beginGroup('mainwindow')
-        settings.setValue('fullscreen', self.isMaximized())
-        settings.setValue('pos', self.pos())
-        settings.setValue('size', self.size())
+        settings.setValue('geometry', self.saveGeometry())
+        settings.setValue('state', self.saveState())
         settings.endGroup()
 
         # SAVE TO DISK
