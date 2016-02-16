@@ -213,7 +213,7 @@ def snapF(value, size, offset=0, snap=True):
     return value
 
 
-def snapPT(point, size, snap=True):
+def snap(point, size, snap=True):
     """
     Snap the given point according to the given grid size.
     :type point: QPointF

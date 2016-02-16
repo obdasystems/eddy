@@ -41,7 +41,7 @@ from PyQt5.QtWidgets import QGraphicsItem
 
 from eddy.core.commands import CommandEdgeBreakpointAdd, CommandEdgeBreakpointMove, CommandEdgeAnchorMove
 from eddy.core.datatypes import DiagramMode
-from eddy.core.functions import distanceP, distanceL, snapPT
+from eddy.core.functions import distanceP, distanceL, snap
 from eddy.core.items import AbstractItem
 
 
@@ -162,7 +162,7 @@ class AbstractEdge(AbstractItem):
         """
         scene = self.scene()
         nodePos = node.pos()
-        mousePos = snapPT(mousePos, scene.GridSize, scene.mainwindow.snapToGrid)
+        mousePos = snap(mousePos, scene.GridSize, scene.mainwindow.snapToGrid)
         path = self.mapFromItem(node, node.painterPath())
         if path.contains(mousePos):
             # Mouse is inside the shape => use this position as anchor point.
@@ -242,7 +242,7 @@ class AbstractEdge(AbstractItem):
         :type mousePos: QPointF
         """
         scene = self.scene()
-        self.breakpoints[breakpoint] = snapPT(mousePos, scene.GridSize, scene.mainwindow.snapToGrid)
+        self.breakpoints[breakpoint] = snap(mousePos, scene.GridSize, scene.mainwindow.snapToGrid)
 
     def canDraw(self):
         """

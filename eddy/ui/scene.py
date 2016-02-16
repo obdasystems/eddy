@@ -40,7 +40,7 @@ from PyQt5.QtWidgets import QGraphicsScene, QUndoStack
 
 from eddy.core.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
 from eddy.core.datatypes import DiagramMode, File, Item
-from eddy.core.functions import snapF, snapPT
+from eddy.core.functions import snapF, snap
 from eddy.core.items.edges import InputEdge, InclusionEdge
 from eddy.core.items.nodes import ConceptNode, ComplementNode, RoleChainNode, RoleInverseNode
 from eddy.core.items.nodes import RangeRestrictionNode, DomainRestrictionNode
@@ -137,7 +137,7 @@ class DiagramScene(QGraphicsScene):
         if dropEvent.mimeData().hasFormat('text/plain'):
             item = Item.forValue(dropEvent.mimeData().text())
             node = self.factory.create(item=item, scene=self)
-            node.setPos(snapPT(dropEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
+            node.setPos(snap(dropEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
             self.undostack.push(CommandNodeAdd(scene=self, node=node))
             self.itemAdded.emit(node, dropEvent.modifiers())
             dropEvent.setDropAction(Qt.CopyAction)
@@ -163,7 +163,7 @@ class DiagramScene(QGraphicsScene):
                 # create a new node and place it under the mouse position
                 item = Item.forValue(self.modeParam)
                 node = self.factory.create(item=item, scene=self)
-                node.setPos(snapPT(mouseEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
+                node.setPos(snap(mouseEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
 
                 # no need to switch back the operation mode here: the signal handlers already does that and takes
                 # care of the keyboard modifiers being held (if CTRL is being held the operation mode doesn't change)
@@ -297,7 +297,7 @@ class DiagramScene(QGraphicsScene):
                     ####################################################################################################
 
                     point = self.mousePressNodePos + mouseEvent.scenePos() - self.mousePressPos
-                    point = snapPT(point, DiagramScene.GridSize, self.mainwindow.snapToGrid)
+                    point = snap(point, DiagramScene.GridSize, self.mainwindow.snapToGrid)
                     delta = point - self.mousePressNodePos
                     edges = set()
 

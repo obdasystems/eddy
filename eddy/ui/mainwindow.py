@@ -59,7 +59,7 @@ from eddy.core.commands import CommandNodeSetBrush, CommandEdgeBreakpointDel
 from eddy.core.datatypes import Color, File, DiagramMode, Filetype, Platform
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
 from eddy.core.exporters import GrapholExporter
-from eddy.core.functions import connect, disconnect, uncapitalize, rCut, lCut
+from eddy.core.functions import connect, disconnect, uncapitalize, rCut
 from eddy.core.functions import expandPath, coloredIcon, shadedIcon, snapF
 from eddy.core.items import Item, DatatypeRestrictionNode
 from eddy.core.items import RoleInverseNode, DisjointUnionNode
@@ -761,14 +761,14 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.actionBringToFront)
         self.toolbar.addAction(self.actionSendToBack)
 
-        self.changeNodeBrushButton = QToolButton()
-        self.changeNodeBrushButton.setIcon(self.iconColorFill)
-        self.changeNodeBrushButton.setMenu(self.menuChangeNodeBrush)
-        self.changeNodeBrushButton.setPopupMode(QToolButton.InstantPopup)
-        self.changeNodeBrushButton.setEnabled(False)
+        self.buttonChangeNodeBrush = QToolButton()
+        self.buttonChangeNodeBrush.setIcon(self.iconColorFill)
+        self.buttonChangeNodeBrush.setMenu(self.menuChangeNodeBrush)
+        self.buttonChangeNodeBrush.setPopupMode(QToolButton.InstantPopup)
+        self.buttonChangeNodeBrush.setEnabled(False)
 
         self.toolbar.addSeparator()
-        self.toolbar.addWidget(self.changeNodeBrushButton)
+        self.toolbar.addWidget(self.buttonChangeNodeBrush)
 
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.actionSnapToGrid)
@@ -815,7 +815,7 @@ class MainWindow(QMainWindow):
                     if item.zValue() >= zValue:
                         zValue = item.zValue() + 0.2
                 if zValue != selected.zValue():
-                    scene.undostack.push(CommandNodeSetZValue(scene=scene, node=selected, zValue=zValue))
+                    scene.undostack.push(CommandNodeSetZValue(scene, selected, zValue))
 
     @pyqtSlot()
     def centerDiagram(self):
@@ -833,7 +833,7 @@ class MainWindow(QMainWindow):
                 moveY = snapF(((R1.bottom() - R2.bottom()) - (R2.top() - R1.top())) / 2, DiagramScene.GridSize)
                 if moveX or moveY:
                     collection = [x for x in items if x.node or x.edge]
-                    scene.undostack.push(CommandItemsTranslate(scene, collection, moveX, moveY, name='center diagram'))
+                    scene.undostack.push(CommandItemsTranslate(scene, collection, moveX, moveY, 'center diagram'))
                     mainview = self.mdi.activeView
                     mainview.centerOn(0, 0)
 
@@ -860,26 +860,15 @@ class MainWindow(QMainWindow):
                 if action:
                     if action.isChecked():
                         if not node.asymmetric:
+                            name = 'compose asymmetric role'
                             items = scene.asymmetricRoleAxiomComposition(node)
                             nodes = {x for x in items if x.node}
                             edges = {x for x in items if x.edge}
-                            kwargs = {
-                                'name': 'compose asymmetric role',
-                                'scene': scene,
-                                'source': node,
-                                'nodes': nodes,
-                                'edges': edges,
-                            }
-                            scene.undostack.push(CommandComposeAxiom(**kwargs))
+                            scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
                     else:
                         if node.asymmetric:
-                            kwargs = {
-                                'name': 'decompose asymmetric role',
-                                'scene': scene,
-                                'source': node,
-                                'items': node.asymmetryPath,
-                            }
-                            scene.undostack.push(CommandDecomposeAxiom(**kwargs))
+                            name = 'decompose asymmetric node'
+                            scene.undostack.push(CommandDecomposeAxiom(name, scene, node, node.asymmetryPath))
 
     @pyqtSlot()
     def composeFunctional(self):
@@ -892,17 +881,11 @@ class MainWindow(QMainWindow):
             args = Item.RoleNode, Item.AttributeNode
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
+                name = 'compose functional {}'.format(node.item.label)
                 items = scene.functionalAxiomComposition(node)
                 nodes = {x for x in items if x.node}
                 edges = {x for x in items if x.edge}
-                kwargs = {
-                    'name': 'compose functional {}'.format(node.item.label),
-                    'scene': scene,
-                    'source': node,
-                    'nodes': nodes,
-                    'edges': edges,
-                }
-                scene.undostack.push(CommandComposeAxiom(**kwargs))
+                scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
 
     @pyqtSlot()
     def composeInverseFunctional(self):
@@ -915,17 +898,11 @@ class MainWindow(QMainWindow):
             args = Item.RoleNode, Item.AttributeNode
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
+                name = 'compose inverse functional {}'.format(node.item.label)
                 items = scene.inverseFunctionalAxiomComposition(node)
                 nodes = {x for x in items if x.node}
                 edges = {x for x in items if x.edge}
-                kwargs = {
-                    'name': 'compose inverse functional {}'.format(node.item.label),
-                    'scene': scene,
-                    'source': node,
-                    'nodes': nodes,
-                    'edges': edges,
-                }
-                scene.undostack.push(CommandComposeAxiom(**kwargs))
+                scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
 
     @pyqtSlot()
     def composeIrreflexiveRole(self):
@@ -941,26 +918,15 @@ class MainWindow(QMainWindow):
                 if action:
                     if action.isChecked():
                         if not node.irreflexive:
+                            name = 'compose irreflexive role'
                             items = scene.irreflexiveRoleAxiomComposition(node)
                             nodes = {x for x in items if x.node}
                             edges = {x for x in items if x.edge}
-                            kwargs = {
-                                'name': 'compose irreflexive role',
-                                'scene': scene,
-                                'source': node,
-                                'nodes': nodes,
-                                'edges': edges,
-                            }
-                            scene.undostack.push(CommandComposeAxiom(**kwargs))
+                            scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
                     else:
                         if node.irreflexive:
-                            kwargs = {
-                                'name': 'decompose irreflexive role',
-                                'scene': scene,
-                                'source': node,
-                                'items': node.irreflexivityPath,
-                            }
-                            scene.undostack.push(CommandDecomposeAxiom(**kwargs))
+                            name = 'decompose irreflexive node'
+                            scene.undostack.push(CommandDecomposeAxiom(name, scene, node, node.irreflexivityPath))
 
     @pyqtSlot()
     def composePropertyDomain(self):
@@ -973,17 +939,11 @@ class MainWindow(QMainWindow):
             args = Item.RoleNode, Item.AttributeNode
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
+                name = 'compose {} property domain'.format(node.item.label)
                 items = scene.propertyDomainAxiomComposition(node)
                 nodes = {x for x in items if x.node}
                 edges = {x for x in items if x.edge}
-                kwargs = {
-                    'name': 'compose {} property domain'.format(node.item.label),
-                    'scene': scene,
-                    'source': node,
-                    'nodes': nodes,
-                    'edges': edges,
-                }
-                scene.undostack.push(CommandComposeAxiom(**kwargs))
+                scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
 
     @pyqtSlot()
     def composePropertyRange(self):
@@ -996,17 +956,11 @@ class MainWindow(QMainWindow):
             args = Item.RoleNode, Item.AttributeNode
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
+                name = 'compose {} property range'.format(node.item.label)
                 items = scene.propertyRangeAxiomComposition(node)
                 nodes = {x for x in items if x.node}
                 edges = {x for x in items if x.edge}
-                kwargs = {
-                    'name': 'compose {} property range'.format(node.item.label),
-                    'scene': scene,
-                    'source': node,
-                    'nodes': nodes,
-                    'edges': edges,
-                }
-                scene.undostack.push(CommandComposeAxiom(**kwargs))
+                scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
 
     @pyqtSlot()
     def composeReflexiveRole(self):
@@ -1022,26 +976,15 @@ class MainWindow(QMainWindow):
                 if action:
                     if action.isChecked():
                         if not node.reflexive:
+                            name = 'compose reflexive role'
                             items = scene.reflexiveRoleAxiomComposition(node)
                             nodes = {x for x in items if x.node}
                             edges = {x for x in items if x.edge}
-                            kwargs = {
-                                'name': 'compose reflexive role',
-                                'scene': scene,
-                                'source': node,
-                                'nodes': nodes,
-                                'edges': edges,
-                            }
-                            scene.undostack.push(CommandComposeAxiom(**kwargs))
+                            scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
                     else:
                         if node.reflexive:
-                            kwargs = {
-                                'name': 'decompose reflexive role',
-                                'scene': scene,
-                                'source': node,
-                                'items': node.reflexivityPath,
-                            }
-                            scene.undostack.push(CommandDecomposeAxiom(**kwargs))
+                            name = 'decompose reflexive node'
+                            scene.undostack.push(CommandDecomposeAxiom(name, scene, node, node.reflexivityPath))
 
     @pyqtSlot()
     def composeSymmetricRole(self):
@@ -1057,26 +1000,15 @@ class MainWindow(QMainWindow):
                 if action:
                     if action.isChecked():
                         if not node.symmetric:
+                            name = 'compose symmetric role'
                             items = scene.symmetricRoleAxiomComposition(node)
                             nodes = {x for x in items if x.node}
                             edges = {x for x in items if x.edge}
-                            kwargs = {
-                                'name': 'compose symmetric role',
-                                'scene': scene,
-                                'source': node,
-                                'nodes': nodes,
-                                'edges': edges,
-                            }
-                            scene.undostack.push(CommandComposeAxiom(**kwargs))
+                            scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
                     else:
                         if node.symmetric:
-                            kwargs = {
-                                'name': 'decompose symmetric role',
-                                'scene': scene,
-                                'source': node,
-                                'items': node.symmetryPath,
-                            }
-                            scene.undostack.push(CommandDecomposeAxiom(**kwargs))
+                            name = 'decompose symmetric role'
+                            scene.undostack.push(CommandDecomposeAxiom(name, scene, node, node.symmetryPath))
 
     @pyqtSlot()
     def composeTransitiveRole(self):
@@ -1092,26 +1024,15 @@ class MainWindow(QMainWindow):
                 if action:
                     if action.isChecked():
                         if not node.transitive:
+                            name = 'compose transitive role'
                             items = scene.transitiveRoleAxiomComposition(node)
                             nodes = {x for x in items if x.node}
                             edges = {x for x in items if x.edge}
-                            kwargs = {
-                                'name': 'compose transitive role',
-                                'scene': scene,
-                                'source': node,
-                                'nodes': nodes,
-                                'edges': edges,
-                            }
-                            scene.undostack.push(CommandComposeAxiom(**kwargs))
+                            scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
                     else:
                         if node.transitive:
-                            kwargs = {
-                                'name': 'decompose transitive role',
-                                'scene': scene,
-                                'source': node,
-                                'items': node.transitivityPath,
-                            }
-                            scene.undostack.push(CommandDecomposeAxiom(**kwargs))
+                            name = 'decompose transitive role'
+                            scene.undostack.push(CommandDecomposeAxiom(name, scene, node, node.transitivityPath))
 
     @pyqtSlot('QGraphicsScene')
     def documentLoadedOrSaved(self, scene):
@@ -1149,12 +1070,12 @@ class MainWindow(QMainWindow):
         if dialog.exec_():
 
             filepath = dialog.selectedFiles()[0]
-            loader = GraphmlLoader(mainwindow=self, filepath=filepath)
+            worker = GraphmlLoader(self, filepath)
 
             with BusyProgressDialog('Importing {}'.format(os.path.basename(filepath)), self):
 
                 try:
-                    loader.run()
+                    worker.run()
                 except Exception as e:
                     msgbox = QMessageBox(self)
                     msgbox.setIconPixmap(QPixmap(':/icons/error'))
@@ -1165,7 +1086,7 @@ class MainWindow(QMainWindow):
                     msgbox.setDetailedText(''.join(format_exception(type(e), e, e.__traceback__)))
                     msgbox.exec_()
                 else:
-                    scene = loader.scene
+                    scene = worker.scene
                     scene.setMode(DiagramMode.Idle)
                     mainview = self.createView(scene)
                     subwindow = self.createSubWindow(mainview)
@@ -1173,19 +1094,19 @@ class MainWindow(QMainWindow):
                     self.mdi.setActiveSubWindow(subwindow)
                     self.mdi.update()
 
-            if loader.errors:
+            if worker.errors:
 
                 # If some errors have been generated during the import process, display
                 # them into a popup so the user can check whether the problem is in the
                 # .graphml document or Eddy is not handling the import properly.
                 m1 = 'Document {} has been imported! However some errors ({}) have been generated ' \
                      'during the import process. You can inspect detailed information by expanding the ' \
-                     'box below.'.format(os.path.basename(filepath), len(loader.errors))
+                     'box below.'.format(os.path.basename(filepath), len(worker.errors))
 
                 m2 = 'If needed, <a href="{}">submit a bug report</a> with detailed information.'.format(BUG_TRACKER)
 
                 parts = []
-                for k, v in enumerate(loader.errors, start=1):
+                for k, v in enumerate(worker.errors, start=1):
                     parts.append('{}) {}'.format(k, ''.join(format_exception(type(v), v, v.__traceback__))))
 
                 m3 = '\n'.join(parts)
@@ -1228,7 +1149,7 @@ class MainWindow(QMainWindow):
             selection = scene.selectedItems()
             if selection:
                 selection.extend([x for item in selection if item.node for x in item.edges if x not in selection])
-                scene.undostack.push(CommandItemsMultiRemove(scene=scene, collection=selection))
+                scene.undostack.push(CommandItemsMultiRemove(scene, selection))
 
     @pyqtSlot()
     def itemCopy(self):
@@ -1265,7 +1186,7 @@ class MainWindow(QMainWindow):
             selection = scene.selectedItems()
             if selection:
                 selection.extend([x for item in selection if item.node for x in item.edges if x not in selection])
-                scene.undostack.push(CommandItemsMultiRemove(scene=scene, collection=selection))
+                scene.undostack.push(CommandItemsMultiRemove(scene, selection))
 
     @pyqtSlot()
     def newDocument(self):
@@ -1383,7 +1304,8 @@ class MainWindow(QMainWindow):
             if node:
                 action = self.sender()
                 color = action.data()
-                command = CommandNodeSetBrush(scene, scene.nodesByLabel[node.text()], QBrush(QColor(color.value)))
+                nodes = scene.nodesByLabel[node.text()]
+                command = CommandNodeSetBrush(scene, nodes, QBrush(QColor(color.value)))
                 scene.undostack.push(command)
 
     @pyqtSlot()
@@ -1398,23 +1320,16 @@ class MainWindow(QMainWindow):
             args = Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
             if node:
-
                 form = RenameForm(node, self)
                 if form.exec_() == RenameForm.Accepted:
                     if node.text() != form.renameField.value():
-
                         commands = []
                         for n in scene.index.nodesForLabel(node.item, node.text()):
-                            command = CommandNodeLabelChange(scene, n, n.text(), form.renameField.value())
-                            commands.append(command)
-
-                        kwargs = {
-                            'name': 'rename {} node{}'.format(len(commands), 's' if len(commands) > 1 else ''),
-                            'scene': scene,
-                            'commands': commands,
-                        }
-
-                        scene.undostack.push(CommandRefactor(**kwargs))
+                            undo = n.text()
+                            redo = form.renameField.value()
+                            commands.append(CommandNodeLabelChange(scene, n, undo, redo))
+                        name = 'rename {} node{}'.format(len(commands), 's' if len(commands) > 1 else '')
+                        scene.undostack.push(CommandRefactor(name, scene, commands))
 
     @pyqtSlot()
     def removeBreakpoint(self):
@@ -1426,7 +1341,7 @@ class MainWindow(QMainWindow):
             action = self.sender()
             edge, breakpoint = action.data()
             if 0 <= breakpoint < len(edge.breakpoints):
-                scene.undostack.push(CommandEdgeBreakpointDel(scene=scene, edge=edge, index=breakpoint))
+                scene.undostack.push(CommandEdgeBreakpointDel(scene, edge, breakpoint))
 
     @pyqtSlot()
     def resetTextPosition(self):
@@ -1438,9 +1353,10 @@ class MainWindow(QMainWindow):
             scene.setMode(DiagramMode.Idle)
             node = next(filter(lambda x: hasattr(x, 'label'), scene.selectedNodes()), None)
             if node and node.label.movable:
-                command = CommandNodeLabelMove(scene, node, node.label.pos(), node.label.defaultPos())
-                scene.undostack.push(command)
-                node.label.updatePos()
+                undo = node.label.pos()
+                redo = node.label.defaultPos()
+                scene.undostack.push(CommandNodeLabelMove(scene, node, undo, redo))
+                node.updateTextPos()
 
     @pyqtSlot()
     def saveDocument(self):
@@ -1524,7 +1440,7 @@ class MainWindow(QMainWindow):
         self.actionSendToBack.setEnabled(node)
         self.actionSnapToGrid.setEnabled(window)
         self.actionSyntaxCheck.setEnabled(window)
-        self.changeNodeBrushButton.setEnabled(predicate)
+        self.buttonChangeNodeBrush.setEnabled(predicate)
         self.zoomctrl.setEnabled(window)
 
     @pyqtSlot()
@@ -1532,6 +1448,7 @@ class MainWindow(QMainWindow):
         """
         Select all the items in the scene.
         """
+        # TODO SPEED UP
         scene = self.mdi.activeScene
         if scene:
             scene.clearSelection()
@@ -1555,7 +1472,7 @@ class MainWindow(QMainWindow):
                     if item.zValue() <= zValue:
                         zValue = item.zValue() - 0.2
                 if zValue != selected.zValue():
-                    scene.undostack.push(CommandNodeSetZValue(scene=scene, node=selected, zValue=zValue))
+                    scene.undostack.push(CommandNodeSetZValue(scene, selected, zValue))
 
     @pyqtSlot()
     def setNodeBrush(self):
@@ -1570,8 +1487,7 @@ class MainWindow(QMainWindow):
             brush = QBrush(QColor(color.value))
             selected = [x for x in scene.selectedNodes() if x.predicate and x.brush != brush]
             if selected:
-                command = CommandNodeSetBrush(scene, selected, brush)
-                scene.undostack.push(command)
+                scene.undostack.push(CommandNodeSetBrush(scene, selected, brush))
 
     @pyqtSlot()
     def setDomainRangeRestriction(self):
@@ -1584,24 +1500,20 @@ class MainWindow(QMainWindow):
             nodes = scene.selectedNodes()
             node = next(filter(lambda x: x.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode), nodes), None)
             if node:
-
+                data = None
                 action = self.sender()
                 restriction = action.data()
-
-                data = None
                 if restriction is not Restriction.Cardinality:
                     data = restriction.label
                 else:
                     form = CardinalityRestrictionForm()
                     if form.exec_() == CardinalityRestrictionForm.Accepted:
                         data = '({},{})'.format(form.minCardinalityValue or '-', form.maxCardinalityValue or '-')
-
                 if data:
-                    item = 'range' if node.isItem(Item.RangeRestrictionNode) else 'domain'
-                    name = 'change {} restriction to {}'.format(item, data)
                     if node.text() != data:
-                        command = CommandNodeLabelChange(scene, node, node.text(), data, name)
-                        scene.undostack.push(command)
+                        item = 'range' if node.isItem(Item.RangeRestrictionNode) else 'domain'
+                        name = 'change {} restriction to {}'.format(item, data)
+                        scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
 
     @pyqtSlot()
     def setIndividualNodeAs(self):
@@ -1618,21 +1530,18 @@ class MainWindow(QMainWindow):
                 action = self.sender()
                 if action.data() is Identity.Individual:
                     if node.identity is Identity.Literal:
-                        # Switch Literal -> Individual => set default template
                         name = 'change literal to individual'
-                        command = CommandNodeLabelChange(scene, node, node.text(), node.label.template, name)
-                        scene.undostack.push(command)
+                        data = node.label.template
+                        scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
                 elif action.data() is Identity.Literal:
-                    # We need to bring up the form here
                     form = LiteralForm(node, self)
                     if form.exec_() == LiteralForm.Accepted:
                         datatype = form.datatypeField.currentData()
-                        data = form.valueField.value().strip()
-                        data = '"{}"^^{}'.format(rCut(lCut(data, '"'), '"'), datatype.value)
+                        value = form.valueField.value()
+                        data = node.composeLiteral(value, datatype)
                         if node.text() != data:
                             name = 'change {} node to {}'.format(node.identity.label.lower(), data)
-                            command = CommandNodeLabelChange(scene, node, node.text(), data, name)
-                            scene.undostack.push(command)
+                            scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
 
     @pyqtSlot()
     def setSpecialNode(self):
@@ -1650,8 +1559,7 @@ class MainWindow(QMainWindow):
                 data = special.value if special else node.label.template
                 if node.text() != data:
                     name = 'change {} label to "{}"'.format(node.name, data)
-                    command = CommandNodeLabelChange(scene, node, node.text(), data, name)
-                    scene.undostack.push(command)
+                    scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
 
     @pyqtSlot()
     def setValueDomainDatatype(self):
@@ -1669,8 +1577,7 @@ class MainWindow(QMainWindow):
                 data = datatype.value
                 if node.text() != data:
                     name = 'change {} datatype to {}'.format(node.name, data)
-                    command = CommandNodeLabelChange(scene, node, node.text(), data, name)
-                    scene.undostack.push(command)
+                    scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
 
     @pyqtSlot()
     def setValueRestriction(self):
@@ -1684,10 +1591,8 @@ class MainWindow(QMainWindow):
             selected = scene.selectedNodes()
             node = next(filter(lambda x: x.isItem(Item.ValueRestrictionNode), selected), None)
             if node:
-
                 form = ValueRestrictionForm(node, self)
                 form.datatypeField.setEnabled(not node.constrained)
-
                 if form.exec() == ValueRestrictionForm.Accepted:
                     datatype = form.datatypeField.currentData()
                     facet = form.facetField.currentData()
@@ -1695,8 +1600,7 @@ class MainWindow(QMainWindow):
                     data = node.compose(facet, value, datatype)
                     if node.text() != data:
                         name = 'change value restriction to {}'.format(data)
-                        command = CommandNodeLabelChange(scene, node, node.text(), data, name)
-                        scene.undostack.push(command)
+                        scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
 
     @pyqtSlot('QMdiSubWindow')
     def subWindowActivated(self, subwindow):
@@ -1757,7 +1661,7 @@ class MainWindow(QMainWindow):
             scene.setMode(DiagramMode.Idle)
             selected = [edge for edge in scene.selectedEdges() if scene.validator.valid(edge.target, edge, edge.source)]
             if selected:
-                scene.undostack.push(CommandEdgeSwap(scene=scene, edges=selected))
+                scene.undostack.push(CommandEdgeSwap(scene, selected))
 
     @pyqtSlot()
     def switchOperatorNode(self):
@@ -1775,7 +1679,7 @@ class MainWindow(QMainWindow):
                 if not isinstance(node, clazz):
                     xnode = clazz(scene=scene)
                     xnode.setPos(node.pos())
-                    scene.undostack.push(CommandNodeOperatorSwitchTo(scene=scene, node1=node, node2=xnode))
+                    scene.undostack.push(CommandNodeOperatorSwitchTo(scene, node, xnode))
 
     @pyqtSlot()
     def syntaxCheck(self):
@@ -1785,36 +1689,33 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
 
-            busy = BusyProgressDialog('Syntax check...', self)
-            busy.show()
-
             placeholder = None
             message = 'No syntax error found!'
             pixmap = QPixmap(':/icons/info')
 
-            for edge in scene.edges():
-                res = scene.validator.result(edge.source, edge, edge.target)
-                if not res.valid:
-                    E = res.edge
-                    S = res.source
-                    T = res.target
-                    M = uncapitalize(res.message)
-                    placeholder = res.edge
-                    sname = '{} "{}"'.format(S.name, S.id if not S.predicate else '{}:{}'.format(S.text(), S.id))
-                    tname = '{} "{}"'.format(T.name, T.id if not T.predicate else '{}:{}'.format(T.text(), T.id))
-                    message = 'Syntax error detected on {} from {} to {}: <i>{}</i>.'.format(E.name, sname, tname, M)
-                    pixmap = QPixmap(':/icons/warning')
-                    break
-            else:
-                for n in scene.nodes():
-                    if n.identity is Identity.Unknown:
-                        placeholder = n
-                        name = '{} "{}"'.format(n.name, n.id if not n.predicate else '{}:{}'.format(n.text(), n.id))
-                        message = 'Unkown node identity detected on {}.'.format(name)
+            with BusyProgressDialog('Syntax check...', self):
+
+                for edge in scene.edges():
+                    res = scene.validator.result(edge.source, edge, edge.target)
+                    if not res.valid:
+                        e = res.edge
+                        s = res.source
+                        t = res.target
+                        m = uncapitalize(res.message)
+                        placeholder = res.edge
+                        sname = '{} "{}"'.format(s.name, s.id if not s.predicate else '{}:{}'.format(s.text(), s.id))
+                        tname = '{} "{}"'.format(t.name, t.id if not t.predicate else '{}:{}'.format(t.text(), t.id))
+                        message = 'Syntax error detected on {} from {} to {}: <i>{}</i>.'.format(e.name, sname, tname, m)
                         pixmap = QPixmap(':/icons/warning')
                         break
-
-            busy.close()
+                else:
+                    for n in scene.nodes():
+                        if n.identity is Identity.Unknown:
+                            placeholder = n
+                            name = '{} "{}"'.format(n.name, n.id if not n.predicate else '{}:{}'.format(n.text(), n.id))
+                            message = 'Unkown node identity detected on {}.'.format(name)
+                            pixmap = QPixmap(':/icons/warning')
+                            break
 
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(pixmap)
@@ -1841,7 +1742,7 @@ class MainWindow(QMainWindow):
             if selected:
                 comp = sum(edge.complete for edge in selected) <= len(selected) / 2
                 data = {edge: {'from': edge.complete, 'to': comp} for edge in selected}
-                scene.undostack.push(CommandEdgeInclusionToggleComplete(scene=scene, data=data))
+                scene.undostack.push(CommandEdgeInclusionToggleComplete(scene, data))
 
     @pyqtSlot()
     def toggleEdgeFunctional(self):
@@ -1855,7 +1756,7 @@ class MainWindow(QMainWindow):
             if selected:
                 func = sum(edge.functional for edge in selected) <= len(selected) / 2
                 data = {edge: {'from': edge.functional, 'to': func} for edge in selected}
-                scene.undostack.push(CommandEdgeInputToggleFunctional(scene=scene, data=data))
+                scene.undostack.push(CommandEdgeInputToggleFunctional(scene, data))
 
     @pyqtSlot()
     def toggleSnapToGrid(self):
@@ -2042,7 +1943,7 @@ class MainWindow(QMainWindow):
         :type filepath: str
         :rtype: DiagramScene
         """
-        worker = GrapholLoader(mainwindow=self, filepath=filepath)
+        worker = GrapholLoader(self, filepath)
 
         try:
             worker.run()
@@ -2108,7 +2009,7 @@ class MainWindow(QMainWindow):
         :type filepath: str
         :rtype: bool
         """
-        exportForm = OWLTranslationForm(scene=scene, filepath=filepath, parent=self)
+        exportForm = OWLTranslationForm(scene, filepath, self)
         if exportForm.exec_() == OWLTranslationForm.Accepted:
             return True
         return False
@@ -2220,7 +2121,7 @@ class MainWindow(QMainWindow):
         :type filepath: str
         :rtype: bool
         """
-        worker = GrapholExporter(scene=scene)
+        worker = GrapholExporter(scene)
 
         try:
             worker.run()
