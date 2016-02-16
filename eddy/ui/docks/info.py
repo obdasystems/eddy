@@ -234,7 +234,7 @@ class Key(QLabel):
         Initialize the key.
         """
         super().__init__(*args)
-        self.setFixedSize(80, 20)
+        self.setFixedSize(82, 20)
 
 
 class Button(QPushButton):
