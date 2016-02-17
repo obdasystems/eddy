@@ -63,169 +63,169 @@ class GraphmlLoader(AbstractLoader):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def buildAttributeNode(self, node):
+    def buildAttributeNode(self, element):
         """
         Build an Attribute node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: AttributeNode
         """
-        return self.buildNodeFromGenericNode(Item.AttributeNode, node)
+        return self.buildNodeFromGenericNode(Item.AttributeNode, element)
 
-    def buildComplementNode(self, node):
+    def buildComplementNode(self, element):
         """
         Build a Complement node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: ComplementNode
         """
-        return self.buildNodeFromShapeNode(Item.ComplementNode, node)
+        return self.buildNodeFromShapeNode(Item.ComplementNode, element)
 
-    def buildConceptNode(self, node):
+    def buildConceptNode(self, element):
         """
         Build a Concept node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: ConceptNode
         """
-        return self.buildNodeFromGenericNode(Item.ConceptNode, node)
+        return self.buildNodeFromGenericNode(Item.ConceptNode, element)
 
-    def buildDatatypeRestrictionNode(self, node):
+    def buildDatatypeRestrictionNode(self, element):
         """
         Build a DatatypeRestriction node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: DatatypeRestrictionNode
         """
-        return self.buildNodeFromShapeNode(Item.DatatypeRestrictionNode, node)
+        return self.buildNodeFromShapeNode(Item.DatatypeRestrictionNode, element)
 
-    def buildDisjointUnionNode(self, node):
+    def buildDisjointUnionNode(self, element):
         """
         Build a DisjointUnion node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: DisjointUnionNode
         """
-        return self.buildNodeFromShapeNode(Item.DisjointUnionNode, node)
+        return self.buildNodeFromShapeNode(Item.DisjointUnionNode, element)
 
-    def buildDomainRestrictionNode(self, node):
+    def buildDomainRestrictionNode(self, element):
         """
         Build a DomainRestriction node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: DomainRestrictionNode
         """
-        item = self.buildNodeFromShapeNode(Item.DomainRestrictionNode, node)
-        if item:
-            data = node.firstChildElement('data')
+        node = self.buildNodeFromShapeNode(Item.DomainRestrictionNode, element)
+        if node:
+            data = element.firstChildElement('data')
             while not data.isNull():
                 if data.attribute('key', '') == self.keys['node_key']:
                     shapeNode = data.firstChildElement('y:ShapeNode')
                     nodeLabel = shapeNode.firstChildElement('y:NodeLabel')
-                    item.setText(nodeLabel.text())
+                    node.setText(nodeLabel.text())
                 data = data.nextSiblingElement('data')
-        return item
+        return node
 
-    def buildEnumerationNode(self, node):
+    def buildEnumerationNode(self, element):
         """
         Build an Enumeration node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: EnumerationNode
         """
-        return self.buildNodeFromShapeNode(Item.EnumerationNode, node)
+        return self.buildNodeFromShapeNode(Item.EnumerationNode, element)
 
-    def buildIndividualNode(self, node):
+    def buildIndividualNode(self, element):
         """
         Build an Individual node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: IndividualNode
         """
-        item = self.buildNodeFromShapeNode(Item.IndividualNode, node)
-        if item:
-            data = node.firstChildElement('data')
+        node = self.buildNodeFromShapeNode(Item.IndividualNode, element)
+        if node:
+            data = element.firstChildElement('data')
             while not data.isNull():
                 if data.attribute('key', '') == self.keys['node_key']:
                     shapeNode = data.firstChildElement('y:ShapeNode')
                     nodeLabel = shapeNode.firstChildElement('y:NodeLabel')
-                    item.setText(nodeLabel.text())
+                    node.setText(nodeLabel.text())
                 data = data.nextSiblingElement('data')
-        return item
+        return node
 
-    def buildIntersectionNode(self, node):
+    def buildIntersectionNode(self, element):
         """
         Build an Intersection node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: IntersectionNode
         """
-        return self.buildNodeFromShapeNode(Item.IntersectionNode, node)
+        return self.buildNodeFromShapeNode(Item.IntersectionNode, element)
 
-    def buildRangeRestrictionNode(self, node):
+    def buildRangeRestrictionNode(self, element):
         """
         Build a RangeRestriction node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: RangeRestrictionNode
         """
-        item = self.buildNodeFromShapeNode(Item.RangeRestrictionNode, node)
-        if item:
-            data = node.firstChildElement('data')
+        node = self.buildNodeFromShapeNode(Item.RangeRestrictionNode, element)
+        if node:
+            data = element.firstChildElement('data')
             while not data.isNull():
                 if data.attribute('key', '') == self.keys['node_key']:
                     shapeNode = data.firstChildElement('y:ShapeNode')
                     nodeLabel = shapeNode.firstChildElement('y:NodeLabel')
-                    item.setText(nodeLabel.text())
+                    node.setText(nodeLabel.text())
                 data = data.nextSiblingElement('data')
-        return item
+        return node
 
-    def buildRoleNode(self, node):
+    def buildRoleNode(self, element):
         """
         Build a Role node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: RoleNode
         """
-        return self.buildNodeFromGenericNode(Item.RoleNode, node)
+        return self.buildNodeFromGenericNode(Item.RoleNode, element)
 
-    def buildRoleChainNode(self, node):
+    def buildRoleChainNode(self, element):
         """
         Build a RoleChain node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: RoleChainNode
         """
-        return self.buildNodeFromShapeNode(Item.RoleChainNode, node)
+        return self.buildNodeFromShapeNode(Item.RoleChainNode, element)
 
-    def buildRoleInverseNode(self, node):
+    def buildRoleInverseNode(self, element):
         """
         Build a RoleInverse node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: RoleInverseNode
         """
-        return self.buildNodeFromShapeNode(Item.RoleInverseNode, node)
+        return self.buildNodeFromShapeNode(Item.RoleInverseNode, element)
 
-    def buildValueDomainNode(self, node):
+    def buildValueDomainNode(self, element):
         """
         Build a Value-Domain node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: ValueDomainNode
         """
-        item = self.buildNodeFromShapeNode(Item.ValueDomainNode, node)
-        if item:
-            data = node.firstChildElement('data')
+        node = self.buildNodeFromShapeNode(Item.ValueDomainNode, element)
+        if node:
+            data = element.firstChildElement('data')
             while not data.isNull():
                 if data.attribute('key', '') == self.keys['node_key']:
                     shapeNode = data.firstChildElement('y:ShapeNode')
                     nodeLabel = shapeNode.firstChildElement('y:NodeLabel')
-                    item.setText(nodeLabel.text())
+                    node.setText(nodeLabel.text())
                 data = data.nextSiblingElement('data')
-        return item
+        return node
 
-    def buildUnionNode(self, node):
+    def buildUnionNode(self, element):
         """
         Build a Union node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: UnionNode
         """
-        return self.buildNodeFromShapeNode(Item.UnionNode, node)
+        return self.buildNodeFromShapeNode(Item.UnionNode, element)
 
-    def buildValueRestrictionNode(self, node):
+    def buildValueRestrictionNode(self, element):
         """
         Build a ValueRestriction node using the given QDomElement.
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: ValueRestrictionNode
         """
-        return self.buildNodeFromUMLNoteNode(Item.ValueRestrictionNode, node)
+        return self.buildNodeFromUMLNoteNode(Item.ValueRestrictionNode, element)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -233,43 +233,54 @@ class GraphmlLoader(AbstractLoader):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def buildInclusionEdge(self, edge):
+    def buildInclusionEdge(self, element):
         """
         Build an Inclusion edge using the given QDomElement.
-        :type edge: QDomElement
+        :type element: QDomElement
         :rtype: InclusionEdge
         """
-        item = self.buildEdgeFromGenericEdge(Item.InclusionEdge, edge)
-        if item:
-            data = edge.firstChildElement('data')
+        edge = self.buildEdgeFromGenericEdge(Item.InclusionEdge, element)
+        if edge:
+            data = element.firstChildElement('data')
             while not data.isNull():
                 if data.attribute('key', '') == self.keys['edge_key']:
                     polyLineEdge = data.firstChildElement('y:PolyLineEdge')
                     arrows = polyLineEdge.firstChildElement('y:Arrows')
                     if arrows.attribute('source', '') == 'standard' and arrows.attribute('target', '') == 'standard':
-                        item.complete = True
-                        item.updateEdge()
+                        edge.complete = True
+                        edge.updateEdge()
                 data = data.nextSiblingElement('data')
-        return item
+        return edge
 
-    def buildInputEdge(self, edge):
+    def buildInputEdge(self, element):
         """
         Build an Input edge using the given QDomElement.
-        :type edge: QDomElement
+        :type element: QDomElement
         :rtype: InputEdge
         """
-        item = self.buildEdgeFromGenericEdge(Item.InputEdge, edge)
-        if item:
-            data = edge.firstChildElement('data')
+        edge = self.buildEdgeFromGenericEdge(Item.InputEdge, element)
+        if edge:
+            data = element.firstChildElement('data')
             while not data.isNull():
                 if data.attribute('key', '') == self.keys['edge_key']:
                     polyLineEdge = data.firstChildElement('y:PolyLineEdge')
                     arrows = polyLineEdge.firstChildElement('y:Arrows')
                     if arrows.attribute('source', '') == 't_shape':
-                        # FIXME: item.functional = True
-                        item.updateEdge()
+                        source = edge.source
+                        target = edge.target
+                        predicate = source.text()
+                        meta = self.scene.meta.metaFor(source.item, predicate)
+                        if source.item is Item.RoleNode:
+                            if target.item is Item.DomainRestrictionNode:
+                                meta.functionality = True
+                            elif target.item is Item.RangeRestrictionNode:
+                                meta.inverseFunctionality = True
+                        elif source.item is Item.AttributeNode:
+                             if target.item is Item.DomainRestrictionNode:
+                                meta.functionality = True
+                        self.scene.meta.add(meta.item, meta.predicate, meta)
                 data = data.nextSiblingElement('data')
-        return item
+        return edge
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -277,14 +288,14 @@ class GraphmlLoader(AbstractLoader):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def buildEdgeFromGenericEdge(self, item, edge):
+    def buildEdgeFromGenericEdge(self, item, element):
         """
         Build an edge using the given item type and QDomElement.
         :type item: Item
-        :type edge: QDomElement
+        :type element: QDomElement
         :rtype: AbstractEdge
         """
-        data = edge.firstChildElement('data')
+        data = element.firstChildElement('data')
         while not data.isNull():
 
             if data.attribute('key', '') == self.keys['edge_key']:
@@ -300,49 +311,49 @@ class GraphmlLoader(AbstractLoader):
                     points.append(pos)
 
                 kwargs = {
-                    'id': edge.attribute('id'),
-                    'source': self.scene.node(edge.attribute('source')),
-                    'target': self.scene.node(edge.attribute('target')),
+                    'id': element.attribute('id'),
+                    'source': self.scene.node(element.attribute('source')),
+                    'target': self.scene.node(element.attribute('target')),
                     'breakpoints': points,
                 }
 
-                item = self.factory.create(item=item, scene=self.scene, **kwargs)
+                edge = self.factory.create(item=item, scene=self.scene, **kwargs)
                 # yEd, differently from the node pos whose origin matches the TOP-LEFT corner,
                 # consider the center of the shape as original anchor point (0,0). So if the
                 # anchor point hs a negative X it's moved a bit on the left with respect to
                 # the center of the shape (the same applies for the Y axis)
                 sourceP = QPointF(float(path.attribute('sx')), float(path.attribute('sy')))
-                sourceP = item.source.pos() + sourceP
+                sourceP = edge.source.pos() + sourceP
                 sourceP = QPointF(snapF(sourceP.x(), DiagramScene.GridSize), snapF(sourceP.y(), DiagramScene.GridSize))
 
                 targetP = QPointF(float(path.attribute('tx')), float(path.attribute('ty')))
-                targetP = item.target.pos() + targetP
+                targetP = edge.target.pos() + targetP
                 targetP = QPointF(snapF(targetP.x(), DiagramScene.GridSize), snapF(targetP.y(), DiagramScene.GridSize))
 
-                painterPath = item.source.painterPath()
-                if painterPath.contains(item.source.mapFromScene(sourceP)):
-                    item.source.setAnchor(item, sourceP)
+                painterPath = edge.source.painterPath()
+                if painterPath.contains(edge.source.mapFromScene(sourceP)):
+                    edge.source.setAnchor(edge, sourceP)
 
-                painterPath = item.target.painterPath()
-                if painterPath.contains(item.target.mapFromScene(targetP)):
-                    item.target.setAnchor(item, targetP)
+                painterPath = edge.target.painterPath()
+                if painterPath.contains(edge.target.mapFromScene(targetP)):
+                    edge.target.setAnchor(edge, targetP)
 
-                item.source.addEdge(item)
-                item.target.addEdge(item)
-                return item
+                edge.source.addEdge(edge)
+                edge.target.addEdge(edge)
+                return edge
 
             data = data.nextSiblingElement('data')
 
         return None
 
-    def buildNodeFromGenericNode(self, item, node):
+    def buildNodeFromGenericNode(self, item, element):
         """
         Build a node using the given item type and QDomElement.
         :type item: Item
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: AbstractNode
         """
-        data = node.firstChildElement('data')
+        data = element.firstChildElement('data')
         while not data.isNull():
 
             if data.attribute('key', '') == self.keys['node_key']:
@@ -352,35 +363,35 @@ class GraphmlLoader(AbstractLoader):
                 nodeLabel = genericNode.firstChildElement('y:NodeLabel')
 
                 kwargs = {
-                    'id': node.attribute('id'),
+                    'id': element.attribute('id'),
                     'height': float(geometry.attribute('height')),
                     'width': float(geometry.attribute('width')),
                 }
 
-                item = self.factory.create(item=item, scene=self.scene, **kwargs)
+                node = self.factory.create(item=item, scene=self.scene, **kwargs)
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
                 # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
                 # Additionally we force-snap the position to the grid so that items say aligned.
                 pos = QPointF(float(geometry.attribute('x')), float(geometry.attribute('y')))
-                pos = pos + QPointF(item.width() / 2, item.height() / 2)
+                pos = pos + QPointF(node.width() / 2, node.height() / 2)
                 pos = QPointF(snapF(pos.x(), DiagramScene.GridSize), snapF(pos.y(), DiagramScene.GridSize))
-                item.setPos(pos)
-                item.setText(nodeLabel.text())
-                return item
+                node.setPos(pos)
+                node.setText(nodeLabel.text())
+                return node
 
             data = data.nextSiblingElement('data')
 
         return None
 
-    def buildNodeFromShapeNode(self, item, node):
+    def buildNodeFromShapeNode(self, item, element):
         """
         Build a node using the given item type and QDomElement.
         :type item: Item
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: AbstractNode
         """
-        data = node.firstChildElement('data')
+        data = element.firstChildElement('data')
         while not data.isNull():
 
             if data.attribute('key', '') == self.keys['node_key']:
@@ -389,34 +400,34 @@ class GraphmlLoader(AbstractLoader):
                 geometry = shapeNode.firstChildElement('y:Geometry')
 
                 kwargs = {
-                    'id': node.attribute('id'),
+                    'id': element.attribute('id'),
                     'height': float(geometry.attribute('height')),
                     'width': float(geometry.attribute('width')),
                 }
 
-                item = self.factory.create(item=item, scene=self.scene, **kwargs)
+                node = self.factory.create(item=item, scene=self.scene, **kwargs)
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
                 # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
                 # Additionally we force-snap the position to the grid so that items say aligned.
                 pos = QPointF(float(geometry.attribute('x')), float(geometry.attribute('y')))
-                pos = pos + QPointF(item.width() / 2, item.height() / 2)
+                pos = pos + QPointF(node.width() / 2, node.height() / 2)
                 pos = QPointF(snapF(pos.x(), DiagramScene.GridSize), snapF(pos.y(), DiagramScene.GridSize))
-                item.setPos(pos)
-                return item
+                node.setPos(pos)
+                return node
 
             data = data.nextSiblingElement('data')
 
         return None
 
-    def buildNodeFromUMLNoteNode(self, item, node):
+    def buildNodeFromUMLNoteNode(self, item, element):
         """
         Build a node using the given item type and QDomElement.
         :type item: Item
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: AbstractNode
         """
-        data = node.firstChildElement('data')
+        data = element.firstChildElement('data')
         while not data.isNull():
 
             if data.attribute('key', '') == self.keys['node_key']:
@@ -426,24 +437,22 @@ class GraphmlLoader(AbstractLoader):
                 nodeLabel = umlNoteNode.firstChildElement('y:NodeLabel')
 
                 kwargs = {
-                    'id': node.attribute('id'),
+                    'id': element.attribute('id'),
                     'height': float(geometry.attribute('height')),
                     'width': float(geometry.attribute('width')),
                 }
 
-                item = self.factory.create(item=item, scene=self.scene, **kwargs)
+                node = self.factory.create(item=item, scene=self.scene, **kwargs)
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
                 # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
                 # Additionally we force-snap the position to the grid so that items say aligned.
                 pos = QPointF(float(geometry.attribute('x')), float(geometry.attribute('y')))
-                pos = pos + QPointF(item.width() / 2, item.height() / 2)
+                pos = pos + QPointF(node.width() / 2, node.height() / 2)
                 pos = QPointF(snapF(pos.x(), DiagramScene.GridSize), snapF(pos.y(), DiagramScene.GridSize))
-
-                item.setPos(pos)
-                item.setText(nodeLabel.text())
-
-                return item
+                node.setPos(pos)
+                node.setText(nodeLabel.text())
+                return node
 
             data = data.nextSiblingElement('data')
 
@@ -646,25 +655,25 @@ class GraphmlLoader(AbstractLoader):
                 # noinspection PyArgumentList
                 QApplication.processEvents()
 
-                node = None
+                edge = None
                 item = self.itemFromGraphmlNode(element)
 
                 try:
 
                     if item is Item.InclusionEdge:
-                        node = self.buildInclusionEdge(element)
+                        edge = self.buildInclusionEdge(element)
                     elif item is Item.InputEdge:
-                        node = self.buildInputEdge(element)
+                        edge = self.buildInputEdge(element)
 
-                    if not node:
+                    if not edge:
                         raise ValueError('unknown edge with id {}'.format(element.attribute('id')))
 
                 except Exception as e:
                     self.errors.append(e)
                 else:
-                    self.scene.addItem(node)
-                    self.scene.guid.update(node.id)
-                    node.updateEdge()
+                    self.scene.addItem(edge)
+                    self.scene.guid.update(edge.id)
+                    edge.updateEdge()
                 finally:
                     element = element.nextSiblingElement('edge')
 
