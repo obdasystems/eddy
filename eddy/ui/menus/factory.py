@@ -209,18 +209,16 @@ class MenuFactory(QObject):
         """
         menu = self.buildGenericNodeMenu(mainwindow, scene, node)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeNodeBrush)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuAttributeNodeCompose)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeChangeBrush)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeCompose)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeSpecial)
 
-        # Switch the check on the currently active special.
         for action in mainwindow.actionsNodeSetSpecial:
             action.setChecked(node.special is action.data())
 
-        # Disable refactor name if special type is set.
         mainwindow.actionRefactorName.setEnabled(node.special is None)
+        mainwindow.actionComposeInverseFunctional.setEnabled(False)
 
-        # Append label specific actions.
         collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
         if collection:
             menu.insertSeparator(mainwindow.actionOpenNodeProperties)
@@ -263,7 +261,7 @@ class MenuFactory(QObject):
         """
         menu = self.buildGenericNodeMenu(mainwindow, scene, node)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeNodeBrush)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeChangeBrush)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeSpecial)
 
         # Switch the check on the currently active special.
@@ -376,7 +374,7 @@ class MenuFactory(QObject):
         """
         menu = self.buildGenericNodeMenu(mainwindow, scene, node)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeNodeBrush)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeChangeBrush)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetIndividualNodeAs)
 
         ##################################
@@ -512,25 +510,16 @@ class MenuFactory(QObject):
         """
         menu = self.buildGenericNodeMenu(mainwindow, scene, node)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeNodeBrush)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuRoleNodeCompose)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeChangeBrush)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeCompose)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeSpecial)
 
-        # Check currently composed axioms
-        mainwindow.actionComposeAsymmetricRole.setChecked(node.asymmetric)
-        mainwindow.actionComposeIrreflexiveRole.setChecked(node.irreflexive)
-        mainwindow.actionComposeReflexiveRole.setChecked(node.reflexive)
-        mainwindow.actionComposeSymmetricRole.setChecked(node.symmetric)
-        mainwindow.actionComposeTransitiveRole.setChecked(node.transitive)
-
-        # Switch the check on the currently active special
         for action in mainwindow.actionsNodeSetSpecial:
             action.setChecked(node.special is action.data())
 
-        # Disable refactor name if special type is set
         mainwindow.actionRefactorName.setEnabled(node.special is None)
+        mainwindow.actionComposeInverseFunctional.setEnabled(True)
 
-        # Append label specific actions.
         collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
         if collection:
             menu.insertSeparator(mainwindow.actionOpenNodeProperties)
@@ -597,7 +586,7 @@ class MenuFactory(QObject):
         :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(mainwindow, scene, node)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeNodeBrush)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeChangeBrush)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeValueDomainDatatype)
         menu.insertSeparator(mainwindow.actionOpenNodeProperties)
 
@@ -616,7 +605,7 @@ class MenuFactory(QObject):
         :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(mainwindow, scene, node)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeNodeBrush)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeChangeBrush)
         menu.insertAction(mainwindow.actionOpenNodeProperties, mainwindow.actionChangeValueRestriction)
 
         # Append label specific actions.

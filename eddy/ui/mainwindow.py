@@ -391,27 +391,6 @@ class MainWindow(QMainWindow):
             connect(action.triggered, self.refactorBrush)
             self.actionsRefactorBrush.append(action)
 
-        ## ROLE NODE
-        self.actionComposeAsymmetricRole = QAction('Asymmetric Role', self)
-        self.actionComposeAsymmetricRole.setCheckable(True)
-        connect(self.actionComposeAsymmetricRole.triggered, self.composeAsymmetricRole)
-
-        self.actionComposeIrreflexiveRole = QAction('Irreflexive Role', self)
-        self.actionComposeIrreflexiveRole.setCheckable(True)
-        connect(self.actionComposeIrreflexiveRole.triggered, self.composeIrreflexiveRole)
-
-        self.actionComposeReflexiveRole = QAction('Reflexive Role', self)
-        self.actionComposeReflexiveRole.setCheckable(True)
-        connect(self.actionComposeReflexiveRole.triggered, self.composeReflexiveRole)
-
-        self.actionComposeSymmetricRole = QAction('Symmetric Role', self)
-        self.actionComposeSymmetricRole.setCheckable(True)
-        connect(self.actionComposeSymmetricRole.triggered, self.composeSymmetricRole)
-
-        self.actionComposeTransitiveRole = QAction('Transitive Role', self)
-        self.actionComposeTransitiveRole.setCheckable(True)
-        connect(self.actionComposeTransitiveRole.triggered, self.composeTransitiveRole)
-
         ## ROLE / ATTRIBUTE NODES
         self.actionComposeFunctional = QAction('Functional', self)
         self.actionComposeInverseFunctional = QAction('Inverse Functional', self)
@@ -614,10 +593,10 @@ class MainWindow(QMainWindow):
         self.menuHelp.addAction(self.actionGrapholWeb)
 
         ## NODE GENERIC MENU
-        self.menuChangeNodeBrush = QMenu('Select color')
-        self.menuChangeNodeBrush.setIcon(self.iconColorFill)
+        self.menuNodeChangeBrush = QMenu('Select color')
+        self.menuNodeChangeBrush.setIcon(self.iconColorFill)
         for action in self.actionsChangeNodeBrush:
-            self.menuChangeNodeBrush.addAction(action)
+            self.menuNodeChangeBrush.addAction(action)
 
         self.menuNodeSpecial = QMenu('Special type')
         self.menuNodeSpecial.setIcon(self.iconStarFilled)
@@ -634,30 +613,11 @@ class MainWindow(QMainWindow):
         self.menuNodeRefactor.addAction(self.actionRefactorName)
         self.menuNodeRefactor.addMenu(self.menuRefactorBrush)
 
-        ## ROLE NODE
-        self.menuRoleNodeCompose = QMenu('Compose')
-        self.menuRoleNodeCompose.setIcon(self.iconCreate)
-        self.menuRoleNodeCompose.addAction(self.actionComposeAsymmetricRole)
-        self.menuRoleNodeCompose.addAction(self.actionComposeIrreflexiveRole)
-        self.menuRoleNodeCompose.addAction(self.actionComposeReflexiveRole)
-        self.menuRoleNodeCompose.addAction(self.actionComposeSymmetricRole)
-        self.menuRoleNodeCompose.addAction(self.actionComposeTransitiveRole)
-        self.menuRoleNodeCompose.addSeparator()
-        self.menuRoleNodeCompose.addAction(self.actionComposeFunctional)
-        self.menuRoleNodeCompose.addAction(self.actionComposeInverseFunctional)
-        self.menuRoleNodeCompose.addSeparator()
-        self.menuRoleNodeCompose.addAction(self.actionComposePropertyDomain)
-        self.menuRoleNodeCompose.addAction(self.actionComposePropertyRange)
-
-        ## ATTRIBUTE NODE
-        self.menuAttributeNodeCompose = QMenu('Compose')
-        self.menuAttributeNodeCompose.setIcon(self.iconCreate)
-        self.menuAttributeNodeCompose.addAction(self.actionComposeFunctional)
-        self.menuAttributeNodeCompose.addSeparator()
-        self.menuAttributeNodeCompose.addAction(self.actionComposePropertyDomain)
-        self.menuAttributeNodeCompose.addSeparator()
-        self.menuAttributeNodeCompose.addAction(self.actionComposePropertyDomain)
-        self.menuAttributeNodeCompose.addAction(self.actionComposePropertyRange)
+        ## ROLE / ATTRIBUTE NODE
+        self.menuNodeCompose = QMenu('Compose')
+        self.menuNodeCompose.setIcon(self.iconCreate)
+        self.menuNodeCompose.addAction(self.actionComposePropertyDomain)
+        self.menuNodeCompose.addAction(self.actionComposePropertyRange)
 
         ## VALUE DOMAIN NODE
         self.menuChangeValueDomainDatatype = QMenu('Select type')
@@ -721,7 +681,7 @@ class MainWindow(QMainWindow):
 
         self.buttonChangeNodeBrush = QToolButton()
         self.buttonChangeNodeBrush.setIcon(self.iconColorFill)
-        self.buttonChangeNodeBrush.setMenu(self.menuChangeNodeBrush)
+        self.buttonChangeNodeBrush.setMenu(self.menuNodeChangeBrush)
         self.buttonChangeNodeBrush.setPopupMode(QToolButton.InstantPopup)
         self.buttonChangeNodeBrush.setEnabled(False)
 

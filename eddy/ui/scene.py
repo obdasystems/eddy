@@ -41,8 +41,7 @@ from PyQt5.QtWidgets import QGraphicsScene, QUndoStack
 from eddy.core.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
 from eddy.core.datatypes import DiagramMode, File, Item
 from eddy.core.functions import snapF, snap
-from eddy.core.items.edges import InputEdge, InclusionEdge
-from eddy.core.items.nodes import ConceptNode, ComplementNode, RoleChainNode, RoleInverseNode
+from eddy.core.items.edges import InputEdge
 from eddy.core.items.nodes import RangeRestrictionNode, DomainRestrictionNode
 from eddy.core.items.factory import ItemFactory
 from eddy.core.items.index import ItemIndex
@@ -425,125 +424,6 @@ class DiagramScene(QGraphicsScene):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def asymmetricRoleAxiomComposition(self, source):
-        """
-        Returns a collection of items to be added to the given source node to compose an asymmetric role.
-        :type source: AbstractNode
-        :rtype: set
-        """
-        x1 = snapF(source.pos().x() + source.width() / 2 + 100, DiagramScene.GridSize)
-        y1 = snapF(source.pos().y() - source.height() / 2 - 40, DiagramScene.GridSize)
-        y2 = snapF(source.pos().y() - source.height() / 2 - 80, DiagramScene.GridSize)
-
-        node1 = RoleInverseNode(scene=self)
-        node1.setPos(QPointF(x1, source.pos().y()))
-        node2 = ComplementNode(scene=self)
-        node2.setPos(QPointF(x1, y1))
-        edge1 = InputEdge(scene=self, source=source, target=node1)
-        edge2 = InputEdge(scene=self, source=node1, target=node2)
-        edge3 = InclusionEdge(scene=self, source=source, target=node2, breakpoints=[
-            QPointF(source.pos().x(), y2),
-            QPointF(x1, y2)
-        ])
-
-        return {node1, node2, edge1, edge2, edge3}
-    
-    def functionalAxiomComposition(self, source):
-        """
-        Returns a collection of items to be added to the given source node to compose a functional axiom.
-        :type source: AbstractNode
-        :rtype: set
-        """
-        node1 = DomainRestrictionNode(scene=self)
-        edge1 = InputEdge(scene=self, source=source, target=node1, functional=True)
-
-        size = DiagramScene.GridSize
-
-        offsets = (
-            QPointF(snapF(+source.width() / 2 + 90, size), 0),
-            QPointF(snapF(-source.width() / 2 - 90, size), 0),
-            QPointF(0, snapF(-source.height() / 2 - 70, size)),
-            QPointF(0, snapF(+source.height() / 2 + 70, size)),
-            QPointF(snapF(+source.width() / 2 + 90, size), snapF(-source.height() / 2 - 70, size)),
-            QPointF(snapF(-source.width() / 2 - 90, size), snapF(-source.height() / 2 - 70, size)),
-            QPointF(snapF(+source.width() / 2 + 90, size), snapF(+source.height() / 2 + 70, size)),
-            QPointF(snapF(-source.width() / 2 - 90, size), snapF(+source.height() / 2 + 70, size)),
-        )
-
-        pos = None
-        num = sys.maxsize
-        rad = QPointF(node1.width() / 2, node1.height() / 2)
-
-        for o in offsets:
-            count = len(self.items(QRectF(source.pos() + o - rad, source.pos() + o + rad)))
-            if count < num:
-                num = count
-                pos = source.pos() + o
-
-        node1.setPos(pos)
-
-        return {node1, edge1}
-    
-    def inverseFunctionalAxiomComposition(self, source):
-        """
-        Returns a collection of items to be added to the given source node to compose an inverse functional axiom.
-        :type source: AbstractNode
-        :rtype: set
-        """
-        node1 = RangeRestrictionNode(scene=self)
-        edge1 = InputEdge(scene=self, source=source, target=node1, functional=True)
-        
-        size = DiagramScene.GridSize
-        
-        offsets = (
-            QPointF(snapF(+source.width() / 2 + 90, size), 0),
-            QPointF(snapF(-source.width() / 2 - 90, size), 0),
-            QPointF(0, snapF(-source.height() / 2 - 70, size)),
-            QPointF(0, snapF(+source.height() / 2 + 70, size)),
-            QPointF(snapF(+source.width() / 2 + 90, size), snapF(-source.height() / 2 - 70, size)),
-            QPointF(snapF(-source.width() / 2 - 90, size), snapF(-source.height() / 2 - 70, size)),
-            QPointF(snapF(+source.width() / 2 + 90, size), snapF(+source.height() / 2 + 70, size)),
-            QPointF(snapF(-source.width() / 2 - 90, size), snapF(+source.height() / 2 + 70, size)),
-        )
-    
-        pos = None
-        num = sys.maxsize
-        rad = QPointF(node1.width() / 2, node1.height() / 2)
-    
-        for o in offsets:
-            count = len(self.items(QRectF(source.pos() + o - rad, source.pos() + o + rad)))
-            if count < num:
-                num = count
-                pos = source.pos() + o
-    
-        node1.setPos(pos)
-
-        return {node1, edge1}
-        
-    def irreflexiveRoleAxiomComposition(self, source):
-        """
-        Returns a collection of items to be added to the given source node to compose an irreflexive role.
-        :type source: AbstractNode
-        :rtype: set
-        """
-        x1 = snapF(source.pos().x() + source.width() / 2 + 40, DiagramScene.GridSize)
-        x2 = snapF(source.pos().x() + source.width() / 2 + 120, DiagramScene.GridSize)
-        x3 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize)
-
-        node1 = DomainRestrictionNode(scene=self)
-        node1.setText('self')
-        node1.setPos(QPointF(x1, source.pos().y()))
-        node2 = ComplementNode(scene=self)
-        node2.setPos(QPointF(x2, source.pos().y()))
-        node3 = ConceptNode(scene=self)
-        node3.setText('TOP')
-        node3.setPos(QPointF(x3, source.pos().y()))
-        edge1 = InputEdge(scene=self, source=source, target=node1)
-        edge2 = InputEdge(scene=self, source=node1, target=node2)
-        edge3 = InclusionEdge(scene=self, source=node3, target=node2)
-
-        return {node1, node2, node3, edge1, edge2, edge3}
-
     def propertyDomainAxiomComposition(self, source):
         """
         Returns a collection of items to be added to the given source node to compose a property domain.
@@ -615,79 +495,6 @@ class DiagramScene(QGraphicsScene):
         node.setPos(pos)
 
         return {node, edge}
-            
-    def reflexiveRoleAxiomComposition(self, source):
-        """
-        Returns a collection of items to be added to the given source node to compose a reflexive role.
-        :type source: AbstractNode
-        :rtype: set
-        """
-        x1 = snapF(source.pos().x() + source.width() / 2 + 40, DiagramScene.GridSize)
-        x2 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize)
-
-        node1 = DomainRestrictionNode(scene=self)
-        node1.setText('self')
-        node1.setPos(QPointF(x1, source.pos().y()))
-        node2 = ConceptNode(scene=self)
-        node2.setText('TOP')
-        node2.setPos(QPointF(x2, source.pos().y()))
-        edge1 = InputEdge(scene=self, source=source, target=node1)
-        edge2 = InclusionEdge(scene=self, source=node2, target=node1)
-
-        return {node1, node2, edge1, edge2}
-
-    def symmetricRoleAxiomComposition(self, source):
-        """
-        Returns a collection of items to be added to the given source node to compose a symmetric role.
-        :type source: AbstractNode
-        :rtype: set
-        """
-        x1 = snapF(source.pos().x() + source.width() / 2 + 100, DiagramScene.GridSize)
-        y1 = snapF(source.pos().y() - source.height() / 2 - 80, DiagramScene.GridSize)
-
-        node1 = RoleInverseNode(scene=self)
-        node1.setPos(QPointF(x1, source.pos().y()))
-        edge1 = InputEdge(scene=self, source=source, target=node1)
-        edge2 = InclusionEdge(scene=self, source=source, target=node1, breakpoints=[
-            QPointF(source.pos().x(), y1),
-            QPointF(x1, y1)
-        ])
-
-        return {node1, edge1, edge2}
-    
-    def transitiveRoleAxiomComposition(self, source):
-        """
-        Returns a collection of items to be added to the given source node to compose a transitive role.
-        :type source: AbstractNode
-        :rtype: set
-        """
-        x1 = snapF(source.pos().x() + source.width() / 2 + 90, DiagramScene.GridSize)
-        x2 = snapF(source.pos().x() + source.width() / 2 + 50, DiagramScene.GridSize)
-        x3 = snapF(source.pos().x() - source.width() / 2 - 20, DiagramScene.GridSize)
-        y1 = snapF(source.pos().y() - source.height() / 2 - 20, DiagramScene.GridSize)
-        y2 = snapF(source.pos().y() + source.height() / 2 + 20, DiagramScene.GridSize)
-        y3 = snapF(source.pos().y() - source.height() / 2 + 80, DiagramScene.GridSize)
-
-        node1 = RoleChainNode(scene=self)
-        node1.setPos(QPointF(x1, source.pos().y()))
-
-        edge1 = InputEdge(scene=self, source=source, target=node1, breakpoints=[
-            QPointF(source.pos().x(), y1),
-            QPointF(x2, y1),
-        ])
-
-        edge2 = InputEdge(scene=self, source=source, target=node1, breakpoints=[
-            QPointF(source.pos().x(), y2),
-            QPointF(x2, y2),
-        ])
-
-        edge3 = InclusionEdge(scene=self, source=node1, target=source, breakpoints=[
-            QPointF(x1, y3),
-            QPointF(x3, y3),
-            QPointF(x3, source.pos().y()),
-        ])
-
-        return {node1, edge1, edge2, edge3}
 
     ####################################################################################################################
     #                                                                                                                  #
