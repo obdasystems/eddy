@@ -319,6 +319,40 @@ class GrapholLoader(AbstractLoader):
         meta.description = description.text()
         return meta
 
+    def buildAttributeMetadata(self, element):
+        """
+        Build role metadata using the given QDomElement.
+        :type element: QDomElement
+        :rtype: AttributeMetaData
+        """
+        meta = self.buildPredicateMetadata(element)
+        functionality = element.firstChildElement('data:functionality')
+        meta.functionality = bool(int(functionality.text()))
+        return meta
+
+    def buildRoleMetadata(self, element):
+        """
+        Build role metadata using the given QDomElement.
+        :type element: QDomElement
+        :rtype: AttributeMetaData
+        """
+        meta = self.buildPredicateMetadata(element)
+        functionality = element.firstChildElement('data:functionality')
+        inverseFunctionality = element.firstChildElement('data:inverseFunctionality')
+        asymmetry = element.firstChildElement('data:asymmetry')
+        irreflexivity = element.firstChildElement('data:irreflexivity')
+        reflexivity = element.firstChildElement('data:reflexivity')
+        symmetry = element.firstChildElement('data:symmetry')
+        transitivity = element.firstChildElement('data:transitivity')
+        meta.functionality = bool(int(functionality.text()))
+        meta.inverseFunctionality = bool(int(inverseFunctionality.text()))
+        meta.asymmetry = bool(int(asymmetry.text()))
+        meta.irreflexivity = bool(int(irreflexivity.text()))
+        meta.reflexivity = bool(int(reflexivity.text()))
+        meta.symmetry = bool(int(symmetry.text()))
+        meta.transitivity = bool(int(transitivity.text()))
+        return meta
+
     ####################################################################################################################
     #                                                                                                                  #
     #   AUXILIARY METHODS                                                                                              #
@@ -521,10 +555,20 @@ class GrapholLoader(AbstractLoader):
                     # noinspection PyArgumentList
                     QApplication.processEvents()
 
+                    item = self.itemFromGrapholNode(element)
+
                     try:
-                        meta = self.buildPredicateMetadata(element)
+
+                        if item is Item.AttributeNode:
+                            meta = self.buildAttributeMetadata(element)
+                        elif item is Item.RoleNode:
+                            meta = self.buildRoleMetadata(element)
+                        else:
+                            meta = self.buildPredicateMetadata(element)
+
                         if meta:
                             self.scene.meta.add(meta.item, meta.predicate, meta)
+
                     finally:
                         element = element.nextSiblingElement('meta')
 
