@@ -145,9 +145,7 @@ class MenuFactory(QObject):
             menu.addAction(mainwindow.actionDelete)
             menu.addAction(mainwindow.actionSwapEdge)
             menu.addSeparator()
-            menu.addAction(mainwindow.actionToggleEdgeFunctional)
             mainwindow.actionSwapEdge.setVisible(scene.validator.valid(edge.target, edge, edge.source))
-            mainwindow.actionToggleEdgeFunctional.setChecked(edge.functional)
         return menu
 
     @staticmethod
@@ -217,7 +215,6 @@ class MenuFactory(QObject):
             action.setChecked(node.special is action.data())
 
         mainwindow.actionRefactorName.setEnabled(node.special is None)
-        mainwindow.actionComposeInverseFunctional.setEnabled(False)
 
         collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
         if collection:
@@ -518,7 +515,6 @@ class MenuFactory(QObject):
             action.setChecked(node.special is action.data())
 
         mainwindow.actionRefactorName.setEnabled(node.special is None)
-        mainwindow.actionComposeInverseFunctional.setEnabled(True)
 
         collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
         if collection:

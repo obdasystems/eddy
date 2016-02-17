@@ -234,15 +234,13 @@ class GrapholExporter(AbstractExporter):
         element.setAttribute('complete', int(edge.complete))
         return element
 
-    def exportInputnEdge(self, edge):
+    def exportInputEdge(self, edge):
         """
         Export the given edge into a QDomElement.
         :type edge: InputEdge
         :rtype: QDomElement
         """
-        element = self.exportGenericEdge(edge)
-        element.setAttribute('functional', int(edge.functional))
-        return element
+        return self.exportGenericEdge(edge)
 
     def exportInstanceOfEdge(self, edge):
         """
@@ -440,7 +438,7 @@ class GrapholExporter(AbstractExporter):
             if edge.item is Item.InclusionEdge:
                 element = self.exportInclusionEdge(edge)
             elif edge.item is Item.InputEdge:
-                element = self.exportInputnEdge(edge)
+                element = self.exportInputEdge(edge)
             elif edge.item is Item.InstanceOfEdge:
                 element = self.exportInstanceOfEdge(edge)
 

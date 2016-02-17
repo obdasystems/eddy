@@ -49,9 +49,8 @@ from PyQt5.QtWidgets import QUndoGroup, QStyle, QGraphicsItem
 
 from eddy import APPNAME, VERSION, BUG_TRACKER, GRAPHOL_HOME, DIAG_HOME
 
-from eddy.core.commands import CommandComposeAxiom, CommandDecomposeAxiom
+from eddy.core.commands import CommandComposeAxiom, CommandItemsMultiRemove
 from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandRefactor
-from eddy.core.commands import CommandItemsMultiRemove, CommandEdgeInputToggleFunctional
 from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap
 from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelChange
 from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeSetZValue
@@ -392,13 +391,9 @@ class MainWindow(QMainWindow):
             self.actionsRefactorBrush.append(action)
 
         ## ROLE / ATTRIBUTE NODES
-        self.actionComposeFunctional = QAction('Functional', self)
-        self.actionComposeInverseFunctional = QAction('Inverse Functional', self)
         self.actionComposePropertyDomain = QAction('Property Domain', self)
         self.actionComposePropertyRange = QAction('Property Range', self)
 
-        connect(self.actionComposeFunctional.triggered, self.composeFunctional)
-        connect(self.actionComposeInverseFunctional.triggered, self.composeInverseFunctional)
         connect(self.actionComposePropertyDomain.triggered, self.composePropertyDomain)
         connect(self.actionComposePropertyRange.triggered, self.composePropertyRange)
 
@@ -459,22 +454,16 @@ class MainWindow(QMainWindow):
 
         self.actionSwapEdge = QAction('Swap', self)
         self.actionSwapEdge.setIcon(self.iconSwapHorizontal)
-        self.actionSwapEdge.setShortcut('CTRL+ALT+S' if platform is Platform.Windows else 'ALT+S')
+        self.actionSwapEdge.setShortcut('ALT+S')
         connect(self.actionSwapEdge.triggered, self.swapEdge)
 
         self.actionToggleEdgeComplete = QAction('Complete', self)
-        self.actionToggleEdgeComplete.setShortcut('CTRL+ALT+C' if platform is Platform.Windows else 'ALT+C')
+        self.actionToggleEdgeComplete.setShortcut('ALT+C')
         self.actionToggleEdgeComplete.setCheckable(True)
         connect(self.actionToggleEdgeComplete.triggered, self.toggleEdgeComplete)
 
-        self.actionToggleEdgeFunctional = QAction('Functional', self)
-        self.actionToggleEdgeFunctional.setShortcut('CTRL+ALT+F' if platform is Platform.Windows else 'ALT+F')
-        self.actionToggleEdgeFunctional.setCheckable(True)
-        connect(self.actionToggleEdgeFunctional.triggered, self.toggleEdgeFunctional)
-
         self.addAction(self.actionSwapEdge)
         self.addAction(self.actionToggleEdgeComplete)
-        self.addAction(self.actionToggleEdgeFunctional)
 
         ################################################################################################################
         #                                                                                                              #
@@ -803,88 +792,6 @@ class MainWindow(QMainWindow):
             subwindow.close()
 
     @pyqtSlot()
-    def composeAsymmetricRole(self):
-        """
-        Compose an asymmetric role using the selected Role node.
-        """
-        scene = self.mdi.activeScene
-        if scene:
-            scene.setMode(DiagramMode.Idle)
-            node = next(filter(lambda x: x.isItem(Item.RoleNode), scene.selectedNodes()), None)
-            if node:
-                action = self.sender()
-                if action:
-                    if action.isChecked():
-                        if not node.asymmetric:
-                            name = 'compose asymmetric role'
-                            items = scene.asymmetricRoleAxiomComposition(node)
-                            nodes = {x for x in items if x.node}
-                            edges = {x for x in items if x.edge}
-                            scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
-                    else:
-                        if node.asymmetric:
-                            name = 'decompose asymmetric node'
-                            scene.undostack.push(CommandDecomposeAxiom(name, scene, node, node.asymmetryPath))
-
-    @pyqtSlot()
-    def composeFunctional(self):
-        """
-        Makes the selected role/attribute node functional.
-        """
-        scene = self.mdi.activeScene
-        if scene:
-            scene.setMode(DiagramMode.Idle)
-            args = Item.RoleNode, Item.AttributeNode
-            node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
-            if node:
-                name = 'compose functional {}'.format(node.item.label)
-                items = scene.functionalAxiomComposition(node)
-                nodes = {x for x in items if x.node}
-                edges = {x for x in items if x.edge}
-                scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
-
-    @pyqtSlot()
-    def composeInverseFunctional(self):
-        """
-        Makes the selected role node inverse functional.
-        """
-        scene = self.mdi.activeScene
-        if scene:
-            scene.setMode(DiagramMode.Idle)
-            args = Item.RoleNode, Item.AttributeNode
-            node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
-            if node:
-                name = 'compose inverse functional {}'.format(node.item.label)
-                items = scene.inverseFunctionalAxiomComposition(node)
-                nodes = {x for x in items if x.node}
-                edges = {x for x in items if x.edge}
-                scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
-
-    @pyqtSlot()
-    def composeIrreflexiveRole(self):
-        """
-        Compose an irreflexive role using the selected Role node.
-        """
-        scene = self.mdi.activeScene
-        if scene:
-            scene.setMode(DiagramMode.Idle)
-            node = next(filter(lambda x: x.isItem(Item.RoleNode), scene.selectedNodes()), None)
-            if node:
-                action = self.sender()
-                if action:
-                    if action.isChecked():
-                        if not node.irreflexive:
-                            name = 'compose irreflexive role'
-                            items = scene.irreflexiveRoleAxiomComposition(node)
-                            nodes = {x for x in items if x.node}
-                            edges = {x for x in items if x.edge}
-                            scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
-                    else:
-                        if node.irreflexive:
-                            name = 'decompose irreflexive node'
-                            scene.undostack.push(CommandDecomposeAxiom(name, scene, node, node.irreflexivityPath))
-
-    @pyqtSlot()
     def composePropertyDomain(self):
         """
         Compose a property domain using the selected role/attribute node.
@@ -917,78 +824,6 @@ class MainWindow(QMainWindow):
                 nodes = {x for x in items if x.node}
                 edges = {x for x in items if x.edge}
                 scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
-
-    @pyqtSlot()
-    def composeReflexiveRole(self):
-        """
-        Compose a reflexive role using the selected Role node.
-        """
-        scene = self.mdi.activeScene
-        if scene:
-            scene.setMode(DiagramMode.Idle)
-            node = next(filter(lambda x: x.isItem(Item.RoleNode), scene.selectedNodes()), None)
-            if node:
-                action = self.sender()
-                if action:
-                    if action.isChecked():
-                        if not node.reflexive:
-                            name = 'compose reflexive role'
-                            items = scene.reflexiveRoleAxiomComposition(node)
-                            nodes = {x for x in items if x.node}
-                            edges = {x for x in items if x.edge}
-                            scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
-                    else:
-                        if node.reflexive:
-                            name = 'decompose reflexive node'
-                            scene.undostack.push(CommandDecomposeAxiom(name, scene, node, node.reflexivityPath))
-
-    @pyqtSlot()
-    def composeSymmetricRole(self):
-        """
-        Compose a symmetric role using the selected Role node.
-        """
-        scene = self.mdi.activeScene
-        if scene:
-            scene.setMode(DiagramMode.Idle)
-            node = next(filter(lambda x: x.isItem(Item.RoleNode), scene.selectedNodes()), None)
-            if node:
-                action = self.sender()
-                if action:
-                    if action.isChecked():
-                        if not node.symmetric:
-                            name = 'compose symmetric role'
-                            items = scene.symmetricRoleAxiomComposition(node)
-                            nodes = {x for x in items if x.node}
-                            edges = {x for x in items if x.edge}
-                            scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
-                    else:
-                        if node.symmetric:
-                            name = 'decompose symmetric role'
-                            scene.undostack.push(CommandDecomposeAxiom(name, scene, node, node.symmetryPath))
-
-    @pyqtSlot()
-    def composeTransitiveRole(self):
-        """
-        Compose a transitive role using the selected Role node.
-        """
-        scene = self.mdi.activeScene
-        if scene:
-            scene.setMode(DiagramMode.Idle)
-            node = next(filter(lambda x: x.isItem(Item.RoleNode), scene.selectedNodes()), None)
-            if node:
-                action = self.sender()
-                if action:
-                    if action.isChecked():
-                        if not node.transitive:
-                            name = 'compose transitive role'
-                            items = scene.transitiveRoleAxiomComposition(node)
-                            nodes = {x for x in items if x.node}
-                            edges = {x for x in items if x.edge}
-                            scene.undostack.push(CommandComposeAxiom(name, scene, node, nodes, edges))
-                    else:
-                        if node.transitive:
-                            name = 'decompose transitive role'
-                            scene.undostack.push(CommandDecomposeAxiom(name, scene, node, node.transitivityPath))
 
     @pyqtSlot('QGraphicsScene')
     def documentLoadedOrSaved(self, scene):
@@ -1699,20 +1534,6 @@ class MainWindow(QMainWindow):
                 comp = sum(edge.complete for edge in selected) <= len(selected) / 2
                 data = {edge: {'from': edge.complete, 'to': comp} for edge in selected}
                 scene.undostack.push(CommandEdgeInclusionToggleComplete(scene, data))
-
-    @pyqtSlot()
-    def toggleEdgeFunctional(self):
-        """
-        Toggle the 'functional' attribute for all the selected Input edges.
-        """
-        scene = self.mdi.activeScene
-        if scene:
-            scene.setMode(DiagramMode.Idle)
-            selected = [item for item in scene.selectedEdges() if item.isItem(Item.InputEdge)]
-            if selected:
-                func = sum(edge.functional for edge in selected) <= len(selected) / 2
-                data = {edge: {'from': edge.functional, 'to': func} for edge in selected}
-                scene.undostack.push(CommandEdgeInputToggleFunctional(scene, data))
 
     @pyqtSlot()
     def toggleSnapToGrid(self):

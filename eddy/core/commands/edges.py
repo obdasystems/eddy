@@ -230,38 +230,6 @@ class CommandEdgeInclusionToggleComplete(QUndoCommand):
             edge.updateEdge()
         self.scene.updated.emit()
 
-
-class CommandEdgeInputToggleFunctional(QUndoCommand):
-    """
-    This command is used to toggle the functional attribute of Input edges.
-    """
-    def __init__(self, scene, data):
-        """
-        Initialize the command.
-        """
-        if len(data) == 1:
-            super().__init__('toggle {} functionality'.format(next(iter(data.keys())).name))
-        else:
-            super().__init__('toggle functionality for {} edges'.format(len(data)))
-
-        self.scene = scene
-        self.data = data
-
-    def redo(self):
-        """redo the command"""
-        for edge in self.data:
-            edge.functional = self.data[edge]['to']
-            edge.updateEdge()
-        self.scene.updated.emit()
-
-    def undo(self):
-        """undo the command"""
-        for edge in self.data:
-            edge.functional = self.data[edge]['from']
-            edge.updateEdge()
-        self.scene.updated.emit()
-
-
 class CommandEdgeSwap(QUndoCommand):
     """
     This command is used to swap edges' source/target.

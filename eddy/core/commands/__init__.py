@@ -33,7 +33,6 @@
 
 
 from eddy.core.commands.common import CommandComposeAxiom
-from eddy.core.commands.common import CommandDecomposeAxiom
 from eddy.core.commands.common import CommandItemsMultiAdd
 from eddy.core.commands.common import CommandItemsMultiRemove
 from eddy.core.commands.common import CommandItemsTranslate
@@ -45,7 +44,6 @@ from eddy.core.commands.edges import CommandEdgeBreakpointAdd
 from eddy.core.commands.edges import CommandEdgeBreakpointDel
 from eddy.core.commands.edges import CommandEdgeBreakpointMove
 from eddy.core.commands.edges import CommandEdgeInclusionToggleComplete
-from eddy.core.commands.edges import CommandEdgeInputToggleFunctional
 from eddy.core.commands.edges import CommandEdgeSwap
 
 from eddy.core.commands.nodes import CommandNodeAdd

@@ -951,23 +951,6 @@ class OWLExporter(AbstractExporter):
                     else:
                         raise MalformedDiagramError(e, 'type mismatch in equivalence')
 
-            elif e.isItem(Item.InputEdge):
-
-                if e.functional:
-
-                    if e.source.identity is Identity.Role:
-                        if e.target.isItem(Item.DomainRestrictionNode):
-                            self.axiomFunctionalObjectProperty(e)
-                        elif e.target.isItem(Item.RangeRestrictionNode):
-                            self.axiomInverseFunctionalObjectProperty(e)
-                    elif e.source.identity is Identity.Attribute:
-                        if e.target.isItem(Item.DomainRestrictionNode):
-                            self.axiomFunctionalDataProperty(e)
-                        else:
-                            raise MalformedDiagramError(e, 'unsupported inverse functional edge')
-                    else:
-                        raise MalformedDiagramError(e, 'type mismatch in functional edge')
-
             elif e.isItem(Item.InstanceOfEdge):
 
                 if e.source.identity is Identity.Individual and e.target.identity is Identity.Concept:

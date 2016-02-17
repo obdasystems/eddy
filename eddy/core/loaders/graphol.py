@@ -288,9 +288,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: InputEdge
         """
-        edge = self.buildGenericEdge(Item.InputEdge, element)
-        edge.functional = bool(int(element.attribute('functional', '0')))
-        return edge
+        return self.buildGenericEdge(Item.InputEdge, element)
 
     def buildInstanceOfEdge(self, element):
         """

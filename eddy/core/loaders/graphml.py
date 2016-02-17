@@ -266,7 +266,7 @@ class GraphmlLoader(AbstractLoader):
                     polyLineEdge = data.firstChildElement('y:PolyLineEdge')
                     arrows = polyLineEdge.firstChildElement('y:Arrows')
                     if arrows.attribute('source', '') == 't_shape':
-                        item.functional = True
+                        # FIXME: item.functional = True
                         item.updateEdge()
                 data = data.nextSiblingElement('data')
         return item

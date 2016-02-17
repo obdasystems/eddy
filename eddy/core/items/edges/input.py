@@ -53,37 +53,12 @@ class InputEdge(AbstractEdge):
     headSize = 10
     item = Item.InputEdge
 
-    def __init__(self, functional=False, **kwargs):
+    def __init__(self, **kwargs):
         """
         Initialize the edge.
-        :type functional: bool
         """
-        self._functional = functional
         super().__init__(**kwargs)
         self.label = Label('', centered=False, parent=self)
-        self.tail = QLineF()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @property
-    def functional(self):
-        """
-        Tells whether this edge is functional.
-        :rtype: bool
-        """
-        return self._functional
-
-    @functional.setter
-    def functional(self, functional):
-        """
-        Set the functional attribute for this edge.
-        :type functional: bool
-        """
-        self._functional = bool(functional)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -101,7 +76,6 @@ class InputEdge(AbstractEdge):
             'source': self.source,
             'target': self.target,
             'breakpoints': self.breakpoints[:],
-            'functional': self.functional,
         }
         return scene.factory.create(item=self.item, scene=scene, **kwargs)
 
@@ -119,20 +93,6 @@ class InputEdge(AbstractEdge):
         pos3 = pos2 - QPointF(sin(rad + 3.0 / 4.0 * M_PI) * size, cos(rad + 3.0 / 4.0 * M_PI) * size)
         pos4 = pos3 - QPointF(sin(rad - 3.0 / 4.0 * M_PI) * size, cos(rad - 3.0 / 4.0 * M_PI) * size)
         return QPolygonF([pos1, pos2, pos3, pos4])
-
-    @staticmethod
-    def createTail(pos1, angle, size):
-        """
-        Create the tail line.
-        :type pos1: QPointF
-        :type angle: float
-        :type size: int
-        :rtype: QLineF
-        """
-        rad = radians(angle)
-        pos2 = pos1 + QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-        pos3 = pos1 + QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-        return QLineF(pos2, pos3)
 
     def updateLabel(self, points):
         """
@@ -160,8 +120,6 @@ class InputEdge(AbstractEdge):
         path = QPainterPath()
         path.addPath(self.selection)
         path.addPolygon(self.head)
-        path.moveTo(self.tail.p1())
-        path.lineTo(self.tail.p2())
 
         for shape in self.handles:
             path.addEllipse(shape)
@@ -178,8 +136,6 @@ class InputEdge(AbstractEdge):
         path = QPainterPath()
         path.addPath(self.path)
         path.addPolygon(self.head)
-        path.moveTo(self.tail.p1())
-        path.lineTo(self.tail.p2())
         return path
 
     def shape(self):
@@ -190,8 +146,6 @@ class InputEdge(AbstractEdge):
         path = QPainterPath()
         path.addPath(self.selection)
         path.addPolygon(self.head)
-        path.moveTo(self.tail.p1())
-        path.lineTo(self.tail.p2())
 
         if self.isSelected():
             for shape in self.handles:
@@ -227,7 +181,6 @@ class InputEdge(AbstractEdge):
 
         createSelectionArea = self.createSelectionArea
         createHead = self.createHead
-        createTail = self.createTail
 
         ################################################################################################################
         #                                                                                                              #
@@ -257,8 +210,6 @@ class InputEdge(AbstractEdge):
                 self.path.lineTo(p2)
                 self.selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), boxSize))
                 self.head = createHead(p2, subpath.angle(), headSize)
-                if self.functional:
-                    self.tail = createTail(p1, subpath.angle(), headSize)
                 extend((p1, p2))
 
         elif len(collection) > 1:
@@ -292,8 +243,6 @@ class InputEdge(AbstractEdge):
                 append(p22)
 
                 self.head = createHead(p22, subpathN.angle(), headSize)
-                if self.functional:
-                    self.tail = createTail(p11, subpath1.angle(), headSize)
 
         self.updateLabel(points)
         self.updateBrush(selected=self.isSelected(), visible=self.canDraw())
