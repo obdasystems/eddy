@@ -277,6 +277,58 @@ class GrapholExporter(AbstractExporter):
             return element
         return None
 
+    def exportAttributeMetadata(self, item, predicate):
+        """
+        Export given attribute metadata.
+        :type item: Item
+        :type predicate: str
+        :rtype: QDomElement
+        """
+        element = self.exportPredicateMetadata(item, predicate)
+        if element:
+            meta = self.scene.meta.metaFor(item, predicate)
+            if meta:
+                functionality = self.document.createElement('data:functionality')
+                functionality.appendChild(self.document.createTextNode(str(int(meta.functionality))))
+                element.appendChild(functionality)
+                return element
+        return None
+
+    def exportRoleMetadata(self, item, predicate):
+        """
+        Export given role metadata
+        :type item: Item
+        :type predicate: str
+        :rtype: QDomElement
+        """
+        element = self.exportPredicateMetadata(item, predicate)
+        if element:
+            meta = self.scene.meta.metaFor(item, predicate)
+            if meta:
+                functionality = self.document.createElement('data:functionality')
+                functionality.appendChild(self.document.createTextNode(str(int(meta.functionality))))
+                inverseFunctionality = self.document.createElement('data:inverseFunctionality')
+                inverseFunctionality.appendChild(self.document.createTextNode(str(int(meta.inverseFunctionality))))
+                asymmetry = self.document.createElement('data:asymmetry')
+                asymmetry.appendChild(self.document.createTextNode(str(int(meta.asymmetry))))
+                irreflexivity = self.document.createElement('data:irreflexivity')
+                irreflexivity.appendChild(self.document.createTextNode(str(int(meta.irreflexivity))))
+                reflexivity = self.document.createElement('data:reflexivity')
+                reflexivity.appendChild(self.document.createTextNode(str(int(meta.reflexivity))))
+                symmetry = self.document.createElement('data:symmetry')
+                symmetry.appendChild(self.document.createTextNode(str(int(meta.symmetry))))
+                transitivity = self.document.createElement('data:transitivity')
+                transitivity.appendChild(self.document.createTextNode(str(int(meta.transitivity))))
+                element.appendChild(functionality)
+                element.appendChild(inverseFunctionality)
+                element.appendChild(asymmetry)
+                element.appendChild(irreflexivity)
+                element.appendChild(reflexivity)
+                element.appendChild(symmetry)
+                element.appendChild(transitivity)
+                return element
+        return None
+
     ####################################################################################################################
     #                                                                                                                  #
     #   AUXILIARY METHODS                                                                                              #
@@ -453,7 +505,14 @@ class GrapholExporter(AbstractExporter):
         # 7) GENERATE NODES META DATA
         collection = []
         for item, predicate in self.scene.meta.entries():
-            element = self.exportPredicateMetadata(item, predicate)
+
+            if item is Item.RoleNode:
+                element = self.exportRoleMetadata(item, predicate)
+            elif item is Item.AttributeNode:
+                element = self.exportAttributeMetadata(item, predicate)
+            else:
+                element = self.exportPredicateMetadata(item, predicate)
+
             if element:
                 collection.append(element)
 
