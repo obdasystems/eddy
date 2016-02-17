@@ -711,6 +711,7 @@ class MainWindow(QMainWindow):
                 expandPath('@examples/Animals.graphol'),
                 expandPath('@examples/Diet.graphol'),
                 expandPath('@examples/Family.graphol'),
+                expandPath('@examples/LUBM.graphol'),
                 expandPath('@examples/Pizza.graphol'),
             ])
 
