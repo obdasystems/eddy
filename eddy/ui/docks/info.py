@@ -41,8 +41,8 @@ from PyQt5.QtWidgets import QMenu, QSizePolicy, QScrollArea
 
 from eddy.core.commands import CommandNodeLabelChange
 from eddy.core.datatypes import Item, XsdDatatype, Facet
-from eddy.core.functions import disconnect, connect, coloredIcon, isEmpty
-from eddy.core.qt import Font, StackedWidget
+from eddy.core.functions import disconnect, connect, isEmpty
+from eddy.core.qt import ColoredIcon, Font, StackedWidget
 
 from eddy.ui.fields import IntField, StringField, CheckBox, ComboBox
 
@@ -597,7 +597,7 @@ class PredicateNodeInfo(NodeInfo):
             color = action.data()
             brush = QBrush(QColor(color.value))
             if node.brush == brush:
-                self.brushButton.setIcon(coloredIcon(12, 12, color.value, '#000000'))
+                self.brushButton.setIcon(ColoredIcon(12, 12, color.value, '#000000'))
                 self.brushButton.setText(color.value)
                 break
 

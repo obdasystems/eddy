@@ -59,14 +59,15 @@ from eddy.core.commands import CommandNodeSetBrush, CommandEdgeBreakpointDel
 from eddy.core.datatypes import Color, File, DiagramMode, Filetype, Platform
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
 from eddy.core.exporters import GrapholExporter
-from eddy.core.functions import connect, disconnect, uncapitalize, rCut
-from eddy.core.functions import expandPath, coloredIcon, shadedIcon, snapF
+from eddy.core.functions import connect, disconnect, uncapitalize
+from eddy.core.functions import expandPath, rCut, snapF
 from eddy.core.items import Item, DatatypeRestrictionNode
 from eddy.core.items import RoleInverseNode, DisjointUnionNode
 from eddy.core.items import UnionNode, EnumerationNode, ComplementNode
 from eddy.core.items import RoleChainNode, IntersectionNode
 from eddy.core.loaders import GraphmlLoader, GrapholLoader
 from eddy.core.utils import Clipboard
+from eddy.core.qt import ColoredIcon, Icon
 
 from eddy.ui.dialogs import About, OpenFile, SaveFile
 from eddy.ui.dialogs import BusyProgressDialog, PreferencesDialog
@@ -137,41 +138,41 @@ class MainWindow(QMainWindow):
         #                                                                                                              #
         ################################################################################################################
 
-        self.iconAbc = shadedIcon(':/icons/abc')
-        self.iconBringToFront = shadedIcon(':/icons/bring-to-front')
-        self.iconCenterFocus = shadedIcon(':/icons/center-focus')
-        self.iconClose = shadedIcon(':/icons/close')
-        self.iconColorFill = shadedIcon(':/icons/color-fill')
-        self.iconCopy = shadedIcon(':/icons/copy')
-        self.iconCreate = shadedIcon(':/icons/create')
-        self.iconCut = shadedIcon(':/icons/cut')
-        self.iconDelete = shadedIcon(':/icons/delete')
-        self.iconGrid = shadedIcon(':/icons/grid')
-        self.iconHelp = shadedIcon(':/icons/help')
-        self.iconLabel = shadedIcon(':/icons/label')
-        self.iconLicense = shadedIcon(':/icons/license')
-        self.iconLink = shadedIcon(':/icons/link')
-        self.iconNew = shadedIcon(':/icons/new')
-        self.iconOpen = shadedIcon(':/icons/open')
-        self.iconPaste = shadedIcon(':/icons/paste')
-        self.iconPalette = shadedIcon(':/icons/appearance')
-        self.iconPreferences = shadedIcon(':/icons/preferences')
-        self.iconPrint = shadedIcon(':/icons/print')
-        self.iconQuit = shadedIcon(':/icons/quit')
-        self.iconRedo = shadedIcon(':/icons/redo')
-        self.iconRefactor = shadedIcon(':/icons/refactor')
-        self.iconRefresh = shadedIcon(':/icons/refresh')
-        self.iconSave = shadedIcon(':/icons/save')
-        self.iconSaveAs = shadedIcon(':/icons/save')
-        self.iconSelectAll = shadedIcon(':/icons/select-all')
-        self.iconSendToBack = shadedIcon(':/icons/send-to-back')
-        self.iconStarFilled = shadedIcon(':/icons/star-filled')
-        self.iconSwapHorizontal = shadedIcon(':/icons/swap-horizontal')
-        self.iconSwapVertical = shadedIcon(':/icons/swap-vertical')
-        self.iconUndo = shadedIcon(':/icons/undo')
-        self.iconZoom = shadedIcon(':/icons/zoom')
-        self.iconZoomIn = shadedIcon(':/icons/zoom-in')
-        self.iconZoomOut = shadedIcon(':/icons/zoom-out')
+        self.iconAbc = Icon(':/icons/abc')
+        self.iconBringToFront = Icon(':/icons/bring-to-front')
+        self.iconCenterFocus = Icon(':/icons/center-focus')
+        self.iconClose = Icon(':/icons/close')
+        self.iconColorFill = Icon(':/icons/color-fill')
+        self.iconCopy = Icon(':/icons/copy')
+        self.iconCreate = Icon(':/icons/create')
+        self.iconCut = Icon(':/icons/cut')
+        self.iconDelete = Icon(':/icons/delete')
+        self.iconGrid = Icon(':/icons/grid')
+        self.iconHelp = Icon(':/icons/help')
+        self.iconLabel = Icon(':/icons/label')
+        self.iconLicense = Icon(':/icons/license')
+        self.iconLink = Icon(':/icons/link')
+        self.iconNew = Icon(':/icons/new')
+        self.iconOpen = Icon(':/icons/open')
+        self.iconPaste = Icon(':/icons/paste')
+        self.iconPalette = Icon(':/icons/appearance')
+        self.iconPreferences = Icon(':/icons/preferences')
+        self.iconPrint = Icon(':/icons/print')
+        self.iconQuit = Icon(':/icons/quit')
+        self.iconRedo = Icon(':/icons/redo')
+        self.iconRefactor = Icon(':/icons/refactor')
+        self.iconRefresh = Icon(':/icons/refresh')
+        self.iconSave = Icon(':/icons/save')
+        self.iconSaveAs = Icon(':/icons/save')
+        self.iconSelectAll = Icon(':/icons/select-all')
+        self.iconSendToBack = Icon(':/icons/send-to-back')
+        self.iconStarFilled = Icon(':/icons/star-filled')
+        self.iconSwapHorizontal = Icon(':/icons/swap-horizontal')
+        self.iconSwapVertical = Icon(':/icons/swap-vertical')
+        self.iconUndo = Icon(':/icons/undo')
+        self.iconZoom = Icon(':/icons/zoom')
+        self.iconZoomIn = Icon(':/icons/zoom-in')
+        self.iconZoomOut = Icon(':/icons/zoom-out')
 
         ################################################################################################################
         #                                                                                                              #
@@ -359,7 +360,7 @@ class MainWindow(QMainWindow):
         self.actionsChangeNodeBrush = []
         for color in Color:
             action = QAction(color.name, self)
-            action.setIcon(coloredIcon(size, size, color.value))
+            action.setIcon(ColoredIcon(size, size, color.value))
             action.setCheckable(False)
             action.setData(color)
             connect(action.triggered, self.setNodeBrush)
@@ -384,7 +385,7 @@ class MainWindow(QMainWindow):
         self.actionsRefactorBrush = []
         for color in Color:
             action = QAction(color.name, self)
-            action.setIcon(coloredIcon(size, size, color.value))
+            action.setIcon(ColoredIcon(size, size, color.value))
             action.setCheckable(False)
             action.setData(color)
             connect(action.triggered, self.refactorBrush)

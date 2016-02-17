@@ -36,8 +36,8 @@ import itertools
 import os
 import re
 
-from PyQt5.QtCore import Qt, QPointF, QRectF
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap, QPen, QBrush, QPainterPath
+from PyQt5.QtCore import Qt, QPointF
+from PyQt5.QtGui import QPainter, QPixmap
 
 from eddy.core.regex import RE_QUOTED, RE_OWL_INVALID_CHAR
 
@@ -57,28 +57,6 @@ def clamp(val, minval=None, maxval=None):
     if maxval is not None:
         val = min(val, maxval)
     return val
-
-
-def coloredIcon(width, height, color, border=None):
-    """
-    Create and returns a QIcon filled using the given color.
-    :type width: T <= int | float
-    :type height: T <= int | float
-    :type color: str
-    :type border: str
-    :rtype: QIcon
-    """
-    pixmap = QPixmap(width, height)
-    painter = QPainter(pixmap)
-    painter.setRenderHint(QPainter.Antialiasing)
-    path = QPainterPath()
-    path.addRect(QRectF(QPointF(0, 0), QPointF(width, height)))
-    painter.fillPath(path, QBrush(QColor(color)))
-    if border:
-        painter.setPen(QPen(QColor(border), 0, Qt.SolidLine))
-        painter.drawPath(path)
-    painter.end()
-    return QIcon(pixmap)
 
 
 def isEmpty(string):
@@ -184,19 +162,6 @@ def shaded(pixmap, opacity=0.25):
     p.drawPixmap(0, 0, pixmap)
     p.end()
     return o
-
-
-def shadedIcon(path, opacity=0.25):
-    """
-    Create a shaded icon using the given image: the shaded copy will use the given opacity value.
-    :type path: str
-    :type opacity: T <= int | float
-    :rtype: QIcon
-    """
-    icon = QIcon()
-    icon.addPixmap(QPixmap(path), QIcon.Normal)
-    icon.addPixmap(shaded(QPixmap(path), opacity), QIcon.Disabled)
-    return icon
 
 
 def snapF(value, size, offset=0, snap=True):

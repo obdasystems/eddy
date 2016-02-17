@@ -35,8 +35,8 @@
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QToolButton, QAction, QMenu
 
-from eddy.core.functions import clamp, connect, shadedIcon, rangeF
-from eddy.core.qt import Font
+from eddy.core.functions import clamp, connect, rangeF
+from eddy.core.qt import Font, Icon
 
 
 class ZoomControl(QWidget):
@@ -79,12 +79,12 @@ class ZoomControl(QWidget):
 
         # zoom out shortcut
         self.buttonZoomOut = QToolButton()
-        self.buttonZoomOut.setIcon(shadedIcon(':/icons/zoom-out'))
+        self.buttonZoomOut.setIcon(Icon(':/icons/zoom-out'))
         connect(self.buttonZoomOut.clicked, self.zoomOut)
 
         # zoom in shortcut
         self.buttonZoomIn = QToolButton()
-        self.buttonZoomIn.setIcon(shadedIcon(':/icons/zoom-in'))
+        self.buttonZoomIn.setIcon(Icon(':/icons/zoom-in'))
         connect(self.buttonZoomIn.clicked, self.zoomIn)
 
         # zoom level QToolButton (to show a drop down menu)

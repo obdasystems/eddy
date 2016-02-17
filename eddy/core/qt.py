@@ -32,12 +32,12 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import pyqtSlot, QRectF, QPointF, Qt
+from PyQt5.QtGui import QFont, QIcon, QPixmap, QPainter, QPainterPath, QColor, QBrush, QPen
 from PyQt5.QtWidgets import QStackedWidget, QSizePolicy
 
 from eddy.core.datatypes.system import Platform
-from eddy.core.functions import connect
+from eddy.core.functions import connect, shaded
 
 
 class Font(QFont):
@@ -55,6 +55,46 @@ class Font(QFont):
         if Platform.identify() is not Platform.Darwin:
             size = int(round(size * 0.75))
         super().__init__(family, size, weight, italic)
+
+
+class ColoredIcon(QIcon):
+    """
+    This class extends PyQt5.QtGui.QIcon and automatically creates an icon filled with the given color..
+    """
+    def __init__(self, width, height, color, border=None):
+        """
+        Initialize the icon.
+        :type width: T <= int | float
+        :type height: T <= int | float
+        :type color: str
+        :type border: str
+        """
+        pixmap = QPixmap(width, height)
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.Antialiasing)
+        path = QPainterPath()
+        path.addRect(QRectF(QPointF(0, 0), QPointF(width, height)))
+        painter.fillPath(path, QBrush(QColor(color)))
+        if border:
+            painter.setPen(QPen(QColor(border), 0, Qt.SolidLine))
+            painter.drawPath(path)
+        painter.end()
+        super().__init__(pixmap)
+
+
+class Icon(QIcon):
+    """
+    This class extends PyQt5.QtGui.QIcon providing automatic generation of shaded icon for disabled status.
+    """
+    def __init__(self, path, opacity=0.25):
+        """
+        Initialize the icon.
+        :type path: str
+        :type opacity: float
+        """
+        super().__init__()
+        self.addPixmap(QPixmap(path), QIcon.Normal)
+        self.addPixmap(shaded(QPixmap(path), opacity), QIcon.Disabled)
 
 
 class StackedWidget(QStackedWidget):
