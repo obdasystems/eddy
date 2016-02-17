@@ -592,8 +592,10 @@ class AbstractResizableNode(AbstractNode):
         :type point: QPointF
         :rtype: int
         """
+        size = QPointF(3, 3)
+        area = QRectF(point - size, point + size)
         for i in range(len(self.handleBound)):
-            if self.handleBound[i].contains(point):
+            if self.handleBound[i].intersects(area):
                 return i
         return None
 
