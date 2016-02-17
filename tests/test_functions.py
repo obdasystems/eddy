@@ -134,5 +134,5 @@ class Test_SnapF(unittest.TestCase):
         self.assertEqual(6.0, snapF(value=6.0, size=10.0, offset=-4.0))
 
     def test_snap_to_grid_with_skip(self):
-        self.assertEqual(8.0, snapF(value=8.0, size=10.0, snap=False))
-        self.assertEqual(6.0, snapF(value=6.0, size=10.0, snap=False))
+        self.assertEqual(8.0, snapF(value=8.0, size=10.0))
+        self.assertEqual(6.0, snapF(value=6.0, size=10.0))

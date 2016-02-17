@@ -431,9 +431,9 @@ class DiagramScene(QGraphicsScene):
         :type source: AbstractNode
         :rtype: set
         """
-        x1 = snapF(source.pos().x() + source.width() / 2 + 100, DiagramScene.GridSize, snap=True)
-        y1 = snapF(source.pos().y() - source.height() / 2 - 40, DiagramScene.GridSize, snap=True)
-        y2 = snapF(source.pos().y() - source.height() / 2 - 80, DiagramScene.GridSize, snap=True)
+        x1 = snapF(source.pos().x() + source.width() / 2 + 100, DiagramScene.GridSize)
+        y1 = snapF(source.pos().y() - source.height() / 2 - 40, DiagramScene.GridSize)
+        y2 = snapF(source.pos().y() - source.height() / 2 - 80, DiagramScene.GridSize)
 
         node1 = RoleInverseNode(scene=self)
         node1.setPos(QPointF(x1, source.pos().y()))
@@ -526,9 +526,9 @@ class DiagramScene(QGraphicsScene):
         :type source: AbstractNode
         :rtype: set
         """
-        x1 = snapF(source.pos().x() + source.width() / 2 + 40, DiagramScene.GridSize, snap=True)
-        x2 = snapF(source.pos().x() + source.width() / 2 + 120, DiagramScene.GridSize, snap=True)
-        x3 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize, snap=True)
+        x1 = snapF(source.pos().x() + source.width() / 2 + 40, DiagramScene.GridSize)
+        x2 = snapF(source.pos().x() + source.width() / 2 + 120, DiagramScene.GridSize)
+        x3 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize)
 
         node1 = DomainRestrictionNode(scene=self)
         node1.setText('self')
@@ -622,8 +622,8 @@ class DiagramScene(QGraphicsScene):
         :type source: AbstractNode
         :rtype: set
         """
-        x1 = snapF(source.pos().x() + source.width() / 2 + 40, DiagramScene.GridSize, snap=True)
-        x2 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize, snap=True)
+        x1 = snapF(source.pos().x() + source.width() / 2 + 40, DiagramScene.GridSize)
+        x2 = snapF(source.pos().x() + source.width() / 2 + 250, DiagramScene.GridSize)
 
         node1 = DomainRestrictionNode(scene=self)
         node1.setText('self')
@@ -642,8 +642,8 @@ class DiagramScene(QGraphicsScene):
         :type source: AbstractNode
         :rtype: set
         """
-        x1 = snapF(source.pos().x() + source.width() / 2 + 100, DiagramScene.GridSize, snap=True)
-        y1 = snapF(source.pos().y() - source.height() / 2 - 80, DiagramScene.GridSize, snap=True)
+        x1 = snapF(source.pos().x() + source.width() / 2 + 100, DiagramScene.GridSize)
+        y1 = snapF(source.pos().y() - source.height() / 2 - 80, DiagramScene.GridSize)
 
         node1 = RoleInverseNode(scene=self)
         node1.setPos(QPointF(x1, source.pos().y()))
@@ -661,12 +661,12 @@ class DiagramScene(QGraphicsScene):
         :type source: AbstractNode
         :rtype: set
         """
-        x1 = snapF(source.pos().x() + source.width() / 2 + 90, DiagramScene.GridSize, snap=True)
-        x2 = snapF(source.pos().x() + source.width() / 2 + 50, DiagramScene.GridSize, snap=True)
-        x3 = snapF(source.pos().x() - source.width() / 2 - 20, DiagramScene.GridSize, snap=True)
-        y1 = snapF(source.pos().y() - source.height() / 2 - 20, DiagramScene.GridSize, snap=True)
-        y2 = snapF(source.pos().y() + source.height() / 2 + 20, DiagramScene.GridSize, snap=True)
-        y3 = snapF(source.pos().y() - source.height() / 2 + 80, DiagramScene.GridSize, snap=True)
+        x1 = snapF(source.pos().x() + source.width() / 2 + 90, DiagramScene.GridSize)
+        x2 = snapF(source.pos().x() + source.width() / 2 + 50, DiagramScene.GridSize)
+        x3 = snapF(source.pos().x() - source.width() / 2 - 20, DiagramScene.GridSize)
+        y1 = snapF(source.pos().y() - source.height() / 2 - 20, DiagramScene.GridSize)
+        y2 = snapF(source.pos().y() + source.height() / 2 + 20, DiagramScene.GridSize)
+        y3 = snapF(source.pos().y() - source.height() / 2 + 80, DiagramScene.GridSize)
 
         node1 = RoleChainNode(scene=self)
         node1.setPos(QPointF(x1, source.pos().y()))
