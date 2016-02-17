@@ -437,14 +437,14 @@ class DiagramScene(QGraphicsScene):
         size = DiagramScene.GridSize
 
         offsets = (
-            QPointF(snapF(+source.width() / 2 + 90, size), 0),
-            QPointF(snapF(-source.width() / 2 - 90, size), 0),
+            QPointF(snapF(+source.width() / 2 + 70, size), 0),
+            QPointF(snapF(-source.width() / 2 - 70, size), 0),
             QPointF(0, snapF(-source.height() / 2 - 70, size)),
             QPointF(0, snapF(+source.height() / 2 + 70, size)),
-            QPointF(snapF(+source.width() / 2 + 90, size), snapF(-source.height() / 2 - 70, size)),
-            QPointF(snapF(-source.width() / 2 - 90, size), snapF(-source.height() / 2 - 70, size)),
-            QPointF(snapF(+source.width() / 2 + 90, size), snapF(+source.height() / 2 + 70, size)),
-            QPointF(snapF(-source.width() / 2 - 90, size), snapF(+source.height() / 2 + 70, size)),
+            QPointF(snapF(+source.width() / 2 + 70, size), snapF(-source.height() / 2 - 70, size)),
+            QPointF(snapF(-source.width() / 2 - 70, size), snapF(-source.height() / 2 - 70, size)),
+            QPointF(snapF(+source.width() / 2 + 70, size), snapF(+source.height() / 2 + 70, size)),
+            QPointF(snapF(-source.width() / 2 - 70, size), snapF(+source.height() / 2 + 70, size)),
         )
 
         pos = None
