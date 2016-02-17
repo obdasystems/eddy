@@ -656,12 +656,22 @@ class OWLExporter(AbstractExporter):
         :type node: AbstractNode
         """
         meta = self.scene.meta.metaFor(node.item, node.text())
-        if not isEmpty(meta.description):
+        if meta and not isEmpty(meta.description):
             annotationP = self.factory.getOWLAnnotationProperty(self.IRI.create("Description"))
             annotationV = self.factory.getOWLLiteral(OWLAnnotationText(meta.description))
             annotationV.__class__ = self.OWLAnnotationValue
             annotation = self.factory.getOWLAnnotation(annotationP, annotationV)
             self.axioms.add(self.factory.getOWLAnnotationAssertionAxiom(self.converted[node].getIRI(), annotation))
+    
+    def axiomDataProperty(self, node):
+        """
+        Generate OWL Data Property specific axioms.
+        :type node: AttributeNode
+        """
+        meta = self.scene.meta.metaFor(node.item, node.text())
+        if meta:
+            if meta.functionality:
+                self.axioms.add(self.factory.getOWLFunctionalDataPropertyAxiom(self.converted[node]))
 
     def axiomClassAssertion(self, edge):
         """
@@ -759,26 +769,27 @@ class OWLExporter(AbstractExporter):
         collection.__class__ = self.Set
         self.axioms.add(self.factory.getOWLEquivalentObjectPropertiesAxiom(collection))
 
-    def axiomFunctionalDataProperty(self, edge):
+    def axiomObjectProperty(self, node):
         """
-        Generate a OWL FunctionalDataProperty axiom.
-        :type edge: InputEdge
+        Generate OWL ObjectProperty specific axioms.
+        :type node: RoleNode
         """
-        self.axioms.add(self.factory.getOWLFunctionalDataPropertyAxiom(self.converted[edge.source]))
-
-    def axiomFunctionalObjectProperty(self, edge):
-        """
-        Generate a OWL FunctionalObjectProperty axiom.
-        :type edge: InputEdge
-        """
-        self.axioms.add(self.factory.getOWLFunctionalObjectPropertyAxiom(self.converted[edge.source]))
-
-    def axiomInverseFunctionalObjectProperty(self, edge):
-        """
-        Generate a OWL InverseFunctionalObjectProperty axiom.
-        :type edge: InputEdge
-        """
-        self.axioms.add(self.factory.getOWLInverseFunctionalObjectPropertyAxiom(self.converted[edge.source]))
+        meta = self.scene.meta.metaFor(node.item, node.text())
+        if meta:
+            if meta.functionality:
+                self.axioms.add(self.factory.getOWLFunctionalObjectPropertyAxiom(self.converted[node]))
+            if meta.inverseFunctionality:
+                self.axioms.add(self.factory.getOWLInverseFunctionalObjectPropertyAxiom(self.converted[node]))
+            if meta.asymmetry:
+                self.axioms.add(self.factory.getOWLAsymmetricObjectPropertyAxiom(self.converted[node]))
+            if meta.irreflexivity:
+                self.axioms.add(self.factory.getOWLIrreflexiveObjectPropertyAxiom(self.converted[node]))
+            if meta.reflexivity:
+                self.axioms.add(self.factory.getOWLReflexiveObjectPropertyAxiom(self.converted[node]))
+            if meta.symmetry:
+                self.axioms.add(self.factory.getOWLSymmetricObjectPropertyAxiom(self.converted[node]))
+            if meta.transitivity:
+                self.axioms.add(self.factory.getOWLTransitiveObjectPropertyAxiom(self.converted[node]))
 
     def axiomObjectPropertyAssertion(self, edge):
         """
@@ -907,7 +918,14 @@ class OWLExporter(AbstractExporter):
         for n in self.scene.nodes():
 
             if n.isItem(Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.ValueDomainNode):
+
                 self.axiomDeclaration(n)
+
+                if n.isItem(Item.AttributeNode):
+                    self.axiomDataProperty(n)
+                elif n.isItem(Item.RoleNode):
+                    self.axiomObjectProperty(n)
+
             elif n.isItem(Item.DisjointUnionNode):
                 self.axiomDisjointClasses(n)
 
@@ -938,7 +956,7 @@ class OWLExporter(AbstractExporter):
                     elif e.source.isItem(Item.RangeRestrictionNode) and e.target.identity is Identity.DataRange:
                         self.axiomDataPropertyRange(e)
                     else:
-                        raise MalformedDiagramError(e, 'type mismatch in ISA')
+                        raise MalformedDiagramError(e, 'type mismatch in inclusion')
 
                 else:
 
