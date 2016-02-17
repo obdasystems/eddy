@@ -132,6 +132,10 @@ class MetaFactory(QObject):
         :type predicate: str
         :rtype: AbstractItem
         """
+        if item is Item.RoleNode:
+            return RoleMetaData(item, predicate)
+        if item is Item.AttributeNode:
+            return AttributeMetaData(item, predicate)
         return PredicateMetaData(item, predicate)
 
 
@@ -271,4 +275,168 @@ class PredicateMetaData(QObject):
             return self.url != other.url or \
                    self.description != other.description or \
                    self.predicate != other.predicate
+        return True
+
+
+class AttributeMetaData(PredicateMetaData):
+    """
+    This class implements the attribute predicate node metadata container.
+    """
+    def __init__(self, item, predicate, parent=None):
+        """
+        Initialize the attribute metadata container.
+        :type item: Item
+        :type predicate: str
+        :type parent: QObject
+        """
+        super().__init__(item, predicate, parent)
+        self.functionality = False
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def copy(self):
+        """
+        Returns a copy of this predicate metadata.
+        """
+        meta = RoleMetaData(self.item, self.predicate)
+        meta.description = self.description
+        meta.url = self.url
+        meta.functionality = self.functionality
+        return meta
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   MAGIC METHODS                                                                                                  #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def __bool__(self):
+        """
+        Boolean operator implementation.
+        :rtype: bool
+        """
+        return True
+
+    def __eq__(self, other):
+        """
+        Equality operator implementation.
+        :type other: PredicateMetaData
+        :rtype: bool
+        """
+        if isinstance(other, RoleMetaData):
+            return self.url == other.url and \
+                   self.description == other.description and \
+                   self.predicate == other.predicate and \
+                   self.functionality == other.functionality
+        return False
+
+    def __ne__(self, other):
+        """
+        Inequality operator implementation.
+        :type other: PredicateMetaData
+        :rtype: bool
+        """
+        if isinstance(other, RoleMetaData):
+            return self.url != other.url or \
+                   self.description != other.description or \
+                   self.predicate != other.predicate or \
+                   self.functionality != other.functionality
+        return True
+
+
+class RoleMetaData(PredicateMetaData):
+    """
+    This class implements the role predicate node metadata container.
+    """
+    def __init__(self, item, predicate, parent=None):
+        """
+        Initialize the role metadata container.
+        :type item: Item
+        :type predicate: str
+        :type parent: QObject
+        """
+        super().__init__(item, predicate, parent)
+        self.asymmetry = False
+        self.functionality = False
+        self.inverseFunctionality = False
+        self.irreflexivity = False
+        self.reflexivity = False
+        self.symmetry = False
+        self.transitivity = False
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def copy(self):
+        """
+        Returns a copy of this predicate metadata.
+        """
+        meta = RoleMetaData(self.item, self.predicate)
+        meta.description = self.description
+        meta.url = self.url
+        meta.asymmetry = self.asymmetry
+        meta.functionality = self.functionality
+        meta.inverseFunctionality = self.inverseFunctionality
+        meta.irreflexivity = self.irreflexivity
+        meta.reflexivity = self.reflexivity
+        meta.symmetry = self.symmetry
+        meta.transitivity = self.transitivity
+        return meta
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   MAGIC METHODS                                                                                                  #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    def __bool__(self):
+        """
+        Boolean operator implementation.
+        :rtype: bool
+        """
+        return True
+
+    def __eq__(self, other):
+        """
+        Equality operator implementation.
+        :type other: PredicateMetaData
+        :rtype: bool
+        """
+        if isinstance(other, RoleMetaData):
+            return self.url == other.url and \
+                   self.description == other.description and \
+                   self.predicate == other.predicate and \
+                   self.asymmetry == other.asymmetry and \
+                   self.functionality == other.functionality and \
+                   self.inverseFunctionality == other.inverseFunctionality and \
+                   self.irreflexivity == other.irreflexivity and \
+                   self.reflexivity == other.reflexivity and \
+                   self.symmetry == other.symmetry and \
+                   self.transitivity == other.transitivity
+        return False
+
+    def __ne__(self, other):
+        """
+        Inequality operator implementation.
+        :type other: PredicateMetaData
+        :rtype: bool
+        """
+        if isinstance(other, RoleMetaData):
+            return self.url != other.url or \
+                   self.description != other.description or \
+                   self.predicate != other.predicate or \
+                   self.asymmetry != other.asymmetry or \
+                   self.functionality != other.functionality or \
+                   self.inverseFunctionality != other.inverseFunctionality or \
+                   self.irreflexivity != other.irreflexivity or \
+                   self.reflexivity != other.reflexivity or \
+                   self.symmetry != other.symmetry or \
+                   self.transitivity != other.transitivity
         return True

@@ -84,6 +84,48 @@ class RoleNode(AbstractResizableNode):
     ####################################################################################################################
 
     @property
+    def asymmetric(self):
+        """
+        Tells whether the Role is defined as asymmetric.
+        :rtype: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        return meta.asymmetry
+
+    @asymmetric.setter
+    def asymmetric(self, value):
+        """
+        Set the Role asymmetry property.
+        :type value: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        meta.asymmetry = bool(value)
+        scene.meta.add(self.item, self.text(), meta)
+
+    @property
+    def functional(self):
+        """
+        Tells whether the Role is defined as functional.
+        :rtype: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        return meta.functionality
+
+    @functional.setter
+    def functional(self, value):
+        """
+        Set the Role functionality property.
+        :type value: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        meta.functionality = bool(value)
+        scene.meta.add(self.item, self.text(), meta)
+
+    @property
     def identity(self):
         """
         Returns the identity of the current node.
@@ -100,12 +142,117 @@ class RoleNode(AbstractResizableNode):
         pass
 
     @property
+    def inverseFunctional(self):
+        """
+        Tells whether the Role is defined as inverse functional.
+        :rtype: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        return meta.inverseFunctionality
+
+    @inverseFunctional.setter
+    def inverseFunctional(self, value):
+        """
+        Set the Role inverse functionality property.
+        :type value: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        meta.inverseFunctionality = bool(value)
+        scene.meta.add(self.item, self.text(), meta)
+
+    @property
+    def irreflexive(self):
+        """
+        Tells whether the Role is defined as irreflexive.
+        :rtype: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        return meta.irreflexivity
+
+    @irreflexive.setter
+    def irreflexive(self, value):
+        """
+        Set the Role irreflexivity property.
+        :type value: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        meta.irreflexivity = bool(value)
+        scene.meta.add(self.item, self.text(), meta)
+
+    @property
+    def reflexive(self):
+        """
+        Tells whether the Role is defined as reflexive.
+        :rtype: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        return meta.reflexivity
+
+    @reflexive.setter
+    def reflexive(self, value):
+        """
+        Set the Role reflexivity property.
+        :type value: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        meta.reflexivity = bool(value)
+        scene.meta.add(self.item, self.text(), meta)
+
+    @property
     def special(self):
         """
         Returns the special type of this node.
         :rtype: Special
         """
         return Special.forValue(self.text())
+
+    @property
+    def symmetric(self):
+        """
+        Tells whether the Role is defined as symmetric.
+        :rtype: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        return meta.symmetry
+
+    @symmetric.setter
+    def symmetric(self, value):
+        """
+        Set the Role symmetry property.
+        :type value: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        meta.symmetry = bool(value)
+        scene.meta.add(self.item, self.text(), meta)
+
+    @property
+    def transitive(self):
+        """
+        Tells whether the Role is defined as transitive.
+        :rtype: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        return meta.transitivity
+
+    @transitive.setter
+    def transitive(self, value):
+        """
+        Set the Role transitivity property.
+        :type value: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        meta.transitivity = bool(value)
+        scene.meta.add(self.item, self.text(), meta)
 
     ####################################################################################################################
     #                                                                                                                  #

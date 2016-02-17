@@ -71,6 +71,27 @@ class AttributeNode(AbstractNode):
     ####################################################################################################################
 
     @property
+    def functional(self):
+        """
+        Tells whether the Attribute is defined as functional.
+        :rtype: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        return meta.functionality
+
+    @functional.setter
+    def functional(self, value):
+        """
+        Set the Attribute functionality property.
+        :type value: bool
+        """
+        scene = self.scene()
+        meta = scene.meta.metaFor(self.item, self.text())
+        meta.functionality = bool(value)
+        scene.meta.add(self.item, self.text(), meta)
+
+    @property
     def identity(self):
         """
         Returns the identity of the current node.

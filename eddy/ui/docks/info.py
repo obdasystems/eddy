@@ -39,10 +39,11 @@ from PyQt5.QtGui import QBrush, QColor, QPainter
 from PyQt5.QtWidgets import QWidget, QFormLayout, QLabel, QVBoxLayout, QPushButton, QScrollBar, QStyleOption, QStyle
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QScrollArea
 
-from eddy.core.commands import CommandNodeLabelChange
+from eddy.core.commands import CommandNodeLabelChange, CommandSetProperty
 from eddy.core.datatypes import Item, XsdDatatype, Facet
 from eddy.core.functions import disconnect, connect, isEmpty
 from eddy.core.qt import ColoredIcon, Font, StackedWidget
+from eddy.core.regex import RE_CAMEL_SPACE
 
 from eddy.ui.fields import IntField, StringField, CheckBox, ComboBox
 
@@ -73,6 +74,8 @@ class Info(QScrollArea):
         self.infoNode = NodeInfo(mainwindow, self.stacked)
         self.infoPredicateNode = PredicateNodeInfo(mainwindow, self.stacked)
         self.infoEditableNode = EditableNodeInfo(mainwindow, self.stacked)
+        self.infoAttributeNode = AttributeNodeInfo(mainwindow, self.stacked)
+        self.infoRoleNode = RoleNodeInfo(mainwindow, self.stacked)
         self.infoValueDomainNode = ValueDomainNodeInfo(mainwindow, self.stacked)
         self.infoValueRestrictionNode = ValueRestrictionNodeInfo(mainwindow, self.stacked)
         self.stacked.addWidget(self.infoEmpty)
@@ -82,6 +85,8 @@ class Info(QScrollArea):
         self.stacked.addWidget(self.infoNode)
         self.stacked.addWidget(self.infoPredicateNode)
         self.stacked.addWidget(self.infoEditableNode)
+        self.stacked.addWidget(self.infoAttributeNode)
+        self.stacked.addWidget(self.infoRoleNode)
         self.stacked.addWidget(self.infoValueDomainNode)
         self.stacked.addWidget(self.infoValueRestrictionNode)
         self.setWidget(self.stacked)
@@ -139,6 +144,12 @@ class Info(QScrollArea):
                         elif item.item is Item.ValueRestrictionNode:
                             show = self.infoValueRestrictionNode
                             show.updateData(item)
+                        elif item.item is Item.RoleNode:
+                            show = self.infoRoleNode
+                            show.updateData(item)
+                        elif item.item is Item.AttributeNode:
+                            show = self.infoAttributeNode
+                            show.updateData(item)
                         elif item.label.editable:
                             show = self.infoEditableNode
                             show.updateData(item)
@@ -158,10 +169,12 @@ class Info(QScrollArea):
         else:
             show = self.infoEmpty
 
+        prev = self.stacked.currentWidget()
         self.stacked.setCurrentWidget(show)
         self.stacked.setFixedSize(show.size())
-        scrollbar = self.verticalScrollBar()
-        scrollbar.setValue(0)
+        if prev is not show:
+            scrollbar = self.verticalScrollBar()
+            scrollbar.setValue(0)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -234,7 +247,7 @@ class Key(QLabel):
         Initialize the key.
         """
         super().__init__(*args)
-        self.setFixedSize(82, 20)
+        self.setFixedSize(84, 20)
 
 
 class Button(QPushButton):
@@ -640,6 +653,159 @@ class EditableNodeInfo(PredicateNodeInfo):
         """
         super().updateData(node)
         self.textField.setValue(node.text())
+
+
+class AttributeNodeInfo(EditableNodeInfo):
+    """
+    This class implements the information box for the Attribute node.
+    """
+    def __init__(self, mainwindow, parent=None):
+        """
+        Initialize the Attribute node information box.
+        """
+        super().__init__(mainwindow, parent)
+
+        self.h4 = Header('Properties', self)
+
+        self.functionalKey = Key('Funct.', self)
+        functionalParent = Parent(self)
+        self.functionalBox = CheckBox(functionalParent)
+        self.functionalBox.setCheckable(True)
+        self.functionalBox.setProperty('attribute', 'functional')
+        connect(self.functionalBox.clicked, self.propertyChanged)
+
+        self.propertiesLayout = QFormLayout()
+        self.propertiesLayout.setSpacing(0)
+        self.propertiesLayout.addRow(self.functionalKey, functionalParent)
+
+        self.mainLayout.insertWidget(4, self.h4)
+        self.mainLayout.insertLayout(5, self.propertiesLayout)
+
+    @pyqtSlot()
+    def propertyChanged(self):
+        """
+        Executed whenever one of the property fields changes.
+        """
+        node = self.node
+        scene = node.scene()
+        sender = self.sender()
+        checked = sender.isChecked()
+        attribute = sender.property('attribute')
+        name = '{}set {} {} property'.format('un' if checked else '', node.shortname, attribute)
+        data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
+        scene.undostack.push(CommandSetProperty(scene, node, data, name))
+
+    def updateData(self, node):
+        """
+        Fetch new information and fill the widget with data.
+        :type node: AbstractNode
+        """
+        super().updateData(node)
+        self.functionalBox.setChecked(node.functional)
+
+
+class RoleNodeInfo(EditableNodeInfo):
+    """
+    This class implements the information box for the Role node.
+    """
+    def __init__(self, mainwindow, parent=None):
+        """
+        Initialize the Role node information box.
+        """
+        super().__init__(mainwindow, parent)
+
+        self.h4 = Header('Properties', self)
+
+        self.functionalKey = Key('Funct.', self)
+        functionalParent = Parent(self)
+        self.functionalBox = CheckBox(functionalParent)
+        self.functionalBox.setCheckable(True)
+        self.functionalBox.setProperty('attribute', 'functional')
+        connect(self.functionalBox.clicked, self.propertyChanged)
+
+        self.inverseFunctionalKey = Key('Inv. Funct.', self)
+        inverseFunctionalParent = Parent(self)
+        self.inverseFunctionalBox = CheckBox(inverseFunctionalParent)
+        self.inverseFunctionalBox.setCheckable(True)
+        self.inverseFunctionalBox.setProperty('attribute', 'inverseFunctional')
+        connect(self.inverseFunctionalBox.clicked, self.propertyChanged)
+
+        self.asymmetricKey = Key('Asymmetric', self)
+        asymmetricParent = Parent(self)
+        self.asymmetricBox = CheckBox(asymmetricParent)
+        self.asymmetricBox.setCheckable(True)
+        self.asymmetricBox.setProperty('attribute', 'asymmetric')
+        connect(self.asymmetricBox.clicked, self.propertyChanged)
+
+        self.irreflexiveKey = Key('Irreflexive', self)
+        irreflexiveParent = Parent(self)
+        self.irreflexiveBox = CheckBox(irreflexiveParent)
+        self.irreflexiveBox.setCheckable(True)
+        self.irreflexiveBox.setProperty('attribute', 'irreflexive')
+        connect(self.irreflexiveBox.clicked, self.propertyChanged)
+        
+        self.reflexiveKey = Key('Reflexive', self)
+        reflexiveParent = Parent(self)
+        self.reflexiveBox = CheckBox(reflexiveParent)
+        self.reflexiveBox.setCheckable(True)
+        self.reflexiveBox.setProperty('attribute', 'reflexive')
+        connect(self.reflexiveBox.clicked, self.propertyChanged)
+        
+        self.symmetricKey = Key('Symmetric', self)
+        symmetricParent = Parent(self)
+        self.symmetricBox = CheckBox(symmetricParent)
+        self.symmetricBox.setCheckable(True)
+        self.symmetricBox.setProperty('attribute', 'symmetric')
+        connect(self.symmetricBox.clicked, self.propertyChanged)
+        
+        self.transitiveKey = Key('Transitive', self)
+        transitiveParent = Parent(self)
+        self.transitiveBox = CheckBox(transitiveParent)
+        self.transitiveBox.setCheckable(True)
+        self.transitiveBox.setProperty('attribute', 'transitive')
+        connect(self.transitiveBox.clicked, self.propertyChanged)
+
+        self.propertiesLayout = QFormLayout()
+        self.propertiesLayout.setSpacing(0)
+        self.propertiesLayout.addRow(self.functionalKey, functionalParent)
+        self.propertiesLayout.addRow(self.inverseFunctionalKey, inverseFunctionalParent)
+        self.propertiesLayout.addRow(self.asymmetricKey, asymmetricParent)
+        self.propertiesLayout.addRow(self.irreflexiveKey, irreflexiveParent)
+        self.propertiesLayout.addRow(self.reflexiveKey, reflexiveParent)
+        self.propertiesLayout.addRow(self.symmetricKey, symmetricParent)
+        self.propertiesLayout.addRow(self.transitiveKey, transitiveParent)
+
+        self.mainLayout.insertWidget(4, self.h4)
+        self.mainLayout.insertLayout(5, self.propertiesLayout)
+
+    @pyqtSlot()
+    def propertyChanged(self):
+        """
+        Executed whenever one of the property fields changes.
+        """
+        node = self.node
+        scene = node.scene()
+        sender = self.sender()
+        checked = sender.isChecked()
+        attribute = sender.property('attribute')
+        prop = RE_CAMEL_SPACE.sub('\g<1> \g<2>', attribute).lower()
+        name = '{}set {} {} property'.format('un' if checked else '', node.shortname, prop)
+        data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
+        scene.undostack.push(CommandSetProperty(scene, node, data, name))
+
+    def updateData(self, node):
+        """
+        Fetch new information and fill the widget with data.
+        :type node: AbstractNode
+        """
+        super().updateData(node)
+        self.functionalBox.setChecked(node.functional)
+        self.inverseFunctionalBox.setChecked(node.inverseFunctional)
+        self.asymmetricBox.setChecked(node.asymmetric)
+        self.irreflexiveBox.setChecked(node.irreflexive)
+        self.reflexiveBox.setChecked(node.reflexive)
+        self.symmetricBox.setChecked(node.symmetric)
+        self.transitiveBox.setChecked(node.transitive)
 
 
 class ValueDomainNodeInfo(PredicateNodeInfo):

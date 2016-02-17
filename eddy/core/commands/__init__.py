@@ -37,6 +37,7 @@ from eddy.core.commands.common import CommandItemsMultiAdd
 from eddy.core.commands.common import CommandItemsMultiRemove
 from eddy.core.commands.common import CommandItemsTranslate
 from eddy.core.commands.common import CommandRefactor
+from eddy.core.commands.common import CommandSetProperty
 
 from eddy.core.commands.edges import CommandEdgeAdd
 from eddy.core.commands.edges import CommandEdgeAnchorMove

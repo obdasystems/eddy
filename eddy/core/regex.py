@@ -35,6 +35,7 @@
 import re
 
 
+RE_CAMEL_SPACE = re.compile("""([a-z])([A-Z])""") # space string on camel case token
 RE_CARDINALITY = re.compile("""^\(\s*(?P<min>[\d-]+)\s*,\s*(?P<max>[\d-]+)\s*\)$""") # parse cardinality restriction
 RE_DIGIT = re.compile("""\d""") # identify strings composed of only digits
 RE_FACET = re.compile("""^(?P<facet>.*)\s*"(?P<value>.*)"\^\^(?P<datatype>.*)$""") # tokenize facet restriction

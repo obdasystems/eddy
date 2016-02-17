@@ -43,8 +43,8 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter
 from PyQt5.QtGui import QPageSize, QCursor, QBrush, QColor
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
-from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QDockWidget
-from PyQt5.QtWidgets import QDialog, QMenu, QToolButton
+from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox
+from PyQt5.QtWidgets import QDialog, QMenu, QToolButton, QDockWidget
 from PyQt5.QtWidgets import QUndoGroup, QStyle, QGraphicsItem
 
 from eddy import APPNAME, VERSION, BUG_TRACKER, GRAPHOL_HOME, DIAG_HOME
