@@ -424,17 +424,18 @@ class DiagramScene(QGraphicsScene):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def propertyDomainAxiomComposition(self, source):
+    def propertyAxiomComposition(self, source, restriction):
         """
-        Returns a collection of items to be added to the given source node to compose a property domain.
+        Returns a collection of items to be added to the given source node to compose a property axiom.
         :type source: AbstractNode
+        :type restriction: class
         :rtype: set
         """
-        node = DomainRestrictionNode(scene=self)
+        node = restriction(scene=self)
         edge = InputEdge(scene=self, source=source, target=node)
-        
+
         size = DiagramScene.GridSize
-        
+
         offsets = (
             QPointF(snapF(+source.width() / 2 + 90, size), 0),
             QPointF(snapF(-source.width() / 2 - 90, size), 0),
@@ -459,6 +460,14 @@ class DiagramScene(QGraphicsScene):
         node.setPos(pos)
 
         return {node, edge}
+
+    def propertyDomainAxiomComposition(self, source):
+        """
+        Returns a collection of items to be added to the given source node to compose a property domain.
+        :type source: AbstractNode
+        :rtype: set
+        """
+        return self.propertyAxiomComposition(source, DomainRestrictionNode)
 
     def propertyRangeAxiomComposition(self, source):
         """
@@ -466,35 +475,7 @@ class DiagramScene(QGraphicsScene):
         :type source: AbstractNode
         :rtype: set
         """
-        node = RangeRestrictionNode(scene=self)
-        edge = InputEdge(scene=self, source=source, target=node)
-
-        size = DiagramScene.GridSize
-
-        offsets = (
-            QPointF(snapF(+source.width() / 2 + 90, size), 0),
-            QPointF(snapF(-source.width() / 2 - 90, size), 0),
-            QPointF(0, snapF(-source.height() / 2 - 70, size)),
-            QPointF(0, snapF(+source.height() / 2 + 70, size)),
-            QPointF(snapF(+source.width() / 2 + 90, size), snapF(-source.height() / 2 - 70, size)),
-            QPointF(snapF(-source.width() / 2 - 90, size), snapF(-source.height() / 2 - 70, size)),
-            QPointF(snapF(+source.width() / 2 + 90, size), snapF(+source.height() / 2 + 70, size)),
-            QPointF(snapF(-source.width() / 2 - 90, size), snapF(+source.height() / 2 + 70, size)),
-        )
-
-        pos = None
-        num = sys.maxsize
-        rad = QPointF(node.width() / 2, node.height() / 2)
-
-        for o in offsets:
-            count = len(self.items(QRectF(source.pos() + o - rad, source.pos() + o + rad)))
-            if count < num:
-                num = count
-                pos = source.pos() + o
-
-        node.setPos(pos)
-
-        return {node, edge}
+        return self.propertyAxiomComposition(source, RangeRestrictionNode)
 
     ####################################################################################################################
     #                                                                                                                  #
