@@ -41,7 +41,7 @@ from tests import EddyTestCase
 
 class Test_MainWindow(EddyTestCase):
 
-    def test_new_document_from_toolbar(self):
+    def test_new_document(self):
         # WHEN
         self.mainwindow.actionNewDocument.trigger()
         # THEN
