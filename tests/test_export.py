@@ -37,10 +37,11 @@ from eddy.core.exceptions import MalformedDiagramError
 from eddy.core.exporters import OWLExporter, GrapholExporter
 from eddy.core.functions import expandPath, isEmpty
 from eddy.core.items import ConceptNode, RoleNode, InclusionEdge
+
 from tests import EddyTestCase
 
 
-class Test_Translation(EddyTestCase):
+class Test_Export(EddyTestCase):
 
     def setUp(self):
         """
