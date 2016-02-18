@@ -632,13 +632,15 @@ setup(
     author="Daniele Pantaleone",
     author_email="danielepantaleone@me.com",
     description="Eddy is a graphical editor for the construction of Graphol ontologies.",
-    long_description="Eddy is a graphical editor for the construction of Graphol ontologies. Eddy features a "
-                     "design environment specifically thought out for generating Graphol ontologies through ad-hoc "
-                     "functionalities. Drawing features allow designers to comfortably edit ontologies in a central "
-                     "viewport area, while two lateral docking areas contains specifically-tailored widgets for "
-                     "editing, navigation and inspection of the diagram. Eddy is written in [Python 3] and the UI is "
-                     "implemented through the PyQt5 bindings for the Qt5 framework. Eddy is licensed under the GNU "
-                     "General Public License v3.",
+    long_description="Eddy is a graphical editor for the construction of Graphol ontologies. Eddy features "
+                     "a design environment specifically thought out for generating Graphol ontologies through "
+                     "ad-hoc functionalities. Drawing features allow designers to comfortably edit ontologies "
+                     "in a central viewport area, while two lateral docking areas contains specifically-tailored "
+                     "widgets for editing, navigation and inspection of the diagram. In order to support interaction "
+                     "with third-party tools such as OWL 2 reasoners and editors like Protégé, Eddy is able to export "
+                     "the produced Graphol ontology into an OWL 2 ontology. Other simpler exporting file formats, "
+                     "like PDF, are also currently provided. Eddy is written in Python and make use of the PyQt5 "
+                     "python bindings for the cross-platform GUI toolkit Qt5 framework.",
     keywords = "eddy graphol sapienza",
     license=LICENSE,
     url="https://github.com/danielepantaleone/eddy",
