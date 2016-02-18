@@ -924,7 +924,6 @@ class MainWindow(QMainWindow):
         if not modifiers & Qt.ControlModifier:
             self.palette_.button(item.item).setChecked(False)
             scene.setMode(DiagramMode.Idle)
-            scene.command = None
 
     @pyqtSlot()
     def itemCut(self):
