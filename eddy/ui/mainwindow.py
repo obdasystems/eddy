@@ -1332,7 +1332,7 @@ class MainWindow(QMainWindow):
                         value = form.valueField.value()
                         data = node.composeLiteral(value, datatype)
                         if node.text() != data:
-                            name = 'change {} node to {}'.format(node.identity.label.lower(), data)
+                            name = 'change individual node to {}'.format(data)
                             scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
 
     @pyqtSlot()

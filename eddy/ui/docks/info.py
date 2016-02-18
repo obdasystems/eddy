@@ -40,7 +40,7 @@ from PyQt5.QtWidgets import QWidget, QFormLayout, QLabel, QVBoxLayout, QPushButt
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QScrollArea
 
 from eddy.core.commands import CommandNodeLabelChange, CommandSetProperty
-from eddy.core.datatypes import Item, XsdDatatype, Facet
+from eddy.core.datatypes import Item, XsdDatatype, Facet, Identity
 from eddy.core.functions import disconnect, connect, isEmpty
 from eddy.core.qt import ColoredIcon, Font, StackedWidget
 from eddy.core.regex import RE_CAMEL_SPACE
@@ -76,6 +76,7 @@ class Info(QScrollArea):
         self.infoEditableNode = EditableNodeInfo(mainwindow, self.stacked)
         self.infoAttributeNode = AttributeNodeInfo(mainwindow, self.stacked)
         self.infoRoleNode = RoleNodeInfo(mainwindow, self.stacked)
+        self.infoLiteralNode = LiteralNodeInfo(mainwindow, self.stacked)
         self.infoValueDomainNode = ValueDomainNodeInfo(mainwindow, self.stacked)
         self.infoValueRestrictionNode = ValueRestrictionNodeInfo(mainwindow, self.stacked)
         self.stacked.addWidget(self.infoEmpty)
@@ -87,6 +88,7 @@ class Info(QScrollArea):
         self.stacked.addWidget(self.infoEditableNode)
         self.stacked.addWidget(self.infoAttributeNode)
         self.stacked.addWidget(self.infoRoleNode)
+        self.stacked.addWidget(self.infoLiteralNode)
         self.stacked.addWidget(self.infoValueDomainNode)
         self.stacked.addWidget(self.infoValueRestrictionNode)
         self.setWidget(self.stacked)
@@ -149,6 +151,9 @@ class Info(QScrollArea):
                             show.updateData(item)
                         elif item.item is Item.AttributeNode:
                             show = self.infoAttributeNode
+                            show.updateData(item)
+                        elif item.item is Item.IndividualNode and item.identity is Identity.Literal:
+                            show = self.infoLiteralNode
                             show.updateData(item)
                         elif item.label.editable:
                             show = self.infoEditableNode
@@ -893,8 +898,7 @@ class ValueRestrictionNodeInfo(PredicateNodeInfo):
                 data = node.compose(facet, value, datatype)
                 if node.text() != data:
                     name = 'change value restriction to {}'.format(data)
-                    command = CommandNodeLabelChange(scene, node, node.text(), data, name)
-                    scene.undostack.push(command)
+                    scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
 
             except RuntimeError:
                 # We need to catch this exception because sometime when we close the active
@@ -931,3 +935,71 @@ class ValueRestrictionNodeInfo(PredicateNodeInfo):
             self.facetField.setCurrentIndex(0)
 
         self.restrictionField.setValue(node.value)
+
+
+class LiteralNodeInfo(PredicateNodeInfo):
+    """
+    This class implements the information box for the Individual node with identity 'Literal'.
+    """
+    def __init__(self, mainwindow, parent=None):
+        """
+        Initialize the Literal node information box.
+        """
+        super().__init__(mainwindow, parent)
+
+        self.datatypeKey = Key('Datatype', self)
+        self.datatypeField = Select(self)
+        connect(self.datatypeField.activated, self.literalChanged)
+
+        self.valueKey = Key('Value', self)
+        self.valueField = Str(self)
+        self.valueField.setReadOnly(False)
+        connect(self.valueField.editingFinished, self.literalChanged)
+
+        for datatype in XsdDatatype:
+            if Facet.forDatatype(datatype):
+                self.datatypeField.addItem(datatype.value, datatype)
+
+        self.predicateLayout.addRow(self.datatypeKey, self.datatypeField)
+        self.predicateLayout.addRow(self.valueKey, self.valueField)
+
+    @pyqtSlot()
+    def literalChanged(self):
+        """
+        Executed when we need to recompute the Literal.
+        """
+        if self.node:
+
+            try:
+
+                node = self.node
+                scene = node.scene()
+                datatype = self.datatypeField.currentData()
+                value = self.valueField.value()
+
+                data = node.composeLiteral(value, datatype)
+                if node.text() != data:
+                    name = 'change individual node to {}'.format(data)
+                    scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
+
+            except RuntimeError:
+                # We need to catch this exception because sometime when we close the active
+                # scene while having a combobox active this slot is triggered but we don't
+                # have a scene object anymore, so we'll end up with an exception.
+                pass
+
+
+    def updateData(self, node):
+        """
+        Fetch new information and fill the widget with data.
+        :type node: AbstractNode
+        """
+        super().updateData(node)
+
+        datatype = node.datatype
+        for i in range(self.datatypeField.count()):
+            if self.datatypeField.itemData(i) is datatype:
+                self.datatypeField.setCurrentIndex(i)
+                break
+
+        self.valueField.setValue(node.literal)
