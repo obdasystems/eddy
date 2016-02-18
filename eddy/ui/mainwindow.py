@@ -1096,9 +1096,8 @@ class MainWindow(QMainWindow):
             if node:
                 action = self.sender()
                 color = action.data()
-                nodes = scene.nodesByLabel[node.text()]
-                command = CommandNodeSetBrush(scene, nodes, QBrush(QColor(color.value)))
-                scene.undostack.push(command)
+                nodes = scene.index.nodesForLabel(node.item, node.text())
+                scene.undostack.push(CommandNodeSetBrush(scene, nodes, QBrush(QColor(color.value))))
 
     @pyqtSlot()
     def refactorName(self):
@@ -1107,7 +1106,6 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-
             scene.setMode(DiagramMode.Idle)
             args = Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode
             node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
