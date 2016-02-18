@@ -149,8 +149,10 @@ class AbstractEdge(AbstractItem):
         Returns the key of the anchor whose handle is being pressed.
         :type point: AbstractNode
         """
+        size = QPointF(3, 3)
+        area = QRectF(point - size, point + size)
         for k, v, in self.anchors.items():
-            if v.contains(point):
+            if v.intersects(area):
                 return k
         return None
 
