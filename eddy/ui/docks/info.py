@@ -76,7 +76,7 @@ class Info(QScrollArea):
         self.infoEditableNode = EditableNodeInfo(mainwindow, self.stacked)
         self.infoAttributeNode = AttributeNodeInfo(mainwindow, self.stacked)
         self.infoRoleNode = RoleNodeInfo(mainwindow, self.stacked)
-        self.infoLiteralNode = LiteralNodeInfo(mainwindow, self.stacked)
+        self.infoValueNode = ValueNodeInfo(mainwindow, self.stacked)
         self.infoValueDomainNode = ValueDomainNodeInfo(mainwindow, self.stacked)
         self.infoValueRestrictionNode = ValueRestrictionNodeInfo(mainwindow, self.stacked)
         self.stacked.addWidget(self.infoEmpty)
@@ -88,7 +88,7 @@ class Info(QScrollArea):
         self.stacked.addWidget(self.infoEditableNode)
         self.stacked.addWidget(self.infoAttributeNode)
         self.stacked.addWidget(self.infoRoleNode)
-        self.stacked.addWidget(self.infoLiteralNode)
+        self.stacked.addWidget(self.infoValueNode)
         self.stacked.addWidget(self.infoValueDomainNode)
         self.stacked.addWidget(self.infoValueRestrictionNode)
         self.setWidget(self.stacked)
@@ -152,8 +152,8 @@ class Info(QScrollArea):
                         elif item.item is Item.AttributeNode:
                             show = self.infoAttributeNode
                             show.updateData(item)
-                        elif item.item is Item.IndividualNode and item.identity is Identity.Literal:
-                            show = self.infoLiteralNode
+                        elif item.item is Item.IndividualNode and item.identity is Identity.Value:
+                            show = self.infoValueNode
                             show.updateData(item)
                         elif item.label.editable:
                             show = self.infoEditableNode
@@ -937,9 +937,9 @@ class ValueRestrictionNodeInfo(PredicateNodeInfo):
         self.restrictionField.setValue(node.value)
 
 
-class LiteralNodeInfo(PredicateNodeInfo):
+class ValueNodeInfo(PredicateNodeInfo):
     """
-    This class implements the information box for the Individual node with identity 'Literal'.
+    This class implements the information box for the Individual node with identity 'Value'.
     """
     def __init__(self, mainwindow, parent=None):
         """
@@ -949,12 +949,12 @@ class LiteralNodeInfo(PredicateNodeInfo):
 
         self.datatypeKey = Key('Datatype', self)
         self.datatypeField = Select(self)
-        connect(self.datatypeField.activated, self.literalChanged)
+        connect(self.datatypeField.activated, self.valueChanged)
 
         self.valueKey = Key('Value', self)
         self.valueField = Str(self)
         self.valueField.setReadOnly(False)
-        connect(self.valueField.editingFinished, self.literalChanged)
+        connect(self.valueField.editingFinished, self.valueChanged)
 
         for datatype in XsdDatatype:
             if Facet.forDatatype(datatype):
@@ -964,7 +964,7 @@ class LiteralNodeInfo(PredicateNodeInfo):
         self.predicateLayout.addRow(self.valueKey, self.valueField)
 
     @pyqtSlot()
-    def literalChanged(self):
+    def valueChanged(self):
         """
         Executed when we need to recompute the Literal.
         """
@@ -977,7 +977,7 @@ class LiteralNodeInfo(PredicateNodeInfo):
                 datatype = self.datatypeField.currentData()
                 value = self.valueField.value()
 
-                data = node.composeLiteral(value, datatype)
+                data = node.composeValue(value, datatype)
                 if node.text() != data:
                     name = 'change individual node to {}'.format(data)
                     scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
@@ -1002,4 +1002,4 @@ class LiteralNodeInfo(PredicateNodeInfo):
                 self.datatypeField.setCurrentIndex(i)
                 break
 
-        self.valueField.setValue(node.literal)
+        self.valueField.setValue(node.value)

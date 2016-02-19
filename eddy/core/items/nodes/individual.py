@@ -42,7 +42,7 @@ from eddy.core.functions import snapF, lCut, rCut
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import Label
 from eddy.core.qt import Font
-from eddy.core.regex import RE_LITERAL
+from eddy.core.regex import RE_VALUE
 
 
 class IndividualNode(AbstractResizableNode):
@@ -59,7 +59,7 @@ class IndividualNode(AbstractResizableNode):
     indexTL = 7
     indexEE = 8
 
-    identities = {Identity.Individual, Identity.Literal}
+    identities = {Identity.Instance, Identity.Value}
     item = Item.IndividualNode
     minheight = 60
     minwidth = 60
@@ -80,7 +80,7 @@ class IndividualNode(AbstractResizableNode):
         self.polygon = self.createPolygon(w, h)
         self.background = self.createBackground(w + s, h + s)
         self.selection = self.createSelection(w + s, h + s)
-        self.label = Label('individual', parent=self)
+        self.label = Label('instance', parent=self)
         self.label.updatePos()
         self.updateHandles()
 
@@ -93,10 +93,10 @@ class IndividualNode(AbstractResizableNode):
     @property
     def datatype(self):
         """
-        Returns the datatype associated with this node or None if the node is not a Literal.
+        Returns the datatype associated with this node.
         :rtype: XsdDatatype
         """
-        match = RE_LITERAL.match(self.text())
+        match = RE_VALUE.match(self.text())
         if match:
             return XsdDatatype.forValue(match.group('datatype'))
         return None
@@ -107,21 +107,20 @@ class IndividualNode(AbstractResizableNode):
         Returns the identity of the current node.
         :rtype: Identity
         """
-        match = RE_LITERAL.match(self.text())
+        match = RE_VALUE.match(self.text())
         if match:
-            return Identity.Literal
-        return Identity.Individual
+            return Identity.Value
+        return Identity.Instance
 
     @property
-    def literal(self):
+    def value(self):
         """
-        Returns the literal value associated with this node.
-        If the node is not a literal it will return None.
+        Returns the value value associated with this node.
         :rtype: str
         """
-        match = RE_LITERAL.match(self.text())
+        match = RE_VALUE.match(self.text())
         if match:
-            return match.group('literal')
+            return match.group('value')
         return None
 
     ####################################################################################################################
@@ -131,9 +130,9 @@ class IndividualNode(AbstractResizableNode):
     ####################################################################################################################
 
     @staticmethod
-    def composeLiteral(value, datatype):
+    def composeValue(value, datatype):
         """
-        Compose the literal string.
+        Compose the value string.
         :type value: str
         :type datatype: XsdDatatype
         :return: str
@@ -641,7 +640,7 @@ class IndividualNode(AbstractResizableNode):
         Set the label text: will additionally block label editing if a literal is being.
         :type text: str
         """
-        self.label.editable = RE_LITERAL.match(text) is None
+        self.label.editable = RE_VALUE.match(text) is None
         self.label.setText(text)
 
     def updateTextPos(self, *args, **kwargs):
@@ -674,7 +673,7 @@ class IndividualNode(AbstractResizableNode):
         painter.drawPolygon(polygon)
         # TEXT WITHIN THE SHAPE
         painter.setFont(Font('Arial', 9, Font.Light))
-        painter.drawText(-18, 4, 'individual')
+        painter.drawText(-16, 4, 'instance')
         return pixmap
 
     def paint(self, painter, option, widget=None):

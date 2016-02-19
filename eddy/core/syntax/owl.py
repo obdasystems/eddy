@@ -88,7 +88,7 @@ class OWL2RLValidator(AbstractValidator):
                     idB = target.identity.label
                     raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
 
-                if Identity.Individual in {source.identity, target.identity}:
+                if Identity.Instance in {source.identity, target.identity}:
                     # Individual doesn't match OWL ClassExpression so we can't allow the connection.
                     idA = source.identity.label
                     idB = target.identity.label
@@ -169,7 +169,7 @@ class OWL2RLValidator(AbstractValidator):
                     ####################################################################################################
 
                     if not source.isItem(Item.IndividualNode):
-                        # Enumeration operator (oneOf) takes as inputs individuals or literals, both represented
+                        # Enumeration operator (oneOf) takes as inputs instances or values, both represented
                         # by the Individual node, and has the job of composing a set if individuals (either Concept
                         # or DataRange, but not both together).
                         name = source.identity.label if source.identity is not Identity.Neutral else source.name
@@ -182,10 +182,10 @@ class OWL2RLValidator(AbstractValidator):
 
                     if target.identity is not Identity.Neutral:
 
-                        if source.identity is Identity.Individual and target.identity is Identity.DataRange:
+                        if source.identity is Identity.Instance and target.identity is Identity.DataRange:
                             raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.identity.label))
 
-                        if source.identity is Identity.Literal and target.identity is Identity.Concept:
+                        if source.identity is Identity.Value and target.identity is Identity.Concept:
                             raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.identity.label))
 
                 elif target.isItem(Item.RoleInverseNode):
@@ -281,13 +281,13 @@ class OWL2RLValidator(AbstractValidator):
                         # the individuals are identified by M.Draghi and "Mario".
                         raise SyntaxError('Too many inputs to {}'.format(target.name))
 
-                    if source.identity is Identity.Literal:
+                    if source.identity is Identity.Value:
 
                         f1 = lambda x: x.isItem(Item.InputEdge) and x is not edge
-                        f2 = lambda x: x.identity is Identity.Literal
+                        f2 = lambda x: x.identity is Identity.Value
                         if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
                             # At most one Literal can be given as input (2 Individuals | 1 Individual + 1 Literal)
-                            raise SyntaxError('Too many literals in input to {}'.format(target.name))
+                            raise SyntaxError('Too many values in input to {}'.format(target.name))
 
                     # See if the source we are connecting to the Link is consistent with the instanceOf expression
                     # if there is such expression (else we do not care since we check this in the instanceOf edge.
@@ -297,19 +297,19 @@ class OWL2RLValidator(AbstractValidator):
 
                         if node.isItem(Item.RoleNode, Item.RoleInverseNode):
 
-                            if source.identity is Identity.Literal:
-                                # We are constructing an ObjectPropertyAssertion expression so we can't connect a Literal.
-                                raise SyntaxError('Invalid input to Role assertion: Literal')
+                            if source.identity is Identity.Value:
+                                # We are constructing an ObjectPropertyAssertion expression so we can't connect a Value.
+                                raise SyntaxError('Invalid input to Role assertion: Value')
 
                         if node.isItem(Item.AttributeNode):
 
-                            if source.identity is Identity.Individual:
+                            if source.identity is Identity.Instance:
 
                                 f1 = lambda x: x.isItem(Item.InputEdge) and x is not edge
-                                f2 = lambda x: x.identity is Identity.Individual
+                                f2 = lambda x: x.identity is Identity.Instance
                                 if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
-                                    # We are constructing a DataPropertyAssertion and so we can't have more than 1 Individual.
-                                    raise SyntaxError('Too many individuals in input to Attribute assertion')
+                                    # We are constructing a DataPropertyAssertion and so we can't have more than 1 Instance.
+                                    raise SyntaxError('Too many instances in input to Attribute assertion')
 
                 elif target.isItem(Item.DomainRestrictionNode):
 
@@ -485,7 +485,7 @@ class OWL2RLValidator(AbstractValidator):
                 #                                                                                                      #
                 ########################################################################################################
 
-                if source.identity not in {Identity.Individual, Identity.Link}:
+                if source.identity not in {Identity.Instance, Identity.Link}:
                     # The source of the edge must be one of Individual or Link.
                     raise SyntaxError('Invalid source for instanceOf edge: {}'.format(source.identity.label))
 
@@ -493,7 +493,7 @@ class OWL2RLValidator(AbstractValidator):
                     # The source node MUST be instanceOf at most of one construct.
                     raise SyntaxError('Too many outputs from {}'.format(source.name))
 
-                if source.identity is Identity.Individual and target.identity is not Identity.Concept:
+                if source.identity is Identity.Instance and target.identity is not Identity.Concept:
                     # If the source of the edge is an Individual it means that we are trying to construct a ClassAssertion
                     # construct, and so the target of the edge MUST be an axiom identified as Concept (Atomic or General).
                     # OWL 2: ClassAssertion(axiomAnnotations ClassExpression Individual)
@@ -511,7 +511,7 @@ class OWL2RLValidator(AbstractValidator):
                         # not to have Literals in input to the source node (which is a Link).
                         # OWL 2: ObjectPropertyAssertion(axiomAnnotations ObjectPropertyExpression Individual Individual)
                         f1 = lambda x: x.isItem(Item.InputEdge)
-                        f2 = lambda x: x.identity is Identity.Literal
+                        f2 = lambda x: x.identity is Identity.Value
                         if len(source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
                             raise SyntaxError('Invalid in input to {} for Role assertion'.format(source.name))
 
@@ -520,7 +520,7 @@ class OWL2RLValidator(AbstractValidator):
                         # not to have 2 Individuals as input to the source node (which is a link).
                         # OWL 2: DataPropertyAssertion(axiomAnnotations DataPropertyExpression Individual Literal)
                         f1 = lambda x: x.isItem(Item.InputEdge)
-                        f2 = lambda x: x.identity is Identity.Individual
+                        f2 = lambda x: x.identity is Identity.Instance
                         if len(source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 1:
                             raise SyntaxError('Invalid in input to {} for Attribute assertion'.format(source.name))
 

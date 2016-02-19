@@ -48,8 +48,8 @@ class Identity(IntEnum):
     Role = 2
     Attribute = 3
     DataRange = 4
-    Individual = 5
-    Literal = 6
+    Instance = 5
+    Value = 6
     Link = 7
     Unknown = 8
 
@@ -65,8 +65,8 @@ class Identity(IntEnum):
             Identity.Role: 'Role',
             Identity.Attribute: 'Attribute',
             Identity.DataRange: 'DataRange',
-            Identity.Individual: 'Individual',
-            Identity.Literal: 'Literal',
+            Identity.Instance: 'Instance',
+            Identity.Value: 'Value',
             Identity.Link: 'Link',
             Identity.Unknown: 'Unknown',
         }[self]

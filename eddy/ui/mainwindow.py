@@ -72,7 +72,7 @@ from eddy.ui.dialogs import About, OpenFile, SaveFile
 from eddy.ui.dialogs import BusyProgressDialog, PreferencesDialog
 from eddy.ui.docks import Overview, Palette, Explorer, Info
 from eddy.ui.forms import CardinalityRestrictionForm, ValueRestrictionForm
-from eddy.ui.forms import OWLTranslationForm, LiteralForm, RenameForm
+from eddy.ui.forms import OWLTranslationForm, ValueForm, RenameForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
 from eddy.ui.menus import MenuFactory
 from eddy.ui.properties import PropertyFactory
@@ -441,7 +441,7 @@ class MainWindow(QMainWindow):
 
         ## INDIVIDUAL NODE
         self.actionsSetIndividualNodeAs = []
-        for identity in (Identity.Individual, Identity.Literal):
+        for identity in (Identity.Instance, Identity.Value):
             action = QAction(identity.label, self)
             action.setData(identity)
             connect(action.triggered, self.setIndividualNodeAs)
@@ -1307,7 +1307,7 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def setIndividualNodeAs(self):
         """
-        Set an invididual node either to Individual or Literal.
+        Set an invididual node either to Instance or Value.
         Will bring up the Literal Form if needed.
         """
         scene = self.mdi.activeScene
@@ -1317,17 +1317,17 @@ class MainWindow(QMainWindow):
             node = next(filter(lambda x: x.isItem(Item.IndividualNode), selected), None)
             if node:
                 action = self.sender()
-                if action.data() is Identity.Individual:
-                    if node.identity is Identity.Literal:
-                        name = 'change literal to individual'
+                if action.data() is Identity.Instance:
+                    if node.identity is Identity.Value:
+                        name = 'change value to instance'
                         data = node.label.template
                         scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
-                elif action.data() is Identity.Literal:
-                    form = LiteralForm(node, self)
-                    if form.exec_() == LiteralForm.Accepted:
+                elif action.data() is Identity.Value:
+                    form = ValueForm(node, self)
+                    if form.exec_() == ValueForm.Accepted:
                         datatype = form.datatypeField.currentData()
                         value = form.valueField.value()
-                        data = node.composeLiteral(value, datatype)
+                        data = node.composeValue(value, datatype)
                         if node.text() != data:
                             name = 'change individual node to {}'.format(data)
                             scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))

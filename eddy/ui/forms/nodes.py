@@ -105,7 +105,7 @@ class CardinalityRestrictionForm(QDialog):
         self.accept()
 
 
-class LiteralForm(QDialog):
+class ValueForm(QDialog):
     """
     This class implements the form used to select the Literal value of an Individual node.
     """
@@ -127,13 +127,13 @@ class LiteralForm(QDialog):
         self.valueField.setFixedWidth(300)
 
         # FILL FIELDS WITH DATA
-        if node.identity is Identity.Literal:
+        if node.identity is Identity.Value:
             datatype = node.datatype
             for i in range(self.datatypeField.count()):
                 if self.datatypeField.itemData(i) is datatype:
                     self.datatypeField.setCurrentIndex(i)
                     break
-            self.valueField.setValue(node.literal)
+            self.valueField.setValue(node.value)
 
         else:
             self.datatypeField.setCurrentIndex(0)
@@ -147,7 +147,7 @@ class LiteralForm(QDialog):
         self.mainLayout.addRow('Value', self.valueField)
         self.mainLayout.addRow(self.buttonBox)
 
-        self.setWindowTitle('Compose literal')
+        self.setWindowTitle('Compose value')
         self.setWindowIcon(QIcon(':/images/eddy'))
         self.setFixedSize(self.sizeHint())
 

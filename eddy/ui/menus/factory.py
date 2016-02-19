@@ -403,11 +403,11 @@ class MenuFactory(QObject):
                     L = False
                 elif operand.identity is Identity.Attribute:
                     num = len(assertion.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
-                    I = I and (node.identity is Identity.Individual or num < 2)
-                    L = L and (node.identity is Identity.Literal or num < 2)
+                    I = I and (node.identity is Identity.Instance or num < 2)
+                    L = L and (node.identity is Identity.Value or num < 2)
 
         for a in mainwindow.actionsSetIndividualNodeAs:
-            a.setVisible(a.data() is Identity.Individual and I or a.data() is Identity.Literal and L)
+            a.setVisible(a.data() is Identity.Instance and I or a.data() is Identity.Value and L)
 
         ################################
         ## END CONSTRAIN IDENTITY SWITCH

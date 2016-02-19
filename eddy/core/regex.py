@@ -40,6 +40,6 @@ RE_CARDINALITY = re.compile("""^\(\s*(?P<min>[\d-]+)\s*,\s*(?P<max>[\d-]+)\s*\)$
 RE_DIGIT = re.compile("""\d""") # identify strings composed of only digits
 RE_FACET = re.compile("""^(?P<facet>.*)\s*"(?P<value>.*)"\^\^(?P<datatype>.*)$""") # tokenize facet restriction
 RE_ITEM_PREFIX = re.compile("""^(?P<prefix>[^\d])(?P<value>\d+)$""") # split items prefix/id
-RE_LITERAL = re.compile("""^"(?P<literal>.*)"\^\^(?P<datatype>.*)$""") # tokenize string into literal + datatype
 RE_QUOTED = re.compile("""^".*"$""") # identify strings fully embraced into quotes
 RE_OWL_INVALID_CHAR = re.compile("""[\W]""") # identify OWL invalid characters
+RE_VALUE = re.compile("""^"(?P<value>.*)"\^\^(?P<datatype>.*)$""") # tokenize string into literal + datatype

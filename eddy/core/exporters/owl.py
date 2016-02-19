@@ -373,13 +373,12 @@ class OWLExporter(AbstractExporter):
         :rtype: OWLNamedIndividual
         """
         if node not in self.converted:
-            if node.identity is Identity.Individual:
+            if node.identity is Identity.Instance:
                 IRI = self.IRI.create(self.ontoIRI, OWLText(node.text()))
                 self.converted[node] = self.factory.getOWLNamedIndividual(IRI)
-            elif node.identity is Identity.Literal:
-                value = node.literal
+            elif node.identity is Identity.Value:
                 datatype = self.OWL2Datatype.valueOf(node.datatype.owlapi)
-                self.converted[node] = self.factory.getOWLLiteral(value, datatype)
+                self.converted[node] = self.factory.getOWLLiteral(node.value, datatype)
         return self.converted[node]
 
     def buildIntersection(self, node):
@@ -971,7 +970,7 @@ class OWLExporter(AbstractExporter):
 
             elif e.isItem(Item.InstanceOfEdge):
 
-                if e.source.identity is Identity.Individual and e.target.identity is Identity.Concept:
+                if e.source.identity is Identity.Instance and e.target.identity is Identity.Concept:
                     self.axiomClassAssertion(e)
                 elif e.source.identity is Identity.Link and e.target.identity is Identity.Role:
                     self.axiomObjectPropertyAssertion(e)

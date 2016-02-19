@@ -291,9 +291,9 @@ class Explorer(QWidget):
         if node.item is Item.ValueRestrictionNode:
             return self.iconD
         if node.item is Item.IndividualNode:
-            if node.identity is Identity.Individual:
+            if node.identity is Identity.Instance:
                 return self.iconI
-            if node.identity is Identity.Literal:
+            if node.identity is Identity.Value:
                 return self.iconL
         if node.item is Item.RoleNode:
             return self.iconR
