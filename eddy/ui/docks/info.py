@@ -39,7 +39,7 @@ from PyQt5.QtGui import QBrush, QColor, QPainter
 from PyQt5.QtWidgets import QWidget, QFormLayout, QLabel, QVBoxLayout, QPushButton, QScrollBar, QStyleOption, QStyle
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QScrollArea
 
-from eddy.core.commands import CommandNodeLabelChange, CommandSetProperty
+from eddy.core.commands import CommandNodeLabelChange, CommandSetProperty, CommandRefactor
 from eddy.core.datatypes import Item, XsdDatatype, Facet, Identity
 from eddy.core.functions import disconnect, connect, isEmpty
 from eddy.core.qt import ColoredIcon, Font, StackedWidget
@@ -500,81 +500,34 @@ class NodeInfo(AbstractInfo):
 
         self.node = None
 
-        self.h1 = Header('General', self)
-
         self.idKey = Key('ID', self)
         self.idField = Str(self)
         self.idField.setReadOnly(True)
-
-        self.typeKey = Key('Type', self)
-        self.typeField = Str(self)
-        self.typeField.setReadOnly(True)
 
         self.identityKey = Key('Identity', self)
         self.identityField = Str(self)
         self.identityField.setReadOnly(True)
 
-        self.neighboursKey = Key('Neighbours', self)
-        self.neighboursField = Int(self)
-        self.neighboursField.setReadOnly(True)
-
-        self.generalLayout = QFormLayout()
-        self.generalLayout.setSpacing(0)
-        self.generalLayout.addRow(self.idKey, self.idField)
-        self.generalLayout.addRow(self.typeKey, self.typeField)
-        self.generalLayout.addRow(self.identityKey, self.identityField)
-        self.generalLayout.addRow(self.neighboursKey, self.neighboursField)
-
-        self.h2 = Header('Geometry', self)
-
-        self.xKey = Key('X', self)
-        self.xField = Int(self)
-        self.xField.setReadOnly(True)
-
-        self.yKey = Key('Y', self)
-        self.yField = Int(self)
-        self.yField.setReadOnly(True)
-
-        self.wKey = Key('Width', self)
-        self.wField = Int(self)
-        self.wField.setReadOnly(True)
-
-        self.hKey = Key('Height', self)
-        self.hField = Int(self)
-        self.hField.setReadOnly(True)
-
-        self.geometryLayout = QFormLayout()
-        self.geometryLayout.setSpacing(0)
-        self.geometryLayout.addRow(self.xKey, self.xField)
-        self.geometryLayout.addRow(self.yKey, self.yField)
-        self.geometryLayout.addRow(self.wKey, self.wField)
-        self.geometryLayout.addRow(self.hKey, self.hField)
+        self.nodePropHeader = Header('Node properties', self)
+        self.nodePropLayout = QFormLayout()
+        self.nodePropLayout.setSpacing(0)
+        self.nodePropLayout.addRow(self.idKey, self.idField)
+        self.nodePropLayout.addRow(self.identityKey, self.identityField)
 
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setAlignment(Qt.AlignTop)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
-        self.mainLayout.addWidget(self.h1)
-        self.mainLayout.addLayout(self.generalLayout)
-        self.mainLayout.addWidget(self.h2)
-        self.mainLayout.addLayout(self.geometryLayout)
+        self.mainLayout.addWidget(self.nodePropHeader)
+        self.mainLayout.addLayout(self.nodePropLayout)
 
     def updateData(self, node):
         """
         Fetch new information and fill the widget with data.
         :type node: AbstractNode
         """
-        pos = node.pos()
-        self.xField.setValue(int(pos.x()))
-        self.yField.setValue(int(pos.y()))
-        self.wField.setValue(int(node.width()))
-        self.hField.setValue(int(node.height()))
         self.idField.setValue(node.id)
         self.identityField.setValue(node.identity.label)
-        self.neighboursField.setValue(len(node.edges))
-        self.typeField.setValue(node.shortname.capitalize())
-        self.typeField.home(True)
-        self.typeField.deselect()
         self.node = node
 
 
@@ -588,8 +541,6 @@ class PredicateNodeInfo(NodeInfo):
         """
         super().__init__(mainwindow, parent)
 
-        self.h3 = Header('Predicate', self)
-
         self.brushKey = Key('Color', self)
         self.brushMenu = QMenu(self)
         for action in self.mainwindow.actionsChangeNodeBrush:
@@ -598,12 +549,7 @@ class PredicateNodeInfo(NodeInfo):
         self.brushButton.setMenu(self.brushMenu)
         self.brushButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
-        self.predicateLayout = QFormLayout()
-        self.predicateLayout.setSpacing(0)
-        self.predicateLayout.addRow(self.brushKey, self.brushButton)
-
-        self.mainLayout.insertWidget(2, self.h3)
-        self.mainLayout.insertLayout(3, self.predicateLayout)
+        self.nodePropLayout.addRow(self.brushKey, self.brushButton)
 
     def updateData(self, node):
         """
@@ -635,20 +581,45 @@ class EditableNodeInfo(PredicateNodeInfo):
         self.textField.setReadOnly(False)
         connect(self.textField.editingFinished, self.editingFinished)
 
-        self.predicateLayout.addRow(self.textKey, self.textField)
+        self.nameKey = Key('Name', self)
+        self.nameField = Str(self)
+        self.nameField.setReadOnly(False)
+        connect(self.nameField.editingFinished, self.editingFinished)
+
+        self.predPropHeader = Header('Predicate properties', self)
+        self.predPropLayout = QFormLayout()
+        self.predPropLayout.setSpacing(0)
+
+        self.nodePropLayout.insertRow(2, self.textKey, self.textField)
+        self.predPropLayout.addRow(self.nameKey, self.nameField)
+
+        self.mainLayout.insertWidget(0, self.predPropHeader)
+        self.mainLayout.insertLayout(1, self.predPropLayout)
 
     @pyqtSlot()
     def editingFinished(self):
         """
-        Executed when the Return or Enter key is pressed or the line edit loses focus.
+        Executed when the finish in editing the predicate name of the node label
         """
         if self.node:
-            node = self.node
-            data = self.textField.value()
-            data = data if not isEmpty(data) else node.label.template
-            if data != node.text():
-                scene = node.scene()
-                scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data))
+
+            try:
+                node = self.node
+                sender = self.sender()
+                data = sender.value()
+                data = data if not isEmpty(data) else node.label.template
+                if data != node.text():
+                    scene = node.scene()
+                    if sender is self.nameField:
+                        commands = []
+                        for n in scene.index.nodesForLabel(node.item, node.text()):
+                            commands.append(CommandNodeLabelChange(scene, n, n.text(), data))
+                        name = 'change predicate "{}" name to "{}"'.format(node.text(), data)
+                        scene.undostack.push(CommandRefactor(name, scene, commands))
+                    else:
+                        scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data))
+            except RuntimeError:
+                pass
 
 
     def updateData(self, node):
@@ -658,6 +629,7 @@ class EditableNodeInfo(PredicateNodeInfo):
         """
         super().updateData(node)
         self.textField.setValue(node.text())
+        self.nameField.setValue(node.text())
 
 
 class AttributeNodeInfo(EditableNodeInfo):
@@ -672,22 +644,17 @@ class AttributeNodeInfo(EditableNodeInfo):
 
         self.h4 = Header('Properties', self)
 
-        self.functionalKey = Key('Funct.', self)
-        functionalParent = Parent(self)
-        self.functionalBox = CheckBox(functionalParent)
-        self.functionalBox.setCheckable(True)
-        self.functionalBox.setProperty('attribute', 'functional')
-        connect(self.functionalBox.clicked, self.propertyChanged)
+        self.functKey = Key('Funct.', self)
+        functParent = Parent(self)
+        self.functBox = CheckBox(functParent)
+        self.functBox.setCheckable(True)
+        self.functBox.setProperty('attribute', 'functional')
+        connect(self.functBox.clicked, self.flagChanged)
 
-        self.propertiesLayout = QFormLayout()
-        self.propertiesLayout.setSpacing(0)
-        self.propertiesLayout.addRow(self.functionalKey, functionalParent)
-
-        self.mainLayout.insertWidget(4, self.h4)
-        self.mainLayout.insertLayout(5, self.propertiesLayout)
+        self.predPropLayout.addRow(self.functKey, functParent)
 
     @pyqtSlot()
-    def propertyChanged(self):
+    def flagChanged(self):
         """
         Executed whenever one of the property fields changes.
         """
@@ -706,7 +673,7 @@ class AttributeNodeInfo(EditableNodeInfo):
         :type node: AbstractNode
         """
         super().updateData(node)
-        self.functionalBox.setChecked(node.functional)
+        self.functBox.setChecked(node.functional)
 
 
 class RoleNodeInfo(EditableNodeInfo):
@@ -719,72 +686,65 @@ class RoleNodeInfo(EditableNodeInfo):
         """
         super().__init__(mainwindow, parent)
 
-        self.h4 = Header('Properties', self)
+        self.functKey = Key('Funct.', self)
+        functParent = Parent(self)
+        self.functBox = CheckBox(functParent)
+        self.functBox.setCheckable(True)
+        self.functBox.setProperty('attribute', 'functional')
+        connect(self.functBox.clicked, self.flagChanged)
 
-        self.functionalKey = Key('Funct.', self)
-        functionalParent = Parent(self)
-        self.functionalBox = CheckBox(functionalParent)
-        self.functionalBox.setCheckable(True)
-        self.functionalBox.setProperty('attribute', 'functional')
-        connect(self.functionalBox.clicked, self.propertyChanged)
-
-        self.inverseFunctionalKey = Key('Inv. Funct.', self)
-        inverseFunctionalParent = Parent(self)
-        self.inverseFunctionalBox = CheckBox(inverseFunctionalParent)
-        self.inverseFunctionalBox.setCheckable(True)
-        self.inverseFunctionalBox.setProperty('attribute', 'inverseFunctional')
-        connect(self.inverseFunctionalBox.clicked, self.propertyChanged)
+        self.invFunctKey = Key('Inv. Funct.', self)
+        invFunctParent = Parent(self)
+        self.invFunctBox = CheckBox(invFunctParent)
+        self.invFunctBox.setCheckable(True)
+        self.invFunctBox.setProperty('attribute', 'inverseFunctional')
+        connect(self.invFunctBox.clicked, self.flagChanged)
 
         self.asymmetricKey = Key('Asymmetric', self)
         asymmetricParent = Parent(self)
         self.asymmetricBox = CheckBox(asymmetricParent)
         self.asymmetricBox.setCheckable(True)
         self.asymmetricBox.setProperty('attribute', 'asymmetric')
-        connect(self.asymmetricBox.clicked, self.propertyChanged)
+        connect(self.asymmetricBox.clicked, self.flagChanged)
 
         self.irreflexiveKey = Key('Irreflexive', self)
         irreflexiveParent = Parent(self)
         self.irreflexiveBox = CheckBox(irreflexiveParent)
         self.irreflexiveBox.setCheckable(True)
         self.irreflexiveBox.setProperty('attribute', 'irreflexive')
-        connect(self.irreflexiveBox.clicked, self.propertyChanged)
+        connect(self.irreflexiveBox.clicked, self.flagChanged)
         
         self.reflexiveKey = Key('Reflexive', self)
         reflexiveParent = Parent(self)
         self.reflexiveBox = CheckBox(reflexiveParent)
         self.reflexiveBox.setCheckable(True)
         self.reflexiveBox.setProperty('attribute', 'reflexive')
-        connect(self.reflexiveBox.clicked, self.propertyChanged)
+        connect(self.reflexiveBox.clicked, self.flagChanged)
         
         self.symmetricKey = Key('Symmetric', self)
         symmetricParent = Parent(self)
         self.symmetricBox = CheckBox(symmetricParent)
         self.symmetricBox.setCheckable(True)
         self.symmetricBox.setProperty('attribute', 'symmetric')
-        connect(self.symmetricBox.clicked, self.propertyChanged)
+        connect(self.symmetricBox.clicked, self.flagChanged)
         
         self.transitiveKey = Key('Transitive', self)
         transitiveParent = Parent(self)
         self.transitiveBox = CheckBox(transitiveParent)
         self.transitiveBox.setCheckable(True)
         self.transitiveBox.setProperty('attribute', 'transitive')
-        connect(self.transitiveBox.clicked, self.propertyChanged)
+        connect(self.transitiveBox.clicked, self.flagChanged)
 
-        self.propertiesLayout = QFormLayout()
-        self.propertiesLayout.setSpacing(0)
-        self.propertiesLayout.addRow(self.functionalKey, functionalParent)
-        self.propertiesLayout.addRow(self.inverseFunctionalKey, inverseFunctionalParent)
-        self.propertiesLayout.addRow(self.asymmetricKey, asymmetricParent)
-        self.propertiesLayout.addRow(self.irreflexiveKey, irreflexiveParent)
-        self.propertiesLayout.addRow(self.reflexiveKey, reflexiveParent)
-        self.propertiesLayout.addRow(self.symmetricKey, symmetricParent)
-        self.propertiesLayout.addRow(self.transitiveKey, transitiveParent)
-
-        self.mainLayout.insertWidget(4, self.h4)
-        self.mainLayout.insertLayout(5, self.propertiesLayout)
+        self.predPropLayout.addRow(self.functKey, functParent)
+        self.predPropLayout.addRow(self.invFunctKey, invFunctParent)
+        self.predPropLayout.addRow(self.asymmetricKey, asymmetricParent)
+        self.predPropLayout.addRow(self.irreflexiveKey, irreflexiveParent)
+        self.predPropLayout.addRow(self.reflexiveKey, reflexiveParent)
+        self.predPropLayout.addRow(self.symmetricKey, symmetricParent)
+        self.predPropLayout.addRow(self.transitiveKey, transitiveParent)
 
     @pyqtSlot()
-    def propertyChanged(self):
+    def flagChanged(self):
         """
         Executed whenever one of the property fields changes.
         """
@@ -804,8 +764,8 @@ class RoleNodeInfo(EditableNodeInfo):
         :type node: AbstractNode
         """
         super().updateData(node)
-        self.functionalBox.setChecked(node.functional)
-        self.inverseFunctionalBox.setChecked(node.inverseFunctional)
+        self.functBox.setChecked(node.functional)
+        self.invFunctBox.setChecked(node.inverseFunctional)
         self.asymmetricBox.setChecked(node.asymmetric)
         self.irreflexiveBox.setChecked(node.irreflexive)
         self.reflexiveBox.setChecked(node.reflexive)
@@ -831,7 +791,7 @@ class ValueDomainNodeInfo(PredicateNodeInfo):
         self.datatypeButton.setMenu(self.datatypeMenu)
         self.datatypeButton.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
 
-        self.predicateLayout.addRow(self.datatypeKey, self.datatypeButton)
+        self.nodePropLayout.addRow(self.datatypeKey, self.datatypeButton)
 
     def updateData(self, node):
         """
@@ -872,9 +832,9 @@ class ValueRestrictionNodeInfo(PredicateNodeInfo):
             if Facet.forDatatype(datatype):
                 self.datatypeField.addItem(datatype.value, datatype)
 
-        self.predicateLayout.addRow(self.datatypeKey, self.datatypeField)
-        self.predicateLayout.addRow(self.facetKey, self.facetField)
-        self.predicateLayout.addRow(self.restrictionKey, self.restrictionField)
+        self.nodePropLayout.addRow(self.datatypeKey, self.datatypeField)
+        self.nodePropLayout.addRow(self.facetKey, self.facetField)
+        self.nodePropLayout.addRow(self.restrictionKey, self.restrictionField)
 
     @pyqtSlot()
     def restrictionChanged(self):
@@ -884,26 +844,19 @@ class ValueRestrictionNodeInfo(PredicateNodeInfo):
         if self.node:
 
             try:
-
                 node = self.node
                 scene = node.scene()
                 datatype = self.datatypeField.currentData()
                 facet = self.facetField.currentData()
                 value = self.restrictionField.value()
-
                 allowed = Facet.forDatatype(datatype)
                 if facet not in allowed:
                     facet = allowed[0]
-
                 data = node.compose(facet, value, datatype)
                 if node.text() != data:
                     name = 'change value restriction to {}'.format(data)
                     scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
-
             except RuntimeError:
-                # We need to catch this exception because sometime when we close the active
-                # scene while having a combobox active this slot is triggered but we don't
-                # have a scene object anymore, so we'll end up with an exception.
                 pass
 
 
@@ -960,8 +913,8 @@ class ValueNodeInfo(PredicateNodeInfo):
             if Facet.forDatatype(datatype):
                 self.datatypeField.addItem(datatype.value, datatype)
 
-        self.predicateLayout.addRow(self.datatypeKey, self.datatypeField)
-        self.predicateLayout.addRow(self.valueKey, self.valueField)
+        self.nodePropLayout.addRow(self.datatypeKey, self.datatypeField)
+        self.nodePropLayout.addRow(self.valueKey, self.valueField)
 
     @pyqtSlot()
     def valueChanged(self):
@@ -971,21 +924,15 @@ class ValueNodeInfo(PredicateNodeInfo):
         if self.node:
 
             try:
-
                 node = self.node
                 scene = node.scene()
                 datatype = self.datatypeField.currentData()
                 value = self.valueField.value()
-
                 data = node.composeValue(value, datatype)
                 if node.text() != data:
-                    name = 'change individual node to {}'.format(data)
+                    name = 'change value to {}'.format(data)
                     scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
-
             except RuntimeError:
-                # We need to catch this exception because sometime when we close the active
-                # scene while having a combobox active this slot is triggered but we don't
-                # have a scene object anymore, so we'll end up with an exception.
                 pass
 
 

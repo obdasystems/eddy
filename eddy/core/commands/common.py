@@ -250,26 +250,17 @@ class CommandItemsTranslate(QUndoCommand):
 
 class CommandSetProperty(QUndoCommand):
     """
-    This command is used to set properties of Graphol items.
+    This command is used to set properties of graphol items.
     """
-    def __init__(self, scene, node, collection, name=None):
+    def __init__(self, scene, node, collection, name):
         """
         Initialize the command.
         """
         if not isinstance(collection, (list, tuple)):
             collection = [collection]
-
         self.node = node
         self.scene = scene
         self.collection = collection
-
-        if not name:
-            if len(collection) > 1:
-                name = 'set {} properties'.format(node.shortname)
-            else:
-                data = collection[0]
-                name = 'set {} {} property'.format(node.shortname, data['attribute'])
-
         super().__init__(name)
 
     def redo(self):

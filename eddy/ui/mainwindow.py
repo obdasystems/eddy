@@ -1113,11 +1113,11 @@ class MainWindow(QMainWindow):
                 if form.exec_() == RenameForm.Accepted:
                     if node.text() != form.renameField.value():
                         commands = []
+                        undo = node.text()
+                        redo = form.renameField.value()
                         for n in scene.index.nodesForLabel(node.item, node.text()):
-                            undo = n.text()
-                            redo = form.renameField.value()
-                            commands.append(CommandNodeLabelChange(scene, n, undo, redo))
-                        name = 'rename {} node{}'.format(len(commands), 's' if len(commands) > 1 else '')
+                            commands.append(CommandNodeLabelChange(scene, n, n.text(), redo))
+                        name = 'change predicate "{}" name to "{}"'.format(undo, redo)
                         scene.undostack.push(CommandRefactor(name, scene, commands))
 
     @pyqtSlot()
@@ -1329,7 +1329,7 @@ class MainWindow(QMainWindow):
                         value = form.valueField.value()
                         data = node.composeValue(value, datatype)
                         if node.text() != data:
-                            name = 'change individual node to {}'.format(data)
+                            name = 'change {} to {}'.format(node.identity.label.lower(), data)
                             scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
 
     @pyqtSlot()
