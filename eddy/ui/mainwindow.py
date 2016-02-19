@@ -137,7 +137,6 @@ class MainWindow(QMainWindow):
         #                                                                                                              #
         ################################################################################################################
 
-        self.iconAbc = Icon(':/icons/abc')
         self.iconBringToFront = Icon(':/icons/bring-to-front')
         self.iconCenterFocus = Icon(':/icons/center-focus')
         self.iconClose = Icon(':/icons/close')
@@ -165,6 +164,7 @@ class MainWindow(QMainWindow):
         self.iconSaveAs = Icon(':/icons/save')
         self.iconSelectAll = Icon(':/icons/select-all')
         self.iconSendToBack = Icon(':/icons/send-to-back')
+        self.iconSpellCheck = Icon(':/icons/spell-check')
         self.iconStarFilled = Icon(':/icons/star-filled')
         self.iconSwapHorizontal = Icon(':/icons/swap-horizontal')
         self.iconSwapVertical = Icon(':/icons/swap-vertical')
@@ -295,7 +295,7 @@ class MainWindow(QMainWindow):
         connect(self.actionCenterDiagram.triggered, self.centerDiagram)
 
         self.actionSyntaxCheck = QAction('Run syntax check', self)
-        self.actionSyntaxCheck.setIcon(self.iconAbc)
+        self.actionSyntaxCheck.setIcon(self.iconSpellCheck)
         self.actionSyntaxCheck.setStatusTip('Run syntax check on the active diagram')
         self.actionSyntaxCheck.setEnabled(False)
         connect(self.actionSyntaxCheck.triggered, self.syntaxCheck)

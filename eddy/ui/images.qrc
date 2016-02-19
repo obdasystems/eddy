@@ -1,7 +1,6 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
 <qresource prefix="/icons">
-    <file alias="abc">artwork/icons/ic_abc_black_24dp_1x.png</file>
     <file alias="appearance">artwork/icons/ic_palette_black_24dp_1x.png</file>
     <file alias="arrow-drop-down">artwork/icons/ic_arrow_drop_down_black_18dp_1x.png</file>
     <file alias="arrow-drop-up">artwork/icons/ic_arrow_drop_up_black_18dp_1x.png</file>
@@ -39,6 +38,7 @@
     <file alias="save">artwork/icons/ic_save_black_24dp_1x.png</file>
     <file alias="select-all">artwork/icons/ic_select_all_black_24dp_1x.png</file>
     <file alias="send-to-back">artwork/icons/ic_flip_to_back_black_24dp_1x.png</file>
+    <file alias="spell-check">artwork/icons/ic_spellcheck_black_24dp_1x.png</file>
     <file alias="star-filled">artwork/icons/ic_star_black_24dp_1x.png</file>
     <file alias="swap-horizontal">artwork/icons/ic_swap_horiz_black_24dp_1x.png</file>
     <file alias="swap-vertical">artwork/icons/ic_swap_vert_black_24dp_1x.png</file>
