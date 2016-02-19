@@ -111,28 +111,7 @@ class Overview(QGraphicsView):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def clear(self):
-        """
-        Clear the widget from browsing the current view.
-        """
-        if self.mainview:
-
-            try:
-                scene = self.mainview.scene()
-                # Make sure to disconnect only the signals connected to the slots provided by this
-                # widget otherwise we will experiences bugs when the MainWindow goes out of focus: for
-                # more details on the matter read: https://github.com/danielepantaleone/eddy/issues/15
-                disconnect(scene.selectionChanged, self.updateView)
-                disconnect(scene.updated, self.updateView)
-            except RuntimeError:
-                pass
-            finally:
-                self.mainview = None
-
-        viewport = self.viewport()
-        viewport.update()
-
-    def setView(self, view):
+    def browse(self, view):
         """
         Set the widget to browse the given view.
         :type view: MainView
@@ -147,6 +126,24 @@ class Overview(QGraphicsView):
 
         self.mainview = view
         self.updateView()
+
+    def clear(self):
+        """
+        Clear the widget from browsing the current view.
+        """
+        if self.mainview:
+
+            try:
+                scene = self.mainview.scene()
+                disconnect(scene.selectionChanged, self.updateView)
+                disconnect(scene.updated, self.updateView)
+            except RuntimeError:
+                pass
+            finally:
+                self.mainview = None
+
+        viewport = self.viewport()
+        viewport.update()
 
     @pyqtSlot()
     def updateView(self):

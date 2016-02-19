@@ -187,6 +187,22 @@ class Info(QScrollArea):
     #                                                                                                                  #
     ####################################################################################################################
 
+    def browse(self, scene):
+        """
+        Set the widget to inspect the given scene.
+        :type scene: DiagramScene
+        """
+        self.clear()
+        self.scene = scene
+
+        if self.scene:
+            connect(scene.index.added, self.updateLayout)
+            connect(scene.index.removed, self.updateLayout)
+            connect(scene.index.cleared, self.updateLayout)
+            connect(scene.selectionChanged, self.updateLayout)
+            connect(scene.updated, self.updateLayout)
+            self.updateLayout()
+
     def clear(self):
         """
         Clear the widget from inspecting the current view.
@@ -205,22 +221,6 @@ class Info(QScrollArea):
                 self.scene = None
 
         self.updateLayout()
-
-    def setScene(self, scene):
-        """
-        Set the widget to inspect the given scene.
-        :type scene: DiagramScene
-        """
-        self.clear()
-        self.scene = scene
-
-        if self.scene:
-            connect(scene.index.added, self.updateLayout)
-            connect(scene.index.removed, self.updateLayout)
-            connect(scene.index.cleared, self.updateLayout)
-            connect(scene.selectionChanged, self.updateLayout)
-            connect(scene.updated, self.updateLayout)
-            self.updateLayout()
 
 
 ########################################################################################################################

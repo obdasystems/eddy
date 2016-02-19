@@ -242,6 +242,44 @@ class Explorer(QWidget):
     #                                                                                                                  #
     ####################################################################################################################
 
+    def browse(self, view):
+        """
+        Set the widget to inspect the given view.
+        :type view: MainView
+        """
+        self.clear()
+        self.mainview = view
+
+        if self.mainview:
+
+            scene = self.mainview.scene()
+            connect(scene.index.added, self.insert)
+            connect(scene.index.removed, self.remove)
+
+            for item in scene.index.nodes():
+                self.insert(item)
+
+            if self.mainview in self.expanded:
+                expanded = self.expanded[self.mainview]
+                for i in range(self.model.rowCount()):
+                    item = self.model.item(i)
+                    index = self.proxy.mapFromSource(self.model.indexFromItem(item))
+                    self.view.setExpanded(index, item.text() in expanded)
+
+            key = ''
+            if self.mainview in self.searched:
+                key = self.searched[self.mainview]
+            self.search.setText(key)
+
+            if self.mainview in self.scrolled:
+                rect = self.rect()
+                item = next(iter(self.model.findItems(self.scrolled[self.mainview])), None)
+                for i in range(self.model.rowCount()):
+                    self.view.scrollTo(self.proxy.mapFromSource(self.model.indexFromItem(self.model.item(i))))
+                    index = self.proxy.mapToSource(self.view.indexAt(rect.topLeft()))
+                    if self.model.itemFromIndex(index) is item:
+                        break
+
     def clear(self):
         """
         Clear the widget from inspecting the current view.
@@ -315,44 +353,6 @@ class Explorer(QWidget):
             scene = self.mainview.scene()
             scene.clearSelection()
             node.setSelected(True)
-
-    def setView(self, view):
-        """
-        Set the widget to inspect the given view.
-        :type view: MainView
-        """
-        self.clear()
-        self.mainview = view
-
-        if self.mainview:
-
-            scene = self.mainview.scene()
-            connect(scene.index.added, self.insert)
-            connect(scene.index.removed, self.remove)
-
-            for item in scene.index.nodes():
-                self.insert(item)
-
-            if self.mainview in self.expanded:
-                expanded = self.expanded[self.mainview]
-                for i in range(self.model.rowCount()):
-                    item = self.model.item(i)
-                    index = self.proxy.mapFromSource(self.model.indexFromItem(item))
-                    self.view.setExpanded(index, item.text() in expanded)
-
-            key = ''
-            if self.mainview in self.searched:
-                key = self.searched[self.mainview]
-            self.search.setText(key)
-
-            if self.mainview in self.scrolled:
-                rect = self.rect()
-                item = next(iter(self.model.findItems(self.scrolled[self.mainview])), None)
-                for i in range(self.model.rowCount()):
-                    self.view.scrollTo(self.proxy.mapFromSource(self.model.indexFromItem(self.model.item(i))))
-                    index = self.proxy.mapToSource(self.view.indexAt(rect.topLeft()))
-                    if self.model.itemFromIndex(index) is item:
-                        break
 
 
 class ExplorerView(QTreeView):
