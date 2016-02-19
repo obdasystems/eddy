@@ -160,7 +160,7 @@ class ItemIndex(QObject):
         """
         return self.nodesById.values()
 
-    def nodesForLabel(self, item, key):
+    def predicates(self, item, key):
         """
         Returns the list of nodes of the given item type sharing the given label (only for predicate nodes).
         :type item: Item
@@ -171,6 +171,16 @@ class ItemIndex(QObject):
             return self.nodesByTx[item][key]
         except KeyError:
             return DistinctList()
+
+    def predicatesNum(self, item):
+        """
+        Returns the amounf of predicates for the given type.
+        :param item: Item
+        """
+        try:
+            return len(self.nodesByTx[item])
+        except KeyError:
+            return 0
 
     def remove(self, item):
         """

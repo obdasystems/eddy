@@ -1095,7 +1095,7 @@ class MainWindow(QMainWindow):
             if node:
                 action = self.sender()
                 color = action.data()
-                nodes = scene.index.nodesForLabel(node.item, node.text())
+                nodes = scene.index.predicates(node.item, node.text())
                 scene.undostack.push(CommandNodeSetBrush(scene, nodes, QBrush(QColor(color.value))))
 
     @pyqtSlot()
@@ -1115,7 +1115,7 @@ class MainWindow(QMainWindow):
                         commands = []
                         undo = node.text()
                         redo = form.renameField.value()
-                        for n in scene.index.nodesForLabel(node.item, node.text()):
+                        for n in scene.index.predicates(node.item, node.text()):
                             commands.append(CommandNodeLabelChange(scene, n, n.text(), redo))
                         name = 'change predicate "{}" name to "{}"'.format(undo, redo)
                         scene.undostack.push(CommandRefactor(name, scene, commands))

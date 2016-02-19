@@ -95,7 +95,7 @@ class Info(QScrollArea):
         self.setWidgetResizable(True)
         scrollbar = self.verticalScrollBar()
         scrollbar.installEventFilter(self)
-        self.updateLayout()
+        self.stack()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -127,9 +127,9 @@ class Info(QScrollArea):
     ####################################################################################################################
 
     @pyqtSlot()
-    def updateLayout(self):
+    def stack(self):
         """
-        Update widget layout.
+        Set the current stacked widget.
         """
         if self.scene:
             selected = self.scene.selectedItems()
@@ -196,12 +196,12 @@ class Info(QScrollArea):
         self.scene = scene
 
         if self.scene:
-            connect(scene.index.added, self.updateLayout)
-            connect(scene.index.removed, self.updateLayout)
-            connect(scene.index.cleared, self.updateLayout)
-            connect(scene.selectionChanged, self.updateLayout)
-            connect(scene.updated, self.updateLayout)
-            self.updateLayout()
+            connect(scene.index.added, self.stack)
+            connect(scene.index.removed, self.stack)
+            connect(scene.index.cleared, self.stack)
+            connect(scene.selectionChanged, self.stack)
+            connect(scene.updated, self.stack)
+            self.stack()
 
     def clear(self):
         """
@@ -210,17 +210,17 @@ class Info(QScrollArea):
         if self.scene:
 
             try:
-                disconnect(self.scene.index.added, self.updateLayout)
-                disconnect(self.scene.index.removed, self.updateLayout)
-                disconnect(self.scene.index.cleared, self.updateLayout)
-                disconnect(self.scene.selectionChanged, self.updateLayout)
-                disconnect(self.scene.updated, self.updateLayout)
+                disconnect(self.scene.index.added, self.stack)
+                disconnect(self.scene.index.removed, self.stack)
+                disconnect(self.scene.index.cleared, self.stack)
+                disconnect(self.scene.selectionChanged, self.stack)
+                disconnect(self.scene.updated, self.stack)
             except RuntimeError:
                 pass
             finally:
                 self.scene = None
 
-        self.updateLayout()
+        self.stack()
 
 
 ########################################################################################################################
@@ -375,35 +375,41 @@ class DiagramInfo(AbstractInfo):
         """
         super().__init__(mainwindow, parent)
 
-        self.h1 = Header('Diagram', self)
+        self.conceptsKey = Key('Concepts', self)
+        self.conceptsField = Int(self)
+        self.conceptsField.setReadOnly(True)
 
-        self.nodesKey = Key('N° nodes', self)
-        self.nodesField = Int(self)
-        self.nodesField.setReadOnly(True)
+        self.rolesKey = Key('Roles', self)
+        self.rolesField = Int(self)
+        self.rolesField.setReadOnly(True)
 
-        self.edgesKey = Key('N° edges', self)
-        self.edgesField = Int(self)
-        self.edgesField.setReadOnly(True)
+        self.attributesKey = Key('Attributes', self)
+        self.attributesField = Int(self)
+        self.attributesField.setReadOnly(True)
 
-        self.diagramLayout = QFormLayout()
-        self.diagramLayout.setSpacing(0)
-        self.diagramLayout.addRow(self.nodesKey, self.nodesField)
-        self.diagramLayout.addRow(self.edgesKey, self.edgesField)
+        self.atomicPredHeader = Header('Atomic predicates', self)
+
+        self.atomicPredLayout = QFormLayout()
+        self.atomicPredLayout.setSpacing(0)
+        self.atomicPredLayout.addRow(self.conceptsKey, self.conceptsField)
+        self.atomicPredLayout.addRow(self.rolesKey, self.rolesField)
+        self.atomicPredLayout.addRow(self.attributesKey, self.attributesField)
 
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setAlignment(Qt.AlignTop)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
-        self.mainLayout.addWidget(self.h1)
-        self.mainLayout.addLayout(self.diagramLayout)
+        self.mainLayout.addWidget(self.atomicPredHeader)
+        self.mainLayout.addLayout(self.atomicPredLayout)
 
     def updateData(self, scene):
         """
         Fetch new information and fill the widget with data.
         :type scene: DiagramScene
         """
-        self.nodesField.setValue(scene.index.size(edges=False))
-        self.edgesField.setValue(scene.index.size(nodes=False))
+        self.conceptsField.setValue(scene.index.predicatesNum(Item.ConceptNode))
+        self.rolesField.setValue(scene.index.predicatesNum(Item.RoleNode))
+        self.attributesField.setValue(scene.index.predicatesNum(Item.AttributeNode))
 
 
 class EdgeInfo(AbstractInfo):
@@ -612,7 +618,7 @@ class EditableNodeInfo(PredicateNodeInfo):
                     scene = node.scene()
                     if sender is self.nameField:
                         commands = []
-                        for n in scene.index.nodesForLabel(node.item, node.text()):
+                        for n in scene.index.predicates(node.item, node.text()):
                             commands.append(CommandNodeLabelChange(scene, n, n.text(), data))
                         name = 'change predicate "{}" name to "{}"'.format(node.text(), data)
                         scene.undostack.push(CommandRefactor(name, scene, commands))
@@ -713,21 +719,21 @@ class RoleNodeInfo(EditableNodeInfo):
         self.irreflexiveBox.setCheckable(True)
         self.irreflexiveBox.setProperty('attribute', 'irreflexive')
         connect(self.irreflexiveBox.clicked, self.flagChanged)
-        
+
         self.reflexiveKey = Key('Reflexive', self)
         reflexiveParent = Parent(self)
         self.reflexiveBox = CheckBox(reflexiveParent)
         self.reflexiveBox.setCheckable(True)
         self.reflexiveBox.setProperty('attribute', 'reflexive')
         connect(self.reflexiveBox.clicked, self.flagChanged)
-        
+
         self.symmetricKey = Key('Symmetric', self)
         symmetricParent = Parent(self)
         self.symmetricBox = CheckBox(symmetricParent)
         self.symmetricBox.setCheckable(True)
         self.symmetricBox.setProperty('attribute', 'symmetric')
         connect(self.symmetricBox.clicked, self.flagChanged)
-        
+
         self.transitiveKey = Key('Transitive', self)
         transitiveParent = Parent(self)
         self.transitiveBox = CheckBox(transitiveParent)
