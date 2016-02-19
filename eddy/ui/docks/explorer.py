@@ -57,12 +57,12 @@ class Explorer(QWidget):
         self.searched = {}
         self.scrolled = {}
         self.mainview = None
-        self.iconA = QIcon(':/icons/treeview-attribute')
-        self.iconC = QIcon(':/icons/treeview-concept')
-        self.iconD = QIcon(':/icons/treeview-datarange')
-        self.iconI = QIcon(':/icons/treeview-individual')
-        self.iconL = QIcon(':/icons/treeview-literal')
-        self.iconR = QIcon(':/icons/treeview-role')
+        self.iconA = QIcon(':/icons/treeview-icon-attribute')
+        self.iconC = QIcon(':/icons/treeview-icon-concept')
+        self.iconD = QIcon(':/icons/treeview-icon-datarange')
+        self.iconI = QIcon(':/icons/treeview-icon-instance')
+        self.iconR = QIcon(':/icons/treeview-icon-role')
+        self.iconV = QIcon(':/icons/treeview-icon-value')
         self.search = StringField(self)
         self.search.setClearButtonEnabled(True)
         self.search.setPlaceholderText('Search...')
@@ -294,7 +294,7 @@ class Explorer(QWidget):
             if node.identity is Identity.Instance:
                 return self.iconI
             if node.identity is Identity.Value:
-                return self.iconL
+                return self.iconV
         if node.item is Item.RoleNode:
             return self.iconR
 

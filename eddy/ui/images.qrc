@@ -47,13 +47,12 @@
     <file alias="treeview-branch-more">artwork/icons/treeview-branch-more.png</file>
     <file alias="treeview-branch-open">artwork/icons/treeview-branch-open.png</file>
     <file alias="treeview-branch-vline">artwork/icons/treeview-branch-vline.png</file>
-    <file alias="treeview-attribute">artwork/icons/treeview-attribute.png</file>
-    <file alias="treeview-concept">artwork/icons/treeview-concept.png</file>
-    <file alias="treeview-datarange">artwork/icons/treeview-datarange.png</file>
-    <file alias="treeview-individual">artwork/icons/treeview-individual.png</file>
-    <file alias="treeview-literal">artwork/icons/treeview-literal.png</file>
-    <file alias="treeview-role">artwork/icons/treeview-role.png</file>
-
+    <file alias="treeview-icon-attribute">artwork/icons/treeview-icon-attribute.png</file>
+    <file alias="treeview-icon-concept">artwork/icons/treeview-icon-concept.png</file>
+    <file alias="treeview-icon-datarange">artwork/icons/treeview-icon-datarange.png</file>
+    <file alias="treeview-icon-instance">artwork/icons/treeview-icon-instance.png</file>
+    <file alias="treeview-icon-value">artwork/icons/treeview-icon-value.png</file>
+    <file alias="treeview-icon-role">artwork/icons/treeview-icon-role.png</file>
     <file alias="undo">artwork/icons/ic_undo_black_24dp_1x.png</file>
     <file alias="warning">artwork/icons/ic_warning_black_48dp_1x.png</file>
     <file alias="zoom">artwork/icons/ic_zoom_black_24dp_1x.png</file>
