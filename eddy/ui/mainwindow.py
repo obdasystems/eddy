@@ -54,7 +54,7 @@ from eddy.core.commands import CommandEdgeInclusionToggleComplete, CommandRefact
 from eddy.core.commands import CommandItemsTranslate, CommandEdgeSwap
 from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelChange
 from eddy.core.commands import CommandNodeOperatorSwitchTo, CommandNodeSetZValue
-from eddy.core.commands import CommandNodeSetBrush, CommandEdgeBreakpointDel
+from eddy.core.commands import CommandNodeSetBrush, CommandEdgeBreakpointRemove
 from eddy.core.datatypes import Color, File, DiagramMode, Filetype, Platform
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
 from eddy.core.exporters import GrapholExporter
@@ -1130,7 +1130,7 @@ class MainWindow(QMainWindow):
             action = self.sender()
             edge, breakpoint = action.data()
             if 0 <= breakpoint < len(edge.breakpoints):
-                scene.undostack.push(CommandEdgeBreakpointDel(scene, edge, breakpoint))
+                scene.undostack.push(CommandEdgeBreakpointRemove(scene, edge, breakpoint))
 
     @pyqtSlot()
     def resetTextPosition(self):

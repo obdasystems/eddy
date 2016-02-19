@@ -42,7 +42,7 @@ from eddy.core.commands.common import CommandSetProperty
 from eddy.core.commands.edges import CommandEdgeAdd
 from eddy.core.commands.edges import CommandEdgeAnchorMove
 from eddy.core.commands.edges import CommandEdgeBreakpointAdd
-from eddy.core.commands.edges import CommandEdgeBreakpointDel
+from eddy.core.commands.edges import CommandEdgeBreakpointRemove
 from eddy.core.commands.edges import CommandEdgeBreakpointMove
 from eddy.core.commands.edges import CommandEdgeInclusionToggleComplete
 from eddy.core.commands.edges import CommandEdgeSwap

@@ -173,7 +173,7 @@ class CommandEdgeBreakpointMove(QUndoCommand):
         self.scene.updated.emit()
 
 
-class CommandEdgeBreakpointDel(QUndoCommand):
+class CommandEdgeBreakpointRemove(QUndoCommand):
     """
     This command is used to delete edge breakpoints.
     """
