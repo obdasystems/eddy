@@ -32,9 +32,10 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import pyqtSlot, Qt, pyqtSignal
+from PyQt5.QtCore import pyqtSlot, pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QMdiArea, QMdiSubWindow, QMessageBox, QTabWidget, QAction
+from PyQt5.QtWidgets import QMdiArea, QMdiSubWindow, QMessageBox
+from PyQt5.QtWidgets import QTabWidget, QAction, QTabBar
 
 from eddy.core.functions import connect
 
@@ -49,11 +50,17 @@ class MdiArea(QMdiArea):
         :type parent: QWidget
         """
         super().__init__(parent)
+
         self.setContentsMargins(0, 0, 0, 0)
         self.setViewMode(MdiArea.TabbedView)
         self.setTabPosition(QTabWidget.North)
         self.setTabsClosable(True)
         self.setTabsMovable(True)
+
+        for child in self.children():
+            if isinstance(child, QTabBar):
+                child.setExpanding(False)
+                break
 
     ####################################################################################################################
     #                                                                                                                  #
