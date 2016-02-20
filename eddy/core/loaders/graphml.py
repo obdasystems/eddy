@@ -282,6 +282,14 @@ class GraphmlLoader(AbstractLoader):
                 data = data.nextSiblingElement('data')
         return edge
 
+    def buildInstanceOfEdge(self, element):
+        """
+        Build an InstanceOf edge using the given QDomElement.
+        :type element: QDomElement
+        :rtype: InputEdge
+        """
+        return self.buildEdgeFromGenericEdge(Item.InstanceOfEdge, element)
+
     ####################################################################################################################
     #                                                                                                                  #
     #   AUXILIARY METHODS                                                                                              #
@@ -317,7 +325,7 @@ class GraphmlLoader(AbstractLoader):
                     'breakpoints': points,
                 }
 
-                edge = self.factory.create(item=item, scene=self.scene, **kwargs)
+                edge = self.factory.create(item, self.scene, **kwargs)
                 # yEd, differently from the node pos whose origin matches the TOP-LEFT corner,
                 # consider the center of the shape as original anchor point (0,0). So if the
                 # anchor point hs a negative X it's moved a bit on the left with respect to
@@ -368,7 +376,7 @@ class GraphmlLoader(AbstractLoader):
                     'width': float(geometry.attribute('width')),
                 }
 
-                node = self.factory.create(item=item, scene=self.scene, **kwargs)
+                node = self.factory.create(item, self.scene, **kwargs)
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
                 # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
@@ -405,7 +413,7 @@ class GraphmlLoader(AbstractLoader):
                     'width': float(geometry.attribute('width')),
                 }
 
-                node = self.factory.create(item=item, scene=self.scene, **kwargs)
+                node = self.factory.create(item, self.scene, **kwargs)
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
                 # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
@@ -442,7 +450,7 @@ class GraphmlLoader(AbstractLoader):
                     'width': float(geometry.attribute('width')),
                 }
 
-                node = self.factory.create(item=item, scene=self.scene, **kwargs)
+                node = self.factory.create(item, self.scene, **kwargs)
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
                 # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
@@ -545,6 +553,11 @@ class GraphmlLoader(AbstractLoader):
                     if not lineStyle.isNull():
                         lineType = lineStyle.attribute('type', '')
                         if lineType == 'line':
+                            edgeLabel = polyLineEdge.firstChildElement('y:EdgeLabel')
+                            if not edgeLabel.isNull():
+                                edgeText = edgeLabel.text().strip()
+                                if  edgeText == 'instanceOf':
+                                    return Item.InstanceOfEdge
                             return Item.InclusionEdge
                         if lineType == 'dashed':
                             return Item.InputEdge
@@ -664,6 +677,8 @@ class GraphmlLoader(AbstractLoader):
                         edge = self.buildInclusionEdge(element)
                     elif item is Item.InputEdge:
                         edge = self.buildInputEdge(element)
+                    elif item is Item.InstanceOfEdge:
+                        edge = self.buildInstanceOfEdge(element)
 
                     if not edge:
                         raise ValueError('unknown edge with id {}'.format(element.attribute('id')))
