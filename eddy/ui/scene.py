@@ -264,10 +264,13 @@ class DiagramScene(QGraphicsScene):
                         previousNode.updateBrush(selected=False)
 
                     if currentNode:
+                        self.mouseOverNode = currentNode
                         res = self.validator.result(edge.source, edge, currentNode)
                         currentNode.updateBrush(selected=False, valid=res.valid)
-                        statusBar.showMessage(res.message)
-                        self.mouseOverNode = currentNode
+                        if not res.valid:
+                            statusBar.showMessage(res.message)
+                        else:
+                            statusBar.clearMessage()
                     else:
                         statusBar.clearMessage()
                         self.mouseOverNode = None

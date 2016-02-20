@@ -523,4 +523,4 @@ class OWL2RLValidator(AbstractValidator):
         except SyntaxError as e:
             self._result = ValidationResult(source, edge, target, False, e.msg)
         else:
-            self._result = ValidationResult(source, edge, target, True, 'OK')
+            self._result = ValidationResult(source, edge, target, True)
