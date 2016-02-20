@@ -489,10 +489,6 @@ class OWL2RLValidator(AbstractValidator):
                     # The source of the edge must be one of Individual or Link.
                     raise SyntaxError('Invalid source for instanceOf edge: {}'.format(source.identity.label))
 
-                if len(source.outgoingNodes(lambda x: x.isItem(Item.InstanceOfEdge) and x is not edge)) > 0:
-                    # The source node MUST be instanceOf at most of one construct.
-                    raise SyntaxError('Too many outputs from {}'.format(source.name))
-
                 if source.identity is Identity.Instance and target.identity is not Identity.Concept:
                     # If the source of the edge is an Individual it means that we are trying to construct a ClassAssertion
                     # construct, and so the target of the edge MUST be an axiom identified as Concept (Atomic or General).
