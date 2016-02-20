@@ -45,7 +45,7 @@ class Style(QProxyStyle):
 
     def __init__(self, base):
         """
-        Initialize the Light style (using Fusion as base).
+        Initialize the proxy style.
         :type base: str
         """
         super().__init__(base)
