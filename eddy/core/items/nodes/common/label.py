@@ -69,7 +69,6 @@ class Label(LabelItem):
         self.mousePressPos = None
 
         self.setFlag(QGraphicsItem.ItemIsMovable, self.movable)
-        self.setFlag(QGraphicsItem.ItemIsSelectable, self.movable)
         self.setFlag(QGraphicsItem.ItemIsFocusable, self.editable)
         self.setDefaultTextColor(QColor(0, 0, 0, 255))
         self.setFont(Font('Arial', 12, Font.Light))
