@@ -120,6 +120,37 @@ class MainView(QGraphicsView):
     #                                                                                                                  #
     ####################################################################################################################
 
+    def keyPressEvent(self, keyEvent):
+        """
+        Executed when a combination of key is pressed.
+        :type keyEvent: QKeyEvent
+        """
+        scene = self.scene()
+        key = keyEvent.key()
+        modifiers = keyEvent.modifiers()
+
+        if scene.mode is DiagramMode.Idle and \
+            modifiers & Qt.ControlModifier and \
+                key in {Qt.Key_Minus, Qt.Key_Plus, Qt.Key_0}:
+
+            if key == Qt.Key_Minus:
+                zoom = self.zoom - Zoom.Step
+            elif key == Qt.Key_Plus:
+                zoom = self.zoom + Zoom.Step
+            else:
+                zoom = Zoom.Default
+
+            zoom = clamp(zoom, Zoom.Min, Zoom.Max)
+
+            if zoom != self.zoom:
+                self.setTransformationAnchor(QGraphicsView.NoAnchor)
+                self.setResizeAnchor(QGraphicsView.NoAnchor)
+                self.scaleView(zoom)
+                self.scaled.emit(zoom)
+
+        else:
+            super().keyPressEvent(keyEvent)
+
     def mousePressEvent(self, mouseEvent):
         """
         Executed when a mouse button is clicked on the view.
@@ -270,18 +301,24 @@ class MainView(QGraphicsView):
         :type wheelEvent: QWheelEvent
         """
         if wheelEvent.modifiers() & Qt.ControlModifier:
+
+            wheelPos = wheelEvent.pos()
+            wheelAngle = wheelEvent.angleDelta()
+
             zoom = self.zoom
-            zoom += +Zoom.Step if wheelEvent.angleDelta().y() > 0 else -Zoom.Step
-            zoom = clamp(zoom, Zoom.MinScale, Zoom.MaxScale)
+            zoom += +Zoom.Step if wheelAngle.y() > 0 else -Zoom.Step
+            zoom = clamp(zoom, Zoom.Min, Zoom.Max)
+
             if zoom != self.zoom:
                 self.setTransformationAnchor(QGraphicsView.NoAnchor)
                 self.setResizeAnchor(QGraphicsView.NoAnchor)
-                p1 = self.mapToScene(wheelEvent.pos())
+                p1 = self.mapToScene(wheelPos)
                 self.scaleView(zoom)
                 self.scaled.emit(zoom)
-                p2 = self.mapToScene(wheelEvent.pos())
+                p2 = self.mapToScene(wheelPos)
                 move = p2 - p1
                 self.translate(move.x(), move.y())
+
         else:
             super().wheelEvent(wheelEvent)
 
@@ -305,7 +342,7 @@ class MainView(QGraphicsView):
 
     def scaleView(self, zoom):
         """
-        Scale the Main View according to the given zoom.
+        Scale the view according to the given zoom.
         :type zoom: float
         """
         transform = self.transform()

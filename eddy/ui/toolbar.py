@@ -44,8 +44,8 @@ class Zoom(QWidget):
     This class implements the Zoom control which is used to scale the diagram scene.
     """
     Default = 1.00
-    MinScale = 0.10
-    MaxScale = 5.00
+    Min = 0.10
+    Max = 5.00
     Step = 0.10
 
     changed = pyqtSignal(float)
@@ -58,7 +58,7 @@ class Zoom(QWidget):
         super().__init__(parent)
 
         self.level = Zoom.Default
-        self.levels = [x for x in rangeF(Zoom.MinScale, Zoom.MaxScale + Zoom.Step, Zoom.Step)]
+        self.levels = [x for x in rangeF(Zoom.Min, Zoom.Max + Zoom.Step, Zoom.Step)]
 
         self.buttonZoomIn = QToolButton()
         self.buttonZoomIn.setIcon(Icon(':/icons/zoom-in'))
@@ -136,7 +136,7 @@ class Zoom(QWidget):
         :type level: float
         """
         if self.isEnabled():
-            level = clamp(level, Zoom.MinScale, Zoom.MaxScale)
+            level = clamp(level, Zoom.Min, Zoom.Max)
             if level != self.level:
                 self.level = level
                 self.refresh()
