@@ -302,7 +302,7 @@ class AttributeMetaData(PredicateMetaData):
         """
         Returns a copy of this predicate metadata.
         """
-        meta = RoleMetaData(self.item, self.predicate)
+        meta = AttributeMetaData(self.item, self.predicate)
         meta.description = self.description
         meta.url = self.url
         meta.functionality = self.functionality
