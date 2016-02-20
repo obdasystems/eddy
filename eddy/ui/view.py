@@ -33,8 +33,8 @@
 
 
 from PyQt5.QtCore import Qt, QRectF, QPointF, QTimer, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QColor, QPen
-from PyQt5.QtWidgets import QGraphicsView, QApplication
+from PyQt5.QtGui import QPainterPath
+from PyQt5.QtWidgets import QGraphicsView, QApplication, QRubberBand
 
 from eddy.core.datatypes import DiagramMode
 from eddy.core.functions import clamp, connect, disconnect, rangeF
@@ -49,8 +49,6 @@ class MainView(QGraphicsView):
     """
     MoveRate = 40
     MoveBound = 10
-    RubberBandDragBrush = QColor(97, 153, 242, 40)
-    RubberBandDragPen = QPen(QColor(46, 97, 179), 1.0, Qt.SolidLine)
 
     zoomChanged = pyqtSignal(float)
 
@@ -69,8 +67,10 @@ class MainView(QGraphicsView):
         self.mainwindow = mainwindow
         self.mousePressCenterPos = None
         self.mousePressPos = None
-        self.mousePressRubberBand = None
-        self.viewMove = None
+        self.moveTimer = None
+        self.rubberBandOrigin = None
+        self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
+        self.rubberBand.hide()
         self.zoom = 1.00
 
     ####################################################################################################################
@@ -114,19 +114,6 @@ class MainView(QGraphicsView):
             painter.setPen(DiagramScene.GridPen)
             painter.drawPoints(*(QPointF(i, j) for i in rangeF(x, rect.right(), s) for j in rangeF(y, rect.bottom(), s)))
 
-    def drawForeground(self, painter, rect):
-        """
-        Draw the navigation cursor.
-        :type painter: QPainter
-        :type rect: QRectF
-        """
-        scene = self.scene()
-        if scene.mode is DiagramMode.RubberBandDrag:
-            if self.mousePressRubberBand is not None:
-                painter.setPen(MainView.RubberBandDragPen)
-                painter.setBrush(MainView.RubberBandDragBrush)
-                painter.drawRect(self.mousePressRubberBand)
-
     ####################################################################################################################
     #                                                                                                                  #
     #   EVENTS                                                                                                         #
@@ -139,20 +126,35 @@ class MainView(QGraphicsView):
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
         scene = self.scene()
+        mouseButtons = mouseEvent.buttons()
+        mousePos = mouseEvent.pos()
 
-        if mouseEvent.buttons() & Qt.RightButton:
+        if mouseButtons & Qt.RightButton:
+
+            ############################################################################################################
+            #                                                                                                          #
+            #                                              SCENE DRAG                                                  #
+            #                                                                                                          #
+            ############################################################################################################
 
             visibleRect = self.visibleRect()
             self.mousePressCenterPos = visibleRect.center()
-            self.mousePressPos = mouseEvent.pos()
-            self.mousePressRubberBand = None
+            self.mousePressPos = mousePos
 
         else:
 
-            if mouseEvent.buttons() & Qt.LeftButton:
-                if scene.mode is DiagramMode.Idle and not self.itemAt(mouseEvent.pos()):
-                    self.mousePressPos = self.mapToScene(mouseEvent.pos())
-                    self.mousePressRubberBand = None
+            if mouseButtons & Qt.LeftButton:
+
+                ########################################################################################################
+                #                                                                                                      #
+                #                                      RUBBERBAND SELECTION                                            #
+                #                                                                                                      #
+                ########################################################################################################
+
+                if scene.mode is DiagramMode.Idle and not self.itemAt(mousePos):
+                    self.rubberBandOrigin = self.mapToScene(mousePos)
+                    self.rubberBand.setGeometry(QRectF(mousePos, mousePos).toRect())
+                    self.rubberBand.show()
                     scene.setMode(DiagramMode.RubberBandDrag)
 
             super().mousePressEvent(mouseEvent)
@@ -165,12 +167,18 @@ class MainView(QGraphicsView):
         """
         scene = self.scene()
         mousePos = mouseEvent.pos()
+        mouseButtons = mouseEvent.buttons()
         viewport = self.viewport()
 
-        if mouseEvent.buttons() & Qt.RightButton:
+        if mouseButtons & Qt.RightButton:
 
-            distance = (mouseEvent.pos() - self.mousePressPos).manhattanLength()
-            if distance >= QApplication.startDragDistance():
+            if (mouseEvent.pos() - self.mousePressPos).manhattanLength() >= QApplication.startDragDistance():
+
+                ########################################################################################################
+                #                                                                                                      #
+                #                                            SCENE DRAG                                                #
+                #                                                                                                      #
+                ########################################################################################################
 
                 if scene.mode is not DiagramMode.SceneDrag:
                     scene.setMode(DiagramMode.SceneDrag)
@@ -184,44 +192,33 @@ class MainView(QGraphicsView):
 
             super().mouseMoveEvent(mouseEvent)
 
-            if mouseEvent.buttons() & Qt.LeftButton:
-
-                # Always call this before doing anything else: if we miss this call we may end up
-                # with multiple move timers running and we won't be able to stop the view move.
-                self.stopViewMove()
+            if mouseButtons & Qt.LeftButton:
+                
+                self.stopMove()
 
                 if scene.mode is DiagramMode.RubberBandDrag:
 
                     ####################################################################################################
                     #                                                                                                  #
-                    #   RUBBERBAND SELECTION                                                                           #
+                    #                                       RUBBERBAND DRAG                                            #
                     #                                                                                                  #
                     ####################################################################################################
 
-                    x = self.mousePressPos.x()
-                    y = self.mousePressPos.y()
-                    w = self.mapToScene(mousePos).x() - x
-                    h = self.mapToScene(mousePos).y() - y
+                    area = QRectF(self.mapFromScene(self.rubberBandOrigin), mousePos).normalized()
+                    path = QPainterPath()
+                    path.addRect(area)
+                    scene.setSelectionArea(self.mapToScene(path))
+                    self.rubberBand.setGeometry(area.toRect())
 
-                    self.mousePressRubberBand = QRectF(x, y, w, h)
-
-                    items = scene.items()
-                    selected = {x for x in scene.items(self.mousePressRubberBand) if x.node or x.edge}
-
-                    for item in items:
-                        item.setSelected(item in selected)
-
-                    viewport.update()
-
-                if scene.mode in {DiagramMode.EdgeBreakPointMove,
-                                  DiagramMode.EdgeInsert,
-                                  DiagramMode.NodeMove,
-                                  DiagramMode.NodeResize,
-                                  DiagramMode.RubberBandDrag}:
+                if scene.mode in { DiagramMode.EdgeBreakPointMove,
+                                   DiagramMode.EdgeInsert,
+                                   DiagramMode.NodeMove,
+                                   DiagramMode.NodeResize,
+                                   DiagramMode.RubberBandDrag }:
 
                     ####################################################################################################
                     #                                                                                                  #
-                    #   VIEW SCROLLING                                                                                 #
+                    #                                      VIEW SCROLLING                                              #
                     #                                                                                                  #
                     ####################################################################################################
 
@@ -243,7 +240,7 @@ class MainView(QGraphicsView):
                         if move:
                             move.setX(clamp(move.x(), -MainView.MoveBound, +MainView.MoveBound))
                             move.setY(clamp(move.y(), -MainView.MoveBound, +MainView.MoveBound))
-                            self.startViewMove(move, MainView.MoveRate)
+                            self.startMove(move, MainView.MoveRate)
 
     def mouseReleaseEvent(self, mouseEvent):
         """
@@ -252,8 +249,10 @@ class MainView(QGraphicsView):
         """
         self.mousePressCenterPos = None
         self.mousePressPos = None
-        self.mousePressRubberBand = None
-        self.stopViewMove()
+        self.rubberBandOrigin = None
+        self.rubberBand.hide()
+
+        self.stopMove()
 
         scene = self.scene()
         viewport = self.viewport()
@@ -262,8 +261,7 @@ class MainView(QGraphicsView):
 
         super().mouseReleaseEvent(mouseEvent)
 
-        if scene.mode in {DiagramMode.SceneDrag, DiagramMode.RubberBandDrag}:
-            # reset scene mode to idle only if the main view changed mode in the first place
+        if scene.mode in {DiagramMode.RubberBandDrag, DiagramMode.SceneDrag}:
             scene.setMode(DiagramMode.Idle)
 
     def wheelEvent(self, wheelEvent):
@@ -316,14 +314,14 @@ class MainView(QGraphicsView):
         self.scale(zoom, zoom)
         self.zoom = zoom
 
-    def startViewMove(self, delta, rate):
+    def startMove(self, delta, rate):
         """
         Start the view movement.
         :type delta: QPointF
         :type rate: float
         """
-        if self.viewMove:
-            self.stopViewMove()
+        if self.moveTimer:
+            self.stopMove()
 
         # move the view: this is needed before the timer so that if we keep
         # moving the mouse fast outside the viewport rectangle we still are able
@@ -334,18 +332,18 @@ class MainView(QGraphicsView):
         # setup a timer for future move, so the view keeps moving
         # also if we are not moving the mouse anymore but we are
         # holding the position outside the viewport rect
-        self.viewMove = QTimer()
-        connect(self.viewMove.timeout, self.moveBy, delta)
-        self.viewMove.start(rate)
+        self.moveTimer = QTimer()
+        connect(self.moveTimer.timeout, self.moveBy, delta)
+        self.moveTimer.start(rate)
 
-    def stopViewMove(self):
+    def stopMove(self):
         """
         Stop the view movement by destroying the timer object causing it.
         """
-        if self.viewMove:
-            self.viewMove.stop()
-            disconnect(self.viewMove.timeout)
-            self.viewMove = None
+        if self.moveTimer:
+            self.moveTimer.stop()
+            disconnect(self.moveTimer.timeout)
+            self.moveTimer = None
 
     def visibleRect(self):
         """

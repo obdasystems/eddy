@@ -1698,7 +1698,7 @@ class MainWindow(QMainWindow):
         scene = DiagramScene(self)
         scene.setSceneRect(QRectF(-width / 2, -height / 2, width, height))
         scene.setItemIndexMethod(DiagramScene.NoIndex)
-        connect(scene.itemAdded, self.itemAdded)
+        connect(scene.inserted, self.itemAdded)
         connect(scene.modeChanged, self.sceneModeChanged)
         connect(scene.selectionChanged, self.sceneSelectionChanged)
         self.undogroup.addStack(scene.undostack)

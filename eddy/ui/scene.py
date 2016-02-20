@@ -60,7 +60,7 @@ class DiagramScene(QGraphicsScene):
     MaxSize = 1000000
     RecentNum = 5
 
-    itemAdded = pyqtSignal('QGraphicsItem', int)
+    inserted = pyqtSignal('QGraphicsItem', int)
     modeChanged = pyqtSignal(DiagramMode)
     updated = pyqtSignal()
 
@@ -138,7 +138,7 @@ class DiagramScene(QGraphicsScene):
             node = self.factory.create(item=item, scene=self)
             node.setPos(snap(dropEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
             self.undostack.push(CommandNodeAdd(scene=self, node=node))
-            self.itemAdded.emit(node, dropEvent.modifiers())
+            self.inserted.emit(node, dropEvent.modifiers())
             dropEvent.setDropAction(Qt.CopyAction)
             dropEvent.accept()
         else:
@@ -149,7 +149,10 @@ class DiagramScene(QGraphicsScene):
         Executed when a mouse button is clicked on the scene.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        if mouseEvent.buttons() & Qt.LeftButton:
+        mouseButtons = mouseEvent.buttons()
+        mousePos = mouseEvent.scenePos()
+
+        if mouseButtons & Qt.LeftButton:
 
             if self.mode is DiagramMode.NodeInsert:
 
@@ -159,15 +162,11 @@ class DiagramScene(QGraphicsScene):
                 #                                                                                                      #
                 ########################################################################################################
 
-                # create a new node and place it under the mouse position
                 item = Item.forValue(self.modeParam)
-                node = self.factory.create(item=item, scene=self)
-                node.setPos(snap(mouseEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
-
-                # no need to switch back the operation mode here: the signal handlers already does that and takes
-                # care of the keyboard modifiers being held (if CTRL is being held the operation mode doesn't change)
-                self.undostack.push(CommandNodeAdd(scene=self, node=node))
-                self.itemAdded.emit(node, mouseEvent.modifiers())
+                node = self.factory.create(item, self)
+                node.setPos(snap(mousePos, DiagramScene.GridSize, self.mainwindow.snapToGrid))
+                self.undostack.push(CommandNodeAdd(self, node))
+                self.inserted.emit(node, mouseEvent.modifiers())
 
                 super().mousePressEvent(mouseEvent)
 
@@ -179,13 +178,11 @@ class DiagramScene(QGraphicsScene):
                 #                                                                                                      #
                 ########################################################################################################
 
-                # see if we are pressing the mouse on a node and if so set the edge add command
-                node = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
+                node = self.itemOnTopOf(mousePos, edges=False)
                 if node:
-
                     item = Item.forValue(self.modeParam)
-                    edge = self.factory.create(item=item, scene=self, source=node)
-                    edge.updateEdge(target=mouseEvent.scenePos())
+                    edge = self.factory.create(item, self, source=node)
+                    edge.updateEdge(mousePos)
                     self.mousePressEdge = edge
                     self.addItem(edge)
 
@@ -193,37 +190,33 @@ class DiagramScene(QGraphicsScene):
 
             else:
 
-                # see if this event needs to be handled in graphics items before we prepare data for a different
-                # operational mode: a graphics item may bypass the actions being performed here below by
-                # switching the operational mode to something different than DiagramMode.Idle.
                 super().mousePressEvent(mouseEvent)
 
                 if self.mode is DiagramMode.Idle:
 
                     ####################################################################################################
                     #                                                                                                  #
-                    #                                       ITEM MOVEMENT                                              #
+                    #                                      ITEM SELECTION                                              #
                     #                                                                                                  #
                     ####################################################################################################
 
-                    # see if we have some nodes selected in the scene: this is needed because itemOnTopOf
+                    # See if we have some nodes selected in the scene: this is needed because itemOnTopOf
                     # will discard labels, so if we have a node whose label is overlapping the node shape,
                     # clicking on the label will make itemOnTopOf return the node item instead of the label.
                     selected = self.selectedNodes()
 
                     if selected:
 
-                        # we have some nodes selected in the scene so we probably are going to do a
+                        # We have some nodes selected in the scene so we probably are going to do a
                         # move operation, prepare data for mouse move event => select a node that will act
-                        # as mouse grabber to compute delta movements for each componenet in the selection
-                        self.mousePressNode = self.itemOnTopOf(mouseEvent.scenePos(), edges=False)
+                        # as mouse grabber to compute delta movements for each componenet in the selection.
+                        self.mousePressNode = self.itemOnTopOf(mousePos, edges=False)
 
                         if self.mousePressNode:
 
                             self.mousePressNodePos = self.mousePressNode.pos()
-                            self.mousePressPos = mouseEvent.scenePos()
+                            self.mousePressPos = mousePos
 
-                            # initialize data
                             self.mousePressData = {
                                 'nodes': {
                                     node: {
@@ -233,8 +226,8 @@ class DiagramScene(QGraphicsScene):
                                 'edges': {}
                             }
 
-                            # figure out if the nodes we are moving are sharing edges: if so, move the edge
-                            # together with the nodes (which actually means moving the edge breakpoints)
+                            # Figure out if the nodes we are moving are sharing edges: if so, move the edge
+                            # together with the nodes (which actually means moving the edge breakpoints).
                             for node in self.mousePressData['nodes']:
                                 for edge in node.edges:
                                     if edge not in self.mousePressData['edges']:
@@ -246,7 +239,10 @@ class DiagramScene(QGraphicsScene):
         Executed when then mouse is moved on the scene.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        if mouseEvent.buttons() & Qt.LeftButton:
+        mouseButtons = mouseEvent.buttons()
+        mousePos = mouseEvent.scenePos()
+
+        if mouseButtons & Qt.LeftButton:
 
             if self.mode is DiagramMode.EdgeInsert:
 
@@ -259,12 +255,10 @@ class DiagramScene(QGraphicsScene):
                 if self.mousePressEdge:
 
                     edge = self.mousePressEdge
-                    mousePos = mouseEvent.scenePos()
+                    edge.updateEdge(mousePos)
                     currentNode = self.itemOnTopOf(mousePos, edges=False, skip={edge.source})
                     previousNode = self.mouseOverNode
                     statusBar = self.mainwindow.statusBar()
-
-                    edge.updateEdge(target=mousePos)
 
                     if previousNode:
                         previousNode.updateBrush(selected=False)
@@ -281,8 +275,6 @@ class DiagramScene(QGraphicsScene):
 
             else:
 
-                # If we are still idle we are probably going to start a node(s) move: if that's
-                # the case change the operational mode before actually computing delta movements.
                 if self.mode is DiagramMode.Idle:
                     if self.mousePressNode:
                         self.setMode(DiagramMode.NodeMove)
@@ -295,7 +287,7 @@ class DiagramScene(QGraphicsScene):
                     #                                                                                                  #
                     ####################################################################################################
 
-                    point = self.mousePressNodePos + mouseEvent.scenePos() - self.mousePressPos
+                    point = self.mousePressNodePos + mousePos - self.mousePressPos
                     point = snap(point, DiagramScene.GridSize, self.mainwindow.snapToGrid)
                     delta = point - self.mousePressNodePos
                     edges = set()
@@ -323,7 +315,10 @@ class DiagramScene(QGraphicsScene):
         Executed when the mouse is released from the scene.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        if mouseEvent.button() == Qt.LeftButton:
+        mouseButton = mouseEvent.button()
+        mousePos = mouseEvent.scenePos()
+
+        if mouseButton == Qt.LeftButton:
 
             if self.mode is DiagramMode.EdgeInsert:
 
@@ -337,8 +332,6 @@ class DiagramScene(QGraphicsScene):
 
                     edge = self.mousePressEdge
                     edge.source.updateBrush(selected=False)
-                    mousePos = mouseEvent.scenePos()
-                    mouseModifiers = mouseEvent.modifiers()
                     currentNode = self.itemOnTopOf(mousePos, edges=False, skip={edge.source})
                     insertEdge = False
 
@@ -349,7 +342,7 @@ class DiagramScene(QGraphicsScene):
                             insertEdge = True
 
                     if insertEdge:
-                        self.undostack.push(CommandEdgeAdd(scene=self, edge=edge))
+                        self.undostack.push(CommandEdgeAdd(self, edge))
                         self.updated.emit()
                     else:
                         edge.source.removeEdge(edge)
@@ -361,11 +354,7 @@ class DiagramScene(QGraphicsScene):
                     self.validator.clear()
                     statusBar = self.mainwindow.statusBar()
                     statusBar.clearMessage()
-
-                    # Always emit this signal even if the edge has not been inserted since this will clear
-                    # also the palette switching back the operation mode to DiagramMode.Idle in case the CTRL
-                    # keyboard modifier is not being held (in which case the palette button will stay selected).
-                    self.itemAdded.emit(edge, mouseModifiers)
+                    self.inserted.emit(edge, mouseEvent.modifiers())
 
             elif self.mode is DiagramMode.NodeMove:
 
@@ -375,7 +364,7 @@ class DiagramScene(QGraphicsScene):
                 #                                                                                                      #
                 ########################################################################################################
 
-                commandData = {
+                data = {
                     'undo': self.mousePressData,
                     'redo': {
                         'nodes': {
@@ -387,29 +376,27 @@ class DiagramScene(QGraphicsScene):
                     }
                 }
 
-                self.undostack.push(CommandNodeMove(scene=self, data=commandData))
+                self.undostack.push(CommandNodeMove(self, data))
                 self.setMode(DiagramMode.Idle)
 
-
-        elif mouseEvent.button() == Qt.RightButton:
+        elif mouseButton == Qt.RightButton:
 
             if self.mode is not DiagramMode.SceneDrag:
 
                 ########################################################################################################
                 #                                                                                                      #
-                #                                     CUSTOM CONTEXT MENU                                              #
+                #                                         CONTEXT MENU                                                 #
                 #                                                                                                      #
                 ########################################################################################################
 
-                item = self.itemOnTopOf(mouseEvent.scenePos())
+                item = self.itemOnTopOf(mousePos)
                 if item:
                     self.clearSelection()
                     item.setSelected(True)
 
-                self.mousePressPos = mouseEvent.scenePos()
-                menu = self.mainwindow.menuFactory.create(self.mainwindow, self, item, mouseEvent.scenePos())
+                self.mousePressPos = mousePos
+                menu = self.mainwindow.menuFactory.create(self.mainwindow, self, item, mousePos)
                 menu.exec_(mouseEvent.screenPos())
-
 
         super().mouseReleaseEvent(mouseEvent)
 

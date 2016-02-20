@@ -72,7 +72,7 @@ class ItemFactory(QObject):
         # NOTE: do not use Item identity check here. While this may seem an error
         # it allow us to use the factory also when we create graphol items after
         # clicking on the palette button: the palette stores internally the type
-        # of the item for each button but the Identity is lost (probably Qt handle
+        # of the item for each button but the Identity is lost: probably Qt handle
         # only integers as palette button id and the python to C++ conversion from
         # IntEnum to int is implicit!
         if item == Item.AttributeNode:
