@@ -327,7 +327,7 @@ class AttributeMetaData(PredicateMetaData):
         :type other: PredicateMetaData
         :rtype: bool
         """
-        if isinstance(other, RoleMetaData):
+        if isinstance(other, AttributeMetaData):
             return self.url == other.url and \
                    self.description == other.description and \
                    self.predicate == other.predicate and \
@@ -340,7 +340,7 @@ class AttributeMetaData(PredicateMetaData):
         :type other: PredicateMetaData
         :rtype: bool
         """
-        if isinstance(other, RoleMetaData):
+        if isinstance(other, AttributeMetaData):
             return self.url != other.url or \
                    self.description != other.description or \
                    self.predicate != other.predicate or \
