@@ -394,9 +394,6 @@ class Label(LabelItem):
                     scene.undostack.push(command)
                     scene.setMode(DiagramMode.Idle)
 
-        # Always remove the selected flag so that the dotted outline disappears also
-        # if we release the CTRL keyboard modifier before the mouse left button.
-        self.setSelected(False)
         self.mousePressPos = None
 
     ####################################################################################################################
