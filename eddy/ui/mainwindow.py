@@ -40,7 +40,7 @@ from traceback import format_exception
 
 from PyQt5.QtCore import Qt, QSettings, QSizeF, QRectF
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter
+from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter, QPainterPath
 from PyQt5.QtGui import QPageSize, QCursor, QBrush, QColor
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox
@@ -1196,7 +1196,7 @@ class MainWindow(QMainWindow):
         node = False
         predicate = False
 
-        # we need to check if we have at least one subwindow because if Eddy simply
+        # We need to check if we have at least one subwindow because if Eddy simply
         # lose the focus, self.mdi.activeScene will return None even though we do
         # not need to disable actions because we will have scene in the background.
         if self.mdi.subWindowList():
@@ -1237,14 +1237,12 @@ class MainWindow(QMainWindow):
         """
         Select all the items in the scene.
         """
-        # TODO SPEED UP
         scene = self.mdi.activeScene
         if scene:
-            scene.clearSelection()
+            path = QPainterPath()
+            path.addRect(scene.sceneRect())
+            scene.setSelectionArea(path)
             scene.setMode(DiagramMode.Idle)
-            for collection in (scene.nodes(), scene.edges()):
-                for item in collection:
-                    item.setSelected(True)
 
     @pyqtSlot()
     def sendToBack(self):
