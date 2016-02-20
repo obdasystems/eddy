@@ -62,10 +62,6 @@ QToolBar QToolButton:pressed {
 QToolBar QToolButton::menu-indicator {
     image: none;
 }
-QToolBar QToolButton.zoom {
-    width: 34px;
-    height: 24px;
-}
 /**
  * DOCK WIDGETS
  */

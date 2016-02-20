@@ -77,7 +77,7 @@ from eddy.ui.mdi import MdiArea, MdiSubWindow
 from eddy.ui.menus import MenuFactory
 from eddy.ui.properties import PropertyFactory
 from eddy.ui.scene import DiagramScene
-from eddy.ui.toolbar import ZoomControl
+from eddy.ui.toolbar import Zoom
 from eddy.ui.view import MainView
 
 
@@ -169,9 +169,6 @@ class MainWindow(QMainWindow):
         self.iconSwapHorizontal = Icon(':/icons/swap-horizontal')
         self.iconSwapVertical = Icon(':/icons/swap-vertical')
         self.iconUndo = Icon(':/icons/undo')
-        self.iconZoom = Icon(':/icons/zoom')
-        self.iconZoomIn = Icon(':/icons/zoom-in')
-        self.iconZoomOut = Icon(':/icons/zoom-out')
 
         ################################################################################################################
         #                                                                                                              #
@@ -476,7 +473,7 @@ class MainWindow(QMainWindow):
         self.mdi = MdiArea(self)
         self.overview = Overview(self)
         self.palette_ = Palette(self)
-        self.zoomctrl = ZoomControl(self.toolbar)
+        self.zoom = Zoom(self.toolbar)
 
         self.dockExplorer = QDockWidget('Explorer', self, Qt.Widget)
         self.dockExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
@@ -685,9 +682,9 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.actionSyntaxCheck)
 
         self.toolbar.addSeparator()
-        self.toolbar.addWidget(self.zoomctrl.buttonZoomOut)
-        self.toolbar.addWidget(self.zoomctrl.buttonZoomIn)
-        self.toolbar.addWidget(self.zoomctrl.buttonZoomLevelChange)
+        self.toolbar.addWidget(self.zoom.buttonZoomOut)
+        self.toolbar.addWidget(self.zoom.buttonZoomIn)
+        self.toolbar.addWidget(self.zoom.buttonZoomReset)
 
         ################################################################################################################
         #                                                                                                              #
@@ -1230,7 +1227,7 @@ class MainWindow(QMainWindow):
         self.actionSnapToGrid.setEnabled(window)
         self.actionSyntaxCheck.setEnabled(window)
         self.buttonChangeNodeBrush.setEnabled(predicate)
-        self.zoomctrl.setEnabled(window)
+        self.zoom.setEnabled(window)
 
     @pyqtSlot()
     def selectAll(self):
@@ -1402,19 +1399,19 @@ class MainWindow(QMainWindow):
             self.explorer.browse(mainview)
             self.overview.browse(mainview)
             self.info.browse(scene)
-            disconnect(self.zoomctrl.zoomChanged)
-            disconnect(mainview.zoomChanged)
-            self.zoomctrl.adjustZoomLevel(mainview.zoom)
-            connect(self.zoomctrl.zoomChanged, mainview.scaleChanged)
-            connect(mainview.zoomChanged, self.zoomctrl.scaleChanged)
+            disconnect(self.zoom.changed)
+            disconnect(mainview.scaled)
+            self.zoom.adjust(mainview.zoom)
+            connect(self.zoom.changed, mainview.zoomChanged)
+            connect(mainview.scaled, self.zoom.scaleChanged)
             self.setWindowTitle(scene.document.name)
         else:
 
             if not self.mdi.subWindowList():
-                self.zoomctrl.resetZoomLevel()
                 self.info.clear()
                 self.explorer.clear()
                 self.overview.clear()
+                self.zoom.zoomReset()
                 self.setWindowTitle(None)
 
         self.sceneSelectionChanged()

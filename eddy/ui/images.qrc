@@ -59,6 +59,7 @@
     <file alias="zoom">artwork/icons/ic_zoom_black_24dp_1x.png</file>
     <file alias="zoom-in">artwork/icons/ic_zoom_in_black_24dp_1x.png</file>
     <file alias="zoom-out">artwork/icons/ic_zoom_out_black_24dp_1x.png</file>
+    <file alias="zoom-reset">artwork/icons/ic_zoom_reset_black_24dp_1x.png</file>
 </qresource>
 <qresource prefix="/images">
     <file alias="eddy">artwork/eddy.png</file>

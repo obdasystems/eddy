@@ -40,7 +40,7 @@ from eddy.core.datatypes import DiagramMode
 from eddy.core.functions import clamp, connect, disconnect, rangeF
 
 from eddy.ui.scene import DiagramScene
-from eddy.ui.toolbar import ZoomControl
+from eddy.ui.toolbar import Zoom
 
 
 class MainView(QGraphicsView):
@@ -50,7 +50,7 @@ class MainView(QGraphicsView):
     MoveRate = 40
     MoveBound = 10
 
-    zoomChanged = pyqtSignal(float)
+    scaled = pyqtSignal(float)
 
     def __init__(self, mainwindow, scene):
         """
@@ -79,14 +79,6 @@ class MainView(QGraphicsView):
     #                                                                                                                  #
     ####################################################################################################################
 
-    @pyqtSlot(float)
-    def scaleChanged(self, zoom):
-        """
-        Executed when the scale factor changes (triggered by the Zoom control in the Toolbar).
-        :type zoom: float
-        """
-        self.scaleView(zoom)
-
     @pyqtSlot()
     def updateView(self):
         """
@@ -94,6 +86,14 @@ class MainView(QGraphicsView):
         """
         viewport = self.viewport()
         viewport.update()
+
+    @pyqtSlot(float)
+    def zoomChanged(self, zoom):
+        """
+        Executed when the zoom factor changes (triggered by the Zoom widget).
+        :type zoom: float
+        """
+        self.scaleView(zoom)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -271,14 +271,14 @@ class MainView(QGraphicsView):
         """
         if wheelEvent.modifiers() & Qt.ControlModifier:
             zoom = self.zoom
-            zoom += +ZoomControl.Step if wheelEvent.angleDelta().y() > 0 else -ZoomControl.Step
-            zoom = clamp(zoom, ZoomControl.MinScale, ZoomControl.MaxScale)
+            zoom += +Zoom.Step if wheelEvent.angleDelta().y() > 0 else -Zoom.Step
+            zoom = clamp(zoom, Zoom.MinScale, Zoom.MaxScale)
             if zoom != self.zoom:
                 self.setTransformationAnchor(QGraphicsView.NoAnchor)
                 self.setResizeAnchor(QGraphicsView.NoAnchor)
                 p1 = self.mapToScene(wheelEvent.pos())
                 self.scaleView(zoom)
-                self.zoomChanged.emit(zoom)
+                self.scaled.emit(zoom)
                 p2 = self.mapToScene(wheelEvent.pos())
                 move = p2 - p1
                 self.translate(move.x(), move.y())
