@@ -1061,9 +1061,9 @@ class MainWindow(QMainWindow):
                 scene.setMode(DiagramMode.Idle)
             else:
                 if Item.ConceptNode <= item < Item.InclusionEdge:
-                    scene.setMode(DiagramMode.NodeInsert, item)
+                    scene.setMode(DiagramMode.InsertNode, item)
                 elif Item.InclusionEdge <= item <= Item.InstanceOfEdge:
-                    scene.setMode(DiagramMode.EdgeInsert, item)
+                    scene.setMode(DiagramMode.InsertEdge, item)
 
     @pyqtSlot()
     def printDocument(self):
@@ -1181,7 +1181,7 @@ class MainWindow(QMainWindow):
         Executed when the scene operation mode changes.
         :type mode: DiagramMode
         """
-        if mode not in (DiagramMode.NodeInsert, DiagramMode.EdgeInsert):
+        if mode not in (DiagramMode.InsertNode, DiagramMode.InsertEdge):
             self.palette_.clear()
 
     @pyqtSlot()

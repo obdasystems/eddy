@@ -154,7 +154,7 @@ class DiagramScene(QGraphicsScene):
 
         if mouseButtons & Qt.LeftButton:
 
-            if self.mode is DiagramMode.NodeInsert:
+            if self.mode is DiagramMode.InsertNode:
 
                 ########################################################################################################
                 #                                                                                                      #
@@ -170,7 +170,7 @@ class DiagramScene(QGraphicsScene):
 
                 super().mousePressEvent(mouseEvent)
 
-            elif self.mode is DiagramMode.EdgeInsert:
+            elif self.mode is DiagramMode.InsertEdge:
 
                 ########################################################################################################
                 #                                                                                                      #
@@ -244,7 +244,7 @@ class DiagramScene(QGraphicsScene):
 
         if mouseButtons & Qt.LeftButton:
 
-            if self.mode is DiagramMode.EdgeInsert:
+            if self.mode is DiagramMode.InsertEdge:
 
                 ########################################################################################################
                 #                                                                                                      #
@@ -277,9 +277,9 @@ class DiagramScene(QGraphicsScene):
 
                 if self.mode is DiagramMode.Idle:
                     if self.mousePressNode:
-                        self.setMode(DiagramMode.NodeMove)
+                        self.setMode(DiagramMode.MoveNode)
 
-                if self.mode is DiagramMode.NodeMove:
+                if self.mode is DiagramMode.MoveNode:
 
                     ####################################################################################################
                     #                                                                                                  #
@@ -320,7 +320,7 @@ class DiagramScene(QGraphicsScene):
 
         if mouseButton == Qt.LeftButton:
 
-            if self.mode is DiagramMode.EdgeInsert:
+            if self.mode is DiagramMode.InsertEdge:
 
                 ########################################################################################################
                 #                                                                                                      #
@@ -356,7 +356,7 @@ class DiagramScene(QGraphicsScene):
                     statusBar.clearMessage()
                     self.inserted.emit(edge, mouseEvent.modifiers())
 
-            elif self.mode is DiagramMode.NodeMove:
+            elif self.mode is DiagramMode.MoveNode:
 
                 ########################################################################################################
                 #                                                                                                      #

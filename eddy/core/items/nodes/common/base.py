@@ -723,7 +723,7 @@ class AbstractResizableNode(AbstractNode):
         """
         if change == AbstractNode.ItemSelectedHasChanged:
             scene = self.scene()
-            if scene.mode is not DiagramMode.NodeResize:
+            if scene.mode is not DiagramMode.ResizeNode:
                 self.updateBrush(selected=value)
         return super(AbstractNode, self).itemChange(change, value)
 
@@ -740,7 +740,7 @@ class AbstractResizableNode(AbstractNode):
             if handle is not None:
 
                 scene.clearSelection()
-                scene.setMode(DiagramMode.NodeResize)
+                scene.setMode(DiagramMode.ResizeNode)
                 self.setSelected(True)
 
                 BC = QRectF if isinstance(self.background, QRectF) else QPolygonF
@@ -766,7 +766,7 @@ class AbstractResizableNode(AbstractNode):
         """
         scene = self.scene()
 
-        if scene.mode is DiagramMode.NodeResize:
+        if scene.mode is DiagramMode.ResizeNode:
             self.interactiveResize(mouseEvent.pos())
             self.updateEdges()
 
@@ -779,7 +779,7 @@ class AbstractResizableNode(AbstractNode):
         """
         scene = self.scene()
 
-        if scene.mode is DiagramMode.NodeResize:
+        if scene.mode is DiagramMode.ResizeNode:
 
             bound = self.boundingRect()
 

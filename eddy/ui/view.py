@@ -210,10 +210,10 @@ class MainView(QGraphicsView):
                     scene.setSelectionArea(self.mapToScene(path))
                     self.rubberBand.setGeometry(area.toRect())
 
-                if scene.mode in { DiagramMode.EdgeBreakPointMove,
-                                   DiagramMode.EdgeInsert,
-                                   DiagramMode.NodeMove,
-                                   DiagramMode.NodeResize,
+                if scene.mode in { DiagramMode.BreakPointMove,
+                                   DiagramMode.InsertEdge,
+                                   DiagramMode.MoveNode,
+                                   DiagramMode.ResizeNode,
                                    DiagramMode.RubberBandDrag }:
 
                     ####################################################################################################

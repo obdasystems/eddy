@@ -437,7 +437,7 @@ class AbstractEdge(AbstractItem):
             anchorNode = self.anchorAt(mousePos)
             if anchorNode is not None:
                 scene.clearSelection()
-                scene.setMode(DiagramMode.EdgeAnchorPointMove)
+                scene.setMode(DiagramMode.AnchorPointMove)
                 self.setSelected(True)
                 self.mousePressAnchorNode = anchorNode
                 self.mousePressAnchorNodePos = QPointF(anchorNode.anchor(self))
@@ -446,7 +446,7 @@ class AbstractEdge(AbstractItem):
                 breakPoint = self.breakpointAt(mousePos)
                 if breakPoint is not None:
                     scene.clearSelection()
-                    scene.setMode(DiagramMode.EdgeBreakPointMove)
+                    scene.setMode(DiagramMode.BreakPointMove)
                     self.setSelected(True)
                     self.mousePressBreakPoint = breakPoint
                     self.mousePressBreakPointPos = QPointF(self.breakpoints[breakPoint])
@@ -464,7 +464,7 @@ class AbstractEdge(AbstractItem):
         scene = self.scene()
         mousePos = mouseEvent.pos()
 
-        if scene.mode is DiagramMode.EdgeAnchorPointMove:
+        if scene.mode is DiagramMode.AnchorPointMove:
             self.anchorMove(self.mousePressAnchorNode, mousePos)
             self.updateEdge()
         else:
@@ -481,12 +481,12 @@ class AbstractEdge(AbstractItem):
                     pass
                 else:
                     scene.clearSelection()
-                    scene.setMode(DiagramMode.EdgeBreakPointMove)
+                    scene.setMode(DiagramMode.BreakPointMove)
                     self.setSelected(True)
                     self.mousePressBreakPoint = breakPoint
                     self.mousePressBreakPointPos = QPointF(self.breakpoints[breakPoint])
 
-            if scene.mode is DiagramMode.EdgeBreakPointMove:
+            if scene.mode is DiagramMode.BreakPointMove:
                 self.breakpointMove(self.mousePressBreakPoint, mousePos)
                 self.updateEdge()
 
@@ -497,13 +497,13 @@ class AbstractEdge(AbstractItem):
         """
         scene = self.scene()
 
-        if scene.mode is DiagramMode.EdgeAnchorPointMove:
+        if scene.mode is DiagramMode.AnchorPointMove:
             anchorNode = self.mousePressAnchorNode
             anchorNodePos = QPointF(anchorNode.anchor(self))
             if anchorNodePos != self.mousePressAnchorNodePos:
                 commandData = {'undo': self.mousePressAnchorNodePos, 'redo': anchorNodePos}
                 scene.undostack.push(CommandEdgeAnchorMove(scene, self, anchorNode, commandData))
-        elif scene.mode is DiagramMode.EdgeBreakPointMove:
+        elif scene.mode is DiagramMode.BreakPointMove:
             breakPoint = self.mousePressBreakPoint
             breakPointPos = self.breakpoints[breakPoint]
             if breakPointPos != self.mousePressBreakPointPos:

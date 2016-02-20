@@ -74,14 +74,14 @@ class DiagramMode(IntEnum):
     """
     This class defines the diagram scene operational modes.
     """
-    Idle = 0 # idle mode
-    NodeInsert = 1 # node insertion
-    NodeMove = 2 # node movement
-    NodeResize = 3 # node interactive resize
-    EdgeInsert = 4 # edge insertion
-    EdgeAnchorPointMove = 5 # edge anchor point movement
-    EdgeBreakPointMove = 6 # edge breakpoint movement
-    LabelMove = 7 # text label edit
-    LabelEdit = 8 # text label movement
-    RubberBandDrag = 9 # multi selection
-    SceneDrag = 10 # scene being dragged by the mouse
+    Idle = 0
+    InsertNode = 1
+    MoveNode = 2
+    ResizeNode = 3
+    InsertEdge = 4
+    AnchorPointMove = 5
+    BreakPointMove = 6
+    MoveText = 7
+    EditText = 8
+    RubberBandDrag = 9
+    SceneDrag = 10

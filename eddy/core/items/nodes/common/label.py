@@ -241,7 +241,7 @@ class Label(LabelItem):
         # on the text: mostly happens when loading diagram scenes from file)
         if focusEvent.reason() == Qt.OtherFocusReason:
             scene = self.scene()
-            scene.setMode(DiagramMode.LabelEdit)
+            scene.setMode(DiagramMode.EditText)
             cursor = self.textCursor()
             cursor.select(QTextCursor.BlockUnderCursor)
             self.setTextCursor(cursor)
@@ -259,7 +259,7 @@ class Label(LabelItem):
         """
         scene = self.scene()
 
-        if scene.mode is DiagramMode.LabelEdit:
+        if scene.mode is DiagramMode.EditText:
 
             # Make sure we have something in the label.
             if isEmpty(self.text()):
@@ -351,7 +351,7 @@ class Label(LabelItem):
             if mouseEvent.modifiers() & Qt.ControlModifier:
                 # Allow the moving of the label if the CTRL modifier is being held.
                 scene.clearSelection()
-                scene.setMode(DiagramMode.LabelMove)
+                scene.setMode(DiagramMode.MoveText)
                 self.setSelected(True)
                 self.mousePressPos = self.pos()
                 super().mousePressEvent(mouseEvent)
@@ -365,7 +365,7 @@ class Label(LabelItem):
                         scene.clearSelection()
                         parent.setSelected(True)
 
-        elif scene.mode is DiagramMode.LabelEdit:
+        elif scene.mode is DiagramMode.EditText:
 
             # Call super method in this case so we can move the mouse
             # ibeam cursor within the label while being in EDIT mode.
@@ -386,7 +386,7 @@ class Label(LabelItem):
         scene = self.scene()
         super().mouseReleaseEvent(mouseEvent)
 
-        if scene.mode is DiagramMode.LabelMove:
+        if scene.mode is DiagramMode.MoveText:
             if self.mousePressPos is not None:
                 pos = self.pos()
                 if self.mousePressPos != pos:
