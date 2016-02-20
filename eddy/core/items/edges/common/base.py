@@ -53,7 +53,7 @@ class AbstractEdge(AbstractItem):
 
     headBrushPattern = QBrush(QColor(0, 0, 0))
     headPenPattern = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-    handleBrushPattern = QBrush(QColor(168, 168, 168, 255))
+    handleBrushPattern = QBrush(QColor(132, 255, 0, 255))
     handlePenPattern = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     penPattern = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     selectionBrushPattern = QBrush(QColor(251, 255, 148))
