@@ -1477,8 +1477,8 @@ class MainWindow(QMainWindow):
         if scene:
 
             placeholder = None
+            pixmap = QPixmap(':/icons/done')
             message = 'No syntax error found!'
-            pixmap = QPixmap(':/icons/info')
 
             with BusyProgressDialog('Syntax check...', self):
 

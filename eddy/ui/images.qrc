@@ -17,6 +17,7 @@
     <file alias="create">artwork/icons/ic_create_black_24dp_1x.png</file>
     <file alias="cut">artwork/icons/ic_content_cut_black_24dp_1x.png</file>
     <file alias="delete">artwork/icons/ic_delete_black_24dp_1x.png</file>
+    <file alias="done">artwork/icons/ic_done_black_48dp_1x.png</file>
     <file alias="error">artwork/icons/ic_error_outline_black_48dp_1x.png</file>
     <file alias="grid">artwork/icons/ic_grid_on_black_24dp_1x.png</file>
     <file alias="help">artwork/icons/ic_help_outline_black_24dp_1x.png</file>
