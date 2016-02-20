@@ -49,10 +49,10 @@ class Label(LabelItem):
     """
     item = Item.LabelNode
 
-    def __init__(self, default='', centered=True, movable=True, editable=True, parent=None):
+    def __init__(self, template='', centered=True, movable=True, editable=True, parent=None):
         """
         Initialize the label.
-        :type default: str
+        :type template: str
         :type centered: bool
         :type movable: bool
         :type editable: bool
@@ -60,13 +60,13 @@ class Label(LabelItem):
         """
         super().__init__(parent)
 
-        self._centered = centered
         self._editable = editable
         self._movable = movable
-        self._template = default
 
+        self.centered = centered
         self.focusInData = None
         self.mousePressPos = None
+        self.template = template
 
         self.setFlag(QGraphicsItem.ItemIsMovable, self.movable)
         self.setFlag(QGraphicsItem.ItemIsFocusable, self.editable)
@@ -82,22 +82,6 @@ class Label(LabelItem):
     #                                                                                                                  #
     ####################################################################################################################
 
-    @property
-    def centered(self):
-        """
-        Tells whether the label is centered in parent item by default.
-        :rtype: bool
-        """
-        return self._centered
-
-    @property
-    def template(self):
-        """
-        Returns the label default template.
-        :rtype: str
-        """
-        return self._template
- 
     @property
     def editable(self):
         """
@@ -131,7 +115,6 @@ class Label(LabelItem):
         """
         self._movable = bool(movable)
         self.setFlag(QGraphicsItem.ItemIsMovable, self._movable)
-        self.setFlag(QGraphicsItem.ItemIsSelectable, self._movable)
 
     @property
     def moved(self):
@@ -247,7 +230,6 @@ class Label(LabelItem):
             self.setTextCursor(cursor)
             self.focusInData = self.text()
             scene.clearSelection()
-            self.setSelected(True)
             super().focusInEvent(focusEvent)
         else:
             self.clearFocus()
@@ -317,15 +299,14 @@ class Label(LabelItem):
         """
         moved = self.moved
         if keyEvent.key() in {Qt.Key_Enter, Qt.Key_Return}:
-            # enter has been pressed: allow insertion of a newline
-            # character only if the shift modifier is being held
+            # Enter has been pressed: allow insertion of a newline
+            # character only if the shift modifier is being held.
             if keyEvent.modifiers() & Qt.ShiftModifier:
                 super().keyPressEvent(keyEvent)
             else:
-                self.setSelected(False)
                 self.clearFocus()
         else:
-            # normal key press so allow insertion
+            # Normal key press => allow insertion.
             super().keyPressEvent(keyEvent)
         self.updatePos(moved)
 
@@ -352,7 +333,6 @@ class Label(LabelItem):
                 # Allow the moving of the label if the CTRL modifier is being held.
                 scene.clearSelection()
                 scene.setMode(DiagramMode.MoveText)
-                self.setSelected(True)
                 self.mousePressPos = self.pos()
                 super().mousePressEvent(mouseEvent)
             else:

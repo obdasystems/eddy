@@ -57,27 +57,11 @@ class Label(LabelItem):
         :type parent: QObject
         """
         super().__init__(parent)
-
-        self._centered = centered
-
+        self.centered = centered
         self.setDefaultTextColor(QColor(0, 0, 0, 255))
         self.setFont(Font('Arial', 12, Font.Light))
         self.setText(text)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @property
-    def centered(self):
-        """
-        Tells whether the label should be rendered in the middle of the edge or not.
-        :rtype: bool
-        """
-        return self._centered
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -152,14 +136,14 @@ class Label(LabelItem):
 
         if self.centered:
 
-            # here the label should be centered in the edge path => we need to compute 2 different positions:
+            # Here the label should be centered in the edge path => we need to compute 2 different positions:
             #   1. when the edge path is composed of an even number of points (odd subpaths)
             #   2. when the edge path is composed of an odd number of points (even subpaths)
 
             if len(points) % 2 == 0:
 
-                # if we have an even number of points, compute the position of the label
-                # according to the middle point of the subpath connecting the middle points
+                # If we have an even number of points, compute the position of the label
+                # according to the middle point of the subpath connecting the middle points.
                 p1 = points[int(len(points) / 2) - 1]
                 p2 = points[int(len(points) / 2)]
 
@@ -173,8 +157,8 @@ class Label(LabelItem):
 
             else:
 
-                # if we have an even number of points compute the
-                # position of the label according the point in the middle
+                # If we have an even number of points compute the
+                # position of the label according the point in the middle.
                 mid = points[int(len(points) / 2)]
                 rad1 = angle(points[int(len(points) / 2) - 1], mid)
                 rad2 = angle(mid, points[int(len(points) / 2) + 1])
@@ -193,9 +177,9 @@ class Label(LabelItem):
 
         else:
 
-            # here instead we will place the label near the intersection with the target shape: this is mostly
+            # Here instead we will place the label near the intersection with the target shape: this is mostly
             # used for input edges connecting role chain nodes and property assertion nodes, so we can inspect
-            # visually the partecipation order of connected nodes without having to scroll the diagram (if it's big)
+            # visually the partecipation order of connected nodes without having to scroll the diagram.
             rad = angle(points[-2], points[-1])
             pos = points[-1] - QPointF(sin(rad + M_PI / 3.0) * 20, cos(rad + M_PI / 3.0) * 20)
             self.setPos(pos)
