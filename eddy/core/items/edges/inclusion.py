@@ -52,31 +52,9 @@ class InclusionEdge(AbstractEdge):
         Initialize the edge.
         :type complete: bool
         """
-        self._complete = complete
         super().__init__(**kwargs)
+        self.complete = complete
         self.tail = QPolygonF()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @property
-    def complete(self):
-        """
-        Tells whether this edge is complete.
-        :rtype: bool
-        """
-        return self._complete
-
-    @complete.setter
-    def complete(self, complete):
-        """
-        Set the complete attribute for this edge.
-        :type complete: bool
-        """
-        self._complete = bool(complete)
 
     ####################################################################################################################
     #                                                                                                                  #
