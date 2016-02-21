@@ -75,8 +75,8 @@ class OWL2RLValidator(AbstractValidator):
                     idB = target.identity.label
                     raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
 
-                if source.identity is not Identity.Neutral and source.identity not in target.identities:
-                    # If source is not NEUTRAL and target does not support this identity then we can't create an ISA.
+                if not set.intersection(source.identities, target.identities) - {Identity.Neutral, Identity.Unknown}:
+                    # If source and target nodes do not share a common identity then we can't create an ISA.
                     nameA = source.name
                     nameB = target.name
                     raise SyntaxError('Type mismatch: {} and {} are incompatible'.format(nameA, nameB))
