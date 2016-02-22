@@ -33,10 +33,8 @@
 
 
 from eddy.core.datatypes import OWLSyntax
-from eddy.core.exceptions import MalformedDiagramError
 from eddy.core.exporters import OWLExporter, GrapholExporter
 from eddy.core.functions import expandPath, isEmpty
-from eddy.core.items import ConceptNode, RoleNode, InclusionEdge
 
 from tests import EddyTestCase
 
@@ -186,37 +184,3 @@ class Test_Export(EddyTestCase):
         translation = exporter.export(indent=2)
         self.assertIsInstance(translation, str)
         self.assertFalse(isEmpty(translation))
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   TEST MALFORMED                                                                                                 #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def test_invalid_isa(self):
-        # GIVEN
-        self.init()
-        n0 = ConceptNode(scene=self.scene)
-        n1 = RoleNode(scene=self.scene)
-        e0 = InclusionEdge(scene=self.scene, source=n0, target=n1)
-        self.scene.addItem(n0)
-        self.scene.addItem(n1)
-        self.scene.addItem(e0)
-        # WHEN
-        exporter = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
-        # THEN
-        self.assertRaises(MalformedDiagramError, exporter.run)
-
-    def test_invalid_equivalence(self):
-        # GIVEN
-        self.init()
-        n0 = ConceptNode(scene=self.scene)
-        n1 = RoleNode(scene=self.scene)
-        e0 = InclusionEdge(scene=self.scene, source=n0, target=n1, complete=True)
-        self.scene.addItem(n0)
-        self.scene.addItem(n1)
-        self.scene.addItem(e0)
-        # WHEN
-        exporter = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
-        # THEN
-        self.assertRaises(MalformedDiagramError, exporter.run)
