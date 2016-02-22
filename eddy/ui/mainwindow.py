@@ -38,7 +38,7 @@ import webbrowser
 from collections import OrderedDict
 from traceback import format_exception
 
-from PyQt5.QtCore import Qt, QSettings, QSizeF, QRectF
+from PyQt5.QtCore import Qt, QSettings, QSizeF, QRectF, QByteArray
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap, QKeySequence, QPainter, QPainterPath
 from PyQt5.QtGui import QPageSize, QCursor, QBrush, QColor
@@ -281,7 +281,6 @@ class MainWindow(QMainWindow):
         self.actionSnapToGrid.setIcon(self.iconGrid)
         self.actionSnapToGrid.setStatusTip('Snap diagram elements to the grid')
         self.actionSnapToGrid.setCheckable(True)
-        self.actionSnapToGrid.setChecked(self.snapToGrid)
         self.actionSnapToGrid.setEnabled(False)
         connect(self.actionSnapToGrid.triggered, self.toggleSnapToGrid)
 
@@ -717,13 +716,11 @@ class MainWindow(QMainWindow):
         settings.endGroup()
 
         settings.beginGroup('mainwindow')
-        geometry = settings.value('geometry')
-        state = settings.value('state')
-        if geometry:
-            self.restoreGeometry(geometry)
-        if state:
-            self.restoreState(state)
+        self.restoreGeometry(settings.value('geometry', QByteArray(), QByteArray))
+        self.restoreState(settings.value('state', QByteArray(), QByteArray))
         settings.endGroup()
+
+        self.actionSnapToGrid.setChecked(self.snapToGrid)
 
         ################################################################################################################
         #                                                                                                              #
