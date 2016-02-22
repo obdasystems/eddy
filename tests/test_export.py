@@ -59,7 +59,7 @@ class Test_Export(EddyTestCase):
 
         self.mainview = self.mainwindow.createView(self.scene)
         self.subwindow = self.mainwindow.createSubWindow(self.mainview)
-        self.subwindow.showMaximized()
+        self.subwindow.show()
         self.mainwindow.mdi.setActiveSubWindow(self.subwindow)
         self.mainwindow.mdi.update()
 
