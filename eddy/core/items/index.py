@@ -32,18 +32,18 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 
 from eddy.core.datatypes import DistinctList
 
 
 class ItemIndex(QObject):
     """
-    This class can be used to index Diagram Scene items for easy/fast retrieval.
+    This class can be used to index diagram items for easy/fast retrieval.
     """
-    added = pyqtSignal('QGraphicsItem')
-    cleared = pyqtSignal()
-    removed = pyqtSignal('QGraphicsItem')
+    sgnIndexCleared = pyqtSignal()
+    sgnItemAdded = pyqtSignal('QGraphicsItem')
+    sgnItemRemoved = pyqtSignal('QGraphicsItem')
 
     def __init__(self, parent=None):
         """
@@ -56,6 +56,13 @@ class ItemIndex(QObject):
         self.nodesById = {}
         self.nodesByTx = {}
 
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   SLOTS                                                                                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    @pyqtSlot('QGraphicsItem')
     def add(self, item):
         """
         Add the given element to the index.
@@ -73,7 +80,35 @@ class ItemIndex(QObject):
                 if not key in self.nodesByTx[item.item]:
                     self.nodesByTx[item.item][key] = DistinctList()
                 self.nodesByTx[item.item][key].append(item)
-        self.added.emit(item)
+        self.sgnItemAdded.emit(item)
+
+    @pyqtSlot('QGraphicsItem')
+    def remove(self, item):
+        """
+        Remove the given element from the index.
+        :type item: AbstractItem
+        """
+        self.itemsById.pop(item.id, None)
+        if item.edge:
+            self.edgesById.pop(item.id, None)
+        elif item.node:
+            self.nodesById.pop(item.id, None)
+            if item.predicate:
+                key = item.text()
+                if item.item in self.nodesByTx:
+                    if key in self.nodesByTx[item.item]:
+                        self.nodesByTx[item.item][key].remove(item)
+                        if not self.nodesByTx[item.item][key]:
+                            del self.nodesByTx[item.item][key]
+                    if not self.nodesByTx[item.item]:
+                        del self.nodesByTx[item.item]
+        self.sgnItemRemoved.emit(item)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   INTERFACE                                                                                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     def clear(self):
         """
@@ -83,7 +118,7 @@ class ItemIndex(QObject):
         self.itemsById.clear()
         self.nodesById.clear()
         self.nodesByTx.clear()
-        self.cleared.emit()
+        self.sgnIndexCleared.emit()
 
     def edgeForId(self, eid):
         """
@@ -162,7 +197,7 @@ class ItemIndex(QObject):
 
     def predicates(self, item, key):
         """
-        Returns the list of nodes of the given item type sharing the given label (only for predicate nodes).
+        Returns the list of nodes of the given item type belonging to the same predicate.
         :type item: Item
         :type key: str
         :rtype: DistinctList
@@ -174,34 +209,13 @@ class ItemIndex(QObject):
 
     def predicatesNum(self, item):
         """
-        Returns the amounf of predicates for the given type.
+        Returns the amount of predicates for the given type.
         :param item: Item
         """
         try:
             return len(self.nodesByTx[item])
         except KeyError:
             return 0
-
-    def remove(self, item):
-        """
-        Remove the given element from the index.
-        :type item: AbstractItem
-        """
-        self.itemsById.pop(item.id, None)
-        if item.edge:
-            self.edgesById.pop(item.id, None)
-        elif item.node:
-            self.nodesById.pop(item.id, None)
-            if item.predicate:
-                key = item.text()
-                if item.item in self.nodesByTx:
-                    if key in self.nodesByTx[item.item]:
-                        self.nodesByTx[item.item][key].remove(item)
-                        if not self.nodesByTx[item.item][key]:
-                            del self.nodesByTx[item.item][key]
-                    if not self.nodesByTx[item.item]:
-                        del self.nodesByTx[item.item]
-        self.removed.emit(item)
 
     def size(self, nodes=True, edges=True):
         """

@@ -657,6 +657,7 @@ class GraphmlLoader(AbstractLoader):
                     self.errors.append(e)
                 else:
                     self.scene.addItem(node)
+                    self.scene.sgnItemAdded.emit(node)
                     self.scene.guid.update(node.id)
                 finally:
                     element = element.nextSiblingElement('node')
@@ -687,6 +688,7 @@ class GraphmlLoader(AbstractLoader):
                     self.errors.append(e)
                 else:
                     self.scene.addItem(edge)
+                    self.scene.sgnItemAdded.emit(edge)
                     self.scene.guid.update(edge.id)
                     edge.updateEdge()
                 finally:

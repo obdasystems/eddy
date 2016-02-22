@@ -70,7 +70,7 @@ from eddy.core.qt import ColoredIcon, Icon
 
 from eddy.ui.dialogs import About, OpenFile, SaveFile
 from eddy.ui.dialogs import BusyProgressDialog, PreferencesDialog
-from eddy.ui.docks import Overview, Palette, Explorer, Info
+from eddy.ui.docks import Explorer, Info, Overview, Palette
 from eddy.ui.forms import CardinalityRestrictionForm, ValueRestrictionForm
 from eddy.ui.forms import OWLTranslationForm, ValueForm, RenameForm
 from eddy.ui.mdi import MdiArea, MdiSubWindow
@@ -88,8 +88,8 @@ class MainWindow(QMainWindow):
     MinHeight = 600
     MinWidth = 1024
 
-    documentLoaded = pyqtSignal('QGraphicsScene')
-    documentSaved = pyqtSignal('QGraphicsScene')
+    sgnDocumentLoaded = pyqtSignal('QGraphicsScene')
+    sgnDocumentSaved = pyqtSignal('QGraphicsScene')
 
     def __init__(self, parent=None):
         """
@@ -731,8 +731,8 @@ class MainWindow(QMainWindow):
         #                                                                                                              #
         ################################################################################################################
 
-        connect(self.documentLoaded, self.documentLoadedOrSaved)
-        connect(self.documentSaved, self.documentLoadedOrSaved)
+        connect(self.sgnDocumentLoaded, self.documentLoadedOrSaved)
+        connect(self.sgnDocumentSaved, self.documentLoadedOrSaved)
         connect(self.mdi.subWindowActivated, self.subWindowActivated)
         connect(self.palette_.buttonClicked[int], self.paletteButtonClicked)
         connect(self.undogroup.cleanChanged, self.undoGroupCleanChanged)
@@ -910,18 +910,6 @@ class MainWindow(QMainWindow):
                 msgbox.setDetailedText(m3)
                 msgbox.exec_()
 
-    @pyqtSlot('QGraphicsItem', int)
-    def itemAdded(self, item, modifiers):
-        """
-        Executed after an item insertion process ends (even if the item has not been truly inserted).
-        :type item: AbstractItem
-        :type modifiers: int
-        """
-        scene = self.mdi.activeScene
-        if not modifiers & Qt.ControlModifier:
-            self.palette_.button(item.item).setChecked(False)
-            scene.setMode(DiagramMode.Idle)
-
     @pyqtSlot()
     def itemCut(self):
         """
@@ -953,17 +941,6 @@ class MainWindow(QMainWindow):
             self.sceneSelectionChanged()
 
     @pyqtSlot()
-    def itemPaste(self):
-        """
-        Paste previously copied items.
-        """
-        scene = self.mdi.activeScene
-        if scene:
-            scene.setMode(DiagramMode.Idle)
-            if not self.clipboard.empty():
-                self.clipboard.paste(scene, scene.mousePressPos)
-
-    @pyqtSlot()
     def itemDelete(self):
         """
         Delete the currently selected items from the diagram scene.
@@ -975,6 +952,29 @@ class MainWindow(QMainWindow):
             if selection:
                 selection.extend([x for item in selection if item.node for x in item.edges if x not in selection])
                 scene.undostack.push(CommandItemsMultiRemove(scene, selection))
+
+    @pyqtSlot('QGraphicsItem', int)
+    def itemInsertionEnded(self, item, modifiers):
+        """
+        Executed after an item insertion process ends.
+        :type item: AbstractItem
+        :type modifiers: int
+        """
+        scene = self.mdi.activeScene
+        if not modifiers & Qt.ControlModifier:
+            self.palette_.button(item.item).setChecked(False)
+            scene.setMode(DiagramMode.Idle)
+
+    @pyqtSlot()
+    def itemPaste(self):
+        """
+        Paste previously copied items.
+        """
+        scene = self.mdi.activeScene
+        if scene:
+            scene.setMode(DiagramMode.Idle)
+            if not self.clipboard.empty():
+                self.clipboard.paste(scene, scene.mousePressPos)
 
     @pyqtSlot()
     def newDocument(self):
@@ -1156,7 +1156,7 @@ class MainWindow(QMainWindow):
                 saved = self.saveFile(scene, filepath)
                 if saved:
                     scene.undostack.setClean()
-                    self.documentSaved.emit(scene)
+                    self.sgnDocumentSaved.emit(scene)
 
     @pyqtSlot()
     def saveDocumentAs(self):
@@ -1170,7 +1170,7 @@ class MainWindow(QMainWindow):
                 saved = self.saveFile(scene, filepath)
                 if saved:
                     scene.undostack.setClean()
-                    self.documentSaved.emit(scene)
+                    self.sgnDocumentSaved.emit(scene)
 
     @pyqtSlot(DiagramMode)
     def sceneModeChanged(self, mode):
@@ -1193,17 +1193,11 @@ class MainWindow(QMainWindow):
         node = False
         predicate = False
 
-        # We need to check if we have at least one subwindow because if Eddy simply
-        # lose the focus, self.mdi.activeScene will return None even though we do
-        # not need to disable actions because we will have scene in the background.
         if self.mdi.subWindowList():
-
             scene = self.mdi.activeScene
             if scene:
-
                 nodes = scene.selectedNodes()
                 edges = scene.selectedEdges()
-
                 window = True
                 undo = not self.undogroup.isClean()
                 clipboard = not self.clipboard.empty()
@@ -1396,21 +1390,21 @@ class MainWindow(QMainWindow):
             mainview = subwindow.widget()
             scene = mainview.scene()
             scene.undostack.setActive()
+            self.info.browse(scene)
             self.explorer.browse(mainview)
             self.overview.browse(mainview)
-            self.info.browse(scene)
-            disconnect(self.zoom.changed)
-            disconnect(mainview.scaled)
+            disconnect(self.zoom.sgnChanged)
+            disconnect(mainview.sgnScaled)
             self.zoom.adjust(mainview.zoom)
-            connect(self.zoom.changed, mainview.zoomChanged)
-            connect(mainview.scaled, self.zoom.scaleChanged)
+            connect(self.zoom.sgnChanged, mainview.zoomChanged)
+            connect(mainview.sgnScaled, self.zoom.scaleChanged)
             self.setWindowTitle(scene.document.name)
         else:
 
             if not self.mdi.subWindowList():
-                self.info.clear()
-                self.explorer.clear()
-                self.overview.clear()
+                self.info.reset()
+                self.explorer.reset()
+                self.overview.reset()
                 self.zoom.zoomReset()
                 self.setWindowTitle(None)
 
@@ -1693,8 +1687,8 @@ class MainWindow(QMainWindow):
         scene = DiagramScene(self)
         scene.setSceneRect(QRectF(-width / 2, -height / 2, width, height))
         scene.setItemIndexMethod(DiagramScene.NoIndex)
-        connect(scene.inserted, self.itemAdded)
-        connect(scene.modeChanged, self.sceneModeChanged)
+        connect(scene.sgnInsertionEnded, self.itemInsertionEnded)
+        connect(scene.sgnModeChanged, self.sceneModeChanged)
         connect(scene.selectionChanged, self.sceneSelectionChanged)
         self.undogroup.addStack(scene.undostack)
         return scene
@@ -1731,7 +1725,7 @@ class MainWindow(QMainWindow):
         subwindow = self.mdi.addSubWindow(MdiSubWindow(mainview))
         subwindow.updateWindowTitle()
         scene = mainview.scene()
-        connect(self.documentSaved, subwindow.documentSaved)
+        connect(self.sgnDocumentSaved, subwindow.documentSaved)
         connect(scene.undostack.cleanChanged, subwindow.undoStackCleanChanged)
         connect(subwindow.closeAborted, self.subWindowCloseAborted)
         connect(subwindow.closed, self.subWindowClosed)
@@ -1745,7 +1739,7 @@ class MainWindow(QMainWindow):
         """
         view = MainView(self, scene)
         view.centerOn(0, 0)
-        connect(scene.updated, view.updateView)
+        connect(scene.sgnUpdated, view.updateView)
         return view
 
     def exportPath(self, path=None, name=None):

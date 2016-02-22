@@ -42,9 +42,9 @@ class PredicateMetaIndex(QObject):
     """
     This class is used to index predicate metadata.
     """
-    added = pyqtSignal(Item, str)
-    removed = pyqtSignal(Item, str)
-    cleared = pyqtSignal()
+    sgnCleared = pyqtSignal()
+    sgnPredicateAdded = pyqtSignal(Item, str)
+    sgnPredicateRemoved = pyqtSignal(Item, str)
 
     def __init__(self, parent=None):
         """
@@ -65,14 +65,14 @@ class PredicateMetaIndex(QObject):
         if item not in self.index:
             self.index[item] = {}
         self.index[item][predicate] = metadata
-        self.added.emit(item, predicate)
+        self.sgnPredicateAdded.emit(item, predicate)
 
     def clear(self):
         """
         Clear the metadata index.
         """
         self.index.clear()
-        self.cleared.emit()
+        self.sgnCleared.emit()
 
     def entries(self):
         """
@@ -103,7 +103,7 @@ class PredicateMetaIndex(QObject):
             self.index[item].pop(predicate, None)
             if not self.index[item]:
                 del self.index[item]
-        self.removed.emit(item, predicate)
+        self.sgnPredicateRemoved.emit(item, predicate)
 
 
 ########################################################################################################################

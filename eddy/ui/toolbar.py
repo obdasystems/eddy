@@ -48,7 +48,7 @@ class Zoom(QWidget):
     Max = 5.00
     Step = 0.10
 
-    changed = pyqtSignal(float)
+    sgnChanged = pyqtSignal(float)
 
     def __init__(self, parent=None):
         """
@@ -140,7 +140,7 @@ class Zoom(QWidget):
             if level != self.level:
                 self.level = level
                 self.refresh()
-                self.changed.emit(self.level)
+                self.sgnChanged.emit(self.level)
                 
     ####################################################################################################################
     #                                                                                                                  #

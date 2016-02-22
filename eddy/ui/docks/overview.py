@@ -116,18 +116,18 @@ class Overview(QGraphicsView):
         Set the widget to browse the given view.
         :type view: MainView
         """
-        self.clear()
+        self.reset()
 
         if view:
             scene = view.scene()
             connect(scene.selectionChanged, self.updateView)
-            connect(scene.updated, self.updateView)
+            connect(scene.sgnUpdated, self.updateView)
             self.setScene(scene)
 
         self.mainview = view
         self.updateView()
 
-    def clear(self):
+    def reset(self):
         """
         Clear the widget from browsing the current view.
         """
@@ -136,7 +136,7 @@ class Overview(QGraphicsView):
             try:
                 scene = self.mainview.scene()
                 disconnect(scene.selectionChanged, self.updateView)
-                disconnect(scene.updated, self.updateView)
+                disconnect(scene.sgnUpdated, self.updateView)
             except RuntimeError:
                 pass
             finally:

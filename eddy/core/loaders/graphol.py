@@ -513,6 +513,7 @@ class GrapholLoader(AbstractLoader):
                         raise ValueError('unknown node: {}'.format(element.attribute('type')))
 
                     self.scene.addItem(node)
+                    self.scene.sgnItemAdded.emit(node)
                     self.scene.guid.update(node.id)
                 finally:
                     element = element.nextSiblingElement('node')
@@ -540,6 +541,7 @@ class GrapholLoader(AbstractLoader):
                         raise ValueError('unknown edge: {}'.format(element.attribute('type')))
 
                     self.scene.addItem(edge)
+                    self.scene.sgnItemAdded.emit(edge)
                     self.scene.guid.update(edge.id)
                     edge.updateEdge()
                 finally:

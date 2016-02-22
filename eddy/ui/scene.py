@@ -40,7 +40,7 @@ from PyQt5.QtWidgets import QGraphicsScene, QUndoStack
 
 from eddy.core.commands import CommandEdgeAdd, CommandNodeAdd, CommandNodeMove
 from eddy.core.datatypes import DiagramMode, File, Item
-from eddy.core.functions import snapF, snap
+from eddy.core.functions import connect, snapF, snap
 from eddy.core.items.edges import InputEdge
 from eddy.core.items.nodes import RangeRestrictionNode, DomainRestrictionNode
 from eddy.core.items.factory import ItemFactory
@@ -60,9 +60,11 @@ class DiagramScene(QGraphicsScene):
     MaxSize = 1000000
     RecentNum = 5
 
-    inserted = pyqtSignal('QGraphicsItem', int)
-    modeChanged = pyqtSignal(DiagramMode)
-    updated = pyqtSignal()
+    sgnInsertionEnded = pyqtSignal('QGraphicsItem', int)
+    sgnItemAdded = pyqtSignal('QGraphicsItem')
+    sgnModeChanged = pyqtSignal(DiagramMode)
+    sgnItemRemoved = pyqtSignal('QGraphicsItem')
+    sgnUpdated = pyqtSignal()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -96,6 +98,9 @@ class DiagramScene(QGraphicsScene):
         self.mousePressNode = None
         self.mousePressNodePos = None
         self.mousePressData = {}
+
+        connect(self.sgnItemAdded, self.index.add)
+        connect(self.sgnItemRemoved, self.index.remove)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -138,7 +143,7 @@ class DiagramScene(QGraphicsScene):
             node = self.factory.create(item=item, scene=self)
             node.setPos(snap(dropEvent.scenePos(), DiagramScene.GridSize, self.mainwindow.snapToGrid))
             self.undostack.push(CommandNodeAdd(scene=self, node=node))
-            self.inserted.emit(node, dropEvent.modifiers())
+            self.sgnInsertionEnded.emit(node, dropEvent.modifiers())
             dropEvent.setDropAction(Qt.CopyAction)
             dropEvent.accept()
         else:
@@ -166,7 +171,7 @@ class DiagramScene(QGraphicsScene):
                 node = self.factory.create(item, self)
                 node.setPos(snap(mousePos, DiagramScene.GridSize, self.mainwindow.snapToGrid))
                 self.undostack.push(CommandNodeAdd(self, node))
-                self.inserted.emit(node, mouseEvent.modifiers())
+                self.sgnInsertionEnded.emit(node, mouseEvent.modifiers())
 
                 super().mousePressEvent(mouseEvent)
 
@@ -344,12 +349,16 @@ class DiagramScene(QGraphicsScene):
                             edge.target = currentNode
                             insertEdge = True
 
+                    # We remove the item temporarily from the graphics scene and we perform the add using
+                    # the undo command that will also emit the sgnItemAdded signal hence all the widgets will
+                    # be notified of the edge insertion. We do this because while creating the edge we need
+                    # to display it so the users knows what is he connecting, but we don't want to truly insert
+                    # it till it's necessary (when the mouse is released and the validator allows the insertion)
+                    self.removeItem(edge)
+
                     if insertEdge:
                         self.undostack.push(CommandEdgeAdd(self, edge))
-                        self.updated.emit()
-                    else:
-                        edge.source.removeEdge(edge)
-                        self.removeItem(edge)
+                        edge.updateEdge()
 
                     self.mouseOverNode = None
                     self.mousePressEdge = None
@@ -357,7 +366,8 @@ class DiagramScene(QGraphicsScene):
                     self.validator.clear()
                     statusBar = self.mainwindow.statusBar()
                     statusBar.clearMessage()
-                    self.inserted.emit(edge, mouseEvent.modifiers())
+
+                    self.sgnInsertionEnded.emit(edge, mouseEvent.modifiers())
 
             elif self.mode is DiagramMode.MoveNode:
 
@@ -488,14 +498,6 @@ class DiagramScene(QGraphicsScene):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def addItem(self, item):
-        """
-        Add an item to the diagram scene.
-        :type item: AbstractItem
-        """
-        super().addItem(item)
-        self.index.add(item)
-
     def edge(self, eid):
         """
         Returns the edge matching the given edge id.
@@ -539,14 +541,6 @@ class DiagramScene(QGraphicsScene):
         """
         return self.index.nodes()
 
-    def removeItem(self, item):
-        """
-        Remove an item from the Diagram scene.
-        :type item: AbstractItem
-        """
-        super().removeItem(item)
-        self.index.remove(item)
-
     def selectedEdges(self):
         """
         Returns the edges selected in the scene.
@@ -577,7 +571,7 @@ class DiagramScene(QGraphicsScene):
         if self.mode != mode or self.modeParam != param:
             self.mode = mode
             self.modeParam = param
-            self.modeChanged.emit(mode)
+            self.sgnModeChanged.emit(mode)
 
     def visibleRect(self, margin=0):
         """

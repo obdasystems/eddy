@@ -50,7 +50,7 @@ class MainView(QGraphicsView):
     MoveRate = 40
     MoveBound = 10
 
-    scaled = pyqtSignal(float)
+    sgnScaled = pyqtSignal(float)
 
     def __init__(self, mainwindow, scene):
         """
@@ -146,7 +146,7 @@ class MainView(QGraphicsView):
                 self.setTransformationAnchor(QGraphicsView.NoAnchor)
                 self.setResizeAnchor(QGraphicsView.NoAnchor)
                 self.scaleView(zoom)
-                self.scaled.emit(zoom)
+                self.sgnScaled.emit(zoom)
 
         else:
             super().keyPressEvent(keyEvent)
@@ -314,7 +314,7 @@ class MainView(QGraphicsView):
                 self.setResizeAnchor(QGraphicsView.NoAnchor)
                 p1 = self.mapToScene(wheelPos)
                 self.scaleView(zoom)
-                self.scaled.emit(zoom)
+                self.sgnScaled.emit(zoom)
                 p2 = self.mapToScene(wheelPos)
                 move = p2 - p1
                 self.translate(move.x(), move.y())

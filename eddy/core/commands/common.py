@@ -59,19 +59,21 @@ class CommandItemsMultiAdd(QUndoCommand):
         self.scene.clearSelection()
         for item in self.collection:
             self.scene.addItem(item)
+            self.scene.sgnItemAdded.emit(item)
             item.setSelected(True)
         # emit updated signal
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         self.scene.clearSelection()
         for item in self.collection:
             self.scene.removeItem(item)
+            self.scene.sgnItemRemoved.emit(item)
         for item in self.selected:
             item.setSelected(True)
         # emit updated signal
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 
 class CommandItemsMultiRemove(QUndoCommand):
@@ -115,34 +117,38 @@ class CommandItemsMultiRemove(QUndoCommand):
             edge.source.removeEdge(edge)
             edge.target.removeEdge(edge)
             self.scene.removeItem(edge)
+            self.scene.sgnItemRemoved.emit(edge)
         # remove the nodes
         for node in self.nodes:
             self.scene.removeItem(node)
+            self.scene.sgnItemRemoved.emit(node)
         # update node inputs
         for node in self.inputs:
             node.inputs = self.inputs[node]['redo'][:]
             for edge in node.edges:
                 edge.updateEdge()
         # emit updated signal
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         # add back the nodes
         for node in self.nodes:
             self.scene.addItem(node)
+            self.scene.sgnItemAdded.emit(node)
         # add back the edges
         for edge in self.edges:
             edge.source.addEdge(edge)
             edge.target.addEdge(edge)
             self.scene.addItem(edge)
+            self.scene.sgnItemAdded.emit(edge)
         # update node inputs
         for node in self.inputs:
             node.inputs = self.inputs[node]['undo'][:]
             for edge in node.edges:
                 edge.updateEdge()
         # emit updated signal
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 
 class CommandComposeAxiom(QUndoCommand):
@@ -164,13 +170,14 @@ class CommandComposeAxiom(QUndoCommand):
         # add items to the scene
         for item in self.nodes | self.edges:
             self.scene.addItem(item)
+            self.scene.sgnItemAdded.emit(item)
         # map edges over source and target nodes
         for edge in self.edges:
             edge.source.addEdge(edge)
             edge.target.addEdge(edge)
             edge.updateEdge()
         # emit updated signal
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
@@ -181,8 +188,9 @@ class CommandComposeAxiom(QUndoCommand):
         # remove items from the scene
         for item in self.nodes | self.edges:
             self.scene.removeItem(item)
+            self.scene.sgnItemRemoved.emit(item)
         # emit updated signal
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 
 class CommandRefactor(QUndoCommand):
@@ -201,13 +209,13 @@ class CommandRefactor(QUndoCommand):
         """redo the command"""
         for command in self.commands:
             command.redo()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         for command in self.commands:
             command.undo()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 
 class CommandItemsTranslate(QUndoCommand):
@@ -234,7 +242,7 @@ class CommandItemsTranslate(QUndoCommand):
         for item in self.collection:
             if item.edge:
                 item.updateEdge()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
@@ -245,7 +253,7 @@ class CommandItemsTranslate(QUndoCommand):
         for item in self.collection:
             if item.edge:
                 item.updateEdge()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 
 class CommandSetProperty(QUndoCommand):
@@ -267,10 +275,10 @@ class CommandSetProperty(QUndoCommand):
         """redo the command"""
         for data in self.collection:
             setattr(self.node, data['attribute'], data['redo'])
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         for data in self.collection:
             setattr(self.node, data['attribute'], data['undo'])
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()

@@ -65,31 +65,29 @@ class CommandEdgeAdd(QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        # IMPORTANT: don't remove this check!
-        if not self.scene.edge(self.edge.id):
-            # map source/target over the edge
-            self.edge.source.addEdge(self.edge)
-            self.edge.target.addEdge(self.edge)
-            # remove the edge from the scene
-            self.scene.addItem(self.edge)
-            # switch the inputs
-            if self.edge.target.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
-                self.edge.target.inputs = self.inputs['redo'][:]
-            self.scene.updated.emit()
+        # map source/target over the edge
+        self.edge.source.addEdge(self.edge)
+        self.edge.target.addEdge(self.edge)
+        # switch the inputs
+        if self.edge.target.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
+            self.edge.target.inputs = self.inputs['redo'][:]
+        # add the edge to the scene
+        self.scene.addItem(self.edge)
+        self.scene.sgnItemAdded.emit(self.edge)
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
-        # IMPORTANT: don't remove this check!
-        if self.scene.edge(self.edge.id):
-            # remove source/target from the edge
-            self.edge.source.removeEdge(self.edge)
-            self.edge.target.removeEdge(self.edge)
-            # remove the edge from the scene
-            self.scene.removeItem(self.edge)
-            # switch the inputs
-            if self.edge.target.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
-                self.edge.target.inputs = self.inputs['undo'][:]
-            self.scene.updated.emit()
+        # remove source/target from the edge
+        self.edge.source.removeEdge(self.edge)
+        self.edge.target.removeEdge(self.edge)
+        # switch the inputs
+        if self.edge.target.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
+            self.edge.target.inputs = self.inputs['undo'][:]
+        # remove the edge from the scene
+        self.scene.removeItem(self.edge)
+        self.scene.sgnItemRemoved.emit(self.edge)
+        self.scene.sgnUpdated.emit()
 
 
 class CommandEdgeBreakpointAdd(QUndoCommand):
@@ -110,13 +108,13 @@ class CommandEdgeBreakpointAdd(QUndoCommand):
         """redo the command"""
         self.edge.breakpoints.insert(self.index, self.point)
         self.edge.updateEdge()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         self.edge.breakpoints.pop(self.index)
         self.edge.updateEdge()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 
 class CommandEdgeAnchorMove(QUndoCommand):
@@ -137,13 +135,13 @@ class CommandEdgeAnchorMove(QUndoCommand):
         """redo the command"""
         self.node.setAnchor(self.edge, self.data['redo'])
         self.edge.updateEdge()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         self.node.setAnchor(self.edge, self.data['undo'])
         self.edge.updateEdge()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 
 class CommandEdgeBreakpointMove(QUndoCommand):
@@ -164,13 +162,13 @@ class CommandEdgeBreakpointMove(QUndoCommand):
         """redo the command"""
         self.edge.breakpoints[self.index] = self.data['redo']
         self.edge.updateEdge()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         self.edge.breakpoints[self.index] = self.data['undo']
         self.edge.updateEdge()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 
 class CommandEdgeBreakpointRemove(QUndoCommand):
@@ -191,13 +189,13 @@ class CommandEdgeBreakpointRemove(QUndoCommand):
         """redo the command"""
         self.edge.breakpoints.pop(self.index)
         self.edge.updateEdge()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         self.edge.breakpoints.insert(self.index, self.point)
         self.edge.updateEdge()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 
 class CommandEdgeInclusionToggleComplete(QUndoCommand):
@@ -221,14 +219,14 @@ class CommandEdgeInclusionToggleComplete(QUndoCommand):
         for edge in self.data:
             edge.complete = self.data[edge]['to']
             edge.updateEdge()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         for edge in self.data:
             edge.complete = self.data[edge]['from']
             edge.updateEdge()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 class CommandEdgeSwap(QUndoCommand):
     """
@@ -271,7 +269,7 @@ class CommandEdgeSwap(QUndoCommand):
                 if node in self.inputs:
                     node.inputs = self.inputs[node]['redo'][:]
             edge.updateEdge()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
@@ -282,4 +280,4 @@ class CommandEdgeSwap(QUndoCommand):
                 if node in self.inputs:
                     node.inputs = self.inputs[node]['undo'][:]
             edge.updateEdge()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()

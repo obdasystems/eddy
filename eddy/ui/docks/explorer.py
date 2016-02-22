@@ -64,6 +64,7 @@ class Explorer(QWidget):
         self.iconR = QIcon(':/icons/treeview-icon-role')
         self.iconV = QIcon(':/icons/treeview-icon-value')
         self.search = StringField(self)
+        self.search.setAcceptDrops(False)
         self.search.setClearButtonEnabled(True)
         self.search.setPlaceholderText('Search...')
         self.search.setFixedHeight(30)
@@ -81,6 +82,7 @@ class Explorer(QWidget):
         self.mainLayout.addWidget(self.view)
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumWidth(216)
+        self.setMinimumHeight(160)
 
         connect(self.view.doubleClicked, self.itemDoubleClicked)
         connect(self.view.pressed, self.itemPressed)
@@ -110,6 +112,24 @@ class Explorer(QWidget):
     #   SLOTS                                                                                                          #
     #                                                                                                                  #
     ####################################################################################################################
+    
+    @pyqtSlot('QGraphicsItem')
+    def add(self, item):
+        """
+        Add a node in the tree view.
+        :type item: AbstractItem
+        """
+        if item.node and item.predicate:
+            parent = self.parentFor(item)
+            if not parent:
+                parent = ParentItem(item)
+                parent.setIcon(self.iconFor(item))
+                self.model.appendRow(parent)
+                self.proxy.sort(0, Qt.AscendingOrder)
+            child = ChildItem(item)
+            child.setData(item)
+            parent.appendRow(child)
+            self.proxy.sort(0, Qt.AscendingOrder)
 
     @pyqtSlot(str)
     def filterItem(self, key):
@@ -171,33 +191,15 @@ class Explorer(QWidget):
             self.selectNode(node)
 
     @pyqtSlot('QGraphicsItem')
-    def insert(self, item):
-        """
-        Insert a node in the tree view.
-        :type item: AbstractItem
-        """
-        if item.node and item.predicate:
-            parent = self.parentForNode(item)
-            if not parent:
-                parent = ParentItem(item)
-                parent.setIcon(self.iconFor(item))
-                self.model.appendRow(parent)
-                self.proxy.sort(Qt.AscendingOrder)
-            child = ChildItem(item)
-            child.setData(item)
-            parent.appendRow(child)
-            parent.sortChildren(Qt.AscendingOrder)
-
-    @pyqtSlot('QGraphicsItem')
     def remove(self, item):
         """
         Remove a node from the tree view.
         :type item: AbstractItem
         """
         if item.node and item.predicate:
-            parent = self.parentForNode(item)
+            parent = self.parentFor(item)
             if parent:
-                child = self.childForNode(parent, item)
+                child = self.childFor(parent, item)
                 if child:
                     parent.removeRow(child.index().row())
                 if not parent.rowCount():
@@ -210,7 +212,7 @@ class Explorer(QWidget):
     ####################################################################################################################
 
     @staticmethod
-    def childForNode(parent, node):
+    def childFor(parent, node):
         """
         Search the item representing this node among parent children.
         :type parent: QStandardItem
@@ -223,7 +225,7 @@ class Explorer(QWidget):
                 return child
         return None
 
-    def parentForNode(self, node):
+    def parentFor(self, node):
         """
         Search the parent element of the given node.
         :type node: AbstractNode
@@ -247,17 +249,17 @@ class Explorer(QWidget):
         Set the widget to inspect the given view.
         :type view: MainView
         """
-        self.clear()
+        self.reset()
         self.mainview = view
 
         if self.mainview:
 
             scene = self.mainview.scene()
-            connect(scene.index.added, self.insert)
-            connect(scene.index.removed, self.remove)
+            connect(scene.index.sgnItemAdded, self.add)
+            connect(scene.index.sgnItemRemoved, self.remove)
 
             for item in scene.index.nodes():
-                self.insert(item)
+                self.add(item)
 
             if self.mainview in self.expanded:
                 expanded = self.expanded[self.mainview]
@@ -280,7 +282,7 @@ class Explorer(QWidget):
                     if self.model.itemFromIndex(index) is item:
                         break
 
-    def clear(self):
+    def reset(self):
         """
         Clear the widget from inspecting the current view.
         """
@@ -297,8 +299,8 @@ class Explorer(QWidget):
 
             try:
                 scene = self.mainview.scene()
-                disconnect(scene.index.added, self.insert)
-                disconnect(scene.index.removed, self.remove)
+                disconnect(scene.index.sgnItemAdded, self.add)
+                disconnect(scene.index.sgnItemRemoved, self.remove)
             except RuntimeError:
                 pass
             finally:
@@ -394,7 +396,7 @@ class ExplorerView(QTreeView):
         self.clearSelection()
         # We call super after clearing the selection so that we click off an
         # item it will be deselected by clearSelection here above and the default
-        # mousePressEvent will not evit the clicked signal that will select the item.
+        # mousePressEvent will not emit the clicked signal that will select the item.
         super().mousePressEvent(mouseEvent)
 
     def mouseReleaseEvent(self, mouseEvent):
@@ -417,7 +419,7 @@ class ExplorerView(QTreeView):
 
 class ParentItem(QStandardItem):
     """
-    This class implements the single predicated section of the treeview.
+    This class implements the single predicate section of the treeview.
     """
     def __init__(self, node):
         """

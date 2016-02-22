@@ -53,12 +53,14 @@ class CommandNodeAdd(QUndoCommand):
     def redo(self):
         """redo the command"""
         self.scene.addItem(self.node)
-        self.scene.updated.emit()
+        self.scene.sgnItemAdded.emit(self.node)
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         self.scene.removeItem(self.node)
-        self.scene.updated.emit()
+        self.scene.sgnItemRemoved.emit(self.node)
+        self.scene.sgnUpdated.emit()
 
 
 class CommandNodeSetZValue(QUndoCommand):
@@ -78,13 +80,13 @@ class CommandNodeSetZValue(QUndoCommand):
         """redo the command"""
         self.node.setZValue(self.zValue['redo'])
         self.node.updateEdges()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         self.node.setZValue(self.zValue['undo'])
         self.node.updateEdges()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 
 class CommandNodeRezize(QUndoCommand):
@@ -122,7 +124,7 @@ class CommandNodeRezize(QUndoCommand):
         for edge in self.node.edges:
             edge.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
 
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
@@ -146,7 +148,7 @@ class CommandNodeRezize(QUndoCommand):
         for edge in self.node.edges:
             edge.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
 
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 
 class CommandNodeMove(QUndoCommand):
@@ -193,7 +195,7 @@ class CommandNodeMove(QUndoCommand):
         for edge in self.edges:
             edge.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
         # Emit updated signal.
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
@@ -217,7 +219,7 @@ class CommandNodeMove(QUndoCommand):
         for edge in self.edges:
             edge.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
         # Emit updated signal.
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 
 class CommandNodeLabelMove(QUndoCommand):
@@ -236,12 +238,12 @@ class CommandNodeLabelMove(QUndoCommand):
     def redo(self):
         """redo the command"""
         self.node.setTextPos(self.data['redo'])
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         self.node.setTextPos(self.data['undo'])
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 
 class CommandNodeLabelChange(QUndoCommand):
@@ -281,7 +283,7 @@ class CommandNodeLabelChange(QUndoCommand):
             for node in {n for n in [e.other(self.node) for e in self.node.edges if f1(e)] if f2(n)}:
                 identify(node)
 
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
@@ -306,7 +308,7 @@ class CommandNodeLabelChange(QUndoCommand):
             for node in {n for n in [e.other(self.node) for e in self.node.edges if f1(e)] if f2(n)}:
                 identify(node)
 
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 
 class CommandNodeOperatorSwitchTo(QUndoCommand):
@@ -325,6 +327,7 @@ class CommandNodeOperatorSwitchTo(QUndoCommand):
         """redo the command"""
         # add the new node to the scene
         self.scene.addItem(self.node['redo'])
+        self.scene.sgnItemAdded.emit(self.node['redo'])
 
         # move the anchor points
         for edge, point in self.node['undo'].anchors.items():
@@ -349,14 +352,14 @@ class CommandNodeOperatorSwitchTo(QUndoCommand):
 
         # remove the old node from the scene
         self.scene.removeItem(self.node['undo'])
-
-        # emit updated signal
-        self.scene.updated.emit()
+        self.scene.sgnItemRemoved.emit(self.node['undo'])
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         # add back to the scene the old node
         self.scene.addItem(self.node['undo'])
+        self.scene.sgnItemAdded.emit(self.node['undo'])
 
         # move the anchor points back
         for edge, point in self.node['redo'].anchors.items():
@@ -381,9 +384,8 @@ class CommandNodeOperatorSwitchTo(QUndoCommand):
 
         # remove the new node from the scene
         self.scene.removeItem(self.node['redo'])
-
-        # emit updated signal
-        self.scene.updated.emit()
+        self.scene.sgnItemRemoved.emit(self.node['redo'])
+        self.scene.sgnUpdated.emit()
 
 
 class CommandNodeChangeMeta(QUndoCommand):
@@ -425,13 +427,13 @@ class CommandNodeChangeInputOrder(QUndoCommand):
         """redo the command"""
         self.node.inputs = self.inputs['redo']
         self.node.updateEdges()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """redo the command"""
         self.node.inputs = self.inputs['undo']
         self.node.updateEdges()
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
 
 class CommandNodeSetBrush(QUndoCommand):
@@ -455,11 +457,11 @@ class CommandNodeSetBrush(QUndoCommand):
         for node in self.nodes:
             node.brush = self.brush[node]['redo']
             node.updateBrush(selected=node.isSelected())
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()
 
     def undo(self):
         """redo the command"""
         for node in self.nodes:
             node.brush = self.brush[node]['undo']
             node.updateBrush(selected=node.isSelected())
-        self.scene.updated.emit()
+        self.scene.sgnUpdated.emit()

@@ -271,7 +271,7 @@ class Label(LabelItem):
             self.setTextInteractionFlags(Qt.NoTextInteraction)
 
             scene.setMode(DiagramMode.Idle)
-            scene.updated.emit()
+            scene.sgnUpdated.emit()
 
         super().focusOutEvent(focusEvent)
 

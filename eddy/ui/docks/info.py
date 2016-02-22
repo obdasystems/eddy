@@ -192,29 +192,27 @@ class Info(QScrollArea):
         Set the widget to inspect the given scene.
         :type scene: DiagramScene
         """
-        self.clear()
+        self.reset()
         self.scene = scene
 
         if self.scene:
-            connect(scene.index.added, self.stack)
-            connect(scene.index.removed, self.stack)
-            connect(scene.index.cleared, self.stack)
             connect(scene.selectionChanged, self.stack)
-            connect(scene.updated, self.stack)
+            connect(scene.sgnItemAdded, self.stack)
+            connect(scene.sgnItemRemoved, self.stack)
+            connect(scene.sgnUpdated, self.stack)
             self.stack()
 
-    def clear(self):
+    def reset(self):
         """
         Clear the widget from inspecting the current view.
         """
         if self.scene:
 
             try:
-                disconnect(self.scene.index.added, self.stack)
-                disconnect(self.scene.index.removed, self.stack)
-                disconnect(self.scene.index.cleared, self.stack)
                 disconnect(self.scene.selectionChanged, self.stack)
-                disconnect(self.scene.updated, self.stack)
+                disconnect(self.scene.sgnItemAdded, self.stack)
+                disconnect(self.scene.sgnItemRemoved, self.stack)
+                disconnect(self.scene.sgnUpdated, self.stack)
             except RuntimeError:
                 pass
             finally:
