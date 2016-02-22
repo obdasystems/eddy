@@ -33,7 +33,6 @@
 
 
 from eddy.ui.docks.explorer import Explorer
-from eddy.ui.docks.hierarchy import Hierarchy
 from eddy.ui.docks.info import Info
 from eddy.ui.docks.overview import Overview
 from eddy.ui.docks.palette import Palette
