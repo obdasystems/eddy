@@ -34,7 +34,7 @@
 
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 
-from eddy.core.datatypes import DistinctList
+from eddy.core.datatypes import DistinctList, Item
 
 
 class ItemIndex(QObject):
@@ -195,27 +195,54 @@ class ItemIndex(QObject):
         """
         return self.nodesById.values()
 
-    def predicates(self, item, key):
+    def predicates(self, item, name):
         """
-        Returns the list of nodes of the given item type belonging to the same predicate.
+        Returns the list of nodes of the given item type belonging to the same predicates.
+        Will return a 'DistinctList' of 'AbstractNode' instances (predicate instances).
         :type item: Item
-        :type key: str
+        :type name: str
         :rtype: DistinctList
         """
         try:
-            return self.nodesByTx[item][key]
+            return self.nodesByTx[item][name]
         except KeyError:
             return DistinctList()
 
     def predicatesNum(self, item):
         """
         Returns the amount of predicates for the given type.
-        :param item: Item
+        :type item: Item
         """
         try:
             return len(self.nodesByTx[item])
         except KeyError:
             return 0
+
+    def predicateSubClassOf(self, item, name):
+        """
+        Returns a set of atomic predicate names the given one is subClassOf.
+        In other words this method compute a set containing the name of the predicate being targeted by an inclusion
+        edge sourcing from every node in the diagram that is of the given type and matches the given predicate name.
+
+            - C3 -> C1
+            - C3 -> C2
+                => predicateSubClassOf(Item.ConceptNode, 'C1') = {}
+                => predicateSubClassOf(Item.ConceptNode, 'C2') = {}
+                => predicateSubClassOf(Item.ConceptNode, 'C3') = {'C1', 'C2'}
+
+            - C3 <-> C1
+            - C3  -> C2
+                => predicateSubClassOf(Item.ConceptNode, 'C1') = {'C3'}
+                => predicateSubClassOf(Item.ConceptNode, 'C2') = {}
+                => predicateSubClassOf(Item.ConceptNode, 'C3') = {'C1', 'C2'}
+
+        :type item: Item
+        :type name: str
+        :rtype: set
+        """
+        f1 = lambda x: x.item is Item.InclusionEdge
+        f2 = lambda x: x.item is item
+        return {x.text() for n in self.predicates(item, name) for x in n.outgoingNodes(f1, f2)}
 
     def size(self, nodes=True, edges=True):
         """
