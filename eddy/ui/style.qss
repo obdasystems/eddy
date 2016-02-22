@@ -154,6 +154,9 @@ QMdiArea {
     border: 1px solid #BABABA;
     border-top: 0;
 }
+QMdiArea QTabBar::tab:top {
+    min-width: 140px;
+}
 /**
  * TAB WIDGET
  */
