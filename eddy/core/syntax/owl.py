@@ -75,14 +75,14 @@ class OWL2RLValidator(AbstractValidator):
                     idB = target.identity.label
                     raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
 
-                if source.item is target.item and source.predicate and source.text() == target.text():
-                    # Prevent the creation of an inclusion between the same atomic predicate expressed
-                    # by 2 different nodes. Removing this will lead to several errors in the hierarchy widget.
-                    idA = source.identity.label
-                    idB = target.identity.label
-                    txA = source.text()
-                    txB = target.text()
-                    raise SyntaxError('Inclusion between {}:{} and {}:{}'.format(idA, txA, idB, txB))
+                # if source.item is target.item and source.predicate and source.text() == target.text():
+                #     # Prevent the creation of an inclusion between the same atomic predicate expressed
+                #     # by 2 different nodes. Removing this will lead to several errors in the hierarchy widget.
+                #     idA = source.identity.label
+                #     idB = target.identity.label
+                #     txA = source.text()
+                #     txB = target.text()
+                #     raise SyntaxError('Inclusion between {}:{} and {}:{}'.format(idA, txA, idB, txB))
 
                 if not set.intersection(source.identities, target.identities) - {Identity.Neutral, Identity.Unknown}:
                     # If source and target nodes do not share a common identity then we can't create an ISA.
