@@ -99,10 +99,9 @@ class ItemIndex(QObject):
         self.itemsById.pop(item.id, None)
 
         if item.item in self.itemsByType:
-            if item in self.itemsByType[item.item]:
-                self.itemsByType[item.item].remove(item)
-                if not self.itemsByType[item.item]:
-                    del self.itemsByType[item.item]
+            self.itemsByType[item.item].discard(item)
+            if not self.itemsByType[item.item]:
+                del self.itemsByType[item.item]
 
         if item.node:
             self.nodesById.pop(item.id, None)
@@ -110,8 +109,7 @@ class ItemIndex(QObject):
                 key = item.text()
                 if item.item in self.nodesByName:
                     if key in self.nodesByName[item.item]:
-                        if item in self.nodesByName[item.item][key]:
-                            self.nodesByName[item.item][key].remove(item)
+                        self.nodesByName[item.item][key].discard(item)
                         if not self.nodesByName[item.item][key]:
                             del self.nodesByName[item.item][key]
                     if not self.nodesByName[item.item]:
