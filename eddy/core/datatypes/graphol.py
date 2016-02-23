@@ -41,7 +41,7 @@ from eddy.core.regex import RE_CARDINALITY
 @unique
 class Identity(IntEnum):
     """
-    This class defines all the identities a Graph node may assume.
+    This class defines all the identities a graphol node may assume.
     """
     Neutral = 0
     Concept = 1
@@ -50,8 +50,9 @@ class Identity(IntEnum):
     DataRange = 4
     Instance = 5
     Value = 6
-    Link = 7
-    Unknown = 8
+    RoleAssertion = 7
+    AttributeAssertion = 8
+    Unknown = 9
 
     @DynamicClassAttribute
     def label(self):
@@ -67,7 +68,8 @@ class Identity(IntEnum):
             Identity.DataRange: 'DataRange',
             Identity.Instance: 'Instance',
             Identity.Value: 'Value',
-            Identity.Link: 'Link',
+            Identity.RoleAssertion: 'Role Assertion',
+            Identity.AttributeAssertion: 'Attribute Assertion',
             Identity.Unknown: 'Unknown',
         }[self]
 

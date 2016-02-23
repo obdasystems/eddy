@@ -972,9 +972,9 @@ class OWLExporter(AbstractExporter):
 
                 if e.source.identity is Identity.Instance and e.target.identity is Identity.Concept:
                     self.axiomClassAssertion(e)
-                elif e.source.identity is Identity.Link and e.target.identity is Identity.Role:
+                elif e.source.identity is Identity.RoleAssertion:
                     self.axiomObjectPropertyAssertion(e)
-                elif e.source.identity is Identity.Link and e.target.identity is Identity.Attribute:
+                elif e.source.identity is Identity.AttributeAssertion:
                     self.axiomDataPropertyAssertion(e)
                 else:
                     raise MalformedDiagramError(e, 'type mismatch in instanceOf')

@@ -124,17 +124,16 @@ def identify(source):
     nodes which are specifying a "WEAK" identity.
     :type source: Node
     """
-    f1 = lambda x: x.isItem(Item.InclusionEdge, Item.InputEdge)
-    f2 = lambda x: Identity.Neutral in x.identities
-
-    collection = bfs(source=source, filter_on_edges=f1, filter_on_visit=f2)
-    generators = partition(f2, collection)
+    predicate = lambda x: Identity.Neutral in x.identities
+    collection = bfs(source=source, filter_on_visit=predicate)
+    generators = partition(predicate, collection)
+    excluded = set()
     strong = set(generators[1])
     weak = set(generators[0])
 
     for node in weak:
 
-        if node.isItem(Item.EnumerationNode):
+        if node.item is Item.EnumerationNode:
 
             # Enumeration nodes needs to be analyzed separately since they do not inherit an identity
             # from their inputs but they compute it according to the nodes source of the inputs (note
@@ -146,38 +145,32 @@ def identify(source):
             # We compute the identity for this node: if such identity is not NEUTRAL we put it
             # among the nodes specifying a STRONG identity so it will be excluded later when
             # computing inherited identity: computed identity >>> inherited identity.
+            # We will also remove all the individuals used to compute the Enumeration node identity
+            # from the STRONG set since they will lead to errors when computing the final identity.
 
-            f3 = lambda x: x.isItem(Item.InputEdge)
-            f4 = lambda x: x.isItem(Item.IndividualNode)
+            f1 = lambda x: x.item is Item.InputEdge
+            f2 = lambda x: x.item is Item.IndividualNode
 
-            individuals = node.incomingNodes(filter_on_edges=f3, filter_on_nodes=f4)
-            identity = [n.identity for n in individuals]
+            match = lambda x: Identity.Concept if x.identity is Identity.Instance else Identity.DataRange
+            individuals = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+            identities = [match(n) for n in individuals]
 
-            if not identity:
-                identity = Identity.Neutral
-            elif identity.count(identity[0]) != len(identity):
-                identity = Identity.Unknown
-            elif identity[0] is Identity.Instance:
-                identity = Identity.Concept
-            elif identity[0] is Identity.Value:
-                identity = Identity.DataRange
+            identity = Identity.Neutral
+            if identities:
+                identity = identities[0]
+                if identities.count(identities[0]) != len(identities):
+                    identity = Identity.Unknown
 
             node.identity = identity
-
-            # If it has been identified then consider it as STRONG.
             if node.identity is not Identity.Neutral:
                 strong.add(node)
 
-            # Remove all the nodes used to compute the Enumeration identity from the STRONG set
-            # since we don't need them: they may lead to errors when computing the identity since
-            # they do not contribute with inheritance to the identity of the Enumeration node.
-            for k in individuals:
-                strong.discard(k)
+            map(strong.discard, individuals)
 
-        elif node.isItem(Item.RangeRestrictionNode):
+        elif node.item is Item.RangeRestrictionNode:
 
             # RangeRestriction nodes needs to be analyzed separately since they do not inherit an identity
-            # from their inputs but they compute it according to the nodes source of the inputs.
+            # from their inputs but they compute it according to the nodes source of the inputs:
             #
             #   - if it has ATTRIBUTES || DATARANGE as inputs => identity is DataRange
             #   - if it has ROLES || CONCEPTS as inputs => identity is Concept
@@ -185,39 +178,85 @@ def identify(source):
             # We compute the identity for this node: if such identity is not NEUTRAL we put it
             # among the nodes specifying a STRONG identity so it will be excluded later when
             # computing inherited identity: computed identity >>> inherited identity.
+            # We will also remove all the nodes used to compute the RangeRestriction node identity
+            # from the STRONG set since they will lead to errors when computing the final identity.
 
-            f3 = lambda x: Identity.Concept if x.identity in {Identity.Role, Identity.Concept} else Identity.DataRange
-            f4 = lambda x: x.isItem(Item.InputEdge) and x.target is node
-            f5 = lambda x: x.identity in {Identity.Role,
+            f1 = lambda x: x.item is Item.InputEdge
+            f2 = lambda x: x.identity in {Identity.Role,
                                           Identity.Attribute,
                                           Identity.Concept,
                                           Identity.DataRange} and Identity.Neutral not in x.identities
 
-            mixed = node.adjacentNodes(filter_on_edges=f4, filter_on_nodes=f5)
-            identity = {f3(n) for n in mixed}
+            match = lambda x: Identity.Concept if x.identity in {Identity.Role, Identity.Concept} else Identity.DataRange
+            mixed = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+            identities = [match(n) for n in mixed]
 
-            if not identity:
-                identity = Identity.Neutral
-            elif len(identity) > 1:
-                identity = Identity.Unknown
-            else:
-                identity = identity.pop()
+            identity = Identity.Neutral
+            if identities:
+                identity = identities[0]
+                if identities.count(identities[0]) != len(identities):
+                    identity = Identity.Unknown
 
             node.identity = identity
-
-            # If it has been identified then consider it as STRONG.
             if node.identity is not Identity.Neutral:
                 strong.add(node)
 
-            # Remove all the nodes used to compute the Range Restriction identity from the STRONG set
-            # since  we don't need them: they may lead to errors when computing the identity since
-            # they do not contribute with inheritance to the identity of the Range Restriction node.
-            for k in mixed:
-                strong.discard(k)
+            map(strong.discard, mixed)
 
-    v = [n.identity for n in strong]
-    v = Identity.Neutral if not v else Identity.Unknown if v.count(v[0]) != len(v) else v[0]
+        elif node.item is Item.PropertyAssertionNode:
 
-    # Identify WEAK nodes using the computed identity.
-    for node in weak - strong:
-        node.identity = v
+            # PropertyAssertion nodes needs to be analyzed separately since they do not inherit an identity
+            # identity from their inputs nor from the outgoing instanceOf edge, but they compute it according
+            # to the other endpoint of the outgoing instanceOf edge or according to the nodes source of the inputs:
+            #
+            #   - if it's targeting a Role/RoleInverse node using an instanceOf edge => identity is RoleAssertion
+            #   - if it's targeting an Attribute node using an instanceOf edge => identity is AttributeAssertion
+            #
+            #   OR
+            #
+            #   - if it has 2 Instance as inputs => identity is RoleAssertion
+            #   - if it has 1 Instance and 1 Value as inputs => identity is AttributeAssertion
+            #
+            # In any case, either we identify this node or we don't, we exclude it from the WEAK and STRONG sets:
+            # this is due to the fact that the PropertyAssertion node is used to perform assertions at ABox level
+            # while every other node in the graph is used at TBox level. Additionally we discard the inputs of
+            # the node from the STRONG set since they are individual nodes that do not contribute with identity
+            # inheritance (as for the Enumeration node).
+
+            f1 = lambda x: x.item is Item.InstanceOfEdge
+            f2 = lambda x: x.item in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
+            f3 = lambda x: x.item is Item.InputEdge
+            f4 = lambda x: x.item is Item.IndividualNode
+
+            outmatch = lambda x: Identity.RoleAssertion if x.identity is Identity.Role else Identity.AttributeAssertion
+            outgoing = node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+            incoming = node.incomingNodes(filter_on_edges=f3, filter_on_nodes=f4)
+
+            identity = Identity.Neutral
+
+            # 1) Use if instanceOf edge to determine the identity of the node.
+            identities = [outmatch(n) for n in outgoing]
+            if identities:
+                identity = identities[0]
+                if identities.count(identities[0]) != len(identities):
+                    identity = Identity.Unknown
+
+            # 2) If there is no instanceOf edge then use the inputs.
+            if identity is Identity.Neutral and len(incoming) >= 2:
+                identity = Identity.RoleAssertion
+                if len([x for x in incoming if x.identity is Identity.Value]) > 0:
+                    identity = Identity.AttributeAssertion
+
+            node.identity = identity
+            excluded.add(node)
+            map(strong.discard, incoming)
+
+    identity = Identity.Neutral
+    identities = [n.identity for n in strong]
+    if identities:
+        identity = identities[0]
+        if identities.count(identities[0]) != len(identities):
+            identity = Identity.Unknown
+
+    for node in weak - strong - excluded:
+        node.identity = identity

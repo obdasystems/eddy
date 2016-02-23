@@ -36,6 +36,7 @@ from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QBrush
 
 from eddy.core.datatypes import DistinctList, Item, Identity
+from eddy.core.functions import identify
 from eddy.core.items.nodes.common.base import AbstractNode
 
 
@@ -43,7 +44,7 @@ class PropertyAssertionNode(AbstractNode):
     """
     This class implements the 'Property Assertion' node.
     """
-    identities = {Identity.Link}
+    identities = {Identity.RoleAssertion, Identity.AttributeAssertion, Identity.Neutral}
     item = Item.PropertyAssertionNode
 
     def __init__(self, width=52, height=30, brush=None, inputs=None, **kwargs):
@@ -54,6 +55,7 @@ class PropertyAssertionNode(AbstractNode):
         :type brush: QBrush
         :type inputs: DistinctList
         """
+        self._identity = Identity.Neutral
         super().__init__(**kwargs)
         self.brush = QBrush(QColor(252, 252, 252))
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
@@ -74,7 +76,7 @@ class PropertyAssertionNode(AbstractNode):
         Returns the identity of the current node.
         :rtype: Identity
         """
-        return Identity.Link
+        return self._identity
 
     @identity.setter
     def identity(self, identity):
@@ -82,7 +84,9 @@ class PropertyAssertionNode(AbstractNode):
         Set the identity of the current node.
         :type identity: Identity
         """
-        pass
+        if identity not in self.identities:
+            identity = Identity.Unknown
+        self._identity = identity
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -96,9 +100,12 @@ class PropertyAssertionNode(AbstractNode):
         :type edge: AbstractEdge
         """
         super().addEdge(edge)
+
         if edge.isItem(Item.InputEdge) and edge.target is self:
             self.inputs.append(edge.id)
             edge.updateEdge()
+
+        identify(self)
 
     def copy(self, scene):
         """
@@ -147,14 +154,17 @@ class PropertyAssertionNode(AbstractNode):
         :type edge: AbstractEdge
         """
         super().removeEdge(edge)
-        scene = self.scene()
+
         self.inputs.remove(edge.id)
+        scene = self.scene()
         for i in self.inputs:
             try:
                 edge = scene.edge(i)
                 edge.updateEdge()
             except KeyError:
                 pass
+
+        identify(self)
 
     def width(self):
         """
