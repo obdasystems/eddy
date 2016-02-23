@@ -148,24 +148,28 @@ def identify(source):
             # We will also remove all the individuals used to compute the Enumeration node identity
             # from the STRONG set since they will lead to errors when computing the final identity.
 
-            f1 = lambda x: x.item is Item.InputEdge
-            f2 = lambda x: x.item is Item.IndividualNode
+            f1 = lambda x: x.isItem(Item.InputEdge)
+            f2 = lambda x: x.isItem(Item.IndividualNode)
 
-            match = lambda x: Identity.Concept if x.identity is Identity.Instance else Identity.DataRange
             individuals = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
-            identities = [match(n) for n in individuals]
+            identity = [n.identity for n in individuals]
 
-            identity = Identity.Neutral
-            if identities:
-                identity = identities[0]
-                if identities.count(identities[0]) != len(identities):
-                    identity = Identity.Unknown
+            if not identity:
+                identity = Identity.Neutral
+            elif identity.count(identity[0]) != len(identity):
+                identity = Identity.Unknown
+            elif identity[0] is Identity.Individual:
+                identity = Identity.Concept
+            elif identity[0] is Identity.Literal:
+                identity = Identity.DataRange
 
             node.identity = identity
+
             if node.identity is not Identity.Neutral:
                 strong.add(node)
 
-            map(strong.discard, individuals)
+            for k in individuals:
+                strong.discard(k)
 
         elif node.item is Item.RangeRestrictionNode:
 
@@ -181,27 +185,30 @@ def identify(source):
             # We will also remove all the nodes used to compute the RangeRestriction node identity
             # from the STRONG set since they will lead to errors when computing the final identity.
 
-            f1 = lambda x: x.item is Item.InputEdge
-            f2 = lambda x: x.identity in {Identity.Role,
+            f1 = lambda x: Identity.Concept if x.identity in {Identity.Role, Identity.Concept} else Identity.DataRange
+            f2 = lambda x: x.isItem(Item.InputEdge) and x.target is node
+            f3 = lambda x: x.identity in {Identity.Role,
                                           Identity.Attribute,
                                           Identity.Concept,
                                           Identity.DataRange} and Identity.Neutral not in x.identities
 
-            match = lambda x: Identity.Concept if x.identity in {Identity.Role, Identity.Concept} else Identity.DataRange
-            mixed = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
-            identities = [match(n) for n in mixed]
+            mixed = node.adjacentNodes(filter_on_edges=f2, filter_on_nodes=f3)
+            identity = {f1(n) for n in mixed}
 
-            identity = Identity.Neutral
-            if identities:
-                identity = identities[0]
-                if identities.count(identities[0]) != len(identities):
-                    identity = Identity.Unknown
+            if not identity:
+                identity = Identity.Neutral
+            elif len(identity) > 1:
+                identity = Identity.Unknown
+            else:
+                identity = identity.pop()
 
             node.identity = identity
+
             if node.identity is not Identity.Neutral:
                 strong.add(node)
 
-            map(strong.discard, mixed)
+            for k in mixed:
+                strong.discard(k)
 
         elif node.item is Item.PropertyAssertionNode:
 
@@ -227,15 +234,15 @@ def identify(source):
             f2 = lambda x: x.item in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
             f3 = lambda x: x.item is Item.InputEdge
             f4 = lambda x: x.item is Item.IndividualNode
+            f5 = lambda x: Identity.RoleAssertion if x.identity is Identity.Role else Identity.AttributeAssertion
 
-            outmatch = lambda x: Identity.RoleAssertion if x.identity is Identity.Role else Identity.AttributeAssertion
             outgoing = node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)
             incoming = node.incomingNodes(filter_on_edges=f3, filter_on_nodes=f4)
 
             identity = Identity.Neutral
 
             # 1) Use if instanceOf edge to determine the identity of the node.
-            identities = [outmatch(n) for n in outgoing]
+            identities = [f5(n) for n in outgoing]
             if identities:
                 identity = identities[0]
                 if identities.count(identities[0]) != len(identities):
@@ -248,8 +255,11 @@ def identify(source):
                     identity = Identity.AttributeAssertion
 
             node.identity = identity
+
             excluded.add(node)
-            map(strong.discard, incoming)
+
+            for k in incoming:
+                strong.discard(k)
 
     identity = Identity.Neutral
     identities = [n.identity for n in strong]
