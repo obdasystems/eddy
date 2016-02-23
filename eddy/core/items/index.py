@@ -34,14 +34,14 @@
 
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 
-from eddy.core.datatypes import DistinctList, Item
+from eddy.core.datatypes import Item
 
 
 class ItemIndex(QObject):
     """
     This class can be used to index diagram items for easy/fast retrieval.
     """
-    sgnIndexCleared = pyqtSignal()
+    sgnCleared = pyqtSignal()
     sgnItemAdded = pyqtSignal('QGraphicsItem')
     sgnItemRemoved = pyqtSignal('QGraphicsItem')
 
@@ -51,10 +51,11 @@ class ItemIndex(QObject):
         :type parent: QObject
         """
         super().__init__(parent)
-        self.edgesById = {}
         self.itemsById = {}
+        self.edgesById = {}
         self.nodesById = {}
-        self.nodesByTx = {}
+        self.nodesByName = {}
+        self.itemsByType = {}
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -69,17 +70,24 @@ class ItemIndex(QObject):
         :type item: AbstractItem
         """
         self.itemsById[item.id] = item
-        if item.edge:
-            self.edgesById[item.id] = item
-        elif item.node:
+
+        if item.item not in self.itemsByType:
+            self.itemsByType[item.item] = set()
+        self.itemsByType[item.item].add(item)
+
+        if item.node:
             self.nodesById[item.id] = item
             if item.predicate:
                 key = item.text()
-                if item.item not in self.nodesByTx:
-                    self.nodesByTx[item.item] = {}
-                if not key in self.nodesByTx[item.item]:
-                    self.nodesByTx[item.item][key] = DistinctList()
-                self.nodesByTx[item.item][key].append(item)
+                if item.item not in self.nodesByName:
+                    self.nodesByName[item.item] = {}
+                if not key in self.nodesByName[item.item]:
+                    self.nodesByName[item.item][key] = set()
+                self.nodesByName[item.item][key].add(item)
+
+        if item.edge:
+            self.edgesById[item.id] = item
+
         self.sgnItemAdded.emit(item)
 
     @pyqtSlot('QGraphicsItem')
@@ -89,19 +97,29 @@ class ItemIndex(QObject):
         :type item: AbstractItem
         """
         self.itemsById.pop(item.id, None)
-        if item.edge:
-            self.edgesById.pop(item.id, None)
-        elif item.node:
+
+        if item.item in self.itemsByType:
+            if item in self.itemsByType[item.item]:
+                self.itemsByType[item.item].remove(item)
+                if not self.itemsByType[item.item]:
+                    del self.itemsByType[item.item]
+
+        if item.node:
             self.nodesById.pop(item.id, None)
             if item.predicate:
                 key = item.text()
-                if item.item in self.nodesByTx:
-                    if key in self.nodesByTx[item.item]:
-                        self.nodesByTx[item.item][key].remove(item)
-                        if not self.nodesByTx[item.item][key]:
-                            del self.nodesByTx[item.item][key]
-                    if not self.nodesByTx[item.item]:
-                        del self.nodesByTx[item.item]
+                if item.item in self.nodesByName:
+                    if key in self.nodesByName[item.item]:
+                        if item in self.nodesByName[item.item][key]:
+                            self.nodesByName[item.item][key].remove(item)
+                        if not self.nodesByName[item.item][key]:
+                            del self.nodesByName[item.item][key]
+                    if not self.nodesByName[item.item]:
+                        del self.nodesByName[item.item]
+
+        if item.edge:
+            self.edgesById.pop(item.id, None)
+
         self.sgnItemRemoved.emit(item)
 
     ####################################################################################################################
@@ -117,8 +135,9 @@ class ItemIndex(QObject):
         self.edgesById.clear()
         self.itemsById.clear()
         self.nodesById.clear()
-        self.nodesByTx.clear()
-        self.sgnIndexCleared.emit()
+        self.nodesByName.clear()
+        self.itemsByType.clear()
+        self.sgnCleared.emit()
 
     def edgeForId(self, eid):
         """
@@ -170,6 +189,16 @@ class ItemIndex(QObject):
         except KeyError:
             return None
 
+    def itemNum(self, item):
+        """
+        Returns the amount of items of the given type.
+        :type item: Item
+        """
+        try:
+            return len(self.itemsByType[item])
+        except KeyError:
+            return 0
+
     def items(self):
         """
         Returns a view on all the items in the index.
@@ -198,15 +227,15 @@ class ItemIndex(QObject):
     def predicates(self, item, name):
         """
         Returns the list of nodes of the given item type belonging to the same predicates.
-        Will return a 'DistinctList' of 'AbstractNode' instances (predicate instances).
+        Will return a 'set' of 'AbstractNode' instances (predicate instances).
         :type item: Item
         :type name: str
-        :rtype: DistinctList
+        :rtype: set
         """
         try:
-            return self.nodesByTx[item][name]
+            return self.nodesByName[item][name]
         except KeyError:
-            return DistinctList()
+            return set()
 
     def predicatesNum(self, item):
         """
@@ -214,7 +243,7 @@ class ItemIndex(QObject):
         :type item: Item
         """
         try:
-            return len(self.nodesByTx[item])
+            return len(self.nodesByName[item])
         except KeyError:
             return 0
 
