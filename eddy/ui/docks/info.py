@@ -385,6 +385,10 @@ class DiagramInfo(AbstractInfo):
         self.attributesField = Int(self)
         self.attributesField.setReadOnly(True)
 
+        self.inclusionsKey = Key('Inclusions', self)
+        self.inclusionsField = Int(self)
+        self.inclusionsField.setReadOnly(True)
+
         self.atomicPredHeader = Header('Atomic predicates', self)
 
         self.atomicPredLayout = QFormLayout()
@@ -392,6 +396,7 @@ class DiagramInfo(AbstractInfo):
         self.atomicPredLayout.addRow(self.conceptsKey, self.conceptsField)
         self.atomicPredLayout.addRow(self.rolesKey, self.rolesField)
         self.atomicPredLayout.addRow(self.attributesKey, self.attributesField)
+        self.atomicPredLayout.addRow(self.inclusionsKey, self.inclusionsField)
 
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setAlignment(Qt.AlignTop)
@@ -408,6 +413,7 @@ class DiagramInfo(AbstractInfo):
         self.conceptsField.setValue(scene.index.predicatesNum(Item.ConceptNode))
         self.rolesField.setValue(scene.index.predicatesNum(Item.RoleNode))
         self.attributesField.setValue(scene.index.predicatesNum(Item.AttributeNode))
+        self.inclusionsField.setValue(scene.index.itemNum(Item.InclusionEdge))
 
 
 class EdgeInfo(AbstractInfo):
