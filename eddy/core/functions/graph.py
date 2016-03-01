@@ -158,9 +158,9 @@ def identify(source):
                 identity = Identity.Neutral
             elif identity.count(identity[0]) != len(identity):
                 identity = Identity.Unknown
-            elif identity[0] is Identity.Individual:
+            elif identity[0] is Identity.Instance:
                 identity = Identity.Concept
-            elif identity[0] is Identity.Literal:
+            elif identity[0] is Identity.Value:
                 identity = Identity.DataRange
 
             node.identity = identity
