@@ -238,7 +238,7 @@ class MenuFactory(QObject):
         if node.edges:
 
             switch = {ComplementNode}
-            if self.identity is Identity.Role:
+            if node.identity is Identity.Role:
                 switch |= {RoleChainNode, RoleInverseNode}
             else:
                 switch |= {DisjointUnionNode, IntersectionNode, UnionNode}
