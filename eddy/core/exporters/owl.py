@@ -229,7 +229,7 @@ class OWLExporter(AbstractExporter):
             for i in collection:
                 restrictions.add(self.buildValueRestriction(i))
 
-            restrictions.__class__ = self.Set
+            restrictions = jnius.cast(self.Set, restrictions)
             self.converted[node] = self.factory.getOWLDatatypeRestriction(datatypeEx, restrictions)
 
         return self.converted[node]
@@ -282,18 +282,18 @@ class OWLExporter(AbstractExporter):
                 elif node.restriction is Restriction.Forall:
                     self.converted[node] = self.factory.getOWLDataAllValuesFrom(dataPropEx, dataRangeEx)
                 elif node.restriction is Restriction.Cardinality:
-                    HS = self.HashSet()
+                    hs = self.HashSet()
                     if node.cardinality['min'] is not None:
-                        HS.add(self.factory.getOWLDataMinCardinality(node.cardinality['min'], dataPropEx, dataRangeEx))
+                        hs.add(self.factory.getOWLDataMinCardinality(node.cardinality['min'], dataPropEx, dataRangeEx))
                     if node.cardinality['max'] is not None:
-                        HS.add(self.factory.getOWLDataMinCardinality(node.cardinality['max'], dataPropEx, dataRangeEx))
-                    if HS.isEmpty():
+                        hs.add(self.factory.getOWLDataMinCardinality(node.cardinality['max'], dataPropEx, dataRangeEx))
+                    if hs.isEmpty():
                         raise MalformedDiagramError(node, 'missing cardinality')
-                    elif HS.size() >= 1:
-                        HS.__class__ = self.Set
-                        self.converted[node] = self.factory.getOWLDataIntersectionOf(HS)
+                    elif hs.size() >= 1:
+                        hs = jnius.cast(self.Set, hs)
+                        self.converted[node] = self.factory.getOWLDataIntersectionOf(hs)
                     else:
-                        self.converted[node] = HS.iterator().next()
+                        self.converted[node] = hs.iterator().next()
 
             elif o1.identity is Identity.Role:
 
@@ -333,18 +333,18 @@ class OWLExporter(AbstractExporter):
                 elif node.restriction is Restriction.Forall:
                     self.converted[node] = self.factory.getOWLObjectAllValuesFrom(objectPropertyEx, classEx)
                 elif node.restriction is Restriction.Cardinality:
-                    HS = self.HashSet()
+                    hs = self.HashSet()
                     if node.cardinality['min'] is not None:
-                        HS.add(self.factory.getOWLObjectMinCardinality(node.cardinality['min'], objectPropertyEx, classEx))
+                        hs.add(self.factory.getOWLObjectMinCardinality(node.cardinality['min'], objectPropertyEx, classEx))
                     if node.cardinality['max'] is not None:
-                        HS.add(self.factory.getOWLObjectMaxCardinality(node.cardinality['max'], objectPropertyEx, classEx))
-                    if HS.isEmpty():
+                        hs.add(self.factory.getOWLObjectMaxCardinality(node.cardinality['max'], objectPropertyEx, classEx))
+                    if hs.isEmpty():
                         raise MalformedDiagramError(node, 'missing cardinality')
-                    elif HS.size() >= 1:
-                        HS.__class__ = self.Set
-                        self.converted[node] = self.factory.getOWLObjectIntersectionOf(HS)
+                    elif hs.size() >= 1:
+                        hs = jnius.cast(self.Set, hs)
+                        self.converted[node] = self.factory.getOWLObjectIntersectionOf(hs)
                     else:
-                        self.converted[node] = HS.iterator().next()
+                        self.converted[node] = hs.iterator().next()
 
         return self.converted[node]
 
@@ -362,7 +362,7 @@ class OWLExporter(AbstractExporter):
                 collection.add(self.buildIndividual(i))
             if collection.isEmpty():
                 raise MalformedDiagramError(node, 'missing operand(s)')
-            collection.__class__ = self.Set
+            collection = jnius.cast(self.Set, collection)
             self.converted[node] = self.factory.getOWLObjectOneOf(collection)
         return self.converted[node]
 
@@ -420,7 +420,7 @@ class OWLExporter(AbstractExporter):
             if collection.isEmpty():
                 raise MalformedDiagramError(node, 'missing operand(s)')
 
-            collection.__class__ = self.Set
+            collection = jnius.cast(self.Set, collection)
 
             if node.identity is Identity.Concept:
                 self.converted[node] = self.factory.getOWLObjectIntersectionOf(collection)
@@ -515,7 +515,7 @@ class OWLExporter(AbstractExporter):
                     if collection.isEmpty():
                         raise MalformedDiagramError(node, 'missing cardinality')
                     if collection.size() >= 1:
-                        collection.__class__ = self.Set
+                        collection = jnius.cast(self.Set, collection)
                         self.converted[node] = self.factory.getOWLObjectIntersectionOf(collection)
                     else:
                         self.converted[node] = collection.iterator().next()
@@ -554,7 +554,7 @@ class OWLExporter(AbstractExporter):
                     collection.add(self.buildRole(x))
                 elif x.isItem(Item.RoleInverseNode):
                     collection.add(self.buildRoleInverse(x))
-            collection.__class__ = self.List
+            collection = jnius.cast(self.List, collection)
             self.converted[node] = collection
         return self.converted[node]
 
@@ -612,7 +612,7 @@ class OWLExporter(AbstractExporter):
             if not collection.size():
                 raise MalformedDiagramError(node, 'missing operand(s)')
 
-            collection.__class__ = self.Set
+            collection = jnius.cast(self.Set, collection)
 
             if node.identity is Identity.Concept:
                 self.converted[node] = self.factory.getOWLObjectUnionOf(collection)
@@ -658,7 +658,7 @@ class OWLExporter(AbstractExporter):
         if meta and not isEmpty(meta.description):
             annotationP = self.factory.getOWLAnnotationProperty(self.IRI.create("Description"))
             annotationV = self.factory.getOWLLiteral(OWLAnnotationText(meta.description))
-            annotationV.__class__ = self.OWLAnnotationValue
+            annotationV = jnius.cast(self.OWLAnnotationValue, annotationV)
             annotation = self.factory.getOWLAnnotation(annotationP, annotationV)
             self.axioms.add(self.factory.getOWLAnnotationAssertionAxiom(self.converted[node].getIRI(), annotation))
     
@@ -710,7 +710,7 @@ class OWLExporter(AbstractExporter):
         collection = self.HashSet()
         for j in node.incomingNodes(lambda x: x.isItem(Item.InputEdge)):
             collection.add(self.converted[j])
-        collection.__class__ = self.Set
+        collection = jnius.cast(self.Set, collection)
         self.axioms.add(self.factory.getOWLDisjointClassesAxiom(collection))
 
     def axiomDisjointDataProperties(self, edge):
@@ -721,7 +721,7 @@ class OWLExporter(AbstractExporter):
         collection = self.HashSet()
         collection.add(self.converted[edge.source])
         collection.add(self.converted[edge.target])
-        collection.__class__ = self.Set
+        collection = jnius.cast(self.Set, collection)
         self.axioms.add(self.factory.getOWLDisjointDataPropertiesAxiom(collection))
 
     def axiomDisjointObjectProperties(self, edge):
@@ -732,7 +732,7 @@ class OWLExporter(AbstractExporter):
         collection = self.HashSet()
         collection.add(self.converted[edge.source])
         collection.add(self.converted[edge.target])
-        collection.__class__ = self.Set
+        collection = jnius.cast(self.Set, collection)
         self.axioms.add(self.factory.getOWLDisjointObjectPropertiesAxiom(collection))
 
     def axiomEquivalentClasses(self, edge):
@@ -743,7 +743,7 @@ class OWLExporter(AbstractExporter):
         collection = self.HashSet()
         collection.add(self.converted[edge.source])
         collection.add(self.converted[edge.target])
-        collection.__class__ = self.Set
+        collection = jnius.cast(self.Set, collection)
         self.axioms.add(self.factory.getOWLEquivalentClassesAxiom(collection))
 
     def axiomEquivalentDataProperties(self, edge):
@@ -754,7 +754,7 @@ class OWLExporter(AbstractExporter):
         collection = self.HashSet()
         collection.add(self.converted[edge.source])
         collection.add(self.converted[edge.target])
-        collection.__class__ = self.Set
+        collection = jnius.cast(self.Set, collection)
         self.axioms.add(self.factory.getOWLEquivalentDataPropertiesAxiom(collection))
 
     def axiomEquivalentObjectProperties(self, edge):
@@ -765,7 +765,7 @@ class OWLExporter(AbstractExporter):
         collection = self.HashSet()
         collection.add(self.converted[edge.source])
         collection.add(self.converted[edge.target])
-        collection.__class__ = self.Set
+        collection = jnius.cast(self.Set, collection)
         self.axioms.add(self.factory.getOWLEquivalentObjectPropertiesAxiom(collection))
 
     def axiomObjectProperty(self, node):
@@ -852,14 +852,13 @@ class OWLExporter(AbstractExporter):
 
         ontoFormat.setPrefix(self.ontoPrefix, self.ontoIRI)
 
-        # FIXME: https://github.com/kivy/pyjnius/issues/196
         stream = self.ByteArrayOutputStream()
-        stream.__class__ = self.OutputStream
+        stream = jnius.cast(self.OutputStream, stream)
 
         self.man.setOntologyFormat(self.ontology, ontoFormat)
         self.man.saveOntology(self.ontology, stream)
 
-        stream.__class__ = self.ByteArrayOutputStream
+        stream = jnius.cast(self.ByteArrayOutputStream, stream)
         return stream.toString("UTF-8")
 
     ####################################################################################################################
