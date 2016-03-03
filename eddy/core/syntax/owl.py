@@ -75,20 +75,9 @@ class OWL2RLValidator(AbstractValidator):
                     idB = target.identity.label
                     raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
 
-                # if source.item is target.item and source.predicate and source.text() == target.text():
-                #     # Prevent the creation of an inclusion between the same atomic predicate expressed
-                #     # by 2 different nodes. Removing this will lead to several errors in the hierarchy widget.
-                #     idA = source.identity.label
-                #     idB = target.identity.label
-                #     txA = source.text()
-                #     txB = target.text()
-                #     raise SyntaxError('Inclusion between {}:{} and {}:{}'.format(idA, txA, idB, txB))
-
                 if not source.identities.intersection(target.identities) - {Identity.Neutral, Identity.Unknown}:
                     # If source and target nodes do not share a common identity then we can't create an ISA.
-                    nameA = source.name
-                    nameB = target.name
-                    raise SyntaxError('Type mismatch: {} and {} are incompatible'.format(nameA, nameB))
+                    raise SyntaxError('Type mismatch: {} and {} are incompatible'.format(source.name, target.name))
 
                 if Identity.DataRange in {source.identity, target.identity} and not source.item is Item.RangeRestrictionNode:
                     # If we are creating an ISA between 2 DataRange check whether the source of the node is a
@@ -102,6 +91,14 @@ class OWL2RLValidator(AbstractValidator):
                     idA = source.identity.label
                     idB = target.identity.label
                     raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
+
+                if source.item is Item.ComplementNode:
+
+                    identity = next(iter({source.identity, target.identity} - {Identity.Neutral}), None)
+                    if identity and identity in {Identity.Attribute, Identity.Role}:
+                        # Role and attribute expressions whose sink node is a
+                        # complement node cannot be the source of any inclusion edge.
+                        raise SyntaxError('Invalid source for {} inclusion: {}'.format(identity.label, source.name))
 
             elif edge.item is Item.InputEdge:
 
