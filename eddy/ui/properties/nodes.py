@@ -85,7 +85,7 @@ class NodeProperty(QDialog):
         self.showIdentityField = StringField(self.generalWidget)
         self.showIdentityField.setReadOnly(True)
         self.showIdentityField.setFixedWidth(300)
-        self.showIdentityField.setValue(self.node.identity.label)
+        self.showIdentityField.setValue(self.node.identity.value)
 
         self.generalLayout.addRow('ID', self.idField)
         self.generalLayout.addRow('Type', self.itemField)

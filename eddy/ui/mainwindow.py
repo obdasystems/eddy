@@ -438,7 +438,7 @@ class MainWindow(QMainWindow):
         ## INDIVIDUAL NODE
         self.actionsSetIndividualNodeAs = []
         for identity in (Identity.Instance, Identity.Value):
-            action = QAction(identity.label, self)
+            action = QAction(identity.value, self)
             action.setData(identity)
             connect(action.triggered, self.setIndividualNodeAs)
             self.actionsSetIndividualNodeAs.append(action)
@@ -1315,7 +1315,7 @@ class MainWindow(QMainWindow):
                         value = form.valueField.value()
                         data = node.composeValue(value, datatype)
                         if node.text() != data:
-                            name = 'change {} to {}'.format(node.identity.label.lower(), data)
+                            name = 'change {} to {}'.format(node.identity.value.lower(), data)
                             scene.undostack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
 
     @pyqtSlot()

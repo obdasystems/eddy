@@ -39,40 +39,22 @@ from eddy.core.regex import RE_CARDINALITY
 
 
 @unique
-class Identity(IntEnum):
+class Identity(Enum):
     """
     This class defines all the identities a graphol node may assume.
     """
-    # TODO: convert to normal enum and get rid of .label
-    Neutral = 0
-    Concept = 1
-    Role = 2
-    Attribute = 3
-    DataRange = 4
-    Instance = 5
-    Value = 6
-    RoleAssertion = 7
-    AttributeAssertion = 8
-    Unknown = 9
+    __order__ = 'Neutral Concept Role Attribute DataRange Instance Value RoleAssertion AttributeAssertion Unknown'
 
-    @DynamicClassAttribute
-    def label(self):
-        """
-        The label of the Enum member.
-        :rtype: str
-        """
-        return {
-            Identity.Neutral: 'Neutral',
-            Identity.Concept: 'Concept',
-            Identity.Role: 'Role',
-            Identity.Attribute: 'Attribute',
-            Identity.DataRange: 'DataRange',
-            Identity.Instance: 'Instance',
-            Identity.Value: 'Value',
-            Identity.RoleAssertion: 'Role Assertion',
-            Identity.AttributeAssertion: 'Attribute Assertion',
-            Identity.Unknown: 'Unknown',
-        }[self]
+    Neutral = 'Neutral'
+    Concept = 'Concept'
+    Role = 'Role'
+    Attribute = 'Attribute'
+    DataRange = 'DataRange'
+    Instance = 'Instance'
+    Value = 'Value'
+    RoleAssertion = 'Role Assertion'
+    AttributeAssertion = 'Attribute Assertion'
+    Unknown = 'Unknown'
 
 
 @unique

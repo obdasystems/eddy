@@ -537,7 +537,7 @@ class NodeInfo(AbstractInfo):
         :type node: AbstractNode
         """
         self.idField.setValue(node.id)
-        self.identityField.setValue(node.identity.label)
+        self.identityField.setValue(node.identity.value)
         self.node = node
 
 
