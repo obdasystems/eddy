@@ -123,7 +123,7 @@ class OWLExporter(AbstractExporter):
         """
         if node not in self.converted:
 
-            f1 = lambda x: x.isItem(Item.InputEdge)
+            f1 = lambda x: x.item is Item.InputEdge
             f2 = lambda x: x.identity in {Identity.Concept, Identity.DataRange, Identity.Role}
 
             collection = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
@@ -138,38 +138,38 @@ class OWLExporter(AbstractExporter):
 
             if operand.identity is Identity.Concept:
 
-                if operand.isItem(Item.ConceptNode):
+                if operand.item is Item.ConceptNode:
                     self.converted[node] = self.factory.getOWLObjectComplementOf(self.buildConcept(operand))
-                elif operand.isItem(Item.ComplementNode):
+                elif operand.item is Item.ComplementNode:
                     self.converted[node] = self.factory.getOWLObjectComplementOf(self.buildComplement(operand))
-                elif operand.isItem(Item.EnumerationNode):
+                elif operand.item is Item.EnumerationNode:
                     self.converted[node] = self.factory.getOWLObjectComplementOf(self.buildEnumeration(operand))
-                elif operand.isItem(Item.IntersectionNode):
+                elif operand.item is Item.IntersectionNode:
                     self.converted[node] = self.factory.getOWLObjectComplementOf(self.buildIntersection(operand))
-                elif operand.isItem(Item.UnionNode, Item.DisjointUnionNode):
+                elif operand.item in {Item.UnionNode, Item.DisjointUnionNode}:
                     self.converted[node] = self.factory.getOWLObjectComplementOf(self.buildUnion(operand))
-                elif operand.isItem(Item.DomainRestrictionNode):
+                elif operand.item is Item.DomainRestrictionNode:
                     self.converted[node] = self.factory.getOWLObjectComplementOf(self.buildDomainRestriction(operand))
-                elif operand.isItem(Item.RangeRestrictionNode):
+                elif operand.item is Item.RangeRestrictionNode:
                     self.converted[node] = self.factory.getOWLObjectComplementOf(self.buildRangeRestriction(operand))
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(operand))
 
             elif operand.identity is Identity.DataRange:
 
-                if operand.isItem(Item.ValueDomainNode):
+                if operand.item is Item.ValueDomainNode:
                     self.converted[node] = self.factory.getOWLDataComplementOf(self.buildValueDomain(operand))
-                elif operand.isItem(Item.ComplementNode):
+                elif operand.item is Item.ComplementNode:
                     self.converted[node] = self.factory.getOWLDataComplementOf(self.buildComplement(operand))
-                elif operand.isItem(Item.EnumerationNode):
+                elif operand.item is Item.EnumerationNode:
                     self.converted[node] = self.factory.getOWLDataComplementOf(self.buildEnumeration(operand))
-                elif operand.isItem(Item.IntersectionNode):
+                elif operand.item is Item.IntersectionNode:
                     self.converted[node] = self.factory.getOWLDataComplementOf(self.buildIntersection(operand))
-                elif operand.isItem(Item.UnionNode, Item.DisjointUnionNode):
+                elif operand.item in {Item.UnionNode, Item.DisjointUnionNode}:
                     self.converted[node] = self.factory.getOWLDataComplementOf(self.buildUnion(operand))
-                elif operand.isItem(Item.DatatypeRestrictionNode):
+                elif operand.item is Item.DatatypeRestrictionNode:
                     self.converted[node] = self.factory.getOWLDataComplementOf(self.buildDatatypeRestriction(operand))
-                elif operand.isItem(Item.RangeRestrictionNode):
+                elif operand.item is Item.RangeRestrictionNode:
                     self.converted[node] = self.factory.getOWLObjectComplementOf(self.buildRangeRestriction(operand))
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(operand))
@@ -179,9 +179,9 @@ class OWLExporter(AbstractExporter):
                 # If we have a Role in input to this Complement node, create a mapping using
                 # the OWL representation of the Role/Inv itself so that we can generate the role
                 # disjoint axiom later by calling self.factory.getOWLDisjointObjectPropertiesAxiom
-                if operand.isItem(Item.RoleNode):
+                if operand.item is Item.RoleNode:
                     self.converted[node] = self.buildRole(operand)
-                elif operand.isItem(Item.RoleInverseNode):
+                elif operand.item is Item.RoleInverseNode:
                     self.converted[node] = self.buildRoleInverse(operand)
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(operand))
@@ -211,9 +211,9 @@ class OWLExporter(AbstractExporter):
         """
         if node not in self.converted:
 
-            f1 = lambda x: x.isItem(Item.InputEdge)
-            f2 = lambda x: x.isItem(Item.ValueDomainNode)
-            f3 = lambda x: x.isItem(Item.ValueRestrictionNode)
+            f1 = lambda x: x.item is Item.InputEdge
+            f2 = lambda x: x.item is Item.ValueDomainNode
+            f3 = lambda x: x.item is Item.ValueRestrictionNode
 
             o1 = next(iter(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
             if not o1:
@@ -242,7 +242,7 @@ class OWLExporter(AbstractExporter):
         """
         if node not in self.converted:
 
-            f1 = lambda x: x.isItem(Item.InputEdge)
+            f1 = lambda x: x.item is Item.InputEdge
             f2 = lambda x: x.identity in {Identity.Role, Identity.Attribute}
             o1 = next(iter(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
 
@@ -258,19 +258,19 @@ class OWLExporter(AbstractExporter):
 
                 if not o2:
                     dataRangeEx = self.factory.getTopDatatype()
-                elif o2.isItem(Item.ValueDomainNode):
+                elif o2.item is Item.ValueDomainNode:
                     dataRangeEx = self.buildValueDomain(o2)
-                elif o2.isItem(Item.ComplementNode):
+                elif o2.item is Item.ComplementNode:
                     dataRangeEx = self.buildComplement(o2)
-                elif o2.isItem(Item.EnumerationNode):
+                elif o2.item is Item.EnumerationNode:
                     dataRangeEx = self.buildEnumeration(o2)
-                elif o2.isItem(Item.IntersectionNode):
+                elif o2.item is Item.IntersectionNode:
                     dataRangeEx = self.buildIntersection(o2)
-                elif o2.isItem(Item.UnionNode, Item.DisjointUnionNode):
+                elif o2.item in {Item.UnionNode, Item.DisjointUnionNode}:
                     dataRangeEx = self.buildComplement(o2)
-                elif o2.isItem(Item.DatatypeRestrictionNode):
+                elif o2.item is Item.DatatypeRestrictionNode:
                     dataRangeEx = self.buildDatatypeRestriction(o2)
-                elif o2.isItem(Item.RangeRestrictionNode):
+                elif o2.item is Item.RangeRestrictionNode:
                     dataRangeEx = self.buildRangeRestriction(o2)
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(o2))
@@ -297,9 +297,9 @@ class OWLExporter(AbstractExporter):
 
             elif o1.identity is Identity.Role:
 
-                if o1.isItem(Item.RoleNode):
+                if o1.item is Item.RoleNode:
                     objectPropertyEx = self.buildRole(o1)
-                elif o1.isItem(Item.RoleInverseNode):
+                elif o1.item is Item.RoleInverseNode:
                     objectPropertyEx = self.buildRoleInverse(o1)
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(o1))
@@ -309,19 +309,19 @@ class OWLExporter(AbstractExporter):
 
                 if not o2:
                     classEx = self.factory.getOWLThing()
-                elif o2.isItem(Item.ConceptNode):
+                elif o2.item is Item.ConceptNode:
                     classEx = self.buildConcept(o2)
-                elif o2.isItem(Item.ComplementNode):
+                elif o2.item is Item.ComplementNode:
                     classEx = self.buildComplement(o2)
-                elif o2.isItem(Item.EnumerationNode):
+                elif o2.item is Item.EnumerationNode:
                     classEx = self.buildEnumeration(o2)
-                elif o2.isItem(Item.IntersectionNode):
+                elif o2.item is Item.IntersectionNode:
                     classEx = self.buildIntersection(o2)
-                elif o2.isItem(Item.UnionNode, Item.DisjointUnionNode):
+                elif o2.item in {Item.UnionNode, Item.DisjointUnionNode}:
                     classEx = self.buildUnion(o2)
-                elif o2.isItem(Item.DomainRestrictionNode):
+                elif o2.item is Item.DomainRestrictionNode:
                     classEx = self.buildDomainRestriction(o2)
-                elif o2.isItem(Item.RangeRestrictionNode):
+                elif o2.item is Item.RangeRestrictionNode:
                     classEx = self.buildRangeRestriction(o2)
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(o2))
@@ -355,8 +355,8 @@ class OWLExporter(AbstractExporter):
         :rtype: OWLObjectOneOf
         """
         if node not in self.converted:
-            f1 = lambda x: x.isItem(Item.InputEdge)
-            f2 = lambda x: x.isItem(Item.IndividualNode)
+            f1 = lambda x: x.item is Item.InputEdge
+            f2 = lambda x: x.item is Item.IndividualNode
             collection = self.HashSet()
             for i in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
                 collection.add(self.buildIndividual(i))
@@ -391,28 +391,28 @@ class OWLExporter(AbstractExporter):
 
             collection = self.HashSet()
 
-            f1 = lambda x: x.isItem(Item.InputEdge)
+            f1 = lambda x: x.item is Item.InputEdge
             f2 = lambda x: x.identity in {Identity.Concept, Identity.DataRange}
 
             for item in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
 
-                if item.isItem(Item.ConceptNode):
+                if item.item is Item.ConceptNode:
                     collection.add(self.buildConcept(item))
-                elif item.isItem(Item.ValueDomainNode):
+                elif item.item is Item.ValueDomainNode:
                     collection.add(self.buildValueDomain(item))
-                elif item.isItem(Item.ComplementNode):
+                elif item.item is Item.ComplementNode:
                     collection.add(self.buildComplement(item))
-                elif item.isItem(Item.EnumerationNode):
+                elif item.item is Item.EnumerationNode:
                     collection.add(self.buildEnumeration(item))
-                elif item.isItem(Item.IntersectionNode):
+                elif item.item is Item.IntersectionNode:
                     collection.add(self.buildIntersection(item))
-                elif item.isItem(Item.UnionNode, Item.DisjointUnionNode):
+                elif item.item in {Item.UnionNode, Item.DisjointUnionNode}:
                     collection.add(self.buildUnion(item))
-                elif item.isItem(Item.DomainRestrictionNode):
+                elif item.item is Item.DomainRestrictionNode:
                     collection.add(self.buildDomainRestriction(item))
-                elif item.isItem(Item.RangeRestrictionNode):
+                elif item.item is Item.RangeRestrictionNode:
                     collection.add(self.buildRangeRestriction(item))
-                elif item.isItem(Item.DatatypeRestrictionNode):
+                elif item.item is Item.DatatypeRestrictionNode:
                     collection.add(self.buildDatatypeRestriction(item))
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(item))
@@ -431,7 +431,7 @@ class OWLExporter(AbstractExporter):
 
     def buildPropertyAssertion(self, node):
         """
-        Build and returns a collection of Individuals that can be used to build property assertions.
+        Build and returns a collection of individuals that can be used to build property assertions.
         :type node: PropertyAssertionNode
         :rtype: tuple
         """
@@ -444,7 +444,7 @@ class OWLExporter(AbstractExporter):
 
             collection = []
             for x in [self.scene.edge(i).other(node) for i in node.inputs]:
-                if not x.isItem(Item.IndividualNode):
+                if not x.item is Item.IndividualNode:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(x))
                 collection.append(self.buildIndividual(x))
 
@@ -460,7 +460,7 @@ class OWLExporter(AbstractExporter):
         """
         if node not in self.converted:
 
-            f1 = lambda x: x.isItem(Item.InputEdge)
+            f1 = lambda x: x.item is Item.InputEdge
             f2 = lambda x: x.identity in {Identity.Role, Identity.Attribute}
             o1 = next(iter(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
 
@@ -475,9 +475,9 @@ class OWLExporter(AbstractExporter):
 
             elif o1.identity is Identity.Role:
 
-                if o1.isItem(Item.RoleNode):
+                if o1.item is Item.RoleNode:
                     objectPropertyEx = self.buildRole(o1).getInverseProperty()
-                elif o1.isItem(Item.RoleInverseNode):
+                elif o1.item is Item.RoleInverseNode:
                     objectPropertyEx = self.buildRoleInverse(o1).getInverseProperty()
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(o1))
@@ -487,15 +487,15 @@ class OWLExporter(AbstractExporter):
 
                 if not o2:
                     classEx = self.factory.getOWLThing()
-                elif o2.isItem(Item.ConceptNode):
+                elif o2.item is Item.ConceptNode:
                     classEx = self.buildConcept(o2)
-                elif o2.isItem(Item.ComplementNode):
+                elif o2.item is Item.ComplementNode:
                     classEx = self.buildComplement(o2)
-                elif o2.isItem(Item.EnumerationNode):
+                elif o2.item is Item.EnumerationNode:
                     classEx = self.buildEnumeration(o2)
-                elif o2.isItem(Item.IntersectionNode):
+                elif o2.item is Item.IntersectionNode:
                     classEx = self.buildIntersection(o2)
-                elif o2.isItem(Item.UnionNode, Item.DisjointUnionNode):
+                elif o2.item in {Item.UnionNode, Item.DisjointUnionNode}:
                     classEx = self.buildUnion(o2)
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(o2))
@@ -548,11 +548,11 @@ class OWLExporter(AbstractExporter):
                 raise MalformedDiagramError(node, 'missing operand(s)')
             collection = self.LinkedList()
             for x in [self.scene.edge(i).other(node) for i in node.inputs]:
-                if not x.isItem(Item.RoleNode, Item.RoleInverseNode):
+                if not x.item in {Item.RoleNode, Item.RoleInverseNode}:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(x))
-                elif x.isItem(Item.RoleNode):
+                elif x.item is Item.RoleNode:
                     collection.add(self.buildRole(x))
-                elif x.isItem(Item.RoleInverseNode):
+                elif x.item is Item.RoleInverseNode:
                     collection.add(self.buildRoleInverse(x))
             collection = jnius.cast(self.List, collection)
             self.converted[node] = collection
@@ -565,8 +565,8 @@ class OWLExporter(AbstractExporter):
         :rtype: OWLObjectPropertyExpression
         """
         if node not in self.converted:
-            f1 = lambda x: x.isItem(Item.InputEdge)
-            f2 = lambda x: x.isItem(Item.RoleNode)
+            f1 = lambda x: x.item is Item.InputEdge
+            f2 = lambda x: x.item is Item.RoleNode
             operand = next(iter(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
             if not operand:
                 raise MalformedDiagramError(node, 'missing operand')
@@ -583,28 +583,28 @@ class OWLExporter(AbstractExporter):
 
             collection = self.HashSet()
 
-            f1 = lambda x: x.isItem(Item.InputEdge)
+            f1 = lambda x: x.item is Item.InputEdge
             f2 = lambda x: x.identity in {Identity.Concept, Identity.DataRange}
 
             for item in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
 
-                if item.isItem(Item.ConceptNode):
+                if item.item is Item.ConceptNode:
                     collection.add(self.buildConcept(item))
-                elif item.isItem(Item.ValueDomainNode):
+                elif item.item is Item.ValueDomainNode:
                     collection.add(self.buildValueDomain(item))
-                elif item.isItem(Item.ComplementNode):
+                elif item.item is Item.ComplementNode:
                     collection.add(self.buildComplement(item))
-                elif item.isItem(Item.EnumerationNode):
+                elif item.item is Item.EnumerationNode:
                     collection.add(self.buildEnumeration(item))
-                elif item.isItem(Item.IntersectionNode):
+                elif item.item is Item.IntersectionNode:
                     collection.add(self.buildIntersection(item))
-                elif item.isItem(Item.UnionNode, Item.DisjointUnionNode):
+                elif item.item in {Item.UnionNode, Item.DisjointUnionNode}:
                     collection.add(self.buildUnion(item))
-                elif item.isItem(Item.DomainRestrictionNode):
+                elif item.item is Item.DomainRestrictionNode:
                     collection.add(self.buildDomainRestriction(item))
-                elif item.isItem(Item.RangeRestrictionNode):
+                elif item.item is Item.RangeRestrictionNode:
                     collection.add(self.buildRangeRestriction(item))
-                elif item.isItem(Item.DatatypeRestrictionNode):
+                elif item.item is Item.DatatypeRestrictionNode:
                     collection.add(self.buildDatatypeRestriction(item))
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(item))
@@ -708,7 +708,7 @@ class OWLExporter(AbstractExporter):
         :type node: DisjointUnionNode
         """
         collection = self.HashSet()
-        for j in node.incomingNodes(lambda x: x.isItem(Item.InputEdge)):
+        for j in node.incomingNodes(lambda x: x.item is Item.InputEdge):
             collection.add(self.converted[j])
         collection = jnius.cast(self.Set, collection)
         self.axioms.add(self.factory.getOWLDisjointClassesAxiom(collection))
@@ -877,37 +877,37 @@ class OWLExporter(AbstractExporter):
         # 1) NODES CONVERSION
         for n in self.scene.nodes():
 
-            if n.isItem(Item.ConceptNode):                                                      # CONCEPT
+            if n.item is Item.ConceptNode:                                                      # CONCEPT
                 self.buildConcept(n)
-            elif n.isItem(Item.AttributeNode):                                                  # ATTRIBUTE
+            elif n.item is Item.AttributeNode:                                                  # ATTRIBUTE
                 self.buildAttribute(n)
-            elif n.isItem(Item.RoleNode):                                                       # ROLE
+            elif n.item is Item.RoleNode:                                                       # ROLE
                 self.buildRole(n)
-            elif n.isItem(Item.ValueDomainNode):                                                # VALUE-DOMAIN
+            elif n.item is Item.ValueDomainNode:                                                # VALUE-DOMAIN
                 self.buildValueDomain(n)
-            elif n.isItem(Item.ValueRestrictionNode):                                           # VALUE-RESTRICTION
+            elif n.item is Item.ValueRestrictionNode:                                           # VALUE-RESTRICTION
                 self.buildValueRestriction(n)
-            elif n.isItem(Item.IndividualNode):                                                 # INDIVIDUAL
+            elif n.item is Item.IndividualNode:                                                 # INDIVIDUAL
                 self.buildIndividual(n)
-            elif n.isItem(Item.RoleInverseNode):                                                # ROLE INVERSE
+            elif n.item is Item.RoleInverseNode:                                                # ROLE INVERSE
                 self.buildRoleInverse(n)
-            elif n.isItem(Item.RoleChainNode):                                                  # ROLE CHAIN
+            elif n.item is Item.RoleChainNode:                                                  # ROLE CHAIN
                 self.buildRoleChain(n)
-            elif n.isItem(Item.ComplementNode):                                                 # COMPLEMENT
+            elif n.item is Item.ComplementNode:                                                 # COMPLEMENT
                 self.buildComplement(n)
-            elif n.isItem(Item.EnumerationNode):                                                # ENUMERATION
+            elif n.item is Item.EnumerationNode:                                                # ENUMERATION
                 self.buildEnumeration(n)
-            elif n.isItem(Item.IntersectionNode):                                               # INTERSECTION
+            elif n.item is Item.IntersectionNode:                                               # INTERSECTION
                 self.buildIntersection(n)
-            elif n.isItem(Item.UnionNode, Item.DisjointUnionNode):                              # UNION / DISJOINT UNION
+            elif n.item in {Item.UnionNode, Item.DisjointUnionNode}:                            # UNION / DISJOINT UNION
                 self.buildUnion(n)
-            elif n.isItem(Item.DatatypeRestrictionNode):                                        # DATATYPE RESTRICTION
+            elif n.item is Item.DatatypeRestrictionNode:                                        # DATATYPE RESTRICTION
                 self.buildDatatypeRestriction(n)
-            elif n.isItem(Item.PropertyAssertionNode):                                          # PROPERTY ASSERTION
+            elif n.item is Item.PropertyAssertionNode:                                          # PROPERTY ASSERTION
                 self.buildPropertyAssertion(n)
-            elif n.isItem(Item.DomainRestrictionNode):                                          # DOMAIN RESTRICTION
+            elif n.item is Item.DomainRestrictionNode:                                          # DOMAIN RESTRICTION
                 self.buildDomainRestriction(n)
-            elif n.isItem(Item.RangeRestrictionNode):                                           # RANGE RESTRICTION
+            elif n.item is Item.RangeRestrictionNode:                                           # RANGE RESTRICTION
                 self.buildRangeRestriction(n)
 
             self.step(+1)
@@ -915,16 +915,13 @@ class OWLExporter(AbstractExporter):
         # 2) GENERATE AXIOMS FROM NODES
         for n in self.scene.nodes():
 
-            if n.isItem(Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.ValueDomainNode):
-
+            if n.item in {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.ValueDomainNode}:
                 self.axiomDeclaration(n)
-
-                if n.isItem(Item.AttributeNode):
+                if n.item is Item.AttributeNode:
                     self.axiomDataProperty(n)
-                elif n.isItem(Item.RoleNode):
+                elif n.item is Item.RoleNode:
                     self.axiomObjectProperty(n)
-
-            elif n.isItem(Item.DisjointUnionNode):
+            elif n.item is Item.DisjointUnionNode:
                 self.axiomDisjointClasses(n)
 
             if n.predicate:
@@ -933,25 +930,25 @@ class OWLExporter(AbstractExporter):
         # 3) GENERATE AXIOMS FROM EDGES
         for e in self.scene.edges():
 
-            if e.isItem(Item.InclusionEdge):
+            if e.item is Item.InclusionEdge:
 
                 if not e.complete:
 
                     if e.source.identity is Identity.Concept and e.target.identity is Identity.Concept:
                         self.axiomSubclassOf(e)
                     elif e.source.identity is Identity.Role and e.target.identity is Identity.Role:
-                        if e.source.isItem(Item.RoleChainNode):
+                        if e.source.item is Item.RoleChainNode:
                             self.axiomSubPropertyChainOf(e)
-                        elif e.source.isItem(Item.ComplementNode) ^ e.target.isItem(Item.ComplementNode):
+                        elif e.source.item is Item.ComplementNode ^ e.target.item is Item.ComplementNode:
                             self.axiomDisjointObjectProperties(e)
-                        elif e.source.isItem(Item.RoleNode, Item.RoleInverseNode) and e.target.isItem(Item.RoleNode, Item.RoleInverseNode):
+                        elif e.source.item in {Item.RoleNode, Item.RoleInverseNode} and e.target.item in {Item.RoleNode, Item.RoleInverseNode}:
                             self.axiomSubObjectPropertyOf(e)
                     elif e.source.identity is Identity.Attribute and e.target.identity is Identity.Attribute:
-                        if e.source.isItem(Item.ComplementNode) ^ e.target.isItem(Item.ComplementNode):
+                        if e.source.item is Item.ComplementNode ^ e.target.item is Item.ComplementNode:
                             self.axiomDisjointDataProperties(e)
                         else:
                             self.axiomSubDataPropertyOfAxiom(e)
-                    elif e.source.isItem(Item.RangeRestrictionNode) and e.target.identity is Identity.DataRange:
+                    elif e.source.item is Item.RangeRestrictionNode and e.target.identity is Identity.DataRange:
                         self.axiomDataPropertyRange(e)
                     else:
                         raise MalformedDiagramError(e, 'type mismatch in inclusion')
@@ -967,7 +964,7 @@ class OWLExporter(AbstractExporter):
                     else:
                         raise MalformedDiagramError(e, 'type mismatch in equivalence')
 
-            elif e.isItem(Item.InstanceOfEdge):
+            elif e.item is Item.InstanceOfEdge:
 
                 if e.source.identity is Identity.Instance and e.target.identity is Identity.Concept:
                     self.axiomClassAssertion(e)
