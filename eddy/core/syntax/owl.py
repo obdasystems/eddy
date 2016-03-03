@@ -68,25 +68,28 @@ class OWL2RLValidator(AbstractValidator):
                 #                                                                                                      #
                 ########################################################################################################
 
-                if Identity.Neutral not in {source.identity, target.identity} and source.identity is not target.identity:
-                    # If neither of the endpoints is NEUTRAL and the two nodes specify a
-                    # different identity, then we can't create an ISA between the nodes.
-                    idA = source.identity.value
-                    idB = target.identity.value
-                    raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
-
                 if not source.identities.intersection(target.identities) - {Identity.Neutral, Identity.Unknown}:
-                    # If source and target nodes do not share a common identity then we can't create an ISA.
-                    raise SyntaxError('Type mismatch: {} and {} are incompatible'.format(source.name, target.name))
+                    # If source and target nodes do not share a common identity then we can't create an inclusion.
+                    raise SyntaxError('Type mismatch: {} and {} are not compatible'.format(source.name, target.name))
 
-                # FIXME: GRAPHOL inclusion assertions between value-domain expressions must involve at least a valuedomain
-                # FIXME: node (i.e., the source or the target of the assertion must be an atomic data type).
-                if Identity.DataRange in {source.identity, target.identity} and not source.item is Item.RangeRestrictionNode:
-                    # If we are creating an ISA between 2 DataRange check whether the source of the node is a
-                    # range restriction: we allow to create an inclusion only if will express a DataPropertyRange.
+                if Identity.Neutral not in {source.identity, target.identity} and source.identity is not target.identity:
+                    # If both nodes are not neutral and they specify a different identity we can't create an inclusion.
                     idA = source.identity.value
                     idB = target.identity.value
                     raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
+
+                if Identity.DataRange in {source.identity, target.identity}:
+
+                    # We exclude from the following check inclusion edges sourcing from a RangeRestriction
+                    # node since it will be translated into OWL DataPropertyRange that accepts DataRange
+                    # i.e. complex datatypes and not only atomic ones.
+                    if source.item is not Item.RangeRestrictionNode:
+
+                        if source.item is not Item.ValueDomainNode and target.item is not Item.ValueDomainNode:
+                            # Inclusion assertions between value-domain expressions must involve
+                            # at least a value-domain node (i.e., the source or the target of the
+                            # assertion must be an atomic data type).
+                            raise SyntaxError('Inclusion between DataRange must include at least an atomic datatype')
 
                 if Identity.Instance in {source.identity, target.identity}:
                     # Individual doesn't match OWL ClassExpression so we can't allow the connection.
