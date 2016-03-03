@@ -100,6 +100,10 @@ class OWL2RLValidator(AbstractValidator):
                         # complement node cannot be the source of any inclusion edge.
                         raise SyntaxError('Invalid source for {} inclusion: {}'.format(identity.label, source.name))
 
+                if target.item is Item.RoleChainNode:
+                    # Role expressions constructed with chain nodes cannot be the target of any inclusion edge.
+                    raise SyntaxError('Invalid target for {} inclusion: {}'.format(target.identity.label, target.name))
+
             elif edge.item is Item.InputEdge:
 
                 ########################################################################################################
