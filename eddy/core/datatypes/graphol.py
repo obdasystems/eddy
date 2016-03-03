@@ -43,6 +43,7 @@ class Identity(IntEnum):
     """
     This class defines all the identities a graphol node may assume.
     """
+    # TODO: convert to normal enum and get rid of .label
     Neutral = 0
     Concept = 1
     Role = 2
