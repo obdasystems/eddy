@@ -104,6 +104,12 @@ class OWL2RLValidator(AbstractValidator):
                     # Role expressions constructed with chain nodes cannot be the target of any inclusion edge.
                     raise SyntaxError('Invalid target for {} inclusion: {}'.format(target.identity.label, target.name))
 
+                if source.item is Item.RoleChainNode:
+                    # Role expressions constructed with chain nodes can be included only in basic role expressions, that
+                    # are either Role nodes or RoleInverse nodes with one input Role node (this check is done elsewhere)
+                    if target.item not in {Item.RoleNode, Item.RoleInverseNode}:
+                        raise SyntaxError('Inclusion between {} and {} is forbidden'.format(source.name, target.name))
+
             elif edge.item is Item.InputEdge:
 
                 ########################################################################################################
