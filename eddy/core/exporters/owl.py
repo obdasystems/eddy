@@ -282,18 +282,20 @@ class OWLExporter(AbstractExporter):
                 elif node.restriction is Restriction.Forall:
                     self.converted[node] = self.factory.getOWLDataAllValuesFrom(dataPropEx, dataRangeEx)
                 elif node.restriction is Restriction.Cardinality:
-                    hs = self.HashSet()
-                    if node.cardinality['min'] is not None:
-                        hs.add(self.factory.getOWLDataMinCardinality(node.cardinality['min'], dataPropEx, dataRangeEx))
-                    if node.cardinality['max'] is not None:
-                        hs.add(self.factory.getOWLDataMinCardinality(node.cardinality['max'], dataPropEx, dataRangeEx))
-                    if hs.isEmpty():
+                    collection = self.HashSet()
+                    cmin = node.cardinality['min']
+                    cmax = node.cardinality['max']
+                    if cmin is not None:
+                        collection.add(self.factory.getOWLDataMinCardinality(cmin, dataPropEx, dataRangeEx))
+                    if cmax is not None:
+                        collection.add(self.factory.getOWLDataMinCardinality(cmax, dataPropEx, dataRangeEx))
+                    if collection.isEmpty():
                         raise MalformedDiagramError(node, 'missing cardinality')
-                    elif hs.size() >= 1:
-                        hs = jnius.cast(self.Set, hs)
-                        self.converted[node] = self.factory.getOWLDataIntersectionOf(hs)
+                    elif collection.size() >= 1:
+                        collection = jnius.cast(self.Set, collection)
+                        self.converted[node] = self.factory.getOWLDataIntersectionOf(collection)
                     else:
-                        self.converted[node] = hs.iterator().next()
+                        self.converted[node] = collection.iterator().next()
 
             elif o1.identity is Identity.Role:
 
@@ -333,18 +335,20 @@ class OWLExporter(AbstractExporter):
                 elif node.restriction is Restriction.Forall:
                     self.converted[node] = self.factory.getOWLObjectAllValuesFrom(objectPropertyEx, classEx)
                 elif node.restriction is Restriction.Cardinality:
-                    hs = self.HashSet()
+                    collection = self.HashSet()
+                    cmin = node.cardinality['min']
+                    cmax = node.cardinality['max']
                     if node.cardinality['min'] is not None:
-                        hs.add(self.factory.getOWLObjectMinCardinality(node.cardinality['min'], objectPropertyEx, classEx))
+                        collection.add(self.factory.getOWLObjectMinCardinality(cmin, objectPropertyEx, classEx))
                     if node.cardinality['max'] is not None:
-                        hs.add(self.factory.getOWLObjectMaxCardinality(node.cardinality['max'], objectPropertyEx, classEx))
-                    if hs.isEmpty():
+                        collection.add(self.factory.getOWLObjectMaxCardinality(cmax, objectPropertyEx, classEx))
+                    if collection.isEmpty():
                         raise MalformedDiagramError(node, 'missing cardinality')
-                    elif hs.size() >= 1:
-                        hs = jnius.cast(self.Set, hs)
-                        self.converted[node] = self.factory.getOWLObjectIntersectionOf(hs)
+                    elif collection.size() >= 1:
+                        collection = jnius.cast(self.Set, collection)
+                        self.converted[node] = self.factory.getOWLObjectIntersectionOf(collection)
                     else:
-                        self.converted[node] = hs.iterator().next()
+                        self.converted[node] = collection.iterator().next()
 
         return self.converted[node]
 
@@ -508,10 +512,12 @@ class OWLExporter(AbstractExporter):
                     self.converted[node] = self.factory.getOWLObjectAllValuesFrom(objectPropertyEx, classEx)
                 elif node.restriction is Restriction.Cardinality:
                     collection = self.HashSet()
-                    if node.cardinality['min'] is not None:
-                        collection.add(self.factory.getOWLObjectMinCardinality(node.cardinality['min'], objectPropertyEx, classEx))
-                    if node.cardinality['max'] is not None:
-                        collection.add(self.factory.getOWLObjectMaxCardinality(node.cardinality['max'], objectPropertyEx, classEx))
+                    cmin = node.cardinality['min']
+                    cmax = node.cardinality['max']
+                    if cmin is not None:
+                        collection.add(self.factory.getOWLObjectMinCardinality(cmin, objectPropertyEx, classEx))
+                    if cmax is not None:
+                        collection.add(self.factory.getOWLObjectMaxCardinality(cmax, objectPropertyEx, classEx))
                     if collection.isEmpty():
                         raise MalformedDiagramError(node, 'missing cardinality')
                     if collection.size() >= 1:
