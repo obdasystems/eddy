@@ -79,6 +79,8 @@ class OWL2RLValidator(AbstractValidator):
                     # If source and target nodes do not share a common identity then we can't create an ISA.
                     raise SyntaxError('Type mismatch: {} and {} are incompatible'.format(source.name, target.name))
 
+                # FIXME: GRAPHOL inclusion assertions between value-domain expressions must involve at least a valuedomain
+                # FIXME: node (i.e., the source or the target of the assertion must be an atomic data type).
                 if Identity.DataRange in {source.identity, target.identity} and not source.item is Item.RangeRestrictionNode:
                     # If we are creating an ISA between 2 DataRange check whether the source of the node is a
                     # range restriction: we allow to create an inclusion only if will express a DataPropertyRange.
