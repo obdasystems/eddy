@@ -84,7 +84,7 @@ class OWL2RLValidator(AbstractValidator):
                 #     txB = target.text()
                 #     raise SyntaxError('Inclusion between {}:{} and {}:{}'.format(idA, txA, idB, txB))
 
-                if not set.intersection(source.identities, target.identities) - {Identity.Neutral, Identity.Unknown}:
+                if not source.identities.intersection(target.identities) - {Identity.Neutral, Identity.Unknown}:
                     # If source and target nodes do not share a common identity then we can't create an ISA.
                     nameA = source.name
                     nameB = target.name
