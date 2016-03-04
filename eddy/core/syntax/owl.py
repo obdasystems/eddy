@@ -57,7 +57,7 @@ class OWL2RLValidator(AbstractValidator):
         try:
 
             if source is target:
-                # Self connection is not valid.
+                # We do not allow the connection if source and target are the same node.
                 raise SyntaxError('Self connection is not valid')
 
             if edge.item is Item.InclusionEdge:
@@ -68,12 +68,20 @@ class OWL2RLValidator(AbstractValidator):
                 #                                                                                                      #
                 ########################################################################################################
 
-                if not source.identities.intersection(target.identities) - {Identity.Neutral, Identity.Unknown}:
+                supported = {Identity.Concept, Identity.Role, Identity.Attribute, Identity.DataRange}
+                remaining = source.identities & target.identities - {Identity.Neutral, Identity.Unknown}
+
+                if remaining - supported:
+                    # Inclusion assertions can be specified only between Graphol expressions: Concept
+                    # expressions, Role expressions, Value-Domain expressions, Attribute expressions.
+                    raise SyntaxError('Type mismatch: inclusion must involve two graphol expressions')
+
+                if not remaining:
                     # If source and target nodes do not share a common identity then we can't create an inclusion.
                     raise SyntaxError('Type mismatch: {} and {} are not compatible'.format(source.name, target.name))
 
                 if Identity.Neutral not in {source.identity, target.identity} and source.identity is not target.identity:
-                    # If both nodes are not neutral and they specify a different identity we can't create an inclusion.
+                    # If both nodes are not NEUTRAL and they specify a different identity we can't create an inclusion.
                     idA = source.identity.value
                     idB = target.identity.value
                     raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
@@ -89,13 +97,7 @@ class OWL2RLValidator(AbstractValidator):
                             # Inclusion assertions between value-domain expressions must involve
                             # at least a value-domain node (i.e., the source or the target of the
                             # assertion must be an atomic data type).
-                            raise SyntaxError('Inclusion between DataRange must include at least an atomic datatype')
-
-                if Identity.Instance in {source.identity, target.identity}:
-                    # Individual doesn't match OWL ClassExpression so we can't allow the connection.
-                    idA = source.identity.value
-                    idB = target.identity.value
-                    raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
+                            raise SyntaxError('Type mismatch: inclusion between DataRange must include at least an atomic datatype')
 
                 if source.item is Item.ComplementNode:
 
