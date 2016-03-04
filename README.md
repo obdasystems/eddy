@@ -1,4 +1,4 @@
-![Eddy](/eddy/ui/artwork/banner.png?raw=true)
+![Eddy](/artwork/banner.png?raw=true)
 
 Eddy is a graphical editor for the construction of Graphol ontologies. Eddy features a design environment specifically 
 thought out for generating Graphol ontologies through ad-hoc functionalities. Drawing features allow designers to 
@@ -27,7 +27,7 @@ diagrams, thus ontologies that can be rendered as ER diagrams have in Graphol a 
 
 ### Screenshot
 
-![screenshot](/eddy/ui/artwork/shot01.png?raw=true)
+![screenshot](/artwork/shot01.png?raw=true)
 
 ### License
 

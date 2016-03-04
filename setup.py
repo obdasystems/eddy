@@ -69,22 +69,22 @@ if sys.platform.startswith('darwin'):
     OPTS['DIST_NAME'] = '{}-{}-{}-darwin'.format(APPNAME, VERSION, LICENSE.lower())
     OPTS['EXEC_BASE'] = None
     OPTS['EXEC_NAME'] = APPNAME
-    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'ui', 'artwork', 'eddy.icns')
-    OPTS['FILE_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'ui', 'artwork', 'document.icns')
+    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'eddy.icns')
+    OPTS['FILE_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'document.icns')
 elif sys.platform.startswith('win32'):
     OPTS['AS_TO_EXE'] = True
     OPTS['DIST_NAME'] = '{}-{}-{}-win{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
     OPTS['EXEC_BASE'] = 'Win32GUI'
     OPTS['EXEC_NAME'] = '{}.exe'.format(APPNAME)
-    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'ui', 'artwork', 'eddy.ico')
-    OPTS['FILE_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'ui', 'artwork', 'document.ico')
+    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'eddy.ico')
+    OPTS['FILE_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'document.ico')
 else:
     OPTS['AS_TO_EXE'] = None
     OPTS['DIST_NAME'] = '{}-{}-{}-linux{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
     OPTS['EXEC_BASE'] = None
     OPTS['EXEC_NAME'] = APPNAME
-    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'ui', 'artwork', 'eddy.png')
-    OPTS['FILE_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'eddy', 'ui', 'artwork', 'document.png')
+    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'eddy.png')
+    OPTS['FILE_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'document.png')
 
 
 OPTS['BUILD_PATH'] = os.path.join(OPTS['BUILD_DIR'], OPTS['DIST_NAME'])
