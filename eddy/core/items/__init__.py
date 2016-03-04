@@ -39,7 +39,7 @@ from PyQt5.QtGui import QBrush, QPen
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem
 
 from eddy.core.datatypes import Item
-from eddy.core.functions import rCut
+from eddy.core.functions import cutR
 
 
 class AbstractItem(QGraphicsItem):
@@ -112,7 +112,7 @@ class AbstractItem(QGraphicsItem):
         * .name = inclusion edge | .shortname = inclusion edge
         :rtype: str
         """
-        return rCut(rCut(self.name, ' node'), ' edge')
+        return cutR(cutR(self.name, ' node'), ' edge')
 
     @property
     def node(self):

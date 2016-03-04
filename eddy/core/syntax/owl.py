@@ -33,7 +33,7 @@
 
 
 from eddy.core.datatypes import Item, Identity, Restriction
-from eddy.core.functions import rCut
+from eddy.core.functions import cutR
 from eddy.core.syntax.common import AbstractValidator, ValidationResult
 
 
@@ -179,7 +179,7 @@ class OWL2RLValidator(AbstractValidator):
                             # Both are non neutral and we have identity mismatch.
                             idA = source.identity.value
                             idB = target.identity.value
-                            composition = rCut(target.name, ' node')
+                            composition = cutR(target.name, ' node')
                             raise SyntaxError('Type mismatch: {} between {} and {}'.format(composition, idA, idB))
 
                 elif target.item is Item.EnumerationNode:

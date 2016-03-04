@@ -76,7 +76,7 @@ def isQuoted(string):
     return RE_QUOTED.match(string) is not None
 
 
-def lCut(text, cut):
+def cutL(text, cut):
     """
     Remove 'cut' from 'text' if found as starting prefix.
     :type text: str
@@ -113,7 +113,7 @@ def rangeF(start, stop, step):
         x = round(x + step, 4)
 
 
-def rCut(text, cut):
+def cutR(text, cut):
     """
     Remove 'cut' from 'text' if found as ending suffix.
     :type text: str

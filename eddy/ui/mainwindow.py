@@ -59,7 +59,7 @@ from eddy.core.datatypes import Color, File, DiagramMode, Filetype, Platform
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
 from eddy.core.exporters import GrapholExporter
 from eddy.core.functions import connect, disconnect, uncapitalize
-from eddy.core.functions import expandPath, rCut, snapF
+from eddy.core.functions import expandPath, cutR, snapF
 from eddy.core.items import Item, DatatypeRestrictionNode
 from eddy.core.items import RoleInverseNode, DisjointUnionNode
 from eddy.core.items import UnionNode, EnumerationNode, ComplementNode
@@ -836,7 +836,7 @@ class MainWindow(QMainWindow):
         """
         scene = self.mdi.activeScene
         if scene:
-            result = self.exportPath(name=rCut(scene.document.name, Filetype.Graphol.extension))
+            result = self.exportPath(name=cutR(scene.document.name, Filetype.Graphol.extension))
             if result:
                 filepath = result[0]
                 filetype = Filetype.forValue(result[1])

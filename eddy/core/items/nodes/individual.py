@@ -38,7 +38,7 @@ from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap, QBrush
 
 from eddy.core.datatypes import Identity, Item, XsdDatatype
-from eddy.core.functions import snapF, lCut, rCut
+from eddy.core.functions import snapF, cutL, cutR
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import Label
 from eddy.core.qt import Font
@@ -137,7 +137,7 @@ class IndividualNode(AbstractResizableNode):
         :type datatype: XsdDatatype
         :return: str
         """
-        return '"{}"^^{}'.format(rCut(lCut(value.strip(), '"'), '"'), datatype.value)
+        return '"{}"^^{}'.format(cutR(cutL(value.strip(), '"'), '"'), datatype.value)
 
     def copy(self, scene):
         """

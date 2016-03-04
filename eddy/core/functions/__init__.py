@@ -50,13 +50,13 @@ from eddy.core.functions.graph import dfs
 from eddy.core.functions.graph import identify
 
 from eddy.core.functions.misc import clamp
+from eddy.core.functions.misc import cutL
+from eddy.core.functions.misc import cutR
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.misc import isQuoted
-from eddy.core.functions.misc import lCut
 from eddy.core.functions.misc import partition
 from eddy.core.functions.misc import QSS
 from eddy.core.functions.misc import rangeF
-from eddy.core.functions.misc import rCut
 from eddy.core.functions.misc import shaded
 from eddy.core.functions.misc import snap
 from eddy.core.functions.misc import snapF
