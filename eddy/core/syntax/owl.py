@@ -94,10 +94,9 @@ class OWL2RLValidator(AbstractValidator):
                     if source.item is not Item.RangeRestrictionNode:
 
                         if source.item is not Item.ValueDomainNode and target.item is not Item.ValueDomainNode:
-                            # Inclusion assertions between value-domain expressions must involve
-                            # at least a value-domain node (i.e., the source or the target of the
-                            # assertion must be an atomic data type).
-                            raise SyntaxError('Type mismatch: inclusion between DataRange must include at least an atomic datatype')
+                            # Inclusion assertions between value-domain expressions must involve at least an atomic
+                            # datatype (i.e., the source or the target of the assertion must be an atomic datatype).
+                            raise SyntaxError('Inclusion between value-domain expressions must include at least an atomic datatype')
 
                 if source.item is Item.ComplementNode:
 
@@ -109,7 +108,7 @@ class OWL2RLValidator(AbstractValidator):
 
                 if target.item is Item.RoleChainNode:
                     # Role expressions constructed with chain nodes cannot be the target of any inclusion edge.
-                    raise SyntaxError('Invalid target for {} inclusion: {}'.format(target.identity.value, target.name))
+                    raise SyntaxError('Type mismatch: role chain nodes cannot be target of a Role inclusion')
 
                 if source.item is Item.RoleChainNode:
                     # Role expressions constructed with chain nodes can be included only in basic role expressions, that
@@ -317,7 +316,7 @@ class OWL2RLValidator(AbstractValidator):
                             f1 = lambda x: x.item is Item.InputEdge and x is not edge
                             f2 = lambda x: x.identity is Identity.Instance
                             if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
-                                # We are constructing a DataPropertyAssertion and so we can't have more than 1 Instance.
+                                # We are constructing a DataPropertyAssertion and so we can't have more than 1 instance.
                                 raise SyntaxError('Too many instances in input to {}'.format(target.identity.value))
 
                         if source.identity is Identity.Value:
@@ -325,7 +324,7 @@ class OWL2RLValidator(AbstractValidator):
                             f1 = lambda x: x.item is Item.InputEdge and x is not edge
                             f2 = lambda x: x.identity is Identity.Value
                             if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
-                                # At most one Literal can be given as input (2 Individuals | 1 Individual + 1 Literal)
+                                # At most one Literal can be given as input (2 instance | 1 instance + 1 value)
                                 raise SyntaxError('Too many values in input to {}'.format(target.identity.value))
 
                 elif target.item is Item.DomainRestrictionNode:
@@ -340,7 +339,8 @@ class OWL2RLValidator(AbstractValidator):
                         # Domain Restriction node can have at most 2 inputs.
                         raise SyntaxError('Too many inputs to {}'.format(target.name))
 
-                    if source.identity not in {Identity.Neutral, Identity.Concept, Identity.Attribute, Identity.Role, Identity.DataRange}:
+                    supported = {Identity.Concept, Identity.Attribute, Identity.Role, Identity.DataRange}
+                    if source.identity is not Identity.Neutral and source.identity not in supported:
                         # Domain Restriction node takes as input:
                         #  - Role => OWL 2 ObjectPropertyExpression
                         #  - Attribute => OWL 2 DataPropertyExpression
@@ -429,7 +429,8 @@ class OWL2RLValidator(AbstractValidator):
                         # Range Restriction node can have at most 2 inputs.
                         raise SyntaxError('Too many inputs to {}'.format(target.name))
 
-                    if source.identity not in {Identity.Neutral, Identity.Concept, Identity.Attribute, Identity.Role, Identity.DataRange}:
+                    supported = {Identity.Concept, Identity.Attribute, Identity.Role, Identity.DataRange}
+                    if source.identity is not Identity.Neutral and source.identity not in supported:
                         # Range Restriction node takes as input:
                         #  - Role => OWL 2 ObjectPropertyExpression
                         #  - Attribute => OWL 2 DataPropertyExpression
