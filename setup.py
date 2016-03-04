@@ -608,7 +608,6 @@ includes = [
 include_files = [
     (OPTS['FILE_ICON'], os.path.basename(OPTS['FILE_ICON'])),
     (os.path.join(OPTS['QT_PLUGINS_PATH'], 'printsupport'), 'printsupport'),
-    ('docs', 'docs'),
     ('examples', 'examples'),
     ('resources', 'resources'),
     ('eddy/ui/style.qss', 'ui/style.qss'),
