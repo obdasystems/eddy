@@ -71,7 +71,7 @@ def myFunc(self, param1, param2):
    :type param1: The type of the first parameter (i.e: int, str, bool, ...).
    :type param2: The type of the second parameter (i.e: int, str, bool, ...).
    :raise MyError: The exception class if your function may raise an exception.
-   :rtype: The return typw of your function (i.e: int, str, bool, ...)
+   :rtype: The return type of your function.
    """"
    ...
 ```
