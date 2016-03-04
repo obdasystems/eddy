@@ -1,0 +1,3 @@
+[submodule "support/createdmg"]
+	path = support/createdmg
+	url = https://github.com/danielepantaleone/create-dmg.git

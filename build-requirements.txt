@@ -1,3 +1,4 @@
 cx_Freeze>=4.3.4
 Cython>=0.23.4
 pyyaml>=3.11
+Pillow>=3.1.1

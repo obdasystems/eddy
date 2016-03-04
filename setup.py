@@ -70,21 +70,27 @@ if sys.platform.startswith('darwin'):
     OPTS['EXEC_BASE'] = None
     OPTS['EXEC_NAME'] = APPNAME
     OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'eddy.icns')
-    OPTS['FILE_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'document.icns')
+    OPTS['DOCUMENT_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'document.icns')
+    OPTS['DMG_BACKGROUND'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'dmg_background.png')
+    OPTS['DMG_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'dmg_icon.icns')
 elif sys.platform.startswith('win32'):
     OPTS['AS_TO_EXE'] = True
     OPTS['DIST_NAME'] = '{}-{}-{}-win{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
     OPTS['EXEC_BASE'] = 'Win32GUI'
     OPTS['EXEC_NAME'] = '{}.exe'.format(APPNAME)
     OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'eddy.ico')
-    OPTS['FILE_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'document.ico')
+    OPTS['DOCUMENT_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'document.ico')
+    OPTS['DMG_BACKGROUND'] = None
+    OPTS['DMG_ICON'] = None
 else:
     OPTS['AS_TO_EXE'] = None
     OPTS['DIST_NAME'] = '{}-{}-{}-linux{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
     OPTS['EXEC_BASE'] = None
     OPTS['EXEC_NAME'] = APPNAME
     OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'eddy.png')
-    OPTS['FILE_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'document.png')
+    OPTS['DOCUMENT_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'document.png')
+    OPTS['DMG_BACKGROUND'] = None
+    OPTS['DMG_ICON'] = None
 
 
 OPTS['BUILD_PATH'] = os.path.join(OPTS['BUILD_DIR'], OPTS['DIST_NAME'])
@@ -234,7 +240,7 @@ echo "... bye!"
         if sys.platform.startswith('win32'):
 
             import yaml
-            with open(os.path.join('installer', 'build.yaml'), 'r') as f:
+            with open(os.path.join('support', 'innosetup', 'build.yaml'), 'r') as f:
                 config = yaml.load(f)
             if 'scripts' not in config:
                 print("ERROR: invalid config file: could not find 'scripts' section")
@@ -245,7 +251,7 @@ echo "... bye!"
             if 'iscc' not in config:
                 print("ERROR: invalid config file: could not find 'iscc' entry")
                 sys.exit(1)
-            if not os.path.isfile(os.path.join('installer', config['iscc'])):
+            if not os.path.isfile(os.path.join('support', 'innosetup', config['iscc'])):
                 print("ERROR: invalid config file: '{}' is not a file".format(config['iscc']))
                 sys.exit(1)
 
@@ -258,7 +264,7 @@ echo "... bye!"
             # Build each given innosetup script
             for filename in config['scripts']:
 
-                script_file = os.path.join('installer', filename)
+                script_file = os.path.join('support', 'innosetup', filename)
                 print("building: {}".format(script_file))
 
                 try:
@@ -412,8 +418,8 @@ if sys.platform.startswith('darwin'):
             if self.iconfile:
                 self.copy_file(self.iconfile, os.path.join(self.resourcesDir, 'icon.icns'))
 
-            if os.path.isfile(OPTS['FILE_ICON']):
-                self.copy_file(OPTS['FILE_ICON'], os.path.join(self.resourcesDir, os.path.basename(OPTS['FILE_ICON'])))
+            if os.path.isfile(OPTS['DOCUMENT_ICON']):
+                self.copy_file(OPTS['DOCUMENT_ICON'], os.path.join(self.resourcesDir, os.path.basename(OPTS['DOCUMENT_ICON'])))
 
             for framework in self.include_frameworks:
                 self.copy_tree(framework, os.path.join(self.frameworksDir, os.path.basename(framework)))
@@ -491,10 +497,16 @@ if sys.platform.startswith('darwin'):
            - correctly package app bundle instead of app bundle content.
         """
         dist_dir = None
+        volume_background = None
+        volume_icon = None
         user_options = bdist_dmg.user_options
-        user_options.extend([('dist-dir=', 'd', "directory where to put final distributions in [default: dist]")])
+        user_options.extend([
+            ('dist-dir=', 'd', "directory where to put final distributions in [default: dist]"),
+            ('volume-background=', 'b', "the path to use as background of the generated volume"),
+        ])
 
         bundleDir = None
+        bundleName = None
         buildDir = None
         dmgName = None
 
@@ -503,6 +515,8 @@ if sys.platform.startswith('darwin'):
             Initialize command options.
             """
             self.dist_dir = None
+            self.volume_background = None
+            self.volume_icon = None
             super().initialize_options()
 
         def finalize_options(self):
@@ -520,32 +534,46 @@ if sys.platform.startswith('darwin'):
             if os.path.exists(self.dmgName):
                 os.unlink(self.dmgName)
 
-            tmp = os.path.join(self.buildDir, 'tmp')
-            if os.path.exists(tmp):
-                shutil.rmtree(tmp)
+            stagingDir = os.path.join(self.buildDir, 'tmp')
+            if os.path.exists(stagingDir):
+                shutil.rmtree(stagingDir)
 
-            self.mkpath(tmp)
+            self.mkpath(stagingDir)
 
-            # Move the app bundle into a separate folder since hdutil copies in the dmg
-            # the content of the folder specified in the -srcfolder folder parameter, and if we
-            # specify as input the app bundle itself, its content will be copied and not the bundle.
-            if os.spawnvp(os.P_WAIT, 'cp', ['cp', '-R', self.bundleDir, tmp]):
+            # Move the app bundle into a separate folder that will be used as source folder for the DMG image
+            if subprocess.call(['cp', '-R', self.bundleDir, stagingDir]) != 0:
                 raise OSError('could not move app bundle in staging directory')
 
-            if self.applications_shortcut:
-                if os.spawnvp(os.P_WAIT, 'ln', ['ln', '-s', '/Applications', tmp]):
-                    raise OSError('creation of Applications shortcut failed')
+            # We create the DMG disk image using the create-dmg submodule.
+            params = [os.path.join(OPTS['PROJECT_DIR'], 'support', 'createdmg', 'create-dmg')]
+            params.extend(['--volname', self.volume_label])
+            params.extend(['--text-size', '12'])
+            params.extend(['--icon-size', '48'])
+            params.extend(['--icon', '{}.app'.format(self.bundleName), '60', '50'])
+            params.extend(['--hide-extension', '{}.app'.format(self.bundleName)])
+            params.extend(['--app-drop-link', '60', '130'])
 
-            createargs = [
-                'hdiutil', 'create', '-fs', 'HFSX', '-format', 'UDBZ',
-                self.dmgName, '-imagekey', 'zlib-level=9', '-srcfolder',
-                tmp, '-volname', self.volume_label
-            ]
+            if self.volume_background:
+                if not os.path.isfile(self.volume_background):
+                    print('WARNING: volume background image not found at {}'.format(self.volume_background))
+                else:
+                    print('INFO: using volume background {}'.format(self.volume_background))
+                    if os.path.isfile(self.volume_background):
+                        from PIL import Image
+                        w, h = Image.open(self.volume_background).size
+                        params.extend(['--background', self.volume_background, '--window-size', str(w), str(h)])
 
-            if os.spawnvp(os.P_WAIT, 'hdiutil', createargs) != 0:
-                raise OSError('creation of the dmg failed')
+            if self.volume_icon:
+                if not os.path.isfile(self.volume_icon):
+                    print('WARNING: volume icon not found at {}'.format(self.volume_icon))
+                else:
+                    print('INFO: using volume icon {}'.format(self.volume_icon))
+                    params.extend(['--volicon', self.volume_icon])
 
-            shutil.rmtree(tmp)
+            params.extend([self.dmgName, stagingDir])
+
+            subprocess.call(params)
+            shutil.rmtree(stagingDir)
 
         def make_dist(self):
             """
@@ -559,16 +587,12 @@ if sys.platform.startswith('darwin'):
             Command execution.
             """
             self.make_dist()
-
             self.run_command('bdist_mac')
-
             self.bundleDir = self.get_finalized_command('bdist_mac').bundleDir
+            self.bundleName = self.get_finalized_command('bdist_mac').bundle_name
             self.buildDir = self.get_finalized_command('build').build_base
-
             self.dmgName = os.path.join(self.buildDir, OPTS['DIST_NAME'] + '.dmg')
-
             self.execute(self.buildDMG, ())
-
             self.move_file(self.dmgName, self.dist_dir)
 
     commands['bdist_mac'] = BDistMac
@@ -606,7 +630,7 @@ includes = [
 ]
 
 include_files = [
-    (OPTS['FILE_ICON'], os.path.basename(OPTS['FILE_ICON'])),
+    (OPTS['DOCUMENT_ICON'], os.path.basename(OPTS['DOCUMENT_ICON'])),
     (os.path.join(OPTS['QT_PLUGINS_PATH'], 'printsupport'), 'printsupport'),
     ('examples', 'examples'),
     ('resources', 'resources'),
@@ -662,9 +686,10 @@ setup(
             'iconfile': OPTS['EXEC_ICON'],
         },
         'bdist_dmg': {
-            'applications_shortcut': True,
             'dist_dir': OPTS['DIST_DIR'],
             'volume_label': '{} {}'.format(APPNAME, VERSION),
+            'volume_background': OPTS['DMG_BACKGROUND'],
+            'volume_icon': OPTS['DMG_ICON'],
         },
         'build_exe': {
             'append_script_to_exe': OPTS['AS_TO_EXE'],
