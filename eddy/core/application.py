@@ -185,21 +185,14 @@ class Eddy(QApplication):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def activateWindow(self):
+    def activate(self):
         """
-        Activate the activation window.
+        Activate the application by raising the main window.
         """
         if self.mainwindow:
             self.mainwindow.setWindowState((self.mainwindow.windowState() & ~Qt.WindowMinimized) | Qt.WindowActive)
             self.mainwindow.activateWindow()
             self.mainwindow.raise_()
-
-    def activationWindow(self):
-        """
-        Returns the reference to the window that needs to be activated when the process is already running.
-        :type: MainWindow
-        """
-        return self.mainwindow
 
     def openFile(self, filepath):
         """
@@ -247,7 +240,7 @@ class Eddy(QApplication):
             self.inStream = QTextStream(self.inSocket)
             self.inStream.setCodec('UTF-8')
             connect(self.inSocket.readyRead, self.readyRead)
-            self.activateWindow()
+            self.activate()
 
     @pyqtSlot()
     def readyRead(self):
