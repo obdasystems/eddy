@@ -639,7 +639,7 @@ setup(
                      "with third-party tools such as OWL 2 reasoners and editors like Protégé, Eddy is able to export "
                      "the produced Graphol ontology into an OWL 2 ontology. Other simpler exporting file formats, "
                      "like PDF, are also currently provided. Eddy is written in Python and make use of the PyQt5 "
-                     "python bindings for the cross-platform GUI toolkit Qt5 framework.",
+                     "python bindings for the cross-platform Qt5 framework.",
     keywords = "eddy graphol sapienza",
     license=LICENSE,
     url="https://github.com/danielepantaleone/eddy",

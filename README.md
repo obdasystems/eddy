@@ -9,7 +9,7 @@ In order to support interaction with third-party tools such as OWL 2 reasoners a
 to export the produced Graphol ontology into an OWL 2 ontology. Other simpler exporting file formats, like PDF, are 
 also currently provided.
 
-Eddy is written in [Python] and make use of the [PyQt5] python bindings for the cross-platform GUI toolkit [Qt5] framework. 
+Eddy is written in [Python] and make use of the [PyQt5] python bindings for the cross-platform [Qt5] framework. 
 
 ### About Graphol
 
