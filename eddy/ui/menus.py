@@ -36,6 +36,7 @@ from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import QMenu
 
 from eddy.core.datatypes import Item, Identity, Restriction
+from eddy.core.functions import first
 from eddy.core.items import EnumerationNode, DisjointUnionNode, IntersectionNode
 from eddy.core.items import RoleChainNode, RoleInverseNode, UnionNode, ComplementNode
 
@@ -318,7 +319,7 @@ class MenuFactory(QObject):
         f2 = lambda x: x.identity is Identity.Attribute
 
         qualified = node.qualified
-        attribute = next(iter(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
+        attribute = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
 
         # Switch the currently active restriction and hide invalid ones.
         for action in scene.mainwindow.actionsRestrictionChange:
@@ -388,16 +389,16 @@ class MenuFactory(QObject):
         f5 = lambda x: x.isItem(Item.InstanceOfEdge)
         f6 = lambda x: x.identity in {Identity.Attribute, Identity.Role}
 
-        enumeration = next(iter(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
+        enumeration = first(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
 
         if enumeration:
             num = len(enumeration.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
             I = enumeration.identity is Identity.Concept or num < 2
             L = enumeration.identity is Identity.DataRange or num < 2
 
-        assertion = next(iter(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f4)), None)
+        assertion = first(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f4))
         if assertion:
-            operand = next(iter(assertion.outgoingNodes(filter_on_edges=f5, filter_on_nodes=f6)), None)
+            operand = first(assertion.outgoingNodes(filter_on_edges=f5, filter_on_nodes=f6))
             if operand:
                 if operand.identity is Identity.Role:
                     L = False
@@ -479,8 +480,8 @@ class MenuFactory(QObject):
         f1 = lambda x: x.isItem(Item.InputEdge)
         f2 = lambda x: x.identity is Identity.Attribute
 
-        # Allow to change the restriction type only if it's not an Attribute range restriction
-        if not next(iter(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None):
+        # Allow to change the restriction type only if it's not an Attribute range restriction.
+        if not first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)):
             menu.addSeparator()
             menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuRestrictionChange)
             for action in mainwindow.actionsRestrictionChange:

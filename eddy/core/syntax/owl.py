@@ -33,7 +33,7 @@
 
 
 from eddy.core.datatypes import Item, Identity, Restriction
-from eddy.core.functions import cutR
+from eddy.core.functions import cutR, first
 from eddy.core.syntax.common import AbstractValidator, ValidationResult
 
 
@@ -100,7 +100,7 @@ class OWL2RLValidator(AbstractValidator):
 
                 if source.item is Item.ComplementNode:
 
-                    identity = next(iter({source.identity, target.identity} - {Identity.Neutral}), None)
+                    identity = first({source.identity, target.identity} - {Identity.Neutral})
                     if identity and identity in {Identity.Attribute, Identity.Role}:
                         # Role and attribute expressions whose sink node is a
                         # complement node cannot be the source of any inclusion edge.
@@ -277,7 +277,7 @@ class OWL2RLValidator(AbstractValidator):
                     f2 = lambda x: x.item in {Item.ValueDomainNode, Item.ValueRestrictionNode} and x is not source
                     collection = target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
                     if collection:
-                        datatype = next(iter(collection)).datatype
+                        datatype = first(collection).datatype
                         if  datatype is not source.datatype:
                             d1 = source.datatype.value
                             d2 = datatype.value
@@ -362,7 +362,7 @@ class OWL2RLValidator(AbstractValidator):
                             raise SyntaxError('Invalid restriction (self) for qualified restriction')
 
                         # We can connect a Concept in input only if there is no other input or if the other input is a Role.
-                        node = next(iter(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge)), None)
+                        node = first(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge))
                         if node and node.identity is not Identity.Role:
                             # We found another input on this node which is not a Role
                             # so we can't construct a Qualified Restriction.
@@ -376,7 +376,7 @@ class OWL2RLValidator(AbstractValidator):
 
                         # We can connect a Role in input only if there is no other input or if the
                         # other input is a Concept and the node specifies a Qualified Restriction.
-                        node = next(iter(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge)), None)
+                        node = first(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge))
                         if node and node.identity is not Identity.Concept:
                             # Not a Qualified Restriction.
                             idA = source.identity.value
@@ -393,7 +393,7 @@ class OWL2RLValidator(AbstractValidator):
 
                         # We can connect an Attribute in input only if there is no other input or if the
                         # other input is a DataRange and the node specifies a Qualified Restriction.
-                        node = next(iter(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge)), None)
+                        node = first(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge))
                         if node and node.identity is not Identity.DataRange:
                             # Not a Qualified Restriction.
                             idA = source.identity.value
@@ -410,7 +410,7 @@ class OWL2RLValidator(AbstractValidator):
 
                         # We can connect a DataRange in input only if there is no other input or if the
                         # other input is an Attribute and the node specifies a Qualified Restriction.
-                        node = next(iter(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge)), None)
+                        node = first(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge))
                         if node and node.identity is not Identity.Attribute:
                             # Not a Qualified Restriction.
                             idA = source.identity.value
@@ -447,8 +447,8 @@ class OWL2RLValidator(AbstractValidator):
 
                     if source.identity in {Identity.Concept, Identity.Neutral}:
 
-                        # We can connect a Concept in input only if there is no other input or if the other input is a Role.
-                        node = next(iter(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge)), None)
+                        # We can connect a Concept in input iff there is no other input or if the other input is a Role.
+                        node = first(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge))
                         if node and node.identity is not Identity.Role:
                             # We found another input on this node which is not a Role
                             # so we can't construct a Qualified Restriction.
@@ -462,7 +462,7 @@ class OWL2RLValidator(AbstractValidator):
 
                         # We can connect a Role in input only if there is no other input or if the
                         # other input is a Concept and the node specifies a Qualified Restriction.
-                        node = next(iter(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge)), None)
+                        node = first(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge))
                         if node and node.identity is not Identity.Concept:
                             # Not a Qualified Restriction.
                             idA = source.identity.value
@@ -475,7 +475,7 @@ class OWL2RLValidator(AbstractValidator):
 
                         # We can connect an Attribute in input only if there is no other input or if the
                         # other input is a DataRange and the node specifies a Qualified Restriction.
-                        node = next(iter(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge)), None)
+                        node = first(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge))
                         if node and node.identity is not Identity.DataRange:
                             # Not a Qualified Restriction.
                             idA = source.identity.value
@@ -488,7 +488,7 @@ class OWL2RLValidator(AbstractValidator):
 
                         # We can connect a DataRange in input only if there is no other input or if the
                         # other input is an Attribute and the node specifies a Qualified Restriction.
-                        node = next(iter(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge)), None)
+                        node = first(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge))
                         if node and node.identity is not Identity.Attribute:
                             # Not a Qualified Restriction.
                             idA = source.identity.value

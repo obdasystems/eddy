@@ -35,6 +35,7 @@
 from PyQt5.QtWidgets import QUndoCommand
 
 from eddy.core.datatypes import Item
+from eddy.core.functions import first
 
 
 class CommandItemsMultiAdd(QUndoCommand):
@@ -50,7 +51,7 @@ class CommandItemsMultiAdd(QUndoCommand):
         self.selected = scene.selectedItems()
 
         if len(collection) == 1:
-            super().__init__('add {}'.format(next(iter(collection)).name))
+            super().__init__('add {}'.format(first(collection).name))
         else:
             super().__init__('add {} items'.format(len(collection)))
 
@@ -106,7 +107,7 @@ class CommandItemsMultiRemove(QUndoCommand):
                     self.inputs[node]['redo'].remove(edge.id)
 
         if len(collection) == 1:
-            super().__init__('remove {}'.format(next(iter(collection)).name))
+            super().__init__('remove {}'.format(first(collection).name))
         else:
             super().__init__('remove {} items'.format(len(collection)))
 

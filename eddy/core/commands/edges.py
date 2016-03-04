@@ -35,6 +35,7 @@
 from PyQt5.QtWidgets import QUndoCommand
 
 from eddy.core.datatypes import Item
+from eddy.core.functions import first
 
 
 class CommandEdgeAdd(QUndoCommand):
@@ -207,7 +208,7 @@ class CommandEdgeInclusionToggleComplete(QUndoCommand):
         Initialize the command.
         """
         if len(data) == 1:
-            super().__init__('toggle {} completness'.format(next(iter(data.keys())).name))
+            super().__init__('toggle {} completness'.format(first(data.keys()).name))
         else:
             super().__init__('toggle completness for {} edges'.format(len(data)))
 
@@ -237,7 +238,7 @@ class CommandEdgeSwap(QUndoCommand):
         Initialize the command.
         """
         if len(edges) == 1:
-            super().__init__('swap {}'.format(next(iter(edges)).name))
+            super().__init__('swap {}'.format(first(edges).name))
         else:
             super().__init__('swap {} edges'.format(len(edges)))
 

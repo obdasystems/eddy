@@ -35,7 +35,7 @@
 from PyQt5.QtWidgets import QUndoCommand, QGraphicsItem
 
 from eddy.core.datatypes import Item
-from eddy.core.functions import identify
+from eddy.core.functions import identify, first
 
 
 class CommandNodeAdd(QUndoCommand):
@@ -169,7 +169,7 @@ class CommandNodeMove(QUndoCommand):
         if len(data['redo']['nodes']) != 1:
             params = 'move {} nodes'.format(len(data['redo']['nodes']))
         else:
-            params = 'move {}'.format(next(iter(data['redo']['nodes'].keys())).name)
+            params = 'move {}'.format(first(data['redo']['nodes'].keys()).name)
 
         super().__init__(params)
 
@@ -450,7 +450,7 @@ class CommandNodeSetBrush(QUndoCommand):
         if len(nodes) != 1:
             super().__init__('change color of {} nodes'.format(len(nodes)))
         else:
-            super().__init__('change {} color'.format(next(iter(nodes)).name))
+            super().__init__('change {} color'.format(first(nodes).name))
 
     def redo(self):
         """redo the command"""

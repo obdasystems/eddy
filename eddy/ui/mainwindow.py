@@ -59,7 +59,7 @@ from eddy.core.datatypes import Color, File, DiagramMode, Filetype, Platform
 from eddy.core.datatypes import Restriction, Special, XsdDatatype, Identity
 from eddy.core.exporters import GrapholExporter
 from eddy.core.functions import connect, disconnect, uncapitalize
-from eddy.core.functions import expandPath, cutR, snapF
+from eddy.core.functions import cutR, expandPath, first, snapF
 from eddy.core.items import Item, DatatypeRestrictionNode
 from eddy.core.items import RoleInverseNode, DisjointUnionNode
 from eddy.core.items import UnionNode, EnumerationNode, ComplementNode
@@ -794,8 +794,8 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            args = Item.RoleNode, Item.AttributeNode
-            node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
+            supported = {Item.RoleNode, Item.AttributeNode}
+            node = first([x for x in scene.selectedNodes() if x.item in supported])
             if node:
                 name = 'compose {} property domain'.format(node.item.label)
                 items = scene.propertyDomainAxiomComposition(node)
@@ -811,8 +811,8 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            args = Item.RoleNode, Item.AttributeNode
-            node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
+            supported = {Item.RoleNode, Item.AttributeNode}
+            node = first([x for x in scene.selectedNodes() if x.item in supported])
             if node:
                 name = 'compose {} property range'.format(node.item.label)
                 items = scene.propertyRangeAxiomComposition(node)
@@ -1013,7 +1013,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            node = next(iter(scene.selectedNodes()), None)
+            node = first(scene.selectedNodes())
             if node:
                 prop = self.propertyFactory.create(scene=scene, node=node)
                 prop.exec_()
@@ -1084,8 +1084,8 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            args = Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode
-            node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
+            supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
+            node = first([x for x in scene.selectedNodes() if x.item in supported])
             if node:
                 action = self.sender()
                 color = action.data()
@@ -1100,8 +1100,8 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            args = Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode
-            node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
+            supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
+            node = first([x for x in scene.selectedNodes() if x.item in supported])
             if node:
                 form = RenameForm(node, self)
                 if form.exec_() == RenameForm.Accepted:
@@ -1134,7 +1134,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            node = next(filter(lambda x: hasattr(x, 'label'), scene.selectedNodes()), None)
+            node = first([x for x in scene.selectedNodes() if hasattr(x, 'label')])
             if node and node.label.movable:
                 undo = node.label.pos()
                 redo = node.label.defaultPos()
@@ -1200,7 +1200,7 @@ class MainWindow(QMainWindow):
                 clipboard = not self.clipboard.empty()
                 edge = len(edges) != 0
                 node = len(nodes) != 0
-                predicate = next(filter(lambda x: x.predicate, nodes), None) is not None
+                predicate = any([x.predicate for x in nodes])
 
         self.actionBringToFront.setEnabled(node)
         self.actionCenterDiagram.setEnabled(window)
@@ -1272,8 +1272,8 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            nodes = scene.selectedNodes()
-            node = next(filter(lambda x: x.isItem(Item.DomainRestrictionNode, Item.RangeRestrictionNode), nodes), None)
+            supported = {Item.DomainRestrictionNode, Item.RangeRestrictionNode}
+            node = first([x for x in scene.selectedNodes() if x.item in supported])
             if node:
                 data = None
                 action = self.sender()
@@ -1299,8 +1299,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            selected = scene.selectedNodes()
-            node = next(filter(lambda x: x.isItem(Item.IndividualNode), selected), None)
+            node = first([x for x in scene.selectedNodes() if x.item is Item.IndividualNode])
             if node:
                 action = self.sender()
                 if action.data() is Identity.Instance:
@@ -1327,8 +1326,8 @@ class MainWindow(QMainWindow):
         if scene:
             scene.setMode(DiagramMode.Idle)
             action = self.sender()
-            args = Item.ConceptNode, Item.RoleNode, Item.AttributeNode
-            node = next(filter(lambda x: x.isItem(*args), scene.selectedNodes()), None)
+            supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode}
+            node = first([x for x in scene.selectedNodes() if x.item in supported])
             if node:
                 special = action.data() if node.special is not action.data() else None
                 data = special.value if special else node.label.template
@@ -1344,8 +1343,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            selected = scene.selectedNodes()
-            node = next(filter(lambda x: x.isItem(Item.ValueDomainNode), selected), None)
+            node = first([x for x in scene.selectedNodes() if x.item is Item.ValueDomainNode])
             if node:
                 action = self.sender()
                 datatype = action.data()
@@ -1363,8 +1361,7 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            selected = scene.selectedNodes()
-            node = next(filter(lambda x: x.isItem(Item.ValueRestrictionNode), selected), None)
+            node = first([x for x in scene.selectedNodes() if x.item is Item.ValueRestrictionNode])
             if node:
                 form = ValueRestrictionForm(node, self)
                 form.datatypeField.setEnabled(not node.constrained)
@@ -1446,10 +1443,10 @@ class MainWindow(QMainWindow):
         scene = self.mdi.activeScene
         if scene:
             scene.setMode(DiagramMode.Idle)
-            action = self.sender()
-            selected = scene.selectedNodes()
-            node = next(filter(lambda x: Item.UnionNode <= x.item <= Item.DisjointUnionNode, selected), None)
+            call = lambda x: Item.UnionNode <= x.item <= Item.DisjointUnionNode
+            node = first([x for x in scene.selectedNodes() if call(x)])
             if node:
+                action = self.sender()
                 clazz = action.data()
                 if not isinstance(node, clazz):
                     xnode = clazz(scene=scene)

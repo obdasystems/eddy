@@ -38,7 +38,7 @@ from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QHeaderView
 from PyQt5.QtWidgets import QStyleOption, QStyle
 
 from eddy.core.datatypes import Item, Identity
-from eddy.core.functions import disconnect, connect
+from eddy.core.functions import connect, disconnect, first
 
 from eddy.ui.fields import StringField
 
@@ -275,7 +275,7 @@ class Explorer(QWidget):
 
             if self.mainview in self.scrolled:
                 rect = self.rect()
-                item = next(iter(self.model.findItems(self.scrolled[self.mainview])), None)
+                item = first(self.model.findItems(self.scrolled[self.mainview]))
                 for i in range(self.model.rowCount()):
                     self.view.scrollTo(self.proxy.mapFromSource(self.model.indexFromItem(self.model.item(i))))
                     index = self.proxy.mapToSource(self.view.indexAt(rect.topLeft()))
@@ -405,7 +405,7 @@ class ExplorerView(QTreeView):
         :type mouseEvent: QMouseEvent
         """
         if mouseEvent.button() == Qt.RightButton:
-            index = next(iter(self.selectedIndexes()), None)
+            index = first(self.selectedIndexes())
             if index:
                 model = self.model().sourceModel()
                 index = self.model().mapToSource(index)

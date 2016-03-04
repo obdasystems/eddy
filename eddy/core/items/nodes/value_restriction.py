@@ -36,7 +36,7 @@ from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap, QBrush
 
 from eddy.core.datatypes import Facet, Identity, Item, XsdDatatype
-from eddy.core.functions import cutL, cutR
+from eddy.core.functions import cutL, cutR, first
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import Label
 from eddy.core.qt import Font
@@ -91,10 +91,9 @@ class ValueRestrictionNode(AbstractNode):
         f1 = lambda x: x.isItem(Item.InputEdge)
         f2 = lambda x: x.isItem(Item.DatatypeRestrictionNode)
         f3 = lambda x: x.isItem(Item.ValueDomainNode)
-
-        X = next(iter(self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
-        if X:
-            return next(iter(X.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)), None) is not None
+        x = first(self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+        if x:
+            return first(x.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) is not None
         return False
 
     @property

@@ -39,7 +39,7 @@ from PyQt5.QtCore import pyqtSlot, pyqtSignal
 from eddy.core.datatypes import Special, Item, Identity, Restriction, OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
 from eddy.core.exporters.common import AbstractExporter
-from eddy.core.functions import clamp, isEmpty, OWLText, OWLAnnotationText
+from eddy.core.functions import clamp, first, isEmpty, OWLText, OWLAnnotationText
 
 
 class OWLExporter(AbstractExporter):
@@ -215,7 +215,7 @@ class OWLExporter(AbstractExporter):
             f2 = lambda x: x.item is Item.ValueDomainNode
             f3 = lambda x: x.item is Item.ValueRestrictionNode
 
-            o1 = next(iter(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
+            o1 = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
             if not o1:
                 raise MalformedDiagramError(node, 'missing value domain node')
 
@@ -244,7 +244,7 @@ class OWLExporter(AbstractExporter):
 
             f1 = lambda x: x.item is Item.InputEdge
             f2 = lambda x: x.identity in {Identity.Role, Identity.Attribute}
-            o1 = next(iter(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
+            o1 = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
 
             if not o1:
                 raise MalformedDiagramError(node, 'missing operand(s)')
@@ -252,7 +252,7 @@ class OWLExporter(AbstractExporter):
             if o1.identity is Identity.Attribute:
 
                 f3 = lambda x: x.identity is Identity.DataRange
-                o2 = next(iter(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)), None)
+                o2 = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
 
                 dataPropEx = self.buildAttribute(o1)
 
@@ -307,7 +307,7 @@ class OWLExporter(AbstractExporter):
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(o1))
 
                 f3 = lambda x: x.identity is Identity.Concept
-                o2 = next(iter(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)), None)
+                o2 = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
 
                 if not o2:
                     classEx = self.factory.getOWLThing()
@@ -466,7 +466,7 @@ class OWLExporter(AbstractExporter):
 
             f1 = lambda x: x.item is Item.InputEdge
             f2 = lambda x: x.identity in {Identity.Role, Identity.Attribute}
-            o1 = next(iter(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
+            o1 = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
 
             if not o1:
                 raise MalformedDiagramError(node, 'missing operand')
@@ -487,7 +487,7 @@ class OWLExporter(AbstractExporter):
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(o1))
 
                 f3 = lambda x: x.identity is Identity.Concept
-                o2 = next(iter(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)), None)
+                o2 = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
 
                 if not o2:
                     classEx = self.factory.getOWLThing()
@@ -573,7 +573,7 @@ class OWLExporter(AbstractExporter):
         if node not in self.converted:
             f1 = lambda x: x.item is Item.InputEdge
             f2 = lambda x: x.item is Item.RoleNode
-            operand = next(iter(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)), None)
+            operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
             if not operand:
                 raise MalformedDiagramError(node, 'missing operand')
             self.converted[node] = self.buildRole(operand).getInverseProperty()
