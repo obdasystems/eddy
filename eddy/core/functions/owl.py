@@ -32,38 +32,28 @@
 ##########################################################################
 
 
-from eddy.core.functions.system import expandPath
-from eddy.core.functions.system import homePath
-from eddy.core.functions.system import modulePath
-from eddy.core.functions.system import openPath
-from eddy.core.functions.system import resourcesPath
-from eddy.core.functions.system import rootPath
+import re
 
-from eddy.core.functions.geometry import angle
-from eddy.core.functions.geometry import distanceL
-from eddy.core.functions.geometry import distanceP
-from eddy.core.functions.geometry import intersection
-from eddy.core.functions.geometry import midpoint
+from eddy.core.regex import RE_OWL_INVALID_CHAR
 
-from eddy.core.functions.graph import bfs
-from eddy.core.functions.graph import dfs
-from eddy.core.functions.graph import identify
 
-from eddy.core.functions.misc import clamp
-from eddy.core.functions.misc import isEmpty
-from eddy.core.functions.misc import isQuoted
-from eddy.core.functions.misc import lCut
-from eddy.core.functions.misc import partition
-from eddy.core.functions.misc import QSS
-from eddy.core.functions.misc import rangeF
-from eddy.core.functions.misc import rCut
-from eddy.core.functions.misc import shaded
-from eddy.core.functions.misc import snap
-from eddy.core.functions.misc import snapF
-from eddy.core.functions.misc import uncapitalize
+def OWLAnnotationText(text):
+    """
+    Transform the given text returning OWL Annotation compatible text.
+    :type text: str
+    :rtype: str
+    """
+    cleaned = text.lower()
+    cleaned.replace('\n', '')
+    cleaned.replace('\r\n', '')
+    cleaned.strip()
+    return cleaned
 
-from eddy.core.functions.owl import OWLAnnotationText
-from eddy.core.functions.owl import OWLText
 
-from eddy.core.functions.signals import connect
-from eddy.core.functions.signals import disconnect
+def OWLText(text):
+    """
+    Transform the given text returning OWL compatible text.
+    :type text: str
+    :rtype: str
+    """
+    return re.sub(RE_OWL_INVALID_CHAR, '_', str(text))

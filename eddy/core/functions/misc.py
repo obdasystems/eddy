@@ -34,12 +34,11 @@
 
 import itertools
 import os
-import re
 
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPainter, QPixmap
 
-from eddy.core.regex import RE_QUOTED, RE_OWL_INVALID_CHAR
+from eddy.core.regex import RE_QUOTED
 
 
 def clamp(val, minval=None, maxval=None):
@@ -87,28 +86,6 @@ def lCut(text, cut):
     if text.startswith(cut):
         return text[len(cut)+1:]
     return text
-
-
-def OWLAnnotationText(text):
-    """
-    Transform the given text returning OWL Annotation compatible text.
-    :type text: str
-    :rtype: str
-    """
-    cleaned = text.lower()
-    cleaned.replace('\n', '')
-    cleaned.replace('\r\n', '')
-    cleaned.strip()
-    return cleaned
-
-
-def OWLText(text):
-    """
-    Transform the given text returning OWL compatible text.
-    :type text: str
-    :rtype: str
-    """
-    return re.sub(RE_OWL_INVALID_CHAR, '_', str(text))
 
 
 def partition(predicate, iterable):

@@ -39,7 +39,7 @@ from PyQt5.QtCore import pyqtSlot, pyqtSignal
 from eddy.core.datatypes import Special, Item, Identity, Restriction, OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
 from eddy.core.exporters.common import AbstractExporter
-from eddy.core.functions import clamp, OWLText, isEmpty, OWLAnnotationText
+from eddy.core.functions import clamp, isEmpty, OWLText, OWLAnnotationText
 
 
 class OWLExporter(AbstractExporter):
