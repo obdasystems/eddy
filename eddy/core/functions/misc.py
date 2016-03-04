@@ -88,6 +88,19 @@ def cutL(text, cut):
     return text
 
 
+def first(iterable, default=None):
+    """
+    Returns the first element of iterable if it exists, otherwise it returns the given default.
+    :type iterable: T <= list | tuple | set | generator
+    :type default: any
+    :rtype: mixed
+    """
+    if iterable:
+        for item in iterable:
+            return item
+    return default
+
+
 def partition(predicate, iterable):
     """
     Uses the given predicate to partition entries from the given iterable.

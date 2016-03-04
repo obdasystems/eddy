@@ -52,6 +52,7 @@ from eddy.core.functions.graph import identify
 from eddy.core.functions.misc import clamp
 from eddy.core.functions.misc import cutL
 from eddy.core.functions.misc import cutR
+from eddy.core.functions.misc import first
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.misc import isQuoted
 from eddy.core.functions.misc import partition
