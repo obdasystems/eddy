@@ -67,26 +67,26 @@ class Palette(QWidget):
         self.mainLayout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
         self.mainLayout.setContentsMargins(0, Palette.Padding, 0, Palette.Padding)
         self.mainLayout.setSpacing(Palette.Spacing)
-        self.addButton(ConceptNode, 0, 0)
-        self.addButton(RoleNode, 0, 1)
-        self.addButton(ValueDomainNode, 0, 2)
-        self.addButton(IndividualNode, 1, 0)
-        self.addButton(ValueRestrictionNode, 1, 1)
-        self.addButton(AttributeNode, 1, 2)
-        self.addButton(DomainRestrictionNode, 2, 0)
-        self.addButton(RangeRestrictionNode, 2, 1)
-        self.addButton(IntersectionNode, 2, 2)
-        self.addButton(RoleChainNode, 3, 0)
-        self.addButton(DatatypeRestrictionNode, 3, 1)
-        self.addButton(RoleInverseNode, 3, 2)
-        self.addButton(ComplementNode, 4, 0)
-        self.addButton(EnumerationNode, 4, 1)
-        self.addButton(UnionNode, 4, 2)
-        self.addButton(DisjointUnionNode, 5, 0)
-        self.addButton(PropertyAssertionNode, 5, 1)
-        self.addButton(InclusionEdge, 5, 2)
-        self.addButton(InputEdge, 6, 0)
-        self.addButton(InstanceOfEdge, 6, 1)
+        self.add(ConceptNode, 0, 0)
+        self.add(RoleNode, 0, 1)
+        self.add(ValueDomainNode, 0, 2)
+        self.add(IndividualNode, 1, 0)
+        self.add(ValueRestrictionNode, 1, 1)
+        self.add(AttributeNode, 1, 2)
+        self.add(DomainRestrictionNode, 2, 0)
+        self.add(RangeRestrictionNode, 2, 1)
+        self.add(IntersectionNode, 2, 2)
+        self.add(RoleChainNode, 3, 0)
+        self.add(DatatypeRestrictionNode, 3, 1)
+        self.add(RoleInverseNode, 3, 2)
+        self.add(ComplementNode, 4, 0)
+        self.add(EnumerationNode, 4, 1)
+        self.add(UnionNode, 4, 2)
+        self.add(DisjointUnionNode, 5, 0)
+        self.add(PropertyAssertionNode, 5, 1)
+        self.add(InclusionEdge, 5, 2)
+        self.add(InputEdge, 6, 0)
+        self.add(InstanceOfEdge, 6, 1)
         self.setContentsMargins(0, 0, 0, 0)
         self.setFixedSize(216, 394)
 
@@ -113,7 +113,7 @@ class Palette(QWidget):
     #                                                                                                                  #
     ####################################################################################################################
 
-    def addButton(self, item, row, column):
+    def add(self, item, row, column):
         """
         Add a button to the palette.
         :type item: class
@@ -132,12 +132,6 @@ class Palette(QWidget):
         :rtype: PaletteButton
         """
         return self.buttonById[button_id]
-
-    def buttons(self):
-        """
-        Returns a view of the buttons in the Palette.
-        """
-        return self.buttonById.values()
 
     def clear(self, *args):
         """
