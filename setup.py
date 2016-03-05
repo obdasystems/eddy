@@ -555,20 +555,16 @@ if sys.platform.startswith('darwin'):
 
             if self.volume_background:
                 if not os.path.isfile(self.volume_background):
-                    print('WARNING: volume background image not found at {}'.format(self.volume_background))
-                else:
-                    print('INFO: using volume background {}'.format(self.volume_background))
-                    if os.path.isfile(self.volume_background):
-                        from PIL import Image
-                        w, h = Image.open(self.volume_background).size
-                        params.extend(['--background', self.volume_background, '--window-size', str(w), str(h)])
+                    raise OSError('DMG volume background image not found at {}'.format(self.volume_background))
+                if os.path.isfile(self.volume_background):
+                    from PIL import Image
+                    w, h = Image.open(self.volume_background).size
+                    params.extend(['--background', self.volume_background, '--window-size', str(w), str(h)])
 
             if self.volume_icon:
                 if not os.path.isfile(self.volume_icon):
-                    print('WARNING: volume icon not found at {}'.format(self.volume_icon))
-                else:
-                    print('INFO: using volume icon {}'.format(self.volume_icon))
-                    params.extend(['--volicon', self.volume_icon])
+                    raise OSError('DMG volume icon not found at {}'.format(self.volume_icon))
+                params.extend(['--volicon', self.volume_icon])
 
             params.extend([self.dmgName, stagingDir])
 
