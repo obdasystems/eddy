@@ -503,6 +503,7 @@ if sys.platform.startswith('darwin'):
         user_options.extend([
             ('dist-dir=', 'd', "directory where to put final distributions in [default: dist]"),
             ('volume-background=', 'b', "the path to use as background of the generated volume"),
+            ('volume-icon=', 'i', "the icon for the generated volume"),
         ])
 
         bundleDir = None
