@@ -551,7 +551,9 @@ if sys.platform.startswith('darwin'):
             params.extend(['--icon-size', '48'])
             params.extend(['--icon', '{}.app'.format(self.bundleName), '60', '50'])
             params.extend(['--hide-extension', '{}.app'.format(self.bundleName)])
-            params.extend(['--app-drop-link', '60', '130'])
+
+            if self.applications_shortcut:
+                params.extend(['--app-drop-link', '60', '130'])
 
             if self.volume_background:
                 if not os.path.isfile(self.volume_background):
@@ -683,6 +685,7 @@ setup(
         },
         'bdist_dmg': {
             'dist_dir': OPTS['DIST_DIR'],
+            'applications_shortcut': True,
             'volume_label': '{} {}'.format(APPNAME, VERSION),
             'volume_background': OPTS['DMG_BACKGROUND'],
             'volume_icon': OPTS['DMG_ICON'],
