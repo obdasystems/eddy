@@ -652,8 +652,6 @@ class AttributeNodeInfo(EditableNodeInfo):
         """
         super().__init__(mainwindow, parent)
 
-        self.h4 = Header('Properties', self)
-
         self.functKey = Key('Funct.', self)
         functParent = Parent(self)
         self.functBox = CheckBox(functParent)
