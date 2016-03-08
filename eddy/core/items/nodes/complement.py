@@ -46,7 +46,7 @@ class ComplementNode(OperatorNode):
     """
     This class implements the 'Complement' node.
     """
-    identities = {Identity.Attribute, Identity.Concept, Identity.Role, Identity.DataRange, Identity.Neutral}
+    identities = {Identity.Attribute, Identity.Concept, Identity.Role, Identity.ValueDomain, Identity.Neutral}
     item = Item.ComplementNode
 
     def __init__(self, brush=None, **kwargs):

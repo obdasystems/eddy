@@ -45,7 +45,7 @@ class DatatypeRestrictionNode(OperatorNode):
     """
     This class implements the 'Datatype Restriction' node.
     """
-    identities = {Identity.DataRange}
+    identities = {Identity.ValueDomain}
     item = Item.DatatypeRestrictionNode
 
     def __init__(self, brush=None, **kwargs):
@@ -69,7 +69,7 @@ class DatatypeRestrictionNode(OperatorNode):
         Returns the identity of the current node.
         :rtype: Identity
         """
-        return Identity.DataRange
+        return Identity.ValueDomain
 
     @identity.setter
     def identity(self, identity):

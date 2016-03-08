@@ -137,10 +137,10 @@ def identify(source):
 
             # Enumeration nodes needs to be analyzed separately since they do not inherit an identity
             # from their inputs but they compute it according to the nodes source of the inputs (note
-            # that the Enumeration node can have as inputs source only atomic Individuals/Literals):
+            # that the Enumeration node can have as inputs source only atomic instance/value nodes):
             #
             #   - if it has INDIVIDUALS as inputs => identity is Concept
-            #   - if it has LITERALS as inputs => identity is DataRange
+            #   - if it has VALUES as inputs => identity is ValueDomain
             #
             # We compute the identity for this node: if such identity is not NEUTRAL we put it
             # among the nodes specifying a STRONG identity so it will be excluded later when
@@ -161,7 +161,7 @@ def identify(source):
             elif identity[0] is Identity.Instance:
                 identity = Identity.Concept
             elif identity[0] is Identity.Value:
-                identity = Identity.DataRange
+                identity = Identity.ValueDomain
 
             node.identity = identity
 
@@ -176,7 +176,7 @@ def identify(source):
             # RangeRestriction nodes needs to be analyzed separately since they do not inherit an identity
             # from their inputs but they compute it according to the nodes source of the inputs:
             #
-            #   - if it has ATTRIBUTES || DATARANGE as inputs => identity is DataRange
+            #   - if it has ATTRIBUTES || ValueDomain as inputs => identity is ValueDomain
             #   - if it has ROLES || CONCEPTS as inputs => identity is Concept
             #
             # We compute the identity for this node: if such identity is not NEUTRAL we put it
@@ -185,12 +185,12 @@ def identify(source):
             # We will also remove all the nodes used to compute the RangeRestriction node identity
             # from the STRONG set since they will lead to errors when computing the final identity.
 
-            f1 = lambda x: Identity.Concept if x.identity in {Identity.Role, Identity.Concept} else Identity.DataRange
+            f1 = lambda x: Identity.Concept if x.identity in {Identity.Role, Identity.Concept} else Identity.ValueDomain
             f2 = lambda x: x.isItem(Item.InputEdge) and x.target is node
             f3 = lambda x: x.identity in {Identity.Role,
                                           Identity.Attribute,
                                           Identity.Concept,
-                                          Identity.DataRange} and Identity.Neutral not in x.identities
+                                          Identity.ValueDomain} and Identity.Neutral not in x.identities
 
             mixed = node.adjacentNodes(filter_on_edges=f2, filter_on_nodes=f3)
             identity = {f1(n) for n in mixed}

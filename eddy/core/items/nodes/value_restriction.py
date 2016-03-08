@@ -54,7 +54,7 @@ class ValueRestrictionNode(AbstractNode):
     indexRT = 4
     indexEE = 5
 
-    identities = {Identity.DataRange}
+    identities = {Identity.ValueDomain}
     item = Item.ValueRestrictionNode
     minheight = 50
     minwidth = 180
@@ -124,7 +124,7 @@ class ValueRestrictionNode(AbstractNode):
         Returns the identity of the current node.
         :rtype: Identity
         """
-        return Identity.DataRange
+        return Identity.ValueDomain
 
     @identity.setter
     def identity(self, identity):

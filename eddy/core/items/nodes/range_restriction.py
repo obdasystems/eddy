@@ -45,7 +45,7 @@ class RangeRestrictionNode(RestrictionNode):
     """
     This class implements the 'Range Restriction' node.
     """
-    identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
+    identities = {Identity.Concept, Identity.ValueDomain, Identity.Neutral}
     item = Item.RangeRestrictionNode
 
     def __init__(self, brush=None, **kwargs):

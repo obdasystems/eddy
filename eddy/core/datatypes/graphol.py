@@ -43,13 +43,13 @@ class Identity(Enum):
     """
     This class defines all the identities a graphol node may assume.
     """
-    __order__ = 'Neutral Concept Role Attribute DataRange Instance Value RoleAssertion AttributeAssertion Unknown'
+    __order__ = 'Neutral Concept Role Attribute ValueDomain Instance Value RoleAssertion AttributeAssertion Unknown'
 
     Neutral = 'Neutral'
     Concept = 'Concept'
     Role = 'Role'
     Attribute = 'Attribute'
-    DataRange = 'DataRange'
+    ValueDomain = 'Value Domain'
     Instance = 'Instance'
     Value = 'Value'
     RoleAssertion = 'Role Assertion'

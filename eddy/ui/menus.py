@@ -380,7 +380,7 @@ class MenuFactory(QObject):
         ##################################
 
         I = True
-        L = True
+        V = True
 
         f1 = lambda x: x.isItem(Item.InputEdge)
         f2 = lambda x: x.isItem(Item.EnumerationNode)
@@ -394,21 +394,21 @@ class MenuFactory(QObject):
         if enumeration:
             num = len(enumeration.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
             I = enumeration.identity is Identity.Concept or num < 2
-            L = enumeration.identity is Identity.DataRange or num < 2
+            V = enumeration.identity is Identity.ValueDomain or num < 2
 
         assertion = first(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f4))
         if assertion:
             operand = first(assertion.outgoingNodes(filter_on_edges=f5, filter_on_nodes=f6))
             if operand:
                 if operand.identity is Identity.Role:
-                    L = False
+                    V = False
                 elif operand.identity is Identity.Attribute:
                     num = len(assertion.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
                     I = I and (node.identity is Identity.Instance or num < 2)
-                    L = L and (node.identity is Identity.Value or num < 2)
+                    V = V and (node.identity is Identity.Value or num < 2)
 
         for a in mainwindow.actionsSetIndividualNodeAs:
-            a.setVisible(a.data() is Identity.Instance and I or a.data() is Identity.Value and L)
+            a.setVisible(a.data() is Identity.Instance and I or a.data() is Identity.Value and V)
 
         ################################
         ## END CONSTRAIN IDENTITY SWITCH

@@ -124,7 +124,7 @@ class OWLExporter(AbstractExporter):
         if node not in self.converted:
 
             f1 = lambda x: x.item is Item.InputEdge
-            f2 = lambda x: x.identity in {Identity.Concept, Identity.DataRange, Identity.Role}
+            f2 = lambda x: x.identity in {Identity.Concept, Identity.ValueDomain, Identity.Role}
 
             collection = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
 
@@ -155,7 +155,7 @@ class OWLExporter(AbstractExporter):
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(operand))
 
-            elif operand.identity is Identity.DataRange:
+            elif operand.identity is Identity.ValueDomain:
 
                 if operand.item is Item.ValueDomainNode:
                     self.converted[node] = self.factory.getOWLDataComplementOf(self.buildValueDomain(operand))
@@ -251,7 +251,7 @@ class OWLExporter(AbstractExporter):
 
             if o1.identity is Identity.Attribute:
 
-                f3 = lambda x: x.identity is Identity.DataRange
+                f3 = lambda x: x.identity is Identity.ValueDomain
                 o2 = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
 
                 dataPropEx = self.buildAttribute(o1)
@@ -396,7 +396,7 @@ class OWLExporter(AbstractExporter):
             collection = self.HashSet()
 
             f1 = lambda x: x.item is Item.InputEdge
-            f2 = lambda x: x.identity in {Identity.Concept, Identity.DataRange}
+            f2 = lambda x: x.identity in {Identity.Concept, Identity.ValueDomain}
 
             for item in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
 
@@ -428,7 +428,7 @@ class OWLExporter(AbstractExporter):
 
             if node.identity is Identity.Concept:
                 self.converted[node] = self.factory.getOWLObjectIntersectionOf(collection)
-            elif node.identity is Identity.DataRange:
+            elif node.identity is Identity.ValueDomain:
                 self.converted[node] = self.factory.getOWLDataIntersectionOf(collection)
 
         return self.converted[node]
@@ -474,7 +474,7 @@ class OWLExporter(AbstractExporter):
             if o1.identity is Identity.Attribute:
 
                 # In this case we just create a mapping using the OWLDataPropertyExpression which
-                # is needed later when we create the ISA between this node and the DataRange.
+                # is needed later when we create the ISA between this node and the ValueDomain.
                 self.converted[node] = self.buildAttribute(o1)
 
             elif o1.identity is Identity.Role:
@@ -590,7 +590,7 @@ class OWLExporter(AbstractExporter):
             collection = self.HashSet()
 
             f1 = lambda x: x.item is Item.InputEdge
-            f2 = lambda x: x.identity in {Identity.Concept, Identity.DataRange}
+            f2 = lambda x: x.identity in {Identity.Concept, Identity.ValueDomain}
 
             for item in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
 
@@ -622,7 +622,7 @@ class OWLExporter(AbstractExporter):
 
             if node.identity is Identity.Concept:
                 self.converted[node] = self.factory.getOWLObjectUnionOf(collection)
-            elif node.identity is Identity.DataRange:
+            elif node.identity is Identity.ValueDomain:
                 self.converted[node] = self.factory.getOWLDataUnionOf(collection)
 
         return self.converted[node]
@@ -954,7 +954,7 @@ class OWLExporter(AbstractExporter):
                             self.axiomDisjointDataProperties(e)
                         else:
                             self.axiomSubDataPropertyOfAxiom(e)
-                    elif e.source.item is Item.RangeRestrictionNode and e.target.identity is Identity.DataRange:
+                    elif e.source.item is Item.RangeRestrictionNode and e.target.identity is Identity.ValueDomain:
                         self.axiomDataPropertyRange(e)
                     else:
                         raise MalformedDiagramError(e, 'type mismatch in inclusion')

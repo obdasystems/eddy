@@ -45,7 +45,7 @@ class ValueDomainNode(AbstractNode):
     """
     This class implements the 'Value-Domain' node.
     """
-    identities = {Identity.DataRange}
+    identities = {Identity.ValueDomain}
     item = Item.ValueDomainNode
     minheight = 40
     minwidth = 90
@@ -86,7 +86,7 @@ class ValueDomainNode(AbstractNode):
         Returns the identity of the current node.
         :rtype: Identity
         """
-        return Identity.DataRange
+        return Identity.ValueDomain
 
     @identity.setter
     def identity(self, identity):

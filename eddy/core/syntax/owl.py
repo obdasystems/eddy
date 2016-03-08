@@ -68,7 +68,7 @@ class OWL2RLValidator(AbstractValidator):
                 #                                                                                                      #
                 ########################################################################################################
 
-                supported = {Identity.Concept, Identity.Role, Identity.Attribute, Identity.DataRange}
+                supported = {Identity.Concept, Identity.Role, Identity.Attribute, Identity.ValueDomain}
                 remaining = source.identities & target.identities - {Identity.Neutral, Identity.Unknown}
 
                 if remaining - supported:
@@ -86,10 +86,10 @@ class OWL2RLValidator(AbstractValidator):
                     idB = target.identity.value
                     raise SyntaxError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
 
-                if Identity.DataRange in {source.identity, target.identity}:
+                if Identity.ValueDomain in {source.identity, target.identity}:
 
                     # We exclude from the following check inclusion edges sourcing from a RangeRestriction
-                    # node since it will be translated into OWL DataPropertyRange that accepts DataRange
+                    # node since it will be translated into OWL DataPropertyRange that accepts ValueDomain
                     # i.e. complex datatypes and not only atomic ones.
                     if source.item is not Item.RangeRestrictionNode:
 
@@ -193,7 +193,7 @@ class OWL2RLValidator(AbstractValidator):
                     if source.item is not Item.IndividualNode:
                         # Enumeration operator (oneOf) takes as inputs instances or values, both represented
                         # by the Individual node, and has the job of composing a set if individuals (either Concept
-                        # or DataRange, but not both together).
+                        # or ValueDomain, but not both together).
                         name = source.identity.value if source.identity is not Identity.Neutral else source.name
                         raise SyntaxError('Invalid input to {}: {}'.format(target.name, name))
 
@@ -204,7 +204,7 @@ class OWL2RLValidator(AbstractValidator):
 
                     if target.identity is not Identity.Neutral:
 
-                        if source.identity is Identity.Instance and target.identity is Identity.DataRange:
+                        if source.identity is Identity.Instance and target.identity is Identity.ValueDomain:
                             raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.identity.value))
 
                         if source.identity is Identity.Value and target.identity is Identity.Concept:
@@ -339,13 +339,13 @@ class OWL2RLValidator(AbstractValidator):
                         # Domain Restriction node can have at most 2 inputs.
                         raise SyntaxError('Too many inputs to {}'.format(target.name))
 
-                    supported = {Identity.Concept, Identity.Attribute, Identity.Role, Identity.DataRange}
+                    supported = {Identity.Concept, Identity.Attribute, Identity.Role, Identity.ValueDomain}
                     if source.identity is not Identity.Neutral and source.identity not in supported:
                         # Domain Restriction node takes as input:
                         #  - Role => OWL 2 ObjectPropertyExpression
                         #  - Attribute => OWL 2 DataPropertyExpression
                         #  - Concept => Qualified Existential/Universal Role Restriction
-                        #  - DataRange => Qualified Existential Data Restriction
+                        #  - ValueDomain => Qualified Existential Data Restriction
                         raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.identity.value))
 
                     if source.item in {Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode}:
@@ -392,9 +392,9 @@ class OWL2RLValidator(AbstractValidator):
                             raise SyntaxError('Attributes don\'t have self')
 
                         # We can connect an Attribute in input only if there is no other input or if the
-                        # other input is a DataRange and the node specifies a Qualified Restriction.
+                        # other input is a ValueDomain and the node specifies a Qualified Restriction.
                         node = first(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge))
-                        if node and node.identity is not Identity.DataRange:
+                        if node and node.identity is not Identity.ValueDomain:
                             # Not a Qualified Restriction.
                             idA = source.identity.value
                             idB = node.identity.value
@@ -402,13 +402,13 @@ class OWL2RLValidator(AbstractValidator):
 
                     # SOURCE => DATARANGE
 
-                    elif source.identity is Identity.DataRange:
+                    elif source.identity is Identity.ValueDomain:
 
                         if target.restriction is Restriction.Self:
                             # Not a Qualified Restriction.
                             raise SyntaxError('Invalid restriction (self) for qualified restriction')
 
-                        # We can connect a DataRange in input only if there is no other input or if the
+                        # We can connect a ValueDomain in input only if there is no other input or if the
                         # other input is an Attribute and the node specifies a Qualified Restriction.
                         node = first(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge))
                         if node and node.identity is not Identity.Attribute:
@@ -429,13 +429,13 @@ class OWL2RLValidator(AbstractValidator):
                         # Range Restriction node can have at most 2 inputs.
                         raise SyntaxError('Too many inputs to {}'.format(target.name))
 
-                    supported = {Identity.Concept, Identity.Attribute, Identity.Role, Identity.DataRange}
+                    supported = {Identity.Concept, Identity.Attribute, Identity.Role, Identity.ValueDomain}
                     if source.identity is not Identity.Neutral and source.identity not in supported:
                         # Range Restriction node takes as input:
                         #  - Role => OWL 2 ObjectPropertyExpression
                         #  - Attribute => OWL 2 DataPropertyExpression
                         #  - Concept => Qualified Existential/Universal Role Restriction
-                        #  - DataRange => Qualified Existential Data Restriction
+                        #  - ValueDomain => Qualified Existential Data Restriction
                         raise SyntaxError('Invalid input to {}: {}'.format(target.name, source.identity.value))
 
                     if source.item in {Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode}:
@@ -474,9 +474,9 @@ class OWL2RLValidator(AbstractValidator):
                     elif source.identity is Identity.Attribute:
 
                         # We can connect an Attribute in input only if there is no other input or if the
-                        # other input is a DataRange and the node specifies a Qualified Restriction.
+                        # other input is a ValueDomain and the node specifies a Qualified Restriction.
                         node = first(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge))
-                        if node and node.identity is not Identity.DataRange:
+                        if node and node.identity is not Identity.ValueDomain:
                             # Not a Qualified Restriction.
                             idA = source.identity.value
                             idB = node.identity.value
@@ -484,9 +484,9 @@ class OWL2RLValidator(AbstractValidator):
 
                     # SOURCE => DATARANGE
 
-                    elif source.identity is Identity.DataRange:
+                    elif source.identity is Identity.ValueDomain:
 
-                        # We can connect a DataRange in input only if there is no other input or if the
+                        # We can connect a ValueDomain in input only if there is no other input or if the
                         # other input is an Attribute and the node specifies a Qualified Restriction.
                         node = first(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge))
                         if node and node.identity is not Identity.Attribute:

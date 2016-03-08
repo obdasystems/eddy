@@ -46,7 +46,7 @@ class EnumerationNode(OperatorNode):
     """
     This class implements the 'Enumeration' node.
     """
-    identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
+    identities = {Identity.Concept, Identity.ValueDomain, Identity.Neutral}
     item = Item.EnumerationNode
 
     def __init__(self, brush=None, **kwargs):

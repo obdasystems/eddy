@@ -46,7 +46,7 @@ class IntersectionNode(OperatorNode):
     """
     This class implements the 'Intersection' node.
     """
-    identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
+    identities = {Identity.Concept, Identity.ValueDomain, Identity.Neutral}
     item = Item.IntersectionNode
 
     def __init__(self, brush=None, **kwargs):

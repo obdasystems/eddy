@@ -46,7 +46,7 @@ class UnionNode(OperatorNode):
     """
     This class implements the 'Union' node.
     """
-    identities = {Identity.Concept, Identity.DataRange, Identity.Neutral}
+    identities = {Identity.Concept, Identity.ValueDomain, Identity.Neutral}
     item = Item.UnionNode
 
     def __init__(self, brush=None, **kwargs):
