@@ -44,7 +44,7 @@ class PropertyAssertionNode(AbstractNode):
     """
     This class implements the 'Property Assertion' node.
     """
-    identities = {Identity.RoleAssertion, Identity.AttributeAssertion, Identity.Neutral}
+    identities = {Identity.RoleInstance, Identity.AttributeInstance, Identity.Neutral}
     item = Item.PropertyAssertionNode
 
     def __init__(self, width=52, height=30, brush=None, inputs=None, **kwargs):

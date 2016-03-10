@@ -176,7 +176,7 @@ def identify(source):
             # RangeRestriction nodes needs to be analyzed separately since they do not inherit an identity
             # from their inputs but they compute it according to the nodes source of the inputs:
             #
-            #   - if it has ATTRIBUTES || ValueDomain as inputs => identity is ValueDomain
+            #   - if it has ATTRIBUTES || VALUE DOMAIN as inputs => identity is ValueDomain
             #   - if it has ROLES || CONCEPTS as inputs => identity is Concept
             #
             # We compute the identity for this node: if such identity is not NEUTRAL we put it
@@ -216,13 +216,13 @@ def identify(source):
             # identity from their inputs nor from the outgoing instanceOf edge, but they compute it according
             # to the other endpoint of the outgoing instanceOf edge or according to the nodes source of the inputs:
             #
-            #   - if it's targeting a Role/RoleInverse node using an instanceOf edge => identity is RoleAssertion
-            #   - if it's targeting an Attribute node using an instanceOf edge => identity is AttributeAssertion
+            #   - if it's targeting a Role/RoleInverse node using an instanceOf edge => identity is RoleInstance
+            #   - if it's targeting an Attribute node using an instanceOf edge => identity is AttributeInstance
             #
             #   OR
             #
-            #   - if it has 2 Instance as inputs => identity is RoleAssertion
-            #   - if it has 1 Instance and 1 Value as inputs => identity is AttributeAssertion
+            #   - if it has 2 Instance as inputs => identity is RoleInstance
+            #   - if it has 1 Instance and 1 Value as inputs => identity is AttributeInstance
             #
             # In any case, either we identify this node or we don't, we exclude it from the WEAK and STRONG sets:
             # this is due to the fact that the PropertyAssertion node is used to perform assertions at ABox level
@@ -234,7 +234,7 @@ def identify(source):
             f2 = lambda x: x.item in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
             f3 = lambda x: x.item is Item.InputEdge
             f4 = lambda x: x.item is Item.IndividualNode
-            f5 = lambda x: Identity.RoleAssertion if x.identity is Identity.Role else Identity.AttributeAssertion
+            f5 = lambda x: Identity.RoleInstance if x.identity is Identity.Role else Identity.AttributeInstance
 
             outgoing = node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)
             incoming = node.incomingNodes(filter_on_edges=f3, filter_on_nodes=f4)
@@ -252,7 +252,7 @@ def identify(source):
             if identity is Identity.Neutral and len(incoming) >= 2:
                 identity = Identity.RoleAssertion
                 if len([x for x in incoming if x.identity is Identity.Value]) > 0:
-                    identity = Identity.AttributeAssertion
+                    identity = Identity.AttributeInstance
 
             node.identity = identity
 

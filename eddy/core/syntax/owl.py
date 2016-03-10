@@ -303,13 +303,13 @@ class OWL2RLValidator(AbstractValidator):
                         # the individuals are identified by M.Draghi and "Mario".
                         raise SyntaxError('Too many inputs to {}'.format(target.name))
 
-                    if target.identity is Identity.RoleAssertion:
+                    if target.identity is Identity.RoleInstance:
 
                         if source.identity is Identity.Value:
                             # We are constructing an ObjectPropertyAssertion expression so we can't connect a Value.
                             raise SyntaxError('Invalid input to {}: Value'.format(target.identity.value))
 
-                    if target.identity is Identity.AttributeAssertion:
+                    if target.identity is Identity.AttributeInstance:
 
                         if source.identity is Identity.Instance:
 
@@ -521,12 +521,12 @@ class OWL2RLValidator(AbstractValidator):
 
                 if source.item is Item.PropertyAssertionNode:
 
-                    if source.identity is Identity.RoleAssertion and target.item not in {Item.RoleNode, Item.RoleInverseNode}:
-                        # If the source of the edge is a Role Assertion then we MUST target a Role expression.
+                    if source.identity is Identity.RoleInstance and target.item not in {Item.RoleNode, Item.RoleInverseNode}:
+                        # If the source of the edge is a Role Instance then we MUST target a Role expression.
                         raise SyntaxError('Invalid target for {}: {}'.format(source.identity.value, target.name))
 
-                    if source.identity is Identity.AttributeAssertion and target.item is not Item.AttributeNode:
-                        # If the source of the edge is an Attribute Assertion then we MUST target an Attribute.
+                    if source.identity is Identity.AttributeInstance and target.item is not Item.AttributeNode:
+                        # If the source of the edge is an Attribute Instance then we MUST target an Attribute.
                         raise SyntaxError('Invalid target for {}: {}'.format(source.identity.value, target.name))
 
         except SyntaxError as e:
