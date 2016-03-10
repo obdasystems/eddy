@@ -36,8 +36,8 @@ from abc import ABCMeta, abstractmethod
 
 from PyQt5.QtCore import pyqtSlot, Qt, QEvent
 from PyQt5.QtGui import QBrush, QColor, QPainter
-from PyQt5.QtWidgets import QWidget, QFormLayout, QLabel, QVBoxLayout, QPushButton, QScrollBar, QStyleOption, QStyle
-from PyQt5.QtWidgets import QMenu, QSizePolicy, QScrollArea
+from PyQt5.QtWidgets import QFormLayout, QSizePolicy, QLabel, QVBoxLayout, QPushButton
+from PyQt5.QtWidgets import QWidget, QMenu, QScrollArea, QScrollBar, QStyleOption, QStyle
 
 from eddy.core.commands import CommandNodeLabelChange, CommandSetProperty, CommandRefactor
 from eddy.core.datatypes import Item, XsdDatatype, Facet, Identity
@@ -410,9 +410,9 @@ class DiagramInfo(AbstractInfo):
         Fetch new information and fill the widget with data.
         :type scene: DiagramScene
         """
+        self.attributesField.setValue(scene.index.predicatesNum(Item.AttributeNode))
         self.conceptsField.setValue(scene.index.predicatesNum(Item.ConceptNode))
         self.rolesField.setValue(scene.index.predicatesNum(Item.RoleNode))
-        self.attributesField.setValue(scene.index.predicatesNum(Item.AttributeNode))
         self.inclusionsField.setValue(scene.index.itemNum(Item.InclusionEdge))
 
 
