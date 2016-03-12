@@ -46,7 +46,7 @@ from eddy.core.items.nodes import RangeRestrictionNode, DomainRestrictionNode
 from eddy.core.items.factory import ItemFactory
 from eddy.core.items.index import ItemIndex
 from eddy.core.items.nodes.common.meta import PredicateMetaIndex
-from eddy.core.syntax import OWL2RLValidator
+from eddy.core.syntax import OWL2Validator
 from eddy.core.utils import Clipboard, GUID
 
 
@@ -86,7 +86,7 @@ class DiagramScene(QGraphicsScene):
         self.meta = PredicateMetaIndex(self)
         self.undostack = QUndoStack(self)
         self.undostack.setUndoLimit(50)
-        self.validator = OWL2RLValidator(self)
+        self.validator = OWL2Validator(self)
         self.mainwindow = mainwindow
         self.pasteOffsetX = Clipboard.PasteOffsetX
         self.pasteOffsetY = Clipboard.PasteOffsetY

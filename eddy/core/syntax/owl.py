@@ -37,9 +37,9 @@ from eddy.core.functions import cutR, first
 from eddy.core.syntax.common import AbstractValidator, ValidationResult
 
 
-class OWL2RLValidator(AbstractValidator):
+class OWL2Validator(AbstractValidator):
     """
-    This class can be used to validate Graphol triples according to the OWL2RL profile.
+    This class can be used to validate Graphol triples according to the OWL2 syntax.
     """
     ####################################################################################################################
     #                                                                                                                  #
@@ -96,7 +96,8 @@ class OWL2RLValidator(AbstractValidator):
                         if source.item is not Item.ValueDomainNode and target.item is not Item.ValueDomainNode:
                             # Inclusion assertions between value-domain expressions must involve at least an atomic
                             # datatype (i.e., the source or the target of the assertion must be an atomic datatype).
-                            raise SyntaxError('Inclusion between value-domain expressions must include at least an atomic datatype')
+                            raise SyntaxError('Inclusion between value-domain expressions must include at least an '
+                                              'atomic datatype')
 
                 if source.item is Item.ComplementNode:
 
@@ -161,9 +162,9 @@ class OWL2RLValidator(AbstractValidator):
                             # See if the source of the node matches an ObjectPropertyExpression ({Role, RoleInv}) or a
                             # DataPropertyExpression (Attribute). If that's the case check for the node not to have any
                             # outgoing Input edge: the only supported expression are NegativeObjectPropertyAssertion,
-                            # R1 ISA NOT R2, and NegativeDataPropertyAssertion, A1 ISA NOT A2. This prevents the connection
-                            # of Role expressions to Complement nodes that are given as inputs to Enumeration, Union and
-                            # Disjoint Union operatore nodes.
+                            # R1 ISA NOT R2, and NegativeDataPropertyAssertion, A1 ISA NOT A2. This prevents the
+                            # connection of Role expressions to Complement nodes that are given as inputs to Enumeration,
+                            # Union and Disjoint Union operatore nodes.
                             if len(target.incomingNodes(lambda x: x.item is Item.InputEdge and x.source is target)) > 0:
                                 raise SyntaxError('Invalid negative {} expression'.format(source.identity.value))
 
@@ -175,12 +176,14 @@ class OWL2RLValidator(AbstractValidator):
                         #                                                                                              #
                         ################################################################################################
 
-                        if Identity.Neutral not in {source.identity, target.identity} and source.identity is not target.identity:
-                            # Both are non neutral and we have identity mismatch.
-                            idA = source.identity.value
-                            idB = target.identity.value
-                            composition = cutR(target.name, ' node')
-                            raise SyntaxError('Type mismatch: {} between {} and {}'.format(composition, idA, idB))
+                        if Identity.Neutral not in {source.identity, target.identity}:
+
+                            if source.identity is not target.identity:
+                                # Union/Intersection between different type of graphol expressions.
+                                idA = source.identity.value
+                                idB = target.identity.value
+                                composition = cutR(target.name, ' node')
+                                raise SyntaxError('Type mismatch: {} between {} and {}'.format(composition, idA, idB))
 
                 elif target.item is Item.EnumerationNode:
 
@@ -361,7 +364,7 @@ class OWL2RLValidator(AbstractValidator):
                             # Not a Qualified Restriction.
                             raise SyntaxError('Invalid restriction (self) for qualified restriction')
 
-                        # We can connect a Concept in input only if there is no other input or if the other input is a Role.
+                        # A Concept can be given as input only if there is no input or if the other input is a Role.
                         node = first(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge))
                         if node and node.identity is not Identity.Role:
                             # We found another input on this node which is not a Role
@@ -400,7 +403,7 @@ class OWL2RLValidator(AbstractValidator):
                             idB = node.identity.value
                             raise SyntaxError('Invalid inputs ({} + {}) for qualified restriction'.format(idA, idB))
 
-                    # SOURCE => DATARANGE
+                    # SOURCE => VALUE-DOMAIN
 
                     elif source.identity is Identity.ValueDomain:
 
@@ -482,7 +485,7 @@ class OWL2RLValidator(AbstractValidator):
                             idB = node.identity.value
                             raise SyntaxError('Invalid inputs ({} + {}) for qualified restriction'.format(idA, idB))
 
-                    # SOURCE => DATARANGE
+                    # SOURCE => VALUE-DOMAIN
 
                     elif source.identity is Identity.ValueDomain:
 
@@ -514,8 +517,8 @@ class OWL2RLValidator(AbstractValidator):
                 if source.identity is Identity.Instance:
 
                     if target.identity is not Identity.Concept:
-                        # If the source of the edge is an Instance it means that we are trying to construct a ClassAssertion
-                        # and so the target of the edge MUST be an axiom identified as Concept (Atomic or General).
+                        # If the source of the edge is an Instance it means that we are trying to construct a
+                        # ClassAssertion and so the target of the edge MUST be a class expression.
                         # OWL 2: ClassAssertion(axiomAnnotations ClassExpression Individual)
                         raise SyntaxError('Invalid target for Concept assertion: {}'.format(target.identity.value))
 
@@ -523,11 +526,11 @@ class OWL2RLValidator(AbstractValidator):
 
                     if source.identity is Identity.RoleInstance and target.item not in {Item.RoleNode, Item.RoleInverseNode}:
                         # If the source of the edge is a Role Instance then we MUST target a Role expression.
-                        raise SyntaxError('Invalid target for {}: {}'.format(source.identity.value, target.name))
+                        raise SyntaxError('Invalid target for Role assertion: {}'.format(target.name))
 
                     if source.identity is Identity.AttributeInstance and target.item is not Item.AttributeNode:
                         # If the source of the edge is an Attribute Instance then we MUST target an Attribute.
-                        raise SyntaxError('Invalid target for {}: {}'.format(source.identity.value, target.name))
+                        raise SyntaxError('Invalid target for Attribute assertion: {}'.format(target.name))
 
         except SyntaxError as e:
             self._result = ValidationResult(source, edge, target, False, e.msg)
