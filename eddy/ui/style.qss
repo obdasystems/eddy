@@ -184,27 +184,35 @@ QScrollBar::handle {
     margin: 1px;
 }
 QScrollBar::handle:vertical {
-    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop:0 #5C5C5C, stop:1 #515151);
-    min-height: 20px;
     min-width: 8px;
+    min-height: 20px;
+    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                                stop:0 #5C5C5C, stop:1 #515151);
 }
 QScrollBar::handle:vertical:hover {
-    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop:0 #666666, stop:1 #5B5B5B);
+    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                                stop:0 #666666, stop:1 #5B5B5B);
 }
 QScrollBar::handle:horizontal {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop:0 #5C5C5C, stop:1 #515151);
-    min-height: 8px;
     min-width: 20px;
+    min-height: 8px;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop:0 #5C5C5C, stop:1 #515151);
 }
 QScrollBar::handle:horizontal:hover {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop:0 #666666, stop:1 #5B5B5B);
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop:0 #666666, stop:1 #5B5B5B);
 }
-QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical,
-QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical,
+QScrollBar::add-page:horizontal,
+QScrollBar::sub-page:horizontal {
     background: transparent;
 }
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
-QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical,
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
     height: 0;
     width: 0;
 }
@@ -232,7 +240,7 @@ QSlider::handle:horizontal {
 QMenu {
     border: 1px solid #A9A9A9;
     background: #EDEDED;
-    margin: 4px;
+    margin: 0px;
 }
 QMenu::icon {
     margin: 5px;
@@ -242,20 +250,25 @@ QMenu::indicator {
     height: 18px;
 }
 QMenu::item  {
-    border: 1px solid transparent;
-    color: #6A6A6A;
+    background: transparent;
+    border: 0px solid transparent;
+    color: #000000;
     font-size: 12px;
-    margin-left: 5px;
+    margin: 0px;
     padding: 5px 30px 5px 30px;
 }
+QMenu::item:disabled {
+    background: transparent;
+    color: #C0C0C0;
+}
 QMenu::item:selected {
+    background: #4FC3F7;
     color: #000000;
 }
 QMenu::separator {
     height: 1px;
     background: #A9A9A9;
-    margin-left: 8px;
-    margin-right: 4px;
+    margin: 0;
 }
 /**
  * POPUPS
@@ -269,7 +282,8 @@ QLabel.invalid {
 /**
  * FIELDS
  */
-/*QCheckBox {
+/*
+QCheckBox {
     spacing: 4px;
 }
 QCheckBox::indicator {
@@ -284,7 +298,8 @@ QCheckBox::indicator:checked {
 }
 QCheckBox::indicator:indeterminate {
     image: url(:/icons/checkbox-indeterminate);
-}*/
+}
+*/
 QComboBox {
     background: #F2F2F2;
     border: 1px solid #BABABA;
@@ -295,12 +310,14 @@ QComboBox {
 QComboBox:editable {
     background: white;
 }
-QComboBox:!editable, QComboBox::drop-down:editable {
+QComboBox:!editable,
+QComboBox::drop-down:editable {
      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                 stop: 0.0 #E0E0E0, stop: 0.3 #DCDCDC,
                                 stop: 0.7 #DBDBDB, stop: 1.0 #D3D3D3);
 }
-QComboBox:!editable:on, QComboBox::drop-down:editable:on {
+QComboBox:!editable:on,
+QComboBox::drop-down:editable:on {
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                 stop: 0.0 #F8F8F8, stop: 0.3 #F4F4F4,
                                 stop: 0.7 #F0F0F0, stop: 1.0 #EDEDED);
@@ -320,8 +337,8 @@ QRadioButton {
     spacing: 4px;
 }
 QRadioButton::indicator {
-    width: 14px;
     height: 14px;
+    width: 14px;
 }
 QRadioButton::indicator::unchecked {
     image: url(:/icons/radio-outline);
