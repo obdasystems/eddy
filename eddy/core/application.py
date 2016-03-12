@@ -37,13 +37,13 @@ import jnius_config
 
 from argparse import ArgumentParser
 
-from PyQt5.QtCore import QEvent, pyqtSignal, pyqtSlot, QTextStream, Qt
+from PyQt5.QtCore import Qt, QEvent, QTextStream, pyqtSignal, pyqtSlot
 from PyQt5.QtNetwork import QLocalSocket, QLocalServer
 from PyQt5.QtWidgets import QApplication
 
 from eddy import APPID
 from eddy.core.datatypes import Platform, Filetype
-from eddy.core.functions import isEmpty, expandPath, connect, disconnect, QSS
+from eddy.core.functions import isEmpty, expandPath, connect, disconnect
 
 ########################################################
 ##         BEGIN JAVA VIRTUAL MACHINE SETUP           ##
@@ -77,7 +77,7 @@ jnius_config.set_classpath(*classpath)
 
 from eddy.ui.mainwindow import MainWindow
 from eddy.ui.splash import SplashScreen
-from eddy.ui.style import Style
+from eddy.ui.style import Clean
 
 
 class Eddy(QApplication):
@@ -137,8 +137,9 @@ class Eddy(QApplication):
                 self.splashscreen.show()
 
             # Setup layout.
-            self.setStyle(Style('Fusion'))
-            self.setStyleSheet(QSS(expandPath('@eddy/ui/style.qss')))
+            self.setStyle(Clean('Fusion'))
+            with open(expandPath('@eddy/ui/clean.qss')) as sheet:
+                self.setStyleSheet(sheet.read())
 
             # Create the main window.
             self.mainwindow = MainWindow()

@@ -35,7 +35,7 @@
 from PyQt5.QtWidgets import QStyle, QProxyStyle
 
 
-class Style(QProxyStyle):
+class Clean(QProxyStyle):
 
     PM = {
         QStyle.PM_SmallIconSize: 18,
@@ -59,6 +59,6 @@ class Style(QProxyStyle):
         :rtype: int
         """
         try:
-            return Style.PM[metric]
+            return Clean.PM[metric]
         except KeyError:
             return super().pixelMetric(metric, option, widget)

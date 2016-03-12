@@ -56,7 +56,6 @@ from eddy.core.functions.misc import first
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.misc import isQuoted
 from eddy.core.functions.misc import partition
-from eddy.core.functions.misc import QSS
 from eddy.core.functions.misc import rangeF
 from eddy.core.functions.misc import shaded
 from eddy.core.functions.misc import snap

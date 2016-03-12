@@ -33,7 +33,6 @@
 
 
 import itertools
-import os
 
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPainter, QPixmap
@@ -181,22 +180,6 @@ def snap(point, size, perform=True):
         y = snapF(point.y(), size, 0, perform)
         return QPointF(x, y)
     return point
-
-
-def QSS(path):
-    """
-    Read a QSS file matching the given name and return its content.
-    :raise TypeError: if an invalid QSS file is supplied.
-    :raise IOError: if there is no QSS file matching the given name.
-    :type path: str
-    :rtype: str
-    """
-    if not path.lower().endswith('.qss'):
-        raise TypeError('invalid QSS file supplied: {}'.format(path))
-    if not os.path.isfile(path):
-        raise IOError('could not load QSS file ({}): file no found'.format(path))
-    with open(path) as qss:
-        return qss.read()
 
 
 def uncapitalize(s):
