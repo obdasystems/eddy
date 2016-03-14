@@ -296,7 +296,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: InstanceOfEdge
         """
-        return self.buildGenericEdge(Item.InputEdge, element)
+        return self.buildGenericEdge(Item.InstanceOfEdge, element)
 
     ####################################################################################################################
     #                                                                                                                  #
