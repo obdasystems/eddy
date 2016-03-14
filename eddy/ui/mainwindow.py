@@ -1499,6 +1499,8 @@ class MainWindow(QMainWindow):
             msgbox.exec_()
 
             if placeholder:
+                scene.clearSelection()
+                placeholder.setSelected(True)
                 mainview = self.mdi.activeView
                 mainview.centerOn(placeholder)
 
