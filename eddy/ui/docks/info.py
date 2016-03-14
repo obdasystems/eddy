@@ -41,7 +41,7 @@ from PyQt5.QtWidgets import QWidget, QMenu, QScrollArea, QScrollBar, QStyleOptio
 
 from eddy.core.commands import CommandNodeLabelChange, CommandSetProperty, CommandRefactor
 from eddy.core.datatypes import Item, XsdDatatype, Facet, Identity
-from eddy.core.functions import disconnect, connect, isEmpty
+from eddy.core.functions import disconnect, connect, first, isEmpty
 from eddy.core.qt import ColoredIcon, Font, StackedWidget
 from eddy.core.regex import RE_CAMEL_SPACE
 
@@ -137,7 +137,7 @@ class Info(QScrollArea):
                 show = self.infoDiagram
                 show.updateData(self.scene)
             else:
-                item = selected[0]
+                item = first(selected)
                 if item.node:
                     if item.predicate:
                         if item.item is Item.ValueDomainNode:
@@ -250,7 +250,7 @@ class Key(QLabel):
         Initialize the key.
         """
         super().__init__(*args)
-        self.setFixedSize(84, 20)
+        self.setFixedSize(88, 20)
 
 
 class Button(QPushButton):
@@ -389,6 +389,10 @@ class DiagramInfo(AbstractInfo):
         self.inclusionsField = Int(self)
         self.inclusionsField.setReadOnly(True)
 
+        self.membershipKey = Key('Membership', self)
+        self.membershipField = Int(self)
+        self.membershipField.setReadOnly(True)
+
         self.atomicPredHeader = Header('Atomic predicates', self)
 
         self.atomicPredLayout = QFormLayout()
@@ -396,7 +400,13 @@ class DiagramInfo(AbstractInfo):
         self.atomicPredLayout.addRow(self.conceptsKey, self.conceptsField)
         self.atomicPredLayout.addRow(self.rolesKey, self.rolesField)
         self.atomicPredLayout.addRow(self.attributesKey, self.attributesField)
-        self.atomicPredLayout.addRow(self.inclusionsKey, self.inclusionsField)
+
+        self.assertionsHeader = Header('Assertions', self)
+
+        self.assertionsLayout = QFormLayout()
+        self.assertionsLayout.setSpacing(0)
+        self.assertionsLayout.addRow(self.inclusionsKey, self.inclusionsField)
+        self.assertionsLayout.addRow(self.membershipKey, self.membershipField)
 
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setAlignment(Qt.AlignTop)
@@ -404,6 +414,8 @@ class DiagramInfo(AbstractInfo):
         self.mainLayout.setSpacing(0)
         self.mainLayout.addWidget(self.atomicPredHeader)
         self.mainLayout.addLayout(self.atomicPredLayout)
+        self.mainLayout.addWidget(self.assertionsHeader)
+        self.mainLayout.addLayout(self.assertionsLayout)
 
     def updateData(self, scene):
         """
@@ -414,6 +426,7 @@ class DiagramInfo(AbstractInfo):
         self.conceptsField.setValue(scene.index.predicatesNum(Item.ConceptNode))
         self.rolesField.setValue(scene.index.predicatesNum(Item.RoleNode))
         self.inclusionsField.setValue(scene.index.itemNum(Item.InclusionEdge))
+        self.membershipField.setValue(scene.index.itemNum(Item.InstanceOfEdge))
 
 
 class EdgeInfo(AbstractInfo):
