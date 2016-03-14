@@ -1499,10 +1499,15 @@ class MainWindow(QMainWindow):
             msgbox.exec_()
 
             if placeholder:
+                focus = placeholder
+                if placeholder.edge:
+                    if placeholder.breakpoints:
+                        focus = placeholder.breakpoints[int(len(placeholder.breakpoints)/2)]
+
                 scene.clearSelection()
                 placeholder.setSelected(True)
                 mainview = self.mdi.activeView
-                mainview.centerOn(placeholder)
+                mainview.centerOn(focus)
 
     @pyqtSlot()
     def toggleEdgeComplete(self):
