@@ -633,7 +633,7 @@ include_files = [
     (os.path.join(OPTS['QT_PLUGINS_PATH'], 'printsupport'), 'printsupport'),
     ('examples', 'examples'),
     ('resources', 'resources'),
-    ('eddy/ui/style.qss', 'ui/style.qss'),
+    ('eddy/ui/clean.qss', 'ui/clean.qss'),
     ('LICENSE', 'LICENSE'),
     ('CONTRIBUTING.md', 'CONTRIBUTING.md'),
     ('PACKAGING.md', 'PACKAGING.md'),
