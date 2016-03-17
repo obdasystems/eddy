@@ -10,23 +10,16 @@ Eddy is distributed as different packages:
 
 # Packaging
 
-To create distribution packages you need to have installed Python 3 on your system. You also need 
-to have installed [GIT](http://git-scm.com/) on your system and make sure that the `git` command
-is in your `$PATH` environment. Once the building process is completed you will find the built 
+To create distribution packages you need to have installed [Python 3.4](https://www.python.org) on your system. 
+You also need to have installed [GIT](http://git-scm.com/) on your system and make sure that the `git` command
+is in your `$PATH` environment variable. Once the building process is completed you will find the built 
 package(s) inside the *dist* directory.
-
-## Source distribution
-
-Bring up a terminal window (or command prompt if on win32 platform) and type the following:
-    
-    >>> git clone https://github.com/danielepantaleone/eddy.git
-    >>> cd eddy
-    >>> python setup.py release
 
 ## Windows
 
 Install [Qt 5.5](http://download.qt.io/official_releases/qt/5.5/5.5.1/qt-opensource-windows-x86-mingw492-5.5.1.exe).    
 Install [cx_Freeze](https://pypi.python.org/pypi/cx_Freeze/4.3.4).  
+Install [InnoSetup](http://www.jrsoftware.org/isinfo.php).  
 Download and uncompress [SIP 4.17](http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.zip).  
 Download and uncompress [PyQt5.5](http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.zip).  
 Bring up command prompt window and navigate to the uncompressed SIP 4.17 directory:
@@ -74,7 +67,7 @@ Bring up a terminal window and type the following:
     >>> make
     >>> make install
     >>> cd ~/Downloads
-    >>> wget http://skylink.dl.sourceforge.net/project/pyqt/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
+    >>> wget http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
     >>> tar xf PyQt-gpl-5.5.1.tar.gz
     >>> cd PyQt-gpl-5.5.1
     >>> python configure.py --qmake ~/Qt/5.5/clang_64/bin/qmake --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
@@ -112,7 +105,7 @@ Bring up a terminal window and type the following:
     >>> make -j 3
     >>> sudo make install
     >>> cd ~/Downloads
-    >>> wget http://skylink.dl.sourceforge.net/project/pyqt/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
+    >>> wget http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
     >>> tar xf PyQt-gpl-5.5.1.tar.gz
     >>> cd PyQt-gpl-5.5.1
     >>> python configure.py --qmake ~/Qt5.5.1/5.5/gcc/bin/qmake --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
@@ -156,7 +149,7 @@ Bring up a terminal window and type the following:
     >>> make -j 3
     >>> sudo make install
     >>> cd ~/Downloads
-    >>> wget http://skylink.dl.sourceforge.net/project/pyqt/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
+    >>> wget http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
     >>> tar xf PyQt-gpl-5.5.1.tar.gz
     >>> cd PyQt-gpl-5.5.1
     >>> python configure.py --qmake ~/Qt5.5.1/5.5/gcc_64/bin/qmake --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
