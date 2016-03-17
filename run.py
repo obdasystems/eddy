@@ -3,7 +3,7 @@
 
 ##########################################################################
 #                                                                        #
-#  Eddy: a graphical editor for the construction of Graphol ontologies.  #
+#  Eddy: a graphical editor for the specification of Graphol ontologies  #
 #  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
