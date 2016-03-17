@@ -1,24 +1,26 @@
 ![Eddy](/artwork/banner.png?raw=true)
 
-Eddy is a graphical editor for the construction of Graphol ontologies. Eddy features a design environment specifically 
-thought out for generating Graphol ontologies through ad-hoc functionalities. Drawing features allow designers to 
-comfortably edit ontologies in a central viewport area, while two lateral docking areas contains specifically-tailored 
-widgets for editing, navigation and inspection of the diagram. 
+Eddy is a graphical editor for the specification and visualization of <span style="font-variant: small-caps">Graphol</span> ontologies. 
+Eddy features a design environment specifically thought out for generating <span style="font-variant: small-caps">Graphol</span> 
+ontologies through ad-hoc functionalities. Drawing features allow designers to comfortably edit ontologies in a central viewport 
+area, while two lateral docking areas contains specifically-tailored widgets for editing, navigating and inspecing open diagrams. 
 
 In order to support interaction with third-party tools such as OWL 2 reasoners and editors like [Protégé], Eddy is able 
-to export the produced Graphol ontology into an OWL 2 ontology. Other simpler exporting file formats, like PDF, are 
-also currently provided.
+to export the produced <span style="font-variant: small-caps">Graphol</span> ontology into an OWL 2 ontology. Other 
+simpler exporting file formats, like PDF, are also currently provided.
 
 Eddy is written in [Python] and make use of the [PyQt5] python bindings for the cross-platform [Qt5] framework. 
 
 ### About Graphol
 
-[Graphol] is a language for the diagrammatic representation of Description Logic (DL) ontologies, developed by members 
-of the DASI-lab group of the [Dipartimento di Ingegneria Informatica, Automatica e Gestionale "A.Ruberti"] at [Sapienza] 
-University of Rome. Graphol offers a completely visual representation of ontologies to users, in order to help 
-understanding by people who are not skilled in logic. Graphol provides designers with simple graphical primitives for 
-ontology editing, avoiding complex textual syntax. Graphol's basic components are inspired by Entity Relationship (ER) 
-diagrams, thus ontologies that can be rendered as ER diagrams have in Graphol a similar diagrammatic shape.
+<span style="font-variant: small-caps">Graphol</span> is a novel language for the specification and visualization of Description Logic (DL) 
+ontologies, developed by members of the DASI-lab group of the [Dipartimento di Ingegneria Informatica, Automatica e Gestionale "A.Ruberti"] 
+at [Sapienza] University of Rome. <span style="font-variant: small-caps">Graphol</span>  offers a completely visual representation of 
+ontologies to users, in order to help understanding by people who are not skilled in logic. 
+<span style="font-variant: small-caps">Graphol</span> provides designers with simple graphical primitives for ontology editing, 
+avoiding complex textual syntax. <span style="font-variant: small-caps">Graphol</span>'s basic components are inspired by Entity 
+Relationship (ER) diagrams, thus ontologies that can be rendered as ER diagrams have in <span style="font-variant: small-caps">Graphol</span> 
+a similar diagrammatic shape.
 
 * [Domenico Lembo](http://www.dis.uniroma1.it/~lembo/)                         
 * [Valerio Santarelli](http://www.dis.uniroma1.it/~dottoratoii/students/valerio-santarelli)           
