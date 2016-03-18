@@ -250,7 +250,7 @@ def identify(source):
 
             # 2) If there is no instanceOf edge then use the inputs.
             if identity is Identity.Neutral and len(incoming) >= 2:
-                identity = Identity.RoleAssertion
+                identity = Identity.RoleInstance
                 if len([x for x in incoming if x.identity is Identity.Value]) > 0:
                     identity = Identity.AttributeInstance
 
