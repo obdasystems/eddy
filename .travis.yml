@@ -2,6 +2,10 @@
 sudo:
   required
 
+## Cache PIP installs across jobs
+cache:
+  - pip
+
 ## Select test language
 language:
   python
@@ -16,4 +20,8 @@ before_install:
 
 ## Run automated tests using nose
 script:
-  - nosetests --where=tests --verbosity=3
+  - nosetests --where=tests --verbosity=3 --with-cov --cov eddy --cov-report term-missing --cov-config .coveragerc
+
+# Report tests coverage
+after_success:
+  - coveralls

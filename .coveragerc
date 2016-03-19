@@ -1,0 +1,8 @@
+[run]
+omit =
+    artwork/*
+    examples/*
+    resources/*
+    scripts/*
+    support/*
+    tests/*
