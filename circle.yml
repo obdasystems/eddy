@@ -1,60 +1,18 @@
 ## Customize the test machine
 machine:
-
-  ## Version of Python to use
   python:
     version:
       3.4.3
-
-  ## Version of Java to use
   java:
     version:
       oraclejdk8
 
-  ## Install Qt5
-  pre:
-    - sudo apt-add-repository ppa:beineri/opt-qt551 -y
-    - sudo apt-get update
-    - sudo apt-get install qt-latest
-    - sudo apt-get install mercurial
-    - echo "source /opt/qt55/bin/qt55-env.sh" >> ~/.circlerc
-
-
-## Customize python dependencies
+## Prepare build environment
 dependencies:
-
-  # Install SIP and PyQt5
-  pre:
-    # Prepare the build environment
-    - sudo mkdir -p /builds && sudo chmod a+rw /builds
-    - sudo mkdir -p /downloads && sudo chmod a+rw /downloads
-    # Downloads
-    - curl -L -o /downloads/sip.tar.gz http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.tar.gz
-    - curl -L -o /downloads/pyqt.tar.gz http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
-    # Extract archives
-    - tar xzf /downloads/sip.tar.gz -C /builds --keep-newer-files
-    - tar xzf /downloads/pyqt.tar.gz -C /builds --keep-newer-files
-    # Build SIP
-    - cd /builds/sip-4.17 && python configure.py
-    - cd /builds/sip-4.17 && sudo make && sudo make install
-    # Build PyQt5
-    - cd /builds/PyQt-gpl-5.5.1 && python configure.py --confirm-license --no-designer-plugin -e QtCore -e QtGui -e QtWidgets -e QtPrintSupport -e QtXml -e QtTest -e QtNetwork
-    - cd /builds/PyQt-gpl-5.5.1 && sudo make && sudo make install
-    # Install cx_Freeze
-    - cd /builds && hg clone https://danielepantaleone@bitbucket.org/danielepantaleone/cx_freeze
-    - cd /builds/cx_freeze && hg pull && hg update ubuntu && python setup.py build && python setup.py install
-
-  ## Install PIP packages
   override:
-    - pip install -U pip
-    - pip install -r build-requirements.txt
-    - pip install -r test-requirements.txt
-    - pip install -e git+https://github.com/danielepantaleone/pyjnius.git@i386#egg=pyjnius --exists-action i
+    - ./scripts/configure-circle.sh
 
-
-## Customize test suite
+## Run automated tests using nose
 test:
-
-  ## Run automates tests using nose
   override:
     - nosetests --where=tests --verbosity=3
