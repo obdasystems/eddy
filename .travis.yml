@@ -1,12 +1,19 @@
+## Enable sudo
+sudo:
+  required
+
 ## Select test language
 language:
   python
+
 ## Select python version
 python:
   - 3.4
+
 ## Prepare build environment
 before_install:
   - ./scripts/configure-travis.sh
+
 ## Run automated tests using nose
 script:
   - nosetests --where=tests --verbosity=3
