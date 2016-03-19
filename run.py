@@ -23,7 +23,7 @@
 #                                                                        #
 #  Graphol is developed by members of the DASI-lab group of the          #
 #  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
-#  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it/ #
+#  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it  #
 #                                                                        #
 #     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
 #     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
