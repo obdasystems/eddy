@@ -1,6 +1,6 @@
 ![Eddy](/artwork/banner.png?raw=true)
 
-[![Circle CI](https://circleci.com/gh/danielepantaleone/eddy/tree/master.svg?style=svg&circle-token=d4611bacee6dca791faf8b03502ffabdeb099ffe)](https://circleci.com/gh/danielepantaleone/eddy/tree/master)
+[![Circle CI](https://img.shields.io/circleci/project/danielepantaleone/eddy/master.svg)](https://circleci.com/gh/danielepantaleone/eddy/tree/master)
 [![Build Status](https://travis-ci.org/danielepantaleone/eddy.svg?branch=master)](https://travis-ci.org/danielepantaleone/eddy)
 [![Code Health](https://landscape.io/github/danielepantaleone/eddy/master/landscape.svg?style=flat)](https://landscape.io/github/danielepantaleone/eddy/master)
 [![Coverage Status](https://coveralls.io/repos/github/danielepantaleone/eddy/badge.svg?branch=master)](https://coveralls.io/github/danielepantaleone/eddy?branch=master)
