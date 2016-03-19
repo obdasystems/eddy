@@ -58,7 +58,6 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
     :type exc_value: Exception
     :type exc_traceback: Traceback
     """
-    global app
     global box
 
     if issubclass(exc_type, KeyboardInterrupt):
