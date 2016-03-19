@@ -87,7 +87,7 @@ class memoized(object):
         return res
 
     def __repr__(self):
-         """
-         Return the function's docstring.
-         """
-         return self.func.__doc__
+        """
+        Return the function's docstring.
+        """
+        return self.func.__doc__
