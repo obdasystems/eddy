@@ -2,8 +2,8 @@
 
 [![Circle CI](https://img.shields.io/circleci/project/danielepantaleone/eddy/master.svg)](https://circleci.com/gh/danielepantaleone/eddy/tree/master)
 [![Build Status](https://travis-ci.org/danielepantaleone/eddy.svg?branch=master)](https://travis-ci.org/danielepantaleone/eddy)
-[![Code Health](https://landscape.io/github/danielepantaleone/eddy/master/landscape.svg?style=flat)](https://landscape.io/github/danielepantaleone/eddy/master)
-[![Coverage Status](https://coveralls.io/repos/github/danielepantaleone/eddy/badge.svg?branch=master)](https://coveralls.io/github/danielepantaleone/eddy?branch=master)
+[![Code Health](https://landscape.io/github/danielepantaleone/eddy/master/landscape.svg?style=flat&bust=1)](https://landscape.io/github/danielepantaleone/eddy/master)
+[![Coverage Status](https://coveralls.io/repos/github/danielepantaleone/eddy/badge.svg?branch=master&bust=1)](https://coveralls.io/github/danielepantaleone/eddy?branch=master)
 [![Python version](https://img.shields.io/badge/python-3.4.3-blue.svg)](https://www.python.org)
 [![GitHub license](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://raw.githubusercontent.com/danielepantaleone/eddy/master/LICENSE)
 [![Gitter chatroom](https://badges.gitter.im/danielepantaleone/eddy.svg)](https://gitter.im/danielepantaleone/eddy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
