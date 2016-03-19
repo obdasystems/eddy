@@ -41,7 +41,7 @@ from eddy.core.functions.misc import clamp, isEmpty, rangeF, snapF
 from eddy.core.functions.geometry import angle, distanceP, distanceL, intersection, midpoint
 
 
-class Test_AngleP(unittest.TestCase):
+class Test_Angle(unittest.TestCase):
 
     def test_angle(self):
         self.assertEqual(0.0, angle(QPointF(0, 0), QPointF(+1, 0)))
@@ -49,6 +49,7 @@ class Test_AngleP(unittest.TestCase):
         self.assertEqual(-math.pi / 2, angle(QPointF(0, 0), QPointF(0, +1)))
         self.assertEqual(math.pi, angle(QPointF(0, 0), QPointF(-1, 0)))
         self.assertEqual(+math.pi / 4, angle(QPointF(0, 0), QPointF(1, -1)))
+
 
 class Test_Clamp(unittest.TestCase):
 
@@ -103,6 +104,7 @@ class Test_IsEmpty(unittest.TestCase):
         self.assertTrue(isEmpty('   '))
         self.assertFalse(isEmpty('Hello World'))
         self.assertFalse(isEmpty(4))
+
 
 class Test_Midpoint(unittest.TestCase):
 
