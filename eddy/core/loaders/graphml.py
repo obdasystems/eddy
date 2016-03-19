@@ -276,7 +276,7 @@ class GraphmlLoader(AbstractLoader):
                             elif target.item is Item.RangeRestrictionNode:
                                 meta.inverseFunctionality = True
                         elif source.item is Item.AttributeNode:
-                             if target.item is Item.DomainRestrictionNode:
+                            if target.item is Item.DomainRestrictionNode:
                                 meta.functionality = True
                         self.scene.meta.add(meta.item, meta.predicate, meta)
                 data = data.nextSiblingElement('data')

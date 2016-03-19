@@ -146,10 +146,10 @@ class AbstractItem(QGraphicsItem):
 
     @abstractmethod
     def updateBrush(self, **kwargs):
-         """
-         Perform updates on pens and brushes needed by the paint() method.
-         """
-         pass
+        """
+        Perform updates on pens and brushes needed by the paint() method.
+        """
+        pass
 
     ####################################################################################################################
     #                                                                                                                  #

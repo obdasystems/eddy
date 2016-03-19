@@ -230,7 +230,7 @@ class ConceptNode(AbstractResizableNode):
             R.setRight(toX)
             R.setTop(toY)
 
-             ## CLAMP SIZE
+            ## CLAMP SIZE
             if R.width() < minBoundW:
                 D.setX(D.x() + minBoundW - R.width())
                 R.setRight(R.right() + minBoundW - R.width())
@@ -253,7 +253,7 @@ class ConceptNode(AbstractResizableNode):
             D.setX(toX - fromX)
             R.setLeft(toX)
 
-             ## CLAMP SIZE
+            ## CLAMP SIZE
             if R.width() < minBoundW:
                 D.setX(D.x() - minBoundW + R.width())
                 R.setLeft(R.left() - minBoundW + R.width())
