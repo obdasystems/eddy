@@ -18,6 +18,10 @@ python:
 before_install:
   - ./scripts/configure-travis.sh
 
+## Skip install step
+install:
+  true
+
 ## Run automated tests using nose
 script:
   - nosetests --where=tests --verbosity=3 --with-cov --cov eddy --cov-report term-missing --cov-config .coveragerc
