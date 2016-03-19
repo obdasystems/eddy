@@ -47,7 +47,7 @@ sudo apt-get install mercurial
 source /opt/qt55/bin/qt55-env.sh
 
 # Install OracleJDK8
-sudo add-apt-repository ppa:webupd8team/java
+sudo add-apt-repository ppa:webupd8team/java -y
 sudo apt-get update
 sudo apt-get install oracle-java8-installer
 sudo apt-get install oracle-java8-set-default
