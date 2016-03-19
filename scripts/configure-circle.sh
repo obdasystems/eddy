@@ -44,7 +44,7 @@ sudo apt-add-repository ppa:beineri/opt-qt551 -y
 sudo apt-get update
 sudo apt-get install qt-latest
 sudo apt-get install mercurial
-echo "source /opt/qt55/bin/qt55-env.sh" >> ~/.circlerc
+source /opt/qt55/bin/qt55-env.sh
 
 # Install Sip
 curl -L -o "${BUILDS_DIR}/sip.tar.gz" "http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.tar.gz"
