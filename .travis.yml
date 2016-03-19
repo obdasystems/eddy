@@ -29,3 +29,12 @@ script:
 # Report tests coverage
 after_success:
   - coveralls
+
+# Setup notifications
+notifications:
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/aafeec4156a7fb26ef0c
+    on_success: always  # options: [always|never|change] default: always
+    on_failure: change  # options: [always|never|change] default: always
+    on_start: never     # default: never
