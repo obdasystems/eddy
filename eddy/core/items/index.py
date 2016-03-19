@@ -81,7 +81,7 @@ class ItemIndex(QObject):
                 key = item.text()
                 if item.item not in self.nodesByName:
                     self.nodesByName[item.item] = {}
-                if not key in self.nodesByName[item.item]:
+                if key not in self.nodesByName[item.item]:
                     self.nodesByName[item.item][key] = set()
                 self.nodesByName[item.item][key].add(item)
 

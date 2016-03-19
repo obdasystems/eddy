@@ -448,7 +448,7 @@ class OWLExporter(AbstractExporter):
 
             collection = []
             for x in [self.scene.edge(i).other(node) for i in node.inputs]:
-                if not x.item is Item.IndividualNode:
+                if x.item is not Item.IndividualNode:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(x))
                 collection.append(self.buildIndividual(x))
 
@@ -554,7 +554,7 @@ class OWLExporter(AbstractExporter):
                 raise MalformedDiagramError(node, 'missing operand(s)')
             collection = self.LinkedList()
             for x in [self.scene.edge(i).other(node) for i in node.inputs]:
-                if not x.item in {Item.RoleNode, Item.RoleInverseNode}:
+                if x.item not in {Item.RoleNode, Item.RoleInverseNode}:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(x))
                 elif x.item is Item.RoleNode:
                     collection.add(self.buildRole(x))
