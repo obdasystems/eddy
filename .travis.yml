@@ -14,6 +14,11 @@ language:
 python:
   - 3.4
 
+## Test only master branch
+branches:
+  only:
+    - master
+
 ## Prepare build environment
 before_install:
   - ./scripts/configure-travis.sh
