@@ -7,6 +7,12 @@ machine:
     version:
       oraclejdk8
 
+## Test only master branch
+general:
+  branches:
+    only:
+      - master
+
 ## Prepare build environment
 dependencies:
   override:
