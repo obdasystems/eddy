@@ -34,7 +34,7 @@
 
 from PyQt5.QtCore import QObject
 
-from eddy.core.datatypes import Item
+from eddy.core.datatypes.graphol import Item
 
 from eddy.ui.properties.nodes import NodeProperty, PredicateNodeProperty, EditableNodeProperty
 from eddy.ui.properties.nodes import OrderedInputNodeProperty
@@ -68,7 +68,7 @@ class PropertyFactory(QObject):
                     window = EditableNodeProperty(scene=scene, node=node)
                 else:
                     window = PredicateNodeProperty(scene=scene, node=node)
-            elif node.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
+            elif node.type() in {Item.RoleChainNode, Item.PropertyAssertionNode}:
                 window = OrderedInputNodeProperty(scene=scene, node=node)
             else:
                 window = NodeProperty(scene=scene, node=node)

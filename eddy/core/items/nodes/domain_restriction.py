@@ -35,7 +35,7 @@
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QBrush
 
-from eddy.core.datatypes import Item, Identity, Restriction
+from eddy.core.datatypes.graphol import Item, Identity, Restriction
 from eddy.core.items.nodes.common.restriction import RestrictionNode
 from eddy.core.qt import Font
 
@@ -44,8 +44,8 @@ class DomainRestrictionNode(RestrictionNode):
     """
     This class implements the 'Domain Restriction' node.
     """
-    identities = {Identity.Concept}
-    item = Item.DomainRestrictionNode
+    Identities = {Identity.Concept}
+    Type = Item.DomainRestrictionNode
 
     def __init__(self, brush=None, **kwargs):
         """
@@ -54,11 +54,9 @@ class DomainRestrictionNode(RestrictionNode):
         """
         super().__init__(brush=QBrush(QColor(252, 252, 252)), **kwargs)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   PROPERTIES
+    #################################
 
     @property
     def identity(self):
@@ -82,18 +80,21 @@ class DomainRestrictionNode(RestrictionNode):
         Tells whether this node expresses a qualified restriction.
         :rtype: bool
         """
-        f1 = lambda x: x.isItem(Item.InputEdge) and x.target is self
+        f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity in {Identity.Concept, Identity.Role}
+        f3 = lambda x: x.identity in {Identity.Attribute, Identity.ValueDomain}
         if self.restriction in {Restriction.Cardinality, Restriction.Exists, Restriction.Forall}:
-            if len([n for n in [e.other(self) for e in self.edges if f1(e)] if f2(n)]) >= 2:
+            if len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) >= 2:
+                # Role qualified restriction => Role + Concept
+                return True
+            if len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) >= 2:
+                # Attribute qualified restriction => Attribute + ValueDomain
                 return True
         return False
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
     @classmethod
     def image(cls, **kwargs):

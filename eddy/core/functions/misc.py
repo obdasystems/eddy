@@ -57,6 +57,45 @@ def clamp(val, minval=None, maxval=None):
     return val
 
 
+def cutL(text, *args):
+    """
+    Removes from 'text' all the given starting prefixes.
+    :type text: str
+    :type args: list
+    :rtype: str
+    """
+    for token in args:
+        if token and text.startswith(token):
+            return text[len(token)+1:]
+    return text
+
+
+def cutR(text, *args):
+    """
+    Removes from 'text' all the given ending suffixes.
+    :type text: str
+    :type args: list
+    :rtype: str
+    """
+    for token in args:
+        if token and text.endswith(token):
+            text = text[:-len(token)]
+    return text
+
+
+def first(iterable, default=None):
+    """
+    Returns the first element of iterable if it exists, otherwise it returns the given default.
+    :type iterable: T <= list | tuple | set | generator
+    :type default: any
+    :rtype: mixed
+    """
+    if iterable:
+        for item in iterable:
+            return item
+    return default
+
+
 def isEmpty(string):
     """
     Safely detect whether the given string is empty.
@@ -73,31 +112,6 @@ def isQuoted(string):
     :rtype: bool
     """
     return RE_QUOTED.match(string) is not None
-
-
-def cutL(text, cut):
-    """
-    Remove 'cut' from 'text' if found as starting prefix.
-    :type text: str
-    :type cut: str
-    :rtype: str
-    """
-    if text.startswith(cut):
-        return text[len(cut)+1:]
-    return text
-
-
-def first(iterable, default=None):
-    """
-    Returns the first element of iterable if it exists, otherwise it returns the given default.
-    :type iterable: T <= list | tuple | set | generator
-    :type default: any
-    :rtype: mixed
-    """
-    if iterable:
-        for item in iterable:
-            return item
-    return default
 
 
 def partition(predicate, iterable):
@@ -123,18 +137,6 @@ def rangeF(start, stop, step):
     while x < stop:
         yield x
         x = round(x + step, 4)
-
-
-def cutR(text, cut):
-    """
-    Remove 'cut' from 'text' if found as ending suffix.
-    :type text: str
-    :type cut: str
-    :rtype: str
-    """
-    if text.endswith(cut):
-        return text[:-len(cut)]
-    return text
 
 
 def shaded(pixmap, opacity=0.25):

@@ -36,7 +36,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout
 from PyQt5.QtWidgets import QDialogButtonBox, QTabWidget, QFormLayout
 
-from eddy.core.functions import connect
+from eddy.core.functions.signals import connect
 from eddy.ui.fields import SpinBox
 
 
@@ -59,10 +59,11 @@ class PreferencesDialog(QDialog):
         #                                                                                                              #
         ################################################################################################################
 
+        # TODO: GET FROM SETTINGS
         self.diagramSizeF = SpinBox(self)
         self.diagramSizeF.setRange(2000, 1000000)
         self.diagramSizeF.setSingleStep(100)
-        self.diagramSizeF.setValue(self.mainwindow.diagramSize)
+        self.diagramSizeF.setValue('')
 
         self.editorWidget = QWidget()
         self.editorLayout = QFormLayout(self.editorWidget)
@@ -114,10 +115,11 @@ class PreferencesDialog(QDialog):
     #                                                                                                                  #
     ####################################################################################################################
 
+    # TODO: SAVE ON SETTINGS
     def completed(self, code):
         """
         Executed when the dialog is terminated.
         :type code: int
         """
         if code == PreferencesDialog.Accepted:
-            self.mainwindow.diagramSize = self.diagramSizeF.value()
+            pass

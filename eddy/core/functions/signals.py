@@ -37,11 +37,13 @@ from functools import partial
 
 def connect(signal, slot, *args, **kwargs):
     """
-    Connect the given signal to the specified slots passing all arguments to the slot.
-    Note that this function make use of functools.partial to hand parameters over to the function slot.
-    This is actually highly discouraged because the the function slot will be treated as a normal python function,
-    losing all the properties of Qt slot. Whenever it's possible make use of self.sender() to retrieve the action
-    executing the slot execution, and action.data() to retrieve function slot's parameters (previously set with setData)
+    Connect the given signal to the specified slots passing all arguments
+    to the slot. Note that this function make use of functools.partial to
+    hand parameters over to the function slot. This is actually highly
+    discouraged because the the function slot will be treated as a normal
+    python callable, losing all the properties of PyQt slots. Whenever it's
+    possible make use of self.sender() to retrieve the action executing the
+    slot execution, and action.data() to retrieve function slot's parameters.
     :type signal: pyqtSignal
     :type slot: callable
     :type args: mixed
@@ -70,3 +72,17 @@ def disconnect(signal, *args):
             signal.disconnect()
         except (RuntimeError, TypeError, AttributeError):
             pass
+
+
+def emit(signal, *args):
+    """
+    Emit the given signal passing the given arguments along.
+    This function is actually just a wrapper around the pyqtSignal
+    built-in, mostly needed to keep backwards compatibility in case
+    PyQt changes the signal interface, like it happened already with
+    the introduction of the new style for signals and slots introduced
+    in PyQt4 v4.5.
+    :type signal: pyqtSignal
+    :type args: list
+    """
+    signal.emit(*args)

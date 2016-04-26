@@ -32,117 +32,15 @@
 ##########################################################################
 
 
-import os
 import sys
 
 from enum import unique, Enum
-from types import DynamicClassAttribute
-
-from PyQt5.QtCore import QObject
-
-from eddy.core.functions.system import expandPath
-
-
-class File(QObject):
-    """
-    This class is used to manage Files.
-    """
-    def __init__(self, path=None, parent=None):
-        """
-        Initialize the File.
-        :type path: str
-        :type parent: QObject
-        """
-        super().__init__(parent)
-        self._path = expandPath(path) if path else None
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @property
-    def edited(self):
-        """
-        Returns the timestamp when the file has been last modified.
-        :rtype: int
-        """
-        if self.exists():
-            return os.path.getmtime(self.path)
-        return 0
-
-    @property
-    def path(self):
-        """
-        Returns the path of the File.
-        :rtype: str
-        """
-        return self._path
-
-    @path.setter
-    def path(self, path):
-        """
-        Set the path of the File.
-        :type path: str.
-        """
-        self._path = expandPath(path)
-
-    @property
-    def name(self):
-        """
-        Returns the name of the File.
-        :rtype: str
-        """
-        if not self.path:
-            return 'Untitled'
-        return os.path.basename(os.path.normpath(self.path))
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def exists(self):
-        """
-        Tells whether the file exists.
-        :rtype: bool
-        """
-        return self.path and os.path.isfile(self.path)
-
-    def read(self, path=None):
-        """
-        Read the content of 'path' returning it as a 'string'.
-        :type path: str
-        :rtype: str
-        """
-        path = path or self.path
-        with open(path, 'r') as file:
-            return file.read()
-
-    def write(self, string, path=None):
-        """
-        Write the content of 'string' in 'path'.
-        :type string: str
-        :type path: str
-        """
-        path = path or self.path
-        temp = expandPath('@home/.{}'.format(os.path.basename(os.path.normpath(path))))
-
-        with open(temp, mode='wb') as file:
-            file.write(string.encode(encoding='UTF-8'))
-
-        if os.path.isfile(path):
-            os.remove(path)
-        os.rename(temp, path)
-        self.path = path
 
 
 @unique
-class Filetype(Enum):
+class File(Enum):
     """
-    This class defines all the available file types supported for graphol document export.
+    This class defines supported filetypes.
     """
     __order__ = 'Graphml Graphol Owl Pdf'
 
@@ -152,28 +50,40 @@ class Filetype(Enum):
     Pdf = 'PDF (*.pdf)'
 
     @classmethod
+    def forPath(cls, path):
+        """
+        Returns the File matching the given path.
+        :type path: str
+        :rtype: File
+        """
+        for x in cls:
+            if path.endswith(x.extension):
+                return x
+        return None
+
+    @classmethod
     def forValue(cls, value):
         """
-        Returns the filetype matching the given value.
+        Returns the File matching the given value.
         :type value: str
-        :rtype: Filetype
+        :rtype: File
         """
         for x in cls:
             if x.value == value:
                 return x
         return None
 
-    @DynamicClassAttribute
+    @property
     def extension(self):
         """
         The extension associated with the Enum member.
         :rtype: str
         """
         return {
-            Filetype.Graphml: '.graphml',
-            Filetype.Graphol: '.graphol',
-            Filetype.Owl: '.owl',
-            Filetype.Pdf: '.pdf'
+            File.Graphml: '.graphml',
+            File.Graphol: '.graphol',
+            File.Owl: '.owl',
+            File.Pdf: '.pdf'
         }[self]
 
 

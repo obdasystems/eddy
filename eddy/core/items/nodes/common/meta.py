@@ -32,85 +32,10 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject
 
-from eddy.core.datatypes import Item
-from eddy.core.functions import isEmpty
-
-
-class PredicateMetaIndex(QObject):
-    """
-    This class is used to index predicate metadata.
-    """
-    sgnCleared = pyqtSignal()
-    sgnPredicateAdded = pyqtSignal(Item, str)
-    sgnPredicateRemoved = pyqtSignal(Item, str)
-
-    def __init__(self, parent=None):
-        """
-        Initialize the metadata index.
-        :type parent: QObject
-        """
-        super().__init__(parent)
-        self.index = {}
-        self.metaFactory = MetaFactory(self)
-
-    def add(self, item, predicate, metadata):
-        """
-        Insert predicate metadata in the index.
-        :type item: Item
-        :type predicate: str
-        :type metadata: PredicateMetaData
-        """
-        if item not in self.index:
-            self.index[item] = {}
-        self.index[item][predicate] = metadata
-        self.sgnPredicateAdded.emit(item, predicate)
-
-    def clear(self):
-        """
-        Clear the metadata index.
-        """
-        self.index.clear()
-        self.sgnCleared.emit()
-
-    def entries(self):
-        """
-        Returns a list of pairs 'item', 'predicate' for all the elements in the index.
-        :rtype: generator
-        """
-        return ((k1, k2) for k1 in self.index.keys() for k2 in self.index[k1].keys())
-
-    def metaFor(self, item, predicate):
-        """
-        Returns predicate metadata.
-        :type item: Item
-        :type predicate: str
-        :rtype: PredicateMetaData
-        """
-        try:
-            return self.index[item][predicate]
-        except KeyError:
-            return self.metaFactory.create(item, predicate)
-
-    def remove(self, item, predicate):
-        """
-        Remove predicate metadata from the index.
-        :type item: Item
-        :type predicate: str
-        """
-        if item in self.index:
-            self.index[item].pop(predicate, None)
-            if not self.index[item]:
-                del self.index[item]
-        self.sgnPredicateRemoved.emit(item, predicate)
-
-
-########################################################################################################################
-#                                                                                                                      #
-#   FACTORY IMPLEMENTATION                                                                                             #
-#                                                                                                                      #
-########################################################################################################################
+from eddy.core.datatypes.graphol import Item
+from eddy.core.functions.misc import isEmpty
 
 
 class MetaFactory(QObject):
@@ -139,13 +64,6 @@ class MetaFactory(QObject):
         return PredicateMetaData(item, predicate)
 
 
-########################################################################################################################
-#                                                                                                                      #
-#   PREDICATE METADATA CONTAINERS                                                                                      #
-#                                                                                                                      #
-########################################################################################################################
-
-
 class PredicateMetaData(QObject):
     """
     This class implements the basic predicate node metadata container.
@@ -158,16 +76,14 @@ class PredicateMetaData(QObject):
         :type parent: QObject
         """
         super().__init__(parent)
-        self._item = item
-        self._predicate = predicate
-        self._description = ''
-        self._url = ''
+        self.item = item
+        self.predicate = predicate
+        self.description = ''
+        self.url = ''
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
     def copy(self):
         """
@@ -177,74 +93,6 @@ class PredicateMetaData(QObject):
         meta.description = self.description
         meta.url = self.url
         return meta
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
-    
-    @property
-    def item(self):
-        """
-        Returns the item type of the predicate.
-        :rtype: Item
-        """
-        return self._item
-    
-    @property
-    def description(self):
-        """
-        Returns the description of the predicate.
-        :rtype: str
-        """
-        return self._description
-
-    @description.setter
-    def description(self, description):
-        """
-        Set the description of the predicate.
-        :type description: str
-        """
-        self._description = description.strip()
-
-    @property
-    def predicate(self):
-        """
-        Returns the predicate identifier.
-        :rtype: str
-        """
-        return self._predicate
-
-    @predicate.setter
-    def predicate(self, predicate):
-        """
-        Set the identifier of the predicate.
-        :type predicate: str
-        """
-        self._predicate = predicate.strip()
-
-    @property
-    def url(self):
-        """
-        Returns the URL of the predicate.
-        :rtype: str
-        """
-        return self._url
-
-    @url.setter
-    def url(self, url):
-        """
-        Set the URL of the predicate.
-        :type url: str
-        """
-        self._url = url.strip()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   MAGIC METHODS                                                                                                  #
-    #                                                                                                                  #
-    ####################################################################################################################
 
     def __bool__(self):
         """
@@ -290,13 +138,11 @@ class AttributeMetaData(PredicateMetaData):
         :type parent: QObject
         """
         super().__init__(item, predicate, parent)
-        self.functionality = False
+        self.functional = False
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
     def copy(self):
         """
@@ -304,15 +150,9 @@ class AttributeMetaData(PredicateMetaData):
         """
         meta = AttributeMetaData(self.item, self.predicate)
         meta.description = self.description
+        meta.functional = self.functional
         meta.url = self.url
-        meta.functionality = self.functionality
         return meta
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   MAGIC METHODS                                                                                                  #
-    #                                                                                                                  #
-    ####################################################################################################################
 
     def __bool__(self):
         """
@@ -330,8 +170,8 @@ class AttributeMetaData(PredicateMetaData):
         if isinstance(other, AttributeMetaData):
             return self.url == other.url and \
                    self.description == other.description and \
-                   self.predicate == other.predicate and \
-                   self.functionality == other.functionality
+                   self.functional == other.functional and \
+                   self.predicate == other.predicate
         return False
 
     def __ne__(self, other):
@@ -343,8 +183,8 @@ class AttributeMetaData(PredicateMetaData):
         if isinstance(other, AttributeMetaData):
             return self.url != other.url or \
                    self.description != other.description or \
-                   self.predicate != other.predicate or \
-                   self.functionality != other.functionality
+                   self.functional != other.functional or \
+                   self.predicate != other.predicate
         return True
 
 
@@ -360,41 +200,33 @@ class RoleMetaData(PredicateMetaData):
         :type parent: QObject
         """
         super().__init__(item, predicate, parent)
-        self.asymmetry = False
-        self.functionality = False
-        self.inverseFunctionality = False
-        self.irreflexivity = False
-        self.reflexivity = False
-        self.symmetry = False
-        self.transitivity = False
+        self.asymmetric = False
+        self.functional = False
+        self.inverseFunctional = False
+        self.irreflexive = False
+        self.reflexive = False
+        self.symmetric = False
+        self.transitive = False
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
     def copy(self):
         """
         Returns a copy of this predicate metadata.
         """
         meta = RoleMetaData(self.item, self.predicate)
+        meta.asymmetric = self.asymmetric
         meta.description = self.description
+        meta.functional = self.functional
+        meta.inverseFunctional = self.inverseFunctional
+        meta.irreflexive = self.irreflexive
+        meta.reflexive = self.reflexive
+        meta.symmetric = self.symmetric
+        meta.transitive = self.transitive
         meta.url = self.url
-        meta.asymmetry = self.asymmetry
-        meta.functionality = self.functionality
-        meta.inverseFunctionality = self.inverseFunctionality
-        meta.irreflexivity = self.irreflexivity
-        meta.reflexivity = self.reflexivity
-        meta.symmetry = self.symmetry
-        meta.transitivity = self.transitivity
         return meta
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   MAGIC METHODS                                                                                                  #
-    #                                                                                                                  #
-    ####################################################################################################################
 
     def __bool__(self):
         """
@@ -413,13 +245,13 @@ class RoleMetaData(PredicateMetaData):
             return self.url == other.url and \
                    self.description == other.description and \
                    self.predicate == other.predicate and \
-                   self.asymmetry == other.asymmetry and \
-                   self.functionality == other.functionality and \
-                   self.inverseFunctionality == other.inverseFunctionality and \
-                   self.irreflexivity == other.irreflexivity and \
-                   self.reflexivity == other.reflexivity and \
-                   self.symmetry == other.symmetry and \
-                   self.transitivity == other.transitivity
+                   self.asymmetric == other.asymmetric and \
+                   self.functional == other.functional and \
+                   self.inverseFunctional == other.inverseFunctional and \
+                   self.irreflexive == other.irreflexive and \
+                   self.reflexive == other.reflexive and \
+                   self.symmetric == other.symmetric and \
+                   self.transitive == other.transitive
         return False
 
     def __ne__(self, other):
@@ -432,11 +264,11 @@ class RoleMetaData(PredicateMetaData):
             return self.url != other.url or \
                    self.description != other.description or \
                    self.predicate != other.predicate or \
-                   self.asymmetry != other.asymmetry or \
-                   self.functionality != other.functionality or \
-                   self.inverseFunctionality != other.inverseFunctionality or \
-                   self.irreflexivity != other.irreflexivity or \
-                   self.reflexivity != other.reflexivity or \
-                   self.symmetry != other.symmetry or \
-                   self.transitivity != other.transitivity
+                   self.asymmetric != other.asymmetric or \
+                   self.functional != other.functional or \
+                   self.inverseFunctional != other.inverseFunctional or \
+                   self.irreflexive != other.irreflexive or \
+                   self.reflexive != other.reflexive or \
+                   self.symmetric != other.symmetric or \
+                   self.transitive != other.transitive
         return True

@@ -35,15 +35,13 @@
 from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import QMenu
 
-from eddy.core.datatypes import Item, Identity, Restriction
-from eddy.core.functions import first
-from eddy.core.items import EnumerationNode, DisjointUnionNode, IntersectionNode
-from eddy.core.items import RoleChainNode, RoleInverseNode, UnionNode, ComplementNode
+from eddy.core.datatypes.graphol import Item, Identity, Restriction
+from eddy.core.functions.misc import first
 
 
 class MenuFactory(QObject):
     """
-    This class can be used to produce DiagramScene items menus.
+    This class can be used to produce diagram items contextual menus.
     """
     def __init__(self, parent=None):
         """
@@ -52,11 +50,9 @@ class MenuFactory(QObject):
         """
         super().__init__(parent)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SCENE                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   DIAGRAM
+    #################################
 
     @staticmethod
     def buildDiagramSceneMenu(mainwindow, scene):
@@ -74,11 +70,9 @@ class MenuFactory(QObject):
         menu.addAction(mainwindow.actionOpenSceneProperties)
         return menu
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   EDGES                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   EDGES
+    #################################
 
     @staticmethod
     def buildGenericEdgeMenu(mainwindow, scene, edge, pos):
@@ -150,7 +144,7 @@ class MenuFactory(QObject):
         return menu
 
     @staticmethod
-    def buildInstanceOfEdgeMenu(mainwindow, scene, edge, pos):
+    def buildMembershipEdgeMenu(mainwindow, scene, edge, pos):
         """
         Build and return a QMenu instance for InstanceOf edges.
         :type mainwindow: MainWindow
@@ -170,11 +164,9 @@ class MenuFactory(QObject):
             menu.addAction(mainwindow.actionDelete)
         return menu
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   NODES                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   NODES
+    #################################
 
     @staticmethod
     def buildGenericNodeMenu( mainwindow, scene, node):
@@ -238,13 +230,13 @@ class MenuFactory(QObject):
 
         if node.edges:
 
-            switch = {ComplementNode}
+            switch = {Item.ComplementNode}
             if node.identity is Identity.Role:
-                switch |= {RoleChainNode, RoleInverseNode}
+                switch |= {Item.RoleChainNode, Item.RoleInverseNode}
             else:
-                switch |= {DisjointUnionNode, IntersectionNode, UnionNode}
+                switch |= {Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode}
 
-            for action in mainwindow.actionsSwitchOperatorNode:
+            for action in mainwindow.actionsSwitchOperator:
                 action.setVisible(action.data() in switch)
 
         return menu
@@ -299,8 +291,8 @@ class MenuFactory(QObject):
         """
         menu = self.buildOperatorNodeMenu(mainwindow, scene, node)
         if node.edges:
-            for action in mainwindow.actionsSwitchOperatorNode:
-                action.setVisible(action.data() in {DisjointUnionNode, IntersectionNode, UnionNode})
+            for action in mainwindow.actionsSwitchOperator:
+                action.setVisible(action.data() in {Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode})
         return menu
 
     def buildDomainRestrictionNodeMenu(self, mainwindow, scene, node):
@@ -315,7 +307,7 @@ class MenuFactory(QObject):
         menu.addSeparator()
         menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRestrictionChange)
 
-        f1 = lambda x: x.isItem(Item.InputEdge)
+        f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity is Identity.Attribute
 
         qualified = node.qualified
@@ -348,17 +340,18 @@ class MenuFactory(QObject):
 
         if node.edges:
 
-            if [e for e in node.edges if e.isItem(Item.InputEdge) and e.target is node]:
+            if [e for e in node.edges if e.type() is Item.InputEdge and e.target is node]:
                 # If we have input edges targeting the node keep only the Enumeration action
                 # active: individuals can be connected only to Enumeration nodes and Link, so
                 # switching to another operator would be an error.
-                for action in mainwindow.actionsSwitchOperatorNode:
-                    action.setVisible(action.data() is EnumerationNode)
-            elif [e for e in node.edges if e.isItem(Item.InclusionEdge)]:
+                for action in mainwindow.actionsSwitchOperator:
+                    action.setVisible(action.data() is Item.EnumerationNode)
+            elif [e for e in node.edges if e.type() is Item.InclusionEdge]:
                 # We have inclusion edges attached to this edge but no input => allow switching to
                 # operators that can be identified using the identities declared by this very node.
-                for action in mainwindow.actionsSwitchOperatorNode:
-                    action.setVisible(action.data() in {DisjointUnionNode, EnumerationNode, IntersectionNode, UnionNode})
+                for action in mainwindow.actionsSwitchOperator:
+                    action.setVisible(action.data() in {Item.DisjointUnionNode, Item.EnumerationNode,
+                                                        Item.IntersectionNode, Item.UnionNode})
 
         return menu
 
@@ -373,20 +366,20 @@ class MenuFactory(QObject):
         menu = self.buildGenericNodeMenu(mainwindow, scene, node)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeChangeBrush)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetIndividualNodeAs)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetIndividualAs)
 
         ##################################
-        ## BEGIN CONSTRAIN IDENTITY SWITCH
+        # BEGIN CONSTRAIN IDENTITY SWITCH
         ##################################
 
         I = True
         V = True
 
-        f1 = lambda x: x.isItem(Item.InputEdge)
-        f2 = lambda x: x.isItem(Item.EnumerationNode)
-        f3 = lambda x: x.isItem(Item.IndividualNode)
-        f4 = lambda x: x.isItem(Item.PropertyAssertionNode)
-        f5 = lambda x: x.isItem(Item.InstanceOfEdge)
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.type() is Item.EnumerationNode
+        f3 = lambda x: x.type() is Item.IndividualNode
+        f4 = lambda x: x.type() is Item.PropertyAssertionNode
+        f5 = lambda x: x.type() is Item.MembershipEdge
         f6 = lambda x: x.identity in {Identity.Attribute, Identity.Role}
 
         enumeration = first(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
@@ -407,11 +400,11 @@ class MenuFactory(QObject):
                     I = I and (node.identity is Identity.Instance or num < 2)
                     V = V and (node.identity is Identity.Value or num < 2)
 
-        for a in mainwindow.actionsSetIndividualNodeAs:
+        for a in mainwindow.actionsSetIndividualAs:
             a.setVisible(a.data() is Identity.Instance and I or a.data() is Identity.Value and V)
 
         ################################
-        ## END CONSTRAIN IDENTITY SWITCH
+        # END CONSTRAIN IDENTITY SWITCH
         ################################
 
         # Append label specific actions.
@@ -434,8 +427,8 @@ class MenuFactory(QObject):
         """
         menu = self.buildOperatorNodeMenu(mainwindow, scene, node)
         if node.edges:
-            for action in mainwindow.actionsSwitchOperatorNode:
-                action.setVisible(action.data() in {DisjointUnionNode, IntersectionNode, UnionNode})
+            for action in mainwindow.actionsSwitchOperator:
+                action.setVisible(action.data() in {Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode})
         return menu
 
     def buildOperatorNodeMenu(self, mainwindow, scene, node):
@@ -448,13 +441,10 @@ class MenuFactory(QObject):
         """
         menu = self.buildGenericNodeMenu(mainwindow, scene, node)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuOperatorNodeSwitch)
-
-        # Check the currently active operator type.
-        for action in mainwindow.actionsSwitchOperatorNode:
-            action.setChecked(isinstance(node, action.data()))
-            action.setVisible(True)
-
         menu.insertSeparator(mainwindow.actionOpenNodeProperties)
+        for action in mainwindow.actionsSwitchOperator:
+            action.setChecked(node.type() is action.data())
+            action.setVisible(True)
         return menu
 
     def buildPropertyAssertionNodeMenu(self, mainwindow, scene, node):
@@ -477,7 +467,7 @@ class MenuFactory(QObject):
         """
         menu = self.buildGenericNodeMenu(mainwindow, scene, node)
 
-        f1 = lambda x: x.isItem(Item.InputEdge)
+        f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity is Identity.Attribute
 
         # Allow to change the restriction type only if it's not an Attribute range restriction.
@@ -536,8 +526,8 @@ class MenuFactory(QObject):
         """
         menu = self.buildOperatorNodeMenu(mainwindow, scene, node)
         if node.edges:
-            for action in mainwindow.actionsSwitchOperatorNode:
-                action.setVisible(action.data() in {ComplementNode, RoleChainNode, RoleInverseNode})
+            for action in mainwindow.actionsSwitchOperator:
+                action.setVisible(action.data() in {Item.ComplementNode, Item.RoleChainNode, Item.RoleInverseNode})
         return menu
 
     def buildRoleChainNodeMenu(self, mainwindow, scene, node):
@@ -549,15 +539,12 @@ class MenuFactory(QObject):
         :rtype: QMenu
         """
         menu = self.buildOperatorNodeMenu(mainwindow, scene, node)
-
         if node.edges:
-
-            switch = {ComplementNode, RoleChainNode, RoleInverseNode}
-            if len([e for e in node.edges if e.isItem(Item.InputEdge) and e.target is node]) > 1:
-                switch = {RoleChainNode}
-            for action in mainwindow.actionsSwitchOperatorNode:
+            switch = {Item.ComplementNode, Item.RoleChainNode, Item.RoleInverseNode}
+            if len([e for e in node.edges if e.type() is Item.InputEdge and e.target is node]) > 1:
+                switch = {Item.RoleChainNode}
+            for action in mainwindow.actionsSwitchOperator:
                 action.setVisible(action.data() in switch)
-
         return menu
 
     def buildUnionNodeMenu(self, mainwindow, scene, node):
@@ -570,8 +557,8 @@ class MenuFactory(QObject):
         """
         menu = self.buildOperatorNodeMenu(mainwindow, scene, node)
         if node.edges:
-            for action in mainwindow.actionsSwitchOperatorNode:
-                action.setVisible(action.data() in {DisjointUnionNode, IntersectionNode, UnionNode})
+            for action in mainwindow.actionsSwitchOperator:
+                action.setVisible(action.data() in {Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode})
         return menu
 
     def buildValueDomainNodeMenu(self, mainwindow, scene, node):
@@ -635,11 +622,9 @@ class MenuFactory(QObject):
             collection.append(mainwindow.actionResetTextPosition)
         return collection
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   FACTORY                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   FACTORY
+    #################################
 
     def create(self, mainwindow, scene, item, pos=None):
         """
@@ -654,53 +639,53 @@ class MenuFactory(QObject):
             return self.buildDiagramSceneMenu(mainwindow, scene)
 
         ## NODES
-        if item.isItem(Item.AttributeNode):
+        if item.type() is Item.AttributeNode:
             return self.buildAttributeNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.ComplementNode):
+        if item.type() is Item.ComplementNode:
             return self.buildComplementNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.ConceptNode):
+        if item.type() is Item.ConceptNode:
             return self.buildConceptNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.DatatypeRestrictionNode):
+        if item.type() is Item.DatatypeRestrictionNode:
             return self.buildDatatypeRestrictionNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.DisjointUnionNode):
+        if item.type() is Item.DisjointUnionNode:
             return self.buildDisjointUnionNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.DomainRestrictionNode):
+        if item.type() is Item.DomainRestrictionNode:
             return self.buildDomainRestrictionNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.EnumerationNode):
+        if item.type() is Item.EnumerationNode:
             return self.buildEnumerationNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.IndividualNode):
+        if item.type() is Item.IndividualNode:
             return self.buildIndividualNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.IntersectionNode):
+        if item.type() is Item.IntersectionNode:
             return self.buildIntersectionNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.PropertyAssertionNode):
+        if item.type() is Item.PropertyAssertionNode:
             return self.buildPropertyAssertionNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.RangeRestrictionNode):
+        if item.type() is Item.RangeRestrictionNode:
             return self.buildRangeRestrictionNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.RoleNode):
+        if item.type() is Item.RoleNode:
             return self.buildRoleNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.RoleInverseNode):
+        if item.type() is Item.RoleInverseNode:
             return self.buildRoleInverseNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.RoleChainNode):
+        if item.type() is Item.RoleChainNode:
             return self.buildRoleChainNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.UnionNode):
+        if item.type() is Item.UnionNode:
             return self.buildUnionNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.ValueDomainNode):
+        if item.type() is Item.ValueDomainNode:
             return self.buildValueDomainNodeMenu(mainwindow, scene, item)
-        if item.isItem(Item.ValueRestrictionNode):
+        if item.type() is Item.ValueRestrictionNode:
             return self.buildValueRestrictionNodeMenu(mainwindow, scene, item)
 
         ## EDGES
-        if item.isItem(Item.InclusionEdge):
+        if item.type() is Item.InclusionEdge:
             return self.buildInclusionEdgeMenu(mainwindow, scene, item, pos)
-        if item.isItem(Item.InputEdge):
+        if item.type() is Item.InputEdge:
             return self.buildInputEdgeMenu(mainwindow, scene, item, pos)
-        if item.isItem(Item.InstanceOfEdge):
-            return self.buildInstanceOfEdgeMenu(mainwindow, scene, item, pos)
+        if item.type() is Item.MembershipEdge:
+            return self.buildMembershipEdgeMenu(mainwindow, scene, item, pos)
 
         ## GENERIC
-        if item.node:
+        if item.isNode():
             return self.buildGenericNodeMenu(mainwindow, scene, item)
-        if item.edge:
+        if item.isEdge():
             return self.buildGenericEdgeMenu(mainwindow, scene, item, pos)
 
-        raise RuntimeError('could not create menu for {}'.format(item))
+        raise RuntimeError('could not create menu for {0}'.format(item))

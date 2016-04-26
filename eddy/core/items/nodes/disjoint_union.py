@@ -35,8 +35,7 @@
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QBrush
 
-from eddy.core.datatypes import Item, Identity
-from eddy.core.functions import identify
+from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.operator import OperatorNode
 
 
@@ -44,8 +43,8 @@ class DisjointUnionNode(OperatorNode):
     """
     This class implements the 'Disjoint Union' node.
     """
-    identities = {Identity.Concept, Identity.ValueDomain, Identity.Neutral}
-    item = Item.DisjointUnionNode
+    Identities = {Identity.Concept, Identity.ValueDomain, Identity.Neutral}
+    Type = Item.DisjointUnionNode
 
     def __init__(self, brush=None, **kwargs):
         """
@@ -55,11 +54,9 @@ class DisjointUnionNode(OperatorNode):
         self._identity = Identity.Neutral
         super().__init__(brush=QBrush(QColor(0, 0, 0)), **kwargs)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   PROPERTIES
+    #################################
 
     @property
     def identity(self):
@@ -75,91 +72,23 @@ class DisjointUnionNode(OperatorNode):
         Set the identity of the current node.
         :type identity: Identity
         """
-        if identity not in self.identities:
+        if identity not in self.Identities:
             identity = Identity.Unknown
         self._identity = identity
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
-    def addEdge(self, edge):
-        """
-        Add the given edge to the current node.
-        :type edge: AbstractEdge
-        """
-        super().addEdge(edge)
-        identify(self)
-
-    def copy(self, scene):
+    def copy(self, project):
         """
         Create a copy of the current item.
-        :type scene: DiagramScene
+        :type project: Project
         """
-        kwargs = {
-            'id': self.id,
-            'height': self.height(),
-            'width': self.width(),
-        }
-        node = scene.factory.create(item=self.item, scene=scene, **kwargs)
+        kwargs = {'id': self.id, 'height': self.height(), 'width': self.width()}
+        node = project.itemFactory.create(self.type(), **kwargs)
         node.setPos(self.pos())
         return node
-
-    def removeEdge(self, edge):
-        """
-        Remove the given edge from the current node.
-        :type edge: AbstractEdge
-        """
-        super().removeEdge(edge)
-        identify(self)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   LABEL SHORTCUTS                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def textPos(self):
-        """
-        Returns the current label position in item coordinates.
-        :rtype: QPointF
-        """
-        pass
-
-    def text(self):
-        """
-        Returns the label text.
-        :rtype: str
-        """
-        pass
-
-    def setTextPos(self, pos):
-        """
-        Set the label position.
-        :type pos: QPointF
-        """
-        pass
-
-    def setText(self, text):
-        """
-        Set the label text.
-        :type text: str
-        """
-        pass
-
-    def updateTextPos(self, *args, **kwargs):
-        """
-        Update the label position.
-        """
-        pass
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
 
     @classmethod
     def image(cls, **kwargs):
@@ -171,7 +100,7 @@ class DisjointUnionNode(OperatorNode):
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
-        polygon = cls.createPolygon(48, 30)
+        polygon = cls.createPolygon(46, 30)
         # ITEM SHAPE
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
@@ -179,3 +108,37 @@ class DisjointUnionNode(OperatorNode):
         painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
         painter.drawPolygon(polygon)
         return pixmap
+
+    def setText(self, text):
+        """
+        Set the label text.
+        :type text: str
+        """
+        pass
+
+    def setTextPos(self, pos):
+        """
+        Set the label position.
+        :type pos: QPointF
+        """
+        pass
+
+    def text(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        pass
+
+    def textPos(self):
+        """
+        Returns the current label position in item coordinates.
+        :rtype: QPointF
+        """
+        pass
+
+    def updateTextPos(self, *args, **kwargs):
+        """
+        Update the label position.
+        """
+        pass

@@ -37,17 +37,17 @@ from math import sin, cos, pi as M_PI
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QColor, QPainterPath
 
-from eddy.core.datatypes import Item
-from eddy.core.functions import midpoint, angle
-from eddy.core.items import LabelItem
+from eddy.core.datatypes.graphol import Item
+from eddy.core.functions.geometry import angle, midpoint
+from eddy.core.items.common import AbstractLabel
 from eddy.core.qt import Font
 
 
-class Label(LabelItem):
+class EdgeLabel(AbstractLabel):
     """
-    This class implements the label to be attached to the graph edges.
+    This class implements the label to be attached to the graphol edges.
     """
-    item = Item.LabelEdge
+    Type = Item.Label
 
     def __init__(self, text='', centered=True, parent=None):
         """
@@ -63,26 +63,9 @@ class Label(LabelItem):
         self.setText(text)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   GEOMETRY                                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def shape(self):
-        """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addRect(self.boundingRect())
-        return path
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
     def center(self):
         """
@@ -97,6 +80,17 @@ class Label(LabelItem):
         :rtype: int
         """
         return self.boundingRect().height()
+
+    def paint(self, painter, option, widget=None):
+        """
+        Paint the label in the graphic view.
+        :type painter: QPainter
+        :type option: QStyleOptionGraphicsItem
+        :type widget: QWidget
+        """
+        parent = self.parentItem()
+        if not parent.path.isEmpty():
+            super().paint(painter, option, widget)
 
     def pos(self):
         """
@@ -118,6 +112,15 @@ class Label(LabelItem):
         :type text: str
         """
         self.setPlainText(text)
+
+    def shape(self):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRect(self.boundingRect())
+        return path
 
     def text(self):
         """
@@ -190,20 +193,3 @@ class Label(LabelItem):
         :rtype: int
         """
         return self.boundingRect().width()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def paint(self, painter, option, widget=None):
-        """
-        Paint the label in the graphic view.
-        :type painter: QPainter
-        :type option: QStyleOptionGraphicsItem
-        :type widget: QWidget
-        """
-        parent = self.parentItem()
-        if not parent.path.isEmpty():
-            super().paint(painter, option, widget)

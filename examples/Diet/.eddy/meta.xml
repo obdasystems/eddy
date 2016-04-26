@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project version="1">
+  <ontology>
+    <iri>http://www.dis.uniroma1.it/~graphol/diet</iri>
+    <prefix>diet</prefix>
+  </ontology>
+  <predicates>
+    <predicate name="fat_mass_per_serve" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="mass_per_serve" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="name" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="code" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="water_mass_per_serve" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="carb_mass_per_serve" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="standard_serve_size" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="type" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="kilocalories" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="standard_serve_size_unit_of_measurement" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="date_of_birth" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="form" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="percentage" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="alchol_percentage" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="email" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="water_percentage" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="cholesterol_mass_per_server" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="sugar_mass_per_serve" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="sex" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="rated" type="role">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+      <inverseFunctional>0</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+    <predicate name="has" type="role">
+      <url></url>
+      <description></description>
+      <functional>0</functional>
+      <inverseFunctional>1</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+    <predicate name="won_by" type="role">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+      <inverseFunctional>0</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+    <predicate name="on" type="role">
+      <url></url>
+      <description></description>
+      <functional>0</functional>
+      <inverseFunctional>1</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+    <predicate name="seeks" type="role">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+      <inverseFunctional>0</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+    <predicate name="contains" type="role">
+      <url></url>
+      <description></description>
+      <functional>0</functional>
+      <inverseFunctional>1</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+  </predicates>
+</project>

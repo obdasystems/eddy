@@ -35,8 +35,8 @@
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QBrush
 
-from eddy.core.datatypes import DistinctList, Item, Identity
-from eddy.core.functions import identify
+from eddy.core.datatypes.collections import DistinctList
+from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.base import AbstractNode
 
 
@@ -44,8 +44,8 @@ class PropertyAssertionNode(AbstractNode):
     """
     This class implements the 'Property Assertion' node.
     """
-    identities = {Identity.RoleInstance, Identity.AttributeInstance, Identity.Neutral}
-    item = Item.PropertyAssertionNode
+    Identities = {Identity.RoleInstance, Identity.AttributeInstance, Identity.Neutral}
+    Type = Item.PropertyAssertionNode
 
     def __init__(self, width=52, height=30, brush=None, inputs=None, **kwargs):
         """
@@ -64,11 +64,9 @@ class PropertyAssertionNode(AbstractNode):
         self.background = self.createBackground(60, 38)
         self.selection = self.createSelection(60, 38)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   PROPERTIES
+    #################################
 
     @property
     def identity(self):
@@ -84,15 +82,13 @@ class PropertyAssertionNode(AbstractNode):
         Set the identity of the current node.
         :type identity: Identity
         """
-        if identity not in self.identities:
+        if identity not in self.Identities:
             identity = Identity.Unknown
         self._identity = identity
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
     def addEdge(self, edge):
         """
@@ -100,24 +96,24 @@ class PropertyAssertionNode(AbstractNode):
         :type edge: AbstractEdge
         """
         super().addEdge(edge)
-
-        if edge.isItem(Item.InputEdge) and edge.target is self:
+        if edge.type() is Item.InputEdge and edge.target is self:
             self.inputs.append(edge.id)
             edge.updateEdge()
 
-        identify(self)
+    def boundingRect(self):
+        """
+        Returns the shape bounding rectangle.
+        :rtype: QRectF
+        """
+        return self.selection
 
-    def copy(self, scene):
+    def copy(self, project):
         """
         Create a copy of the current item.
-        :type scene: DiagramScene
+        :type project: Project
         """
-        kwargs = {
-            'id': self.id,
-            'height': self.height(),
-            'width': self.width(),
-        }
-        node = scene.factory.create(item=self.item, scene=scene, **kwargs)
+        kwargs = {'id': self.id, 'height': self.height(), 'width': self.width()}
+        node = project.itemFactory.create(self.type(), **kwargs)
         node.setPos(self.pos())
         return node
 
@@ -148,108 +144,6 @@ class PropertyAssertionNode(AbstractNode):
         """
         return self.polygon.height()
 
-    def removeEdge(self, edge):
-        """
-        Remove the given edge from the current node.
-        :type edge: AbstractEdge
-        """
-        super().removeEdge(edge)
-
-        self.inputs.remove(edge.id)
-        scene = self.scene()
-        for i in self.inputs:
-            try:
-                edge = scene.edge(i)
-                edge.updateEdge()
-            except KeyError:
-                pass
-
-        identify(self)
-
-    def width(self):
-        """
-        Returns the width of the shape.
-        :rtype: int
-        """
-        return self.polygon.width()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   IMPORT / EXPORT                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def boundingRect(self):
-        """
-        Returns the shape bounding rectangle.
-        :rtype: QRectF
-        """
-        return self.selection
-
-    def painterPath(self):
-        """
-        Returns the current shape as QPainterPath (used for collision detection).
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addRoundedRect(self.polygon, 16, 16)
-        return path
-
-    def shape(self):
-        """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addRoundedRect(self.polygon, 16, 16)
-        return path
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   LABEL SHORTCUTS                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def textPos(self):
-        """
-        Returns the current label position in item coordinates.
-        :rtype: QPointF
-        """
-        pass
-
-    def text(self):
-        """
-        Returns the label text.
-        :rtype: str
-        """
-        pass
-
-    def setTextPos(self, pos):
-        """
-        Set the label position.
-        :type pos: QPointF
-        """
-        pass
-
-    def setText(self, text):
-        """
-        Set the label text.
-        :type text: str
-        """
-        pass
-
-    def updateTextPos(self, *args, **kwargs):
-        """
-        Update the label position.
-        """
-        pass
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
-
     @classmethod
     def image(cls, **kwargs):
         """
@@ -261,7 +155,7 @@ class PropertyAssertionNode(AbstractNode):
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
         # ITEM SHAPE
-        rect = cls.createPolygon(50, 30)
+        rect = cls.createPolygon(46, 30)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin))
         painter.setBrush(QColor(252, 252, 252))
@@ -271,7 +165,7 @@ class PropertyAssertionNode(AbstractNode):
 
     def paint(self, painter, option, widget=None):
         """
-        Paint the node in the diagram scene.
+        Paint the node in the diagram.
         :type painter: QPainter
         :type option: QStyleOptionGraphicsItem
         :type widget: QWidget
@@ -291,3 +185,76 @@ class PropertyAssertionNode(AbstractNode):
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawRoundedRect(self.polygon, 16, 16)
+
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used for collision detection).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRoundedRect(self.polygon, 16, 16)
+        return path
+
+    def shape(self):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRoundedRect(self.polygon, 16, 16)
+        return path
+
+    def removeEdge(self, edge):
+        """
+        Remove the given edge from the current node.
+        :type edge: AbstractEdge
+        """
+        super().removeEdge(edge)
+        self.inputs.remove(edge.id)
+        for i in self.inputs:
+            try:
+                edge = self.diagram.edge(i)
+                edge.updateEdge()
+            except KeyError:
+                pass
+
+    def setText(self, text):
+        """
+        Set the label text.
+        :type text: str
+        """
+        pass
+
+    def setTextPos(self, pos):
+        """
+        Set the label position.
+        :type pos: QPointF
+        """
+        pass
+
+    def text(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        pass
+
+    def textPos(self):
+        """
+        Returns the current label position in item coordinates.
+        :rtype: QPointF
+        """
+        pass
+
+    def updateTextPos(self, *args, **kwargs):
+        """
+        Update the label position.
+        """
+        pass
+
+    def width(self):
+        """
+        Returns the width of the shape.
+        :rtype: int
+        """
+        return self.polygon.width()

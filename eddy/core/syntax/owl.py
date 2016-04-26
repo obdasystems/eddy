@@ -32,8 +32,8 @@
 ##########################################################################
 
 
-from eddy.core.datatypes import Item, Identity, Restriction
-from eddy.core.functions import cutR, first
+from eddy.core.datatypes.graphol import Identity, Item, Restriction
+from eddy.core.functions.misc import cutR, first
 from eddy.core.syntax.common import AbstractValidator, ValidationResult
 
 
@@ -41,11 +41,9 @@ class OWL2Validator(AbstractValidator):
     """
     This class can be used to validate Graphol triples according to the OWL2 syntax.
     """
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
     def run(self, source, edge, target):
         """
@@ -62,11 +60,9 @@ class OWL2Validator(AbstractValidator):
 
             if edge.item is Item.InclusionEdge:
 
-                ########################################################################################################
-                #                                                                                                      #
-                #   INCLUSION EDGE                                                                                     #
-                #                                                                                                      #
-                ########################################################################################################
+                #############################################
+                # INCLUSION EDGE
+                #################################
 
                 supported = {Identity.Concept, Identity.Role, Identity.Attribute, Identity.ValueDomain}
                 remaining = source.identities & target.identities - {Identity.Neutral, Identity.Unknown}
@@ -119,11 +115,9 @@ class OWL2Validator(AbstractValidator):
 
             elif edge.item is Item.InputEdge:
 
-                ########################################################################################################
-                #                                                                                                      #
-                #   INPUT EDGE                                                                                         #
-                #                                                                                                      #
-                ########################################################################################################
+                #############################################
+                # INPUT EDGE
+                #################################
 
                 if not target.constructor:
                     # Input edges can only target constructor nodes.
@@ -131,11 +125,9 @@ class OWL2Validator(AbstractValidator):
 
                 if target.item in {Item.ComplementNode, Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode}:
 
-                    ####################################################################################################
-                    #                                                                                                  #
-                    #   TARGET IN { COMPLEMENT, DISJOINT UNION, INTERSECTION, UNION }                                  #
-                    #                                                                                                  #
-                    ####################################################################################################
+                    #############################################
+                    # TARGET = COMPLEMENT | INTERSECTION | UNION
+                    #################################
 
                     if source.identity not in target.identities:
                         # Source node identity is not supported by this node despite the currently set identity.
@@ -145,11 +137,9 @@ class OWL2Validator(AbstractValidator):
                         # Exclude invalid nodes despite identity matching.
                         raise SyntaxError('Invalid target: {}'.format(target.name))
 
-                    ####################################################################################################
-                    #                                                                                                  #
-                    #   TARGET = COMPLEMENT                                                                            #
-                    #                                                                                                  #
-                    ####################################################################################################
+                    #############################################
+                    # TARGET = COMPLEMENT
+                    #################################
 
                     if target.item is Item.ComplementNode:
 
@@ -170,11 +160,9 @@ class OWL2Validator(AbstractValidator):
 
                     else:
 
-                        ################################################################################################
-                        #                                                                                              #
-                        #   TARGET IN { DISJOINT UNION, INTERSECTION, UNION }                                          #
-                        #                                                                                              #
-                        ################################################################################################
+                        #############################################
+                        # TARGET = UNION | INTERSECTION
+                        #################################
 
                         if Identity.Neutral not in {source.identity, target.identity}:
 
@@ -187,11 +175,9 @@ class OWL2Validator(AbstractValidator):
 
                 elif target.item is Item.EnumerationNode:
 
-                    ####################################################################################################
-                    #                                                                                                  #
-                    #   TARGET = ENUMERATION                                                                           #
-                    #                                                                                                  #
-                    ####################################################################################################
+                    #############################################
+                    # TARGET = ENUMERATION
+                    #################################
 
                     if source.item is not Item.IndividualNode:
                         # Enumeration operator (oneOf) takes as inputs instances or values, both represented
@@ -215,11 +201,9 @@ class OWL2Validator(AbstractValidator):
 
                 elif target.item is Item.RoleInverseNode:
 
-                    ####################################################################################################
-                    #                                                                                                  #
-                    #   TARGET = ROLE INVERSE                                                                          #
-                    #                                                                                                  #
-                    ####################################################################################################
+                    #############################################
+                    # TARGET = ROLE INVERSE
+                    #################################
 
                     if source.item is not Item.RoleNode:
                         # The Role Inverse operator takes as input a role and constructs its inverse by switching
@@ -235,11 +219,9 @@ class OWL2Validator(AbstractValidator):
 
                 elif target.item is Item.RoleChainNode:
 
-                    ####################################################################################################
-                    #                                                                                                  #
-                    #   TARGET = ROLE CHAIN                                                                            #
-                    #                                                                                                  #
-                    ####################################################################################################
+                    #############################################
+                    # TARGET = ROLE CHAIN
+                    #################################
 
                     if source.item not in {Item.RoleNode, Item.RoleInverseNode}:
                         # The Role Chain operator constructs a concatenation of roles. Assume to have 2 Role nodes
@@ -253,11 +235,9 @@ class OWL2Validator(AbstractValidator):
 
                 elif target.item is Item.DatatypeRestrictionNode:
 
-                    ####################################################################################################
-                    #                                                                                                  #
-                    #   TARGET = DATATYPE RESTRICTION                                                                  #
-                    #                                                                                                  #
-                    ####################################################################################################
+                    #############################################
+                    # TARGET = DATATYPE RESTRICTION
+                    #################################
 
                     if source.item not in {Item.ValueDomainNode, Item.ValueRestrictionNode}:
                         # The DatatypeRestriction node is used to compose complex datatypes and
@@ -288,11 +268,9 @@ class OWL2Validator(AbstractValidator):
 
                 elif target.item is Item.PropertyAssertionNode:
 
-                    ####################################################################################################
-                    #                                                                                                  #
-                    #   TARGET = PROPERTY ASSERTION                                                                    #
-                    #                                                                                                  #
-                    ####################################################################################################
+                    #############################################
+                    # TARGET = PROPERTY ASSERTION
+                    #################################
 
                     if source.item is not Item.IndividualNode:
                         # Property Assertion operators accepts only Individual nodes as input: they are
@@ -332,11 +310,9 @@ class OWL2Validator(AbstractValidator):
 
                 elif target.item is Item.DomainRestrictionNode:
 
-                    ####################################################################################################
-                    #                                                                                                  #
-                    #   TARGET = DOMAIN RESTRICTION                                                                    #
-                    #                                                                                                  #
-                    ####################################################################################################
+                    #############################################
+                    # TARGET = DOMAIN RESTRICTION
+                    #################################
 
                     if len(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge)) >= 2:
                         # Domain Restriction node can have at most 2 inputs.
@@ -422,11 +398,9 @@ class OWL2Validator(AbstractValidator):
 
                 elif target.item is Item.RangeRestrictionNode:
 
-                    ####################################################################################################
-                    #                                                                                                  #
-                    #   TARGET = RANGE RESTRICTION                                                                     #
-                    #                                                                                                  #
-                    ####################################################################################################
+                    #############################################
+                    # TARGET = RANGE RESTRICTION
+                    #################################
 
                     if len(target.incomingNodes(lambda x: x.item is Item.InputEdge and x is not edge)) >= 2:
                         # Range Restriction node can have at most 2 inputs.
@@ -498,13 +472,11 @@ class OWL2Validator(AbstractValidator):
                             idB = node.identity.value
                             raise SyntaxError('Invalid inputs ({} + {}) for qualified restriction'.format(idA, idB))
 
-            elif edge.item is Item.InstanceOfEdge:
+            elif edge.item is Item.MembershipEdge:
 
-                ########################################################################################################
-                #                                                                                                      #
-                #   INSTANCE OF EDGE                                                                                   #
-                #                                                                                                      #
-                ########################################################################################################
+                #############################################
+                # MEMBERSHIP EDGE
+                #################################
 
                 if source.identity is not Identity.Instance and source.item is not Item.PropertyAssertionNode:
                     # The source of the edge must be one of Instance or a Property Assertion node.

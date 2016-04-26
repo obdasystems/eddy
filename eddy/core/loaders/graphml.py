@@ -32,36 +32,40 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QFile, QIODevice, QPointF, QRectF
+from PyQt5.QtCore import QPointF, QRectF, QObject
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtXml import QDomDocument
 
-from eddy.core.datatypes import Item
+from eddy.core.datatypes.graphol import Item
+from eddy.core.diagram import Diagram
 from eddy.core.exceptions import ParseError
-from eddy.core.functions import snapF
-from eddy.core.loaders.common import AbstractLoader
-from eddy.ui.scene import DiagramScene
+from eddy.core.functions.fsystem import fexists
+from eddy.core.functions.fsystem import fread
+from eddy.core.functions.misc import snapF
+from eddy.core.functions.signals import connect
 
 
-class GraphmlLoader(AbstractLoader):
+class GraphmlLoader(QObject):
     """
-    This class can be used to import Graphol ontologies created using the Graphol paletter for yEd.
+    This class can be used to import graphol ontologies created using the graphol paletter for yEd.
     """
-    def __init__(self, mainwindow, filepath, parent=None):
+    def __init__(self, project, path, parent=None):
         """
-        Initialize the Graphml importer.
-        :type mainwindow: MainWindow
-        :type filepath: str
+        Initialize the graphml importer.
+        :type project: Project
+        :type path: str
         :type parent: QObject
         """
-        super().__init__(mainwindow, filepath, parent)
+        super().__init__(parent)
+        self.diagram = None
+        self.errors = []
+        self.project = project
+        self.path = path
         self.keys = dict()
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   NODES                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   NODES
+    #################################
 
     def buildAttributeNode(self, element):
         """
@@ -227,11 +231,9 @@ class GraphmlLoader(AbstractLoader):
         """
         return self.buildNodeFromUMLNoteNode(Item.ValueRestrictionNode, element)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   EDGES                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   NODES
+    #################################
 
     def buildInclusionEdge(self, element):
         """
@@ -248,8 +250,8 @@ class GraphmlLoader(AbstractLoader):
                     arrows = polyLineEdge.firstChildElement('y:Arrows')
                     if arrows.attribute('source', '') == 'standard' and arrows.attribute('target', '') == 'standard':
                         edge.complete = True
-                        edge.updateEdge()
                 data = data.nextSiblingElement('data')
+            edge.updateEdge()
         return edge
 
     def buildInputEdge(self, element):
@@ -260,41 +262,23 @@ class GraphmlLoader(AbstractLoader):
         """
         edge = self.buildEdgeFromGenericEdge(Item.InputEdge, element)
         if edge:
-            data = element.firstChildElement('data')
-            while not data.isNull():
-                if data.attribute('key', '') == self.keys['edge_key']:
-                    polyLineEdge = data.firstChildElement('y:PolyLineEdge')
-                    arrows = polyLineEdge.firstChildElement('y:Arrows')
-                    if arrows.attribute('source', '') == 't_shape':
-                        source = edge.source
-                        target = edge.target
-                        predicate = source.text()
-                        meta = self.scene.meta.metaFor(source.item, predicate)
-                        if source.item is Item.RoleNode:
-                            if target.item is Item.DomainRestrictionNode:
-                                meta.functionality = True
-                            elif target.item is Item.RangeRestrictionNode:
-                                meta.inverseFunctionality = True
-                        elif source.item is Item.AttributeNode:
-                            if target.item is Item.DomainRestrictionNode:
-                                meta.functionality = True
-                        self.scene.meta.add(meta.item, meta.predicate, meta)
-                data = data.nextSiblingElement('data')
+            edge.updateEdge()
         return edge
 
-    def buildInstanceOfEdge(self, element):
+    def buildMembershipEdge(self, element):
         """
-        Build an InstanceOf edge using the given QDomElement.
+        Build a Membership edge using the given QDomElement.
         :type element: QDomElement
         :rtype: InputEdge
         """
-        return self.buildEdgeFromGenericEdge(Item.InstanceOfEdge, element)
+        edge = self.buildEdgeFromGenericEdge(Item.MembershipEdge, element)
+        if edge:
+            edge.updateEdge()
+        return edge
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   AUXILIARY METHODS
+    #################################
 
     def buildEdgeFromGenericEdge(self, item, element):
         """
@@ -315,28 +299,29 @@ class GraphmlLoader(AbstractLoader):
                 for i in range(0, collection.count()):
                     point = collection.at(i).toElement()
                     pos = QPointF(float(point.attribute('x')), float(point.attribute('y')))
-                    pos = QPointF(snapF(pos.x(), DiagramScene.GridSize), snapF(pos.y(), DiagramScene.GridSize))
+                    pos = QPointF(snapF(pos.x(), Diagram.GridSize), snapF(pos.y(), Diagram.GridSize))
                     points.append(pos)
 
                 kwargs = {
                     'id': element.attribute('id'),
-                    'source': self.scene.node(element.attribute('source')),
-                    'target': self.scene.node(element.attribute('target')),
+                    'source': self.diagram.node(element.attribute('source')),
+                    'target': self.diagram.node(element.attribute('target')),
                     'breakpoints': points,
                 }
 
-                edge = self.factory.create(item, self.scene, **kwargs)
+                edge = self.project.itemFactory.create(item, **kwargs)
+
                 # yEd, differently from the node pos whose origin matches the TOP-LEFT corner,
                 # consider the center of the shape as original anchor point (0,0). So if the
                 # anchor point hs a negative X it's moved a bit on the left with respect to
                 # the center of the shape (the same applies for the Y axis)
                 sourceP = QPointF(float(path.attribute('sx')), float(path.attribute('sy')))
                 sourceP = edge.source.pos() + sourceP
-                sourceP = QPointF(snapF(sourceP.x(), DiagramScene.GridSize), snapF(sourceP.y(), DiagramScene.GridSize))
+                sourceP = QPointF(snapF(sourceP.x(), Diagram.GridSize), snapF(sourceP.y(), Diagram.GridSize))
 
                 targetP = QPointF(float(path.attribute('tx')), float(path.attribute('ty')))
                 targetP = edge.target.pos() + targetP
-                targetP = QPointF(snapF(targetP.x(), DiagramScene.GridSize), snapF(targetP.y(), DiagramScene.GridSize))
+                targetP = QPointF(snapF(targetP.x(), Diagram.GridSize), snapF(targetP.y(), Diagram.GridSize))
 
                 painterPath = edge.source.painterPath()
                 if painterPath.contains(edge.source.mapFromScene(sourceP)):
@@ -376,14 +361,15 @@ class GraphmlLoader(AbstractLoader):
                     'width': float(geometry.attribute('width')),
                 }
 
-                node = self.factory.create(item, self.scene, **kwargs)
+                node = self.project.itemFactory.create(item, **kwargs)
+
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
                 # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
                 # Additionally we force-snap the position to the grid so that items say aligned.
                 pos = QPointF(float(geometry.attribute('x')), float(geometry.attribute('y')))
                 pos = pos + QPointF(node.width() / 2, node.height() / 2)
-                pos = QPointF(snapF(pos.x(), DiagramScene.GridSize), snapF(pos.y(), DiagramScene.GridSize))
+                pos = QPointF(snapF(pos.x(), Diagram.GridSize), snapF(pos.y(), Diagram.GridSize))
                 node.setPos(pos)
                 node.setText(nodeLabel.text())
                 return node
@@ -413,14 +399,15 @@ class GraphmlLoader(AbstractLoader):
                     'width': float(geometry.attribute('width')),
                 }
 
-                node = self.factory.create(item, self.scene, **kwargs)
+                node = self.project.itemFactory.create(item, **kwargs)
+
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
                 # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
                 # Additionally we force-snap the position to the grid so that items say aligned.
                 pos = QPointF(float(geometry.attribute('x')), float(geometry.attribute('y')))
                 pos = pos + QPointF(node.width() / 2, node.height() / 2)
-                pos = QPointF(snapF(pos.x(), DiagramScene.GridSize), snapF(pos.y(), DiagramScene.GridSize))
+                pos = QPointF(snapF(pos.x(), Diagram.GridSize), snapF(pos.y(), Diagram.GridSize))
                 node.setPos(pos)
                 return node
 
@@ -450,14 +437,15 @@ class GraphmlLoader(AbstractLoader):
                     'width': float(geometry.attribute('width')),
                 }
 
-                node = self.factory.create(item, self.scene, **kwargs)
+                node = self.project.itemFactory.create(item, **kwargs)
+
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
                 # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
                 # Additionally we force-snap the position to the grid so that items say aligned.
                 pos = QPointF(float(geometry.attribute('x')), float(geometry.attribute('y')))
                 pos = pos + QPointF(node.width() / 2, node.height() / 2)
-                pos = QPointF(snapF(pos.x(), DiagramScene.GridSize), snapF(pos.y(), DiagramScene.GridSize))
+                pos = QPointF(snapF(pos.x(), Diagram.GridSize), snapF(pos.y(), Diagram.GridSize))
                 node.setPos(pos)
                 node.setText(nodeLabel.text())
                 return node
@@ -557,7 +545,7 @@ class GraphmlLoader(AbstractLoader):
                             if not edgeLabel.isNull():
                                 edgeText = edgeLabel.text().strip()
                                 if  edgeText == 'instanceOf':
-                                    return Item.InstanceOfEdge
+                                    return Item.MembershipEdge
                             return Item.InclusionEdge
                         if lineType == 'dashed':
                             return Item.InputEdge
@@ -566,156 +554,152 @@ class GraphmlLoader(AbstractLoader):
 
         return None
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DIAGRAM SCENE GENERATION                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   DIAGRAM GENERATION
+    #################################
 
     def run(self):
         """
-        Perform ontology import from .graphml file format.
+        Perform diagram import from .graphml file format.
         """
-        file = QFile(self.filepath)
+        if not fexists(self.path):
+            raise IOError('could not find file: {0}'.format(self.file))
 
-        try:
+        document = QDomDocument()
+        if not document.setContent(fread(self.path)):
+            raise ParseError('could not initialize QDomDocument')
 
-            if not file.open(QIODevice.ReadOnly):
-                raise IOError('File not found: {}'.format(self.filepath))
+        # 1) INITIALIZE XML ROOT ELEMENT
+        root = document.documentElement()
 
-            document = QDomDocument()
-            if not document.setContent(file):
-                raise ParseError('could not initialize DOM document')
+        # 2) READ KEYS FROM THE DOCUMENT
+        key = root.firstChildElement('key')
+        while not key.isNull():
+            if key.attribute('yfiles.type', '') == 'nodegraphics':
+                self.keys['node_key'] = key.attribute('id')
+            if key.attribute('yfiles.type', '') == 'edgegraphics':
+                self.keys['edge_key'] = key.attribute('id')
+            key = key.nextSiblingElement('key')
 
-            # 1) INITIALIZE XML ROOT ELEMENT
-            root = document.documentElement()
+        # 3) CREATE AN ARBIRARY DIAGRAM
+        self.diagram = Diagram(self.path, self.project)
+        self.diagram.setSceneRect(QRectF(-Diagram.MaxSize / 2, -Diagram.MaxSize / 2, Diagram.MaxSize, Diagram.MaxSize))
+        self.diagram.setItemIndexMethod(Diagram.NoIndex)
+        connect(self.diagram.sgnItemAdded, self.project.doAddItem)
+        connect(self.diagram.sgnItemRemoved, self.project.doRemoveItem)
 
-            # 2) READ KEYS FROM THE DOCUMENT
-            key = root.firstChildElement('key')
-            while not key.isNull():
-                if key.attribute('yfiles.type', '') == 'nodegraphics':
-                    self.keys['node_key'] = key.attribute('id')
-                if key.attribute('yfiles.type', '') == 'edgegraphics':
-                    self.keys['edge_key'] = key.attribute('id')
-                key = key.nextSiblingElement('key')
+        # 4) INITIALIZE GRAPH ELEMENT
+        graph = root.firstChildElement('graph')
 
-            # 3) GENERATE ARBITRARY DIAGRAM SCENE
-            self.scene = self.mainwindow.createScene(DiagramScene.MaxSize, DiagramScene.MaxSize)
+        # 5) GENERATE NODES
+        element = graph.firstChildElement('node')
+        while not element.isNull():
 
-            # 4) INITIALIZE GRAPH ELEMENT
-            graph = root.firstChildElement('graph')
+            # noinspection PyArgumentList
+            QApplication.processEvents()
 
-            # 5) GENERATE NODES
-            element = graph.firstChildElement('node')
-            while not element.isNull():
+            node = None
+            item = self.itemFromGraphmlNode(element)
 
+            try:
+
+                if item is Item.AttributeNode:
+                    node = self.buildAttributeNode(element)
+                elif item is Item.ComplementNode:
+                    node = self.buildComplementNode(element)
+                elif item is Item.ConceptNode:
+                    node = self.buildConceptNode(element)
+                elif item is Item.DatatypeRestrictionNode:
+                    node = self.buildDatatypeRestrictionNode(element)
+                elif item is Item.DisjointUnionNode:
+                    node = self.buildDisjointUnionNode(element)
+                elif item is Item.DomainRestrictionNode:
+                    node = self.buildDomainRestrictionNode(element)
+                elif item is Item.EnumerationNode:
+                    node = self.buildEnumerationNode(element)
+                elif item is Item.IndividualNode:
+                    node = self.buildIndividualNode(element)
+                elif item is Item.IntersectionNode:
+                    node = self.buildIntersectionNode(element)
+                elif item is Item.RangeRestrictionNode:
+                    node = self.buildRangeRestrictionNode(element)
+                elif item is Item.RoleNode:
+                    node = self.buildRoleNode(element)
+                elif item is Item.RoleChainNode:
+                    node = self.buildRoleChainNode(element)
+                elif item is Item.RoleInverseNode:
+                    node = self.buildRoleInverseNode(element)
+                elif item is Item.UnionNode:
+                    node = self.buildUnionNode(element)
+                elif item is Item.ValueDomainNode:
+                    node = self.buildValueDomainNode(element)
+                elif item is Item.ValueRestrictionNode:
+                    node = self.buildValueRestrictionNode(element)
+
+                if not node:
+                    raise ValueError('unknown node with id {0}'.format(element.attribute('id')))
+
+            except Exception as e:
+                self.errors.append(e)
+            else:
+                self.diagram.addItem(node)
+                self.diagram.sgnItemAdded.emit(self.diagram, node)
+                self.project.guid.update(node.id)
+            finally:
+                element = element.nextSiblingElement('node')
+
+        # 6) GENERATE EDGES
+        element = graph.firstChildElement('edge')
+        while not element.isNull():
+
+            # noinspection PyArgumentList
+            QApplication.processEvents()
+
+            edge = None
+            item = self.itemFromGraphmlNode(element)
+
+            try:
+
+                if item is Item.InclusionEdge:
+                    edge = self.buildInclusionEdge(element)
+                elif item is Item.InputEdge:
+                    edge = self.buildInputEdge(element)
+                elif item is Item.MembershipEdge:
+                    edge = self.buildMembershipEdge(element)
+
+                if not edge:
+                    raise ValueError('unknown edge with id {}'.format(element.attribute('id')))
+
+            except Exception as e:
+                self.errors.append(e)
+            else:
+                self.diagram.addItem(edge)
+                self.diagram.sgnItemAdded.emit(self.diagram, edge)
+                self.project.guid.update(edge.id)
+            finally:
+                element = element.nextSiblingElement('edge')
+
+        # 7) CENTER DIAGRAM
+        R1 = self.diagram.sceneRect()
+        R2 = self.diagram.visibleRect(margin=0)
+        moveX = snapF(((R1.right() - R2.right()) - (R2.left() - R1.left())) / 2, Diagram.GridSize)
+        moveY = snapF(((R1.bottom() - R2.bottom()) - (R2.top() - R1.top())) / 2, Diagram.GridSize)
+        if moveX or moveY:
+            collection = [x for x in self.diagram.items() if x.isNode() or x.isEdge()]
+            for item in collection:
                 # noinspection PyArgumentList
                 QApplication.processEvents()
-
-                node = None
-                item = self.itemFromGraphmlNode(element)
-
-                try:
-
-                    if item is Item.AttributeNode:
-                        node = self.buildAttributeNode(element)
-                    elif item is Item.ComplementNode:
-                        node = self.buildComplementNode(element)
-                    elif item is Item.ConceptNode:
-                        node = self.buildConceptNode(element)
-                    elif item is Item.DatatypeRestrictionNode:
-                        node = self.buildDatatypeRestrictionNode(element)
-                    elif item is Item.DisjointUnionNode:
-                        node = self.buildDisjointUnionNode(element)
-                    elif item is Item.DomainRestrictionNode:
-                        node = self.buildDomainRestrictionNode(element)
-                    elif item is Item.EnumerationNode:
-                        node = self.buildEnumerationNode(element)
-                    elif item is Item.IndividualNode:
-                        node = self.buildIndividualNode(element)
-                    elif item is Item.IntersectionNode:
-                        node = self.buildIntersectionNode(element)
-                    elif item is Item.RangeRestrictionNode:
-                        node = self.buildRangeRestrictionNode(element)
-                    elif item is Item.RoleNode:
-                        node = self.buildRoleNode(element)
-                    elif item is Item.RoleChainNode:
-                        node = self.buildRoleChainNode(element)
-                    elif item is Item.RoleInverseNode:
-                        node = self.buildRoleInverseNode(element)
-                    elif item is Item.UnionNode:
-                        node = self.buildUnionNode(element)
-                    elif item is Item.ValueDomainNode:
-                        node = self.buildValueDomainNode(element)
-                    elif item is Item.ValueRestrictionNode:
-                        node = self.buildValueRestrictionNode(element)
-
-                    if not node:
-                        raise ValueError('unknown node with id {}'.format(element.attribute('id')))
-
-                except Exception as e:
-                    self.errors.append(e)
-                else:
-                    self.scene.addItem(node)
-                    self.scene.sgnItemAdded.emit(node)
-                    self.scene.guid.update(node.id)
-                finally:
-                    element = element.nextSiblingElement('node')
-
-            # 6) GENERATE EDGES
-            element = graph.firstChildElement('edge')
-            while not element.isNull():
-
+                item.moveBy(moveX, moveY)
+            for item in collection:
                 # noinspection PyArgumentList
                 QApplication.processEvents()
+                if item.edge:
+                    item.updateEdge()
 
-                edge = None
-                item = self.itemFromGraphmlNode(element)
+        # 8) RESIZE DIAGRAM SCENE
+        R3 = self.diagram.visibleRect(margin=20)
+        size = max(R3.width(), R3.height(), Diagram.MinSize)
+        self.diagram.setSceneRect(QRectF(-size / 2, -size / 2, size, size))
 
-                try:
-
-                    if item is Item.InclusionEdge:
-                        edge = self.buildInclusionEdge(element)
-                    elif item is Item.InputEdge:
-                        edge = self.buildInputEdge(element)
-                    elif item is Item.InstanceOfEdge:
-                        edge = self.buildInstanceOfEdge(element)
-
-                    if not edge:
-                        raise ValueError('unknown edge with id {}'.format(element.attribute('id')))
-
-                except Exception as e:
-                    self.errors.append(e)
-                else:
-                    self.scene.addItem(edge)
-                    self.scene.sgnItemAdded.emit(edge)
-                    self.scene.guid.update(edge.id)
-                    edge.updateEdge()
-                finally:
-                    element = element.nextSiblingElement('edge')
-
-            # 7) CENTER DIAGRAM
-            R1 = self.scene.sceneRect()
-            R2 = self.scene.visibleRect(margin=0)
-            moveX = snapF(((R1.right() - R2.right()) - (R2.left() - R1.left())) / 2, DiagramScene.GridSize)
-            moveY = snapF(((R1.bottom() - R2.bottom()) - (R2.top() - R1.top())) / 2, DiagramScene.GridSize)
-            if moveX or moveY:
-                collection = [x for x in self.scene.items() if x.node or x.edge]
-                for item in collection:
-                    # noinspection PyArgumentList
-                    QApplication.processEvents()
-                    item.moveBy(moveX, moveY)
-                for item in collection:
-                    # noinspection PyArgumentList
-                    QApplication.processEvents()
-                    if item.edge:
-                        item.updateEdge()
-
-            # 8) RESIZE DIAGRAM SCENE
-            R3 = self.scene.visibleRect(margin=20)
-            size = max(R3.width(), R3.height(), DiagramScene.MinSize)
-            self.scene.setSceneRect(QRectF(-size / 2, -size / 2, size, size))
-
-        finally:
-
-            file.close()
+        # 7) RETURN GENERATED DIAGRAM
+        return self.diagram

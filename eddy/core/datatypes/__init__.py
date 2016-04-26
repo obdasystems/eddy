@@ -32,20 +32,20 @@
 ##########################################################################
 
 
-from eddy.core.datatypes.collections import DistinctList
-
-from eddy.core.datatypes.graphol import Identity
-from eddy.core.datatypes.graphol import Item
-from eddy.core.datatypes.graphol import Restriction
-from eddy.core.datatypes.graphol import Special
-
-from eddy.core.datatypes.misc import Color
-from eddy.core.datatypes.misc import DiagramMode
-
-from eddy.core.datatypes.owl import Facet
-from eddy.core.datatypes.owl import OWLSyntax
-from eddy.core.datatypes.owl import XsdDatatype
-
-from eddy.core.datatypes.system import File
-from eddy.core.datatypes.system import Filetype
-from eddy.core.datatypes.system import Platform
+# from eddy.core.datatypes.collections import DistinctList
+#
+# from eddy.core.datatypes.graphol import Identity
+# from eddy.core.datatypes.graphol import Item
+# from eddy.core.datatypes.graphol import Restriction
+# from eddy.core.datatypes.graphol import Special
+#
+# from eddy.core.datatypes.misc import Color
+# from eddy.core.datatypes.misc import DiagramMode
+#
+# from eddy.core.datatypes.owl import Facet
+# from eddy.core.datatypes.owl import OWLSyntax
+# from eddy.core.datatypes.owl import XsdDatatype
+#
+# from eddy.core.datatypes.system import File
+# from eddy.core.datatypes.system import File
+# from eddy.core.datatypes.system import Platform

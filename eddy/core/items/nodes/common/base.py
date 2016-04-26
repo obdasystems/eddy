@@ -38,9 +38,10 @@ from PyQt5.QtCore import QPointF, QLineF, Qt, QRectF
 from PyQt5.QtGui import QColor, QPen, QBrush, QPolygonF
 from PyQt5.QtWidgets import QGraphicsItem
 
-from eddy.core.commands import CommandNodeRezize
-from eddy.core.datatypes import DistinctList, DiagramMode, Identity, Item
-from eddy.core.items import AbstractItem
+from eddy.core.commands.nodes import CommandNodeRezize
+from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.misc import DiagramMode
+from eddy.core.items.common import AbstractItem
 
 
 class AbstractNode(AbstractItem):
@@ -49,8 +50,8 @@ class AbstractNode(AbstractItem):
     """
     __metaclass__ = ABCMeta
 
-    identities = {}
-    prefix = 'n'
+    Identities = {}
+    Prefix = 'n'
 
     def __init__(self, **kwargs):
         """
@@ -58,33 +59,22 @@ class AbstractNode(AbstractItem):
         """
         super().__init__(**kwargs)
 
-        self.anchors = {}
-        self.edges = DistinctList()
+        self.anchors = dict()
+        self.edges = set()
 
         self.backgroundBrush = QBrush(Qt.NoBrush)
         self.backgroundPen = QPen(Qt.NoPen)
-
         self.background = None
         self.selection = None
         self.polygon = None
 
         self.setAcceptHoverEvents(True)
-        self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
-        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        self.setCacheMode(AbstractItem.DeviceCoordinateCache)
+        self.setFlag(AbstractItem.ItemIsSelectable, True) # TODO: remove
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @property
-    def constructor(self):
-        """
-        Tells whether this node is a constructor node.
-        :rtype: bool
-        """
-        return Item.DomainRestrictionNode <= self.item <= Item.PropertyAssertionNode
+    #############################################
+    #   PROPERTIES
+    #################################
 
     @property
     @abstractmethod
@@ -104,34 +94,16 @@ class AbstractNode(AbstractItem):
         """
         pass
 
-    @property
-    def predicate(self):
-        """
-        Tells whether this node is a predicate node.
-        :rtype: bool
-        """
-        return Item.ConceptNode <= self.item <= Item.ValueRestrictionNode
-
-    @property
-    def resizable(self):
-        """
-        Tells whether the shape can be resized or not.
-        :rtype: bool
-        """
-        return False
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
     def addEdge(self, edge):
         """
         Add the given edge to the current node.
         :type edge: AbstractEdge
         """
-        self.edges.append(edge)
+        self.edges.add(edge)
 
     def adjacentNodes(self, filter_on_edges=None, filter_on_nodes=None):
         """
@@ -165,10 +137,10 @@ class AbstractNode(AbstractItem):
         return self.boundingRect().center()
 
     @abstractmethod
-    def copy(self, scene):
+    def copy(self, project):
         """
         Create a copy of the current item.
-        :type scene: DiagramScene
+        :type project: Project
         """
         pass
 
@@ -212,6 +184,15 @@ class AbstractNode(AbstractItem):
         """
         pass
 
+    @classmethod
+    @abstractmethod
+    def image(cls, **kwargs):
+        """
+        Returns a snapshot of this item suitable for the palette.
+        :rtype: QPixmap
+        """
+        pass
+
     def incomingNodes(self, filter_on_edges=None, filter_on_nodes=None):
         """
         Returns the set of incoming nodes.
@@ -223,7 +204,7 @@ class AbstractNode(AbstractItem):
         f1 = filter_on_edges or f0
         f2 = filter_on_nodes or f0
         return [x for x in [e.other(self) for e in self.edges \
-                    if (e.target is self or e.item is Item.InclusionEdge and e.complete) \
+                    if (e.target is self or e.type() is Item.InclusionEdge and e.complete) \
                         and f1(e)] if f2(x)]
 
     def intersection(self, line):
@@ -235,13 +216,25 @@ class AbstractNode(AbstractItem):
         intersection = QPointF()
         path = self.painterPath()
         polygon = self.mapToScene(path.toFillPolygon(self.transform()))
-
         for i in range(0, polygon.size() - 1):
             polyline = QLineF(polygon[i], polygon[i + 1])
             if polyline.intersect(line, intersection) == QLineF.BoundedIntersection:
                 return intersection
-
         return None
+
+    def isConstructor(self):
+        """
+        Returns True if this node is a contructor node, False otherwise.
+        :rtype: bool
+        """
+        return Item.DomainRestrictionNode <= self.type() <= Item.PropertyAssertionNode
+
+    def isPredicate(self):
+        """
+        Returns True if this node is a predicate node, False otherwise.
+        :rtype: bool
+        """
+        return Item.ConceptNode <= self.type() <= Item.ValueRestrictionNode
 
     def moveBy(self, x, y):
         """
@@ -264,8 +257,16 @@ class AbstractNode(AbstractItem):
         f1 = filter_on_edges or f0
         f2 = filter_on_nodes or f0
         return [x for x in [e.other(self) for e in self.edges \
-                    if (e.source is self or e.item is Item.InclusionEdge and e.complete) \
+                    if (e.source is self or e.type() is Item.InclusionEdge and e.complete) \
                         and f1(e)] if f2(x)]
+
+    @abstractmethod
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used for collision detection).
+        :rtype: QPainterPath
+        """
+        pass
 
     def pos(self):
         """
@@ -279,7 +280,7 @@ class AbstractNode(AbstractItem):
         Remove the given edge from the current node.
         :type edge: AbstractEdge
         """
-        self.edges.remove(edge)
+        self.edges.discard(edge)
 
     def setAnchor(self, edge, pos):
         """
@@ -303,9 +304,9 @@ class AbstractNode(AbstractItem):
             raise TypeError('too many arguments; expected {}, got {}'.format(2, len(__args)))
         super().setPos(pos + super().pos() - self.pos())
 
-    def updateBrush(self, selected=None, valid=None, **kwargs):
+    def redraw(self, selected=None, valid=None, **kwargs):
         """
-        Perform updates on pens and brushes needed by the paint() method.
+        Schedule this item for redrawing.
         :type selected: bool
         :type valid: bool
         """
@@ -336,12 +337,51 @@ class AbstractNode(AbstractItem):
         # SCHEDULE REPAINT
         self.update(self.boundingRect())
 
+    @abstractmethod
+    def setText(self, text):
+        """
+        Set the label text.
+        :type text: str
+        """
+        pass
+
+    @abstractmethod
+    def setTextPos(self, pos):
+        """
+        Set the label position.
+        :type pos: QPointF
+        """
+        pass
+
+    @abstractmethod
+    def text(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        pass
+
+    @abstractmethod
+    def textPos(self):
+        """
+        Returns the current label position.
+        :rtype: QPointF
+        """
+        pass
+
     def updateEdges(self):
         """
         Update all the edges attached to the node.
         """
         for edge in self.edges:
             edge.updateEdge()
+
+    @abstractmethod
+    def updateTextPos(self, *args, **kwargs):
+        """
+        Update the label position.
+        """
+        pass
 
     @abstractmethod
     def width(self):
@@ -351,21 +391,19 @@ class AbstractNode(AbstractItem):
         """
         pass
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   EVENTS                                                                                                         #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   EVENTS
+    #################################
 
     def itemChange(self, change, value):
         """
         Executed whenever the item change state.
-        :type change: GraphicsItemChange
+        :type change: int
         :type value: QVariant
         :rtype: QVariant
         """
         if change == AbstractNode.ItemSelectedHasChanged:
-            self.updateBrush(selected=value)
+            self.redraw(selected=value)
         return super(AbstractNode, self).itemChange(change, value)
 
     def mousePressEvent(self, mouseEvent):
@@ -373,31 +411,28 @@ class AbstractNode(AbstractItem):
         Executed when the mouse is pressed on the item.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        scene = self.scene()
-
         # Allow node selection only if we are in DiagramMode.Idle state: resizable
-        # nodes may have changed the scene mode to DiagramMode.NodeResize if a resize
+        # nodes may have changed the diagram mode to DiagramMode.ResizeNode if a resize
         # handle is selected, thus we don't need to perform (multi)selection.
-        if scene.mode is DiagramMode.Idle:
-
+        if self.diagram.mode is DiagramMode.Idle:
             # Here is a slightly modified version of the default behavior
             # which improves the interaction with multiple selected nodes.
             if mouseEvent.modifiers() & Qt.ControlModifier:
                 # If the control modifier is being held switch the selection flag.
                 self.setSelected(not self.isSelected())
             else:
-                if scene.selectedItems():
+                if self.diagram.selectedItems():
                     # Some elements are already selected (previoust mouse press event).
                     if not self.isSelected():
                         # There are some items selected but we clicked on a node
                         # which is not currently selected, so select only this one.
-                        scene.clearSelection()
+                        self.diagram.clearSelection()
                         self.setSelected(True)
                 else:
                     # No node is selected and we just clicked on one so select it
-                    # since we filter out the Label, clear the scene selection in
+                    # since we filter out the Label, clear the diagram selection in
                     # any case to avoid strange bugs.
-                    scene.clearSelection()
+                    self.diagram.clearSelection()
                     self.setSelected(True)
 
     def mouseMoveEvent(self, mouseEvent):
@@ -414,80 +449,6 @@ class AbstractNode(AbstractItem):
         """
         pass
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   GEOMETRY                                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @abstractmethod
-    def painterPath(self):
-        """
-        Returns the current shape as QPainterPath (used for collision detection).
-        :rtype: QPainterPath
-        """
-        pass
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   LABEL SHORTCUTS                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @abstractmethod
-    def textPos(self):
-        """
-        Returns the current label position.
-        :rtype: QPointF
-        """
-        pass
-
-    @abstractmethod
-    def text(self):
-        """
-        Returns the label text.
-        :rtype: str
-        """
-        pass
-
-    @abstractmethod
-    def setTextPos(self, pos):
-        """
-        Set the label position.
-        :type pos: QPointF
-        """
-        pass
-
-    @abstractmethod
-    def setText(self, text):
-        """
-        Set the label text.
-        :type text: str
-        """
-        pass
-
-    @abstractmethod
-    def updateTextPos(self, *args, **kwargs):
-        """
-        Update the label position.
-        """
-        pass
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @classmethod
-    @abstractmethod
-    def image(cls, **kwargs):
-        """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
-        """
-        pass
-
 
 class AbstractResizableNode(AbstractNode):
     """
@@ -495,20 +456,20 @@ class AbstractResizableNode(AbstractNode):
     """
     __metaclass__ = ABCMeta
 
-    handleTL = 0
-    handleTM = 1
-    handleTR = 2
-    handleML = 3
-    handleMR = 4
-    handleBL = 5
-    handleBM = 6
-    handleBR = 7
+    HandleTL = 0
+    HandleTM = 1
+    HandleTR = 2
+    HandleML = 3
+    HandleMR = 4
+    HandleBL = 5
+    HandleBM = 6
+    HandleBR = 7
 
-    handleNum = 8
-    handleMove = -4
-    handleSize = 8
+    HandleNum = 8
+    HandleMove = -4
+    HandleSize = 8
 
-    handleCursors = [
+    HandleCursors = [
         Qt.SizeFDiagCursor,
         Qt.SizeVerCursor,
         Qt.SizeBDiagCursor,
@@ -525,9 +486,9 @@ class AbstractResizableNode(AbstractNode):
         """
         super().__init__(**kwargs)
 
-        self.handleBound = [QRectF()] * self.handleNum
-        self.handleBrush = [QBrush(Qt.NoBrush)] * self.handleNum
-        self.handlePen = [QPen(Qt.NoPen)] * self.handleNum
+        self.handleBound = [QRectF()] * self.HandleNum
+        self.handleBrush = [QBrush(Qt.NoBrush)] * self.HandleNum
+        self.handlePen = [QPen(Qt.NoPen)] * self.HandleNum
 
         self.mousePressBackground = None
         self.mousePressSelection = None
@@ -537,11 +498,9 @@ class AbstractResizableNode(AbstractNode):
         self.mousePressHandle = None
         self.mousePressPos = None
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   PROPERTIES
+    #################################
 
     @property
     @abstractmethod
@@ -561,19 +520,9 @@ class AbstractResizableNode(AbstractNode):
         """
         pass
 
-    @property
-    def resizable(self):
-        """
-        Tells whether the shape can be resized or not.
-        :rtype: bool
-        """
-        return True
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
     def cursorAt(self, index):
         """
@@ -582,7 +531,7 @@ class AbstractResizableNode(AbstractNode):
         :rtype: int
         """
         try:
-            return self.handleCursors[index]
+            return self.HandleCursors[index]
         except (TypeError, IndexError):
             return Qt.ArrowCursor
 
@@ -599,36 +548,14 @@ class AbstractResizableNode(AbstractNode):
                 return i
         return None
 
-    @abstractmethod
-    def interactiveResize(self, mousePos):
+    def redraw(self, selected=None, valid=None, handle=None, **kwargs):
         """
-        Handle the interactive resize of the node.
-        :type mousePos: QPointF
-        """
-        pass
-
-    def updateAnchors(self, data, diff):
-        """
-        Update anchor points.
-        :type data: dict
-        :type diff: QPointF
-        """
-        if data:
-            for edge, pos in data.items():
-                newPos = pos + diff * 0.5
-                painterPath = self.painterPath()
-                if not painterPath.contains(self.mapFromScene(newPos)):
-                    newPos = self.intersection(QLineF(newPos, self.pos()))
-                self.setAnchor(edge, newPos)
-
-    def updateBrush(self, selected=None, valid=None, handle=None, **kwargs):
-        """
-        Perform updates on pens and brushes needed by the paint() method.
+        Schedule this item for redrawing.
         :type selected: bool
         :type valid: bool
         :type handle: int
         """
-        num = self.handleNum
+        num = self.HandleNum
 
         brush0 = QBrush(Qt.NoBrush)
         brush1 = QBrush(QColor(43, 173, 63, 160))
@@ -674,34 +601,53 @@ class AbstractResizableNode(AbstractNode):
         # SCHEDULE REPAINT
         self.update(self.boundingRect())
 
+    @abstractmethod
+    def resize(self, mousePos):
+        """
+        Perform interactive resize of the node.
+        :type mousePos: QPointF
+        """
+        pass
+
+    def updateAnchors(self, data, diff):
+        """
+        Update anchor points.
+        :type data: dict
+        :type diff: QPointF
+        """
+        if data:
+            for edge, pos in data.items():
+                newPos = pos + diff * 0.5
+                painterPath = self.painterPath()
+                if not painterPath.contains(self.mapFromScene(newPos)):
+                    newPos = self.intersection(QLineF(newPos, self.pos()))
+                self.setAnchor(edge, newPos)
+
     def updateHandles(self):
         """
         Update current resize handles according to the shape size and position.
         """
-        s = self.handleSize
+        s = self.HandleSize
         b = self.boundingRect()
-        self.handleBound[self.handleTL] = QRectF(b.left(), b.top(), s, s)
-        self.handleBound[self.handleTM] = QRectF(b.center().x() - s / 2, b.top(), s, s)
-        self.handleBound[self.handleTR] = QRectF(b.right() - s, b.top(), s, s)
-        self.handleBound[self.handleML] = QRectF(b.left(), b.center().y() - s / 2, s, s)
-        self.handleBound[self.handleMR] = QRectF(b.right() - s, b.center().y() - s / 2, s, s)
-        self.handleBound[self.handleBL] = QRectF(b.left(), b.bottom() - s, s, s)
-        self.handleBound[self.handleBM] = QRectF(b.center().x() - s / 2, b.bottom() - s, s, s)
-        self.handleBound[self.handleBR] = QRectF(b.right() - s, b.bottom() - s, s, s)
+        self.handleBound[self.HandleTL] = QRectF(b.left(), b.top(), s, s)
+        self.handleBound[self.HandleTM] = QRectF(b.center().x() - s / 2, b.top(), s, s)
+        self.handleBound[self.HandleTR] = QRectF(b.right() - s, b.top(), s, s)
+        self.handleBound[self.HandleML] = QRectF(b.left(), b.center().y() - s / 2, s, s)
+        self.handleBound[self.HandleMR] = QRectF(b.right() - s, b.center().y() - s / 2, s, s)
+        self.handleBound[self.HandleBL] = QRectF(b.left(), b.bottom() - s, s, s)
+        self.handleBound[self.HandleBM] = QRectF(b.center().x() - s / 2, b.bottom() - s, s, s)
+        self.handleBound[self.HandleBR] = QRectF(b.right() - s, b.bottom() - s, s, s)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   EVENTS                                                                                                         #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   EVENTS
+    #################################
 
     def hoverMoveEvent(self, hoverEvent):
         """
         Executed when the mouse moves over the shape (NOT PRESSED).
         :type hoverEvent: QGraphicsSceneHoverEvent
         """
-        scene = self.scene()
-        if scene.mode is DiagramMode.Idle:
+        if self.diagram.mode is DiagramMode.Idle:
             if self.isSelected():
                 self.setCursor(self.cursorAt(self.handleAt(hoverEvent.pos())))
         super().hoverMoveEvent(hoverEvent)
@@ -722,9 +668,8 @@ class AbstractResizableNode(AbstractNode):
         :rtype: QVariant
         """
         if change == AbstractNode.ItemSelectedHasChanged:
-            scene = self.scene()
-            if scene.mode is not DiagramMode.ResizeNode:
-                self.updateBrush(selected=value)
+            if self.diagram.mode is not DiagramMode.ResizeNode:
+                self.redraw(selected=value)
         return super(AbstractNode, self).itemChange(change, value)
 
     def mousePressEvent(self, mouseEvent):
@@ -732,15 +677,14 @@ class AbstractResizableNode(AbstractNode):
         Executed when the mouse is pressed on the item.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        scene = self.scene()
+        if self.diagram.mode is DiagramMode.Idle:
 
-        if scene.mode is DiagramMode.Idle:
             mousePos = mouseEvent.pos()
             handle = self.handleAt(mousePos)
             if handle is not None:
 
-                scene.clearSelection()
-                scene.setMode(DiagramMode.ResizeNode)
+                self.diagram.clearSelection()
+                self.diagram.setMode(DiagramMode.ResizeNode)
                 self.setSelected(True)
 
                 BC = QRectF if isinstance(self.background, QRectF) else QPolygonF
@@ -755,7 +699,7 @@ class AbstractResizableNode(AbstractNode):
                 self.mousePressHandle = handle
                 self.mousePressPos = mousePos
 
-                self.updateBrush(selected=True, handle=handle)
+                self.redraw(selected=True, handle=handle)
 
         super().mousePressEvent(mouseEvent)
 
@@ -764,12 +708,9 @@ class AbstractResizableNode(AbstractNode):
         Executed when the mouse is being moved over the item while being pressed.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        scene = self.scene()
-
-        if scene.mode is DiagramMode.ResizeNode:
-            self.interactiveResize(mouseEvent.pos())
+        if self.diagram.mode is DiagramMode.ResizeNode:
+            self.resize(mouseEvent.pos())
             self.updateEdges()
-
         super().mouseMoveEvent(mouseEvent)
 
     def mouseReleaseEvent(self, mouseEvent):
@@ -777,9 +718,7 @@ class AbstractResizableNode(AbstractNode):
         Executed when the mouse is released from the item.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        scene = self.scene()
-
-        if scene.mode is DiagramMode.ResizeNode:
+        if self.diagram.mode is DiagramMode.ResizeNode:
 
             bound = self.boundingRect()
 
@@ -793,7 +732,7 @@ class AbstractResizableNode(AbstractNode):
                 selection = SC(self.selection)
                 polygon = PC(self.polygon)
 
-                commandData = {
+                data = {
                     'undo': {
                         'background': self.mousePressBackground,
                         'selection': self.mousePressSelection,
@@ -810,11 +749,11 @@ class AbstractResizableNode(AbstractNode):
                     }
                 }
 
-                scene.undostack.push(CommandNodeRezize(scene=scene, node=self, data=commandData))
+                self.diagram.undoStack.push(CommandNodeRezize(self.diagram, self, data))
 
-            scene.setMode(DiagramMode.Idle)
+            self.diagram.setMode(DiagramMode.Idle)
 
-        self.updateBrush(selected=self.isSelected())
+        self.redraw(selected=self.isSelected())
 
         super().mouseReleaseEvent(mouseEvent)
 

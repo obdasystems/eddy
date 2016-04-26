@@ -34,6 +34,9 @@
 
 from PyQt5.QtWidgets import QStyle, QProxyStyle
 
+from eddy.core.functions.fsystem import fread
+from eddy.core.functions.path import expandPath
+
 
 class Clean(QProxyStyle):
 
@@ -62,3 +65,11 @@ class Clean(QProxyStyle):
             return Clean.PM[metric]
         except KeyError:
             return super().pixelMetric(metric, option, widget)
+
+    @property
+    def stylesheet(self):
+        """
+        Returns the stylesheet for this proxystyle.
+        :rtype: str
+        """
+        return fread(expandPath('@resources/styles/clean.qss'))

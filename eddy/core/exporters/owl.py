@@ -36,10 +36,12 @@ import jnius
 
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
 
-from eddy.core.datatypes import Special, Item, Identity, Restriction, OWLSyntax
+from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
+from eddy.core.datatypes.owl import OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
 from eddy.core.exporters.common import AbstractExporter
-from eddy.core.functions import clamp, first, isEmpty, OWLText, OWLAnnotationText
+from eddy.core.functions.misc import first, clamp, isEmpty
+from eddy.core.functions.owl import OWLText, OWLAnnotationText
 
 
 class OWLExporter(AbstractExporter):
@@ -227,7 +229,7 @@ class OWLExporter(AbstractExporter):
 
             restrictions = self.HashSet()
             for i in collection:
-                restrictions.add(self.buildValueRestriction(i))
+                restrictions.doAddNode(self.buildValueRestriction(i))
 
             restrictions = jnius.cast(self.Set, restrictions)
             self.converted[node] = self.factory.getOWLDatatypeRestriction(datatypeEx, restrictions)
@@ -286,9 +288,9 @@ class OWLExporter(AbstractExporter):
                     cmin = node.cardinality['min']
                     cmax = node.cardinality['max']
                     if cmin is not None:
-                        collection.add(self.factory.getOWLDataMinCardinality(cmin, dataPropEx, dataRangeEx))
+                        collection.doAddNode(self.factory.getOWLDataMinCardinality(cmin, dataPropEx, dataRangeEx))
                     if cmax is not None:
-                        collection.add(self.factory.getOWLDataMinCardinality(cmax, dataPropEx, dataRangeEx))
+                        collection.doAddNode(self.factory.getOWLDataMinCardinality(cmax, dataPropEx, dataRangeEx))
                     if collection.isEmpty():
                         raise MalformedDiagramError(node, 'missing cardinality')
                     elif collection.size() >= 1:
@@ -339,9 +341,9 @@ class OWLExporter(AbstractExporter):
                     cmin = node.cardinality['min']
                     cmax = node.cardinality['max']
                     if node.cardinality['min'] is not None:
-                        collection.add(self.factory.getOWLObjectMinCardinality(cmin, objectPropertyEx, classEx))
+                        collection.doAddNode(self.factory.getOWLObjectMinCardinality(cmin, objectPropertyEx, classEx))
                     if node.cardinality['max'] is not None:
-                        collection.add(self.factory.getOWLObjectMaxCardinality(cmax, objectPropertyEx, classEx))
+                        collection.doAddNode(self.factory.getOWLObjectMaxCardinality(cmax, objectPropertyEx, classEx))
                     if collection.isEmpty():
                         raise MalformedDiagramError(node, 'missing cardinality')
                     elif collection.size() >= 1:
@@ -363,7 +365,7 @@ class OWLExporter(AbstractExporter):
             f2 = lambda x: x.item is Item.IndividualNode
             collection = self.HashSet()
             for i in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-                collection.add(self.buildIndividual(i))
+                collection.doAddNode(self.buildIndividual(i))
             if collection.isEmpty():
                 raise MalformedDiagramError(node, 'missing operand(s)')
             collection = jnius.cast(self.Set, collection)
@@ -401,23 +403,23 @@ class OWLExporter(AbstractExporter):
             for item in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
 
                 if item.item is Item.ConceptNode:
-                    collection.add(self.buildConcept(item))
+                    collection.doAddNode(self.buildConcept(item))
                 elif item.item is Item.ValueDomainNode:
-                    collection.add(self.buildValueDomain(item))
+                    collection.doAddNode(self.buildValueDomain(item))
                 elif item.item is Item.ComplementNode:
-                    collection.add(self.buildComplement(item))
+                    collection.doAddNode(self.buildComplement(item))
                 elif item.item is Item.EnumerationNode:
-                    collection.add(self.buildEnumeration(item))
+                    collection.doAddNode(self.buildEnumeration(item))
                 elif item.item is Item.IntersectionNode:
-                    collection.add(self.buildIntersection(item))
+                    collection.doAddNode(self.buildIntersection(item))
                 elif item.item in {Item.UnionNode, Item.DisjointUnionNode}:
-                    collection.add(self.buildUnion(item))
+                    collection.doAddNode(self.buildUnion(item))
                 elif item.item is Item.DomainRestrictionNode:
-                    collection.add(self.buildDomainRestriction(item))
+                    collection.doAddNode(self.buildDomainRestriction(item))
                 elif item.item is Item.RangeRestrictionNode:
-                    collection.add(self.buildRangeRestriction(item))
+                    collection.doAddNode(self.buildRangeRestriction(item))
                 elif item.item is Item.DatatypeRestrictionNode:
-                    collection.add(self.buildDatatypeRestriction(item))
+                    collection.doAddNode(self.buildDatatypeRestriction(item))
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(item))
 
@@ -515,9 +517,9 @@ class OWLExporter(AbstractExporter):
                     cmin = node.cardinality['min']
                     cmax = node.cardinality['max']
                     if cmin is not None:
-                        collection.add(self.factory.getOWLObjectMinCardinality(cmin, objectPropertyEx, classEx))
+                        collection.doAddNode(self.factory.getOWLObjectMinCardinality(cmin, objectPropertyEx, classEx))
                     if cmax is not None:
-                        collection.add(self.factory.getOWLObjectMaxCardinality(cmax, objectPropertyEx, classEx))
+                        collection.doAddNode(self.factory.getOWLObjectMaxCardinality(cmax, objectPropertyEx, classEx))
                     if collection.isEmpty():
                         raise MalformedDiagramError(node, 'missing cardinality')
                     if collection.size() >= 1:
@@ -557,9 +559,9 @@ class OWLExporter(AbstractExporter):
                 if x.item not in {Item.RoleNode, Item.RoleInverseNode}:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(x))
                 elif x.item is Item.RoleNode:
-                    collection.add(self.buildRole(x))
+                    collection.doAddNode(self.buildRole(x))
                 elif x.item is Item.RoleInverseNode:
-                    collection.add(self.buildRoleInverse(x))
+                    collection.doAddNode(self.buildRoleInverse(x))
             collection = jnius.cast(self.List, collection)
             self.converted[node] = collection
         return self.converted[node]
@@ -595,23 +597,23 @@ class OWLExporter(AbstractExporter):
             for item in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
 
                 if item.item is Item.ConceptNode:
-                    collection.add(self.buildConcept(item))
+                    collection.doAddNode(self.buildConcept(item))
                 elif item.item is Item.ValueDomainNode:
-                    collection.add(self.buildValueDomain(item))
+                    collection.doAddNode(self.buildValueDomain(item))
                 elif item.item is Item.ComplementNode:
-                    collection.add(self.buildComplement(item))
+                    collection.doAddNode(self.buildComplement(item))
                 elif item.item is Item.EnumerationNode:
-                    collection.add(self.buildEnumeration(item))
+                    collection.doAddNode(self.buildEnumeration(item))
                 elif item.item is Item.IntersectionNode:
-                    collection.add(self.buildIntersection(item))
+                    collection.doAddNode(self.buildIntersection(item))
                 elif item.item in {Item.UnionNode, Item.DisjointUnionNode}:
-                    collection.add(self.buildUnion(item))
+                    collection.doAddNode(self.buildUnion(item))
                 elif item.item is Item.DomainRestrictionNode:
-                    collection.add(self.buildDomainRestriction(item))
+                    collection.doAddNode(self.buildDomainRestriction(item))
                 elif item.item is Item.RangeRestrictionNode:
-                    collection.add(self.buildRangeRestriction(item))
+                    collection.doAddNode(self.buildRangeRestriction(item))
                 elif item.item is Item.DatatypeRestrictionNode:
-                    collection.add(self.buildDatatypeRestriction(item))
+                    collection.doAddNode(self.buildDatatypeRestriction(item))
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({})'.format(item))
 
@@ -715,7 +717,7 @@ class OWLExporter(AbstractExporter):
         """
         collection = self.HashSet()
         for j in node.incomingNodes(lambda x: x.item is Item.InputEdge):
-            collection.add(self.converted[j])
+            collection.doAddNode(self.converted[j])
         collection = jnius.cast(self.Set, collection)
         self.axioms.add(self.factory.getOWLDisjointClassesAxiom(collection))
 
@@ -725,8 +727,8 @@ class OWLExporter(AbstractExporter):
         :type edge: InclusionEdge
         """
         collection = self.HashSet()
-        collection.add(self.converted[edge.source])
-        collection.add(self.converted[edge.target])
+        collection.doAddNode(self.converted[edge.source])
+        collection.doAddNode(self.converted[edge.target])
         collection = jnius.cast(self.Set, collection)
         self.axioms.add(self.factory.getOWLDisjointDataPropertiesAxiom(collection))
 
@@ -736,8 +738,8 @@ class OWLExporter(AbstractExporter):
         :type edge: InclusionEdge
         """
         collection = self.HashSet()
-        collection.add(self.converted[edge.source])
-        collection.add(self.converted[edge.target])
+        collection.doAddNode(self.converted[edge.source])
+        collection.doAddNode(self.converted[edge.target])
         collection = jnius.cast(self.Set, collection)
         self.axioms.add(self.factory.getOWLDisjointObjectPropertiesAxiom(collection))
 
@@ -747,8 +749,8 @@ class OWLExporter(AbstractExporter):
         :type edge: InclusionEdge
         """
         collection = self.HashSet()
-        collection.add(self.converted[edge.source])
-        collection.add(self.converted[edge.target])
+        collection.doAddNode(self.converted[edge.source])
+        collection.doAddNode(self.converted[edge.target])
         collection = jnius.cast(self.Set, collection)
         self.axioms.add(self.factory.getOWLEquivalentClassesAxiom(collection))
 
@@ -758,8 +760,8 @@ class OWLExporter(AbstractExporter):
         :type edge: InclusionEdge
         """
         collection = self.HashSet()
-        collection.add(self.converted[edge.source])
-        collection.add(self.converted[edge.target])
+        collection.doAddNode(self.converted[edge.source])
+        collection.doAddNode(self.converted[edge.target])
         collection = jnius.cast(self.Set, collection)
         self.axioms.add(self.factory.getOWLEquivalentDataPropertiesAxiom(collection))
 
@@ -769,8 +771,8 @@ class OWLExporter(AbstractExporter):
         :type edge: InclusionEdge
         """
         collection = self.HashSet()
-        collection.add(self.converted[edge.source])
-        collection.add(self.converted[edge.target])
+        collection.doAddNode(self.converted[edge.source])
+        collection.doAddNode(self.converted[edge.target])
         collection = jnius.cast(self.Set, collection)
         self.axioms.add(self.factory.getOWLEquivalentObjectPropertiesAxiom(collection))
 
@@ -970,7 +972,7 @@ class OWLExporter(AbstractExporter):
                     else:
                         raise MalformedDiagramError(e, 'type mismatch in equivalence')
 
-            elif e.item is Item.InstanceOfEdge:
+            elif e.item is Item.MembershipEdge:
 
                 if e.source.identity is Identity.Instance and e.target.identity is Identity.Concept:
                     self.axiomClassAssertion(e)

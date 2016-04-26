@@ -42,17 +42,17 @@ from eddy.core.items.nodes.common.base import AbstractNode
 
 class OperatorNode(AbstractNode):
     """
-    This is the base class for all the Hexagon shaped nodes.
+    This is the base class for operator nodes.
     """
     __metaclass__ = ABCMeta
 
-    indexML = 0
-    indexBL = 1
-    indexBR = 2
-    indexMR = 3
-    indexTR = 4
-    indexTL = 5
-    indexEE = 6
+    IndexML = 0
+    IndexBL = 1
+    IndexBR = 2
+    IndexMR = 3
+    IndexTR = 4
+    IndexTL = 5
+    IndexEE = 6
 
     def __init__(self, width=50, height=30, brush=None, **kwargs):
         """
@@ -68,11 +68,9 @@ class OperatorNode(AbstractNode):
         self.background = self.createBackground(58, 38)
         self.selection = self.createSelection(58, 38)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   PROPERTIES
+    #################################
 
     @property
     @abstractmethod
@@ -92,11 +90,16 @@ class OperatorNode(AbstractNode):
         """
         pass
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def boundingRect(self):
+        """
+        Returns the shape bounding rectangle.
+        :rtype: QRectF
+        """
+        return self.selection
 
     @staticmethod
     def createBackground(width, height):
@@ -139,95 +142,11 @@ class OperatorNode(AbstractNode):
         Returns the height of the shape.
         :rtype: int
         """
-        return self.polygon[self.indexBL].y() - self.polygon[self.indexTL].y()
-
-    def width(self):
-        """
-        Returns the width of the shape.
-        :rtype: int
-        """
-        return self.polygon[self.indexMR].x() - self.polygon[self.indexML].x()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   GEOMETRY                                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def boundingRect(self):
-        """
-        Returns the shape bounding rectangle.
-        :rtype: QRectF
-        """
-        return self.selection
-
-    def painterPath(self):
-        """
-        Returns the current shape as QPainterPath (used for collision detection).
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addPolygon(self.polygon)
-        return path
-
-    def shape(self):
-        """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addPolygon(self.polygon)
-        return path
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   LABEL SHORTCUTS                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def textPos(self):
-        """
-        Returns the current label position in item coordinates.
-        :rtype: QPointF
-        """
-        pass
-
-    def text(self):
-        """
-        Returns the label text.
-        :rtype: str
-        """
-        pass
-
-    def setTextPos(self, pos):
-        """
-        Set the label position.
-        :type pos: QPointF
-        """
-        pass
-
-    def setText(self, text):
-        """
-        Set the label text.
-        :type text: str
-        """
-        pass
-
-    def updateTextPos(self, *args, **kwargs):
-        """
-        Update the label position.
-        """
-        pass
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
+        return self.polygon[self.IndexBL].y() - self.polygon[self.IndexTL].y()
 
     def paint(self, painter, option, widget=None):
         """
-        Paint the node in the diagram scene.
+        Paint the node in the diagram.
         :type painter: QPainter
         :type option: QStyleOptionGraphicsItem
         :type widget: QWidget
@@ -245,3 +164,62 @@ class OperatorNode(AbstractNode):
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawPolygon(self.polygon)
+
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used for collision detection).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addPolygon(self.polygon)
+        return path
+
+    def setText(self, text):
+        """
+        Set the label text.
+        :type text: str
+        """
+        pass
+
+    def setTextPos(self, pos):
+        """
+        Set the label position.
+        :type pos: QPointF
+        """
+        pass
+
+    def shape(self):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addPolygon(self.polygon)
+        return path
+
+    def text(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        pass
+
+    def textPos(self):
+        """
+        Returns the current label position in item coordinates.
+        :rtype: QPointF
+        """
+        pass
+
+    def updateTextPos(self, *args, **kwargs):
+        """
+        Update the label position.
+        """
+        pass
+
+    def width(self):
+        """
+        Returns the width of the shape.
+        :rtype: int
+        """
+        return self.polygon[self.IndexMR].x() - self.polygon[self.IndexML].x()

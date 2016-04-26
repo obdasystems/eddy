@@ -34,21 +34,18 @@
 
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QColor, QTextCursor, QPainterPath
-from PyQt5.QtWidgets import QGraphicsItem
 
-from eddy.core.commands import CommandNodeLabelMove, CommandNodeLabelChange
-from eddy.core.datatypes import DiagramMode, Item
-from eddy.core.functions import isEmpty, distanceP
-from eddy.core.items import LabelItem
+from eddy.core.commands.nodes import CommandNodeLabelMove, CommandNodeLabelChange
+from eddy.core.datatypes.misc import DiagramMode
+from eddy.core.functions.misc import isEmpty
+from eddy.core.items.common import AbstractLabel
 from eddy.core.qt import Font
 
 
-class Label(LabelItem):
+class NodeLabel(AbstractLabel):
     """
-    This class implements the label to be attached to the graph nodes.
+    This class implements the label to be attached to the graphol nodes.
     """
-    item = Item.LabelNode
-
     def __init__(self, template='', centered=True, movable=True, editable=True, parent=None):
         """
         Initialize the label.
@@ -68,24 +65,22 @@ class Label(LabelItem):
         self.mousePressPos = None
         self.template = template
 
-        self.setFlag(QGraphicsItem.ItemIsMovable, self.movable)
-        self.setFlag(QGraphicsItem.ItemIsFocusable, self.editable)
+        self.setFlag(AbstractLabel.ItemIsMovable, self.movable)
+        self.setFlag(AbstractLabel.ItemIsFocusable, self.editable)
         self.setDefaultTextColor(QColor(0, 0, 0, 255))
         self.setFont(Font('Arial', 12, Font.Light))
         self.setText(self.template)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
         self.setPos(self.defaultPos())
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   PROPERTIES
+    #################################
 
     @property
     def editable(self):
         """
-        Tells whether the label is editable.
+        Returns True if the label is editable, else False.
         :rtype: bool
         """
         return self._editable
@@ -97,12 +92,12 @@ class Label(LabelItem):
         :type editable: bool.
         """
         self._editable = bool(editable)
-        self.setFlag(QGraphicsItem.ItemIsFocusable, self._editable)
+        self.setFlag(AbstractLabel.ItemIsFocusable, self._editable)
 
     @property
     def movable(self):
         """
-        Tells whether the label is movable.
+        Returns True if the label is movable, else False.
         :rtype: bool
         """
         return self._movable
@@ -114,21 +109,19 @@ class Label(LabelItem):
         :type movable: bool.
         """
         self._movable = bool(movable)
-        self.setFlag(QGraphicsItem.ItemIsMovable, self._movable)
+        self.setFlag(AbstractLabel.ItemIsMovable, self._movable)
 
     @property
     def moved(self):
         """
-        Tells whether the label has been moved from its default position.
+        Returns True if the label has been moved from its default location, else False.
         :return: bool
         """
-        return distanceP(self.pos(), self.defaultPos()) > 1.41421356237 # sqrt(2) => max distance in 1px
+        return (self.pos() - self.defaultPos()).manhattanLength() >= 1
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
     def center(self):
         """
@@ -185,16 +178,25 @@ class Label(LabelItem):
         self.setPlainText(text)
         self.updatePos(moved)
 
+    def shape(self):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRect(self.boundingRect())
+        return path
+
     def text(self):
         """
-        Returns the current shape text (shortcut for self.toPlainText()).
+        Returns the text of the label.
         :rtype: str
         """
         return self.toPlainText().strip()
 
     def updatePos(self, moved=False):
         """
-        Update the current text position with respect to the shape.
+        Update the current text position with respect to its parent node.
         :type moved: bool.
         """
         if not moved:
@@ -207,11 +209,9 @@ class Label(LabelItem):
         """
         return self.boundingRect().width()
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   EVENTS                                                                                                         #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   EVENTS
+    #################################
 
     def focusInEvent(self, focusEvent):
         """
@@ -221,15 +221,14 @@ class Label(LabelItem):
         # Make the label focusable only by performing a double click on the
         # text: this will exclude any other type of focus action (dunno why
         # but sometime the label gets the focus when hovering the mouse cursor
-        # on the text: mostly happens when loading diagram scenes from file)
+        # on the text: mostly happens when loading a diagram from file)
         if focusEvent.reason() == Qt.OtherFocusReason:
-            scene = self.scene()
-            scene.setMode(DiagramMode.EditText)
+            self.diagram.setMode(DiagramMode.EditText)
             cursor = self.textCursor()
             cursor.select(QTextCursor.BlockUnderCursor)
             self.setTextCursor(cursor)
             self.focusInData = self.text()
-            scene.clearSelection()
+            self.diagram.clearSelection()
             super().focusInEvent(focusEvent)
         else:
             self.clearFocus()
@@ -239,9 +238,7 @@ class Label(LabelItem):
         Executed when the text item lose the focus.
         :type focusEvent: QFocusEvent
         """
-        scene = self.scene()
-
-        if scene.mode is DiagramMode.EditText:
+        if self.diagram.mode is DiagramMode.EditText:
 
             # Make sure we have something in the label.
             if isEmpty(self.text()):
@@ -251,27 +248,28 @@ class Label(LabelItem):
             currentData = self.text()
 
             if focusInData and focusInData != currentData:
-                # The code below is a bit tricky: to be able to properly update the node index in
-                # the diagram scene we need to force the value of the label to it's previous one
-                # and let the undo command implementation update the index by applying the redo.
-                # We won't notice any glitch since the back and forth change is going to happen
-                # within a frame and Qt will only draw the new text. This is the only place where
-                # this trick is necessary since both the refactor name dialog and the node properties
-                # tab perform the edit on an external QTextField and oly later they will push the
-                # change in the label, while here we have realtime edit of the label.
+                # The code below is a bit tricky: to be able to properly update
+                # the node in the project index we need to force the value of the
+                # label to it's previous one and let the undo command implementation
+                # update the index by applying the redo. We won't notice any glitch
+                # since the back and forth change is going to happen within a frame
+                # and Qt will only draw the new text. This is the only place where
+                # this trick is necessary since both the refactor name dialog and
+                # the node properties tab perform the edit on an external QTextField
+                # and only later they will push the change in the label, while here
+                # we have realtime edit of the label.
                 self.setText(focusInData)
                 node = self.parentItem()
-                command = CommandNodeLabelChange(scene, node, focusInData, currentData)
-                scene.undostack.push(command)
+                command = CommandNodeLabelChange(self.diagram, node, focusInData, currentData)
+                self.diagram.undoStack.push(command)
 
             cursor = self.textCursor()
             cursor.clearSelection()
             self.focusInData = None
             self.setTextCursor(cursor)
             self.setTextInteractionFlags(Qt.NoTextInteraction)
-
-            scene.setMode(DiagramMode.Idle)
-            scene.sgnUpdated.emit()
+            self.diagram.setMode(DiagramMode.Idle)
+            self.diagram.sgnUpdated.emit()
 
         super().focusOutEvent(focusEvent)
 
@@ -325,27 +323,25 @@ class Label(LabelItem):
         Executed when the mouse is pressed on the text item.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        scene = self.scene()
-
-        if scene.mode is DiagramMode.Idle:
+        if self.diagram.mode is DiagramMode.Idle:
 
             if mouseEvent.modifiers() & Qt.ControlModifier:
                 # Allow the moving of the label if the CTRL modifier is being held.
-                scene.clearSelection()
-                scene.setMode(DiagramMode.MoveText)
+                self.diagram.clearSelection()
+                self.diagram.setMode(DiagramMode.MoveText)
                 self.mousePressPos = self.pos()
                 super().mousePressEvent(mouseEvent)
             else:
                 # See if the mouse is hovering the parent item: if so see if the
                 # item is not selected and in case select it so the mouseMoveEvent
-                # in DiagramScene can perform the node movement.
+                # in the Diagram class can perform the node movement.
                 parent = self.parentItem()
-                if parent in scene.items(mouseEvent.scenePos()):
+                if parent in self.diagram.items(mouseEvent.scenePos()):
                     if not parent.isSelected():
-                        scene.clearSelection()
+                        self.diagram.clearSelection()
                         parent.setSelected(True)
 
-        elif scene.mode is DiagramMode.EditText:
+        elif self.diagram.mode is DiagramMode.EditText:
 
             # Call super method in this case so we can move the mouse
             # ibeam cursor within the label while being in EDIT mode.
@@ -363,43 +359,15 @@ class Label(LabelItem):
         Executed when the mouse is released from the label.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        scene = self.scene()
         super().mouseReleaseEvent(mouseEvent)
 
-        if scene.mode is DiagramMode.MoveText:
+        if self.diagram.mode is DiagramMode.MoveText:
             if self.mousePressPos is not None:
                 pos = self.pos()
                 if self.mousePressPos != pos:
-                    command = CommandNodeLabelMove(scene, self.parentItem(), self.mousePressPos, pos)
-                    scene.undostack.push(command)
-                    scene.setMode(DiagramMode.Idle)
+                    node = self.parentItem()
+                    command = CommandNodeLabelMove(self.diagram, node, self.mousePressPos, pos)
+                    self.diagram.undoStack.push(command)
+                    self.diagram.setMode(DiagramMode.Idle)
 
         self.mousePressPos = None
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   GEOMETRY                                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def shape(self):
-        """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addRect(self.boundingRect())
-        return path
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   REPRESENTATION                                                                                                 #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def __repr__(self):
-        """
-        Object representaton.
-        """
-        parent = self.parentItem()
-        return 'Label:{}:{}'.format(parent.__class__.__name__, parent.id)

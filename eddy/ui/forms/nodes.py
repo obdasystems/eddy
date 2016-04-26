@@ -37,10 +37,11 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QDialogButtonBox, QLabel
 from PyQt5.QtWidgets import QMessageBox
 
-from eddy.core.datatypes import XsdDatatype, Identity, Facet
-from eddy.core.functions import isEmpty, connect
-
-from eddy.ui.fields import IntField, StringField, ComboBox
+from eddy.core.datatypes.graphol import Identity
+from eddy.core.datatypes.owl import XsdDatatype, Facet
+from eddy.core.functions.misc import isEmpty
+from eddy.core.functions.signals import connect
+from eddy.ui.fields import IntegerField, StringField, ComboBox
 
 
 class CardinalityRestrictionForm(QDialog):
@@ -53,61 +54,57 @@ class CardinalityRestrictionForm(QDialog):
         :type parent: QWidget
         """
         super().__init__(parent)
-        self.minCardinalityValue = None
-        self.maxCardinalityValue = None
-        self.minCardinalityField = IntField(self)
-        self.maxCardinalityField = IntField(self)
-        self.minCardinalityField.setFixedWidth(80)
-        self.maxCardinalityField.setFixedWidth(80)
+        self.minValue = None
+        self.maxValue = None
+        self.minField = IntegerField(self)
+        self.maxField = IntegerField(self)
+        self.minField.setFixedWidth(80)
+        self.maxField.setFixedWidth(80)
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
         self.mainLayout = QFormLayout(self)
-        self.mainLayout.addRow('Min. cardinality', self.minCardinalityField)
-        self.mainLayout.addRow('Max. cardinality', self.maxCardinalityField)
+        self.mainLayout.addRow('Min. cardinality', self.minField)
+        self.mainLayout.addRow('Max. cardinality', self.maxField)
         self.mainLayout.addRow(self.buttonBox)
         self.setWindowTitle('Insert cardinality')
         self.setWindowIcon(QIcon(':/images/eddy'))
         self.setFixedSize(self.sizeHint())
 
-        connect(self.buttonBox.accepted, self.validate)
+        connect(self.buttonBox.accepted, self.accept)
         connect(self.buttonBox.rejected, self.reject)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SLOTS                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   SLOTS
+    #################################
 
     @pyqtSlot()
-    def validate(self):
+    def accept(self):
         """
         Validate the form and trigger accept() if the form is valid.
         """
-        if not isEmpty(self.minCardinalityField.text()) and not isEmpty(self.maxCardinalityField.text()):
-
-            v1 = int(self.minCardinalityField.text())
-            v2 = int(self.maxCardinalityField.text())
-
+        valid = True
+        if not isEmpty(self.minField.text()) and not isEmpty(self.maxField.text()):
+            v1 = int(self.minField.text())
+            v2 = int(self.maxField.text())
             if v1 > v2:
                 msgbox = QMessageBox(self)
                 msgbox.setIconPixmap(QPixmap(':/icons/warning'))
                 msgbox.setWindowIcon(QIcon(':/images/eddy'))
                 msgbox.setWindowTitle('Invalid range specified')
-                msgbox.setText('Minimum cardinality {} must be lower or equal than Maximum cardinality {}'.format(v1, v2))
+                msgbox.setText('Min. cardinality {0} must be lower or equal than Max. cardinality {1}'.format(v1, v2))
                 msgbox.setStandardButtons(QMessageBox.Ok)
                 msgbox.exec_()
-                return
-
-        if not isEmpty(self.minCardinalityField.text()):
-            self.minCardinalityValue = int(self.minCardinalityField.text())
-        if not isEmpty(self.maxCardinalityField.text()):
-            self.maxCardinalityValue = int(self.maxCardinalityField.text())
-
-        self.accept()
+                valid = False
+        if valid:
+            if not isEmpty(self.minField.text()):
+                self.minValue = int(self.minField.text())
+            if not isEmpty(self.maxField.text()):
+                self.maxValue = int(self.maxField.text())
+            super().accept()
 
 
 class ValueForm(QDialog):
     """
-    This class implements the form used to select the Literal value of an Individual node.
+    This class implements the form used to select the Value of an Individual node.
     """
     def __init__(self, node, parent=None):
         """
@@ -182,15 +179,13 @@ class RenameForm(QDialog):
         self.setWindowIcon(QIcon(':/images/eddy'))
         self.setFixedSize(self.sizeHint())
 
-        connect(self.buttonBox.accepted, self.validate)
+        connect(self.buttonBox.accepted, self.accept)
         connect(self.buttonBox.rejected, self.reject)
         connect(self.renameField.textChanged, self.nameChanged)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SLOTS                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   SLOTS
+    #################################
 
     @pyqtSlot()
     def nameChanged(self):
@@ -204,7 +199,7 @@ class RenameForm(QDialog):
         self.setFixedSize(self.sizeHint())
 
     @pyqtSlot()
-    def validate(self):
+    def accept(self):
         """
         Validate the form and trigger accept() if the form is valid.
         """
@@ -216,11 +211,10 @@ class RenameForm(QDialog):
             msgbox.setText('You specified an invalid predicate name!')
             msgbox.setStandardButtons(QMessageBox.Ok)
             msgbox.exec_()
-            return
-
-        # This will strip out leading/trailing whitespaces.
-        self.renameField.setValue(self.renameField.value())
-        self.accept()
+        else:
+            # This will strip out leading/trailing whitespaces.
+            self.renameField.setValue(self.renameField.value())
+            super().accept()
 
 
 class ValueRestrictionForm(QDialog):
@@ -282,11 +276,9 @@ class ValueRestrictionForm(QDialog):
         connect(self.buttonBox.rejected, self.reject)
         connect(self.datatypeField.currentIndexChanged[int], self.datatypeFieldChanged)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SLOTS                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   SLOTS
+    #################################
 
     @pyqtSlot(int)
     def datatypeFieldChanged(self, index):
@@ -298,7 +290,6 @@ class ValueRestrictionForm(QDialog):
         self.facetField.clear()
         for facet in Facet.forDatatype(self.datatypeField.itemData(index)):
             self.facetField.addItem(facet.value, facet)
-
         for i in range(self.facetField.count()):
             if self.facetField.itemData(i) is currentFacet:
                 self.facetField.setCurrentIndex(i)

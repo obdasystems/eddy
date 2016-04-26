@@ -40,8 +40,7 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QProgressBar, QVBoxLayout, QApplication
 from PyQt5.QtWidgets import QMessageBox
 
-
-from eddy.core.functions import connect
+from eddy.core.functions.signals import connect
 
 
 class BusyLoaderDialog(QDialog):
@@ -119,5 +118,6 @@ class BusyLoaderDialog(QDialog):
         Executed whenever the translation completes.
         """
         self.workerThread.quit()
+        # noinspection PyArgumentList
         self.worker.moveToThread(QApplication.instance().thread())
         self.accept()

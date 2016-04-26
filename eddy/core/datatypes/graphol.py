@@ -33,17 +33,18 @@
 
 
 from enum import unique, IntEnum, Enum
-from types import DynamicClassAttribute
 
-from eddy.core.regex import RE_CARDINALITY
+from eddy.core.functions.misc import cutR
+from eddy.core.regex import RE_CARDINALITY, RE_CAMEL_SPACE
 
 
 @unique
 class Identity(Enum):
     """
-    This class defines all the identities a graphol node may assume.
+    This class defines graphol expression identities.
     """
-    __order__ = 'Neutral Concept Role Attribute ValueDomain Instance Value RoleInstance AttributeInstance Unknown'
+    __order__ = 'Neutral Concept Role Attribute ValueDomain ' \
+                'Instance Value RoleInstance AttributeInstance Unknown'
 
     Neutral = 'Neutral'
     Concept = 'Concept'
@@ -60,46 +61,48 @@ class Identity(Enum):
 @unique
 class Item(IntEnum):
     """
-    This class defines all the available Graphol items.
-    The enum is ordered according to Graphol elements' classes.
-    Changing the order of the enum elements will affect node properties results such as 'predicate' and 'constructor'.
+    This class defines all the available elements for graphol diagrams.
     """
-    __order__ = 'ConceptNode AttributeNode RoleNode ValueDomainNode IndividualNode ValueRestrictionNode' \
-                'DomainRestrictionNode RangeRestrictionNode UnionNode EnumerationNode ComplementNode RoleChainNode' \
-                'RoleInverseNode DatatypeRestrictionNode DisjointUnionNode PropertyAssertionNode InclusionEdge' \
-                'InputEdge InstanceOfEdge LabelEdge LabelNode Undefined'
+    __order__ = 'ConceptNode AttributeNode RoleNode ValueDomainNode IndividualNode ' \
+                'ValueRestrictionNode DomainRestrictionNode RangeRestrictionNode ' \
+                'UnionNode EnumerationNode ComplementNode RoleChainNode RoleInverseNode ' \
+                'DatatypeRestrictionNode DisjointUnionNode PropertyAssertionNode ' \
+                'InclusionEdge InputEdge MembershipEdge Label Undefined'
 
-    Undefined = 0
+    # PREDICATES
+    ConceptNode = 65537
+    AttributeNode = 65538
+    RoleNode = 65539
+    ValueDomainNode = 65540
+    IndividualNode = 65541
+    ValueRestrictionNode = 65542
 
-    ConceptNode = 1
-    AttributeNode = 2
-    RoleNode = 3
-    ValueDomainNode = 4
-    IndividualNode = 5
-    ValueRestrictionNode = 6
-    DomainRestrictionNode = 7
-    RangeRestrictionNode = 8
-    UnionNode = 9
-    EnumerationNode = 10
-    ComplementNode = 11
-    RoleChainNode = 12
-    IntersectionNode = 13
-    RoleInverseNode = 14
-    DatatypeRestrictionNode = 15
-    DisjointUnionNode = 16
-    PropertyAssertionNode = 17
+    # CONSTRUCTORS
+    DomainRestrictionNode = 65543
+    RangeRestrictionNode = 65544
+    UnionNode = 65545
+    EnumerationNode = 65546
+    ComplementNode = 65547
+    RoleChainNode = 65548
+    IntersectionNode = 65549
+    RoleInverseNode = 65550
+    DatatypeRestrictionNode = 65551
+    DisjointUnionNode = 65552
+    PropertyAssertionNode = 65553
 
-    InclusionEdge = 18
-    InputEdge = 19
-    InstanceOfEdge = 20
+    # EDGES
+    InclusionEdge = 65554
+    InputEdge = 65555
+    MembershipEdge = 65556
 
-    LabelEdge = 21
-    LabelNode = 22
+    # EXTRA
+    Label = 65557
+    Undefined = 65558
 
     @classmethod
     def forValue(cls, value):
         """
-        Returns the Item matching the given value.
+        Returns the item type matching the given value.
         :type value: T <= int | str | Item
         :rtype: Item
         """
@@ -112,31 +115,27 @@ class Item(IntEnum):
                     return x
         return None
 
-    @DynamicClassAttribute
-    def label(self):
+    @property
+    def realname(self):
         """
-        The label of the Enum member.
+        Returns the item readable name, i.e: attribute node, concept node.
         :rtype: str
         """
-        return {
-            Item.AttributeNode: 'attribute node', Item.ComplementNode: 'complement node',
-            Item.ConceptNode: 'concept node', Item.DatatypeRestrictionNode: 'datatype restriction node',
-            Item.DisjointUnionNode: 'disjoint union node', Item.DomainRestrictionNode: 'domain restriction node',
-            Item.EnumerationNode: 'enumeration node', Item.IndividualNode: 'individual node',
-            Item.IntersectionNode: 'intersection node', Item.PropertyAssertionNode: 'property assertion node',
-            Item.RangeRestrictionNode: 'range restriction node', Item.RoleNode: 'role node',
-            Item.RoleChainNode: 'role chain node', Item.RoleInverseNode: 'role inverse node',
-            Item.UnionNode: 'union node', Item.ValueDomainNode: 'value domain node',
-            Item.ValueRestrictionNode: 'value restriction node', Item.InclusionEdge: 'inclusion edge',
-            Item.InputEdge: 'input edge', Item.InstanceOfEdge: 'instanceOf edge',
-            Item.LabelNode: 'node label', Item.LabelEdge: 'edge label', Item.Undefined: 'undefined item',
-        }[self]
+        return RE_CAMEL_SPACE.sub('\g<1> \g<2>', self.name).lower()
 
+    @property
+    def shortname(self):
+        """
+        Returns the item short name, i.e: attribute, concept.
+        :rtype: str
+        """
+        return cutR(cutR(self.realname, ' node'), ' edge')
+    
 
 @unique
 class Restriction(Enum):
     """
-    This class defines all the available restrictions for the Domain and Range restriction nodes.
+    This class defines all the available restrictions for domain and range restriction nodes.
     """
     __order__ = 'Exists Forall Cardinality Self'
 
@@ -146,33 +145,32 @@ class Restriction(Enum):
     Self = 'Self: self'
 
     @classmethod
-    def forLabel(cls, label):
+    def forLabel(cls, value):
         """
         Returns the restriction matching the given label.
-        :type label: str
+        :type value: str
         :rtype: Restriction
         """
-        label = label.lower().strip()
+        value = value.lower().strip()
         for x in {Restriction.Exists, Restriction.Forall, Restriction.Self}:
-            if label == x.label:
+            if value == x.format():
                 return x
-        match = RE_CARDINALITY.match(label)
+        match = RE_CARDINALITY.match(value)
         if match:
             return Restriction.Cardinality
         return None
 
-    @DynamicClassAttribute
-    def label(self):
+    def format(self, **kwargs):
         """
-        The label of the Enum member.
+        Returns a formatted representation of the restriction.
         :rtype: str
         """
         return {
             Restriction.Exists: 'exists',
             Restriction.Forall: 'forall',
             Restriction.Self: 'self',
-            Restriction.Cardinality: '({min},{max})',
-        }[self]
+            Restriction.Cardinality: '({0},{1})',
+        }[self].format(**kwargs)
 
 
 @unique
@@ -186,9 +184,9 @@ class Special(Enum):
     Bottom = 'BOTTOM'
 
     @classmethod
-    def forValue(cls, value):
+    def forLabel(cls, value):
         """
-        Returns the special type matching the given value.
+        Returns the special type matching the given label.
         :type value: str
         :rtype: Special
         """

@@ -31,31 +31,30 @@
 #                                                                        #
 ##########################################################################
 
-
-from eddy.core.commands.common import CommandComposeAxiom
-from eddy.core.commands.common import CommandItemsMultiAdd
-from eddy.core.commands.common import CommandItemsMultiRemove
-from eddy.core.commands.common import CommandItemsTranslate
-from eddy.core.commands.common import CommandRefactor
-from eddy.core.commands.common import CommandSetProperty
-
-from eddy.core.commands.edges import CommandEdgeAdd
-from eddy.core.commands.edges import CommandEdgeAnchorMove
-from eddy.core.commands.edges import CommandEdgeBreakpointAdd
-from eddy.core.commands.edges import CommandEdgeBreakpointRemove
-from eddy.core.commands.edges import CommandEdgeBreakpointMove
-from eddy.core.commands.edges import CommandEdgeInclusionToggleComplete
-from eddy.core.commands.edges import CommandEdgeSwap
-
-from eddy.core.commands.nodes import CommandNodeAdd
-from eddy.core.commands.nodes import CommandNodeSetBrush
-from eddy.core.commands.nodes import CommandNodeChangeInputOrder
-from eddy.core.commands.nodes import CommandNodeOperatorSwitchTo
-from eddy.core.commands.nodes import CommandNodeLabelChange
-from eddy.core.commands.nodes import CommandNodeLabelMove
-from eddy.core.commands.nodes import CommandNodeMove
-from eddy.core.commands.nodes import CommandNodeRezize
-from eddy.core.commands.nodes import CommandNodeChangeMeta
-from eddy.core.commands.nodes import CommandNodeSetZValue
-
-from eddy.core.commands.scene import CommandSceneResize
+# from eddy.core.commands.common import CommandComposeAxiom
+# from eddy.core.commands.common import CommandItemsMultiAdd
+# from eddy.core.commands.common import CommandItemsMultiRemove
+# from eddy.core.commands.common import CommandItemsTranslate
+# from eddy.core.commands.common import CommandRefactor
+# from eddy.core.commands.common import CommandSetProperty
+#
+# from eddy.core.commands.edges import CommandEdgeAdd
+# from eddy.core.commands.edges import CommandEdgeAnchorMove
+# from eddy.core.commands.edges import CommandEdgeBreakpointAdd
+# from eddy.core.commands.edges import CommandEdgeBreakpointRemove
+# from eddy.core.commands.edges import CommandEdgeBreakpointMove
+# from eddy.core.commands.edges import CommandEdgeToggleComplete
+# from eddy.core.commands.edges import CommandEdgeSwap
+#
+# from eddy.core.commands.nodes import CommandNodeAdd
+# from eddy.core.commands.nodes import CommandNodeSetBrush
+# from eddy.core.commands.nodes import CommandNodeChangeInputOrder
+# from eddy.core.commands.nodes import CommandNodeOperatorSwitchTo
+# from eddy.core.commands.nodes import CommandNodeLabelChange
+# from eddy.core.commands.nodes import CommandNodeLabelMove
+# from eddy.core.commands.nodes import CommandNodeMove
+# from eddy.core.commands.nodes import CommandNodeRezize
+# from eddy.core.commands.nodes import CommandNodeChangeMeta
+# from eddy.core.commands.nodes import CommandNodeSetZValue
+#
+# from eddy.core.commands.diagram import CommandDiagramResize

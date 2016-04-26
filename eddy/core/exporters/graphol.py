@@ -32,23 +32,53 @@
 ##########################################################################
 
 
+from PyQt5.QtCore import QObject
 from PyQt5.QtXml import QDomDocument
 
-from eddy.core.datatypes import Item
-from eddy.core.exporters.common import AbstractExporter
+from eddy.core.datatypes.graphol import Item
+from eddy.core.functions.fsystem import fwrite
 
 
-class GrapholExporter(AbstractExporter):
+class GrapholExporter(QObject):
     """
-    This class can be used to export Graphol diagrams to file.
+    This class can be used to export the structure of graphol diagrams to file.
     """
-    def __init__(self, scene):
+    GrapholVersion = 1
+
+    def __init__(self, diagram, parent=None):
         """
-        Initialize the Graphol exporter.
-        :type scene: DiagramScene
+        Initialize the graphol exporter.
+        :type diagram: Diagram
+        :type parent: MainWindow
         """
-        super().__init__(scene)
+        super().__init__(parent)
+
+        self.diagram = diagram
         self.document = None
+
+        self.exportFuncForItem = {
+            Item.AttributeNode: self.exportAttributeNode,
+            Item.ComplementNode: self.exportComplementNode,
+            Item.ConceptNode: self.exportConceptNode,
+            Item.DatatypeRestrictionNode: self.exportDatatypeRestrictionNode,
+            Item.DisjointUnionNode: self.exportDisjointUnionNode,
+            Item.DomainRestrictionNode: self.exportDomainRestrictionNode,
+            Item.EnumerationNode: self.exportEnumerationNode,
+            Item.IndividualNode: self.exportIndividualNode,
+            Item.IntersectionNode: self.exportIntersectionNode,
+            Item.PropertyAssertionNode: self.exportPropertyAssertionNode,
+            Item.RangeRestrictionNode: self.exportRangeRestrictionNode,
+            Item.RoleNode: self.exportRoleNode,
+            Item.RoleChainNode: self.exportRoleChainNode,
+            Item.RoleInverseNode: self.exportRoleInverseNode,
+            Item.UnionNode: self.exportUnionNode,
+            Item.ValueDomainNode: self.exportValueDomainNode,
+            Item.ValueRestrictionNode: self.exportValueRestrictionNode,
+            Item.InclusionEdge: self.exportInclusionEdge,
+            Item.InputEdge: self.exportInputEdge,
+            Item.MembershipEdge: self.exportMembershipEdge,
+        }
+
         self.itemToXml = {
             Item.AttributeNode: 'attribute',
             Item.ComplementNode: 'complement',
@@ -69,14 +99,12 @@ class GrapholExporter(AbstractExporter):
             Item.ValueRestrictionNode: 'value-restriction',
             Item.InclusionEdge: 'inclusion',
             Item.InputEdge: 'input',
-            Item.InstanceOfEdge: 'instance-of',
+            Item.MembershipEdge: 'membership',
         }
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   NODES                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   NODES
+    #################################
 
     def exportAttributeNode(self, node):
         """
@@ -218,11 +246,9 @@ class GrapholExporter(AbstractExporter):
         """
         return self.exportLabelNode(node)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   EDGES                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   EDGES
+    #################################
 
     def exportInclusionEdge(self, edge):
         """
@@ -242,98 +268,17 @@ class GrapholExporter(AbstractExporter):
         """
         return self.exportGenericEdge(edge)
 
-    def exportInstanceOfEdge(self, edge):
+    def exportMembershipEdge(self, edge):
         """
         Export the given edge into a QDomElement.
-        :type edge: InstanceOf
+        :type edge: MembershipEdge
         :rtype: QDomElement
         """
         return self.exportGenericEdge(edge)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   METADATA                                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def exportPredicateMetadata(self, item, predicate):
-        """
-        Export given predicate metadata.
-        :type item: Item
-        :type predicate: str
-        :rtype: QDomElement
-        """
-        meta = self.scene.meta.metaFor(item, predicate)
-        if meta:
-            element = self.document.createElement('meta')
-            element.setAttribute('type', self.itemToXml[item])
-            element.setAttribute('predicate', predicate)
-            url = self.document.createElement('data:url')
-            url.appendChild(self.document.createTextNode(meta.url))
-            description = self.document.createElement('data:description')
-            description.appendChild(self.document.createTextNode(meta.description))
-            element.appendChild(url)
-            element.appendChild(description)
-            return element
-        return None
-
-    def exportAttributeMetadata(self, item, predicate):
-        """
-        Export given attribute metadata.
-        :type item: Item
-        :type predicate: str
-        :rtype: QDomElement
-        """
-        element = self.exportPredicateMetadata(item, predicate)
-        if element:
-            meta = self.scene.meta.metaFor(item, predicate)
-            if meta:
-                functionality = self.document.createElement('data:functionality')
-                functionality.appendChild(self.document.createTextNode(str(int(meta.functionality))))
-                element.appendChild(functionality)
-                return element
-        return None
-
-    def exportRoleMetadata(self, item, predicate):
-        """
-        Export given role metadata
-        :type item: Item
-        :type predicate: str
-        :rtype: QDomElement
-        """
-        element = self.exportPredicateMetadata(item, predicate)
-        if element:
-            meta = self.scene.meta.metaFor(item, predicate)
-            if meta:
-                functionality = self.document.createElement('data:functionality')
-                functionality.appendChild(self.document.createTextNode(str(int(meta.functionality))))
-                inverseFunctionality = self.document.createElement('data:inverseFunctionality')
-                inverseFunctionality.appendChild(self.document.createTextNode(str(int(meta.inverseFunctionality))))
-                asymmetry = self.document.createElement('data:asymmetry')
-                asymmetry.appendChild(self.document.createTextNode(str(int(meta.asymmetry))))
-                irreflexivity = self.document.createElement('data:irreflexivity')
-                irreflexivity.appendChild(self.document.createTextNode(str(int(meta.irreflexivity))))
-                reflexivity = self.document.createElement('data:reflexivity')
-                reflexivity.appendChild(self.document.createTextNode(str(int(meta.reflexivity))))
-                symmetry = self.document.createElement('data:symmetry')
-                symmetry.appendChild(self.document.createTextNode(str(int(meta.symmetry))))
-                transitivity = self.document.createElement('data:transitivity')
-                transitivity.appendChild(self.document.createTextNode(str(int(meta.transitivity))))
-                element.appendChild(functionality)
-                element.appendChild(inverseFunctionality)
-                element.appendChild(asymmetry)
-                element.appendChild(irreflexivity)
-                element.appendChild(reflexivity)
-                element.appendChild(symmetry)
-                element.appendChild(transitivity)
-                return element
-        return None
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   AUXILIARY METHODS
+    #################################
 
     def exportLabelNode(self, node):
         """
@@ -342,7 +287,7 @@ class GrapholExporter(AbstractExporter):
         :rtype: QDomElement
         """
         position = node.mapToScene(node.textPos())
-        label = self.document.createElement('shape:label')
+        label = self.document.createElement('label')
         label.setAttribute('height', node.label.height())
         label.setAttribute('width', node.label.width())
         label.setAttribute('x', position.x())
@@ -362,10 +307,10 @@ class GrapholExporter(AbstractExporter):
         element.setAttribute('source', edge.source.id)
         element.setAttribute('target', edge.target.id)
         element.setAttribute('id', edge.id)
-        element.setAttribute('type', self.itemToXml[edge.item])
+        element.setAttribute('type', self.itemToXml[edge.type()])
 
         for p in [edge.source.anchor(edge)] + edge.breakpoints + [edge.target.anchor(edge)]:
-            point = self.document.createElement('line:point')
+            point = self.document.createElement('point')
             point.setAttribute('x', p.x())
             point.setAttribute('y', p.y())
             element.appendChild(point)
@@ -380,9 +325,9 @@ class GrapholExporter(AbstractExporter):
         """
         element = self.document.createElement('node')
         element.setAttribute('id', node.id)
-        element.setAttribute('type', self.itemToXml[node.item])
+        element.setAttribute('type', self.itemToXml[node.type()])
         element.setAttribute('color', node.brush.color().name())
-        geometry = self.document.createElement('shape:geometry')
+        geometry = self.document.createElement('geometry')
         geometry.setAttribute('height', node.height())
         geometry.setAttribute('width', node.width())
         geometry.setAttribute('x', node.pos().x())
@@ -390,134 +335,42 @@ class GrapholExporter(AbstractExporter):
         element.appendChild(geometry)
         return element
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DOCUMENT EXPORT                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def export(self, indent=4):
-        """
-        Export the coverted ontology.
-        :type indent: int
-        :rtype: str
-        """
-        return self.document.toString(indent)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DOCUMENT GENERATION                                                                                            #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   DOCUMENT GENERATION
+    #################################
 
     def run(self):
         """
-        Perform Graphol ontology generation.
+        Perform graphol document generation.
         """
         # 1) CREATE THE DOCUMENT
         self.document = QDomDocument()
-        self.document.appendChild(self.document.createProcessingInstruction('xml', 'version="1.0" '
-                                                                                   'encoding="UTF-8" '
-                                                                                   'standalone="no"'))
+        instruction = self.document.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"')
+        self.document.appendChild(instruction)
         
         # 2) CREATE ROOT ELEMENT
         root = self.document.createElement('graphol')
-        root.setAttribute('xmlns', 'http://www.dis.uniroma1.it/~graphol/schema')
-        root.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
-        root.setAttribute('xmlns:data', 'http://www.dis.uniroma1.it/~graphol/schema/data')
-        root.setAttribute('xmlns:line', 'http://www.dis.uniroma1.it/~graphol/schema/line')
-        root.setAttribute('xmlns:shape', 'http://www.dis.uniroma1.it/~graphol/schema/shape')
-        root.setAttribute('xsi:schemaLocation', 'http://www.dis.uniroma1.it/~graphol/schema '
-                                                'http://www.dis.uniroma1.it/~graphol/schema/graphol.xsd')
+        root.setAttribute('version', str(self.GrapholVersion))
         
         self.document.appendChild(root)
         
         # 3) CREATE THE GRAPH NODE
         graph = self.document.createElement('graph')
-        graph.setAttribute('width', self.scene.sceneRect().width())
-        graph.setAttribute('height', self.scene.sceneRect().height())
+        graph.setAttribute('width', self.diagram.width())
+        graph.setAttribute('height', self.diagram.height())
         
         # 4) GENERATE NODES
-        for node in self.scene.nodes():
-        
-            element = None
-
-            if node.item is Item.AttributeNode:
-                element = self.exportAttributeNode(node)
-            elif node.item is Item.ComplementNode:
-                element = self.exportComplementNode(node)
-            elif node.item is Item.ConceptNode:
-                element = self.exportConceptNode(node)
-            elif node.item is Item.DatatypeRestrictionNode:
-                element = self.exportDatatypeRestrictionNode(node)
-            elif node.item is Item.DisjointUnionNode:
-                element = self.exportDisjointUnionNode(node)
-            elif node.item is Item.DomainRestrictionNode:
-                element = self.exportDomainRestrictionNode(node)
-            elif node.item is Item.EnumerationNode:
-                element = self.exportEnumerationNode(node)
-            elif node.item is Item.IndividualNode:
-                element = self.exportIndividualNode(node)
-            elif node.item is Item.IntersectionNode:
-                element = self.exportIntersectionNode(node)
-            elif node.item is Item.PropertyAssertionNode:
-                element = self.exportPropertyAssertionNode(node)
-            elif node.item is Item.RangeRestrictionNode:
-                element = self.exportRangeRestrictionNode(node)
-            elif node.item is Item.RoleNode:
-                element = self.exportRoleNode(node)
-            elif node.item is Item.RoleChainNode:
-                element = self.exportRoleChainNode(node)
-            elif node.item is Item.RoleInverseNode:
-                element = self.exportRoleInverseNode(node)
-            elif node.item is Item.UnionNode:
-                element = self.exportUnionNode(node)
-            elif node.item is Item.ValueDomainNode:
-                element = self.exportValueDomainNode(node)
-            elif node.item is Item.ValueRestrictionNode:
-                element = self.exportValueRestrictionNode(node)
-
-            if not element:
-                raise ValueError('unknown node: {}'.format(node))
-
-            graph.appendChild(element)
+        for node in self.diagram.nodes():
+            func = self.exportFuncForItem[node.type()]
+            graph.appendChild(func(node))
 
         # 5) GENERATE EDGES
-        for edge in self.scene.edges():
-
-            element = None
-
-            if edge.item is Item.InclusionEdge:
-                element = self.exportInclusionEdge(edge)
-            elif edge.item is Item.InputEdge:
-                element = self.exportInputEdge(edge)
-            elif edge.item is Item.InstanceOfEdge:
-                element = self.exportInstanceOfEdge(edge)
-
-            if not element:
-                raise ValueError('unknown edge: {}'.format(edge))
-
-            graph.appendChild(element)
+        for edge in self.diagram.edges():
+            func = self.exportFuncForItem[edge.type()]
+            graph.appendChild(func(edge))
 
         # 6) APPEND THE GRAPH TO THE DOCUMENT
         root.appendChild(graph)
 
-        # 7) GENERATE NODES META DATA
-        collection = []
-        for item, predicate in self.scene.meta.entries():
-
-            if item is Item.RoleNode:
-                element = self.exportRoleMetadata(item, predicate)
-            elif item is Item.AttributeNode:
-                element = self.exportAttributeMetadata(item, predicate)
-            else:
-                element = self.exportPredicateMetadata(item, predicate)
-
-            if element:
-                collection.append(element)
-
-        if collection:
-            metadata = self.document.createElement('metadata')
-            for element in collection:
-                metadata.appendChild(element)
-            root.appendChild(metadata)
+        # 7) GENERATE THE FILE
+        fwrite(self.document.toString(2), self.diagram.path)

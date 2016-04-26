@@ -32,31 +32,63 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QFile, QIODevice, QPointF
-from PyQt5.QtGui import QBrush
-from PyQt5.QtGui import QColor
+from PyQt5.QtCore import QPointF, QObject, QRectF
+from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtXml import QDomDocument
 
-from eddy.core.datatypes import Item, DistinctList
+from eddy.core.datatypes.collections import DistinctList
+from eddy.core.datatypes.graphol import Item
+from eddy.core.diagram import Diagram
 from eddy.core.exceptions import ParseError
-from eddy.core.items.nodes.common.meta import MetaFactory
-from eddy.core.loaders.common import AbstractLoader
+from eddy.core.functions.fsystem import fread, fexists
+from eddy.core.functions.signals import connect
 
 
-class GrapholLoader(AbstractLoader):
+class GrapholLoader(QObject):
     """
-    This class can be used to load Graphol documents.
+    This class can be used to load graphol diagrams from file.
     """
-    def __init__(self, mainwindow, filepath, parent=None):
+    GrapholVersion = 1
+
+    def __init__(self, project, path, parent):
         """
-        Initialize the Graphml importer.
-        :type mainwindow: MainWindow
-        :type filepath: str
-        :type parent: QObject
+        Initialize the graphol loader.
+        :type project: Project
+        :type path: str
+        :type parent: MainWindow
         """
-        super().__init__(mainwindow, filepath, parent)
-        self.metaFactory = MetaFactory(self)
+        super().__init__(parent)
+        
+        self.diagram = None
+        self.nodes = dict()
+        self.path = path
+        self.project = project
+        self.mainwindow = project.parent()
+
+        self.importFuncForItem = {
+            Item.AttributeNode: self.buildAttributeNode,
+            Item.ComplementNode: self.buildComplementNode,
+            Item.ConceptNode: self.buildConceptNode,
+            Item.DatatypeRestrictionNode: self.buildDatatypeRestrictionNode,
+            Item.DisjointUnionNode: self.buildDisjointUnionNode,
+            Item.DomainRestrictionNode: self.buildDomainRestrictionNode,
+            Item.EnumerationNode: self.buildEnumerationNode,
+            Item.IndividualNode: self.buildIndividualNode,
+            Item.IntersectionNode: self.buildIntersectionNode,
+            Item.PropertyAssertionNode: self.buildPropertyAssertionNode,
+            Item.RangeRestrictionNode: self.buildRangeRestrictionNode,
+            Item.RoleNode: self.buildRoleNode,
+            Item.RoleChainNode: self.buildRoleChainNode,
+            Item.RoleInverseNode: self.buildRoleInverseNode,
+            Item.UnionNode: self.buildUnionNode,
+            Item.ValueDomainNode: self.buildValueDomainNode,
+            Item.ValueRestrictionNode: self.buildValueRestrictionNode,
+            Item.InclusionEdge: self.buildInclusionEdge,
+            Item.InputEdge: self.buildInputEdge,
+            Item.MembershipEdge: self.buildMembershipEdge,
+        }
+        
         self.itemFromXml = {
             'attribute': Item.AttributeNode,
             'complement': Item.ComplementNode,
@@ -77,14 +109,13 @@ class GrapholLoader(AbstractLoader):
             'value-restriction': Item.ValueRestrictionNode,
             'inclusion': Item.InclusionEdge,
             'input': Item.InputEdge,
-            'instance-of': Item.InstanceOfEdge,
+            'instance-of': Item.MembershipEdge,
+            'membership': Item.MembershipEdge,
         }
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   NODES                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   NODES
+    #################################
 
     def buildAttributeNode(self, element):
         """
@@ -92,7 +123,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: AttributeNode
         """
-        label = element.firstChildElement('shape:label')
+        label = self.extractLabelInsideElement(element)
         node = self.buildGenericNode(Item.AttributeNode, element)
         node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
         node.setText(label.text())
@@ -113,7 +144,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: ConceptNode
         """
-        label = element.firstChildElement('shape:label')
+        label = self.extractLabelInsideElement(element)
         node = self.buildGenericNode(Item.ConceptNode, element)
         node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
         node.setText(label.text())
@@ -142,7 +173,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: DomainRestrictionNode
         """
-        label = element.firstChildElement('shape:label')
+        label = self.extractLabelInsideElement(element)
         node = self.buildGenericNode(Item.DomainRestrictionNode, element)
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
@@ -162,7 +193,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: IndividualNode
         """
-        label = element.firstChildElement('shape:label')
+        label = self.extractLabelInsideElement(element)
         node = self.buildGenericNode(Item.IndividualNode, element)
         node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
         node.setText(label.text())
@@ -194,7 +225,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: RangeRestrictionNode
         """
-        label = element.firstChildElement('shape:label')
+        label = self.extractLabelInsideElement(element)
         node = self.buildGenericNode(Item.RangeRestrictionNode, element)
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
@@ -206,7 +237,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: RoleNode
         """
-        label = element.firstChildElement('shape:label')
+        label = self.extractLabelInsideElement(element)
         node = self.buildGenericNode(Item.RoleNode, element)
         node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
         node.setText(label.text())
@@ -238,7 +269,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: ValueDomainNode
         """
-        label = element.firstChildElement('shape:label')
+        label = self.extractLabelInsideElement(element)
         node = self.buildGenericNode(Item.ValueDomainNode, element)
         node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
         node.setText(label.text())
@@ -259,18 +290,16 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: ValueRestrictionNode
         """
-        label = element.firstChildElement('shape:label')
+        label = self.extractLabelInsideElement(element)
         node = self.buildGenericNode(Item.ValueRestrictionNode, element)
         node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return node
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   EDGES                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   EDGES
+    #################################
 
     def buildInclusionEdge(self, element):
         """
@@ -290,137 +319,120 @@ class GrapholLoader(AbstractLoader):
         """
         return self.buildGenericEdge(Item.InputEdge, element)
 
-    def buildInstanceOfEdge(self, element):
+    def buildMembershipEdge(self, element):
         """
-        Build an InstanceOf edge using the given QDomElement.
+        Build a Membership edge using the given QDomElement.
         :type element: QDomElement
-        :rtype: InstanceOfEdge
+        :rtype: MembershipEdge
         """
-        return self.buildGenericEdge(Item.InstanceOfEdge, element)
+        return self.buildGenericEdge(Item.MembershipEdge, element)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   METADATA                                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   AUXILIARY METHODS
+    #################################
 
-    def buildPredicateMetadata(self, element):
-        """
-        Build predicate metadata using the given QDomElement.
-        :type element: QDomElement
-        :rtype: PredicateMetaData
-        """
-        item = self.itemFromXml[element.attribute('type')]
-        predicate = element.attribute('predicate')
-        url = element.firstChildElement('data:url')
-        description = element.firstChildElement('data:description')
-        meta = self.metaFactory.create(item, predicate)
-        meta.url = url.text()
-        meta.description = description.text()
-        return meta
-
-    def buildAttributeMetadata(self, element):
-        """
-        Build role metadata using the given QDomElement.
-        :type element: QDomElement
-        :rtype: AttributeMetaData
-        """
-        meta = self.buildPredicateMetadata(element)
-        functionality = element.firstChildElement('data:functionality')
-        meta.functionality = bool(int(functionality.text()))
-        return meta
-
-    def buildRoleMetadata(self, element):
-        """
-        Build role metadata using the given QDomElement.
-        :type element: QDomElement
-        :rtype: AttributeMetaData
-        """
-        meta = self.buildPredicateMetadata(element)
-        functionality = element.firstChildElement('data:functionality')
-        inverseFunctionality = element.firstChildElement('data:inverseFunctionality')
-        asymmetry = element.firstChildElement('data:asymmetry')
-        irreflexivity = element.firstChildElement('data:irreflexivity')
-        reflexivity = element.firstChildElement('data:reflexivity')
-        symmetry = element.firstChildElement('data:symmetry')
-        transitivity = element.firstChildElement('data:transitivity')
-        meta.functionality = bool(int(functionality.text()))
-        meta.inverseFunctionality = bool(int(inverseFunctionality.text()))
-        meta.asymmetry = bool(int(asymmetry.text()))
-        meta.irreflexivity = bool(int(irreflexivity.text()))
-        meta.reflexivity = bool(int(reflexivity.text()))
-        meta.symmetry = bool(int(symmetry.text()))
-        meta.transitivity = bool(int(transitivity.text()))
-        return meta
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   AUXILIARY METHODS                                                                                              #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def buildGenericEdge(self, item, edge):
+    def buildGenericEdge(self, item, element):
         """
         Build an edge using the given item type and QDomElement.
         :type item: Item
-        :type edge: QDomElement
+        :type element: QDomElement
         :rtype: AbstractEdge
         """
         points = []
-        point = edge.firstChildElement('line:point')
+        point = self.extractPointInsideElement(element)
         while not point.isNull():
             points.append(QPointF(int(point.attribute('x')), int(point.attribute('y'))))
-            point = point.nextSiblingElement('line:point')
+            point = self.extractPointBesideElement(point)
 
         kwargs = {
-            'id': edge.attribute('id'),
-            'source': self.scene.node(edge.attribute('source')),
-            'target': self.scene.node(edge.attribute('target')),
+            'id': element.attribute('id'),
+            'source': self.nodes[element.attribute('source')],
+            'target': self.nodes[element.attribute('target')],
             'breakpoints': points[1:-1],
         }
 
-        item = self.factory.create(item=item, scene=self.scene, **kwargs)
+        edge = self.project.itemFactory.create(item, **kwargs)
 
-        # set the anchor points only if they are inside the endpoint shape: users can modify
-        # the .graphol file manually, changing anchor points coordinates, which will result
-        # in an edge floating in the scene without being bounded by endpoint shapes. Not
-        # setting the anchor point will make the edge use the default one (node center point)
+        path = edge.source.painterPath()
+        if path.contains(edge.source.mapFromScene(points[0])):
+            edge.source.setAnchor(edge, points[0])
 
-        path = item.source.painterPath()
-        if path.contains(item.source.mapFromScene(points[0])):
-            item.source.setAnchor(item, points[0])
+        path = edge.target.painterPath()
+        if path.contains(edge.target.mapFromScene(points[-1])):
+            edge.target.setAnchor(edge, points[-1])
 
-        path = item.target.painterPath()
-        if path.contains(item.target.mapFromScene(points[-1])):
-            item.target.setAnchor(item, points[-1])
+        edge.source.addEdge(edge)
+        edge.target.addEdge(edge)
+        return edge
 
-        # map the edge over the source and target nodes
-        item.source.addEdge(item)
-        item.target.addEdge(item)
-        return item
-
-    def buildGenericNode(self, item, node):
+    def buildGenericNode(self, item, element):
         """
         Build a node using the given item type and QDomElement.
         :type item: Item
-        :type node: QDomElement
+        :type element: QDomElement
         :rtype: AbstractNode
         """
-        geometry = node.firstChildElement('shape:geometry')
-
+        geometry = self.extractGeometryInsideElement(element)
         kwargs = {
-            'id': node.attribute('id'),
+            'id': element.attribute('id'),
             'height': int(geometry.attribute('height')),
             'width': int(geometry.attribute('width')),
         }
+        node = self.project.itemFactory.create(item, **kwargs)
+        node.setPos(QPointF(int(geometry.attribute('x')), int(geometry.attribute('y'))))
+        return node
 
-        item = self.factory.create(item=item, scene=self.scene, **kwargs)
-        item.setPos(QPointF(int(geometry.attribute('x')), int(geometry.attribute('y'))))
-        return item
+    @staticmethod
+    def extractGeometryInsideElement(element):
+        """
+        Returns the geometry element inside the given one.
+        :type element: QDomElement
+        :rtype: QDomElement
+        """
+        search = element.firstChildElement('geometry')
+        if search.isNull():
+            search = element.firstChildElement('shape:geometry')
+        return search
+
+    @staticmethod
+    def extractLabelInsideElement(element):
+        """
+        Returns the label element inside the given one.
+        :type element: QDomElement
+        :rtype: QDomElement
+        """
+        search = element.firstChildElement('label')
+        if search.isNull():
+            search = element.firstChildElement('shape:label')
+        return search
+
+    @staticmethod
+    def extractPointBesideElement(element):
+        """
+        Returns the point element beside the given one.
+        :type element: QDomElement
+        :rtype: QDomElement
+        """
+        search = element.nextSiblingElement('point')
+        if search.isNull():
+            search = element.nextSiblingElement('line:point')
+        return search
+
+    @staticmethod
+    def extractPointInsideElement(element):
+        """
+        Returns the point element inside the given one.
+        :type element: QDomElement
+        :rtype: QDomElement
+        """
+        search = element.firstChildElement('point')
+        if search.isNull():
+            search = element.firstChildElement('line:point')
+        return search
 
     def itemFromGrapholNode(self, element):
         """
-        Returns the item matching the given Graphol node.
+        Returns the item matching the given graphol node.
         :type element: QDomElement
         :rtype: Item
         """
@@ -429,151 +441,69 @@ class GrapholLoader(AbstractLoader):
         except KeyError:
             return None
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DIAGRAM SCENE GENERATION                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   DIAGRAM GENERATION
+    #################################
 
     def run(self):
         """
-        Perform ontology import from .graphol file format.
+        Perform diagram import from .graphol file format.
+        :rtype: Diagram
         """
-        file = QFile(self.filepath)
+        if not fexists(self.path):
+            raise IOError('could not find diagram: {0}'.format(self.path))
 
-        try:
+        document = QDomDocument()
+        if not document.setContent(fread(self.path)):
+            raise ParseError('could not initialize QDomDocument')
 
-            if not file.open(QIODevice.ReadOnly):
-                raise IOError('File not found: {}'.format(self.filepath))
+        # 1) INITIALIZE XML ROOT ELEMENT
+        root = document.documentElement()
 
-            document = QDomDocument()
-            if not document.setContent(file):
-                raise ParseError('could not initialize DOM document')
+        # 2) READ GRAPH INITIALIZATION DATA
+        graph = root.firstChildElement('graph')
+        size = max(int(graph.attribute('width', '10000')), int(graph.attribute('height', '10000')))
 
-            # 1) INITIALIZE XML ROOT ELEMENT
-            root = document.documentElement()
+        # 3) CREATE A DIAGRAM
+        self.diagram = Diagram(self.path, self.project)
+        self.diagram.setSceneRect(QRectF(-size / 2, -size / 2, size, size))
+        self.diagram.setItemIndexMethod(Diagram.NoIndex)
 
-            # 2) READ GRAPH INITIALIZATION DATA
-            graph = root.firstChildElement('graph')
-            w = int(graph.attribute('width', str(self.mainwindow.diagramSize)))
-            h = int(graph.attribute('height', str(self.mainwindow.diagramSize)))
+        # 4) GENERATE NODES
+        element = graph.firstChildElement('node')
+        while not element.isNull():
+            # noinspection PyArgumentList
+            QApplication.processEvents()
+            item = self.itemFromGrapholNode(element)
+            func = self.importFuncForItem[item]
+            node = func(element)
+            self.diagram.addItem(node)
+            self.nodes[node.id] = node
+            self.project.guid.update(node.id)
+            element = element.nextSiblingElement('node')
 
-            # 3) GENERATE DIAGRAM SCENE
-            self.scene = self.mainwindow.createScene(width=w, height=h)
-            self.scene.document.path = self.filepath
+        # 5) GENERATE EDGES
+        element = graph.firstChildElement('edge')
+        while not element.isNull():
+            # noinspection PyArgumentList
+            QApplication.processEvents()
+            item = self.itemFromGrapholNode(element)
+            func = self.importFuncForItem[item]
+            edge = func(element)
+            self.diagram.addItem(edge)
+            self.project.guid.update(edge.id)
+            edge.updateEdge()
+            element = element.nextSiblingElement('edge')
 
-            # 4) GENERATE NODES
-            element = graph.firstChildElement('node')
-            while not element.isNull():
+        # 6) CONFIGURE SLOTS
+        connect(self.diagram.sgnItemAdded, self.project.doAddItem)
+        connect(self.diagram.sgnItemRemoved, self.project.doRemoveItem)
+        connect(self.diagram.sgnActionCompleted, self.mainwindow.onDiagramActionCompleted)
+        connect(self.diagram.sgnModeChanged, self.mainwindow.onDiagramModeChanged)
+        connect(self.diagram.selectionChanged, self.mainwindow.doUpdateState)
 
-                # noinspection PyArgumentList
-                QApplication.processEvents()
+        # 7) CONFIGURE UNDOSTACK
+        self.mainwindow.undoGroup.addStack(self.diagram.undoStack)
 
-                node = None
-                item = self.itemFromGrapholNode(element)
-
-                try:
-
-                    if item is Item.AttributeNode:
-                        node = self.buildAttributeNode(element)
-                    elif item is Item.ComplementNode:
-                        node = self.buildComplementNode(element)
-                    elif item is Item.ConceptNode:
-                        node = self.buildConceptNode(element)
-                    elif item is Item.DatatypeRestrictionNode:
-                        node = self.buildDatatypeRestrictionNode(element)
-                    elif item is Item.DisjointUnionNode:
-                        node = self.buildDisjointUnionNode(element)
-                    elif item is Item.DomainRestrictionNode:
-                        node = self.buildDomainRestrictionNode(element)
-                    elif item is Item.EnumerationNode:
-                        node = self.buildEnumerationNode(element)
-                    elif item is Item.IndividualNode:
-                        node = self.buildIndividualNode(element)
-                    elif item is Item.IntersectionNode:
-                        node = self.buildIntersectionNode(element)
-                    elif item is Item.PropertyAssertionNode:
-                        node = self.buildPropertyAssertionNode(element)
-                    elif item is Item.RangeRestrictionNode:
-                        node = self.buildRangeRestrictionNode(element)
-                    elif item is Item.RoleNode:
-                        node = self.buildRoleNode(element)
-                    elif item is Item.RoleChainNode:
-                        node = self.buildRoleChainNode(element)
-                    elif item is Item.RoleInverseNode:
-                        node = self.buildRoleInverseNode(element)
-                    elif item is Item.UnionNode:
-                        node = self.buildUnionNode(element)
-                    elif item is Item.ValueDomainNode:
-                        node = self.buildValueDomainNode(element)
-                    elif item is Item.ValueRestrictionNode:
-                        node = self.buildValueRestrictionNode(element)
-
-                    if not node:
-                        raise ValueError('unknown node: {}'.format(element.attribute('type')))
-
-                    self.scene.addItem(node)
-                    self.scene.sgnItemAdded.emit(node)
-                    self.scene.guid.update(node.id)
-                finally:
-                    element = element.nextSiblingElement('node')
-
-            # 5) GENERATE EDGES
-            element = graph.firstChildElement('edge')
-            while not element.isNull():
-
-                # noinspection PyArgumentList
-                QApplication.processEvents()
-
-                edge = None
-                item = self.itemFromGrapholNode(element)
-
-                try:
-
-                    if item is Item.InclusionEdge:
-                        edge = self.buildInclusionEdge(element)
-                    elif item is Item.InputEdge:
-                        edge = self.buildInputEdge(element)
-                    elif item is Item.InstanceOfEdge:
-                        edge = self.buildInstanceOfEdge(element)
-
-                    if not edge:
-                        raise ValueError('unknown edge: {}'.format(element.attribute('type')))
-
-                    self.scene.addItem(edge)
-                    self.scene.sgnItemAdded.emit(edge)
-                    self.scene.guid.update(edge.id)
-                    edge.updateEdge()
-                finally:
-                    element = element.nextSiblingElement('edge')
-
-            # 6) GENERATE PREDICATE METADATA
-            metadata = root.firstChildElement('metadata')
-            if not metadata.isNull():
-
-                element = metadata.firstChildElement('meta')
-                while not element.isNull():
-
-                    # noinspection PyArgumentList
-                    QApplication.processEvents()
-
-                    item = self.itemFromGrapholNode(element)
-
-                    try:
-
-                        if item is Item.AttributeNode:
-                            meta = self.buildAttributeMetadata(element)
-                        elif item is Item.RoleNode:
-                            meta = self.buildRoleMetadata(element)
-                        else:
-                            meta = self.buildPredicateMetadata(element)
-
-                        if meta:
-                            self.scene.meta.add(meta.item, meta.predicate, meta)
-
-                    finally:
-                        element = element.nextSiblingElement('meta')
-
-        finally:
-
-            file.close()
+        # 8) RETURN GENERATED DIAGRAM
+        return self.diagram

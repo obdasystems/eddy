@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project version="1">
+  <ontology>
+    <iri>http://www.dis.uniroma1.it/~graphol/family</iri>
+    <prefix>family</prefix>
+  </ontology>
+  <predicates>
+    <predicate type="attribute" name="name">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate type="role" name="hasFather">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+      <inverseFunctional>0</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+    <predicate type="role" name="hasMother">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+      <inverseFunctional>0</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+  </predicates>
+</project>

@@ -30,22 +30,3 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-
-
-from eddy.core.items.nodes.attribute import AttributeNode
-from eddy.core.items.nodes.complement import ComplementNode
-from eddy.core.items.nodes.concept import ConceptNode
-from eddy.core.items.nodes.datatype_restriction import DatatypeRestrictionNode
-from eddy.core.items.nodes.disjoint_union import DisjointUnionNode
-from eddy.core.items.nodes.domain_restriction import DomainRestrictionNode
-from eddy.core.items.nodes.enumeration import EnumerationNode
-from eddy.core.items.nodes.individual import IndividualNode
-from eddy.core.items.nodes.intersection import IntersectionNode
-from eddy.core.items.nodes.property_assertion import PropertyAssertionNode
-from eddy.core.items.nodes.range_restriction import RangeRestrictionNode
-from eddy.core.items.nodes.role import RoleNode
-from eddy.core.items.nodes.role_chain import RoleChainNode
-from eddy.core.items.nodes.role_inverse import RoleInverseNode
-from eddy.core.items.nodes.union import UnionNode
-from eddy.core.items.nodes.value_domain import ValueDomainNode
-from eddy.core.items.nodes.value_restriction import ValueRestrictionNode

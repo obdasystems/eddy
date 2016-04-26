@@ -71,10 +71,10 @@ class Test_DistinctList(unittest.TestCase):
 
     def test_remove_with_match(self):
         D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.remove(4)
+        D1.doRemoveNode(4)
         self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 5, 6, 7, 8]), seq_type=DistinctList)
 
     def test_remove_with_no_match(self):
         D1 = DistinctList([1, 2, 3, 4, 5, 6, 7, 8])
-        D1.remove(9)
+        D1.doRemoveNode(9)
         self.assertSequenceEqual(D1, DistinctList([1, 2, 3, 4, 5, 6, 7, 8]), seq_type=DistinctList)

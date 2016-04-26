@@ -35,9 +35,9 @@
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QBrush
 
-from eddy.core.datatypes import Item, Special, Identity
+from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.items.nodes.common.base import AbstractNode
-from eddy.core.items.nodes.common.label import Label
+from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.qt import Font
 
 
@@ -45,8 +45,8 @@ class AttributeNode(AbstractNode):
     """
     This class implements the 'Attribute' node.
     """
-    identities = {Identity.Attribute}
-    item = Item.AttributeNode
+    Identities = {Identity.Attribute}
+    Type = Item.AttributeNode
 
     def __init__(self, width=20, height=20, brush=None, **kwargs):
         """
@@ -61,35 +61,31 @@ class AttributeNode(AbstractNode):
         self.polygon = self.createPolygon(20, 20)
         self.background = self.createBackground(28, 28)
         self.selection = self.createBackground(28, 28)
-        self.label = Label('attribute', centered=False, parent=self)
+        self.label = NodeLabel('attribute', centered=False, parent=self)
         self.label.updatePos()
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   PROPERTIES
+    #################################
 
     @property
     def functional(self):
         """
-        Tells whether the Attribute is defined as functional.
+        Returns True if the predicate represented by this node is functional, else False.
         :rtype: bool
         """
-        scene = self.scene()
-        meta = scene.meta.metaFor(self.item, self.text())
-        return meta.functionality
+        meta = self.project.meta(self.type(), self.text())
+        return meta.functional
 
     @functional.setter
     def functional(self, value):
         """
-        Set the Attribute functionality property.
+        Set the functional property of the predicated represented by this node.
         :type value: bool
         """
-        scene = self.scene()
-        meta = scene.meta.metaFor(self.item, self.text())
-        meta.functionality = bool(value)
-        scene.meta.add(self.item, self.text(), meta)
+        meta = self.project.meta(self.type(), self.text())
+        meta.functional = bool(value)
+        self.project.metaAdd(self.type(), self.text(), meta)
 
     @property
     def identity(self):
@@ -113,26 +109,26 @@ class AttributeNode(AbstractNode):
         Returns the special type of this node.
         :rtype: Special
         """
-        return Special.forValue(self.text())
+        return Special.forLabel(self.text())
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
-    def copy(self, scene):
+    def boundingRect(self):
+        """
+        Returns the shape bounding rectangle.
+        :rtype: QRectF
+        """
+        return self.selection
+
+    def copy(self, project):
         """
         Create a copy of the current item.
-        :type scene: DiagramScene
+        :type project: Project
         """
-        kwargs = {
-            'id': self.id,
-            'brush': self.brush,
-            'height': self.height(),
-            'width': self.width(),
-        }
-        node = scene.factory.create(item=self.item, scene=scene, **kwargs)
+        kwargs = {'id': self.id, 'brush': self.brush, 'height': self.height(), 'width': self.width()}
+        node = project.itemFactory.create(self.type(), **kwargs)
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
@@ -165,91 +161,6 @@ class AttributeNode(AbstractNode):
         """
         return self.polygon.height()
 
-    def width(self):
-        """
-        Returns the width of the shape.
-        :rtype: int
-        """
-        return self.polygon.width()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   GEOMETRY                                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def boundingRect(self):
-        """
-        Returns the shape bounding rectangle.
-        :rtype: QRectF
-        """
-        return self.selection
-
-    def painterPath(self):
-        """
-        Returns the current shape as QPainterPath (used for collision detection).
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addEllipse(self.polygon)
-        return path
-
-    def shape(self):
-        """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addEllipse(self.polygon)
-        return path
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   LABEL SHORTCUTS                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def textPos(self):
-        """
-        Returns the current label position in item coordinates.
-        :rtype: QPointF
-        """
-        return self.label.pos()
-
-    def text(self):
-        """
-        Returns the label text.
-        :rtype: str
-        """
-        return self.label.text()
-
-    def setTextPos(self, pos):
-        """
-        Set the label position.
-        :type pos: QPointF
-        """
-        self.label.setPos(pos)
-
-    def setText(self, text):
-        """
-        Set the label text.
-        :type text: str
-        """
-        self.label.editable = Special.forValue(text) is None
-        self.label.setText(text)
-
-    def updateTextPos(self, *args, **kwargs):
-        """
-        Update the label position.
-        """
-        self.label.updatePos(*args, **kwargs)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
-
     @classmethod
     def image(cls, **kwargs):
         """
@@ -274,7 +185,7 @@ class AttributeNode(AbstractNode):
 
     def paint(self, painter, option, widget=None):
         """
-        Paint the node in the diagram scene.
+        Paint the node in the diagram.
         :type painter: QPainter
         :type option: QStyleOptionGraphicsItem
         :type widget: QWidget
@@ -294,3 +205,63 @@ class AttributeNode(AbstractNode):
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawEllipse(self.polygon)
+
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used for collision detection).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addEllipse(self.polygon)
+        return path
+
+    def setText(self, text):
+        """
+        Set the label text.
+        :type text: str
+        """
+        self.label.editable = Special.forLabel(text) is None
+        self.label.setText(text)
+
+    def setTextPos(self, pos):
+        """
+        Set the label position.
+        :type pos: QPointF
+        """
+        self.label.setPos(pos)
+
+    def shape(self):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addEllipse(self.polygon)
+        return path
+
+    def text(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        return self.label.text()
+
+    def textPos(self):
+        """
+        Returns the current label position in item coordinates.
+        :rtype: QPointF
+        """
+        return self.label.pos()
+
+    def updateTextPos(self, *args, **kwargs):
+        """
+        Update the label position.
+        """
+        self.label.updatePos(*args, **kwargs)
+
+    def width(self):
+        """
+        Returns the width of the shape.
+        :rtype: int
+        """
+        return self.polygon.width()

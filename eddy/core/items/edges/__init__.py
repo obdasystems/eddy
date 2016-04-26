@@ -30,8 +30,3 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-
-
-from eddy.core.items.edges.inclusion import InclusionEdge
-from eddy.core.items.edges.input import InputEdge
-from eddy.core.items.edges.instance_of import InstanceOfEdge

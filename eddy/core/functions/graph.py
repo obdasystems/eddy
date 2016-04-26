@@ -34,25 +34,31 @@
 
 from collections import deque
 
-from eddy.core.datatypes import Identity, Item
+from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.functions.misc import partition
 
 
 def bfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None):
     """
-    Perform a customized BFS returning a list of nodes ordered according to the visit time.
+    Perform a customized BFS returning a list of visited nodes.
     The function accepts 3 callable parameters:
 
-        * filter_on_edges: a callable which takes as input an edge and returns True iff the search has to proceed along
-                           the edge; if instead the callable returns False, the given edge is excluded from the search.
-        * filter_on_nodes: a callable which takes as input a node and returns True iff the search has to take the node
-                           into consideration; else the callable MUST return False (NOTE: the node is not included
-                           in the returned set of visited nodes, nor its neighbours are being visited, unless they are
-                           connected through some other nodes for which the callable returns True).
-        * filter_on_visit: a callable which takes as input a node and returns True iff the search algoritm should visit
-                           the given node neighbours; else the callable MUST return False (NOTE: the node IS included in
-                           the returned set of visited nodes, but its neighbours are not being visited, unless they are
-                           connected through some other nodes for which the callable returns True).
+        * filter_on_edges: a callable which takes as input an edge and returns True
+                           iff the search has to proceed along the edge; if instead
+                           the callable returns False, the given edge is excluded
+                           from the search.
+        * filter_on_nodes: a callable which takes as input a node and returns True iff
+                           the search has to take the node into consideration; else the
+                           callable MUST return False (NOTE: the node is not included
+                           in the returned set of visited nodes, nor its neighbours are
+                           being visited, unless they are connected through some other
+                           nodes for which the callable returns True).
+        * filter_on_visit: a callable which takes as input a node and returns True iff
+                           the search algoritm should visit the given node neighbours;
+                           else the callable MUST return False (NOTE: the node IS included
+                           in the returned set of visited nodes, but its neighbours are not
+                           being visited, unless they are connected through some other nodes
+                           for which the callable returns True).
 
     :type source: Node
     :type filter_on_edges: callable
@@ -79,19 +85,25 @@ def bfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None
 
 def dfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None):
     """
-    Perform a customized DFS returning a list of nodes ordered according to the visit time.
+    Perform a customized DFS returning a list of visited nodes.
     The function accepts 3 callable parameters:
 
-        * filter_on_edges: a callable which takes as input an edge and returns True iff the search has to proceed along
-                           the edge; if instead the callable returns False, the given edge is excluded from the search.
-        * filter_on_nodes: a callable which takes as input a node and returns True iff the search has to take the node
-                           into consideration; else the callable MUST return False (NOTE: the node is not included
-                           in the returned set of visited nodes, nor its neighbours are being visited, unless they are
-                           connected through some other nodes for which the callable returns True).
-        * filter_on_visit: a callable which takes as input a node and returns True iff the search algoritm should visit
-                           the given node neighbours; else the callable MUST return False (NOTE: the node IS included in
-                           the returned set of visited nodes, but its neighbours are not being visited, unless they are
-                           connected through some other nodes for which the callable returns True).
+        * filter_on_edges: a callable which takes as input an edge and returns True
+                           iff the search has to proceed along the edge; if instead
+                           the callable returns False, the given edge is excluded
+                           from the search.
+        * filter_on_nodes: a callable which takes as input a node and returns True iff
+                           the search has to take the node into consideration; else the
+                           callable MUST return False (NOTE: the node is not included
+                           in the returned set of visited nodes, nor its neighbours are
+                           being visited, unless they are connected through some other
+                           nodes for which the callable returns True).
+        * filter_on_visit: a callable which takes as input a node and returns True iff
+                           the search algoritm should visit the given node neighbours;
+                           else the callable MUST return False (NOTE: the node IS included
+                           in the returned set of visited nodes, but its neighbours are not
+                           being visited, unless they are connected through some other nodes
+                           for which the callable returns True).
 
     :type source: Node
     :type filter_on_edges: callable
@@ -119,10 +131,11 @@ def dfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None
 
 def identify(source):
     """
-    Perform node identification by traversing all the nodes in the graph which are directly/indirectly
-    connected with the given one. This function will also update the identity of all the other related
-    nodes which are specifying a "WEAK" identity.
-    :type source: Node
+    Perform node identification by traversing all the nodes in the graph
+    which are directly/indirectly connected with the given one. This
+    function  will also update the identity of all the other related nodes
+    which are specifying a "WEAK" identity.
+    :type source: AbstractNode
     """
     predicate = lambda x: Identity.Neutral in x.identities
     collection = bfs(source=source, filter_on_visit=predicate)
@@ -148,8 +161,8 @@ def identify(source):
             # We will also remove all the individuals used to compute the Enumeration node identity
             # from the STRONG set since they will lead to errors when computing the final identity.
 
-            f1 = lambda x: x.isItem(Item.InputEdge)
-            f2 = lambda x: x.isItem(Item.IndividualNode)
+            f1 = lambda x: x.type() is Item.InputEdge
+            f2 = lambda x: x.type() is Item.IndividualNode
 
             individuals = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
             identity = [n.identity for n in individuals]
@@ -186,7 +199,7 @@ def identify(source):
             # from the STRONG set since they will lead to errors when computing the final identity.
 
             f1 = lambda x: Identity.Concept if x.identity in {Identity.Role, Identity.Concept} else Identity.ValueDomain
-            f2 = lambda x: x.isItem(Item.InputEdge) and x.target is node
+            f2 = lambda x: x.type() is Item.InputEdge and x.target is node
             f3 = lambda x: x.identity in {Identity.Role,
                                           Identity.Attribute,
                                           Identity.Concept,
@@ -230,7 +243,7 @@ def identify(source):
             # the node from the STRONG set since they are individual nodes that do not contribute with identity
             # inheritance (as for the Enumeration node).
 
-            f1 = lambda x: x.item is Item.InstanceOfEdge
+            f1 = lambda x: x.item is Item.MembershipEdge
             f2 = lambda x: x.item in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
             f3 = lambda x: x.item is Item.InputEdge
             f4 = lambda x: x.item is Item.IndividualNode

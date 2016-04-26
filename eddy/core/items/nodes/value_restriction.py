@@ -35,10 +35,11 @@
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap, QBrush
 
-from eddy.core.datatypes import Facet, Identity, Item, XsdDatatype
-from eddy.core.functions import cutL, cutR, first
+from eddy.core.datatypes.graphol import Identity, Item
+from eddy.core.datatypes.owl import XsdDatatype, Facet
+from eddy.core.functions.misc import cutL, cutR, first
 from eddy.core.items.nodes.common.base import AbstractNode
-from eddy.core.items.nodes.common.label import Label
+from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.qt import Font
 from eddy.core.regex import RE_FACET
 
@@ -47,19 +48,19 @@ class ValueRestrictionNode(AbstractNode):
     """
     This class implements the 'Value-Restriction' node.
     """
-    indexTR = 0
-    indexTL = 1
-    indexBL = 2
-    indexBR = 3
-    indexRT = 4
-    indexEE = 5
+    IndexTR = 0
+    IndexTL = 1
+    IndexBL = 2
+    IndexBR = 3
+    IndexRT = 4
+    IndexEE = 5
 
-    identities = {Identity.ValueDomain}
-    item = Item.ValueRestrictionNode
-    minheight = 50
-    minwidth = 180
+    Identities = {Identity.ValueDomain}
+    Type = Item.ValueRestrictionNode
+    MinHeight = 50
+    MinWidth = 180
 
-    def __init__(self, width=minwidth, height=minheight, brush=None, **kwargs):
+    def __init__(self, width=MinWidth, height=MinHeight, brush=None, **kwargs):
         """
         Initialize the node.
         :type width: int
@@ -69,18 +70,16 @@ class ValueRestrictionNode(AbstractNode):
         super().__init__(**kwargs)
         self.brush = brush or QBrush(QColor(252, 252, 252))
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
-        self.polygon = self.createPolygon(self.minwidth, self.minheight)
-        self.fold = self.createFold(self.polygon, self.indexTR, self.indexRT)
-        self.background = self.createBackground(self.minwidth + 8, self.minheight + 8)
-        self.selection = self.createSelection(self.minwidth + 8, self.minheight + 8)
-        self.label = Label('xsd:length "32"^^xsd:string', movable=False, editable=False, parent=self)
+        self.polygon = self.createPolygon(self.MinWidth, self.MinHeight)
+        self.fold = self.createFold(self.polygon, self.IndexTR, self.IndexRT)
+        self.background = self.createBackground(self.MinWidth + 8, self.MinHeight + 8)
+        self.selection = self.createSelection(self.MinWidth + 8, self.MinHeight + 8)
+        self.label = NodeLabel('xsd:length "32"^^xsd:string', movable=False, editable=False, parent=self)
         self.updateLayout()
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   PROPERTIES
+    #################################
 
     @property
     def constrained(self):
@@ -88,12 +87,12 @@ class ValueRestrictionNode(AbstractNode):
         Tells whether the datatype of this restriction is constrained by graph composition.
         :rtype: bool
         """
-        f1 = lambda x: x.isItem(Item.InputEdge)
-        f2 = lambda x: x.isItem(Item.DatatypeRestrictionNode)
-        f3 = lambda x: x.isItem(Item.ValueDomainNode)
-        x = first(self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
-        if x:
-            return first(x.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) is not None
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.type() is Item.DatatypeRestrictionNode
+        f3 = lambda x: x.type() is Item.ValueDomainNode
+        xx = first(self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+        if xx:
+            return first(xx.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) is not None
         return False
 
     @property
@@ -145,11 +144,16 @@ class ValueRestrictionNode(AbstractNode):
             return match.group('value')
         return ''
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def boundingRect(self):
+        """
+        Returns the shape bounding rectangle.
+        :rtype: QRectF
+        """
+        return self.selection
 
     @staticmethod
     def compose(facet, value, datatype):
@@ -162,18 +166,13 @@ class ValueRestrictionNode(AbstractNode):
         """
         return '{} "{}"^^{}'.format(facet.value, cutR(cutL(value.strip(), '"'), '"'), datatype.value)
 
-    def copy(self, scene):
+    def copy(self, project):
         """
         Create a copy of the current item.
-        :type scene: DiagramScene
+        :type project: Project
         """
-        kwargs = {
-            'id': self.id,
-            'brush': self.brush,
-            'height': self.height(),
-            'width': self.width(),
-        }
-        node = scene.factory.create(item=self.item, scene=scene, **kwargs)
+        kwargs = {'id': self.id, 'brush': self.brush, 'height': self.height(), 'width': self.width()}
+        node = project.itemFactory.create(self.type(), **kwargs)
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
@@ -190,19 +189,19 @@ class ValueRestrictionNode(AbstractNode):
         return QRectF(-width / 2, -height / 2, width, height)
 
     @staticmethod
-    def createFold(polygon, indexTR, indexRT):
+    def createFold(polygon, IndexTR, IndexRT):
         """
         Returns the initialized fold polygon.
         :type polygon: QPolygonF
-        :type indexTR: int
-        :type indexRT: int
+        :type IndexTR: int
+        :type IndexRT: int
         :rtype: QPolygonF
         """
         return QPolygonF([
-            QPointF(polygon[indexTR].x(), polygon[indexTR].y()),
-            QPointF(polygon[indexTR].x(), polygon[indexTR].y() + 12),
-            QPointF(polygon[indexRT].x(), polygon[indexRT].y()),
-            QPointF(polygon[indexTR].x(), polygon[indexTR].y()),
+            QPointF(polygon[IndexTR].x(), polygon[IndexTR].y()),
+            QPointF(polygon[IndexTR].x(), polygon[IndexTR].y() + 12),
+            QPointF(polygon[IndexRT].x(), polygon[IndexRT].y()),
+            QPointF(polygon[IndexTR].x(), polygon[IndexTR].y()),
         ])
     
     @staticmethod
@@ -227,104 +226,7 @@ class ValueRestrictionNode(AbstractNode):
         Returns the height of the shape.
         :rtype: int
         """
-        return self.polygon[self.indexBL].y() - self.polygon[self.indexTL].y()
-
-    def updateLayout(self):
-        """
-        Update current shape rect according to the selected datatype.
-        """
-        width = max(self.label.width() + 16, self.minwidth)
-        self.polygon = self.createPolygon(width, self.minheight)
-        self.fold = self.createFold(self.polygon, self.indexTR, self.indexRT)
-        self.background = self.createBackground(width + 8, self.minheight + 8)
-        self.selection = self.createSelection(width + 8, self.minheight + 8)
-        self.updateTextPos()
-        self.updateEdges()
-
-    def width(self):
-        """
-        Returns the width of the shape.
-        :rtype: int
-        """
-        return self.polygon[self.indexBR].x() - self.polygon[self.indexBL].x()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   GEOMETRY                                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def boundingRect(self):
-        """
-        Returns the shape bounding rectangle.
-        :rtype: QRectF
-        """
-        return self.selection
-
-    def painterPath(self):
-        """
-        Returns the current shape as QPainterPath (used for collision detection).
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addPolygon(self.polygon)
-        return path
-
-    def shape(self):
-        """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addPolygon(self.polygon)
-        return path
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   LABEL SHORTCUTS                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def textPos(self):
-        """
-        Returns the current label position in item coordinates.
-        :rtype: QPointF
-        """
-        return self.label.pos()
-
-    def text(self):
-        """
-        Returns the label text.
-        :rtype: str
-        """
-        return self.label.text()
-
-    def setTextPos(self, pos):
-        """
-        Set the label position.
-        :type pos: QPointF
-        """
-        self.label.setPos(pos)
-
-    def setText(self, text):
-        """
-        Set the label text.
-        :type text: str
-        """
-        self.label.setText(text)
-        self.updateLayout()
-
-    def updateTextPos(self, *args, **kwargs):
-        """
-        Update the label position.
-        """
-        self.label.updatePos(*args, **kwargs)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
+        return self.polygon[self.IndexBL].y() - self.polygon[self.IndexTL].y()
 
     @classmethod
     def image(cls, **kwargs):
@@ -345,12 +247,12 @@ class ValueRestrictionNode(AbstractNode):
             QPointF(+27, -17 + 10),  # 4
             QPointF(+27 - 10, -17),  # 5
         ])
-        
+
         fold = QPolygonF([
-            QPointF(polygon[cls.indexTR].x(), polygon[cls.indexTR].y()),
-            QPointF(polygon[cls.indexTR].x(), polygon[cls.indexTR].y() + 10),
-            QPointF(polygon[cls.indexRT].x(), polygon[cls.indexRT].y()),
-            QPointF(polygon[cls.indexTR].x(), polygon[cls.indexTR].y()),
+            QPointF(polygon[cls.IndexTR].x(), polygon[cls.IndexTR].y()),
+            QPointF(polygon[cls.IndexTR].x(), polygon[cls.IndexTR].y() + 10),
+            QPointF(polygon[cls.IndexRT].x(), polygon[cls.IndexRT].y()),
+            QPointF(polygon[cls.IndexTR].x(), polygon[cls.IndexTR].y()),
         ])
 
         # ITEM SHAPE
@@ -366,7 +268,7 @@ class ValueRestrictionNode(AbstractNode):
 
     def paint(self, painter, option, widget=None):
         """
-        Paint the node in the diagram scene.
+        Paint the node in the diagram.
         :type painter: QPainter
         :type option: QStyleOptionGraphicsItem
         :type widget: QWidget
@@ -387,3 +289,75 @@ class ValueRestrictionNode(AbstractNode):
         painter.setBrush(self.brush)
         painter.drawPolygon(self.polygon)
         painter.drawPolygon(self.fold)
+
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used for collision detection).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addPolygon(self.polygon)
+        return path
+
+    def setText(self, text):
+        """
+        Set the label text.
+        :type text: str
+        """
+        self.label.setText(text)
+        self.updateLayout()
+
+    def setTextPos(self, pos):
+        """
+        Set the label position.
+        :type pos: QPointF
+        """
+        self.label.setPos(pos)
+
+    def shape(self):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addPolygon(self.polygon)
+        return path
+
+    def text(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        return self.label.text()
+
+    def textPos(self):
+        """
+        Returns the current label position in item coordinates.
+        :rtype: QPointF
+        """
+        return self.label.pos()
+
+    def updateLayout(self):
+        """
+        Update current shape rect according to the selected datatype.
+        """
+        width = max(self.label.width() + 16, self.MinWidth)
+        self.polygon = self.createPolygon(width, self.MinHeight)
+        self.fold = self.createFold(self.polygon, self.IndexTR, self.IndexRT)
+        self.background = self.createBackground(width + 8, self.MinHeight + 8)
+        self.selection = self.createSelection(width + 8, self.MinHeight + 8)
+        self.updateTextPos()
+        self.updateEdges()
+
+    def updateTextPos(self, *args, **kwargs):
+        """
+        Update the label position.
+        """
+        self.label.updatePos(*args, **kwargs)
+
+    def width(self):
+        """
+        Returns the width of the shape.
+        :rtype: int
+        """
+        return self.polygon[self.IndexBR].x() - self.polygon[self.IndexBL].x()

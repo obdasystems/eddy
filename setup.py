@@ -290,7 +290,7 @@ echo "... bye!"
                     ]
                     subprocess.call(cmd)
                 except Exception as e:
-                    print('ERROR: failed to build {}: {}'.format(script_file, e))
+                    print('ERROR: failed to build {0}: {1}'.format(script_file, e))
 
 
 commands = {
@@ -633,7 +633,6 @@ include_files = [
     (os.path.join(OPTS['QT_PLUGINS_PATH'], 'printsupport'), 'printsupport'),
     ('examples', 'examples'),
     ('resources', 'resources'),
-    ('eddy/ui/clean.qss', 'ui/clean.qss'),
     ('LICENSE', 'LICENSE'),
     ('CONTRIBUTING.md', 'CONTRIBUTING.md'),
     ('PACKAGING.md', 'PACKAGING.md'),
@@ -653,16 +652,7 @@ setup(
     version=VERSION,
     author="Daniele Pantaleone",
     author_email="danielepantaleone@me.com",
-    description="Eddy is a graphical editor for the construction of Graphol ontologies.",
-    long_description="Eddy is a graphical editor for the construction of Graphol ontologies. Eddy features "
-                     "a design environment specifically thought out for generating Graphol ontologies through "
-                     "ad-hoc functionalities. Drawing features allow designers to comfortably edit ontologies "
-                     "in a central viewport area, while two lateral docking areas contains specifically-tailored "
-                     "widgets for editing, navigation and inspection of the diagram. In order to support interaction "
-                     "with third-party tools such as OWL 2 reasoners and editors like Protégé, Eddy is able to export "
-                     "the produced Graphol ontology into an OWL 2 ontology. Other simpler exporting file formats, "
-                     "like PDF, are also currently provided. Eddy is written in Python and make use of the PyQt5 "
-                     "python bindings for the cross-platform Qt5 framework.",
+    description="Eddy is a graphical editor for the specification and visualization of Graphol ontologies.",
     keywords = "eddy graphol sapienza",
     license=LICENSE,
     url="https://github.com/danielepantaleone/eddy",

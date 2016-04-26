@@ -32,81 +32,84 @@
 ##########################################################################
 
 
-from PyQt5.QtWidgets import QUndoCommand, QGraphicsItem
+from PyQt5.QtWidgets import QUndoCommand
 
-from eddy.core.datatypes import Item
-from eddy.core.functions import identify, first
+from eddy.core.datatypes.graphol import Item
+from eddy.core.functions.graph import identify
+from eddy.core.functions.misc import first
+from eddy.core.items.common import AbstractItem
+from eddy.lang import gettext as _
 
 
 class CommandNodeAdd(QUndoCommand):
     """
-    This command is used to add nodes to the scene.
+    This command is used to add a node to a diagram.
     """
-    def __init__(self, scene, node):
+    def __init__(self, diagram, node):
         """
         Initialize the command.
         """
         super().__init__('add {}'.format(node.name))
-        self.scene = scene
+        self.diagram = diagram
         self.node = node
 
     def redo(self):
         """redo the command"""
-        self.scene.addItem(self.node)
-        self.scene.sgnItemAdded.emit(self.node)
-        self.scene.sgnUpdated.emit()
+        self.diagram.addItem(self.node)
+        self.diagram.sgnItemAdded.emit(self.diagram, self.node)
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
-        self.scene.removeItem(self.node)
-        self.scene.sgnItemRemoved.emit(self.node)
-        self.scene.sgnUpdated.emit()
+        self.diagram.removeItem(self.node)
+        self.diagram.sgnItemRemoved.emit(self.diagram, self.node)
+        self.diagram.sgnUpdated.emit()
 
 
-class CommandNodeSetZValue(QUndoCommand):
+class CommandNodeSetDepth(QUndoCommand):
     """
-    This command is used to change the Z value of scene nodes.
+    This command is used to change the Z value of diagram nodes.
     """
-    def __init__(self, scene, node, zValue):
+    def __init__(self, diagram, node, zValue):
         """
         Initialize the command.
         """
-        super().__init__('change {} Z value'.format(node.name))
+        super().__init__(_('COMMAND_NODE_SET_DEPTH', node.name))
         self.node = node
-        self.scene = scene
-        self.zValue = {'redo': zValue, 'undo': node.zValue()}
+        self.diagram = diagram
+        self.depth = {'redo': zValue, 'undo': node.zValue()}
 
     def redo(self):
         """redo the command"""
-        self.node.setZValue(self.zValue['redo'])
+        self.node.setZValue(self.depth['redo'])
         self.node.updateEdges()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
-        self.node.setZValue(self.zValue['undo'])
+        self.node.setZValue(self.depth['undo'])
         self.node.updateEdges()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
 
 class CommandNodeRezize(QUndoCommand):
     """
     This command is used to resize nodes.
     """
-    def __init__(self, scene, node, data):
+    def __init__(self, diagram, node, data):
         """
         Initialize the command.
         """
         super().__init__('resize {}'.format(node.name))
-        self.scene = scene
+        self.diagram = diagram
         self.node = node
         self.data = data
 
     def redo(self):
         """redo the command"""
-        # Turn caching OFF.
+        # TURN CACHING OFF
         for edge in self.node.edges:
-            edge.setCacheMode(QGraphicsItem.NoCache)
+            edge.setCacheMode(AbstractItem.NoCache)
 
         self.node.background = self.data['redo']['background']
         self.node.selection = self.data['redo']['selection']
@@ -120,17 +123,17 @@ class CommandNodeRezize(QUndoCommand):
         self.node.updateEdges()
         self.node.update()
 
-        # Turn caching ON.
+        # TURN CACHING ON
         for edge in self.node.edges:
-            edge.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+            edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
 
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
-        # Turn caching OFF.
+        # TURN CACHING OFF
         for edge in self.node.edges:
-            edge.setCacheMode(QGraphicsItem.NoCache)
+            edge.setCacheMode(AbstractItem.NoCache)
 
         self.node.background = self.data['undo']['background']
         self.node.selection = self.data['undo']['selection']
@@ -144,23 +147,23 @@ class CommandNodeRezize(QUndoCommand):
         self.node.updateEdges()
         self.node.update()
 
-        # Turn caching ON.
+        # TURN CACHING ON
         for edge in self.node.edges:
-            edge.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+            edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
 
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
 
 class CommandNodeMove(QUndoCommand):
     """
     This command is used to move nodes (1 or more).
     """
-    def __init__(self, scene, data):
+    def __init__(self, diagram, data):
         """
         Initialize the command.
         """
         self.data = data
-        self.scene = scene
+        self.diagram = diagram
         self.edges = set()
 
         for node in data['redo']['nodes']:
@@ -177,7 +180,7 @@ class CommandNodeMove(QUndoCommand):
         """redo the command"""
         # Turn off caching.
         for edge in self.edges:
-            edge.setCacheMode(QGraphicsItem.NoCache)
+            edge.setCacheMode(AbstractItem.NoCache)
         # Update edges breakpoints.
         for edge, breakpoints in self.data['redo']['edges'].items():
             for i in range(len(breakpoints)):
@@ -193,15 +196,15 @@ class CommandNodeMove(QUndoCommand):
             edge.updateEdge()
         # Turn on caching.
         for edge in self.edges:
-            edge.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+            edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
         # Emit updated signal.
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         # Turn off caching.
         for edge in self.edges:
-            edge.setCacheMode(QGraphicsItem.NoCache)
+            edge.setCacheMode(AbstractItem.NoCache)
         # Update edges breakpoints.
         for edge, breakpoints in self.data['undo']['edges'].items():
             for i in range(len(breakpoints)):
@@ -217,46 +220,47 @@ class CommandNodeMove(QUndoCommand):
             edge.updateEdge()
         # Turn caching ON.
         for edge in self.edges:
-            edge.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+            edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
         # Emit updated signal.
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
 
 class CommandNodeLabelMove(QUndoCommand):
     """
     This command is used to move nodes labels.
     """
-    def __init__(self, scene, node, pos1, pos2):
+    def __init__(self, diagram, node, pos1, pos2):
         """
         Initialize the command.
         """
         super().__init__('move {} label'.format(node.name))
-        self.scene = scene
+        self.diagram = diagram
         self.node = node
         self.data = {'undo': pos1, 'redo': pos2}
 
     def redo(self):
         """redo the command"""
         self.node.setTextPos(self.data['redo'])
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         self.node.setTextPos(self.data['undo'])
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
 
+# FIXME: handle relocation of index in project
 class CommandNodeLabelChange(QUndoCommand):
     """
     This command is used to edit nodes labels.
     """
-    def __init__(self, scene, node, undo, redo, name=None):
+    def __init__(self, diagram, node, undo, redo, name=None):
         """
         Initialize the command.
         """
         message = name or 'edit {} label'.format(node.name)
         super().__init__(message)
-        self.scene = scene
+        self.diagram = diagram
         self.node = node
         self.data = {'undo': undo, 'redo': redo}
 
@@ -265,69 +269,71 @@ class CommandNodeLabelChange(QUndoCommand):
         # If the command is executed in a "refactor" command we won't have
         # any meta except for the first node in the refactored collection
         # so we don't have to remove nor add predicates from the meta index.
-        meta = self.scene.meta.metaFor(self.node.item, self.data['undo'])
+        meta = self.diagram.meta.metaFor(self.node.item, self.data['undo'])
         if meta:
-            self.scene.meta.remove(self.node.item, self.data['undo'])
+            self.diagram.meta.doRemoveNode(self.node.item, self.data['undo'])
 
-        self.scene.index.remove(self.node)
+        self.diagram.index.doRemoveNode(self.node)
         self.node.setText(self.data['redo'])
-        self.scene.index.add(self.node)
+        self.diagram.index.doAddNode(self.node)
 
         if meta:
             meta.predicate = self.data['redo']
-            self.scene.meta.add(self.node.item, self.data['redo'], meta)
+            self.diagram.meta.doAddNode(self.node.item, self.data['redo'], meta)
 
-        if self.node.isItem(Item.IndividualNode):
-            f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
-            f2 = lambda x: x.isItem(Item.EnumerationNode)
+        if self.node.type() is Item.IndividualNode:
+            f1 = lambda x: x.type() is Item.InputEdge and x.source is self.node
+            f2 = lambda x: x.type() is Item.EnumerationNode
             for node in {n for n in [e.other(self.node) for e in self.node.edges if f1(e)] if f2(n)}:
-                identify(node)
+                pass
+                #identify(node)
 
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         # If the command is executed in a "refactor" command we won't have
         # any meta except for the first node in the refactored collection
         # so we don't have to remove nor add predicates from the meta index.
-        meta = self.scene.meta.metaFor(self.node.item, self.data['redo'])
+        meta = self.diagram.meta.metaFor(self.node.item, self.data['redo'])
         if meta:
-            self.scene.meta.remove(self.node.item, self.data['redo'])
+            self.diagram.meta.doRemoveNode(self.node.item, self.data['redo'])
 
-        self.scene.index.remove(self.node)
+        self.diagram.index.doRemoveNode(self.node)
         self.node.setText(self.data['undo'])
-        self.scene.index.add(self.node)
+        self.diagram.index.doAddNode(self.node)
 
         if meta:
             meta.predicate = self.data['undo']
-            self.scene.meta.add(self.node.item, self.data['undo'], meta)
+            self.diagram.meta.doAddNode(self.node.item, self.data['undo'], meta)
 
-        if self.node.isItem(Item.IndividualNode):
-            f1 = lambda x: x.isItem(Item.InputEdge) and x.source is self.node
-            f2 = lambda x: x.isItem(Item.EnumerationNode)
+        if self.node.type() is Item.IndividualNode:
+            f1 = lambda x: x.type() is Item.InputEdge and x.source is self.node
+            f2 = lambda x: x.type() is Item.EnumerationNode
             for node in {n for n in [e.other(self.node) for e in self.node.edges if f1(e)] if f2(n)}:
-                identify(node)
+                pass
+                #identify(node)
 
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
 
 class CommandNodeOperatorSwitchTo(QUndoCommand):
     """
-    This command is used to change the class of hexagon based constructor nodes.
+    This command is used to change the class of hexagon based operator nodes.
     """
-    def __init__(self, scene, node1, node2):
+    def __init__(self, diagram, node1, node2):
         """
         Initialize the command.
         """
         super().__init__('switch {} to {}'.format(node1.name, node2.name))
-        self.scene = scene
+        self.diagram = diagram
         self.node = {'redo': node2, 'undo': node1}
 
     def redo(self):
         """redo the command"""
-        # add the new node to the scene
-        self.scene.addItem(self.node['redo'])
-        self.scene.sgnItemAdded.emit(self.node['redo'])
+        # add the new node to the diagram
+        self.diagram.addItem(self.node['redo'])
+        self.diagram.sgnItemAdded.emit(self.diagram, self.node['redo'])
 
         # move the anchor points
         for edge, point in self.node['undo'].anchors.items():
@@ -350,16 +356,16 @@ class CommandNodeOperatorSwitchTo(QUndoCommand):
         self.node['undo'].anchors.clear()
         self.node['undo'].edges.clear()
 
-        # remove the old node from the scene
-        self.scene.removeItem(self.node['undo'])
-        self.scene.sgnItemRemoved.emit(self.node['undo'])
-        self.scene.sgnUpdated.emit()
+        # remove the old node from the diagram
+        self.diagram.removeItem(self.node['undo'])
+        self.diagram.sgnItemRemoved.emit(self.diagram, self.node['undo'])
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
-        # add back to the scene the old node
-        self.scene.addItem(self.node['undo'])
-        self.scene.sgnItemAdded.emit(self.node['undo'])
+        # add back to the diagram the old node
+        self.diagram.addItem(self.node['undo'])
+        self.diagram.sgnItemAdded.emit(self.diagram, self.node['undo'])
 
         # move the anchor points back
         for edge, point in self.node['redo'].anchors.items():
@@ -382,44 +388,45 @@ class CommandNodeOperatorSwitchTo(QUndoCommand):
         self.node['redo'].anchors.clear()
         self.node['redo'].edges.clear()
 
-        # remove the new node from the scene
-        self.scene.removeItem(self.node['redo'])
-        self.scene.sgnItemRemoved.emit(self.node['redo'])
-        self.scene.sgnUpdated.emit()
+        # remove the new node from the diagram
+        self.diagram.removeItem(self.node['redo'])
+        self.diagram.sgnItemRemoved.emit(self.diagram, self.node['redo'])
+        self.diagram.sgnUpdated.emit()
 
 
+# FIXME: relocate meta inside project!
 class CommandNodeChangeMeta(QUndoCommand):
     """
     This command is used to change predicate nodes metadata.
     """
-    def __init__(self, scene, node, undo, redo):
+    def __init__(self, diagram, node, undo, redo):
         """
         Initialize the command.
         """
         super().__init__('change {} metadata'.format(node.name))
-        self.scene = scene
+        self.diagram = diagram
         self.data = {'redo': redo, 'undo': undo}
         self.node = node
 
     def redo(self):
         """redo the command"""
-        self.scene.meta.add(self.node.item, self.node.text(), self.data['redo'])
+        self.diagram.meta.doAddNode(self.node.item, self.node.text(), self.data['redo'])
 
     def undo(self):
         """undo the command"""
-        self.scene.meta.add(self.node.item, self.node.text(), self.data['undo'])
+        self.diagram.meta.doAddNode(self.node.item, self.node.text(), self.data['undo'])
 
 
 class CommandNodeChangeInputOrder(QUndoCommand):
     """
     This command is used to change the order of Role chain and Property assertion inputs.
     """
-    def __init__(self, scene, node, inputs):
+    def __init__(self, diagram, node, inputs):
         """
         Initilize the command.
         """
         self.node = node
-        self.scene = scene
+        self.diagram = diagram
         self.inputs = {'redo': inputs, 'undo': node.inputs}
         super().__init__('change {} inputs order'.format(node.name))
 
@@ -427,41 +434,39 @@ class CommandNodeChangeInputOrder(QUndoCommand):
         """redo the command"""
         self.node.inputs = self.inputs['redo']
         self.node.updateEdges()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """redo the command"""
         self.node.inputs = self.inputs['undo']
         self.node.updateEdges()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
 
 class CommandNodeSetBrush(QUndoCommand):
     """
     This command is used to change the brush of predicate nodes.
     """
-    def __init__(self, scene, nodes, brush):
+    def __init__(self, diagram, nodes, brush):
         """
         Initilize the command.
         """
-        self.scene = scene
+        self.diagram = diagram
         self.nodes = nodes
         self.brush = {x: {'undo': x.brush, 'redo': brush} for x in nodes}
-        if len(nodes) != 1:
-            super().__init__('change color of {} nodes'.format(len(nodes)))
-        else:
-            super().__init__('change {} color'.format(first(nodes).name))
+        name = 'set {0} brush on {1} node{2}'.format(brush.color().name(), len(nodes), 's' if len(nodes) > 1 else '')
+        super().__init__(name)
 
     def redo(self):
         """redo the command"""
         for node in self.nodes:
             node.brush = self.brush[node]['redo']
-            node.updateBrush(selected=node.isSelected())
-        self.scene.sgnUpdated.emit()
+            node.redraw(selected=node.isSelected())
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """redo the command"""
         for node in self.nodes:
             node.brush = self.brush[node]['undo']
-            node.updateBrush(selected=node.isSelected())
-        self.scene.sgnUpdated.emit()
+            node.redraw(selected=node.isSelected())
+        self.diagram.sgnUpdated.emit()

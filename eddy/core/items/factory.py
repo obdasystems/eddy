@@ -34,18 +34,33 @@
 
 from PyQt5.QtCore import QObject
 
-from eddy.core.datatypes import Item
+from eddy.core.datatypes.graphol import Item
 
-from eddy.core.items import AttributeNode, ComplementNode, ConceptNode, DatatypeRestrictionNode
-from eddy.core.items import DisjointUnionNode, DomainRestrictionNode, EnumerationNode
-from eddy.core.items import IndividualNode, IntersectionNode, PropertyAssertionNode, RangeRestrictionNode
-from eddy.core.items import RoleNode, RoleChainNode, RoleInverseNode, UnionNode, ValueDomainNode
-from eddy.core.items import ValueRestrictionNode, InclusionEdge, InputEdge, InstanceOfEdge
+from eddy.core.items.nodes.attribute import AttributeNode
+from eddy.core.items.nodes.complement import ComplementNode
+from eddy.core.items.nodes.concept import ConceptNode
+from eddy.core.items.nodes.datatype_restriction import DatatypeRestrictionNode
+from eddy.core.items.nodes.disjoint_union import DisjointUnionNode
+from eddy.core.items.nodes.domain_restriction import DomainRestrictionNode
+from eddy.core.items.nodes.enumeration import EnumerationNode
+from eddy.core.items.nodes.individual import IndividualNode
+from eddy.core.items.nodes.intersection import IntersectionNode
+from eddy.core.items.nodes.property_assertion import PropertyAssertionNode
+from eddy.core.items.nodes.range_restriction import RangeRestrictionNode
+from eddy.core.items.nodes.role import RoleNode
+from eddy.core.items.nodes.role_chain import RoleChainNode
+from eddy.core.items.nodes.role_inverse import RoleInverseNode
+from eddy.core.items.nodes.union import UnionNode
+from eddy.core.items.nodes.value_domain import ValueDomainNode
+from eddy.core.items.nodes.value_restriction import ValueRestrictionNode
+from eddy.core.items.edges.inclusion import InclusionEdge
+from eddy.core.items.edges.input import InputEdge
+from eddy.core.items.edges.membership import MembershipEdge
 
 
 class ItemFactory(QObject):
     """
-    This class can be used to produce Graphol items.
+    This class can be used to produce graphol items.
     """
     def __init__(self, parent=None):
         """
@@ -53,67 +68,53 @@ class ItemFactory(QObject):
         :type parent: QObject
         """
         super().__init__(parent)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   FACTORY                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @staticmethod
-    def create(item, scene, **kwargs):
+    
+    def create(self, item, **kwargs):
         """
-        Build and return a Graphol item instance using to the given parameters.
+        Build and return a graphol item instance using to the given parameters.
         :type item: Item
-        :type scene: DiagramScene
         :type kwargs: dict
         :rtype: AbstractItem
         """
-        # NOTE: do not use Item identity check here. While this may seem an error
-        # it allow us to use the factory also when we create graphol items after
-        # clicking on the palette button: the palette stores internally the type
-        # of the item for each button but the Identity is lost: probably Qt handle
-        # only integers as palette button id and the python to C++ conversion from
-        # IntEnum to int is implicit!
-        if item == Item.AttributeNode:
-            return AttributeNode(scene=scene, **kwargs)
-        if item == Item.ComplementNode:
-            return ComplementNode(scene=scene, **kwargs)
-        if item == Item.ConceptNode:
-            return ConceptNode(scene=scene, **kwargs)
-        if item == Item.DatatypeRestrictionNode:
-            return DatatypeRestrictionNode(scene=scene, **kwargs)
-        if item == Item.DisjointUnionNode:
-            return DisjointUnionNode(scene=scene, **kwargs)
-        if item == Item.DomainRestrictionNode:
-            return DomainRestrictionNode(scene=scene, **kwargs)
-        if item == Item.EnumerationNode:
-            return EnumerationNode(scene=scene, **kwargs)
-        if item == Item.IndividualNode:
-            return IndividualNode(scene=scene, **kwargs)
-        if item == Item.IntersectionNode:
-            return IntersectionNode(scene=scene, **kwargs)
-        if item == Item.PropertyAssertionNode:
-            return PropertyAssertionNode(scene=scene, **kwargs)
-        if item == Item.RangeRestrictionNode:
-            return RangeRestrictionNode(scene=scene, **kwargs)
-        if item == Item.RoleNode:
-            return RoleNode(scene=scene, **kwargs)
-        if item == Item.RoleChainNode:
-            return RoleChainNode(scene=scene, **kwargs)
-        if item == Item.RoleInverseNode:
-            return RoleInverseNode(scene=scene, **kwargs)
-        if item == Item.UnionNode:
-            return UnionNode(scene=scene, **kwargs)
-        if item == Item.ValueDomainNode:
-            return ValueDomainNode(scene=scene, **kwargs)
-        if item == Item.ValueRestrictionNode:
-            return ValueRestrictionNode(scene=scene, **kwargs)
-        if item == Item.InclusionEdge:
-            return InclusionEdge(scene=scene, **kwargs)
-        if item == Item.InputEdge:
-            return InputEdge(scene=scene, **kwargs)
-        if item == Item.InstanceOfEdge:
-            return InstanceOfEdge(scene=scene, **kwargs)
-
+        item = Item.forValue(item)
+        if item is Item.AttributeNode:
+            return AttributeNode(project=self.parent(), **kwargs)
+        if item is Item.ComplementNode:
+            return ComplementNode(project=self.parent(), **kwargs)
+        if item is Item.ConceptNode:
+            return ConceptNode(project=self.parent(), **kwargs)
+        if item is Item.DatatypeRestrictionNode:
+            return DatatypeRestrictionNode(project=self.parent(), **kwargs)
+        if item is Item.DisjointUnionNode:
+            return DisjointUnionNode(project=self.parent(), **kwargs)
+        if item is Item.DomainRestrictionNode:
+            return DomainRestrictionNode(project=self.parent(), **kwargs)
+        if item is Item.EnumerationNode:
+            return EnumerationNode(project=self.parent(), **kwargs)
+        if item is Item.IndividualNode:
+            return IndividualNode(project=self.parent(), **kwargs)
+        if item is Item.IntersectionNode:
+            return IntersectionNode(project=self.parent(), **kwargs)
+        if item is Item.PropertyAssertionNode:
+            return PropertyAssertionNode(project=self.parent(), **kwargs)
+        if item is Item.RangeRestrictionNode:
+            return RangeRestrictionNode(project=self.parent(), **kwargs)
+        if item is Item.RoleNode:
+            return RoleNode(project=self.parent(), **kwargs)
+        if item is Item.RoleChainNode:
+            return RoleChainNode(project=self.parent(), **kwargs)
+        if item is Item.RoleInverseNode:
+            return RoleInverseNode(project=self.parent(), **kwargs)
+        if item is Item.UnionNode:
+            return UnionNode(project=self.parent(), **kwargs)
+        if item is Item.ValueDomainNode:
+            return ValueDomainNode(project=self.parent(), **kwargs)
+        if item is Item.ValueRestrictionNode:
+            return ValueRestrictionNode(project=self.parent(), **kwargs)
+        if item is Item.InclusionEdge:
+            return InclusionEdge(project=self.parent(), **kwargs)
+        if item is Item.InputEdge:
+            return InputEdge(project=self.parent(), **kwargs)
+        if item is Item.MembershipEdge:
+            return MembershipEdge(project=self.parent(), **kwargs)
         raise RuntimeError('unknown item ({}) in ItemFactory.create()'.format(item))

@@ -37,6 +37,7 @@ from abc import abstractmethod, ABCMeta
 from PyQt5.QtCore import QObject
 
 
+# TODO: DELETE
 class AbstractExporter(QObject):
     """
     Base class for DiagramScene exporters.

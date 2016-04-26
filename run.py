@@ -36,12 +36,14 @@
 import sys
 import traceback
 
+from argparse import ArgumentParser
+
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QMessageBox, QApplication
 
 from eddy import APPNAME, BUG_TRACKER
 from eddy.core.application import Eddy
-from eddy.core.functions import connect
+from eddy.core.functions.signals import connect
 
 # noinspection PyUnresolvedReferences
 from eddy.ui import images_rc
@@ -77,7 +79,7 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
             box = QMessageBox()
             box.setIconPixmap(QPixmap(':/images/eddy-sad'))
             box.setWindowIcon(QIcon(':/images/eddy'))
-            box.setWindowTitle('Unhandled error!')
+            box.setWindowTitle('Fatal error!')
             box.setText(m1)
             box.setInformativeText(m2)
             box.setDetailedText(m3)
@@ -102,16 +104,22 @@ def main():
     """
     Application entry point.
     """
-    global app
-    sys.excepthook = base_except_hook
-    app = Eddy(sys.argv)
+    parser = ArgumentParser()
+    parser.add_argument('--nosplash', dest='nosplash', action='store_true')
+    parser.add_argument('--tests', dest='tests', action='store_true')
 
-    if app.isRunning:
-        # If the application is already running in another process send a message to the
-        # process containing all the sys.argv elements joined into a string. This will
-        # cause the other process to activate itself and handle the received message.
-        app.sendMessage(' '.join(sys.argv))
+    sys.excepthook = base_except_hook
+
+    options, _ = parser.parse_known_args(args=sys.argv)
+
+    global app
+    app = Eddy(options, sys.argv)
+    if app.running:
+        app.route(sys.argv)
         sys.exit(0)
+
+    app.configure(options)
+    app.start()
 
     sys.exit(app.exec_())
 

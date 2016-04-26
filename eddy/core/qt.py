@@ -33,16 +33,18 @@
 
 
 from PyQt5.QtCore import pyqtSlot, QRectF, QPointF, Qt
-from PyQt5.QtGui import QFont, QIcon, QPixmap, QPainter, QPainterPath, QColor, QBrush, QPen
-from PyQt5.QtWidgets import QStackedWidget, QSizePolicy
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPainterPath
+from PyQt5.QtGui import QColor, QBrush, QPen, QFont
+from PyQt5.QtWidgets import QStackedWidget, QSizePolicy, QPushButton, QToolButton
 
 from eddy.core.datatypes.system import Platform
-from eddy.core.functions import connect, shaded
+from eddy.core.functions.misc import shaded
+from eddy.core.functions.signals import connect
 
 
 class Font(QFont):
     """
-    This class extends PyQt5.QtGui.QFont providing better font rendering on different platforms.
+    This class extends QFont providing better font rendering on different platforms.
     """
     def __init__(self, family, size=12, weight=-1, italic=False):
         """
@@ -59,7 +61,7 @@ class Font(QFont):
 
 class ColoredIcon(QIcon):
     """
-    This class extends PyQt5.QtGui.QIcon and automatically creates an icon filled with the given color..
+    This class extends QIcon and automatically creates an icon filled with the given color..
     """
     def __init__(self, width, height, color, border=None):
         """
@@ -84,7 +86,7 @@ class ColoredIcon(QIcon):
 
 class Icon(QIcon):
     """
-    This class extends PyQt5.QtGui.QIcon providing automatic generation of shaded icon for disabled status.
+    This class extends QIcon providing automatic generation of shaded icon for disabled status.
     """
     def __init__(self, path, opacity=0.25):
         """
@@ -97,9 +99,67 @@ class Icon(QIcon):
         self.addPixmap(shaded(QPixmap(path), opacity), QIcon.Disabled)
 
 
+class PHCQPushButton(QPushButton):
+    """
+    This class extends QPushButton providing mouse cursor change then the mour pointer hover the button area.
+    """
+    def __init__(self, parent=None):
+        """
+        Initialize the button.
+        """
+        super().__init__(parent)
+
+    #############################################
+    #   EVENTS
+    #################################
+
+    def enterEvent(self, event):
+        """
+        Executed when the mouse enter the widget.
+        :type event: QEvent
+        """
+        self.setCursor(Qt.PointingHandCursor)
+
+    def leaveEvent(self, event):
+        """
+        Executed when the mouse leave the widget.
+        :type event: QEvent
+        """
+        self.unsetCursor()
+
+
+class PHCQToolButton(QToolButton):
+    """
+    This class extends QToolButton providing mouse cursor change then the mour pointer hover the button area.
+    """
+    def __init__(self, parent=None):
+        """
+        Initialize the button.
+        """
+        super().__init__(parent)
+
+    #############################################
+    #   EVENTS
+    #################################
+
+    def enterEvent(self, event):
+        """
+        Executed when the mouse enter the widget.
+        :type event: QEvent
+        """
+        self.setCursor(Qt.PointingHandCursor)
+
+    def leaveEvent(self, event):
+        """
+        Executed when the mouse leave the widget.
+        :type event: QEvent
+        """
+        self.unsetCursor()
+
+
 class StackedWidget(QStackedWidget):
     """
-    This class implements a stacked widget with variable page size.
+    This class extends QStackedWidget providing a stacked widget with variable page size.
     """
     def __init__(self, parent=None):
         """

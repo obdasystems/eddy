@@ -40,13 +40,14 @@ from PyQt5.QtWidgets import QDialog, QFormLayout, QDialogButtonBox, QProgressBar
 from PyQt5.QtWidgets import QMessageBox, QSpacerItem, QSizePolicy
 
 from eddy import BUG_TRACKER
-from eddy.core.datatypes import File, OWLSyntax
+from eddy.core.datatypes.owl import OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
-from eddy.core.exporters import OWLExporter
-from eddy.core.functions import isEmpty, connect, openPath
-
+from eddy.core.exporters.owl import OWLExporter
+from eddy.core.functions.misc import isEmpty
+from eddy.core.functions.path import openPath
+from eddy.core.functions.signals import connect
 from eddy.ui.fields import StringField, ComboBox
-from eddy.ui.view import MainView
+from eddy.ui.widgets.view import DiagramView
 
 
 class OWLTranslationForm(QDialog):
@@ -131,7 +132,7 @@ class OWLTranslationForm(QDialog):
 
             if msgbox.result() == QMessageBox.Yes:
                 for view in self.scene.views():
-                    if isinstance(view, MainView):
+                    if isinstance(view, DiagramView):
                         view.centerOn(exception.item)
 
         else:
@@ -159,8 +160,8 @@ class OWLTranslationForm(QDialog):
         """
         self.workerThread.quit()
 
-        file = File(path=self.filepath)
-        file.write(string=self.worker.export(syntax=self.syntaxField.currentData()))
+        # file = File(path=self.filepath)
+        # file.write(string=self.worker.export(syntax=self.syntaxField.currentData()))
 
         msgbox = QMessageBox(self)
         msgbox.setIconPixmap(QPixmap(':/icons/info'))

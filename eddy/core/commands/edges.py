@@ -34,32 +34,32 @@
 
 from PyQt5.QtWidgets import QUndoCommand
 
-from eddy.core.datatypes import Item
-from eddy.core.functions import first
+from eddy.core.datatypes.graphol import Item
+from eddy.core.functions.misc import first
 
 
 class CommandEdgeAdd(QUndoCommand):
     """
-    This command is used to add edges to the scene.
+    This command is used to add an edge to a diagram.
     """
-    def __init__(self, scene, edge):
+    def __init__(self, diagram, edge):
         """
         Initialize the command.
         """
         super().__init__('add {}'.format(edge.name))
 
+        self.diagram = diagram
         self.edge = edge
         self.edge.source.addEdge(self.edge)
         self.edge.target.addEdge(self.edge)
         self.edge.updateEdge()
-        self.scene = scene
         self.inputs = {'redo': [], 'undo': []}
 
-        if self.edge.isItem(Item.InputEdge):
+        if self.edge.type() is Item.InputEdge:
             # If we are adding an input edge targeting a role chain or a property
             # assertion node we need to save the new inputs order and compute the
             # old one by removing the current edge id from the input list.
-            if self.edge.target.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
+            if self.edge.target.type() in {Item.RoleChainNode, Item.PropertyAssertionNode}:
                 self.inputs['redo'] = self.edge.target.inputs[:]
                 self.inputs['undo'] = self.edge.target.inputs[:]
                 self.inputs['undo'].remove(self.edge.id)
@@ -70,12 +70,12 @@ class CommandEdgeAdd(QUndoCommand):
         self.edge.source.addEdge(self.edge)
         self.edge.target.addEdge(self.edge)
         # switch the inputs
-        if self.edge.target.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
+        if self.edge.target.type() in {Item.RoleChainNode, Item.PropertyAssertionNode}:
             self.edge.target.inputs = self.inputs['redo'][:]
-        # add the edge to the scene
-        self.scene.addItem(self.edge)
-        self.scene.sgnItemAdded.emit(self.edge)
-        self.scene.sgnUpdated.emit()
+        # add the edge to the diagram
+        self.diagram.addItem(self.edge)
+        self.diagram.sgnItemAdded.emit(self.diagram, self.edge)
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
@@ -83,25 +83,25 @@ class CommandEdgeAdd(QUndoCommand):
         self.edge.source.removeEdge(self.edge)
         self.edge.target.removeEdge(self.edge)
         # switch the inputs
-        if self.edge.target.isItem(Item.RoleChainNode, Item.PropertyAssertionNode):
+        if self.edge.target.type() in {Item.RoleChainNode, Item.PropertyAssertionNode}:
             self.edge.target.inputs = self.inputs['undo'][:]
-        # remove the edge from the scene
-        self.scene.removeItem(self.edge)
-        self.scene.sgnItemRemoved.emit(self.edge)
-        self.scene.sgnUpdated.emit()
+        # remove the edge from the diagram
+        self.diagram.removeItem(self.edge)
+        self.diagram.sgnItemRemoved.emit(self.diagram, self.edge)
+        self.diagram.sgnUpdated.emit()
 
 
 class CommandEdgeBreakpointAdd(QUndoCommand):
     """
     This command is used to add a breakpoint on the given edge.
     """
-    def __init__(self, scene, edge, index, point):
+    def __init__(self, diagram, edge, index, point):
         """
         Initialize the command.
         """
         super().__init__('add {} breakpoint'.format(edge.name))
+        self.diagram = diagram
         self.edge = edge
-        self.scene = scene
         self.index = index
         self.point = point
 
@@ -109,25 +109,25 @@ class CommandEdgeBreakpointAdd(QUndoCommand):
         """redo the command"""
         self.edge.breakpoints.insert(self.index, self.point)
         self.edge.updateEdge()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         self.edge.breakpoints.pop(self.index)
         self.edge.updateEdge()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
 
 class CommandEdgeAnchorMove(QUndoCommand):
     """
     This command is used to move edge anchor points.
     """
-    def __init__(self, scene, edge, node, data):
+    def __init__(self, diagram, edge, node, data):
         """
         Initialize the command.
         """
         super().__init__('move {} anchor point'.format(edge.name))
-        self.scene = scene
+        self.diagram = diagram
         self.edge = edge
         self.node = node
         self.data = data
@@ -136,53 +136,53 @@ class CommandEdgeAnchorMove(QUndoCommand):
         """redo the command"""
         self.node.setAnchor(self.edge, self.data['redo'])
         self.edge.updateEdge()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         self.node.setAnchor(self.edge, self.data['undo'])
         self.edge.updateEdge()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
 
 class CommandEdgeBreakpointMove(QUndoCommand):
     """
     This command is used to move edge breakpoints.
     """
-    def __init__(self, scene, edge, index, data):
+    def __init__(self, diagram, edge, index, data):
         """
         Initialize the command.
         """
         super().__init__('move {} breakpoint'.format(edge.name))
-        self.data = data
+        self.diagram = diagram
         self.edge = edge
         self.index = index
-        self.scene = scene
+        self.data = data
 
     def redo(self):
         """redo the command"""
         self.edge.breakpoints[self.index] = self.data['redo']
         self.edge.updateEdge()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         self.edge.breakpoints[self.index] = self.data['undo']
         self.edge.updateEdge()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
 
 class CommandEdgeBreakpointRemove(QUndoCommand):
     """
     This command is used to delete edge breakpoints.
     """
-    def __init__(self, scene, edge, index):
+    def __init__(self, diagram, edge, index):
         """
         Initialize the command.
         """
         super().__init__('remove {} breakpoint'.format(edge.name))
+        self.diagram = diagram
         self.edge = edge
-        self.scene = scene
         self.index = index
         self.point = edge.breakpoints[self.index]
 
@@ -190,20 +190,20 @@ class CommandEdgeBreakpointRemove(QUndoCommand):
         """redo the command"""
         self.edge.breakpoints.pop(self.index)
         self.edge.updateEdge()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         self.edge.breakpoints.insert(self.index, self.point)
         self.edge.updateEdge()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
 
-class CommandEdgeInclusionToggleComplete(QUndoCommand):
+class CommandEdgeToggleComplete(QUndoCommand):
     """
-    This command is used to toggle the complete attribute of Inclusion edges.
+    This command is used to toggle the complete attribute of inclusion edges.
     """
-    def __init__(self, scene, data):
+    def __init__(self, diagram, data):
         """
         Initialize the command.
         """
@@ -212,7 +212,7 @@ class CommandEdgeInclusionToggleComplete(QUndoCommand):
         else:
             super().__init__('toggle completness for {} edges'.format(len(data)))
 
-        self.scene = scene
+        self.diagram = diagram
         self.data = data
 
     def redo(self):
@@ -220,20 +220,21 @@ class CommandEdgeInclusionToggleComplete(QUndoCommand):
         for edge in self.data:
             edge.complete = self.data[edge]['to']
             edge.updateEdge()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         for edge in self.data:
             edge.complete = self.data[edge]['from']
             edge.updateEdge()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
+
 
 class CommandEdgeSwap(QUndoCommand):
     """
-    This command is used to swap edges' source/target.
+    This command is used to swap the endpoints of edges.
     """
-    def __init__(self, scene, edges):
+    def __init__(self, diagram, edges):
         """
         Initialize the command.
         """
@@ -242,23 +243,23 @@ class CommandEdgeSwap(QUndoCommand):
         else:
             super().__init__('swap {} edges'.format(len(edges)))
 
-        self.scene = scene
+        self.diagram = diagram
         self.edges = edges
 
         self.inputs = {n: {
             'undo': n.inputs[:],
             'redo': n.inputs[:],
         } for edge in self.edges \
-            if edge.isItem(Item.InputEdge) \
+            if edge.type() is Item.InputEdge \
                 for n in {edge.source, edge.target} \
-                    if n.isItem(Item.RoleChainNode, Item.PropertyAssertionNode)}
+                    if n.type() in {Item.RoleChainNode, Item.PropertyAssertionNode}}
 
         for edge in self.edges:
-            if edge.isItem(Item.InputEdge) and edge.target in self.inputs:
-                self.inputs[edge.target]['redo'].remove(edge.id)
+            if edge.type() is Item.InputEdge and edge.target in self.inputs:
+                self.inputs[edge.target]['redo'].doRemoveNode(edge.id)
 
         for edge in self.edges:
-            if edge.isItem(Item.InputEdge) and edge.source in self.inputs:
+            if edge.type() is Item.InputEdge and edge.source in self.inputs:
                 self.inputs[edge.source]['redo'].append(edge.id)
 
     def redo(self):
@@ -270,7 +271,7 @@ class CommandEdgeSwap(QUndoCommand):
                 if node in self.inputs:
                     node.inputs = self.inputs[node]['redo'][:]
             edge.updateEdge()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
@@ -281,4 +282,4 @@ class CommandEdgeSwap(QUndoCommand):
                 if node in self.inputs:
                     node.inputs = self.inputs[node]['undo'][:]
             edge.updateEdge()
-        self.scene.sgnUpdated.emit()
+        self.diagram.sgnUpdated.emit()

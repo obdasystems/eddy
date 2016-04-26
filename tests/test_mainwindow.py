@@ -32,10 +32,9 @@
 ##########################################################################
 
 
-from eddy.ui.mdi import MdiSubWindow
-from eddy.ui.scene import DiagramScene
-from eddy.ui.view import MainView
-
+from eddy.core.diagram import Diagram
+from eddy.ui.widgets.mdi import MdiSubWindow
+from eddy.ui.widgets.view import MainView
 from tests import EddyTestCase
 
 
@@ -48,7 +47,7 @@ class Test_MainWindow(EddyTestCase):
         self.assertEqual(1, len(self.mainwindow.mdi.subWindowList()))
         self.assertIsInstance(self.mainwindow.mdi.subWindowList()[0], MdiSubWindow)
         self.assertIsInstance(self.mainwindow.mdi.subWindowList()[0].widget(), MainView)
-        self.assertIsInstance(self.mainwindow.mdi.subWindowList()[0].widget().scene(), DiagramScene)
+        self.assertIsInstance(self.mainwindow.mdi.subWindowList()[0].widget().scene(), Diagram)
         self.assertFalse(self.mainwindow.actionSaveDocument.isEnabled())
         self.assertFalse(self.mainwindow.actionCut.isEnabled())
         self.assertFalse(self.mainwindow.actionCopy.isEnabled())

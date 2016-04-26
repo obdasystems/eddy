@@ -29,6 +29,8 @@
     <file alias="open">../../artwork/icons/ic_folder_open_black_24dp_1x.png</file>
     <file alias="paste">../../artwork/icons/ic_content_paste_black_24dp_1x.png</file>
     <file alias="preferences">../../artwork/icons/ic_settings_black_24dp_1x.png</file>
+    <file alias="property-domain">../../artwork/icons/ic_property_domain_24dp_1x.png</file>
+    <file alias="property-range">../../artwork/icons/ic_property_range_24dp_1x.png</file>
     <file alias="print">../../artwork/icons/ic_print_black_24dp_1x.png</file>
     <file alias="quit">../../artwork/icons/ic_power_settings_new_black_24dp_1x.png</file>
     <file alias="radio-checked">../../artwork/icons/ic_radio_button_checked_black_24dp_1x.png</file>
@@ -48,12 +50,16 @@
     <file alias="treeview-branch-more">../../artwork/icons/treeview-branch-more.png</file>
     <file alias="treeview-branch-open">../../artwork/icons/treeview-branch-open.png</file>
     <file alias="treeview-branch-vline">../../artwork/icons/treeview-branch-vline.png</file>
-    <file alias="treeview-icon-attribute">../../artwork/icons/treeview-icon-attribute.png</file>
-    <file alias="treeview-icon-concept">../../artwork/icons/treeview-icon-concept.png</file>
-    <file alias="treeview-icon-datarange">../../artwork/icons/treeview-icon-datarange.png</file>
-    <file alias="treeview-icon-instance">../../artwork/icons/treeview-icon-instance.png</file>
-    <file alias="treeview-icon-value">../../artwork/icons/treeview-icon-value.png</file>
-    <file alias="treeview-icon-role">../../artwork/icons/treeview-icon-role.png</file>
+    <file alias="treeview-predicate-attribute">../../artwork/icons/treeview-predicate-attribute.png</file>
+    <file alias="treeview-predicate-concept">../../artwork/icons/treeview-predicate-concept.png</file>
+    <file alias="treeview-predicate-datarange">../../artwork/icons/treeview-predicate-datarange.png</file>
+    <file alias="treeview-predicate-instance">../../artwork/icons/treeview-predicate-instance.png</file>
+    <file alias="treeview-predicate-value">../../artwork/icons/treeview-predicate-value.png</file>
+    <file alias="treeview-predicate-role">../../artwork/icons/treeview-predicate-role.png</file>
+    <file alias="treeview-directory">../../artwork/icons/treeview-directory.png</file>
+    <file alias="treeview-document-blank">../../artwork/icons/treeview-document-blank.png</file>
+    <file alias="treeview-document-graphol">../../artwork/icons/treeview-document-graphol.png</file>
+    <file alias="treeview-document-owl">../../artwork/icons/treeview-document-owl.png</file>
     <file alias="undo">../../artwork/icons/ic_undo_black_24dp_1x.png</file>
     <file alias="warning">../../artwork/icons/ic_warning_black_48dp_1x.png</file>
     <file alias="zoom">../../artwork/icons/ic_zoom_black_24dp_1x.png</file>
@@ -65,6 +71,7 @@
     <file alias="eddy">../../artwork/eddy.png</file>
     <file alias="eddy-sad">../../artwork/eddy_sad.png</file>
     <file alias="eddy-smile">../../artwork/eddy_smile.png</file>
+    <file alias="eddy-smile-small-noframe">../../artwork/eddy_smile_small_noframe.png</file>
     <file alias="splash">../../artwork/splash.png</file>
 </qresource>
 </RCC>

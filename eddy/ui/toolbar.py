@@ -35,7 +35,8 @@
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QToolButton
 
-from eddy.core.functions import clamp, connect, rangeF
+from eddy.core.functions.misc import clamp, rangeF
+from eddy.core.functions.signals import connect
 from eddy.core.qt import Icon
 
 
@@ -73,11 +74,9 @@ class Zoom(QWidget):
 
         self.setEnabled(False)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SLOTS                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   SLOTS
+    #################################
 
     @pyqtSlot(float)
     def scaleChanged(self, level):
@@ -108,11 +107,9 @@ class Zoom(QWidget):
         """
         self.setLevel(Zoom.Default)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
     def adjust(self, level):
         """
@@ -130,24 +127,6 @@ class Zoom(QWidget):
         self.buttonZoomOut.setEnabled(self.isEnabled() and self.level > min(self.levels))
         self.buttonZoomReset.setEnabled(self.isEnabled() and self.level != Zoom.Default)
 
-    def setLevel(self, level):
-        """
-        Set the zoom level according to the given value.
-        :type level: float
-        """
-        if self.isEnabled():
-            level = clamp(level, Zoom.Min, Zoom.Max)
-            if level != self.level:
-                self.level = level
-                self.refresh()
-                self.sgnChanged.emit(self.level)
-                
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   OVERRIDES                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
-
     def setDisabled(self, disabled):
         """
         Set the widget disabled status.
@@ -163,3 +142,15 @@ class Zoom(QWidget):
         """
         super().setEnabled(enabled)
         self.refresh()
+
+    def setLevel(self, level):
+        """
+        Set the zoom level according to the given value.
+        :type level: float
+        """
+        if self.isEnabled():
+            level = clamp(level, Zoom.Min, Zoom.Max)
+            if level != self.level:
+                self.level = level
+                self.refresh()
+                self.sgnChanged.emit(self.level)

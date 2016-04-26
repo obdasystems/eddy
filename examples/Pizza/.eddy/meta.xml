@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project version="1">
+  <ontology>
+    <iri>http://www.dis.uniroma1.it/~graphol/pizza</iri>
+    <prefix>pizza</prefix>
+  </ontology>
+  <predicates>
+    <predicate name="depth" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="calories" type="attribute">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate name="hasBase" type="role">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+      <inverseFunctional>1</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+    <predicate name="hasTopping" type="role">
+      <url></url>
+      <description></description>
+      <functional>0</functional>
+      <inverseFunctional>1</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+  </predicates>
+</project>

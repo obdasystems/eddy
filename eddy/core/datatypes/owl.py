@@ -101,7 +101,6 @@ class Facet(Enum):
             XsdDatatype.unsignedLong: numbers,
             XsdDatatype.unsignedShort: numbers,
             XsdDatatype.xmlLiteral: []
-            
         }[value]
 
     @classmethod
@@ -154,10 +153,11 @@ class XsdDatatype(Enum):
     """
     This class defines all the available datatypes for the value-domain node.
     """
-    __order__ = 'anyURI base64Binary boolean byte dateTime dateTimeStamp decimal double float hexBinary int integer ' \
-                'language literal long Name NCName negativeInteger NMTOKEN nonNegativeInteger nonPositiveInteger ' \
-                'normalizedString plainLiteral positiveInteger rational real short string token unsignedByte ' \
-                'unsignedInt unsignedLong unsignedShort xmlLiteral'
+    __order__ = 'anyURI base64Binary boolean byte dateTime dateTimeStamp decimal ' \
+                'double float hexBinary int integer language literal long Name NCName ' \
+                'negativeInteger NMTOKEN nonNegativeInteger nonPositiveInteger ' \
+                'normalizedString plainLiteral positiveInteger rational real short ' \
+                'string token unsignedByte unsignedInt unsignedLong unsignedShort xmlLiteral'
 
     anyURI = 'xsd:anyURI'
     base64Binary = 'xsd:base64Binary'
@@ -213,18 +213,38 @@ class XsdDatatype(Enum):
         :rtype: str
         """
         return {
-            XsdDatatype.anyURI: 'XSD_ANY_URI', XsdDatatype.base64Binary: 'XSD_BASE_64_BINARY',
-            XsdDatatype.boolean: 'XSD_BOOLEAN', XsdDatatype.byte: 'XSD_BYTE', XsdDatatype.dateTime: 'XSD_DATE_TIME',
-            XsdDatatype.dateTimeStamp: 'XSD_DATE_TIME_STAMP', XsdDatatype.decimal: 'XSD_DECIMAL',
-            XsdDatatype.double: 'XSD_DOUBLE', XsdDatatype.float: 'XSD_FLOAT', XsdDatatype.hexBinary: 'XSD_HEX_BINARY',
-            XsdDatatype.int: 'XSD_INT', XsdDatatype.integer: 'XSD_INTEGER', XsdDatatype.language: 'XSD_LANGUAGE',
-            XsdDatatype.literal: 'RDFS_LITERAL', XsdDatatype.long: 'XSD_LONG', XsdDatatype.Name: 'XSD_NAME',
-            XsdDatatype.NCName: 'XSD_NCNAME', XsdDatatype.negativeInteger: 'XSD_NEGATIVE_INTEGER',
-            XsdDatatype.NMTOKEN: 'XSD_NMTOKEN', XsdDatatype.nonNegativeInteger: 'XSD_NON_NEGATIVE_INTEGER',
-            XsdDatatype.nonPositiveInteger: 'XSD_NON_POSITIVE_INTEGER', XsdDatatype.normalizedString: 'XSD_NORMALIZED_STRING',
-            XsdDatatype.plainLiteral: 'RDF_PLAIN_LITERAL', XsdDatatype.positiveInteger: 'XSD_POSITIVE_INTEGER',
-            XsdDatatype.rational: 'OWL_RATIONAL', XsdDatatype.real: 'OWL_REAL', XsdDatatype.short: 'XSD_SHORT',
-            XsdDatatype.string: 'XSD_STRING', XsdDatatype.token: 'XSD_TOKEN', XsdDatatype.unsignedByte: 'XSD_UNSIGNED_BYTE',
-            XsdDatatype.unsignedInt: 'XSD_UNSIGNED_INT', XsdDatatype.unsignedLong: 'XSD_UNSIGNED_LONG',
-            XsdDatatype.unsignedShort: 'XSD_UNSIGNED_SHORT', XsdDatatype.xmlLiteral: 'RDF_XML_LITERAL',
+            XsdDatatype.anyURI: 'XSD_ANY_URI',
+            XsdDatatype.base64Binary: 'XSD_BASE_64_BINARY',
+            XsdDatatype.boolean: 'XSD_BOOLEAN',
+            XsdDatatype.byte: 'XSD_BYTE',
+            XsdDatatype.dateTime: 'XSD_DATE_TIME',
+            XsdDatatype.dateTimeStamp: 'XSD_DATE_TIME_STAMP',
+            XsdDatatype.decimal: 'XSD_DECIMAL',
+            XsdDatatype.double: 'XSD_DOUBLE',
+            XsdDatatype.float: 'XSD_FLOAT',
+            XsdDatatype.hexBinary: 'XSD_HEX_BINARY',
+            XsdDatatype.int: 'XSD_INT',
+            XsdDatatype.integer: 'XSD_INTEGER',
+            XsdDatatype.language: 'XSD_LANGUAGE',
+            XsdDatatype.literal: 'RDFS_LITERAL',
+            XsdDatatype.long: 'XSD_LONG',
+            XsdDatatype.Name: 'XSD_NAME',
+            XsdDatatype.NCName: 'XSD_NCNAME',
+            XsdDatatype.negativeInteger: 'XSD_NEGATIVE_INTEGER',
+            XsdDatatype.NMTOKEN: 'XSD_NMTOKEN',
+            XsdDatatype.nonNegativeInteger: 'XSD_NON_NEGATIVE_INTEGER',
+            XsdDatatype.nonPositiveInteger: 'XSD_NON_POSITIVE_INTEGER',
+            XsdDatatype.normalizedString: 'XSD_NORMALIZED_STRING',
+            XsdDatatype.plainLiteral: 'RDF_PLAIN_LITERAL',
+            XsdDatatype.positiveInteger: 'XSD_POSITIVE_INTEGER',
+            XsdDatatype.rational: 'OWL_RATIONAL',
+            XsdDatatype.real: 'OWL_REAL',
+            XsdDatatype.short: 'XSD_SHORT',
+            XsdDatatype.string: 'XSD_STRING',
+            XsdDatatype.token: 'XSD_TOKEN',
+            XsdDatatype.unsignedByte: 'XSD_UNSIGNED_BYTE',
+            XsdDatatype.unsignedInt: 'XSD_UNSIGNED_INT',
+            XsdDatatype.unsignedLong: 'XSD_UNSIGNED_LONG',
+            XsdDatatype.unsignedShort: 'XSD_UNSIGNED_SHORT',
+            XsdDatatype.xmlLiteral: 'RDF_XML_LITERAL',
         }[self]

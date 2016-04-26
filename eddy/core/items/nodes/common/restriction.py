@@ -37,9 +37,9 @@ from abc import ABCMeta, abstractmethod
 from PyQt5.QtCore import QRectF, QPointF, Qt
 from PyQt5.QtGui import QColor, QPainterPath, QPen, QBrush
 
-from eddy.core.datatypes import Identity, Restriction
+from eddy.core.datatypes.graphol import Identity, Restriction
 from eddy.core.items.nodes.common.base import AbstractNode
-from eddy.core.items.nodes.common.label import Label
+from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.regex import RE_CARDINALITY
 
 
@@ -62,30 +62,12 @@ class RestrictionNode(AbstractNode):
         self.polygon = self.createPolygon(20, 20)
         self.background = self.createBackground(28, 28)
         self.selection = self.createSelection(28, 28)
-        self.label = Label(Restriction.Exists.label, centered=False, editable=False, parent=self)
+        self.label = NodeLabel(Restriction.Exists.format(), centered=False, editable=False, parent=self)
         self.label.updatePos()
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @property
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        return Identity.Concept
-
-    @identity.setter
-    def identity(self, identity):
-        """
-        Set the identity of the current node.
-        :type identity: Identity
-        """
-        pass
+    #############################################
+    #   PROPERTIES
+    #################################
 
     @property
     def cardinality(self):
@@ -103,6 +85,24 @@ class RestrictionNode(AbstractNode):
         return cardinality
 
     @property
+    @abstractmethod
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        pass
+
+    @identity.setter
+    @abstractmethod
+    def identity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
+
+    @property
     def restriction(self):
         """
         Returns the restriction type of the node.
@@ -110,23 +110,24 @@ class RestrictionNode(AbstractNode):
         """
         return Restriction.forLabel(self.text())
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
-    def copy(self, scene):
+    def boundingRect(self):
+        """
+        Returns the shape bounding rectangle.
+        :rtype: QRectF
+        """
+        return self.selection
+
+    def copy(self, project):
         """
         Create a copy of the current item.
-        :type scene: DiagramScene
+        :type project: Project
         """
-        kwargs = {
-            'id': self.id,
-            'height': self.height(),
-            'width': self.width(),
-        }
-        node = scene.factory.create(item=self.item, scene=scene, **kwargs)
+        kwargs = {'id': self.id, 'height': self.height(), 'width': self.width()}
+        node = project.itemFactory.create(self.type(), **kwargs)
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
@@ -159,93 +160,6 @@ class RestrictionNode(AbstractNode):
         """
         return self.polygon.height()
 
-    def width(self):
-        """
-        Returns the width of the shape.
-        :rtype: int
-        """
-        return self.polygon.width()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   GEOMETRY                                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def boundingRect(self):
-        """
-        Returns the shape bounding rectangle.
-        :rtype: QRectF
-        """
-        return self.selection
-
-    def painterPath(self):
-        """
-        Returns the current shape as QPainterPath (used for collision detection).
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addRect(self.polygon)
-        return path
-
-    def shape(self, *args, **kwargs):
-        """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addRect(self.polygon)
-        return path
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   LABEL SHORTCUTS                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def textPos(self):
-        """
-        Returns the current label position.
-        :rtype: QPointF
-        """
-        return self.label.pos()
-
-    def text(self):
-        """
-        Returns the label text.
-        :rtype: str
-        """
-        return self.label.text()
-
-    def setTextPos(self, pos):
-        """
-        Set the label position.
-        :type pos: QPointF
-        """
-        self.label.setPos(pos)
-
-    def setText(self, text):
-        """
-        Set the label text: will additionally parse the given value checking for a consistent restriction type.
-        :type text: str
-        """
-        restriction = Restriction.forLabel(text)
-        if not restriction:
-            text = Restriction.Exists.label
-        self.label.setText(text)
-
-    def updateTextPos(self, *args, **kwargs):
-        """
-        Update the label position.
-        """
-        self.label.updatePos(*args, **kwargs)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
-
     @classmethod
     @abstractmethod
     def image(cls, **kwargs):
@@ -257,7 +171,7 @@ class RestrictionNode(AbstractNode):
 
     def paint(self, painter, option, widget=None):
         """
-        Paint the node in the diagram scene.
+        Paint the node in the diagram.
         :type painter: QPainter
         :type option: QStyleOptionGraphicsItem
         :type widget: QWidget
@@ -274,3 +188,66 @@ class RestrictionNode(AbstractNode):
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawRect(self.polygon)
+
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used for collision detection).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRect(self.polygon)
+        return path
+
+    def setText(self, text):
+        """
+        Set the label text.
+        Will additionally parse the given value checking for a consistent restriction type.
+        :type text: str
+        """
+        restriction = Restriction.forLabel(text)
+        if not restriction:
+            text = Restriction.Exists.format()
+        self.label.setText(text)
+
+    def setTextPos(self, pos):
+        """
+        Set the label position.
+        :type pos: QPointF
+        """
+        self.label.setPos(pos)
+
+    def shape(self, *args, **kwargs):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRect(self.polygon)
+        return path
+
+    def text(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        return self.label.text()
+
+    def textPos(self):
+        """
+        Returns the current label position.
+        :rtype: QPointF
+        """
+        return self.label.pos()
+
+    def width(self):
+        """
+        Returns the width of the shape.
+        :rtype: int
+        """
+        return self.polygon.width()
+
+    def updateTextPos(self, *args, **kwargs):
+        """
+        Update the label position.
+        """
+        self.label.updatePos(*args, **kwargs)

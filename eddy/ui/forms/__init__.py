@@ -30,11 +30,11 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-
-
-from eddy.ui.forms.export import OWLTranslationForm
-
-from eddy.ui.forms.nodes import CardinalityRestrictionForm
-from eddy.ui.forms.nodes import ValueForm
-from eddy.ui.forms.nodes import RenameForm
-from eddy.ui.forms.nodes import ValueRestrictionForm
+#
+#
+# from eddy.ui.forms.export import OWLTranslationForm
+#
+# from eddy.ui.forms.nodes import CardinalityRestrictionForm
+# from eddy.ui.forms.nodes import ValueForm
+# from eddy.ui.forms.nodes import RenameForm
+# from eddy.ui.forms.nodes import ValueRestrictionForm

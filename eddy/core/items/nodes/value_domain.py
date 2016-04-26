@@ -35,9 +35,10 @@
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QBrush
 
-from eddy.core.datatypes import Item, XsdDatatype, Identity
+from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.datatypes.owl import XsdDatatype
 from eddy.core.items.nodes.common.base import AbstractNode
-from eddy.core.items.nodes.common.label import Label
+from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.qt import Font
 
 
@@ -45,14 +46,14 @@ class ValueDomainNode(AbstractNode):
     """
     This class implements the 'Value-Domain' node.
     """
-    identities = {Identity.ValueDomain}
-    item = Item.ValueDomainNode
-    minheight = 40
-    minwidth = 90
+    Identities = {Identity.ValueDomain}
+    Type = Item.ValueDomainNode
+    MinHeight = 40
+    MinWidth = 90
 
-    def __init__(self, width=minwidth, height=minheight, brush=None, **kwargs):
+    def __init__(self, width=MinWidth, height=MinHeight, brush=None, **kwargs):
         """
-        Initialize the Value-Domain node.
+        Initialize the ValueDomain node.
         :type width: int
         :type height: int
         :type brush: QBrush
@@ -60,17 +61,15 @@ class ValueDomainNode(AbstractNode):
         super().__init__(**kwargs)
         self.brush = brush or QBrush(QColor(252, 252, 252))
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
-        self.polygon = self.createPolygon(self.minwidth, self.minheight)
-        self.background = self.createBackground(self.minwidth + 8, self.minheight + 8)
-        self.selection = self.createSelection(self.minwidth + 8, self.minheight + 8)
-        self.label = Label('xsd:string', movable=False, editable=False, parent=self)
+        self.polygon = self.createPolygon(self.MinWidth, self.MinHeight)
+        self.background = self.createBackground(self.MinWidth + 8, self.MinHeight + 8)
+        self.selection = self.createSelection(self.MinWidth + 8, self.MinHeight + 8)
+        self.label = NodeLabel('xsd:string', movable=False, editable=False, parent=self)
         self.updateLayout()
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   PROPERTIES
+    #################################
 
     @property
     def datatype(self):
@@ -96,24 +95,24 @@ class ValueDomainNode(AbstractNode):
         """
         pass
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
-    def copy(self, scene):
+    def boundingRect(self):
+        """
+        Returns the shape bounding rectangle.
+        :rtype: QRectF
+        """
+        return self.selection
+
+    def copy(self, project):
         """
         Create a copy of the current item.
-        :type scene: DiagramScene
+        :type project: Project
         """
-        kwargs = {
-            'id': self.id,
-            'brush': self.brush,
-            'height': self.height(),
-            'width': self.width(),
-        }
-        node = scene.factory.create(item=self.item, scene=scene, **kwargs)
+        kwargs = {'id': self.id, 'brush': self.brush, 'height': self.height(), 'width': self.width()}
+        node = project.itemFactory.create(self.type(), **kwargs)
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
@@ -146,103 +145,6 @@ class ValueDomainNode(AbstractNode):
         """
         return self.polygon.height()
 
-    def updateLayout(self):
-        """
-        Update current shape rect according to the selected datatype.
-        """
-        width = max(self.label.width() + 16, self.minwidth)
-        self.polygon = self.createPolygon(width, self.minheight)
-        self.background = self.createBackground(width + 8, self.minheight + 8)
-        self.selection = self.createSelection(width + 8, self.minheight + 8)
-        self.updateTextPos()
-        self.updateEdges()
-
-    def width(self):
-        """
-        Returns the width of the shape.
-        :rtype: int
-        """
-        return self.polygon.width()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   GEOMETRY                                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def boundingRect(self):
-        """
-        Returns the shape bounding rectangle.
-        :rtype: QRectF
-        """
-        return self.selection
-
-    def painterPath(self):
-        """
-        Returns the current shape as QPainterPath (used for collision detection).
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addRoundedRect(self.polygon, 8, 8)
-        return path
-
-    def shape(self):
-        """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addRoundedRect(self.polygon, 8, 8)
-        return path
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   LABEL SHORTCUTS                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def textPos(self):
-        """
-        Returns the current label position in item coordinates.
-        :rtype: QPointF
-        """
-        return self.label.pos()
-
-    def text(self):
-        """
-        Returns the label text.
-        :rtype: str
-        """
-        return self.label.text()
-
-    def setTextPos(self, pos):
-        """
-        Set the label position.
-        :type pos: QPointF
-        """
-        self.label.setPos(pos)
-
-    def setText(self, text):
-        """
-        Set the label text.
-        :type text: str
-        """
-        datatype = XsdDatatype.forValue(text) or XsdDatatype.string
-        self.label.setText(datatype.value)
-        self.updateLayout()
-
-    def updateTextPos(self, *args, **kwargs):
-        """
-        Update the label position.
-        """
-        self.label.updatePos(*args, **kwargs)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
-
     @classmethod
     def image(cls, **kwargs):
         """
@@ -267,7 +169,7 @@ class ValueDomainNode(AbstractNode):
 
     def paint(self, painter, option, widget=None):
         """
-        Paint the node in the diagram scene.
+        Paint the node in the diagram.
         :type painter: QPainter
         :type option: QStyleOptionGraphicsItem
         :type widget: QWidget
@@ -287,3 +189,75 @@ class ValueDomainNode(AbstractNode):
         painter.setBrush(self.brush)
         painter.setPen(self.pen)
         painter.drawRoundedRect(self.polygon, 8, 8)
+
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used for collision detection).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRoundedRect(self.polygon, 8, 8)
+        return path
+
+    def setText(self, text):
+        """
+        Set the label text.
+        :type text: str
+        """
+        datatype = XsdDatatype.forValue(text) or XsdDatatype.string
+        self.label.setText(datatype.value)
+        self.updateLayout()
+
+    def setTextPos(self, pos):
+        """
+        Set the label position.
+        :type pos: QPointF
+        """
+        self.label.setPos(pos)
+
+    def shape(self):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRoundedRect(self.polygon, 8, 8)
+        return path
+
+    def text(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        return self.label.text()
+
+    def textPos(self):
+        """
+        Returns the current label position in item coordinates.
+        :rtype: QPointF
+        """
+        return self.label.pos()
+
+    def updateTextPos(self, *args, **kwargs):
+        """
+        Update the label position.
+        """
+        self.label.updatePos(*args, **kwargs)
+
+    def updateLayout(self):
+        """
+        Update current shape rect according to the selected datatype.
+        """
+        width = max(self.label.width() + 16, self.MinWidth)
+        self.polygon = self.createPolygon(width, self.MinHeight)
+        self.background = self.createBackground(width + 8, self.MinHeight + 8)
+        self.selection = self.createSelection(width + 8, self.MinHeight + 8)
+        self.updateTextPos()
+        self.updateEdges()
+
+    def width(self):
+        """
+        Returns the width of the shape.
+        :rtype: int
+        """
+        return self.polygon.width()

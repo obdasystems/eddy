@@ -35,10 +35,10 @@
 from PyQt5.QtCore import QRectF, QPointF, Qt
 from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QColor, QPen, QBrush
 
-from eddy.core.datatypes import Item, Special, Identity
-from eddy.core.functions import snapF
+from eddy.core.datatypes.graphol import Identity, Item, Special
+from eddy.core.functions.misc import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
-from eddy.core.items.nodes.common.label import Label
+from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.qt import Font
 
 
@@ -46,12 +46,12 @@ class ConceptNode(AbstractResizableNode):
     """
     This class implements the 'Concept' node.
     """
-    identities = {Identity.Concept}
-    item = Item.ConceptNode
-    minheight = 50
-    minwidth = 110
+    Identities = {Identity.Concept}
+    Type = Item.ConceptNode
+    MinHeight = 50
+    MinWidth = 110
 
-    def __init__(self, width=minwidth, height=minheight, brush=None, **kwargs):
+    def __init__(self, width=MinWidth, height=MinHeight, brush=None, **kwargs):
         """
         Initialize the node.
         :type width: int
@@ -60,24 +60,22 @@ class ConceptNode(AbstractResizableNode):
         """
         super().__init__(**kwargs)
 
-        w = max(width, self.minwidth)
-        h = max(height, self.minheight)
-        s = self.handleSize
+        w = max(width, self.MinWidth)
+        h = max(height, self.MinHeight)
+        s = self.HandleSize
 
         self.brush = brush or QBrush(QColor(252, 252, 252))
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.polygon = self.createPolygon(w, h)
         self.background = self.createBackground(w + s, h + s)
         self.selection = self.createSelection(w + s, h + s)
-        self.label = Label('concept', parent=self)
+        self.label = NodeLabel('concept', parent=self)
         self.label.updatePos()
         self.updateHandles()
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   PROPERTIES
+    #################################
 
     @property
     def identity(self):
@@ -101,26 +99,26 @@ class ConceptNode(AbstractResizableNode):
         Returns the special type of this node.
         :rtype: Special
         """
-        return Special.forValue(self.text())
+        return Special.forLabel(self.text())
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
-    def copy(self, scene):
+    def boundingRect(self):
+        """
+        Returns the shape bounding rectangle.
+        :rtype: QRectF
+        """
+        return self.selection
+
+    def copy(self, project):
         """
         Create a copy of the current item.
-        :type scene: DiagramScene
+        :type project: Project
         """
-        kwargs = {
-            'id': self.id,
-            'brush': self.brush,
-            'height': self.height(),
-            'width': self.width(),
-        }
-        node = scene.factory.create(item=self.item, scene=scene, **kwargs)
+        kwargs = {'id': self.id, 'brush': self.brush, 'height': self.height(), 'width': self.width()}
+        node = project.itemFactory.create(self.type(), **kwargs)
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
@@ -153,26 +151,84 @@ class ConceptNode(AbstractResizableNode):
         """
         return self.polygon.height()
 
-    def interactiveResize(self, mousePos):
+    @classmethod
+    def image(cls, **kwargs):
+        """
+        Returns an image suitable for the palette.
+        :rtype: QPixmap
+        """
+        # INITIALIZATION
+        pixmap = QPixmap(kwargs['w'], kwargs['h'])
+        pixmap.fill(Qt.transparent)
+        painter = QPainter(pixmap)
+        rect = cls.createPolygon(54, 34)
+        # DRAW THE RECTANGLE
+        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+        painter.setBrush(QColor(252, 252, 252))
+        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
+        painter.drawRect(rect)
+        # TEXT WITHIN THE RECTANGLE
+        painter.setFont(Font('Arial', 11, Font.Light))
+        painter.drawText(rect, Qt.AlignCenter, 'concept')
+        return pixmap
+
+    def paint(self, painter, option, widget=None):
+        """
+        Paint the node in the diagram.
+        :type painter: QPainter
+        :type option: QStyleOptionGraphicsItem
+        :type widget: QWidget
+        """
+        # SET THE RECT THAT NEEDS TO BE REPAINTED
+        painter.setClipRect(option.exposedRect)
+        # SELECTION AREA
+        painter.setPen(self.selectionPen)
+        painter.setBrush(self.selectionBrush)
+        painter.drawRect(self.selection)
+        # SYNTAX VALIDATION
+        painter.setPen(self.backgroundPen)
+        painter.setBrush(self.backgroundBrush)
+        painter.drawRect(self.background)
+        # ITEM SHAPE
+        painter.setPen(self.pen)
+        painter.setBrush(self.brush)
+        painter.drawRect(self.polygon)
+        # RESIZE HANDLES
+        painter.setRenderHint(QPainter.Antialiasing)
+        for i in range(self.HandleNum):
+            painter.setBrush(self.handleBrush[i])
+            painter.setPen(self.handlePen[i])
+            painter.drawEllipse(self.handleBound[i])
+
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used for collision detection).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRect(self.polygon)
+        return path
+
+    def resize(self, mousePos):
         """
         Handle the interactive resize of the shape.
         :type mousePos: QPointF
         """
-        scene = self.scene()
-        snap = scene.mainwindow.snapToGrid
-        size = scene.GridSize
-        offset = self.handleSize + self.handleMove
+        mainwindow = self.project.parent()
+        snap = mainwindow.actionSnapToGrid.isChecked()
+        size = self.diagram.GridSize
+        offset = self.HandleSize + self.HandleMove
         moved = self.label.moved
 
         R = QRectF(self.boundingRect())
         D = QPointF(0, 0)
 
-        minBoundW = self.minwidth + offset * 2
-        minBoundH = self.minheight + offset * 2
+        minBoundW = self.MinWidth + offset * 2
+        minBoundH = self.MinHeight + offset * 2
 
         self.prepareGeometryChange()
 
-        if self.mousePressHandle == self.handleTL:
+        if self.mousePressHandle == self.HandleTL:
 
             fromX = self.mousePressBound.left()
             fromY = self.mousePressBound.top()
@@ -200,7 +256,7 @@ class ConceptNode(AbstractResizableNode):
             self.polygon.setLeft(R.left() + offset)
             self.polygon.setTop(R.top() + offset)
 
-        elif self.mousePressHandle == self.handleTM:
+        elif self.mousePressHandle == self.HandleTM:
 
             fromY = self.mousePressBound.top()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
@@ -217,7 +273,7 @@ class ConceptNode(AbstractResizableNode):
             self.selection.setTop(R.top())
             self.polygon.setTop(R.top() + offset)
 
-        elif self.mousePressHandle == self.handleTR:
+        elif self.mousePressHandle == self.HandleTR:
 
             fromX = self.mousePressBound.right()
             fromY = self.mousePressBound.top()
@@ -245,7 +301,7 @@ class ConceptNode(AbstractResizableNode):
             self.polygon.setRight(R.right() - offset)
             self.polygon.setTop(R.top() + offset)
 
-        elif self.mousePressHandle == self.handleML:
+        elif self.mousePressHandle == self.HandleML:
 
             fromX = self.mousePressBound.left()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
@@ -262,7 +318,7 @@ class ConceptNode(AbstractResizableNode):
             self.selection.setLeft(R.left())
             self.polygon.setLeft(R.left() + offset)
 
-        elif self.mousePressHandle == self.handleMR:
+        elif self.mousePressHandle == self.HandleMR:
 
             fromX = self.mousePressBound.right()
             toX = fromX + mousePos.x() - self.mousePressPos.x()
@@ -279,7 +335,7 @@ class ConceptNode(AbstractResizableNode):
             self.selection.setRight(R.right())
             self.polygon.setRight(R.right() - offset)
 
-        elif self.mousePressHandle == self.handleBL:
+        elif self.mousePressHandle == self.HandleBL:
 
             fromX = self.mousePressBound.left()
             fromY = self.mousePressBound.bottom()
@@ -307,7 +363,7 @@ class ConceptNode(AbstractResizableNode):
             self.polygon.setLeft(R.left() + offset)
             self.polygon.setBottom(R.bottom() - offset)
 
-        elif self.mousePressHandle == self.handleBM:
+        elif self.mousePressHandle == self.HandleBM:
 
             fromY = self.mousePressBound.bottom()
             toY = fromY + mousePos.y() - self.mousePressPos.y()
@@ -324,7 +380,7 @@ class ConceptNode(AbstractResizableNode):
             self.selection.setBottom(R.bottom())
             self.polygon.setBottom(R.bottom() - offset)
 
-        elif self.mousePressHandle == self.handleBR:
+        elif self.mousePressHandle == self.HandleBR:
 
             fromX = self.mousePressBound.right()
             fromY = self.mousePressBound.bottom()
@@ -356,35 +412,6 @@ class ConceptNode(AbstractResizableNode):
         self.updateTextPos(moved=moved)
         self.updateAnchors(self.mousePressData, D)
 
-    def width(self):
-        """
-        Returns the width of the shape.
-        :rtype: int
-        """
-        return self.polygon.width()
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   GEOMETRY                                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def boundingRect(self):
-        """
-        Returns the shape bounding rectangle.
-        :rtype: QRectF
-        """
-        return self.selection
-
-    def painterPath(self):
-        """
-        Returns the current shape as QPainterPath (used for collision detection).
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addRect(self.polygon)
-        return path
-
     def shape(self):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
@@ -396,25 +423,13 @@ class ConceptNode(AbstractResizableNode):
             path.addEllipse(shape)
         return path
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   LABEL SHORTCUTS                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def textPos(self):
+    def setText(self, text):
         """
-        Returns the current label position in item coordinates.
-        :rtype: QPointF
+        Set the label text.
+        :type text: str
         """
-        return self.label.pos()
-
-    def text(self):
-        """
-        Returns the label text.
-        :rtype: str
-        """
-        return self.label.text()
+        self.label.editable = Special.forLabel(text) is None
+        self.label.setText(text)
 
     def setTextPos(self, pos):
         """
@@ -423,13 +438,19 @@ class ConceptNode(AbstractResizableNode):
         """
         self.label.setPos(pos)
 
-    def setText(self, text):
+    def text(self):
         """
-        Set the label text.
-        :type text: str
+        Returns the label text.
+        :rtype: str
         """
-        self.label.editable = Special.forValue(text) is None
-        self.label.setText(text)
+        return self.label.text()
+
+    def textPos(self):
+        """
+        Returns the current label position in item coordinates.
+        :rtype: QPointF
+        """
+        return self.label.pos()
 
     def updateTextPos(self, *args, **kwargs):
         """
@@ -437,57 +458,9 @@ class ConceptNode(AbstractResizableNode):
         """
         self.label.updatePos(*args, **kwargs)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    @classmethod
-    def image(cls, **kwargs):
+    def width(self):
         """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
+        Returns the width of the shape.
+        :rtype: int
         """
-        # INITIALIZATION
-        pixmap = QPixmap(kwargs['w'], kwargs['h'])
-        pixmap.fill(Qt.transparent)
-        painter = QPainter(pixmap)
-        rect = cls.createPolygon(54, 34)
-        # DRAW THE RECTANGLE
-        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-        painter.setBrush(QColor(252, 252, 252))
-        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
-        painter.drawRect(rect)
-        # TEXT WITHIN THE RECTANGLE
-        painter.setFont(Font('Arial', 11, Font.Light))
-        painter.drawText(rect, Qt.AlignCenter, 'concept')
-        return pixmap
-
-    def paint(self, painter, option, widget=None):
-        """
-        Paint the node in the diagram scene.
-        :type painter: QPainter
-        :type option: QStyleOptionGraphicsItem
-        :type widget: QWidget
-        """
-        # SET THE RECT THAT NEEDS TO BE REPAINTED
-        painter.setClipRect(option.exposedRect)
-        # SELECTION AREA
-        painter.setPen(self.selectionPen)
-        painter.setBrush(self.selectionBrush)
-        painter.drawRect(self.selection)
-        # SYNTAX VALIDATION
-        painter.setPen(self.backgroundPen)
-        painter.setBrush(self.backgroundBrush)
-        painter.drawRect(self.background)
-        # ITEM SHAPE
-        painter.setPen(self.pen)
-        painter.setBrush(self.brush)
-        painter.drawRect(self.polygon)
-        # RESIZE HANDLES
-        painter.setRenderHint(QPainter.Antialiasing)
-        for i in range(self.handleNum):
-            painter.setBrush(self.handleBrush[i])
-            painter.setPen(self.handlePen[i])
-            painter.drawEllipse(self.handleBound[i])
+        return self.polygon.width()

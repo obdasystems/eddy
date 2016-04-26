@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project version="1">
+  <ontology>
+    <iri>http://www.dis.uniroma1.it/~graphol/lubm</iri>
+    <prefix>lubm</prefix>
+  </ontology>
+  <predicates>
+    <predicate type="attribute" name="telephoneNumber">
+      <url></url>
+      <description></description>
+      <functional>0</functional>
+    </predicate>
+    <predicate type="attribute" name="title">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate type="attribute" name="age">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate type="attribute" name="name">
+      <url></url>
+      <description></description>
+      <functional>1</functional>
+    </predicate>
+    <predicate type="attribute" name="email">
+      <url></url>
+      <description></description>
+      <functional>0</functional>
+    </predicate>
+    <predicate type="role" name="writtenBy">
+      <url></url>
+      <description></description>
+      <functional>0</functional>
+      <inverseFunctional>0</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+    <predicate type="role" name="isHeadOf">
+      <url></url>
+      <description></description>
+      <functional>0</functional>
+      <inverseFunctional>0</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+    <predicate type="role" name="hasAlumnus">
+      <url></url>
+      <description></description>
+      <functional>0</functional>
+      <inverseFunctional>0</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+    <predicate type="role" name="isPartOf">
+      <url></url>
+      <description></description>
+      <functional>0</functional>
+      <inverseFunctional>0</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+    <predicate type="role" name="teaches">
+      <url></url>
+      <description></description>
+      <functional>0</functional>
+      <inverseFunctional>1</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+    <predicate type="role" name="attends">
+      <url></url>
+      <description></description>
+      <functional>0</functional>
+      <inverseFunctional>0</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+    <predicate type="role" name="publishes">
+      <url></url>
+      <description></description>
+      <functional>0</functional>
+      <inverseFunctional>0</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+    <predicate type="role" name="worksFor">
+      <url></url>
+      <description></description>
+      <functional>0</functional>
+      <inverseFunctional>0</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+    <predicate type="role" name="hasDegreeFrom">
+      <url></url>
+      <description></description>
+      <functional>0</functional>
+      <inverseFunctional>0</inverseFunctional>
+      <asymmetric>0</asymmetric>
+      <irreflexive>0</irreflexive>
+      <reflexive>0</reflexive>
+      <symmetric>0</symmetric>
+      <transitive>0</transitive>
+    </predicate>
+  </predicates>
+</project>

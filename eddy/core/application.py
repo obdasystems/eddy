@@ -35,26 +35,25 @@
 import os
 import jnius_config
 
-from argparse import ArgumentParser
-
-from PyQt5.QtCore import Qt, QEvent, QTextStream, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QEvent, QTextStream, pyqtSignal, pyqtSlot, QSettings
 from PyQt5.QtNetwork import QLocalSocket, QLocalServer
 from PyQt5.QtWidgets import QApplication
 
-from eddy import APPID
-from eddy.core.datatypes import Platform, Filetype
-from eddy.core.functions import isEmpty, expandPath, connect, disconnect
+from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE
+from eddy.core.datatypes.system import Platform
+from eddy.core.functions.fsystem import isdir
+from eddy.core.functions.misc import isEmpty
+from eddy.core.functions.path import expandPath
+from eddy.core.functions.signals import connect, disconnect
 
 ########################################################
 ##         BEGIN JAVA VIRTUAL MACHINE SETUP           ##
 ########################################################
 
 if os.path.isdir(expandPath('@resources/java/')):
-    # If we are shipping the jvm then set the JAVA_HOME.
     os.environ['JAVA_HOME'] = expandPath('@resources/java/')
 
 if Platform.identify() is Platform.Windows:
-    # On windows we must add the jvm.dll to system path.
     path = os.getenv('Path', '')
     path = path.split(os.pathsep)
     path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'bin', 'client'))
@@ -74,9 +73,11 @@ jnius_config.set_classpath(*classpath)
 ##          END JAVA VIRTUAL MACHINE SETUP            ##
 ########################################################
 
-
-from eddy.ui.mainwindow import MainWindow
-from eddy.ui.splash import SplashScreen
+from eddy.ui.dialogs.progress import BusyProgressDialog
+from eddy.ui.dialogs.workspace import WorkspaceDialog
+from eddy.ui.widgets.mainwindow import MainWindow
+from eddy.ui.widgets.splash import Splash
+from eddy.ui.widgets.welcome import Welcome
 from eddy.ui.style import Clean
 
 
@@ -84,91 +85,51 @@ class Eddy(QApplication):
     """
     This class implements the main Qt application.
     """
-    messageReceived = pyqtSignal(str)
+    sgnMessageReceived = pyqtSignal(str)
 
-    def __init__(self, argv):
+    def __init__(self, options, argv):
         """
         Initialize Eddy.
+        :type options: Namespace
         :type argv: list
         """
         super().__init__(argv)
 
-        parser = ArgumentParser()
-        parser.add_argument('--nosplash', dest='nosplash', action='store_true')
-        parser.add_argument('--tests', dest='tests', action='store_true')
+        self.iSock = None
+        self.iStream = None
+        self.oSock = QLocalSocket()
+        self.oSock.connectToServer(APPID)
+        self.oStream = None
 
-        options, args = parser.parse_known_args(args=argv)
-
-        self.inSocket = None
-        self.inStream = None
-        self.outSocket = QLocalSocket()
-        self.outSocket.connectToServer(APPID)
-        self.outStream = None
-        self.isRunning = self.outSocket.waitForConnected()
-        self.mainwindow = None
-        self.pendingOpen = []
+        self.pending = []
+        self.running = self.oSock.waitForConnected()
+        self.session = None
+        self.welcome = None
         self.server = None
+        self.splash = None
 
-        # We do not initialize a new instance of Eddy if there is a process running
-        # and we are not executing the tests suite: we'll create a socket instead so we can
-        # exchange messages between the 2 processes (this one and the already running one).
-        if self.isRunning and not options.tests:
-            self.outStream = QTextStream(self.outSocket)
-            self.outStream.setCodec('UTF-8')
+        if self.running and not options.tests:
+            # We allow to initialize multiple processes of Eddy only if we
+            # are running the test suite to speed up tests execution time,
+            # else we configure an output stream on which to route outgoing
+            # messages to the alive Eddy process that will handle them.
+            self.oStream = QTextStream(self.oSock)
+            self.oStream.setCodec('UTF-8')
         else:
+            # We are not running Eddy yet, so we initialize a local server
+            # to intercept incoming messages from future instances of Eddy
+            # not to spawn multiple process.
             self.server = QLocalServer()
             self.server.listen(APPID)
-            self.outSocket = None
-            self.outStream = None
+            self.oStream = None
+            self.oSock = None
 
-            connect(self.server.newConnection, self.newConnection)
-            connect(self.messageReceived, self.readMessage)
+            connect(self.server.newConnection, self.doAcceptConnection)
+            connect(self.sgnMessageReceived, self.doReadMessage)
 
-            ############################################################################################################
-            #                                                                                                          #
-            #   PERFORM EDDY INITIALIZATION                                                                            #
-            #                                                                                                          #
-            ############################################################################################################
-
-            # Draw the splashscreen.
-            self.splashscreen = None
-            if not options.nosplash:
-                self.splashscreen = SplashScreen(min_splash_time=4)
-                self.splashscreen.show()
-
-            # Setup layout.
-            self.setStyle(Clean('Fusion'))
-            with open(expandPath('@eddy/ui/clean.qss')) as sheet:
-                self.setStyleSheet(sheet.read())
-
-            # Create the main window.
-            self.mainwindow = MainWindow()
-
-            # Close the splashscreen.
-            if self.splashscreen:
-                self.splashscreen.wait(self.splashscreen.remaining)
-                self.splashscreen.close()
-
-            # Display the mainwindow.
-            self.mainwindow.show()
-
-            if Platform.identify() is Platform.Darwin:
-                # On MacOS files being opened are handled as a QFileOpenEvent but since we don't
-                # have a Main Window initialized we store them locally and we open them here.
-                for filepath in self.pendingOpen:
-                    self.openFile(filepath)
-                self.pendingOpen = []
-            else:
-                # Perform document opening if files have been added to sys.argv. This is not
-                # executed on Mac OS since this is already handled as a QFileOpenEvent instance.
-                for filepath in argv:
-                    self.openFile(filepath)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   EVENTS                                                                                                         #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   EVENTS
+    #################################
 
     def event(self, event):
         """
@@ -176,89 +137,123 @@ class Eddy(QApplication):
         :type event: T <= QEvent | QFileOpenEvent
         """
         if event.type() == QEvent.FileOpen:
-            self.pendingOpen = [event.file()]
+            self.pending = [event.file()]
             return True
         return super().event(event)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
-    def activate(self):
+    def configure(self, options):
         """
-        Activate the application by raising the main window.
+        Perform initial configuration tasks for Eddy to work properly.
+        :type options: Namespace
         """
-        if self.mainwindow:
-            self.mainwindow.setWindowState((self.mainwindow.windowState() & ~Qt.WindowMinimized) | Qt.WindowActive)
-            self.mainwindow.activateWindow()
-            self.mainwindow.raise_()
+        # DRAW SPLASH SCREEN
+        self.splash = None
+        if not options.nosplash:
+            self.splash = Splash(':/images/splash', mtime=4)
+            self.splash.show()
 
-    def openFile(self, filepath):
+        # CONFIGURE LAYOUT
+        clean = Clean('Fusion')
+        self.setStyle(clean)
+        self.setStyleSheet(clean.stylesheet)
+
+        # CONFIGURE RECENT PROJECTS
+        settings = QSettings(ORGANIZATION, APPNAME)
+        if not settings.contains('project/recent'):
+            # From PyQt5 documentation: if the value of the setting is a container (corresponding
+            # to either QVariantList, QVariantMap or QVariantHash) then the type is applied to the
+            # contents of the container. According to this we can't use an empty list as default value
+            # because PyQt5 needs to know the type of the contents added to the collection: we avoid
+            # this problem by placing the list of example projects as recent project list.
+            settings.setValue('project/recent', [
+                expandPath('@examples/animals'),
+                expandPath('@examples/diet'),
+                expandPath('@examples/family'),
+                expandPath('@examples/lubm'),
+                expandPath('@examples/pizza'),
+            ])
+
+        # CLOSE SPLASH SCREEN
+        if self.splash:
+            self.splash.sleep()
+            self.splash.close()
+
+        # CONFIGURE WORKSPACE
+        workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
+        if not isdir(workspace):
+            window = WorkspaceDialog()
+            if window.exec_() == WorkspaceDialog.Rejected:
+                raise SystemExit
+
+    def route(self, argv):
         """
-        Open the given file in the activation window.
-        :type filepath: str
+        Route input arguments to the already running Eddy process.
+        :type argv: list
         :rtype: bool
         """
-        if self.mainwindow:
-            if not isEmpty(filepath) and os.path.isfile(filepath) and filepath.endswith(Filetype.Graphol.extension):
-                self.mainwindow.openFile(filepath)
-                return True
+        if self.oStream:
+            self.oStream = self.oStream << ' '.join(argv) << '\n'
+            self.oStream.flush()
+            return self.oSock.waitForBytesWritten()
         return False
 
-    def sendMessage(self, message):
+    def start(self):
         """
-        Send a message to the other alive Eddy's process.
-        :type message: str
-        :rtype: bool
+        Run the application by showing the welcome dialog.
         """
-        if self.outStream:
-            self.outStream = self.outStream << message << '\n'
-            self.outStream.flush()
-            return self.outSocket.waitForBytesWritten()
-        return False
+        self.welcome = Welcome()
+        connect(self.welcome.sgnCreateSession, self.doCreateSession)
+        self.welcome.show()
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SLOTS                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   SLOTS
+    #################################
 
     @pyqtSlot()
-    def newConnection(self):
+    def doAcceptConnection(self):
         """
-        Executed whenever a message is received.
+        Executed whenever a new connection needs to be established.
         """
-        if self.inSocket:
-            # Disconnect previously connected signal slot.
-            disconnect(self.inSocket.readyRead, self.readyRead)
+        if self.iSock:
+            disconnect(self.iSock.readyRead, self.onReadyRead)
 
-        # Create a new socket.
-        self.inSocket = self.server.nextPendingConnection()
+        self.iSock = self.server.nextPendingConnection()
 
-        if self.inSocket:
-            self.inStream = QTextStream(self.inSocket)
-            self.inStream.setCodec('UTF-8')
-            connect(self.inSocket.readyRead, self.readyRead)
-            self.activate()
-
-    @pyqtSlot()
-    def readyRead(self):
-        """
-        Executed whenever we need to read a message.
-        """
-        while True:
-            message = self.inStream.readLine()
-            if isEmpty(message):
-                break
-            self.messageReceived.emit(message)
+        if self.iSock:
+            self.iStream = QTextStream(self.iSock)
+            self.iStream.setCodec('UTF-8')
+            connect(self.iSock.onReadyRead, self.onReadyRead)
 
     @pyqtSlot(str)
-    def readMessage(self, message):
+    def doCreateSession(self, project):
+        """
+        Create a working session using the given project path.
+        :type project: str
+        """
+        with BusyProgressDialog('Loading project: {0}'.format(os.path.basename(project))):
+            self.session = MainWindow(project)
+        self.welcome.close()
+        self.session.show()
+
+    @pyqtSlot(str)
+    def doReadMessage(self, message):
         """
         Read a received message.
         :type message: str
         """
-        for filepath in message.split(' '):
-            self.openFile(filepath)
+        pass
+
+    @pyqtSlot()
+    def onReadyRead(self):
+        """
+        Executed whenever we need to read a message.
+        """
+        while True:
+            message = self.iStream.readLine()
+            if isEmpty(message):
+                break
+            self.sgnMessageReceived.emit(message)

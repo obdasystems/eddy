@@ -35,8 +35,7 @@
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QBrush
 
-from eddy.core.datatypes import Item, Identity
-from eddy.core.functions import identify
+from eddy.core.datatypes.graphol import Item, Identity, Restriction
 from eddy.core.items.nodes.common.restriction import RestrictionNode
 from eddy.core.qt import Font
 
@@ -45,8 +44,8 @@ class RangeRestrictionNode(RestrictionNode):
     """
     This class implements the 'Range Restriction' node.
     """
-    identities = {Identity.Concept, Identity.ValueDomain, Identity.Neutral}
-    item = Item.RangeRestrictionNode
+    Identities = {Identity.Concept, Identity.ValueDomain, Identity.Neutral}
+    Type = Item.RangeRestrictionNode
 
     def __init__(self, brush=None, **kwargs):
         """
@@ -56,11 +55,9 @@ class RangeRestrictionNode(RestrictionNode):
         self._identity = Identity.Neutral
         super().__init__(brush=QBrush(QColor(0, 0, 0)), **kwargs)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   PROPERTIES
+    #################################
 
     @property
     def identity(self):
@@ -76,37 +73,31 @@ class RangeRestrictionNode(RestrictionNode):
         Set the identity of the current node.
         :type identity: Identity
         """
-        if identity not in self.identities:
+        if identity not in self.Identities:
             identity = Identity.Unknown
         self._identity = identity
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    @property
+    def qualified(self):
+        """
+        Tells whether this node expresses a qualified restriction.
+        :rtype: bool
+        """
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.identity in {Identity.Concept, Identity.Role}
+        f3 = lambda x: x.identity in {Identity.Attribute, Identity.ValueDomain}
+        if self.restriction in {Restriction.Cardinality, Restriction.Exists, Restriction.Forall}:
+            if len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) >= 2:
+                # Role qualified restriction => Role + Concept
+                return True
+            if len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) >= 2:
+                # Attribute qualified restriction => Attribute + ValueDomain
+                return True
+        return False
 
-    def addEdge(self, edge):
-        """
-        Add the given edge to the current node.
-        :type edge: AbstractEdge
-        """
-        super().addEdge(edge)
-        identify(self)
-
-    def removeEdge(self, edge):
-        """
-        Remove the given edge from the current node.
-        :type edge: AbstractEdge
-        """
-        super().removeEdge(edge)
-        identify(self)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
     @classmethod
     def image(cls, **kwargs):

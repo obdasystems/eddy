@@ -34,7 +34,7 @@
 
 from PyQt5.QtCore import QObject, QPointF
 
-from eddy.core.commands import CommandItemsMultiAdd
+from eddy.core.commands.common import CommandItemsMultiAdd
 
 
 class Clipboard(QObject):
@@ -67,22 +67,24 @@ class Clipboard(QObject):
         """
         return not self.edges and not self.nodes
 
-    def paste(self, scene, pos=None):
+    def paste(self, diagram, pos=None):
         """
-        Paste currently copied items in the given scene.
-        :type scene: DiagramScene
+        Paste currently copied items in the given diagram.
+        :type diagram: Diagram
         :type pos: QPointF
         """
+        project = diagram.parent()
+
         def ncopy(node):
             """
             Create a copy of the given node generating a new id.
             :type node: AbstractNode
             """
-            copy = node.copy(scene)
-            copy.id = scene.guid.next('n')
+            copy = node.copy(project)
+            copy.id = project.guid.next('n')
             return copy
 
-        # create a copy of all the nodes in the clipboard and store them in a dict using the old
+        # Create a copy of all the nodes in the clipboard and store them in a dict using the old
         # node id: this is needed so we can attach copied edges to the copy of the nodes in the
         # clipboard and to do so we need a mapping between the old node id and the new node id.
         nodes = {x:ncopy(n) for x, n in self.nodes.items()}
@@ -93,8 +95,8 @@ class Clipboard(QObject):
             copied edge to the correspondent previously copied source/target nodes.
             :type edge: AbstractEdge
             """
-            copy = edge.copy(scene)
-            copy.id = scene.guid.next('e')
+            copy = edge.copy(project)
+            copy.id = project.guid.next('e')
             copy.source = nodes[edge.source.id]
             copy.target = nodes[edge.target.id]
             copy.source.setAnchor(copy, edge.source.anchor(edge))
@@ -104,50 +106,50 @@ class Clipboard(QObject):
             copy.updateEdge()
             return copy
 
-        # copy all the needed edges
+        # Copy all the needed edges
         edges = [ecopy(e) for e in self.edges.values()]
         nodes = [n for n in nodes.values()]
         items = nodes + edges
 
         try:
-            zValue = max(scene.items(), key=lambda x: x.zValue()).zValue()
+            zValue = max(diagram.items(), key=lambda x: x.zValue()).zValue()
         except ValueError:
-            zValue = 0  # scene is empty
+            zValue = 0  # Diagram is empty
 
         if pos:
 
-            # paste position has been given manually => figure out which node to use as anchor item and
+            # Paste position has been given manually => figure out which node to use as anchor item and
             # adjust the paste position so that the anchor item is pasted right after the given position
             item = min(nodes, key=lambda x: x.boundingRect().top())
             offset = pos - item.pos() + QPointF(item.width() / 2, item.height() / 2)
             for item in items:
                 item.moveBy(offset.x(), offset.y())
-                if item.node:
+                if item.isNode():
                     item.setZValue(zValue + 0.1)
                     zValue += 0.1
-                elif item.edge:
+                elif item.isEdge():
                     item.updateEdge()
 
-            # adjust scene offsets for a possible next paste using shortcuts
-            scene.pasteOffsetX = offset.x() + Clipboard.PasteOffsetX
-            scene.pasteOffsetY = offset.y() + Clipboard.PasteOffsetY
+            # Adjust project offsets for a possible next paste using shortcuts.
+            diagram.pasteX = offset.x() + self.PasteOffsetX
+            diagram.pasteY = offset.y() + self.PasteOffsetY
 
         else:
 
-            # no paste position given => use offsets set in the scene instance
+            # No paste position given => use offsets set in the diagram instance.
             for item in items:
-                item.moveBy(scene.pasteOffsetX, scene.pasteOffsetY)
-                if item.node:
+                item.moveBy(diagram.pasteX, diagram.pasteY)
+                if item.isNode():
                     item.setZValue(zValue + 0.1)
                     zValue += 0.1
-                elif item.edge:
+                elif item.isEdge():
                     item.updateEdge()
 
-            # adjust scene offsets for a possible next paste using shortcuts
-            scene.pasteOffsetX += Clipboard.PasteOffsetX
-            scene.pasteOffsetY += Clipboard.PasteOffsetY
+            # Adjust diagram offsets for a possible next paste using shortcuts.
+            diagram.pasteX += self.PasteOffsetX
+            diagram.pasteY += self.PasteOffsetY
 
-        scene.undostack.push(CommandItemsMultiAdd(scene=scene, collection=items))
+        diagram.undoStack.push(CommandItemsMultiAdd(diagram, items))
 
     def size(self):
         """
@@ -155,22 +157,23 @@ class Clipboard(QObject):
         """
         return len(self.edges) + len(self.nodes)
 
-    def update(self, scene):
+    def update(self, diagram):
         """
         Update the clipboard collecting new selected items.
-        :type scene: DiagramScene
+        :type diagram: Diagram
         """
-        nodes = scene.selectedNodes()
+        project = diagram.parent()
+        nodes = diagram.selectedNodes()
 
         if nodes:
 
             self.edges = {}
-            self.nodes = {node.id: node.copy(scene) for node in nodes}
+            self.nodes = {node.id: node.copy(project) for node in nodes}
 
             for node in nodes:
                 for edge in node.edges:
                     if edge.id not in self.edges and edge.other(node).isSelected():
-                        copy = edge.copy(scene)
+                        copy = edge.copy(project)
                         copy.source = self.nodes[edge.source.id]
                         copy.source.setAnchor(copy, edge.source.anchor(edge))
                         copy.target = self.nodes[edge.target.id]

@@ -34,7 +34,7 @@
 
 from PyQt5.QtWidgets import QFileDialog
 
-from eddy.core.functions.system import expandPath
+from eddy.core.functions.path import expandPath
 
 
 class OpenFile(QFileDialog):

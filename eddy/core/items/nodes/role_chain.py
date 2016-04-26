@@ -35,9 +35,10 @@
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QBrush
 
-from eddy.core.datatypes import Item, DistinctList, Identity
+from eddy.core.datatypes.collections import DistinctList
+from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.operator import OperatorNode
-from eddy.core.items.nodes.common.label import Label
+from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.qt import Font
 
 
@@ -45,8 +46,8 @@ class RoleChainNode(OperatorNode):
     """
     This class implements the 'Role Chain' node.
     """
-    identities = {Identity.Role}
-    item = Item.RoleChainNode
+    Identities = {Identity.Role}
+    Type = Item.RoleChainNode
 
     def __init__(self, brush=None, inputs=None, **kwargs):
         """
@@ -56,14 +57,12 @@ class RoleChainNode(OperatorNode):
         """
         super().__init__(brush=QBrush(QColor(252, 252, 252)), **kwargs)
         self.inputs = inputs or DistinctList()
-        self.label = Label('chain', movable=False, editable=False, parent=self)
+        self.label = NodeLabel('chain', movable=False, editable=False, parent=self)
         self.label.updatePos()
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   PROPERTIES                                                                                                     #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   PROPERTIES
+    #################################
 
     @property
     def identity(self):
@@ -81,11 +80,9 @@ class RoleChainNode(OperatorNode):
         """
         pass
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
     def addEdge(self, edge):
         """
@@ -93,86 +90,21 @@ class RoleChainNode(OperatorNode):
         :type edge: AbstractEdge
         """
         super().addEdge(edge)
-        if edge.isItem(Item.InputEdge) and edge.target is self:
+        if edge.type() is Item.InputEdge and edge.target is self:
             self.inputs.append(edge.id)
             edge.updateEdge()
 
-    def copy(self, scene):
+    def copy(self, project):
         """
         Create a copy of the current item.
-        :type scene: DiagramScene
+        :type project: Project
         """
-        kwargs = {
-            'id': self.id,
-            'height': self.height(),
-            'width': self.width(),
-        }
-        node = scene.factory.create(item=self.item, scene=scene, **kwargs)
+        kwargs = {'id': self.id, 'height': self.height(), 'width': self.width()}
+        node = project.itemFactory.create(self.type(), **kwargs)
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
-
-    def removeEdge(self, edge):
-        """
-        Remove the given edge from the current node.
-        :type edge: AbstractEdge
-        """
-        super().removeEdge(edge)
-        scene = self.scene()
-        self.inputs.remove(edge.id)
-        for i in self.inputs:
-            try:
-                edge = scene.edge(i)
-                edge.updateEdge()
-            except KeyError:
-                pass
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   LABEL SHORTCUTS                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def textPos(self):
-        """
-        Returns the current label position in item coordinates.
-        :rtype: QPointF
-        """
-        return self.label.pos()
-
-    def text(self):
-        """
-        Returns the label text.
-        :rtype: str
-        """
-        return self.label.text()
-
-    def setTextPos(self, pos):
-        """
-        Set the label position.
-        :type pos: QPointF
-        """
-        self.label.setPos(pos)
-
-    def setText(self, text):
-        """
-        Set the label text.
-        :type text: str
-        """
-        pass
-
-    def updateTextPos(self, *args, **kwargs):
-        """
-        Update the label position.
-        """
-        self.label.updatePos(*args, **kwargs)
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
 
     @classmethod
     def image(cls, **kwargs):
@@ -184,7 +116,7 @@ class RoleChainNode(OperatorNode):
         pixmap = QPixmap(kwargs['w'], kwargs['h'])
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
-        polygon = cls.createPolygon(48, 30)
+        polygon = cls.createPolygon(46, 30)
         # ITEM SHAPE
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
@@ -195,3 +127,51 @@ class RoleChainNode(OperatorNode):
         painter.setFont(Font('Arial', 11, Font.Light))
         painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'chain')
         return pixmap
+
+    def removeEdge(self, edge):
+        """
+        Remove the given edge from the current node.
+        :type edge: AbstractEdge
+        """
+        super().removeEdge(edge)
+        self.inputs.remove(edge.id)
+        for i in self.inputs:
+            try:
+                edge = self.diagram.edge(i)
+                edge.updateEdge()
+            except KeyError:
+                pass
+
+    def setText(self, text):
+        """
+        Set the label text.
+        :type text: str
+        """
+        pass
+
+    def setTextPos(self, pos):
+        """
+        Set the label position.
+        :type pos: QPointF
+        """
+        self.label.setPos(pos)
+
+    def text(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        return self.label.text()
+
+    def textPos(self):
+        """
+        Returns the current label position in item coordinates.
+        :rtype: QPointF
+        """
+        return self.label.pos()
+
+    def updateTextPos(self, *args, **kwargs):
+        """
+        Update the label position.
+        """
+        self.label.updatePos(*args, **kwargs)

@@ -37,7 +37,7 @@ __author__ = 'Daniele Pantaleone'
 __copyright__ = 'Copyright © 2016 Daniele Pantaleone'
 __email__ = 'danielepantaleone@me.com'
 __license__ = 'GPL'
-__organization__ = 'Sapienza - University Of Rome'
+__organization__ = 'Sapienza University'
 __status__ = 'Development'
 __version__ = '0.8'
 
@@ -56,3 +56,4 @@ PROJECT_HOME = 'https://github.com/danielepantaleone/eddy'
 SAPIENZA_HOME = 'http://en.uniroma1.it/'
 STATUS = __status__
 VERSION = __version__
+WORKSPACE = '~/EddyProjects'

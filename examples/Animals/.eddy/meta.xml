@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project version="1">
+  <ontology>
+    <iri>http://www.dis.uniroma1.it/~graphol/animals</iri>
+    <prefix>animals</prefix>
+  </ontology>
+  <predicates>
+  </predicates>
+</project>

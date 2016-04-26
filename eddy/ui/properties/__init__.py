@@ -30,6 +30,6 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-
-
-from eddy.ui.properties.factory import PropertyFactory
+#
+#
+# from eddy.ui.properties.factory import PropertyFactory

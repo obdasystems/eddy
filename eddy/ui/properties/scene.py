@@ -36,12 +36,13 @@ from datetime import datetime
 
 from PyQt5.QtCore import Qt, QRectF, pyqtSlot
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout
+from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QDialogButtonBox
+from PyQt5.QtWidgets import QTabWidget, QFormLayout
 
-from eddy.core.commands import CommandSceneResize
-from eddy.core.functions import connect
+from eddy.core.commands.diagram import CommandDiagramResize
+from eddy.core.functions.signals import connect
 
-from eddy.ui.fields import StringField, SpinBox, IntField
+from eddy.ui.fields import StringField, SpinBox, IntegerField
 
 
 class SceneProperty(QDialog):
@@ -68,13 +69,13 @@ class SceneProperty(QDialog):
         self.generalLayout = QFormLayout(self.generalWidget)
 
         # Amount of nodes in the scene
-        self.nodesField = IntField(self.generalWidget)
+        self.nodesField = IntegerField(self.generalWidget)
         self.nodesField.setReadOnly(True)
         self.nodesField.setFixedWidth(300)
         self.nodesField.setValue(len(self.scene.nodes()))
 
         # Amount of edges in the scene
-        self.edgesField = IntField(self.generalWidget)
+        self.edgesField = IntegerField(self.generalWidget)
         self.nodesField.setReadOnly(True)
         self.edgesField.setFixedWidth(300)
         self.edgesField.setValue(len(self.scene.edges()))
@@ -208,4 +209,4 @@ class SceneProperty(QDialog):
                 # clamp size2 so that all the elements in the scene stays visible
                 size2 = max(size2, abs(min(X) * 2), abs(max(X) * 2), abs(min(Y) * 2), abs(max(Y) * 2))
 
-            self.scene.undostack.push(CommandSceneResize(self.scene, QRectF(-size2 / 2, -size2 / 2, size2, size2)))
+            self.scene.undoStack.push(CommandDiagramResize(self.scene, QRectF(-size2 / 2, -size2 / 2, size2, size2)))

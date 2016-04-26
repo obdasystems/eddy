@@ -39,11 +39,8 @@ from eddy.core.regex import RE_DIGIT, RE_ITEM_PREFIX
 
 class GUID(QObject):
     """
-    Class used to generate sequential IDs for DiagramScene items.
+    Class used to generate sequential ids for diagram elements.
     """
-    Start = 0
-    Step = 1
-
     def __init__(self, parent=None):
         """
         Initialize the the unique id generator.
@@ -62,40 +59,40 @@ class GUID(QObject):
         if RE_DIGIT.search(prefix):
             raise ValueError('invalid prefix supplied ({}): id prefix MUST not contain any digit'.format(prefix))
         try:
-            last = self.ids[prefix]
+            uid = self.ids[prefix]
         except KeyError:
-            self.ids[prefix] = GUID.Start
+            self.ids[prefix] = 0
         else:
-            self.ids[prefix] = last + GUID.Step
+            self.ids[prefix] = uid + 1
         finally:
-            return '{PREFIX}{ID}'.format(PREFIX=prefix, ID=self.ids[prefix])
+            return '{}{}'.format(prefix, self.ids[prefix])
 
     @staticmethod
-    def parse(unique_id):
+    def parse(uid):
         """
         Parse the given unique id returning a tuple in the format (prefix, value).
         :raise ValueError: if the given value has an invalid format.
-        :type unique_id: str
+        :type uid: str
         :rtype: tuple
         """
-        match = RE_ITEM_PREFIX.match(unique_id)
+        match = RE_ITEM_PREFIX.match(uid)
         if not match:
-            raise ValueError('invalid id supplied ({})'.format(unique_id))
+            raise ValueError('invalid id supplied ({})'.format(uid))
         return match.group('prefix'), int(match.group('value'))
 
-    def update(self, unique_id):
+    def update(self, uid):
         """
         Update the last incremental value according to the given id.
         :raise ValueError: if the given value has an invalid format.
-        :type unique_id: str
+        :type uid: str
         """
-        prefix, value = self.parse(unique_id)
+        prefix, value = self.parse(uid)
         try:
-            last = self.ids[prefix]
+            uid = self.ids[prefix]
         except KeyError:
             self.ids[prefix] = value
         else:
-            self.ids[prefix] = max(last, value)
+            self.ids[prefix] = max(uid, value)
 
     def __repr__(self):
         """

@@ -118,7 +118,7 @@ class DoubleField(QLineEdit):
         return float(self.text())
 
 
-class IntField(QLineEdit):
+class IntegerField(QLineEdit):
     """
     This class implements an input field where the user can enter only integer values.
     """

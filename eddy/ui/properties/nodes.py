@@ -34,22 +34,22 @@
 
 from PyQt5.QtCore import Qt, QPointF, pyqtSlot
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QDialog, QPushButton, QHBoxLayout, QListWidget, QAbstractItemView
-from PyQt5.QtWidgets import QVBoxLayout, QDialogButtonBox, QTabWidget, QFormLayout, QListWidgetItem
+from PyQt5.QtWidgets import QWidget, QDialog, QPushButton, QHBoxLayout
+from PyQt5.QtWidgets import QListWidget, QAbstractItemView, QVBoxLayout
+from PyQt5.QtWidgets import QDialogButtonBox, QTabWidget, QFormLayout
+from PyQt5.QtWidgets import QListWidgetItem
 
-from eddy.core.commands import CommandNodeChangeMeta, CommandNodeChangeInputOrder
-from eddy.core.commands import CommandNodeLabelChange, CommandNodeMove
-from eddy.core.datatypes import DistinctList
-from eddy.core.functions import clamp, connect, isEmpty
-
+from eddy.core.commands.nodes import CommandNodeMove, CommandNodeChangeMeta, CommandNodeLabelChange, \
+    CommandNodeChangeInputOrder
+from eddy.core.datatypes.collections import DistinctList
+from eddy.core.functions.misc import clamp, isEmpty
+from eddy.core.functions.signals import connect
 from eddy.ui.fields import StringField, TextField, SpinBox
 
 
-########################################################################################################################
-#                                                                                                                      #
-#   NODE GENERIC                                                                                                       #
-#                                                                                                                      #
-########################################################################################################################
+##############################################
+#   NODES
+#################################
 
 
 class NodeProperty(QDialog):
@@ -143,11 +143,9 @@ class NodeProperty(QDialog):
         connect(self.buttonBox.accepted, self.accept)
         connect(self.buttonBox.rejected, self.reject)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SLOTS                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    # SLOTS
+    #################################
 
     @pyqtSlot(int)
     def completed(self, code):
@@ -191,14 +189,12 @@ class NodeProperty(QDialog):
                 }
             }
 
-            self.scene.undostack.push(CommandNodeMove(scene=self.scene, data=commandData))
+            self.scene.undoStack.push(CommandNodeMove(diagram=self.scene, data=commandData))
             
 
-########################################################################################################################
-#                                                                                                                      #
-#   PREDICATE NODES                                                                                                    #
-#                                                                                                                      #
-########################################################################################################################
+#############################################
+#   PREDICATE NODES
+#################################
 
 
 class PredicateNodeProperty(NodeProperty):
@@ -227,11 +223,9 @@ class PredicateNodeProperty(NodeProperty):
         self.generalLayout.addRow('URL', self.urlField)
         self.generalLayout.addRow('Description', self.descriptionField)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SLOTS                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   SLOTS
+    #################################
 
     @pyqtSlot(int)
     def completed(self, code):
@@ -255,14 +249,12 @@ class PredicateNodeProperty(NodeProperty):
 
         if copy != meta:
             command = CommandNodeChangeMeta(self.scene, self.node, meta, copy)
-            self.scene.undostack.push(command)
+            self.scene.undoStack.push(command)
 
 
-########################################################################################################################
-#                                                                                                                      #
-#   EDITABLE NODES                                                                                                     #
-#                                                                                                                      #
-########################################################################################################################
+#############################################
+#   EDITABLE NODES
+#################################
 
 
 class EditableNodeProperty(PredicateNodeProperty):
@@ -278,11 +270,9 @@ class EditableNodeProperty(PredicateNodeProperty):
         """
         super().__init__(scene, node, parent)
 
-        ################################################################################################################
-        #                                                                                                              #
-        #   LABEL TAB                                                                                                  #
-        #                                                                                                              #
-        ################################################################################################################
+        #############################################
+        # LABEL TAB
+        #################################
 
         self.labelWidget = QWidget()
         self.labelLayout = QFormLayout(self.labelWidget)
@@ -296,11 +286,9 @@ class EditableNodeProperty(PredicateNodeProperty):
 
         self.mainWidget.addTab(self.labelWidget, 'Label')
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SLOTS                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   SLOTS
+    #################################
 
     def completed(self, code):
         """
@@ -319,14 +307,12 @@ class EditableNodeProperty(PredicateNodeProperty):
         data = data if not isEmpty(data) else self.node.label.template
         if self.node.text() != data:
             command = CommandNodeLabelChange(self.scene, self.node, self.node.text(), data)
-            self.scene.undostack.push(command)
+            self.scene.undoStack.push(command)
 
 
-########################################################################################################################
-#                                                                                                                      #
-#   ORDERED INPUT NODES => {ROLE CHAIN, PROPERTY ASSERTION}                                                            #
-#                                                                                                                      #
-########################################################################################################################
+#############################################
+#   ORDERED INPUT NODES
+#################################
 
 
 class OrderedInputNodeProperty(NodeProperty):
@@ -442,4 +428,4 @@ class OrderedInputNodeProperty(NodeProperty):
                 inputs.append(item.data(Qt.UserRole))
 
             if self.node.inputs != inputs:
-                self.scene.undostack.push(CommandNodeChangeInputOrder(self.scene, self.node, inputs))
+                self.scene.undoStack.push(CommandNodeChangeInputOrder(self.scene, self.node, inputs))

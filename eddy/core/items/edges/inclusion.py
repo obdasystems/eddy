@@ -37,15 +37,15 @@ from math import sin, cos, radians, pi as M_PI
 from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
 
-from eddy.core.datatypes import Item
+from eddy.core.datatypes.graphol import Item
 from eddy.core.items.edges.common.base import AbstractEdge
 
 
 class InclusionEdge(AbstractEdge):
     """
-    This class implements the Inclusion edge.
+    This class implements the 'Inclusion' edge.
     """
-    item = Item.InclusionEdge
+    Type = Item.InclusionEdge
 
     def __init__(self, complete=False, **kwargs):
         """
@@ -56,16 +56,31 @@ class InclusionEdge(AbstractEdge):
         self.complete = complete
         self.tail = QPolygonF()
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
-    def copy(self, scene):
+    def boundingRect(self):
         """
-        Create a copy of the current edge.
-        :type scene: DiagramScene
+        Returns the shape bounding rect.
+        :rtype: QRectF
+        """
+        path = QPainterPath()
+        path.addPath(self.selection)
+        path.addPolygon(self.head)
+        path.addPolygon(self.tail)
+
+        for shape in self.handles:
+            path.addEllipse(shape)
+        for shape in self.anchors.values():
+            path.addEllipse(shape)
+
+        return path.controlPointRect()
+
+    def copy(self, project):
+        """
+        Create a copy of the current item.
+        :type project: Project
         """
         kwargs = {
             'id': self.id,
@@ -74,7 +89,7 @@ class InclusionEdge(AbstractEdge):
             'breakpoints': self.breakpoints[:],
             'complete': self.complete,
         }
-        return scene.factory.create(item=self.item, scene=scene, **kwargs)
+        return project.itemFactory.create(self.type(), **kwargs)
 
     @staticmethod
     def createHead(pos1, angle, size):
@@ -103,151 +118,6 @@ class InclusionEdge(AbstractEdge):
         pos2 = pos1 + QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
         pos3 = pos1 + QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
         return QPolygonF([pos1, pos2, pos3])
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   GEOMETRY                                                                                                       #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def boundingRect(self):
-        """
-        Returns the shape bounding rect.
-        :rtype: QRectF
-        """
-        path = QPainterPath()
-        path.addPath(self.selection)
-        path.addPolygon(self.head)
-        path.addPolygon(self.tail)
-
-        for shape in self.handles:
-            path.addEllipse(shape)
-        for shape in self.anchors.values():
-            path.addEllipse(shape)
-
-        return path.controlPointRect()
-
-    def painterPath(self):
-        """
-        Returns the current shape as QPainterPath (used for collision detection).
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addPath(self.path)
-        path.addPolygon(self.head)
-        path.addPolygon(self.tail)
-        return path
-
-    def shape(self):
-        """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addPath(self.selection)
-        path.addPolygon(self.head)
-        path.addPolygon(self.tail)
-
-        if self.isSelected():
-            for shape in self.handles:
-                path.addEllipse(shape)
-            for shape in self.anchors.values():
-                path.addEllipse(shape)
-
-        return path
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   GEOMETRY UPDATE                                                                                                #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    def updateEdge(self, target=None):
-        """
-        Update the edge painter path and the selection polygon.
-        :type target: QPointF
-        """
-        boxSize = self.selectionSize
-        headSize = self.headSize
-        sourceNode = self.source
-        targetNode = self.target
-        sourcePos = sourceNode.anchor(self)
-        targetPos = target or targetNode.anchor(self)
-
-        self.prepareGeometryChange()
-
-        self.updateAnchors()
-        self.updateBreakPoints()
-        self.updateZValue()
-
-        createSelectionArea = self.createSelectionArea
-        createHead = self.createHead
-        createTail = self.createTail
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   UPDATE EDGE PATH, SELECTION BOX, HEAD AND TAIL                                                             #
-        #                                                                                                              #
-        ################################################################################################################
-
-        collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
-
-        self.path = QPainterPath()
-        self.selection = QPainterPath()
-        self.head = QPolygonF()
-        self.tail = QPolygonF()
-
-        if len(collection) == 1:
-
-            subpath = collection[0]
-            p1 = sourceNode.intersection(subpath)
-            p2 = targetNode.intersection(subpath) if targetNode else subpath.p2()
-            if p1 is not None and p2 is not None:
-                self.path.moveTo(p1)
-                self.path.lineTo(p2)
-                self.selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), boxSize))
-                self.head = createHead(p2, subpath.angle(), headSize)
-                if self.complete:
-                    self.tail = createTail(p1, subpath.angle(), headSize)
-
-        elif len(collection) > 1:
-
-            subpath1 = collection[0]
-            subpathN = collection[-1]
-            p11 = sourceNode.intersection(subpath1)
-            p22 = targetNode.intersection(subpathN)
-
-            if p11 and p22:
-
-                p12 = subpath1.p2()
-                p21 = subpathN.p1()
-
-                self.path.moveTo(p11)
-                self.path.lineTo(p12)
-                self.selection.addPolygon(createSelectionArea(p11, p12, subpath1.angle(), boxSize))
-
-                for subpath in collection[1:-1]:
-                    p1 = subpath.p1()
-                    p2 = subpath.p2()
-                    self.path.moveTo(p1)
-                    self.path.lineTo(p2)
-                    self.selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), boxSize))
-
-                self.path.moveTo(p21)
-                self.path.lineTo(p22)
-                self.selection.addPolygon(createSelectionArea(p21, p22, subpathN.angle(), boxSize))
-
-                self.head = createHead(p22, subpathN.angle(), headSize)
-                if self.complete:
-                    self.tail = createTail(p11, subpath1.angle(), headSize)
-
-        self.updateBrush(selected=self.isSelected(), visible=self.canDraw())
-
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   DRAWING                                                                                                        #
-    #                                                                                                                  #
-    ####################################################################################################################
 
     @classmethod
     def image(cls, **kwargs):
@@ -307,3 +177,111 @@ class InclusionEdge(AbstractEdge):
             painter.drawEllipse(shape)
         for shape in self.anchors.values():
             painter.drawEllipse(shape)
+
+    def painterPath(self):
+        """
+        Returns the current shape as QPainterPath (used for collision detection).
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addPath(self.path)
+        path.addPolygon(self.head)
+        path.addPolygon(self.tail)
+        return path
+
+    def shape(self):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addPath(self.selection)
+        path.addPolygon(self.head)
+        path.addPolygon(self.tail)
+
+        if self.isSelected():
+            for shape in self.handles:
+                path.addEllipse(shape)
+            for shape in self.anchors.values():
+                path.addEllipse(shape)
+
+        return path
+
+    def updateEdge(self, target=None):
+        """
+        Update the edge painter path and the selection polygon.
+        :type target: QPointF
+        """
+        boxSize = self.SelectionSize
+        headSize = self.HeadSize
+        sourceNode = self.source
+        targetNode = self.target
+        sourcePos = sourceNode.anchor(self)
+        targetPos = target or targetNode.anchor(self)
+
+        self.prepareGeometryChange()
+
+        self.updateAnchors()
+        self.updateBreakPoints()
+        self.updateZValue()
+
+        createSelectionArea = self.createSelectionArea
+        createHead = self.createHead
+        createTail = self.createTail
+
+        ################################################
+        # UPDATE EDGE PATH, SELECTION BOX, HEAD AND TAIL
+        #################################
+
+        collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
+
+        self.path = QPainterPath()
+        self.selection = QPainterPath()
+        self.head = QPolygonF()
+        self.tail = QPolygonF()
+
+        if len(collection) == 1:
+
+            subpath = collection[0]
+            p1 = sourceNode.intersection(subpath)
+            p2 = targetNode.intersection(subpath) if targetNode else subpath.p2()
+            if p1 is not None and p2 is not None:
+                self.path.moveTo(p1)
+                self.path.lineTo(p2)
+                self.selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), boxSize))
+                self.head = createHead(p2, subpath.angle(), headSize)
+                if self.complete:
+                    self.tail = createTail(p1, subpath.angle(), headSize)
+
+        elif len(collection) > 1:
+
+            subpath1 = collection[0]
+            subpathN = collection[-1]
+            p11 = sourceNode.intersection(subpath1)
+            p22 = targetNode.intersection(subpathN)
+
+            if p11 and p22:
+
+                p12 = subpath1.p2()
+                p21 = subpathN.p1()
+
+                self.path.moveTo(p11)
+                self.path.lineTo(p12)
+                self.selection.addPolygon(createSelectionArea(p11, p12, subpath1.angle(), boxSize))
+
+                for subpath in collection[1:-1]:
+                    p1 = subpath.p1()
+                    p2 = subpath.p2()
+                    self.path.moveTo(p1)
+                    self.path.lineTo(p2)
+                    self.selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), boxSize))
+
+                self.path.moveTo(p21)
+                self.path.lineTo(p22)
+                self.selection.addPolygon(createSelectionArea(p21, p22, subpathN.angle(), boxSize))
+
+                self.head = createHead(p22, subpathN.angle(), headSize)
+                if self.complete:
+                    self.tail = createTail(p11, subpath1.angle(), headSize)
+
+        self.redraw(selected=self.isSelected(), visible=self.canDraw())

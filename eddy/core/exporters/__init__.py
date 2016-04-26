@@ -31,6 +31,6 @@
 #                                                                        #
 ##########################################################################
 
-
-from eddy.core.exporters.graphol import GrapholExporter
-from eddy.core.exporters.owl import OWLExporter
+#
+# from eddy.core.exporters.graphol import GrapholExporter
+# from eddy.core.exporters.owl import OWLExporter
