@@ -35,16 +35,18 @@
 import os
 import sys
 
-from PyQt5.QtCore import Qt, QPointF, QRectF, pyqtSignal
+from PyQt5.QtCore import Qt, QPointF, QRectF, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QColor, QPen
 from PyQt5.QtWidgets import QGraphicsScene, QUndoStack
 
 from eddy.core.commands.edges import CommandEdgeAdd
 from eddy.core.commands.nodes import CommandNodeAdd, CommandNodeMove
-from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import DiagramMode
-from eddy.core.functions.misc import snap, snapF
+from eddy.core.functions.graph import bfs
+from eddy.core.functions.misc import snap, snapF, partition, first
 from eddy.core.functions.path import expandPath
+from eddy.core.functions.signals import connect
 from eddy.core.utils.clipboard import Clipboard
 
 
@@ -85,6 +87,9 @@ class Diagram(QGraphicsScene):
         self.mousePressNode = None
         self.mousePressNodePos = None
         self.mousePressData = {}
+
+        connect(self.sgnItemAdded, self.onConnectionChanged)
+        connect(self.sgnItemRemoved, self.onConnectionChanged)
 
     #############################################
     #   PROPERTIES
@@ -270,16 +275,17 @@ class Diagram(QGraphicsScene):
 
                     if currentNode:
                         self.mouseOverNode = currentNode
-                        res = self.project.validator.result(edge.source, edge, currentNode)
-                        currentNode.redraw(selected=False, valid=res.valid)
-                        if not res.valid:
-                            statusBar.showMessage(res.message)
-                        else:
-                            statusBar.clearMessage()
+                        # #res = self.project.validator.result(edge.source, edge, currentNode)
+                        # currentNode.redraw(selected=False, valid=res.valid)
+                        # if not res.valid:
+                        #     statusBar.showMessage(res.message)
+                        # else:
+                        #     statusBar.clearMessage()
+                        pass
                     else:
                         statusBar.clearMessage()
                         self.mouseOverNode = None
-                        self.validator.clear()
+                        #self.validator.clear()
 
             else:
 
@@ -343,9 +349,11 @@ class Diagram(QGraphicsScene):
 
                     if currentNode:
                         currentNode.redraw(selected=False)
-                        if self.validator.valid(edge.source, edge, currentNode):
-                            edge.target = currentNode
-                            insertEdge = True
+                        edge.target = currentNode
+                        #if self.validator.valid(edge.source, edge, currentNode):
+                        #    edge.target = currentNode
+                        #    insertEdge = True
+                        insertEdge = True
 
                     # We temporarily remove the item from the diagram and we perform the
                     # insertion using the undo command that will also emit the sgnItemAdded
@@ -363,7 +371,7 @@ class Diagram(QGraphicsScene):
                     self.mouseOverNode = None
                     self.mousePressEdge = None
                     self.clearSelection()
-                    self.project.validator.clear()
+                    #self.project.validator.clear()
                     mainwindow = self.project.parent()
                     statusBar = mainwindow.statusBar()
                     statusBar.clearMessage()
@@ -417,6 +425,22 @@ class Diagram(QGraphicsScene):
         self.mousePressData = None
 
     #############################################
+    #   SLOTS
+    #################################
+
+    @pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    def onConnectionChanged(self, _, item):
+        """
+        Executed whenever a connection is created/removed.
+        :type _: Diagram
+        :type item: AbstractItem
+        """
+        if item.isEdge():
+            for node in (item.source, item.target):
+                if Identity.Neutral in node.Identities:
+                    self.identify(node)
+
+    #############################################
     #   INTERFACE
     #################################
 
@@ -441,6 +465,159 @@ class Diagram(QGraphicsScene):
         :rtype: int
         """
         return self.sceneRect().height()
+
+    @staticmethod
+    def identify(node):
+        """
+        Perform node identification.
+        :type node: AbstractNode
+        """
+        predicate = lambda x: Identity.Neutral in x.Identities
+        collection = bfs(source=node, filter_on_visit=predicate)
+        generators = partition(predicate, collection)
+        excluded = set()
+        strong = set(generators[1])
+        weak = set(generators[0])
+
+        #############################################
+        #   SPECIAL CASES
+        #################################
+
+        for node in weak:
+
+            if node.type() is Item.EnumerationNode:
+
+                # ENUMERATION:
+                #
+                #   - If it has INSTANCE as inputs => Identity is CONCEPT
+                #   - If it has VALUE as inputs => Identity is VALUE-DOMAIN
+                #
+                # After establishing the identity for this node, we discard all the
+                # nodes we used to compute such identity and also move the enumeration
+                # node from the WEAK set to the STRONG set, so it will contribute to the
+                # computation of the final identity for all the remaining WEAK nodes.
+
+                f1 = lambda x: x.type() is Item.InputEdge
+                f2 = lambda x: x.type() is Item.IndividualNode
+                f3 = lambda x: Identity.Concept if x is Identity.Instance else Identity.ValueDomain
+
+                individuals = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+                identities = {f3(x.identity) for x in individuals}
+                computed = Identity.Neutral
+
+                if identities:
+                    computed = first(identities)
+                    if len(identities) > 1:
+                        computed = Identity.Unknown
+
+                node.identity = computed
+
+                if node.identity is not Identity.Neutral:
+                    strong.add(node)
+
+                for k in individuals:
+                    strong.discard(k)
+
+            elif node.type() is Item.RangeRestrictionNode:
+
+                # RANGE RESTRICTION:
+                #
+                #   - If it has ATTRIBUTE|VALUE-DOMAIN as inputs => Identity is VALUE-DOMAIN
+                #   - If it has ROLE|CONCEPT as inputs => Identity is CONCEPT
+                #
+                # After establishing the identity for this node, we discard all the
+                # nodes we used to compute such identity and also moVe the range restriction
+                # node from the WEAK set to the STRONG set, so it will contribute to the
+                # computation of the final identity for all the remaining WEAK nodes.
+
+                admissible = {Identity.Role, Identity.Attribute, Identity.Concept, Identity.ValueDomain}
+
+                f1 = lambda x: x.type() is Item.InputEdge
+                f2 = lambda x: x.type() in admissible and Identity.Neutral not in x.Identities
+                f3 = lambda x: Identity.Concept if x in {Identity.Role, Identity.Concept} else Identity.ValueDomain
+
+                collection = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+                identities = {f3(x.identity) for x in collection}
+                computed = Identity.Neutral
+
+                if identities:
+                    computed = first(identities)
+                    if len(identities) > 1:
+                        computed = Identity.Unknown
+
+                node.identity = computed
+
+                if node.identity is not Identity.Neutral:
+                    strong.add(node)
+
+                for k in collection:
+                    strong.discard(k)
+
+            elif node.type() is Item.PropertyAssertionNode:
+
+                # PROPERTY ASSERTION:
+                #
+                #   - If it is targeting a ROLE using a Membership edge => Identity is ROLE INSTANCE
+                #   - If it is targeting an ATTRIBUTE using a Membership edge => Identity is ATTRIBUTE INSTANCE
+                #
+                #   OR
+                #
+                #   - If it has 2 INSTANCE as inputs => Identity is ROLE INSTANCE
+                #   - If it has 1 INSTANCE and 1 VALUE as inputs => Identity is ATTRIBUTE INSTANCE
+                #
+                # In both the cases, whether we establish or not an idendity for this node,
+                # we exclude it from both the WEAK and the STRONG sets. This is due to the fact
+                # that the PropertyAssertion node is used to perform assertions at ABox level
+                # while every other node in the graph is used at TBox level. Additionally we
+                # discard the inputs of the node from the STRONG set since they are either INSTANCE
+                # or VALUE nodes since they are not needed to compute the final identity for
+                # the remaining nodes in the WEAK set (see Enumeration node).
+
+                f1 = lambda x: x.type() is Item.MembershipEdge
+                f2 = lambda x: x.type() in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
+                f3 = lambda x: x.type() is Item.InputEdge
+                f4 = lambda x: x.type() is Item.IndividualNode
+                f5 = lambda x: Identity.RoleInstance if x is Identity.Role else Identity.AttributeInstance
+                f6 = lambda x: x.identity is Identity.Value
+
+                outgoing = node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+                incoming = node.incomingNodes(filter_on_edges=f3, filter_on_nodes=f4)
+
+                computed = Identity.Neutral
+
+                # 1) USE MEMBERSHIP EDGE
+                identities = {f5(x.identity) for x in outgoing}
+                if identities:
+                    computed = first(identities)
+                    if len(identities) > 1:
+                        computed = Identity.Unknown
+
+                # 2) USE INPUT EDGES
+                if computed is Identity.Neutral and len(incoming) >= 2:
+                    computed = Identity.RoleInstance
+                    if sum(map(f6, incoming)):
+                        computed = Identity.AttributeInstance
+
+                node.identity = computed
+
+                excluded.add(node)
+
+                for k in incoming:
+                    strong.discard(k)
+
+        #############################################
+        #   FINAL COMPUTATION
+        #################################
+
+        computed = Identity.Neutral
+        identities = {x.identity for x in strong}
+        if identities:
+            computed = first(identities)
+            if len(identities) > 1:
+                computed = Identity.Unknown
+
+        for node in weak - strong - excluded:
+            node.identity = computed
 
     def itemOnTopOf(self, point, nodes=True, edges=True, skip=None):
         """

@@ -110,12 +110,12 @@ class AbstractNode(AbstractItem):
         Returns the set of adjacent nodes.
         :type filter_on_edges: callable
         :type filter_on_nodes: callable
-        :rtype: list
+        :rtype: set
         """
         f0 = lambda x: True
         f1 = filter_on_edges or f0
         f2 = filter_on_nodes or f0
-        return [x for x in [e.other(self) for e in self.edges if f1(e)] if f2(x)]
+        return {x for x in [e.other(self) for e in self.edges if f1(e)] if f2(x)}
 
     def anchor(self, edge):
         """
@@ -198,14 +198,14 @@ class AbstractNode(AbstractItem):
         Returns the set of incoming nodes.
         :type filter_on_edges: callable
         :type filter_on_nodes: callable
-        :rtype: list
+        :rtype: set
         """
         f0 = lambda x: True
         f1 = filter_on_edges or f0
         f2 = filter_on_nodes or f0
-        return [x for x in [e.other(self) for e in self.edges \
+        return {x for x in [e.other(self) for e in self.edges \
                     if (e.target is self or e.type() is Item.InclusionEdge and e.complete) \
-                        and f1(e)] if f2(x)]
+                        and f1(e)] if f2(x)}
 
     def intersection(self, line):
         """
@@ -251,14 +251,14 @@ class AbstractNode(AbstractItem):
         Returns the set of outgoing nodes.
         :type filter_on_edges: callable
         :type filter_on_nodes: callable
-        :rtype: list
+        :rtype: set
         """
         f0 = lambda x: True
         f1 = filter_on_edges or f0
         f2 = filter_on_nodes or f0
-        return [x for x in [e.other(self) for e in self.edges \
+        return {x for x in [e.other(self) for e in self.edges \
                     if (e.source is self or e.type() is Item.InclusionEdge and e.complete) \
-                        and f1(e)] if f2(x)]
+                        and f1(e)] if f2(x)}
 
     @abstractmethod
     def painterPath(self):
