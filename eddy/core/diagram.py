@@ -275,17 +275,17 @@ class Diagram(QGraphicsScene):
 
                     if currentNode:
                         self.mouseOverNode = currentNode
-                        # #res = self.project.validator.result(edge.source, edge, currentNode)
-                        # currentNode.redraw(selected=False, valid=res.valid)
-                        # if not res.valid:
-                        #     statusBar.showMessage(res.message)
-                        # else:
-                        #     statusBar.clearMessage()
-                        pass
+                        result = self.project.validator.validate(edge.source, edge, currentNode)
+                        currentNode.redraw(selected=False, valid=result.valid)
+                        if not result.valid:
+                            statusBar.showMessage(result.message)
+                        else:
+                            statusBar.clearMessage()
+
                     else:
                         statusBar.clearMessage()
                         self.mouseOverNode = None
-                        #self.validator.clear()
+                        self.project.validator.clear()
 
             else:
 
@@ -349,11 +349,10 @@ class Diagram(QGraphicsScene):
 
                     if currentNode:
                         currentNode.redraw(selected=False)
-                        edge.target = currentNode
-                        #if self.validator.valid(edge.source, edge, currentNode):
-                        #    edge.target = currentNode
-                        #    insertEdge = True
-                        insertEdge = True
+                        result = self.project.validator.validate(edge.source, edge, currentNode)
+                        if result.valid:
+                           edge.target = currentNode
+                           insertEdge = True
 
                     # We temporarily remove the item from the diagram and we perform the
                     # insertion using the undo command that will also emit the sgnItemAdded
@@ -368,10 +367,10 @@ class Diagram(QGraphicsScene):
                         self.undoStack.push(CommandEdgeAdd(self, edge))
                         edge.updateEdge()
 
+                    self.clearSelection()
+                    self.project.validator.clear()
                     self.mouseOverNode = None
                     self.mousePressEdge = None
-                    self.clearSelection()
-                    #self.project.validator.clear()
                     mainwindow = self.project.parent()
                     statusBar = mainwindow.statusBar()
                     statusBar.clearMessage()

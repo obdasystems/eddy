@@ -37,6 +37,8 @@ from PyQt5.QtWidgets import QUndoCommand
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.misc import first
 
+from eddy.lang import gettext as _
+
 
 class CommandEdgeAdd(QUndoCommand):
     """
@@ -46,8 +48,9 @@ class CommandEdgeAdd(QUndoCommand):
         """
         Initialize the command.
         """
-        super().__init__('add {}'.format(edge.name))
+        super().__init__(_('COMMAND_EDGE_ADD', edge.name))
 
+        # TODO: VERIFY
         self.diagram = diagram
         self.edge = edge
         self.edge.source.addEdge(self.edge)
@@ -98,12 +101,16 @@ class CommandEdgeBreakpointAdd(QUndoCommand):
     def __init__(self, diagram, edge, index, point):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type edge: AbstractEdge
+        :type index: int
+        :type point: QPointF
         """
-        super().__init__('add {} breakpoint'.format(edge.name))
-        self.diagram = diagram
+        super().__init__(_('COMMAND_EDGE_BREAKPOINT_ADD', edge.name))
         self.edge = edge
         self.index = index
         self.point = point
+        self.diagram = diagram
 
     def redo(self):
         """redo the command"""
@@ -125,8 +132,12 @@ class CommandEdgeAnchorMove(QUndoCommand):
     def __init__(self, diagram, edge, node, data):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type edge: AbstractEdge
+        :type node: AbstractNode
+        :type data: dict
         """
-        super().__init__('move {} anchor point'.format(edge.name))
+        super().__init__(_('COMMAND_EDGE_ANCHOR_MOVE', edge.name))
         self.diagram = diagram
         self.edge = edge
         self.node = node
@@ -152,8 +163,12 @@ class CommandEdgeBreakpointMove(QUndoCommand):
     def __init__(self, diagram, edge, index, data):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type edge: AbstractEdge
+        :type index: int
+        :type data: dict
         """
-        super().__init__('move {} breakpoint'.format(edge.name))
+        super().__init__(_('COMMAND_EDGE_BREAKPOINT_MOVE', edge.name))
         self.diagram = diagram
         self.edge = edge
         self.index = index
@@ -179,8 +194,11 @@ class CommandEdgeBreakpointRemove(QUndoCommand):
     def __init__(self, diagram, edge, index):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type edge: AbstractEdge
+        :type index: int
         """
-        super().__init__('remove {} breakpoint'.format(edge.name))
+        super().__init__(_('COMMAND_EDGE_BREAKPOINT_REMOVE', edge.name))
         self.diagram = diagram
         self.edge = edge
         self.index = index
@@ -206,14 +224,18 @@ class CommandEdgeToggleComplete(QUndoCommand):
     def __init__(self, diagram, data):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type data: dict
         """
-        if len(data) == 1:
-            super().__init__('toggle {} completness'.format(first(data.keys()).name))
-        else:
-            super().__init__('toggle completness for {} edges'.format(len(data)))
-
         self.diagram = diagram
         self.data = data
+
+        if len(data) == 1:
+            name = _('COMMAND_EDGE_TOGGLE_COMPLETE', first(data.keys()).name)
+        else:
+            name = _('COMMAND_EDGE_TOGGLE_COMPLETE_MULTI', len(data))
+
+        super().__init__(name)
 
     def redo(self):
         """redo the command"""
@@ -237,12 +259,9 @@ class CommandEdgeSwap(QUndoCommand):
     def __init__(self, diagram, edges):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type edges: T <= tuple|list|set
         """
-        if len(edges) == 1:
-            super().__init__('swap {}'.format(first(edges).name))
-        else:
-            super().__init__('swap {} edges'.format(len(edges)))
-
         self.diagram = diagram
         self.edges = edges
 
@@ -261,6 +280,13 @@ class CommandEdgeSwap(QUndoCommand):
         for edge in self.edges:
             if edge.type() is Item.InputEdge and edge.source in self.inputs:
                 self.inputs[edge.source]['redo'].append(edge.id)
+
+        if len(edges) == 1:
+            name = _('COMMAND_EDGE_TOGGLE_COMPLETE', first(edges).name)
+        else:
+            name = _('COMMAND_EDGE_TOGGLE_COMPLETE_MULTI', len(edges))
+
+        super().__init__(name)
 
     def redo(self):
         """redo the command"""

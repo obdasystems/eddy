@@ -107,7 +107,7 @@ class CommandItemsRemove(QUndoCommand):
         if len(items) == 1:
             super().__init__(_('COMMAND_ITEM_REMOVE', first(items).name))
         else:
-            super().__init__(_('COMMAND_ITEMS_REMOVE', len(items)))
+            super().__init__(_('COMMAND_ITEM_REMOVE_MULTI', len(items)))
 
     def redo(self):
         """redo the command"""

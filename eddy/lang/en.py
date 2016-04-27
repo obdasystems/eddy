@@ -112,11 +112,65 @@ MENU_VIEW = 'View'
 # UNDO / REDO COMMANDS
 #################################
 
-COMMAND_CENTER_DIAGRAM = 'center diagram'
+COMMAND_DIAGRAM_CENTER = 'center diagram'
+COMMAND_DIAGRAM_RESIZE = 'resize diagram'
+COMMAND_EDGE_ADD = 'add {0}'
+COMMAND_EDGE_ANCHOR_MOVE = 'move {0} anchor point'
+COMMAND_EDGE_BREAKPOINT_ADD = 'add {0} breakpoint'
+COMMAND_EDGE_BREAKPOINT_MOVE = 'move {0} breakpoint'
+COMMAND_EDGE_BREAKPOINT_REMOVE = 'remove {0} breakpoint'
+COMMAND_EDGE_SWAP = 'swap {0}'
+COMMAND_EDGE_SWAP_MULTI = 'swap {0} edges'
+COMMAND_EDGE_TOGGLE_COMPLETE = 'toggle {0} completness'
+COMMAND_EDGE_TOGGLE_COMPLETE_MULTI = 'toggle completness for {0} edges'
 COMMAND_ITEM_TRANSLATE = 'move {0} item{1}'
 COMMAND_ITEM_REMOVE = 'remove {0}'
-COMMAND_ITEMS_REMOVE = 'remove {0} items'
+COMMAND_ITEM_REMOVE_MULTI = 'remove {0} items'
+COMMAND_NODE_ADD = 'add {0}'
+COMMAND_NODE_CHANGE_INPUTS_ORDER = 'change {0} inputs order'
+COMMAND_NODE_CHANGE_META = 'change {0} metadata'
+COMMAND_NODE_EDIT_LABEL = 'edit {0} label'
+COMMAND_NODE_MOVE = 'move {0}'
+COMMAND_NODE_MOVE_LABEL = 'move {0} label'
+COMMAND_NODE_MOVE_MULTI = 'move {0} nodes'
+COMMAND_NODE_OPERATOR_SWITCH = 'switch {0} to {1}'
+COMMAND_NODE_RESIZE = 'resize {0}'
+COMMAND_NODE_SET_BRUSH = 'set {0} brush on {1} node{2}'
 COMMAND_NODE_SET_DEPTH = 'change {0} depth'
+
+#############################################
+# SYNTAX VALIDATION
+#################################
+
+SYNTAX_SELF_CONNECTION = 'Self connection is not valid'
+
+SYNTAX_INCLUSION_VALUE_DOMAIN_MISSING_ATOMIC = 'Inclusion between value-domain expressions must include at least an atomic datatype'
+SYNTAX_INCLUSION_CHAIN_AS_TARGET = 'Role chain nodes cannot be target of a Role inclusion'
+SYNTAX_INCLUSION_CHAIN_AS_SOURCE_INVALID_TARGET = 'Inclusion between {0} and {0} is forbidden'
+SYNTAX_INCLUSION_COMPLEMENT_INVALID_SOURCE = 'Invalid source for {0} inclusion: {1}'
+SYNTAX_INCLUSION_NO_GRAPHOL_EXPRESSION = 'Type mismatch: inclusion must involve two graphol expressions'
+SYNTAX_INCLUSION_NOT_COMPATIBLE = 'Type mismatch: {0} and {1} are not compatible'
+SYNTAX_INCLUSION_TYPE_MISMATCH = 'Type mismatch: inclusion between {0} and {1}'
+
+SYNTAX_INPUT_COMPLEMENT_INVALID_EXPRESSION = 'Invalid negative {0} expression'
+SYNTAX_INPUT_DATA_TOO_MANY_DATATYPE = 'Too many value-domain nodes in input to datatype restriction node'
+SYNTAX_INPUT_DATA_DATATYPE_MISMATCH = 'Datatype mismatch: restriction between {0} and {0}'
+SYNTAX_INPUT_DR_INVALID_QUALIFIED_RESTRICTION = 'Invalid restriction ({0}) for qualified restriction'
+SYNTAX_INPUT_DR_INVALID_QUALIFIED_RESTRICTION_OPERANDS = 'Invalid inputs ({0} + {1}) for qualified restriction'
+SYNTAX_INPUT_DR_ATTRIBUTE_NO_SELF = 'Attributes do not have self'
+SYNTAX_INPUT_ENUMERATION_INVALID_TARGET_IDENTITY = 'Target node has an invalid identity: {0}'
+SYNTAX_INPUT_PROP_ASSERTION_TOO_MANY_INSTANCES = 'Too many instances in input to {0}'
+SYNTAX_INPUT_PROP_ASSERTION_TOO_MANY_VALUES = 'Too many values in input to {0}'
+SYNTAX_INPUT_VALUE_RESTRICTION_SOURCE = 'Invalid target: {0}'
+SYNTAX_INPUT_INVALID_COMPOSITION = 'Type mismatch: {0} between {1} and {2}'
+SYNTAX_INPUT_INVALID_OPERAND = 'Invalid input to {0}: {1}'
+SYNTAX_INPUT_INVALID_TARGET = 'Input edges can only target constructor nodes'
+SYNTAX_INPUT_TOO_MANY_OPERANDS = 'Too many inputs to {0}'
+
+SYNTAX_MEMBERSHIP_INVALID_ASSERTION_TARGET = 'Invalid target for {0} assertion: {1}'
+SYNTAX_MEMBERSHIP_INVALID_SOURCE = 'Invalid source for membership edge: {0}'
+SYNTAX_MEMBERSHIP_INVALID_TARGET = 'Invalid target for membership edge: {0}'
+
 
 #############################################
 # DOCK WIDGETS

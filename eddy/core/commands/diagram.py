@@ -39,13 +39,15 @@ class CommandDiagramResize(QUndoCommand):
     """
     This command is used to resize the size of a diagram.
     """
-    def __init__(self, scene, rect):
+    def __init__(self, diagram, rect):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type rect: QRectF
         """
-        super().__init__('resize diagram')
+        super().__init__(_('COMMAND_DIAGRAM_RESIZE'))
         self.diagram = diagram
-        self.rect = {'redo': rect, 'undo': scene.sceneRect()}
+        self.rect = {'redo': rect, 'undo': diagram.sceneRect()}
 
     def redo(self):
         """redo the command"""

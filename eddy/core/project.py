@@ -43,7 +43,7 @@ from eddy.core.functions.misc import cutR
 from eddy.core.items.factory import ItemFactory
 from eddy.core.items.nodes.common.meta import MetaFactory
 from eddy.core.items.nodes.common.meta import PredicateMetaData
-from eddy.core.syntax.owl import OWL2Validator
+from eddy.core.syntax.owl import OWL2RLValidator
 from eddy.core.utils.guid import GUID
 
 
@@ -66,6 +66,7 @@ class Project(QObject):
     sgnItemAdded = pyqtSignal('QGraphicsItem')
     sgnItemRemoved = pyqtSignal('QGraphicsItem')
     sgnMetaAdded = pyqtSignal(Item, str)
+    sgnMetaRemoved = pyqtSignal(Item, str)
 
     def __init__(self, path, prefix, iri, parent=None):
         """
@@ -93,7 +94,7 @@ class Project(QObject):
         self.guid = GUID(self)
         self.itemFactory = ItemFactory(self)
         self.metaFactory = MetaFactory(self)
-        self.validator = OWL2Validator(self)
+        self.validator = OWL2RLValidator(self)
 
     #############################################
     #   PROPERTIES
@@ -123,7 +124,7 @@ class Project(QObject):
                 if item.isNode() or item.isEdge():
                     self.doAddItem(diagram, item)
 
-    def createMeta(self, item, name, metadata):
+    def addMeta(self, item, name, metadata):
         """
         Create metadata for the given predicate type/name combination.
         :type item: Item
@@ -310,6 +311,18 @@ class Project(QObject):
                 self.doRemoveItem(diagram, item)
             del self.index[K_DIAGRAM][diagram.id]
             self.sgnDiagramRemoved.emit(diagram)
+
+    def removeMeta(self, item, name):
+        """
+        Remove metadata for the given predicate type/name combination.
+        :type item: Item
+        :type name: str
+        """
+        if item in self.index[K_PREDICATE]:
+            if name in self.index[K_PREDICATE][item]:
+                if K_META in self.index[K_PREDICATE][item][name]:
+                    del self.index[K_PREDICATE][item][name][K_META]
+                    self.sgnMetaRemoved.emit(item, name)
 
     #############################################
     #   SLOTS

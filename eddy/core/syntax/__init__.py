@@ -30,6 +30,3 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-
-
-#from eddy.core.syntax.owl import OWL2Validator

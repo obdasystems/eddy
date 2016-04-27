@@ -47,7 +47,7 @@ finally:
     en = import_module('eddy.lang.en')
 
 
-def gettext(key, *args):
+def gettext(key, *args, **kwargs):
     """
     Returns the translation of the text associated with the given keyword.
     Differently from the builtin gettext.gettext this function accepts a
@@ -55,9 +55,10 @@ def gettext(key, *args):
     substitute to the associated message pattern, if any is required.
     :type key: str
     :type args: list
+    :type kwargs: dict
     :rtype: str
     """
     try:
-        return getattr(mo, key).format(*args)
+        return getattr(mo, key).format(*args, **kwargs)
     except AttributeError:
-        return getattr(en, key, key).format(*args)
+        return getattr(en, key, key).format(*args, **kwargs)

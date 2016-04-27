@@ -222,7 +222,7 @@ class ProjectLoader(QObject):
                 item = self.itemFromXml[predicate.attribute('type')]
                 func = self.metaFuncForItem[item]
                 meta = func(predicate)
-                self.project.createMeta(meta.item, meta.predicate, meta)
+                self.project.addMeta(meta.item, meta.predicate, meta)
             except Exception:
                 pass
             finally:

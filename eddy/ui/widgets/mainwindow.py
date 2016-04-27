@@ -867,7 +867,7 @@ class MainWindow(QMainWindow):
                 mY = snapF(((r1.bottom() - r2.bottom()) - (r2.top() - r1.top())) / 2, Diagram.GridSize)
                 if mX or mY:
                     items = [x for x in items if x.isNode() or x.isEdge()]
-                    command = CommandItemsTranslate(diagram, items, mX, mY, _('COMMAND_CENTER_DIAGRAM'))
+                    command = CommandItemsTranslate(diagram, items, mX, mY, _('COMMAND_DIAGRAM_CENTER'))
                     diagram.undoStack.push(command)
                     self.mdi.activeView.centerOn(0, 0)
 

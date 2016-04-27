@@ -37,21 +37,21 @@ from abc import ABCMeta, abstractmethod
 from PyQt5.QtCore import QObject
 
 
-class ValidationResult(object):
+class SyntaxValidationResult(object):
     """
-    This class can be used to store validation results.
+    This class can be used to store syntax validation results.
     """
     def __init__(self, source, edge, target, valid, message=''):
         """
-        Initialize the validation result.
+        Initialize the syntax validation result.
         :type source: AbstractNode
         :type edge: AbstractEdge
         :type target: AbstractNode
         :type valid: bool
         :type message: str
         """
-        self.source = source
         self.edge = edge
+        self.source = source
         self.target = target
         self.message = message
         self.valid = valid
@@ -72,18 +72,17 @@ class AbstractValidator(QObject):
     """
     Base syntax validator class.
     This class defines the base structure of syntax validators and enforce the implementation
-    of the 'run' method which is responsible of validation Graphol triples: NODE -> EDGE -> NODE.
-    The method MUST generate the ValidationResult instance that can later be queried using the validator interface.
+    of the 'run' method which is responsible of validation graphol triples: NODE -> EDGE -> NODE.
     """
     __metaclass__ = ABCMeta
 
     def __init__(self, parent=None):
         """
         Initialize the validator.
-        :type parent:  QObject
+        :type parent: QObject
         """
         super().__init__(parent)
-        self._result = None
+        self.result = None
 
     #############################################
     #   INTERFACE
@@ -93,38 +92,26 @@ class AbstractValidator(QObject):
         """
         Clear the validator by removing the latest validation result.
         """
-        self._result = None
-
-    def result(self, source, edge, target):
-        """
-        Returns the validation result for the given triple.
-        :type source: AbstractNode
-        :type edge: AbstractEdge
-        :type target: AbstractNode
-        :rtype: ValidationResult
-        """
-        if not self._result or (source, edge, target) not in self._result:
-            self.run(source, edge, target)
-        return self._result
+        self.result = None
 
     @abstractmethod
     def run(self, source, edge, target):
         """
-        Run the validation algorithm on the given triple and generates the ValidationResult instance.
+        Run the validation algorithm on the given triple and generates the SyntaxValidationResult instance.
         :type source: AbstractNode
         :type edge: AbstractEdge
         :type target: AbstractNode
         """
         pass
 
-    def valid(self, source, edge, target):
+    def validate(self, source, edge, target):
         """
-        Tells whether the given triple is a valid one.
+        Returns the SyntaxValidationResult for the given triple.
         :type source: AbstractNode
         :type edge: AbstractEdge
         :type target: AbstractNode
-        :rtype: bool
+        :rtype: SyntaxValidationResult
         """
-        if not self._result or (source, edge, target) not in self._result:
+        if not self.result or (source, edge, target) not in self.result:
             self.run(source, edge, target)
-        return self._result.valid
+        return self.result

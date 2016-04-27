@@ -35,9 +35,9 @@
 from PyQt5.QtWidgets import QUndoCommand
 
 from eddy.core.datatypes.graphol import Item
-from eddy.core.functions.graph import identify
 from eddy.core.functions.misc import first
 from eddy.core.items.common import AbstractItem
+
 from eddy.lang import gettext as _
 
 
@@ -48,8 +48,10 @@ class CommandNodeAdd(QUndoCommand):
     def __init__(self, diagram, node):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type node: AbstractNode
         """
-        super().__init__('add {}'.format(node.name))
+        super().__init__(_('COMMAND_NODE_ADD', node.name))
         self.diagram = diagram
         self.node = node
 
@@ -73,6 +75,9 @@ class CommandNodeSetDepth(QUndoCommand):
     def __init__(self, diagram, node, zValue):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type node: AbstractNode
+        :type zValue: float
         """
         super().__init__(_('COMMAND_NODE_SET_DEPTH', node.name))
         self.node = node
@@ -99,8 +104,11 @@ class CommandNodeRezize(QUndoCommand):
     def __init__(self, diagram, node, data):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type node: AbstractNode
+        :type data: dict
         """
-        super().__init__('resize {}'.format(node.name))
+        super().__init__(_('COMMAND_NODE_RESIZE', node.name))
         self.diagram = diagram
         self.node = node
         self.data = data
@@ -161,20 +169,22 @@ class CommandNodeMove(QUndoCommand):
     def __init__(self, diagram, data):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type data: dict
         """
         self.data = data
         self.diagram = diagram
         self.edges = set()
 
         for node in data['redo']['nodes']:
-            self.edges |= set(node.edges)
+            self.edges |= node.edges
 
         if len(data['redo']['nodes']) != 1:
-            params = 'move {} nodes'.format(len(data['redo']['nodes']))
+            name = _('COMMAND_NODE_MOVE_MULTI', len(data['redo']['nodes']))
         else:
-            params = 'move {}'.format(first(data['redo']['nodes'].keys()).name)
+            name = _('COMMAND_NODE_MOVE', first(data['redo']['nodes'].keys()).name)
 
-        super().__init__(params)
+        super().__init__(name)
 
     def redo(self):
         """redo the command"""
@@ -232,8 +242,12 @@ class CommandNodeLabelMove(QUndoCommand):
     def __init__(self, diagram, node, pos1, pos2):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type node: AbstractNode
+        :type pos1: QPointF
+        :type pos2: QPointF
         """
-        super().__init__('move {} label'.format(node.name))
+        super().__init__(_('COMMAND_NODE_MOVE_LABEL', node.name))
         self.diagram = diagram
         self.node = node
         self.data = {'undo': pos1, 'redo': pos2}
@@ -249,7 +263,6 @@ class CommandNodeLabelMove(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-# FIXME: handle relocation of index in project
 class CommandNodeLabelChange(QUndoCommand):
     """
     This command is used to edit nodes labels.
@@ -257,10 +270,15 @@ class CommandNodeLabelChange(QUndoCommand):
     def __init__(self, diagram, node, undo, redo, name=None):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type node: AbstractNode
+        :type undo: str
+        :type redo: str
+        :type name: str
         """
-        message = name or 'edit {} label'.format(node.name)
-        super().__init__(message)
+        super().__init__(name or _('COMMAND_NODE_EDIT_LABEL', node.name))
         self.diagram = diagram
+        self.project = diagram.project
         self.node = node
         self.data = {'undo': undo, 'redo': redo}
 
@@ -269,24 +287,24 @@ class CommandNodeLabelChange(QUndoCommand):
         # If the command is executed in a "refactor" command we won't have
         # any meta except for the first node in the refactored collection
         # so we don't have to remove nor add predicates from the meta index.
-        meta = self.diagram.meta.metaFor(self.node.item, self.data['undo'])
+        meta = self.project.meta(self.node.type(), self.data['undo'])
         if meta:
-            self.diagram.meta.doRemoveNode(self.node.item, self.data['undo'])
+            self.project.removeMeta(self.node.type(), self.data['undo'])
 
-        self.diagram.index.doRemoveNode(self.node)
+        self.project.doRemoveItem(self.diagram, self.node)
         self.node.setText(self.data['redo'])
-        self.diagram.index.doAddNode(self.node)
+        self.project.doAddItem(self.diagram, self.node)
 
         if meta:
             meta.predicate = self.data['redo']
-            self.diagram.meta.doAddNode(self.node.item, self.data['redo'], meta)
+            self.project.addMeta(self.node.type(), self.data['redo'], meta)
 
         if self.node.type() is Item.IndividualNode:
-            f1 = lambda x: x.type() is Item.InputEdge and x.source is self.node
+            # Perform re-identification of connected Enumeration nodes.
+            f1 = lambda x: x.type() is Item.InputEdge
             f2 = lambda x: x.type() is Item.EnumerationNode
-            for node in {n for n in [e.other(self.node) for e in self.node.edges if f1(e)] if f2(n)}:
-                pass
-                #identify(node)
+            for node in self.node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                self.diagram.identify(node)
 
         self.diagram.sgnUpdated.emit()
 
@@ -295,24 +313,24 @@ class CommandNodeLabelChange(QUndoCommand):
         # If the command is executed in a "refactor" command we won't have
         # any meta except for the first node in the refactored collection
         # so we don't have to remove nor add predicates from the meta index.
-        meta = self.diagram.meta.metaFor(self.node.item, self.data['redo'])
+        meta = self.project.meta(self.node.type(), self.data['redo'])
         if meta:
-            self.diagram.meta.doRemoveNode(self.node.item, self.data['redo'])
+            self.project.removeMeta(self.node.type(), self.data['redo'])
 
-        self.diagram.index.doRemoveNode(self.node)
+        self.project.doRemoveItem(self.diagram, self.node)
         self.node.setText(self.data['undo'])
-        self.diagram.index.doAddNode(self.node)
+        self.project.doAddItem(self.diagram, self.node)
 
         if meta:
             meta.predicate = self.data['undo']
-            self.diagram.meta.doAddNode(self.node.item, self.data['undo'], meta)
+            self.project.addMeta(self.node.type(), self.data['undo'], meta)
 
         if self.node.type() is Item.IndividualNode:
-            f1 = lambda x: x.type() is Item.InputEdge and x.source is self.node
+            # Perform re-identification of connected Enumeration nodes.
+            f1 = lambda x: x.type() is Item.InputEdge
             f2 = lambda x: x.type() is Item.EnumerationNode
-            for node in {n for n in [e.other(self.node) for e in self.node.edges if f1(e)] if f2(n)}:
-                pass
-                #identify(node)
+            for node in self.node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                self.diagram.identify(node)
 
         self.diagram.sgnUpdated.emit()
 
@@ -324,8 +342,11 @@ class CommandNodeOperatorSwitchTo(QUndoCommand):
     def __init__(self, diagram, node1, node2):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type node1: OperatorNode
+        :type node2: OperatorNode
         """
-        super().__init__('switch {} to {}'.format(node1.name, node2.name))
+        super().__init__(_('COMMAND_NODE_OPERATOR_SWITCH', node1.name, node2.name))
         self.diagram = diagram
         self.node = {'redo': node2, 'undo': node1}
 
@@ -394,27 +415,31 @@ class CommandNodeOperatorSwitchTo(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-# FIXME: relocate meta inside project!
 class CommandNodeChangeMeta(QUndoCommand):
     """
     This command is used to change predicate nodes metadata.
     """
-    def __init__(self, diagram, node, undo, redo):
+    def __init__(self, diagram, node, undo, redo, name=None):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type node: AbstractNode
+        :type undo: PredicateMetadata
+        :type redo: PredicateMetadata
+        :type name: str
         """
-        super().__init__('change {} metadata'.format(node.name))
-        self.diagram = diagram
+        super().__init__(name or _('COMMAND_NODE_CHANGE_META', node.name))
+        self.project = diagram.project
         self.data = {'redo': redo, 'undo': undo}
         self.node = node
 
     def redo(self):
         """redo the command"""
-        self.diagram.meta.doAddNode(self.node.item, self.node.text(), self.data['redo'])
+        self.project.addMeta(self.node.type(), self.node.text(), self.data['redo'])
 
     def undo(self):
         """undo the command"""
-        self.diagram.meta.doAddNode(self.node.item, self.node.text(), self.data['undo'])
+        self.project.addMeta(self.node.type(), self.node.text(), self.data['undo'])
 
 
 class CommandNodeChangeInputOrder(QUndoCommand):
@@ -423,12 +448,15 @@ class CommandNodeChangeInputOrder(QUndoCommand):
     """
     def __init__(self, diagram, node, inputs):
         """
-        Initilize the command.
+        Initialize the command.
+        :type diagram: Diagram
+        :type node: AbstractNode
+        :type inputs: DistinctList
         """
         self.node = node
         self.diagram = diagram
         self.inputs = {'redo': inputs, 'undo': node.inputs}
-        super().__init__('change {} inputs order'.format(node.name))
+        super().__init__(_('COMMAND_NODE_CHANGE_INPUTS_ORDER', node.name))
 
     def redo(self):
         """redo the command"""
@@ -449,13 +477,15 @@ class CommandNodeSetBrush(QUndoCommand):
     """
     def __init__(self, diagram, nodes, brush):
         """
-        Initilize the command.
+        Initialize the command.
+        :type diagram: Diagram
+        :type nodes: set
+        :type brush: QBrush
         """
-        self.diagram = diagram
         self.nodes = nodes
         self.brush = {x: {'undo': x.brush, 'redo': brush} for x in nodes}
-        name = 'set {0} brush on {1} node{2}'.format(brush.color().name(), len(nodes), 's' if len(nodes) > 1 else '')
-        super().__init__(name)
+        self.diagram = diagram
+        super().__init__(_('COMMAND_NODE_SET_BRUSH', brush.color().name(), len(nodes), 's' if len(nodes) > 1 else ''))
 
     def redo(self):
         """redo the command"""
