@@ -55,11 +55,11 @@ class MenuFactory(QObject):
     #################################
 
     @staticmethod
-    def buildDiagramSceneMenu(mainwindow, scene):
+    def buildDiagramMenu(mainwindow, diagram):
         """
-        Build and return a QMenu instance for the DiagramScene.
+        Build and return a QMenu instance for the given diagram.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :rtype: QMenu
         """
         menu = QMenu()
@@ -67,7 +67,7 @@ class MenuFactory(QObject):
             menu.addAction(mainwindow.actionPaste)
         menu.addAction(mainwindow.actionSelectAll)
         menu.addSeparator()
-        menu.addAction(mainwindow.actionOpenSceneProperties)
+        menu.addAction(mainwindow.actionOpenDiagramProperties)
         return menu
 
     #############################################
@@ -75,11 +75,11 @@ class MenuFactory(QObject):
     #################################
 
     @staticmethod
-    def buildGenericEdgeMenu(mainwindow, scene, edge, pos):
+    def buildGenericEdgeMenu(mainwindow, diagram, edge, pos):
         """
         Build and return a QMenu instance for a generic edge.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type edge: AbstractEdge
         :type pos: QPointF
         :rtype: QMenu
@@ -96,11 +96,11 @@ class MenuFactory(QObject):
         return menu
 
     @staticmethod
-    def buildInclusionEdgeMenu(mainwindow, scene, edge, pos):
+    def buildInclusionEdgeMenu(mainwindow, diagram, edge, pos):
         """
         Build and return a QMenu instance for Inclusion edges.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type edge: InclusionEdge
         :type pos: QPointF
         :rtype: QMenu
@@ -112,20 +112,24 @@ class MenuFactory(QObject):
             action.setData((edge, breakpoint))
             menu.addAction(action)
         else:
+            # VALIDATE POSSIBLE EDGE SWAP
+            project = diagram.project
+            result = project.validator.validate(edge.target, edge, edge.source)
+            # BUILD THE MENU
             menu.addAction(mainwindow.actionDelete)
             menu.addAction(mainwindow.actionSwapEdge)
             menu.addSeparator()
             menu.addAction(mainwindow.actionToggleEdgeComplete)
-            mainwindow.actionSwapEdge.setVisible(scene.validator.valid(edge.target, edge, edge.source))
+            mainwindow.actionSwapEdge.setVisible(result.valid)
             mainwindow.actionToggleEdgeComplete.setChecked(edge.complete)
         return menu
 
     @staticmethod
-    def buildInputEdgeMenu(mainwindow, scene, edge, pos):
+    def buildInputEdgeMenu(mainwindow, diagram, edge, pos):
         """
         Build and return a QMenu instance for Input edges.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type edge: InputEdge
         :type pos: QPointF
         :rtype: QMenu
@@ -137,25 +141,28 @@ class MenuFactory(QObject):
             action.setData((edge, breakpoint))
             menu.addAction(action)
         else:
+            # VALIDATE POSSIBLE EDGE SWAP
+            project = diagram.project
+            result = project.validator.validate(edge.target, edge, edge.source)
+            # BUILD THE MENU
             menu.addAction(mainwindow.actionDelete)
             menu.addAction(mainwindow.actionSwapEdge)
             menu.addSeparator()
-            mainwindow.actionSwapEdge.setVisible(scene.validator.valid(edge.target, edge, edge.source))
+            mainwindow.actionSwapEdge.setVisible(result.valid)
         return menu
 
     @staticmethod
-    def buildMembershipEdgeMenu(mainwindow, scene, edge, pos):
+    def buildMembershipEdgeMenu(mainwindow, diagram, edge, pos):
         """
         Build and return a QMenu instance for InstanceOf edges.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type edge: InstanceOfEdge
         :type pos: QPointF
         :rtype: QMenu
         """
         menu = QMenu()
         breakpoint = edge.breakpointAt(pos)
-        mainwindow = scene.mainwindow
         if breakpoint is not None:
             action = mainwindow.actionRemoveEdgeBreakpoint
             action.setData((edge, breakpoint))
@@ -169,11 +176,11 @@ class MenuFactory(QObject):
     #################################
 
     @staticmethod
-    def buildGenericNodeMenu( mainwindow, scene, node):
+    def buildGenericNodeMenu(mainwindow, diagram, node):
         """
         Build and return a QMenu instance for a generic node.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: AbstractNode
         :rtype: QMenu
         """
@@ -190,26 +197,26 @@ class MenuFactory(QObject):
         menu.addAction(mainwindow.actionOpenNodeProperties)
         return menu
 
-    def buildAttributeNodeMenu(self, mainwindow, scene, node):
+    def buildAttributeNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for attribute nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: AttributeNode
         :rtype: QMenu
         """
-        menu = self.buildGenericNodeMenu(mainwindow, scene, node)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeChangeBrush)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeCompose)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeSpecial)
+        menu = self.buildGenericNodeMenu(mainwindow, diagram, node)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuRefactor)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetBrush)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuCompose)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetSpecial)
 
-        for action in mainwindow.actionsNodeSetSpecial:
+        for action in mainwindow.actionsSetSpecial:
             action.setChecked(node.special is action.data())
 
         mainwindow.actionRefactorName.setEnabled(node.special is None)
 
-        collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
+        collection = self.buildNodeLabelSpecificActionSet(mainwindow, diagram, node)
         if collection:
             menu.insertSeparator(mainwindow.actionOpenNodeProperties)
             for action in collection:
@@ -218,51 +225,48 @@ class MenuFactory(QObject):
         menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         return menu
 
-    def buildComplementNodeMenu(self, mainwindow, scene, node):
+    def buildComplementNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for complement nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: ComplementNode
         :rtype: QMenu
         """
-        menu = self.buildOperatorNodeMenu(mainwindow, scene, node)
+        menu = self.buildOperatorNodeMenu(mainwindow, diagram, node)
 
+        # FIXME: adjust contraint switch
         if node.edges:
-
-            switch = {Item.ComplementNode}
+            switch = {Item.ComplementNode, Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode}
             if node.identity is Identity.Role:
-                switch |= {Item.RoleChainNode, Item.RoleInverseNode}
-            else:
-                switch |= {Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode}
-
+                switch = {Item.ComplementNode, Item.RoleChainNode, Item.RoleInverseNode}
             for action in mainwindow.actionsSwitchOperator:
                 action.setVisible(action.data() in switch)
-
+                
         return menu
 
-    def buildConceptNodeMenu(self, mainwindow, scene, node):
+    def buildConceptNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for concept nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: ConceptNode
         :rtype: QMenu
         """
-        menu = self.buildGenericNodeMenu(mainwindow, scene, node)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeChangeBrush)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeSpecial)
+        menu = self.buildGenericNodeMenu(mainwindow, diagram, node)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuRefactor)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetBrush)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetSpecial)
 
         # Switch the check on the currently active special.
-        for action in mainwindow.actionsNodeSetSpecial:
+        for action in mainwindow.actionsSetSpecial:
             action.setChecked(node.special is action.data())
 
         # Disable refactor name if special type is set.
         mainwindow.actionRefactorName.setEnabled(node.special is None)
 
         # Append label specific actions.
-        collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
+        collection = self.buildNodeLabelSpecificActionSet(mainwindow, diagram, node)
         if collection:
             menu.insertSeparator(mainwindow.actionOpenNodeProperties)
             for action in collection:
@@ -271,41 +275,41 @@ class MenuFactory(QObject):
         menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         return menu
 
-    def buildDatatypeRestrictionNodeMenu(self, mainwindow, scene, node):
+    def buildDatatypeRestrictionNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for datatype restriction nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: DatatypeRestrictionNode
         :rtype: QMenu
         """
-        return self.buildOperatorNodeMenu(mainwindow, scene, node)
+        return self.buildOperatorNodeMenu(mainwindow, diagram, node)
 
-    def buildDisjointUnionNodeMenu(self, mainwindow, scene, node):
+    def buildDisjointUnionNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for disjoint union nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: DisjointUnionNode
         :rtype: QMenu
         """
-        menu = self.buildOperatorNodeMenu(mainwindow, scene, node)
+        menu = self.buildOperatorNodeMenu(mainwindow, diagram, node)
         if node.edges:
             for action in mainwindow.actionsSwitchOperator:
                 action.setVisible(action.data() in {Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode})
         return menu
 
-    def buildDomainRestrictionNodeMenu(self, mainwindow, scene, node):
+    def buildDomainRestrictionNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for domain restriction nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: DomainRestrictionNode
         :rtype: QMenu
         """
-        menu = self.buildGenericNodeMenu(mainwindow, scene, node)
+        menu = self.buildGenericNodeMenu(mainwindow, diagram, node)
         menu.addSeparator()
-        menu.insertMenu(scene.mainwindow.actionOpenNodeProperties, scene.mainwindow.menuRestrictionChange)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetPropertyRestriction)
 
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity is Identity.Attribute
@@ -314,63 +318,63 @@ class MenuFactory(QObject):
         attribute = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
 
         # Switch the currently active restriction and hide invalid ones.
-        for action in scene.mainwindow.actionsRestrictionChange:
+        for action in mainwindow.actionsSetPropertyRestriction:
             action.setChecked(node.restriction is action.data())
             action.setVisible(action.data() is not Restriction.Self or not qualified and not attribute)
 
         # Append label specific actions.
-        collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
+        collection = self.buildNodeLabelSpecificActionSet(mainwindow, diagram, node)
         if collection:
             menu.insertSeparator(mainwindow.actionOpenNodeProperties)
             for action in collection:
                 menu.insertAction(mainwindow.actionOpenNodeProperties, action)
 
-        menu.insertSeparator(scene.mainwindow.actionOpenNodeProperties)
+        menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         return menu
 
-    def buildEnumerationNodeMenu(self, mainwindow, scene, node):
+    def buildEnumerationNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for enumeration nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: EnumerationNode
         :rtype: QMenu
         """
-        menu = self.buildOperatorNodeMenu(mainwindow, scene, node)
+        menu = self.buildOperatorNodeMenu(mainwindow, diagram, node)
 
         if node.edges:
 
-            if [e for e in node.edges if e.type() is Item.InputEdge and e.target is node]:
+            if node.incomingNodes(filter_on_edges=lambda x: x.type() is Item.InputEdge):
                 # If we have input edges targeting the node keep only the Enumeration action
                 # active: individuals can be connected only to Enumeration nodes and Link, so
                 # switching to another operator would be an error.
                 for action in mainwindow.actionsSwitchOperator:
                     action.setVisible(action.data() is Item.EnumerationNode)
-            elif [e for e in node.edges if e.type() is Item.InclusionEdge]:
+            elif node.outgoingNodes(filter_on_edges=lambda x: x.type() is Item.InputEdge):
                 # We have inclusion edges attached to this edge but no input => allow switching to
                 # operators that can be identified using the identities declared by this very node.
+                admissible = {Item.DisjointUnionNode, Item.EnumerationNode, Item.IntersectionNode, Item.UnionNode}
                 for action in mainwindow.actionsSwitchOperator:
-                    action.setVisible(action.data() in {Item.DisjointUnionNode, Item.EnumerationNode,
-                                                        Item.IntersectionNode, Item.UnionNode})
+                    action.setVisible(action.data() in admissible)
 
         return menu
 
-    def buildIndividualNodeMenu(self, mainwindow, scene, node):
+    def buildIndividualNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for individual nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: IndividualNode
         :rtype: QMenu
         """
-        menu = self.buildGenericNodeMenu(mainwindow, scene, node)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeChangeBrush)
+        menu = self.buildGenericNodeMenu(mainwindow, diagram, node)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuRefactor)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetBrush)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetIndividualAs)
 
-        ##################################
+        #############################################
         # BEGIN CONSTRAIN IDENTITY SWITCH
-        ##################################
+        #################################
 
         I = True
         V = True
@@ -403,12 +407,12 @@ class MenuFactory(QObject):
         for a in mainwindow.actionsSetIndividualAs:
             a.setVisible(a.data() is Identity.Instance and I or a.data() is Identity.Value and V)
 
-        ################################
+        #############################################
         # END CONSTRAIN IDENTITY SWITCH
-        ################################
+        #################################
 
         # Append label specific actions.
-        collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
+        collection = self.buildNodeLabelSpecificActionSet(mainwindow, diagram, node)
         if collection:
             menu.insertSeparator(mainwindow.actionOpenNodeProperties)
             for action in collection:
@@ -417,55 +421,55 @@ class MenuFactory(QObject):
         menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         return menu
 
-    def buildIntersectionNodeMenu(self, mainwindow, scene, node):
+    def buildIntersectionNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for intersection nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: IntersectionNode
         :rtype: QMenu
         """
-        menu = self.buildOperatorNodeMenu(mainwindow, scene, node)
+        menu = self.buildOperatorNodeMenu(mainwindow, diagram, node)
         if node.edges:
             for action in mainwindow.actionsSwitchOperator:
                 action.setVisible(action.data() in {Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode})
         return menu
 
-    def buildOperatorNodeMenu(self, mainwindow, scene, node):
+    def buildOperatorNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for operator nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: OperatorNode
         :rtype: QMenu
         """
-        menu = self.buildGenericNodeMenu(mainwindow, scene, node)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuOperatorNodeSwitch)
+        menu = self.buildGenericNodeMenu(mainwindow, diagram, node)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSwitchOperator)
         menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         for action in mainwindow.actionsSwitchOperator:
             action.setChecked(node.type() is action.data())
             action.setVisible(True)
         return menu
 
-    def buildPropertyAssertionNodeMenu(self, mainwindow, scene, node):
+    def buildPropertyAssertionNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for property assertion nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: PropertyAssertionNode
         :rtype: QMenu
         """
-        return self.buildGenericNodeMenu(mainwindow, scene, node)
+        return self.buildGenericNodeMenu(mainwindow, diagram, node)
 
-    def buildRangeRestrictionNodeMenu(self, mainwindow, scene, node):
+    def buildRangeRestrictionNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for range restriction nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: RangeRestrictionNode
         :rtype: QMenu
         """
-        menu = self.buildGenericNodeMenu(mainwindow, scene, node)
+        menu = self.buildGenericNodeMenu(mainwindow, diagram, node)
 
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity is Identity.Attribute
@@ -473,13 +477,13 @@ class MenuFactory(QObject):
         # Allow to change the restriction type only if it's not an Attribute range restriction.
         if not first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)):
             menu.addSeparator()
-            menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuRestrictionChange)
-            for action in mainwindow.actionsRestrictionChange:
+            menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetPropertyRestriction)
+            for action in mainwindow.actionsSetPropertyRestriction:
                 action.setChecked(node.restriction is action.data())
                 action.setVisible(action.data() is not Restriction.Self)
 
         # Append label specific actions.
-        collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
+        collection = self.buildNodeLabelSpecificActionSet(mainwindow, diagram, node)
         if collection:
             menu.insertSeparator(mainwindow.actionOpenNodeProperties)
             for action in collection:
@@ -488,26 +492,26 @@ class MenuFactory(QObject):
         menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         return menu
 
-    def buildRoleNodeMenu(self, mainwindow, scene, node):
+    def buildRoleNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for role nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: RoleNode
         :rtype: QMenu
         """
-        menu = self.buildGenericNodeMenu(mainwindow, scene, node)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeRefactor)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeChangeBrush)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeCompose)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeSpecial)
+        menu = self.buildGenericNodeMenu(mainwindow, diagram, node)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuRefactor)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetBrush)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuCompose)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetSpecial)
 
-        for action in mainwindow.actionsNodeSetSpecial:
+        for action in mainwindow.actionsSetSpecial:
             action.setChecked(node.special is action.data())
 
         mainwindow.actionRefactorName.setEnabled(node.special is None)
 
-        collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
+        collection = self.buildNodeLabelSpecificActionSet(mainwindow, diagram, node)
         if collection:
             menu.insertSeparator(mainwindow.actionOpenNodeProperties)
             for action in collection:
@@ -516,84 +520,84 @@ class MenuFactory(QObject):
         menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         return menu
 
-    def buildRoleInverseNodeMenu(self, mainwindow, scene, node):
+    def buildRoleInverseNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for role inverse nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: RoleInverseNode
         :rtype: QMenu
         """
-        menu = self.buildOperatorNodeMenu(mainwindow, scene, node)
+        menu = self.buildOperatorNodeMenu(mainwindow, diagram, node)
         if node.edges:
             for action in mainwindow.actionsSwitchOperator:
                 action.setVisible(action.data() in {Item.ComplementNode, Item.RoleChainNode, Item.RoleInverseNode})
         return menu
 
-    def buildRoleChainNodeMenu(self, mainwindow, scene, node):
+    def buildRoleChainNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for role chain nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: RoleChainNode
         :rtype: QMenu
         """
-        menu = self.buildOperatorNodeMenu(mainwindow, scene, node)
+        menu = self.buildOperatorNodeMenu(mainwindow, diagram, node)
         if node.edges:
             switch = {Item.ComplementNode, Item.RoleChainNode, Item.RoleInverseNode}
-            if len([e for e in node.edges if e.type() is Item.InputEdge and e.target is node]) > 1:
+            if len(node.incomingNodes(filter_on_edges=lambda x: x.type() is Item.InputEdge)) > 1:
                 switch = {Item.RoleChainNode}
             for action in mainwindow.actionsSwitchOperator:
                 action.setVisible(action.data() in switch)
         return menu
 
-    def buildUnionNodeMenu(self, mainwindow, scene, node):
+    def buildUnionNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for union nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: UnionNode
         :rtype: QMenu
         """
-        menu = self.buildOperatorNodeMenu(mainwindow, scene, node)
+        menu = self.buildOperatorNodeMenu(mainwindow, diagram, node)
         if node.edges:
             for action in mainwindow.actionsSwitchOperator:
                 action.setVisible(action.data() in {Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode})
         return menu
 
-    def buildValueDomainNodeMenu(self, mainwindow, scene, node):
+    def buildValueDomainNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for value domain nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: ValueDomainNode
         :rtype: QMenu
         """
-        menu = self.buildGenericNodeMenu(mainwindow, scene, node)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeChangeBrush)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuChangeValueDomainDatatype)
+        menu = self.buildGenericNodeMenu(mainwindow, diagram, node)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetBrush)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetDatatype)
         menu.insertSeparator(mainwindow.actionOpenNodeProperties)
 
         # Switch the check matching the current datatype.
-        for action in mainwindow.actionsChangeValueDomainDatatype:
+        for action in mainwindow.actionsSetDatatype:
             action.setChecked(node.datatype == action.data())
 
         return menu
 
-    def buildValueRestrictionNodeMenu(self, mainwindow, scene, node):
+    def buildValueRestrictionNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for value restriction nodes.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: ValueRestrictionNode
         :rtype: QMenu
         """
-        menu = self.buildGenericNodeMenu(mainwindow, scene, node)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuNodeChangeBrush)
-        menu.insertAction(mainwindow.actionOpenNodeProperties, mainwindow.actionChangeValueRestriction)
+        menu = self.buildGenericNodeMenu(mainwindow, diagram, node)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetBrush)
+        menu.insertAction(mainwindow.actionOpenNodeProperties, mainwindow.actionSetValueRestriction)
 
         # Append label specific actions.
-        collection = self.buildNodeLabelSpecificActionSet(mainwindow, scene, node)
+        collection = self.buildNodeLabelSpecificActionSet(mainwindow, diagram, node)
         if collection:
             menu.insertSeparator(mainwindow.actionOpenNodeProperties)
             for action in collection:
@@ -602,90 +606,88 @@ class MenuFactory(QObject):
         menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         return menu
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   LABELS                                                                                                         #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   LABEL
+    #################################
 
     @staticmethod
-    def buildNodeLabelSpecificActionSet(mainwindow, scene, node):
+    def buildNodeLabelSpecificActionSet(mainwindow, diagram, node):
         """
-        Build and return a collection of actions for the given node label
+        Build and return a collection of actions for the given node label.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type node: AbstractNode
         :rtype: list
         """
         collection = []
         if node.label.movable and node.label.moved:
-            collection.append(mainwindow.actionResetTextPosition)
+            collection.append(mainwindow.actionRelocateLabel)
         return collection
 
     #############################################
     #   FACTORY
     #################################
 
-    def create(self, mainwindow, scene, item, pos=None):
+    def create(self, mainwindow, diagram, item, pos=None):
         """
         Build and return a QMenu instance according to the given parameters.
         :type mainwindow: MainWindow
-        :type scene: DiagramScene
+        :type diagram: Diagram
         :type item: AbstractItem
         :type pos: QPointF
         :rtype: QMenu
         """
         if not item:
-            return self.buildDiagramSceneMenu(mainwindow, scene)
+            return self.buildDiagramMenu(mainwindow, diagram)
 
         ## NODES
         if item.type() is Item.AttributeNode:
-            return self.buildAttributeNodeMenu(mainwindow, scene, item)
+            return self.buildAttributeNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.ComplementNode:
-            return self.buildComplementNodeMenu(mainwindow, scene, item)
+            return self.buildComplementNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.ConceptNode:
-            return self.buildConceptNodeMenu(mainwindow, scene, item)
+            return self.buildConceptNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.DatatypeRestrictionNode:
-            return self.buildDatatypeRestrictionNodeMenu(mainwindow, scene, item)
+            return self.buildDatatypeRestrictionNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.DisjointUnionNode:
-            return self.buildDisjointUnionNodeMenu(mainwindow, scene, item)
+            return self.buildDisjointUnionNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.DomainRestrictionNode:
-            return self.buildDomainRestrictionNodeMenu(mainwindow, scene, item)
+            return self.buildDomainRestrictionNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.EnumerationNode:
-            return self.buildEnumerationNodeMenu(mainwindow, scene, item)
+            return self.buildEnumerationNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.IndividualNode:
-            return self.buildIndividualNodeMenu(mainwindow, scene, item)
+            return self.buildIndividualNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.IntersectionNode:
-            return self.buildIntersectionNodeMenu(mainwindow, scene, item)
+            return self.buildIntersectionNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.PropertyAssertionNode:
-            return self.buildPropertyAssertionNodeMenu(mainwindow, scene, item)
+            return self.buildPropertyAssertionNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.RangeRestrictionNode:
-            return self.buildRangeRestrictionNodeMenu(mainwindow, scene, item)
+            return self.buildRangeRestrictionNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.RoleNode:
-            return self.buildRoleNodeMenu(mainwindow, scene, item)
+            return self.buildRoleNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.RoleInverseNode:
-            return self.buildRoleInverseNodeMenu(mainwindow, scene, item)
+            return self.buildRoleInverseNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.RoleChainNode:
-            return self.buildRoleChainNodeMenu(mainwindow, scene, item)
+            return self.buildRoleChainNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.UnionNode:
-            return self.buildUnionNodeMenu(mainwindow, scene, item)
+            return self.buildUnionNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.ValueDomainNode:
-            return self.buildValueDomainNodeMenu(mainwindow, scene, item)
+            return self.buildValueDomainNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.ValueRestrictionNode:
-            return self.buildValueRestrictionNodeMenu(mainwindow, scene, item)
+            return self.buildValueRestrictionNodeMenu(mainwindow, diagram, item)
 
         ## EDGES
         if item.type() is Item.InclusionEdge:
-            return self.buildInclusionEdgeMenu(mainwindow, scene, item, pos)
+            return self.buildInclusionEdgeMenu(mainwindow, diagram, item, pos)
         if item.type() is Item.InputEdge:
-            return self.buildInputEdgeMenu(mainwindow, scene, item, pos)
+            return self.buildInputEdgeMenu(mainwindow, diagram, item, pos)
         if item.type() is Item.MembershipEdge:
-            return self.buildMembershipEdgeMenu(mainwindow, scene, item, pos)
+            return self.buildMembershipEdgeMenu(mainwindow, diagram, item, pos)
 
         ## GENERIC
         if item.isNode():
-            return self.buildGenericNodeMenu(mainwindow, scene, item)
+            return self.buildGenericNodeMenu(mainwindow, diagram, item)
         if item.isEdge():
-            return self.buildGenericEdgeMenu(mainwindow, scene, item, pos)
+            return self.buildGenericEdgeMenu(mainwindow, diagram, item, pos)
 
         raise RuntimeError('could not create menu for {0}'.format(item))
