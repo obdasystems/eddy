@@ -150,17 +150,23 @@ background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
 QDockWidget QWidget {
 border: 0;
 }
+/**************************************************************************/
+/*                                PALETTE                                 */
+/**************************************************************************/
 QDockWidget Palette {
 background: #F0F0F0;
 }
 QDockWidget Palette QToolButton:checked {
 background: #4FC3F7;
 }
+/**************************************************************************/
+/*                              INFO WIDGET                               */
+/**************************************************************************/
 Info {
 background: #FFFFFF;
 }
 Info Header {
-background: #7d7c7b;
+background: #7D7C7B;
 padding-left: 4px;
 color: #FFFFFF;
 }
@@ -170,8 +176,8 @@ border-bottom: 1px solid #BABABA;
 padding-left: 4px;
 }
 Info Button,
-Info Int,
-Info Str,
+Info Integer,
+Info String,
 Info Select,
 Info Parent {
 background: #FEFFDC;
@@ -482,7 +488,7 @@ QStatusBar {
 background: #BBBBBB;
 }
 /**************************************************************************/
-/*                                  MISC                                  */
+/*                                 MISC                                   */
 /**************************************************************************/
 DiagramView {
 border-top: 1px solid #A9A9A9;

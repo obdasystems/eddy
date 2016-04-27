@@ -124,8 +124,11 @@ COMMAND_EDGE_SWAP_MULTI = 'swap {0} edges'
 COMMAND_EDGE_TOGGLE_COMPLETE = 'toggle {0} completness'
 COMMAND_EDGE_TOGGLE_COMPLETE_MULTI = 'toggle completness for {0} edges'
 COMMAND_ITEM_TRANSLATE = 'move {0} item{1}'
+COMMAND_ITEM_ADD = 'add {0}'
+COMMAND_ITEM_ADD_MULTI = 'add {0} items'
 COMMAND_ITEM_REMOVE = 'remove {0}'
 COMMAND_ITEM_REMOVE_MULTI = 'remove {0} items'
+COMMAND_ITEM_SET_PROPERTY = '{0}set {1} {2} property'
 COMMAND_NODE_ADD = 'add {0}'
 COMMAND_NODE_CHANGE_INPUTS_ORDER = 'change {0} inputs order'
 COMMAND_NODE_CHANGE_META = 'change {0} metadata'
@@ -134,9 +137,12 @@ COMMAND_NODE_MOVE = 'move {0}'
 COMMAND_NODE_MOVE_LABEL = 'move {0} label'
 COMMAND_NODE_MOVE_MULTI = 'move {0} nodes'
 COMMAND_NODE_OPERATOR_SWITCH = 'switch {0} to {1}'
+COMMAND_NODE_REFACTOR_NAME = 'change predicate "{0}" to "{1}"'
 COMMAND_NODE_RESIZE = 'resize {0}'
 COMMAND_NODE_SET_BRUSH = 'set {0} brush on {1} node{2}'
 COMMAND_NODE_SET_DEPTH = 'change {0} depth'
+COMMAND_NODE_SET_VALUE = 'change value to {0}'
+COMMAND_NODE_SET_VALUE_RESTRICTION = 'change value restriction to {0}'
 
 #############################################
 # SYNTAX VALIDATION
@@ -170,7 +176,6 @@ SYNTAX_INPUT_TOO_MANY_OPERANDS = 'Too many inputs to {0}'
 SYNTAX_MEMBERSHIP_INVALID_ASSERTION_TARGET = 'Invalid target for {0} assertion: {1}'
 SYNTAX_MEMBERSHIP_INVALID_SOURCE = 'Invalid source for membership edge: {0}'
 SYNTAX_MEMBERSHIP_INVALID_TARGET = 'Invalid target for membership edge: {0}'
-
 
 #############################################
 # DOCK WIDGETS

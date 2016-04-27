@@ -43,23 +43,27 @@ class CommandItemsMultiAdd(QUndoCommand):
     """
     This command is used to add a collection of items to a diagram.
     """
-    def __init__(self, diagram, collection):
+    def __init__(self, diagram, items):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type items: T <= tuple|list|set
         """
         self.diagram = diagram
-        self.collection = collection
+        self.items = items
         self.selected = diagram.selectedItems()
 
-        if len(collection) == 1:
-            super().__init__('add {}'.format(first(collection).name))
+        if len(items) == 1:
+            name = _('COMMAND_ITEM_ADD', first(items).name)
         else:
-            super().__init__('add {} items'.format(len(collection)))
+            name = _('COMMAND_ITEM_ADD_MULTI', len(items))
+
+        super().__init__(name)
 
     def redo(self):
         """redo the command"""
         self.diagram.clearSelection()
-        for item in self.collection:
+        for item in self.items:
             self.diagram.addItem(item)
             self.diagram.sgnItemAdded.emit(self.diagram, item)
             item.setSelected(True)
@@ -69,7 +73,7 @@ class CommandItemsMultiAdd(QUndoCommand):
     def undo(self):
         """undo the command"""
         self.diagram.clearSelection()
-        for item in self.collection:
+        for item in self.items:
             self.diagram.removeItem(item)
             self.diagram.sgnItemRemoved.emit(self.diagram, item)
         for item in self.selected:
@@ -85,6 +89,8 @@ class CommandItemsRemove(QUndoCommand):
     def __init__(self, diagram, items):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type items: T <= tuple|list|set
         """
         self.diagram = diagram
         self.nodes = {item for item in items if item.isNode()}
@@ -105,9 +111,11 @@ class CommandItemsRemove(QUndoCommand):
                     self.inputs[node]['redo'].remove(edge.id)
 
         if len(items) == 1:
-            super().__init__(_('COMMAND_ITEM_REMOVE', first(items).name))
+            name = _('COMMAND_ITEM_REMOVE', first(items).name)
         else:
-            super().__init__(_('COMMAND_ITEM_REMOVE_MULTI', len(items)))
+            name = _('COMMAND_ITEM_REMOVE_MULTI', len(items))
+
+        super().__init__(name)
 
     def redo(self):
         """redo the command"""
@@ -157,6 +165,11 @@ class CommandComposeAxiom(QUndoCommand):
     def __init__(self, name, diagram, source, nodes, edges):
         """
         Initialize the command.
+        :type name: str
+        :type diagram: Diagram
+        :type source: AbstractNode
+        :type nodes: T <= tuple|list|set
+        :type edges: T <= tuple|list|set
         """
         super().__init__(name)
         self.diagram = diagram
@@ -196,25 +209,24 @@ class CommandRefactor(QUndoCommand):
     """
     This command is used to perform refactoring by applying multiple QUndoCommand.
     """
-    def __init__(self, name, diagram, commands):
+    def __init__(self, name, commands):
         """
         Initialize the command.
+        :type name: str
+        :type commands: T <= tuple|list|set
         """
         super().__init__(name)
-        self.diagram = diagram
         self.commands = commands
 
     def redo(self):
         """redo the command"""
         for command in self.commands:
             command.redo()
-        self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         for command in self.commands:
             command.undo()
-        self.diagram.sgnUpdated.emit()
 
 
 class CommandItemsTranslate(QUndoCommand):
@@ -224,6 +236,11 @@ class CommandItemsTranslate(QUndoCommand):
     def __init__(self, diagram, items, moveX, moveY, name=None):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type items: T <= tuple|list|set
+        :type moveX: float
+        :type moveY: float
+        :type name: str
         """
         super().__init__(name or _('COMMAND_ITEM_TRANSLATE', len(items), 's' if len(items) != 1 else ''))
         self.diagram = diagram
@@ -258,13 +275,17 @@ class CommandSetProperty(QUndoCommand):
     """
     This command is used to set properties of graphol items.
     """
-    def __init__(self, diagram, node, collection, name):
+    def __init__(self, diagram, item, collection, name):
         """
         Initialize the command.
+        :type diagram: Diagram
+        :type item: AbstractItem
+        :type collection: T <= tuple|list|set|dict
+        :type name: str
         """
-        if not isinstance(collection, (list, tuple)):
+        if not isinstance(collection, (list, tuple, set)):
             collection = [collection]
-        self.node = node
+        self.item = item
         self.diagram = diagram
         self.collection = collection
         super().__init__(name)
@@ -272,11 +293,11 @@ class CommandSetProperty(QUndoCommand):
     def redo(self):
         """redo the command"""
         for data in self.collection:
-            setattr(self.node, data['attribute'], data['redo'])
+            setattr(self.item, data['attribute'], data['redo'])
         self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         for data in self.collection:
-            setattr(self.node, data['attribute'], data['undo'])
+            setattr(self.item, data['attribute'], data['undo'])
         self.diagram.sgnUpdated.emit()

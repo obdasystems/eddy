@@ -479,7 +479,7 @@ class CommandNodeSetBrush(QUndoCommand):
         """
         Initialize the command.
         :type diagram: Diagram
-        :type nodes: set
+        :type nodes: T <= tuple|list|set
         :type brush: QBrush
         """
         self.nodes = nodes

@@ -85,7 +85,7 @@ class AttributeNode(AbstractNode):
         """
         meta = self.project.meta(self.type(), self.text())
         meta.functional = bool(value)
-        self.project.metaAdd(self.type(), self.text(), meta)
+        self.project.addMeta(self.type(), self.text(), meta)
 
     @property
     def identity(self):

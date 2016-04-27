@@ -82,9 +82,9 @@ from eddy.ui.properties.factory import PropertyFactory
 from eddy.ui.toolbar import Zoom
 from eddy.ui.widgets.explorer import OntologyExplorer
 from eddy.ui.widgets.explorer import ProjectExplorer
+from eddy.ui.widgets.info import Info
 from eddy.ui.widgets.mdi import MdiArea
 from eddy.ui.widgets.mdi import MdiSubWindow
-#from eddy.ui.widgets.info import Info
 from eddy.ui.widgets.overview import Overview
 from eddy.ui.widgets.palette import Palette
 from eddy.ui.widgets.view import DiagramView
@@ -148,7 +148,7 @@ class MainWindow(QMainWindow):
         self.propertyFactory = PropertyFactory(self)
         self.undoGroup = QUndoGroup(self)
 
-        #self.info = Info(self)
+        self.info = Info(self)
         self.mdi = MdiArea(self)
         self.ontologyExplorer = OntologyExplorer(self)
         self.overview = Overview(self)
@@ -156,7 +156,7 @@ class MainWindow(QMainWindow):
         self.projectExplorer = ProjectExplorer(self)
         self.zoom = Zoom(self.toolbar)
 
-        #self.dockInfo = QDockWidget(_('DOCK_INFO'), self, Qt.Widget)
+        self.dockInfo = QDockWidget(_('DOCK_INFO'), self, Qt.Widget)
         self.dockOntologyExplorer = QDockWidget(_('DOCK_ONTOLOGY_EXPLORER'), self, Qt.Widget)
         self.dockOverview = QDockWidget(_('DOCK_OVERVIEW'), self, Qt.Widget)
         self.dockPalette = QDockWidget(_('DOCK_PALETTE'), self, Qt.Widget)
@@ -274,7 +274,7 @@ class MainWindow(QMainWindow):
         self.setAcceptDrops(True)
         self.setCentralWidget(self.mdi)
         self.setDockOptions(MainWindow.AnimatedDocks|MainWindow.AllowTabbedDocks)
-        self.setMinimumSize(1140, 600)
+        self.setMinimumSize(1140, 720)
         self.setWindowIcon(QIcon(':/images/eddy'))
         self.setWindowTitle(None)
 
@@ -599,11 +599,11 @@ class MainWindow(QMainWindow):
         self.dockOntologyExplorer.setObjectName('ontologyExplorer')
         self.dockOntologyExplorer.setWidget(self.ontologyExplorer)
 
-        # self.dockInfo.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        # self.dockInfo.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
-        # self.dockInfo.setFixedWidth(self.info.width())
-        # self.dockInfo.setObjectName('info')
-        # self.dockInfo.setWidget(self.info)
+        self.dockInfo.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        self.dockInfo.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
+        self.dockInfo.setFixedWidth(self.info.width())
+        self.dockInfo.setObjectName('info')
+        self.dockInfo.setWidget(self.info)
 
         self.dockOverview.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockOverview.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
@@ -625,8 +625,8 @@ class MainWindow(QMainWindow):
 
         self.addDockWidget(Qt.LeftDockWidgetArea, self.dockPalette)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.dockProjectExplorer)
-        #self.addDockWidget(Qt.LeftDockWidgetArea, self.dockInfo)
         self.addDockWidget(Qt.RightDockWidgetArea, self.dockOverview)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.dockInfo)
         self.addDockWidget(Qt.RightDockWidgetArea, self.dockOntologyExplorer)
 
         self.ontologyExplorer.browse(self.project)
@@ -1320,7 +1320,7 @@ class MainWindow(QMainWindow):
             color = action.data()
             brush = QBrush(QColor(color.value))
             supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
-            selected = [x for x in diagram.selectedNodes() if x.type() in supported and x.brush != brush]
+            selected = {x for x in diagram.selectedNodes() if x.type() in supported and x.brush != brush}
             if selected:
                 diagram.undoStack.push(CommandNodeSetBrush(diagram, selected, brush))
 
@@ -1629,7 +1629,7 @@ class MainWindow(QMainWindow):
             view = subwindow.view
             diagram = subwindow.diagram
             diagram.undoStack.setActive()
-            #self.info.browse(diagram)
+            self.info.browse(diagram)
             self.overview.browse(view)
             disconnect(self.zoom.sgnChanged)
             disconnect(view.sgnScaled)
@@ -1639,7 +1639,7 @@ class MainWindow(QMainWindow):
             self.setWindowTitle(diagram.name)
         else:
             if not self.mdi.subWindowList():
-                #self.info.reset()
+                self.info.reset()
                 self.overview.reset()
                 self.zoom.zoomReset()
                 self.setWindowTitle(None)

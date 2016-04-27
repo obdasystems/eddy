@@ -87,7 +87,7 @@ class RoleNode(AbstractResizableNode):
         Returns True if the predicate represented by this node is asymmetric, False otherwise.
         :rtype: bool
         """
-        meta = self.project.meta(self.type, self.text())
+        meta = self.project.meta(self.type(), self.text())
         return meta.asymmetric
 
     @asymmetric.setter
@@ -96,9 +96,9 @@ class RoleNode(AbstractResizableNode):
         Set the asymmetric property for the predicate represented by this node.
         :type value: bool
         """
-        meta = self.project.meta(self.type, self.text())
+        meta = self.project.meta(self.type(), self.text())
         meta.asymmetric = bool(value)
-        self.project.metaAdd(self.type(), self.text(), meta)
+        self.project.addMeta(self.type(), self.text(), meta)
 
     @property
     def functional(self):
@@ -117,7 +117,7 @@ class RoleNode(AbstractResizableNode):
         """
         meta = self.project.meta(self.type(), self.text())
         meta.functional = bool(value)
-        self.project.metaAdd(self.type(), self.text(), meta)
+        self.project.addMeta(self.type(), self.text(), meta)
 
     @property
     def identity(self):
@@ -152,7 +152,7 @@ class RoleNode(AbstractResizableNode):
         """
         meta = self.project.meta(self.type(), self.text())
         meta.inverseFunctional = bool(value)
-        self.project.metaAdd(self.type(), self.text(), meta)
+        self.project.addMeta(self.type(), self.text(), meta)
     
     @property
     def irreflexive(self):
@@ -160,7 +160,7 @@ class RoleNode(AbstractResizableNode):
         Returns True if the predicate represented by this node is irreflexive, False otherwise.
         :rtype: bool
         """
-        meta = self.project.meta(self.type, self.text())
+        meta = self.project.meta(self.type(), self.text())
         return meta.irreflexive
 
     @irreflexive.setter
@@ -169,9 +169,9 @@ class RoleNode(AbstractResizableNode):
         Set the irreflexive property for the predicate represented by this node.
         :type value: bool
         """
-        meta = self.project.meta(self.type, self.text())
+        meta = self.project.meta(self.type(), self.text())
         meta.irreflexive = bool(value)
-        self.project.metaAdd(self.type(), self.text(), meta)
+        self.project.addMeta(self.type(), self.text(), meta)
 
     @property
     def reflexive(self):
@@ -179,7 +179,7 @@ class RoleNode(AbstractResizableNode):
         Returns True if the predicate represented by this node is reflexive, False otherwise.
         :rtype: bool
         """
-        meta = self.project.meta(self.type, self.text())
+        meta = self.project.meta(self.type(), self.text())
         return meta.reflexive
 
     @reflexive.setter
@@ -188,9 +188,9 @@ class RoleNode(AbstractResizableNode):
         Set the reflexive property for the predicate represented by this node.
         :type value: bool
         """
-        meta = self.project.meta(self.type, self.text())
+        meta = self.project.meta(self.type(), self.text())
         meta.reflexive = bool(value)
-        self.project.metaAdd(self.type(), self.text(), meta)
+        self.project.addMeta(self.type(), self.text(), meta)
 
     @property
     def special(self):
@@ -206,7 +206,7 @@ class RoleNode(AbstractResizableNode):
         Returns True if the predicate represented by this node is symmetric, False otherwise.
         :rtype: bool
         """
-        meta = self.project.meta(self.type, self.text())
+        meta = self.project.meta(self.type(), self.text())
         return meta.symmetric
 
     @symmetric.setter
@@ -215,9 +215,9 @@ class RoleNode(AbstractResizableNode):
         Set the symmetric property for the predicate represented by this node.
         :type value: bool
         """
-        meta = self.project.meta(self.type, self.text())
+        meta = self.project.meta(self.type(), self.text())
         meta.symmetric = bool(value)
-        self.project.metaAdd(self.type(), self.text(), meta)
+        self.project.addMeta(self.type(), self.text(), meta)
 
     @property
     def transitive(self):
@@ -225,7 +225,7 @@ class RoleNode(AbstractResizableNode):
         Returns True if the transitive represented by this node is symmetric, False otherwise.
         :rtype: bool
         """
-        meta = self.project.meta(self.type, self.text())
+        meta = self.project.meta(self.type(), self.text())
         return meta.transitive
 
     @transitive.setter
@@ -234,9 +234,9 @@ class RoleNode(AbstractResizableNode):
         Set the transitive property for the predicate represented by this node.
         :type value: bool
         """
-        meta = self.project.meta(self.type, self.text())
+        meta = self.project.meta(self.type(), self.text())
         meta.transitive = bool(value)
-        self.project.metaAdd(self.type(), self.text(), meta)
+        self.project.addMeta(self.type(), self.text(), meta)
 
     #############################################
     #   INTERFACE

@@ -48,6 +48,8 @@ from eddy.core.functions.signals import connect, disconnect
 from eddy.core.qt import ColoredIcon, Font, StackedWidget
 from eddy.core.regex import RE_CAMEL_SPACE
 
+from eddy.lang import gettext as _
+
 from eddy.ui.fields import IntegerField, StringField, CheckBox, ComboBox
 
 
@@ -57,13 +59,13 @@ class Info(QScrollArea):
     """
     Width = 216
 
-    def __init__(self, mainwindow):
+    def __init__(self, parent):
         """
         Initialize the info box.
-        :type mainwindow: MainWindow
+        :type parent: MainWindow
         """
-        super().__init__(mainwindow)
-        self.scene = None
+        super().__init__(parent)
+        self.diagram = None
         self.setContentsMargins(0, 0, 0, 0)
         self.setFixedWidth(Info.Width)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -71,17 +73,17 @@ class Info(QScrollArea):
         self.stacked = StackedWidget(self)
         self.stacked.setContentsMargins(0, 0, 0, 0)
         self.infoEmpty = QWidget(self.stacked)
-        self.infoDiagram = DiagramInfo(mainwindow, self.stacked)
-        self.infoEdge = EdgeInfo(mainwindow, self.stacked)
-        self.infoInclusionEdge = InclusionEdgeInfo(mainwindow, self.stacked)
-        self.infoNode = NodeInfo(mainwindow, self.stacked)
-        self.infoPredicateNode = PredicateNodeInfo(mainwindow, self.stacked)
-        self.infoEditableNode = EditableNodeInfo(mainwindow, self.stacked)
-        self.infoAttributeNode = AttributeNodeInfo(mainwindow, self.stacked)
-        self.infoRoleNode = RoleNodeInfo(mainwindow, self.stacked)
-        self.infoValueNode = ValueNodeInfo(mainwindow, self.stacked)
-        self.infoValueDomainNode = ValueDomainNodeInfo(mainwindow, self.stacked)
-        self.infoValueRestrictionNode = ValueRestrictionNodeInfo(mainwindow, self.stacked)
+        self.infoDiagram = DiagramInfo(parent, self.stacked)
+        self.infoEdge = EdgeInfo(parent, self.stacked)
+        self.infoInclusionEdge = InclusionEdgeInfo(parent, self.stacked)
+        self.infoNode = NodeInfo(parent, self.stacked)
+        self.infoPredicateNode = PredicateNodeInfo(parent, self.stacked)
+        self.infoEditableNode = EditableNodeInfo(parent, self.stacked)
+        self.infoAttributeNode = AttributeNodeInfo(parent, self.stacked)
+        self.infoRoleNode = RoleNodeInfo(parent, self.stacked)
+        self.infoValueNode = ValueNodeInfo(parent, self.stacked)
+        self.infoValueDomainNode = ValueDomainNodeInfo(parent, self.stacked)
+        self.infoValueRestrictionNode = ValueRestrictionNodeInfo(parent, self.stacked)
         self.stacked.addWidget(self.infoEmpty)
         self.stacked.addWidget(self.infoDiagram)
         self.stacked.addWidget(self.infoEdge)
@@ -94,17 +96,16 @@ class Info(QScrollArea):
         self.stacked.addWidget(self.infoValueNode)
         self.stacked.addWidget(self.infoValueDomainNode)
         self.stacked.addWidget(self.infoValueRestrictionNode)
+        self.setMinimumHeight(120)
         self.setWidget(self.stacked)
         self.setWidgetResizable(True)
         scrollbar = self.verticalScrollBar()
         scrollbar.installEventFilter(self)
-        self.stack()
+        self.doStack()
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   EVENTS                                                                                                         #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   EVENTS
+    #################################
 
     def eventFilter(self, source, event):
         """
@@ -123,39 +124,37 @@ class Info(QScrollArea):
                 self.stacked.setFixedWidth(Info.Width)
         return super().eventFilter(source, event)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SLOTS                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   SLOTS
+    #################################
 
     @pyqtSlot()
-    def stack(self):
+    def doStack(self):
         """
         Set the current stacked widget.
         """
-        if self.scene:
-            selected = self.scene.selectedItems()
+        if self.diagram:
+            selected = self.diagram.selectedItems()
             if not selected or len(selected) > 1:
                 show = self.infoDiagram
-                show.updateData(self.scene)
+                show.updateData(self.diagram)
             else:
                 item = first(selected)
-                if item.node:
-                    if item.predicate:
-                        if item.item is Item.ValueDomainNode:
+                if item.isNode():
+                    if item.isPredicate():
+                        if item.type() is Item.ValueDomainNode:
                             show = self.infoValueDomainNode
                             show.updateData(item)
-                        elif item.item is Item.ValueRestrictionNode:
+                        elif item.type() is Item.ValueRestrictionNode:
                             show = self.infoValueRestrictionNode
                             show.updateData(item)
-                        elif item.item is Item.RoleNode:
+                        elif item.type() is Item.RoleNode:
                             show = self.infoRoleNode
                             show.updateData(item)
-                        elif item.item is Item.AttributeNode:
+                        elif item.type() is Item.AttributeNode:
                             show = self.infoAttributeNode
                             show.updateData(item)
-                        elif item.item is Item.IndividualNode and item.identity is Identity.Value:
+                        elif item.type() is Item.IndividualNode and item.identity is Identity.Value:
                             show = self.infoValueNode
                             show.updateData(item)
                         elif item.label.editable:
@@ -168,7 +167,7 @@ class Info(QScrollArea):
                         show = self.infoNode
                         show.updateData(item)
                 else:
-                    if item.item is Item.InclusionEdge:
+                    if item.type() is Item.InclusionEdge:
                         show = self.infoInclusionEdge
                         show.updateData(item)
                     else:
@@ -184,51 +183,47 @@ class Info(QScrollArea):
             scrollbar = self.verticalScrollBar()
             scrollbar.setValue(0)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   INTERFACE                                                                                                      #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   INTERFACE
+    #################################
 
-    def browse(self, scene):
+    def browse(self, diagram):
         """
-        Set the widget to inspect the given scene.
-        :type scene: DiagramScene
+        Set the widget to inspect the given diagram.
+        :type diagram: Diagram
         """
         self.reset()
-        self.scene = scene
 
-        if self.scene:
-            connect(scene.selectionChanged, self.stack)
-            connect(scene.sgnItemAdded, self.stack)
-            connect(scene.sgnItemRemoved, self.stack)
-            connect(scene.sgnUpdated, self.stack)
-            self.stack()
+        if diagram:
+            self.diagram = diagram
+            connect(self.diagram.selectionChanged, self.doStack)
+            connect(self.diagram.sgnItemAdded, self.doStack)
+            connect(self.diagram.sgnItemRemoved, self.doStack)
+            connect(self.diagram.sgnUpdated, self.doStack)
+            self.doStack()
 
     def reset(self):
         """
-        Clear the widget from inspecting the current view.
+        Clear the widget from inspecting the current diagram.
         """
-        if self.scene:
+        if self.diagram:
 
             try:
-                disconnect(self.scene.selectionChanged, self.stack)
-                disconnect(self.scene.sgnItemAdded, self.stack)
-                disconnect(self.scene.sgnItemRemoved, self.stack)
-                disconnect(self.scene.sgnUpdated, self.stack)
+                disconnect(self.diagram.selectionChanged, self.doStack)
+                disconnect(self.diagram.sgnItemAdded, self.doStack)
+                disconnect(self.diagram.sgnItemRemoved, self.doStack)
+                disconnect(self.diagram.sgnUpdated, self.doStack)
             except RuntimeError:
                 pass
             finally:
-                self.scene = None
+                self.diagram = None
 
-        self.stack()
+        self.doStack()
 
 
-########################################################################################################################
-#                                                                                                                      #
-#   COMPONENTS                                                                                                         #
-#                                                                                                                      #
-########################################################################################################################
+#############################################
+#   COMPONENTS
+#################################
 
 
 class Header(QLabel):
@@ -265,10 +260,9 @@ class Button(QPushButton):
         Initialize the button.
         """
         super().__init__(*args)
-        self.setFont(Font('Arial', 12))
 
 
-class Int(IntegerField):
+class Integer(IntegerField):
     """
     This class implements the integer value of an info field.
     """
@@ -280,7 +274,7 @@ class Int(IntegerField):
         self.setFixedHeight(20)
 
 
-class Str(StringField):
+class String(StringField):
     """
     This class implements the string value of an info field.
     """
@@ -301,7 +295,6 @@ class Select(ComboBox):
         Initialize the field.
         """
         super().__init__(*args)
-        self.setFont(Font('Arial', 12))
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         self.setFocusPolicy(Qt.StrongFocus)
         self.setScrollEnabled(False)
@@ -330,11 +323,9 @@ class Parent(QWidget):
         style.drawPrimitive(QStyle.PE_Widget, option, painter, self)
 
 
-########################################################################################################################
-#                                                                                                                      #
-#   INFO WIDGETS                                                                                                       #
-#                                                                                                                      #
-########################################################################################################################
+#############################################
+#   INFO WIDGETS
+#################################
 
 
 class AbstractInfo(QWidget):
@@ -353,6 +344,7 @@ class AbstractInfo(QWidget):
         :type parent: QWidget
         """
         super().__init__(parent)
+        self.setContentsMargins(0, 0, 0, 0)
         self.setFixedWidth(Info.Width)
         self.mainwindow = mainwindow
 
@@ -376,27 +368,40 @@ class DiagramInfo(AbstractInfo):
         """
         super().__init__(mainwindow, parent)
 
+        arial12r = Font('Arial', 12)
+
         self.conceptsKey = Key('Concepts', self)
-        self.conceptsField = Int(self)
+        self.conceptsKey.setFont(arial12r)
+        self.conceptsField = Integer(self)
+        self.conceptsField.setFont(arial12r)
         self.conceptsField.setReadOnly(True)
 
         self.rolesKey = Key('Roles', self)
-        self.rolesField = Int(self)
+        self.rolesKey.setFont(arial12r)
+        self.rolesField = Integer(self)
+        self.rolesField.setFont(arial12r)
         self.rolesField.setReadOnly(True)
 
         self.attributesKey = Key('Attributes', self)
-        self.attributesField = Int(self)
+        self.attributesKey.setFont(arial12r)
+        self.attributesField = Integer(self)
+        self.attributesField.setFont(arial12r)
         self.attributesField.setReadOnly(True)
 
         self.inclusionsKey = Key('Inclusions', self)
-        self.inclusionsField = Int(self)
+        self.inclusionsKey.setFont(arial12r)
+        self.inclusionsField = Integer(self)
+        self.inclusionsField.setFont(arial12r)
         self.inclusionsField.setReadOnly(True)
 
         self.membershipKey = Key('Membership', self)
-        self.membershipField = Int(self)
+        self.membershipKey.setFont(arial12r)
+        self.membershipField = Integer(self)
+        self.membershipField.setFont(arial12r)
         self.membershipField.setReadOnly(True)
 
         self.atomicPredHeader = Header('Atomic predicates', self)
+        self.atomicPredHeader.setFont(arial12r)
 
         self.atomicPredLayout = QFormLayout()
         self.atomicPredLayout.setSpacing(0)
@@ -405,6 +410,7 @@ class DiagramInfo(AbstractInfo):
         self.atomicPredLayout.addRow(self.attributesKey, self.attributesField)
 
         self.assertionsHeader = Header('Assertions', self)
+        self.assertionsHeader.setFont(arial12r)
 
         self.assertionsLayout = QFormLayout()
         self.assertionsLayout.setSpacing(0)
@@ -420,16 +426,17 @@ class DiagramInfo(AbstractInfo):
         self.mainLayout.addWidget(self.assertionsHeader)
         self.mainLayout.addLayout(self.assertionsLayout)
 
-    def updateData(self, scene):
+    def updateData(self, diagram):
         """
         Fetch new information and fill the widget with data.
-        :type scene: DiagramScene
+        :type diagram: Diagram
         """
-        self.attributesField.setValue(scene.index.predicatesNum(Item.AttributeNode))
-        self.conceptsField.setValue(scene.index.predicatesNum(Item.ConceptNode))
-        self.rolesField.setValue(scene.index.predicatesNum(Item.RoleNode))
-        self.inclusionsField.setValue(scene.index.itemNum(Item.InclusionEdge))
-        self.membershipField.setValue(scene.index.itemNum(Item.MembershipEdge))
+        count = diagram.project.count
+        self.attributesField.setValue(count(predicate=Item.AttributeNode))
+        self.conceptsField.setValue(count(predicate=Item.ConceptNode))
+        self.rolesField.setValue(count(predicate=Item.RoleNode))
+        self.inclusionsField.setValue(count(item=Item.InclusionEdge))
+        self.membershipField.setValue(count(item=Item.MembershipEdge))
 
 
 class EdgeInfo(AbstractInfo):
@@ -444,18 +451,27 @@ class EdgeInfo(AbstractInfo):
         """
         super().__init__(mainwindow, parent)
 
+        arial12r = Font('Arial', 12)
+
         self.h1 = Header('General', self)
+        self.h1.setFont(arial12r)
 
         self.typeKey = Key('Type', self)
-        self.typeField = Str(self)
+        self.typeKey.setFont(arial12r)
+        self.typeField = String(self)
+        self.typeField.setFont(arial12r)
         self.typeField.setReadOnly(True)
 
         self.sourceKey = Key('Source', self)
-        self.sourceField = Str(self)
+        self.sourceKey.setFont(arial12r)
+        self.sourceField = String(self)
+        self.sourceField.setFont(arial12r)
         self.sourceField.setReadOnly(True)
 
         self.targetKey = Key('Target', self)
-        self.targetField = Str(self)
+        self.targetKey.setFont(arial12r)
+        self.targetField = String(self)
+        self.targetField.setFont(arial12r)
         self.targetField.setReadOnly(True)
 
         self.generalLayout = QFormLayout()
@@ -495,18 +511,22 @@ class InclusionEdgeInfo(EdgeInfo):
         """
         super().__init__(mainwindow, parent)
 
+        arial12r = Font('Arial', 12)
+
         self.completeKey = Key('Complete', self)
+        self.completeKey.setFont(arial12r)
         parent = Parent(self)
         self.completeBox = CheckBox(parent)
+        self.completeBox.setFont(arial12r)
         self.completeBox.setCheckable(True)
-        connect(self.completeBox.clicked, self.mainwindow.toggleEdgeComplete)
+        connect(self.completeBox.clicked, self.mainwindow.doToggleEdgeComplete)
 
         self.generalLayout.addRow(self.completeKey, parent)
 
     def updateData(self, edge):
         """
         Fetch new information and fill the widget with data.
-        :type edge: AbstractEdge
+        :type edge: InclusionEdge
         """
         super().updateData(edge)
         self.completeBox.setChecked(edge.complete)
@@ -524,17 +544,24 @@ class NodeInfo(AbstractInfo):
         """
         super().__init__(mainwindow, parent)
 
+        arial12r = Font('Arial', 12)
+
         self.node = None
 
         self.idKey = Key('ID', self)
-        self.idField = Str(self)
+        self.idKey.setFont(arial12r)
+        self.idField = String(self)
+        self.idField.setFont(arial12r)
         self.idField.setReadOnly(True)
 
         self.identityKey = Key('Identity', self)
-        self.identityField = Str(self)
+        self.identityKey.setFont(arial12r)
+        self.identityField = String(self)
+        self.identityField.setFont(arial12r)
         self.identityField.setReadOnly(True)
 
         self.nodePropHeader = Header('Node properties', self)
+        self.nodePropHeader.setFont(arial12r)
         self.nodePropLayout = QFormLayout()
         self.nodePropLayout.setSpacing(0)
         self.nodePropLayout.addRow(self.idKey, self.idField)
@@ -567,11 +594,13 @@ class PredicateNodeInfo(NodeInfo):
         """
         super().__init__(mainwindow, parent)
 
+        arial12r = Font('Arial', 12)
+
         self.brushKey = Key('Color', self)
+        self.brushKey.setFont(arial12r)
         self.brushMenu = QMenu(self)
-        for action in self.mainwindow.actionsChangeNodeBrush:
-            self.brushMenu.addAction(action)
         self.brushButton = Button()
+        self.brushButton.setFont(arial12r)
         self.brushButton.setMenu(self.brushMenu)
         self.brushButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
@@ -583,7 +612,11 @@ class PredicateNodeInfo(NodeInfo):
         :type node: AbstractNode
         """
         super().updateData(node)
-        for action in self.mainwindow.actionsChangeNodeBrush:
+        # CONFIGURE MENU
+        if self.brushMenu.isEmpty():
+            self.brushMenu.addActions(self.mainwindow.actionsSetBrush)
+        # SELECT CURRENT BRUSHu
+        for action in self.mainwindow.actionsSetBrush:
             color = action.data()
             brush = QBrush(QColor(color.value))
             if node.brush == brush:
@@ -602,17 +635,24 @@ class EditableNodeInfo(PredicateNodeInfo):
         """
         super().__init__(mainwindow, parent)
 
+        arial12r = Font('Arial', 12)
+
         self.textKey = Key('Label', self)
-        self.textField = Str(self)
+        self.textKey.setFont(arial12r)
+        self.textField = String(self)
+        self.textField.setFont(arial12r)
         self.textField.setReadOnly(False)
         connect(self.textField.editingFinished, self.editingFinished)
 
         self.nameKey = Key('Name', self)
-        self.nameField = Str(self)
+        self.nameKey.setFont(arial12r)
+        self.nameField = String(self)
+        self.nameField.setFont(arial12r)
         self.nameField.setReadOnly(False)
         connect(self.nameField.editingFinished, self.editingFinished)
 
         self.predPropHeader = Header('Predicate properties', self)
+        self.nodePropHeader.setFont(arial12r)
         self.predPropLayout = QFormLayout()
         self.predPropLayout.setSpacing(0)
 
@@ -625,28 +665,26 @@ class EditableNodeInfo(PredicateNodeInfo):
     @pyqtSlot()
     def editingFinished(self):
         """
-        Executed when the finish in editing the predicate name of the node label
+        Executed whenever we finish to edit the predicate/node name.
         """
         if self.node:
 
             try:
-                node = self.node
                 sender = self.sender()
+                node = self.node
                 data = sender.value()
                 data = data if not isEmpty(data) else node.label.template
                 if data != node.text():
-                    scene = node.scene()
+                    diagram = node.diagram
                     if sender is self.nameField:
-                        commands = []
-                        for n in scene.index.predicates(node.item, node.text()):
-                            commands.append(CommandNodeLabelChange(scene, n, n.text(), data))
-                        name = 'change predicate "{}" name to "{}"'.format(node.text(), data)
-                        scene.undoStack.push(CommandRefactor(name, scene, commands))
+                        cmds = []
+                        for n in diagram.project.predicates(node.item, node.text()):
+                            cmds.append(CommandNodeLabelChange(n.diagram, n, n.text(), data))
+                        diagram.undoStack.push(CommandRefactor(_('COMMAND_NODE_REFACTOR_NAME', node.text(), data), cmds))
                     else:
-                        scene.undoStack.push(CommandNodeLabelChange(scene, node, node.text(), data))
+                        diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data))
             except RuntimeError:
                 pass
-
 
     def updateData(self, node):
         """
@@ -654,8 +692,8 @@ class EditableNodeInfo(PredicateNodeInfo):
         :type node: AbstractNode
         """
         super().updateData(node)
-        self.textField.setValue(node.text())
         self.nameField.setValue(node.text())
+        self.textField.setValue(node.text())
 
 
 class AttributeNodeInfo(EditableNodeInfo):
@@ -668,10 +706,14 @@ class AttributeNodeInfo(EditableNodeInfo):
         """
         super().__init__(mainwindow, parent)
 
+        arial12r = Font('Arial', 12)
+
         self.functKey = Key('Funct.', self)
+        self.functKey.setFont(arial12r)
         functParent = Parent(self)
         self.functBox = CheckBox(functParent)
         self.functBox.setCheckable(True)
+        self.functBox.setFont(arial12r)
         self.functBox.setProperty('attribute', 'functional')
         connect(self.functBox.clicked, self.flagChanged)
 
@@ -683,13 +725,13 @@ class AttributeNodeInfo(EditableNodeInfo):
         Executed whenever one of the property fields changes.
         """
         node = self.node
-        scene = node.scene()
         sender = self.sender()
         checked = sender.isChecked()
+        diagram = node.diagram
         attribute = sender.property('attribute')
-        name = '{}set {} {} property'.format('un' if checked else '', node.shortname, attribute)
+        name = _('COMMAND_ITEM_SET_PROPERTY', 'un' if checked else '', node.shortname, attribute)
         data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
-        scene.undoStack.push(CommandSetProperty(scene, node, data, name))
+        diagram.undoStack.push(CommandSetProperty(diagram, node, data, name))
 
     def updateData(self, node):
         """
@@ -710,52 +752,68 @@ class RoleNodeInfo(EditableNodeInfo):
         """
         super().__init__(mainwindow, parent)
 
+        arial12r = Font('Arial', 12)
+
         self.functKey = Key('Funct.', self)
+        self.functKey.setFont(arial12r)
         functParent = Parent(self)
         self.functBox = CheckBox(functParent)
         self.functBox.setCheckable(True)
+        self.functBox.setFont(arial12r)
         self.functBox.setProperty('attribute', 'functional')
         connect(self.functBox.clicked, self.flagChanged)
 
         self.invFunctKey = Key('Inv. Funct.', self)
+        self.invFunctKey.setFont(arial12r)
         invFunctParent = Parent(self)
         self.invFunctBox = CheckBox(invFunctParent)
         self.invFunctBox.setCheckable(True)
+        self.invFunctBox.setFont(arial12r)
         self.invFunctBox.setProperty('attribute', 'inverseFunctional')
         connect(self.invFunctBox.clicked, self.flagChanged)
 
         self.asymmetricKey = Key('Asymmetric', self)
+        self.asymmetricKey.setFont(arial12r)
         asymmetricParent = Parent(self)
         self.asymmetricBox = CheckBox(asymmetricParent)
         self.asymmetricBox.setCheckable(True)
+        self.asymmetricBox.setFont(arial12r)
         self.asymmetricBox.setProperty('attribute', 'asymmetric')
         connect(self.asymmetricBox.clicked, self.flagChanged)
 
         self.irreflexiveKey = Key('Irreflexive', self)
+        self.irreflexiveKey.setFont(arial12r)
         irreflexiveParent = Parent(self)
         self.irreflexiveBox = CheckBox(irreflexiveParent)
         self.irreflexiveBox.setCheckable(True)
+        self.irreflexiveBox.setFont(arial12r)
         self.irreflexiveBox.setProperty('attribute', 'irreflexive')
         connect(self.irreflexiveBox.clicked, self.flagChanged)
 
         self.reflexiveKey = Key('Reflexive', self)
+        self.reflexiveKey.setFont(arial12r)
         reflexiveParent = Parent(self)
         self.reflexiveBox = CheckBox(reflexiveParent)
         self.reflexiveBox.setCheckable(True)
+        self.reflexiveBox.setFont(arial12r)
         self.reflexiveBox.setProperty('attribute', 'reflexive')
         connect(self.reflexiveBox.clicked, self.flagChanged)
 
         self.symmetricKey = Key('Symmetric', self)
+        self.symmetricKey.setFont(arial12r)
         symmetricParent = Parent(self)
         self.symmetricBox = CheckBox(symmetricParent)
         self.symmetricBox.setCheckable(True)
+        self.symmetricBox.setFont(arial12r)
         self.symmetricBox.setProperty('attribute', 'symmetric')
         connect(self.symmetricBox.clicked, self.flagChanged)
 
         self.transitiveKey = Key('Transitive', self)
+        self.transitiveKey.setFont(arial12r)
         transitiveParent = Parent(self)
         self.transitiveBox = CheckBox(transitiveParent)
         self.transitiveBox.setCheckable(True)
+        self.transitiveBox.setFont(arial12r)
         self.transitiveBox.setProperty('attribute', 'transitive')
         connect(self.transitiveBox.clicked, self.flagChanged)
 
@@ -773,14 +831,14 @@ class RoleNodeInfo(EditableNodeInfo):
         Executed whenever one of the property fields changes.
         """
         node = self.node
-        scene = node.scene()
         sender = self.sender()
         checked = sender.isChecked()
+        diagram = node.diagram
         attribute = sender.property('attribute')
         prop = RE_CAMEL_SPACE.sub('\g<1> \g<2>', attribute).lower()
-        name = '{}set {} {} property'.format('un' if checked else '', node.shortname, prop)
+        name = _('COMMAND_ITEM_SET_PROPERTY', 'un' if checked else '', node.shortname, prop)
         data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
-        scene.undoStack.push(CommandSetProperty(scene, node, data, name))
+        diagram.undoStack.push(CommandSetProperty(diagram, node, data, name))
 
     def updateData(self, node):
         """
@@ -788,9 +846,9 @@ class RoleNodeInfo(EditableNodeInfo):
         :type node: AbstractNode
         """
         super().updateData(node)
+        self.asymmetricBox.setChecked(node.asymmetric)
         self.functBox.setChecked(node.functional)
         self.invFunctBox.setChecked(node.inverseFunctional)
-        self.asymmetricBox.setChecked(node.asymmetric)
         self.irreflexiveBox.setChecked(node.irreflexive)
         self.reflexiveBox.setChecked(node.reflexive)
         self.symmetricBox.setChecked(node.symmetric)
@@ -807,11 +865,13 @@ class ValueDomainNodeInfo(PredicateNodeInfo):
         """
         super().__init__(mainwindow, parent)
 
+        arial12r = Font('Arial', 12)
+
         self.datatypeKey = Key('Datatype', self)
+        self.datatypeKey.setFont(arial12r)
         self.datatypeMenu = QMenu(self)
-        for action in self.mainwindow.actionsChangeValueDomainDatatype:
-            self.datatypeMenu.addAction(action)
         self.datatypeButton = Button()
+        self.datatypeButton.setFont(arial12r)
         self.datatypeButton.setMenu(self.datatypeMenu)
         self.datatypeButton.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
 
@@ -823,8 +883,12 @@ class ValueDomainNodeInfo(PredicateNodeInfo):
         :type node: AbstractNode
         """
         super().updateData(node)
+        # CONFIGURE MENU
+        if self.datatypeMenu.isEmpty():
+            self.datatypeMenu.addActions(self.mainwindow.actionsSetDatatype)
+        # SELECT CURRENT DATATYPE
         datatype = node.datatype
-        for action in self.mainwindow.actionsChangeValueDomainDatatype:
+        for action in self.mainwindow.actionsSetDatatype:
             action.setChecked(action.data() is datatype)
         self.datatypeButton.setText(datatype.value)
 
@@ -839,16 +903,24 @@ class ValueRestrictionNodeInfo(PredicateNodeInfo):
         """
         super().__init__(mainwindow, parent)
 
+        arial12r = Font('Arial', 12)
+
         self.datatypeKey = Key('Datatype', self)
+        self.datatypeKey.setFont(arial12r)
         self.datatypeField = Select(self)
+        self.datatypeField.setFont(arial12r)
         connect(self.datatypeField.activated, self.restrictionChanged)
 
         self.facetKey = Key('Facet', self)
+        self.facetKey.setFont(arial12r)
         self.facetField = Select(self)
+        self.facetField.setFont(arial12r)
         connect(self.facetField.activated, self.restrictionChanged)
 
         self.restrictionKey = Key('Restriction', self)
-        self.restrictionField = Str(self)
+        self.restrictionKey.setFont(arial12r)
+        self.restrictionField = String(self)
+        self.restrictionField.setFont(arial12r)
         self.restrictionField.setReadOnly(False)
         connect(self.restrictionField.editingFinished, self.restrictionChanged)
 
@@ -869,20 +941,19 @@ class ValueRestrictionNodeInfo(PredicateNodeInfo):
 
             try:
                 node = self.node
-                scene = node.scene()
+                diagram = node.diagram
                 datatype = self.datatypeField.currentData()
                 facet = self.facetField.currentData()
                 value = self.restrictionField.value()
                 allowed = Facet.forDatatype(datatype)
                 if facet not in allowed:
-                    facet = allowed[0]
+                    facet = first(allowed)
                 data = node.compose(facet, value, datatype)
                 if node.text() != data:
-                    name = 'change value restriction to {}'.format(data)
-                    scene.undoStack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
+                    name = _('COMMAND_NODE_SET_VALUE_RESTRICTION', data)
+                    diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
             except RuntimeError:
                 pass
-
 
     def updateData(self, node):
         """
@@ -920,16 +991,22 @@ class ValueNodeInfo(PredicateNodeInfo):
     """
     def __init__(self, mainwindow, parent=None):
         """
-        Initialize the Literal node information box.
+        Initialize the Value node information box.
         """
         super().__init__(mainwindow, parent)
 
+        arial12r = Font('Arial', 12)
+
         self.datatypeKey = Key('Datatype', self)
+        self.datatypeKey.setFont(arial12r)
         self.datatypeField = Select(self)
+        self.datatypeField.setFont(arial12r)
         connect(self.datatypeField.activated, self.valueChanged)
 
         self.valueKey = Key('Value', self)
-        self.valueField = Str(self)
+        self.valueKey.setFont(arial12r)
+        self.valueField = String(self)
+        self.valueField.setFont(arial12r)
         self.valueField.setReadOnly(False)
         connect(self.valueField.editingFinished, self.valueChanged)
 
@@ -943,22 +1020,21 @@ class ValueNodeInfo(PredicateNodeInfo):
     @pyqtSlot()
     def valueChanged(self):
         """
-        Executed when we need to recompute the Literal.
+        Executed when we need to recompute the Value.
         """
         if self.node:
 
             try:
                 node = self.node
-                scene = node.scene()
+                diagram = node.diagram
                 datatype = self.datatypeField.currentData()
                 value = self.valueField.value()
                 data = node.composeValue(value, datatype)
                 if node.text() != data:
-                    name = 'change value to {}'.format(data)
-                    scene.undoStack.push(CommandNodeLabelChange(scene, node, node.text(), data, name))
+                    name = _('COMMAND_NODE_SET_VALUE', data)
+                    diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
             except RuntimeError:
                 pass
-
 
     def updateData(self, node):
         """
