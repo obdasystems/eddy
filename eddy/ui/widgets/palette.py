@@ -101,7 +101,23 @@ class Palette(QWidget):
         self.add(InputEdge, 6, 0)
         self.add(MembershipEdge, 6, 1)
         self.setContentsMargins(0, 0, 0, 0)
-        self.setFixedSize(216, 394)
+        self.setMinimumWidth(216)
+        #self.setMaximumHeight(372)
+
+    #############################################
+    #   EVENTS
+    #################################
+
+    def paintEvent(self, paintEvent):
+        """
+        This is needed for the widget to pick the stylesheet.
+        :type paintEvent: QPaintEvent
+        """
+        option = QStyleOption()
+        option.initFrom(self)
+        painter = QPainter(self)
+        style = self.style()
+        style.drawPrimitive(QStyle.PE_Widget, option, painter, self)
 
     #############################################
     #   INTERFACE
@@ -136,16 +152,12 @@ class Palette(QWidget):
             if button not in args:
                 button.setChecked(False)
 
-    def paintEvent(self, paintEvent):
+    def sizeHint(self):
         """
-        This is needed for the widget to pick the stylesheet.
-        :type paintEvent: QPaintEvent
+        Returns the recommended size for this widget.
+        :rtype: QSize
         """
-        option = QStyleOption()
-        option.initFrom(self)
-        painter = QPainter(self)
-        style = self.style()
-        style.drawPrimitive(QStyle.PE_Widget, option, painter, self)
+        return QSize(216, 372)
 
 
 class PaletteButton(QToolButton):

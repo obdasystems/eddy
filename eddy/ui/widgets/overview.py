@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtCore import Qt, pyqtSlot, QSize
 from PyQt5.QtWidgets import QGraphicsView
 
 from eddy.core.functions.signals import connect, disconnect
@@ -49,7 +49,7 @@ class Overview(QGraphicsView):
         """
         super().__init__(parent)
         self.setContextMenuPolicy(Qt.PreventContextMenu)
-        self.setFixedSize(216, 216)
+        self.setMinimumSize(QSize(216, 216))
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setOptimizationFlags(QGraphicsView.DontAdjustForAntialiasing)
         self.setOptimizationFlags(QGraphicsView.DontSavePainterState)
@@ -105,6 +105,23 @@ class Overview(QGraphicsView):
         pass
 
     #############################################
+    #   SLOTS
+    #################################
+
+    @pyqtSlot()
+    def redraw(self):
+        """
+        Redraw the diagram within the overview.
+        """
+        if self.view:
+            diagram = self.view.scene()
+            shape = diagram.visibleRect(margin=10)
+            if shape:
+                self.fitInView(shape, Qt.KeepAspectRatio)
+        viewport = self.viewport()
+        viewport.update()
+
+    #############################################
     #   INTERFACE
     #################################
 
@@ -142,17 +159,9 @@ class Overview(QGraphicsView):
         viewport = self.viewport()
         viewport.update()
 
-    @pyqtSlot()
-    def redraw(self):
+    def sizeHint(self):
         """
-        Redraw the diagram within the overview.
+        Returns the recommended size for this widget.
+        :rtype: QSize
         """
-        if self.view:
-
-            diagram = self.view.scene()
-            shape = diagram.visibleRect(margin=10)
-            if shape:
-                self.fitInView(shape, Qt.KeepAspectRatio)
-
-        viewport = self.viewport()
-        viewport.update()
+        return QSize(216, 216)

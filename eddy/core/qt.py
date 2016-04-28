@@ -32,14 +32,13 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import pyqtSlot, QRectF, QPointF, Qt
+from PyQt5.QtCore import QRectF, QPointF, Qt
 from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPainterPath
 from PyQt5.QtGui import QColor, QBrush, QPen, QFont
-from PyQt5.QtWidgets import QStackedWidget, QSizePolicy, QPushButton, QToolButton
+from PyQt5.QtWidgets import QPushButton, QToolButton
 
 from eddy.core.datatypes.system import Platform
 from eddy.core.functions.misc import shaded
-from eddy.core.functions.signals import connect
 
 
 class Font(QFont):
@@ -155,34 +154,3 @@ class PHCQToolButton(QToolButton):
         :type event: QEvent
         """
         self.unsetCursor()
-
-
-class StackedWidget(QStackedWidget):
-    """
-    This class extends QStackedWidget providing a stacked widget with variable page size.
-    """
-    def __init__(self, parent=None):
-        """
-        Initialize the stacked widget.
-        :type parent: QWidget
-        """
-        super().__init__(parent)
-        connect(self.currentChanged, self.currentIndexChanged)
-
-    def addWidget(self, widget):
-        """
-        Add a widget in the stack.
-        :type widget: QWidget
-        """
-        widget.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
-        super().addWidget(widget)
-
-    @pyqtSlot(int)
-    def currentIndexChanged(self, index):
-        """
-        Executed whenever the currently displayed widget changes.
-        :type index: int
-        """
-        widget = self.widget(index)
-        widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        widget.adjustSize()

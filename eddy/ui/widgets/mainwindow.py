@@ -37,7 +37,7 @@ import webbrowser
 from collections import OrderedDict
 from traceback import format_exception
 
-from PyQt5.QtCore import Qt, QSettings, QByteArray, pyqtSlot
+from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, pyqtSlot
 from PyQt5.QtGui import QBrush, QColor, QPixmap
 from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
 from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox
@@ -45,13 +45,17 @@ from PyQt5.QtWidgets import QMenu, QToolButton, QDockWidget, QApplication
 from PyQt5.QtWidgets import QUndoGroup, QStyle
 
 from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION, VERSION
-from eddy.core.commands.common import CommandComposeAxiom, CommandItemsRemove
+from eddy.core.commands.common import CommandComposeAxiom
+from eddy.core.commands.common import CommandItemsRemove
 from eddy.core.commands.common import CommandItemsTranslate
 from eddy.core.commands.edges import CommandEdgeBreakpointRemove
-from eddy.core.commands.edges import CommandEdgeSwap, CommandEdgeToggleComplete
+from eddy.core.commands.edges import CommandEdgeSwap
+from eddy.core.commands.edges import CommandEdgeToggleComplete
 from eddy.core.commands.nodes import CommandNodeOperatorSwitchTo
-from eddy.core.commands.nodes import CommandNodeSetBrush, CommandNodeLabelChange
-from eddy.core.commands.nodes import CommandNodeSetDepth, CommandNodeLabelMove
+from eddy.core.commands.nodes import CommandNodeSetBrush
+from eddy.core.commands.nodes import CommandNodeLabelChange
+from eddy.core.commands.nodes import CommandNodeSetDepth
+from eddy.core.commands.nodes import CommandNodeLabelMove
 from eddy.core.datatypes.graphol import Identity
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.graphol import Restriction
@@ -75,7 +79,8 @@ from eddy.lang import gettext as _
 from eddy.ui.dialogs.about import About
 from eddy.ui.dialogs.diagram import NewDiagramDialog
 from eddy.ui.dialogs.preferences import PreferencesDialog
-from eddy.ui.forms.nodes import CardinalityRestrictionForm, ValueRestrictionForm
+from eddy.ui.forms.nodes import CardinalityRestrictionForm
+from eddy.ui.forms.nodes import ValueRestrictionForm
 from eddy.ui.forms.nodes import ValueForm
 from eddy.ui.menus import MenuFactory
 from eddy.ui.properties.factory import PropertyFactory
@@ -595,31 +600,31 @@ class MainWindow(QMainWindow):
 
         self.dockOntologyExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockOntologyExplorer.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
-        self.dockOntologyExplorer.setFixedWidth(self.ontologyExplorer.width())
+        self.dockOntologyExplorer.installEventFilter(self)
         self.dockOntologyExplorer.setObjectName('ontologyExplorer')
         self.dockOntologyExplorer.setWidget(self.ontologyExplorer)
 
         self.dockInfo.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockInfo.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
-        self.dockInfo.setFixedWidth(self.info.width())
+        self.dockInfo.installEventFilter(self)
         self.dockInfo.setObjectName('info')
         self.dockInfo.setWidget(self.info)
 
         self.dockOverview.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockOverview.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
-        self.dockOverview.setFixedWidth(self.overview.width())
+        self.dockOverview.installEventFilter(self)
         self.dockOverview.setObjectName('overview')
         self.dockOverview.setWidget(self.overview)
 
         self.dockPalette.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockPalette.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
-        self.dockPalette.setFixedSize(self.palette_.size())
+        self.dockPalette.installEventFilter(self)
         self.dockPalette.setObjectName('palette')
         self.dockPalette.setWidget(self.palette_)
 
         self.dockProjectExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockProjectExplorer.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
-        self.dockProjectExplorer.setFixedWidth(self.projectExplorer.width())
+        self.dockProjectExplorer.installEventFilter(self)
         self.dockProjectExplorer.setObjectName('projectExplorer')
         self.dockProjectExplorer.setWidget(self.projectExplorer)
 
@@ -1741,6 +1746,23 @@ class MainWindow(QMainWindow):
     #         dropEvent.accept()
     #     else:
     #         dropEvent.ignore()
+
+    def eventFilter(self, source, event):
+        """
+        Filters events if this object has been installed as an event filter for the watched object.
+        :type source: QObject
+        :type event: QEvent
+        :rtype: bool
+        """
+        if event.type() == QEvent.Resize:
+
+            try:
+                widget = source.widget()
+                widget.redraw()
+            except AttributeError:
+                pass
+
+        return super().eventFilter(source, event)
 
     def keyReleaseEvent(self, keyEvent):
         """

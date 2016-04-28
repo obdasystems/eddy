@@ -34,18 +34,20 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import pyqtSlot, Qt, QEvent
+from PyQt5.QtCore import pyqtSlot, Qt, QEvent, QSize
 from PyQt5.QtGui import QBrush, QColor, QPainter
-from PyQt5.QtWidgets import QFormLayout, QSizePolicy, QLabel, QVBoxLayout, QPushButton
-from PyQt5.QtWidgets import QWidget, QMenu, QScrollArea, QScrollBar, QStyleOption, QStyle
+from PyQt5.QtWidgets import QFormLayout, QSizePolicy, QLabel, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QPushButton, QMenu, QScrollArea
+from PyQt5.QtWidgets import QStackedWidget, QStyle, QStyleOption
 
-from eddy.core.commands.common import CommandRefactor, CommandSetProperty
+from eddy.core.commands.common import CommandRefactor
+from eddy.core.commands.common import CommandSetProperty
 from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Facet, XsdDatatype
-from eddy.core.functions.misc import first, isEmpty
+from eddy.core.functions.misc import first, isEmpty, clamp
 from eddy.core.functions.signals import connect, disconnect
-from eddy.core.qt import ColoredIcon, Font, StackedWidget
+from eddy.core.qt import ColoredIcon, Font
 from eddy.core.regex import RE_CAMEL_SPACE
 
 from eddy.lang import gettext as _
@@ -67,10 +69,10 @@ class Info(QScrollArea):
         super().__init__(parent)
         self.diagram = None
         self.setContentsMargins(0, 0, 0, 0)
-        self.setFixedWidth(Info.Width)
+        self.setMinimumSize(QSize(216, 120))
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.stacked = StackedWidget(self)
+        self.stacked = QStackedWidget(self)
         self.stacked.setContentsMargins(0, 0, 0, 0)
         self.infoEmpty = QWidget(self.stacked)
         self.infoDiagram = DiagramInfo(parent, self.stacked)
@@ -96,12 +98,11 @@ class Info(QScrollArea):
         self.stacked.addWidget(self.infoValueNode)
         self.stacked.addWidget(self.infoValueDomainNode)
         self.stacked.addWidget(self.infoValueRestrictionNode)
-        self.setMinimumHeight(120)
         self.setWidget(self.stacked)
         self.setWidgetResizable(True)
         scrollbar = self.verticalScrollBar()
         scrollbar.installEventFilter(self)
-        self.doStack()
+        self.stack()
 
     #############################################
     #   EVENTS
@@ -113,15 +114,9 @@ class Info(QScrollArea):
         :type source: QObject
         :type event: QEvent
         """
-        if isinstance(source, QScrollBar):
-            if event.type() == QEvent.Show:
-                widget = self.stacked.currentWidget()
-                widget.setFixedWidth(Info.Width - source.width())
-                self.stacked.setFixedWidth(Info.Width - source.width())
-            elif event.type() == QEvent.Hide:
-                widget = self.stacked.currentWidget()
-                widget.setFixedWidth(Info.Width)
-                self.stacked.setFixedWidth(Info.Width)
+        if source is self.verticalScrollBar():
+            if event.type() in {QEvent.Show, QEvent.Hide}:
+                self.redraw()
         return super().eventFilter(source, event)
 
     #############################################
@@ -129,7 +124,7 @@ class Info(QScrollArea):
     #################################
 
     @pyqtSlot()
-    def doStack(self):
+    def stack(self):
         """
         Set the current stacked widget.
         """
@@ -144,41 +139,32 @@ class Info(QScrollArea):
                     if item.isPredicate():
                         if item.type() is Item.ValueDomainNode:
                             show = self.infoValueDomainNode
-                            show.updateData(item)
                         elif item.type() is Item.ValueRestrictionNode:
                             show = self.infoValueRestrictionNode
-                            show.updateData(item)
                         elif item.type() is Item.RoleNode:
                             show = self.infoRoleNode
-                            show.updateData(item)
                         elif item.type() is Item.AttributeNode:
                             show = self.infoAttributeNode
-                            show.updateData(item)
                         elif item.type() is Item.IndividualNode and item.identity is Identity.Value:
                             show = self.infoValueNode
-                            show.updateData(item)
                         elif item.label.editable:
                             show = self.infoEditableNode
-                            show.updateData(item)
                         else:
                             show = self.infoPredicateNode
-                            show.updateData(item)
                     else:
                         show = self.infoNode
-                        show.updateData(item)
                 else:
                     if item.type() is Item.InclusionEdge:
                         show = self.infoInclusionEdge
-                        show.updateData(item)
                     else:
                         show = self.infoEdge
-                        show.updateData(item)
+                show.updateData(item)
         else:
             show = self.infoEmpty
 
         prev = self.stacked.currentWidget()
         self.stacked.setCurrentWidget(show)
-        self.stacked.setFixedSize(show.size())
+        self.redraw()
         if prev is not show:
             scrollbar = self.verticalScrollBar()
             scrollbar.setValue(0)
@@ -196,11 +182,29 @@ class Info(QScrollArea):
 
         if diagram:
             self.diagram = diagram
-            connect(self.diagram.selectionChanged, self.doStack)
-            connect(self.diagram.sgnItemAdded, self.doStack)
-            connect(self.diagram.sgnItemRemoved, self.doStack)
-            connect(self.diagram.sgnUpdated, self.doStack)
-            self.doStack()
+            connect(self.diagram.selectionChanged, self.stack)
+            connect(self.diagram.sgnItemAdded, self.stack)
+            connect(self.diagram.sgnItemRemoved, self.stack)
+            connect(self.diagram.sgnUpdated, self.stack)
+            self.stack()
+
+    def redraw(self):
+        """
+        Redraw the content of the widget.
+        """
+
+        width = self.width()
+        scrollbar = self.verticalScrollBar()
+        if scrollbar.isVisible():
+            width -= scrollbar.width()
+
+        widget = self.stacked.currentWidget()
+        widget.setFixedWidth(width)
+        self.stacked.setFixedWidth(width)
+
+        sizeHint = widget.sizeHint()
+        height = sizeHint.height()
+        self.stacked.setFixedHeight(clamp(height, 0))
 
     def reset(self):
         """
@@ -209,16 +213,16 @@ class Info(QScrollArea):
         if self.diagram:
 
             try:
-                disconnect(self.diagram.selectionChanged, self.doStack)
-                disconnect(self.diagram.sgnItemAdded, self.doStack)
-                disconnect(self.diagram.sgnItemRemoved, self.doStack)
-                disconnect(self.diagram.sgnUpdated, self.doStack)
+                disconnect(self.diagram.selectionChanged, self.stack)
+                disconnect(self.diagram.sgnItemAdded, self.stack)
+                disconnect(self.diagram.sgnItemRemoved, self.stack)
+                disconnect(self.diagram.sgnUpdated, self.stack)
             except RuntimeError:
                 pass
             finally:
                 self.diagram = None
 
-        self.doStack()
+        self.stack()
 
 
 #############################################
@@ -334,9 +338,6 @@ class AbstractInfo(QWidget):
     """
     __metaclass__ = ABCMeta
 
-    Height = 20
-    LabelWidth = 80
-
     def __init__(self, mainwindow, parent=None):
         """
         Initialize the base information box.
@@ -345,7 +346,6 @@ class AbstractInfo(QWidget):
         """
         super().__init__(parent)
         self.setContentsMargins(0, 0, 0, 0)
-        self.setFixedWidth(Info.Width)
         self.mainwindow = mainwindow
 
     @abstractmethod
@@ -615,7 +615,7 @@ class PredicateNodeInfo(NodeInfo):
         # CONFIGURE MENU
         if self.brushMenu.isEmpty():
             self.brushMenu.addActions(self.mainwindow.actionsSetBrush)
-        # SELECT CURRENT BRUSHu
+        # SELECT CURRENT BRUSH
         for action in self.mainwindow.actionsSetBrush:
             color = action.data()
             brush = QBrush(QColor(color.value))
@@ -677,12 +677,14 @@ class EditableNodeInfo(PredicateNodeInfo):
                 if data != node.text():
                     diagram = node.diagram
                     if sender is self.nameField:
-                        cmds = []
-                        for n in diagram.project.predicates(node.item, node.text()):
-                            cmds.append(CommandNodeLabelChange(n.diagram, n, n.text(), data))
-                        diagram.undoStack.push(CommandRefactor(_('COMMAND_NODE_REFACTOR_NAME', node.text(), data), cmds))
+                        collection = []
+                        for n in diagram.project.predicates(node.type(), node.text()):
+                            collection.append(CommandNodeLabelChange(n.diagram, n, n.text(), data))
+                        command = CommandRefactor(_('COMMAND_NODE_REFACTOR_NAME', node.text(), data), collection)
+                        diagram.undoStack.push(command)
                     else:
-                        diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data))
+                        command = CommandNodeLabelChange(diagram, node, node.text(), data)
+                        diagram.undoStack.push(command)
             except RuntimeError:
                 pass
 

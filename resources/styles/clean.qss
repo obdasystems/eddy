@@ -87,15 +87,6 @@ background: #4FC3F7;
 color: #000000;
 }
 /**************************************************************************/
-/*                              MAINWINDOW                                */
-/**************************************************************************/
-QMainWindow::separator {
-height: 0;
-margin: -10px;
-padding: 0;
-width: 10px;
-}
-/**************************************************************************/
 /*                                TOOLBAR                                 */
 /**************************************************************************/
 QToolBar {
@@ -117,6 +108,41 @@ border: 1px solid #607D8B;
 }
 QToolBar QToolButton::menu-indicator {
 image: none;
+}
+/**************************************************************************/
+/*                              MAINWINDOW                                */
+/**************************************************************************/
+QMainWindow::separator {
+background: #BABABA;
+height: 1px;
+}
+/**************************************************************************/
+/*                                MDI AREA                                */
+/**************************************************************************/
+QMdiArea {
+border: 0;
+}
+QMdiArea QTabBar::tab:top {
+border: 1px solid #BABABA;
+border-bottom: 0;
+min-width: 140px;
+}
+QMdiArea QTabBar::tab:top:!last {
+border-left: 0;
+border-bottom: 0;
+}
+QMdiArea QTabBar::tab:top:only-one {
+border-left: 0;
+border-bottom: 0;
+}
+QMdiArea QTabWidget::pane {
+border: 1px solid #A9A9A9;
+}
+/**************************************************************************/
+/*                              DIAGRAM VIEW                              */
+/**************************************************************************/
+DiagramView {
+border-top: 1px solid #A9A9A9;
 }
 /**************************************************************************/
 /*                              DOCK WIDGETS                              */
@@ -251,19 +277,6 @@ border-bottom: 0;
 QTabBar::tab:top:only-one {
 border: 1px solid #BABABA;
 border-bottom: 0;
-}
-/**************************************************************************/
-/*                                MDI AREA                                */
-/**************************************************************************/
-QMdiArea {
-border: 1px solid #BABABA;
-border-top: 0;
-}
-QMdiArea QTabBar::tab:top {
-min-width: 140px;
-}
-QTabWidget::pane {
-border: 1px solid #A9A9A9;
 }
 /**************************************************************************/
 /*                               SCROLL BAR                               */
@@ -490,9 +503,6 @@ background: #BBBBBB;
 /**************************************************************************/
 /*                                 MISC                                   */
 /**************************************************************************/
-DiagramView {
-border-top: 1px solid #A9A9A9;
-}
 QLineEdit {
 background: #FFFFFF;
 }

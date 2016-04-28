@@ -32,10 +32,10 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import pyqtSlot, QSortFilterProxyModel, Qt, pyqtSignal
+from PyQt5.QtCore import pyqtSlot, QSortFilterProxyModel, Qt, pyqtSignal, QSize
 from PyQt5.QtGui import QPainter, QStandardItemModel, QStandardItem, QIcon
-from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QHeaderView, QApplication
-from PyQt5.QtWidgets import QStyleOption, QStyle
+from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QHeaderView
+from PyQt5.QtWidgets import QStyleOption, QStyle, QApplication
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.diagram import Diagram
@@ -257,6 +257,13 @@ class OntologyExplorer(QWidget):
         """
         return node.text().replace('\n', '')
 
+    def sizeHint(self):
+        """
+        Returns the recommended size for this widget.
+        :rtype: QSize
+        """
+        return QSize(216, 266)
+
 
 class OntologyExplorerView(QTreeView):
     """
@@ -466,6 +473,13 @@ class ProjectExplorer(QWidget):
 
         connect(project.sgnDiagramAdded, self.doAddDiagram)
         connect(project.sgnDiagramRemoved, self.doRemoveDiagram)
+
+    def sizeHint(self):
+        """
+        Returns the recommended size for this widget.
+        :rtype: QSize
+        """
+        return QSize(216, 266)
 
 
 class ProjectExplorerView(QTreeView):
