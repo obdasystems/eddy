@@ -1350,7 +1350,7 @@ class MainWindow(QMainWindow):
                     if form.exec_() == CardinalityRestrictionForm.Accepted:
                         data = restriction.format(form.minValue or '-', form.maxValue or '-')
                 if data and node.text() != data:
-                    name = 'change {0} to {0}'.format(node.shortname, data)
+                    name = 'change {0} to {1}'.format(node.shortname, data)
                     diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
