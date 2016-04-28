@@ -107,6 +107,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument('--nosplash', dest='nosplash', action='store_true')
     parser.add_argument('--tests', dest='tests', action='store_true')
+    parser.add_argument('--open', dest='open', default=None)
 
     sys.excepthook = base_except_hook
 
@@ -119,7 +120,7 @@ def main():
         sys.exit(0)
 
     app.configure(options)
-    app.start()
+    app.start(options)
 
     sys.exit(app.exec_())
 

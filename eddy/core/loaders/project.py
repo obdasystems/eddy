@@ -42,7 +42,6 @@ from eddy.core.datatypes.graphol import Item
 from eddy.core.exceptions import ParseError
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.fsystem import fread, fexists, isdir
-from eddy.core.functions.misc import cutR
 from eddy.core.loaders.graphol import GrapholLoader
 from eddy.core.project import Project
 

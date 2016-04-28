@@ -58,6 +58,11 @@ def connect(signal, slot, *args, **kwargs):
 def disconnect(signal, *args):
     """
     Disconnect the given signal.
+    This function is meant to catch all the possible exceptions which
+    can happen while disconnecting signals such as C++ object reference
+    not being available anymore (in which case the disconnection is not
+    needed), or signal not connected to the given slot (once again
+    there will be nothing to disconnect).
     :type signal: pyqtSignal
     :type args: mixed
     """

@@ -201,13 +201,17 @@ class Eddy(QApplication):
             return self.oSock.waitForBytesWritten()
         return False
 
-    def start(self):
+    def start(self, options):
         """
         Run the application by showing the welcome dialog.
+        :type options: Namespace
         """
-        self.welcome = Welcome()
-        connect(self.welcome.sgnCreateSession, self.doCreateSession)
-        self.welcome.show()
+        if options.open and isdir(options.open):
+            self.doCreateSession(options.open)
+        else:
+            self.welcome = Welcome()
+            connect(self.welcome.sgnCreateSession, self.doCreateSession)
+            self.welcome.show()
 
     #############################################
     #   SLOTS
@@ -236,7 +240,8 @@ class Eddy(QApplication):
         """
         with BusyProgressDialog('Loading project: {0}'.format(os.path.basename(project))):
             self.session = MainWindow(project)
-        self.welcome.close()
+        if self.welcome:
+            self.welcome.close()
         self.session.show()
 
     @pyqtSlot(str)
