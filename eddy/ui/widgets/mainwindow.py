@@ -1260,7 +1260,6 @@ class MainWindow(QMainWindow):
                 undo = node.label.pos()
                 redo = node.label.defaultPos()
                 diagram.undoStack.push(CommandNodeLabelMove(diagram, node, undo, redo))
-                #node.updateTextPos() # TODO: remove???
 
     @pyqtSlot()
     def doSave(self):

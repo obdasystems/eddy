@@ -70,7 +70,7 @@ class AbstractNode(AbstractItem):
 
         self.setAcceptHoverEvents(True)
         self.setCacheMode(AbstractItem.DeviceCoordinateCache)
-        self.setFlag(AbstractItem.ItemIsSelectable, True) # TODO: remove
+        self.setFlag(AbstractItem.ItemIsSelectable, True)
 
     #############################################
     #   PROPERTIES

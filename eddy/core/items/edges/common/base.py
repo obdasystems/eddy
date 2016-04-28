@@ -100,7 +100,7 @@ class AbstractEdge(AbstractItem):
 
         self.setAcceptHoverEvents(True)
         self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
-        self.setFlag(QGraphicsItem.ItemIsSelectable, True) # TODO: remove
+        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
 
     #############################################
     #   INTERFACE
