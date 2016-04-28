@@ -50,11 +50,8 @@ class CommandEdgeAdd(QUndoCommand):
         """
         super().__init__(_('COMMAND_EDGE_ADD', edge.name))
 
-        # TODO: VERIFY
         self.diagram = diagram
         self.edge = edge
-        self.edge.source.addEdge(self.edge)
-        self.edge.target.addEdge(self.edge)
         self.edge.updateEdge()
         self.inputs = {'redo': [], 'undo': []}
 
