@@ -194,6 +194,42 @@ DOCK_PROJECT_EXPLORER = 'Project Explorer'
 ONTO_EXPLORER_SEARCH_PLACEHOLDER = 'Search...'
 
 #############################################
+# INFO BOX
+#################################
+
+INFO_HEADER_ASSERTIONS = 'Assertions'
+INFO_HEADER_ATOMIC_PREDICATES = 'Atomic predicates'
+INFO_HEADER_GENERAL = 'General'
+INFO_HEADER_NODE_PROPERTIES = 'Node properties'
+INFO_HEADER_PREDICATE_PROPERTIES = 'Predicate properties'
+
+INFO_KEY_ASYMMETRIC = 'Asymmetric'
+INFO_KEY_ATTRIBUTE = 'Attribute'
+INFO_KEY_COLOR = 'Color'
+INFO_KEY_COMPLETE = 'Complete'
+INFO_KEY_CONCEPT = 'Concept'
+INFO_KEY_DATATYPE = 'Datatype'
+INFO_KEY_FACET = 'Facet'
+INFO_KEY_FUNCTIONAL = 'Funct.'
+INFO_KEY_ID = 'ID'
+INFO_KEY_IDENTITY = 'Identity'
+INFO_KEY_INCLUSION = 'Inclusion'
+INFO_KEY_INVERSE_FUNCTIONAL = 'Inv. Funct.'
+INFO_KEY_IRREFLEXIVE = 'Irreflexive'
+INFO_KEY_LABEL = 'Label'
+INFO_KEY_MEMBERSHIP = 'Membership'
+INFO_KEY_NAME = 'Name'
+INFO_KEY_REFLEXIVE = 'Reflexive'
+INFO_KEY_RESTRICTION = 'Restriction'
+INFO_KEY_ROLE = 'Role'
+INFO_KEY_SOURCE = 'Source'
+INFO_KEY_SYMMETRIC = 'Symmetric'
+INFO_KEY_TARGET = 'Target'
+INFO_KEY_TRANSITIVE = 'Transitive'
+INFO_KEY_TYPE = 'Type'
+INFO_KEY_VALUE = 'Value'
+
+#############################################
 # DIAGRAM CREATE / EDIT / LOAD
 #################################
 
