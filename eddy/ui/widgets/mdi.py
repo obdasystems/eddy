@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import pyqtSlot, Qt
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMdiArea, QMdiSubWindow
 from PyQt5.QtWidgets import QTabWidget, QAction, QTabBar
 
@@ -111,9 +111,6 @@ class MdiSubWindow(QMdiSubWindow):
     """
     This class implements the MDI area subwindow.
     """
-    #closeAborted = pyqtSignal('QMdiSubWindow')
-    #closed = pyqtSignal('QMdiSubWindow')
-
     def __init__(self, view, parent=None):
         """
         Initialize the subwindow
@@ -124,7 +121,6 @@ class MdiSubWindow(QMdiSubWindow):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWidget(view)
         self.setWindowTitle(self.diagram.name)
-        connect(self.diagram.undoStack.cleanChanged, self.doSetWindowTitle)
     
     #############################################
     #   PROPERTIES
@@ -148,50 +144,3 @@ class MdiSubWindow(QMdiSubWindow):
         :rtype: DiagramView
         """
         return self.widget()
-    
-    #############################################
-    #   EVENTS
-    #################################
-    #
-    # def closeEvent(self, closeEvent):
-    #     """
-    #     Executed when the subwindow is closed.
-    #     :type closeEvent: QCloseEvent
-    #     """
-    #     mainview = self.widget()
-    #     scene = mainview.scene()
-    #
-    #     if (scene.items() and not scene.document.path) or (not scene.undoStack.isClean()):
-    #         # ask the user if he wants to save unsaved changes to disk
-    #         box = QMessageBox()
-    #         box.setIconPixmap(QPixmap(':/icons/info'))
-    #         box.setWindowIcon(QIcon(':/images/eddy'))
-    #         box.setWindowTitle('Save file?')
-    #         box.setText('The document has been modified. Save changes?')
-    #         box.setStandardButtons(QMessageBox.Cancel|QMessageBox.No|QMessageBox.Yes)
-    #
-    #         result = box.exec_()
-    #
-    #         if result == QMessageBox.Cancel:
-    #             closeEvent.ignore()
-    #             self.closeAborted.emit(self)
-    #         elif result == QMessageBox.Yes:
-    #             if not self.saveScene():
-    #                 closeEvent.ignore()
-    #                 self.closeAborted.emit(self)
-    #
-    #     if closeEvent.isAccepted():
-    #         self.closed.emit(self)
-    #         scene.clear()
-
-    #############################################
-    #   SLOTS
-    #################################
-
-    @pyqtSlot(bool)
-    def doSetWindowTitle(self, clean):
-        """
-        Executed when the clean state of the undoStack held by the displayed diagram is updated.
-        :type clean: bool
-        """
-        self.setWindowTitle(self.diagram.name if clean else '{0} *'.format(self.diagram.name))
