@@ -34,6 +34,8 @@
 
 from PyQt5.QtWidgets import QUndoCommand
 
+from eddy.lang import gettext as _
+
 
 class CommandDiagramResize(QUndoCommand):
     """
