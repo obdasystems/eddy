@@ -48,7 +48,7 @@ class MembershipEdge(AbstractEdge):
     """
     This class implements the 'Membership' edge.
     """
-    item = Item.MembershipEdge
+    Type = Item.MembershipEdge
 
     def __init__(self, **kwargs):
         """
