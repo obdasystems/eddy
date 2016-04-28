@@ -296,7 +296,7 @@ class Project(QObject):
         """
         try:
             if not diagram:
-                return set(self.index[K_PREDICATE][item][name][K_NODE].values())
+                return set.union(*self.index[K_PREDICATE][item][name][K_NODE].values())
             return self.index[K_PREDICATE][item][name][K_NODE][diagram.id]
         except KeyError:
             return set()
