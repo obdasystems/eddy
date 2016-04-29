@@ -215,3 +215,20 @@ def shortPath(path):
         if path.startswith(absprefix):
             return path.replace(absprefix, prefix)
     return path
+
+
+def uniquePath(base, name, extension):
+    """
+    This function generates a unique filepath which ensure not to overwrite an existing file.
+    :type base: str
+    :type name: str
+    :type extension: str
+    :rtype: str
+    """
+    num = 0
+    base = expandPath(base)
+    dest = os.path.join(base, '{0}{1}'.format(name, extension))
+    while os.path.isfile(dest):
+        dest = os.path.join(base, '{0}_{1}{2}'.format(name, num, extension))
+        num += 1
+    return dest
