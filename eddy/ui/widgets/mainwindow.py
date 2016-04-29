@@ -176,6 +176,7 @@ class MainWindow(QMainWindow):
         # noinspection PyArgumentList
         QApplication.processEvents()
 
+        self.iconBottom = Icon(':/icons/bottom')
         self.iconBringToFront = Icon(':/icons/bring-to-front')
         self.iconCenterFocus = Icon(':/icons/center-focus')
         self.iconClose = Icon(':/icons/close')
@@ -210,6 +211,7 @@ class MainWindow(QMainWindow):
         self.iconSwapHorizontal = Icon(':/icons/swap-horizontal')
         self.iconSwapVertical = Icon(':/icons/swap-vertical')
         self.iconUndo = Icon(':/icons/undo')
+        self.iconTop = Icon(':/icons/top')
 
         #############################################
         # CREATE ACTIONS
