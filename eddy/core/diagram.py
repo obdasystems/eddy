@@ -351,8 +351,8 @@ class Diagram(QGraphicsScene):
                         currentNode.redraw(selected=False)
                         result = self.project.validator.validate(edge.source, edge, currentNode)
                         if result.valid:
-                           edge.target = currentNode
-                           insertEdge = True
+                            edge.target = currentNode
+                            insertEdge = True
 
                     # We temporarily remove the item from the diagram and we perform the
                     # insertion using the undo command that will also emit the sgnItemAdded
