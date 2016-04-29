@@ -80,7 +80,7 @@ def expandPath(path):
     :type path: str
     :rtype: str
     """
-    if path.startswith('@eddy{}'.format(os.path.sep)):
+    if path.startswith('@eddy{0}'.format(os.path.sep)):
         path = os.path.join(modulePath(), path[6:])
     elif path.startswith('@home{0}'.format(os.path.sep)):
         path = os.path.join(homePath(), path[6:])
@@ -143,6 +143,16 @@ def isPathValid(path):
         return True
 
 
+def isSubPath(path1, path2):
+    """
+    Check whether the given 'path1' is subpath of the given 'path2'.
+    :param path1: str
+    :param path2: str
+    :rtype: bool
+    """
+    return expandPath(path2).startswith(expandPath(path1))
+
+
 def modulePath():
     """
     Returns the path to Eddy's directory.
@@ -164,11 +174,11 @@ def openPath(path):
     if os.path.isfile(path) or os.path.isdir(path):
         platform = Platform.identify()
         if platform is Platform.Windows:
-            os.system('start {}'.format(path))
+            os.system('start {0}'.format(path))
         elif platform is Platform.Darwin:
-            os.system('open "{}"'.format(path))
+            os.system('open "{0}"'.format(path))
         elif platform is Platform.Linux:
-            os.system('xdg-open "{}"'.format(path))
+            os.system('xdg-open "{0}"'.format(path))
 
 
 def resourcesPath():

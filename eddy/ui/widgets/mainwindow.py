@@ -32,6 +32,7 @@
 ##########################################################################
 
 
+import os
 import webbrowser
 
 from collections import OrderedDict
@@ -40,7 +41,7 @@ from traceback import format_exception
 from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, pyqtSlot
 from PyQt5.QtGui import QBrush, QColor, QPixmap
 from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
-from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QFileDialog
 from PyQt5.QtWidgets import QMenu, QToolButton, QDockWidget, QApplication
 from PyQt5.QtWidgets import QUndoGroup, QStyle
 
@@ -65,9 +66,9 @@ from eddy.core.datatypes.owl import XsdDatatype
 from eddy.core.datatypes.system import Platform, File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.project import ProjectExporter
-from eddy.core.functions.fsystem import fexists
-from eddy.core.functions.misc import snapF, first
-from eddy.core.functions.path import expandPath
+from eddy.core.functions.fsystem import fexists, fcopy
+from eddy.core.functions.misc import snapF, first, cutR
+from eddy.core.functions.path import expandPath, isSubPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.loaders.graphol import GrapholLoader
 from eddy.core.loaders.project import ProjectLoader
@@ -1099,11 +1100,14 @@ class MainWindow(QMainWindow):
         """
         Open a document.
         """
-        # TODO: IMPLEMENT
-        # dialog = OpenFile(expandPath('~'))
-        # dialog.setNameFilters([File.Graphol.value])
-        # if dialog.exec_():
-        #     self.openFile(dialog.selectedFiles()[0])
+        dialog = QFileDialog(self)
+        dialog.setAcceptMode(QFileDialog.AcceptOpen)
+        dialog.setDirectory(expandPath('~'))
+        dialog.setFileMode(QFileDialog.ExistingFile)
+        dialog.setViewMode(QFileDialog.Detail)
+        dialog.setNameFilters([File.Graphol.value])
+        if dialog.exec_():
+            self.openFile(first(dialog.selectedFiles()))
 
     @pyqtSlot()
     def doOpenDialog(self):
@@ -1460,7 +1464,7 @@ class MainWindow(QMainWindow):
             if node:
                 action = self.sender()
                 if node.type() is not action.data():
-                    xnode = self.project.itemFactory.create(action.data())
+                    xnode = diagram.factory.create(action.data())
                     xnode.setPos(node.pos())
                     diagram.undoStack.push(CommandNodeOperatorSwitchTo(diagram, node, xnode))
 
@@ -1934,20 +1938,31 @@ class MainWindow(QMainWindow):
     #         self.recentDocument = self.recentDocument[:Diagram.RecentNum]
     #         self.refreshRecentDocument()
 
-    # TODO: REMOVE
-    def openFile(self, filepath):
+    def openFile(self, path):
         """
-        Open a Graphol document creating the scene and attaching it to the MDI area.
-        :type filepath: str
+        Open a graphol document adding it to the project and to the MDI area.
+        :type path: str
         """
-        # if not self.focusDocument(filepath):
-        #     scene = self.createSceneFromGrapholFile(filepath)
-        #     if scene:
-        #         mainview = self.createDiagramView(scene)
-        #         subwindow = self.createMdiSubWindow(mainview)
-        #         subwindow.showMaximized()
-        #         self.mdi.setActiveSubWindow(subwindow)
-        #         self.mdi.update()
+        if not self.project.diagram(expandPath(path)):
+
+            if not fexists(path):
+                raise IOError('file not found: {0}'.format(path))
+
+            if not isSubPath(self.project.path, path):
+
+                num = 0
+                name = os.path.basename(path)
+                dest = os.path.join(self.project.path, name)
+                while fexists(dest):
+                    name = '{0}_{1}{2}'.format(cutR(name, File.Graphol.extension), num, File.Graphol.extension)
+                    dest = os.path.join(self.project.path, name)
+                    num += 1
+
+                path = fcopy(path, dest)
+
+            self.doLoadDiagram(path)
+            self.doFocusDiagram(self.project.diagram(path))
+            self.doSave()
 
     # TODO: IMPLEMENT
     # def refreshRecentDocument(self):

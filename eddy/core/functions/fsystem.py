@@ -33,8 +33,20 @@
 
 
 import os
+import shutil
 
 from eddy.core.functions.path import expandPath
+
+
+def fcopy(src, dst):
+    """
+    Copy the contents of the file named src to a file named dst.
+    If dst specifies a directory, the file will be copied into dst using the base filename from src.
+    :type src: str
+    :type dst: str
+    :rtype: str
+    """
+    return shutil.copy(expandPath(src), expandPath(dst))
 
 
 def fexists(path):
