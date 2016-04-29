@@ -57,15 +57,14 @@ class GUID(QObject):
         :rtype: str
         """
         if RE_DIGIT.search(prefix):
-            raise ValueError('invalid prefix supplied ({}): id prefix MUST not contain any digit'.format(prefix))
+            raise ValueError('invalid prefix supplied ({0}): id prefix MUST not contain any digit'.format(prefix))
         try:
             uid = self.ids[prefix]
         except KeyError:
             self.ids[prefix] = 0
         else:
             self.ids[prefix] = uid + 1
-        finally:
-            return '{}{}'.format(prefix, self.ids[prefix])
+        return '{}{}'.format(prefix, self.ids[prefix])
 
     @staticmethod
     def parse(uid):
@@ -77,7 +76,7 @@ class GUID(QObject):
         """
         match = RE_ITEM_PREFIX.match(uid)
         if not match:
-            raise ValueError('invalid id supplied ({})'.format(uid))
+            raise ValueError('invalid id supplied ({0})'.format(uid))
         return match.group('prefix'), int(match.group('value'))
 
     def update(self, uid):
@@ -98,4 +97,4 @@ class GUID(QObject):
         """
         Return repr(self).
         """
-        return 'GUID<{}>'.format(','.join(['{}:{}'.format(k, v) for k, v in self.ids.items()]))
+        return 'GUID<{0}>'.format(','.join(['{0}:{1}'.format(k, v) for k, v in self.ids.items()]))

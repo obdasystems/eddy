@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QPointF
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QBrush
 
 from eddy.core.datatypes.collections import DistinctList

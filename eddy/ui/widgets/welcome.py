@@ -35,10 +35,10 @@
 import os
 import webbrowser
 
-from PyQt5.QtCore import Qt, QSettings, pyqtSlot, QSize, QEvent, pyqtSignal
+from PyQt5.QtCore import Qt, QSettings, pyqtSlot, QSize, pyqtSignal
 from PyQt5.QtGui import QPixmap, QIcon, QPainter
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog
-from PyQt5.QtWidgets import QLabel, QWidget, QStyleOption, QStyle, QMenu, QAction
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog, QMenu
+from PyQt5.QtWidgets import QLabel, QWidget, QStyleOption, QStyle, QAction
 
 from eddy import APPNAME, ORGANIZATION, VERSION
 from eddy import PROJECT_HOME, BUG_TRACKER, GRAPHOL_HOME, WORKSPACE

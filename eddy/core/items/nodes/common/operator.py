@@ -34,8 +34,9 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath, QPolygonF, QBrush
+from PyQt5.QtCore import Qt, QPointF
+from PyQt5.QtGui import QPainter, QBrush, QColor
+from PyQt5.QtGui import QPainterPath, QPolygonF, QPen
 
 from eddy.core.items.nodes.common.base import AbstractNode
 

@@ -38,11 +38,9 @@ from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 
 from eddy.core.datatypes.graphol import Item
-from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import cutR
 from eddy.core.items.factory import ItemFactory
 from eddy.core.items.nodes.common.meta import MetaFactory
-from eddy.core.items.nodes.common.meta import PredicateMetaData
 from eddy.core.syntax.owl import OWL2RLValidator
 from eddy.core.utils.guid import GUID
 

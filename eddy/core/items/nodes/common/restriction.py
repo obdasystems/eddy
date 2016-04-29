@@ -34,10 +34,10 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import QRectF, QPointF, Qt
+from PyQt5.QtCore import QRectF, Qt
 from PyQt5.QtGui import QColor, QPainterPath, QPen, QBrush
 
-from eddy.core.datatypes.graphol import Identity, Restriction
+from eddy.core.datatypes.graphol import Restriction
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.regex import RE_CARDINALITY

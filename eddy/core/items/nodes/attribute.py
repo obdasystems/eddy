@@ -32,8 +32,9 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QBrush
+from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtGui import QPixmap, QPainter, QPen
+from PyQt5.QtGui import QColor, QPainterPath, QBrush
 
 from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.items.nodes.common.base import AbstractNode
