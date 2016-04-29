@@ -85,6 +85,14 @@ class AbstractItem(QGraphicsItem):
         return item.realname
 
     @property
+    def project(self):
+        """
+        Returns the project this item belongs to.
+        :rtype: Project
+        """
+        return self.diagram.parent()
+
+    @property
     def shortname(self):
         """
         Returns the item readable short name, i.e:
@@ -94,14 +102,6 @@ class AbstractItem(QGraphicsItem):
         """
         item = self.type()
         return item.shortname
-
-    @property
-    def project(self):
-        """
-        Returns the project this item belongs to.
-        :rtype: Project
-        """
-        return self.diagram.parent()
 
     #############################################
     #   INTERFACE

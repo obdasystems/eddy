@@ -34,13 +34,19 @@
 
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QDialog, QFormLayout, QDialogButtonBox, QLabel
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QDialog, QFormLayout, QLabel, QVBoxLayout
+from PyQt5.QtWidgets import QMessageBox, QDialogButtonBox, QWidget
 
+from eddy.core.commands.common import CommandRefactor
+from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.datatypes.graphol import Identity
 from eddy.core.datatypes.owl import XsdDatatype, Facet
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
+from eddy.core.qt import Font
+
+from eddy.lang import gettext as _
+
 from eddy.ui.fields import IntegerField, StringField, ComboBox
 
 
@@ -152,7 +158,7 @@ class ValueForm(QDialog):
         connect(self.buttonBox.rejected, self.reject)
 
 
-class RenameForm(QDialog):
+class RefactorNameDialog(QDialog):
     """
     This class implements the form used to rename nodes during refactor operations.
     """
@@ -164,57 +170,94 @@ class RenameForm(QDialog):
         """
         super().__init__(parent)
         self.node = node
+
+        arial12r = Font('Arial', 12)
+
+        #############################################
+        # FORM AREA
+        #################################
+
+        self.renameLabel = QLabel(self)
+        self.renameLabel.setFont(arial12r)
+        self.renameLabel.setText(_('REFACTOR_NAME_RENAME_LABEL'))
         self.renameField = StringField(self)
         self.renameField.setFixedWidth(200)
+        self.renameField.setFont(arial12r)
         self.renameField.setValue(self.node.text())
-        self.invalidName = QLabel('\'\' is not a valid predicate name', self)
-        self.invalidName.setProperty('class', 'invalid')
-        self.invalidName.setVisible(False)
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
-        self.mainLayout = QFormLayout(self)
-        self.mainLayout.addRow('Name', self.renameField)
-        self.mainLayout.addRow(self.invalidName)
-        self.mainLayout.addRow(self.buttonBox)
-        self.setWindowTitle('Rename')
-        self.setWindowIcon(QIcon(':/images/eddy'))
-        self.setFixedSize(self.sizeHint())
-
-        connect(self.buttonBox.accepted, self.accept)
-        connect(self.buttonBox.rejected, self.reject)
         connect(self.renameField.textChanged, self.nameChanged)
+
+        self.formWidget = QWidget(self)
+        self.formLayout = QFormLayout(self.formWidget)
+        self.formLayout.addRow(self.renameLabel, self.renameField)
+
+        #############################################
+        # CONFIRMATION AREA
+        #################################
+
+        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.confirmationBox.setContentsMargins(10, 0, 10, 10)
+        self.confirmationBox.setFont(arial12r)
+
+        #############################################
+        # SETUP DIALOG LAYOUT
+        #################################
+
+        self.caption = QLabel(self)
+        self.caption.setFont(arial12r)
+        self.caption.setContentsMargins(8, 0, 8, 0)
+        self.caption.setProperty('class', 'invalid')
+        self.caption.setVisible(False)
+
+        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.addWidget(self.formWidget)
+        self.mainLayout.addWidget(self.caption)
+        self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
+
+        self.setFixedSize(self.sizeHint())
+        self.setWindowTitle(_('REFACTOR_NAME_WINDOW_TITLE'))
+
+        connect(self.confirmationBox.accepted, self.accept)
+        connect(self.confirmationBox.rejected, self.reject)
 
     #############################################
     #   SLOTS
     #################################
 
     @pyqtSlot()
+    def accept(self):
+        """
+        Accepts the rename form and perform refactoring.
+        """
+        name = self.renameField.value()
+        name = name.strip()
+        diagram = self.node.diagram
+        project = self.node.project
+
+        collection = []
+        for n in project.predicates(self.node.type(), self.node.text()):
+            collection.append(CommandNodeLabelChange(n.diagram, n, n.text(), name))
+        command = CommandRefactor(_('COMMAND_NODE_REFACTOR_NAME', self.node.text(), name), collection)
+        diagram.undoStack.push(command)
+
+        super().accept()
+
+    @pyqtSlot()
     def nameChanged(self):
         """
         Executed whenever the text in the rename field changes.
         """
-        button = self.buttonBox.button(QDialogButtonBox.Ok)
-        empty = isEmpty(self.renameField.value())
-        button.setDisabled(empty)
-        self.invalidName.setVisible(empty)
-        self.setFixedSize(self.sizeHint())
+        caption = ''
+        enabled = True
 
-    @pyqtSlot()
-    def accept(self):
-        """
-        Validate the form and trigger accept() if the form is valid.
-        """
         if isEmpty(self.renameField.value()):
-            msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QPixmap(':/icons/warning'))
-            msgbox.setWindowIcon(QIcon(':/images/eddy'))
-            msgbox.setWindowTitle('Invalid predicate')
-            msgbox.setText('You specified an invalid predicate name!')
-            msgbox.setStandardButtons(QMessageBox.Ok)
-            msgbox.exec_()
-        else:
-            # This will strip out leading/trailing whitespaces.
-            self.renameField.setValue(self.renameField.value())
-            super().accept()
+            caption = _('REFACTOR_NAME_CAPTION_NAME_NOT_VALID', self.renameField.value())
+            enabled = False
+
+        self.caption.setText(caption)
+        self.caption.setVisible(not isEmpty(caption))
+        self.confirmationBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
+        self.setFixedSize(self.sizeHint())
 
 
 class ValueRestrictionForm(QDialog):

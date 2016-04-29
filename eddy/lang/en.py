@@ -257,6 +257,14 @@ PROJECT_LOCATION_LABEL = 'Location'
 PROJECT_WINDOW_TITLE = 'New project'
 
 #############################################
+# REFACTOR NAME DIALOG
+#################################
+
+REFACTOR_NAME_RENAME_LABEL = 'Name'
+REFACTOR_NAME_WINDOW_TITLE = 'Rename'
+REFACTOR_NAME_CAPTION_NAME_NOT_VALID = "\'{0}\' is not a valid predicate name"
+
+#############################################
 # WELCOME SCREEN
 #################################
 

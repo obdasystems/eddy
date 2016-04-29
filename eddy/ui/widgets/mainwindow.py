@@ -52,11 +52,11 @@ from eddy.core.commands.common import CommandItemsTranslate
 from eddy.core.commands.edges import CommandEdgeBreakpointRemove
 from eddy.core.commands.edges import CommandEdgeSwap
 from eddy.core.commands.edges import CommandEdgeToggleComplete
+from eddy.core.commands.nodes import CommandNodeLabelChange
+from eddy.core.commands.nodes import CommandNodeLabelMove
 from eddy.core.commands.nodes import CommandNodeOperatorSwitchTo
 from eddy.core.commands.nodes import CommandNodeSetBrush
-from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.commands.nodes import CommandNodeSetDepth
-from eddy.core.commands.nodes import CommandNodeLabelMove
 from eddy.core.datatypes.graphol import Identity
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.graphol import Restriction
@@ -79,10 +79,11 @@ from eddy.lang import gettext as _
 
 from eddy.ui.dialogs.about import About
 from eddy.ui.dialogs.diagram import NewDiagramDialog
+from eddy.ui.dialogs.nodes import CardinalityRestrictionForm
+from eddy.ui.dialogs.nodes import RefactorNameDialog
+from eddy.ui.dialogs.nodes import ValueForm
+from eddy.ui.dialogs.nodes import ValueRestrictionForm
 from eddy.ui.dialogs.preferences import PreferencesDialog
-from eddy.ui.forms.nodes import CardinalityRestrictionForm
-from eddy.ui.forms.nodes import ValueRestrictionForm
-from eddy.ui.forms.nodes import ValueForm
 from eddy.ui.menus import MenuFactory
 from eddy.ui.properties.factory import PropertyFactory
 from eddy.ui.toolbar import Zoom
@@ -1142,16 +1143,6 @@ class MainWindow(QMainWindow):
         #     if node:
         #         prop = self.propertyFactory.create(scene=scene, node=node)
         #         prop.exec_()
-        
-    @pyqtSlot()
-    def doOpenRecentProject(self):
-        """
-        Open the clicked recent document.
-        """
-        # TODO: IMPLEMENT
-        # action = self.sender()
-        # if action:
-        #     self.openFile(action.data())
 
     @pyqtSlot()
     def doOpenDiagramProperties(self):
@@ -1219,25 +1210,16 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def doRefactorName(self):
         """
-        Rename the label of the currently selected node and all the occurrences sharing the same label text.
+        Rename all the instance of the selected predicate node.
         """
-        # TODO: IMPLEMENT
-        # scene = self.mdi.activeScene
-        # if scene:
-        #     scene.setMode(DiagramMode.Idle)
-        #     supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
-        #     node = first([x for x in scene.selectedNodes() if x.item in supported])
-        #     if node:
-        #         form = RenameForm(node, self)
-        #         if form.exec_() == RenameForm.Accepted:
-        #             if node.text() != form.renameField.value():
-        #                 commands = []
-        #                 undo = node.text()
-        #                 redo = form.renameField.value()
-        #                 for n in scene.index.predicates(node.item, node.text()):
-        #                     commands.append(CommandNodeLabelChange(scene, n, n.text(), redo))
-        #                 name = 'change predicate "{}" name to "{}"'.format(undo, redo)
-        #                 scene.undoStack.push(CommandRefactor(name, scene, commands))
+        diagram = self.mdi.activeDiagram
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
+            node = first([x for x in diagram.selectedNodes() if x.type() in supported])
+            if node:
+                 dialog = RefactorNameDialog(node, self)
+                 dialog.exec_()
 
     @pyqtSlot()
     def doRemoveBreakpoint(self):
