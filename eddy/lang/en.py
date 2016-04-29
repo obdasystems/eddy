@@ -112,6 +112,7 @@ MENU_VIEW = 'View'
 # UNDO / REDO COMMANDS
 #################################
 
+COMMAND_COMPOSE_DOMAIN_RANGE_RESTRICTION = 'compose {0} {1}'
 COMMAND_DIAGRAM_CENTER = 'center diagram'
 COMMAND_DIAGRAM_RESIZE = 'resize diagram'
 COMMAND_EDGE_ADD = 'add {0}'

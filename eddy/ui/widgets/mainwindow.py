@@ -889,16 +889,15 @@ class MainWindow(QMainWindow):
         """
         Compose a property domain using the selected role/attribute node.
         """
-        # TODO: TRANSLATE
         diagram = self.mdi.activeDiagram
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             supported = {Item.RoleNode, Item.AttributeNode}
-            node = first([x for x in diagram.selectedNodes() if x.item in supported])
+            node = first([x for x in diagram.selectedNodes() if x.type() in supported])
             if node:
                 action = self.sender()
                 item = action.data()
-                name = 'compose {0} {1}'.format(node.shortname, item.shortname)
+                name = _('COMMAND_COMPOSE_DOMAIN_RANGE_RESTRICTION', node.shortname, item.shortname)
                 items = diagram.propertyComposition(node, item)
                 nodes = {x for x in items if x.isNode()}
                 edges = {x for x in items if x.isEdge()}
