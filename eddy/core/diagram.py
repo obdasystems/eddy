@@ -47,7 +47,9 @@ from eddy.core.functions.graph import bfs
 from eddy.core.functions.misc import snap, snapF, partition, first
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
+from eddy.core.items.factory import ItemFactory
 from eddy.core.utils.clipboard import Clipboard
+from eddy.core.utils.guid import GUID
 
 
 class Diagram(QGraphicsScene):
@@ -73,6 +75,8 @@ class Diagram(QGraphicsScene):
         """
         super().__init__(parent)
 
+        self.factory = ItemFactory(self)
+        self.guid = GUID(self)
         self.mode = DiagramMode.Idle
         self.modeParam = Item.Undefined
         self.path = expandPath(path)
@@ -156,7 +160,7 @@ class Diagram(QGraphicsScene):
         if dropEvent.mimeData().hasFormat('text/plain'):
             mainwindow = self.project.parent()
             snapToGrid = mainwindow.actionSnapToGrid.isChecked()
-            node = self.project.itemFactory.create(Item.forValue(dropEvent.mimeData().text()))
+            node = self.factory.create(Item.forValue(dropEvent.mimeData().text()))
             node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
             self.undoStack.push(CommandNodeAdd(self, node))
             self.sgnActionCompleted.emit(node, dropEvent.modifiers())
@@ -183,7 +187,7 @@ class Diagram(QGraphicsScene):
 
                 mainwindow = self.project.parent()
                 snapToGrid = mainwindow.actionSnapToGrid.isChecked()
-                node = self.project.itemFactory.create(Item.forValue(self.modeParam))
+                node = self.factory.create(Item.forValue(self.modeParam))
                 node.setPos(snap(mousePos, Diagram.GridSize, snapToGrid))
                 self.undoStack.push(CommandNodeAdd(self, node))
                 self.sgnActionCompleted.emit(node, mouseEvent.modifiers())
@@ -198,7 +202,7 @@ class Diagram(QGraphicsScene):
 
                 node = self.itemOnTopOf(mousePos, edges=False)
                 if node:
-                    edge = self.project.itemFactory.create(Item.forValue(self.modeParam), source=node)
+                    edge = self.factory.create(Item.forValue(self.modeParam), source=node)
                     edge.updateEdge(mousePos)
                     self.mousePressEdge = edge
                     self.addItem(edge)
@@ -653,8 +657,8 @@ class Diagram(QGraphicsScene):
         :type item: Item
         :rtype: set
         """
-        restriction = self.project.itemFactory.create(item)
-        edge = self.project.itemFactory.create(Item.InputEdge, source=source, target=restriction)
+        restriction = self.factory.create(item)
+        edge = self.factory.create(Item.InputEdge, source=source, target=restriction)
         size = Diagram.GridSize
 
         offsets = (

@@ -30,7 +30,3 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-
-#
-# from eddy.core.utils.clipboard import Clipboard
-# from eddy.core.utils.guid import GUID

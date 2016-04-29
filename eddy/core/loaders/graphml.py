@@ -309,7 +309,7 @@ class GraphmlLoader(QObject):
                     'breakpoints': points,
                 }
 
-                edge = self.project.itemFactory.create(item, **kwargs)
+                edge = self.diagram.factory.create(item, **kwargs)
 
                 # yEd, differently from the node pos whose origin matches the TOP-LEFT corner,
                 # consider the center of the shape as original anchor point (0,0). So if the
@@ -361,7 +361,7 @@ class GraphmlLoader(QObject):
                     'width': float(geometry.attribute('width')),
                 }
 
-                node = self.project.itemFactory.create(item, **kwargs)
+                node = self.diagram.factory.create(item, **kwargs)
 
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
@@ -399,7 +399,7 @@ class GraphmlLoader(QObject):
                     'width': float(geometry.attribute('width')),
                 }
 
-                node = self.project.itemFactory.create(item, **kwargs)
+                node = self.diagram.factory.create(item, **kwargs)
 
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
@@ -437,7 +437,7 @@ class GraphmlLoader(QObject):
                     'width': float(geometry.attribute('width')),
                 }
 
-                node = self.project.itemFactory.create(item, **kwargs)
+                node = self.pdiagram.factory.create(item, **kwargs)
 
                 # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
                 # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
@@ -644,7 +644,7 @@ class GraphmlLoader(QObject):
             else:
                 self.diagram.addItem(node)
                 self.diagram.sgnItemAdded.emit(self.diagram, node)
-                self.project.guid.update(node.id)
+                self.diagram.guid.update(node.id)
             finally:
                 element = element.nextSiblingElement('node')
 
@@ -675,7 +675,7 @@ class GraphmlLoader(QObject):
             else:
                 self.diagram.addItem(edge)
                 self.diagram.sgnItemAdded.emit(self.diagram, edge)
-                self.project.guid.update(edge.id)
+                self.diagram.guid.update(edge.id)
             finally:
                 element = element.nextSiblingElement('edge')
 

@@ -65,10 +65,10 @@ class ItemFactory(QObject):
     def __init__(self, parent=None):
         """
         Initialize the factory.
-        :type parent: QObject
+        :type parent: Diagram
         """
         super().__init__(parent)
-    
+
     def create(self, item, **kwargs):
         """
         Build and return a graphol item instance using to the given parameters.
@@ -78,43 +78,43 @@ class ItemFactory(QObject):
         """
         item = Item.forValue(item)
         if item is Item.AttributeNode:
-            return AttributeNode(project=self.parent(), **kwargs)
+            return AttributeNode(diagram=self.parent(), **kwargs)
         if item is Item.ComplementNode:
-            return ComplementNode(project=self.parent(), **kwargs)
+            return ComplementNode(diagram=self.parent(), **kwargs)
         if item is Item.ConceptNode:
-            return ConceptNode(project=self.parent(), **kwargs)
+            return ConceptNode(diagram=self.parent(), **kwargs)
         if item is Item.DatatypeRestrictionNode:
-            return DatatypeRestrictionNode(project=self.parent(), **kwargs)
+            return DatatypeRestrictionNode(diagram=self.parent(), **kwargs)
         if item is Item.DisjointUnionNode:
-            return DisjointUnionNode(project=self.parent(), **kwargs)
+            return DisjointUnionNode(diagram=self.parent(), **kwargs)
         if item is Item.DomainRestrictionNode:
-            return DomainRestrictionNode(project=self.parent(), **kwargs)
+            return DomainRestrictionNode(diagram=self.parent(), **kwargs)
         if item is Item.EnumerationNode:
-            return EnumerationNode(project=self.parent(), **kwargs)
+            return EnumerationNode(diagram=self.parent(), **kwargs)
         if item is Item.IndividualNode:
-            return IndividualNode(project=self.parent(), **kwargs)
+            return IndividualNode(diagram=self.parent(), **kwargs)
         if item is Item.IntersectionNode:
-            return IntersectionNode(project=self.parent(), **kwargs)
+            return IntersectionNode(diagram=self.parent(), **kwargs)
         if item is Item.PropertyAssertionNode:
-            return PropertyAssertionNode(project=self.parent(), **kwargs)
+            return PropertyAssertionNode(diagram=self.parent(), **kwargs)
         if item is Item.RangeRestrictionNode:
-            return RangeRestrictionNode(project=self.parent(), **kwargs)
+            return RangeRestrictionNode(diagram=self.parent(), **kwargs)
         if item is Item.RoleNode:
-            return RoleNode(project=self.parent(), **kwargs)
+            return RoleNode(diagram=self.parent(), **kwargs)
         if item is Item.RoleChainNode:
-            return RoleChainNode(project=self.parent(), **kwargs)
+            return RoleChainNode(diagram=self.parent(), **kwargs)
         if item is Item.RoleInverseNode:
-            return RoleInverseNode(project=self.parent(), **kwargs)
+            return RoleInverseNode(diagram=self.parent(), **kwargs)
         if item is Item.UnionNode:
-            return UnionNode(project=self.parent(), **kwargs)
+            return UnionNode(diagram=self.parent(), **kwargs)
         if item is Item.ValueDomainNode:
-            return ValueDomainNode(project=self.parent(), **kwargs)
+            return ValueDomainNode(diagram=self.parent(), **kwargs)
         if item is Item.ValueRestrictionNode:
-            return ValueRestrictionNode(project=self.parent(), **kwargs)
+            return ValueRestrictionNode(diagram=self.parent(), **kwargs)
         if item is Item.InclusionEdge:
-            return InclusionEdge(project=self.parent(), **kwargs)
+            return InclusionEdge(diagram=self.parent(), **kwargs)
         if item is Item.InputEdge:
-            return InputEdge(project=self.parent(), **kwargs)
+            return InputEdge(diagram=self.parent(), **kwargs)
         if item is Item.MembershipEdge:
-            return MembershipEdge(project=self.parent(), **kwargs)
-        raise RuntimeError('unknown item ({}) in ItemFactory.create()'.format(item))
+            return MembershipEdge(diagram=self.parent(), **kwargs)
+        raise RuntimeError('unknown item type ({0}) in ItemFactory.create()'.format(item))

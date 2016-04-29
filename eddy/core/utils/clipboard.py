@@ -73,15 +73,13 @@ class Clipboard(QObject):
         :type diagram: Diagram
         :type pos: QPointF
         """
-        project = diagram.parent()
-
         def ncopy(node):
             """
             Create a copy of the given node generating a new id.
             :type node: AbstractNode
             """
-            copy = node.copy(project)
-            copy.id = project.guid.next('n')
+            copy = node.copy(diagram)
+            copy.id = diagram.guid.next('n')
             return copy
 
         # Create a copy of all the nodes in the clipboard and store them in a dict using the old
@@ -95,8 +93,8 @@ class Clipboard(QObject):
             copied edge to the correspondent previously copied source/target nodes.
             :type edge: AbstractEdge
             """
-            copy = edge.copy(project)
-            copy.id = project.guid.next('e')
+            copy = edge.copy(diagram)
+            copy.id = diagram.guid.next('e')
             copy.source = nodes[edge.source.id]
             copy.target = nodes[edge.target.id]
             copy.source.setAnchor(copy, edge.source.anchor(edge))

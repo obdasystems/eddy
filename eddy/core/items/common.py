@@ -50,14 +50,14 @@ class AbstractItem(QGraphicsItem):
     Prefix = 'i'
     Type = Item.Undefined
 
-    def __init__(self, project, id=None, **kwargs):
+    def __init__(self, diagram, id=None, **kwargs):
         """
         Initialize the item.
-        :type project: Project
+        :type diagram: Diagram
         :type id: str
         """
         super().__init__(**kwargs)
-        self.id = id or project.guid.next(self.Prefix)
+        self.id = id or diagram.guid.next(self.Prefix)
         self.selectionBrush = QBrush(Qt.NoBrush)
         self.selectionPen = QPen(Qt.NoPen)
         self.brush = QBrush(Qt.NoBrush)
@@ -108,10 +108,10 @@ class AbstractItem(QGraphicsItem):
     #################################
 
     @abstractmethod
-    def copy(self, project):
+    def copy(self, diagram):
         """
         Create a copy of the current item.
-        :type project: Project
+        :type diagram: Diagram
         """
         pass
 

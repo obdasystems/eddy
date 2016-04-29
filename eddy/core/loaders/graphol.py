@@ -351,7 +351,7 @@ class GrapholLoader(QObject):
             'breakpoints': points[1:-1],
         }
 
-        edge = self.project.itemFactory.create(item, **kwargs)
+        edge = self.diagram.factory.create(item, **kwargs)
 
         path = edge.source.painterPath()
         if path.contains(edge.source.mapFromScene(points[0])):
@@ -378,7 +378,7 @@ class GrapholLoader(QObject):
             'height': int(geometry.attribute('height')),
             'width': int(geometry.attribute('width')),
         }
-        node = self.project.itemFactory.create(item, **kwargs)
+        node = self.diagram.factory.create(item, **kwargs)
         node.setPos(QPointF(int(geometry.attribute('x')), int(geometry.attribute('y'))))
         return node
 
@@ -478,8 +478,8 @@ class GrapholLoader(QObject):
             func = self.importFuncForItem[item]
             node = func(element)
             self.diagram.addItem(node)
+            self.diagram.guid.update(node.id)
             self.nodes[node.id] = node
-            self.project.guid.update(node.id)
             element = element.nextSiblingElement('node')
 
         # 5) GENERATE EDGES
@@ -491,7 +491,7 @@ class GrapholLoader(QObject):
             func = self.importFuncForItem[item]
             edge = func(element)
             self.diagram.addItem(edge)
-            self.project.guid.update(edge.id)
+            self.diagram.guid.update(edge.id)
             edge.updateEdge()
             element = element.nextSiblingElement('edge')
 

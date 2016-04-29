@@ -84,13 +84,13 @@ class IntersectionNode(OperatorNode):
     #   INTERFACE
     #################################
 
-    def copy(self, project):
+    def copy(self, diagram):
         """
         Create a copy of the current item.
-        :type project: Project
+        :type diagram: Diagram
         """
         kwargs = {'id': self.id, 'height': self.height(), 'width': self.width()}
-        node = project.itemFactory.create(self.type(), **kwargs)
+        node = diagram.factory.create(self.type(), **kwargs)
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))

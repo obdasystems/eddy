@@ -248,10 +248,10 @@ class AbstractEdge(AbstractItem):
         return True
 
     @abstractmethod
-    def copy(self, project):
+    def copy(self, diagram):
         """
         Create a copy of the current item.
-        :type project: Project
+        :type diagram: Diagram
         """
         pass
 

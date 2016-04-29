@@ -77,10 +77,10 @@ class InclusionEdge(AbstractEdge):
 
         return path.controlPointRect()
 
-    def copy(self, project):
+    def copy(self, diagram):
         """
         Create a copy of the current item.
-        :type project: Project
+        :type diagram: Diagram
         """
         kwargs = {
             'id': self.id,
@@ -89,7 +89,7 @@ class InclusionEdge(AbstractEdge):
             'breakpoints': self.breakpoints[:],
             'complete': self.complete,
         }
-        return project.itemFactory.create(self.type(), **kwargs)
+        return diagram.factory.create(self.type(), **kwargs)
 
     @staticmethod
     def createHead(pos1, angle, size):
