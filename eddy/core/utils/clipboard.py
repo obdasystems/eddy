@@ -128,7 +128,7 @@ class Clipboard(QObject):
                 elif item.isEdge():
                     item.updateEdge()
 
-            # Adjust project offsets for a possible next paste using shortcuts.
+            # Adjust offsets for a possible next paste using shortcuts.
             diagram.pasteX = offset.x() + self.PasteOffsetX
             diagram.pasteY = offset.y() + self.PasteOffsetY
 
@@ -160,18 +160,16 @@ class Clipboard(QObject):
         Update the clipboard collecting new selected items.
         :type diagram: Diagram
         """
-        project = diagram.parent()
         nodes = diagram.selectedNodes()
-
         if nodes:
 
             self.edges = {}
-            self.nodes = {node.id: node.copy(project) for node in nodes}
+            self.nodes = {node.id: node.copy(diagram) for node in nodes}
 
             for node in nodes:
                 for edge in node.edges:
                     if edge.id not in self.edges and edge.other(node).isSelected():
-                        copy = edge.copy(project)
+                        copy = edge.copy(diagram)
                         copy.source = self.nodes[edge.source.id]
                         copy.source.setAnchor(copy, edge.source.anchor(edge))
                         copy.target = self.nodes[edge.target.id]
