@@ -482,6 +482,21 @@ class Diagram(QGraphicsScene):
         #   SPECIAL CASES
         #################################
 
+        admissible = {Identity.Role, Identity.Attribute, Identity.Concept, Identity.ValueDomain}
+
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.type() is Item.IndividualNode
+        f3 = lambda x: x.type() is Item.MembershipEdge
+        f4 = lambda x: x.type() in admissible and Identity.Neutral not in x.Identities
+        f5 = lambda x: x.type() in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
+        f6 = lambda x: x.type() is Item.IndividualNode
+
+        conv1 = lambda x: Identity.Concept if x is Identity.Instance else Identity.ValueDomain
+        conv2 = lambda x: Identity.Concept if x in {Identity.Role, Identity.Concept} else Identity.ValueDomain
+        conv3 = lambda x: Identity.RoleInstance if x is Identity.Role else Identity.AttributeInstance
+
+        aux1 = lambda x: x.identity is Identity.Value
+
         for node in weak:
 
             if node.type() is Item.EnumerationNode:
@@ -496,12 +511,8 @@ class Diagram(QGraphicsScene):
                 # node from the WEAK set to the STRONG set, so it will contribute to the
                 # computation of the final identity for all the remaining WEAK nodes.
 
-                f1 = lambda x: x.type() is Item.InputEdge
-                f2 = lambda x: x.type() is Item.IndividualNode
-                f3 = lambda x: Identity.Concept if x is Identity.Instance else Identity.ValueDomain
-
                 individuals = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
-                identities = {f3(x.identity) for x in individuals}
+                identities = {conv1(x.identity) for x in individuals}
                 computed = Identity.Neutral
 
                 if identities:
@@ -529,14 +540,8 @@ class Diagram(QGraphicsScene):
                 # node from the WEAK set to the STRONG set, so it will contribute to the
                 # computation of the final identity for all the remaining WEAK nodes.
 
-                admissible = {Identity.Role, Identity.Attribute, Identity.Concept, Identity.ValueDomain}
-
-                f1 = lambda x: x.type() is Item.InputEdge
-                f2 = lambda x: x.type() in admissible and Identity.Neutral not in x.Identities
-                f3 = lambda x: Identity.Concept if x in {Identity.Role, Identity.Concept} else Identity.ValueDomain
-
-                collection = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
-                identities = {f3(x.identity) for x in collection}
+                collection = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f4)
+                identities = {conv2(x.identity) for x in collection}
                 computed = Identity.Neutral
 
                 if identities:
@@ -572,20 +577,13 @@ class Diagram(QGraphicsScene):
                 # or VALUE nodes since they are not needed to compute the final identity for
                 # the remaining nodes in the WEAK set (see Enumeration node).
 
-                f1 = lambda x: x.type() is Item.MembershipEdge
-                f2 = lambda x: x.type() in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
-                f3 = lambda x: x.type() is Item.InputEdge
-                f4 = lambda x: x.type() is Item.IndividualNode
-                f5 = lambda x: Identity.RoleInstance if x is Identity.Role else Identity.AttributeInstance
-                f6 = lambda x: x.identity is Identity.Value
-
-                outgoing = node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)
-                incoming = node.incomingNodes(filter_on_edges=f3, filter_on_nodes=f4)
+                outgoing = node.outgoingNodes(filter_on_edges=f3, filter_on_nodes=f5)
+                incoming = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f6)
 
                 computed = Identity.Neutral
 
                 # 1) USE MEMBERSHIP EDGE
-                identities = {f5(x.identity) for x in outgoing}
+                identities = {conv3(x.identity) for x in outgoing}
                 if identities:
                     computed = first(identities)
                     if len(identities) > 1:
@@ -594,7 +592,7 @@ class Diagram(QGraphicsScene):
                 # 2) USE INPUT EDGES
                 if computed is Identity.Neutral and len(incoming) >= 2:
                     computed = Identity.RoleInstance
-                    if sum(map(f6, incoming)):
+                    if sum(map(aux1, incoming)):
                         computed = Identity.AttributeInstance
 
                 node.identity = computed
