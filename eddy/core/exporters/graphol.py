@@ -49,7 +49,7 @@ class GrapholExporter(QObject):
         """
         Initialize the graphol exporter.
         :type diagram: Diagram
-        :type parent: MainWindow
+        :type parent: QObject
         """
         super().__init__(parent)
 
@@ -339,9 +339,10 @@ class GrapholExporter(QObject):
     #   DOCUMENT GENERATION
     #################################
 
-    def run(self):
+    def run(self, path=None):
         """
         Perform graphol document generation.
+        :type path: str
         """
         # 1) CREATE THE DOCUMENT
         self.document = QDomDocument()
@@ -373,4 +374,4 @@ class GrapholExporter(QObject):
         root.appendChild(graph)
 
         # 7) GENERATE THE FILE
-        fwrite(self.document.toString(2), self.diagram.path)
+        fwrite(self.document.toString(2), path or self.diagram.path)

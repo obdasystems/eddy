@@ -41,9 +41,9 @@ from traceback import format_exception
 from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, pyqtSlot
 from PyQt5.QtGui import QBrush, QColor, QPixmap
 from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
-from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox
 from PyQt5.QtWidgets import QMenu, QToolButton, QDockWidget, QApplication
-from PyQt5.QtWidgets import QUndoGroup, QStyle
+from PyQt5.QtWidgets import QUndoGroup, QStyle, QFileDialog
 
 from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION, VERSION
 from eddy.core.commands.common import CommandComposeAxiom
@@ -65,10 +65,11 @@ from eddy.core.datatypes.misc import Color, DiagramMode
 from eddy.core.datatypes.owl import XsdDatatype
 from eddy.core.datatypes.system import Platform, File
 from eddy.core.diagram import Diagram
+from eddy.core.exporters.graphol import GrapholExporter
 from eddy.core.exporters.project import ProjectExporter
 from eddy.core.functions.fsystem import fexists, fcopy
 from eddy.core.functions.misc import snapF, first, cutR
-from eddy.core.functions.path import expandPath, isSubPath
+from eddy.core.functions.path import expandPath, isSubPath, uniquePath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.loaders.graphol import GrapholLoader
 from eddy.core.loaders.project import ProjectLoader
@@ -1259,17 +1260,20 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def doSaveAs(self):
         """
-        Save the currently open graphol document (enforcing a new name).
+        Creates a copy of the currently open diagram.
         """
-        # TODO: implement
-        # scene = self.mdi.activeScene
-        # if scene:
-        #     filepath = self.savePath(name=scene.document.name)
-        #     if filepath:
-        #         saved = self.saveFile(scene, filepath)
-        #         if saved:
-        #             scene.undoStack.setClean()
-        #             self.sgnDocumentSaved.emit(scene)
+        diagram = self.mdi.activeDiagram
+        if diagram:
+            dialog = QFileDialog(self)
+            dialog.setAcceptMode(QFileDialog.AcceptSave)
+            dialog.setDirectory(self.project.path)
+            dialog.setFileMode(QFileDialog.ExistingFile)
+            dialog.setNameFilters([File.Graphol.value])
+            dialog.setOption(QFileDialog.DontConfirmOverwrite, True)
+            dialog.setViewMode(QFileDialog.Detail)
+            dialog.selectFile(diagram.name)
+            if dialog.exec_():
+                self.saveFile(diagram, first(dialog.selectedFiles()))
 
     @pyqtSlot()
     def doSelectAll(self):
@@ -1931,78 +1935,25 @@ class MainWindow(QMainWindow):
                 raise IOError('file not found: {0}'.format(path))
 
             if not isSubPath(self.project.path, path):
-
-                num = 0
-                name = os.path.basename(path)
-                dest = os.path.join(self.project.path, name)
-                while fexists(dest):
-                    name = '{0}_{1}{2}'.format(cutR(name, File.Graphol.extension), num, File.Graphol.extension)
-                    dest = os.path.join(self.project.path, name)
-                    num += 1
-
+                name = cutR(os.path.basename(path), File.Graphol.extension)
+                dest = uniquePath(self.project.path, name, File.Graphol.extension)
                 path = fcopy(path, dest)
 
             self.doLoadDiagram(path)
             self.doFocusDiagram(self.project.diagram(path))
             self.doSave()
 
-    # TODO: IMPLEMENT
-    # def refreshRecentDocument(self):
-    #     """
-    #     Update the recent document action list.
-    #     """
-    #     num = min(len(self.recentDocument), Diagram.RecentNum)
-    #     for i in range(num):
-    #         name = '&{} {}'.format(i + 1, os.path.basename(os.path.normpath(self.recentDocument[i])))
-    #         self.actionsOpenRecentDocument[i].setText(name)
-    #         self.actionsOpenRecentDocument[i].setData(self.recentDocument[i])
-    #         self.actionsOpenRecentDocument[i].setVisible(True)
-    #     for i in range(num, Diagram.RecentNum):
-    #         self.actionsOpenRecentDocument[i].setVisible(False)
-    #     self.recentDocumentSeparator.setVisible(num > 0)
-
-    def saveFile(self, scene, filepath):
+    def saveFile(self, diagram, path):
         """
-        Save the given scene to the corresponding given filepath.
-        Will return True if the save has been performed, False otherwise.
-        :type scene: Diagram
-        :type filepath: str
-        :rtype: bool
-        """
-        # TODO: IMPLEMENT
-        # worker = GrapholExporter(scene)
-        #
-        # try:
-        #     worker.run()
-        #     scene.document.write(worker.export(indent=2), filepath)
-        # except Exception as e:
-        #     msgbox = QMessageBox(self)
-        #     msgbox.setIconPixmap(QPixmap(':/icons/error'))
-        #     msgbox.setWindowIcon(QIcon(':/images/eddy'))
-        #     msgbox.setWindowTitle('Save failed!')
-        #     msgbox.setStandardButtons(QMessageBox.Close)
-        #     msgbox.setText('Failed to save document to {}!'.format(os.path.basename(filepath)))
-        #     msgbox.setDetailedText(''.join(format_exception(type(e), e, e.__traceback__)))
-        #     msgbox.exec_()
-        #     return False
-        # else:
-        #     return True
-
-    def savePath(self, path=None, name=None):
-        """
-        Bring up the 'Save' file dialog and returns the selected filepath.
-        Will return None in case the user hit the 'Cancel' button to abort the operation.
+        Save the given diagram in a file identified by the given path.
+        :type diagram: Diagram
         :type path: str
-        :type name: str
-        :rtype: str
         """
-        # TODO: IMPLEMENT
-        # dialog = SaveFile(path=path, parent=self)
-        # dialog.setNameFilters([File.Graphol.value])
-        # dialog.selectFile(name or 'Untitled')
-        # if dialog.exec_():
-        #     return dialog.selectedFiles()[0]
-        # return None
+        base = os.path.dirname(path)
+        name = cutR(os.path.basename(path), File.Graphol.extension)
+        path = uniquePath(base, name, File.Graphol.extension)
+        worker = GrapholExporter(diagram, self)
+        worker.run(path)
 
     def setWindowTitle(self, s=None):
         """
