@@ -643,7 +643,7 @@ class MainWindow(QMainWindow):
         self.projectExplorer.browse(self.project)
 
         connect(self.mdi.subWindowActivated, self.onSubWindowActivated)
-        connect(self.palette_.buttonClicked[int], self.onPaletteButtonClicked)
+        connect(self.palette_.sgnButtonClicked['QToolButton'], self.onPaletteClicked)
         connect(self.ontologyExplorer.sgnItemDoubleClicked['QGraphicsItem'], self.doFocusItem)
         connect(self.projectExplorer.sgnItemDoubleClicked['QGraphicsScene'], self.doFocusDiagram)
 
@@ -1582,7 +1582,8 @@ class MainWindow(QMainWindow):
         diagram = self.mdi.activeDiagram
         if diagram:
             if not modifiers & Qt.ControlModifier:
-                self.palette_.button(item.type()).setChecked(False)
+                button = self.palette_.button(item.type())
+                button.setChecked(False)
                 diagram.setMode(DiagramMode.Idle)
 
     @pyqtSlot(DiagramMode)
@@ -1592,27 +1593,24 @@ class MainWindow(QMainWindow):
         :type mode: DiagramMode
         """
         if mode not in (DiagramMode.InsertNode, DiagramMode.InsertEdge):
-            self.palette_.clear()
+            self.palette_.reset()
 
-    @pyqtSlot(int)
-    def onPaletteButtonClicked(self, item):
+    @pyqtSlot('QToolButton')
+    def onPaletteClicked(self, button):
         """
         Executed whenever a palette button is clicked.
-        :type item: Item
+        :type button: Button
         """
-        # TODO: disable palette when there is no diagram
         diagram = self.mdi.activeDiagram
         if diagram:
             diagram.clearSelection()
-            button = self.palette_.button(item)
-            self.palette_.clear(button)
             if not button.isChecked():
                 diagram.setMode(DiagramMode.Idle)
             else:
-                if Item.ConceptNode <= item < Item.InclusionEdge:
-                    diagram.setMode(DiagramMode.InsertNode, item)
-                elif Item.InclusionEdge <= item <= Item.MembershipEdge:
-                    diagram.setMode(DiagramMode.InsertEdge, item)
+                if Item.ConceptNode <= button.item < Item.InclusionEdge:
+                    diagram.setMode(DiagramMode.InsertNode, button.item)
+                elif Item.InclusionEdge <= button.item <= Item.MembershipEdge:
+                    diagram.setMode(DiagramMode.InsertEdge, button.item)
 
     @pyqtSlot('QMdiSubWindow')
     def onSubWindowActivated(self, subwindow):
@@ -1621,9 +1619,11 @@ class MainWindow(QMainWindow):
         :type subwindow: MdiSubWindow
         """
         if subwindow:
+
             view = subwindow.view
             diagram = subwindow.diagram
             diagram.undoStack.setActive()
+            diagram.setMode(DiagramMode.Idle)
             self.info.browse(diagram)
             self.overview.browse(view)
             disconnect(self.zoom.sgnChanged)
@@ -1632,7 +1632,9 @@ class MainWindow(QMainWindow):
             connect(self.zoom.sgnChanged, view.onZoomChanged)
             connect(view.sgnScaled, self.zoom.scaleChanged)
             self.setWindowTitle(diagram.name)
+
         else:
+
             if not self.mdi.subWindowList():
                 self.info.reset()
                 self.overview.reset()

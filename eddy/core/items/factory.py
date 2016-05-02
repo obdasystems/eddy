@@ -36,6 +36,9 @@ from PyQt5.QtCore import QObject
 
 from eddy.core.datatypes.graphol import Item
 
+from eddy.core.items.edges.inclusion import InclusionEdge
+from eddy.core.items.edges.input import InputEdge
+from eddy.core.items.edges.membership import MembershipEdge
 from eddy.core.items.nodes.attribute import AttributeNode
 from eddy.core.items.nodes.complement import ComplementNode
 from eddy.core.items.nodes.concept import ConceptNode
@@ -53,9 +56,6 @@ from eddy.core.items.nodes.role_inverse import RoleInverseNode
 from eddy.core.items.nodes.union import UnionNode
 from eddy.core.items.nodes.value_domain import ValueDomainNode
 from eddy.core.items.nodes.value_restriction import ValueRestrictionNode
-from eddy.core.items.edges.inclusion import InclusionEdge
-from eddy.core.items.edges.input import InputEdge
-from eddy.core.items.edges.membership import MembershipEdge
 
 
 class ItemFactory(QObject):
@@ -68,6 +68,67 @@ class ItemFactory(QObject):
         :type parent: Diagram
         """
         super().__init__(parent)
+    
+    @classmethod
+    def classForItem(cls, item):
+        """
+        Returns the class implementing the given item.
+        :type item: Item
+        :rtype: class 
+        """
+        item = Item.forValue(item)
+        if item is Item.AttributeNode:
+            return AttributeNode
+        if item is Item.ComplementNode:
+            return ComplementNode
+        if item is Item.ConceptNode:
+            return ConceptNode
+        if item is Item.DatatypeRestrictionNode:
+            return DatatypeRestrictionNode
+        if item is Item.DisjointUnionNode:
+            return DisjointUnionNode
+        if item is Item.DomainRestrictionNode:
+            return DomainRestrictionNode
+        if item is Item.EnumerationNode:
+            return EnumerationNode
+        if item is Item.IndividualNode:
+            return IndividualNode
+        if item is Item.IntersectionNode:
+            return IntersectionNode
+        if item is Item.PropertyAssertionNode:
+            return PropertyAssertionNode
+        if item is Item.RangeRestrictionNode:
+            return RangeRestrictionNode
+        if item is Item.RoleNode:
+            return RoleNode
+        if item is Item.RoleChainNode:
+            return RoleChainNode
+        if item is Item.RoleInverseNode:
+            return RoleInverseNode
+        if item is Item.UnionNode:
+            return UnionNode
+        if item is Item.ValueDomainNode:
+            return ValueDomainNode
+        if item is Item.ValueRestrictionNode:
+            return ValueRestrictionNode
+        if item is Item.InclusionEdge:
+            return InclusionEdge
+        if item is Item.InputEdge:
+            return InputEdge
+        if item is Item.MembershipEdge:
+            return MembershipEdge
+        raise RuntimeError('unknown item type ({0})'.format(item))
+
+    @classmethod
+    def imageForItem(cls, item, width, height):
+        """
+        Returns a pixmap representing the given item.
+        :type item: Item
+        :type width: int
+        :type height: int
+        :rtype: QPixmap
+        """
+        return ItemFactory.classForItem(item).image(w=width, h=height)
 
     def create(self, item, **kwargs):
         """
@@ -76,45 +137,4 @@ class ItemFactory(QObject):
         :type kwargs: dict
         :rtype: AbstractItem
         """
-        item = Item.forValue(item)
-        if item is Item.AttributeNode:
-            return AttributeNode(diagram=self.parent(), **kwargs)
-        if item is Item.ComplementNode:
-            return ComplementNode(diagram=self.parent(), **kwargs)
-        if item is Item.ConceptNode:
-            return ConceptNode(diagram=self.parent(), **kwargs)
-        if item is Item.DatatypeRestrictionNode:
-            return DatatypeRestrictionNode(diagram=self.parent(), **kwargs)
-        if item is Item.DisjointUnionNode:
-            return DisjointUnionNode(diagram=self.parent(), **kwargs)
-        if item is Item.DomainRestrictionNode:
-            return DomainRestrictionNode(diagram=self.parent(), **kwargs)
-        if item is Item.EnumerationNode:
-            return EnumerationNode(diagram=self.parent(), **kwargs)
-        if item is Item.IndividualNode:
-            return IndividualNode(diagram=self.parent(), **kwargs)
-        if item is Item.IntersectionNode:
-            return IntersectionNode(diagram=self.parent(), **kwargs)
-        if item is Item.PropertyAssertionNode:
-            return PropertyAssertionNode(diagram=self.parent(), **kwargs)
-        if item is Item.RangeRestrictionNode:
-            return RangeRestrictionNode(diagram=self.parent(), **kwargs)
-        if item is Item.RoleNode:
-            return RoleNode(diagram=self.parent(), **kwargs)
-        if item is Item.RoleChainNode:
-            return RoleChainNode(diagram=self.parent(), **kwargs)
-        if item is Item.RoleInverseNode:
-            return RoleInverseNode(diagram=self.parent(), **kwargs)
-        if item is Item.UnionNode:
-            return UnionNode(diagram=self.parent(), **kwargs)
-        if item is Item.ValueDomainNode:
-            return ValueDomainNode(diagram=self.parent(), **kwargs)
-        if item is Item.ValueRestrictionNode:
-            return ValueRestrictionNode(diagram=self.parent(), **kwargs)
-        if item is Item.InclusionEdge:
-            return InclusionEdge(diagram=self.parent(), **kwargs)
-        if item is Item.InputEdge:
-            return InputEdge(diagram=self.parent(), **kwargs)
-        if item is Item.MembershipEdge:
-            return MembershipEdge(diagram=self.parent(), **kwargs)
-        raise RuntimeError('unknown item type ({0}) in ItemFactory.create()'.format(item))
+        return ItemFactory.classForItem(item)(diagram=self.parent(), **kwargs)
