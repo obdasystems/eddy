@@ -66,7 +66,7 @@ def cutL(text, *args):
     """
     for token in args:
         if token and text.startswith(token):
-            return text[len(token)+1:]
+            return text[len(token):]
     return text
 
 
