@@ -227,7 +227,7 @@ class AbstractNode(AbstractItem):
         Returns True if this node is a contructor node, False otherwise.
         :rtype: bool
         """
-        return Item.DomainRestrictionNode <= self.type() <= Item.PropertyAssertionNode
+        return Item.DomainRestrictionNode <= self.type() <= Item.FacetNode
 
     def isPredicate(self):
         """
@@ -738,14 +738,14 @@ class AbstractResizableNode(AbstractNode):
                         'selection': self.mousePressSelection,
                         'polygon': self.mousePressPolygon,
                         'anchors': self.mousePressData,
-                        'moved': hasattr(self, 'label') and self.label.moved,
+                        'moved': hasattr(self, 'label') and self.label.isMoved(),
                     },
                     'redo': {
                         'background': background,
                         'selection': selection,
                         'polygon': polygon,
                         'anchors': {edge: pos for edge, pos in self.anchors.items()},
-                        'moved': hasattr(self, 'label') and self.label.moved,
+                        'moved': hasattr(self, 'label') and self.label.isMoved(),
                     }
                 }
 

@@ -54,8 +54,11 @@ class DatatypeRestrictionNode(OperatorNode):
         :type brush: QBrush
         """
         super().__init__(brush=QBrush(QColor(252, 252, 252)), **kwargs)
-        self.label = NodeLabel('data', movable=False, editable=False, parent=self)
-        self.label.updatePos()
+        self.label = NodeLabel(template='data',
+                               editable=False,
+                               movable=False,
+                               pos=lambda: self.center(),
+                               parent=self)
 
     #############################################
     #   PROPERTIES

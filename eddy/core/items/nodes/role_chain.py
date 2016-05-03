@@ -57,8 +57,11 @@ class RoleChainNode(OperatorNode):
         """
         super().__init__(brush=QBrush(QColor(252, 252, 252)), **kwargs)
         self.inputs = inputs or DistinctList()
-        self.label = NodeLabel('chain', movable=False, editable=False, parent=self)
-        self.label.updatePos()
+        self.label = NodeLabel(template='chain',
+                               editable=False,
+                               movable=False,
+                               pos=lambda: self.center(),
+                               parent=self)
 
     #############################################
     #   PROPERTIES

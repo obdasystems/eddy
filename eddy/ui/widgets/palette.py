@@ -65,9 +65,9 @@ class Palette(QWidget):
             Item.ConceptNode,
             Item.RoleNode,
             Item.AttributeNode,
-            Item.IndividualNode,
             Item.ValueDomainNode,
-            Item.ValueRestrictionNode,
+            Item.IndividualNode,
+            Item.FacetNode,
             Item.DomainRestrictionNode,
             Item.RangeRestrictionNode,
             Item.IntersectionNode,
@@ -229,7 +229,7 @@ class Button(QToolButton):
         if mouseEvent.buttons() & Qt.LeftButton:
 
             # Exclude edges from drag & drop.
-            if Item.ConceptNode <= self.item <= Item.PropertyAssertionNode:
+            if Item.ConceptNode <= self.item < Item.InclusionEdge:
                 distance = (mouseEvent.pos() - self.startPos).manhattanLength()
                 if distance >= QApplication.startDragDistance():
                     mimeData = QMimeData()

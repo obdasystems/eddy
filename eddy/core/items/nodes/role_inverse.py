@@ -54,8 +54,11 @@ class RoleInverseNode(OperatorNode):
         :type brush: QBrush
         """
         super().__init__(brush=QBrush(QColor(252, 252, 252)), **kwargs)
-        self.label = NodeLabel('inv', movable=False, editable=False, parent=self)
-        self.label.updatePos()
+        self.label = NodeLabel(template='inv',
+                               editable=False,
+                               movable=False,
+                               pos=lambda: self.center(),
+                               parent=self)
 
     #############################################
     #   PROPERTIES

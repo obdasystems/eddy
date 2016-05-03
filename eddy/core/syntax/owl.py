@@ -33,6 +33,7 @@
 
 
 from eddy.core.datatypes.graphol import Identity, Item, Restriction
+from eddy.core.datatypes.owl import Facet
 from eddy.core.functions.misc import cutR, first
 from eddy.core.syntax.common import AbstractValidator
 from eddy.core.syntax.common import SyntaxValidationResult
@@ -135,10 +136,6 @@ class OWL2RLValidator(AbstractValidator):
                     if source.identity not in target.Identities:
                         # Source node identity is not supported by this target node.
                         raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', target.name, source.identity.value))
-
-                    if source.type() is Item.ValueRestrictionNode:
-                        # Exclude invalid nodes despite identity matching.
-                        raise SyntaxError(_('SYNTAX_INPUT_VALUE_RESTRICTION_SOURCE', target.name))
 
                     #############################################
                     # TARGET = COMPLEMENT
@@ -246,9 +243,9 @@ class OWL2RLValidator(AbstractValidator):
                     # TARGET = DATATYPE RESTRICTION
                     #################################
 
-                    if source.type() not in {Item.ValueDomainNode, Item.ValueRestrictionNode}:
+                    if source.type() not in {Item.ValueDomainNode, Item.FacetNode}:
                         # The DatatypeRestriction node is used to compose complex datatypes and
-                        # accepts as inputs one value-domain node and n >= 1 value-restriction
+                        # accepts as inputs one value-domain node and n >= 1 facet
                         # nodes to compose the OWL 2 equivalent DatatypeRestriction.
                         raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', target.name, source.name))
 
@@ -260,16 +257,19 @@ class OWL2RLValidator(AbstractValidator):
                             # The value-domain has already been attached to the DatatypeRestriction.
                             raise SyntaxError(_('SYNTAX_INPUT_DATA_TOO_MANY_DATATYPE'))
 
-                    # We need to check whether the DatatypeRestriction node has already datatype
-                    # inferred: if that's the case and the datatype doesn't match the datatype of
-                    # the source node, we deny the connection to prevent inconsistencies.
-                    f1 = lambda x: x.type() is Item.InputEdge and x is not edge
-                    f2 = lambda x: x.type() in {Item.ValueDomainNode, Item.ValueRestrictionNode} and x is not source
-                    collection = target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
-                    if collection:
-                        k = first(collection).datatype
-                        if k is not source.datatype:
-                            raise SyntaxError(_('SYNTAX_INPUT_DATA_DATATYPE_MISMATCH', source.datatype.value, k.value))
+                    if source.type() is Item.FacetNode:
+
+                        # We need to check if the DatatypeRestriction node has already datatype
+                        # connected: if that's the case we need to check whether the Facet we
+                        # want to attach to the datatype restriction node supports it.
+                        f1 = lambda x: x.type() is Item.InputEdge
+                        f2 = lambda x: x.type() is Item.ValueDomainNode
+                        node = first(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+                        if node:
+                            if source.facet not in Facet.forDatatype(node.datatype):
+                                nameA = source.facet.value
+                                nameB = node.datatype.value
+                                raise SyntaxError(_('SYNTAX_INPUT_DATA_INVALID_FACET', nameA , nameB))
 
                 elif target.type() is Item.PropertyAssertionNode:
 

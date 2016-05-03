@@ -36,6 +36,7 @@ from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import QMenu
 
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
+from eddy.core.datatypes.owl import Facet
 from eddy.core.functions.misc import first
 
 
@@ -359,6 +360,38 @@ class MenuFactory(QObject):
 
         return menu
 
+    def buildFacetNodeMenu(self, mainwindow, diagram, node):
+        """
+        Build and return a QMenu instance for facet nodes.
+        :type mainwindow: MainWindow
+        :type diagram: Diagram
+        :type node: FacetNode
+        :rtype: QMenu
+        """
+        menu = self.buildGenericNodeMenu(mainwindow, diagram, node)
+        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetFacet)
+        menu.insertSeparator(mainwindow.actionOpenNodeProperties)
+        #############################################
+        # BEGIN CONSTRAIN FACET SWITCH
+        #################################
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.type() is Item.DatatypeRestrictionNode
+        f3 = lambda x: x.type() is Item.ValueDomainNode
+        facet = node.facet
+        admissible = [x for x in Facet]
+        restriction = first(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+        if restriction:
+            valuedomain = first(restriction.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
+            if valuedomain:
+                admissible = Facet.forDatatype(valuedomain.datatype)
+        for action in mainwindow.actionsSetFacet:
+            action.setChecked(action.data() is facet)
+            action.setVisible(action.data() in admissible)
+        #############################################
+        # END CONSTRAIN FACET SWITCH
+        #################################
+        return menu
+
     def buildIndividualNodeMenu(self, mainwindow, diagram, node):
         """
         Build and return a QMenu instance for individual nodes.
@@ -561,8 +594,9 @@ class MenuFactory(QObject):
         """
         menu = self.buildOperatorNodeMenu(mainwindow, diagram, node)
         if node.edges:
+            admissible = {Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode}
             for action in mainwindow.actionsSwitchOperator:
-                action.setVisible(action.data() in {Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode})
+                action.setVisible(action.data() in admissible)
         return menu
 
     def buildValueDomainNodeMenu(self, mainwindow, diagram, node):
@@ -577,33 +611,8 @@ class MenuFactory(QObject):
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetBrush)
         menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetDatatype)
         menu.insertSeparator(mainwindow.actionOpenNodeProperties)
-
-        # Switch the check matching the current datatype.
         for action in mainwindow.actionsSetDatatype:
             action.setChecked(node.datatype == action.data())
-
-        return menu
-
-    def buildValueRestrictionNodeMenu(self, mainwindow, diagram, node):
-        """
-        Build and return a QMenu instance for value restriction nodes.
-        :type mainwindow: MainWindow
-        :type diagram: Diagram
-        :type node: ValueRestrictionNode
-        :rtype: QMenu
-        """
-        menu = self.buildGenericNodeMenu(mainwindow, diagram, node)
-        menu.insertMenu(mainwindow.actionOpenNodeProperties, mainwindow.menuSetBrush)
-        menu.insertAction(mainwindow.actionOpenNodeProperties, mainwindow.actionSetValueRestriction)
-
-        # Append label specific actions.
-        collection = self.buildNodeLabelSpecificActionSet(mainwindow, diagram, node)
-        if collection:
-            menu.insertSeparator(mainwindow.actionOpenNodeProperties)
-            for action in collection:
-                menu.insertAction(mainwindow.actionOpenNodeProperties, action)
-
-        menu.insertSeparator(mainwindow.actionOpenNodeProperties)
         return menu
 
     #############################################
@@ -620,7 +629,7 @@ class MenuFactory(QObject):
         :rtype: list
         """
         collection = []
-        if node.label.movable and node.label.moved:
+        if node.label.isMovable() and node.label.isMoved():
             collection.append(mainwindow.actionRelocateLabel)
         return collection
 
@@ -657,6 +666,8 @@ class MenuFactory(QObject):
             return self.buildEnumerationNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.IndividualNode:
             return self.buildIndividualNodeMenu(mainwindow, diagram, item)
+        if item.type() is Item.FacetNode:
+            return self.buildFacetNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.IntersectionNode:
             return self.buildIntersectionNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.PropertyAssertionNode:
@@ -673,8 +684,6 @@ class MenuFactory(QObject):
             return self.buildUnionNodeMenu(mainwindow, diagram, item)
         if item.type() is Item.ValueDomainNode:
             return self.buildValueDomainNodeMenu(mainwindow, diagram, item)
-        if item.type() is Item.ValueRestrictionNode:
-            return self.buildValueRestrictionNodeMenu(mainwindow, diagram, item)
 
         ## EDGES
         if item.type() is Item.InclusionEdge:

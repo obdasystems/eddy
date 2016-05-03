@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QPen
 from PyQt5.QtGui import QColor, QPainterPath, QBrush
 
@@ -62,8 +62,9 @@ class AttributeNode(AbstractNode):
         self.polygon = self.createPolygon(20, 20)
         self.background = self.createBackground(28, 28)
         self.selection = self.createBackground(28, 28)
-        self.label = NodeLabel('attribute', centered=False, parent=self)
-        self.label.updatePos()
+        self.label = NodeLabel(template='attribute',
+                               pos=lambda: self.center() - QPointF(0, 22),
+                               parent=self)
 
     #############################################
     #   PROPERTIES
@@ -221,7 +222,7 @@ class AttributeNode(AbstractNode):
         Set the label text.
         :type text: str
         """
-        self.label.editable = Special.forLabel(text) is None
+        self.label.setEditable(Special.forLabel(text) is None)
         self.label.setText(text)
 
     def setTextPos(self, pos):

@@ -46,6 +46,7 @@ from eddy.core.items.nodes.datatype_restriction import DatatypeRestrictionNode
 from eddy.core.items.nodes.disjoint_union import DisjointUnionNode
 from eddy.core.items.nodes.domain_restriction import DomainRestrictionNode
 from eddy.core.items.nodes.enumeration import EnumerationNode
+from eddy.core.items.nodes.facet import FacetNode
 from eddy.core.items.nodes.individual import IndividualNode
 from eddy.core.items.nodes.intersection import IntersectionNode
 from eddy.core.items.nodes.property_assertion import PropertyAssertionNode
@@ -91,6 +92,8 @@ class ItemFactory(QObject):
             return DomainRestrictionNode
         if item is Item.EnumerationNode:
             return EnumerationNode
+        if item is Item.FacetNode:
+            return FacetNode
         if item is Item.IndividualNode:
             return IndividualNode
         if item is Item.IntersectionNode:

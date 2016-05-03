@@ -73,8 +73,10 @@ class RoleNode(AbstractResizableNode):
         self.polygon = self.createPolygon(w, h)
         self.background = self.createBackground(w + s, h + s)
         self.selection = self.createSelection(w + s, h + s)
-        self.label = NodeLabel('role', parent=self)
-        self.label.updatePos()
+        self.label = NodeLabel(template='role',
+                               pos=lambda: self.center(),
+                               parent=self)
+        self.updateTextPos()
         self.updateHandles()
 
     #############################################
@@ -360,7 +362,7 @@ class RoleNode(AbstractResizableNode):
         snap = mainwindow.actionSnapToGrid.isChecked()
         size = self.diagram.GridSize
         offset = self.HandleSize + self.HandleMove
-        moved = self.label.moved
+        moved = self.label.isMoved()
         
         R = QRectF(self.boundingRect())
         D = QPointF(0, 0)
@@ -630,7 +632,7 @@ class RoleNode(AbstractResizableNode):
         Set the label text.
         :type text: str
         """
-        self.label.editable = Special.forLabel(text) is None
+        self.label.setEditable(Special.forLabel(text) is None)
         self.label.setText(text)
 
     def setTextPos(self, pos):

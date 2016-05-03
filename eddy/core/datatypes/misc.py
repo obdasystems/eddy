@@ -72,7 +72,7 @@ class Color(Enum):
 @unique
 class DiagramMode(IntEnum):
     """
-    This class defines the diagram scene operational modes.
+    This class defines the diagram operational modes.
     """
     Idle = 0
     InsertNode = 1

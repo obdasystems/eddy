@@ -34,7 +34,7 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import QRectF, Qt
+from PyQt5.QtCore import QRectF, Qt, QPointF
 from PyQt5.QtGui import QColor, QPainterPath, QPen, QBrush
 
 from eddy.core.datatypes.graphol import Restriction
@@ -62,8 +62,10 @@ class RestrictionNode(AbstractNode):
         self.polygon = self.createPolygon(20, 20)
         self.background = self.createBackground(28, 28)
         self.selection = self.createSelection(28, 28)
-        self.label = NodeLabel(Restriction.Exists.format(), centered=False, editable=False, parent=self)
-        self.label.updatePos()
+        self.label = NodeLabel(template='attribute',
+                               editable=False,
+                               pos=lambda: self.center() - QPointF(0, 22),
+                               parent=self)
 
     #############################################
     #   PROPERTIES

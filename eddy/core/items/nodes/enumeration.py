@@ -55,8 +55,11 @@ class EnumerationNode(OperatorNode):
         """
         self._identity = Identity.Neutral
         super().__init__(brush=QBrush(QColor(252, 252, 252)), **kwargs)
-        self.label = NodeLabel('oneOf', movable=False, editable=False, parent=self)
-        self.label.updatePos()
+        self.label = NodeLabel(template='oneOf',
+                               editable=False,
+                               movable=False,
+                               pos=lambda: self.center(),
+                               parent=self)
 
     #############################################
     #   PROPERTIES

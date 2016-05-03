@@ -64,8 +64,13 @@ class ValueDomainNode(AbstractNode):
         self.polygon = self.createPolygon(self.MinWidth, self.MinHeight)
         self.background = self.createBackground(self.MinWidth + 8, self.MinHeight + 8)
         self.selection = self.createSelection(self.MinWidth + 8, self.MinHeight + 8)
-        self.label = NodeLabel('xsd:string', movable=False, editable=False, parent=self)
+        self.label = NodeLabel(template=XsdDatatype.string.value,
+                               editable=False,
+                               movable=False,
+                               pos=lambda: self.center(),
+                               parent=self)
         self.updateLayout()
+        self.updateTextPos()
 
     #############################################
     #   PROPERTIES

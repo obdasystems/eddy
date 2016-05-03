@@ -45,7 +45,7 @@ class Identity(Enum):
     """
     __order__ = 'Neutral Concept Role Attribute ValueDomain ' \
                 'Instance Value RoleInstance AttributeInstance ' \
-                'Unknown'
+                'Facet Unknown'
 
     Neutral = 'Neutral'
     Concept = 'Concept'
@@ -56,6 +56,7 @@ class Identity(Enum):
     Value = 'Value'
     RoleInstance = 'Role Instance'
     AttributeInstance = 'Attribute Instance'
+    Facet = 'Facet'
     Unknown = 'Unknown'
 
 
@@ -68,7 +69,7 @@ class Item(IntEnum):
                 'ValueRestrictionNode DomainRestrictionNode RangeRestrictionNode ' \
                 'UnionNode EnumerationNode ComplementNode RoleChainNode RoleInverseNode ' \
                 'DatatypeRestrictionNode DisjointUnionNode PropertyAssertionNode ' \
-                'InclusionEdge InputEdge MembershipEdge Label Undefined'
+                'FacetNode InclusionEdge InputEdge MembershipEdge Label Undefined'
 
     # PREDICATES
     ConceptNode = 65537
@@ -90,15 +91,16 @@ class Item(IntEnum):
     DatatypeRestrictionNode = 65551
     DisjointUnionNode = 65552
     PropertyAssertionNode = 65553
+    FacetNode = 65554
 
     # EDGES
-    InclusionEdge = 65554
-    InputEdge = 65555
-    MembershipEdge = 65556
+    InclusionEdge = 65555
+    InputEdge = 65556
+    MembershipEdge = 65557
 
     # EXTRA
-    Label = 65557
-    Undefined = 65558
+    Label = 65558
+    Undefined = 65559
 
     @classmethod
     def forValue(cls, value):

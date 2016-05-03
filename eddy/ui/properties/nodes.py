@@ -280,7 +280,7 @@ class EditableNodeProperty(PredicateNodeProperty):
         self.textField = StringField(self.labelWidget)
         self.textField.setFixedWidth(300)
         self.textField.setValue(self.node.text())
-        self.textField.setEnabled(self.node.label.editable)
+        self.textField.setEnabled(self.node.label.isEditable())
 
         self.labelLayout.addRow('Text', self.textField)
 

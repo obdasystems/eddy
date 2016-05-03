@@ -136,7 +136,7 @@ class AbstractItem(QGraphicsItem):
         Returns True if this element is a node, False otherwise.
         :rtype: bool
         """
-        return Item.ConceptNode <= self.type() <= Item.PropertyAssertionNode
+        return Item.ConceptNode <= self.type() < Item.InclusionEdge
 
     @abstractmethod
     def painterPath(self):
@@ -164,7 +164,7 @@ class AbstractItem(QGraphicsItem):
         """
         Returns repr(self).
         """
-        return '{}:{}'.format(self.__class__.__name__, self.id)
+        return '{0}:{1}'.format(self.__class__.__name__, self.id)
 
 
 class AbstractLabel(QGraphicsTextItem):
@@ -226,4 +226,4 @@ class AbstractLabel(QGraphicsTextItem):
         """
         Returns repr(self).
         """
-        return 'Label<{}:{}>'.format(self.parentItem().__class__.__name__, self.parentItem().id)
+        return 'Label<{0}:{1}>'.format(self.parentItem().__class__.__name__, self.parentItem().id)

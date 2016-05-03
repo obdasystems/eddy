@@ -146,7 +146,7 @@ class Info(QScrollArea):
                             show = self.infoAttributeNode
                         elif item.type() is Item.IndividualNode and item.identity is Identity.Value:
                             show = self.infoValueNode
-                        elif item.label.editable:
+                        elif item.label.isEditable():
                             show = self.infoEditableNode
                         else:
                             show = self.infoPredicateNode

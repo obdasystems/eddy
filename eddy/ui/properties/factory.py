@@ -64,7 +64,7 @@ class PropertyFactory(QObject):
             window = SceneProperty(scene=scene)
         else:
             if node.predicate:
-                if node.label.editable:
+                if node.label.isEditable():
                     window = EditableNodeProperty(scene=scene, node=node)
                 else:
                     window = PredicateNodeProperty(scene=scene, node=node)

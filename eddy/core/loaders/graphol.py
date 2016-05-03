@@ -74,6 +74,7 @@ class GrapholLoader(QObject):
             Item.DisjointUnionNode: self.buildDisjointUnionNode,
             Item.DomainRestrictionNode: self.buildDomainRestrictionNode,
             Item.EnumerationNode: self.buildEnumerationNode,
+            Item.FacetNode: self.buildFacetNode,
             Item.IndividualNode: self.buildIndividualNode,
             Item.IntersectionNode: self.buildIntersectionNode,
             Item.PropertyAssertionNode: self.buildPropertyAssertionNode,
@@ -83,7 +84,7 @@ class GrapholLoader(QObject):
             Item.RoleInverseNode: self.buildRoleInverseNode,
             Item.UnionNode: self.buildUnionNode,
             Item.ValueDomainNode: self.buildValueDomainNode,
-            Item.ValueRestrictionNode: self.buildValueRestrictionNode,
+            Item.ValueRestrictionNode: self.buildFacetNode,
             Item.InclusionEdge: self.buildInclusionEdge,
             Item.InputEdge: self.buildInputEdge,
             Item.MembershipEdge: self.buildMembershipEdge,
@@ -97,6 +98,7 @@ class GrapholLoader(QObject):
             'disjoint-union': Item.DisjointUnionNode,
             'domain-restriction': Item.DomainRestrictionNode,
             'enumeration': Item.EnumerationNode,
+            'facet': Item.FacetNode,
             'individual': Item.IndividualNode,
             'intersection': Item.IntersectionNode,
             'property-assertion': Item.PropertyAssertionNode,
@@ -186,6 +188,17 @@ class GrapholLoader(QObject):
         :rtype: EnumerationNode
         """
         return self.buildGenericNode(Item.EnumerationNode, element)
+
+    def buildFacetNode(self, element):
+        """
+        Build a FacetNode node using the given QDomElement.
+        :type element: QDomElement
+        :rtype: FacetNode
+        """
+        label = self.extractLabelInsideElement(element)
+        node = self.buildGenericNode(Item.FacetNode, element)
+        node.setText(label.text())
+        return node
 
     def buildIndividualNode(self, element):
         """
@@ -284,19 +297,6 @@ class GrapholLoader(QObject):
         """
         return self.buildGenericNode(Item.UnionNode, element)
 
-    def buildValueRestrictionNode(self, element):
-        """
-        Build a ValueRestriction node using the given QDomElement.
-        :type element: QDomElement
-        :rtype: ValueRestrictionNode
-        """
-        label = self.extractLabelInsideElement(element)
-        node = self.buildGenericNode(Item.ValueRestrictionNode, element)
-        node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
-        node.setText(label.text())
-        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
-        return node
-
     #############################################
     #   EDGES
     #################################
@@ -391,6 +391,7 @@ class GrapholLoader(QObject):
         """
         search = element.firstChildElement('geometry')
         if search.isNull():
+            # KEEP BACKWARDS COMPATIBILITY
             search = element.firstChildElement('shape:geometry')
         return search
 
@@ -403,6 +404,7 @@ class GrapholLoader(QObject):
         """
         search = element.firstChildElement('label')
         if search.isNull():
+            # KEEP BACKWARDS COMPATIBILITY
             search = element.firstChildElement('shape:label')
         return search
 
@@ -415,6 +417,7 @@ class GrapholLoader(QObject):
         """
         search = element.nextSiblingElement('point')
         if search.isNull():
+            # KEEP BACKWARDS COMPATIBILITY
             search = element.nextSiblingElement('line:point')
         return search
 
@@ -427,6 +430,7 @@ class GrapholLoader(QObject):
         """
         search = element.firstChildElement('point')
         if search.isNull():
+            # KEEP BACKWARDS COMPATIBILITY
             search = element.firstChildElement('line:point')
         return search
 

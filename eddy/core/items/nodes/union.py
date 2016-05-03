@@ -55,8 +55,11 @@ class UnionNode(OperatorNode):
         """
         self._identity = Identity.Neutral
         super().__init__(brush=QBrush(QColor(252, 252, 252)), **kwargs)
-        self.label = NodeLabel('or', movable=False, editable=False, parent=self)
-        self.label.updatePos()
+        self.label = NodeLabel(template='or',
+                               editable=False,
+                               movable=False,
+                               pos=lambda: self.center(),
+                               parent=self)
 
     #############################################
     #   PROPERTIES

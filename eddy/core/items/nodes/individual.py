@@ -81,8 +81,10 @@ class IndividualNode(AbstractResizableNode):
         self.polygon = self.createPolygon(w, h)
         self.background = self.createBackground(w + s, h + s)
         self.selection = self.createSelection(w + s, h + s)
-        self.label = NodeLabel('instance', parent=self)
-        self.label.updatePos()
+        self.label = NodeLabel(template='instance',
+                               pos=lambda: self.center(),
+                               parent=self)
+        self.updateTextPos()
         self.updateHandles()
 
     #############################################
@@ -261,7 +263,7 @@ class IndividualNode(AbstractResizableNode):
         snap = mainwindow.actionSnapToGrid.isChecked()
         size = self.diagram.GridSize
         offset = self.HandleSize + self.HandleMove
-        moved = self.label.moved
+        moved = self.label.isMoved()
         
         R = QRectF(self.boundingRect())
         D = QPointF(0, 0)
@@ -642,7 +644,7 @@ class IndividualNode(AbstractResizableNode):
         Set the label text: will additionally block label editing if a literal is being.
         :type text: str
         """
-        self.label.editable = RE_VALUE.match(text) is None
+        self.label.setEditable(RE_VALUE.match(text) is None)
         self.label.setText(text)
 
     def setTextPos(self, pos):

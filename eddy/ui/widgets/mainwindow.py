@@ -62,7 +62,7 @@ from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.graphol import Restriction
 from eddy.core.datatypes.graphol import Special
 from eddy.core.datatypes.misc import Color, DiagramMode
-from eddy.core.datatypes.owl import XsdDatatype
+from eddy.core.datatypes.owl import XsdDatatype, Facet
 from eddy.core.datatypes.system import Platform, File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphol import GrapholExporter
@@ -83,7 +83,6 @@ from eddy.ui.dialogs.diagram import NewDiagramDialog
 from eddy.ui.dialogs.nodes import CardinalityRestrictionForm
 from eddy.ui.dialogs.nodes import RefactorNameDialog
 from eddy.ui.dialogs.nodes import ValueForm
-from eddy.ui.dialogs.nodes import ValueRestrictionForm
 from eddy.ui.dialogs.preferences import PreferencesDialog
 from eddy.ui.menus import MenuFactory
 from eddy.ui.properties.factory import PropertyFactory
@@ -128,6 +127,7 @@ class MainWindow(QMainWindow):
         self.menuRefactor = QMenu(_('MENU_REFACTOR'))
         self.menuSetBrush = QMenu(_('MENU_SET_BRUSH'))
         self.menuSetDatatype = QMenu(_('MENU_SET_DATATYPE'))
+        self.menuSetFacet = QMenu(_('MENU_SET_FACET'))
         self.menuSetIndividualAs = QMenu(_('MENU_SET_INDIVIDUAL_AS'))
         self.menuSetPropertyRestriction = QMenu(_('MENU_SET_PROPERTY_RESTRICTION'))
         self.menuSetSpecial = QMenu(_('MENU_SET_SPECIAL'))
@@ -254,7 +254,7 @@ class MainWindow(QMainWindow):
         self.actionRefactorName = QAction(_('ACTION_REFACTOR_NAME_N'), self)
         self.actionComposePropertyDomain = QAction(_('ACTION_COMPOSE_PROPERTY_DOMAIN_N'), self)
         self.actionComposePropertyRange = QAction(_('ACTION_COMPOSE_PROPERTY_RANGE_N'), self)
-        self.actionSetValueRestriction = QAction(_('ACTION_SET_VALUE_RESTRICTION_N'), self)
+        self.actionsSetFacet = QAction(_('ACTION_SET_FACET_N'), self)
         self.actionRemoveEdgeBreakpoint = QAction(_('ACTION_REMOVE_EDGE_BREAKPOINT_N'), self)
         self.actionSwapEdge = QAction(_('ACTION_EDGE_SWAP_N'), self)
         self.actionToggleEdgeComplete = QAction(_('ACTION_TOGGLE_EDGE_COMPLETE_N'), self)
@@ -264,6 +264,7 @@ class MainWindow(QMainWindow):
         self.actionsSetSpecial = []
         self.actionsSetPropertyRestriction = []
         self.actionsSetDatatype = []
+        self.actionsSetFacet = []
         self.actionsSetIndividualAs = []
         self.actionsSwitchOperator = []
 
@@ -528,13 +529,6 @@ class MainWindow(QMainWindow):
             self.actionsSetDatatype.append(action)
 
         #############################################
-        # VALUE-RESTRICTION SPECIFIC
-        #################################
-
-        self.actionSetValueRestriction.setIcon(self.iconRefresh)
-        connect(self.actionSetValueRestriction.triggered, self.doSetValueRestriction)
-
-        #############################################
         # INDIVIDUAL SPECIFIC
         #################################
 
@@ -543,6 +537,17 @@ class MainWindow(QMainWindow):
             action.setData(identity)
             connect(action.triggered, self.doSetIndividualAs)
             self.actionsSetIndividualAs.append(action)
+
+        #############################################
+        # FACET SPECIFIC
+        #################################
+
+        for facet in Facet:
+            action = QAction(facet.value, self)
+            action.setCheckable(True)
+            action.setData(facet)
+            connect(action.triggered, self.doSetFacet)
+            self.actionsSetFacet.append(action)
 
         #############################################
         # OPERATORS SPECIFIC
@@ -741,6 +746,14 @@ class MainWindow(QMainWindow):
         self.menuSetDatatype.setIcon(self.iconRefresh)
         for action in self.actionsSetDatatype:
             self.menuSetDatatype.addAction(action)
+
+        #############################################
+        # FACET SPECIFIC
+        #################################
+
+        self.menuSetFacet.setIcon(self.iconRefresh)
+        for action in self.actionsSetFacet:
+            self.menuSetFacet.addAction(action)
 
         #############################################
         # PROPERTY DOMAIN / RANGE SPECIFIC
@@ -1244,7 +1257,7 @@ class MainWindow(QMainWindow):
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             node = first([x for x in diagram.selectedNodes() if hasattr(x, 'label')])
-            if node and node.label.movable:
+            if node and node.label.isMovable():
                 undo = node.label.pos()
                 redo = node.label.defaultPos()
                 diagram.undoStack.push(CommandNodeLabelMove(diagram, node, undo, redo))
@@ -1324,6 +1337,7 @@ class MainWindow(QMainWindow):
         """
         Set a property domain / range restriction.
         """
+        # TODO: translate
         diagram = self.mdi.activeDiagram
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -1349,6 +1363,7 @@ class MainWindow(QMainWindow):
         Set an invididual node either to Instance or Value.
         Will bring up the Value Form if needed.
         """
+        # TODO: translate
         diagram = self.mdi.activeDiagram
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -1375,6 +1390,7 @@ class MainWindow(QMainWindow):
         """
         Set the special type of the selected node.
         """
+        # TODO: translate
         diagram = self.mdi.activeDiagram
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -1393,6 +1409,7 @@ class MainWindow(QMainWindow):
         """
         Set the datatype of the selected value-domain node.
         """
+        # TODO: translate
         diagram = self.mdi.activeDiagram
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -1406,25 +1423,21 @@ class MainWindow(QMainWindow):
                     diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
-    def doSetValueRestriction(self):
+    def doSetFacet(self):
         """
-        Set the restriction of a Value-Restriction node.
+        Set the facet of a Facet node.
         """
         diagram = self.mdi.activeDiagram
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            node = first([x for x in diagram.selectedNodes() if x.type() is Item.ValueRestrictionNode])
+            node = first([x for x in diagram.selectedNodes() if x.type() is Item.FacetNode])
             if node:
-                form = ValueRestrictionForm(node, self)
-                form.datatypeField.setEnabled(not node.constrained)
-                if form.exec() == ValueRestrictionForm.Accepted:
-                    datatype = form.datatypeField.currentData()
-                    facet = form.facetField.currentData()
-                    value = form.valueField.value()
-                    data = node.compose(facet, value, datatype)
-                    if node.text() != data:
-                        name = 'change {0} to {1}'.format(node.shortname, data)
-                        diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                action = self.sender()
+                facet = action.data()
+                if facet != node.facet:
+                    data = node.compose(facet, node.value)
+                    name = _('COMMAND_NODE_SET_FACET', node.facet.value, facet.value)
+                    diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
     def doSwapEdge(self):

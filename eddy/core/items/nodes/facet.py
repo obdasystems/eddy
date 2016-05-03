@@ -33,32 +33,34 @@
 
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
-from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap, QBrush
+from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
+from PyQt5.QtGui import QPen, QColor, QPixmap, QBrush
 
 from eddy.core.datatypes.graphol import Identity, Item
-from eddy.core.datatypes.owl import XsdDatatype, Facet
-from eddy.core.functions.misc import cutL, cutR, first
+from eddy.core.datatypes.owl import Facet
+from eddy.core.functions.misc import cutL
+from eddy.core.functions.misc import cutR
 from eddy.core.items.nodes.common.base import AbstractNode
-from eddy.core.items.nodes.common.label import NodeLabel
+from eddy.core.items.nodes.common.label import NodeQuotedLabel
 from eddy.core.qt import Font
-from eddy.core.regex import RE_VALUE_RESTRICTION
+from eddy.core.regex import RE_FACET, RE_VALUE_RESTRICTION
 
 
-class ValueRestrictionNode(AbstractNode):
+class FacetNode(AbstractNode):
     """
-    This class implements the 'Value-Restriction' node.
+    This class implements the 'Facet' node.
     """
-    IndexTR = 0
-    IndexTL = 1
-    IndexBL = 2
-    IndexBR = 3
-    IndexRT = 4
-    IndexEE = 5
+    IndexTL = 0
+    IndexTR = 1
+    IndexBR = 2
+    IndexBL = 3
+    IndexEE = 4
 
-    Identities = {Identity.ValueDomain}
-    Type = Item.ValueRestrictionNode
-    MinHeight = 50
-    MinWidth = 180
+    Identities = {Identity.Facet}
+    Type = Item.FacetNode
+    MinHeight = 40
+    MinWidth = 80
+    Skew = 10
 
     def __init__(self, width=MinWidth, height=MinHeight, brush=None, **kwargs):
         """
@@ -68,17 +70,26 @@ class ValueRestrictionNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.brush = brush or QBrush(QColor(252, 252, 252))
+        self.brushA = QBrush(QColor(222, 222, 222))
+        self.brushB = QBrush(QColor(252, 252, 252))
         self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
         self.polygon = self.createPolygon(self.MinWidth, self.MinHeight)
-        self.fold = self.createFold(self.polygon, self.IndexTR, self.IndexRT)
+        self.polygonA = self.createPolygonA(self.MinWidth, self.MinHeight)
+        self.polygonB = self.createPolygonB(self.MinWidth, self.MinHeight)
         self.background = self.createBackground(self.MinWidth + 8, self.MinHeight + 8)
         self.selection = self.createSelection(self.MinWidth + 8, self.MinHeight + 8)
-        self.label = NodeLabel(template='xsd:length "32"^^xsd:string',
-                               editable=False,
-                               movable=False,
-                               pos=lambda: self.center(),
-                               parent=self)
+
+        self.labelA = NodeQuotedLabel(template=Facet.length.value,
+                                      editable=False,
+                                      movable=False,
+                                      pos=lambda: self.centerA(),
+                                      parent=self)
+
+        self.labelB = NodeQuotedLabel(template='"32"',
+                                      movable=False,
+                                      pos=lambda: self.centerB(),
+                                      parent=self)
+
         self.updateTextPos()
         self.updateLayout()
 
@@ -87,40 +98,12 @@ class ValueRestrictionNode(AbstractNode):
     #################################
 
     @property
-    def constrained(self):
-        """
-        Tells whether the datatype of this restriction is constrained by graph composition.
-        :rtype: bool
-        """
-        f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.type() is Item.DatatypeRestrictionNode
-        f3 = lambda x: x.type() is Item.ValueDomainNode
-        xx = first(self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
-        if xx:
-            return first(xx.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) is not None
-        return False
-
-    @property
-    def datatype(self):
-        """
-        Returns the datatype associated with this node.
-        :rtype: XsdDatatype
-        """
-        match = RE_VALUE_RESTRICTION.match(self.text())
-        if match:
-            return XsdDatatype.forValue(match.group('datatype'))
-        return None
-
-    @property
     def facet(self):
         """
         Returns the facet associated with this node.
         :rtype: Facet
         """
-        match = RE_VALUE_RESTRICTION.match(self.text())
-        if match:
-            return Facet.forValue(match.group('facet'))
-        return None
+        return Facet.forValue(self.labelA.text())
 
     @property
     def identity(self):
@@ -128,7 +111,7 @@ class ValueRestrictionNode(AbstractNode):
         Returns the identity of the current node.
         :rtype: Identity
         """
-        return Identity.ValueDomain
+        return Identity.Facet
 
     @identity.setter
     def identity(self, identity):
@@ -141,13 +124,10 @@ class ValueRestrictionNode(AbstractNode):
     @property
     def value(self):
         """
-        Returns the value of the restriction.
+        Returns the value of this facet node.
         :rtype: str
         """
-        match = RE_VALUE_RESTRICTION.match(self.text())
-        if match:
-            return match.group('value')
-        return ''
+        return cutR(cutL(self.labelB.text(), '"'), '"')
 
     #############################################
     #   INTERFACE
@@ -160,26 +140,40 @@ class ValueRestrictionNode(AbstractNode):
         """
         return self.selection
 
+    def centerA(self):
+        """
+        Returns the center point of polygon A.
+        :rtype: QPointF
+        """
+        return self.boundingRect().center() - QPointF(0, self.MinHeight / 4)
+
+    def centerB(self):
+        """
+        Returns the center point of polygon A.
+        :rtype: QPointF
+        """
+        return self.boundingRect().center() + QPointF(0, self.MinHeight / 4)
+
     @staticmethod
-    def compose(facet, value, datatype):
+    def compose(facet, value):
         """
         Compose the restriction string.
         :type facet: Facet
         :type value: str
-        :type datatype: XsdDatatype
         :return: str
         """
-        return '{} "{}"^^{}'.format(facet.value, cutR(cutL(value.strip(), '"'), '"'), datatype.value)
+        return '{0}^^"{1}"'.format(facet.value, cutR(cutL(value.strip(), '"'), '"'))
 
     def copy(self, diagram):
         """
         Create a copy of the current item.
         :type diagram: Diagram
         """
-        kwargs = {'id': self.id, 'brush': self.brush, 'height': self.height(), 'width': self.width()}
+        kwargs = {'id': self.id, 'height': self.height(), 'width': self.width()}
         node = diagram.factory.create(self.type(), **kwargs)
         node.setPos(self.pos())
         node.setText(self.text())
+        node.updateLayout()
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
@@ -191,24 +185,14 @@ class ValueRestrictionNode(AbstractNode):
         :type height: int
         :rtype: QRectF
         """
-        return QRectF(-width / 2, -height / 2, width, height)
-
-    @staticmethod
-    def createFold(polygon, IndexTR, IndexRT):
-        """
-        Returns the initialized fold polygon.
-        :type polygon: QPolygonF
-        :type IndexTR: int
-        :type IndexRT: int
-        :rtype: QPolygonF
-        """
         return QPolygonF([
-            QPointF(polygon[IndexTR].x(), polygon[IndexTR].y()),
-            QPointF(polygon[IndexTR].x(), polygon[IndexTR].y() + 12),
-            QPointF(polygon[IndexRT].x(), polygon[IndexRT].y()),
-            QPointF(polygon[IndexTR].x(), polygon[IndexTR].y()),
+            QPointF(-width / 2 + FacetNode.Skew, -height / 2),  # 0
+            QPointF(+width / 2, -height / 2),                   # 1
+            QPointF(+width / 2 - FacetNode.Skew, +height / 2),  # 2
+            QPointF(-width / 2, +height / 2),                   # 3
+            QPointF(-width / 2 + FacetNode.Skew, -height / 2),  # 4
         ])
-    
+
     @staticmethod
     def createPolygon(width, height):
         """
@@ -218,12 +202,43 @@ class ValueRestrictionNode(AbstractNode):
         :rtype: QPolygonF
         """
         return QPolygonF([
-            QPointF(+(width / 2) - 12, -(height / 2)),  # 0
-            QPointF(-(width / 2), -(height / 2)),       # 1
-            QPointF(-(width / 2), +(height / 2)),       # 2
-            QPointF(+(width / 2), +(height / 2)),       # 3
-            QPointF(+(width / 2), -(height / 2) + 12),  # 4
-            QPointF(+(width / 2) - 12, -(height / 2)),  # 5
+            QPointF(-width / 2 + FacetNode.Skew, -height / 2),  # 0
+            QPointF(+width / 2, -height / 2),                   # 1
+            QPointF(+width / 2 - FacetNode.Skew, +height / 2),  # 2
+            QPointF(-width / 2, +height / 2),                   # 3
+            QPointF(-width / 2 + FacetNode.Skew, -height / 2),  # 4
+        ])
+
+    @staticmethod
+    def createPolygonA(width, height):
+        """
+        Returns the initialized top-half polygon according to the given width/height.
+        :type width: int
+        :type height: int
+        :rtype: QPolygonF
+        """
+        return QPolygonF([
+            QPointF(-width / 2 + FacetNode.Skew, -height / 2),  # 0
+            QPointF(+width / 2, -height / 2),                   # 1
+            QPointF(+width / 2 - FacetNode.Skew / 2, 0),        # 2
+            QPointF(-width / 2 + FacetNode.Skew / 2, 0),        # 3
+            QPointF(-width / 2 + FacetNode.Skew, -height / 2),  # 4
+        ])
+
+    @staticmethod
+    def createPolygonB(width, height):
+        """
+        Returns the initialized bottom-half polygon according to the given width/height.
+        :type width: int
+        :type height: int
+        :rtype: QPolygonF
+        """
+        return QPolygonF([
+            QPointF(-width / 2 + FacetNode.Skew / 2, 0),        # 0
+            QPointF(+width / 2 - FacetNode.Skew / 2, 0),        # 1
+            QPointF(+width / 2 - FacetNode.Skew, +height / 2),  # 2
+            QPointF(-width / 2, +height / 2),                   # 3
+            QPointF(-width / 2 + FacetNode.Skew / 2, 0),        # 4
         ])
 
     def height(self):
@@ -231,7 +246,7 @@ class ValueRestrictionNode(AbstractNode):
         Returns the height of the shape.
         :rtype: int
         """
-        return self.polygon[self.IndexBL].y() - self.polygon[self.IndexTL].y()
+        return self.polygonA[self.IndexBL].y() - self.polygonB[self.IndexTL].y()
 
     @classmethod
     def image(cls, **kwargs):
@@ -244,31 +259,38 @@ class ValueRestrictionNode(AbstractNode):
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
 
-        polygon = QPolygonF([
-            QPointF(+27 - 10, -17),  # 0
-            QPointF(-27, -17),       # 1
-            QPointF(-27, +17),       # 2
-            QPointF(+27, +17),       # 3
-            QPointF(+27, -17 + 10),  # 4
-            QPointF(+27 - 10, -17),  # 5
+        w = 54
+        h = 32
+        s = 4
+
+        polygonA = QPolygonF([
+            QPointF(-w / 2 + s, -h / 2),  # 0
+            QPointF(+w / 2, -h / 2),      # 1
+            QPointF(+w / 2 - s / 2, 0),   # 2
+            QPointF(-w / 2 + s / 2, 0),   # 3
+            QPointF(-w / 2 + s, -h / 2),  # 4
         ])
 
-        fold = QPolygonF([
-            QPointF(polygon[cls.IndexTR].x(), polygon[cls.IndexTR].y()),
-            QPointF(polygon[cls.IndexTR].x(), polygon[cls.IndexTR].y() + 10),
-            QPointF(polygon[cls.IndexRT].x(), polygon[cls.IndexRT].y()),
-            QPointF(polygon[cls.IndexTR].x(), polygon[cls.IndexTR].y()),
+        polygonB = QPolygonF([
+            QPointF(-w / 2 + s / 2, 0),   # 0
+            QPointF(+w / 2 - s / 2, 0),   # 1
+            QPointF(+w / 2 - s, +h / 2),  # 2
+            QPointF(-w / 2, +h / 2),      # 3
+            QPointF(-w / 2 + s / 2, 0),   # 4
         ])
 
         # ITEM SHAPE
-        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-        painter.setBrush(QColor(252, 252, 252))
+        painter.setRenderHint(QPainter.Antialiasing)
         painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
-        painter.drawPolygon(polygon)
-        painter.drawPolygon(fold)
+        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+        painter.setBrush(QColor(222, 222, 222))
+        painter.drawPolygon(polygonA)
+        painter.setBrush(QBrush(QColor(252, 252, 252)))
+        painter.drawPolygon(polygonB)
         # TEXT WITHIN THE SHAPE
-        painter.setFont(Font('Arial', 10, Font.Light))
-        painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'value\nrestriction')
+        painter.setFont(Font('Arial', 9, Font.Light))
+        painter.drawText(QPointF(-19, -5), Facet.length.value)
+        painter.drawText(QPointF(-8, 12), '"32"')
         return pixmap
 
     def paint(self, painter, option, widget=None):
@@ -288,12 +310,13 @@ class ValueRestrictionNode(AbstractNode):
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(self.backgroundPen)
         painter.setBrush(self.backgroundBrush)
-        painter.drawRect(self.background)
+        painter.drawPolygon(self.background)
         # SHAPE
         painter.setPen(self.pen)
-        painter.setBrush(self.brush)
-        painter.drawPolygon(self.polygon)
-        painter.drawPolygon(self.fold)
+        painter.setBrush(self.brushA)
+        painter.drawPolygon(self.polygonA)
+        painter.setBrush(self.brushB)
+        painter.drawPolygon(self.polygonB)
 
     def painterPath(self):
         """
@@ -309,15 +332,25 @@ class ValueRestrictionNode(AbstractNode):
         Set the label text.
         :type text: str
         """
-        self.label.setText(text)
-        self.updateLayout()
+        match = RE_FACET.match(text)
+        if match:
+            self.labelA.setText((Facet.forValue(match.group('facet')) or Facet.length).value)
+            self.labelB.setText('"{0}"'.format(match.group('value')))
+            self.updateLayout()
+        else:
+            # USE THE OLD VALUE-RESTRICTION PATTERN
+            match = RE_VALUE_RESTRICTION.match(text)
+            if match:
+                self.labelA.setText((Facet.forValue(match.group('facet')) or Facet.length).value)
+                self.labelB.setText('"{0}"'.format(match.group('value')))
+                self.updateLayout()
 
     def setTextPos(self, pos):
         """
         Set the label position.
         :type pos: QPointF
         """
-        self.label.setPos(pos)
+        pass
 
     def shape(self):
         """
@@ -333,22 +366,26 @@ class ValueRestrictionNode(AbstractNode):
         Returns the label text.
         :rtype: str
         """
-        return self.label.text()
+        return self.compose(self.facet, self.value)
 
     def textPos(self):
         """
         Returns the current label position in item coordinates.
         :rtype: QPointF
         """
-        return self.label.pos()
+        return self.boundingRect().center()
 
     def updateLayout(self):
         """
         Update current shape rect according to the selected datatype.
         """
-        width = max(self.label.width() + 16, self.MinWidth)
+        width = max(self.labelA.width() + 16,
+                    self.labelB.width() + 16,
+                    self.MinWidth)
+
         self.polygon = self.createPolygon(width, self.MinHeight)
-        self.fold = self.createFold(self.polygon, self.IndexTR, self.IndexRT)
+        self.polygonA = self.createPolygonA(width, self.MinHeight)
+        self.polygonB = self.createPolygonB(width, self.MinHeight)
         self.background = self.createBackground(width + 8, self.MinHeight + 8)
         self.selection = self.createSelection(width + 8, self.MinHeight + 8)
         self.updateTextPos()
@@ -358,11 +395,12 @@ class ValueRestrictionNode(AbstractNode):
         """
         Update the label position.
         """
-        self.label.updatePos(*args, **kwargs)
+        self.labelA.updatePos()
+        self.labelB.updatePos()
 
     def width(self):
         """
         Returns the width of the shape.
         :rtype: int
         """
-        return self.polygon[self.IndexBR].x() - self.polygon[self.IndexBL].x()
+        return self.polygonA[self.IndexTR].x() - self.polygonB[self.IndexBL].x()

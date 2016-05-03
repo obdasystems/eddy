@@ -64,6 +64,7 @@ class GrapholExporter(QObject):
             Item.DisjointUnionNode: self.exportDisjointUnionNode,
             Item.DomainRestrictionNode: self.exportDomainRestrictionNode,
             Item.EnumerationNode: self.exportEnumerationNode,
+            Item.FacetNode: self.exportFacetNode,
             Item.IndividualNode: self.exportIndividualNode,
             Item.IntersectionNode: self.exportIntersectionNode,
             Item.PropertyAssertionNode: self.exportPropertyAssertionNode,
@@ -73,7 +74,6 @@ class GrapholExporter(QObject):
             Item.RoleInverseNode: self.exportRoleInverseNode,
             Item.UnionNode: self.exportUnionNode,
             Item.ValueDomainNode: self.exportValueDomainNode,
-            Item.ValueRestrictionNode: self.exportValueRestrictionNode,
             Item.InclusionEdge: self.exportInclusionEdge,
             Item.InputEdge: self.exportInputEdge,
             Item.MembershipEdge: self.exportMembershipEdge,
@@ -87,6 +87,7 @@ class GrapholExporter(QObject):
             Item.DisjointUnionNode: 'disjoint-union',
             Item.DomainRestrictionNode: 'domain-restriction',
             Item.EnumerationNode: 'enumeration',
+            Item.FacetNode: 'facet',
             Item.IndividualNode: 'individual',
             Item.IntersectionNode: 'intersection',
             Item.PropertyAssertionNode: 'property-assertion',
@@ -96,7 +97,6 @@ class GrapholExporter(QObject):
             Item.RoleInverseNode: 'role-inverse',
             Item.UnionNode: 'union',
             Item.ValueDomainNode: 'value-domain',
-            Item.ValueRestrictionNode: 'value-restriction',
             Item.InclusionEdge: 'inclusion',
             Item.InputEdge: 'input',
             Item.MembershipEdge: 'membership',
@@ -161,6 +161,23 @@ class GrapholExporter(QObject):
         :rtype: QDomElement
         """
         return self.exportLabelNode(node)
+
+    def exportFacetNode(self, node):
+        """
+        Export the given node into a QDomElement.
+        :type node: FacetNode
+        :rtype: QDomElement
+        """
+        position = node.mapToScene(node.textPos())
+        label = self.document.createElement('label')
+        label.setAttribute('height', node.labelA.height())
+        label.setAttribute('width', node.labelA.width() + node.labelB.width())
+        label.setAttribute('x', position.x())
+        label.setAttribute('y', position.y())
+        label.appendChild(self.document.createTextNode(node.text()))
+        element = self.exportGenericNode(node)
+        element.appendChild(label)
+        return element
 
     def exportIndividualNode(self, node):
         """
@@ -234,14 +251,6 @@ class GrapholExporter(QObject):
         """
         Export the given node into a QDomElement.
         :type node: UnionNode
-        :rtype: QDomElement
-        """
-        return self.exportLabelNode(node)
-
-    def exportValueRestrictionNode(self, node):
-        """
-        Export the given node into a QDomElement.
-        :type node: ValueRestrictionNode
         :rtype: QDomElement
         """
         return self.exportLabelNode(node)

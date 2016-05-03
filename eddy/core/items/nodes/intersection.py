@@ -55,8 +55,11 @@ class IntersectionNode(OperatorNode):
         """
         self._identity = Identity.Neutral
         super().__init__(brush=QBrush(QColor(252, 252, 252)), **kwargs)
-        self.label = NodeLabel('and', movable=False, editable=False, parent=self)
-        self.label.updatePos()
+        self.label = NodeLabel(template='and',
+                               editable=False,
+                               movable=False,
+                               pos=lambda: self.center(),
+                               parent=self)
 
     #############################################
     #   PROPERTIES

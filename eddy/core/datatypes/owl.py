@@ -33,7 +33,6 @@
 
 
 from enum import unique, Enum
-from types import DynamicClassAttribute
 
 
 @unique
@@ -115,7 +114,7 @@ class Facet(Enum):
                 return x
         return None
 
-    @DynamicClassAttribute
+    @property
     def owlapi(self):
         """
         Returns the name of the OWL api facet enum entry.
@@ -206,7 +205,7 @@ class XsdDatatype(Enum):
                 return x
         return None
 
-    @DynamicClassAttribute
+    @property
     def owlapi(self):
         """
         Returns the name of the OWL api datatype enum entry.
