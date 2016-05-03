@@ -217,34 +217,19 @@ class AbstractEdge(AbstractItem):
         :rtype: bool
         """
         if not self.diagram:
-            # No diagram => probably the edge is sitting in a CommandEdgeAdd instance in the
-            # undoStack of the diagram but it is currently detached from it: removing this
-            # check will cause an AttributeError being raised in paint() methods.
             return False
 
         if self.target:
-            
-            s = self.source
-            t = self.target
-
-            sp = self.mapFromItem(s, s.painterPath())
-            tp = self.mapFromItem(t, t.painterPath())
-
-            if sp.intersects(tp):
-
-                # Paths are colliding: estimate whether the edge needs to be drawn or not.
-                if not self.breakpoints:
-                    # If there is no breakpoint then the edge line won't be visible.
-                    return False
-
+            source = self.source
+            target = self.target
+            sourcePP = self.mapFromItem(source, source.painterPath())
+            targetPP = self.mapFromItem(target, target.painterPath())
+            if sourcePP.intersects(targetPP):
                 for point in self.breakpoints:
-                    # Loop through all the breakpoints: if there is at least one breakpoint
-                    # which is not inside the connected shapes then draw the edges
-                    if not s.contains(self.mapToItem(s, point)) and not t.contains(self.mapToItem(t, point)):
-                        return True
-
+                    if not source.contains(self.mapToItem(source, point)):
+                        if not target.contains(self.mapToItem(target, point)):
+                            return True
                 return False
-
         return True
 
     @abstractmethod
