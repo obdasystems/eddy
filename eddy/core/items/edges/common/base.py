@@ -438,10 +438,12 @@ class AbstractEdge(AbstractItem):
         mousePos = mouseEvent.pos()
 
         if self.diagram.mode is DiagramMode.Idle:
-            # Check first if we need to start an anchor point movement: we need to evaluate anchor
-            # points first because we may be in the situation where we are trying to select the anchor
-            # point, but if the code for breakpoint retrieval is executed first, no breakpoint is found
-            # and hence a new one will be added upon mouseMoveEvent (even a small move will cause this).
+            # Check first if we need to start an anchor point movement: we need
+            # to evaluate anchor points first because we may be in the situation
+            # where we are trying to select the anchor point, but if the code for
+            # breakpoint retrieval is executed first, no breakpoint is found
+            # and hence a new one will be added upon mouseMoveEvent (even a small
+            # move will cause this).
             anchorNode = self.anchorAt(mousePos)
             if anchorNode is not None:
                 self.diagram.clearSelection()
@@ -483,8 +485,6 @@ class AbstractEdge(AbstractItem):
                     # so we need to create a new one and switch the operation mode.
                     breakPoint = self.breakpointAdd(self.mousePressPos)
                 except:
-                    # Sometime an error is raised while creating the breakpoint... still
-                    # need to figure out why, but it's not something we need to hurry to fix.
                     pass
                 else:
                     self.diagram.clearSelection()
