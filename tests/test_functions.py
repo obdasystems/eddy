@@ -38,7 +38,7 @@ import unittest
 from PyQt5.QtCore import QPointF, QLineF
 
 from eddy.core.functions.misc import clamp, isEmpty, rangeF, snapF
-from eddy.core.functions.geometry import angle, distanceP, distanceL, intersection, midpoint
+from eddy.core.functions.geometry import angle, distance, projection, intersection, midpoint
 
 
 class Test_Angle(unittest.TestCase):
@@ -68,13 +68,13 @@ class Test_Clamp(unittest.TestCase):
 class Test_DistanceP(unittest.TestCase):
 
     def test_distance(self):
-        self.assertEqual(0.0, distanceP(QPointF(0, 0), QPointF(0, 0)))
-        self.assertEqual(10.0, distanceP(QPointF(0, 0), QPointF(10, 0)))
-        self.assertEqual(10.0, distanceP(QPointF(0, 0), QPointF(0, 10)))
-        self.assertEqual(14.0, distanceP(QPointF(-4, 0), QPointF(10, 0)))
-        self.assertEqual(14.0, distanceP(QPointF(0, -4), QPointF(0, 10)))
-        self.assertEqual(10.0, distanceP(QPointF(0, 8), QPointF(6, 0)))
-        self.assertEqual(10.0, distanceP(QPointF(0, -8), QPointF(-6, 0)))
+        self.assertEqual(0.0, distance(QPointF(0, 0), QPointF(0, 0)))
+        self.assertEqual(10.0, distance(QPointF(0, 0), QPointF(10, 0)))
+        self.assertEqual(10.0, distance(QPointF(0, 0), QPointF(0, 10)))
+        self.assertEqual(14.0, distance(QPointF(-4, 0), QPointF(10, 0)))
+        self.assertEqual(14.0, distance(QPointF(0, -4), QPointF(0, 10)))
+        self.assertEqual(10.0, distance(QPointF(0, 8), QPointF(6, 0)))
+        self.assertEqual(10.0, distance(QPointF(0, -8), QPointF(-6, 0)))
 
 
 class Test_DistanceL(unittest.TestCase):
@@ -82,7 +82,7 @@ class Test_DistanceL(unittest.TestCase):
     def test_distance(self):
         P = QPointF(2, 8)
         L = QLineF(QPointF(0, 0), QPointF(10, 0))
-        D = distanceL(L, P)
+        D = projection(L, P)
         self.assertIsInstance(D, tuple)
         self.assertEqual(D[0], 8.0)
         self.assertEqual(D[1], QPointF(2, 0))

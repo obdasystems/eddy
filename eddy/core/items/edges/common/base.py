@@ -44,7 +44,7 @@ from eddy.core.commands.edges import CommandEdgeAnchorMove
 from eddy.core.commands.edges import CommandEdgeBreakpointAdd
 from eddy.core.commands.edges import CommandEdgeBreakpointMove
 from eddy.core.datatypes.misc import DiagramMode
-from eddy.core.functions.geometry import distanceP, distanceL
+from eddy.core.functions.geometry import distance, projection
 from eddy.core.functions.misc import snap
 from eddy.core.items.common import AbstractItem
 
@@ -134,7 +134,7 @@ class AbstractEdge(AbstractItem):
         path = self.mapFromItem(node, node.painterPath())
         if path.contains(mousePos):
             # Mouse is inside the shape => use this position as anchor point.
-            pos = nodePos if distanceP(mousePos, nodePos) < 10.0 else mousePos
+            pos = nodePos if distance(mousePos, nodePos) < 10.0 else mousePos
         else:
             # Mouse is outside the shape => use the intersection point as anchor point.
             pos = node.intersection(QLineF(mousePos, nodePos))
@@ -163,7 +163,7 @@ class AbstractEdge(AbstractItem):
 
         # Estimate between which breakpoints the new one is being added.
         for subpath in (QLineF(points[i], points[i + 1]) for i in range(len(points) - 1)):
-            dis, pos = distanceL(subpath, mousePos)
+            dis, pos = projection(subpath, mousePos)
             if dis < shortest:
                 point = pos
                 shortest = dis

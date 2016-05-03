@@ -47,7 +47,7 @@ def angle(p1, p2):
     return math.atan2(p1.y() - p2.y(), p2.x() - p1.x())
 
 
-def distanceP(p1, p2):
+def distance(p1, p2):
     """
     Calculate the distance between the given points.
     :type p1: QPointF
@@ -55,30 +55,6 @@ def distanceP(p1, p2):
     :rtype: float
     """
     return math.sqrt(math.pow(p2.x() - p1.x(), 2) + math.pow(p2.y() - p1.y(), 2))
-
-
-def distanceL(line, p):
-    """
-    Returns a tuple containing the distance between the given line and the given point, and the intersection point.
-    :type line: QLineF
-    :type p: QPointF
-    :rtype: tuple
-    """
-    x1 = line.x1()
-    y1 = line.y1()
-    x2 = line.x2()
-    y2 = line.y2()
-    x3 = p.x()
-    y3 = p.y()
-
-    kk = ((y2 - y1) * (x3 - x1) - (x2 - x1) * (y3 - y1)) / (math.pow(y2 - y1, 2) + math.pow(x2 - x1, 2))
-    x4 = x3 - kk * (y2 - y1)
-    y4 = y3 + kk * (x2 - x1)
-
-    p1 = QPointF(x3, y3)
-    p2 = QPointF(x4, y4)
-
-    return distanceP(p1, p2), p2
 
 
 def intersection(l1, l2):
@@ -106,3 +82,29 @@ def midpoint(p1, p2):
     :rtype: QPointF
     """
     return QPointF(((p1.x() + p2.x()) / 2), ((p1.y() + p2.y()) / 2))
+
+
+def projection(line, p):
+    """
+    Calculate the projection of the given point on the given line.
+    Will return a tuple containing the length of the segment connecting the
+    original point with its projection, and the coordinate of the projected point.
+    :type line: QLineF
+    :type p: QPointF
+    :rtype: tuple
+    """
+    x1 = line.x1()
+    y1 = line.y1()
+    x2 = line.x2()
+    y2 = line.y2()
+    x3 = p.x()
+    y3 = p.y()
+
+    kk = ((y2 - y1) * (x3 - x1) - (x2 - x1) * (y3 - y1)) / (math.pow(y2 - y1, 2) + math.pow(x2 - x1, 2))
+    x4 = x3 - kk * (y2 - y1)
+    y4 = y3 + kk * (x2 - x1)
+
+    p1 = QPointF(x3, y3)
+    p2 = QPointF(x4, y4)
+
+    return distance(p1, p2), p2
