@@ -142,8 +142,12 @@ COMMAND_NODE_OPERATOR_SWITCH = 'switch {0} to {1}'
 COMMAND_NODE_REFACTOR_NAME = 'change predicate "{0}" to "{1}"'
 COMMAND_NODE_RESIZE = 'resize {0}'
 COMMAND_NODE_SET_BRUSH = 'set {0} brush on {1} node{2}'
+COMMAND_NODE_SET_DATATYPE = 'change {0} to {1}'
 COMMAND_NODE_SET_DEPTH = 'change {0} depth'
 COMMAND_NODE_SET_FACET = 'change {0} to {1}'
+COMMAND_NODE_SET_INDIVIDUAL_AS = 'change {0} to {1}'
+COMMAND_NODE_SET_PROPERTY_RESTRICTION = 'change {0} to {1}'
+COMMAND_NODE_SET_SPECIAL = 'change {0} to {1}'
 COMMAND_NODE_SET_VALUE = 'change value to {0}'
 COMMAND_NODE_SET_VALUE_RESTRICTION = 'change value restriction to {0}'
 
@@ -244,6 +248,19 @@ DIAGRAM_LOAD_FAILED_MESSAGE = 'Eddy could not load the specified diagram: {0}!'
 DIAGRAM_LOCATION_LABEL = 'Location'
 DIAGRAM_NAME_LABEL = 'Name'
 DIAGRAM_WINDOW_TITLE_NEW = 'New diagram'
+
+#############################################
+# DIAGRAM IMPORT
+#################################
+
+DIAGRAM_IMPORT_FAILED_WINDOW_TITLE = 'Diagram import failed!'
+DIAGRAM_IMPORT_FAILED_MESSAGE = 'Eddy could not import the specified file: {0}!'
+DIAGRAM_IMPORT_PROGRESS_TITLE = 'Importing {0}...'
+DIAGRAM_IMPORT_PARTIAL_WINDOW_TITLE = 'Partial document import!'
+DIAGRAM_IMPORT_PARTIAL_INFORMATIVE_MESSAGE = 'If needed, <a href="{0}">submit a bug report</a> with detailed information.'
+DIAGRAM_IMPORT_PARTIAL_MESSAGE = 'Document {0} has been imported! However some errors ({1}) have ' \
+                                 'been generated during the import process. You can inspect detailed ' \
+                                 'information by expanding the box below.'
 
 #############################################
 # PROJECT DIALOG

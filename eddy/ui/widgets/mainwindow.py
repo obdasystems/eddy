@@ -36,7 +36,7 @@ import os
 import webbrowser
 
 from collections import OrderedDict
-from traceback import format_exception
+from traceback import format_exception as f_exc
 
 from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, pyqtSlot
 from PyQt5.QtGui import QBrush, QColor, QPixmap
@@ -45,7 +45,7 @@ from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox
 from PyQt5.QtWidgets import QMenu, QToolButton, QDockWidget, QApplication
 from PyQt5.QtWidgets import QUndoGroup, QStyle, QFileDialog
 
-from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION, VERSION
+from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION, VERSION, BUG_TRACKER
 from eddy.core.commands.common import CommandComposeAxiom
 from eddy.core.commands.common import CommandItemsRemove
 from eddy.core.commands.common import CommandItemsTranslate
@@ -71,6 +71,7 @@ from eddy.core.functions.fsystem import fexists, fcopy
 from eddy.core.functions.misc import snapF, first, cutR
 from eddy.core.functions.path import expandPath, isSubPath, uniquePath
 from eddy.core.functions.signals import connect, disconnect
+from eddy.core.loaders.graphml import GraphmlLoader
 from eddy.core.loaders.graphol import GrapholLoader
 from eddy.core.loaders.project import ProjectLoader
 from eddy.core.qt import Icon, ColoredIcon
@@ -84,6 +85,7 @@ from eddy.ui.dialogs.nodes import CardinalityRestrictionForm
 from eddy.ui.dialogs.nodes import RefactorNameDialog
 from eddy.ui.dialogs.nodes import ValueForm
 from eddy.ui.dialogs.preferences import PreferencesDialog
+from eddy.ui.dialogs.progress import BusyProgressDialog
 from eddy.ui.menus import MenuFactory
 from eddy.ui.properties.factory import PropertyFactory
 from eddy.ui.toolbar import Zoom
@@ -1014,63 +1016,16 @@ class MainWindow(QMainWindow):
         """
         Import a document from a different file format.
         """
-        # TODO: IMPLEMENT
-        # dialog = OpenFile(expandPath('~'))
-        # dialog.setNameFilters([File.Graphml.value])
-        #
-        # if dialog.exec_():
-        #
-        #     filepath = dialog.selectedFiles()[0]
-        #     worker = GraphmlLoader(self, filepath)
-        #
-        #     with BusyProgressDialog('Importing {}'.format(os.path.basename(filepath)), self):
-        #
-        #         try:
-        #             worker.run()
-        #         except Exception as e:
-        #             msgbox = QMessageBox(self)
-        #             msgbox.setIconPixmap(QPixmap(':/icons/error'))
-        #             msgbox.setWindowIcon(QIcon(':/images/eddy'))
-        #             msgbox.setWindowTitle('Import failed!')
-        #             msgbox.setStandardButtons(QMessageBox.Close)
-        #             msgbox.setText('Failed to import {}!'.format(os.path.basename(filepath)))
-        #             msgbox.setDetailedText(''.join(format_exception(type(e), e, e.__traceback__)))
-        #             msgbox.exec_()
-        #         else:
-        #             scene = worker.scene
-        #             scene.setMode(DiagramMode.Idle)
-        #             mainview = self.createDiagramView(scene)
-        #             subwindow = self.createMdiSubWindow(mainview)
-        #             subwindow.showMaximized()
-        #             self.mdi.setActiveSubWindow(subwindow)
-        #             self.mdi.update()
-        #
-        #     if worker.errors:
-        #
-        #         # If some errors have been generated during the import process, display
-        #         # them into a popup so the user can check whether the problem is in the
-        #         # .graphml document or Eddy is not handling the import properly.
-        #         m1 = 'Document {} has been imported! However some errors ({}) have been generated ' \
-        #              'during the import process. You can inspect detailed information by expanding the ' \
-        #              'box below.'.format(os.path.basename(filepath), len(worker.errors))
-        #
-        #         m2 = 'If needed, <a href="{}">submit a bug report</a> with detailed information.'.format(BUG_TRACKER)
-        #
-        #         parts = []
-        #         for k, v in enumerate(worker.errors, start=1):
-        #             parts.append('{}) {}'.format(k, ''.join(format_exception(type(v), v, v.__traceback__))))
-        #
-        #         m3 = '\n'.join(parts)
-        #
-        #         msgbox = QMessageBox(self)
-        #         msgbox.setIconPixmap(QPixmap(':/icons/warning'))
-        #         msgbox.setWindowIcon(QIcon(':/images/eddy'))
-        #         msgbox.setWindowTitle('Partial document import!')
-        #         msgbox.setStandardButtons(QMessageBox.Close)
-        #         msgbox.setText(m1)
-        #         msgbox.setInformativeText(m2)
-        #         msgbox.setDetailedText(m3)
-        #         msgbox.exec_()
+        dialog = QFileDialog(self)
+        dialog.setAcceptMode(QFileDialog.AcceptOpen)
+        dialog.setDirectory(expandPath('~'))
+        dialog.setFileMode(QFileDialog.ExistingFile)
+        dialog.setViewMode(QFileDialog.Detail)
+        dialog.setNameFilters([File.Graphml.value])
+        if dialog.exec_():
+            path = first(dialog.selectedFiles())
+            if File.forPath(path) is File.Graphml:
+                self.importFromGraphml(path)
 
     @pyqtSlot(str)
     def doLoadDiagram(self, path):
@@ -1093,7 +1048,7 @@ class MainWindow(QMainWindow):
                     msgbox.setWindowTitle(_('DIAGRAM_LOAD_FAILED_WINDOW_TITLE'))
                     msgbox.setStandardButtons(QMessageBox.Close)
                     msgbox.setText(_('DIAGRAM_LOAD_FAILED_MESSAGE', path))
-                    msgbox.setDetailedText(''.join(format_exception(type(e), e, e.__traceback__)))
+                    msgbox.setDetailedText(''.join(f_exc(type(e), e, e.__traceback__)))
                     msgbox.exec_()
                 else:
                     self.project.addDiagram(diagram)
@@ -1337,7 +1292,6 @@ class MainWindow(QMainWindow):
         """
         Set a property domain / range restriction.
         """
-        # TODO: translate
         diagram = self.mdi.activeDiagram
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -1354,7 +1308,7 @@ class MainWindow(QMainWindow):
                     if form.exec_() == CardinalityRestrictionForm.Accepted:
                         data = restriction.format(form.minValue or '-', form.maxValue or '-')
                 if data and node.text() != data:
-                    name = 'change {0} to {1}'.format(node.shortname, data)
+                    name = _('COMMAND_NODE_SET_PROPERTY_RESTRICTION', node.shortname, data)
                     diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
@@ -1363,7 +1317,6 @@ class MainWindow(QMainWindow):
         Set an invididual node either to Instance or Value.
         Will bring up the Value Form if needed.
         """
-        # TODO: translate
         diagram = self.mdi.activeDiagram
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -1373,7 +1326,7 @@ class MainWindow(QMainWindow):
                 if action.data() is Identity.Instance:
                     if node.identity is Identity.Value:
                         data = node.label.template
-                        name = 'change {0} to {1}'.format(node.text(), data)
+                        name = _('COMMAND_NODE_SET_INDIVIDUAL_AS', node.text(), data)
                         diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
                 elif action.data() is Identity.Value:
                     form = ValueForm(node, self)
@@ -1382,7 +1335,7 @@ class MainWindow(QMainWindow):
                         value = form.valueField.value()
                         data = node.composeValue(value, datatype)
                         if node.text() != data:
-                            name = 'change {0} to {1}'.format(node.text(), data)
+                            name = _('COMMAND_NODE_SET_INDIVIDUAL_AS', node.text(), data)
                             diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
@@ -1390,7 +1343,6 @@ class MainWindow(QMainWindow):
         """
         Set the special type of the selected node.
         """
-        # TODO: translate
         diagram = self.mdi.activeDiagram
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -1401,7 +1353,7 @@ class MainWindow(QMainWindow):
                 special = action.data() if node.special is not action.data() else None
                 data = special.value if special else node.label.template
                 if node.text() != data:
-                    name = 'change {0} to {1}'.format(node.shortname, data)
+                    name = _('COMMAND_NODE_SET_SPECIAL', node.shortname, data)
                     diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
@@ -1409,7 +1361,6 @@ class MainWindow(QMainWindow):
         """
         Set the datatype of the selected value-domain node.
         """
-        # TODO: translate
         diagram = self.mdi.activeDiagram
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -1419,7 +1370,7 @@ class MainWindow(QMainWindow):
                 datatype = action.data()
                 data = datatype.value
                 if node.text() != data:
-                    name = 'change {0} to {1}'.format(node.shortname, data)
+                    name = _('COMMAND_NODE_SET_DATATYPE', node.shortname, data)
                     diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
@@ -1829,7 +1780,7 @@ class MainWindow(QMainWindow):
     #         msgbox.setWindowTitle('Load failed!')
     #         msgbox.setStandardButtons(QMessageBox.Close)
     #         msgbox.setText('Failed to load {}!'.format(os.path.basename(filepath)))
-    #         msgbox.setDetailedText(''.join(format_exception(type(e), e, e.__traceback__)))
+    #         msgbox.setDetailedText(''.join(f_exc(type(e), e, e.__traceback__)))
     #         msgbox.exec_()
     #         return None
     #     else:
@@ -1925,20 +1876,50 @@ class MainWindow(QMainWindow):
         #
         # return False
 
-    # TODO: IMPLEMENT
-    # def insertRecentDocument(self, path):
-    #     """
-    #     Add the given document to the recent document list.
-    #     :type path: str
-    #     """
-    #     try:
-    #         self.recentDocument.remove(path)
-    #     except ValueError:
-    #         pass
-    #     finally:
-    #         self.recentDocument.insert(0, path)
-    #         self.recentDocument = self.recentDocument[:Diagram.RecentNum]
-    #         self.refreshRecentDocument()
+    def importFromGraphml(self, path):
+        """
+        Import from .graphml file format, adding the new diagram to the project and MDI area.
+        :type path: str
+        """
+        if not fexists(path):
+            raise IOError('file not found: {0}'.format(path))
+
+        name = os.path.basename(path)
+        with BusyProgressDialog(_('DIAGRAM_IMPORT_PROGRESS_TITLE', name, 2, self)):
+
+            worker = GraphmlLoader(self.project, path, self)
+
+            try:
+                diagram = worker.run()
+            except Exception as e:
+                msgbox = QMessageBox(self)
+                msgbox.setIconPixmap(QPixmap(':/icons/error'))
+                msgbox.setWindowIcon(QIcon(':/images/eddy'))
+                msgbox.setWindowTitle(_('DIAGRAM_IMPORT_FAILED_WINDOW_TITLE'))
+                msgbox.setStandardButtons(QMessageBox.Close)
+                msgbox.setText(_('DIAGRAM_IMPORT_FAILED_MESSAGE', path))
+                msgbox.setDetailedText(''.join(f_exc(type(e), e, e.__traceback__)))
+                msgbox.exec_()
+            else:
+                self.project.addDiagram(diagram)
+                self.doFocusDiagram(diagram)
+                self.doSave()
+
+        if worker.errors:
+            # If some errors have been generated during the import process, display
+            # them into a popup so the user can check whether the problem is in the
+            # .graphml document or Eddy is not handling the import properly.
+            enums = enumerate(worker.errors, start=1)
+            parts = ['{0}) {1}'.format(k, ''.join(f_exc(type(v), v, v.__traceback__))) for k, v in enums]
+            msgbox = QMessageBox(self)
+            msgbox.setIconPixmap(QPixmap(':/icons/warning'))
+            msgbox.setWindowIcon(QIcon(':/images/eddy'))
+            msgbox.setWindowTitle(_('DIAGRAM_IMPORT_PARTIAL_WINDOW_TITLE'))
+            msgbox.setStandardButtons(QMessageBox.Close)
+            msgbox.setText(_('DIAGRAM_IMPORT_PARTIAL_MESSAGE', name, len(worker.errors)))
+            msgbox.setInformativeText(_('DIAGRAM_IMPORT_PARTIAL_INFORMATIVE_MESSAGE', BUG_TRACKER))
+            msgbox.setDetailedText('\n'.join(parts))
+            msgbox.exec_()
 
     def openFile(self, path):
         """

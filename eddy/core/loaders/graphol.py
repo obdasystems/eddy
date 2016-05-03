@@ -455,7 +455,7 @@ class GrapholLoader(QObject):
         :rtype: Diagram
         """
         if not fexists(self.path):
-            raise IOError('could not find diagram: {0}'.format(self.path))
+            raise IOError('file not found: {0}'.format(self.path))
 
         document = QDomDocument()
         if not document.setContent(fread(self.path)):

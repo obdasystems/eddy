@@ -32,16 +32,20 @@
 ##########################################################################
 
 
+import os
+
 from PyQt5.QtCore import QPointF, QRectF, QObject
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtXml import QDomDocument
 
 from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.system import File
 from eddy.core.diagram import Diagram
 from eddy.core.exceptions import ParseError
 from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.fsystem import fread
-from eddy.core.functions.misc import snapF
+from eddy.core.functions.misc import snapF, cutR
+from eddy.core.functions.path import uniquePath
 from eddy.core.functions.signals import connect
 
 
@@ -60,8 +64,33 @@ class GraphmlLoader(QObject):
         self.diagram = None
         self.errors = []
         self.project = project
+        self.mainwindow = project.parent()
         self.path = path
         self.keys = dict()
+        self.nodes = dict()
+        
+        self.importFuncForItem = {
+            Item.AttributeNode: self.buildAttributeNode,
+            Item.ComplementNode: self.buildComplementNode,
+            Item.ConceptNode: self.buildConceptNode,
+            Item.DatatypeRestrictionNode: self.buildDatatypeRestrictionNode,
+            Item.DisjointUnionNode: self.buildDisjointUnionNode,
+            Item.DomainRestrictionNode: self.buildDomainRestrictionNode,
+            Item.EnumerationNode: self.buildEnumerationNode,
+            Item.FacetNode: self.buildFacetNode,
+            Item.IndividualNode: self.buildIndividualNode,
+            Item.IntersectionNode: self.buildIntersectionNode,
+            Item.RangeRestrictionNode: self.buildRangeRestrictionNode,
+            Item.RoleNode: self.buildRoleNode,
+            Item.RoleChainNode: self.buildRoleChainNode,
+            Item.RoleInverseNode: self.buildRoleInverseNode,
+            Item.UnionNode: self.buildUnionNode,
+            Item.ValueDomainNode: self.buildValueDomainNode,
+            Item.ValueRestrictionNode: self.buildFacetNode,
+            Item.InclusionEdge: self.buildInclusionEdge,
+            Item.InputEdge: self.buildInputEdge,
+            Item.MembershipEdge: self.buildMembershipEdge,
+        }
 
     #############################################
     #   NODES
@@ -131,6 +160,44 @@ class GraphmlLoader(QObject):
         :rtype: EnumerationNode
         """
         return self.buildNodeFromShapeNode(Item.EnumerationNode, element)
+
+    def buildFacetNode(self, element):
+        """
+        Build a FacetNode node using the given QDomElement.
+        :type element: QDomElement
+        :rtype: FacetNode
+        """
+        data = element.firstChildElement('data')
+        while not data.isNull():
+
+            if data.attribute('key', '') == self.keys['node_key']:
+
+                umlNoteNode = data.firstChildElement('y:UMLNoteNode')
+                geometry = umlNoteNode.firstChildElement('y:Geometry')
+                nodeLabel = umlNoteNode.firstChildElement('y:NodeLabel')
+
+                kwargs = {
+                    'id': element.attribute('id'),
+                    'height': float(geometry.attribute('height')),
+                    'width': float(geometry.attribute('width')),
+                }
+
+                node = self.diagram.factory.create(Item.FacetNode, **kwargs)
+
+                # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
+                # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
+                # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
+                # Additionally we force-snap the position to the grid so that items say aligned.
+                pos = QPointF(float(geometry.attribute('x')), float(geometry.attribute('y')))
+                pos = pos + QPointF(node.width() / 2, node.height() / 2)
+                pos = QPointF(snapF(pos.x(), Diagram.GridSize), snapF(pos.y(), Diagram.GridSize))
+                node.setPos(pos)
+                node.setText(nodeLabel.text())
+                return node
+
+            data = data.nextSiblingElement('data')
+
+        return None
 
     def buildIndividualNode(self, element):
         """
@@ -223,14 +290,6 @@ class GraphmlLoader(QObject):
         """
         return self.buildNodeFromShapeNode(Item.UnionNode, element)
 
-    def buildValueRestrictionNode(self, element):
-        """
-        Build a ValueRestriction node using the given QDomElement.
-        :type element: QDomElement
-        :rtype: ValueRestrictionNode
-        """
-        return self.buildNodeFromUMLNoteNode(Item.ValueRestrictionNode, element)
-
     #############################################
     #   NODES
     #################################
@@ -304,8 +363,8 @@ class GraphmlLoader(QObject):
 
                 kwargs = {
                     'id': element.attribute('id'),
-                    'source': self.diagram.node(element.attribute('source')),
-                    'target': self.diagram.node(element.attribute('target')),
+                    'source': self.nodes[element.attribute('source')],
+                    'target': self.nodes[element.attribute('target')],
                     'breakpoints': points,
                 }
 
@@ -415,45 +474,6 @@ class GraphmlLoader(QObject):
 
         return None
 
-    def buildNodeFromUMLNoteNode(self, item, element):
-        """
-        Build a node using the given item type and QDomElement.
-        :type item: Item
-        :type element: QDomElement
-        :rtype: AbstractNode
-        """
-        data = element.firstChildElement('data')
-        while not data.isNull():
-
-            if data.attribute('key', '') == self.keys['node_key']:
-
-                umlNoteNode = data.firstChildElement('y:UMLNoteNode')
-                geometry = umlNoteNode.firstChildElement('y:Geometry')
-                nodeLabel = umlNoteNode.firstChildElement('y:NodeLabel')
-
-                kwargs = {
-                    'id': element.attribute('id'),
-                    'height': float(geometry.attribute('height')),
-                    'width': float(geometry.attribute('width')),
-                }
-
-                node = self.pdiagram.factory.create(item, **kwargs)
-
-                # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
-                # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
-                # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
-                # Additionally we force-snap the position to the grid so that items say aligned.
-                pos = QPointF(float(geometry.attribute('x')), float(geometry.attribute('y')))
-                pos = pos + QPointF(node.width() / 2, node.height() / 2)
-                pos = QPointF(snapF(pos.x(), Diagram.GridSize), snapF(pos.y(), Diagram.GridSize))
-                node.setPos(pos)
-                node.setText(nodeLabel.text())
-                return node
-
-            data = data.nextSiblingElement('data')
-
-        return None
-
     def itemFromGraphmlNode(self, element):
         """
         Returns the item matching the given Graphml node.
@@ -493,9 +513,10 @@ class GraphmlLoader(QObject):
 
                         if shapeType == 'hexagon':
 
-                            # We need to identify DisjointUnion from the color and not by checking the empty label
-                            # because in some ontologies created under yEd another operator node has been copied
-                            # over and the background color has been changed despite the label not being removed.
+                            # We need to identify DisjointUnion from the color and not by
+                            # checking the empty label because in some ontologies created
+                            # under yEd another operator node has been copied over and the
+                            # background color has been changed while keeping the label.
                             fill = shapeNode.firstChildElement('y:Fill')
                             if not fill.isNull():
                                 color = fill.attribute('color', '')
@@ -533,6 +554,7 @@ class GraphmlLoader(QObject):
                 if not umlNoteNode.isNull():
                     return Item.ValueRestrictionNode
 
+            # EDGE
             if data.attribute('key', '') == self.keys['edge_key']:
 
                 polyLineEdge = data.firstChildElement('y:PolyLineEdge')
@@ -563,7 +585,7 @@ class GraphmlLoader(QObject):
         Perform diagram import from .graphml file format.
         """
         if not fexists(self.path):
-            raise IOError('could not find file: {0}'.format(self.file))
+            raise IOError('file not found: {0}'.format(self.path))
 
         document = QDomDocument()
         if not document.setContent(fread(self.path)):
@@ -582,11 +604,11 @@ class GraphmlLoader(QObject):
             key = key.nextSiblingElement('key')
 
         # 3) CREATE AN ARBIRARY DIAGRAM
-        self.diagram = Diagram(self.path, self.project)
+        name = cutR(os.path.basename(self.path), File.Graphml.extension)
+        path = uniquePath(self.project.path, name, File.Graphol.extension)
+        self.diagram = Diagram(path, self.project)
         self.diagram.setSceneRect(QRectF(-Diagram.MaxSize / 2, -Diagram.MaxSize / 2, Diagram.MaxSize, Diagram.MaxSize))
         self.diagram.setItemIndexMethod(Diagram.NoIndex)
-        connect(self.diagram.sgnItemAdded, self.project.doAddItem)
-        connect(self.diagram.sgnItemRemoved, self.project.doRemoveItem)
 
         # 4) INITIALIZE GRAPH ELEMENT
         graph = root.firstChildElement('graph')
@@ -598,53 +620,18 @@ class GraphmlLoader(QObject):
             # noinspection PyArgumentList
             QApplication.processEvents()
 
-            node = None
-            item = self.itemFromGraphmlNode(element)
-
             try:
-
-                if item is Item.AttributeNode:
-                    node = self.buildAttributeNode(element)
-                elif item is Item.ComplementNode:
-                    node = self.buildComplementNode(element)
-                elif item is Item.ConceptNode:
-                    node = self.buildConceptNode(element)
-                elif item is Item.DatatypeRestrictionNode:
-                    node = self.buildDatatypeRestrictionNode(element)
-                elif item is Item.DisjointUnionNode:
-                    node = self.buildDisjointUnionNode(element)
-                elif item is Item.DomainRestrictionNode:
-                    node = self.buildDomainRestrictionNode(element)
-                elif item is Item.EnumerationNode:
-                    node = self.buildEnumerationNode(element)
-                elif item is Item.IndividualNode:
-                    node = self.buildIndividualNode(element)
-                elif item is Item.IntersectionNode:
-                    node = self.buildIntersectionNode(element)
-                elif item is Item.RangeRestrictionNode:
-                    node = self.buildRangeRestrictionNode(element)
-                elif item is Item.RoleNode:
-                    node = self.buildRoleNode(element)
-                elif item is Item.RoleChainNode:
-                    node = self.buildRoleChainNode(element)
-                elif item is Item.RoleInverseNode:
-                    node = self.buildRoleInverseNode(element)
-                elif item is Item.UnionNode:
-                    node = self.buildUnionNode(element)
-                elif item is Item.ValueDomainNode:
-                    node = self.buildValueDomainNode(element)
-                elif item is Item.ValueRestrictionNode:
-                    node = self.buildValueRestrictionNode(element)
-
+                item = self.itemFromGraphmlNode(element)
+                func = self.importFuncForItem[item]
+                node = func(element)
                 if not node:
                     raise ValueError('unknown node with id {0}'.format(element.attribute('id')))
-
             except Exception as e:
                 self.errors.append(e)
             else:
                 self.diagram.addItem(node)
-                self.diagram.sgnItemAdded.emit(self.diagram, node)
                 self.diagram.guid.update(node.id)
+                self.nodes[node.id] = node
             finally:
                 element = element.nextSiblingElement('node')
 
@@ -655,27 +642,18 @@ class GraphmlLoader(QObject):
             # noinspection PyArgumentList
             QApplication.processEvents()
 
-            edge = None
-            item = self.itemFromGraphmlNode(element)
-
             try:
-
-                if item is Item.InclusionEdge:
-                    edge = self.buildInclusionEdge(element)
-                elif item is Item.InputEdge:
-                    edge = self.buildInputEdge(element)
-                elif item is Item.MembershipEdge:
-                    edge = self.buildMembershipEdge(element)
-
+                item = self.itemFromGraphmlNode(element)
+                func = self.importFuncForItem[item]
+                edge = func(element)
                 if not edge:
-                    raise ValueError('unknown edge with id {}'.format(element.attribute('id')))
-
+                    raise ValueError('unknown edge with id {0}'.format(element.attribute('id')))
             except Exception as e:
                 self.errors.append(e)
             else:
                 self.diagram.addItem(edge)
-                self.diagram.sgnItemAdded.emit(self.diagram, edge)
                 self.diagram.guid.update(edge.id)
+                edge.updateEdge()
             finally:
                 element = element.nextSiblingElement('edge')
 
@@ -693,13 +671,23 @@ class GraphmlLoader(QObject):
             for item in collection:
                 # noinspection PyArgumentList
                 QApplication.processEvents()
-                if item.edge:
+                if item.isEdge():
                     item.updateEdge()
 
-        # 8) RESIZE DIAGRAM SCENE
+        # 8) RESIZE DIAGRAM
         R3 = self.diagram.visibleRect(margin=20)
         size = max(R3.width(), R3.height(), Diagram.MinSize)
         self.diagram.setSceneRect(QRectF(-size / 2, -size / 2, size, size))
 
-        # 7) RETURN GENERATED DIAGRAM
+        # 9) CONFIGURE SLOTS
+        connect(self.diagram.sgnItemAdded, self.project.doAddItem)
+        connect(self.diagram.sgnItemRemoved, self.project.doRemoveItem)
+        connect(self.diagram.sgnActionCompleted, self.mainwindow.onDiagramActionCompleted)
+        connect(self.diagram.sgnModeChanged, self.mainwindow.onDiagramModeChanged)
+        connect(self.diagram.selectionChanged, self.mainwindow.doUpdateState)
+
+        # 10) CONFIGURE UNDOSTACK
+        self.mainwindow.undoGroup.addStack(self.diagram.undoStack)
+
+        # 11) RETURN GENERATED DIAGRAM
         return self.diagram
