@@ -49,7 +49,7 @@ def clamp(val, minval=None, maxval=None):
     :rtype: float
     """
     if minval is not None and maxval is not None and minval > maxval:
-        raise ValueError('minval ({}) MUST be lower than maxval ({})'.format(minval, maxval))
+        raise ValueError('minval ({0}) MUST be lower than maxval ({1})'.format(minval, maxval))
     if minval is not None:
         val = max(val, minval)
     if maxval is not None:
@@ -85,7 +85,7 @@ def cutR(text, *args):
 
 def first(iterable, default=None):
     """
-    Returns the first element of iterable if it exists, otherwise it returns the given default.
+    Returns the first element in 'iterable' if it exists, otherwise it returns the given default.
     :type iterable: T <= list | tuple | set | generator
     :type default: any
     :rtype: mixed
@@ -112,6 +112,19 @@ def isQuoted(string):
     :rtype: bool
     """
     return RE_QUOTED.match(string) is not None
+
+
+def last(iterable, default=None):
+    """
+    Returns the last element in 'iterable' if it exists, otherwise it returns the given default.
+    :type iterable: T <= list | tuple | set | generator
+    :type default: any
+    :rtype: mixed
+    """
+    if iterable:
+        for item in reversed(iterable):
+            return item
+    return default
 
 
 def partition(predicate, iterable):

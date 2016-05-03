@@ -33,6 +33,7 @@
 
 
 from abc import ABCMeta, abstractmethod
+from itertools import permutations
 from math import sin, cos, radians
 
 from PyQt5.QtCore import Qt, QPointF, QLineF, QRectF
@@ -40,7 +41,8 @@ from PyQt5.QtGui import QPen, QPolygonF, QPainterPath, QBrush, QColor
 from PyQt5.QtWidgets import QGraphicsItem
 
 from eddy.core.commands.edges import CommandEdgeAnchorMove
-from eddy.core.commands.edges import CommandEdgeBreakpointAdd, CommandEdgeBreakpointMove
+from eddy.core.commands.edges import CommandEdgeBreakpointAdd
+from eddy.core.commands.edges import CommandEdgeBreakpointMove
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.geometry import distanceP, distanceL
 from eddy.core.functions.misc import snap
@@ -136,12 +138,10 @@ class AbstractEdge(AbstractItem):
         else:
             # Mouse is outside the shape => use the intersection point as anchor point.
             pos = node.intersection(QLineF(mousePos, nodePos))
-            for e in [pos, pos + QPointF(1, -1), pos + QPointF(1, 0),
-                           pos + QPointF(1, 1), pos + QPointF(0, 1),
-                           pos + QPointF(-1, 1), pos + QPointF(-1, 0),
-                           pos + QPointF(-1, -1), pos + QPointF(0, -1)]:
-                if path.contains(e):
-                    pos = e
+            for pair in set(permutations([-1, -1, 0, 0, 1, 1], 2)):
+                p = pos + QPointF(*pair)
+                if path.contains(p):
+                    pos = p
                     break
 
         node.setAnchor(self, pos)
