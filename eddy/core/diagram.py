@@ -474,11 +474,9 @@ class Diagram(QGraphicsScene):
         Perform node identification.
         :type node: AbstractNode
         """
-        print(1)
         if Identity.Neutral in node.Identities:
-            print(2)
 
-            predicate = lambda x: Identity.Neutral in x.Identities
+            predicate = lambda n1: Identity.Neutral in n1.Identities
             collection = bfs(source=node, filter_on_visit=predicate)
             generators = partition(predicate, collection)
             excluded = set()
@@ -489,18 +487,18 @@ class Diagram(QGraphicsScene):
             #   SPECIAL CASES
             #################################
 
-            admissible = {Identity.Role, Identity.Attribute, Identity.Concept, Identity.ValueDomain}
+            rr_admissible = {Identity.Role, Identity.Attribute, Identity.Concept, Identity.ValueDomain}
 
             f1 = lambda x: x.type() is Item.InputEdge
             f2 = lambda x: x.type() is Item.IndividualNode
             f3 = lambda x: x.type() is Item.MembershipEdge
-            f4 = lambda x: x.type() in admissible and Identity.Neutral not in x.Identities
+            f4 = lambda x: x.identity in rr_admissible and Identity.Neutral not in x.Identities
             f5 = lambda x: x.type() in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
             f6 = lambda x: x.type() is Item.IndividualNode
 
-            conv1 = lambda x: Identity.Concept if x is Identity.Instance else Identity.ValueDomain
-            conv2 = lambda x: Identity.Concept if x in {Identity.Role, Identity.Concept} else Identity.ValueDomain
-            conv3 = lambda x: Identity.RoleInstance if x is Identity.Role else Identity.AttributeInstance
+            conv1 = lambda x: Identity.Concept if x.identity is Identity.Instance else Identity.ValueDomain
+            conv2 = lambda x: Identity.Concept if x.identity in {Identity.Role, Identity.Concept} else Identity.ValueDomain
+            conv3 = lambda x: Identity.RoleInstance if x.identity is Identity.Role else Identity.AttributeInstance
 
             aux1 = lambda x: x.identity is Identity.Value
 
@@ -518,8 +516,8 @@ class Diagram(QGraphicsScene):
                     # node from the WEAK set to the STRONG set, so it will contribute to the
                     # computation of the final identity for all the remaining WEAK nodes.
 
-                    individuals = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
-                    identities = {conv1(x.identity) for x in individuals}
+                    collection = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+                    identities = set(map(conv1, collection))
                     computed = Identity.Neutral
 
                     if identities:
@@ -532,7 +530,7 @@ class Diagram(QGraphicsScene):
                     if node.identity is not Identity.Neutral:
                         strong.add(node)
 
-                    for k in individuals:
+                    for k in collection:
                         strong.discard(k)
 
                 elif node.type() is Item.RangeRestrictionNode:
@@ -548,7 +546,7 @@ class Diagram(QGraphicsScene):
                     # computation of the final identity for all the remaining WEAK nodes.
 
                     collection = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f4)
-                    identities = {conv2(x.identity) for x in collection}
+                    identities = set(map(conv2, collection))
                     computed = Identity.Neutral
 
                     if identities:
@@ -590,7 +588,7 @@ class Diagram(QGraphicsScene):
                     computed = Identity.Neutral
 
                     # 1) USE MEMBERSHIP EDGE
-                    identities = {conv3(x.identity) for x in outgoing}
+                    identities = set(map(conv3, outgoing))
                     if identities:
                         computed = first(identities)
                         if len(identities) > 1:
