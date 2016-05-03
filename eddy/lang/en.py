@@ -183,6 +183,12 @@ SYNTAX_MEMBERSHIP_INVALID_ASSERTION_TARGET = 'Invalid target for {0} assertion: 
 SYNTAX_MEMBERSHIP_INVALID_SOURCE = 'Invalid source for membership edge: {0}'
 SYNTAX_MEMBERSHIP_INVALID_TARGET = 'Invalid target for membership edge: {0}'
 
+SYNTAX_MANUAL_EDGE_ERROR = 'Syntax error detected on {0} from {1} to {2}: <i>{3}</i>.'
+SYNTAX_MANUAL_NODE_IDENTITY_UNKNOWN = 'Unkown node identity detected on {0}.'
+SYNTAX_MANUAL_NO_ERROR_FOUND = 'No syntax error found!'
+SYNTAX_MANUAL_PROGRESS_TITLE = 'Running syntax validation...'
+SYNTAX_MANUAL_WINDOW_TITLE = 'Syntax validation completed!'
+
 #############################################
 # DOCK WIDGETS
 #################################

@@ -68,7 +68,7 @@ from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphol import GrapholExporter
 from eddy.core.exporters.project import ProjectExporter
 from eddy.core.functions.fsystem import fexists, fcopy
-from eddy.core.functions.misc import snapF, first, cutR
+from eddy.core.functions.misc import snapF, first, cutR, uncapitalize
 from eddy.core.functions.path import expandPath, isSubPath, uniquePath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.loaders.graphml import GraphmlLoader
@@ -1424,57 +1424,54 @@ class MainWindow(QMainWindow):
         """
         Perform syntax checking on the active diagram.
         """
-        # TODO: IMPLEMENT
-        # scene = self.mdi.activeScene
-        # if scene:
-        # 
-        #     placeholder = None
-        #     pixmap = QPixmap(':/icons/done')
-        #     message = 'No syntax error found!'
-        # 
-        #     with BusyProgressDialog('Syntax check...', self):
-        # 
-        #         for edge in scene.edges():
-        #             res = scene.validator.result(edge.source, edge, edge.target)
-        #             if not res.valid:
-        #                 e = res.edge
-        #                 s = res.source
-        #                 t = res.target
-        #                 m = uncapitalize(res.message)
-        #                 placeholder = res.edge
-        #                 sname = '{} "{}"'.format(s.name, s.id if not s.predicate else '{}:{}'.format(s.text(), s.id))
-        #                 tname = '{} "{}"'.format(t.name, t.id if not t.predicate else '{}:{}'.format(t.text(), t.id))
-        #                 message = 'Syntax error detected on {} from {} to {}: <i>{}</i>.'.format(e.name, sname, tname, m)
-        #                 pixmap = QPixmap(':/icons/warning')
-        #                 break
-        #         else:
-        #             for n in scene.nodes():
-        #                 if n.identity is Identity.Unknown:
-        #                     placeholder = n
-        #                     name = '{} "{}"'.format(n.name, n.id if not n.predicate else '{}:{}'.format(n.text(), n.id))
-        #                     message = 'Unkown node identity detected on {}.'.format(name)
-        #                     pixmap = QPixmap(':/icons/warning')
-        #                     break
-        # 
-        #     msgbox = QMessageBox(self)
-        #     msgbox.setIconPixmap(pixmap)
-        #     msgbox.setWindowIcon(QIcon(':/images/eddy'))
-        #     msgbox.setWindowTitle('Syntax check completed!')
-        #     msgbox.setStandardButtons(QMessageBox.Close)
-        #     msgbox.setText(message)
-        #     msgbox.setTextFormat(Qt.RichText)
-        #     msgbox.exec_()
-        # 
-        #     if placeholder:
-        #         focus = placeholder
-        #         if placeholder.edge:
-        #             if placeholder.breakpoints:
-        #                 focus = placeholder.breakpoints[int(len(placeholder.breakpoints)/2)]
-        # 
-        #         scene.clearSelection()
-        #         placeholder.setSelected(True)
-        #         mainview = self.mdi.activeView
-        #         mainview.centerOn(focus)
+        item = None
+        pixmap = QPixmap(':/icons/done')
+        message = _('SYNTAX_MANUAL_NO_ERROR_FOUND')
+        with BusyProgressDialog(_('SYNTAX_MANUAL_PROGRESS_TITLE'), 2, self):
+            for edge in self.project.edges():
+                source = edge.source
+                target = edge.target
+                result = self.project.validator.validate(source, edge, target)
+                if not result.valid:
+                    nameA = '{0} "{1}"'.format(source.name, source.id)
+                    nameB = '{0} "{1}"'.format(target.name, target.id)
+                    if source.isPredicate():
+                        nameA = '{0} "{1}:{2}"'.format(source.name, source.text(), source.id)
+                    if target.isPredicate():
+                        nameB = '{0} "{1}:{2}"'.format(target.name, target.text(), target.id)
+                    message = _('SYNTAX_MANUAL_EDGE_ERROR', edge.name, nameA, nameB, uncapitalize(result.message))
+                    pixmap = QPixmap(':/icons/warning')
+                    item = edge
+                    break
+            else:
+                for node in self.project.nodes():
+                    if node.identity is Identity.Unknown:
+                        name = '{0} "{1}"'.format(node.name, node.id)
+                        if node.isPredicate():
+                            name = '{0} "{1}:{2}"'.format(node.name, node.text(), node.id)
+                        message = _('SYNTAX_MANUAL_NODE_IDENTITY_UNKNOWN', name)
+                        pixmap = QPixmap(':/icons/warning')
+                        item = node
+                        break
+
+        msgbox = QMessageBox(self)
+        msgbox.setIconPixmap(pixmap)
+        msgbox.setWindowIcon(QIcon(':/images/eddy'))
+        msgbox.setWindowTitle(_('SYNTAX_MANUAL_WINDOW_TITLE'))
+        msgbox.setStandardButtons(QMessageBox.Close)
+        msgbox.setText(message)
+        msgbox.setTextFormat(Qt.RichText)
+        msgbox.exec_()
+
+        if item:
+            focus = item
+            if item.isEdge():
+                if item.breakpoints:
+                    focus = item.breakpoints[int(len(item.breakpoints)/2)]
+            self.doFocusDiagram(item.diagram)
+            self.mdi.activeView.centerOn(focus)
+            self.mdi.activeDiagram.clearSelection()
+            item.setSelected(True)
 
     @pyqtSlot()
     def doToggleEdgeComplete(self):
