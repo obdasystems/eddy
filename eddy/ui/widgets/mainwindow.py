@@ -886,13 +886,13 @@ class MainWindow(QMainWindow):
             diagram.setMode(DiagramMode.Idle)
             items = diagram.items()
             if items:
-                r1 = diagram.sceneRect()
-                r2 = diagram.visibleRect(margin=0)
-                mX = snapF(((r1.right() - r2.right()) - (r2.left() - r1.left())) / 2, Diagram.GridSize)
-                mY = snapF(((r1.bottom() - r2.bottom()) - (r2.top() - r1.top())) / 2, Diagram.GridSize)
-                if mX or mY:
+                R1 = diagram.sceneRect()
+                R2 = diagram.visibleRect(margin=0)
+                moveX = snapF(((R1.right() - R2.right()) - (R2.left() - R1.left())) / 2, Diagram.GridSize)
+                moveY = snapF(((R1.bottom() - R2.bottom()) - (R2.top() - R1.top())) / 2, Diagram.GridSize)
+                if moveX or moveY:
                     items = [x for x in items if x.isNode() or x.isEdge()]
-                    command = CommandItemsTranslate(diagram, items, mX, mY, _('COMMAND_DIAGRAM_CENTER'))
+                    command = CommandItemsTranslate(diagram, items, moveX, moveY, _('COMMAND_DIAGRAM_CENTER'))
                     diagram.undoStack.push(command)
                     self.mdi.activeView.centerOn(0, 0)
 
@@ -1159,6 +1159,8 @@ class MainWindow(QMainWindow):
         """
         Quit Eddy.
         """
+        # TODO: implement
+        pass
 
     @pyqtSlot()
     def doRefactorBrush(self):

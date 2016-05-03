@@ -724,10 +724,17 @@ class Diagram(QGraphicsScene):
         :type margin: float
         :rtype: QRectF
         """
-        bound = self.itemsBoundingRect()
-        topLeft = QPointF(bound.left() - margin, bound.top() - margin)
-        bottomRight = QPointF(bound.right() + margin, bound.bottom() + margin)
-        return QRectF(topLeft, bottomRight)
+        items = self.items()
+        if items:
+            x = set()
+            y = set()
+            for item in items:
+                if item.isEdge() or item.isNode():
+                    b = item.mapRectToScene(item.boundingRect())
+                    x.update({b.left(), b.right()})
+                    y.update({b.top(), b.bottom()})
+            return QRectF(QPointF(min(x) - margin, min(y) - margin), QPointF(max(x) + margin, max(y) + margin))
+        return QRectF()
 
     def width(self):
         """
