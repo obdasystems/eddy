@@ -499,15 +499,19 @@ class GrapholLoader(QObject):
             edge.updateEdge()
             element = element.nextSiblingElement('edge')
 
-        # 6) CONFIGURE SLOTS
+        # 6) RUN IDENTIFICATION ALGORITHM
+        for node in self.nodes.values():
+            self.diagram.identify(node)
+
+        # 7) CONFIGURE SLOTS
         connect(self.diagram.sgnItemAdded, self.project.doAddItem)
         connect(self.diagram.sgnItemRemoved, self.project.doRemoveItem)
         connect(self.diagram.sgnActionCompleted, self.mainwindow.onDiagramActionCompleted)
         connect(self.diagram.sgnModeChanged, self.mainwindow.onDiagramModeChanged)
         connect(self.diagram.selectionChanged, self.mainwindow.doUpdateState)
 
-        # 7) CONFIGURE UNDOSTACK
+        # 8) CONFIGURE UNDOSTACK
         self.mainwindow.undoGroup.addStack(self.diagram.undoStack)
 
-        # 8) RETURN GENERATED DIAGRAM
+        # 9) RETURN GENERATED DIAGRAM
         return self.diagram

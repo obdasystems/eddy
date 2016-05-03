@@ -679,15 +679,19 @@ class GraphmlLoader(QObject):
         size = max(R3.width(), R3.height(), Diagram.MinSize)
         self.diagram.setSceneRect(QRectF(-size / 2, -size / 2, size, size))
 
-        # 9) CONFIGURE SLOTS
+        # 9) RUN IDENTIFICATION ALGORITHM
+        for node in self.nodes.values():
+            self.diagram.identify(node)
+
+        # 10) CONFIGURE SLOTS
         connect(self.diagram.sgnItemAdded, self.project.doAddItem)
         connect(self.diagram.sgnItemRemoved, self.project.doRemoveItem)
         connect(self.diagram.sgnActionCompleted, self.mainwindow.onDiagramActionCompleted)
         connect(self.diagram.sgnModeChanged, self.mainwindow.onDiagramModeChanged)
         connect(self.diagram.selectionChanged, self.mainwindow.doUpdateState)
 
-        # 10) CONFIGURE UNDOSTACK
+        # 11) CONFIGURE UNDOSTACK
         self.mainwindow.undoGroup.addStack(self.diagram.undoStack)
 
-        # 11) RETURN GENERATED DIAGRAM
+        # 12) RETURN GENERATED DIAGRAM
         return self.diagram
