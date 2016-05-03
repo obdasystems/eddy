@@ -37,10 +37,9 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QLabel, QVBoxLayout
 from PyQt5.QtWidgets import QMessageBox, QDialogButtonBox, QWidget
 
-from eddy.core.commands.common import CommandRefactor
 from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.datatypes.graphol import Identity
-from eddy.core.datatypes.owl import XsdDatatype, Facet
+from eddy.core.datatypes.owl import XsdDatatype
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font
@@ -234,11 +233,10 @@ class RefactorNameDialog(QDialog):
         diagram = self.node.diagram
         project = self.node.project
 
-        collection = []
+        diagram.undoStack.beginMacro(_('COMMAND_NODE_REFACTOR_NAME', self.node.text(), name))
         for n in project.predicates(self.node.type(), self.node.text()):
-            collection.append(CommandNodeLabelChange(n.diagram, n, n.text(), name))
-        command = CommandRefactor(_('COMMAND_NODE_REFACTOR_NAME', self.node.text(), name), collection)
-        diagram.undoStack.push(command)
+            diagram.undoStack.push(CommandNodeLabelChange(n.diagram, n, n.text(), name))
+        diagram.undoStack.endMacro()
 
         super().accept()
 
@@ -258,84 +256,3 @@ class RefactorNameDialog(QDialog):
         self.caption.setVisible(not isEmpty(caption))
         self.confirmationBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
         self.setFixedSize(self.sizeHint())
-
-
-class ValueRestrictionForm(QDialog):
-    """
-    This class implements the form used to select the restriction of a datatype.
-    """
-    # noinspection PyUnresolvedReferences
-    def __init__(self, node, parent=None):
-        """
-        Initialize the form dialog.
-        :type node: ValueRestrictionNode
-        :type parent: QWidget
-        """
-        super().__init__(parent)
-
-        # DATATYPE COMBO BOX
-        self.datatypeField = ComboBox(self)
-        for datatype in XsdDatatype:
-            # hide unrestrictable elements.
-            if Facet.forDatatype(datatype):
-                self.datatypeField.addItem(datatype.value, datatype)
-
-        datatype = node.datatype
-        for i in range(self.datatypeField.count()):
-            if self.datatypeField.itemData(i) is datatype:
-                self.datatypeField.setCurrentIndex(i)
-                break
-
-        # FACET COMBO BOX
-        self.facetField = ComboBox(self)
-        for facet in Facet.forDatatype(datatype):
-            self.facetField.addItem(facet.value, facet)
-
-        facet = node.facet
-        for i in range(self.facetField.count()):
-            if self.facetField.itemData(i) is facet:
-                self.facetField.setCurrentIndex(i)
-                break
-
-        # VALUE STRING FIELD
-        self.valueField = StringField(self)
-        self.valueField.setFixedWidth(300)
-        self.valueField.setValue(node.value)
-
-        # CONFIRMATION BOX
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
-
-        self.mainLayout = QFormLayout(self)
-        self.mainLayout.addRow('Datatype', self.datatypeField)
-        self.mainLayout.addRow('Facet', self.facetField)
-        self.mainLayout.addRow('Value', self.valueField)
-        self.mainLayout.addRow(self.buttonBox)
-
-        self.setWindowTitle('Compose value restriction')
-        self.setWindowIcon(QIcon(':/images/eddy'))
-        self.setFixedSize(self.sizeHint())
-
-        connect(self.buttonBox.accepted, self.accept)
-        connect(self.buttonBox.rejected, self.reject)
-        connect(self.datatypeField.currentIndexChanged[int], self.datatypeFieldChanged)
-
-    #############################################
-    #   SLOTS
-    #################################
-
-    @pyqtSlot(int)
-    def datatypeFieldChanged(self, index):
-        """
-        Executed whenever the index of the datatype field changes.
-        :type index: int
-        """
-        currentFacet = self.facetField.currentData()
-        self.facetField.clear()
-        for facet in Facet.forDatatype(self.datatypeField.itemData(index)):
-            self.facetField.addItem(facet.value, facet)
-        for i in range(self.facetField.count()):
-            if self.facetField.itemData(i) is currentFacet:
-                self.facetField.setCurrentIndex(i)
-                break
-        else:
-            self.facetField.setCurrentIndex(0)

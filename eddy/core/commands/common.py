@@ -205,30 +205,6 @@ class CommandComposeAxiom(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandRefactor(QUndoCommand):
-    """
-    This command is used to perform refactoring by applying multiple QUndoCommand.
-    """
-    def __init__(self, name, commands):
-        """
-        Initialize the command.
-        :type name: str
-        :type commands: T <= tuple|list|set
-        """
-        super().__init__(name)
-        self.commands = commands
-
-    def redo(self):
-        """redo the command"""
-        for command in self.commands:
-            command.redo()
-
-    def undo(self):
-        """undo the command"""
-        for command in self.commands:
-            command.undo()
-
-
 class CommandItemsTranslate(QUndoCommand):
     """
     This command is used to translate items.

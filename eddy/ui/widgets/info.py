@@ -37,10 +37,9 @@ from abc import ABCMeta, abstractmethod
 from PyQt5.QtCore import pyqtSlot, Qt, QEvent, QSize
 from PyQt5.QtGui import QBrush, QColor, QPainter
 from PyQt5.QtWidgets import QFormLayout, QSizePolicy, QLabel, QVBoxLayout
-from PyQt5.QtWidgets import QWidget, QPushButton, QMenu, QScrollArea
-from PyQt5.QtWidgets import QStackedWidget, QStyle, QStyleOption
+from PyQt5.QtWidgets import QWidget, QPushButton, QMenu, QScrollArea, QStyle
+from PyQt5.QtWidgets import QStackedWidget, QStyleOption
 
-from eddy.core.commands.common import CommandRefactor
 from eddy.core.commands.common import CommandSetProperty
 from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.datatypes.graphol import Item, Identity
@@ -677,11 +676,10 @@ class EditableNodeInfo(PredicateNodeInfo):
                 if data != node.text():
                     diagram = node.diagram
                     if sender is self.nameField:
-                        collection = []
+                        diagram.undoStack.beginMacro(_('COMMAND_NODE_REFACTOR_NAME', node.text(), data))
                         for n in diagram.project.predicates(node.type(), node.text()):
-                            collection.append(CommandNodeLabelChange(n.diagram, n, n.text(), data))
-                        command = CommandRefactor(_('COMMAND_NODE_REFACTOR_NAME', node.text(), data), collection)
-                        diagram.undoStack.push(command)
+                            diagram.undoStack.push(CommandNodeLabelChange(n.diagram, n, n.text(), data))
+                        diagram.undoStack.endMacro()
                     else:
                         command = CommandNodeLabelChange(diagram, node, node.text(), data)
                         diagram.undoStack.push(command)
