@@ -77,7 +77,7 @@ class IndividualNode(AbstractResizableNode):
         h = max(height, self.MinHeight)
         s = self.HandleSize
         self.brush = brush or QBrush(QColor(252, 252, 252))
-        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
+        self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
         self.polygon = self.createPolygon(w, h)
         self.background = self.createBackground(w + s, h + s)
         self.selection = self.createSelection(w + s, h + s)
