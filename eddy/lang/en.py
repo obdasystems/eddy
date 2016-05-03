@@ -157,13 +157,13 @@ COMMAND_NODE_SET_VALUE_RESTRICTION = 'change value restriction to {0}'
 
 SYNTAX_SELF_CONNECTION = 'Self connection is not valid'
 
-SYNTAX_INCLUSION_VALUE_DOMAIN_MISSING_ATOMIC = 'Inclusion between value-domain expressions must include at least an atomic datatype'
 SYNTAX_INCLUSION_CHAIN_AS_TARGET = 'Role chain nodes cannot be target of a Role inclusion'
 SYNTAX_INCLUSION_CHAIN_AS_SOURCE_INVALID_TARGET = 'Inclusion between {0} and {0} is forbidden'
 SYNTAX_INCLUSION_COMPLEMENT_INVALID_SOURCE = 'Invalid source for {0} inclusion: {1}'
 SYNTAX_INCLUSION_NO_GRAPHOL_EXPRESSION = 'Type mismatch: inclusion must involve two graphol expressions'
 SYNTAX_INCLUSION_NOT_COMPATIBLE = 'Type mismatch: {0} and {1} are not compatible'
 SYNTAX_INCLUSION_TYPE_MISMATCH = 'Type mismatch: inclusion between {0} and {1}'
+SYNTAX_INCLUSION_VALUE_DOMAIN_MISSING_ATOMIC = 'Inclusion between value-domain expressions must include at least an atomic datatype'
 
 SYNTAX_INPUT_COMPLEMENT_INVALID_EXPRESSION = 'Invalid negative {0} expression'
 SYNTAX_INPUT_DATA_TOO_MANY_DATATYPE = 'Too many value-domain nodes in input to datatype restriction node'
