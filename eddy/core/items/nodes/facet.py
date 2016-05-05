@@ -38,7 +38,7 @@ from PyQt5.QtGui import QPen, QColor, QPixmap, QBrush
 
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.owl import Facet
-from eddy.core.functions.misc import cutL
+from eddy.core.functions.misc import cutL, first
 from eddy.core.functions.misc import cutR
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeQuotedLabel
@@ -96,6 +96,22 @@ class FacetNode(AbstractNode):
     #############################################
     #   PROPERTIES
     #################################
+
+    @property
+    def datatype(self):
+        """
+        Returns the datatype this facet is restricting, or None if the node is isolated.
+        :rtype: XsdDatatype
+        """
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.type() is Item.DatatypeRestrictionNode
+        f3 = lambda x: x.type() is Item.ValueDomainNode
+        outgoing = first(self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+        if outgoing:
+            incoming = first(outgoing.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
+            if incoming:
+                return incoming.datatype
+        return None
 
     @property
     def facet(self):
