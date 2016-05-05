@@ -50,10 +50,16 @@ class CommandEdgeAdd(QUndoCommand):
         """
         super().__init__(_('COMMAND_EDGE_ADD', edge.name))
 
+        self.inputs = {'redo': [], 'undo': []}
         self.diagram = diagram
         self.edge = edge
+
+        # IMPORTANT: do not remove the following since it's
+        # needed by property assertion node and role chain node
+        # to correctly generate an entry in their input lists.
+        self.edge.source.addEdge(self.edge)
+        self.edge.target.addEdge(self.edge)
         self.edge.updateEdge()
-        self.inputs = {'redo': [], 'undo': []}
 
         if self.edge.type() is Item.InputEdge:
             # If we are adding an input edge targeting a role chain or a property
