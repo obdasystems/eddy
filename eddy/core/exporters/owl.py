@@ -85,7 +85,6 @@ class OWLExporter(QObject):
         self.ontology = None
         self.pm = None
 
-        self.AddAxiom = jnius.autoclass('org.semanticweb.owlapi.model.AddAxiom')
         self.DefaultPrefixManager = jnius.autoclass('org.semanticweb.owlapi.util.DefaultPrefixManager')
         self.FunctionalSyntaxDocumentFormat = jnius.autoclass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
         self.HashSet = jnius.autoclass('java.util.HashSet')
@@ -1016,7 +1015,7 @@ class OWLExporter(QObject):
         #################################
 
         for axiom in self.axioms:
-            self.man.applyChange(self.AddAxiom(self.ontology, axiom))
+            self.man.addAxiom(self.ontology, axiom)
 
         #############################################
         # SERIALIZE THE ONTOLOGY
