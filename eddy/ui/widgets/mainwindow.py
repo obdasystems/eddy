@@ -81,6 +81,7 @@ from eddy.lang import gettext as _
 
 from eddy.ui.dialogs.about import About
 from eddy.ui.dialogs.diagram import NewDiagramDialog
+from eddy.ui.dialogs.export import OWLExportDialog
 from eddy.ui.dialogs.nodes import CardinalityRestrictionForm
 from eddy.ui.dialogs.nodes import RefactorNameDialog
 from eddy.ui.dialogs.nodes import ValueForm
@@ -377,6 +378,7 @@ class MainWindow(QMainWindow):
         connect(self.actionImport.triggered, self.doImport)
 
         self.actionExport.setStatusTip(_('ACTION_EXPORT_S'))
+        self.actionExport.setEnabled(not self.project.isEmpty())
         connect(self.actionExport.triggered, self.doExport)
 
         self.actionPrint.setIcon(self.iconPrint)
@@ -971,17 +973,19 @@ class MainWindow(QMainWindow):
         """
         Export the currently open graphol document.
         """
-        # TODO: IMPLEMENT
-        # scene = self.mdi.activeScene
-        # if scene:
-        #     result = self.exportPath(name=cutR(scene.document.name, File.Graphol.extension))
-        #     if result:
-        #         filepath = result[0]
-        #         filetype = File.forValue(result[1])
-        #         if filetype is File.Pdf:
-        #             self.exportToPdf(scene, filepath)
-        #         elif filetype is File.Owl:
-        #             self.exportToOwl(scene, filepath)
+        if not self.project.isEmpty():
+            dialog = QFileDialog(self)
+            dialog.setAcceptMode(QFileDialog.AcceptSave)
+            dialog.setDirectory(expandPath('~/'))
+            dialog.setFileMode(QFileDialog.ExistingFile)
+            dialog.setNameFilters([File.Owl.value, File.Pdf.value])
+            dialog.setViewMode(QFileDialog.Detail)
+            dialog.selectFile(self.project.name)
+            if dialog.exec_():
+                path = first(dialog.selectedFiles())
+                file = File.forValue(dialog.selectedNameFilter())
+                if file is File.Owl:
+                    self.exportToOwl(path)
 
     @pyqtSlot('QGraphicsScene')
     def doFocusDiagram(self, diagram):
@@ -1511,6 +1515,7 @@ class MainWindow(QMainWindow):
         isEdgeSelected = False
         isNodeSelected = False
         isPredicateSelected = False
+        isProjectEmpty = self.project.isEmpty()
 
         if self.mdi.subWindowList():
             diagram = self.mdi.activeDiagram
@@ -1528,6 +1533,7 @@ class MainWindow(QMainWindow):
         self.actionCut.setEnabled(isNodeSelected)
         self.actionCopy.setEnabled(isNodeSelected)
         self.actionDelete.setEnabled(isNodeSelected or isEdgeSelected)
+        self.actionExport.setEnabled(not isProjectEmpty)
         self.actionPaste.setEnabled(not isClipboardEmpty)
         self.actionSaveAs.setEnabled(isDiagramActive)
         self.actionSelectAll.setEnabled(isDiagramActive)
@@ -1806,35 +1812,14 @@ class MainWindow(QMainWindow):
         subwindow.showMaximized()
         return subwindow
 
-    def exportPath(self, path=None, name=None):
+    def exportToOwl(self, path):
         """
-        Bring up the 'Export' file dialog and returns the selected filepath.
-        Will return None in case the user hit the 'Cancel' button to abort the operation.
+        Export the current project in OWL syntax.
         :type path: str
-        :type name: str
-        :rtype: tuple
-        """
-        # TODO: ADAPT
-        # dialog = SaveFile(path=path, parent=self)
-        # dialog.setWindowTitle('Export')
-        # dialog.setNameFilters([File.Owl.value, File.Pdf.value])
-        # dialog.selectFile(name or 'Untitled')
-        # if dialog.exec_():
-        #     return dialog.selectedFiles()[0], dialog.selectedNameFilter()
-        # return None
-
-    def exportToOwl(self, scene, filepath):
-        """
-        Export the given scene in OWL syntax saving it in the given filepath.
-        :type scene: Diagram
-        :type filepath: str
         :rtype: bool
         """
-        # TODO: ADAPT
-        # exportForm = OWLTranslationForm(scene, filepath, self)
-        # if exportForm.exec_() == OWLTranslationForm.Accepted:
-        #     return True
-        # return False
+        dialog = OWLExportDialog(self.project, path, self)
+        dialog.exec_()
 
     @staticmethod
     def exportToPdf(scene, filepath):

@@ -35,11 +35,14 @@
 
 class MalformedDiagramError(RuntimeError):
     """
-    Raised whenever we encounter a problem while exporting a Graphol diagram.
+    Raised whenever we encounter a problem while exporting a graphol diagram.
     """
     def __init__(self, item, *args, **kwargs):
         """
-        Initialize the Exception.
+        Initialize the exception.
+        :type item: AbstractItem
+        :type args: list
+        :type kwargs: dict
         """
         super().__init__(*args, **kwargs)
         self.item = item

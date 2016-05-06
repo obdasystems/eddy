@@ -74,7 +74,7 @@ class Test_Export(EddyTestCase):
         self.init('@examples/Animals.graphol')
         # WHEN
         exporter = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
-        exporter.work()
+        exporter.export()
         # THEN
         translation = exporter.export(OWLSyntax.Functional)
         self.assertIsInstance(translation, str)
@@ -85,7 +85,7 @@ class Test_Export(EddyTestCase):
         self.init('@examples/Family.graphol')
         # WHEN
         exporter = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
-        exporter.work()
+        exporter.export()
         # THEN
         translation = exporter.export(OWLSyntax.Functional)
         self.assertIsInstance(translation, str)
@@ -96,7 +96,7 @@ class Test_Export(EddyTestCase):
         self.init('@examples/Pizza.graphol')
         # WHEN
         exporter = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
-        exporter.work()
+        exporter.export()
         # THEN
         translation = exporter.export(OWLSyntax.Functional)
         self.assertIsInstance(translation, str)
@@ -107,7 +107,7 @@ class Test_Export(EddyTestCase):
         self.init('@examples/Diet.graphol')
         # WHEN
         exporter = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
-        exporter.work()
+        exporter.export()
         # THEN
         translation = exporter.export(OWLSyntax.Functional)
         self.assertIsInstance(translation, str)
@@ -118,7 +118,7 @@ class Test_Export(EddyTestCase):
         self.init('@examples/LUBM.graphol')
         # WHEN
         exporter = OWLExporter(scene=self.scene, ontoIRI='IRI', ontoPrefix='PREFIX')
-        exporter.work()
+        exporter.export()
         # THEN
         translation = exporter.export(OWLSyntax.Functional)
         self.assertIsInstance(translation, str)

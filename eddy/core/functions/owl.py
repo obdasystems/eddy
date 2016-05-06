@@ -50,10 +50,12 @@ def OWLAnnotationText(text):
     return cleaned
 
 
-def OWLText(text):
+def OWLShortIRI(prefix, resource):
     """
-    Transform the given text returning OWL compatible text.
-    :type text: str
+    Construct an abbreviated IRI, which is of the form PREFIX_NAME:RC by joining the given values with a colon.
+    This function will also take care of removing invalid characters from the given resource.
+    :type prefix: str
+    :type resource: str
     :rtype: str
     """
-    return re.sub(RE_OWL_INVALID_CHAR, '_', str(text))
+    return '{0}:{1}'.format(prefix, re.sub(RE_OWL_INVALID_CHAR, '_', str(resource)))

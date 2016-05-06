@@ -281,6 +281,33 @@ PROJECT_LOCATION_LABEL = 'Location'
 PROJECT_WINDOW_TITLE = 'New project'
 
 #############################################
+# PROJECT EXPORT [OWL] DIALOG
+#################################
+
+PROJECT_EXPORT_OWL_WINDOW_TITLE = 'OWL Export'
+PROJECT_EXPORT_OWL_SYNTAX_KEY = 'Syntax'
+PROJECT_EXPORT_OWL_MALFORMED_EXPRESSION_WINDOW_TITLE = 'Malformed expression'
+PROJECT_EXPORT_OWL_MALFORMED_EXPRESSION_MESSAGE = 'Malformed expression detected on {0}: {1}'
+PROJECT_EXPORT_OWL_MALFORMED_EXPRESSION_QUESTION = 'Do you want to see the error in the diagram?'
+PROJECT_EXPORT_OWL_ERRORED_WINDOW_TITLE = 'Unhandled exception!'
+PROJECT_EXPORT_OWL_ERRORED_MESSAGE = 'Diagram translation could not be completed!'
+PROJECT_EXPORT_OWL_ERRORED_INFORMATIVE_MESSAGE = 'Please <a href="{0}">submit a bug report</a> with detailed information.'
+PROJECT_EXPORT_OWL_COMPLETED_WINDOW_TITLE = 'Translation completed!'
+PROJECT_EXPORT_OWL_COMPLETED_MESSAGE = 'Do you want to open the OWL ontology?'
+PROJECT_EXPORT_OWL_DISCONNECTED_FACET = 'disconnected facet node'
+PROJECT_EXPORT_OWL_MISMATCH_INCLUSION = 'type mismatch in inclusion'
+PROJECT_EXPORT_OWL_MISMATCH_EQUIVALENCE = 'type mismatch in equivalence'
+PROJECT_EXPORT_OWL_MISMATCH_MEMBERSHIP = 'type mismatch in membership'
+PROJECT_EXPORT_OWL_MISSING_CARDINALITY = 'missing cardinality'
+PROJECT_EXPORT_OWL_MISSING_OPERAND = 'missing operand(s)'
+PROJECT_EXPORT_OWL_MISSING_FACET = 'missing facet node(s)'
+PROJECT_EXPORT_OWL_MISSING_VALUE_DOMAIN = 'missing value domain node'
+PROJECT_EXPORT_OWL_TOO_MANY_OPERANDS = 'too many operands'
+PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND = 'unsupported operand ({0})'
+PROJECT_EXPORT_OWL_UNSUPPORTED_RESTRICTION = 'unsupported restriction'
+PROJECT_EXPORT_OWL_UNSUPPORTED_SYNTAX = 'unsupported syntax ({0})'
+
+#############################################
 # REFACTOR NAME DIALOG
 #################################
 

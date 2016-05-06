@@ -34,81 +34,98 @@
 
 import traceback
 
-from PyQt5.QtCore import Qt, QThread, pyqtSlot, QRegExp
-from PyQt5.QtGui import QPixmap, QIcon, QRegExpValidator
-from PyQt5.QtWidgets import QDialog, QFormLayout, QDialogButtonBox, QProgressBar
-from PyQt5.QtWidgets import QMessageBox, QSpacerItem, QSizePolicy
+from PyQt5.QtCore import Qt, QThread, pyqtSlot
+from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtWidgets import QDialog, QFormLayout, QDialogButtonBox
+from PyQt5.QtWidgets import QProgressBar, QFrame, QWidget, QVBoxLayout
+from PyQt5.QtWidgets import QMessageBox
 
 from eddy import BUG_TRACKER
 from eddy.core.datatypes.owl import OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
 from eddy.core.exporters.owl import OWLExporter
-from eddy.core.functions.misc import isEmpty
-from eddy.core.functions.path import openPath
+from eddy.core.functions.path import openPath, expandPath
 from eddy.core.functions.signals import connect
-from eddy.ui.fields import StringField, ComboBox
-from eddy.ui.widgets.view import DiagramView
+from eddy.core.qt import Font
+
+from eddy.lang import gettext as _
+
+from eddy.ui.fields import ComboBox
 
 
-class OWLTranslationForm(QDialog):
+class OWLExportDialog(QDialog):
     """
     This class implements the form used to perform Graphol -> OWL ontology translation.
     """
-    def __init__(self, scene, filepath, parent=None):
+    def __init__(self, project, path, parent=None):
         """
         Initialize the form dialog.
-        :type scene: DiagramScene
-        :type filepath: str
+        :type project: Project
+        :type path: str
         :type parent: QWidget
         """
         super().__init__(parent)
 
-        self.scene = scene
-        self.filepath = filepath
+        arial12r = Font('Arial', 12)
+
+        self.path = expandPath(path)
+        self.project = project
         self.worker = None
         self.workerThread = None
 
-        self.iriField = StringField(self)
-        self.iriField.setFixedWidth(300)
-        self.iriField.setValidator(QRegExpValidator(QRegExp('[\w:\/\[\]=?%#~\.\-\+]*'), self))
-
-        self.prefixField = StringField(self)
-        self.prefixField.setFixedWidth(300)
-        self.prefixField.setValidator(QRegExpValidator(QRegExp('[\w]*'), self))
+        #############################################
+        # FORM AREA
+        #################################
 
         self.syntaxField = ComboBox(self)
         for syntax in OWLSyntax:
             self.syntaxField.addItem(syntax.value, syntax)
         self.syntaxField.setCurrentIndex(0)
+        self.syntaxField.setFixedWidth(300)
+        self.syntaxField.setFont(arial12r)
+
+        spacer = QFrame()
+        spacer.setFrameShape(QFrame.HLine)
+        spacer.setFrameShadow(QFrame.Sunken)
 
         self.progressBar = QProgressBar(self)
         self.progressBar.setAlignment(Qt.AlignHCenter)
         self.progressBar.setRange(0, 100)
         self.progressBar.setValue(0)
 
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
-        self.buttonBox.button(QDialogButtonBox.Ok).setDisabled(True)
+        self.formWidget = QWidget(self)
+        self.formLayout = QFormLayout(self.formWidget)
+        self.formLayout.addRow(_('PROJECT_EXPORT_OWL_SYNTAX_KEY'), self.syntaxField)
+        self.formLayout.addRow(spacer)
+        self.formLayout.addRow(self.progressBar)
 
-        self.mainLayout = QFormLayout(self)
-        self.mainLayout.addRow('IRI', self.iriField)
-        self.mainLayout.addRow('Prefix', self.prefixField)
-        self.mainLayout.addRow('Syntax', self.syntaxField)
-        self.mainLayout.addRow(self.progressBar)
-        self.mainLayout.addRow(self.buttonBox)
+        #############################################
+        # CONFIRMATION AREA
+        #################################
 
-        self.setWindowTitle('OWL Translation')
+        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.confirmationBox.setContentsMargins(10, 0, 10, 10)
+        self.confirmationBox.setFont(arial12r)
+
+        #############################################
+        # CONFIGURE LAYOUT
+        #################################
+
+        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.addWidget(self.formWidget)
+        self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
+
+        self.setWindowTitle(_('PROJECT_EXPORT_OWL_WINDOW_TITLE'))
         self.setWindowIcon(QIcon(':/images/eddy'))
         self.setFixedSize(self.sizeHint())
 
-        connect(self.buttonBox.accepted, self.run)
-        connect(self.buttonBox.rejected, self.reject)
-        connect(self.iriField.textChanged, self.iriChanged)
+        connect(self.confirmationBox.accepted, self.run)
+        connect(self.confirmationBox.rejected, self.reject)
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SLOTS                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
+    #############################################
+    #   SLOTS
+    #################################
 
     @pyqtSlot(Exception)
     def errored(self, exception):
@@ -116,41 +133,31 @@ class OWLTranslationForm(QDialog):
         Executed whenever the translation errors.
         :type exception: Exception
         """
-        if isinstance(exception, MalformedDiagramError):
+        self.workerThread.quit()
 
+        if isinstance(exception, MalformedDiagramError):
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(QPixmap(':/icons/warning'))
             msgbox.setWindowIcon(QIcon(':/images/eddy'))
-            msgbox.setWindowTitle('Malformed Diagram')
-            msgbox.setText('Malformed expression detected on {}: {}'.format(exception.item, exception))
-            msgbox.setInformativeText('Do you want to see the error in the diagram?')
+            msgbox.setWindowTitle(_('PROJECT_EXPORT_OWL_MALFORMED_EXPRESSION_WINDOW_TITLE'))
+            msgbox.setText(_('PROJECT_EXPORT_OWL_MALFORMED_EXPRESSION_MESSAGE', exception.item, exception))
+            msgbox.setInformativeText(_('PROJECT_EXPORT_OWL_MALFORMED_EXPRESSION_QUESTION'))
             msgbox.setStandardButtons(QMessageBox.Yes|QMessageBox.No)
-            S = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-            L = msgbox.layout()
-            L.addItem(S, L.rowCount(), 0, 1, L.columnCount())
             msgbox.exec_()
-
             if msgbox.result() == QMessageBox.Yes:
-                for view in self.scene.views():
-                    if isinstance(view, DiagramView):
-                        view.centerOn(exception.item)
-
+                mainwindow = self.parent()
+                mainwindow.doFocusItem(exception.item)
         else:
-
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(QPixmap(':/icons/error'))
             msgbox.setWindowIcon(QIcon(':/images/eddy'))
-            msgbox.setWindowTitle('Unhandled exception!')
+            msgbox.setWindowTitle(_('PROJECT_EXPORT_OWL_ERRORED_WINDOW_TITLE'))
             msgbox.setStandardButtons(QMessageBox.Close)
-            msgbox.setText('Diagram translation could not be completed!')
-            msgbox.setInformativeText('Please <a href="{}">submit a bug report</a> with detailed information.'.format(BUG_TRACKER))
+            msgbox.setText(_('PROJECT_EXPORT_OWL_ERRORED_MESSAGE'))
+            msgbox.setInformativeText(_('PROJECT_EXPORT_OWL_ERRORED_INFORMATIVE_MESSAGE', BUG_TRACKER))
             msgbox.setDetailedText(''.join(traceback.format_exception(type(exception), exception, exception.__traceback__)))
-            S = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-            L = msgbox.layout()
-            L.addItem(S, L.rowCount(), 0, 1, L.columnCount())
             msgbox.exec_()
 
-        self.workerThread.quit()
         self.reject()
 
     @pyqtSlot()
@@ -160,22 +167,15 @@ class OWLTranslationForm(QDialog):
         """
         self.workerThread.quit()
 
-        # file = File(path=self.filepath)
-        # file.write(string=self.worker.export(syntax=self.syntaxField.currentData()))
-
         msgbox = QMessageBox(self)
         msgbox.setIconPixmap(QPixmap(':/icons/info'))
         msgbox.setWindowIcon(QIcon(':/images/eddy'))
-        msgbox.setText('Translation completed!')
-        msgbox.setInformativeText('Do you want to open the OWL ontology?')
+        msgbox.setText(_('PROJECT_EXPORT_OWL_COMPLETED_WINDOW_TITLE'))
+        msgbox.setInformativeText(_('PROJECT_EXPORT_OWL_COMPLETED_MESSAGE'))
         msgbox.setStandardButtons(QMessageBox.Yes|QMessageBox.No)
-        S = QSpacerItem(400, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        L = msgbox.layout()
-        L.addItem(S, L.rowCount(), 0, 1, L.columnCount())
         msgbox.exec_()
-
         if msgbox.result() == QMessageBox.Yes:
-            openPath(self.filepath)
+            openPath(self.path)
 
         self.accept()
 
@@ -190,34 +190,15 @@ class OWLTranslationForm(QDialog):
         self.progressBar.setValue(current)
 
     @pyqtSlot()
-    def iriChanged(self):
-        """
-        Executed whenever the value of the prefix field changes.
-        """
-        button = self.buttonBox.button(QDialogButtonBox.Ok)
-        button.setEnabled(not isEmpty(self.iriField.value()))
-
-    @pyqtSlot()
     def run(self):
         """
         Perform the Graphol -> OWL translation in a separate thread.
         """
-        ontoIRI = self.iriField.value()
-        ontoPrefix = self.prefixField.value()
-
-        self.buttonBox.setEnabled(False)
-        self.syntaxField.setEnabled(False)
-
-        if not ontoIRI.endswith('#'):
-            ontoIRI = '{0}#'.format(ontoIRI)
-
         self.workerThread = QThread()
-        self.worker = OWLExporter(scene=self.scene, ontoIRI=ontoIRI, ontoPrefix=ontoPrefix)
+        self.worker = OWLExporter(self.project, self.path, self.syntaxField.currentData())
         self.worker.moveToThread(self.workerThread)
-
-        connect(self.worker.completed, self.completed)
-        connect(self.worker.errored, self.errored)
-        connect(self.worker.progress, self.progress)
-        connect(self.workerThread.started, self.worker.work)
-
+        connect(self.worker.sgnCompleted, self.completed)
+        connect(self.worker.sgnErrored, self.errored)
+        connect(self.worker.sgnProgress, self.progress)
+        connect(self.workerThread.started, self.worker.run)
         self.workerThread.start()

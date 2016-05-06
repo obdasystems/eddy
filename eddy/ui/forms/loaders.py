@@ -85,7 +85,7 @@ class BusyLoaderDialog(QDialog):
 
         connect(self.worker.completed, self.completed)
         connect(self.worker.errored, self.errored)
-        connect(self.workerThread.started, self.worker.work)
+        connect(self.workerThread.started, self.worker.export)
 
         self.workerThread.start()
 

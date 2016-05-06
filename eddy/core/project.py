@@ -83,9 +83,9 @@ class Project(QObject):
             K_TYPE: {},
         }
 
+        self.iri = iri
         self.path = path
         self.prefix = prefix
-        self.iri = iri
 
         self.metaFactory = MetaFactory(self)
         self.validator = OWL2RLValidator(self)
@@ -216,6 +216,16 @@ class Project(QObject):
             return self.index[K_ITEM][diagram.id][iid]
         except KeyError:
             return None
+
+    def isEmpty(self):
+        """
+        Returns True if the project contains no element, False otherwise.
+        :rtype: bool
+        """
+        for i in self.index[K_ITEM]:
+            for _ in self.index[K_ITEM][i]:
+                return False
+        return True
 
     def items(self, diagram=None):
         """
