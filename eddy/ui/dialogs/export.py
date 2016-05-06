@@ -128,7 +128,7 @@ class OWLExportDialog(QDialog):
     #################################
 
     @pyqtSlot(Exception)
-    def errored(self, exception):
+    def onErrored(self, exception):
         """
         Executed whenever the translation errors.
         :type exception: Exception
@@ -161,7 +161,7 @@ class OWLExportDialog(QDialog):
         self.reject()
 
     @pyqtSlot()
-    def completed(self):
+    def onCompleted(self):
         """
         Executed whenever the translation completes.
         """
@@ -180,7 +180,7 @@ class OWLExportDialog(QDialog):
         self.accept()
 
     @pyqtSlot(int, int)
-    def progress(self, current, total):
+    def onProgress(self, current, total):
         """
         Update the progress bar showing the translation advancement.
         :type current: int
@@ -190,6 +190,13 @@ class OWLExportDialog(QDialog):
         self.progressBar.setValue(current)
 
     @pyqtSlot()
+    def onStarted(self):
+        """
+        Executed whenever the translation starts.
+        """
+        self.confirmationBox.setEnabled(False)
+
+    @pyqtSlot()
     def run(self):
         """
         Perform the Graphol -> OWL translation in a separate thread.
@@ -197,8 +204,9 @@ class OWLExportDialog(QDialog):
         self.workerThread = QThread()
         self.worker = OWLExporter(self.project, self.path, self.syntaxField.currentData())
         self.worker.moveToThread(self.workerThread)
-        connect(self.worker.sgnCompleted, self.completed)
-        connect(self.worker.sgnErrored, self.errored)
-        connect(self.worker.sgnProgress, self.progress)
+        connect(self.worker.sgnStarted, self.onStarted)
+        connect(self.worker.sgnCompleted, self.onCompleted)
+        connect(self.worker.sgnErrored, self.onErrored)
+        connect(self.worker.sgnProgress, self.onProgress)
         connect(self.workerThread.started, self.worker.run)
         self.workerThread.start()
