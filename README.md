@@ -34,6 +34,12 @@ ontologies that can be rendered as ER diagrams have in Graphol a similar diagram
 * [Domenico Fabio Savo](http://www.dis.uniroma1.it/~savo/)                       
 * [Marco Console](http://www.dis.uniroma1.it/~dottoratoii/students/marco-console)                 
 
+### Publications
+
+- Domenico Lembo, Daniele Pantaleone, Valerio Santarelli, Domenico Fabio Savo
+  **Easy OWL Drawing with the Graphol Visual Ontology Language** [PDF](http://www.aaai.org/ocs/index.php/KR/KR16/paper/view/12904/12524)
+  *Proceedings of the 15th International Conference, KR-2016, Cape Town, South Africa, April 25-29, 2016*
+
 ### Screenshot
 
 ![screenshot](/artwork/shot01.png?raw=true)
@@ -44,9 +50,9 @@ Eddy is licensed under the GNU General Public License v3. See the LICENSE file i
 
 ### Resources
 
-* [Source code](https://github.com/danielepantaleone/eddy)
 * [Bug tracker](https://github.com/danielepantaleone/eddy/issues)
 * [Graphol website](http://www.dis.uniroma1.it/~graphol/)
+* [Source code](https://github.com/danielepantaleone/eddy)
 
 [Dipartimento di Ingegneria Informatica, Automatica e Gestionale "A.Ruberti"]: http://www.dis.uniroma1.it/en
 [Graphol]: http://www.dis.uniroma1.it/~graphol/
