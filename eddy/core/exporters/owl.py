@@ -42,6 +42,7 @@ from eddy.core.exceptions import MalformedDiagramError
 from eddy.core.functions.fsystem import fwrite
 from eddy.core.functions.misc import first, clamp, isEmpty
 from eddy.core.functions.owl import OWLShortIRI, OWLAnnotationText
+from eddy.core.functions.owl import OWLFunctionalDocumentFilter
 from eddy.core.functions.signals import emit
 
 from eddy.lang import gettext as _
@@ -1023,12 +1024,16 @@ class OWLExporter(QObject):
 
         if self.syntax is OWLSyntax.Functional:
             DocumentFormat = self.FunctionalSyntaxDocumentFormat
+            DocumentFilter = OWLFunctionalDocumentFilter
         elif self.syntax is OWLSyntax.Manchester:
             DocumentFormat = self.ManchesterSyntaxDocumentFormat
+            DocumentFilter = lambda x: x
         elif self.syntax is OWLSyntax.RDF:
             DocumentFormat = self.RDFXMLDocumentFormat
+            DocumentFilter = lambda x: x
         elif self.syntax is OWLSyntax.Turtle:
             DocumentFormat = self.TurtleDocumentFormat
+            DocumentFilter = lambda x: x
         else:
             raise TypeError(_('PROJECT_EXPORT_OWL_UNSUPPORTED_SYNTAX', self.syntax))
 
@@ -1042,7 +1047,8 @@ class OWLExporter(QObject):
         self.man.setOntologyFormat(self.ontology, ontoFormat)
         self.man.saveOntology(self.ontology, stream)
         stream = jnius.cast(self.StringDocumentTarget, stream)
-        fwrite(stream.toString(), self.path)
+        string = DocumentFilter(stream.toString())
+        fwrite(string, self.path)
 
     #############################################
     #   AUXILIARY METHODS

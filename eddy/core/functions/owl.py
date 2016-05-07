@@ -32,22 +32,43 @@
 ##########################################################################
 
 
+import os
 import re
 
+from eddy.core.functions.misc import isEmpty
 from eddy.core.regex import RE_OWL_INVALID_CHAR
+from eddy.core.regex import RE_OWL_ONTOLOGY_FUNCTIONAL_TAG
 
 
-def OWLAnnotationText(text):
+def OWLAnnotationText(content):
     """
     Transform the given text returning OWL Annotation compatible text.
-    :type text: str
+    :type content: str
     :rtype: str
     """
-    cleaned = text.lower()
-    cleaned.replace('\n', '')
-    cleaned.replace('\r\n', '')
+    cleaned = content.lower()
+    cleaned.replace(os.linesep, '')
     cleaned.strip()
     return cleaned
+
+
+def OWLFunctionalDocumentFilter(content):
+    """
+    Properly format the given OWL document for Functional OWL serialization.
+    This function is needed because Protege 4.3 does not support comments being generated
+    by OWLapi 4 FunctionalSyntaxObjectRenderer, so we need to strip them out of our document.
+    :type content: str
+    :rtype: str
+    """
+    result = []
+    extend = result.extend
+    for row in (i for i in content.split(os.linesep) if not i.startswith('#')):
+        if not isEmpty(row):
+            if RE_OWL_ONTOLOGY_FUNCTIONAL_TAG.search(row):
+                extend([os.linesep, row, os.linesep, os.linesep])
+            else:
+                extend([row, os.linesep])
+    return ''.join(result).rstrip(os.linesep)
 
 
 def OWLShortIRI(prefix, resource):
