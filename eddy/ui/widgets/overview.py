@@ -40,7 +40,7 @@ from eddy.core.functions.signals import connect, disconnect
 
 class Overview(QGraphicsView):
     """
-    This class is used to display the active scene overview.
+    This class is used to display the active diagram overview.
     """
     def __init__(self, parent=None):
         """
