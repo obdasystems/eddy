@@ -62,7 +62,7 @@ class OWLExportDialog(QDialog):
         Initialize the form dialog.
         :type project: Project
         :type path: str
-        :type parent: QWidget
+        :type parent: MainWindow
         """
         super().__init__(parent)
 

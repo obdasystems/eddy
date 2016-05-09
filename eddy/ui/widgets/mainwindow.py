@@ -38,10 +38,9 @@ import webbrowser
 from collections import OrderedDict
 from traceback import format_exception as f_exc
 
-from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, pyqtSlot, QSizeF
-from PyQt5.QtGui import QBrush, QColor, QPixmap, QPageSize, QPainter
+from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, pyqtSlot
+from PyQt5.QtGui import QBrush, QColor, QPixmap
 from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
-from PyQt5.QtPrintSupport import QPrinter
 from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox
 from PyQt5.QtWidgets import QMenu, QToolButton, QDockWidget, QApplication
 from PyQt5.QtWidgets import QUndoGroup, QStyle, QFileDialog
@@ -83,7 +82,6 @@ from eddy.lang import gettext as _
 
 from eddy.ui.dialogs.about import About
 from eddy.ui.dialogs.diagram import NewDiagramDialog
-from eddy.ui.dialogs.export import OWLExportDialog
 from eddy.ui.dialogs.nodes import CardinalityRestrictionForm
 from eddy.ui.dialogs.nodes import RefactorNameDialog
 from eddy.ui.dialogs.nodes import ValueForm
@@ -984,12 +982,9 @@ class MainWindow(QMainWindow):
             dialog.setViewMode(QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             if dialog.exec_():
-                path = first(dialog.selectedFiles())
                 file = File.forValue(dialog.selectedNameFilter())
-                if file is File.Owl:
-                    self.exportToOwl(path)
-                elif file is File.Pdf:
-                    self.exportToPdf(path)
+                path = first(dialog.selectedFiles())
+                self.project.export(path, file)
 
     @pyqtSlot('QGraphicsScene')
     def doFocusDiagram(self, diagram):
@@ -1774,54 +1769,6 @@ class MainWindow(QMainWindow):
         subwindow = self.mdi.addSubWindow(subwindow)
         subwindow.showMaximized()
         return subwindow
-
-    def exportToOwl(self, path):
-        """
-        Export the current project in OWL syntax.
-        :type path: str
-        :rtype: bool
-        """
-        if not self.project.isEmpty():
-            dialog = OWLExportDialog(self.project, path, self)
-            dialog.exec_()
-
-    def exportToPdf(self, path):
-        """
-        Export the current project in PDF format.
-        :type path: str
-        """
-        if not self.project.isEmpty():
-
-            printer = QPrinter(QPrinter.HighResolution)
-            printer.setOutputFormat(QPrinter.PdfFormat)
-            printer.setOutputFileName(path)
-            printer.setPaperSize(QPrinter.Custom)
-
-            painter = QPainter()
-            painter.begin(printer)
-
-            # TURN CACHING OFF
-            for item in self.project.items():
-                if item.isNode() or item.isEdge():
-                    item.setCacheMode(AbstractItem.NoCache)
-
-            # EXPORT ALL THE DIAGRAMS
-            newPage = False
-            for diagram in sorted(self.project.diagrams(), key=lambda x: x.name.lower()):
-                if not diagram.isEmpty():
-                    source = diagram.visibleRect(margin=20)
-                    printer.setPageSize(QPageSize(QSizeF(source.width(), source.height()), QPageSize.Point))
-                    if newPage:
-                        printer.newPage()
-                    diagram.render(painter, source=source)
-                    newPage = True
-
-            # TURN CACHING ON
-            for item in self.project.items():
-                if item.isNode() or item.isEdge():
-                    item.setCacheMode(AbstractItem.DeviceCoordinateCache)
-
-            painter.end()
 
     def importFromGraphml(self, path):
         """

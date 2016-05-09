@@ -34,14 +34,19 @@
 
 import os
 
-from PyQt5.QtCore import QObject
+from PyQt5.QtCore import QObject, QSizeF
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
+from PyQt5.QtGui import QPainter, QPageSize
+from PyQt5.QtPrintSupport import QPrinter
 
 from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.system import File
 from eddy.core.functions.misc import cutR
+from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.meta import MetaFactory
 from eddy.core.syntax.owl import OWL2RLValidator
 
+from eddy.ui.dialogs.export import OWLExportDialog
 
 K_DIAGRAM = 'diagrams'
 K_EDGE = 'edges'
@@ -165,7 +170,7 @@ class Project(QObject):
         """
         Returns the diagram matching the given id or None if no diagram is found.
         :type did: str
-        :rtype: AbstractItem
+        :rtype: Diagram
         """
         try:
             return self.index[K_DIAGRAM][did]
@@ -205,6 +210,75 @@ class Project(QObject):
         except (KeyError, TypeError):
             return set()
 
+    def export(self, path, file):
+        """
+        Export the current project.
+        :type path: str
+        :type file: File
+        """
+        if file is File.Owl:
+            self.exportToOwl(path)
+        elif file is File.Pdf:
+            self.exportToPdf(path)
+
+    def exportToOwl(self, path):
+        """
+        Export the current project in OWL syntax.
+        :type path: str
+        :rtype: bool
+        """
+        if not self.isEmpty():
+            dialog = OWLExportDialog(self, path, self.parent())
+            dialog.exec_()
+
+    def exportToPdf(self, path):
+        """
+        Export the current project in PDF format.
+        :type path: str
+        """
+        if not self.isEmpty():
+
+            printer = QPrinter(QPrinter.HighResolution)
+            printer.setOutputFormat(QPrinter.PdfFormat)
+            printer.setOutputFileName(path)
+            printer.setPaperSize(QPrinter.Custom)
+
+            painter = QPainter()
+            painter.begin(printer)
+
+            # TURN CACHING OFF
+            for item in self.items():
+                if item.isNode() or item.isEdge():
+                    item.setCacheMode(AbstractItem.NoCache)
+
+            # EXPORT ALL THE DIAGRAMS
+            newPage = False
+            for diagram in sorted(self.diagrams(), key=lambda x: x.name.lower()):
+                if not diagram.isEmpty():
+                    source = diagram.visibleRect(margin=20)
+                    printer.setPageSize(QPageSize(QSizeF(source.width(), source.height()), QPageSize.Point))
+                    if newPage:
+                        printer.newPage()
+                    diagram.render(painter, source=source)
+                    newPage = True
+
+            # TURN CACHING ON
+            for item in self.items():
+                if item.isNode() or item.isEdge():
+                    item.setCacheMode(AbstractItem.DeviceCoordinateCache)
+
+            painter.end()
+
+    def isEmpty(self):
+        """
+        Returns True if the project contains no element, False otherwise.
+        :rtype: bool
+        """
+        for i in self.index[K_ITEM]:
+            for _ in self.index[K_ITEM][i]:
+                return False
+        return True
+
     def item(self, diagram, iid):
         """
         Returns the item matching the given id or None if no item is found.
@@ -216,16 +290,6 @@ class Project(QObject):
             return self.index[K_ITEM][diagram.id][iid]
         except KeyError:
             return None
-
-    def isEmpty(self):
-        """
-        Returns True if the project contains no element, False otherwise.
-        :rtype: bool
-        """
-        for i in self.index[K_ITEM]:
-            for _ in self.index[K_ITEM][i]:
-                return False
-        return True
 
     def items(self, diagram=None):
         """
