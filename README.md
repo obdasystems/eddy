@@ -36,8 +36,8 @@ ontologies that can be rendered as ER diagrams have in Graphol a similar diagram
 
 ### Publications
 
-- Domenico Lembo, Daniele Pantaleone, Valerio Santarelli, Domenico Fabio Savo<br/>
-  **Easy OWL Drawing with the Graphol Visual Ontology Language** [PDF](http://www.aaai.org/ocs/index.php/KR/KR16/paper/view/12904/12524)<br/>
+- **Easy OWL Drawing with the Graphol Visual Ontology Language** [PDF](http://www.aaai.org/ocs/index.php/KR/KR16/paper/view/12904/12524)<br/>
+  Domenico Lembo, Daniele Pantaleone, Valerio Santarelli, Domenico Fabio Savo<br/>
   *Proceedings of the 15th International Conference, KR-2016, Cape Town, South Africa, April 25-29, 2016*
 
 ### Screenshot
