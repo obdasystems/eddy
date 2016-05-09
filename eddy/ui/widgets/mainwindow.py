@@ -971,7 +971,7 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def doExport(self):
         """
-        Export the currently open graphol document.
+        Export the current project.
         """
         if not self.project.isEmpty():
             dialog = QFileDialog(self)
