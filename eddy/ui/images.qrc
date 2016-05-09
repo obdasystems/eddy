@@ -74,6 +74,6 @@
     <file alias="eddy-sad">../../artwork/eddy_sad.png</file>
     <file alias="eddy-smile">../../artwork/eddy_smile.png</file>
     <file alias="eddy-smile-small-noframe">../../artwork/eddy_smile_small_noframe.png</file>
-    <file alias="splash">../../artwork/eddy_splash.png</file>
+    <file alias="eddy-splash">../../artwork/eddy_splash.png</file>
 </qresource>
 </RCC>

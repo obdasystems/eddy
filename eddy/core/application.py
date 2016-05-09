@@ -153,7 +153,7 @@ class Eddy(QApplication):
         # DRAW SPLASH SCREEN
         self.splash = None
         if not options.nosplash:
-            self.splash = Splash(':/images/splash', mtime=4)
+            self.splash = Splash(':/images/eddy-splash', mtime=4)
             self.splash.show()
 
         # CONFIGURE LAYOUT

@@ -52,7 +52,7 @@ class Splash(QSplashScreen):
     >>> import sys
     >>> from PyQt5.QtWidgets import QApplication
     >>> app = QApplication(sys.argv)
-    >>> with Splash(':/images/splash', mtime=5):
+    >>> with Splash(':/images/eddy-splash', mtime=5):
     >>>     app.do_something_heavy()
 
     will draw a 5 seconds (at least) splash screen on the screen.
