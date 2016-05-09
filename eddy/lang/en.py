@@ -169,6 +169,17 @@ DOCK_PALETTE = 'Palette'
 DOCK_PROJECT_EXPLORER = 'Project Explorer'
 
 #############################################
+# EXCEPT_HOOK_MESSAGE
+#################################
+
+EXCEPT_HOOK_BTN_CLOSE = 'Close'
+EXCEPT_HOOK_BTN_QUIT = 'Quit {0}'
+EXCEPT_HOOK_INFORMATIVE_MESSAGE = 'If the problem persists please <a href="{0}">submit a bug report</a>.'
+EXCEPT_HOOK_MESSAGE = 'This is embarrassing ...\n\n' \
+                      'A critical error has just occurred. ' \
+                      '{0} will continue to work, however a reboot is highly recommended.'
+
+#############################################
 # INFO BOX
 #################################
 

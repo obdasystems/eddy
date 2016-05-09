@@ -45,12 +45,14 @@ from eddy import APPNAME, BUG_TRACKER
 from eddy.core.application import Eddy
 from eddy.core.functions.signals import connect
 
+from eddy.lang import gettext as _
+
 # noinspection PyUnresolvedReferences
 from eddy.ui import images_rc
 
 
 app = None
-box = None
+msgbox = None
 
 
 def base_except_hook(exc_type, exc_value, exc_traceback):
@@ -60,44 +62,29 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
     :type exc_value: Exception
     :type exc_traceback: Traceback
     """
-    global box
-
     if issubclass(exc_type, KeyboardInterrupt):
-
         app.quit()
-
     else:
-
-        if not box:
-
-            m1 = 'This is embarrassing ...\n\n' \
-                 'A critical error has just occurred. ' \
-                 'Eddy will continue to work, however a reboot is highly recommended.'
-            m2 = 'If the problem persists please <a href="{}">submit a bug report</a>.'.format(BUG_TRACKER)
-            m3 = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-
-            box = QMessageBox()
-            box.setIconPixmap(QPixmap(':/images/eddy-sad'))
-            box.setWindowIcon(QIcon(':/images/eddy'))
-            box.setWindowTitle('Fatal error!')
-            box.setText(m1)
-            box.setInformativeText(m2)
-            box.setDetailedText(m3)
-            box.setStandardButtons(QMessageBox.Close|QMessageBox.Ok)
-
-            buttonOk = box.button(QMessageBox.Ok)
-            buttonOk.setText('Close')
-            buttonQuit = box.button(QMessageBox.Close)
-            buttonQuit.setText('Quit {}'.format(APPNAME))
-
-            connect(buttonOk.clicked, box.close)
+        global msgbox
+        if not msgbox:
+            msgbox = QMessageBox()
+            msgbox.setIconPixmap(QPixmap(':/images/eddy-sad'))
+            msgbox.setWindowIcon(QIcon(':/images/eddy'))
+            msgbox.setWindowTitle('Fatal error!')
+            msgbox.setText(_('EXCEPT_HOOK_MESSAGE', APPNAME))
+            msgbox.setInformativeText(_('EXCEPT_HOOK_INFORMATIVE_MESSAGE', BUG_TRACKER))
+            msgbox.setDetailedText(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+            msgbox.setStandardButtons(QMessageBox.Close|QMessageBox.Ok)
+            buttonOk = msgbox.button(QMessageBox.Ok)
+            buttonOk.setText(_('EXCEPT_HOOK_BTN_CLOSE'))
+            buttonQuit = msgbox.button(QMessageBox.Close)
+            buttonQuit.setText(_('EXCEPT_HOOK_BTN_QUIT', APPNAME))
+            connect(buttonOk.clicked, msgbox.close)
             connect(buttonQuit.clicked, app.quit)
-
             # noinspection PyArgumentList
             QApplication.beep()
-
-            box.exec_()
-            box = None
+            msgbox.exec_()
+            msgbox = None
 
 
 def main():
