@@ -896,8 +896,9 @@ class MainWindow(QMainWindow):
         """
         Close the currently active subwindow.
         """
-        # TODO: IMPLEMENT
-        pass
+        self.doSave()
+        self.close()
+        self.sgnClosed.emit()
 
     @pyqtSlot()
     def doComposePropertyExpression(self):
