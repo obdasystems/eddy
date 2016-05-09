@@ -20,6 +20,8 @@ formats, like PDF, are also currently provided.
 
 Eddy is written in [Python] and make use of the [PyQt5] python bindings for the cross-platform [Qt5] framework. 
 
+[![Download eddy](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/eddy-editor/files/)
+
 ### About Graphol
 
 [Graphol] is a novel language for the specification and visualization of Description Logic (DL) ontologies, 
