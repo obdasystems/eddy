@@ -621,6 +621,13 @@ class Diagram(QGraphicsScene):
             for node in weak - strong - excluded:
                 node.identity = computed
 
+    def isEmpty(self):
+        """
+        Returns True if this diagram containts no element, False otherwise.
+        :rtype: bool
+        """
+        return len(self.project.items(self)) == 0
+
     def itemOnTopOf(self, point, nodes=True, edges=True, skip=None):
         """
         Returns the shape which is on top of the given point.
