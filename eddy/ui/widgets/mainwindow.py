@@ -38,9 +38,10 @@ import webbrowser
 from collections import OrderedDict
 from traceback import format_exception as f_exc
 
-from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, pyqtSlot
-from PyQt5.QtGui import QBrush, QColor, QPixmap
+from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, pyqtSlot, QSizeF
+from PyQt5.QtGui import QBrush, QColor, QPixmap, QPageSize, QPainter
 from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
+from PyQt5.QtPrintSupport import QPrinter
 from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox
 from PyQt5.QtWidgets import QMenu, QToolButton, QDockWidget, QApplication
 from PyQt5.QtWidgets import QUndoGroup, QStyle, QFileDialog
@@ -71,6 +72,7 @@ from eddy.core.functions.fsystem import fexists, fcopy
 from eddy.core.functions.misc import snapF, first, cutR, uncapitalize
 from eddy.core.functions.path import expandPath, isSubPath, uniquePath
 from eddy.core.functions.signals import connect, disconnect
+from eddy.core.items.common import AbstractItem
 from eddy.core.loaders.graphml import GraphmlLoader
 from eddy.core.loaders.graphol import GrapholLoader
 from eddy.core.loaders.project import ProjectLoader
@@ -986,6 +988,8 @@ class MainWindow(QMainWindow):
                 file = File.forValue(dialog.selectedNameFilter())
                 if file is File.Owl:
                     self.exportToOwl(path)
+                elif file is File.Pdf:
+                    self.exportToPdf(path)
 
     @pyqtSlot('QGraphicsScene')
     def doFocusDiagram(self, diagram):
@@ -1750,47 +1754,6 @@ class MainWindow(QMainWindow):
     #   INTERFACE
     #################################
 
-    def createScene(self, width, height):
-        """
-        Create and return an empty scene.
-        :type width: int
-        :type height: int
-        :rtype: Diagram
-        """
-        # TODO: MOVE IN PROJECT
-        # scene = Diagram(self)
-        # scene.setSceneRect(QRectF(-width / 2, -height / 2, width, height))
-        # scene.setItemIndexMethod(Diagram.NoIndex)
-        # connect(scene.sgnActionCompleted, self.onDiagramActionCompleted)
-        # connect(scene.sgnModeChanged, self.onDiagramModeChanged)
-        # connect(scene.selectionChanged, self.doUpdateState)
-        # self.undoGroup.addStack(scene.undoStack)
-        # return scene
-    
-    # TODO: REMOVE
-    # def createSceneFromGrapholFile(self, filepath):
-    #     """
-    #     Create a new scene by loading the given Graphol file.
-    #     :type filepath: str
-    #     :rtype: Diagram
-    #     """
-    #     worker = GrapholLoader(self, filepath)
-    # 
-    #     try:
-    #         worker.run()
-    #     except Exception as e:
-    #         msgbox = QMessageBox(self)
-    #         msgbox.setIconPixmap(QPixmap(':/icons/error'))
-    #         msgbox.setWindowIcon(QIcon(':/images/eddy'))
-    #         msgbox.setWindowTitle('Load failed!')
-    #         msgbox.setStandardButtons(QMessageBox.Close)
-    #         msgbox.setText('Failed to load {}!'.format(os.path.basename(filepath)))
-    #         msgbox.setDetailedText(''.join(f_exc(type(e), e, e.__traceback__)))
-    #         msgbox.exec_()
-    #         return None
-    #     else:
-    #         return worker.scene
-
     def createDiagramView(self, diagram):
         """
         Create a new diagram view displaying the given diagram.
@@ -1818,47 +1781,47 @@ class MainWindow(QMainWindow):
         :type path: str
         :rtype: bool
         """
-        dialog = OWLExportDialog(self.project, path, self)
-        dialog.exec_()
+        if not self.project.isEmpty():
+            dialog = OWLExportDialog(self.project, path, self)
+            dialog.exec_()
 
-    @staticmethod
-    def exportToPdf(scene, filepath):
+    def exportToPdf(self, path):
         """
-        Export the given scene as PDF saving it in the given filepath.
-        :type scene: Diagram
-        :type filepath: str
-        :rtype: bool
+        Export the current project in PDF format.
+        :type path: str
         """
-        # TODO: ADAPT
-        # shape = scene.visibleRect(margin=20)
-        # if shape:
-        #
-        #     printer = QPrinter(QPrinter.HighResolution)
-        #     printer.setOutputFormat(QPrinter.PdfFormat)
-        #     printer.setOutputFileName(filepath)
-        #     printer.setPaperSize(QPrinter.Custom)
-        #     printer.setPageSize(QPageSize(QSizeF(shape.width(), shape.height()), QPageSize.Point))
-        #
-        #     painter = QPainter()
-        #     if painter.begin(printer):
-        #
-        #         # TURN CACHING OFF!
-        #         for item in scene.items():
-        #             if item.node or item.edge:
-        #                 item.setCacheMode(QGraphicsItem.NoCache)
-        #
-        #         # RENDER THE SCENE
-        #         scene.render(painter, source=shape)
-        #
-        #         # TURN CACHING ON!
-        #         for item in scene.items():
-        #             if item.node or item.edge:
-        #                 item.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
-        #
-        #         painter.end()
-        #         return True
-        #
-        # return False
+        if not self.project.isEmpty():
+
+            printer = QPrinter(QPrinter.HighResolution)
+            printer.setOutputFormat(QPrinter.PdfFormat)
+            printer.setOutputFileName(path)
+            printer.setPaperSize(QPrinter.Custom)
+
+            painter = QPainter()
+            painter.begin(printer)
+
+            # TURN CACHING OFF
+            for item in self.project.items():
+                if item.isNode() or item.isEdge():
+                    item.setCacheMode(AbstractItem.NoCache)
+
+            # EXPORT ALL THE DIAGRAMS
+            newPage = False
+            for diagram in sorted(self.project.diagrams(), key=lambda x: x.name.lower()):
+                if not diagram.isEmpty():
+                    source = diagram.visibleRect(margin=20)
+                    printer.setPageSize(QPageSize(QSizeF(source.width(), source.height()), QPageSize.Point))
+                    if newPage:
+                        printer.newPage()
+                    diagram.render(painter, source=source)
+                    newPage = True
+
+            # TURN CACHING ON
+            for item in self.project.items():
+                if item.isNode() or item.isEdge():
+                    item.setCacheMode(AbstractItem.DeviceCoordinateCache)
+
+            painter.end()
 
     def importFromGraphml(self, path):
         """
