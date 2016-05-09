@@ -225,6 +225,20 @@ MENU_TOOLS = 'Tools'
 MENU_VIEW = 'View'
 
 #############################################
+# META
+#################################
+
+META_HEADER_ASYMMETRIC = 'Asymmetric'
+META_HEADER_FUNCTIONAL = 'Functional'
+META_HEADER_INVERSE_FUNCTIONAL = 'Inverse Functional'
+META_HEADER_IRREFLEXIVE = 'Irreflexive'
+META_HEADER_PREDICATE = 'Predicate'
+META_HEADER_REFLEXIVE = 'Reflexive'
+META_HEADER_SYMMETRIC = 'Symmetric'
+META_HEADER_TRANSITIVE = 'Transitive'
+META_HEADER_TYPE = 'Type'
+
+#############################################
 # ONTOLOGY EXPLORER
 #################################
 

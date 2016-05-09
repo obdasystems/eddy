@@ -34,19 +34,20 @@
 
 import os
 
-from PyQt5.QtCore import QObject, QSizeF
+from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QPainter, QPageSize
-from PyQt5.QtPrintSupport import QPrinter
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
+from eddy.core.exporters.pdf import PdfExporter
 from eddy.core.functions.misc import cutR
+from eddy.core.functions.path import openPath
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.meta import MetaFactory
 from eddy.core.syntax.owl import OWL2RLValidator
 
 from eddy.ui.dialogs.export import OWLExportDialog
+
 
 K_DIAGRAM = 'diagrams'
 K_EDGE = 'edges'
@@ -238,36 +239,13 @@ class Project(QObject):
         """
         if not self.isEmpty():
 
-            printer = QPrinter(QPrinter.HighResolution)
-            printer.setOutputFormat(QPrinter.PdfFormat)
-            printer.setOutputFileName(path)
-            printer.setPaperSize(QPrinter.Custom)
-
-            painter = QPainter()
-            painter.begin(printer)
-
-            # TURN CACHING OFF
-            for item in self.items():
-                if item.isNode() or item.isEdge():
-                    item.setCacheMode(AbstractItem.NoCache)
-
-            # EXPORT ALL THE DIAGRAMS
-            newPage = False
-            for diagram in sorted(self.diagrams(), key=lambda x: x.name.lower()):
-                if not diagram.isEmpty():
-                    source = diagram.visibleRect(margin=20)
-                    printer.setPageSize(QPageSize(QSizeF(source.width(), source.height()), QPageSize.Point))
-                    if newPage:
-                        printer.newPage()
-                    diagram.render(painter, source=source)
-                    newPage = True
-
-            # TURN CACHING ON
-            for item in self.items():
-                if item.isNode() or item.isEdge():
-                    item.setCacheMode(AbstractItem.DeviceCoordinateCache)
-
-            painter.end()
+            try:
+                exporter = PdfExporter(self, path)
+                exporter.run()
+            except Exception as e:
+                raise e
+            else:
+                openPath(path)
 
     def isEmpty(self):
         """
@@ -317,14 +295,16 @@ class Project(QObject):
         except KeyError:
             return self.metaFactory.create(item, name)
 
-    def metas(self):
+    def metas(self, *types):
         """
         Returns a collection of pairs 'item', 'name' for all the predicates with metadata.
+        :type types: list
         :rtype: list
         """
+        func = lambda x: not types or x in types
         return [(k1, k2) for k1 in self.index[K_PREDICATE] \
                             for k2 in self.index[K_PREDICATE][k1] \
-                                if K_META in self.index[K_PREDICATE][k1][k2]]
+                                if func(k1) and K_META in self.index[K_PREDICATE][k1][k2]]
 
     def node(self, diagram, nid):
         """
