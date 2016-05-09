@@ -46,7 +46,7 @@ from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox
 from PyQt5.QtWidgets import QMenu, QToolButton, QDockWidget, QApplication
 from PyQt5.QtWidgets import QUndoGroup, QStyle, QFileDialog
 
-from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION, VERSION, BUG_TRACKER
+from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION, BUG_TRACKER
 from eddy.core.commands.common import CommandComposeAxiom
 from eddy.core.commands.common import CommandItemsRemove
 from eddy.core.commands.common import CommandItemsTranslate
@@ -70,7 +70,7 @@ from eddy.core.exporters.graphol import GrapholExporter
 from eddy.core.exporters.project import ProjectExporter
 from eddy.core.functions.fsystem import fexists, fcopy
 from eddy.core.functions.misc import snapF, first, cutR, uncapitalize
-from eddy.core.functions.path import expandPath, isSubPath, uniquePath
+from eddy.core.functions.path import expandPath, isSubPath, uniquePath, shortPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
 from eddy.core.loaders.graphml import GraphmlLoader
@@ -292,7 +292,7 @@ class MainWindow(QMainWindow):
         self.setDockOptions(MainWindow.AnimatedDocks|MainWindow.AllowTabbedDocks)
         self.setMinimumSize(1140, 720)
         self.setWindowIcon(QIcon(':/images/eddy'))
-        self.setWindowTitle(None)
+        self.setWindowTitle(self.project)
 
         self.configureActions()
         self.configureWidgets()
@@ -1605,7 +1605,7 @@ class MainWindow(QMainWindow):
             self.zoom.adjust(view.zoom)
             connect(self.zoom.sgnChanged, view.onZoomChanged)
             connect(view.sgnScaled, self.zoom.scaleChanged)
-            self.setWindowTitle(diagram.name)
+            self.setWindowTitle(self.project, diagram)
 
         else:
 
@@ -1613,7 +1613,7 @@ class MainWindow(QMainWindow):
                 self.info.reset()
                 self.overview.reset()
                 self.zoom.zoomReset()
-                self.setWindowTitle(None)
+                self.setWindowTitle(self.project)
 
         self.doUpdateState()
 
@@ -1899,9 +1899,13 @@ class MainWindow(QMainWindow):
         worker = GrapholExporter(diagram, self)
         worker.run(path)
 
-    def setWindowTitle(self, s=None):
+    def setWindowTitle(self, project, diagram=None):
         """
         Set the main window title.
-        :type s: T <= str | None
+        :type project: Project
+        :type diagram: Diagram
         """
-        super().setWindowTitle('{} - {} {}'.format(s, APPNAME, VERSION) if s else '{} {}'.format(APPNAME, VERSION))
+        title = '{0} - [{1}]'.format(project.name, shortPath(project.path))
+        if diagram:
+            title = '{0} - {1}'.format(diagram.name, title)
+        super().setWindowTitle(title)
