@@ -116,12 +116,11 @@ def main():
     global app
     app = Eddy(options, sys.argv)
     if app.running:
-        app.route(sys.argv)
+        app.routePacket(sys.argv)
         sys.exit(0)
 
     app.configure(options)
     app.start(options)
-
     sys.exit(app.exec_())
 
 

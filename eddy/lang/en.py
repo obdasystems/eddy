@@ -245,7 +245,7 @@ META_HEADER_TYPE = 'Type'
 ONTO_EXPLORER_SEARCH_PLACEHOLDER = 'Search...'
 
 #############################################
-# PROJECT DIALOG
+# PROJECT DIALOG / LOADING
 #################################
 
 PROJECT_CAPTION_ALREADY_EXISTS = "Project '{0}' already exists!"
@@ -253,6 +253,7 @@ PROJECT_CAPTION_NAME_NOT_VALID = "'{0}' is not a valid project name!"
 PROJECT_IRI_LABEL = 'IRI'
 PROJECT_NAME_LABEL = 'Name'
 PROJECT_PREFIX_LABEL = 'Prefix'
+PROJECT_LOADING = 'Loading project: {0}'
 PROJECT_LOCATION_LABEL = 'Location'
 PROJECT_WINDOW_TITLE = 'New project'
 

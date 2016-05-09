@@ -46,6 +46,9 @@ from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 
+from eddy.lang import gettext as _
+
+
 ########################################################
 ##         BEGIN JAVA VIRTUAL MACHINE SETUP           ##
 ########################################################
@@ -103,7 +106,7 @@ class Eddy(QApplication):
 
         self.pending = []
         self.running = self.oSock.waitForConnected()
-        self.session = None
+        self.mainwindow = None
         self.welcome = None
         self.server = None
         self.splash = None
@@ -189,7 +192,7 @@ class Eddy(QApplication):
             if window.exec_() == WorkspaceDialog.Rejected:
                 raise SystemExit
 
-    def route(self, argv):
+    def routePacket(self, argv):
         """
         Route input arguments to the already running Eddy process.
         :type argv: list
@@ -200,6 +203,16 @@ class Eddy(QApplication):
             self.oStream.flush()
             return self.oSock.waitForBytesWritten()
         return False
+
+    def saveSessionState(self):
+        """
+        Save the state of the current active session.
+        """
+        if self.mainwindow:
+            settings = QSettings(ORGANIZATION, APPNAME)
+            settings.setValue('mainwindow/geometry', self.mainwindow.saveGeometry())
+            settings.setValue('mainwindow/state', self.mainwindow.saveState())
+            settings.sync()
 
     def start(self, options):
         """
@@ -238,11 +251,24 @@ class Eddy(QApplication):
         Create a working session using the given project path.
         :type project: str
         """
-        with BusyProgressDialog('Loading project: {0}'.format(os.path.basename(project))):
-            self.session = MainWindow(project)
+        with BusyProgressDialog(_('PROJECT_LOADING', os.path.basename(project))):
+            self.mainwindow = MainWindow(project)
+            connect(self.mainwindow.sgnQuit, self.doQuit)
+            connect(self.mainwindow.sgnClosed, self.onSessionClosed)
+
         if self.welcome:
             self.welcome.close()
-        self.session.show()
+            self.welcome = None
+
+        self.mainwindow.show()
+    
+    @pyqtSlot()
+    def doQuit(self):
+        """
+        Quit Eddy.
+        """
+        self.saveSessionState()
+        self.quit()
 
     @pyqtSlot(str)
     def doReadMessage(self, message):
@@ -262,3 +288,13 @@ class Eddy(QApplication):
             if isEmpty(message):
                 break
             self.sgnMessageReceived.emit(message)
+
+    @pyqtSlot()
+    def onSessionClosed(self):
+        """
+        Quit Eddy.
+        """
+        self.saveSessionState()
+        self.welcome = Welcome()
+        connect(self.welcome.sgnCreateSession, self.doCreateSession)
+        self.welcome.show()

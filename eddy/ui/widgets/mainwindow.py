@@ -38,7 +38,7 @@ import webbrowser
 from collections import OrderedDict
 from traceback import format_exception as f_exc
 
-from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, pyqtSlot
+from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QBrush, QColor, QPixmap
 from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
 from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox
@@ -104,6 +104,9 @@ class MainWindow(QMainWindow):
     """
     This class implements Eddy's main window.
     """
+    sgnClosed = pyqtSignal()
+    sgnQuit = pyqtSignal()
+
     def __init__(self, path, parent=None):
         """
         Initialize the application main window.
@@ -844,18 +847,8 @@ class MainWindow(QMainWindow):
         QApplication.processEvents()
 
         settings = QSettings(ORGANIZATION, APPNAME)
-
-        #############################################
-        # RESTORE MAINWINDOW APPEARANCE
-        #################################
-
         self.restoreGeometry(settings.value('mainwindow/geometry', QByteArray(), QByteArray))
         self.restoreState(settings.value('mainwindow/state', QByteArray(), QByteArray))
-
-        #############################################
-        # TOGGLE ACTIONS STATE
-        #################################
-
         self.actionSnapToGrid.setChecked(settings.value('diagram/grid', False, bool))
 
     #############################################
@@ -1162,8 +1155,8 @@ class MainWindow(QMainWindow):
         """
         Quit Eddy.
         """
-        # TODO: implement
-        pass
+        self.doSave()
+        self.sgnQuit.emit()
 
     @pyqtSlot()
     def doRefactorBrush(self):
@@ -1621,32 +1614,8 @@ class MainWindow(QMainWindow):
         Executed when the main window is closed.
         :type closeEvent: QCloseEvent
         """
-        # self.abortQuit = False
-        # for subwindow in self.mdi.subWindowList():
-        #     mainview = subwindow.widget()
-        #     scene = mainview.scene()
-        #     if (scene.items() and not scene.document.path) or (not scene.undoStack.isClean()):
-        #         self.mdi.setActiveSubWindow(subwindow)
-        #         subwindow.showMaximized()
-        #     subwindow.close()
-        #     if self.abortQuit:
-        #         closeEvent.ignore()
-        #         break
-
-        #############################################
-        # EXPORT CURRENT STATE
-        #################################
-        #
-        # settings = QSettings(expandPath('@home/{}.ini'.format(APPNAME)), QSettings.IniFormat)
-        # settings.beginGroup('diagram')
-        # settings.setValue('grid', self.snapToGrid)
-        # settings.setValue('size', self.diagramSize)
-        # settings.endGroup()
-        # settings.beginGroup('mainwindow')
-        # settings.setValue('geometry', self.saveGeometry())
-        # settings.setValue('state', self.saveState())
-        # settings.endGroup()
-        # settings.sync()
+        self.doSave()
+        self.sgnClosed.emit()
 
     # def dragEnterEvent(self, dragEvent):
     #     """
