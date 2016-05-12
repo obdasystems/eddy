@@ -337,7 +337,7 @@ class CommandNodeLabelChange(QUndoCommand):
 
 class CommandNodeOperatorSwitchTo(QUndoCommand):
     """
-    This command is used to change the class of hexagon based operator nodes.
+    This command is used to change the type of hexagon based operator nodes.
     """
     def __init__(self, diagram, node1, node2):
         """
@@ -347,20 +347,20 @@ class CommandNodeOperatorSwitchTo(QUndoCommand):
         :type node2: OperatorNode
         """
         super().__init__(_('COMMAND_NODE_OPERATOR_SWITCH', node1.name, node2.name))
-        self.diagram = diagram
         self.node = {'redo': node2, 'undo': node1}
+        self.diagram = diagram
 
     def redo(self):
         """redo the command"""
-        # add the new node to the diagram
+        # Add the new node to the diagram.
         self.diagram.addItem(self.node['redo'])
         self.diagram.sgnItemAdded.emit(self.diagram, self.node['redo'])
 
-        # move the anchor points
+        # Move the anchor points.
         for edge, point in self.node['undo'].anchors.items():
             self.node['redo'].setAnchor(edge, point)
 
-        # move the edges
+        # Move the edges.
         for edge in self.node['undo'].edges:
             if edge.source is self.node['undo']:
                 edge.source = self.node['redo']
@@ -368,31 +368,35 @@ class CommandNodeOperatorSwitchTo(QUndoCommand):
                 edge.target = self.node['redo']
 
             self.node['redo'].addEdge(edge)
-            # IMPORTANT: clear anchors dict in the edge or we will have also the
-            # reference of the previous node since it's a dict indexed by item!
+            # IMPORTANT: clear anchors dict in the edge or we
+            # will have also the reference of the previous node
+            # since it's a dict indexed by item!
             edge.anchors.clear()
             edge.updateEdge()
 
-        # clear edge and anchor references from node1
+        # Identify the new node.
+        self.diagram.identify(self.node['redo'])
+
+        # Clear edge and anchor references from node1.
         self.node['undo'].anchors.clear()
         self.node['undo'].edges.clear()
 
-        # remove the old node from the diagram
+        # Remove the old node from the diagram.
         self.diagram.removeItem(self.node['undo'])
         self.diagram.sgnItemRemoved.emit(self.diagram, self.node['undo'])
         self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
-        # add back to the diagram the old node
+        # Add back to the diagram the old node.
         self.diagram.addItem(self.node['undo'])
         self.diagram.sgnItemAdded.emit(self.diagram, self.node['undo'])
 
-        # move the anchor points back
+        # Move the anchor points back.
         for edge, point in self.node['redo'].anchors.items():
             self.node['undo'].setAnchor(edge, point)
 
-        # move the edges
+        # Move the edges.
         for edge in self.node['redo'].edges:
             if edge.source is self.node['redo']:
                 edge.source = self.node['undo']
@@ -400,16 +404,20 @@ class CommandNodeOperatorSwitchTo(QUndoCommand):
                 edge.target = self.node['undo']
 
             self.node['undo'].addEdge(edge)
-            # IMPORTANT: clear anchors dict in the edge or we will have also the
-            # reference of the previous node since it's a dict indexed by item!
+            # IMPORTANT: clear anchors dict in the edge or we
+            # will have also the reference of the previous node
+            # since it's a dict indexed by item!
             edge.anchors.clear()
             edge.updateEdge()
 
-        # clear edge and anchor references from node2
+        # Identify the old node.
+        self.diagram.identify(self.node['undo'])
+
+        # Clear edge and anchor references from node2.
         self.node['redo'].anchors.clear()
         self.node['redo'].edges.clear()
 
-        # remove the new node from the diagram
+        # Remove the new node from the diagram.
         self.diagram.removeItem(self.node['redo'])
         self.diagram.sgnItemRemoved.emit(self.diagram, self.node['redo'])
         self.diagram.sgnUpdated.emit()
