@@ -132,7 +132,7 @@ class OWLExporter(QObject):
         if node not in self.conv:
 
             f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.identity in {Identity.Concept, Identity.ValueDomain, Identity.Role}
+            f2 = lambda x: x.identity in {Identity.Attribute, Identity.Concept, Identity.ValueDomain, Identity.Role}
 
             incoming = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
             if not incoming:
@@ -182,16 +182,22 @@ class OWLExporter(QObject):
 
             elif operand.identity is Identity.Role:
 
-                # If we have a Role in input to this Complement node, we store
-                # the OWL representation of the Role (or the inverse of it) so
-                # that we can generate the role disjoint axiom later by calling
-                # self.factory.getOWLDisjointObjectPropertiesAxiom.
+                # OWLDisjointObjectPropertiesAxiom
                 if operand.type() is Item.RoleNode:
                     self.conv[node] = self.buildRole(operand)
                 elif operand.type() is Item.RoleInverseNode:
                     self.conv[node] = self.buildRoleInverse(operand)
                 else:
                     raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND', operand))
+
+            elif operand.identity is Identity.Attribute:
+
+                # OWLDisjointDataPropertiesAxiom
+                if operand.type() is Item.AttributeNode:
+                    self.conv[node] = self.buildAttribute(operand)
+                else:
+                    raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND', operand))
+
 
         return self.conv[node]
 
@@ -972,16 +978,17 @@ class OWLExporter(QObject):
                     elif e.source.identity is Identity.Role and e.target.identity is Identity.Role:
                         if e.source.type() is Item.RoleChainNode:
                             self.axiomSubPropertyChainOf(e)
-                        elif e.source.type() is Item.ComplementNode ^ e.target.type() is Item.ComplementNode:
-                            self.axiomDisjointObjectProperties(e)
-                        elif e.source.type() in {Item.RoleNode, Item.RoleInverseNode} and \
-                                e.target.type() in {Item.RoleNode, Item.RoleInverseNode}:
-                            self.axiomSubObjectPropertyOf(e)
+                        elif e.source.type() in {Item.RoleNode, Item.RoleInverseNode}:
+                            if e.target.type() is Item.ComplementNode:
+                                self.axiomDisjointObjectProperties(e)
+                            elif e.target.type() in {Item.RoleNode, Item.RoleInverseNode}:
+                                self.axiomSubObjectPropertyOf(e)
                     elif e.source.identity is Identity.Attribute and e.target.identity is Identity.Attribute:
-                        if e.source.type() is Item.ComplementNode ^ e.target.type() is Item.ComplementNode:
-                            self.axiomDisjointDataProperties(e)
-                        else:
-                            self.axiomSubDataPropertyOfAxiom(e)
+                        if e.source.type() is Item.AttributeNode:
+                            if e.target.type() is Item.ComplementNode:
+                                self.axiomDisjointDataProperties(e)
+                            elif e.target.type() is Item.AttributeNode:
+                                self.axiomSubDataPropertyOfAxiom(e)
                     elif e.source.type() is Item.RangeRestrictionNode and e.target.identity is Identity.ValueDomain:
                         self.axiomDataPropertyRange(e)
                     else:
