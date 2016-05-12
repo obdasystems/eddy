@@ -132,7 +132,7 @@ class Item(IntEnum):
         Returns the item short name, i.e: attribute, concept.
         :rtype: str
         """
-        return cutR(cutR(self.realname, ' node'), ' edge')
+        return cutR(self.realname, ' node', ' edge')
     
 
 @unique
