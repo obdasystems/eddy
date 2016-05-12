@@ -41,9 +41,9 @@ from eddy.core.syntax.common import SyntaxValidationResult
 from eddy.lang import gettext as _
 
 
-class OWL2RLValidator(AbstractValidator):
+class OWL2Validator(AbstractValidator):
     """
-    This class can be used to validate graphol triples according to the OWL2RL syntax.
+    This class can be used to validate graphol triples according to the OWL2 syntax.
     """
     #############################################
     #   INTERFACE
@@ -102,8 +102,9 @@ class OWL2RLValidator(AbstractValidator):
 
                     identity = first({source.identity, target.identity} - {Identity.Neutral})
                     if identity and identity in {Identity.Attribute, Identity.Role}:
-                        # Role and attribute expressions whose sink node is a
-                        # complement node cannot be the source of any inclusion.
+                        # Complement nodes can only be the target of Role and Attribute inclusions since they
+                        # are used to generate OWLDisjointObjectPropertiesAxiom and OWLDisjointDataPropertiesAxiom.
+                        # Differently we allow inclusions targeting concept nodes to source from complement nodes.
                         raise SyntaxError(_('SYNTAX_INCLUSION_COMPLEMENT_INVALID_SOURCE', identity.value, source.name))
 
                 if target.type() is Item.RoleChainNode:

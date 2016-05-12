@@ -119,8 +119,8 @@ class MenuFactory(QObject):
             menu.addSeparator()
             menu.addAction(mainwindow.actionToggleEdgeComplete)
             # SETUP ACTIONS STATE
-            project = diagram.project
-            result = project.validator.validate(edge.target, edge, edge.source)
+            validate = diagram.project.validator.validate
+            result = validate(edge.target, edge, edge.source)
             mainwindow.actionSwapEdge.setVisible(result.valid)
             mainwindow.actionToggleEdgeComplete.setChecked(edge.complete)
         return menu
@@ -147,8 +147,8 @@ class MenuFactory(QObject):
             menu.addAction(mainwindow.actionSwapEdge)
             menu.addSeparator()
             # SETUP ACTIONS STATE
-            project = diagram.project
-            result = project.validator.validate(edge.target, edge, edge.source)
+            validate = diagram.project.validator.validate
+            result = validate(edge.target, edge, edge.source)
             mainwindow.actionSwapEdge.setVisible(result.valid)
         return menu
 

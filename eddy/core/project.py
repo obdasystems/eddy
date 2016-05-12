@@ -44,7 +44,7 @@ from eddy.core.functions.misc import cutR
 from eddy.core.functions.path import openPath
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.meta import MetaFactory
-from eddy.core.syntax.owl import OWL2RLValidator
+from eddy.core.syntax.owl import OWL2Validator
 
 from eddy.ui.dialogs.export import OWLExportDialog
 
@@ -94,7 +94,7 @@ class Project(QObject):
         self.prefix = prefix
 
         self.metaFactory = MetaFactory(self)
-        self.validator = OWL2RLValidator(self)
+        self.validator = OWL2Validator(self)
 
     #############################################
     #   PROPERTIES
