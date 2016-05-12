@@ -164,7 +164,7 @@ class Project(QObject):
                 return len(set.union(*(set(self.index[K_ITEM][i].values()) for i in self.index[K_ITEM])))
             return len(set(self.index[K_ITEM][diagram.id].values()))
 
-        except KeyError:
+        except (KeyError, TypeError):
             return 0
 
     def diagram(self, did):
