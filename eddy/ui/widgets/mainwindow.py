@@ -246,7 +246,7 @@ class MainWindow(QMainWindow):
         self.actionGrapholWeb = QAction(_('ACTION_GRAPHOL_WEBSITE_N'), self)
         self.actionSyntaxCheck = QAction(_('ACTION_SYNTAX_CHECK_N'), self)
         self.actionCenterDiagram = QAction(_('ACTION_CENTER_DIAGRAM_N'), self)
-        self.actionOpenDiagramProperties = QAction(_('ACTION_OPEN_DIAGRAM_PROPERTIES_N'), self)
+        self.actionDiagramProperties = QAction(_('ACTION_DIAGRAM_PROPERTIES_N'), self)
         self.actionSnapToGrid = QAction(_('ACTION_SNAP_TO_GRID_N'), self)
         self.actionCut = QAction(_('ACTION_CUT_N'), self)
         self.actionCopy = QAction(_('ACTION_COPY_N'), self)
@@ -255,7 +255,7 @@ class MainWindow(QMainWindow):
         self.actionBringToFront = QAction(_('ACTION_BRING_TO_FRONT_N'), self)
         self.actionSendToBack = QAction(_('ACTION_SEND_TO_BACK_N'), self)
         self.actionSelectAll = QAction(_('ACTION_SELECT_ALL_N'), self)
-        self.actionOpenNodeProperties = QAction(_('ACTION_OPEN_NODE_PROPERTIES_N'), self)
+        self.actionNodeProperties = QAction(_('ACTION_NODE_PROPERTIES_N'), self)
         self.actionRelocateLabel = QAction(_('ACTION_RELOCATE_LABEL_N'), self)
         self.actionRefactorName = QAction(_('ACTION_REFACTOR_NAME_N'), self)
         self.actionComposePropertyDomain = QAction(_('ACTION_COMPOSE_PROPERTY_DOMAIN_N'), self)
@@ -410,8 +410,8 @@ class MainWindow(QMainWindow):
         self.actionCenterDiagram.setEnabled(False)
         connect(self.actionCenterDiagram.triggered, self.doCenterDiagram)
 
-        self.actionOpenDiagramProperties.setIcon(self.iconPreferences)
-        connect(self.actionOpenDiagramProperties.triggered, self.doOpenDiagramProperties)
+        self.actionDiagramProperties.setIcon(self.iconPreferences)
+        connect(self.actionDiagramProperties.triggered, self.doOpenDiagramProperties)
 
         self.actionSnapToGrid.setIcon(self.iconGrid)
         self.actionSnapToGrid.setStatusTip(_('ACTION_SNAP_TO_GRID_S'))
@@ -467,8 +467,8 @@ class MainWindow(QMainWindow):
         # NODE GENERICS
         #################################
         
-        self.actionOpenNodeProperties.setIcon(self.iconPreferences)
-        connect(self.actionOpenNodeProperties.triggered, self.doOpenNodeProperties)
+        self.actionNodeProperties.setIcon(self.iconPreferences)
+        connect(self.actionNodeProperties.triggered, self.doOpenNodeProperties)
         
         self.actionRefactorName.setIcon(self.iconLabel)
         connect(self.actionRefactorName.triggered, self.doRefactorName)
