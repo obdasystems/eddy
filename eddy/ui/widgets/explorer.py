@@ -34,7 +34,7 @@
 
 from PyQt5.QtCore import pyqtSlot, QSortFilterProxyModel, Qt, pyqtSignal, QSize
 from PyQt5.QtGui import QPainter, QStandardItemModel, QStandardItem, QIcon
-from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QHeaderView
+from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QHeaderView, QAction, QMenu
 from PyQt5.QtWidgets import QStyleOption, QStyle, QApplication
 
 from eddy.core.datatypes.graphol import Item, Identity
@@ -71,7 +71,7 @@ class OntologyExplorer(QWidget):
         self.iconA = QIcon(':/icons/treeview-predicate-attribute')
         self.iconC = QIcon(':/icons/treeview-predicate-concept')
         self.iconI = QIcon(':/icons/treeview-predicate-instance')
-        self.iconR = QIcon(':/icons/treeview-predicate-role')
+        self.iconRoot = QIcon(':/icons/treeview-predicate-role')
         self.iconV = QIcon(':/icons/treeview-predicate-value')
 
         self.search = StringField(self)
@@ -239,7 +239,7 @@ class OntologyExplorer(QWidget):
             if node.identity is Identity.Value:
                 return self.iconV
         if node.type() is Item.RoleNode:
-            return self.iconR
+            return self.iconRoot
 
     def parentFor(self, node):
         """
@@ -290,7 +290,19 @@ class OntologyExplorerView(QTreeView):
         self.setSelectionMode(QTreeView.SingleSelection)
         self.setSortingEnabled(True)
         self.setWordWrap(True)
-    
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def widget(self):
+        """
+        Returns the reference to the ProjectExporer widget.
+        :rtype: ProjectExplorer
+        """
+        return self.parent()
+
     #############################################
     #   EVENTS
     #################################
@@ -316,9 +328,8 @@ class OntologyExplorerView(QTreeView):
                 item = model.itemFromIndex(index)
                 node = item.data()
                 if node:
-                    widget = self.parent()
-                    emit(widget.sgnItemRightClicked['QGraphicsItem'], node)
-                    menu = widget.mainwindow.menuFactory.create(widget.mainwindow, node.diagram, node)
+                    emit(self.widget.sgnItemRightClicked['QGraphicsItem'], node)
+                    menu = self.widget.mainwindow.menuFactory.create(self.widget.mainwindow, node.diagram, node)
                     menu.exec_(mouseEvent.screenPos().toPoint())
 
         super().mouseReleaseEvent(mouseEvent)
@@ -350,6 +361,7 @@ class ProjectExplorer(QWidget):
         :type parent: MainWindow
         """
         super().__init__(parent)
+        self.mainwindow = parent
 
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumWidth(216)
@@ -358,15 +370,20 @@ class ProjectExplorer(QWidget):
         self.arial12b = Font('Arial', 12)
         self.arial12b.setBold(True)
 
-        self.iconR = QIcon(':/icons/treeview-directory')
-        self.iconG = QIcon(':/icons/treeview-document-blank')
-        self.iconG = QIcon(':/icons/treeview-document-graphol')
-        self.iconO = QIcon(':/icons/treeview-document-owl')
-
+        self.iconRoot = QIcon(':/icons/treeview-directory')
+        self.iconBlank = QIcon(':/icons/treeview-document-blank')
+        self.iconGraphol = QIcon(':/icons/treeview-document-graphol')
+        self.iconOwl = QIcon(':/icons/treeview-document-owl')
+        self.iconDelete = QIcon(':/icons/delete')
+        
+        self.actionDeleteDiagram = QAction(_('ACTION_DELETE_CONFIRM_N'), self)
+        self.actionDeleteDiagram.setIcon(self.iconDelete)
+        connect(self.actionDeleteDiagram.triggered, self.mainwindow.doRemoveDiagram)
+        
         self.root = QStandardItem()
         self.root.setFlags(self.root.flags() & ~Qt.ItemIsEditable)
         self.root.setFont(self.arial12b)
-        self.root.setIcon(self.iconR)
+        self.root.setIcon(self.iconRoot)
 
         self.model = QStandardItemModel(self)
         self.proxy = QSortFilterProxyModel(self)
@@ -397,12 +414,12 @@ class ProjectExplorer(QWidget):
         Add a diagram in the treeview.
         :type diagram: Diagram
         """
-        if not first(self.model.findItems(diagram.name, Qt.MatchExactly)):
+        if not self.findItem(diagram.name):
             item = QStandardItem(diagram.name)
             item.setData(diagram)
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
             item.setFont(self.arial12r)
-            item.setIcon(self.iconG)
+            item.setIcon(self.iconGraphol)
             self.root.appendRow(item)
             self.proxy.sort(0, Qt.AscendingOrder)
 
@@ -412,7 +429,7 @@ class ProjectExplorer(QWidget):
         Remove a diagram from the treeview.
         :type diagram: Diagram
         """
-        item = first(self.model.findItems(diagram.name, Qt.MatchExactly))
+        item = self.findItem(diagram.name)
         if item:
             self.root.removeRow(item.index().row())
 
@@ -478,6 +495,17 @@ class ProjectExplorer(QWidget):
         connect(project.sgnDiagramAdded, self.doAddDiagram)
         connect(project.sgnDiagramRemoved, self.doRemoveDiagram)
 
+    def findItem(self, name):
+        """
+        Find the item with the given name inside the root element.
+        :type name: str
+        """
+        for i in range(self.root.rowCount()):
+            item = self.root.child(i)
+            if item.text() == name:
+                return item
+        return None
+
     def sizeHint(self):
         """
         Returns the recommended size for this widget.
@@ -507,6 +535,18 @@ class ProjectExplorerView(QTreeView):
         self.setWordWrap(True)
 
     #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def widget(self):
+        """
+        Returns the reference to the ProjectExporer widget.
+        :rtype: ProjectExplorer
+        """
+        return self.parent()
+
+    #############################################
     #   EVENTS
     #################################
 
@@ -517,6 +557,26 @@ class ProjectExplorerView(QTreeView):
         """
         self.clearSelection()
         super().mousePressEvent(mouseEvent)
+
+    def mouseReleaseEvent(self, mouseEvent):
+        """
+        Executed when the mouse is released from the tree view.
+        :type mouseEvent: QMouseEvent
+        """
+        if mouseEvent.button() == Qt.RightButton:
+            index = first(self.selectedIndexes())
+            if index:
+                model = self.model().sourceModel()
+                index = self.model().mapToSource(index)
+                item = model.itemFromIndex(index)
+                diagram = item.data()
+                if diagram:
+                    menu = QMenu()
+                    menu.addAction(self.widget.actionDeleteDiagram)
+                    self.widget.actionDeleteDiagram.setData(diagram)
+                    menu.exec_(mouseEvent.screenPos().toPoint())
+
+        super().mouseReleaseEvent(mouseEvent)
 
     #############################################
     #   INTERFACE

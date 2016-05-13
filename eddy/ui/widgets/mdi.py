@@ -106,6 +106,17 @@ class MdiArea(QMdiArea):
         menu.addAction(action)
         return super().addSubWindow(subwindow)
 
+    def subWindowForDiagram(self, diagram):
+        """
+        Returns the subwindow holding the given diagram.
+        :type diagram: Diagram
+        :rtype: MdiSubWindow
+        """
+        for subwindow in self.subWindowList():
+            if subwindow.diagram == diagram:
+                return subwindow
+        return None
+
 
 class MdiSubWindow(QMdiSubWindow):
     """

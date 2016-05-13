@@ -67,7 +67,7 @@ from eddy.core.datatypes.system import Platform, File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphol import GrapholExporter
 from eddy.core.exporters.project import ProjectExporter
-from eddy.core.functions.fsystem import fexists, fcopy
+from eddy.core.functions.fsystem import fexists, fcopy, fremove
 from eddy.core.functions.misc import snapF, first, cutR, uncapitalize
 from eddy.core.functions.path import expandPath, isSubPath, uniquePath, shortPath
 from eddy.core.functions.signals import connect, disconnect
@@ -987,10 +987,8 @@ class MainWindow(QMainWindow):
         Focus the given diagram in the MDI area.
         :type diagram: Diagram
         """
-        for subwindow in self.mdi.subWindowList():
-            if subwindow.diagram is diagram:
-                break
-        else:
+        subwindow = self.mdi.subWindowForDiagram(diagram)
+        if not subwindow:
             view = self.createDiagramView(diagram)
             subwindow = self.createMdiSubWindow(view)
             subwindow.showMaximized()
@@ -1202,6 +1200,30 @@ class MainWindow(QMainWindow):
             edge, breakpoint = action.data()
             if 0 <= breakpoint < len(edge.breakpoints):
                 diagram.undoStack.push(CommandEdgeBreakpointRemove(diagram, edge, breakpoint))
+
+    @pyqtSlot()
+    def doRemoveDiagram(self):
+        """
+        Removes a diagram from the current project.
+        """
+        action = self.sender()
+        diagram = action.data()
+        if diagram:
+            msgbox = QMessageBox(self)
+            msgbox.setIconPixmap(QPixmap(':/icons/question'))
+            msgbox.setWindowIcon(QIcon(':/images/eddy'))
+            msgbox.setWindowTitle(_('DIAGRAM_REMOVE_POPUP_TITLE', diagram.name))
+            msgbox.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
+            msgbox.setTextFormat(Qt.RichText)
+            msgbox.setText(_('DIAGRAM_REMOVE_POPUP_QUESTION', diagram.name))
+            msgbox.setInformativeText(_('DIAGRAM_REMOVE_POPUP_INFORMATIVE_TEXT'))
+            msgbox.exec_()
+            if msgbox.result() == QMessageBox.Yes:
+                subwindow = self.mdi.subWindowForDiagram(diagram)
+                if subwindow:
+                    subwindow.close()
+                self.project.removeDiagram(diagram)
+                fremove(diagram.path)
 
     @pyqtSlot()
     def doRelocateLabel(self):
@@ -1784,6 +1806,7 @@ class MainWindow(QMainWindow):
             msgbox.setWindowIcon(QIcon(':/images/eddy'))
             msgbox.setWindowTitle(_('DIAGRAM_IMPORT_PARTIAL_WINDOW_TITLE'))
             msgbox.setStandardButtons(QMessageBox.Close)
+            msgbox.setTextFormat(Qt.RichText)
             msgbox.setText(_('DIAGRAM_IMPORT_PARTIAL_MESSAGE', name, len(worker.errors)))
             msgbox.setInformativeText(_('DIAGRAM_IMPORT_PARTIAL_INFORMATIVE_MESSAGE', BUG_TRACKER))
             msgbox.setDetailedText('\n'.join(parts))

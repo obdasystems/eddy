@@ -33,6 +33,7 @@
     <file alias="property-domain">../../artwork/icons/ic_property_domain_24dp_1x.png</file>
     <file alias="property-range">../../artwork/icons/ic_property_range_24dp_1x.png</file>
     <file alias="print">../../artwork/icons/ic_print_black_24dp_1x.png</file>
+    <file alias="question">../../artwork/icons/ic_question_outline_black_48dp_1x.png</file>
     <file alias="quit">../../artwork/icons/ic_power_settings_new_black_24dp_1x.png</file>
     <file alias="radio-checked">../../artwork/icons/ic_radio_button_checked_black_24dp_1x.png</file>
     <file alias="radio-outline">../../artwork/icons/ic_radio_button_unchecked_black_24dp_1x.png</file>

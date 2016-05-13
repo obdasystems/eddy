@@ -79,7 +79,7 @@ class NewDiagramDialog(QDialog):
 
         self.nameLabel = QLabel(self)
         self.nameLabel.setFont(arial12r)
-        self.nameLabel.setText(_('DIAGRAM_NAME_LABEL'))
+        self.nameLabel.setText(_('DIAGRAM_DIALOG_NAME_LABEL'))
         self.nameField = StringField(self)
         self.nameField.setFont(arial12r)
         self.nameField.setMinimumWidth(400)
@@ -89,7 +89,7 @@ class NewDiagramDialog(QDialog):
 
         self.pathLabel = QLabel(self)
         self.pathLabel.setFont(arial12r)
-        self.pathLabel.setText(_('DIAGRAM_LOCATION_LABEL'))
+        self.pathLabel.setText(_('DIAGRAM_DIALOG_LOCATION_LABEL'))
         self.pathField = StringField(self)
         self.pathField.setFont(arial12r)
         self.pathField.setMinimumWidth(400)
@@ -132,7 +132,7 @@ class NewDiagramDialog(QDialog):
         self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
-        self.setWindowTitle(_('DIAGRAM_WINDOW_TITLE_NEW'))
+        self.setWindowTitle(_('DIAGRAM_DIALOG_WINDOW_TITLE'))
 
         connect(self.confirmationBox.accepted, self.accept)
         connect(self.confirmationBox.rejected, self.reject)

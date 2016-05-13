@@ -43,6 +43,7 @@ ACTION_COMPOSE_PROPERTY_RANGE_N = 'Propery Range'
 ACTION_COPY_N = 'Copy'
 ACTION_CUT_N = 'Cut'
 ACTION_DELETE_N = 'Delete'
+ACTION_DELETE_CONFIRM_N = 'Delete...'
 ACTION_DIAG_WEBSITE_N = 'DIAG - Sapienza University'
 ACTION_EDGE_SWAP_N = 'Swap'
 ACTION_EXPORT_N = 'Export...'
@@ -132,18 +133,23 @@ COMMAND_NODE_SET_VALUE = 'change value to {0}'
 COMMAND_NODE_SET_VALUE_RESTRICTION = 'change value restriction to {0}'
 
 #############################################
-# DIAGRAM CREATE / EDIT / LOAD
+# DIAGRAM CREATE / EDIT / LOAD / DELETE
 #################################
 
 DIAGRAM_CAPTION_ALREADY_EXISTS = "Diagram '{0}' already exists!"
 DIAGRAM_CAPTION_NAME_NOT_VALID = "'{0}' is not a valid diagram name!"
 DIAGRAM_CREATION_FAILED_WINDOW_TITLE = 'Diagram creation failed!'
 DIAGRAM_CREATION_FAILED_MESSAGE = 'Eddy could not create the specified diagram: {0}!'
+DIAGRAM_DIALOG_LOCATION_LABEL = 'Location'
+DIAGRAM_DIALOG_NAME_LABEL = 'Name'
+DIAGRAM_DIALOG_WINDOW_TITLE = 'New diagram'
 DIAGRAM_LOAD_FAILED_WINDOW_TITLE = 'Diagram load failed!'
 DIAGRAM_LOAD_FAILED_MESSAGE = 'Eddy could not load the specified diagram: {0}!'
-DIAGRAM_LOCATION_LABEL = 'Location'
-DIAGRAM_NAME_LABEL = 'Name'
-DIAGRAM_WINDOW_TITLE_NEW = 'New diagram'
+DIAGRAM_REMOVE_POPUP_TITLE = 'Remove diagram: {0}?'
+DIAGRAM_REMOVE_POPUP_INFORMATIVE_TEXT = 'NOTE: This acion is not reversible!'
+DIAGRAM_REMOVE_POPUP_QUESTION = 'Are you sure you want to remove diagram <b>{0}</b>? If you continue, ' \
+                                'all the predicates that have been defined only in this diagram will be lost!'
+
 
 #############################################
 # DIAGRAM IMPORT
@@ -154,7 +160,7 @@ DIAGRAM_IMPORT_FAILED_MESSAGE = 'Eddy could not import the specified file: {0}!'
 DIAGRAM_IMPORT_PROGRESS_TITLE = 'Importing {0}...'
 DIAGRAM_IMPORT_PARTIAL_WINDOW_TITLE = 'Partial document import!'
 DIAGRAM_IMPORT_PARTIAL_INFORMATIVE_MESSAGE = 'If needed, <a href="{0}">submit a bug report</a> with detailed information.'
-DIAGRAM_IMPORT_PARTIAL_MESSAGE = 'Document {0} has been imported! However some errors ({1}) have ' \
+DIAGRAM_IMPORT_PARTIAL_MESSAGE = 'Document <b>{0}</b> has been imported! However some errors (<b>{1}</b>) have ' \
                                  'been generated during the import process. You can inspect detailed ' \
                                  'information by expanding the box below.'
 
