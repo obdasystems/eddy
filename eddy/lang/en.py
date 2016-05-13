@@ -315,7 +315,7 @@ SYNTAX_INCLUSION_COMPLEMENT_INVALID_SOURCE = 'Invalid source for {0} inclusion: 
 SYNTAX_INCLUSION_NO_GRAPHOL_EXPRESSION = 'Type mismatch: inclusion must involve two graphol expressions'
 SYNTAX_INCLUSION_NOT_COMPATIBLE = 'Type mismatch: {0} and {1} are not compatible'
 SYNTAX_INCLUSION_TYPE_MISMATCH = 'Type mismatch: inclusion between {0} and {1}'
-SYNTAX_INCLUSION_VALUE_DOMAIN_MISSING_ATOMIC = 'Inclusion between value-domain expressions must include at least an atomic datatype'
+SYNTAX_INCLUSION_VALUE_DOMAIN_EXPRESSIONS = 'Type mismatch: inclusion between value-domain expressions'
 
 SYNTAX_INPUT_COMPLEMENT_INVALID_EXPRESSION = 'Invalid negative {0} expression'
 SYNTAX_INPUT_DATA_TOO_MANY_DATATYPE = 'Too many value-domain nodes in input to datatype restriction node'

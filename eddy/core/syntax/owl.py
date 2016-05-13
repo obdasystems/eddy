@@ -68,6 +68,12 @@ class OWL2Validator(AbstractValidator):
                 # INCLUSION EDGE
                 #################################
 
+                # Here we keep the ValueDomain as supported identity even though we deny the inclusion
+                # between value-domain expressions, unless we are creating a DataPropertyRange axiom.
+                # The reason for this is that if we remove the identity from the supported set the user
+                # will see the message which explains that the inclusion is denied because it does not
+                # involve two graphol expressions, while it actually does. We handle this special case
+                # here below, by passing the only allowed inclusion between value-domain expressions.
                 supported = {Identity.Concept, Identity.Role, Identity.Attribute, Identity.ValueDomain}
                 remaining = source.Identities & target.Identities - {Identity.Neutral, Identity.Unknown}
 
@@ -78,9 +84,9 @@ class OWL2Validator(AbstractValidator):
 
                 if Identity.Neutral not in {source.identity, target.identity} and source.identity is not target.identity:
                     # If both nodes are not NEUTRAL and they have a different identity we can't create an inclusion.
-                    identityA = source.identity.value
-                    identityB = target.identity.value
-                    raise SyntaxError(_('SYNTAX_INCLUSION_TYPE_MISMATCH', identityA, identityB))
+                    idA = source.identity.value
+                    idB = target.identity.value
+                    raise SyntaxError(_('SYNTAX_INCLUSION_TYPE_MISMATCH', idA, idB))
 
                 if not remaining:
                     # If source and target nodes do not share a common identity then we can't create an inclusion.
@@ -88,15 +94,14 @@ class OWL2Validator(AbstractValidator):
 
                 if Identity.ValueDomain in {source.identity, target.identity}:
 
-                    # We exclude from the following check inclusion edges sourcing
-                    # from a RangeRestriction node since it will be translated into OWL
-                    # DataPropertyRange that accepts also non  atomic ValueDomain expressions.
                     if source.type() is not Item.RangeRestrictionNode:
-
-                        if source.type() is not Item.ValueDomainNode and target.type() is not Item.ValueDomainNode:
-                            # Inclusion assertions between value-domain expressions must involve at least an atomic
-                            # datatype (i.e., the source or the target of the assertion must be an atomic datatype).
-                            raise SyntaxError(_('SYNTAX_INCLUSION_VALUE_DOMAIN_MISSING_ATOMIC'))
+                        # Inclusions between value-domain expressions is not yet supported. However,
+                        # we allow inclusions between value-domain expressions only if we are tracing
+                        # an inclusion edge sourcing from a range restriction node (whose input is an
+                        # attribute node, and therefor its identity is set to value-domain) and targeting
+                        # a value-domain expression, either complex or atomic, eventually excluding the
+                        # attribute range restriction as target.
+                        raise SyntaxError(_('SYNTAX_INCLUSION_VALUE_DOMAIN_EXPRESSIONS'))
 
                 if source.type() is Item.ComplementNode:
 
@@ -182,15 +187,16 @@ class OWL2Validator(AbstractValidator):
                     #################################
 
                     if source.type() is not Item.IndividualNode:
-                        # Enumeration operator (oneOf) takes as inputs instances or values, both represented
-                        # by the Individual node, and has the job of composing a set if individuals (either
-                        # Concept or ValueDomain, but not both together).
+                        # Enumeration operator (oneOf) takes as inputs instances or values, both
+                        # represented by the Individual node, and has the job of composing a set
+                        # if individuals (either Concept or ValueDomain, but not both together).
                         name = source.identity.value if source.identity is not Identity.Neutral else source.name
                         raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', target.name, name))
 
                     if target.identity is Identity.Unknown:
-                        # Target node has an unkown identity: we do not allow the connection => the user MUST fix the
-                        # error first and then try to create again the connection (this most likely never happens)
+                        # Target node has an unkown identity: we do not allow the connection => the
+                        # user MUST fix the error first and then try to create again the connection
+                        # (this most likely never happens).
                         raise SyntaxError(_('SYNTAX_INPUT_ENUMERATION_INVALID_TARGET_IDENTITY', target.identity.value))
 
                     if target.identity is not Identity.Neutral:
@@ -294,9 +300,9 @@ class OWL2Validator(AbstractValidator):
 
                         if source.identity is Identity.Value:
                             # We are constructing an ObjectPropertyAssertion expression so we can't connect a Value.
-                            identityA = target.identity.value
-                            identityB = source.identity.value
-                            raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', identityA, identityB))
+                            idA = target.identity.value
+                            idB = source.identity.value
+                            raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', idA, idB))
 
                     if target.identity is Identity.AttributeInstance:
 
@@ -313,7 +319,7 @@ class OWL2Validator(AbstractValidator):
                             f1 = lambda x: x.type() is Item.InputEdge and x is not edge
                             f2 = lambda x: x.identity is Identity.Value
                             if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
-                                # At most one Literal can be given as input (2 instance | 1 instance + 1 value)
+                                # At most one value can be given as input (2 instance | 1 instance + 1 value)
                                 raise SyntaxError(_('SYNTAX_INPUT_PROP_ASSERTION_TOO_MANY_VALUES', target.identity.value))
 
                 elif target.type() is Item.DomainRestrictionNode:
