@@ -110,18 +110,21 @@ class OWL2Validator(AbstractValidator):
                 # attribute range restriction as target.
                 raise SyntaxError(_('SYNTAX_INCLUSION_VALUE_DOMAIN_EXPRESSIONS'))
 
-        if source.type() is Item.ComplementNode:
+        if {Identity.Attribute, Identity.Role} & {source.identity, target.identity}:
 
-            identity = first({source.identity, target.identity} - {Identity.Neutral})
-            if identity and identity in {Identity.Attribute, Identity.Role}:
+            if source.type() is Item.ComplementNode:
                 # Complement nodes can only be the target of Role and Attribute inclusions since they
                 # are used to generate OWLDisjointObjectPropertiesAxiom and OWLDisjointDataPropertiesAxiom.
                 # Differently we allow inclusions targeting concept nodes to source from complement nodes.
-                raise SyntaxError(_('SYNTAX_INCLUSION_COMPLEMENT_INVALID_SOURCE', identity.value, source.name))
+                identity = first({source.identity, target.identity} - {Identity.Neutral}).value.lower()
+                raise SyntaxError(_('SYNTAX_INCLUSION_COMPLEMENT_INVALID_SOURCE', identity, source.name))
 
-        if target.type() is Item.RoleChainNode:
-            # Role expressions constructed with chain nodes cannot be the target of any inclusion edge.
-            raise SyntaxError(_('SYNTAX_INCLUSION_CHAIN_AS_TARGET'))
+            if target.type() is Item.ComplementNode and edge.complete:
+                # Complement nodes can only be the target of Role and Attribute inclusions since they
+                # are used to generate OWLDisjointObjectPropertiesAxiom and OWLDisjointDataPropertiesAxiom.
+                # Differently we allow inclusions targeting concept nodes to source from complement nodes.
+                identity = first({source.identity, target.identity} - {Identity.Neutral}).value.lower()
+                raise SyntaxError(_('SYNTAX_EQUIVALENCE_COMPLEMENT_NOT_VALID', identity, source.name))
 
         if source.type() is Item.RoleChainNode:
             # Role expressions constructed with chain nodes can be included only
@@ -129,6 +132,10 @@ class OWL2Validator(AbstractValidator):
             # nodes with one input Role node (this check is done elsewhere).
             if target.type() not in {Item.RoleNode, Item.RoleInverseNode}:
                 raise SyntaxError(_('SYNTAX_INCLUSION_CHAIN_AS_SOURCE_INVALID_TARGET', source.name, target.name))
+
+        if target.type() is Item.RoleChainNode:
+            # Role expressions constructed with chain nodes cannot be the target of any inclusion edge.
+            raise SyntaxError(_('SYNTAX_INCLUSION_CHAIN_AS_TARGET'))
 
     @staticmethod
     def input(source, edge, target):

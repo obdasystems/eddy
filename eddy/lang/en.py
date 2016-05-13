@@ -309,6 +309,8 @@ REFACTOR_NAME_CAPTION_NAME_NOT_VALID = "\'{0}\' is not a valid predicate name"
 
 SYNTAX_SELF_CONNECTION = 'Self connection is not valid'
 
+SYNTAX_EQUIVALENCE_COMPLEMENT_NOT_VALID = '{0} equivalence is forbidden when expressing disjointness'
+
 SYNTAX_INCLUSION_CHAIN_AS_TARGET = 'Role chain nodes cannot be target of a Role inclusion'
 SYNTAX_INCLUSION_CHAIN_AS_SOURCE_INVALID_TARGET = 'Inclusion between {0} and {0} is forbidden'
 SYNTAX_INCLUSION_COMPLEMENT_INVALID_SOURCE = 'Invalid source for {0} inclusion: {1}'
