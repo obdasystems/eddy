@@ -127,7 +127,7 @@ class MainWindow(QMainWindow):
         self.menuView = self.menuBar().addMenu(_('MENU_VIEW'))
         self.menuTools = self.menuBar().addMenu(_('MENU_TOOLS'))
         self.menuHelp = self.menuBar().addMenu(_('MENU_HELP'))
-        
+
         self.menuCompose = QMenu(_('MENU_COMPOSE'))
         self.menuRefactorBrush = QMenu(_('MENU_REFACTOR_BRUSH'))
         self.menuRefactor = QMenu(_('MENU_REFACTOR'))
@@ -138,6 +138,7 @@ class MainWindow(QMainWindow):
         self.menuSetPropertyRestriction = QMenu(_('MENU_SET_PROPERTY_RESTRICTION'))
         self.menuSetSpecial = QMenu(_('MENU_SET_SPECIAL'))
         self.menuSwitchOperator = QMenu(_('MENU_SWITCH_OPERATOR'))
+        self.menuToolbars = QMenu(_('MENU_TOOLBARS'))
 
         #############################################
         # CREATE TOOLBARS
@@ -146,9 +147,14 @@ class MainWindow(QMainWindow):
         # noinspection PyArgumentList
         QApplication.processEvents()
 
-        # TODO: TRANSLATE
-        self.toolbar = self.addToolBar('Toolbar')
-        self.toolbar.setObjectName('toolbar')
+        self.toolbarDocument = self.addToolBar(_('TOOLBAR_DOCUMENT'))
+        self.toolbarDocument.setObjectName('toolbarDocument')
+        self.toolbarEditor = self.addToolBar(_('TOOLBAR_EDITOR'))
+        self.toolbarEditor.setObjectName('toolbarEditor')
+        self.toolbarView = self.addToolBar(_('TOOLBAR_VIEW'))
+        self.toolbarView.setObjectName('toolbarView')
+        self.toolbarGraphol = self.addToolBar(_('TOOLBAR_GRAPHOL'))
+        self.toolbarGraphol.setObjectName('toolbarGraphol')
 
         #############################################
         # CREATE WIDGETS
@@ -168,7 +174,7 @@ class MainWindow(QMainWindow):
         self.overview = Overview(self)
         self.palette_ = Palette(self)
         self.projectExplorer = ProjectExplorer(self)
-        self.zoom = Zoom(self.toolbar)
+        self.zoom = Zoom(self.toolbarView)
 
         self.dockInfo = QDockWidget(_('DOCK_INFO'), self, Qt.Widget)
         self.dockOntologyExplorer = QDockWidget(_('DOCK_ONTOLOGY_EXPLORER'), self, Qt.Widget)
@@ -704,13 +710,18 @@ class MainWindow(QMainWindow):
 
         self.menuView.addAction(self.actionSnapToGrid)
         self.menuView.addSeparator()
-        self.menuView.addAction(self.toolbar.toggleViewAction())
+        self.menuView.addMenu(self.menuToolbars)
         self.menuView.addSeparator()
         self.menuView.addAction(self.dockInfo.toggleViewAction())
         self.menuView.addAction(self.dockOntologyExplorer.toggleViewAction())
         self.menuView.addAction(self.dockOverview.toggleViewAction())
         self.menuView.addAction(self.dockPalette.toggleViewAction())
         self.menuView.addAction(self.dockProjectExplorer.toggleViewAction())
+
+        self.menuToolbars.addAction(self.toolbarDocument.toggleViewAction())
+        self.menuToolbars.addAction(self.toolbarEditor.toggleViewAction())
+        self.menuToolbars.addAction(self.toolbarGraphol.toggleViewAction())
+        self.menuToolbars.addAction(self.toolbarView.toggleViewAction())
 
         self.menuTools.addAction(self.actionSyntaxCheck)
 
@@ -805,41 +816,36 @@ class MainWindow(QMainWindow):
         # noinspection PyArgumentList
         QApplication.processEvents()
 
-        self.toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
-        self.toolbar.setFloatable(False)
-        self.toolbar.setMovable(False)
+        self.toolbarDocument.setContextMenuPolicy(Qt.PreventContextMenu)
+        self.toolbarEditor.setContextMenuPolicy(Qt.PreventContextMenu)
+        self.toolbarView.setContextMenuPolicy(Qt.PreventContextMenu)
+        self.toolbarGraphol.setContextMenuPolicy(Qt.PreventContextMenu)
 
-        self.toolbar.addAction(self.actionNewDiagram)
-        self.toolbar.addAction(self.actionOpen)
-        self.toolbar.addAction(self.actionSave)
-        self.toolbar.addAction(self.actionPrint)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.actionUndo)
-        self.toolbar.addAction(self.actionRedo)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.actionCut)
-        self.toolbar.addAction(self.actionCopy)
-        self.toolbar.addAction(self.actionPaste)
-        self.toolbar.addAction(self.actionDelete)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.actionBringToFront)
-        self.toolbar.addAction(self.actionSendToBack)
+        self.toolbarDocument.addAction(self.actionNewDiagram)
+        self.toolbarDocument.addAction(self.actionOpen)
+        self.toolbarDocument.addAction(self.actionSave)
+        self.toolbarDocument.addAction(self.actionPrint)
 
-        self.toolbar.addSeparator()
-        self.toolbar.addWidget(self.buttonSetBrush)
+        self.toolbarEditor.addAction(self.actionUndo)
+        self.toolbarEditor.addAction(self.actionRedo)
+        self.toolbarEditor.addSeparator()
+        self.toolbarEditor.addAction(self.actionCut)
+        self.toolbarEditor.addAction(self.actionCopy)
+        self.toolbarEditor.addAction(self.actionPaste)
+        self.toolbarEditor.addAction(self.actionDelete)
+        self.toolbarEditor.addSeparator()
+        self.toolbarEditor.addAction(self.actionBringToFront)
+        self.toolbarEditor.addAction(self.actionSendToBack)
+        self.toolbarEditor.addWidget(self.buttonSetBrush)
 
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.actionSnapToGrid)
-        self.toolbar.addAction(self.actionCenterDiagram)
+        self.toolbarView.addAction(self.actionSnapToGrid)
+        self.toolbarView.addAction(self.actionCenterDiagram)
+        self.toolbarView.addSeparator()
+        self.toolbarView.addWidget(self.zoom.buttonZoomOut)
+        self.toolbarView.addWidget(self.zoom.buttonZoomIn)
+        self.toolbarView.addWidget(self.zoom.buttonZoomReset)
+        self.toolbarGraphol.addAction(self.actionSyntaxCheck)
 
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.actionSyntaxCheck)
-
-        self.toolbar.addSeparator()
-        self.toolbar.addWidget(self.zoom.buttonZoomOut)
-        self.toolbar.addWidget(self.zoom.buttonZoomIn)
-        self.toolbar.addWidget(self.zoom.buttonZoomReset)
-    
     def configureState(self):
         """
         Configure application state by reading the preferences file.

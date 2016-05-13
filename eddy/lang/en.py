@@ -146,7 +146,7 @@ DIAGRAM_DIALOG_WINDOW_TITLE = 'New diagram'
 DIAGRAM_LOAD_FAILED_WINDOW_TITLE = 'Diagram load failed!'
 DIAGRAM_LOAD_FAILED_MESSAGE = 'Eddy could not load the specified diagram: {0}!'
 DIAGRAM_REMOVE_POPUP_TITLE = 'Remove diagram: {0}?'
-DIAGRAM_REMOVE_POPUP_INFORMATIVE_TEXT = 'NOTE: This acion is not reversible!'
+DIAGRAM_REMOVE_POPUP_INFORMATIVE_TEXT = '<b>NOTE: This action is not reversible!</b>'
 DIAGRAM_REMOVE_POPUP_QUESTION = 'Are you sure you want to remove diagram <b>{0}</b>? If you continue, ' \
                                 'all the predicates that have been defined only in this diagram will be lost!'
 
@@ -238,6 +238,7 @@ MENU_SET_INDIVIDUAL_AS = 'Set as'
 MENU_SET_PROPERTY_RESTRICTION = 'Select restriction'
 MENU_SET_SPECIAL = 'Special type'
 MENU_SWITCH_OPERATOR = 'Switch to'
+MENU_TOOLBARS = 'Toolbars'
 MENU_TOOLS = 'Tools'
 MENU_VIEW = 'View'
 
@@ -348,6 +349,15 @@ SYNTAX_MANUAL_NODE_IDENTITY_UNKNOWN = 'Unkown node identity detected on {0}.'
 SYNTAX_MANUAL_NO_ERROR_FOUND = 'No syntax error found!'
 SYNTAX_MANUAL_PROGRESS_TITLE = 'Running syntax validation...'
 SYNTAX_MANUAL_WINDOW_TITLE = 'Syntax validation completed!'
+
+#############################################
+# TOOLBARS
+#################################
+
+TOOLBAR_DOCUMENT = 'Document'
+TOOLBAR_EDITOR = 'Editor'
+TOOLBAR_VIEW = 'View'
+TOOLBAR_GRAPHOL = 'Graphol'
 
 #############################################
 # WELCOME SCREEN
