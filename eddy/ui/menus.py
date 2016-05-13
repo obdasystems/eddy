@@ -117,12 +117,19 @@ class MenuFactory(QObject):
             menu.addAction(mainwindow.actionDelete)
             menu.addAction(mainwindow.actionSwapEdge)
             menu.addSeparator()
-            menu.addAction(mainwindow.actionToggleEdgeComplete)
+            menu.addAction(mainwindow.actionSetEdgeComplete)
             # SETUP ACTIONS STATE
+            swapOn = True
+            completeOn = True
             validate = diagram.project.validator.validate
-            result = validate(edge.target, edge, edge.source)
-            mainwindow.actionSwapEdge.setVisible(result.valid)
-            mainwindow.actionToggleEdgeComplete.setChecked(edge.complete)
+            if not validate(edge.target, edge, edge.source).valid:
+                swapOn = False
+            if edge.source.identity in {Identity.Attribute, Identity.Role}:
+                if edge.target.type() is Item.ComplementNode:
+                    completeOn = False
+            mainwindow.actionSetEdgeComplete.setVisible(completeOn)
+            mainwindow.actionSetEdgeComplete.setChecked(edge.complete)
+            mainwindow.actionSwapEdge.setVisible(swapOn)
         return menu
 
     @staticmethod

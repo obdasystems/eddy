@@ -518,7 +518,7 @@ class InclusionEdgeInfo(EdgeInfo):
         self.completeBox = CheckBox(parent)
         self.completeBox.setFont(arial12r)
         self.completeBox.setCheckable(True)
-        connect(self.completeBox.clicked, self.mainwindow.doToggleEdgeComplete)
+        connect(self.completeBox.clicked, self.mainwindow.doSetEdgeComplete)
 
         self.generalLayout.addRow(self.completeKey, parent)
 
