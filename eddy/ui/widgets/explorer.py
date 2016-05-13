@@ -38,8 +38,9 @@ from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QHeaderView
 from PyQt5.QtWidgets import QStyleOption, QStyle, QApplication
 
 from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.datatypes.system import File
 from eddy.core.diagram import Diagram
-from eddy.core.functions.misc import first
+from eddy.core.functions.misc import first, cutR
 from eddy.core.functions.signals import connect, emit
 from eddy.core.qt import Font
 
@@ -217,7 +218,9 @@ class OntologyExplorer(QWidget):
         :type node: AbstractNode
         :rtype: str
         """
-        return '{0} ({1})'.format(node.text().replace('\n', ''), node.id)
+        predicate = node.text().replace('\n', '')
+        diagram = cutR(node.diagram.name, File.Graphol.extension)
+        return '{0} ({1} - {2})'.format(predicate, diagram, node.id)
 
     def iconFor(self, node):
         """
