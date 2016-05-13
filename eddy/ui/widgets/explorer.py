@@ -55,6 +55,7 @@ class OntologyExplorer(QWidget):
     """
     sgnItemClicked = pyqtSignal('QGraphicsItem')
     sgnItemDoubleClicked = pyqtSignal('QGraphicsItem')
+    sgnItemRightClicked = pyqtSignal('QGraphicsItem')
 
     def __init__(self, parent):
         """
@@ -62,6 +63,7 @@ class OntologyExplorer(QWidget):
         :type parent: MainWindow
         """
         super().__init__(parent)
+        self.mainwindow = parent
 
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumWidth(216)
@@ -301,26 +303,25 @@ class OntologyExplorerView(QTreeView):
         self.clearSelection()
         super().mousePressEvent(mouseEvent)
 
-    # TODO: CONTEXT MENU
-    # def mouseReleaseEvent(self, mouseEvent):
-    #     """
-    #     Executed when the mouse is released from the tree view.
-    #     :type mouseEvent: QMouseEvent
-    #     """
-    #     if mouseEvent.button() == Qt.RightButton:
-    #         index = first(self.selectedIndexes())
-    #         if index:
-    #             model = self.model().sourceModel()
-    #             index = self.model().mapToSource(index)
-    #             item = model.itemFromIndex(index)
-    #             node = item.data()
-    #             if node:
-    #                 widget = self.parent()
-    #                 window = widget.parent()
-    #                 menu = window.menuFactory.create(window, node.diagram, node)
-    #                 menu.exec_(mouseEvent.screenPos().toPoint())
-    #
-    #     super().mouseReleaseEvent(mouseEvent)
+    def mouseReleaseEvent(self, mouseEvent):
+        """
+        Executed when the mouse is released from the tree view.
+        :type mouseEvent: QMouseEvent
+        """
+        if mouseEvent.button() == Qt.RightButton:
+            index = first(self.selectedIndexes())
+            if index:
+                model = self.model().sourceModel()
+                index = self.model().mapToSource(index)
+                item = model.itemFromIndex(index)
+                node = item.data()
+                if node:
+                    widget = self.parent()
+                    emit(widget.sgnItemRightClicked['QGraphicsItem'], node)
+                    menu = widget.mainwindow.menuFactory.create(widget.mainwindow, node.diagram, node)
+                    menu.exec_(mouseEvent.screenPos().toPoint())
+
+        super().mouseReleaseEvent(mouseEvent)
 
     #############################################
     #   INTERFACE

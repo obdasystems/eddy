@@ -657,6 +657,7 @@ class MainWindow(QMainWindow):
         connect(self.mdi.subWindowActivated, self.onSubWindowActivated)
         connect(self.palette_.sgnButtonClicked['QToolButton'], self.onPaletteClicked)
         connect(self.ontologyExplorer.sgnItemDoubleClicked['QGraphicsItem'], self.doFocusItem)
+        connect(self.ontologyExplorer.sgnItemRightClicked['QGraphicsItem'], self.doFocusItem)
         connect(self.projectExplorer.sgnItemDoubleClicked['QGraphicsScene'], self.doFocusDiagram)
 
     def configureMenus(self):
