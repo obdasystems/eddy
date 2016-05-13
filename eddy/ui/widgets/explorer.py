@@ -115,10 +115,11 @@ class OntologyExplorer(QWidget):
     #   SLOTS
     #################################
 
-    @pyqtSlot('QGraphicsItem')
-    def doAddNode(self, node):
+    @pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    def doAddNode(self, diagram, node):
         """
         Add a node in the tree view.
+        :type diagram: QGraphicsScene
         :type node: AbstractItem
         """
         if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
@@ -128,7 +129,7 @@ class OntologyExplorer(QWidget):
                 parent.setIcon(self.iconFor(node))
                 self.model.appendRow(parent)
                 self.proxy.sort(0, Qt.AscendingOrder)
-            child = QStandardItem(self.childKey(node))
+            child = QStandardItem(self.childKey(diagram, node))
             child.setData(node)
             parent.appendRow(child)
             self.proxy.sort(0, Qt.AscendingOrder)
@@ -142,16 +143,17 @@ class OntologyExplorer(QWidget):
         self.proxy.setFilterFixedString(key)
         self.proxy.sort(Qt.AscendingOrder)
 
-    @pyqtSlot('QGraphicsItem')
-    def doRemoveNode(self, node):
+    @pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    def doRemoveNode(self, diagram, node):
         """
         Remove a node from the tree view.
+        :type diagram: QGraphicsScene
         :type node: AbstractItem
         """
         if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
             parent = self.parentFor(node)
             if parent:
-                child = self.childFor(parent, node)
+                child = self.childFor(parent, diagram, node)
                 if child:
                     parent.removeRow(child.index().row())
                 if not parent.rowCount():
@@ -191,7 +193,7 @@ class OntologyExplorer(QWidget):
         :type project: Project
         """
         for node in project.nodes():
-            self.doAddNode(node)
+            self.doAddNode(node.diagram, node)
 
         header = self.ontoview.header()
         header.setStretchLastSection(False)
@@ -200,13 +202,14 @@ class OntologyExplorer(QWidget):
         connect(project.sgnItemAdded, self.doAddNode)
         connect(project.sgnItemRemoved, self.doRemoveNode)
 
-    def childFor(self, parent, node):
+    def childFor(self, parent, diagram, node):
         """
         Search the item representing this node among parent children.
         :type parent: QStandardItem
+        :type diagram: Diagram
         :type node: AbstractNode
         """
-        key = self.childKey(node)
+        key = self.childKey(diagram, node)
         for i in range(parent.rowCount()):
             child = parent.child(i)
             if child.text() == key:
@@ -214,14 +217,15 @@ class OntologyExplorer(QWidget):
         return None
 
     @staticmethod
-    def childKey(node):
+    def childKey(diagram, node):
         """
         Returns the child key (text) used to place the given node in the treeview.
+        :type diagram: Diagram
         :type node: AbstractNode
         :rtype: str
         """
         predicate = node.text().replace('\n', '')
-        diagram = cutR(node.diagram.name, File.Graphol.extension)
+        diagram = cutR(diagram.name, File.Graphol.extension)
         return '{0} ({1} - {2})'.format(predicate, diagram, node.id)
 
     def iconFor(self, node):

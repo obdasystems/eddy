@@ -65,8 +65,8 @@ class Project(QObject):
     """
     sgnDiagramAdded = pyqtSignal('QGraphicsScene')
     sgnDiagramRemoved = pyqtSignal('QGraphicsScene')
-    sgnItemAdded = pyqtSignal('QGraphicsItem')
-    sgnItemRemoved = pyqtSignal('QGraphicsItem')
+    sgnItemAdded = pyqtSignal('QGraphicsScene', 'QGraphicsItem')
+    sgnItemRemoved = pyqtSignal('QGraphicsScene', 'QGraphicsItem')
     sgnMetaAdded = pyqtSignal(Item, str)
     sgnMetaRemoved = pyqtSignal(Item, str)
 
@@ -417,7 +417,7 @@ class Project(QObject):
                     self.index[K_EDGE][diagram.id] = dict()
                 self.index[K_EDGE][diagram.id][item.id] = item
             # SIGNAL
-            self.sgnItemAdded.emit(item)
+            self.sgnItemAdded.emit(diagram, item)
 
     @pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def doRemoveItem(self, diagram, item):
@@ -470,4 +470,4 @@ class Project(QObject):
                         if not self.index[K_EDGE][diagram.id]:
                             del self.index[K_EDGE][diagram.id]
             # SIGNAL
-            self.sgnItemRemoved.emit(item)
+            self.sgnItemRemoved.emit(diagram, item)
