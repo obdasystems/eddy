@@ -39,7 +39,7 @@ from eddy.core.functions.misc import first
 from eddy.lang import gettext as _
 
 
-class CommandItemsMultiAdd(QUndoCommand):
+class CommandItemsAdd(QUndoCommand):
     """
     This command is used to add a collection of items to a diagram.
     """

@@ -34,7 +34,7 @@
 
 from PyQt5.QtCore import QObject, QPointF
 
-from eddy.core.commands.common import CommandItemsMultiAdd
+from eddy.core.commands.common import CommandItemsAdd
 
 
 class Clipboard(QObject):
@@ -147,7 +147,7 @@ class Clipboard(QObject):
             diagram.pasteX += self.PasteOffsetX
             diagram.pasteY += self.PasteOffsetY
 
-        diagram.undoStack.push(CommandItemsMultiAdd(diagram, items))
+        diagram.undoStack.push(CommandItemsAdd(diagram, items))
 
     def size(self):
         """
