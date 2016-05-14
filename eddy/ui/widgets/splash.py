@@ -66,6 +66,7 @@ class Splash(QSplashScreen):
         """
         super().__init__(QPixmap(path), Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.setMask(self.pixmap().mask())
         self.setFixedSize(self.pixmap().width(), self.pixmap().height())
         self.mtime = time() + mtime
