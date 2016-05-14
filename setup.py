@@ -69,17 +69,17 @@ if sys.platform.startswith('darwin'):
     OPTS['DIST_NAME'] = '{}-{}-{}-darwin'.format(APPNAME, VERSION, LICENSE.lower())
     OPTS['EXEC_BASE'] = None
     OPTS['EXEC_NAME'] = APPNAME
-    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'eddy.icns')
-    OPTS['DOCUMENT_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'document.icns')
-    OPTS['DMG_BACKGROUND'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'dmg_background.png')
-    OPTS['DMG_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'dmg_icon.icns')
+    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'eddy.icns')
+    OPTS['DOCUMENT_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'document.icns')
+    OPTS['DMG_BACKGROUND'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'dmg_background.png')
+    OPTS['DMG_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'dmg_icon.icns')
 elif sys.platform.startswith('win32'):
     OPTS['AS_TO_EXE'] = True
     OPTS['DIST_NAME'] = '{}-{}-{}-win{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
     OPTS['EXEC_BASE'] = 'Win32GUI'
     OPTS['EXEC_NAME'] = '{}.exe'.format(APPNAME)
-    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'eddy.ico')
-    OPTS['DOCUMENT_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'document.ico')
+    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'eddy.ico')
+    OPTS['DOCUMENT_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'document.ico')
     OPTS['DMG_BACKGROUND'] = None
     OPTS['DMG_ICON'] = None
 else:
@@ -87,8 +87,8 @@ else:
     OPTS['DIST_NAME'] = '{}-{}-{}-linux{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
     OPTS['EXEC_BASE'] = None
     OPTS['EXEC_NAME'] = APPNAME
-    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'eddy.png')
-    OPTS['DOCUMENT_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'document.png')
+    OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'eddy.png')
+    OPTS['DOCUMENT_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'document.png')
     OPTS['DMG_BACKGROUND'] = None
     OPTS['DMG_ICON'] = None
 
