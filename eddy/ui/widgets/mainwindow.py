@@ -34,7 +34,6 @@
 
 import os
 import webbrowser
-
 from collections import OrderedDict
 from traceback import format_exception as f_exc
 
@@ -77,9 +76,7 @@ from eddy.core.loaders.graphol import GrapholLoader
 from eddy.core.loaders.project import ProjectLoader
 from eddy.core.qt import Icon, ColoredIcon
 from eddy.core.utils.clipboard import Clipboard
-
 from eddy.lang import gettext as _
-
 from eddy.ui.dialogs.about import About
 from eddy.ui.dialogs.diagram import NewDiagramDialog
 from eddy.ui.dialogs.nodes import CardinalityRestrictionForm
@@ -89,7 +86,6 @@ from eddy.ui.dialogs.preferences import PreferencesDialog
 from eddy.ui.dialogs.progress import BusyProgressDialog
 from eddy.ui.menus import MenuFactory
 from eddy.ui.properties.factory import PropertyFactory
-from eddy.ui.toolbar import Zoom
 from eddy.ui.widgets.explorer import OntologyExplorer
 from eddy.ui.widgets.explorer import ProjectExplorer
 from eddy.ui.widgets.info import Info
@@ -98,6 +94,7 @@ from eddy.ui.widgets.mdi import MdiSubWindow
 from eddy.ui.widgets.overview import Overview
 from eddy.ui.widgets.palette import Palette
 from eddy.ui.widgets.view import DiagramView
+from eddy.ui.widgets.zoom import Zoom
 
 
 class MainWindow(QMainWindow):

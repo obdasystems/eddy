@@ -40,7 +40,8 @@ from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import clamp, rangeF
 from eddy.core.functions.signals import disconnect, connect
-from eddy.ui.toolbar import Zoom
+
+from eddy.ui.widgets.zoom import Zoom
 
 
 class DiagramView(QGraphicsView):
