@@ -3,6 +3,12 @@
 <qresource prefix="/icons/18">
   <file alias="arrow-drop-down">../../artwork/icons/18/ic_arrow_drop_down_black_18dp_1x.png</file>
   <file alias="arrow-drop-up">../../artwork/icons/18/ic_arrow_drop_up_black_18dp_1x.png</file>
+  <file alias="close">../../artwork/icons/18/ic_close_black_18dp_1x.png</file>
+  <file alias="explore">../../artwork/icons/18/ic_explore_black_18dp_1x.png</file>
+  <file alias="info">../../artwork/icons/18/ic_info_outline_black_18dp_1x.png</file>
+  <file alias="palette">../../artwork/icons/18/ic_palette_black_18dp_1x.png</file>
+  <file alias="storage">../../artwork/icons/18/ic_storage_black_18dp_1x.png</file>
+  <file alias="zoom">../../artwork/icons/18/ic_zoom_black_18dp_1x.png</file>
 </qresource>
 <qresource prefix="/icons/24">
   <file alias="arrow-down">../../artwork/icons/24/ic_keyboard_arrow_down_black_24dp_1x.png</file>

@@ -34,14 +34,15 @@
 
 import os
 import webbrowser
+
 from collections import OrderedDict
 from traceback import format_exception as f_exc
 
 from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QBrush, QColor, QPixmap
 from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
-from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QMessageBox
-from PyQt5.QtWidgets import QMenu, QToolButton, QDockWidget, QApplication
+from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QToolButton
+from PyQt5.QtWidgets import QMenu, QApplication, QMessageBox
 from PyQt5.QtWidgets import QUndoGroup, QStyle, QFileDialog
 
 from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION, BUG_TRACKER
@@ -86,6 +87,7 @@ from eddy.ui.dialogs.preferences import PreferencesDialog
 from eddy.ui.dialogs.progress import BusyProgressDialog
 from eddy.ui.menus import MenuFactory
 from eddy.ui.properties.factory import PropertyFactory
+from eddy.ui.widgets.dock import DockWidget
 from eddy.ui.widgets.explorer import OntologyExplorer
 from eddy.ui.widgets.explorer import ProjectExplorer
 from eddy.ui.widgets.info import Info
@@ -173,11 +175,11 @@ class MainWindow(QMainWindow):
         self.projectExplorer = ProjectExplorer(self)
         self.zoom = Zoom(self.toolbarView)
 
-        self.dockInfo = QDockWidget(_('DOCK_INFO'), self, Qt.Widget)
-        self.dockOntologyExplorer = QDockWidget(_('DOCK_ONTOLOGY_EXPLORER'), self, Qt.Widget)
-        self.dockOverview = QDockWidget(_('DOCK_OVERVIEW'), self, Qt.Widget)
-        self.dockPalette = QDockWidget(_('DOCK_PALETTE'), self, Qt.Widget)
-        self.dockProjectExplorer = QDockWidget(_('DOCK_PROJECT_EXPLORER'), self, Qt.Widget)
+        self.dockInfo = DockWidget(_('DOCK_INFO'), ':/icons/18/info', self)
+        self.dockOntologyExplorer = DockWidget(_('DOCK_ONTOLOGY_EXPLORER'), ':/icons/18/explore', self)
+        self.dockOverview = DockWidget(_('DOCK_OVERVIEW'), ':/icons/18/zoom', self)
+        self.dockPalette = DockWidget(_('DOCK_PALETTE'), ':/icons/18/palette', self)
+        self.dockProjectExplorer = DockWidget(_('DOCK_PROJECT_EXPLORER'), ':/icons/18/storage', self)
 
         self.buttonSetBrush = QToolButton()
 
@@ -188,42 +190,42 @@ class MainWindow(QMainWindow):
         # noinspection PyArgumentList
         QApplication.processEvents()
 
-        self.iconBottom = Icon(':/icons/bottom')
-        self.iconBringToFront = Icon(':/icons/bring-to-front')
-        self.iconCenterFocus = Icon(':/icons/center-focus')
-        self.iconClose = Icon(':/icons/close')
-        self.iconColorFill = Icon(':/icons/color-fill')
-        self.iconCopy = Icon(':/icons/copy')
-        self.iconCreate = Icon(':/icons/create')
-        self.iconCut = Icon(':/icons/cut')
-        self.iconDelete = Icon(':/icons/delete')
-        self.iconGrid = Icon(':/icons/grid')
-        self.iconHelp = Icon(':/icons/help')
-        self.iconLabel = Icon(':/icons/label')
-        self.iconLicense = Icon(':/icons/license')
-        self.iconLink = Icon(':/icons/link')
-        self.iconNew = Icon(':/icons/new')
-        self.iconOpen = Icon(':/icons/open')
-        self.iconPaste = Icon(':/icons/paste')
-        self.iconPalette = Icon(':/icons/appearance')
-        self.iconPreferences = Icon(':/icons/preferences')
-        self.iconPrint = Icon(':/icons/print')
-        self.iconPropertyDomain = Icon(':/icons/property-domain')
-        self.iconPropertyRange = Icon(':/icons/property-range')
-        self.iconQuit = Icon(':/icons/quit')
-        self.iconRedo = Icon(':/icons/redo')
-        self.iconRefactor = Icon(':/icons/refactor')
-        self.iconRefresh = Icon(':/icons/refresh')
-        self.iconSave = Icon(':/icons/save')
-        self.iconSaveAs = Icon(':/icons/save')
-        self.iconSelectAll = Icon(':/icons/select-all')
-        self.iconSendToBack = Icon(':/icons/send-to-back')
-        self.iconSpellCheck = Icon(':/icons/spell-check')
-        self.iconStarFilled = Icon(':/icons/star-filled')
-        self.iconSwapHorizontal = Icon(':/icons/swap-horizontal')
-        self.iconSwapVertical = Icon(':/icons/swap-vertical')
-        self.iconUndo = Icon(':/icons/undo')
-        self.iconTop = Icon(':/icons/top')
+        self.iconBottom = Icon(':/icons/24/bottom')
+        self.iconBringToFront = Icon(':/icons/24/bring-to-front')
+        self.iconCenterFocus = Icon(':/icons/24/center-focus')
+        self.iconClose = Icon(':/icons/24/close')
+        self.iconColorFill = Icon(':/icons/24/color-fill')
+        self.iconCopy = Icon(':/icons/24/copy')
+        self.iconCreate = Icon(':/icons/24/create')
+        self.iconCut = Icon(':/icons/24/cut')
+        self.iconDelete = Icon(':/icons/24/delete')
+        self.iconGrid = Icon(':/icons/24/grid')
+        self.iconHelp = Icon(':/icons/24/help')
+        self.iconLabel = Icon(':/icons/24/label')
+        self.iconLicense = Icon(':/icons/24/license')
+        self.iconLink = Icon(':/icons/24/link')
+        self.iconNew = Icon(':/icons/24/new')
+        self.iconOpen = Icon(':/icons/24/open')
+        self.iconPaste = Icon(':/icons/24/paste')
+        self.iconPalette = Icon(':/icons/24/palette')
+        self.iconPreferences = Icon(':/icons/24/preferences')
+        self.iconPrint = Icon(':/icons/24/print')
+        self.iconPropertyDomain = Icon(':/icons/24/property-domain')
+        self.iconPropertyRange = Icon(':/icons/24/property-range')
+        self.iconQuit = Icon(':/icons/24/quit')
+        self.iconRedo = Icon(':/icons/24/redo')
+        self.iconRefactor = Icon(':/icons/24/refactor')
+        self.iconRefresh = Icon(':/icons/24/refresh')
+        self.iconSave = Icon(':/icons/24/save')
+        self.iconSaveAs = Icon(':/icons/24/save')
+        self.iconSelectAll = Icon(':/icons/24/select-all')
+        self.iconSendToBack = Icon(':/icons/24/send-to-back')
+        self.iconSpellCheck = Icon(':/icons/24/spell-check')
+        self.iconStarFilled = Icon(':/icons/24/star-filled')
+        self.iconSwapHorizontal = Icon(':/icons/24/swap-horizontal')
+        self.iconSwapVertical = Icon(':/icons/24/swap-vertical')
+        self.iconUndo = Icon(':/icons/24/undo')
+        self.iconTop = Icon(':/icons/24/top')
 
         #############################################
         # CREATE ACTIONS
@@ -619,31 +621,31 @@ class MainWindow(QMainWindow):
         #################################
 
         self.dockOntologyExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockOntologyExplorer.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
+        self.dockOntologyExplorer.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
         self.dockOntologyExplorer.installEventFilter(self)
         self.dockOntologyExplorer.setObjectName('ontologyExplorer')
         self.dockOntologyExplorer.setWidget(self.ontologyExplorer)
 
         self.dockInfo.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockInfo.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
+        self.dockInfo.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
         self.dockInfo.installEventFilter(self)
         self.dockInfo.setObjectName('info')
         self.dockInfo.setWidget(self.info)
 
         self.dockOverview.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockOverview.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
+        self.dockOverview.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
         self.dockOverview.installEventFilter(self)
         self.dockOverview.setObjectName('overview')
         self.dockOverview.setWidget(self.overview)
 
         self.dockPalette.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockPalette.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
+        self.dockPalette.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
         self.dockPalette.installEventFilter(self)
         self.dockPalette.setObjectName('palette')
         self.dockPalette.setWidget(self.palette_)
 
         self.dockProjectExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockProjectExplorer.setFeatures(QDockWidget.DockWidgetClosable|QDockWidget.DockWidgetMovable)
+        self.dockProjectExplorer.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
         self.dockProjectExplorer.installEventFilter(self)
         self.dockProjectExplorer.setObjectName('projectExplorer')
         self.dockProjectExplorer.setWidget(self.projectExplorer)
@@ -1043,7 +1045,7 @@ class MainWindow(QMainWindow):
                     diagram = worker.run()
                 except Exception as e:
                     msgbox = QMessageBox(self)
-                    msgbox.setIconPixmap(QPixmap(':/icons/error'))
+                    msgbox.setIconPixmap(QPixmap(':/icons/48/error'))
                     msgbox.setWindowIcon(QIcon(':/images/eddy'))
                     msgbox.setWindowTitle(_('DIAGRAM_LOAD_FAILED_WINDOW_TITLE'))
                     msgbox.setStandardButtons(QMessageBox.Close)
@@ -1214,7 +1216,7 @@ class MainWindow(QMainWindow):
         diagram = action.data()
         if diagram:
             msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QPixmap(':/icons/question'))
+            msgbox.setIconPixmap(QPixmap(':/icons/48/question'))
             msgbox.setWindowIcon(QIcon(':/images/eddy'))
             msgbox.setWindowTitle(_('DIAGRAM_REMOVE_POPUP_TITLE', diagram.name))
             msgbox.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
@@ -1451,7 +1453,7 @@ class MainWindow(QMainWindow):
         Perform syntax checking on the active diagram.
         """
         item = None
-        pixmap = QPixmap(':/icons/done')
+        pixmap = QPixmap(':/icons/48/done')
         message = _('SYNTAX_MANUAL_NO_ERROR_FOUND')
         with BusyProgressDialog(_('SYNTAX_MANUAL_PROGRESS_TITLE'), 2, self):
             for edge in self.project.edges():
@@ -1466,7 +1468,7 @@ class MainWindow(QMainWindow):
                     if target.isPredicate():
                         nameB = '{0} "{1}:{2}"'.format(target.name, target.text(), target.id)
                     message = _('SYNTAX_MANUAL_EDGE_ERROR', edge.name, nameA, nameB, uncapitalize(result.message))
-                    pixmap = QPixmap(':/icons/warning')
+                    pixmap = QPixmap(':/icons/48/warning')
                     item = edge
                     break
             else:
@@ -1476,7 +1478,7 @@ class MainWindow(QMainWindow):
                         if node.isPredicate():
                             name = '{0} "{1}:{2}"'.format(node.name, node.text(), node.id)
                         message = _('SYNTAX_MANUAL_NODE_IDENTITY_UNKNOWN', name)
-                        pixmap = QPixmap(':/icons/warning')
+                        pixmap = QPixmap(':/icons/48/warning')
                         item = node
                         break
 
@@ -1787,7 +1789,7 @@ class MainWindow(QMainWindow):
                 diagram = worker.run()
             except Exception as e:
                 msgbox = QMessageBox(self)
-                msgbox.setIconPixmap(QPixmap(':/icons/error'))
+                msgbox.setIconPixmap(QPixmap(':/icons/48/error'))
                 msgbox.setWindowIcon(QIcon(':/images/eddy'))
                 msgbox.setWindowTitle(_('DIAGRAM_IMPORT_FAILED_WINDOW_TITLE'))
                 msgbox.setStandardButtons(QMessageBox.Close)
@@ -1806,7 +1808,7 @@ class MainWindow(QMainWindow):
             enums = enumerate(worker.errors, start=1)
             parts = ['{0}) {1}'.format(k, ''.join(f_exc(type(v), v, v.__traceback__))) for k, v in enums]
             msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QPixmap(':/icons/warning'))
+            msgbox.setIconPixmap(QPixmap(':/icons/48/warning'))
             msgbox.setWindowIcon(QIcon(':/images/eddy'))
             msgbox.setWindowTitle(_('DIAGRAM_IMPORT_PARTIAL_WINDOW_TITLE'))
             msgbox.setStandardButtons(QMessageBox.Close)
