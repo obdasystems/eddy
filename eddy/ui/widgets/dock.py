@@ -97,6 +97,7 @@ class DockTitleWidget(QWidget):
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
         self.setContentsMargins(6, 4, 6, 4)
+        self.setContextMenuPolicy(Qt.PreventContextMenu)
         self.setFont(Font('Arial', 13))
         self.updateLayout()
 
