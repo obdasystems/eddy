@@ -148,23 +148,27 @@ class Eddy(QApplication):
     #   INTERFACE
     #################################
 
-    def configure(self, options):
+    def closeSplashScreen(self):
         """
-        Perform initial configuration tasks for Eddy to work properly.
-        :type options: Namespace
+        Close the splash screen.
         """
-        # DRAW SPLASH SCREEN
-        self.splash = None
-        if not options.nosplash:
-            self.splash = Splash(':/images/eddy-splash', mtime=4)
-            self.splash.show()
+        if self.splash:
+            self.splash.sleep()
+            self.splash.close()
+            self.splash = None
 
-        # CONFIGURE LAYOUT
-        clean = Clean('Fusion')
-        self.setStyle(clean)
-        self.setStyleSheet(clean.stylesheet)
+    def closeWelcomeScreen(self):
+        """
+        Close the welcome screen.
+        """
+        if self.welcome:
+            self.welcome.close()
+            self.welcome = None
 
-        # CONFIGURE RECENT PROJECTS
+    def configureDefaults(self):
+        """
+        Configure application default parameters.
+        """
         settings = QSettings(ORGANIZATION, APPNAME)
         if not settings.contains('project/recent'):
             # From PyQt5 documentation: if the value of the setting is a container (corresponding
@@ -180,17 +184,35 @@ class Eddy(QApplication):
                 expandPath('@examples/pizza'),
             ])
 
-        # CLOSE SPLASH SCREEN
-        if self.splash:
-            self.splash.sleep()
-            self.splash.close()
-
-        # CONFIGURE WORKSPACE
+    def configureWorkspace(self):
+        """
+        Configure the application workspace.
+        """
+        settings = QSettings(ORGANIZATION, APPNAME)
         workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
         if not isdir(workspace):
             window = WorkspaceDialog()
             if window.exec_() == WorkspaceDialog.Rejected:
                 raise SystemExit
+
+    def configureLayout(self):
+        """
+        Configure application layout.
+        """
+        clean = Clean('Fusion')
+        self.setStyle(clean)
+        self.setStyleSheet(clean.stylesheet)
+
+    def configure(self, options):
+        """
+        Perform initial configuration tasks for Eddy to work properly.
+        :type options: Namespace
+        """
+        self.showSplashScreen(options)
+        self.configureDefaults()
+        self.configureLayout()
+        self.closeSplashScreen()
+        self.configureWorkspace()
 
     def routePacket(self, argv):
         """
@@ -214,6 +236,24 @@ class Eddy(QApplication):
             settings.setValue('mainwindow/state', self.mainwindow.saveState())
             settings.sync()
 
+    def showSplashScreen(self, options):
+        """
+        Display the splash screen.
+        :type options: Namespace
+        """
+        if not self.splash:
+            if not options.nosplash:
+                self.splash = Splash(':/images/eddy-splash', mtime=4)
+                self.splash.show()
+
+    def showWelcomeScreen(self):
+        """
+        Display the welcome screen.
+        """
+        if not self.welcome:
+            self.welcome = Welcome(self)
+            self.welcome.show()
+
     def start(self, options):
         """
         Run the application by showing the welcome dialog.
@@ -222,9 +262,7 @@ class Eddy(QApplication):
         if options.open and isdir(options.open):
             self.doCreateSession(options.open)
         else:
-            self.welcome = Welcome()
-            connect(self.welcome.sgnCreateSession, self.doCreateSession)
-            self.welcome.show()
+            self.showWelcomeScreen()
 
     #############################################
     #   SLOTS
@@ -255,11 +293,7 @@ class Eddy(QApplication):
             self.mainwindow = MainWindow(project)
             connect(self.mainwindow.sgnQuit, self.doQuit)
             connect(self.mainwindow.sgnClosed, self.onSessionClosed)
-
-        if self.welcome:
-            self.welcome.close()
-            self.welcome = None
-
+        self.closeWelcomeScreen()
         self.mainwindow.show()
     
     @pyqtSlot()
@@ -295,6 +329,4 @@ class Eddy(QApplication):
         Quit Eddy.
         """
         self.saveSessionState()
-        self.welcome = Welcome()
-        connect(self.welcome.sgnCreateSession, self.doCreateSession)
-        self.welcome.show()
+        self.showWelcomeScreen()

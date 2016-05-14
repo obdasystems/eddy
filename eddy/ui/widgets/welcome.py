@@ -56,9 +56,10 @@ class Welcome(QWidget):
     """
     sgnCreateSession = pyqtSignal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, application, parent=None):
         """
         Initialize the workspace dialog.
+        :type application: QApplication
         :type parent: QWidget
         """
         super().__init__(parent)
@@ -192,6 +193,7 @@ class Welcome(QWidget):
         self.setFixedSize(700, 400)
         self.setWindowIcon(QIcon(':/images/eddy'))
         self.setWindowTitle(_('WELCOME_WINDOW_TITLE', APPNAME))
+        connect(self.sgnCreateSession, application.doCreateSession)
 
     #############################################
     #   EVENTS
