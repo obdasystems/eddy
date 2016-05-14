@@ -190,6 +190,7 @@ class Welcome(QWidget):
 
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setFixedSize(700, 400)
+        self.setWindowIcon(QIcon(':/images/eddy'))
         self.setWindowTitle(_('WELCOME_WINDOW_TITLE', APPNAME))
 
     #############################################
