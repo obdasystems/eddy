@@ -34,14 +34,16 @@
 
 from math import ceil
 
-from PyQt5.QtCore import Qt, QSize, QMimeData, pyqtSlot, pyqtSignal, QEvent
+from PyQt5.QtCore import Qt, QSize, QMimeData, pyqtSlot, pyqtSignal, QEvent, QSettings
 from PyQt5.QtGui import QIcon, QPainter, QDrag
-from PyQt5.QtWidgets import QWidget, QGridLayout, QToolButton
+from PyQt5.QtWidgets import QWidget, QGridLayout, QToolButton, QMenu, QAction
 from PyQt5.QtWidgets import QApplication, QStyleOption, QStyle
 
+from eddy import ORGANIZATION, APPNAME
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.signals import emit, connect
 from eddy.core.items.factory import ItemFactory
+from eddy.core.qt import Font
 
 
 class Palette(QWidget):
@@ -61,6 +63,7 @@ class Palette(QWidget):
 
         self.cols = -1
         self.buttons = {}
+        self.display = {}
         self.items = [
             Item.ConceptNode,
             Item.RoleNode,
@@ -84,12 +87,36 @@ class Palette(QWidget):
             Item.MembershipEdge,
         ]
 
+        # CREATE BUTTONS
         for item in self.items:
             button = Button(item)
             button.installEventFilter(self)
             connect(button.clicked, self.onButtonClicked)
             self.buttons[item] = button
 
+        # LOAD BUTTONS DISPLAY SETTINGS
+        settings = QSettings(ORGANIZATION, APPNAME)
+        for item in self.items:
+            self.display[item] = settings.value('palette/{0}'.format(item.name), True, bool)
+
+        # CREATE TOGGLE MENU
+        self.menu = QMenu()
+        for item in self.items:
+            action = QAction(item.shortname.title(), self)
+            action.setCheckable(True)
+            action.setChecked(self.display[item])
+            action.setFont(Font('Arial', 11))
+            action.setData(item)
+            connect(action.triggered, self.onMenuButtonClicked)
+            self.menu.addAction(action)
+
+        # CREATE CONTROL WIDGET
+        self.btnMenu = QToolButton()
+        self.btnMenu.setIcon(QIcon(':/icons/18/settings'))
+        self.btnMenu.setMenu(self.menu)
+        self.btnMenu.setPopupMode(QToolButton.InstantPopup)
+
+        # SETUP LAYOUT
         self.mainLayout = QGridLayout(self)
         self.mainLayout.setAlignment(Qt.AlignHCenter|Qt.AlignTop)
         self.mainLayout.setContentsMargins(0, Palette.Padding, 0, Palette.Padding)
@@ -108,6 +135,24 @@ class Palette(QWidget):
         """
         self.reset(self.sender())
         emit(self.sgnButtonClicked, self.sender())
+
+    @pyqtSlot()
+    def onMenuButtonClicked(self):
+        """
+        Executed when a button in the widget menu is clicked.
+        """
+        # UPDATE THE PALETTE LAYOUT
+        item = self.sender().data()
+        self.display[item] = not self.display[item]
+        self.buttons[item].setVisible(self.display[item])
+        self.redraw(True)
+        # UPDATE SETTINGS
+        settings = QSettings(ORGANIZATION, APPNAME)
+        for item in self.items:
+            settings.setValue('palette/{0}'.format(item.name), self.display[item])
+        settings.sync()
+        # FIXME: https://bugreports.qt.io/browse/QTBUG-36862
+        self.btnMenu.setAttribute(Qt.WA_UnderMouse, False)
 
     #############################################
     #   EVENTS
@@ -149,24 +194,33 @@ class Palette(QWidget):
         """
         return self.buttons[item]
 
-    def redraw(self):
+    def controls(self):
+        """
+        Returns a set of widgets that can be placed in the docking area title bar to control this widget.
+        :rtype: list
+        """
+        return [self.btnMenu]
+
+    def redraw(self, force=False):
         """
         Redraw the palette.
+        :type force: bool
         """
+        items = [i for i in self.items if self.display[i]]
         cols = int((self.width() - Palette.Padding * 2) / Button.Width)
-        rows = ceil(len(self.items) / cols)
-        if self.cols != cols:
+        rows = ceil(len(items) / cols)
+        if self.cols != cols or force:
             self.cols = cols
             # COMPUTE NEW BUTTONS LOCATION
             zipped = list(zip([x for x in range(rows) for _ in range(cols)], list(range(cols)) * rows))
-            zipped = zipped[:len(self.items)]
+            zipped = zipped[:len(items)]
             # CLEAR CURRENTY LAYOUT
             for i in reversed(range(self.mainLayout.count())):
                 item = self.mainLayout.itemAt(i)
                 self.mainLayout.removeItem(item)
             # DISPOSE NEW BUTTONS
             for i in range(len(zipped)):
-                self.mainLayout.addWidget(self.button(self.items[i]), zipped[i][0], zipped[i][1])
+                self.mainLayout.addWidget(self.button(items[i]), zipped[i][0], zipped[i][1])
 
     def reset(self, *args):
         """

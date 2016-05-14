@@ -620,28 +620,28 @@ class MainWindow(QMainWindow):
         # CONFIGURE DOCK WIDGETS
         #################################
 
-        self.dockOntologyExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockOntologyExplorer.installEventFilter(self)
+        self.dockOntologyExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockOntologyExplorer.setObjectName('ontologyExplorer')
         self.dockOntologyExplorer.setWidget(self.ontologyExplorer)
 
-        self.dockInfo.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockInfo.installEventFilter(self)
+        self.dockInfo.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockInfo.setObjectName('info')
         self.dockInfo.setWidget(self.info)
 
-        self.dockOverview.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockOverview.installEventFilter(self)
+        self.dockOverview.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockOverview.setObjectName('overview')
         self.dockOverview.setWidget(self.overview)
 
-        self.dockPalette.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockPalette.installEventFilter(self)
+        self.dockPalette.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockPalette.setObjectName('palette')
         self.dockPalette.setWidget(self.palette_)
 
-        self.dockProjectExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockProjectExplorer.installEventFilter(self)
+        self.dockProjectExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockProjectExplorer.setObjectName('projectExplorer')
         self.dockProjectExplorer.setWidget(self.projectExplorer)
 
@@ -651,8 +651,23 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, self.dockInfo)
         self.addDockWidget(Qt.RightDockWidgetArea, self.dockOntologyExplorer)
 
+        #############################################
+        # CONFIGURE DOCK WIDGETS CONTROLS
+        #################################
+
+        for button in self.palette_.controls():
+            self.dockPalette.addTitleBarButton(button)
+
+        #############################################
+        # CONFIGURE WIDGETS INSPECTIONS
+        #################################
+
         self.ontologyExplorer.browse(self.project)
         self.projectExplorer.browse(self.project)
+
+        #############################################
+        # CONFIGURE SIGNALS
+        #################################
 
         connect(self.mdi.subWindowActivated, self.onSubWindowActivated)
         connect(self.palette_.sgnButtonClicked['QToolButton'], self.onPaletteClicked)

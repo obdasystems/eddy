@@ -7,6 +7,7 @@
   <file alias="explore">../../artwork/icons/18/ic_explore_black_18dp_1x.png</file>
   <file alias="info">../../artwork/icons/18/ic_info_outline_black_18dp_1x.png</file>
   <file alias="palette">../../artwork/icons/18/ic_palette_black_18dp_1x.png</file>
+  <file alias="settings">../../artwork/icons/18/ic_settings_black_18dp_1x.png</file>
   <file alias="storage">../../artwork/icons/18/ic_storage_black_18dp_1x.png</file>
   <file alias="zoom">../../artwork/icons/18/ic_zoom_black_18dp_1x.png</file>
 </qresource>

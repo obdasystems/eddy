@@ -54,6 +54,15 @@ class DockWidget(QDockWidget):
         super().__init__(title, parent, Qt.Widget)
         self.setTitleBarWidget(DockTitleWidget(title, icon, self))
 
+    def addTitleBarButton(self, button):
+        """
+        Add a button to the right side of the titlebar of this widget.
+        :type button: T <= QPushButton|QToolButton
+        """
+        widget = self.titleBarWidget()
+        widget.addButton(button)
+        widget.updateLayout()
+
 
 class DockTitleWidget(QWidget):
     """
@@ -67,10 +76,7 @@ class DockTitleWidget(QWidget):
         :type parent: QDockWidget
         """
         super().__init__(parent)
-        self.buttonClose = QPushButton(self)
-        self.buttonClose.setIcon(QIcon(':/icons/18/close'))
-        self.buttonClose.setFixedSize(18, 18)
-        connect(self.buttonClose.clicked, parent.close)
+        # CREATE TITLEBAR ICON AND TITLE
         self.imageLabel = QLabel(self)
         self.imageLabel.setPixmap(QPixmap(icon))
         self.imageLabel.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
@@ -80,6 +86,13 @@ class DockTitleWidget(QWidget):
         self.titleLabel.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
         self.titleLabel.setContentsMargins(4, 0, 0, 0)
         self.titleLabel.setFont(Font('Arial', 13))
+        # CREATE STANDARD BUTTONS
+        close = QPushButton(self)
+        close.setIcon(QIcon(':/icons/18/close'))
+        close.setFixedSize(18, 18)
+        connect(close.clicked, parent.close)
+        self.buttons = [close]
+        # CONFIGURE LAYOUT
         self.mainLayout = QHBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
@@ -90,6 +103,13 @@ class DockTitleWidget(QWidget):
     #############################################
     #   INTERFACE
     #################################
+
+    def addButton(self, button):
+        """
+        Add a button to the right side of the titlebar, before the close button..
+        :type button: T <= QPushButton|QToolButton
+        """
+        self.buttons.insert(0, button)
 
     def updateLayout(self):
         """
@@ -102,7 +122,8 @@ class DockTitleWidget(QWidget):
         # DISPOSE NEW ELEMENTS
         self.mainLayout.addWidget(self.imageLabel, 0, Qt.AlignLeft|Qt.AlignVCenter)
         self.mainLayout.addWidget(self.titleLabel, 1, Qt.AlignLeft|Qt.AlignVCenter)
-        self.mainLayout.addWidget(self.buttonClose, 0, Qt.AlignRight|Qt.AlignVCenter)
+        for button in self.buttons:
+            self.mainLayout.addWidget(button, 0, Qt.AlignRight|Qt.AlignVCenter)
 
     #############################################
     #   EVENTS
