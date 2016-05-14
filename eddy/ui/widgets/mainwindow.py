@@ -621,31 +621,26 @@ class MainWindow(QMainWindow):
         #################################
 
         self.dockOntologyExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockOntologyExplorer.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
         self.dockOntologyExplorer.installEventFilter(self)
         self.dockOntologyExplorer.setObjectName('ontologyExplorer')
         self.dockOntologyExplorer.setWidget(self.ontologyExplorer)
 
         self.dockInfo.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockInfo.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
         self.dockInfo.installEventFilter(self)
         self.dockInfo.setObjectName('info')
         self.dockInfo.setWidget(self.info)
 
         self.dockOverview.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockOverview.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
         self.dockOverview.installEventFilter(self)
         self.dockOverview.setObjectName('overview')
         self.dockOverview.setWidget(self.overview)
 
         self.dockPalette.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockPalette.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
         self.dockPalette.installEventFilter(self)
         self.dockPalette.setObjectName('palette')
         self.dockPalette.setWidget(self.palette_)
 
         self.dockProjectExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockProjectExplorer.setFeatures(DockWidget.DockWidgetClosable|DockWidget.DockWidgetMovable)
         self.dockProjectExplorer.installEventFilter(self)
         self.dockProjectExplorer.setObjectName('projectExplorer')
         self.dockProjectExplorer.setWidget(self.projectExplorer)
