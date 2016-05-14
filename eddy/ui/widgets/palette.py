@@ -113,6 +113,8 @@ class Palette(QWidget):
         # CREATE CONTROL WIDGET
         self.btnMenu = QToolButton()
         self.btnMenu.setIcon(QIcon(':/icons/18/settings'))
+        self.btnMenu.setContentsMargins(0, 0, 0, 0)
+        self.btnMenu.setFixedSize(18, 18)
         self.btnMenu.setMenu(self.menu)
         self.btnMenu.setPopupMode(QToolButton.InstantPopup)
 
