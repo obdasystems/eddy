@@ -68,11 +68,11 @@ class OntologyExplorer(QWidget):
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumWidth(216)
 
-        self.iconA = QIcon(':/icons/treeview-predicate-attribute')
-        self.iconC = QIcon(':/icons/treeview-predicate-concept')
-        self.iconI = QIcon(':/icons/treeview-predicate-instance')
-        self.iconRoot = QIcon(':/icons/treeview-predicate-role')
-        self.iconV = QIcon(':/icons/treeview-predicate-value')
+        self.iconA = QIcon(':/icons/treeview/predicate-attribute')
+        self.iconC = QIcon(':/icons/treeview/predicate-concept')
+        self.iconI = QIcon(':/icons/treeview/predicate-instance')
+        self.iconRoot = QIcon(':/icons/treeview/predicate-role')
+        self.iconV = QIcon(':/icons/treeview/predicate-value')
 
         self.search = StringField(self)
         self.search.setAcceptDrops(False)
@@ -374,11 +374,11 @@ class ProjectExplorer(QWidget):
         self.arial12b = Font('Arial', 12)
         self.arial12b.setBold(True)
 
-        self.iconRoot = QIcon(':/icons/treeview-directory')
-        self.iconBlank = QIcon(':/icons/treeview-document-blank')
-        self.iconGraphol = QIcon(':/icons/treeview-document-graphol')
-        self.iconOwl = QIcon(':/icons/treeview-document-owl')
-        self.iconDelete = QIcon(':/icons/delete')
+        self.iconRoot = QIcon(':/icons/treeview/directory')
+        self.iconBlank = QIcon(':/icons/treeview/document-blank')
+        self.iconGraphol = QIcon(':/icons/treeview/document-graphol')
+        self.iconOwl = QIcon(':/icons/treeview/document-owl')
+        self.iconDelete = QIcon(':/icons/24/delete')
         
         self.actionDeleteDiagram = QAction(_('ACTION_DELETE_CONFIRM_N'), self)
         self.actionDeleteDiagram.setIcon(self.iconDelete)

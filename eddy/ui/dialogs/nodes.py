@@ -92,7 +92,7 @@ class CardinalityRestrictionForm(QDialog):
             v2 = int(self.maxField.text())
             if v1 > v2:
                 msgbox = QMessageBox(self)
-                msgbox.setIconPixmap(QPixmap(':/icons/warning'))
+                msgbox.setIconPixmap(QPixmap(':/icons/48/warning'))
                 msgbox.setWindowIcon(QIcon(':/images/eddy'))
                 msgbox.setWindowTitle('Invalid range specified')
                 msgbox.setText('Min. cardinality {0} must be lower or equal than Max. cardinality {1}'.format(v1, v2))

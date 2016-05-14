@@ -137,7 +137,7 @@ class OWLExportDialog(QDialog):
 
         if isinstance(exception, MalformedDiagramError):
             msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QPixmap(':/icons/warning'))
+            msgbox.setIconPixmap(QPixmap(':/icons/48/warning'))
             msgbox.setWindowIcon(QIcon(':/images/eddy'))
             msgbox.setWindowTitle(_('PROJECT_EXPORT_OWL_MALFORMED_EXPRESSION_WINDOW_TITLE'))
             msgbox.setText(_('PROJECT_EXPORT_OWL_MALFORMED_EXPRESSION_MESSAGE', exception.item, exception))
@@ -149,7 +149,7 @@ class OWLExportDialog(QDialog):
                 mainwindow.doFocusItem(exception.item)
         else:
             msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QPixmap(':/icons/error'))
+            msgbox.setIconPixmap(QPixmap(':/icons/48/error'))
             msgbox.setWindowIcon(QIcon(':/images/eddy'))
             msgbox.setWindowTitle(_('PROJECT_EXPORT_OWL_ERRORED_WINDOW_TITLE'))
             msgbox.setStandardButtons(QMessageBox.Close)
@@ -168,7 +168,7 @@ class OWLExportDialog(QDialog):
         self.workerThread.quit()
 
         msgbox = QMessageBox(self)
-        msgbox.setIconPixmap(QPixmap(':/icons/info'))
+        msgbox.setIconPixmap(QPixmap(':/icons/24/info'))
         msgbox.setWindowIcon(QIcon(':/images/eddy'))
         msgbox.setText(_('PROJECT_EXPORT_OWL_COMPLETED_WINDOW_TITLE'))
         msgbox.setInformativeText(_('PROJECT_EXPORT_OWL_COMPLETED_MESSAGE'))

@@ -62,11 +62,11 @@ class Zoom(QWidget):
         self.levels = [x for x in rangeF(Zoom.Min, Zoom.Max + Zoom.Step, Zoom.Step)]
 
         self.buttonZoomIn = QToolButton()
-        self.buttonZoomIn.setIcon(Icon(':/icons/zoom-in'))
+        self.buttonZoomIn.setIcon(Icon(':/icons/24/zoom-in'))
         self.buttonZoomOut = QToolButton()
-        self.buttonZoomOut.setIcon(Icon(':/icons/zoom-out'))
+        self.buttonZoomOut.setIcon(Icon(':/icons/24/zoom-out'))
         self.buttonZoomReset = QToolButton()
-        self.buttonZoomReset.setIcon(Icon(':/icons/zoom-reset'))
+        self.buttonZoomReset.setIcon(Icon(':/icons/24/zoom-reset'))
 
         connect(self.buttonZoomIn.clicked, self.zoomIn)
         connect(self.buttonZoomOut.clicked, self.zoomOut)

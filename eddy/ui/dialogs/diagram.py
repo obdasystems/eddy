@@ -158,7 +158,7 @@ class NewDiagramDialog(QDialog):
             exporter.run()
         except Exception as e:
             msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QPixmap(':/icons/error'))
+            msgbox.setIconPixmap(QPixmap(':/icons/48/error'))
             msgbox.setWindowIcon(QIcon(':/images/eddy'))
             msgbox.setWindowTitle(_('DIAGRAM_CREATION_FAILED_WINDOW_TITLE'))
             msgbox.setStandardButtons(QMessageBox.Close)

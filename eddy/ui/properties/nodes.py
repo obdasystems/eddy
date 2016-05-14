@@ -351,12 +351,12 @@ class OrderedInputNodeProperty(NodeProperty):
             self.list.setDragDropMode(QAbstractItemView.NoDragDrop)
 
             self.buttonUp = QPushButton(self)
-            self.buttonUp.setIcon(QIcon(':/icons/arrow-up'))
+            self.buttonUp.setIcon(QIcon(':/icons/24/arrow-up'))
             self.buttonUp.setFixedSize(20, 20)
             connect(self.buttonUp.clicked, self.moveUp)
 
             self.buttonDown = QPushButton(self)
-            self.buttonDown.setIcon(QIcon(':/icons/arrow-down'))
+            self.buttonDown.setIcon(QIcon(':/icons/24/arrow-down'))
             self.buttonDown.setFixedSize(20, 20)
 
             inLayout = QVBoxLayout()
