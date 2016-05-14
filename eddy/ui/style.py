@@ -39,7 +39,9 @@ from eddy.core.functions.path import expandPath
 
 
 class Clean(QProxyStyle):
-
+    """
+    Eddy clean style.
+    """
     PM = {
         QStyle.PM_SmallIconSize: 18,
         QStyle.PM_TabBarIconSize: 14,
