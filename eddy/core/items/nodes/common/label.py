@@ -38,7 +38,7 @@ from PyQt5.QtGui import QColor, QTextCursor, QPainterPath
 from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.commands.nodes import CommandNodeLabelMove
 from eddy.core.datatypes.misc import DiagramMode
-from eddy.core.functions.misc import isEmpty, cutL, cutR
+from eddy.core.functions.misc import isEmpty
 from eddy.core.items.common import AbstractLabel
 from eddy.core.qt import Font
 
@@ -349,10 +349,18 @@ class NodeLabel(AbstractLabel):
         self.mousePressPos = None
 
 
-class NodeQuotedLabel(NodeLabel):
+class FacetNodeQuotedLabel(NodeLabel):
     """
-    This class implements the label for a node, whose text must stay quoted.
+    This class implements the quoted label of Facet nodes.
     """
+    def __init__(self, **kwargs):
+        """
+        Initialize the label.
+        :type kwargs: dict
+        """
+        super().__init__(**kwargs)
+        self.focusInFacet = None
+
     #############################################
     #   EVENTS
     #################################
@@ -367,10 +375,12 @@ class NodeQuotedLabel(NodeLabel):
         # but sometime the label gets the focus when hovering the mouse cursor
         # on the text: mostly happens when loading a diagram from file)
         if focusEvent.reason() == Qt.OtherFocusReason:
+            item = self.parentItem()
             self.diagram.setMode(DiagramMode.EditText)
             self.diagram.clearSelection()
             self.focusInData = self.text()
-            self.setText(cutR(cutL(self.text(), '"'), '"'))
+            self.focusInFacet = item.facet
+            self.setText(self.text().strip('"'))
             cursor = self.textCursor()
             cursor.select(QTextCursor.BlockUnderCursor)
             self.setTextCursor(cursor)
@@ -389,7 +399,7 @@ class NodeQuotedLabel(NodeLabel):
                 self.setText(self.template)
 
             focusInData = self.focusInData
-            currentData = '"{0}"'.format(cutR(cutL(self.text(), '"'), '"'))
+            currentData = '"{0}"'.format(self.text().strip('"'))
 
             # The code below is a bit tricky: to be able to properly
             # update the node in the project index we need to force
@@ -398,12 +408,16 @@ class NodeQuotedLabel(NodeLabel):
             self.setText(focusInData)
 
             if focusInData and focusInData != currentData:
-                command = CommandNodeLabelChange(self.diagram, self.parentItem(), focusInData, currentData)
+                item = self.parentItem()
+                data1 = item.compose(self.focusInFacet, focusInData)
+                data2 = item.compose(self.focusInFacet, currentData)
+                command = CommandNodeLabelChange(self.diagram, self.parentItem(), data1, data2)
                 self.diagram.undoStack.push(command)
 
             cursor = self.textCursor()
             cursor.clearSelection()
             self.focusInData = None
+            self.focusInFacet = None
             self.setTextCursor(cursor)
             self.setTextInteractionFlags(Qt.NoTextInteraction)
             self.diagram.setMode(DiagramMode.Idle)

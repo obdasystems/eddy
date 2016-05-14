@@ -41,7 +41,7 @@ from eddy.core.datatypes.owl import Facet
 from eddy.core.functions.misc import cutL, first
 from eddy.core.functions.misc import cutR
 from eddy.core.items.nodes.common.base import AbstractNode
-from eddy.core.items.nodes.common.label import NodeQuotedLabel
+from eddy.core.items.nodes.common.label import FacetNodeQuotedLabel
 from eddy.core.qt import Font
 from eddy.core.regex import RE_FACET, RE_VALUE_RESTRICTION
 
@@ -79,16 +79,16 @@ class FacetNode(AbstractNode):
         self.background = self.createBackground(self.MinWidth + 8, self.MinHeight + 8)
         self.selection = self.createSelection(self.MinWidth + 8, self.MinHeight + 8)
 
-        self.labelA = NodeQuotedLabel(template=Facet.length.value,
-                                      editable=False,
-                                      movable=False,
-                                      pos=lambda: self.centerA(),
-                                      parent=self)
+        self.labelA = FacetNodeQuotedLabel(template=Facet.length.value,
+                                           editable=False,
+                                           movable=False,
+                                           pos=lambda: self.centerA(),
+                                           parent=self)
 
-        self.labelB = NodeQuotedLabel(template='"32"',
-                                      movable=False,
-                                      pos=lambda: self.centerB(),
-                                      parent=self)
+        self.labelB = FacetNodeQuotedLabel(template='"32"',
+                                           movable=False,
+                                           pos=lambda: self.centerB(),
+                                           parent=self)
 
         self.updateTextPos()
         self.updateLayout()
