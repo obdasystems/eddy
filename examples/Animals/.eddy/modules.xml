@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project version="1">
   <modules>
-    <module>animals.graphol</module>
+    <module>Animals.graphol</module>
   </modules>
 </project>
