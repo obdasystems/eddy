@@ -34,7 +34,8 @@
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QPixmap, QIcon
-from PyQt5.QtWidgets import QWidget, QStyleOption, QStyle, QHBoxLayout, QLabel, QDockWidget, QPushButton
+from PyQt5.QtWidgets import QWidget, QStyleOption, QStyle, QHBoxLayout
+from PyQt5.QtWidgets import QLabel, QDockWidget, QPushButton
 
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font
@@ -107,7 +108,7 @@ class DockTitleWidget(QWidget):
 
     def addButton(self, button):
         """
-        Add a button to the right side of the titlebar, before the close button..
+        Add a button to the right side of the titlebar, before the close button.
         :type button: T <= QPushButton|QToolButton
         """
         self.buttons.insert(0, button)
