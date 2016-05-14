@@ -844,6 +844,7 @@ class MainWindow(QMainWindow):
         self.toolbarView.addWidget(self.zoom.buttonZoomOut)
         self.toolbarView.addWidget(self.zoom.buttonZoomIn)
         self.toolbarView.addWidget(self.zoom.buttonZoomReset)
+
         self.toolbarGraphol.addAction(self.actionSyntaxCheck)
 
     def configureState(self):

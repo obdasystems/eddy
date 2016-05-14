@@ -493,7 +493,7 @@ class CommandNodeSetBrush(QUndoCommand):
         self.nodes = nodes
         self.brush = {x: {'undo': x.brush, 'redo': brush} for x in nodes}
         self.diagram = diagram
-        super().__init__(_('COMMAND_NODE_SET_BRUSH', brush.color().name(), len(nodes), 's' if len(nodes) > 1 else ''))
+        super().__init__(_('COMMAND_NODE_SET_BRUSH', brush.color().name()))
 
     def redo(self):
         """redo the command"""

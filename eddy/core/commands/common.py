@@ -218,7 +218,7 @@ class CommandItemsTranslate(QUndoCommand):
         :type moveY: float
         :type name: str
         """
-        super().__init__(name or _('COMMAND_ITEM_TRANSLATE', len(items), 's' if len(items) != 1 else ''))
+        super().__init__(name or _('COMMAND_ITEM_TRANSLATE', len(items)))
         self.diagram = diagram
         self.items = items
         self.moveX = moveX
