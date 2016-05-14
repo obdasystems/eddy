@@ -80,15 +80,15 @@ def expandPath(path):
     :type path: str
     :rtype: str
     """
-    if path.startswith('@eddy{0}'.format(os.path.sep)):
+    if path.startswith('@eddy/') or path.startswith('@eddy\\'):
         path = os.path.join(modulePath(), path[6:])
-    elif path.startswith('@home{0}'.format(os.path.sep)):
+    elif path.startswith('@home/') or path.startswith('@home\\'):
         path = os.path.join(homePath(), path[6:])
-    elif path.startswith('@root{0}'.format(os.path.sep)):
+    elif path.startswith('@root/') or path.startswith('@root\\'):
         path = os.path.join(rootPath(), path[6:])
-    elif path.startswith('@resources{0}'.format(os.path.sep)):
+    elif path.startswith('@resources/') or path.startswith('@resources\\'):
         path = os.path.join(resourcesPath(), path[11:])
-    elif path.startswith('@examples{0}'.format(os.path.sep)):
+    elif path.startswith('@examples/') or path.startswith('@examples\\'):
         path = os.path.join(examplesPath(), path[10:])
     return os.path.normpath(os.path.expanduser(path))
 
