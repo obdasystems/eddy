@@ -96,6 +96,7 @@ ACTION_SYNTAX_CHECK_S = 'Run syntax validation on the current project'
 
 COMMAND_COMPOSE_DOMAIN_RANGE_RESTRICTION = 'compose {0} {1}'
 COMMAND_DIAGRAM_CENTER = 'center diagram'
+COMMAND_DIAGRAM_EDIT_PROPERTIES = 'edit {0} properties'
 COMMAND_DIAGRAM_RESIZE = 'resize diagram'
 COMMAND_EDGE_ADD = 'add {0}'
 COMMAND_EDGE_ANCHOR_MOVE = 'move {0} anchor point'
@@ -116,6 +117,7 @@ COMMAND_NODE_ADD = 'add {0}'
 COMMAND_NODE_CHANGE_INPUTS_ORDER = 'change {0} inputs order'
 COMMAND_NODE_CHANGE_META = 'change {0} metadata'
 COMMAND_NODE_EDIT_LABEL = 'edit {0} label'
+COMMAND_NODE_EDIT_PROPERTIES = 'edit {0} properties'
 COMMAND_NODE_MOVE = 'move {0}'
 COMMAND_NODE_MOVE_LABEL = 'move {0} label'
 COMMAND_NODE_MOVE_MULTI = 'move {0} nodes'
@@ -149,7 +151,6 @@ DIAGRAM_REMOVE_POPUP_TITLE = 'Remove diagram: {0}?'
 DIAGRAM_REMOVE_POPUP_INFORMATIVE_TEXT = '<b>NOTE: This action is not reversible!</b>'
 DIAGRAM_REMOVE_POPUP_QUESTION = 'Are you sure you want to remove diagram <b>{0}</b>? If you continue, ' \
                                 'all the predicates that have been defined only in this diagram will be lost!'
-
 
 #############################################
 # DIAGRAM IMPORT
@@ -301,6 +302,34 @@ PROJECT_EXPORT_OWL_TOO_MANY_OPERANDS = 'too many operands'
 PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND = 'unsupported operand ({0})'
 PROJECT_EXPORT_OWL_UNSUPPORTED_RESTRICTION = 'unsupported restriction'
 PROJECT_EXPORT_OWL_UNSUPPORTED_SYNTAX = 'unsupported syntax ({0})'
+
+#############################################
+# PROPERTIES DIALOG
+#################################
+
+PROPERTY_DIAGRAM_TAB_GENERAL = 'General'
+PROPERTY_DIAGRAM_TAB_GEOMETRY = 'Geometry'
+PROPERTY_DIAGRAM_LABEL_NUM_EDGES = 'N° edges'
+PROPERTY_DIAGRAM_LABEL_NUM_NODES = 'N° nodes'
+PROPERTY_DIAGRAM_LABEL_SIZE = 'Size'
+PROPERTY_DIAGRAM_WINDOW_TITLE = 'Properties: {0}'
+
+PROPERTY_NODE_TAB_GENERAL = 'General'
+PROPERTY_NODE_TAB_GEOMETRY = 'Geometry'
+PROPERTY_NODE_TAB_LABEL = 'Label'
+PROPERTY_NODE_TAB_ORDERING = 'Ordering'
+PROPERTY_NODE_LABEL_DESCRIPTION = 'Description'
+PROPERTY_NODE_LABEL_HEIGHT = 'Height'
+PROPERTY_NODE_LABEL_ID = 'ID'
+PROPERTY_NODE_LABEL_IDENTITY = 'Identity'
+PROPERTY_NODE_LABEL_SORT = 'Sort'
+PROPERTY_NODE_LABEL_TEXT = 'Text'
+PROPERTY_NODE_LABEL_TYPE = 'Type'
+PROPERTY_NODE_LABEL_URL = 'URL'
+PROPERTY_NODE_LABEL_WIDTH = 'Width'
+PROPERTY_NODE_LABEL_X = 'X'
+PROPERTY_NODE_LABEL_Y = 'Y'
+PROPERTY_NODE_WINDOW_TITLE = 'Properties: {0}'
 
 #############################################
 # REFACTOR NAME DIALOG

@@ -236,6 +236,38 @@ margin-left: 4px;
 margin-top: 2px;
 }
 /**************************************************************************/
+/*                              PROPERTIES                                */
+/**************************************************************************/
+PropertyDialog QTabWidget::pane {
+border: 1px solid transparent;
+}
+PropertyDialog QTabBar::tab:top {
+border: 1px solid #BABABA;
+border-bottom: 0;
+border-left: 0;
+border-top: 0;
+height: 24px;
+padding: 0 10px;
+}
+PropertyDialog QTabBar::tab:top:selected {
+background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                            stop: 0.0 #F8F8F8, stop: 0.3 #F4F4F4,
+                            stop: 0.7 #F0F0F0, stop: 1.0 #EDEDED);
+}
+PropertyDialog QTabBar::tab:top:!selected {
+background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                            stop: 0.0 #D0D0D0, stop: 0.3 #CCCCCC,
+                            stop: 0.7 #CBCBCB, stop: 1.0 #C3C3C3);
+}
+PropertyDialog QTabBar::tab:top:!last,
+PropertyDialog QTabBar::tab:top:last,
+PropertyDialog QTabBar::tab:top:only-one {
+border: 1px solid #BABABA;
+border-bottom: 0;
+border-left: 0;
+border-top: 0;
+}
+/**************************************************************************/
 /*                                TAB BAR                                 */
 /**************************************************************************/
 QTabBar {

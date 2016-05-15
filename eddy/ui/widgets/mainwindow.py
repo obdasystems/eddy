@@ -85,8 +85,8 @@ from eddy.ui.dialogs.nodes import RefactorNameDialog
 from eddy.ui.dialogs.nodes import ValueForm
 from eddy.ui.dialogs.preferences import PreferencesDialog
 from eddy.ui.dialogs.progress import BusyProgressDialog
+from eddy.ui.dialogs.properties import PropertyFactory
 from eddy.ui.menus import MenuFactory
-from eddy.ui.properties.factory import PropertyFactory
 from eddy.ui.widgets.dock import DockWidget
 from eddy.ui.widgets.explorer import OntologyExplorer
 from eddy.ui.widgets.explorer import ProjectExplorer
@@ -1116,26 +1116,24 @@ class MainWindow(QMainWindow):
         """
         Executed when node properties needs to be displayed.
         """
-        # TODO: review
-        # scene = self.mdi.activeScene
-        # if scene:
-        #     scene.setMode(DiagramMode.Idle)
-        #     node = first(scene.selectedNodes())
-        #     if node:
-        #         prop = self.propertyFactory.create(scene=scene, node=node)
-        #         prop.exec_()
+        diagram = self.mdi.activeDiagram
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            node = first(diagram.selectedNodes())
+            if node:
+                properties = self.propertyFactory.create(diagram, node)
+                properties.exec_()
 
     @pyqtSlot()
     def doOpenDiagramProperties(self):
         """
         Executed when scene properties needs to be displayed.
         """
-        # TODO: IMPLEMENT
-        # scene = self.mdi.activeScene
-        # if scene:
-        #     scene.setMode(DiagramMode.Idle)
-        #     prop = self.propertyFactory.create(scene=scene)
-        #     prop.exec_()
+        diagram = self.mdi.activeDiagram
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            properties = self.propertyFactory.create(diagram)
+            properties.exec_()
 
     @pyqtSlot()
     def doPaste(self):

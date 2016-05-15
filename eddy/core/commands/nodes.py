@@ -450,7 +450,7 @@ class CommandNodeChangeMeta(QUndoCommand):
         self.project.addMeta(self.node.type(), self.node.text(), self.data['undo'])
 
 
-class CommandNodeChangeInputOrder(QUndoCommand):
+class CommandNodeChangeInputsOrder(QUndoCommand):
     """
     This command is used to change the order of Role chain and Property assertion inputs.
     """
