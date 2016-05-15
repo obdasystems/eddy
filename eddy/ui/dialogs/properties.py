@@ -55,7 +55,7 @@ from eddy.core.qt import Font
 
 from eddy.lang import gettext as _
 
-from eddy.ui.fields import StringField, TextField, SpinBox, IntegerField
+from eddy.ui.fields import StringField, TextField, SpinBox, IntegerField, CheckBox
 
 
 class PropertyDialog(QDialog):
@@ -458,9 +458,17 @@ class PredicateNodeProperty(NodeProperty):
         self.textField.setFont(arial12r)
         self.textField.setValue(self.node.text())
 
+        self.refactorLabel = QLabel(self)
+        self.refactorLabel.setFont(arial12r)
+        self.refactorLabel.setText(_('PROPERTY_NODE_LABEL_REFACTOR'))
+        self.refactorField = CheckBox(self)
+        self.refactorField.setFont(arial12r)
+        self.refactorField.setChecked(False)
+
         self.labelWidget = QWidget()
         self.labelLayout = QFormLayout(self.labelWidget)
         self.labelLayout.addRow(self.textLabel, self.textField)
+        self.labelLayout.addRow(self.refactorLabel, self.refactorField)
 
         self.mainWidget.addTab(self.labelWidget, _('PROPERTY_NODE_TAB_LABEL'))
 
@@ -473,7 +481,7 @@ class PredicateNodeProperty(NodeProperty):
         """
         Executed when the dialog is accepted.
         """
-        commands = [self.positionChanged(), self.metaDataChanged(), self.textChanged()]
+        commands = [self.positionChanged(), self.metaDataChanged()] + self.textChanged()
         self.push(self.diagram.undoStack, _('COMMAND_NODE_EDIT_PROPERTIES', self.node.name), commands)
         super().accept()
 
@@ -497,13 +505,18 @@ class PredicateNodeProperty(NodeProperty):
     def textChanged(self):
         """
         Change the label of the node.
-        :rtype: QUndoCommand
+        :rtype: list
         """
         data = self.textField.value().strip()
         data = data if not isEmpty(data) else self.node.label.template
         if self.node.text() != data:
-            return CommandNodeLabelChange(self.diagram, self.node, self.node.text(), data)
-        return None
+            if self.refactorField.isChecked():
+                item = self.node.type()
+                name = self.node.text()
+                project = self.diagram.project
+                return [CommandNodeLabelChange(n.diagram, n, n.text(), data) for n in project.predicates(item, name)]
+            return [CommandNodeLabelChange(self.diagram, self.node, self.node.text(), data)]
+        return [None]
 
 
 #############################################
