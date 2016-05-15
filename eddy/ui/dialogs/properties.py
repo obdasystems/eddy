@@ -48,14 +48,16 @@ from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.commands.nodes import CommandNodeMove
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.owl import Facet
 from eddy.core.diagram import Diagram
-from eddy.core.functions.misc import clamp, isEmpty
+from eddy.core.functions.misc import clamp, isEmpty, first
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font
 
 from eddy.lang import gettext as _
 
-from eddy.ui.fields import StringField, TextField, SpinBox, IntegerField, CheckBox
+from eddy.ui.fields import IntegerField, StringField, TextField
+from eddy.ui.fields import CheckBox, ComboBox, SpinBox
 
 
 class PropertyDialog(QDialog):
@@ -519,11 +521,6 @@ class PredicateNodeProperty(NodeProperty):
         return [None]
 
 
-#############################################
-#   ORDERED INPUT NODES
-#################################
-
-
 class OrderedInputNodeProperty(NodeProperty):
     """
     This class implements the propertiy dialog for constructor nodes having incoming input edges
@@ -636,6 +633,93 @@ class OrderedInputNodeProperty(NodeProperty):
         return None
 
 
+class FacetNodeProperty(NodeProperty):
+    """
+    This class implements the property dialog for facet nodes.
+    """
+    def __init__(self, diagram, node, parent=None):
+        """
+        Initialize the node properties dialog.
+        :type diagram: Diagram
+        :type node: AbstractNode
+        :type parent: QWidget
+        """
+        super().__init__(diagram, node, parent)
+
+        arial12r = Font('Arial', 12)
+
+        #############################################
+        # FACET TAB
+        #################################
+
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.type() is Item.DatatypeRestrictionNode
+        f3 = lambda x: x.type() is Item.ValueDomainNode
+        facet = self.node.facet
+        admissible = [x for x in Facet]
+        restriction = first(self.node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+        if restriction:
+            valuedomain = first(restriction.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
+            if valuedomain:
+                admissible = Facet.forDatatype(valuedomain.datatype)
+
+        self.facetLabel = QLabel(self)
+        self.facetLabel.setFont(arial12r)
+        self.facetLabel.setText(_('PROPERTY_NODE_LABEL_FACET'))
+        self.facetField = ComboBox(self)
+        self.facetField.setFixedWidth(200)
+        self.facetField.setFocusPolicy(Qt.StrongFocus)
+        self.facetField.setFont(arial12r)
+        for i in admissible:
+            self.facetField.addItem(i.value, i)
+        for i in range(self.facetField.count()):
+            if self.facetField.itemData(i) is facet:
+                self.facetField.setCurrentIndex(i)
+                break
+
+        self.valueLabel = QLabel(self)
+        self.valueLabel.setFont(arial12r)
+        self.valueLabel.setText(_('PROPERTY_NODE_LABEL_VALUE'))
+        self.valueField = StringField(self)
+        self.valueField.setFixedWidth(200)
+        self.valueField.setFont(arial12r)
+        self.valueField.setValue(self.node.value)
+
+        self.labelWidget = QWidget()
+        self.labelLayout = QFormLayout(self.labelWidget)
+        self.labelLayout.addRow(self.facetLabel, self.facetField)
+        self.labelLayout.addRow(self.valueLabel, self.valueField)
+
+        self.mainWidget.addTab(self.labelWidget, _('PROPERTY_NODE_TAB_FACET'))
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @pyqtSlot()
+    def complete(self):
+        """
+        Executed when the dialog is accepted.
+        """
+        commands = [self.positionChanged(), self.facetChanged()]
+        self.push(self.diagram.undoStack, _('COMMAND_NODE_EDIT_PROPERTIES', self.node.name), commands)
+        super().accept()
+
+    #############################################
+    #   AUXILIARY METHODS
+    #################################
+
+    def facetChanged(self):
+        """
+        Change the url and description of the node.
+        :rtype: QUndoCommand
+        """
+        data = self.node.compose(self.facetField.currentData(), self.valueField.value())
+        if self.node.text() != data:
+            return CommandNodeLabelChange(self.diagram, self.node, self.node.text(), data)
+        return None
+
+
 class PropertyFactory(QObject):
     """
     This class can be used to produce properties dialog windows.
@@ -672,6 +756,8 @@ class PropertyFactory(QObject):
                     properties = OrderedInputNodeProperty(diagram, node)
                 elif node.type() is Item.RoleChainNode:
                     properties = OrderedInputNodeProperty(diagram, node)
+                elif node.type() is Item.FacetNode:
+                    properties = FacetNodeProperty(diagram, node)
             if not properties:
                 properties = NodeProperty(diagram, node)
 
