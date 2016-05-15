@@ -79,7 +79,6 @@ class Info(QScrollArea):
         self.infoInclusionEdge = InclusionEdgeInfo(parent, self.stacked)
         self.infoNode = NodeInfo(parent, self.stacked)
         self.infoPredicateNode = PredicateNodeInfo(parent, self.stacked)
-        self.infoEditableNode = EditableNodeInfo(parent, self.stacked)
         self.infoAttributeNode = AttributeNodeInfo(parent, self.stacked)
         self.infoRoleNode = RoleNodeInfo(parent, self.stacked)
         self.infoValueNode = ValueNodeInfo(parent, self.stacked)
@@ -91,7 +90,6 @@ class Info(QScrollArea):
         self.stacked.addWidget(self.infoInclusionEdge)
         self.stacked.addWidget(self.infoNode)
         self.stacked.addWidget(self.infoPredicateNode)
-        self.stacked.addWidget(self.infoEditableNode)
         self.stacked.addWidget(self.infoAttributeNode)
         self.stacked.addWidget(self.infoRoleNode)
         self.stacked.addWidget(self.infoValueNode)
@@ -144,8 +142,6 @@ class Info(QScrollArea):
                             show = self.infoAttributeNode
                         elif item.type() is Item.IndividualNode and item.identity is Identity.Value:
                             show = self.infoValueNode
-                        elif item.label.isEditable():
-                            show = self.infoEditableNode
                         else:
                             show = self.infoPredicateNode
                     else:
@@ -426,6 +422,10 @@ class DiagramInfo(AbstractInfo):
         self.mainLayout.addWidget(self.assertionsHeader)
         self.mainLayout.addLayout(self.assertionsLayout)
 
+    #############################################
+    #   INTERFACE
+    #################################
+
     def updateData(self, diagram):
         """
         Fetch new information and fill the widget with data.
@@ -487,6 +487,10 @@ class EdgeInfo(AbstractInfo):
         self.mainLayout.addWidget(self.h1)
         self.mainLayout.addLayout(self.generalLayout)
 
+    #############################################
+    #   INTERFACE
+    #################################
+
     def updateData(self, edge):
         """
         Fetch new information and fill the widget with data.
@@ -522,6 +526,10 @@ class InclusionEdgeInfo(EdgeInfo):
         connect(self.completeBox.clicked, self.mainwindow.doSetEdgeComplete)
 
         self.generalLayout.addRow(self.completeKey, parent)
+
+    #############################################
+    #   INTERFACE
+    #################################
 
     def updateData(self, edge):
         """
@@ -574,6 +582,10 @@ class NodeInfo(AbstractInfo):
         self.mainLayout.addWidget(self.nodePropHeader)
         self.mainLayout.addLayout(self.nodePropLayout)
 
+    #############################################
+    #   INTERFACE
+    #################################
+
     def updateData(self, node):
         """
         Fetch new information and fill the widget with data.
@@ -596,6 +608,13 @@ class PredicateNodeInfo(NodeInfo):
 
         arial12r = Font('Arial', 12)
 
+        self.textKey = Key(_('INFO_KEY_LABEL'), self)
+        self.textKey.setFont(arial12r)
+        self.textField = String(self)
+        self.textField.setFont(arial12r)
+        self.textField.setReadOnly(False)
+        connect(self.textField.editingFinished, self.editingFinished)
+
         self.brushKey = Key(_('INFO_KEY_COLOR'), self)
         self.brushKey.setFont(arial12r)
         self.brushMenu = QMenu(self)
@@ -605,44 +624,7 @@ class PredicateNodeInfo(NodeInfo):
         self.brushButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
         self.nodePropLayout.addRow(self.brushKey, self.brushButton)
-
-    def updateData(self, node):
-        """
-        Fetch new information and fill the widget with data.
-        :type node: AbstractNode
-        """
-        super().updateData(node)
-        # CONFIGURE MENU
-        if self.brushMenu.isEmpty():
-            self.brushMenu.addActions(self.mainwindow.actionsSetBrush)
-        # SELECT CURRENT BRUSH
-        for action in self.mainwindow.actionsSetBrush:
-            color = action.data()
-            brush = QBrush(QColor(color.value))
-            if node.brush == brush:
-                self.brushButton.setIcon(ColoredIcon(12, 12, color.value, '#000000'))
-                self.brushButton.setText(color.value)
-                break
-
-
-class EditableNodeInfo(PredicateNodeInfo):
-    """
-    This class implements the information box for the predicate nodes with editable label.
-    """
-    def __init__(self, mainwindow, parent=None):
-        """
-        Initialize the editable node information box.
-        """
-        super().__init__(mainwindow, parent)
-
-        arial12r = Font('Arial', 12)
-
-        self.textKey = Key(_('INFO_KEY_LABEL'), self)
-        self.textKey.setFont(arial12r)
-        self.textField = String(self)
-        self.textField.setFont(arial12r)
-        self.textField.setReadOnly(False)
-        connect(self.textField.editingFinished, self.editingFinished)
+        self.nodePropLayout.addRow(self.textKey, self.textField)
 
         self.nameKey = Key(_('INFO_KEY_NAME'), self)
         self.nameKey.setFont(arial12r)
@@ -652,15 +634,17 @@ class EditableNodeInfo(PredicateNodeInfo):
         connect(self.nameField.editingFinished, self.editingFinished)
 
         self.predPropHeader = Header(_('INFO_HEADER_PREDICATE_PROPERTIES'), self)
-        self.nodePropHeader.setFont(arial12r)
+        self.predPropHeader.setFont(arial12r)
         self.predPropLayout = QFormLayout()
         self.predPropLayout.setSpacing(0)
-
-        self.nodePropLayout.insertRow(2, self.textKey, self.textField)
         self.predPropLayout.addRow(self.nameKey, self.nameField)
 
         self.mainLayout.insertWidget(0, self.predPropHeader)
         self.mainLayout.insertLayout(1, self.predPropLayout)
+
+    #############################################
+    #   SLOTS
+    #################################
 
     @pyqtSlot()
     def editingFinished(self):
@@ -668,7 +652,6 @@ class EditableNodeInfo(PredicateNodeInfo):
         Executed whenever we finish to edit the predicate/node name.
         """
         if self.node:
-
             try:
                 sender = self.sender()
                 node = self.node
@@ -687,17 +670,40 @@ class EditableNodeInfo(PredicateNodeInfo):
             except RuntimeError:
                 pass
 
+    #############################################
+    #   INTERFACE
+    #################################
+
     def updateData(self, node):
         """
         Fetch new information and fill the widget with data.
         :type node: AbstractNode
         """
         super().updateData(node)
+
+        #############################################
+        # BRUSH FIELD
+        #################################
+
+        if self.brushMenu.isEmpty():
+            self.brushMenu.addActions(self.mainwindow.actionsSetBrush)
+        for action in self.mainwindow.actionsSetBrush:
+            color = action.data()
+            brush = QBrush(QColor(color.value))
+            if node.brush == brush:
+                self.brushButton.setIcon(ColoredIcon(12, 12, color.value, '#000000'))
+                self.brushButton.setText(color.value)
+                break
+
+        #############################################
+        # NAME / TEXT FIELDS
+        #################################
+
         self.nameField.setValue(node.text())
         self.textField.setValue(node.text())
 
 
-class AttributeNodeInfo(EditableNodeInfo):
+class AttributeNodeInfo(PredicateNodeInfo):
     """
     This class implements the information box for the Attribute node.
     """
@@ -720,6 +726,10 @@ class AttributeNodeInfo(EditableNodeInfo):
 
         self.predPropLayout.addRow(self.functKey, functParent)
 
+    #############################################
+    #   SLOTS
+    #################################
+
     @pyqtSlot()
     def flagChanged(self):
         """
@@ -734,6 +744,10 @@ class AttributeNodeInfo(EditableNodeInfo):
         data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
         diagram.undoStack.push(CommandSetProperty(diagram, node, data, name))
 
+    #############################################
+    #   INTERFACE
+    #################################
+
     def updateData(self, node):
         """
         Fetch new information and fill the widget with data.
@@ -743,7 +757,7 @@ class AttributeNodeInfo(EditableNodeInfo):
         self.functBox.setChecked(node.functional)
 
 
-class RoleNodeInfo(EditableNodeInfo):
+class RoleNodeInfo(PredicateNodeInfo):
     """
     This class implements the information box for the Role node.
     """
@@ -826,6 +840,10 @@ class RoleNodeInfo(EditableNodeInfo):
         self.predPropLayout.addRow(self.symmetricKey, symmetricParent)
         self.predPropLayout.addRow(self.transitiveKey, transitiveParent)
 
+    #############################################
+    #   SLOTS
+    #################################
+
     @pyqtSlot()
     def flagChanged(self):
         """
@@ -840,6 +858,10 @@ class RoleNodeInfo(EditableNodeInfo):
         name = _('COMMAND_ITEM_SET_PROPERTY', 'un' if checked else '', node.shortname, prop)
         data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
         diagram.undoStack.push(CommandSetProperty(diagram, node, data, name))
+
+    #############################################
+    #   INTERFACE
+    #################################
 
     def updateData(self, node):
         """
@@ -856,7 +878,7 @@ class RoleNodeInfo(EditableNodeInfo):
         self.transitiveBox.setChecked(node.transitive)
 
 
-class ValueDomainNodeInfo(PredicateNodeInfo):
+class ValueDomainNodeInfo(NodeInfo):
     """
     This class implements the information box for the Value Domain node.
     """
@@ -878,16 +900,18 @@ class ValueDomainNodeInfo(PredicateNodeInfo):
 
         self.nodePropLayout.addRow(self.datatypeKey, self.datatypeButton)
 
+    #############################################
+    #   INTERFACE
+    #################################
+
     def updateData(self, node):
         """
         Fetch new information and fill the widget with data.
         :type node: AbstractNode
         """
         super().updateData(node)
-        # CONFIGURE MENU
         if self.datatypeMenu.isEmpty():
             self.datatypeMenu.addActions(self.mainwindow.actionsSetDatatype)
-        # SELECT CURRENT DATATYPE
         datatype = node.datatype
         for action in self.mainwindow.actionsSetDatatype:
             action.setChecked(action.data() is datatype)
@@ -926,6 +950,10 @@ class ValueNodeInfo(PredicateNodeInfo):
         self.nodePropLayout.addRow(self.datatypeKey, self.datatypeField)
         self.nodePropLayout.addRow(self.valueKey, self.valueField)
 
+    #############################################
+    #   SLOTS
+    #################################
+
     @pyqtSlot()
     def valueChanged(self):
         """
@@ -945,6 +973,10 @@ class ValueNodeInfo(PredicateNodeInfo):
             except RuntimeError:
                 pass
 
+    #############################################
+    #   INTERFACE
+    #################################
+
     def updateData(self, node):
         """
         Fetch new information and fill the widget with data.
@@ -952,11 +984,19 @@ class ValueNodeInfo(PredicateNodeInfo):
         """
         super().updateData(node)
 
+        #############################################
+        # DATATYPE FIELD
+        #################################
+
         datatype = node.datatype
         for i in range(self.datatypeField.count()):
             if self.datatypeField.itemData(i) is datatype:
                 self.datatypeField.setCurrentIndex(i)
                 break
+
+        #############################################
+        # VALUE FIELD
+        #################################
 
         self.valueField.setValue(node.value)
 
@@ -989,6 +1029,10 @@ class FacetNodeInfo(NodeInfo):
         self.nodePropLayout.addRow(self.facetKey, self.facetField)
         self.nodePropLayout.addRow(self.valueKey, self.valueField)
 
+    #############################################
+    #   SLOTS
+    #################################
+
     @pyqtSlot()
     def facetChanged(self):
         """
@@ -1001,6 +1045,10 @@ class FacetNodeInfo(NodeInfo):
             if node.text() != data:
                 name = _('COMMAND_NODE_SET_FACET', node.text(), data)
                 diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+
+    #############################################
+    #   INTERFACE
+    #################################
 
     def updateData(self, node):
         """
