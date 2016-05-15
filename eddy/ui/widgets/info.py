@@ -84,7 +84,7 @@ class Info(QScrollArea):
         self.infoRoleNode = RoleNodeInfo(parent, self.stacked)
         self.infoValueNode = ValueNodeInfo(parent, self.stacked)
         self.infoValueDomainNode = ValueDomainNodeInfo(parent, self.stacked)
-        self.infoValueRestrictionNode = ValueRestrictionNodeInfo(parent, self.stacked)
+        self.infoFacet = FacetNodeInfo(parent, self.stacked)
         self.stacked.addWidget(self.infoEmpty)
         self.stacked.addWidget(self.infoDiagram)
         self.stacked.addWidget(self.infoEdge)
@@ -96,7 +96,7 @@ class Info(QScrollArea):
         self.stacked.addWidget(self.infoRoleNode)
         self.stacked.addWidget(self.infoValueNode)
         self.stacked.addWidget(self.infoValueDomainNode)
-        self.stacked.addWidget(self.infoValueRestrictionNode)
+        self.stacked.addWidget(self.infoFacet)
         self.setWidget(self.stacked)
         self.setWidgetResizable(True)
         scrollbar = self.verticalScrollBar()
@@ -138,8 +138,6 @@ class Info(QScrollArea):
                     if item.isPredicate():
                         if item.type() is Item.ValueDomainNode:
                             show = self.infoValueDomainNode
-                        elif item.type() is Item.ValueRestrictionNode:
-                            show = self.infoValueRestrictionNode
                         elif item.type() is Item.RoleNode:
                             show = self.infoRoleNode
                         elif item.type() is Item.AttributeNode:
@@ -151,7 +149,10 @@ class Info(QScrollArea):
                         else:
                             show = self.infoPredicateNode
                     else:
-                        show = self.infoNode
+                        if item.type() is Item.FacetNode:
+                            show = self.infoFacet
+                        else:
+                            show = self.infoNode
                 else:
                     if item.type() is Item.InclusionEdge:
                         show = self.infoInclusionEdge
@@ -893,98 +894,6 @@ class ValueDomainNodeInfo(PredicateNodeInfo):
         self.datatypeButton.setText(datatype.value)
 
 
-class ValueRestrictionNodeInfo(PredicateNodeInfo):
-    """
-    This class implements the information box for the Value Restriction node.
-    """
-    def __init__(self, mainwindow, parent=None):
-        """
-        Initialize the Value Restriction node information box.
-        """
-        super().__init__(mainwindow, parent)
-
-        arial12r = Font('Arial', 12)
-
-        self.datatypeKey = Key(_('INFO_KEY_DATATYPE'), self)
-        self.datatypeKey.setFont(arial12r)
-        self.datatypeField = Select(self)
-        self.datatypeField.setFont(arial12r)
-        connect(self.datatypeField.activated, self.restrictionChanged)
-
-        self.facetKey = Key(_('INFO_KEY_FACET'), self)
-        self.facetKey.setFont(arial12r)
-        self.facetField = Select(self)
-        self.facetField.setFont(arial12r)
-        connect(self.facetField.activated, self.restrictionChanged)
-
-        self.restrictionKey = Key(_('INFO_KEY_RESTRICTION'), self)
-        self.restrictionKey.setFont(arial12r)
-        self.restrictionField = String(self)
-        self.restrictionField.setFont(arial12r)
-        self.restrictionField.setReadOnly(False)
-        connect(self.restrictionField.editingFinished, self.restrictionChanged)
-
-        for datatype in XsdDatatype:
-            if Facet.forDatatype(datatype):
-                self.datatypeField.addItem(datatype.value, datatype)
-
-        self.nodePropLayout.addRow(self.datatypeKey, self.datatypeField)
-        self.nodePropLayout.addRow(self.facetKey, self.facetField)
-        self.nodePropLayout.addRow(self.restrictionKey, self.restrictionField)
-
-    @pyqtSlot()
-    def restrictionChanged(self):
-        """
-        Executed when we need to recompute the restriction of the node.
-        """
-        if self.node:
-
-            try:
-                node = self.node
-                diagram = node.diagram
-                datatype = self.datatypeField.currentData()
-                facet = self.facetField.currentData()
-                value = self.restrictionField.value()
-                allowed = Facet.forDatatype(datatype)
-                if facet not in allowed:
-                    facet = first(allowed)
-                data = node.compose(facet, value, datatype)
-                if node.text() != data:
-                    name = _('COMMAND_NODE_SET_VALUE_RESTRICTION', data)
-                    diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
-            except RuntimeError:
-                pass
-
-    def updateData(self, node):
-        """
-        Fetch new information and fill the widget with data.
-        :type node: AbstractNode
-        """
-        super().updateData(node)
-
-        datatype = node.datatype
-        for i in range(self.datatypeField.count()):
-            if self.datatypeField.itemData(i) is datatype:
-                self.datatypeField.setCurrentIndex(i)
-                break
-
-        self.datatypeField.setEnabled(not node.constrained)
-
-        self.facetField.clear()
-        for facet in Facet.forDatatype(datatype):
-            self.facetField.addItem(facet.value, facet)
-
-        facet = node.facet
-        for i in range(self.facetField.count()):
-            if self.facetField.itemData(i) is facet:
-                self.facetField.setCurrentIndex(i)
-                break
-        else:
-            self.facetField.setCurrentIndex(0)
-
-        self.restrictionField.setValue(node.value)
-
-
 class ValueNodeInfo(PredicateNodeInfo):
     """
     This class implements the information box for the Individual node with identity 'Value'.
@@ -1048,5 +957,86 @@ class ValueNodeInfo(PredicateNodeInfo):
             if self.datatypeField.itemData(i) is datatype:
                 self.datatypeField.setCurrentIndex(i)
                 break
+
+        self.valueField.setValue(node.value)
+
+
+class FacetNodeInfo(NodeInfo):
+    """
+    This class implements the information box for the Facet node.
+    """
+    def __init__(self, mainwindow, parent=None):
+        """
+        Initialize the Value Restriction node information box.
+        """
+        super().__init__(mainwindow, parent)
+
+        arial12r = Font('Arial', 12)
+
+        self.facetKey = Key(_('INFO_KEY_FACET'), self)
+        self.facetKey.setFont(arial12r)
+        self.facetField = Select(self)
+        self.facetField.setFont(arial12r)
+        connect(self.facetField.activated, self.facetChanged)
+
+        self.valueKey = Key(_('INFO_KEY_VALUE'), self)
+        self.valueKey.setFont(arial12r)
+        self.valueField = String(self)
+        self.valueField.setFont(arial12r)
+        self.valueField.setReadOnly(False)
+        connect(self.valueField.editingFinished, self.facetChanged)
+
+        self.nodePropLayout.addRow(self.facetKey, self.facetField)
+        self.nodePropLayout.addRow(self.valueKey, self.valueField)
+
+    @pyqtSlot()
+    def facetChanged(self):
+        """
+        Executed when we need to recompute the value of the node.
+        """
+        if self.node:
+            node = self.node
+            diagram = node.diagram
+            data = node.compose(self.facetField.currentData(), self.valueField.value())
+            if node.text() != data:
+                name = _('COMMAND_NODE_SET_FACET', node.text(), data)
+                diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+
+    def updateData(self, node):
+        """
+        Fetch new information and fill the widget with data.
+        :type node: AbstractNode
+        """
+        super().updateData(node)
+
+        #############################################
+        # FACET FIELD
+        #################################
+
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.type() is Item.DatatypeRestrictionNode
+        f3 = lambda x: x.type() is Item.ValueDomainNode
+        admissible = [x for x in Facet]
+        restriction = first(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+        if restriction:
+            valuedomain = first(restriction.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
+            if valuedomain:
+                admissible = Facet.forDatatype(valuedomain.datatype)
+
+        self.facetField.clear()
+        for facet in admissible:
+            self.facetField.addItem(facet.value, facet)
+
+        facet = node.facet
+        for i in range(self.facetField.count()):
+            if self.facetField.itemData(i) is facet:
+                self.facetField.setCurrentIndex(i)
+                break
+        else:
+            self.facetField.setCurrentIndex(0)
+
+        #############################################
+        # VALUE FIELD
+        #################################
 
         self.valueField.setValue(node.value)

@@ -655,7 +655,6 @@ class FacetNodeProperty(NodeProperty):
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.type() is Item.DatatypeRestrictionNode
         f3 = lambda x: x.type() is Item.ValueDomainNode
-        facet = self.node.facet
         admissible = [x for x in Facet]
         restriction = first(self.node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
         if restriction:
@@ -670,12 +669,15 @@ class FacetNodeProperty(NodeProperty):
         self.facetField.setFixedWidth(200)
         self.facetField.setFocusPolicy(Qt.StrongFocus)
         self.facetField.setFont(arial12r)
-        for i in admissible:
-            self.facetField.addItem(i.value, i)
+        for facet in admissible:
+            self.facetField.addItem(facet.value, facet)
+        facet = self.node.facet
         for i in range(self.facetField.count()):
             if self.facetField.itemData(i) is facet:
                 self.facetField.setCurrentIndex(i)
                 break
+        else:
+            self.facetField.setCurrentIndex(0)
 
         self.valueLabel = QLabel(self)
         self.valueLabel.setFont(arial12r)
