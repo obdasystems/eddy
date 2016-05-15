@@ -204,7 +204,6 @@ class DiagramProperty(PropertyDialog):
         sceneRect = self.diagram.sceneRect()
         size1 = max(sceneRect.width(), sceneRect.height())
         size2 = self.diagramSizeField.value()
-
         if size1 != size2:
             items = self.diagram.items()
             if items:
@@ -269,11 +268,21 @@ class NodeProperty(PropertyDialog):
         self.identityField.setFixedWidth(300)
         self.identityField.setValue(self.node.identity.value)
 
+        self.neighboursLabel = QLabel(self)
+        self.neighboursLabel.setFont(arial12r)
+        self.neighboursLabel.setText(_('PROPERTY_NODE_LABEL_NEIGHBOURS'))
+        self.neighboursField = IntegerField(self)
+        self.neighboursField.setFont(arial12r)
+        self.neighboursField.setReadOnly(True)
+        self.neighboursField.setFixedWidth(300)
+        self.neighboursField.setValue(len(self.node.adjacentNodes()))
+
         self.generalWidget = QWidget()
         self.generalLayout = QFormLayout(self.generalWidget)
         self.generalLayout.addRow(self.idLabel, self.idField)
         self.generalLayout.addRow(self.typeLabel, self.typeField)
         self.generalLayout.addRow(self.identityLabel, self.identityField)
+        self.generalLayout.addRow(self.neighboursLabel, self.neighboursField)
 
         #############################################
         # GEOMETRY TAB
