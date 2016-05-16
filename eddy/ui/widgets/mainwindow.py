@@ -1149,20 +1149,10 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def doPrint(self):
         """
-        Print the currently open graphol document.
+        Print the current project.
         """
-        # TODO: implement
-        # scene = self.mdi.activeScene
-        # if scene:
-        #     shape = scene.visibleRect(margin=20)
-        #     if shape:
-        #         printer = QPrinter(QPrinter.HighResolution)
-        #         printer.setOutputFormat(QPrinter.NativeFormat)
-        #         dialog = QPrintDialog(printer)
-        #         if dialog.exec_() == QDialog.Accepted:
-        #             painter = QPainter()
-        #             if painter.begin(printer):
-        #                 scene.render(painter, source=shape)
+        if not self.project.isEmpty():
+            self.project.print()
 
     @pyqtSlot()
     def doQuit(self):

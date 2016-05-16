@@ -36,10 +36,12 @@ import os
 
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
+from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
 from eddy.core.exporters.pdf import PdfExporter
+from eddy.core.exporters.printer import PrinterExporter
 from eddy.core.functions.misc import cutR
 from eddy.core.functions.path import openPath
 from eddy.core.items.common import AbstractItem
@@ -348,6 +350,18 @@ class Project(QObject):
             return self.index[K_PREDICATE][item][name][K_NODE][diagram.id]
         except KeyError:
             return set()
+
+    def print(self):
+        """
+        Print the current project.
+        """
+        if not self.isEmpty():
+            printer = QPrinter(QPrinter.HighResolution)
+            printer.setOutputFormat(QPrinter.NativeFormat)
+            dialog = QPrintDialog(printer)
+            if dialog.exec_() == QPrintDialog.Accepted:
+                exporter = PrinterExporter(self, printer)
+                exporter.run()
 
     def removeDiagram(self, diagram):
         """

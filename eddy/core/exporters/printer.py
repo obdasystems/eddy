@@ -32,44 +32,29 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QObject, QSizeF, Qt
-from PyQt5.QtGui import QPainter, QPageSize, QStandardItemModel, QStandardItem
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPainter, QStandardItemModel
 from PyQt5.QtPrintSupport import QPrinter
 from PyQt5.QtWidgets import QTableView
 
 from eddy.core.datatypes.graphol import Item
-from eddy.core.items.common import AbstractItem
-from eddy.core.qt import Font
+from eddy.core.exporters.pdf import PdfExporter
 
 from eddy.lang import gettext as _
 
 
-class PdfExporter(QObject):
+class PrinterExporter(PdfExporter):
     """
-    This class can be used to export graphol projects in PDF format.
+    This class can be used to print graphol projects.
     """
-    def __init__(self, project, path=None):
+    def __init__(self, project, printer):
         """
         Initialize the Pdf Exporter.
         :type project: Project
-        :type path: str
+        :type printer: QPrinter
         """
-        super().__init__()
-        self.path = path
-        self.project = project
-        self.printer = None
-        self.painter = None
-        self.metamodel = None
-        self.metaview = None
-        self.newPage = False
-        self.arial12r = Font('Arial', 12)
-        self.arial12i = Font('Arial', 12, italic=True)
-        self.arial12b = Font('Arial', 12)
-        self.arial12b.setBold(True)
-        self.exportFuncForItem = {
-            Item.AttributeNode: self.exportAttributeMetaData,
-            Item.RoleNode: self.exportRoleMetaData,
-        }
+        super().__init__(project)
+        self.printer = printer
 
     #############################################
     #   ELEMENTS EXPORT
@@ -82,7 +67,6 @@ class PdfExporter(QObject):
         for diagram in sorted(self.project.diagrams(), key=lambda x: x.name.lower()):
             if not diagram.isEmpty():
                 source = diagram.visibleRect(margin=20)
-                self.printer.setPageSize(QPageSize(QSizeF(source.width(), source.height()), QPageSize.Point))
                 if self.newPage:
                     self.printer.newPage()
                 diagram.render(self.painter, source=source)
@@ -131,7 +115,6 @@ class PdfExporter(QObject):
         self.metaview.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.metaview.verticalHeader().setVisible(False)
 
-        self.printer.setPageSize(QPageSize(QSizeF(self.metaview.width(), self.metaview.height()), QPageSize.Point))
         if self.newPage:
             self.printer.newPage()
 
@@ -139,94 +122,6 @@ class PdfExporter(QObject):
         yscale = self.printer.pageRect().height() / self.metaview.height()
         self.painter.scale(min(xscale, yscale), min(xscale, yscale))
         self.metaview.render(self.painter)
-
-    def exportAttributeMetaData(self, meta):
-        """
-        Export the given attribute meta data in the given row.
-        :type meta: AttributeMetaData
-        """
-        i1 = QStandardItem(meta.predicate)
-        i1.setFont(self.arial12r)
-        i1.setTextAlignment(Qt.AlignLeft|Qt.AlignVCenter)
-        i2 = QStandardItem(meta.item.shortname)
-        i2.setFont(self.arial12r)
-        i2.setTextAlignment(Qt.AlignCenter)
-        i3 = QStandardItem('Yes' if meta.functional else 'No')
-        i3.setFont(self.arial12i)
-        i3.setTextAlignment(Qt.AlignCenter)
-        i4 = QStandardItem('-')
-        i4.setFont(self.arial12i)
-        i4.setTextAlignment(Qt.AlignCenter)
-        i5 = QStandardItem('-')
-        i5.setFont(self.arial12i)
-        i5.setTextAlignment(Qt.AlignCenter)
-        i6 = QStandardItem('-')
-        i6.setFont(self.arial12i)
-        i6.setTextAlignment(Qt.AlignCenter)
-        i7 = QStandardItem('-')
-        i7.setFont(self.arial12i)
-        i7.setTextAlignment(Qt.AlignCenter)
-        i8 = QStandardItem('-')
-        i8.setFont(self.arial12i)
-        i8.setTextAlignment(Qt.AlignCenter)
-        i9 = QStandardItem('-')
-        i9.setFont(self.arial12i)
-        i9.setTextAlignment(Qt.AlignCenter)
-        return [i1, i2, i3, i4, i5, i6, i7, i8, i9]
-
-    def exportRoleMetaData(self, meta):
-        """
-        Export the given role meta data in the given row.
-        :type meta: RoleMetaData
-        """
-        i1 = QStandardItem(meta.predicate)
-        i1.setFont(self.arial12r)
-        i1.setTextAlignment(Qt.AlignLeft|Qt.AlignVCenter)
-        i2 = QStandardItem(meta.item.shortname)
-        i2.setFont(self.arial12r)
-        i2.setTextAlignment(Qt.AlignCenter)
-        i3 = QStandardItem('Yes' if meta.functional else 'No')
-        i3.setFont(self.arial12i)
-        i3.setTextAlignment(Qt.AlignCenter)
-        i4 = QStandardItem('Yes' if meta.inverseFunctional else 'No')
-        i4.setFont(self.arial12i)
-        i4.setTextAlignment(Qt.AlignCenter)
-        i5 = QStandardItem('Yes' if meta.asymmetric else 'No')
-        i5.setFont(self.arial12i)
-        i5.setTextAlignment(Qt.AlignCenter)
-        i6 = QStandardItem('Yes' if meta.irreflexive else 'No')
-        i6.setFont(self.arial12i)
-        i6.setTextAlignment(Qt.AlignCenter)
-        i7 = QStandardItem('Yes' if meta.reflexive else 'No')
-        i7.setFont(self.arial12i)
-        i7.setTextAlignment(Qt.AlignCenter)
-        i8 = QStandardItem('Yes' if meta.symmetric else 'No')
-        i8.setFont(self.arial12i)
-        i8.setTextAlignment(Qt.AlignCenter)
-        i9 = QStandardItem('Yes' if meta.transitive else 'No')
-        i9.setFont(self.arial12i)
-        i9.setTextAlignment(Qt.AlignCenter)
-        return [i1, i2, i3, i4, i5, i6, i7, i8, i9]
-
-    #############################################
-    #   AUXILIARY METHODS
-    #################################
-
-    def setCachingOff(self):
-        """
-        Turns caching OFF for all the items in the project.
-        """
-        for item in self.project.items():
-            if item.isNode() or item.isEdge():
-                item.setCacheMode(AbstractItem.NoCache)
-
-    def setCachingOn(self):
-        """
-        Turns caching ON for all the items in the project.
-        """
-        for item in self.project.items():
-            if item.isNode() or item.isEdge():
-                item.setCacheMode(AbstractItem.DeviceCoordinateCache)
 
     #############################################
     #   DOCUMENT GENERATION
@@ -236,9 +131,6 @@ class PdfExporter(QObject):
         """
         Perform document generation.
         """
-        self.printer = QPrinter(QPrinter.HighResolution)
-        self.printer.setOutputFormat(QPrinter.PdfFormat)
-        self.printer.setOutputFileName(self.path)
         self.painter = QPainter()
         self.painter.begin(self.printer)
         self.setCachingOff()
