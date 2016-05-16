@@ -38,8 +38,8 @@ from PyQt5.QtCore import QSettings
 
 
 try:
-    prop = QSettings(ORGANIZATION, APPNAME)
-    code = prop.value('general/language', 'en', str)
+    settings = QSettings(ORGANIZATION, APPNAME)
+    code = settings.value('general/language', 'en', str)
     mo = import_module('eddy.lang.{0}'.format(code))
 except ImportError:
     mo = import_module('eddy.lang.en')

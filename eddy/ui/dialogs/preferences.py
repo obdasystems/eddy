@@ -32,94 +32,114 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout
+from PyQt5.QtCore import Qt, QSettings, pyqtSlot
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import QDialogButtonBox, QTabWidget, QFormLayout
 
+from eddy import ORGANIZATION, APPNAME
+from eddy.core.datatypes.system import Language
+from eddy.core.diagram import Diagram
 from eddy.core.functions.signals import connect
-from eddy.ui.fields import SpinBox
+from eddy.core.qt import Font
+
+from eddy.lang import gettext as _
+
+from eddy.ui.fields import SpinBox, ComboBox
 
 
 class PreferencesDialog(QDialog):
     """
     This class implements the 'Preferences' dialog.
     """
-    def __init__(self, mainwindow):
+    def __init__(self, parent=None):
         """
         Initialize the Preferences dialog.
-        :type mainwindow: QMainWindow
+        :type parent: QWidget
         """
-        super().__init__(mainwindow)
+        super().__init__(parent)
 
-        self.mainwindow = mainwindow
+        arial12r = Font('Arial', 12)
+        settings = QSettings(ORGANIZATION, APPNAME)
 
-        ################################################################################################################
-        #                                                                                                              #
-        #   EDITOR TAB                                                                                                 #
-        #                                                                                                              #
-        ################################################################################################################
+        #############################################
+        # GENERAL TAB
+        #################################
 
-        # TODO: GET FROM SETTINGS
-        self.diagramSizeF = SpinBox(self)
-        self.diagramSizeF.setRange(2000, 1000000)
-        self.diagramSizeF.setSingleStep(100)
-        self.diagramSizeF.setValue('')
+        self.languageLabel = QLabel(self)
+        self.languageLabel.setFont(arial12r)
+        self.languageLabel.setText(_('PREFERENCES_LABEL_LANGUAGE'))
+        self.languageField = ComboBox(self)
+        self.languageField.setFixedWidth(200)
+        self.languageField.setFocusPolicy(Qt.StrongFocus)
+        self.languageField.setFont(arial12r)
+        for language in Language:
+            self.languageField.addItem(language.name, language.value)
+        language = settings.value('general/language', 'en', str)
+        for i in range(self.languageField.count()):
+            if self.languageField.itemData(i) == language:
+                self.languageField.setCurrentIndex(i)
+                break
+
+        self.generalWidget = QWidget()
+        self.generalLayout = QFormLayout(self.generalWidget)
+        self.generalLayout.addRow(self.languageLabel, self.languageField)
+
+        #############################################
+        # EDITOR TAB
+        #################################
+
+        self.diagramSizeLabel = QLabel(self)
+        self.diagramSizeLabel.setFont(arial12r)
+        self.diagramSizeLabel.setText(_('PREFERENCES_LABEL_DIAGRAM_SIZE'))
+        self.diagramSizeField = SpinBox(self)
+        self.diagramSizeField.setFont(arial12r)
+        self.diagramSizeField.setRange(Diagram.MinSize, Diagram.MaxSize)
+        self.diagramSizeField.setSingleStep(100)
+        self.diagramSizeField.setValue(settings.value('diagram/size', 5000, int))
 
         self.editorWidget = QWidget()
         self.editorLayout = QFormLayout(self.editorWidget)
-        self.editorLayout.addRow('Diagram size', self.diagramSizeF)
+        self.editorLayout.addRow(self.diagramSizeLabel, self.diagramSizeField)
 
-        ################################################################################################################
-        #                                                                                                              #
-        #   MAIN WIDGET                                                                                                #
-        #                                                                                                              #
-        ################################################################################################################
+        #############################################
+        # CONFIRMATION BOX
+        #################################
+
+        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.confirmationBox.setContentsMargins(10, 0, 10, 10)
+        self.confirmationBox.setFont(arial12r)
+
+        #############################################
+        # MAIN WIDGET
+        #################################
 
         self.mainWidget = QTabWidget(self)
-        self.mainWidget.addTab(self.editorWidget, 'Editor')
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   BUTTON BOX                                                                                                 #
-        #                                                                                                              #
-        ################################################################################################################
-
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Close, Qt.Horizontal, self)
-
-        ################################################################################################################
-        #                                                                                                              #
-        #   MAIN LAYOUT                                                                                                #
-        #                                                                                                              #
-        ################################################################################################################
-
+        self.mainWidget.addTab(self.generalWidget, _('PREFERENCES_TAB_GENERAL'))
+        self.mainWidget.addTab(self.editorWidget, _('PREFERENCES_TAB_EDITOR'))
         self.mainLayout = QVBoxLayout(self)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.mainWidget)
-        self.mainLayout.addWidget(self.buttonBox, 0, Qt.AlignRight)
+        self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
-        self.setWindowTitle('Preferences')
+        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowTitle(_('PREFERENCES_WINDOW_TITLE'))
 
-        ################################################################################################################
-        #                                                                                                              #
-        #   CONFIGURE SIGNALS                                                                                          #
-        #                                                                                                              #
-        ################################################################################################################
+        connect(self.confirmationBox.accepted, self.accept)
+        connect(self.confirmationBox.rejected, self.reject)
 
-        connect(self.buttonBox.accepted, self.accept)
-        connect(self.buttonBox.rejected, self.reject)
-        connect(self.finished, self.completed)
+    #############################################
+    #   SLOTS
+    #################################
 
-    ####################################################################################################################
-    #                                                                                                                  #
-    #   SLOTS                                                                                                          #
-    #                                                                                                                  #
-    ####################################################################################################################
-
-    # TODO: SAVE ON SETTINGS
-    def completed(self, code):
+    @pyqtSlot()
+    def accept(self):
         """
-        Executed when the dialog is terminated.
-        :type code: int
+        Executed when the dialog is accepted.
         """
-        if code == PreferencesDialog.Accepted:
-            pass
+        settings = QSettings(ORGANIZATION, APPNAME)
+        settings.setValue('general/language', self.languageField.currentData())
+        settings.setValue('diagram/size', self.diagramSizeField.value())
+        settings.sync()
+        super().accept()
