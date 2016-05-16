@@ -163,7 +163,7 @@ class Restriction(Enum):
             return Restriction.Cardinality
         return None
 
-    def format(self, **kwargs):
+    def format(self, *args):
         """
         Returns a formatted representation of the restriction.
         :rtype: str
@@ -173,7 +173,7 @@ class Restriction(Enum):
             Restriction.Forall: 'forall',
             Restriction.Self: 'self',
             Restriction.Cardinality: '({0},{1})',
-        }[self].format(**kwargs)
+        }[self].format(*args)
 
 
 @unique
