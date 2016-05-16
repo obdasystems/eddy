@@ -47,7 +47,7 @@ from eddy.core.commands.nodes import CommandNodeChangeMeta
 from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.commands.nodes import CommandNodeMove
 from eddy.core.datatypes.collections import DistinctList
-from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Facet, Datatype
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import clamp, isEmpty, first
@@ -794,6 +794,88 @@ class ValueDomainNodeProperty(NodeProperty):
         return None
 
 
+class ValueNodeProperty(NodeProperty):
+    """
+    This class implements the property dialog for value nodes.
+    """
+    def __init__(self, diagram, node, parent=None):
+        """
+        Initialize the node properties dialog.
+        :type diagram: Diagram
+        :type node: AbstractNode
+        :type parent: QWidget
+        """
+        super().__init__(diagram, node, parent)
+
+        arial12r = Font('Arial', 12)
+
+        #############################################
+        # VALUE TAB
+        #################################
+
+        self.datatypeLabel = QLabel(self)
+        self.datatypeLabel.setFont(arial12r)
+        self.datatypeLabel.setText(_('PROPERTY_NODE_LABEL_DATATYPE'))
+        self.datatypeField = ComboBox(self)
+        self.datatypeField.setFixedWidth(200)
+        self.datatypeField.setFocusPolicy(Qt.StrongFocus)
+        self.datatypeField.setFont(arial12r)
+
+        for datatype in Datatype:
+            self.datatypeField.addItem(datatype.value, datatype)
+        datatype = self.node.datatype
+        for i in range(self.datatypeField.count()):
+            if self.datatypeField.itemData(i) is datatype:
+                self.datatypeField.setCurrentIndex(i)
+                break
+        else:
+            self.datatypeField.setCurrentIndex(0)
+
+        self.valueLabel = QLabel(self)
+        self.valueLabel.setFont(arial12r)
+        self.valueLabel.setText(_('PROPERTY_NODE_LABEL_VALUE'))
+        self.valueField = StringField(self)
+        self.valueField.setFixedWidth(200)
+        self.valueField.setFont(arial12r)
+        self.valueField.setValue(self.node.value)
+
+        self.valueWidget = QWidget()
+        self.valueLayout = QFormLayout(self.valueWidget)
+        self.valueLayout.addRow(self.datatypeLabel, self.datatypeField)
+        self.valueLayout.addRow(self.valueLabel, self.valueField)
+
+        self.mainWidget.addTab(self.valueWidget, _('PROPERTY_NODE_TAB_VALUE'))
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @pyqtSlot()
+    def complete(self):
+        """
+        Executed when the dialog is accepted.
+        """
+        commands = [self.positionChanged(), self.valueChanged()]
+        self.push(self.diagram.undoStack, _('COMMAND_NODE_EDIT_PROPERTIES', self.node.name), commands)
+        super().accept()
+
+    #############################################
+    #   AUXILIARY METHODS
+    #################################
+
+    def valueChanged(self):
+        """
+        Change the value of the node.
+        :rtype: QUndoCommand
+        """
+        datatype = self.datatypeField.currentData()
+        value = self.valueField.value()
+        data = self.node.composeValue(value, datatype)
+        if self.node.text() != data:
+            return CommandNodeLabelChange(self.diagram, self.node, self.node.text(), data)
+        return None
+
+
 class PropertyFactory(QObject):
     """
     This class can be used to produce properties dialog windows.
@@ -824,6 +906,11 @@ class PropertyFactory(QObject):
                 properties = PredicateNodeProperty(diagram, node)
             elif node.type() is Item.ValueDomainNode:
                 properties = ValueDomainNodeProperty(diagram, node)
+            elif node.type() is Item.IndividualNode:
+                if node.identity is Identity.Instance:
+                    properties = PredicateNodeProperty(diagram, node)
+                else:
+                    properties = ValueNodeProperty(diagram, node)
             elif node.type() is Item.PropertyAssertionNode:
                 properties = OrderedInputNodeProperty(diagram, node)
             elif node.type() is Item.RoleChainNode:

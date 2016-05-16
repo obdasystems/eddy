@@ -39,7 +39,7 @@ from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap
 
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.owl import Datatype
-from eddy.core.functions.misc import snapF, cutL, cutR
+from eddy.core.functions.misc import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.qt import Font
@@ -143,7 +143,7 @@ class IndividualNode(AbstractResizableNode):
         :type datatype: Datatype
         :return: str
         """
-        return '"{}"^^{}'.format(cutR(cutL(value.strip(), '"'), '"'), datatype.value)
+        return '"{}"^^{}'.format(value.strip('"'), datatype.value)
 
     def copy(self, diagram):
         """
