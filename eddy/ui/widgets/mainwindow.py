@@ -62,7 +62,7 @@ from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.graphol import Restriction
 from eddy.core.datatypes.graphol import Special
 from eddy.core.datatypes.misc import Color, DiagramMode
-from eddy.core.datatypes.owl import XsdDatatype, Facet
+from eddy.core.datatypes.owl import Datatype, Facet
 from eddy.core.datatypes.system import Platform, File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphol import GrapholExporter
@@ -533,7 +533,7 @@ class MainWindow(QMainWindow):
         # VALUE-DOMAIN SPECIFIC
         #################################
 
-        for datatype in XsdDatatype:
+        for datatype in Datatype:
             action = QAction(datatype.value, self)
             action.setCheckable(True)
             action.setData(datatype)

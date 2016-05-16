@@ -38,7 +38,7 @@ from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap, QBrush
 
 from eddy.core.datatypes.graphol import Identity, Item
-from eddy.core.datatypes.owl import XsdDatatype
+from eddy.core.datatypes.owl import Datatype
 from eddy.core.functions.misc import snapF, cutL, cutR
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -95,11 +95,11 @@ class IndividualNode(AbstractResizableNode):
     def datatype(self):
         """
         Returns the datatype associated with this node.
-        :rtype: XsdDatatype
+        :rtype: Datatype
         """
         match = RE_VALUE.match(self.text())
         if match:
-            return XsdDatatype.forValue(match.group('datatype'))
+            return Datatype.forValue(match.group('datatype'))
         return None
 
     @property
@@ -140,7 +140,7 @@ class IndividualNode(AbstractResizableNode):
         """
         Compose the value string.
         :type value: str
-        :type datatype: XsdDatatype
+        :type datatype: Datatype
         :return: str
         """
         return '"{}"^^{}'.format(cutR(cutL(value.strip(), '"'), '"'), datatype.value)

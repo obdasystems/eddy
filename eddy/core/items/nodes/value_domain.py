@@ -36,7 +36,7 @@ from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QBrush
 
 from eddy.core.datatypes.graphol import Item, Identity
-from eddy.core.datatypes.owl import XsdDatatype
+from eddy.core.datatypes.owl import Datatype
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.qt import Font
@@ -64,7 +64,7 @@ class ValueDomainNode(AbstractNode):
         self.polygon = self.createPolygon(self.MinWidth, self.MinHeight)
         self.background = self.createBackground(self.MinWidth + 8, self.MinHeight + 8)
         self.selection = self.createSelection(self.MinWidth + 8, self.MinHeight + 8)
-        self.label = NodeLabel(template=XsdDatatype.string.value,
+        self.label = NodeLabel(template=Datatype.string.value,
                                editable=False,
                                movable=False,
                                pos=lambda: self.center(),
@@ -80,9 +80,9 @@ class ValueDomainNode(AbstractNode):
     def datatype(self):
         """
         Returns the datatype associated with this node.
-        :rtype: XsdDatatype
+        :rtype: Datatype
         """
-        return XsdDatatype.forValue(self.text())
+        return Datatype.forValue(self.text())
 
     @property
     def identity(self):
@@ -209,7 +209,7 @@ class ValueDomainNode(AbstractNode):
         Set the label text.
         :type text: str
         """
-        datatype = XsdDatatype.forValue(text) or XsdDatatype.string
+        datatype = Datatype.forValue(text) or Datatype.string
         self.label.setText(datatype.value)
         self.updateLayout()
 

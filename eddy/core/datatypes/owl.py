@@ -56,7 +56,7 @@ class Facet(Enum):
     def forDatatype(cls, value):
         """
         Returns a collection of Facets for the given datatype
-        :type value: XsdDatatype
+        :type value: Datatype
         :rtype: list
         """
         allvalues = [x for x in cls]
@@ -66,40 +66,40 @@ class Facet(Enum):
         anyuri = [Facet.length, Facet.maxLength, Facet.minLength, Facet.pattern]
         
         return {
-            XsdDatatype.anyURI: anyuri,
-            XsdDatatype.base64Binary: binary,
-            XsdDatatype.boolean: [],
-            XsdDatatype.byte: numbers,
-            XsdDatatype.dateTime: numbers,
-            XsdDatatype.dateTimeStamp: numbers,
-            XsdDatatype.decimal: numbers,
-            XsdDatatype.double: numbers,
-            XsdDatatype.float: numbers,
-            XsdDatatype.hexBinary: binary,
-            XsdDatatype.int: numbers,
-            XsdDatatype.integer: numbers,
-            XsdDatatype.language: strings,
-            XsdDatatype.literal: allvalues,
-            XsdDatatype.long: numbers,
-            XsdDatatype.Name: strings,
-            XsdDatatype.NCName: strings,
-            XsdDatatype.negativeInteger: numbers,
-            XsdDatatype.NMTOKEN: strings,
-            XsdDatatype.nonNegativeInteger: numbers,
-            XsdDatatype.nonPositiveInteger: numbers,
-            XsdDatatype.normalizedString: strings,
-            XsdDatatype.plainLiteral: strings,
-            XsdDatatype.positiveInteger: numbers,
-            XsdDatatype.rational: numbers,
-            XsdDatatype.real: numbers,
-            XsdDatatype.short: numbers,
-            XsdDatatype.string: strings,
-            XsdDatatype.token: strings,
-            XsdDatatype.unsignedByte: numbers,
-            XsdDatatype.unsignedInt: numbers,
-            XsdDatatype.unsignedLong: numbers,
-            XsdDatatype.unsignedShort: numbers,
-            XsdDatatype.xmlLiteral: []
+            Datatype.anyURI: anyuri,
+            Datatype.base64Binary: binary,
+            Datatype.boolean: [],
+            Datatype.byte: numbers,
+            Datatype.dateTime: numbers,
+            Datatype.dateTimeStamp: numbers,
+            Datatype.decimal: numbers,
+            Datatype.double: numbers,
+            Datatype.float: numbers,
+            Datatype.hexBinary: binary,
+            Datatype.int: numbers,
+            Datatype.integer: numbers,
+            Datatype.language: strings,
+            Datatype.literal: allvalues,
+            Datatype.long: numbers,
+            Datatype.Name: strings,
+            Datatype.NCName: strings,
+            Datatype.negativeInteger: numbers,
+            Datatype.NMTOKEN: strings,
+            Datatype.nonNegativeInteger: numbers,
+            Datatype.nonPositiveInteger: numbers,
+            Datatype.normalizedString: strings,
+            Datatype.plainLiteral: strings,
+            Datatype.positiveInteger: numbers,
+            Datatype.rational: numbers,
+            Datatype.real: numbers,
+            Datatype.short: numbers,
+            Datatype.string: strings,
+            Datatype.token: strings,
+            Datatype.unsignedByte: numbers,
+            Datatype.unsignedInt: numbers,
+            Datatype.unsignedLong: numbers,
+            Datatype.unsignedShort: numbers,
+            Datatype.xmlLiteral: []
         }[value]
 
     @classmethod
@@ -107,7 +107,7 @@ class Facet(Enum):
         """
         Returns the Facet matching the given value.
         :type value: str
-        :rtype: XsdDatatype
+        :rtype: Datatype
         """
         for x in cls:
             if x.value.lower() == value.lower().strip():
@@ -148,7 +148,7 @@ class OWLSyntax(Enum):
 
 
 @unique
-class XsdDatatype(Enum):
+class Datatype(Enum):
     """
     This class defines all the available datatypes for the value-domain node.
     """
@@ -196,9 +196,9 @@ class XsdDatatype(Enum):
     @classmethod
     def forValue(cls, value):
         """
-        Returns the XsdDatatype matching the given value.
+        Returns the Datatype matching the given value.
         :type value: str
-        :rtype: XsdDatatype
+        :rtype: Datatype
         """
         for x in cls:
             if x.value.lower() == value.lower().strip():
@@ -212,38 +212,38 @@ class XsdDatatype(Enum):
         :rtype: str
         """
         return {
-            XsdDatatype.anyURI: 'XSD_ANY_URI',
-            XsdDatatype.base64Binary: 'XSD_BASE_64_BINARY',
-            XsdDatatype.boolean: 'XSD_BOOLEAN',
-            XsdDatatype.byte: 'XSD_BYTE',
-            XsdDatatype.dateTime: 'XSD_DATE_TIME',
-            XsdDatatype.dateTimeStamp: 'XSD_DATE_TIME_STAMP',
-            XsdDatatype.decimal: 'XSD_DECIMAL',
-            XsdDatatype.double: 'XSD_DOUBLE',
-            XsdDatatype.float: 'XSD_FLOAT',
-            XsdDatatype.hexBinary: 'XSD_HEX_BINARY',
-            XsdDatatype.int: 'XSD_INT',
-            XsdDatatype.integer: 'XSD_INTEGER',
-            XsdDatatype.language: 'XSD_LANGUAGE',
-            XsdDatatype.literal: 'RDFS_LITERAL',
-            XsdDatatype.long: 'XSD_LONG',
-            XsdDatatype.Name: 'XSD_NAME',
-            XsdDatatype.NCName: 'XSD_NCNAME',
-            XsdDatatype.negativeInteger: 'XSD_NEGATIVE_INTEGER',
-            XsdDatatype.NMTOKEN: 'XSD_NMTOKEN',
-            XsdDatatype.nonNegativeInteger: 'XSD_NON_NEGATIVE_INTEGER',
-            XsdDatatype.nonPositiveInteger: 'XSD_NON_POSITIVE_INTEGER',
-            XsdDatatype.normalizedString: 'XSD_NORMALIZED_STRING',
-            XsdDatatype.plainLiteral: 'RDF_PLAIN_LITERAL',
-            XsdDatatype.positiveInteger: 'XSD_POSITIVE_INTEGER',
-            XsdDatatype.rational: 'OWL_RATIONAL',
-            XsdDatatype.real: 'OWL_REAL',
-            XsdDatatype.short: 'XSD_SHORT',
-            XsdDatatype.string: 'XSD_STRING',
-            XsdDatatype.token: 'XSD_TOKEN',
-            XsdDatatype.unsignedByte: 'XSD_UNSIGNED_BYTE',
-            XsdDatatype.unsignedInt: 'XSD_UNSIGNED_INT',
-            XsdDatatype.unsignedLong: 'XSD_UNSIGNED_LONG',
-            XsdDatatype.unsignedShort: 'XSD_UNSIGNED_SHORT',
-            XsdDatatype.xmlLiteral: 'RDF_XML_LITERAL',
+            Datatype.anyURI: 'XSD_ANY_URI',
+            Datatype.base64Binary: 'XSD_BASE_64_BINARY',
+            Datatype.boolean: 'XSD_BOOLEAN',
+            Datatype.byte: 'XSD_BYTE',
+            Datatype.dateTime: 'XSD_DATE_TIME',
+            Datatype.dateTimeStamp: 'XSD_DATE_TIME_STAMP',
+            Datatype.decimal: 'XSD_DECIMAL',
+            Datatype.double: 'XSD_DOUBLE',
+            Datatype.float: 'XSD_FLOAT',
+            Datatype.hexBinary: 'XSD_HEX_BINARY',
+            Datatype.int: 'XSD_INT',
+            Datatype.integer: 'XSD_INTEGER',
+            Datatype.language: 'XSD_LANGUAGE',
+            Datatype.literal: 'RDFS_LITERAL',
+            Datatype.long: 'XSD_LONG',
+            Datatype.Name: 'XSD_NAME',
+            Datatype.NCName: 'XSD_NCNAME',
+            Datatype.negativeInteger: 'XSD_NEGATIVE_INTEGER',
+            Datatype.NMTOKEN: 'XSD_NMTOKEN',
+            Datatype.nonNegativeInteger: 'XSD_NON_NEGATIVE_INTEGER',
+            Datatype.nonPositiveInteger: 'XSD_NON_POSITIVE_INTEGER',
+            Datatype.normalizedString: 'XSD_NORMALIZED_STRING',
+            Datatype.plainLiteral: 'RDF_PLAIN_LITERAL',
+            Datatype.positiveInteger: 'XSD_POSITIVE_INTEGER',
+            Datatype.rational: 'OWL_RATIONAL',
+            Datatype.real: 'OWL_REAL',
+            Datatype.short: 'XSD_SHORT',
+            Datatype.string: 'XSD_STRING',
+            Datatype.token: 'XSD_TOKEN',
+            Datatype.unsignedByte: 'XSD_UNSIGNED_BYTE',
+            Datatype.unsignedInt: 'XSD_UNSIGNED_INT',
+            Datatype.unsignedLong: 'XSD_UNSIGNED_LONG',
+            Datatype.unsignedShort: 'XSD_UNSIGNED_SHORT',
+            Datatype.xmlLiteral: 'RDF_XML_LITERAL',
         }[self]

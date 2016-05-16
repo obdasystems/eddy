@@ -48,7 +48,7 @@ from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.commands.nodes import CommandNodeMove
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item
-from eddy.core.datatypes.owl import Facet
+from eddy.core.datatypes.owl import Facet, Datatype
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import clamp, isEmpty, first
 from eddy.core.functions.signals import connect
@@ -687,12 +687,12 @@ class FacetNodeProperty(NodeProperty):
         self.valueField.setFont(arial12r)
         self.valueField.setValue(self.node.value)
 
-        self.labelWidget = QWidget()
-        self.labelLayout = QFormLayout(self.labelWidget)
-        self.labelLayout.addRow(self.facetLabel, self.facetField)
-        self.labelLayout.addRow(self.valueLabel, self.valueField)
+        self.facetWidget = QWidget()
+        self.facetLayout = QFormLayout(self.facetWidget)
+        self.facetLayout.addRow(self.facetLabel, self.facetField)
+        self.facetLayout.addRow(self.valueLabel, self.valueField)
 
-        self.mainWidget.addTab(self.labelWidget, _('PROPERTY_NODE_TAB_FACET'))
+        self.mainWidget.addTab(self.facetLayout, _('PROPERTY_NODE_TAB_FACET'))
 
     #############################################
     #   SLOTS
@@ -713,10 +713,82 @@ class FacetNodeProperty(NodeProperty):
 
     def facetChanged(self):
         """
-        Change the url and description of the node.
+        Change the facet value of the node of the node.
         :rtype: QUndoCommand
         """
         data = self.node.compose(self.facetField.currentData(), self.valueField.value())
+        if self.node.text() != data:
+            return CommandNodeLabelChange(self.diagram, self.node, self.node.text(), data)
+        return None
+
+
+class ValueDomainNodeProperty(NodeProperty):
+    """
+    This class implements the property dialog for value-domain nodes.
+    """
+    def __init__(self, diagram, node, parent=None):
+        """
+        Initialize the node properties dialog.
+        :type diagram: Diagram
+        :type node: AbstractNode
+        :type parent: QWidget
+        """
+        super().__init__(diagram, node, parent)
+
+        arial12r = Font('Arial', 12)
+
+        #############################################
+        # DATATYPE TAB
+        #################################
+
+        self.datatypeLabel = QLabel(self)
+        self.datatypeLabel.setFont(arial12r)
+        self.datatypeLabel.setText(_('PROPERTY_NODE_LABEL_DATATYPE'))
+        self.datatypeField = ComboBox(self)
+        self.datatypeField.setFixedWidth(200)
+        self.datatypeField.setFocusPolicy(Qt.StrongFocus)
+        self.datatypeField.setFont(arial12r)
+
+        for datatype in Datatype:
+            self.datatypeField.addItem(datatype.value, datatype)
+        datatype = self.node.datatype
+        for i in range(self.datatypeField.count()):
+            if self.datatypeField.itemData(i) is datatype:
+                self.datatypeField.setCurrentIndex(i)
+                break
+        else:
+            self.datatypeField.setCurrentIndex(0)
+
+        self.datatypeWidget = QWidget()
+        self.datatypeLayout = QFormLayout(self.datatypeWidget)
+        self.datatypeLayout.addRow(self.datatypeLabel, self.datatypeField)
+
+        self.mainWidget.addTab(self.datatypeWidget, _('PROPERTY_NODE_TAB_DATATYPE'))
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @pyqtSlot()
+    def complete(self):
+        """
+        Executed when the dialog is accepted.
+        """
+        commands = [self.positionChanged(), self.datatypeChanged()]
+        self.push(self.diagram.undoStack, _('COMMAND_NODE_EDIT_PROPERTIES', self.node.name), commands)
+        super().accept()
+
+    #############################################
+    #   AUXILIARY METHODS
+    #################################
+
+    def datatypeChanged(self):
+        """
+        Change the datatype of the node.
+        :rtype: QUndoCommand
+        """
+        datatype = self.datatypeField.currentData()
+        data = datatype.value
         if self.node.text() != data:
             return CommandNodeLabelChange(self.diagram, self.node, self.node.text(), data)
         return None
@@ -741,27 +813,24 @@ class PropertyFactory(QObject):
         :type node: AbstractNode
         :rtype: QDialog
         """
-        properties = None
-
         if not node:
             properties = DiagramProperty(diagram)
         else:
-            if node.isPredicate():
-                if node.type() is Item.AttributeNode:
-                    properties = PredicateNodeProperty(diagram, node)
-                elif node.type() is Item.ConceptNode:
-                    properties = PredicateNodeProperty(diagram, node)
-                elif node.type() is Item.RoleNode:
-                    properties = PredicateNodeProperty(diagram, node)
+            if node.type() is Item.AttributeNode:
+                properties = PredicateNodeProperty(diagram, node)
+            elif node.type() is Item.ConceptNode:
+                properties = PredicateNodeProperty(diagram, node)
+            elif node.type() is Item.RoleNode:
+                properties = PredicateNodeProperty(diagram, node)
+            elif node.type() is Item.ValueDomainNode:
+                properties = ValueDomainNodeProperty(diagram, node)
+            elif node.type() is Item.PropertyAssertionNode:
+                properties = OrderedInputNodeProperty(diagram, node)
+            elif node.type() is Item.RoleChainNode:
+                properties = OrderedInputNodeProperty(diagram, node)
+            elif node.type() is Item.FacetNode:
+                properties = FacetNodeProperty(diagram, node)
             else:
-                if node.type() is Item.PropertyAssertionNode:
-                    properties = OrderedInputNodeProperty(diagram, node)
-                elif node.type() is Item.RoleChainNode:
-                    properties = OrderedInputNodeProperty(diagram, node)
-                elif node.type() is Item.FacetNode:
-                    properties = FacetNodeProperty(diagram, node)
-            if not properties:
                 properties = NodeProperty(diagram, node)
-
         properties.setFixedSize(properties.sizeHint())
         return properties

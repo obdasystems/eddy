@@ -39,7 +39,7 @@ from PyQt5.QtWidgets import QMessageBox, QDialogButtonBox, QWidget
 
 from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.datatypes.graphol import Identity
-from eddy.core.datatypes.owl import XsdDatatype
+from eddy.core.datatypes.owl import Datatype
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font
@@ -121,7 +121,7 @@ class ValueForm(QDialog):
 
         # DATATYPE COMBO BOX
         self.datatypeField = ComboBox(self)
-        for datatype in XsdDatatype:
+        for datatype in Datatype:
             self.datatypeField.addItem(datatype.value, datatype)
 
         # VALUE STRING FIELD

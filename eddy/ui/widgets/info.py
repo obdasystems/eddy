@@ -43,7 +43,7 @@ from PyQt5.QtWidgets import QStackedWidget, QStyleOption
 from eddy.core.commands.common import CommandSetProperty
 from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.datatypes.graphol import Item, Identity
-from eddy.core.datatypes.owl import Facet, XsdDatatype
+from eddy.core.datatypes.owl import Facet, Datatype
 from eddy.core.functions.misc import first, isEmpty, clamp
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.qt import ColoredIcon, Font
@@ -943,7 +943,7 @@ class ValueNodeInfo(PredicateNodeInfo):
         self.valueField.setReadOnly(False)
         connect(self.valueField.editingFinished, self.valueChanged)
 
-        for datatype in XsdDatatype:
+        for datatype in Datatype:
             if Facet.forDatatype(datatype):
                 self.datatypeField.addItem(datatype.value, datatype)
 

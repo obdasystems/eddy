@@ -36,7 +36,7 @@ from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap, QBrush
 
 from eddy.core.datatypes.graphol import Identity, Item
-from eddy.core.datatypes.owl import XsdDatatype, Facet
+from eddy.core.datatypes.owl import Datatype, Facet
 from eddy.core.functions.misc import cutL, cutR, first
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -104,11 +104,11 @@ class ValueRestrictionNode(AbstractNode):
     def datatype(self):
         """
         Returns the datatype associated with this node.
-        :rtype: XsdDatatype
+        :rtype: Datatype
         """
         match = RE_VALUE_RESTRICTION.match(self.text())
         if match:
-            return XsdDatatype.forValue(match.group('datatype'))
+            return Datatype.forValue(match.group('datatype'))
         return None
 
     @property
@@ -166,7 +166,7 @@ class ValueRestrictionNode(AbstractNode):
         Compose the restriction string.
         :type facet: Facet
         :type value: str
-        :type datatype: XsdDatatype
+        :type datatype: Datatype
         :return: str
         """
         return '{} "{}"^^{}'.format(facet.value, cutR(cutL(value.strip(), '"'), '"'), datatype.value)

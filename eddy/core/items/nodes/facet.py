@@ -101,7 +101,7 @@ class FacetNode(AbstractNode):
     def datatype(self):
         """
         Returns the datatype this facet is restricting, or None if the node is isolated.
-        :rtype: XsdDatatype
+        :rtype: Datatype
         """
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.type() is Item.DatatypeRestrictionNode
