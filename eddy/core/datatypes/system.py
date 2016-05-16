@@ -92,10 +92,9 @@ class Language(Enum):
     """
     This class defines available languages.
     """
-    __order__ = 'English Italian'
+    __order__ = 'English'
 
     English = 'en'
-    Italian = 'it'
 
     @classmethod
     def forValue(cls, value):

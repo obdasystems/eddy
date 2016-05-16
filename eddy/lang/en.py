@@ -38,8 +38,8 @@ ACTION_ABOUT_N = 'About {0}'
 ACTION_BRING_TO_FRONT_N = 'Bring to Front'
 ACTION_CENTER_DIAGRAM_N = 'Center diagram'
 ACTION_CLOSE_PROJECT_N = 'Close'
-ACTION_COMPOSE_PROPERTY_DOMAIN_N = 'Property Domain'
-ACTION_COMPOSE_PROPERTY_RANGE_N = 'Propery Range'
+ACTION_COMPOSE_PROPERTY_DOMAIN_N = 'Domain'
+ACTION_COMPOSE_PROPERTY_RANGE_N = 'Range'
 ACTION_COPY_N = 'Copy'
 ACTION_CUT_N = 'Cut'
 ACTION_DELETE_N = 'Delete'
@@ -132,7 +132,6 @@ COMMAND_NODE_SET_INDIVIDUAL_AS = 'change {0} to {1}'
 COMMAND_NODE_SET_PROPERTY_RESTRICTION = 'change {0} to {1}'
 COMMAND_NODE_SET_SPECIAL = 'change {0} to {1}'
 COMMAND_NODE_SET_VALUE = 'change value to {0}'
-COMMAND_NODE_SET_VALUE_RESTRICTION = 'change value restriction to {0}'
 
 #############################################
 # DIAGRAM CREATE / EDIT / LOAD / DELETE
