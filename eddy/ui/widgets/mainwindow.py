@@ -77,7 +77,9 @@ from eddy.core.loaders.graphol import GrapholLoader
 from eddy.core.loaders.project import ProjectLoader
 from eddy.core.qt import Icon, ColoredIcon
 from eddy.core.utils.clipboard import Clipboard
+
 from eddy.lang import gettext as _
+
 from eddy.ui.dialogs.about import About
 from eddy.ui.dialogs.diagram import NewDiagramDialog
 from eddy.ui.dialogs.forms import CardinalityRestrictionForm
