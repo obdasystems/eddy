@@ -61,21 +61,55 @@ class CardinalityRestrictionForm(QDialog):
         super().__init__(parent)
         self.minValue = None
         self.maxValue = None
-        self.minField = IntegerField(self)
-        self.maxField = IntegerField(self)
-        self.minField.setFixedWidth(80)
-        self.maxField.setFixedWidth(80)
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
-        self.mainLayout = QFormLayout(self)
-        self.mainLayout.addRow('Min. cardinality', self.minField)
-        self.mainLayout.addRow('Max. cardinality', self.maxField)
-        self.mainLayout.addRow(self.buttonBox)
-        self.setWindowTitle('Insert cardinality')
-        self.setWindowIcon(QIcon(':/images/eddy'))
-        self.setFixedSize(self.sizeHint())
 
-        connect(self.buttonBox.accepted, self.accept)
-        connect(self.buttonBox.rejected, self.reject)
+        arial12r = Font('Arial', 12)
+
+        #############################################
+        # FORM AREA
+        #################################
+
+        self.minLabel = QLabel(self)
+        self.minLabel.setFont(arial12r)
+        self.minLabel.setText(_('FORM_CARDINALITY_LABEL_MIN'))
+        self.minField = IntegerField(self)
+        self.minField.setFont(arial12r)
+        self.minField.setFixedWidth(80)
+
+        self.maxLabel = QLabel(self)
+        self.maxLabel.setFont(arial12r)
+        self.maxLabel.setText(_('FORM_CARDINALITY_LABEL_MAX'))
+        self.maxField = IntegerField(self)
+        self.maxField.setFont(arial12r)
+        self.maxField.setFixedWidth(80)
+
+        self.formWidget = QWidget(self)
+        self.formLayout = QFormLayout(self.formWidget)
+        self.formLayout.addRow(self.minLabel, self.minField)
+        self.formLayout.addRow(self.maxLabel, self.maxField)
+
+        #############################################
+        # CONFIRMATION AREA
+        #################################
+
+        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.confirmationBox.setContentsMargins(10, 0, 10, 10)
+        self.confirmationBox.setFont(arial12r)
+
+        #############################################
+        # SETUP DIALOG LAYOUT
+        #################################
+
+        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.addWidget(self.formWidget)
+        self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
+
+        self.setFixedSize(self.sizeHint())
+        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowTitle(_('FORM_CARDINALITY_WINDOW_TITLE'))
+
+        connect(self.confirmationBox.accepted, self.accept)
+        connect(self.confirmationBox.rejected, self.reject)
 
     #############################################
     #   SLOTS
@@ -86,7 +120,6 @@ class CardinalityRestrictionForm(QDialog):
         """
         Validate the form and trigger accept() if the form is valid.
         """
-        valid = True
         if not isEmpty(self.minField.text()) and not isEmpty(self.maxField.text()):
             v1 = int(self.minField.text())
             v2 = int(self.maxField.text())
@@ -94,17 +127,19 @@ class CardinalityRestrictionForm(QDialog):
                 msgbox = QMessageBox(self)
                 msgbox.setIconPixmap(QPixmap(':/icons/48/warning'))
                 msgbox.setWindowIcon(QIcon(':/images/eddy'))
-                msgbox.setWindowTitle('Invalid range specified')
-                msgbox.setText('Min. cardinality {0} must be lower or equal than Max. cardinality {1}'.format(v1, v2))
+                msgbox.setWindowTitle(_('FORM_CARDINALITY_ERROR_WINDOW_TITLE'))
+                msgbox.setText(_('FORM_CARDINALITY_ERROR_MESSAGE', v1, v2))
+                msgbox.setTextFormat(Qt.RichText)
                 msgbox.setStandardButtons(QMessageBox.Ok)
                 msgbox.exec_()
-                valid = False
-        if valid:
-            if not isEmpty(self.minField.text()):
-                self.minValue = int(self.minField.text())
-            if not isEmpty(self.maxField.text()):
-                self.maxValue = int(self.maxField.text())
-            super().accept()
+                return
+
+        if not isEmpty(self.minField.text()):
+            self.minValue = int(self.minField.text())
+        if not isEmpty(self.maxField.text()):
+            self.maxValue = int(self.maxField.text())
+
+        super().accept()
 
 
 class ValueForm(QDialog):

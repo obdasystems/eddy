@@ -190,6 +190,11 @@ EXCEPT_HOOK_MESSAGE = 'This is embarrassing ...\n\n' \
 # FORMS
 #################################
 
+FORM_CARDINALITY_ERROR_WINDOW_TITLE = 'Invalid range specified'
+FORM_CARDINALITY_ERROR_MESSAGE = 'Min. cardinality <b>{0}</b> must be lower or equal than Max. cardinality <b>{1}</b>'
+FORM_CARDINALITY_LABEL_MIN = 'Min. cardinality'
+FORM_CARDINALITY_LABEL_MAX = 'Max. cardinality'
+FORM_CARDINALITY_WINDOW_TITLE = 'Insert cardinality'
 FORM_VALUE_WINDOW_TITLE = 'Compose value'
 FORM_VALUE_LABEL_DATATYPE = 'Datatype'
 FORM_VALUE_LABEL_VALUE = 'Value'
