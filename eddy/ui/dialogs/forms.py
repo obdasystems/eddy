@@ -118,46 +118,91 @@ class ValueForm(QDialog):
         :type parent: QWidget
         """
         super().__init__(parent)
+        self.node = node
 
-        # DATATYPE COMBO BOX
+        arial12r = Font('Arial', 12)
+
+        #############################################
+        # FORM AREA
+        #################################
+
+        self.datatypeLabel = QLabel(self)
+        self.datatypeLabel.setFont(arial12r)
+        self.datatypeLabel.setText(_('FORM_VALUE_LABEL_DATATYPE'))
         self.datatypeField = ComboBox(self)
+        self.datatypeField.setFont(arial12r)
+        self.datatypeField.setFixedWidth(300)
         for datatype in Datatype:
             self.datatypeField.addItem(datatype.value, datatype)
 
-        # VALUE STRING FIELD
+        self.valueLabel = QLabel(self)
+        self.valueLabel.setFont(arial12r)
+        self.valueLabel.setText(_('FORM_VALUE_LABEL_VALUE'))
         self.valueField = StringField(self)
         self.valueField.setFixedWidth(300)
 
-        # FILL FIELDS WITH DATA
         if node.identity is Identity.Value:
+            self.valueField.setValue(node.value)
             datatype = node.datatype
             for i in range(self.datatypeField.count()):
                 if self.datatypeField.itemData(i) is datatype:
                     self.datatypeField.setCurrentIndex(i)
                     break
-            self.valueField.setValue(node.value)
-
         else:
-            self.datatypeField.setCurrentIndex(0)
             self.valueField.setValue('')
+            self.datatypeField.setCurrentIndex(0)
 
-        # CONFIRMATION BOX
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.formWidget = QWidget(self)
+        self.formLayout = QFormLayout(self.formWidget)
+        self.formLayout.addRow(self.datatypeLabel, self.datatypeField)
+        self.formLayout.addRow(self.valueLabel, self.valueField)
 
-        self.mainLayout = QFormLayout(self)
-        self.mainLayout.addRow('Datatype', self.datatypeField)
-        self.mainLayout.addRow('Value', self.valueField)
-        self.mainLayout.addRow(self.buttonBox)
+        #############################################
+        # CONFIRMATION AREA
+        #################################
 
-        self.setWindowTitle('Compose value')
-        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.confirmationBox.setContentsMargins(10, 0, 10, 10)
+        self.confirmationBox.setFont(arial12r)
+
+        #############################################
+        # SETUP DIALOG LAYOUT
+        #################################
+
+        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.addWidget(self.formWidget)
+        self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
+
         self.setFixedSize(self.sizeHint())
+        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowTitle(_('FORM_VALUE_WINDOW_TITLE'))
 
-        connect(self.buttonBox.accepted, self.accept)
-        connect(self.buttonBox.rejected, self.reject)
+        connect(self.confirmationBox.accepted, self.accept)
+        connect(self.confirmationBox.rejected, self.reject)
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @pyqtSlot()
+    def accept(self):
+        """
+        Accepts the form and set the new value.
+        """
+        node = self.node
+        diagram = node.diagram
+        datatype = self.datatypeField.currentData()
+        value = self.valueField.value()
+        data = node.composeValue(value, datatype)
+        if node.text() != data:
+            name = _('COMMAND_NODE_SET_INDIVIDUAL_AS', node.text(), data)
+            diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+
+        super().accept()
 
 
-class RefactorNameDialog(QDialog):
+class RefactorNameForm(QDialog):
     """
     This class implements the form used to rename nodes during refactor operations.
     """

@@ -187,6 +187,14 @@ EXCEPT_HOOK_MESSAGE = 'This is embarrassing ...\n\n' \
                       '{0} will continue to work, however a reboot is highly recommended.'
 
 #############################################
+# FORMS
+#################################
+
+FORM_VALUE_WINDOW_TITLE = 'Compose value'
+FORM_VALUE_LABEL_DATATYPE = 'Datatype'
+FORM_VALUE_LABEL_VALUE = 'Value'
+
+#############################################
 # INFO BOX
 #################################
 

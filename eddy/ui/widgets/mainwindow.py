@@ -80,9 +80,9 @@ from eddy.core.utils.clipboard import Clipboard
 from eddy.lang import gettext as _
 from eddy.ui.dialogs.about import About
 from eddy.ui.dialogs.diagram import NewDiagramDialog
-from eddy.ui.dialogs.nodes import CardinalityRestrictionForm
-from eddy.ui.dialogs.nodes import RefactorNameDialog
-from eddy.ui.dialogs.nodes import ValueForm
+from eddy.ui.dialogs.forms import CardinalityRestrictionForm
+from eddy.ui.dialogs.forms import RefactorNameForm
+from eddy.ui.dialogs.forms import ValueForm
 from eddy.ui.dialogs.preferences import PreferencesDialog
 from eddy.ui.dialogs.progress import BusyProgressDialog
 from eddy.ui.dialogs.properties import PropertyFactory
@@ -1199,7 +1199,7 @@ class MainWindow(QMainWindow):
             supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
             node = first([x for x in diagram.selectedNodes() if x.type() in supported])
             if node:
-                 dialog = RefactorNameDialog(node, self)
+                 dialog = RefactorNameForm(node, self)
                  dialog.exec_()
 
     @pyqtSlot()
@@ -1366,13 +1366,7 @@ class MainWindow(QMainWindow):
                         diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
                 elif action.data() is Identity.Value:
                     form = ValueForm(node, self)
-                    if form.exec_() == ValueForm.Accepted:
-                        datatype = form.datatypeField.currentData()
-                        value = form.valueField.value()
-                        data = node.composeValue(value, datatype)
-                        if node.text() != data:
-                            name = _('COMMAND_NODE_SET_INDIVIDUAL_AS', node.text(), data)
-                            diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                    form.exec_()
 
     @pyqtSlot()
     def doSetNodeSpecial(self):
