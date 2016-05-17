@@ -692,7 +692,7 @@ class FacetNodeProperty(NodeProperty):
         self.facetLayout.addRow(self.facetLabel, self.facetField)
         self.facetLayout.addRow(self.valueLabel, self.valueField)
 
-        self.mainWidget.addTab(self.facetLayout, _('PROPERTY_NODE_TAB_FACET'))
+        self.mainWidget.addTab(self.facetWidget, _('PROPERTY_NODE_TAB_FACET'))
 
     #############################################
     #   SLOTS
