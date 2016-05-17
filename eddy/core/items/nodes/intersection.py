@@ -58,7 +58,7 @@ class IntersectionNode(OperatorNode):
         self.label = NodeLabel(template='and',
                                editable=False,
                                movable=False,
-                               pos=lambda: self.center(),
+                               pos=self.center,
                                parent=self)
 
     #############################################

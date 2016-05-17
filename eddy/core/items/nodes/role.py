@@ -74,7 +74,7 @@ class RoleNode(AbstractResizableNode):
         self.background = self.createBackground(w + s, h + s)
         self.selection = self.createSelection(w + s, h + s)
         self.label = NodeLabel(template='role',
-                               pos=lambda: self.center(),
+                               pos=self.center,
                                parent=self)
         self.updateTextPos()
         self.updateHandles()

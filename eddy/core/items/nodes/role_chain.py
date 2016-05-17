@@ -60,7 +60,7 @@ class RoleChainNode(OperatorNode):
         self.label = NodeLabel(template='chain',
                                editable=False,
                                movable=False,
-                               pos=lambda: self.center(),
+                               pos=self.center,
                                parent=self)
 
     #############################################

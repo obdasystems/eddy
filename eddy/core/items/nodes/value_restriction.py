@@ -77,7 +77,7 @@ class ValueRestrictionNode(AbstractNode):
         self.label = NodeLabel(template='xsd:length "32"^^xsd:string',
                                editable=False,
                                movable=False,
-                               pos=lambda: self.center(),
+                               pos=self.center,
                                parent=self)
         self.updateTextPos()
         self.updateLayout()

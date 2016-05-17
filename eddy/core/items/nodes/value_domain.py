@@ -67,7 +67,7 @@ class ValueDomainNode(AbstractNode):
         self.label = NodeLabel(template=Datatype.string.value,
                                editable=False,
                                movable=False,
-                               pos=lambda: self.center(),
+                               pos=self.center,
                                parent=self)
         self.updateLayout()
         self.updateTextPos()

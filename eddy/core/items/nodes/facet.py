@@ -82,12 +82,12 @@ class FacetNode(AbstractNode):
         self.labelA = FacetNodeQuotedLabel(template=Facet.length.value,
                                            editable=False,
                                            movable=False,
-                                           pos=lambda: self.centerA(),
+                                           pos=self.centerA,
                                            parent=self)
 
         self.labelB = FacetNodeQuotedLabel(template='"32"',
                                            movable=False,
-                                           pos=lambda: self.centerB(),
+                                           pos=self.centerB,
                                            parent=self)
 
         self.updateTextPos()

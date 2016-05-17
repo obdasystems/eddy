@@ -58,7 +58,7 @@ class EnumerationNode(OperatorNode):
         self.label = NodeLabel(template='oneOf',
                                editable=False,
                                movable=False,
-                               pos=lambda: self.center(),
+                               pos=self.center,
                                parent=self)
 
     #############################################

@@ -57,7 +57,7 @@ class DatatypeRestrictionNode(OperatorNode):
         self.label = NodeLabel(template='data',
                                editable=False,
                                movable=False,
-                               pos=lambda: self.center(),
+                               pos=self.center,
                                parent=self)
 
     #############################################

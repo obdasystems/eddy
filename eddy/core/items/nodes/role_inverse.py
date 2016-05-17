@@ -57,7 +57,7 @@ class RoleInverseNode(OperatorNode):
         self.label = NodeLabel(template='inv',
                                editable=False,
                                movable=False,
-                               pos=lambda: self.center(),
+                               pos=self.center,
                                parent=self)
 
     #############################################

@@ -58,7 +58,7 @@ class UnionNode(OperatorNode):
         self.label = NodeLabel(template='or',
                                editable=False,
                                movable=False,
-                               pos=lambda: self.center(),
+                               pos=self.center,
                                parent=self)
 
     #############################################

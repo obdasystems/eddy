@@ -58,7 +58,7 @@ class ComplementNode(OperatorNode):
         self.label = NodeLabel(template='not',
                                editable=False,
                                movable=False,
-                               pos=lambda: self.center(),
+                               pos=self.center,
                                parent=self)
 
     #############################################
