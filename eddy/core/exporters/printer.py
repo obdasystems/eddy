@@ -34,7 +34,6 @@
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QStandardItemModel
-from PyQt5.QtPrintSupport import QPrinter
 from PyQt5.QtWidgets import QTableView
 
 from eddy.core.datatypes.graphol import Item
