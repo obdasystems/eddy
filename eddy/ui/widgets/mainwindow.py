@@ -82,6 +82,7 @@ from eddy.lang import gettext as _
 
 from eddy.ui.dialogs.about import About
 from eddy.ui.dialogs.diagram import NewDiagramDialog
+from eddy.ui.dialogs.diagram import RenameDiagramDialog
 from eddy.ui.dialogs.forms import CardinalityRestrictionForm
 from eddy.ui.dialogs.forms import RefactorNameForm
 from eddy.ui.dialogs.forms import ValueForm
@@ -1113,6 +1114,17 @@ class MainWindow(QMainWindow):
             webbrowser.open(weburl)
 
     @pyqtSlot()
+    def doOpenDiagramProperties(self):
+        """
+        Executed when scene properties needs to be displayed.
+        """
+        diagram = self.sender().data() or self.mdi.activeDiagram
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            properties = self.propertyFactory.create(diagram)
+            properties.exec_()
+
+    @pyqtSlot()
     def doOpenNodeProperties(self):
         """
         Executed when node properties needs to be displayed.
@@ -1124,17 +1136,6 @@ class MainWindow(QMainWindow):
             if node:
                 properties = self.propertyFactory.create(diagram, node)
                 properties.exec_()
-
-    @pyqtSlot()
-    def doOpenDiagramProperties(self):
-        """
-        Executed when scene properties needs to be displayed.
-        """
-        diagram = self.mdi.activeDiagram
-        if diagram:
-            diagram.setMode(DiagramMode.Idle)
-            properties = self.propertyFactory.create(diagram)
-            properties.exec_()
 
     @pyqtSlot()
     def doPaste(self):
@@ -1229,6 +1230,17 @@ class MainWindow(QMainWindow):
                     subwindow.close()
                 self.project.removeDiagram(diagram)
                 fremove(diagram.path)
+
+    @pyqtSlot()
+    def doRenameDiagram(self):
+        """
+        Renames a diagram.
+        """
+        action = self.sender()
+        diagram = action.data()
+        if diagram:
+            form = RenameDiagramDialog(self.project, diagram, self)
+            form.exec_()
 
     @pyqtSlot()
     def doRelocateLabel(self):

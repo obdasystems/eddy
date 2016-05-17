@@ -63,12 +63,15 @@ class MenuFactory(QObject):
         :type diagram: Diagram
         :rtype: QMenu
         """
+        # BUILD THE MENU
         menu = QMenu()
         if not mainwindow.clipboard.empty():
             menu.addAction(mainwindow.actionPaste)
         menu.addAction(mainwindow.actionSelectAll)
         menu.addSeparator()
         menu.addAction(mainwindow.actionDiagramProperties)
+        # SETUP ACTION DATA
+        mainwindow.actionDiagramProperties.setData(diagram)
         return menu
 
     #############################################

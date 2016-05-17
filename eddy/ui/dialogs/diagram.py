@@ -34,18 +34,19 @@
 
 import os
 
+from abc import ABCMeta
 from traceback import format_exception
 
 from PyQt5.QtCore import Qt, pyqtSlot, QRectF, QSettings
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QFormLayout, QFrame, QLabel, QMessageBox
-from PyQt5.QtWidgets import QWidget, QDialogButtonBox
+from PyQt5.QtWidgets import QDialog, QWidget, QVBoxLayout, QFormLayout
+from PyQt5.QtWidgets import QDialogButtonBox, QMessageBox, QLabel, QFrame
 
 from eddy import ORGANIZATION, APPNAME
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphol import GrapholExporter
-from eddy.core.functions.fsystem import isdir
+from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.misc import cutR, isEmpty
 from eddy.core.functions.path import isPathValid, shortPath, expandPath
 from eddy.core.functions.signals import connect
@@ -55,13 +56,15 @@ from eddy.lang import gettext as _
 from eddy.ui.fields import StringField
 
 
-class NewDiagramDialog(QDialog):
+class AbstractDiagramDialog(QDialog):
     """
-    This class is used to display a modal window used to create a new diagram.
+    Base class for diagram dialogs.
     """
+    __metaclass__ = ABCMeta
+
     def __init__(self, project, parent=None):
         """
-        Initialize the new diagram dialog.
+        Initialize the dialog.
         :type project: Project
         :type parent: QWidget
         """
@@ -85,7 +88,7 @@ class NewDiagramDialog(QDialog):
         self.nameField.setMinimumWidth(400)
         self.nameField.setMaxLength(64)
         connect(self.nameField.textChanged, self.onNameFieldChanged)
-        connect(self.nameField.textChanged, self.doDiagramPathValidate)
+        connect(self.nameField.textChanged, self.doPathValidate)
 
         self.pathLabel = QLabel(self)
         self.pathLabel.setFont(arial12r)
@@ -111,7 +114,7 @@ class NewDiagramDialog(QDialog):
         # CONFIRMATION AREA
         #################################
 
-        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel, Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(arial12r)
         self.confirmationBox.button(QDialogButtonBox.Ok).setEnabled(False)
@@ -132,13 +135,72 @@ class NewDiagramDialog(QDialog):
         self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
-        self.setWindowTitle(_('DIAGRAM_DIALOG_WINDOW_TITLE'))
 
         connect(self.confirmationBox.accepted, self.accept)
         connect(self.confirmationBox.rejected, self.reject)
 
     #############################################
-    # SLOTS
+    #   SLOTS
+    #################################
+
+    @pyqtSlot()
+    def doPathValidate(self):
+        """
+        Validate diagram path settings.
+        """
+        caption = ''
+        enabled = True
+
+        #############################################
+        # CHECK NAME
+        #################################
+
+        name = self.nameField.value()
+        path = self.pathField.value()
+
+        if not name:
+            caption = ''
+            enabled = False
+        else:
+            if fexists(path):
+                caption = _('DIAGRAM_CAPTION_ALREADY_EXISTS', name)
+                enabled = False
+            elif not isPathValid(path):
+                caption = _('DIAGRAM_CAPTION_NAME_NOT_VALID', name)
+                enabled = False
+
+        self.caption.setText(caption)
+        self.caption.setVisible(not isEmpty(caption))
+        self.confirmationBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
+        self.setFixedSize(self.sizeHint())
+
+    @pyqtSlot(str)
+    def onNameFieldChanged(self, name):
+        """
+        Update the diagram location field to reflect the new diagram name.
+        :type name: str
+        """
+        if not isEmpty(name):
+            name = name.strip()
+            name = '{0}{1}'.format(cutR(name, File.Graphol.extension), File.Graphol.extension)
+        self.pathField.setValue('{0}{1}'.format(self.projectPath, name))
+
+
+class NewDiagramDialog(AbstractDiagramDialog):
+    """
+    This class is used to display a modal window used to create a new diagram.
+    """
+    def __init__(self, project, parent=None):
+        """
+        Initialize the new diagram dialog.
+        :type project: Project
+        :type parent: QWidget
+        """
+        super().__init__(project, parent)
+        self.setWindowTitle(_('DIAGRAM_DIALOG_NEW_WINDOW_TITLE'))
+
+    #############################################
+    #   SLOTS
     #################################
 
     @pyqtSlot()
@@ -169,8 +231,41 @@ class NewDiagramDialog(QDialog):
         else:
             super().accept()
 
+
+class RenameDiagramDialog(AbstractDiagramDialog):
+    """
+    This class is used to display a modal window used to rename diagrams.
+    """
+    def __init__(self, project, diagram, parent=None):
+        """
+        Initialize the new diagram dialog.
+        :type project: Project
+        :type diagram: Diagram
+        :type parent: QWidget
+        """
+        super().__init__(project, parent)
+        self.diagram = diagram
+        self.nameField.setText(cutR(self.diagram.name, File.Graphol.extension))
+        self.setWindowTitle(_('DIAGRAM_DIALOG_RENAME_WINDOW_TITLE'))
+
+    #############################################
+    #   SLOTS
+    #################################
+
     @pyqtSlot()
-    def doDiagramPathValidate(self):
+    def accept(self):
+        """
+        Accept the form and renames the diagram.
+        """
+        self.project.removeDiagram(self.diagram)
+        path = expandPath(self.pathField.value())
+        os.rename(self.diagram.path, path)
+        self.diagram.path = path
+        self.project.addDiagram(self.diagram)
+        super().accept()
+
+    @pyqtSlot()
+    def doPathValidate(self):
         """
         Validate diagram path settings.
         """
@@ -188,25 +283,19 @@ class NewDiagramDialog(QDialog):
             caption = ''
             enabled = False
         else:
-            if isdir(path):
-                caption = _('DIAGRAM_CAPTION_ALREADY_EXISTS', name)
-                enabled = False
-            elif not isPathValid(path):
+            if not isPathValid(path):
                 caption = _('DIAGRAM_CAPTION_NAME_NOT_VALID', name)
                 enabled = False
+            else:
+                if expandPath(path) == expandPath(self.diagram.path):
+                    caption = ''
+                    enabled = False
+                else:
+                    if fexists(path):
+                        caption = _('DIAGRAM_CAPTION_ALREADY_EXISTS', name)
+                        enabled = False
 
         self.caption.setText(caption)
         self.caption.setVisible(not isEmpty(caption))
         self.confirmationBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
         self.setFixedSize(self.sizeHint())
-
-    @pyqtSlot(str)
-    def onNameFieldChanged(self, name):
-        """
-        Update the diagram location field to reflect the new diagram name.
-        :type name: str
-        """
-        if not isEmpty(name):
-            name = name.strip()
-            name = '{0}{1}'.format(cutR(name, File.Graphol.extension), File.Graphol.extension)
-        self.pathField.setValue('{0}{1}'.format(self.projectPath, name))

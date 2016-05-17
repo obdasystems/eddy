@@ -379,7 +379,11 @@ class ProjectExplorer(QWidget):
         self.iconGraphol = QIcon(':/icons/treeview/document-graphol')
         self.iconOwl = QIcon(':/icons/treeview/document-owl')
         self.iconDelete = QIcon(':/icons/24/delete')
-        
+        self.iconRename = QIcon(':/icons/24/label')
+
+        self.actionRenameDiagram = QAction(_('ACTION_RENAME_DIAGRAM_N'), self)
+        self.actionRenameDiagram.setIcon(self.iconRename)
+        connect(self.actionRenameDiagram.triggered, self.mainwindow.doRenameDiagram)
         self.actionDeleteDiagram = QAction(_('ACTION_DELETE_CONFIRM_N'), self)
         self.actionDeleteDiagram.setIcon(self.iconDelete)
         connect(self.actionDeleteDiagram.triggered, self.mainwindow.doRemoveDiagram)
@@ -576,8 +580,15 @@ class ProjectExplorerView(QTreeView):
                 diagram = item.data()
                 if diagram:
                     menu = QMenu()
+                    menu.addAction(self.widget.mainwindow.actionNewDiagram)
+                    menu.addSeparator()
+                    menu.addAction(self.widget.actionRenameDiagram)
                     menu.addAction(self.widget.actionDeleteDiagram)
+                    menu.addSeparator()
+                    menu.addAction(self.widget.mainwindow.actionDiagramProperties)
+                    self.widget.actionRenameDiagram.setData(diagram)
                     self.widget.actionDeleteDiagram.setData(diagram)
+                    self.widget.mainwindow.actionDiagramProperties.setData(diagram)
                     menu.exec_(mouseEvent.screenPos().toPoint())
 
         super().mouseReleaseEvent(mouseEvent)
