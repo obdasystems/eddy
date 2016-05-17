@@ -267,7 +267,6 @@ class MainWindow(QMainWindow):
         self.actionRefactorName = QAction(_('ACTION_REFACTOR_NAME_N'), self)
         self.actionComposePropertyDomain = QAction(_('ACTION_COMPOSE_PROPERTY_DOMAIN_N'), self)
         self.actionComposePropertyRange = QAction(_('ACTION_COMPOSE_PROPERTY_RANGE_N'), self)
-        self.actionsSetFacet = QAction(_('ACTION_SET_FACET_N'), self)
         self.actionRemoveEdgeBreakpoint = QAction(_('ACTION_REMOVE_EDGE_BREAKPOINT_N'), self)
         self.actionSwapEdge = QAction(_('ACTION_EDGE_SWAP_N'), self)
         self.actionSetEdgeComplete = QAction(_('ACTION_TOGGLE_EDGE_COMPLETE_N'), self)
