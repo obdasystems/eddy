@@ -33,15 +33,18 @@
 
 
 import math
+import os
 import unittest
 
 from PyQt5.QtCore import QPointF, QLineF
 
 from eddy.core.functions.misc import clamp, isEmpty, rangeF, snapF
-from eddy.core.functions.geometry import angle, distance, projection, intersection, midpoint
+from eddy.core.functions.geometry import angle, distance, projection
+from eddy.core.functions.geometry import intersection, midpoint
+from eddy.core.functions.path import compressPath
 
 
-class Test_Angle(unittest.TestCase):
+class Test_Functions(unittest.TestCase):
 
     def test_angle(self):
         self.assertEqual(0.0, angle(QPointF(0, 0), QPointF(+1, 0)))
@@ -49,9 +52,6 @@ class Test_Angle(unittest.TestCase):
         self.assertEqual(-math.pi / 2, angle(QPointF(0, 0), QPointF(0, +1)))
         self.assertEqual(math.pi, angle(QPointF(0, 0), QPointF(-1, 0)))
         self.assertEqual(+math.pi / 4, angle(QPointF(0, 0), QPointF(1, -1)))
-
-
-class Test_Clamp(unittest.TestCase):
 
     def test_clamp(self):
         self.assertEqual(0.0, clamp(val=-4.0, minval=0.0))
@@ -64,8 +64,8 @@ class Test_Clamp(unittest.TestCase):
     def test_clamp_with_exception(self):
         self.assertRaises(ValueError, clamp, val=4.0, minval=10.0, maxval=0.0)
 
-
-class Test_DistanceP(unittest.TestCase):
+    def test_compress_path(self):
+        self.assertEqual(10, len(compressPath(os.path.join('this', 'is', 'a', 'very', 'long', 'path'), 10)))
 
     def test_distance(self):
         self.assertEqual(0.0, distance(QPointF(0, 0), QPointF(0, 0)))
@@ -76,10 +76,7 @@ class Test_DistanceP(unittest.TestCase):
         self.assertEqual(10.0, distance(QPointF(0, 8), QPointF(6, 0)))
         self.assertEqual(10.0, distance(QPointF(0, -8), QPointF(-6, 0)))
 
-
-class Test_DistanceL(unittest.TestCase):
-
-    def test_distance(self):
+    def test_projection(self):
         P = QPointF(2, 8)
         L = QLineF(QPointF(0, 0), QPointF(10, 0))
         D = projection(L, P)
@@ -87,16 +84,10 @@ class Test_DistanceL(unittest.TestCase):
         self.assertEqual(D[0], 8.0)
         self.assertEqual(D[1], QPointF(2, 0))
 
-
-class Test_IntersectionL(unittest.TestCase):
-
     def test_intersection(self):
         self.assertEqual(QPointF(0, 0), intersection(QLineF(QPointF(-1, 0), QPointF(1, 0)), QLineF(QPointF(0, -1), QPointF(0, 1))))
         self.assertEqual(QPointF(-4, 0), intersection(QLineF(QPointF(-10, 0), QPointF(10, 0)), QLineF(QPointF(-4, -12), QPointF(-4, 14))))
         self.assertIsNone(intersection(QLineF(QPointF(-1, 0), QPointF(1, 0)), QLineF(QPointF(-1, 2), QPointF(1, 2))))
-
-
-class Test_IsEmpty(unittest.TestCase):
 
     def test_empty(self):
         self.assertTrue(isEmpty(None))
@@ -105,36 +96,27 @@ class Test_IsEmpty(unittest.TestCase):
         self.assertFalse(isEmpty('Hello World'))
         self.assertFalse(isEmpty(4))
 
-
-class Test_Midpoint(unittest.TestCase):
-
     def test_midpoint(self):
         self.assertEqual(QPointF(5, 0), midpoint(QPointF(0, 0), QPointF(10, 0)))
         self.assertEqual(QPointF(0, 5), midpoint(QPointF(0, 0), QPointF(0, 10)))
         self.assertEqual(QPointF(5, 5), midpoint(QPointF(0, 0), QPointF(10, 10)))
-
-
-class Test_RangeF(unittest.TestCase):
 
     def test_generator(self):
         self.assertEqual([0.0, 1.0, 2.0, 3.0], list(rangeF(0.0, 4.0, 1.0)))
         self.assertEqual([0.0, 0.2, 0.4, 0.6, 0.8], list(rangeF(0.0, 1.0, 0.2)))
         self.assertEqual([0.0000, 0.0001, 0.0002, 0.0003, 0.0004], list(rangeF(0.0000, 0.0005, 0.0001)))
 
-
-class Test_SnapF(unittest.TestCase):
-
-    def test_snap_to_grid(self):
+    def test_snapF(self):
         self.assertEqual(10.0, snapF(value=8.0, size=10.0))
         self.assertEqual(10.0, snapF(value=6.0, size=10.0))
         self.assertEqual(0.0, snapF(value=5.0, size=10.0))
         self.assertEqual(0.0, snapF(value=4.0, size=10.0))
         self.assertEqual(0.0, snapF(value=2.0, size=10.0))
         
-    def test_snap_to_grid_with_offset(self):
+    def test_snapF_with_offset(self):
         self.assertEqual(12.0, snapF(value=8.0, size=10.0, offset=2.0))
         self.assertEqual(6.0, snapF(value=6.0, size=10.0, offset=-4.0))
 
-    def test_snap_to_grid_with_skip(self):
+    def test_snapF_with_skip(self):
         self.assertEqual(8.0, snapF(value=8.0, size=10.0, perform=False))
         self.assertEqual(6.0, snapF(value=6.0, size=10.0, perform=False))
