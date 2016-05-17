@@ -39,7 +39,7 @@ from collections import OrderedDict
 from traceback import format_exception as f_exc
 
 from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, pyqtSlot, pyqtSignal
-from PyQt5.QtGui import QBrush, QColor, QPixmap
+from PyQt5.QtGui import QBrush, QColor, QPixmap, QCursor
 from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
 from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QToolButton
 from PyQt5.QtWidgets import QMenu, QApplication, QMessageBox
@@ -1655,65 +1655,53 @@ class MainWindow(QMainWindow):
         self.doSave()
         self.sgnClosed.emit()
 
-    # def dragEnterEvent(self, dragEvent):
-    #     """
-    #     Executed when a drag is in progress and the mouse enter this widget.
-    #     :type dragEvent: QDragEnterEvent
-    #     """
-    #     if dragEvent.mimeData().hasUrls():
-    #         self.setCursor(QCursor(Qt.DragCopyCursor))
-    #         dragEvent.setDropAction(Qt.CopyAction)
-    #         dragEvent.accept()
-    #     else:
-    #         dragEvent.ignore()
-    #
-    # def dragMoveEvent(self, dragEvent):
-    #     """
-    #     Executed when a drag is in progress and the mouse moves onto this widget.
-    #     :type dragEvent: QDragMoveEvent
-    #     """
-    #     dragEvent.accept()
-    #
-    # def dragLeaveEvent(self, dragEvent):
-    #     """
-    #     Executed when a drag is in progress and the mouse leave this widget.
-    #     :type dragEvent: QDragEnterEvent
-    #     """
-    #     self.unsetCursor()
-    #
-    # def dropEvent(self, dropEvent):
-    #     """
-    #     Executed when the drag is dropped on this widget.
-    #     :type dropEvent: QDropEvent
-    #     """
-    #     if dropEvent.mimeData().hasUrls():
-    #
-    #         self.unsetCursor()
-    #         dropEvent.setDropAction(Qt.CopyAction)
-    #         platform = Platform.identify()
-    #         for url in dropEvent.mimeData().urls():
-    #
-    #             path = url.path()
-    #             if platform is Platform.Windows:
-    #                 # On Windows the absolute path returned for each URL has a
-    #                 # leading slash: this obviously is not correct on windows
-    #                 # platform when absolute url have the form C:\\Programs\\... (Qt bug?)
-    #                 path = path.lstrip('/').lstrip('\\')
-    #
-    #             if os.path.isfile(path) and path.endswith(File.Graphol.extension):
-    #                 # If the file exists and is a Graphol file then open it!
-    #                 if not self.focusDocument(path):
-    #                     scene = self.createSceneFromGrapholFile(path)
-    #                     if scene:
-    #                         mainview = self.createDiagramView(scene)
-    #                         subwindow = self.createMdiSubWindow(mainview)
-    #                         subwindow.showMaximized()
-    #                         self.mdi.setActiveSubWindow(subwindow)
-    #                         self.mdi.update()
-    #
-    #         dropEvent.accept()
-    #     else:
-    #         dropEvent.ignore()
+    def dragEnterEvent(self, dragEvent):
+        """
+        Executed when a drag is in progress and the mouse enter this widget.
+        :type dragEvent: QDragEnterEvent
+        """
+        if dragEvent.mimeData().hasUrls():
+            self.setCursor(QCursor(Qt.DragCopyCursor))
+            dragEvent.setDropAction(Qt.CopyAction)
+            dragEvent.accept()
+        else:
+            dragEvent.ignore()
+
+    def dragMoveEvent(self, dragEvent):
+        """
+        Executed when a drag is in progress and the mouse moves onto this widget.
+        :type dragEvent: QDragMoveEvent
+        """
+        dragEvent.accept()
+
+    def dragLeaveEvent(self, dragEvent):
+        """
+        Executed when a drag is in progress and the mouse leave this widget.
+        :type dragEvent: QDragEnterEvent
+        """
+        self.unsetCursor()
+
+    def dropEvent(self, dropEvent):
+        """
+        Executed when the drag is dropped on this widget.
+        :type dropEvent: QDropEvent
+        """
+        if dropEvent.mimeData().hasUrls():
+            self.unsetCursor()
+            dropEvent.setDropAction(Qt.CopyAction)
+            platform = Platform.identify()
+            for url in dropEvent.mimeData().urls():
+                path = url.path()
+                if platform is Platform.Windows:
+                    # On Windows the absolute path returned for each URL has a
+                    # leading slash: this obviously is not correct on windows
+                    # platform when absolute url have the form C:\\Programs\\... (Qt bug?)
+                    path = path.lstrip('/').lstrip('\\')
+                if fexists(path) and File.forPath(path) is File.Graphol:
+                    self.openFile(path)
+            dropEvent.accept()
+        else:
+            dropEvent.ignore()
 
     def eventFilter(self, source, event):
         """
