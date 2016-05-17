@@ -32,10 +32,12 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import pyqtSlot, QSortFilterProxyModel, Qt, pyqtSignal, QSize
+from PyQt5.QtCore import QSortFilterProxyModel, Qt, QSize
+from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QPainter, QStandardItemModel, QStandardItem, QIcon
-from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QHeaderView, QAction, QMenu
+from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout
 from PyQt5.QtWidgets import QStyleOption, QStyle, QApplication
+from PyQt5.QtWidgets import QHeaderView, QAction, QMenu
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.system import File
@@ -67,11 +69,11 @@ class OntologyExplorer(QWidget):
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumWidth(216)
 
-        self.iconA = QIcon(':/icons/treeview/predicate-attribute')
-        self.iconC = QIcon(':/icons/treeview/predicate-concept')
-        self.iconI = QIcon(':/icons/treeview/predicate-instance')
-        self.iconRoot = QIcon(':/icons/treeview/predicate-role')
-        self.iconV = QIcon(':/icons/treeview/predicate-value')
+        self.iconAttribute = QIcon(':/icons/treeview/predicate-attribute')
+        self.iconCconcept = QIcon(':/icons/treeview/predicate-concept')
+        self.iconInstance = QIcon(':/icons/treeview/predicate-instance')
+        self.iconRole = QIcon(':/icons/treeview/predicate-role')
+        self.iconValue = QIcon(':/icons/treeview/predicate-value')
 
         self.search = StringField(self)
         self.search.setAcceptDrops(False)
@@ -233,16 +235,16 @@ class OntologyExplorer(QWidget):
         :type node:
         """
         if node.type() is Item.AttributeNode:
-            return self.iconA
+            return self.iconAttribute
         if node.type() is Item.ConceptNode:
-            return self.iconC
+            return self.iconCconcept
         if node.type() is Item.IndividualNode:
             if node.identity is Identity.Instance:
-                return self.iconI
+                return self.iconInstance
             if node.identity is Identity.Value:
-                return self.iconV
+                return self.iconValue
         if node.type() is Item.RoleNode:
-            return self.iconRoot
+            return self.iconRole
 
     def parentFor(self, node):
         """
