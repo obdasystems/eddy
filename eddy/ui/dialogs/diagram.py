@@ -50,7 +50,6 @@ from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.misc import cutR, isEmpty
 from eddy.core.functions.path import isPathValid, shortPath, expandPath
 from eddy.core.functions.signals import connect
-from eddy.core.project import Project
 from eddy.core.qt import Font
 from eddy.lang import gettext as _
 from eddy.ui.fields import StringField

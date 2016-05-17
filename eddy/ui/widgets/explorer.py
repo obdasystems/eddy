@@ -39,7 +39,6 @@ from PyQt5.QtWidgets import QStyleOption, QStyle, QApplication
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.system import File
-from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import first, cutR
 from eddy.core.functions.signals import connect, emit
 from eddy.core.qt import Font

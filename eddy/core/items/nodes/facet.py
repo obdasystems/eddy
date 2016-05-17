@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QPointF, QRectF, Qt
+from PyQt5.QtCore import QPointF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
 from PyQt5.QtGui import QPen, QColor, QPixmap, QBrush
 

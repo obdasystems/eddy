@@ -44,7 +44,6 @@ from eddy.core.exporters.pdf import PdfExporter
 from eddy.core.exporters.printer import PrinterExporter
 from eddy.core.functions.misc import cutR
 from eddy.core.functions.path import openPath
-from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.meta import MetaFactory
 from eddy.core.syntax.owl import OWL2Validator
 
