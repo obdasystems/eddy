@@ -131,6 +131,13 @@ class DockTitleWidget(QWidget):
     #   EVENTS
     #################################
 
+    def mouseDoubleClickEvent(self, mouseEvent):
+        """
+        Executed when the mouse is double clicked on the widget.
+        :type mouseEvent: QMouseEvent
+        """
+        pass
+
     def paintEvent(self, paintEvent):
         """
         This is needed for the widget to pick the stylesheet.
