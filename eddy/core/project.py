@@ -71,6 +71,7 @@ class Project(QObject):
     sgnItemRemoved = pyqtSignal('QGraphicsScene', 'QGraphicsItem')
     sgnMetaAdded = pyqtSignal(Item, str)
     sgnMetaRemoved = pyqtSignal(Item, str)
+    sgnUpdated = pyqtSignal()
 
     def __init__(self, path, prefix, iri, parent=None):
         """

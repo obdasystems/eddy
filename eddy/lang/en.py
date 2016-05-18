@@ -132,6 +132,8 @@ COMMAND_NODE_SET_INDIVIDUAL_AS = 'change {0} to {1}'
 COMMAND_NODE_SET_PROPERTY_RESTRICTION = 'change {0} to {1}'
 COMMAND_NODE_SET_SPECIAL = 'change {0} to {1}'
 COMMAND_NODE_SET_VALUE = 'change value to {0}'
+COMMAND_PROJECT_SET_PREFIX = "set project prefix to '{0}'"
+COMMAND_PROJECT_SET_IRI = "set project IRI to '{0}'"
 
 #############################################
 # DIAGRAM CREATE / EDIT / LOAD / DELETE

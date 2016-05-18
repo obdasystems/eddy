@@ -42,6 +42,8 @@ from PyQt5.QtWidgets import QStackedWidget, QStyleOption
 
 from eddy.core.commands.common import CommandSetProperty
 from eddy.core.commands.nodes import CommandNodeLabelChange
+from eddy.core.commands.project import CommandProjectSetIRI
+from eddy.core.commands.project import CommandProjectSetPrefix
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Facet, Datatype
 from eddy.core.diagram import Diagram
@@ -183,6 +185,7 @@ class Info(QScrollArea):
 
         if isinstance(something, Project):
             self.project = something
+            connect(self.project.sgnUpdated, self.stack)
             self.stack()
         elif isinstance(something, Diagram):
             self.diagram = something
@@ -351,6 +354,22 @@ class AbstractInfo(QWidget):
         self.setContentsMargins(0, 0, 0, 0)
         self.mainwindow = mainwindow
 
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def project(self):
+        """
+        Returns the project loaded in the main window.
+        :rtype: Project
+        """
+        return self.mainwindow.project
+
+    #############################################
+    #   INTERFACE
+    #################################
+
     @abstractmethod
     def updateData(self, **kwargs):
         """
@@ -462,7 +481,10 @@ class ProjectInfo(AbstractInfo):
         """
         Executed whenever we finish to edit the ontology prefix
         """
-        self.mainwindow.project.iri = self.iriField.value()
+        project = self.project
+        iri = self.iriField.value()
+        if project.iri != iri:
+            project.undoStack.push(CommandProjectSetIRI(project, project.iri, iri))
         self.iriField.clearFocus()
 
     @pyqtSlot()
@@ -470,7 +492,10 @@ class ProjectInfo(AbstractInfo):
         """
         Executed whenever we finish to edit the ontology prefix
         """
-        self.mainwindow.project.prefix = self.prefixField.value()
+        project = self.project
+        prefix = self.prefixField.value()
+        if project.prefix != prefix:
+            project.undoStack.push(CommandProjectSetPrefix(project, project.prefix, prefix))
         self.prefixField.clearFocus()
 
     #############################################
