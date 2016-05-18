@@ -184,7 +184,7 @@ class AbstractEdge(AbstractItem):
                 index = i + 1
                 break
 
-        self.diagram.undoStack.push(CommandEdgeBreakpointAdd(self.diagram, self, index, point))
+        self.project.undoStack.push(CommandEdgeBreakpointAdd(self.diagram, self, index, point))
         return index
 
     def breakpointAt(self, point):
@@ -507,13 +507,13 @@ class AbstractEdge(AbstractItem):
             anchorNodePos = QPointF(anchorNode.anchor(self))
             if anchorNodePos != self.mousePressAnchorNodePos:
                 data = {'undo': self.mousePressAnchorNodePos, 'redo': anchorNodePos}
-                self.diagram.undoStack.push(CommandEdgeAnchorMove(self.diagram, self, anchorNode, data))
+                self.project.undoStack.push(CommandEdgeAnchorMove(self.diagram, self, anchorNode, data))
         elif self.diagram.mode is DiagramMode.BreakPointMove:
             breakPoint = self.mousePressBreakPoint
             breakPointPos = self.breakpoints[breakPoint]
             if breakPointPos != self.mousePressBreakPointPos:
                 data = {'undo': self.mousePressBreakPointPos, 'redo': breakPointPos}
-                self.diagram.undoStack.push(CommandEdgeBreakpointMove(self.diagram, self, breakPoint, data))
+                self.project.undoStack.push(CommandEdgeBreakpointMove(self.diagram, self, breakPoint, data))
 
         self.diagram.setMode(DiagramMode.Idle)
         self.updateEdge()

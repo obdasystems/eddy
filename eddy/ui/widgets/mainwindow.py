@@ -43,7 +43,7 @@ from PyQt5.QtGui import QBrush, QColor, QPixmap, QCursor
 from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
 from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QToolButton
 from PyQt5.QtWidgets import QMenu, QApplication, QMessageBox
-from PyQt5.QtWidgets import QUndoGroup, QStyle, QFileDialog
+from PyQt5.QtWidgets import QStyle, QFileDialog
 
 from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION, BUG_TRACKER
 from eddy.core.commands.common import CommandComposeAxiom
@@ -165,11 +165,6 @@ class MainWindow(QMainWindow):
         # noinspection PyArgumentList
         QApplication.processEvents()
 
-        self.clipboard = Clipboard(self)
-        self.menuFactory = MenuFactory(self)
-        self.propertyFactory = PropertyFactory(self)
-        self.undoGroup = QUndoGroup(self)
-
         self.info = Info(self)
         self.mdi = MdiArea(self)
         self.ontologyExplorer = OntologyExplorer(self)
@@ -185,6 +180,20 @@ class MainWindow(QMainWindow):
         self.dockProjectExplorer = DockWidget(_('DOCK_PROJECT_EXPLORER'), ':/icons/18/storage', self)
 
         self.buttonSetBrush = QToolButton()
+
+        #############################################
+        # LOAD THE GIVEN PROJECT
+        #################################
+
+        self.project = ProjectLoader(path, self).run()
+
+        #############################################
+        # CREATE UTILITIES
+        #################################
+
+        self.clipboard = Clipboard(self)
+        self.menuFactory = MenuFactory(self)
+        self.propertyFactory = PropertyFactory(self)
 
         #############################################
         # CREATE ICONS
@@ -237,8 +246,8 @@ class MainWindow(QMainWindow):
         # noinspection PyArgumentList
         QApplication.processEvents()
 
-        self.actionUndo = self.undoGroup.createUndoAction(self)
-        self.actionRedo = self.undoGroup.createRedoAction(self)
+        self.actionUndo = self.project.undoStack.createUndoAction(self)
+        self.actionRedo = self.project.undoStack.createRedoAction(self)
         self.actionNewDiagram = QAction(_('ACTION_NEW_DIAGRAM_N'), self)
         self.actionOpen = QAction(_('ACTION_OPEN_N'), self)
         self.actionSave = QAction(_('ACTION_SAVE_N'), self)
@@ -280,13 +289,6 @@ class MainWindow(QMainWindow):
         self.actionsSetFacet = []
         self.actionsSetIndividualAs = []
         self.actionsSwitchOperator = []
-
-        #############################################
-        # LOAD THE GIVEN PROJECT
-        #################################
-
-        worker = ProjectLoader(path, self)
-        self.project = worker.run()
 
         #############################################
         # CONFIGURE MAIN WINDOW
@@ -889,7 +891,7 @@ class MainWindow(QMainWindow):
                     if item.zValue() >= zValue:
                         zValue = item.zValue() + 0.2
                 if zValue != node.zValue():
-                    diagram.undoStack.push(CommandNodeSetDepth(diagram, node, zValue))
+                    self.project.undoStack.push(CommandNodeSetDepth(diagram, node, zValue))
 
     @pyqtSlot()
     def doCenterDiagram(self):
@@ -908,7 +910,7 @@ class MainWindow(QMainWindow):
                 if moveX or moveY:
                     items = [x for x in items if x.isNode() or x.isEdge()]
                     command = CommandItemsTranslate(diagram, items, moveX, moveY, _('COMMAND_DIAGRAM_CENTER'))
-                    diagram.undoStack.push(command)
+                    self.project.undoStack.push(command)
                     self.mdi.activeView.centerOn(0, 0)
 
     @pyqtSlot()
@@ -937,7 +939,7 @@ class MainWindow(QMainWindow):
                 items = diagram.propertyComposition(node, item)
                 nodes = {x for x in items if x.isNode()}
                 edges = {x for x in items if x.isEdge()}
-                diagram.undoStack.push(CommandComposeAxiom(name, diagram, node, nodes, edges))
+                self.project.undoStack.push(CommandComposeAxiom(name, diagram, node, nodes, edges))
 
     @pyqtSlot()
     def doCopy(self):
@@ -967,7 +969,7 @@ class MainWindow(QMainWindow):
             items = diagram.selectedItems()
             if items:
                 items.extend([x for item in items if item.isNode() for x in item.edges if x not in items])
-                diagram.undoStack.push(CommandItemsRemove(diagram, items))
+                self.project.undoStack.push(CommandItemsRemove(diagram, items))
 
     @pyqtSlot()
     def doDelete(self):
@@ -980,7 +982,7 @@ class MainWindow(QMainWindow):
             items = diagram.selectedItems()
             if items:
                 items.extend([x for item in items if item.isNode() for x in item.edges if x not in items])
-                diagram.undoStack.push(CommandItemsRemove(diagram, items))
+                self.project.undoStack.push(CommandItemsRemove(diagram, items))
 
     @pyqtSlot()
     def doExport(self):
@@ -1179,7 +1181,7 @@ class MainWindow(QMainWindow):
                 action = self.sender()
                 color = action.data()
                 nodes = self.project.predicates(node.type(), node.text())
-                diagram.undoStack.push(CommandNodeSetBrush(diagram, nodes, QBrush(QColor(color.value))))
+                self.project.undoStack.push(CommandNodeSetBrush(diagram, nodes, QBrush(QColor(color.value))))
 
     @pyqtSlot()
     def doRefactorName(self):
@@ -1206,7 +1208,7 @@ class MainWindow(QMainWindow):
             action = self.sender()
             edge, breakpoint = action.data()
             if 0 <= breakpoint < len(edge.breakpoints):
-                diagram.undoStack.push(CommandEdgeBreakpointRemove(diagram, edge, breakpoint))
+                self.project.undoStack.push(CommandEdgeBreakpointRemove(diagram, edge, breakpoint))
 
     @pyqtSlot()
     def doRemoveDiagram(self):
@@ -1255,7 +1257,7 @@ class MainWindow(QMainWindow):
             if node and node.label.isMovable():
                 undo = node.label.pos()
                 redo = node.label.defaultPos()
-                diagram.undoStack.push(CommandNodeLabelMove(diagram, node, undo, redo))
+                self.project.undoStack.push(CommandNodeLabelMove(diagram, node, undo, redo))
 
     @pyqtSlot()
     def doSave(self):
@@ -1309,7 +1311,7 @@ class MainWindow(QMainWindow):
                     if item.zValue() <= zValue:
                         zValue = item.zValue() - 0.2
                 if zValue != node.zValue():
-                    diagram.undoStack.push(CommandNodeSetDepth(diagram, node, zValue))
+                    self.project.undoStack.push(CommandNodeSetDepth(diagram, node, zValue))
 
     @pyqtSlot()
     def doSetNodeBrush(self):
@@ -1325,7 +1327,7 @@ class MainWindow(QMainWindow):
             supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
             selected = {x for x in diagram.selectedNodes() if x.type() in supported and x.brush != brush}
             if selected:
-                diagram.undoStack.push(CommandNodeSetBrush(diagram, selected, brush))
+                self.project.undoStack.push(CommandNodeSetBrush(diagram, selected, brush))
 
     @pyqtSlot()
     def doSetPropertyRestriction(self):
@@ -1349,7 +1351,7 @@ class MainWindow(QMainWindow):
                         data = restriction.format(form.minValue or '-', form.maxValue or '-')
                 if data and node.text() != data:
                     name = _('COMMAND_NODE_SET_PROPERTY_RESTRICTION', node.shortname, data)
-                    diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                    self.project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
     def doSetIndividualAs(self):
@@ -1367,7 +1369,7 @@ class MainWindow(QMainWindow):
                     if node.identity is Identity.Value:
                         data = node.label.template
                         name = _('COMMAND_NODE_SET_INDIVIDUAL_AS', node.text(), data)
-                        diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                        self.project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
                 elif action.data() is Identity.Value:
                     form = ValueForm(node, self)
                     form.exec_()
@@ -1388,7 +1390,7 @@ class MainWindow(QMainWindow):
                 data = special.value if special else node.label.template
                 if node.text() != data:
                     name = _('COMMAND_NODE_SET_SPECIAL', node.shortname, data)
-                    diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                    self.project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
     def doSetDatatype(self):
@@ -1405,7 +1407,7 @@ class MainWindow(QMainWindow):
                 data = datatype.value
                 if node.text() != data:
                     name = _('COMMAND_NODE_SET_DATATYPE', node.shortname, data)
-                    diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                    self.project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
     def doSetFacet(self):
@@ -1422,7 +1424,7 @@ class MainWindow(QMainWindow):
                 if facet != node.facet:
                     data = node.compose(facet, node.value)
                     name = _('COMMAND_NODE_SET_FACET', node.facet.value, facet.value)
-                    diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                    self.project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
     def doSwapEdge(self):
@@ -1435,7 +1437,7 @@ class MainWindow(QMainWindow):
             validate = self.project.validator.validate
             selected = [e for e in diagram.selectedEdges() if validate(e.target, e, e.source).valid]
             if selected:
-                diagram.undoStack.push(CommandEdgeSwap(diagram, selected))
+                self.project.undoStack.push(CommandEdgeSwap(diagram, selected))
 
     @pyqtSlot()
     def doSwitchOperatorNode(self):
@@ -1451,7 +1453,7 @@ class MainWindow(QMainWindow):
                 if node.type() is not action.data():
                     xnode = diagram.factory.create(action.data())
                     xnode.setPos(node.pos())
-                    diagram.undoStack.push(CommandNodeOperatorSwitchTo(diagram, node, xnode))
+                    self.project.undoStack.push(CommandNodeOperatorSwitchTo(diagram, node, xnode))
 
     @pyqtSlot()
     def doSyntaxCheck(self):
@@ -1522,7 +1524,7 @@ class MainWindow(QMainWindow):
             if selected:
                 comp = sum(edge.complete for edge in selected) <= len(selected) / 2
                 data = {edge: {'from': edge.complete, 'to': comp} for edge in selected}
-                diagram.undoStack.push(CommandEdgeToggleComplete(diagram, data))
+                self.project.undoStack.push(CommandEdgeToggleComplete(diagram, data))
 
     @pyqtSlot()
     def doSnapToGrid(self):
@@ -1623,7 +1625,6 @@ class MainWindow(QMainWindow):
 
             view = subwindow.view
             diagram = subwindow.diagram
-            diagram.undoStack.setActive()
             diagram.setMode(DiagramMode.Idle)
             self.info.browse(diagram)
             self.overview.browse(view)

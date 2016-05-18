@@ -749,7 +749,7 @@ class AbstractResizableNode(AbstractNode):
                     }
                 }
 
-                self.diagram.undoStack.push(CommandNodeRezize(self.diagram, self, data))
+                self.project.undoStack.push(CommandNodeRezize(self.diagram, self, data))
 
             self.diagram.setMode(DiagramMode.Idle)
 

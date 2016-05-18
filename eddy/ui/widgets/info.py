@@ -718,14 +718,14 @@ class PredicateNodeInfo(NodeInfo):
                 data = data if not isEmpty(data) else node.label.template
                 if data != node.text():
                     diagram = node.diagram
+                    project = node.project
                     if sender is self.nameField:
-                        diagram.undoStack.beginMacro(_('COMMAND_NODE_REFACTOR_NAME', node.text(), data))
-                        for n in diagram.project.predicates(node.type(), node.text()):
-                            diagram.undoStack.push(CommandNodeLabelChange(n.diagram, n, n.text(), data))
-                        diagram.undoStack.endMacro()
+                        project.undoStack.beginMacro(_('COMMAND_NODE_REFACTOR_NAME', node.text(), data))
+                        for n in project.predicates(node.type(), node.text()):
+                            project.undoStack.push(CommandNodeLabelChange(n.diagram, n, n.text(), data))
+                        project.undoStack.endMacro()
                     else:
-                        command = CommandNodeLabelChange(diagram, node, node.text(), data)
-                        diagram.undoStack.push(command)
+                        project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data))
             except RuntimeError:
                 pass
 
@@ -798,13 +798,14 @@ class AttributeNodeInfo(PredicateNodeInfo):
         Executed whenever one of the property fields changes.
         """
         node = self.node
+        diagram = node.diagram
+        project = node.project
         sender = self.sender()
         checked = sender.isChecked()
-        diagram = node.diagram
         attribute = sender.property('attribute')
         name = _('COMMAND_ITEM_SET_PROPERTY', 'un' if checked else '', node.shortname, attribute)
         data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
-        diagram.undoStack.push(CommandSetProperty(diagram, node, data, name))
+        project.undoStack.push(CommandSetProperty(diagram, node, data, name))
 
     #############################################
     #   INTERFACE
@@ -912,14 +913,15 @@ class RoleNodeInfo(PredicateNodeInfo):
         Executed whenever one of the property fields changes.
         """
         node = self.node
+        diagram = node.diagram
+        project = node.project
         sender = self.sender()
         checked = sender.isChecked()
-        diagram = node.diagram
         attribute = sender.property('attribute')
         prop = RE_CAMEL_SPACE.sub('\g<1> \g<2>', attribute).lower()
         name = _('COMMAND_ITEM_SET_PROPERTY', 'un' if checked else '', node.shortname, prop)
         data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
-        diagram.undoStack.push(CommandSetProperty(diagram, node, data, name))
+        project.undoStack.push(CommandSetProperty(diagram, node, data, name))
 
     #############################################
     #   INTERFACE
@@ -973,14 +975,14 @@ class ValueDomainNodeInfo(NodeInfo):
         Executed when we need to change the datatype.
         """
         if self.node:
-
             node = self.node
             diagram = node.diagram
+            project = node.project
             datatype = self.datatypeField.currentData()
             data = datatype.value
             if node.text() != data:
                 name = _('COMMAND_NODE_SET_DATATYPE', node.shortname, data)
-                diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
 
         self.datatypeField.clearFocus()
 
@@ -1048,12 +1050,13 @@ class ValueNodeInfo(PredicateNodeInfo):
             try:
                 node = self.node
                 diagram = node.diagram
+                project = node.project
                 datatype = self.datatypeField.currentData()
                 value = self.valueField.value()
                 data = node.composeValue(value, datatype)
                 if node.text() != data:
                     name = _('COMMAND_NODE_SET_VALUE', data)
-                    diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                    project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
             except RuntimeError:
                 pass
 
@@ -1128,10 +1131,11 @@ class FacetNodeInfo(NodeInfo):
         if self.node:
             node = self.node
             diagram = node.diagram
+            project = node.project
             data = node.compose(self.facetField.currentData(), self.valueField.value())
             if node.text() != data:
                 name = _('COMMAND_NODE_SET_FACET', node.text(), data)
-                diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
 
         self.facetField.clearFocus()
         self.valueField.clearFocus()

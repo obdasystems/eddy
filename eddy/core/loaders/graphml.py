@@ -690,8 +690,5 @@ class GraphmlLoader(QObject):
         connect(self.diagram.sgnModeChanged, self.mainwindow.onDiagramModeChanged)
         connect(self.diagram.selectionChanged, self.mainwindow.doUpdateState)
 
-        # 11) CONFIGURE UNDOSTACK
-        self.mainwindow.undoGroup.addStack(self.diagram.undoStack)
-
-        # 12) RETURN GENERATED DIAGRAM
+        # 11) RETURN GENERATED DIAGRAM
         return self.diagram

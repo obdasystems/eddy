@@ -37,7 +37,7 @@ import sys
 
 from PyQt5.QtCore import Qt, QPointF, QRectF, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QColor, QPen
-from PyQt5.QtWidgets import QGraphicsScene, QUndoStack
+from PyQt5.QtWidgets import QGraphicsScene
 
 from eddy.core.commands.edges import CommandEdgeAdd
 from eddy.core.commands.nodes import CommandNodeAdd, CommandNodeMove
@@ -82,8 +82,6 @@ class Diagram(QGraphicsScene):
         self.path = expandPath(path)
         self.pasteX = Clipboard.PasteOffsetX
         self.pasteY = Clipboard.PasteOffsetY
-        self.undoStack = QUndoStack(self)
-        self.undoStack.setUndoLimit(100)
 
         self.mouseOverNode = None
         self.mousePressEdge = None
@@ -162,7 +160,7 @@ class Diagram(QGraphicsScene):
             snapToGrid = mainwindow.actionSnapToGrid.isChecked()
             node = self.factory.create(Item.forValue(dropEvent.mimeData().text()))
             node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
-            self.undoStack.push(CommandNodeAdd(self, node))
+            self.project.undoStack.push(CommandNodeAdd(self, node))
             self.sgnActionCompleted.emit(node, dropEvent.modifiers())
             dropEvent.setDropAction(Qt.CopyAction)
             dropEvent.accept()
@@ -189,7 +187,7 @@ class Diagram(QGraphicsScene):
                 snapToGrid = mainwindow.actionSnapToGrid.isChecked()
                 node = self.factory.create(Item.forValue(self.modeParam))
                 node.setPos(snap(mousePos, Diagram.GridSize, snapToGrid))
-                self.undoStack.push(CommandNodeAdd(self, node))
+                self.project.undoStack.push(CommandNodeAdd(self, node))
                 self.sgnActionCompleted.emit(node, mouseEvent.modifiers())
 
                 super().mousePressEvent(mouseEvent)
@@ -368,7 +366,7 @@ class Diagram(QGraphicsScene):
                     self.removeItem(edge)
 
                     if insertEdge:
-                        self.undoStack.push(CommandEdgeAdd(self, edge))
+                        self.project.undoStack.push(CommandEdgeAdd(self, edge))
                         edge.updateEdge()
 
                     self.clearSelection()
@@ -399,7 +397,7 @@ class Diagram(QGraphicsScene):
                     }
                 }
 
-                self.undoStack.push(CommandNodeMove(self, data))
+                self.project.undoStack.push(CommandNodeMove(self, data))
                 self.setMode(DiagramMode.Idle)
 
         elif mouseButton == Qt.RightButton:

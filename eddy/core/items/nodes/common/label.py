@@ -237,7 +237,7 @@ class NodeLabel(AbstractLabel):
 
             if focusInData and focusInData != currentData:
                 command = CommandNodeLabelChange(self.diagram, self.parentItem(), focusInData, currentData)
-                self.diagram.undoStack.push(command)
+                self.project.undoStack.push(command)
 
             cursor = self.textCursor()
             cursor.clearSelection()
@@ -343,8 +343,8 @@ class NodeLabel(AbstractLabel):
                 if self.mousePressPos != pos:
                     node = self.parentItem()
                     command = CommandNodeLabelMove(self.diagram, node, self.mousePressPos, pos)
-                    self.diagram.undoStack.push(command)
-                    self.diagram.setMode(DiagramMode.Idle)
+                    self.project.undoStack.push(command)
+                    self.project.setMode(DiagramMode.Idle)
 
         self.mousePressPos = None
 
@@ -412,7 +412,7 @@ class FacetNodeQuotedLabel(NodeLabel):
                 data1 = item.compose(self.focusInFacet, focusInData)
                 data2 = item.compose(self.focusInFacet, currentData)
                 command = CommandNodeLabelChange(self.diagram, self.parentItem(), data1, data2)
-                self.diagram.undoStack.push(command)
+                self.project.undoStack.push(command)
 
             cursor = self.textCursor()
             cursor.clearSelection()

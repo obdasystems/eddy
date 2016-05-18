@@ -510,8 +510,5 @@ class GrapholLoader(QObject):
         connect(self.diagram.sgnModeChanged, self.mainwindow.onDiagramModeChanged)
         connect(self.diagram.selectionChanged, self.mainwindow.doUpdateState)
 
-        # 8) CONFIGURE UNDOSTACK
-        self.mainwindow.undoGroup.addStack(self.diagram.undoStack)
-
-        # 9) RETURN GENERATED DIAGRAM
+        # 8) RETURN GENERATED DIAGRAM
         return self.diagram

@@ -69,28 +69,22 @@ class PropertyDialog(QDialog):
     def __init__(self, parent=None):
         """
         Initialize the property dialog.
-        :type parent: QWidget
+        :type parent: MainWindow
         """
         super().__init__(parent)
 
     #############################################
-    #   INTERFACE
+    #   PROPERTIES
     #################################
 
-    @staticmethod
-    def push(undostack, name, commands):
+    @property
+    def project(self):
         """
-        Push the given commands on the given undostack.
-        :type undostack: QUndoStack
-        :type name: str
-        :type commands: T <= list|tuple|set
+        Returns the project loaded in the main window.
+        :rtype: Project 
         """
-        if any(commands):
-            undostack.beginMacro(name)
-            for command in commands:
-                if command:
-                    undostack.push(command)
-            undostack.endMacro()
+        mainwindow = self.parent()
+        return mainwindow.project
 
 
 class DiagramProperty(PropertyDialog):
@@ -191,7 +185,12 @@ class DiagramProperty(PropertyDialog):
         Executed when the dialog is accepted.
         """
         commands = [self.diagramSizeChanged()]
-        self.push(self.diagram.undoStack, _('COMMAND_DIAGRAM_EDIT_PROPERTIES', self.diagram.name), commands)
+        if any(commands):
+            self.project.undoStack.beginMacro(_('COMMAND_DIAGRAM_EDIT_PROPERTIES', self.diagram.name))
+            for command in commands:
+                if command:
+                    self.project.undoStack.push(command)
+            self.project.undoStack.endMacro()
         super().accept()
 
     #############################################
@@ -374,7 +373,12 @@ class NodeProperty(PropertyDialog):
         Executed when the dialog is accepted.
         """
         commands = [self.positionChanged()]
-        self.push(self.diagram.undoStack, _('COMMAND_NODE_EDIT_PROPERTIES', self.node.name), commands)
+        if any(commands):
+            self.project.undoStack.beginMacro(_('COMMAND_NODE_EDIT_PROPERTIES', self.node.name))
+            for command in commands:
+                if command:
+                    self.project.undoStack.push(command)
+            self.project.undoStack.endMacro()
         super().accept()
 
     #############################################
@@ -483,8 +487,14 @@ class PredicateNodeProperty(NodeProperty):
         """
         Executed when the dialog is accepted.
         """
-        commands = [self.positionChanged(), self.metaDataChanged()] + self.textChanged()
-        self.push(self.diagram.undoStack, _('COMMAND_NODE_EDIT_PROPERTIES', self.node.name), commands)
+        commands = [self.positionChanged(), self.metaDataChanged()]
+        commands.extend(self.textChanged())
+        if any(commands):
+            self.project.undoStack.beginMacro(_('COMMAND_NODE_EDIT_PROPERTIES', self.node.name))
+            for command in commands:
+                if command:
+                    self.project.undoStack.push(command)
+            self.project.undoStack.endMacro()
         super().accept()
 
     #############################################
@@ -611,7 +621,12 @@ class OrderedInputNodeProperty(NodeProperty):
         Executed when the dialog is accepted.
         """
         commands = [self.positionChanged(), self.orderingChanged()]
-        self.push(self.diagram.undoStack, _('COMMAND_NODE_EDIT_PROPERTIES', self.node.name), commands)
+        if any(commands):
+            self.project.undoStack.beginMacro(_('COMMAND_NODE_EDIT_PROPERTIES', self.node.name))
+            for command in commands:
+                if command:
+                    self.project.undoStack.push(command)
+            self.project.undoStack.endMacro()
         super().accept()
 
     #############################################
@@ -704,7 +719,12 @@ class FacetNodeProperty(NodeProperty):
         Executed when the dialog is accepted.
         """
         commands = [self.positionChanged(), self.facetChanged()]
-        self.push(self.diagram.undoStack, _('COMMAND_NODE_EDIT_PROPERTIES', self.node.name), commands)
+        if any(commands):
+            self.project.undoStack.beginMacro(_('COMMAND_NODE_EDIT_PROPERTIES', self.node.name))
+            for command in commands:
+                if command:
+                    self.project.undoStack.push(command)
+            self.project.undoStack.endMacro()
         super().accept()
 
     #############################################
@@ -775,7 +795,12 @@ class ValueDomainNodeProperty(NodeProperty):
         Executed when the dialog is accepted.
         """
         commands = [self.positionChanged(), self.datatypeChanged()]
-        self.push(self.diagram.undoStack, _('COMMAND_NODE_EDIT_PROPERTIES', self.node.name), commands)
+        if any(commands):
+            self.project.undoStack.beginMacro(_('COMMAND_NODE_EDIT_PROPERTIES', self.node.name))
+            for command in commands:
+                if command:
+                    self.project.undoStack.push(command)
+            self.project.undoStack.endMacro()
         super().accept()
 
     #############################################
@@ -856,7 +881,12 @@ class ValueNodeProperty(NodeProperty):
         Executed when the dialog is accepted.
         """
         commands = [self.positionChanged(), self.valueChanged()]
-        self.push(self.diagram.undoStack, _('COMMAND_NODE_EDIT_PROPERTIES', self.node.name), commands)
+        if any(commands):
+            self.project.undoStack.beginMacro(_('COMMAND_NODE_EDIT_PROPERTIES', self.node.name))
+            for command in commands:
+                if command:
+                    self.project.undoStack.push(command)
+            self.project.undoStack.endMacro()
         super().accept()
 
     #############################################
@@ -883,12 +913,28 @@ class PropertyFactory(QObject):
     def __init__(self, parent=None):
         """
         Initialize the factory.
-        :type parent: QObject
+        :type parent: MainWindow
         """
         super().__init__(parent)
 
-    @staticmethod
-    def create(diagram, node=None):
+    #############################################
+    #   PROPERTIES
+    #################################
+    
+    @property
+    def project(self):
+        """
+        Returns the project loaded in the main window.
+        :rtype: Project 
+        """
+        mainwindow = self.parent()
+        return mainwindow.project
+
+    #############################################
+    #   INTERFACE
+    #################################
+    
+    def create(self, diagram, node=None):
         """
         Build and return a property dialog according to the given parameters.
         :type diagram: Diagram
@@ -896,28 +942,28 @@ class PropertyFactory(QObject):
         :rtype: QDialog
         """
         if not node:
-            properties = DiagramProperty(diagram)
+            properties = DiagramProperty(diagram, self.parent())
         else:
             if node.type() is Item.AttributeNode:
-                properties = PredicateNodeProperty(diagram, node)
+                properties = PredicateNodeProperty(diagram, node, self.parent())
             elif node.type() is Item.ConceptNode:
-                properties = PredicateNodeProperty(diagram, node)
+                properties = PredicateNodeProperty(diagram, node, self.parent())
             elif node.type() is Item.RoleNode:
-                properties = PredicateNodeProperty(diagram, node)
+                properties = PredicateNodeProperty(diagram, node, self.parent())
             elif node.type() is Item.ValueDomainNode:
-                properties = ValueDomainNodeProperty(diagram, node)
+                properties = ValueDomainNodeProperty(diagram, node, self.parent())
             elif node.type() is Item.IndividualNode:
                 if node.identity is Identity.Instance:
-                    properties = PredicateNodeProperty(diagram, node)
+                    properties = PredicateNodeProperty(diagram, node, self.parent())
                 else:
-                    properties = ValueNodeProperty(diagram, node)
+                    properties = ValueNodeProperty(diagram, node, self.parent())
             elif node.type() is Item.PropertyAssertionNode:
-                properties = OrderedInputNodeProperty(diagram, node)
+                properties = OrderedInputNodeProperty(diagram, node, self.parent())
             elif node.type() is Item.RoleChainNode:
-                properties = OrderedInputNodeProperty(diagram, node)
+                properties = OrderedInputNodeProperty(diagram, node, self.parent())
             elif node.type() is Item.FacetNode:
-                properties = FacetNodeProperty(diagram, node)
+                properties = FacetNodeProperty(diagram, node, self.parent())
             else:
-                properties = NodeProperty(diagram, node)
+                properties = NodeProperty(diagram, node, self.parent())
         properties.setFixedSize(properties.sizeHint())
         return properties

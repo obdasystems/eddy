@@ -227,13 +227,13 @@ class ValueForm(QDialog):
         """
         node = self.node
         diagram = node.diagram
+        project = node.project
         datatype = self.datatypeField.currentData()
         value = self.valueField.value()
         data = node.composeValue(value, datatype)
         if node.text() != data:
             name = _('COMMAND_NODE_SET_INDIVIDUAL_AS', node.text(), data)
-            diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
-
+            project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
         super().accept()
 
 
@@ -309,15 +309,11 @@ class RefactorNameForm(QDialog):
         Accepts the rename form and perform refactoring.
         """
         name = self.renameField.value()
-        name = name.strip()
-        diagram = self.node.diagram
         project = self.node.project
-
-        diagram.undoStack.beginMacro(_('COMMAND_NODE_REFACTOR_NAME', self.node.text(), name))
+        project.undoStack.beginMacro(_('COMMAND_NODE_REFACTOR_NAME', self.node.text(), name))
         for n in project.predicates(self.node.type(), self.node.text()):
-            diagram.undoStack.push(CommandNodeLabelChange(n.diagram, n, n.text(), name))
-        diagram.undoStack.endMacro()
-
+            project.undoStack.push(CommandNodeLabelChange(n.diagram, n, n.text(), name))
+            project.undoStack.endMacro()
         super().accept()
 
     @pyqtSlot()

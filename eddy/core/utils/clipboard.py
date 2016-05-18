@@ -147,7 +147,7 @@ class Clipboard(QObject):
             diagram.pasteX += self.PasteOffsetX
             diagram.pasteY += self.PasteOffsetY
 
-        diagram.undoStack.push(CommandItemsAdd(diagram, items))
+        diagram.project.undoStack.push(CommandItemsAdd(diagram, items))
 
     def size(self):
         """
