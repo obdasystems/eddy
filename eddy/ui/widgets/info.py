@@ -373,6 +373,28 @@ class ProjectInfo(AbstractInfo):
 
         arial12r = Font('Arial', 12)
 
+        self.prefixKey = Key(_('INFO_KEY_PREFIX'), self)
+        self.prefixKey.setFont(arial12r)
+        self.prefixField = String(self)
+        self.prefixField.setFont(arial12r)
+        self.prefixField.setReadOnly(False)
+        connect(self.prefixField.editingFinished, self.prefixEditingFinished)
+
+        self.iriKey = Key(_('INFO_KEY_IRI'), self)
+        self.iriKey.setFont(arial12r)
+        self.iriField = String(self)
+        self.iriField.setFont(arial12r)
+        self.iriField.setReadOnly(False)
+        connect(self.iriField.editingFinished, self.iriEditingFinished)
+
+        self.ontologyPropHeader = Header(_('INFO_HEADER_ONTOLOGY_PROPERTIES'), self)
+        self.ontologyPropHeader.setFont(arial12r)
+
+        self.ontologyPropLayout = QFormLayout()
+        self.ontologyPropLayout.setSpacing(0)
+        self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
+        self.ontologyPropLayout.addRow(self.iriKey, self.iriField)
+
         self.conceptsKey = Key(_('INFO_KEY_CONCEPT'), self)
         self.conceptsKey.setFont(arial12r)
         self.conceptsField = Integer(self)
@@ -424,10 +446,30 @@ class ProjectInfo(AbstractInfo):
         self.mainLayout.setAlignment(Qt.AlignTop)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
+        self.mainLayout.addWidget(self.ontologyPropHeader)
+        self.mainLayout.addLayout(self.ontologyPropLayout)
         self.mainLayout.addWidget(self.atomicPredHeader)
         self.mainLayout.addLayout(self.atomicPredLayout)
         self.mainLayout.addWidget(self.assertionsHeader)
         self.mainLayout.addLayout(self.assertionsLayout)
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @pyqtSlot()
+    def iriEditingFinished(self):
+        """
+        Executed whenever we finish to edit the ontology prefix
+        """
+        self.project.iri = self.iriField.value()
+
+    @pyqtSlot()
+    def prefixEditingFinished(self):
+        """
+        Executed whenever we finish to edit the ontology prefix
+        """
+        self.project.prefix = self.prefixField.value()
 
     #############################################
     #   INTERFACE
@@ -438,6 +480,10 @@ class ProjectInfo(AbstractInfo):
         Fetch new information and fill the widget with data.
         :type project: Project
         """
+        self.prefixField.setValue(project.prefix)
+        self.prefixField.home(True)
+        self.iriField.setValue(project.iri)
+        self.iriField.home(True)
         self.attributesField.setValue(project.count(predicate=Item.AttributeNode))
         self.conceptsField.setValue(project.count(predicate=Item.ConceptNode))
         self.rolesField.setValue(project.count(predicate=Item.RoleNode))
