@@ -664,6 +664,7 @@ class MainWindow(QMainWindow):
         # CONFIGURE WIDGETS INSPECTIONS
         #################################
 
+        self.info.browse(self.project)
         self.ontologyExplorer.browse(self.project)
         self.projectExplorer.browse(self.project)
 

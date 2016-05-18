@@ -44,8 +44,10 @@ from eddy.core.commands.common import CommandSetProperty
 from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Facet, Datatype
+from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import first, isEmpty, clamp
 from eddy.core.functions.signals import connect, disconnect
+from eddy.core.project import Project
 from eddy.core.qt import ColoredIcon, Font
 from eddy.core.regex import RE_CAMEL_SPACE
 
@@ -67,6 +69,7 @@ class Info(QScrollArea):
         """
         super().__init__(parent)
         self.diagram = None
+        self.project = None
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumSize(QSize(216, 120))
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -74,7 +77,7 @@ class Info(QScrollArea):
         self.stacked = QStackedWidget(self)
         self.stacked.setContentsMargins(0, 0, 0, 0)
         self.infoEmpty = QWidget(self.stacked)
-        self.infoDiagram = DiagramInfo(parent, self.stacked)
+        self.infoProject = ProjectInfo(parent, self.stacked)
         self.infoEdge = EdgeInfo(parent, self.stacked)
         self.infoInclusionEdge = InclusionEdgeInfo(parent, self.stacked)
         self.infoNode = NodeInfo(parent, self.stacked)
@@ -85,7 +88,7 @@ class Info(QScrollArea):
         self.infoValueDomainNode = ValueDomainNodeInfo(parent, self.stacked)
         self.infoFacet = FacetNodeInfo(parent, self.stacked)
         self.stacked.addWidget(self.infoEmpty)
-        self.stacked.addWidget(self.infoDiagram)
+        self.stacked.addWidget(self.infoProject)
         self.stacked.addWidget(self.infoEdge)
         self.stacked.addWidget(self.infoInclusionEdge)
         self.stacked.addWidget(self.infoNode)
@@ -99,7 +102,6 @@ class Info(QScrollArea):
         self.setWidgetResizable(True)
         scrollbar = self.verticalScrollBar()
         scrollbar.installEventFilter(self)
-        self.stack()
 
     #############################################
     #   EVENTS
@@ -128,8 +130,8 @@ class Info(QScrollArea):
         if self.diagram:
             selected = self.diagram.selectedItems()
             if not selected or len(selected) > 1:
-                show = self.infoDiagram
-                show.updateData(self.diagram)
+                show = self.infoProject
+                show.updateData(self.project)
             else:
                 item = first(selected)
                 if item.isNode():
@@ -155,6 +157,9 @@ class Info(QScrollArea):
                     else:
                         show = self.infoEdge
                 show.updateData(item)
+        elif self.project:
+            show = self.infoProject
+            show.updateData(self.project)
         else:
             show = self.infoEmpty
 
@@ -169,15 +174,18 @@ class Info(QScrollArea):
     #   INTERFACE
     #################################
 
-    def browse(self, diagram):
+    def browse(self, something):
         """
         Set the widget to inspect the given diagram.
-        :type diagram: Diagram
+        :type something: T <= Project|Diagram
         """
         self.reset()
 
-        if diagram:
-            self.diagram = diagram
+        if isinstance(something, Project):
+            self.project = something
+            self.stack()
+        elif isinstance(something, Diagram):
+            self.diagram = something
             connect(self.diagram.selectionChanged, self.stack)
             connect(self.diagram.sgnItemAdded, self.stack)
             connect(self.diagram.sgnItemRemoved, self.stack)
@@ -188,7 +196,6 @@ class Info(QScrollArea):
         """
         Redraw the content of the widget.
         """
-
         width = self.width()
         scrollbar = self.verticalScrollBar()
         if scrollbar.isVisible():
@@ -352,13 +359,13 @@ class AbstractInfo(QWidget):
         pass
 
 
-class DiagramInfo(AbstractInfo):
+class ProjectInfo(AbstractInfo):
     """
-    This class implements the diagram scene information box.
+    This class implements the project information box.
     """
     def __init__(self, mainwindow, parent=None):
         """
-        Initialize the diagram scene information box.
+        Initialize the project information box.
         :type mainwindow: MainWindow
         :type parent: QWidget
         """
@@ -426,17 +433,16 @@ class DiagramInfo(AbstractInfo):
     #   INTERFACE
     #################################
 
-    def updateData(self, diagram):
+    def updateData(self, project):
         """
         Fetch new information and fill the widget with data.
-        :type diagram: Diagram
+        :type project: Project
         """
-        count = diagram.project.count
-        self.attributesField.setValue(count(predicate=Item.AttributeNode))
-        self.conceptsField.setValue(count(predicate=Item.ConceptNode))
-        self.rolesField.setValue(count(predicate=Item.RoleNode))
-        self.inclusionsField.setValue(count(item=Item.InclusionEdge))
-        self.membershipField.setValue(count(item=Item.MembershipEdge))
+        self.attributesField.setValue(project.count(predicate=Item.AttributeNode))
+        self.conceptsField.setValue(project.count(predicate=Item.ConceptNode))
+        self.rolesField.setValue(project.count(predicate=Item.RoleNode))
+        self.inclusionsField.setValue(project.count(item=Item.InclusionEdge))
+        self.membershipField.setValue(project.count(item=Item.MembershipEdge))
 
 
 class EdgeInfo(AbstractInfo):
