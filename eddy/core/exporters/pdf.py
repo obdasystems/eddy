@@ -85,6 +85,7 @@ class PdfExporter(QObject):
                 self.printer.setPageSize(QPageSize(QSizeF(source.width(), source.height()), QPageSize.Point))
                 if self.newPage:
                     self.printer.newPage()
+                diagram.clearSelection()
                 diagram.render(self.painter, source=source)
                 self.newPage = True
 

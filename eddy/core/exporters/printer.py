@@ -68,6 +68,7 @@ class PrinterExporter(PdfExporter):
                 source = diagram.visibleRect(margin=20)
                 if self.newPage:
                     self.printer.newPage()
+                diagram.clearSelection()
                 diagram.render(self.painter, source=source)
                 self.newPage = True
 
