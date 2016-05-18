@@ -73,6 +73,7 @@ class PreferencesDialog(QDialog):
         self.languageField.setFixedWidth(200)
         self.languageField.setFocusPolicy(Qt.StrongFocus)
         self.languageField.setFont(arial12r)
+        self.languageField.setToolTip(_('PREFERENCES_FIELD_LANGUAGE_TOOLTIP', APPNAME))
         for language in Language:
             self.languageField.addItem(language.name, language.value)
         language = settings.value('general/language', 'en', str)
@@ -96,6 +97,7 @@ class PreferencesDialog(QDialog):
         self.diagramSizeField.setFont(arial12r)
         self.diagramSizeField.setRange(Diagram.MinSize, Diagram.MaxSize)
         self.diagramSizeField.setSingleStep(100)
+        self.diagramSizeField.setToolTip(_('PREFERENCES_FIELD_DIAGRAM_SIZE_TOOLTIP'))
         self.diagramSizeField.setValue(settings.value('diagram/size', 5000, int))
 
         self.editorWidget = QWidget()

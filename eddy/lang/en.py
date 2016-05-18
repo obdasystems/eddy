@@ -323,6 +323,8 @@ PROJECT_EXPORT_OWL_UNSUPPORTED_SYNTAX = 'unsupported syntax ({0})'
 # PREFERENCES DIALOG
 #################################
 
+PREFERENCES_FIELD_DIAGRAM_SIZE_TOOLTIP = 'This setting changes the default size of all the newly created diagrams.'
+PREFERENCES_FIELD_LANGUAGE_TOOLTIP = 'This setting changes the language of {0} (reboot required).'
 PREFERENCES_LABEL_DIAGRAM_SIZE = 'Diagram size'
 PREFERENCES_LABEL_LANGUAGE = 'Language'
 PREFERENCES_TAB_EDITOR = 'Editor'
