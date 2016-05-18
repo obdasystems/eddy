@@ -950,13 +950,35 @@ class ValueDomainNodeInfo(NodeInfo):
 
         self.datatypeKey = Key(_('INFO_KEY_DATATYPE'), self)
         self.datatypeKey.setFont(arial12r)
-        self.datatypeMenu = QMenu(self)
-        self.datatypeButton = Button()
-        self.datatypeButton.setFont(arial12r)
-        self.datatypeButton.setMenu(self.datatypeMenu)
-        self.datatypeButton.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        self.datatypeField = Select(self)
+        self.datatypeField.setFont(arial12r)
+        connect(self.datatypeField.activated, self.datatypeChanged)
 
-        self.nodePropLayout.addRow(self.datatypeKey, self.datatypeButton)
+        for datatype in Datatype:
+            self.datatypeField.addItem(datatype.value, datatype)
+
+        self.nodePropLayout.addRow(self.datatypeKey, self.datatypeField)
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @pyqtSlot()
+    def datatypeChanged(self):
+        """
+        Executed when we need to change the datatype.
+        """
+        if self.node:
+
+            node = self.node
+            diagram = node.diagram
+            datatype = self.datatypeField.currentData()
+            data = datatype.value
+            if node.text() != data:
+                name = _('COMMAND_NODE_SET_DATATYPE', node.shortname, data)
+                diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+
+        self.datatypeField.clearFocus()
 
     #############################################
     #   INTERFACE
@@ -968,12 +990,12 @@ class ValueDomainNodeInfo(NodeInfo):
         :type node: AbstractNode
         """
         super().updateData(node)
-        if self.datatypeMenu.isEmpty():
-            self.datatypeMenu.addActions(self.mainwindow.actionsSetDatatype)
+
         datatype = node.datatype
-        for action in self.mainwindow.actionsSetDatatype:
-            action.setChecked(action.data() is datatype)
-        self.datatypeButton.setText(datatype.value)
+        for i in range(self.datatypeField.count()):
+            if self.datatypeField.itemData(i) is datatype:
+                self.datatypeField.setCurrentIndex(i)
+                break
 
 
 class ValueNodeInfo(PredicateNodeInfo):
