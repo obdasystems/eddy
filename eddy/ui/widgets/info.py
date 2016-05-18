@@ -706,6 +706,7 @@ class PredicateNodeInfo(NodeInfo):
         Executed whenever we finish to edit the predicate/node name.
         """
         if self.node:
+
             try:
                 sender = self.sender()
                 node = self.node
@@ -723,6 +724,9 @@ class PredicateNodeInfo(NodeInfo):
                         diagram.undoStack.push(command)
             except RuntimeError:
                 pass
+
+        self.nameField.clearFocus()
+        self.textField.clearFocus()
 
     #############################################
     #   INTERFACE
@@ -1027,6 +1031,9 @@ class ValueNodeInfo(PredicateNodeInfo):
             except RuntimeError:
                 pass
 
+        self.datatypeField.clearFocus()
+        self.valueField.clearFocus()
+
     #############################################
     #   INTERFACE
     #################################
@@ -1099,6 +1106,9 @@ class FacetNodeInfo(NodeInfo):
             if node.text() != data:
                 name = _('COMMAND_NODE_SET_FACET', node.text(), data)
                 diagram.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+
+        self.facetField.clearFocus()
+        self.valueField.clearFocus()
 
     #############################################
     #   INTERFACE
