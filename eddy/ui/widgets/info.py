@@ -462,14 +462,16 @@ class ProjectInfo(AbstractInfo):
         """
         Executed whenever we finish to edit the ontology prefix
         """
-        self.project.iri = self.iriField.value()
+        self.mainwindow.project.iri = self.iriField.value()
+        self.iriField.clearFocus()
 
     @pyqtSlot()
     def prefixEditingFinished(self):
         """
         Executed whenever we finish to edit the ontology prefix
         """
-        self.project.prefix = self.prefixField.value()
+        self.mainwindow.project.prefix = self.prefixField.value()
+        self.prefixField.clearFocus()
 
     #############################################
     #   INTERFACE
