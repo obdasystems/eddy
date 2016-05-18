@@ -125,9 +125,9 @@ class PdfExporter(QObject):
 
         self.metaview.setModel(self.metamodel)
         self.metaview.resizeColumnsToContents()
-        self.metaview.resizeRowsToContents()
         self.metaview.setFixedWidth(sum(self.metaview.columnWidth(i) for i in range(self.metamodel.columnCount())))
-        self.metaview.setFixedHeight(sum(self.metaview.rowHeight(i) for i in range(self.metamodel.rowCount())))
+        self.metaview.setFixedHeight(sum(self.metaview.rowHeight(i) for i in \
+                                         range(self.metamodel.rowCount())) + self.metaview.horizontalHeader().height())
         self.metaview.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.metaview.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.metaview.verticalHeader().setVisible(False)
