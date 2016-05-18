@@ -484,8 +484,12 @@ class ProjectInfo(AbstractInfo):
         """
         self.prefixField.setValue(project.prefix)
         self.prefixField.home(True)
+        self.prefixField.clearFocus()
+        self.prefixField.deselect()
         self.iriField.setValue(project.iri)
         self.iriField.home(True)
+        self.iriField.clearFocus()
+        self.iriField.deselect()
         self.attributesField.setValue(project.count(predicate=Item.AttributeNode))
         self.conceptsField.setValue(project.count(predicate=Item.ConceptNode))
         self.rolesField.setValue(project.count(predicate=Item.RoleNode))
