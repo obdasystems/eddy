@@ -186,6 +186,7 @@ class MainWindow(QMainWindow):
         #################################
 
         self.project = ProjectLoader(path, self).run()
+        connect(self.project.undoStack.cleanChanged, self.doUpdateState)
 
         #############################################
         # CREATE UTILITIES
@@ -1269,9 +1270,20 @@ class MainWindow(QMainWindow):
         """
         Save the current project.
         """
-        if not self.project.undoStack.isClean():
+        try:
             worker = ProjectExporter(self.project, self)
             worker.run()
+        except Exception as e:
+            msgbox = QMessageBox(self)
+            msgbox.setIconPixmap(QPixmap(':/icons/48/error'))
+            msgbox.setWindowIcon(QIcon(':/images/eddy'))
+            msgbox.setWindowTitle(_('PROJECT_SAVE_FAILED_WINDOW_TITLE'))
+            msgbox.setStandardButtons(QMessageBox.Close)
+            msgbox.setText(_('PROJECT_SAVE_FAILED_MESSAGE'))
+            msgbox.setDetailedText(''.join(f_exc(type(e), e, e.__traceback__)))
+            msgbox.exec_()
+        else:
+            self.project.undoStack.setClean()
 
     @pyqtSlot()
     def doSaveAs(self):
@@ -1677,7 +1689,7 @@ class MainWindow(QMainWindow):
                 close = False
             elif msgbox.result() == QMessageBox.No:
                 save = False
-            elif msgbox.result == QMessageBox.Yes:
+            elif msgbox.result() == QMessageBox.Yes:
                 save = True
 
         if not close:
@@ -1686,6 +1698,7 @@ class MainWindow(QMainWindow):
             if save:
                 self.doSave()
             self.sgnClosed.emit()
+            closeEvent.accept()
 
     def dragEnterEvent(self, dragEvent):
         """
