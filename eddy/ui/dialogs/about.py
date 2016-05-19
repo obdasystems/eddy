@@ -36,7 +36,9 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout, QHBoxLayout
 
-from eddy import APPNAME, AUTHOR, VERSION, LICENSE, GRAPHOL_HOME, DIAG_HOME, SAPIENZA_HOME
+from eddy import APPNAME, AUTHOR, VERSION, LICENSE, PROJECT_HOME
+from eddy.core.qt import Font
+from eddy.lang import gettext as _
 
 
 class About(QDialog):
@@ -50,18 +52,9 @@ class About(QDialog):
         """
         super().__init__(parent)
 
-        message = '{TITLE}<br/>' \
-            'Version: {VERSION}<br/>' \
-            'Author: {AUTHOR}<br/>' \
-            'Copyright: © 2016 {AUTHOR}<br/>' \
-            'License: {LICENSE}<br/>' \
-            '<br/>' \
-            '<a href="{GRAPHOL_HOME}" {STYLE}>Graphol</a> is developed by ' \
-            'members of the DASI-lab group of the <a href="{DIAG_HOME}" {STYLE}>DIAG</a> ' \
-            'at <a href="{SAPIENZA_HOME}" {STYLE}>Sapienza</a> University of Rome.'.format(
-                TITLE=APPNAME, VERSION=VERSION, AUTHOR=AUTHOR, LICENSE=LICENSE,
-                GRAPHOL_HOME=GRAPHOL_HOME, DIAG_HOME=DIAG_HOME, SAPIENZA_HOME=SAPIENZA_HOME,
-                STYLE='style="text-decoration:none;"')
+        message = _('ABOUT_DIALOG_MESSAGE', TITLE=APPNAME, VERSION=VERSION,
+                                            AUTHOR=AUTHOR, LICENSE=LICENSE,
+                                            HOMEPAGE=PROJECT_HOME)
 
         self.icon = QLabel(self)
         self.icon.setPixmap(QPixmap(':/images/eddy-smile'))
@@ -71,6 +64,7 @@ class About(QDialog):
         self.text.setOpenExternalLinks(True)
         self.text.setAlignment(Qt.AlignLeft)
         self.text.setFixedWidth(340)
+        self.text.setFont(Font('Arial', 13))
 
         leftLayout = QVBoxLayout()
         leftLayout.addWidget(self.icon)
@@ -88,6 +82,5 @@ class About(QDialog):
 
         self.setFixedWidth(520)
         self.setFixedHeight(self.sizeHint().height())
-        self.setModal(True)
         self.setWindowIcon(QIcon(':/images/eddy'))
-        self.setWindowTitle('About {}'.format(APPNAME))
+        self.setWindowTitle(_('ABOUT_DIALOG_WINDOW_TITLE', APPNAME))

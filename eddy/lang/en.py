@@ -31,6 +31,18 @@
 
 
 #############################################
+# ABOUT DIALOG
+#################################
+
+ABOUT_DIALOG_WINDOW_TITLE = 'About {0}'
+ABOUT_DIALOG_MESSAGE = '{TITLE}<br/>' \
+                       'Version: {VERSION}<br/>' \
+                       'Author: {AUTHOR}<br/>' \
+                       'Copyright: © 2015 {AUTHOR}<br/>' \
+                       'License: {LICENSE}<br/>' \
+                       'Homepage: <a href="{HOMEPAGE}">{HOMEPAGE}</a>'
+
+#############################################
 # ACTIONS
 #################################
 
