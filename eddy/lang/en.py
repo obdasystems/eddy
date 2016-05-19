@@ -282,7 +282,7 @@ META_HEADER_TYPE = 'Type'
 ONTO_EXPLORER_SEARCH_PLACEHOLDER = 'Search...'
 
 #############################################
-# PROJECT DIALOG / LOADING
+# PROJECT DIALOG / LOADING / SAVING
 #################################
 
 PROJECT_CAPTION_ALREADY_EXISTS = "Project '{0}' already exists!"
@@ -293,6 +293,8 @@ PROJECT_PREFIX_LABEL = 'Prefix'
 PROJECT_LOADING = 'Loading project: {0}'
 PROJECT_LOCATION_LABEL = 'Location'
 PROJECT_WINDOW_TITLE = 'New project'
+PROJECT_CLOSING_SAVE_CHANGES_MESSAGE = 'Your project contains unsaved changes: do you want to save?'
+PROJECT_CLOSING_SAVE_CHANGES_WINDOW_TITLE = 'Save changes?'
 
 #############################################
 # PROJECT EXPORT [OWL] DIALOG

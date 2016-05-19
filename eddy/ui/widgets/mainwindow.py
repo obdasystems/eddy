@@ -1663,8 +1663,29 @@ class MainWindow(QMainWindow):
         Executed when the main window is closed.
         :type closeEvent: QCloseEvent
         """
-        self.doSave()
-        self.sgnClosed.emit()
+        close = True
+        save = False
+        if not self.project.undoStack.isClean():
+            msgbox = QMessageBox(self)
+            msgbox.setIconPixmap(QPixmap(':/icons/48/question'))
+            msgbox.setWindowIcon(QIcon(':/images/eddy'))
+            msgbox.setWindowTitle(_('PROJECT_CLOSING_SAVE_CHANGES_WINDOW_TITLE'))
+            msgbox.setStandardButtons(QMessageBox.Cancel|QMessageBox.No|QMessageBox.Yes)
+            msgbox.setText(_('PROJECT_CLOSING_SAVE_CHANGES_MESSAGE'))
+            msgbox.exec_()
+            if msgbox.result() == QMessageBox.Cancel:
+                close = False
+            elif msgbox.result() == QMessageBox.No:
+                save = False
+            elif msgbox.result == QMessageBox.Yes:
+                save = True
+
+        if not close:
+            closeEvent.ignore()
+        else:
+            if save:
+                self.doSave()
+            self.sgnClosed.emit()
 
     def dragEnterEvent(self, dragEvent):
         """
