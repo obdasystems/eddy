@@ -222,7 +222,6 @@ class AttributeNode(AbstractNode):
         Set the label text.
         :type text: str
         """
-        self.label.setEditable(Special.forLabel(text) is None)
         self.label.setText(text)
 
     def setTextPos(self, pos):

@@ -485,6 +485,17 @@ class MainWindow(QMainWindow):
         self.actionRelocateLabel.setIcon(self.iconRefresh)
         connect(self.actionRelocateLabel.triggered, self.doRelocateLabel)
 
+        action = QAction(Special.Top.value, self)
+        action.setData(Special.Top)
+        action.setIcon(self.iconTop)
+        connect(action.triggered, self.doSetNodeSpecial)
+        self.actionsSetSpecial.append(action)
+        action = QAction(Special.Bottom.value, self)
+        action.setData(Special.Bottom)
+        action.setIcon(self.iconBottom)
+        connect(action.triggered, self.doSetNodeSpecial)
+        self.actionsSetSpecial.append(action)
+
         for color in Color:
             size = self.style().pixelMetric(QStyle.PM_ToolBarIconSize)
             action = QAction(color.name, self)
@@ -493,13 +504,6 @@ class MainWindow(QMainWindow):
             action.setData(color)
             connect(action.triggered, self.doSetNodeBrush)
             self.actionsSetBrush.append(action)
-
-        for special in Special:
-            action = QAction(special.value, self)
-            action.setCheckable(True)
-            action.setData(special)
-            connect(action.triggered, self.doSetNodeSpecial)
-            self.actionsSetSpecial.append(action)
 
         for color in Color:
             size = self.style().pixelMetric(QStyle.PM_ToolBarIconSize)
@@ -1386,8 +1390,8 @@ class MainWindow(QMainWindow):
             supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode}
             node = first([x for x in diagram.selectedNodes() if x.type() in supported])
             if node:
-                special = action.data() if node.special is not action.data() else None
-                data = special.value if special else node.label.template
+                special = action.data()
+                data = special.value
                 if node.text() != data:
                     name = _('COMMAND_NODE_SET_SPECIAL', node.shortname, data)
                     self.project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
