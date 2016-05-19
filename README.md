@@ -12,7 +12,7 @@ Eddy is a graphical editor for the specification and visualization of Graphol on
 Eddy features a design environment specifically thought out for generating Graphol ontologies through 
 ad-hoc functionalities. Drawing features allow designers to comfortably edit ontologies in a central 
 viewport area, while two lateral docking areas contains specifically-tailored widgets for editing, 
-navigating and inspecing open diagrams. 
+navigating and inspecting open diagrams. 
 
 In order to support interaction with third-party tools such as OWL 2 reasoners and editors like [Protégé], 
 Eddy is able to export the produced Graphol ontology into an OWL 2 ontology. Other simpler exporting file 
