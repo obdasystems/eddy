@@ -378,6 +378,7 @@ class MainWindow(QMainWindow):
         self.actionSave.setIcon(self.iconSave)
         self.actionSave.setShortcut(QKeySequence.Save)
         self.actionSave.setStatusTip(_('ACTION_SAVE_S'))
+        self.actionSave.setEnabled(False)
         connect(self.actionSave.triggered, self.doSave)
 
         self.actionSaveAs.setIcon(self.iconSaveAs)
@@ -1268,8 +1269,9 @@ class MainWindow(QMainWindow):
         """
         Save the current project.
         """
-        worker = ProjectExporter(self.project, self)
-        worker.run()
+        if not self.project.undoStack.isClean():
+            worker = ProjectExporter(self.project, self)
+            worker.run()
 
     @pyqtSlot()
     def doSaveAs(self):
@@ -1553,6 +1555,7 @@ class MainWindow(QMainWindow):
         isNodeSelected = False
         isPredicateSelected = False
         isProjectEmpty = self.project.isEmpty()
+        isUndoStackClean = self.project.undoStack.isClean()
 
         if self.mdi.subWindowList():
             diagram = self.mdi.activeDiagram
@@ -1573,6 +1576,7 @@ class MainWindow(QMainWindow):
         self.actionDelete.setEnabled(isNodeSelected or isEdgeSelected)
         self.actionExport.setEnabled(not isProjectEmpty)
         self.actionPaste.setEnabled(not isClipboardEmpty)
+        self.actionSave.setEnabled(not isUndoStackClean)
         self.actionSaveAs.setEnabled(isDiagramActive)
         self.actionSelectAll.setEnabled(isDiagramActive)
         self.actionSendToBack.setEnabled(isNodeSelected)
