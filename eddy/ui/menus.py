@@ -607,7 +607,6 @@ class MenuFactory(QObject):
         """
         # BUILD THE MENU
         menu = self.buildGenericNodeMenu(mainwindow, diagram, node)
-        menu.insertMenu(mainwindow.actionNodeProperties, mainwindow.menuSetBrush)
         menu.insertMenu(mainwindow.actionNodeProperties, mainwindow.menuSetDatatype)
         menu.insertSeparator(mainwindow.actionNodeProperties)
         # SETUP ACTIONS STATE

@@ -1552,6 +1552,7 @@ class MainWindow(QMainWindow):
 
         if self.mdi.subWindowList():
             diagram = self.mdi.activeDiagram
+            predicates = {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.IndividualNode}
             if diagram:
                 nodes = diagram.selectedNodes()
                 edges = diagram.selectedEdges()
@@ -1559,7 +1560,7 @@ class MainWindow(QMainWindow):
                 isClipboardEmpty = self.clipboard.empty()
                 isEdgeSelected = first(edges) is not None
                 isNodeSelected = first(nodes) is not None
-                isPredicateSelected = any([i.isPredicate() for i in nodes])
+                isPredicateSelected = any([i.type() in predicates for i in nodes])
 
         self.actionBringToFront.setEnabled(isNodeSelected)
         self.actionCenterDiagram.setEnabled(isDiagramActive)
