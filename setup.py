@@ -32,7 +32,6 @@
 ##########################################################################
 
 
-import distutils
 import distutils.core
 import os
 import platform
