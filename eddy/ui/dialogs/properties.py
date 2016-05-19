@@ -471,6 +471,10 @@ class PredicateNodeProperty(NodeProperty):
         self.refactorField.setFont(arial12r)
         self.refactorField.setChecked(False)
 
+        if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
+            if node.special is not None:
+                self.refactorField.setEnabled(False)
+
         self.labelWidget = QWidget()
         self.labelLayout = QFormLayout(self.labelWidget)
         self.labelLayout.addRow(self.textLabel, self.textField)

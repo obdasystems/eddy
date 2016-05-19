@@ -789,6 +789,16 @@ class PredicateNodeInfo(NodeInfo):
         self.nameField.setValue(node.text())
         self.textField.setValue(node.text())
 
+        #############################################
+        # ENABLE / DISABLE REFACTORING
+        #################################
+
+        refactor = True
+        if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
+            if node.special is not None:
+                refactor = False
+        self.nameField.setReadOnly(not refactor)
+
 
 class AttributeNodeInfo(PredicateNodeInfo):
     """
