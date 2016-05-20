@@ -156,7 +156,7 @@ class Project(QObject):
             if item:
                 sub = self.index[K_TYPE]
                 if not diagram:
-                    return len(set.union(*(sub[i][item] for i in sub)))
+                    return len(set.union(*(sub[i][item] for i in sub if item in sub[i])))
                 return len(sub[diagram.id][item])
 
             if predicate:
