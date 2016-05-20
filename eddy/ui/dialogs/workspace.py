@@ -32,8 +32,6 @@
 ##########################################################################
 
 
-from traceback import format_exception
-
 from PyQt5.QtCore import Qt, QSettings, pyqtSlot
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QWidget
@@ -41,7 +39,7 @@ from PyQt5.QtWidgets import QDialogButtonBox, QFileDialog, QPushButton, QMessage
 
 from eddy import ORGANIZATION, APPNAME, WORKSPACE
 from eddy.core.functions.fsystem import mkdir
-from eddy.core.functions.misc import first
+from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.path import isPathValid, expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font
@@ -162,7 +160,7 @@ class WorkspaceDialog(QDialog):
             msgbox.setWindowTitle(_('WORKSPACE_CREATION_FAILED_WINDOW_TITLE'))
             msgbox.setStandardButtons(QMessageBox.Close)
             msgbox.setText(_('WORKSPACE_CREATION_FAILED_MESSAGE', path))
-            msgbox.setDetailedText(''.join(format_exception(type(e), e, e.__traceback__)))
+            msgbox.setDetailedText(format_exception(e))
             msgbox.exec_()
             super().reject()
         else:

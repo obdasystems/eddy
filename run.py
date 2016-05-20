@@ -34,7 +34,6 @@
 
 
 import sys
-import traceback
 
 from argparse import ArgumentParser
 
@@ -43,6 +42,7 @@ from PyQt5.QtWidgets import QMessageBox, QApplication
 
 from eddy import APPNAME, BUG_TRACKER
 from eddy.core.application import Eddy
+from eddy.core.functions.misc import format_exception
 from eddy.core.functions.signals import connect
 
 from eddy.lang import gettext as _
@@ -73,7 +73,7 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
             msgbox.setWindowTitle('Fatal error!')
             msgbox.setText(_('EXCEPT_HOOK_MESSAGE', APPNAME))
             msgbox.setInformativeText(_('EXCEPT_HOOK_INFORMATIVE_MESSAGE', BUG_TRACKER))
-            msgbox.setDetailedText(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+            msgbox.setDetailedText(format_exception(exc_value))
             msgbox.setStandardButtons(QMessageBox.Close|QMessageBox.Ok)
             buttonOk = msgbox.button(QMessageBox.Ok)
             buttonOk.setText(_('EXCEPT_HOOK_BTN_CLOSE'))

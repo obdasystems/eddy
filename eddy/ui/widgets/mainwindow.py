@@ -36,7 +36,6 @@ import os
 import webbrowser
 
 from collections import OrderedDict
-from traceback import format_exception as f_exc
 
 from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QBrush, QColor, QPixmap, QCursor
@@ -68,7 +67,7 @@ from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphol import GrapholExporter
 from eddy.core.exporters.project import ProjectExporter
 from eddy.core.functions.fsystem import fexists, fcopy, fremove
-from eddy.core.functions.misc import snapF, first, cutR, uncapitalize
+from eddy.core.functions.misc import snapF, first, format_exception, cutR, uncapitalize
 from eddy.core.functions.path import expandPath, isSubPath, uniquePath, shortPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
@@ -1071,7 +1070,7 @@ class MainWindow(QMainWindow):
                     msgbox.setWindowTitle(_('DIAGRAM_LOAD_FAILED_WINDOW_TITLE'))
                     msgbox.setStandardButtons(QMessageBox.Close)
                     msgbox.setText(_('DIAGRAM_LOAD_FAILED_MESSAGE', path))
-                    msgbox.setDetailedText(''.join(f_exc(type(e), e, e.__traceback__)))
+                    msgbox.setDetailedText(format_exception(e))
                     msgbox.exec_()
                 else:
                     self.project.addDiagram(diagram)
@@ -1280,7 +1279,7 @@ class MainWindow(QMainWindow):
             msgbox.setWindowTitle(_('PROJECT_SAVE_FAILED_WINDOW_TITLE'))
             msgbox.setStandardButtons(QMessageBox.Close)
             msgbox.setText(_('PROJECT_SAVE_FAILED_MESSAGE'))
-            msgbox.setDetailedText(''.join(f_exc(type(e), e, e.__traceback__)))
+            msgbox.setDetailedText(format_exception(e))
             msgbox.exec_()
         else:
             self.project.undoStack.setClean()
@@ -1832,7 +1831,7 @@ class MainWindow(QMainWindow):
                 msgbox.setWindowTitle(_('DIAGRAM_IMPORT_FAILED_WINDOW_TITLE'))
                 msgbox.setStandardButtons(QMessageBox.Close)
                 msgbox.setText(_('DIAGRAM_IMPORT_FAILED_MESSAGE', path))
-                msgbox.setDetailedText(''.join(f_exc(type(e), e, e.__traceback__)))
+                msgbox.setDetailedText(format_exception(e))
                 msgbox.exec_()
             else:
                 self.project.addDiagram(diagram)
@@ -1844,7 +1843,7 @@ class MainWindow(QMainWindow):
             # them into a popup so the user can check whether the problem is in the
             # .graphml document or Eddy is not handling the import properly.
             enums = enumerate(worker.errors, start=1)
-            parts = ['{0}) {1}'.format(k, ''.join(f_exc(type(v), v, v.__traceback__))) for k, v in enums]
+            parts = ['{0}) {1}'.format(k, format_exception(v)) for k, v in enums]
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(QPixmap(':/icons/48/warning'))
             msgbox.setWindowIcon(QIcon(':/images/eddy'))

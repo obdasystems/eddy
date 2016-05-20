@@ -35,7 +35,6 @@
 import os
 
 from abc import ABCMeta
-from traceback import format_exception
 
 from PyQt5.QtCore import Qt, pyqtSlot, QRectF, QSettings
 from PyQt5.QtGui import QPixmap, QIcon
@@ -47,7 +46,7 @@ from eddy.core.datatypes.system import File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphol import GrapholExporter
 from eddy.core.functions.fsystem import fexists
-from eddy.core.functions.misc import cutR, isEmpty
+from eddy.core.functions.misc import cutR, format_exception, isEmpty
 from eddy.core.functions.path import isPathValid, shortPath, expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font
@@ -224,7 +223,7 @@ class NewDiagramDialog(AbstractDiagramDialog):
             msgbox.setWindowTitle(_('DIAGRAM_CREATION_FAILED_WINDOW_TITLE'))
             msgbox.setStandardButtons(QMessageBox.Close)
             msgbox.setText(_('DIAGRAM_CREATION_FAILED_MESSAGE', path))
-            msgbox.setDetailedText(''.join(format_exception(type(e), e, e.__traceback__)))
+            msgbox.setDetailedText(format_exception(e))
             msgbox.exec_()
             super().reject()
         else:

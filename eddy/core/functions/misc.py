@@ -34,6 +34,8 @@
 
 import itertools
 
+from traceback import format_exception as f_exc
+
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPainter, QPixmap
 
@@ -94,6 +96,15 @@ def first(iterable, default=None):
         for item in iterable:
             return item
     return default
+
+
+def format_exception(e):
+    """
+    Format the given exception returning a string representation of it.
+    :type e: Exception
+    :rtype: str
+    """
+    return ''.join(f_exc(type(e), e, e.__traceback__))
 
 
 def isEmpty(string):

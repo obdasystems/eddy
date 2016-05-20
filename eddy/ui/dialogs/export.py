@@ -32,8 +32,6 @@
 ##########################################################################
 
 
-import traceback
-
 from PyQt5.QtCore import Qt, QThread, pyqtSlot
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QDialogButtonBox
@@ -44,6 +42,7 @@ from eddy import BUG_TRACKER
 from eddy.core.datatypes.owl import OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
 from eddy.core.exporters.owl import OWLExporter
+from eddy.core.functions.misc import format_exception
 from eddy.core.functions.path import openPath, expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font
@@ -155,7 +154,7 @@ class OWLExportDialog(QDialog):
             msgbox.setStandardButtons(QMessageBox.Close)
             msgbox.setText(_('PROJECT_EXPORT_OWL_ERRORED_MESSAGE'))
             msgbox.setInformativeText(_('PROJECT_EXPORT_OWL_ERRORED_INFORMATIVE_MESSAGE', BUG_TRACKER))
-            msgbox.setDetailedText(''.join(traceback.format_exception(type(exception), exception, exception.__traceback__)))
+            msgbox.setDetailedText(format_exception(exception))
             msgbox.exec_()
 
         self.reject()
