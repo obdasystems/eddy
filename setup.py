@@ -65,7 +65,7 @@ OPTS = {
 
 if sys.platform.startswith('darwin'):
     OPTS['AS_TO_EXE'] = None
-    OPTS['DIST_NAME'] = '{}-{}-{}-darwin'.format(APPNAME, VERSION, LICENSE.lower())
+    OPTS['DIST_NAME'] = '{0}-{1}-{2}-darwin'.format(APPNAME, VERSION, LICENSE.lower())
     OPTS['EXEC_BASE'] = None
     OPTS['EXEC_NAME'] = APPNAME
     OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'eddy.icns')
@@ -74,16 +74,16 @@ if sys.platform.startswith('darwin'):
     OPTS['DMG_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'dmg_icon.icns')
 elif sys.platform.startswith('win32'):
     OPTS['AS_TO_EXE'] = True
-    OPTS['DIST_NAME'] = '{}-{}-{}-win{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
+    OPTS['DIST_NAME'] = '{0}-{1}-{2}-win{3}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
     OPTS['EXEC_BASE'] = 'Win32GUI'
-    OPTS['EXEC_NAME'] = '{}.exe'.format(APPNAME)
+    OPTS['EXEC_NAME'] = '{0}.exe'.format(APPNAME)
     OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'eddy.ico')
     OPTS['DOCUMENT_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'document.ico')
     OPTS['DMG_BACKGROUND'] = None
     OPTS['DMG_ICON'] = None
 else:
     OPTS['AS_TO_EXE'] = None
-    OPTS['DIST_NAME'] = '{}-{}-{}-linux{}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
+    OPTS['DIST_NAME'] = '{0}-{1}-{2}-linux{3}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
     OPTS['EXEC_BASE'] = None
     OPTS['EXEC_NAME'] = APPNAME
     OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'eddy.png')
@@ -128,6 +128,7 @@ class BuildExe(build_exe):
     Extends the build_exe command to:
        - add option 'dist_dir' (or --dist-dir as a command line parameter)
        - produce a zip file
+       - produce a windows installer using InnoSetup (ony on windows platform)
     """
     dist_dir = None
     user_options = build_exe.user_options
@@ -196,12 +197,12 @@ class BuildExe(build_exe):
         Properly create a Linux executable.
         """
         if sys.platform.startswith('linux'):
-             path = os.path.join(self.build_exe, '{}.sh'.format(APPNAME))
+             path = os.path.join(self.build_exe, '{0}.sh'.format(APPNAME))
              with open(path, mode='w') as f:
                 f.write("""#!/bin/sh
-APP="{}"
-EXEC="{}"
-VERSION="{}"
+APP="{0}"
+EXEC="{1}"
+VERSION="{2}"
 DIRNAME=`dirname $0`
 TMP="$DIRNAME#?"
 if [ "$DIRNAME%$TMP" != "/" ]; then
@@ -215,7 +216,7 @@ $DIRNAME/$EXEC "$@"
 echo "... bye!"
 """.format(APPNAME, OPTS['EXEC_NAME'], VERSION))
 
-             for filename in [OPTS['EXEC_NAME'], '{}.sh'.format(APPNAME)]:
+             for filename in [OPTS['EXEC_NAME'], '{0}.sh'.format(APPNAME)]:
                  filepath = os.path.join(self.build_exe, filename)
                  st = os.stat(filepath)
                  os.chmod(filepath, st.st_mode | stat.S_IEXEC)
@@ -224,7 +225,7 @@ echo "... bye!"
         """
         Create a ZIP distribution.
         """
-        zip_file = os.path.join(self.dist_dir, '{}.zip'.format(OPTS['DIST_NAME']))
+        zip_file = os.path.join(self.dist_dir, '{0}.zip'.format(OPTS['DIST_NAME']))
         zipf = zipfile.ZipFile(zip_file, 'w', zipfile.ZIP_DEFLATED)
         for root, dirs, files in os.walk(self.build_exe):
             for filename in files:
@@ -251,41 +252,41 @@ echo "... bye!"
                 print("ERROR: invalid config file: could not find 'iscc' entry")
                 sys.exit(1)
             if not os.path.isfile(os.path.join('support', 'innosetup', config['iscc'])):
-                print("ERROR: invalid config file: '{}' is not a file".format(config['iscc']))
+                print("ERROR: invalid config file: '{0}' is not a file".format(config['iscc']))
                 sys.exit(1)
 
             # Location of the InnoSetup Compiler program taken from environment.
             config['iscc'] = os.environ.get('ISCC_EXE', config['iscc'])
             if not config['iscc'].lower().endswith('iscc.exe'):
-                print("ERROR: invalid location for the ISCC.exe program: {}".format(config['iscc']))
+                print("ERROR: invalid location for the ISCC.exe program: {0}".format(config['iscc']))
                 sys.exit(1)
 
             # Build each given innosetup script
             for filename in config['scripts']:
 
                 script_file = os.path.join('support', 'innosetup', filename)
-                print("building: {}".format(script_file))
+                print("building: {0}".format(script_file))
 
                 try:
                     cmd = [
                         config['iscc'],
                         script_file,
                         '/Q',
-                        '/O{}'.format(OPTS['DIST_DIR']),
-                        '/dEDDY_APPID={}'.format(APPID),
-                        '/dEDDY_APPNAME={}'.format(APPNAME),
-                        '/dEDDY_ARCHITECTURE={}'.format(platform.architecture()[0][:-3]),
-                        '/dEDDY_BUGTRACKER={}'.format(BUG_TRACKER),
-                        '/dEDDY_BUILD_PATH={}'.format(self.build_exe),
-                        '/dEDDY_COPYRIGHT={}'.format(COPYRIGHT),
-                        '/dEDDY_DOWNLOAD_URL={}'.format(GRAPHOL_HOME),
-                        '/dEDDY_EXECUTABLE={}'.format(OPTS['EXEC_NAME']),
-                        '/dEDDY_GRAPHOL_URL={}'.format(GRAPHOL_HOME),
-                        '/dEDDY_LICENSE={}'.format(LICENSE.lower()),
-                        '/dEDDY_ORGANIZATION={}'.format(ORGANIZATION),
-                        '/dEDDY_ORGANIZATION_URL={}'.format(DIAG_HOME),
-                        '/dEDDY_PROJECT_HOME={}'.format(PROJECT_HOME),
-                        '/dEDDY_VERSION={}'.format(VERSION),
+                        '/O{0}'.format(OPTS['DIST_DIR']),
+                        '/dEDDY_APPID={0}'.format(APPID),
+                        '/dEDDY_APPNAME={0}'.format(APPNAME),
+                        '/dEDDY_ARCHITECTURE={0}'.format(platform.architecture()[0][:-3]),
+                        '/dEDDY_BUGTRACKER={0}'.format(BUG_TRACKER),
+                        '/dEDDY_BUILD_PATH={0}'.format(self.build_exe),
+                        '/dEDDY_COPYRIGHT={0}'.format(COPYRIGHT),
+                        '/dEDDY_DOWNLOAD_URL={0}'.format(GRAPHOL_HOME),
+                        '/dEDDY_EXECUTABLE={0}'.format(OPTS['EXEC_NAME']),
+                        '/dEDDY_GRAPHOL_URL={0}'.format(GRAPHOL_HOME),
+                        '/dEDDY_LICENSE={0}'.format(LICENSE.lower()),
+                        '/dEDDY_ORGANIZATION={0}'.format(ORGANIZATION),
+                        '/dEDDY_ORGANIZATION_URL={0}'.format(DIAG_HOME),
+                        '/dEDDY_PROJECT_HOME={0}'.format(PROJECT_HOME),
+                        '/dEDDY_VERSION={0}'.format(VERSION),
                     ]
                     subprocess.call(cmd)
                 except Exception as e:
@@ -355,7 +356,7 @@ if sys.platform.startswith('darwin'):
                     os.chmod(filepath, mode | stat.S_IWUSR)
 
                 # Let the file itself know its place.
-                subprocess.call(('install_name_tool', '-id', '@executable_path/{}'.format(filename), filepath))
+                subprocess.call(('install_name_tool', '-id', '@executable_path/{0}'.format(filename), filepath))
 
                 # Find the references: call otool -L on the file.
                 otool = subprocess.Popen(('otool', '-L', filepath), stdout=subprocess.PIPE)
@@ -382,11 +383,11 @@ if sys.platform.startswith('darwin'):
 
                     new_reference = None
                     if name in files:
-                        new_reference = '@executable_path/{}'.format(name)
+                        new_reference = '@executable_path/{0}'.format(name)
                     elif path.startswith('@rpath'):
                         for i in files:
                             if i.endswith(name):
-                                new_reference = '@executable_path/{}'.format(i)
+                                new_reference = '@executable_path/{0}'.format(i)
 
                     if new_reference:
                         # We provide the referenced file so change the reference.
@@ -463,6 +464,8 @@ if sys.platform.startswith('darwin'):
                 'CFBundleDevelopmentRegion': 'English',
                 'CFBundleSpokenName': APPNAME,
                 'CFBundleExecutable': self.bundle_executable,
+                'NSPrincipalClass': 'NSApplication',
+                'NSHighResolutionCapable': 'True',
 
                 'CFBundleDocumentTypes': [{
                     'CFBundleTypeExtensions': ['graphol'],
@@ -549,24 +552,24 @@ if sys.platform.startswith('darwin'):
             params.extend(['--volname', self.volume_label])
             params.extend(['--text-size', '12'])
             params.extend(['--icon-size', '48'])
-            params.extend(['--icon', '{}.app'.format(self.bundleName), '60', '50'])
-            params.extend(['--hide-extension', '{}.app'.format(self.bundleName)])
+            params.extend(['--icon', '{0}.app'.format(self.bundleName), '60', '50'])
+            params.extend(['--hide-extension', '{0}.app'.format(self.bundleName)])
 
             if self.applications_shortcut:
                 params.extend(['--app-drop-link', '60', '130'])
 
             if self.volume_background:
                 if not os.path.isfile(self.volume_background):
-                    raise OSError('DMG volume background image not found at {}'.format(self.volume_background))
-                print('Using DMG volume background: {}'.format(self.volume_background))
+                    raise OSError('DMG volume background image not found at {0}'.format(self.volume_background))
+                print('Using DMG volume background: {0}'.format(self.volume_background))
                 from PIL import Image
                 w, h = Image.open(self.volume_background).size
                 params.extend(['--background', self.volume_background, '--window-size', str(w), str(h)])
 
             if self.volume_icon:
                 if not os.path.isfile(self.volume_icon):
-                    raise OSError('DMG volume icon not found at {}'.format(self.volume_icon))
-                print('Using DMG volume icon: {}'.format(self.volume_icon))
+                    raise OSError('DMG volume icon not found at {0}'.format(self.volume_icon))
+                print('Using DMG volume icon: {0}'.format(self.volume_icon))
                 params.extend(['--volicon', self.volume_icon])
 
             params.extend([self.dmgName, stagingDir])
@@ -676,7 +679,7 @@ setup(
         'bdist_dmg': {
             'dist_dir': OPTS['DIST_DIR'],
             'applications_shortcut': True,
-            'volume_label': '{} {}'.format(APPNAME, VERSION),
+            'volume_label': '{0} {1}'.format(APPNAME, VERSION),
             'volume_background': OPTS['DMG_BACKGROUND'],
             'volume_icon': OPTS['DMG_ICON'],
         },
