@@ -1240,17 +1240,6 @@ class MainWindow(QMainWindow):
                 fremove(diagram.path)
 
     @pyqtSlot()
-    def doRenameDiagram(self):
-        """
-        Renames a diagram.
-        """
-        action = self.sender()
-        diagram = action.data()
-        if diagram:
-            form = RenameDiagramDialog(self.project, diagram, self)
-            form.exec_()
-
-    @pyqtSlot()
     def doRelocateLabel(self):
         """
         Reset the selected node label to its default position.
@@ -1263,6 +1252,17 @@ class MainWindow(QMainWindow):
                 undo = node.label.pos()
                 redo = node.label.defaultPos()
                 self.project.undoStack.push(CommandNodeLabelMove(diagram, node, undo, redo))
+
+    @pyqtSlot()
+    def doRenameDiagram(self):
+        """
+        Renames a diagram.
+        """
+        action = self.sender()
+        diagram = action.data()
+        if diagram:
+            form = RenameDiagramDialog(self.project, diagram, self)
+            form.exec_()
 
     @pyqtSlot()
     def doSave(self):
