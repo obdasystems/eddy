@@ -299,7 +299,7 @@ ONTO_EXPLORER_SEARCH_PLACEHOLDER = 'Search...'
 
 PROJECT_CAPTION_ALREADY_EXISTS = "Project '{0}' already exists!"
 PROJECT_CAPTION_NAME_NOT_VALID = "'{0}' is not a valid project name!"
-PROJECT_CLOSING_SAVE_CHANGES_MESSAGE = 'Your project contains unsaved changes: do you want to save?'
+PROJECT_CLOSING_SAVE_CHANGES_MESSAGE = 'Your project contains unsaved changes. Do you want to save?'
 PROJECT_CLOSING_SAVE_CHANGES_WINDOW_TITLE = 'Save changes?'
 PROJECT_IRI_LABEL = 'IRI'
 PROJECT_LOADING = 'Loading project: {0}'
