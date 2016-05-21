@@ -344,7 +344,7 @@ class NodeLabel(AbstractLabel):
                     node = self.parentItem()
                     command = CommandNodeLabelMove(self.diagram, node, self.mousePressPos, pos)
                     self.project.undoStack.push(command)
-                    self.project.setMode(DiagramMode.Idle)
+                    self.diagram.setMode(DiagramMode.Idle)
 
         self.mousePressPos = None
 
