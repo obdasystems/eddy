@@ -112,3 +112,12 @@ def mkdir(path):
     """
     if not isdir(path):
         os.mkdir(expandPath(path))
+
+
+def rmdir(path):
+    """
+    Removes the directory identified by given path if it exists.
+    :type path: str
+    """
+    if isdir(path):
+        shutil.rmtree(path)
