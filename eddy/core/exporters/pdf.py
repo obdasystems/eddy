@@ -32,29 +32,31 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QObject, QSizeF, Qt
+from PyQt5.QtCore import QSizeF, Qt
 from PyQt5.QtGui import QPainter, QPageSize, QStandardItemModel, QStandardItem
 from PyQt5.QtPrintSupport import QPrinter
 from PyQt5.QtWidgets import QTableView
 
 from eddy.core.datatypes.graphol import Item
+from eddy.core.exporters.common import AbstractExporter
 from eddy.core.items.common import AbstractItem
 from eddy.core.qt import Font
 
 from eddy.lang import gettext as _
 
 
-class PdfExporter(QObject):
+class PdfExporter(AbstractExporter):
     """
     This class can be used to export graphol projects in PDF format.
     """
-    def __init__(self, project, path=None):
+    def __init__(self, project, path=None, parent=None):
         """
         Initialize the Pdf Exporter.
         :type project: Project
         :type path: str
+        :type parent: QObject
         """
-        super().__init__()
+        super().__init__(parent)
         self.path = path
         self.project = project
         self.printer = None

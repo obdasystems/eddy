@@ -34,11 +34,12 @@
 
 import jnius
 
-from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject
+from PyQt5.QtCore import pyqtSlot, pyqtSignal
 
 from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
 from eddy.core.datatypes.owl import OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
+from eddy.core.exporters.common import AbstractExporter
 from eddy.core.functions.fsystem import fwrite
 from eddy.core.functions.misc import first, clamp, isEmpty
 from eddy.core.functions.owl import OWLShortIRI, OWLAnnotationText
@@ -48,7 +49,7 @@ from eddy.core.functions.signals import emit
 from eddy.lang import gettext as _
 
 
-class OWLExporter(QObject):
+class OWLExporter(AbstractExporter):
     """
     This class can be used to export Graphol projects into OWL ontologies.
     Due to the deep usage of Java OWL api the worker method of this class should be run in a separate thread.
@@ -61,15 +62,17 @@ class OWLExporter(QObject):
     sgnProgress = pyqtSignal(int, int)
     sgnStarted = pyqtSignal()
 
-    def __init__(self, project, path, syntax):
+    def __init__(self, project, path, syntax, parent=None):
         """
-        Initialize the OWL translator: this class does not specify any parent otherwise
-        we won't be able to move the execution of the worker method to a different thread.
+        Initialize the OWL translator.
+        Note that if we specify a parent for this translator we won't be able
+        able to move the execution of the worker method to a different thread.
         :type project: Project
         :type path: str
         :type syntax: OWLSyntax
+        :type parent: QObject
         """
-        super().__init__()
+        super().__init__(parent)
 
         self.path = path
         self.syntax = syntax

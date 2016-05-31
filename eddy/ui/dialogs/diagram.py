@@ -214,7 +214,7 @@ class NewDiagramDialog(AbstractDiagramDialog):
             diagram = Diagram(self.pathField.value(), self.project)
             diagram.setSceneRect(QRectF(-size / 2, -size / 2, size, size))
             diagram.setItemIndexMethod(Diagram.NoIndex)
-            exporter = GrapholExporter(diagram, self)
+            exporter = GrapholExporter(diagram)
             exporter.run()
         except Exception as e:
             msgbox = QMessageBox(self)

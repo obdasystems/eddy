@@ -34,15 +34,15 @@
 
 import os
 
-from PyQt5.QtCore import QObject
 from PyQt5.QtXml import QDomDocument
 
 from eddy.core.datatypes.graphol import Item
+from eddy.core.exporters.common import AbstractExporter
 from eddy.core.exporters.graphol import GrapholExporter
 from eddy.core.functions.fsystem import fwrite, mkdir
 
 
-class ProjectExporter(QObject):
+class ProjectExporter(AbstractExporter):
     """
     This class can be used to export graphol projects to disk.
 
@@ -258,7 +258,7 @@ class ProjectExporter(QObject):
 
         # 2) EXPORT GRAPHOL DIAGRAMS
         for diagram in self.project.diagrams():
-            worker = GrapholExporter(diagram, self)
+            worker = GrapholExporter(diagram)
             worker.run()
 
         # 3) EXPORT PROJECT SPECIFIC DATA

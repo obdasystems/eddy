@@ -32,29 +32,31 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QObject
 from PyQt5.QtXml import QDomDocument
 
 from eddy.core.datatypes.graphol import Item
+from eddy.core.exporters.common import AbstractExporter
 from eddy.core.functions.fsystem import fwrite
 
 
-class GrapholExporter(QObject):
+class GrapholExporter(AbstractExporter):
     """
     This class can be used to export the structure of graphol diagrams to file.
     """
     GrapholVersion = 1
 
-    def __init__(self, diagram, parent=None):
+    def __init__(self, diagram, path=None, parent=None):
         """
         Initialize the graphol exporter.
         :type diagram: Diagram
+        :type path: str
         :type parent: QObject
         """
         super().__init__(parent)
 
-        self.diagram = diagram
         self.document = None
+        self.diagram = diagram
+        self.path = path
 
         self.exportFuncForItem = {
             Item.AttributeNode: self.exportAttributeNode,
@@ -348,10 +350,9 @@ class GrapholExporter(QObject):
     #   DOCUMENT GENERATION
     #################################
 
-    def run(self, path=None):
+    def run(self):
         """
         Perform graphol document generation.
-        :type path: str
         """
         # 1) CREATE THE DOCUMENT
         self.document = QDomDocument()
@@ -383,4 +384,4 @@ class GrapholExporter(QObject):
         root.appendChild(graph)
 
         # 7) GENERATE THE FILE
-        fwrite(self.document.toString(2), path or self.diagram.path)
+        fwrite(self.document.toString(2), self.path or self.diagram.path)
