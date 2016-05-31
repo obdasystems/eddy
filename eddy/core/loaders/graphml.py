@@ -44,7 +44,7 @@ from eddy.core.diagram import Diagram
 from eddy.core.exceptions import ParseError
 from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.fsystem import fread
-from eddy.core.functions.misc import snapF, cutR
+from eddy.core.functions.misc import snapF, cutR, isEmpty, snap
 from eddy.core.functions.path import uniquePath
 from eddy.core.functions.signals import connect
 from eddy.core.loaders.common import AbstractLoader
@@ -52,7 +52,7 @@ from eddy.core.loaders.common import AbstractLoader
 
 class GraphmlLoader(AbstractLoader):
     """
-    This class can be used to import graphol ontologies created using the graphol paletter for yEd.
+    This class can be used to import graphol ontologies created using the graphol palette for yEd.
     """
     def __init__(self, project, path, parent=None):
         """
@@ -143,16 +143,7 @@ class GraphmlLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: DomainRestrictionNode
         """
-        node = self.buildNodeFromShapeNode(Item.DomainRestrictionNode, element)
-        if node:
-            data = element.firstChildElement('data')
-            while not data.isNull():
-                if data.attribute('key', '') == self.keys['node_key']:
-                    shapeNode = data.firstChildElement('y:ShapeNode')
-                    nodeLabel = shapeNode.firstChildElement('y:NodeLabel')
-                    node.setText(nodeLabel.text())
-                data = data.nextSiblingElement('data')
-        return node
+        return self.buildNodeFromShapeNode(Item.DomainRestrictionNode, element)
 
     def buildEnumerationNode(self, element):
         """
@@ -172,27 +163,14 @@ class GraphmlLoader(AbstractLoader):
         while not data.isNull():
 
             if data.attribute('key', '') == self.keys['node_key']:
-
-                umlNoteNode = data.firstChildElement('y:UMLNoteNode')
-                geometry = umlNoteNode.firstChildElement('y:Geometry')
-                nodeLabel = umlNoteNode.firstChildElement('y:NodeLabel')
-
-                kwargs = {
-                    'id': element.attribute('id'),
-                    'height': float(geometry.attribute('height')),
-                    'width': float(geometry.attribute('width')),
-                }
-
+                noteNode = data.firstChildElement('y:UMLNoteNode')
+                geometry = noteNode.firstChildElement('y:Geometry')
+                nodeLabel = noteNode.firstChildElement('y:NodeLabel')
+                h = float(geometry.attribute('height'))
+                w = float(geometry.attribute('width'))
+                kwargs = {'id': element.attribute('id'), 'height': h, 'width': w}
                 node = self.diagram.factory.create(Item.FacetNode, **kwargs)
-
-                # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
-                # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
-                # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
-                # Additionally we force-snap the position to the grid so that items say aligned.
-                pos = QPointF(float(geometry.attribute('x')), float(geometry.attribute('y')))
-                pos = pos + QPointF(node.width() / 2, node.height() / 2)
-                pos = QPointF(snapF(pos.x(), Diagram.GridSize), snapF(pos.y(), Diagram.GridSize))
-                node.setPos(pos)
+                node.setPos(self.parsePos(geometry))
                 node.setText(nodeLabel.text())
                 return node
 
@@ -206,16 +184,7 @@ class GraphmlLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: IndividualNode
         """
-        node = self.buildNodeFromShapeNode(Item.IndividualNode, element)
-        if node:
-            data = element.firstChildElement('data')
-            while not data.isNull():
-                if data.attribute('key', '') == self.keys['node_key']:
-                    shapeNode = data.firstChildElement('y:ShapeNode')
-                    nodeLabel = shapeNode.firstChildElement('y:NodeLabel')
-                    node.setText(nodeLabel.text())
-                data = data.nextSiblingElement('data')
-        return node
+        return self.buildNodeFromShapeNode(Item.IndividualNode, element)
 
     def buildIntersectionNode(self, element):
         """
@@ -231,16 +200,7 @@ class GraphmlLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: RangeRestrictionNode
         """
-        node = self.buildNodeFromShapeNode(Item.RangeRestrictionNode, element)
-        if node:
-            data = element.firstChildElement('data')
-            while not data.isNull():
-                if data.attribute('key', '') == self.keys['node_key']:
-                    shapeNode = data.firstChildElement('y:ShapeNode')
-                    nodeLabel = shapeNode.firstChildElement('y:NodeLabel')
-                    node.setText(nodeLabel.text())
-                data = data.nextSiblingElement('data')
-        return node
+        return self.buildNodeFromShapeNode(Item.RangeRestrictionNode, element)
 
     def buildRoleNode(self, element):
         """
@@ -272,16 +232,7 @@ class GraphmlLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: ValueDomainNode
         """
-        node = self.buildNodeFromShapeNode(Item.ValueDomainNode, element)
-        if node:
-            data = element.firstChildElement('data')
-            while not data.isNull():
-                if data.attribute('key', '') == self.keys['node_key']:
-                    shapeNode = data.firstChildElement('y:ShapeNode')
-                    nodeLabel = shapeNode.firstChildElement('y:NodeLabel')
-                    node.setText(nodeLabel.text())
-                data = data.nextSiblingElement('data')
-        return node
+        return self.buildNodeFromShapeNode(Item.ValueDomainNode, element)
 
     def buildUnionNode(self, element):
         """
@@ -351,7 +302,6 @@ class GraphmlLoader(AbstractLoader):
         while not data.isNull():
 
             if data.attribute('key', '') == self.keys['edge_key']:
-
                 points = []
                 polyLineEdge = data.firstChildElement('y:PolyLineEdge')
                 path = polyLineEdge.firstChildElement('y:Path')
@@ -362,35 +312,12 @@ class GraphmlLoader(AbstractLoader):
                     pos = QPointF(snapF(pos.x(), Diagram.GridSize), snapF(pos.y(), Diagram.GridSize))
                     points.append(pos)
 
-                kwargs = {
-                    'id': element.attribute('id'),
-                    'source': self.nodes[element.attribute('source')],
-                    'target': self.nodes[element.attribute('target')],
-                    'breakpoints': points,
-                }
-
+                source = self.nodes[element.attribute('source')]
+                target = self.nodes[element.attribute('target')]
+                kwargs = {'id': element.attribute('id'), 'source': source, 'target': target, 'breakpoints': points}
                 edge = self.diagram.factory.create(item, **kwargs)
-
-                # yEd, differently from the node pos whose origin matches the TOP-LEFT corner,
-                # consider the center of the shape as original anchor point (0,0). So if the
-                # anchor point hs a negative X it's moved a bit on the left with respect to
-                # the center of the shape (the same applies for the Y axis)
-                sourceP = QPointF(float(path.attribute('sx')), float(path.attribute('sy')))
-                sourceP = edge.source.pos() + sourceP
-                sourceP = QPointF(snapF(sourceP.x(), Diagram.GridSize), snapF(sourceP.y(), Diagram.GridSize))
-
-                targetP = QPointF(float(path.attribute('tx')), float(path.attribute('ty')))
-                targetP = edge.target.pos() + targetP
-                targetP = QPointF(snapF(targetP.x(), Diagram.GridSize), snapF(targetP.y(), Diagram.GridSize))
-
-                painterPath = edge.source.painterPath()
-                if painterPath.contains(edge.source.mapFromScene(sourceP)):
-                    edge.source.setAnchor(edge, sourceP)
-
-                painterPath = edge.target.painterPath()
-                if painterPath.contains(edge.target.mapFromScene(targetP)):
-                    edge.target.setAnchor(edge, targetP)
-
+                edge.source.setAnchor(edge, self.parseAnchorPos(edge, edge.source, path.attribute('sx'), path.attribute('sy')))
+                edge.target.setAnchor(edge, self.parseAnchorPos(edge, edge.target, path.attribute('tx'), path.attribute('ty')))
                 edge.source.addEdge(edge)
                 edge.target.addEdge(edge)
                 return edge
@@ -410,28 +337,16 @@ class GraphmlLoader(AbstractLoader):
         while not data.isNull():
 
             if data.attribute('key', '') == self.keys['node_key']:
-
                 genericNode = data.firstChildElement('y:GenericNode')
                 geometry = genericNode.firstChildElement('y:Geometry')
                 nodeLabel = genericNode.firstChildElement('y:NodeLabel')
-
-                kwargs = {
-                    'id': element.attribute('id'),
-                    'height': float(geometry.attribute('height')),
-                    'width': float(geometry.attribute('width')),
-                }
-
+                h = float(geometry.attribute('height'))
+                w = float(geometry.attribute('width'))
+                kwargs = {'id': element.attribute('id'), 'height': h, 'width': w}
                 node = self.diagram.factory.create(item, **kwargs)
-
-                # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
-                # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
-                # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
-                # Additionally we force-snap the position to the grid so that items say aligned.
-                pos = QPointF(float(geometry.attribute('x')), float(geometry.attribute('y')))
-                pos = pos + QPointF(node.width() / 2, node.height() / 2)
-                pos = QPointF(snapF(pos.x(), Diagram.GridSize), snapF(pos.y(), Diagram.GridSize))
-                node.setPos(pos)
+                node.setPos(self.parsePos(geometry))
                 node.setText(nodeLabel.text())
+                node.setTextPos(self.parseLabelPos(geometry, nodeLabel))
                 return node
 
             data = data.nextSiblingElement('data')
@@ -449,26 +364,23 @@ class GraphmlLoader(AbstractLoader):
         while not data.isNull():
 
             if data.attribute('key', '') == self.keys['node_key']:
-
                 shapeNode = data.firstChildElement('y:ShapeNode')
                 geometry = shapeNode.firstChildElement('y:Geometry')
-
-                kwargs = {
-                    'id': element.attribute('id'),
-                    'height': float(geometry.attribute('height')),
-                    'width': float(geometry.attribute('width')),
-                }
-
+                h = float(geometry.attribute('height'))
+                w = float(geometry.attribute('width'))
+                kwargs = {'id': element.attribute('id'), 'height': h, 'width': w}
                 node = self.diagram.factory.create(item, **kwargs)
-
-                # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
-                # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
-                # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
-                # Additionally we force-snap the position to the grid so that items say aligned.
-                pos = QPointF(float(geometry.attribute('x')), float(geometry.attribute('y')))
-                pos = pos + QPointF(node.width() / 2, node.height() / 2)
-                pos = QPointF(snapF(pos.x(), Diagram.GridSize), snapF(pos.y(), Diagram.GridSize))
-                node.setPos(pos)
+                node.setPos(self.parsePos(geometry))
+                # For the following items we also import the label.
+                # Other operator nodes have fixed label so it's pointless.
+                if item in {Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.ValueDomainNode, Item.IndividualNode}:
+                    nodeLabel = shapeNode.firstChildElement('y:NodeLabel')
+                    node.setText(nodeLabel.text())
+                    if not isEmpty(nodeLabel.text()):
+                        # If the node label is empty do not set the position.
+                        # This is needed because domain restriction and range restriction nodes
+                        # usually do not have any label in gephol documents built with yEd.
+                        node.setTextPos(self.parseLabelPos(geometry, nodeLabel))
                 return node
 
             data = data.nextSiblingElement('data')
@@ -551,8 +463,8 @@ class GraphmlLoader(AbstractLoader):
                                 return Item.DomainRestrictionNode
 
                 # UML NOTE NODE
-                umlNoteNode = data.firstChildElement('y:UMLNoteNode')
-                if not umlNoteNode.isNull():
+                nodeNode = data.firstChildElement('y:UMLNoteNode')
+                if not nodeNode.isNull():
                     return Item.ValueRestrictionNode
 
             # EDGE
@@ -576,6 +488,48 @@ class GraphmlLoader(AbstractLoader):
             data = data.nextSiblingElement('data')
 
         return None
+
+    @staticmethod
+    def parseAnchorPos(edge, node, x, y):
+        """
+        Parse the given edge
+        :type edge: AbstractEdge
+        :type node: AbstractNode
+        :type x: str
+        :type y: str
+        :rtype: QPointF
+        """
+        path = node.painterPath()
+        pos = QPointF(float(x), float(y))
+        if path.contains(pos):
+            return snap(node.mapToScene(pos), Diagram.GridSize)
+        return node.anchor(edge)
+
+    @staticmethod
+    def parseLabelPos(geometry, nodeLabel):
+        """
+        Parse the node label position properly translating it from yEd coordinate system.
+        :type geometry: QDomElement
+        :type nodeLabel: QDomElement
+        :rtype: QPointF
+        """
+        return QPointF(float(nodeLabel.attribute('x')), float(nodeLabel.attribute('y'))) - \
+               QPointF(float(geometry.attribute('width')) / 2, float(geometry.attribute('height')) / 2) + \
+               QPointF(float(nodeLabel.attribute('width')) / 2, float(nodeLabel.attribute('height')) / 2)
+
+    @staticmethod
+    def parsePos(geometry):
+        """
+        Parse the position of the node properly translating it from yEd coordinate system.
+        :type geometry: QDomElement
+        :rtype: QPointF
+        """
+        # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
+        # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
+        # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
+        # We additionally snap the position to the grid so that items stay perfectly aligned.
+        return snap(QPointF(float(geometry.attribute('x')), float(geometry.attribute('y'))) + \
+                    QPointF(float(geometry.attribute('width')) / 2, float(geometry.attribute('height')) / 2), Diagram.GridSize)
 
     #############################################
     #   DIAGRAM GENERATION
