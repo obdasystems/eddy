@@ -644,7 +644,7 @@ class GraphmlExporter(AbstractExporter):
     @staticmethod
     def translateAnchorPos(edge, node):
         """
-        Translate the given label position in yEd coordinates.
+        Translate the the anchor point of the given edge in the given node in yEd coordinates.
         :type edge: AbstractEdge
         :type node: AbstractNode
         :rtype: QPointF
