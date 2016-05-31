@@ -32,7 +32,7 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QPointF, QObject, QRectF
+from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtXml import QDomDocument
@@ -43,9 +43,10 @@ from eddy.core.diagram import Diagram
 from eddy.core.exceptions import ParseError
 from eddy.core.functions.fsystem import fread, fexists
 from eddy.core.functions.signals import connect
+from eddy.core.loaders.common import AbstractLoader
 
 
-class GrapholLoader(QObject):
+class GrapholLoader(AbstractLoader):
     """
     This class can be used to load graphol diagrams from file.
     """

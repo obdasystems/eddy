@@ -34,7 +34,7 @@
 
 import os
 
-from PyQt5.QtCore import QPointF, QRectF, QObject
+from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtXml import QDomDocument
 
@@ -47,9 +47,10 @@ from eddy.core.functions.fsystem import fread
 from eddy.core.functions.misc import snapF, cutR
 from eddy.core.functions.path import uniquePath
 from eddy.core.functions.signals import connect
+from eddy.core.loaders.common import AbstractLoader
 
 
-class GraphmlLoader(QObject):
+class GraphmlLoader(AbstractLoader):
     """
     This class can be used to import graphol ontologies created using the graphol paletter for yEd.
     """

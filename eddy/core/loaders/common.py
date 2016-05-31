@@ -30,3 +30,34 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
+
+
+from abc import ABCMeta, abstractmethod
+
+from PyQt5.QtCore import QObject
+
+
+class AbstractLoader(QObject):
+    """
+    Base class for all the loaders.
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, parent=None):
+        """
+        Initialize the AbstractLoader.
+        :type parent: QObject
+        """
+        super().__init__(parent)
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @abstractmethod
+    def run(self):
+        """
+        Perform the import.
+        """
+        pass
+

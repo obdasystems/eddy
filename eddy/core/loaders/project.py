@@ -34,7 +34,6 @@
 
 import os
 
-from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtXml import QDomDocument
 
@@ -42,11 +41,12 @@ from eddy.core.datatypes.graphol import Item
 from eddy.core.exceptions import ParseError
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.fsystem import fread, fexists, isdir
+from eddy.core.loaders.common import AbstractLoader
 from eddy.core.loaders.graphol import GrapholLoader
 from eddy.core.project import Project
 
 
-class ProjectLoader(QObject):
+class ProjectLoader(AbstractLoader):
     """
     This class can be used to load projects.
 
