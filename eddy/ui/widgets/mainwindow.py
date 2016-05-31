@@ -64,6 +64,7 @@ from eddy.core.datatypes.misc import Color, DiagramMode
 from eddy.core.datatypes.owl import Datatype, Facet
 from eddy.core.datatypes.system import Platform, File
 from eddy.core.diagram import Diagram
+from eddy.core.exporters.graphml import GraphmlExporter
 from eddy.core.exporters.graphol import GrapholExporter
 from eddy.core.exporters.project import ProjectExporter
 from eddy.core.functions.fsystem import fexists, fcopy, fremove
@@ -1295,12 +1296,14 @@ class MainWindow(QMainWindow):
             dialog.setAcceptMode(QFileDialog.AcceptSave)
             dialog.setDirectory(self.project.path)
             dialog.setFileMode(QFileDialog.ExistingFile)
-            dialog.setNameFilters([File.Graphol.value])
+            dialog.setNameFilters([File.Graphol.value, File.Graphml.value])
             dialog.setOption(QFileDialog.DontConfirmOverwrite, True)
             dialog.setViewMode(QFileDialog.Detail)
             dialog.selectFile(diagram.name)
             if dialog.exec_():
-                self.saveFile(diagram, first(dialog.selectedFiles()))
+                file = File.forValue(dialog.selectedNameFilter())
+                path = first(dialog.selectedFiles())
+                self.saveFile(diagram, path, file)
 
     @pyqtSlot()
     def doSelectAll(self):
@@ -1874,17 +1877,22 @@ class MainWindow(QMainWindow):
             self.doFocusDiagram(self.project.diagram(path))
             self.doSave()
 
-    def saveFile(self, diagram, path):
+    def saveFile(self, diagram, path, file):
         """
         Save the given diagram in a file identified by the given path.
         :type diagram: Diagram
         :type path: str
+        :type file: File
         """
         base = os.path.dirname(path)
-        name = cutR(os.path.basename(path), File.Graphol.extension)
-        path = uniquePath(base, name, File.Graphol.extension)
-        worker = GrapholExporter(diagram, self)
-        worker.run(path)
+        name = cutR(os.path.basename(path), file.extension)
+        path = uniquePath(base, name, file.extension)
+        if file is File.Graphol:
+            worker = GrapholExporter(diagram, path, self)
+            worker.run()
+        elif file is File.Graphml:
+            worker = GraphmlExporter(diagram, path, self)
+            worker.run()
 
     def setWindowTitle(self, project, diagram=None):
         """
