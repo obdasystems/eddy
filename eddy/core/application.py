@@ -98,6 +98,9 @@ class Eddy(QApplication):
         """
         super().__init__(argv)
 
+        self._splash = None
+        self._welcome = None
+
         self.iSock = None
         self.iStream = None
         self.oSock = QLocalSocket()
@@ -107,9 +110,7 @@ class Eddy(QApplication):
         self.pending = []
         self.running = self.oSock.waitForConnected()
         self.mainwindow = None
-        self.welcome = None
         self.server = None
-        self.splash = None
 
         if self.running and not options.tests:
             # We allow to initialize multiple processes of Eddy only if we
@@ -148,33 +149,27 @@ class Eddy(QApplication):
     #   INTERFACE
     #################################
 
-    def closeSplashScreen(self):
+    def configure(self, options):
         """
-        Close the splash screen.
+        Perform initial configuration tasks for Eddy to work properly.
+        :type options: Namespace
         """
-        if self.splash:
-            self.splash.sleep()
-            self.splash.close()
-            self.splash = None
+        #############################################
+        # DRAW THE SPLASH SCREEN
+        #################################
 
-    def closeWelcomeScreen(self):
-        """
-        Close the welcome screen.
-        """
-        if self.welcome:
-            self.welcome.close()
-            self.welcome = None
+        self.splash(show=True, options=options)
 
-    def configureDefaults(self):
-        """
-        Configure application default parameters.
-        """
+        #############################################
+        # CONFIGURE DEFAULTS
+        #################################
+
         settings = QSettings(ORGANIZATION, APPNAME)
         if not settings.contains('project/recent'):
             # From PyQt5 documentation: if the value of the setting is a container (corresponding
             # to either QVariantList, QVariantMap or QVariantHash) then the type is applied to the
-            # contents of the container. According to this we can't use an empty list as default value
-            # because PyQt5 needs to know the type of the contents added to the collection: we avoid
+            # contents of the container. So we can't use an empty list as default value because
+            # PyQt5 needs to know the type of the contents added to the collection: we avoid
             # this problem by placing the list of example projects as recent project list.
             settings.setValue('project/recent', [
                 expandPath('@examples/animals'),
@@ -184,35 +179,29 @@ class Eddy(QApplication):
                 expandPath('@examples/pizza'),
             ])
 
-    def configureWorkspace(self):
-        """
-        Configure the application workspace.
-        """
-        settings = QSettings(ORGANIZATION, APPNAME)
+        #############################################
+        # CONFIGURE LAYOUT
+        #################################
+
+        clean = Clean('Fusion')
+        self.setStyle(clean)
+        self.setStyleSheet(clean.stylesheet)
+
+        #############################################
+        # CLOSE THE SPLASH SCREEN
+        #################################
+
+        self.splash(show=False)
+
+        #############################################
+        # CONFIGURE THE WORKSPACE
+        #################################
+
         workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
         if not isdir(workspace):
             window = WorkspaceDialog()
             if window.exec_() == WorkspaceDialog.Rejected:
                 raise SystemExit
-
-    def configureLayout(self):
-        """
-        Configure application layout.
-        """
-        clean = Clean('Fusion')
-        self.setStyle(clean)
-        self.setStyleSheet(clean.stylesheet)
-
-    def configure(self, options):
-        """
-        Perform initial configuration tasks for Eddy to work properly.
-        :type options: Namespace
-        """
-        self.showSplashScreen(options)
-        self.configureDefaults()
-        self.configureLayout()
-        self.closeSplashScreen()
-        self.configureWorkspace()
 
     def routePacket(self, argv):
         """
@@ -226,7 +215,7 @@ class Eddy(QApplication):
             return self.oSock.waitForBytesWritten()
         return False
 
-    def saveSessionState(self):
+    def save(self):
         """
         Save the state of the current active session.
         """
@@ -236,33 +225,45 @@ class Eddy(QApplication):
             settings.setValue('mainwindow/state', self.mainwindow.saveState())
             settings.sync()
 
-    def showSplashScreen(self, options):
+    def splash(self, show=True, options=None):
         """
-        Display the splash screen.
+        Show/hide the splash screen.
+        :type show: bool
         :type options: Namespace
         """
-        if not self.splash:
-            if not options.nosplash:
-                self.splash = Splash(':/images/eddy-splash', mtime=4)
-                self.splash.show()
-
-    def showWelcomeScreen(self):
-        """
-        Display the welcome screen.
-        """
-        if not self.welcome:
-            self.welcome = Welcome(self)
-            self.welcome.show()
+        if show:
+            if not self._splash:
+                if options and not options.nosplash:
+                    self._splash = Splash(':/images/eddy-splash', mtime=4)
+                    self._splash.show()
+        else:
+            if self._splash:
+                self._splash.sleep()
+                self._splash.close()
+                self._splash = None
 
     def start(self, options):
         """
         Run the application by showing the welcome dialog.
         :type options: Namespace
         """
+        self.welcome(show=True)
         if options.open and isdir(options.open):
             self.doCreateSession(options.open)
+
+    def welcome(self, show=True):
+        """
+        Show/hide the welcome screen.
+        :type show: bool
+        """
+        if show:
+            if not self._welcome:
+                self._welcome = Welcome(self)
+                self._welcome.show()
         else:
-            self.showWelcomeScreen()
+            if self._welcome:
+                self._welcome.close()
+                self._welcome = None
 
     #############################################
     #   SLOTS
@@ -293,7 +294,7 @@ class Eddy(QApplication):
             self.mainwindow = MainWindow(project)
             connect(self.mainwindow.sgnQuit, self.doQuit)
             connect(self.mainwindow.sgnClosed, self.onSessionClosed)
-        self.closeWelcomeScreen()
+        self.welcome(show=False)
         self.mainwindow.show()
     
     @pyqtSlot()
@@ -301,7 +302,7 @@ class Eddy(QApplication):
         """
         Quit Eddy.
         """
-        self.saveSessionState()
+        self.save()
         self.quit()
 
     @pyqtSlot(str)
@@ -328,5 +329,5 @@ class Eddy(QApplication):
         """
         Quit Eddy.
         """
-        self.saveSessionState()
-        self.showWelcomeScreen()
+        self.save()
+        self.welcome(show=True)
