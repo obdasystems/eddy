@@ -41,12 +41,17 @@ from PyQt5.QtWidgets import QUndoStack
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
+from eddy.core.exceptions import ProjectNotFoundError
+from eddy.core.exceptions import ProjectNotValidError
 from eddy.core.exporters.pdf import PdfExporter
 from eddy.core.exporters.printer import PrinterExporter
+from eddy.core.functions.fsystem import isdir, fexists
 from eddy.core.functions.misc import cutR
-from eddy.core.functions.path import openPath
+from eddy.core.functions.path import openPath, expandPath
 from eddy.core.items.nodes.common.meta import MetaFactory
 from eddy.core.syntax.owl import OWL2Validator
+
+from eddy.lang import gettext as _
 
 from eddy.ui.dialogs.export import OWLExportDialog
 
@@ -65,6 +70,11 @@ class Project(QObject):
     """
     This class implements a graphol project.
     """
+    Home = '.eddy'
+    Version = 1
+    MetaXML = 'meta.xml'
+    ModulesXML = 'modules.xml'
+
     sgnDiagramAdded = pyqtSignal('QGraphicsScene')
     sgnDiagramRemoved = pyqtSignal('QGraphicsScene')
     sgnItemAdded = pyqtSignal('QGraphicsScene', 'QGraphicsItem')
@@ -388,6 +398,30 @@ class Project(QObject):
                 if K_META in self.index[K_PREDICATE][item][name]:
                     del self.index[K_PREDICATE][item][name][K_META]
                     self.sgnMetaRemoved.emit(item, name)
+
+    @classmethod
+    def validate(cls, path):
+        """
+        Returns True if the project identified by the given path has a valid structure, False otherwise.
+        :type path: str
+        :raise ProjectNotFoundError: if the given project does not exists
+        :raise ProjectNotValidError: if the given project is not a valid one
+        """
+        path = expandPath(path)
+        if not isdir(path):
+            raise ProjectNotFoundError
+
+        projectHome = os.path.join(path, Project.Home)
+        if not isdir(projectHome):
+            raise ProjectNotValidError(_('PROJECT_ERROR_MISSING_HOME', projectHome))
+
+        projectMeta = os.path.join(projectHome, Project.MetaXML)
+        if not fexists(projectMeta):
+            raise ProjectNotValidError(_('PROJECT_ERROR_MISSING_META', projectMeta))
+
+        projectModules = os.path.join(projectHome, Project.ModulesXML)
+        if not fexists(projectModules):
+            raise ProjectNotValidError(_('PROJECT_ERROR_MISSING_STRUCTURE', projectModules))
 
     #############################################
     #   SLOTS
