@@ -402,10 +402,11 @@ class Project(QObject):
     @classmethod
     def validate(cls, path):
         """
-        Returns True if the project identified by the given path has a valid structure, False otherwise.
+        Validate the structure of a project given its path.
+        Will raise an exception if the project does not exists of it's not valid.
+        :raise ProjectNotFoundError: if the given project does not exists.
+        :raise ProjectNotValidError: if the given project is not a valid one.
         :type path: str
-        :raise ProjectNotFoundError: if the given project does not exists
-        :raise ProjectNotValidError: if the given project is not a valid one
         """
         path = expandPath(path)
         if not isdir(path):
