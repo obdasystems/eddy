@@ -1204,6 +1204,20 @@ class MainWindow(QMainWindow):
                  dialog.exec_()
 
     @pyqtSlot()
+    def doRelocateLabel(self):
+        """
+        Reset the selected node label to its default position.
+        """
+        diagram = self.mdi.activeDiagram
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            node = first([x for x in diagram.selectedNodes() if hasattr(x, 'label')])
+            if node and node.label.isMovable():
+                undo = node.label.pos()
+                redo = node.label.defaultPos()
+                self.project.undoStack.push(CommandNodeLabelMove(diagram, node, undo, redo))
+
+    @pyqtSlot()
     def doRemoveBreakpoint(self):
         """
         Remove the edge breakpoint specified in the action triggering this slot.
@@ -1239,20 +1253,7 @@ class MainWindow(QMainWindow):
                     subwindow.close()
                 self.project.removeDiagram(diagram)
                 fremove(diagram.path)
-
-    @pyqtSlot()
-    def doRelocateLabel(self):
-        """
-        Reset the selected node label to its default position.
-        """
-        diagram = self.mdi.activeDiagram
-        if diagram:
-            diagram.setMode(DiagramMode.Idle)
-            node = first([x for x in diagram.selectedNodes() if hasattr(x, 'label')])
-            if node and node.label.isMovable():
-                undo = node.label.pos()
-                redo = node.label.defaultPos()
-                self.project.undoStack.push(CommandNodeLabelMove(diagram, node, undo, redo))
+                self.doSave()
 
     @pyqtSlot()
     def doRenameDiagram(self):
@@ -1263,7 +1264,8 @@ class MainWindow(QMainWindow):
         diagram = action.data()
         if diagram:
             form = RenameDiagramDialog(self.project, diagram, self)
-            form.exec_()
+            if form.exec_() == RenameDiagramDialog.Accepted:
+                self.doSave()
 
     @pyqtSlot()
     def doSave(self):
