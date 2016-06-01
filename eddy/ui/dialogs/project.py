@@ -35,8 +35,8 @@
 import os
 
 from PyQt5.QtCore import Qt, QSettings, pyqtSlot
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QFormLayout, QFrame, QLabel
-from PyQt5.QtWidgets import QWidget, QDialogButtonBox
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QFormLayout, QFrame
+from PyQt5.QtWidgets import QWidget, QDialogButtonBox, QLabel
 
 from eddy import ORGANIZATION, APPNAME, WORKSPACE
 from eddy.core.exporters.project import ProjectExporter
@@ -169,20 +169,6 @@ class ProjectDialog(QDialog):
         project = Project(path, prefix, iri)
         exporter = ProjectExporter(project)
         exporter.run()
-
-        # ADD IT TO THE RECENT PROJECTS
-        settings = QSettings(ORGANIZATION, APPNAME)
-        projects = settings.value('project/recent', None, str) or []
-
-        try:
-            projects.remove(project.path)
-        except ValueError:
-             pass
-        finally:
-            projects.insert(0, project.path)
-            projects = projects[:8]
-            settings.setValue('project/recent', projects)
-            settings.sync()
 
         super().accept()
 

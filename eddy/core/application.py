@@ -156,17 +156,11 @@ class Eddy(QApplication):
             settings.setValue('project/recent', examples)
         else:
             # If we have some projects in out recent list, check whether they exists on the
-            # filesystem. If they do not exists we remove them from our recent list. After
-            # this cleanup, we remove the examples from the recent list if there is at least
-            # a project that is not an example one.
+            # filesystem. If they do not exists we remove them from our recent list.
             recentList = []
             for path in map(expandPath, settings.value('project/recent')):
                 if isdir(path):
                     recentList.append(path)
-
-            for path in examples:
-                if path in recentList:
-                    recentList.remove(path)
 
             settings.setValue('project/recent', recentList or examples)
             settings.sync()
@@ -277,30 +271,31 @@ class Eddy(QApplication):
             connect(self.iSock.onReadyRead, self.onReadyRead)
 
     @pyqtSlot(str)
-    def doCreateSession(self, project):
+    def doCreateSession(self, path):
         """
         Create a working session using the given project path.
-        :type project: str
+        :type path: str
         """
-        with BusyProgressDialog(_('PROJECT_LOADING', os.path.basename(project))):
+        with BusyProgressDialog(_('PROJECT_LOADING', os.path.basename(path))):
 
             try:
 
-                # We do some basic validation before actually loading the project
-                # inside the main window, so that if the project is not a valid one,
-                # we can inform the user and keep the welcome screen opened.
-                path = expandPath(project)
+                # VALIDATE PROJECT PATH
+                path = expandPath(path)
                 if not isdir(path):
                     raise ProjectNotFoundError
 
+                # VALIDATE PROJECT HOME
                 home = os.path.join(path, Project.Home)
                 if not isdir(home):
                     raise ProjectNotValidError(_('PROJECT_ERROR_MISSING_HOME', home))
 
+                # VALIDATE PROJECT METADATA
                 meta = os.path.join(home, Project.MetaXML)
                 if not fexists(meta):
                     raise ProjectNotValidError(_('PROJECT_ERROR_MISSING_META', meta))
 
+                # VALIDATE PROJECT MODULE STRUCTURE
                 modules = os.path.join(home, Project.ModulesXML)
                 if not fexists(modules):
                     raise ProjectNotValidError(_('PROJECT_ERROR_MISSING_STRUCTURE', modules))
@@ -308,7 +303,7 @@ class Eddy(QApplication):
             except ProjectNotFoundError:
                 msgbox = QMessageBox()
                 msgbox.setIconPixmap(QPixmap(':/icons/48/error'))
-                msgbox.setText(_('PROJECT_NOT_FOUND_MESSAGE', os.path.basename(project)))
+                msgbox.setText(_('PROJECT_NOT_FOUND_MESSAGE', os.path.basename(path)))
                 msgbox.setStandardButtons(QMessageBox.Close)
                 msgbox.setWindowIcon(QIcon(':/images/eddy'))
                 msgbox.setWindowTitle(_('PROJECT_NOT_FOUND_WINDOW_TITLE'))
@@ -316,7 +311,7 @@ class Eddy(QApplication):
             except ProjectNotValidError as e:
                 msgbox = QMessageBox()
                 msgbox.setIconPixmap(QPixmap(':/icons/48/error'))
-                msgbox.setText(_('PROJECT_NOT_VALID_MESSAGE', os.path.basename(project)))
+                msgbox.setText(_('PROJECT_NOT_VALID_MESSAGE', os.path.basename(path)))
                 msgbox.setTextFormat(Qt.RichText)
                 msgbox.setDetailedText(format_exception(e))
                 msgbox.setStandardButtons(QMessageBox.Close)
@@ -324,11 +319,29 @@ class Eddy(QApplication):
                 msgbox.setWindowTitle(_('PROJECT_NOT_VALID_WINDOW_TITLE'))
                 msgbox.exec_()
             else:
-                self.mainwindow = MainWindow(project)
-                connect(self.mainwindow.sgnQuit, self.doQuit)
-                connect(self.mainwindow.sgnClosed, self.onSessionClosed)
-                self.welcome(show=False)
-                self.mainwindow.show()
+
+                try:
+                    self.mainwindow = MainWindow(path)
+                except Exception as e:
+                    raise e
+                else:
+                    connect(self.mainwindow.sgnQuit, self.doQuit)
+                    connect(self.mainwindow.sgnClosed, self.onSessionClosed)
+                    settings = QSettings(ORGANIZATION, APPNAME)
+                    projects = settings.value('project/recent', None, str) or []
+
+                    try:
+                        projects.remove(path)
+                    except ValueError:
+                        pass
+                    finally:
+                        projects.insert(0, path)
+                        projects = projects[:8]
+                        settings.setValue('project/recent', projects)
+                        settings.sync()
+
+                    self.welcome(show=False)
+                    self.mainwindow.show()
     
     @pyqtSlot()
     def doQuit(self):
