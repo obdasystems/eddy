@@ -40,6 +40,7 @@ from eddy.core.datatypes.graphol import Item
 from eddy.core.exporters.common import AbstractExporter
 from eddy.core.exporters.graphol import GrapholExporter
 from eddy.core.functions.fsystem import fwrite, mkdir
+from eddy.core.project import Project
 
 
 class ProjectExporter(AbstractExporter):
@@ -57,11 +58,6 @@ class ProjectExporter(AbstractExporter):
     -   ...
     -   moduleN.graphol
     """
-    EddyProjectHome = '.eddy'
-    EddyProjectVersion = 1
-    MetaXML = 'meta.xml'
-    ModulesXML = 'modules.xml'
-
     def __init__(self, project, parent=None):
         """
         Initialize the project exporter.
@@ -72,9 +68,9 @@ class ProjectExporter(AbstractExporter):
 
         self.project = project
         self.projectMainPath = project.path
-        self.projectDataPath = os.path.join(self.projectMainPath, self.EddyProjectHome)
-        self.projectMetaDataPath = os.path.join(self.projectDataPath, self.MetaXML)
-        self.projectModulesDataPath = os.path.join(self.projectDataPath, self.ModulesXML)
+        self.projectDataPath = os.path.join(self.projectMainPath, Project.Home)
+        self.projectMetaDataPath = os.path.join(self.projectDataPath, Project.MetaXML)
+        self.projectModulesDataPath = os.path.join(self.projectDataPath, Project.ModulesXML)
         
         self.metaDocument = None
         self.modulesDocument = None
@@ -195,7 +191,7 @@ class ProjectExporter(AbstractExporter):
 
         # 2) CREATE ROOT ELEMENT
         root = self.metaDocument.createElement('project')
-        root.setAttribute('version', str(self.EddyProjectVersion))
+        root.setAttribute('version', str(Project.Version))
         self.metaDocument.appendChild(root)
 
         # 3) EXPORT PROJECT METADATA
@@ -230,7 +226,7 @@ class ProjectExporter(AbstractExporter):
 
         # 2) CREATE ROOT ELEMENT
         root = self.modulesDocument.createElement('project')
-        root.setAttribute('version', str(self.EddyProjectVersion))
+        root.setAttribute('version', str(Project.Version))
         self.modulesDocument.appendChild(root)
 
         # 3) APPEND ALL THE DIAGRAM NAMES

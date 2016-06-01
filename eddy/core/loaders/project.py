@@ -62,11 +62,6 @@ class ProjectLoader(AbstractLoader):
     -   ...
     -   moduleN.graphol
     """
-    EddyProjectHome = '.eddy'
-    EddyProjectVersion = 1
-    MetaXML = 'meta.xml'
-    ModulesXML = 'modules.xml'
-
     def __init__(self, path, parent):
         """
         Initialize the project loader.
@@ -80,9 +75,9 @@ class ProjectLoader(AbstractLoader):
         self.modulesDocument = None
 
         self.projectMainPath = expandPath(path)
-        self.projectDataPath = os.path.join(self.projectMainPath, self.EddyProjectHome)
-        self.projectMetaDataPath = os.path.join(self.projectDataPath, self.MetaXML)
-        self.projectModulesDataPath = os.path.join(self.projectDataPath, self.ModulesXML)
+        self.projectDataPath = os.path.join(self.projectMainPath, Project.Home)
+        self.projectMetaDataPath = os.path.join(self.projectDataPath, Project.MetaXML)
+        self.projectModulesDataPath = os.path.join(self.projectDataPath, Project.ModulesXML)
 
         self.metaFuncForItem = {
             Item.AttributeNode: self.buildAttributeMetadata,

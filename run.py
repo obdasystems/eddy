@@ -33,7 +33,41 @@
 ##########################################################################
 
 
+import os
 import sys
+import jnius_config
+
+from eddy.core.datatypes.system import Platform
+from eddy.core.functions.path import expandPath
+
+
+#############################################
+# BEGIN JAVA VIRTUAL MACHINE SETUP
+#################################
+
+if os.path.isdir(expandPath('@resources/java/')):
+    os.environ['JAVA_HOME'] = expandPath('@resources/java/')
+
+if Platform.identify() is Platform.Windows:
+    path = os.getenv('Path', '')
+    path = path.split(os.pathsep)
+    path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'bin', 'client'))
+    os.environ['Path'] = os.pathsep.join(path)
+
+classpath = []
+resources = expandPath('@resources/lib/')
+for name in os.listdir(resources):
+    path = os.path.join(resources, name)
+    if os.path.isfile(path):
+        classpath.append(path)
+
+jnius_config.add_options('-ea', '-Xmx512m')
+jnius_config.set_classpath(*classpath)
+
+#############################################
+# END JAVA VIRTUAL MACHINE SETUP
+#################################
+
 
 from argparse import ArgumentParser
 

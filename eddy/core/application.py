@@ -33,48 +33,22 @@
 
 
 import os
-import jnius_config
 
-from PyQt5.QtCore import QEvent, QTextStream, pyqtSignal, pyqtSlot, QSettings
+from PyQt5.QtCore import Qt, QEvent, QTextStream, pyqtSignal, pyqtSlot, QSettings
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtNetwork import QLocalSocket, QLocalServer
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QMessageBox
 
 from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE
-from eddy.core.datatypes.system import Platform
+from eddy.core.exceptions import ProjectNotFoundError
+from eddy.core.exceptions import ProjectNotValidError
 from eddy.core.functions.fsystem import isdir
-from eddy.core.functions.misc import isEmpty
+from eddy.core.functions.misc import isEmpty, format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
+from eddy.core.project import Project
 
 from eddy.lang import gettext as _
-
-
-########################################################
-##         BEGIN JAVA VIRTUAL MACHINE SETUP           ##
-########################################################
-
-if os.path.isdir(expandPath('@resources/java/')):
-    os.environ['JAVA_HOME'] = expandPath('@resources/java/')
-
-if Platform.identify() is Platform.Windows:
-    path = os.getenv('Path', '')
-    path = path.split(os.pathsep)
-    path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'bin', 'client'))
-    os.environ['Path'] = os.pathsep.join(path)
-
-classpath = []
-resources = expandPath('@resources/lib/')
-for name in os.listdir(resources):
-    path = os.path.join(resources, name)
-    if os.path.isfile(path):
-        classpath.append(path)
-
-jnius_config.add_options('-ea', '-Xmx512m')
-jnius_config.set_classpath(*classpath)
-
-########################################################
-##          END JAVA VIRTUAL MACHINE SETUP            ##
-########################################################
 
 from eddy.ui.dialogs.progress import BusyProgressDialog
 from eddy.ui.dialogs.workspace import WorkspaceDialog
@@ -291,11 +265,33 @@ class Eddy(QApplication):
         :type project: str
         """
         with BusyProgressDialog(_('PROJECT_LOADING', os.path.basename(project))):
-            self.mainwindow = MainWindow(project)
-            connect(self.mainwindow.sgnQuit, self.doQuit)
-            connect(self.mainwindow.sgnClosed, self.onSessionClosed)
-        self.welcome(show=False)
-        self.mainwindow.show()
+
+            try:
+                Project.validate(project)
+            except ProjectNotFoundError:
+                msgbox = QMessageBox()
+                msgbox.setIconPixmap(QPixmap(':/icons/48/error'))
+                msgbox.setText(_('PROJECT_NOT_FOUND_MESSAGE', os.path.basename(project)))
+                msgbox.setStandardButtons(QMessageBox.Close)
+                msgbox.setWindowIcon(QIcon(':/images/eddy'))
+                msgbox.setWindowTitle(_('PROJECT_NOT_FOUND_WINDOW_TITLE'))
+                msgbox.exec_()
+            except ProjectNotValidError as e:
+                msgbox = QMessageBox()
+                msgbox.setIconPixmap(QPixmap(':/icons/48/error'))
+                msgbox.setText(_('PROJECT_NOT_VALID_MESSAGE', os.path.basename(project)))
+                msgbox.setTextFormat(Qt.RichText)
+                msgbox.setDetailedText(format_exception(e))
+                msgbox.setStandardButtons(QMessageBox.Close)
+                msgbox.setWindowIcon(QIcon(':/images/eddy'))
+                msgbox.setWindowTitle(_('PROJECT_NOT_VALID_WINDOW_TITLE'))
+                msgbox.exec_()
+            else:
+                self.mainwindow = MainWindow(project)
+                connect(self.mainwindow.sgnQuit, self.doQuit)
+                connect(self.mainwindow.sgnClosed, self.onSessionClosed)
+                self.welcome(show=False)
+                self.mainwindow.show()
     
     @pyqtSlot()
     def doQuit(self):
