@@ -127,14 +127,6 @@ border: 1px solid #BABABA;
 border-bottom: 0;
 min-width: 140px;
 }
-QMdiArea QTabBar::tab:top:!last {
-border-left: 0;
-border-bottom: 0;
-}
-QMdiArea QTabBar::tab:top:only-one {
-border-left: 0;
-border-bottom: 0;
-}
 QMdiArea QTabWidget::pane {
 border: 1px solid #A9A9A9;
 }
