@@ -62,6 +62,7 @@ class GraphmlExporter(AbstractExporter):
         self.document = None
         self.diagram = diagram
         self.path = path
+        self.missing = {Item.FacetNode, Item.PropertyAssertionNode}
 
         self.exportFuncForItem = {
             Item.AttributeNode: self.exportAttributeNode,
@@ -153,7 +154,7 @@ class GraphmlExporter(AbstractExporter):
         :rtype: QDomElement
         """
         # NO SUCH NODE IN THE GRAPHOL PALETTE FOR YED
-        pass
+        return None
 
     def exportIndividualNode(self, node):
         """
@@ -178,7 +179,7 @@ class GraphmlExporter(AbstractExporter):
         :rtype: QDomElement
         """
         # NO SUCH NODE IN THE GRAPHOL PALETTE FOR YED
-        pass
+        return None
 
     def exportRangeRestrictionNode(self, node):
         """
@@ -729,16 +730,15 @@ class GraphmlExporter(AbstractExporter):
 
         # 5) GENERATE NODES
         for node in self.diagram.nodes():
-            if node.type() not in {Item.PropertyAssertionNode, Item.FacetNode}:
+            if node.type() not in self.missing:
                 func = self.exportFuncForItem[node.type()]
                 graph.appendChild(func(node))
 
         # 6) GENERATE EDGES
         for edge in self.diagram.edges():
-            if edge.source not in {Item.PropertyAssertionNode, Item.FacetNode}:
-                if edge.target not in {Item.PropertyAssertionNode, Item.FacetNode}:
-                    func = self.exportFuncForItem[edge.type()]
-                    graph.appendChild(func(edge))
+            if edge.source.type() not in self.missing and edge.target.type() not in self.missing:
+                func = self.exportFuncForItem[edge.type()]
+                graph.appendChild(func(edge))
 
         # 7) APPEND THE GRAPH TO THE DOCUMENT
         self.document.appendChild(root)
