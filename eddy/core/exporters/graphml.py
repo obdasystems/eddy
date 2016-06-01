@@ -433,17 +433,15 @@ class GraphmlExporter(AbstractExporter):
         # Exclude the nodes that have no label.
         # Note that we include an empty NodeLabel XML tag in the .graphml file.
         if node.type() not in {Item.PropertyAssertionNode, Item.DisjointUnionNode}:
+            labelPos = self.translateLabelPos(node)
             label.setAttribute('height', node.label.height())
+            label.setAttribute('modelName', 'free')
+            label.setAttribute('modelPosition', 'anywhere')
             label.setAttribute('textColor', '#000000')
             label.setAttribute('visible', 'true')
             label.setAttribute('width', node.label.width())
-            label.setAttribute('x', node.label.pos().x())
-            label.setAttribute('y', node.label.pos().y())
-            if node.label.movable:
-                # If the label of the node is movable set the modelName and modelPosition tags. If we
-                # omit such tags in the .graphml file, yEd centers the label internally in the node.
-                label.setAttribute('modelName', 'free')
-                label.setAttribute('modelPosition', 'anywhere')
+            label.setAttribute('x', labelPos.x())
+            label.setAttribute('y', labelPos.y())
             smartNodeLabelModel = self.document.createElement('y:SmartNodeLabelModel')
             smartNodeLabelModel.setAttribute('distance', '4.0')
             labelModel = self.document.createElement('y:LabelModel')
@@ -660,7 +658,8 @@ class GraphmlExporter(AbstractExporter):
         """
         return node.label.pos() + \
                QPointF(node.width() / 2, node.height() / 2) - \
-               QPointF(node.label.width() / 2, node.label.height() / 2)
+               QPointF(node.label.width() / 2, node.label.height() / 2) + \
+               QPointF(2.0, 2.0)
 
     @staticmethod
     def translatePos(node):
