@@ -32,13 +32,15 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QRectF, QPointF, QTimer, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import Qt, QRectF, QLineF, QPointF, QTimer, QEvent
+from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QPainterPath
 from PyQt5.QtWidgets import QGraphicsView, QApplication, QRubberBand
 
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.diagram import Diagram
-from eddy.core.functions.misc import clamp, rangeF
+from eddy.core.functions.geometry import midpoint
+from eddy.core.functions.misc import clamp, rangeF, snapF
 from eddy.core.functions.signals import disconnect, connect
 
 from eddy.ui.widgets.zoom import Zoom
@@ -50,6 +52,7 @@ class DiagramView(QGraphicsView):
     """
     MoveRate = 40
     MoveBound = 10
+    PinchSize = 0.12
 
     sgnScaled = pyqtSignal(float)
 
@@ -68,7 +71,8 @@ class DiagramView(QGraphicsView):
         self.rubberBandOrigin = None
         self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
         self.rubberBand.hide()
-        self.zoom = 1.00
+        self.pinchFactor = 1.0
+        self.zoom = 1.0
 
         self.setContextMenuPolicy(Qt.PreventContextMenu)
         self.setDragMode(DiagramView.NoDrag)
@@ -125,20 +129,14 @@ class DiagramView(QGraphicsView):
             modifiers & Qt.ControlModifier and \
                 key in {Qt.Key_Minus, Qt.Key_Plus, Qt.Key_0}:
 
-            if key == Qt.Key_Minus:
-                zoom = self.zoom - Zoom.Step
-            elif key == Qt.Key_Plus:
-                zoom = self.zoom + Zoom.Step
-            else:
-                zoom = Zoom.Default
-
-            zoom = clamp(zoom, Zoom.Min, Zoom.Max)
+            zoom = Zoom.Default
+            if key in {Qt.Key_Minus, Qt.Key_Plus}:
+                zoom = self.zoom
+                zoom += +Zoom.Step if key == Qt.Key_Plus else -Zoom.Step
+                zoom = clamp(zoom, Zoom.Min, Zoom.Max)
 
             if zoom != self.zoom:
-                self.setTransformationAnchor(QGraphicsView.NoAnchor)
-                self.setResizeAnchor(QGraphicsView.NoAnchor)
                 self.scaleView(zoom)
-                self.sgnScaled.emit(zoom)
 
         else:
             super().keyPressEvent(keyEvent)
@@ -289,17 +287,37 @@ class DiagramView(QGraphicsView):
             zoom = clamp(zoom, Zoom.Min, Zoom.Max)
 
             if zoom != self.zoom:
-                self.setTransformationAnchor(QGraphicsView.NoAnchor)
-                self.setResizeAnchor(QGraphicsView.NoAnchor)
-                p1 = self.mapToScene(wheelPos)
-                self.scaleView(zoom)
-                self.sgnScaled.emit(zoom)
-                p2 = self.mapToScene(wheelPos)
-                move = p2 - p1
-                self.translate(move.x(), move.y())
+                self.scaleViewOnPoint(zoom, wheelPos)
 
         else:
             super().wheelEvent(wheelEvent)
+
+    def viewportEvent(self, viewportEvent):
+        """
+        Perform pinch to zoom feature to scale the viewport.
+        :type viewportEvent: QTouchEvent
+        """
+        if viewportEvent.type() in {QEvent.TouchBegin, QEvent.TouchUpdate, QEvent.TouchEnd}:
+
+            if viewportEvent.type() in {QEvent.TouchBegin, QEvent.TouchEnd}:
+                self.pinchFactor = 1.0
+
+            pts = viewportEvent.touchPoints()
+            if len(pts) == 2:
+                p0 = pts[0]
+                p1 = pts[1]
+                p2 = midpoint(p0.pos(), p1.pos())
+                pinchFactor = QLineF(p0.pos(), p1.pos()).length() / QLineF(p0.startPos(), p1.startPos()).length()
+                pinchFactor = snapF(pinchFactor, DiagramView.PinchSize)
+                if pinchFactor != self.pinchFactor:
+                    zoom = self.zoom
+                    zoom += +Zoom.Step if pinchFactor > self.pinchFactor else -Zoom.Step
+                    zoom = clamp(zoom, Zoom.Min, Zoom.Max)
+                    self.pinchFactor = pinchFactor
+                    if zoom != self.zoom:
+                        self.scaleViewOnPoint(zoom, p2.toPoint())
+
+        return super(DiagramView, self).viewportEvent(viewportEvent)
 
     #############################################
     #   INTERFACE
@@ -328,7 +346,7 @@ class DiagramView(QGraphicsView):
         elif len(__args) == 2:
             delta = QPointF(__args[0], __args[1])
         else:
-            raise TypeError('too many arguments; expected {}, got {}'.format(2, len(__args)))
+            raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
         self.centerOn(self.visibleRect().center() + delta)
 
     def scaleView(self, zoom):
@@ -336,11 +354,25 @@ class DiagramView(QGraphicsView):
         Scale the view according to the given zoom.
         :type zoom: float
         """
-        transform = self.transform()
+        self.setTransformationAnchor(QGraphicsView.NoAnchor)
+        self.setResizeAnchor(QGraphicsView.NoAnchor)
         self.resetTransform()
-        self.translate(transform.dx(), transform.dy())
+        self.translate(self.transform().dx(), self.transform().dy())
         self.scale(zoom, zoom)
+        self.sgnScaled.emit(zoom)
         self.zoom = zoom
+
+    def scaleViewOnPoint(self, zoom, point):
+        """
+        Scale the view according to the given zoom and make sure that the given point stays focused.
+        :type zoom: float
+        :type point: QPoint
+        """
+        p0 = self.mapToScene(point)
+        self.scaleView(zoom)
+        p1 = self.mapToScene(point)
+        move = p1 - p0
+        self.translate(move.x(), move.y())
 
     def startMove(self, delta, rate):
         """

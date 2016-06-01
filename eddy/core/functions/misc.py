@@ -179,23 +179,9 @@ def shaded(pixmap, opacity=0.25):
     return o
 
 
-def snapF(value, size, offset=0, perform=True):
-    """
-    Snap the given value according to the given grid size.
-    :type value: float
-    :type size: float
-    :type offset: float
-    :type perform: bool
-    :rtype: float
-    """
-    if perform:
-        return float(round(value / size) * size) + offset
-    return value
-
-
 def snap(point, size, perform=True):
     """
-    Snap the given point according to the given grid size.
+    Snap each component of the given point according to the given size.
     :type point: QPointF
     :type size: float
     :type perform: bool
@@ -206,6 +192,20 @@ def snap(point, size, perform=True):
         y = snapF(point.y(), size, 0, perform)
         return QPointF(x, y)
     return point
+
+
+def snapF(value, size, offset=0, perform=True):
+    """
+    Snap the given value according to the given size.
+    :type value: float
+    :type size: float
+    :type offset: float
+    :type perform: bool
+    :rtype: float
+    """
+    if perform:
+        return float(round(value / size) * size) + offset
+    return value
 
 
 def uncapitalize(s):
