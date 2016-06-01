@@ -52,6 +52,7 @@ class DiagramView(QGraphicsView):
     """
     MoveRate = 40
     MoveBound = 10
+    PinchGuard = (0.75, 1.50)
     PinchSize = 0.12
 
     sgnScaled = pyqtSignal(float)
@@ -309,13 +310,14 @@ class DiagramView(QGraphicsView):
                 p2 = midpoint(p0.pos(), p1.pos())
                 pinchFactor = QLineF(p0.pos(), p1.pos()).length() / QLineF(p0.startPos(), p1.startPos()).length()
                 pinchFactor = snapF(pinchFactor, DiagramView.PinchSize)
-                if pinchFactor != self.pinchFactor:
-                    zoom = self.zoom
-                    zoom += +Zoom.Step if pinchFactor > self.pinchFactor else -Zoom.Step
-                    zoom = clamp(zoom, Zoom.Min, Zoom.Max)
-                    self.pinchFactor = pinchFactor
-                    if zoom != self.zoom:
-                        self.scaleViewOnPoint(zoom, p2.toPoint())
+                if pinchFactor < DiagramView.PinchGuard[0] or pinchFactor > DiagramView.PinchGuard[1]:
+                    if pinchFactor != self.pinchFactor:
+                        zoom = self.zoom
+                        zoom += +Zoom.Step if pinchFactor > self.pinchFactor else -Zoom.Step
+                        zoom = clamp(zoom, Zoom.Min, Zoom.Max)
+                        self.pinchFactor = pinchFactor
+                        if zoom != self.zoom:
+                            self.scaleViewOnPoint(zoom, p2.toPoint())
 
         return super(DiagramView, self).viewportEvent(viewportEvent)
 
