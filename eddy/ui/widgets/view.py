@@ -52,7 +52,7 @@ class DiagramView(QGraphicsView):
     """
     MoveRate = 40
     MoveBound = 10
-    PinchGuard = (0.75, 1.50)
+    PinchGuard = (0.70, 1.50)
     PinchSize = 0.12
 
     sgnScaled = pyqtSignal(float)
