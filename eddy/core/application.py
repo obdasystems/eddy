@@ -42,7 +42,7 @@ from PyQt5.QtWidgets import QApplication, QMessageBox
 from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE
 from eddy.core.exceptions import ProjectNotFoundError
 from eddy.core.exceptions import ProjectNotValidError
-from eddy.core.functions.fsystem import isdir
+from eddy.core.functions.fsystem import isdir, fexists
 from eddy.core.functions.misc import isEmpty, format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
@@ -139,19 +139,37 @@ class Eddy(QApplication):
         #################################
 
         settings = QSettings(ORGANIZATION, APPNAME)
+        examples = [
+            expandPath('@examples/animals'),
+            expandPath('@examples/diet'),
+            expandPath('@examples/family'),
+            expandPath('@examples/lubm'),
+            expandPath('@examples/pizza'),
+        ]
+
         if not settings.contains('project/recent'):
             # From PyQt5 documentation: if the value of the setting is a container (corresponding
             # to either QVariantList, QVariantMap or QVariantHash) then the type is applied to the
             # contents of the container. So we can't use an empty list as default value because
             # PyQt5 needs to know the type of the contents added to the collection: we avoid
             # this problem by placing the list of example projects as recent project list.
-            settings.setValue('project/recent', [
-                expandPath('@examples/animals'),
-                expandPath('@examples/diet'),
-                expandPath('@examples/family'),
-                expandPath('@examples/lubm'),
-                expandPath('@examples/pizza'),
-            ])
+            settings.setValue('project/recent', examples)
+        else:
+            # If we have some projects in out recent list, check whether they exists on the
+            # filesystem. If they do not exists we remove them from our recent list. After
+            # this cleanup, we remove the examples from the recent list if there is at least
+            # a project that is not an example one.
+            recentList = []
+            for path in map(expandPath, settings.value('project/recent')):
+                if isdir(path):
+                    recentList.append(path)
+
+            for path in examples:
+                if path in recentList:
+                    recentList.remove(path)
+
+            settings.setValue('project/recent', recentList or examples)
+            settings.sync()
 
         #############################################
         # CONFIGURE LAYOUT
@@ -267,7 +285,26 @@ class Eddy(QApplication):
         with BusyProgressDialog(_('PROJECT_LOADING', os.path.basename(project))):
 
             try:
-                Project.validate(project)
+
+                # We do some basic validation before actually loading the project
+                # inside the main window, so that if the project is not a valid one,
+                # we can inform the user and keep the welcome screen opened.
+                path = expandPath(project)
+                if not isdir(path):
+                    raise ProjectNotFoundError
+
+                home = os.path.join(path, Project.Home)
+                if not isdir(home):
+                    raise ProjectNotValidError(_('PROJECT_ERROR_MISSING_HOME', home))
+
+                meta = os.path.join(home, Project.MetaXML)
+                if not fexists(meta):
+                    raise ProjectNotValidError(_('PROJECT_ERROR_MISSING_META', meta))
+
+                modules = os.path.join(home, Project.ModulesXML)
+                if not fexists(modules):
+                    raise ProjectNotValidError(_('PROJECT_ERROR_MISSING_STRUCTURE', modules))
+
             except ProjectNotFoundError:
                 msgbox = QMessageBox()
                 msgbox.setIconPixmap(QPixmap(':/icons/48/error'))
