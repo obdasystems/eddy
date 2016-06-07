@@ -118,7 +118,7 @@ class DiagramProperty(PropertyDialog):
 
         self.edgesLabel = QLabel(self)
         self.edgesLabel.setFont(arial12r)
-        self.edgesLabel.setText(_('PROPERTY_DIAGRAM_LABEL_NUM_NODES'))
+        self.edgesLabel.setText(_('PROPERTY_DIAGRAM_LABEL_NUM_EDGES'))
         self.edgesField = IntegerField(self)
         self.edgesField.setFixedWidth(300)
         self.edgesField.setFont(arial12r)
