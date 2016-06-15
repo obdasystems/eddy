@@ -149,6 +149,28 @@ def partition(predicate, iterable):
     return filter(predicate, t2), itertools.filterfalse(predicate, t1)
 
 
+def postfix(string, value):
+    """
+    Add te given suffix to te given string (if it's not there already).
+    :type string: str
+    :type value: str
+    :rtype: str
+    """
+    if not string.endswith(value):
+        return '{0}{1}'.format(string, value)
+
+
+def prefix(string, value):
+    """
+    Add te given prefix to te given string (if it's not there already).
+    :type string: str
+    :type value: str
+    :rtype: str
+    """
+    if not string.startswith(value):
+        return '{0}{1}'.format(value, string)
+
+
 def rangeF(start, stop, step):
     """
     Generator which can be used to generate lists of float values. Floats are rounded up to 4 decimals.
