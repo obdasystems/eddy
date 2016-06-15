@@ -41,7 +41,7 @@ from eddy.core.datatypes.owl import OWLSyntax
 from eddy.core.exceptions import MalformedDiagramError
 from eddy.core.exporters.common import AbstractExporter
 from eddy.core.functions.fsystem import fwrite
-from eddy.core.functions.misc import first, clamp, isEmpty
+from eddy.core.functions.misc import first, clamp, isEmpty, postfix
 from eddy.core.functions.owl import OWLShortIRI, OWLAnnotationText
 from eddy.core.functions.owl import OWLFunctionalDocumentFilter
 from eddy.core.functions.signals import emit
@@ -901,9 +901,9 @@ class OWLExporter(AbstractExporter):
 
         self.man = self.OWLManager.createOWLOntologyManager()
         self.factory = self.man.getOWLDataFactory()
-        self.ontology = self.man.createOntology(self.IRI.create(self.project.iri))
+        self.ontology = self.man.createOntology(self.IRI.create(self.ontoIRI.rstrip('#')))
         self.pm = self.DefaultPrefixManager()
-        self.pm.setPrefix(self.project.prefix, self.project.iri)
+        self.pm.setPrefix(self.project.prefix, postfix(self.ontoIRI, '#'))
 
         jnius.cast(self.PrefixManager, self.pm)
 
