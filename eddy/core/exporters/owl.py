@@ -899,6 +899,7 @@ class OWLExporter(AbstractExporter):
         # INITIALIZE ONTOLOGY
         #################################
 
+        # FIXME: https://github.com/owlcs/owlapi/issues/529
         self.man = self.OWLManager.createOWLOntologyManager()
         self.factory = self.man.getOWLDataFactory()
         self.ontology = self.man.createOntology(self.IRI.create(self.ontoIRI.rstrip('#')))
