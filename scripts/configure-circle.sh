@@ -47,15 +47,15 @@ sudo apt-get install mercurial
 source /opt/qt55/bin/qt55-env.sh
 
 # Install Sip
-curl -L -o "${BUILDS_DIR}/sip.tar.gz" "http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.tar.gz"
+curl -L -o "${BUILDS_DIR}/sip.tar.gz" "http://downloads.sourceforge.net/project/pyqt/sip/sip-4.18/sip-4.18.tar.gz"
 tar xzf "${BUILDS_DIR}/sip.tar.gz" -C "${BUILDS_DIR}" --keep-newer-files
-cd "${BUILDS_DIR}/sip-4.17"
+cd "${BUILDS_DIR}/sip-4.18"
 python configure.py
 make
 sudo make install
 
 # Install PyQt5
-curl -L -o "${BUILDS_DIR}/pyqt.tar.gz" "http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz"
+curl -L -o "${BUILDS_DIR}/pyqt.tar.gz" "http://downloads.sourceforge.net/project/pyqt/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz"
 tar xzf "${BUILDS_DIR}/pyqt.tar.gz" -C "${BUILDS_DIR}" --keep-newer-files
 cd "${BUILDS_DIR}/PyQt-gpl-5.5.1"
 python configure.py --confirm-license --no-designer-plugin -e QtCore -e QtGui -e QtWidgets -e QtPrintSupport -e QtXml -e QtTest -e QtNetwork
