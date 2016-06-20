@@ -1776,7 +1776,7 @@ class MainWindow(QMainWindow):
         """
         if keyEvent.key() == Qt.Key_Control:
             diagram = self.mdi.activeDiagram
-            if diagram:
+            if diagram and not diagram.isEdgeInsertionInProgress():
                 diagram.setMode(DiagramMode.Idle)
         super().keyReleaseEvent(keyEvent)
 

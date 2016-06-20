@@ -262,7 +262,7 @@ class Diagram(QGraphicsScene):
                 # EDGE INSERTION
                 #################################
 
-                if self.mousePressEdge:
+                if self.isEdgeInsertionInProgress():
 
                     mainwindow = self.project.parent()
                     statusBar = mainwindow.statusBar()
@@ -342,7 +342,7 @@ class Diagram(QGraphicsScene):
                 # EDGE INSERTION
                 #################################
 
-                if self.mousePressEdge:
+                if self.isEdgeInsertionInProgress():
 
                     edge = self.mousePressEdge
                     edge.source.redraw(selected=False)
@@ -487,6 +487,7 @@ class Diagram(QGraphicsScene):
 
             rr_admissible = {Identity.Role, Identity.Attribute, Identity.Concept, Identity.ValueDomain}
 
+            # FILTERS
             f1 = lambda x: x.type() is Item.InputEdge
             f2 = lambda x: x.type() is Item.IndividualNode
             f3 = lambda x: x.type() is Item.MembershipEdge
@@ -494,11 +495,13 @@ class Diagram(QGraphicsScene):
             f5 = lambda x: x.type() in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
             f6 = lambda x: x.type() is Item.IndividualNode
 
-            conv1 = lambda x: Identity.Concept if x.identity is Identity.Instance else Identity.ValueDomain
-            conv2 = lambda x: Identity.Concept if x.identity in {Identity.Role, Identity.Concept} else Identity.ValueDomain
-            conv3 = lambda x: Identity.RoleInstance if x.identity is Identity.Role else Identity.AttributeInstance
+            # CONVERTERS
+            c1 = lambda x: Identity.Concept if x.identity is Identity.Instance else Identity.ValueDomain
+            c2 = lambda x: Identity.Concept if x.identity in {Identity.Role, Identity.Concept} else Identity.ValueDomain
+            c3 = lambda x: Identity.RoleInstance if x.identity is Identity.Role else Identity.AttributeInstance
 
-            aux1 = lambda x: x.identity is Identity.Value
+            # AUXILIARY FUNCTIONS
+            a1 = lambda x: x.identity is Identity.Value
 
             for node in weak:
 
@@ -515,7 +518,7 @@ class Diagram(QGraphicsScene):
                     # computation of the final identity for all the remaining WEAK nodes.
 
                     collection = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
-                    identities = set(map(conv1, collection))
+                    identities = set(map(c1, collection))
                     computed = Identity.Neutral
 
                     if identities:
@@ -544,7 +547,7 @@ class Diagram(QGraphicsScene):
                     # computation of the final identity for all the remaining WEAK nodes.
 
                     collection = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f4)
-                    identities = set(map(conv2, collection))
+                    identities = set(map(c2, collection))
                     computed = Identity.Neutral
 
                     if identities:
@@ -586,7 +589,7 @@ class Diagram(QGraphicsScene):
                     computed = Identity.Neutral
 
                     # 1) USE MEMBERSHIP EDGE
-                    identities = set(map(conv3, outgoing))
+                    identities = set(map(c3, outgoing))
                     if identities:
                         computed = first(identities)
                         if len(identities) > 1:
@@ -595,7 +598,7 @@ class Diagram(QGraphicsScene):
                     # 2) USE INPUT EDGES
                     if computed is Identity.Neutral and len(incoming) >= 2:
                         computed = Identity.RoleInstance
-                        if sum(map(aux1, incoming)):
+                        if sum(map(a1, incoming)):
                             computed = Identity.AttributeInstance
 
                     node.identity = computed
@@ -618,6 +621,13 @@ class Diagram(QGraphicsScene):
 
             for node in weak - strong - excluded:
                 node.identity = computed
+
+    def isEdgeInsertionInProgress(self):
+        """
+        Returns True if an edge insertion is currently in progress, False otherwise.
+        :rtype: bool
+        """
+        return self.mode is DiagramMode.InsertEdge and self.mousePressEdge is not None
 
     def isEmpty(self):
         """
