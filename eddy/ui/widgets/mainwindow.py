@@ -212,6 +212,7 @@ class MainWindow(QMainWindow):
         self.iconCreate = Icon(':/icons/24/create')
         self.iconCut = Icon(':/icons/24/cut')
         self.iconDelete = Icon(':/icons/24/delete')
+        self.iconEquivalence = Icon(':/icons/24/equivalence')
         self.iconGrid = Icon(':/icons/24/grid')
         self.iconHelp = Icon(':/icons/24/help')
         self.iconLabel = Icon(':/icons/24/label')
@@ -599,6 +600,7 @@ class MainWindow(QMainWindow):
         self.actionRemoveEdgeBreakpoint.setIcon(self.iconDelete)
         connect(self.actionRemoveEdgeBreakpoint.triggered, self.doRemoveBreakpoint)
 
+        self.actionToggleEdgeEquivalence.setIcon(self.iconEquivalence)
         self.actionToggleEdgeEquivalence.setShortcut('ALT+C')
         connect(self.actionToggleEdgeEquivalence.triggered, self.doToggleEdgeEquivalence)
 
@@ -858,6 +860,10 @@ class MainWindow(QMainWindow):
         self.toolbarEditor.addSeparator()
         self.toolbarEditor.addAction(self.actionBringToFront)
         self.toolbarEditor.addAction(self.actionSendToBack)
+        self.toolbarEditor.addSeparator()
+        self.toolbarEditor.addAction(self.actionSwapEdge)
+        self.toolbarEditor.addAction(self.actionToggleEdgeEquivalence)
+        self.toolbarEditor.addSeparator()
         self.toolbarEditor.addWidget(self.buttonSetBrush)
 
         self.toolbarView.addAction(self.actionSnapToGrid)

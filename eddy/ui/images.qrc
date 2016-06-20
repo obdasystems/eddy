@@ -26,6 +26,7 @@
   <file alias="create">../../artwork/icons/24/ic_create_black_24dp_1x.png</file>
   <file alias="cut">../../artwork/icons/24/ic_content_cut_black_24dp_1x.png</file>
   <file alias="delete">../../artwork/icons/24/ic_delete_black_24dp_1x.png</file>
+  <file alias="equivalence">../../artwork/icons/24/ic_equivalence_black_24dp_1x.png</file>
   <file alias="grid">../../artwork/icons/24/ic_grid_on_black_24dp_1x.png</file>
   <file alias="help">../../artwork/icons/24/ic_help_outline_black_24dp_1x.png</file>
   <file alias="label">../../artwork/icons/24/ic_label_outline_black_24dp_1x.png</file>
