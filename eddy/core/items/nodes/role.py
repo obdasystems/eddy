@@ -33,7 +33,8 @@
 
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
-from PyQt5.QtGui import QPolygonF, QPainterPath, QPixmap, QPainter, QPen, QColor, QBrush
+from PyQt5.QtGui import QPolygonF, QPainterPath, QPixmap, QPainter
+from PyQt5.QtGui import QPen, QColor, QBrush
 
 from eddy.core.datatypes.graphol import Item, Special, Identity
 from eddy.core.functions.misc import snapF
@@ -76,8 +77,8 @@ class RoleNode(AbstractResizableNode):
         self.label = NodeLabel(template='role',
                                pos=self.center,
                                parent=self)
-        self.updateTextPos()
         self.updateHandles()
+        self.updateTextPos()
 
     #############################################
     #   PROPERTIES
@@ -367,8 +368,8 @@ class RoleNode(AbstractResizableNode):
         R = QRectF(self.boundingRect())
         D = QPointF(0, 0)
 
-        minBoundW = self.MinWidth + offset * 2
-        minBoundH = self.MinHeight + offset * 2
+        mbh = self.MinHeight + offset * 2
+        mbw = self.MinWidth + offset * 2
 
         self.prepareGeometryChange()
 
@@ -386,12 +387,12 @@ class RoleNode(AbstractResizableNode):
             R.setTop(toY)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() - minBoundW + R.width())
-                R.setLeft(R.left() - minBoundW + R.width())
-            if R.height() < minBoundH:
-                D.setY(D.y() - minBoundH + R.height())
-                R.setTop(R.top() - minBoundH + R.height())
+            if R.width() < mbw:
+                D.setX(D.x() - mbw + R.width())
+                R.setLeft(R.left() - mbw + R.width())
+            if R.height() < mbh:
+                D.setY(D.y() - mbh + R.height())
+                R.setTop(R.top() - mbh + R.height())
             
             self.selection.setLeft(R.left())
             self.selection.setTop(R.top())
@@ -417,9 +418,9 @@ class RoleNode(AbstractResizableNode):
             R.setTop(toY)
 
             ## CLAMP SIZE
-            if R.height() < minBoundH:
-                D.setY(D.y() - minBoundH + R.height())
-                R.setTop(R.top() - minBoundH + R.height())
+            if R.height() < mbh:
+                D.setY(D.y() - mbh + R.height())
+                R.setTop(R.top() - mbh + R.height())
             
             self.selection.setTop(R.top())
             
@@ -447,12 +448,12 @@ class RoleNode(AbstractResizableNode):
             R.setTop(toY)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() + minBoundW - R.width())
-                R.setRight(R.right() + minBoundW - R.width())
-            if R.height() < minBoundH:
-                D.setY(D.y() - minBoundH + R.height())
-                R.setTop(R.top() - minBoundH + R.height())
+            if R.width() < mbw:
+                D.setX(D.x() + mbw - R.width())
+                R.setRight(R.right() + mbw - R.width())
+            if R.height() < mbh:
+                D.setY(D.y() - mbh + R.height())
+                R.setTop(R.top() - mbh + R.height())
             
             self.selection.setRight(R.right())
             self.selection.setTop(R.top())
@@ -478,9 +479,9 @@ class RoleNode(AbstractResizableNode):
             R.setLeft(toX)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() - minBoundW + R.width())
-                R.setLeft(R.left() - minBoundW + R.width())
+            if R.width() < mbw:
+                D.setX(D.x() - mbw + R.width())
+                R.setLeft(R.left() - mbw + R.width())
             
             self.selection.setLeft(R.left())
             
@@ -503,9 +504,9 @@ class RoleNode(AbstractResizableNode):
             R.setRight(toX)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() + minBoundW - R.width())
-                R.setRight(R.right() + minBoundW - R.width())
+            if R.width() < mbw:
+                D.setX(D.x() + mbw - R.width())
+                R.setRight(R.right() + mbw - R.width())
             
             self.selection.setRight(R.right())
             
@@ -531,12 +532,12 @@ class RoleNode(AbstractResizableNode):
             R.setBottom(toY)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() - minBoundW + R.width())
-                R.setLeft(R.left() - minBoundW + R.width())
-            if R.height() < minBoundH:
-                D.setY(D.y() + minBoundH - R.height())
-                R.setBottom(R.bottom() + minBoundH - R.height())
+            if R.width() < mbw:
+                D.setX(D.x() - mbw + R.width())
+                R.setLeft(R.left() - mbw + R.width())
+            if R.height() < mbh:
+                D.setY(D.y() + mbh - R.height())
+                R.setBottom(R.bottom() + mbh - R.height())
             
             self.selection.setLeft(R.left())
             self.selection.setBottom(R.bottom())
@@ -562,9 +563,9 @@ class RoleNode(AbstractResizableNode):
             R.setBottom(toY)
 
             ## CLAMP SIZE
-            if R.height() < minBoundH:
-                D.setY(D.y() + minBoundH - R.height())
-                R.setBottom(R.bottom() + minBoundH - R.height())
+            if R.height() < mbh:
+                D.setY(D.y() + mbh - R.height())
+                R.setBottom(R.bottom() + mbh - R.height())
             
             self.selection.setBottom(R.bottom())
             
@@ -592,12 +593,12 @@ class RoleNode(AbstractResizableNode):
             R.setBottom(toY)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() + minBoundW - R.width())
-                R.setRight(R.right() + minBoundW - R.width())
-            if R.height() < minBoundH:
-                D.setY(D.y() + minBoundH - R.height())
-                R.setBottom(R.bottom() + minBoundH - R.height())
+            if R.width() < mbw:
+                D.setX(D.x() + mbw - R.width())
+                R.setRight(R.right() + mbw - R.width())
+            if R.height() < mbh:
+                D.setY(D.y() + mbh - R.height())
+                R.setBottom(R.bottom() + mbh - R.height())
 
             self.selection.setRight(R.right())
             self.selection.setBottom(R.bottom())

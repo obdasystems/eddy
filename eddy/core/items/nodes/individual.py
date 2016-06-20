@@ -35,7 +35,8 @@
 import math
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
-from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap, QBrush
+from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
+from PyQt5.QtGui import QPen, QColor, QPixmap, QBrush
 
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.owl import Datatype
@@ -84,8 +85,8 @@ class IndividualNode(AbstractResizableNode):
         self.label = NodeLabel(template='instance',
                                pos=self.center,
                                parent=self)
-        self.updateTextPos()
         self.updateHandles()
+        self.updateTextPos()
 
     #############################################
     #   PROPERTIES
@@ -143,7 +144,7 @@ class IndividualNode(AbstractResizableNode):
         :type datatype: Datatype
         :return: str
         """
-        return '"{}"^^{}'.format(value.strip('"'), datatype.value)
+        return '"{0}"^^{1}'.format(value.strip('"'), datatype.value)
 
     def copy(self, diagram):
         """
@@ -268,8 +269,8 @@ class IndividualNode(AbstractResizableNode):
         R = QRectF(self.boundingRect())
         D = QPointF(0, 0)
 
-        minBoundW = self.MinWidth + offset * 2
-        minBoundH = self.MinHeight + offset * 2
+        mbh = self.MinHeight + offset * 2
+        mbw = self.MinWidth + offset * 2
 
         self.prepareGeometryChange()
 
@@ -287,12 +288,12 @@ class IndividualNode(AbstractResizableNode):
             R.setTop(toY)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() - minBoundW + R.width())
-                R.setLeft(R.left() - minBoundW + R.width())
-            if R.height() < minBoundH:
-                D.setY(D.y() - minBoundH + R.height())
-                R.setTop(R.top() - minBoundH + R.height())
+            if R.width() < mbw:
+                D.setX(D.x() - mbw + R.width())
+                R.setLeft(R.left() - mbw + R.width())
+            if R.height() < mbh:
+                D.setY(D.y() - mbh + R.height())
+                R.setTop(R.top() - mbh + R.height())
 
             newSideY = (R.height() - offset * 2) / (1 + math.sqrt(2))
             newSideX = (R.width() - offset * 2) / (1 + math.sqrt(2))
@@ -333,9 +334,9 @@ class IndividualNode(AbstractResizableNode):
             R.setTop(toY)
 
             ## CLAMP SIZE
-            if R.height() < minBoundH:
-                D.setY(D.y() - minBoundH + R.height())
-                R.setTop(R.top() - minBoundH + R.height())
+            if R.height() < mbh:
+                D.setY(D.y() - mbh + R.height())
+                R.setTop(R.top() - mbh + R.height())
 
             newSide = (R.height() - offset * 2) / (1 + math.sqrt(2))
             newLeftRightBottomY = (R.y() + R.height() / 2) + newSide / 2
@@ -373,12 +374,12 @@ class IndividualNode(AbstractResizableNode):
             R.setTop(toY)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() + minBoundW - R.width())
-                R.setRight(R.right() + minBoundW - R.width())
-            if R.height() < minBoundH:
-                D.setY(D.y() - minBoundH + R.height())
-                R.setTop(R.top() - minBoundH + R.height())
+            if R.width() < mbw:
+                D.setX(D.x() + mbw - R.width())
+                R.setRight(R.right() + mbw - R.width())
+            if R.height() < mbh:
+                D.setY(D.y() - mbh + R.height())
+                R.setTop(R.top() - mbh + R.height())
 
             newSideY = (R.height() - offset * 2) / (1 + math.sqrt(2))
             newSideX = (R.width() - offset * 2) / (1 + math.sqrt(2))
@@ -419,9 +420,9 @@ class IndividualNode(AbstractResizableNode):
             R.setLeft(toX)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() - minBoundW + R.width())
-                R.setLeft(R.left() - minBoundW + R.width())
+            if R.width() < mbw:
+                D.setX(D.x() - mbw + R.width())
+                R.setLeft(R.left() - mbw + R.width())
 
             newSide = (R.width() - offset * 2) / (1 + math.sqrt(2))
             newTopBottomLeftX = (R.x() + R.width() / 2) - newSide / 2
@@ -454,9 +455,9 @@ class IndividualNode(AbstractResizableNode):
             R.setRight(toX)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() + minBoundW - R.width())
-                R.setRight(R.right() + minBoundW - R.width())
+            if R.width() < mbw:
+                D.setX(D.x() + mbw - R.width())
+                R.setRight(R.right() + mbw - R.width())
 
             newSide = (R.width() - offset * 2) / (1 + math.sqrt(2))
             newTopBottomRightX = (R.x() + R.width() / 2) + newSide / 2
@@ -492,12 +493,12 @@ class IndividualNode(AbstractResizableNode):
             R.setBottom(toY)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() - minBoundW + R.width())
-                R.setLeft(R.left() - minBoundW + R.width())
-            if R.height() < minBoundH:
-                D.setY(D.y() + minBoundH - R.height())
-                R.setBottom(R.bottom() + minBoundH - R.height())
+            if R.width() < mbw:
+                D.setX(D.x() - mbw + R.width())
+                R.setLeft(R.left() - mbw + R.width())
+            if R.height() < mbh:
+                D.setY(D.y() + mbh - R.height())
+                R.setBottom(R.bottom() + mbh - R.height())
 
             newSideY = (R.height() - offset * 2) / (1 + math.sqrt(2))
             newSideX = (R.width() - offset * 2) / (1 + math.sqrt(2))
@@ -538,9 +539,9 @@ class IndividualNode(AbstractResizableNode):
             R.setBottom(toY)
 
             ## CLAMP SIZE
-            if R.height() < minBoundH:
-                D.setY(D.y() + minBoundH - R.height())
-                R.setBottom(R.bottom() + minBoundH - R.height())
+            if R.height() < mbh:
+                D.setY(D.y() + mbh - R.height())
+                R.setBottom(R.bottom() + mbh - R.height())
 
             newSide = (R.height() - offset * 2) / (1 + math.sqrt(2))
             newLeftRightTopY = (R.y() + R.height() / 2) - newSide / 2
@@ -578,12 +579,12 @@ class IndividualNode(AbstractResizableNode):
             R.setBottom(toY)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() + minBoundW - R.width())
-                R.setRight(R.right() + minBoundW - R.width())
-            if R.height() < minBoundH:
-                D.setY(D.y() + minBoundH - R.height())
-                R.setBottom(R.bottom() + minBoundH - R.height())
+            if R.width() < mbw:
+                D.setX(D.x() + mbw - R.width())
+                R.setRight(R.right() + mbw - R.width())
+            if R.height() < mbh:
+                D.setY(D.y() + mbh - R.height())
+                R.setBottom(R.bottom() + mbh - R.height())
 
             newSideY = (R.height() - offset * 2) / (1 + math.sqrt(2))
             newSideX = (R.width() - offset * 2) / (1 + math.sqrt(2))

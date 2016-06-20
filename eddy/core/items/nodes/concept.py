@@ -33,7 +33,8 @@
 
 
 from PyQt5.QtCore import QRectF, QPointF, Qt
-from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QColor, QPen, QBrush
+from PyQt5.QtGui import QPainterPath, QPainter, QPixmap
+from PyQt5.QtGui import QColor, QPen, QBrush
 
 from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.functions.misc import snapF
@@ -72,8 +73,8 @@ class ConceptNode(AbstractResizableNode):
         self.label = NodeLabel(template='concept',
                                pos=self.center,
                                parent=self)
-        self.updateTextPos()
         self.updateHandles()
+        self.updateTextPos()
 
     #############################################
     #   PROPERTIES
@@ -225,8 +226,8 @@ class ConceptNode(AbstractResizableNode):
         R = QRectF(self.boundingRect())
         D = QPointF(0, 0)
 
-        minBoundW = self.MinWidth + offset * 2
-        minBoundH = self.MinHeight + offset * 2
+        mbh = self.MinHeight + offset * 2
+        mbw = self.MinWidth + offset * 2
 
         self.prepareGeometryChange()
 
@@ -244,12 +245,12 @@ class ConceptNode(AbstractResizableNode):
             R.setTop(toY)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() - minBoundW + R.width())
-                R.setLeft(R.left() - minBoundW + R.width())
-            if R.height() < minBoundH:
-                D.setY(D.y() - minBoundH + R.height())
-                R.setTop(R.top() - minBoundH + R.height())
+            if R.width() < mbw:
+                D.setX(D.x() - mbw + R.width())
+                R.setLeft(R.left() - mbw + R.width())
+            if R.height() < mbh:
+                D.setY(D.y() - mbh + R.height())
+                R.setTop(R.top() - mbh + R.height())
 
             self.background.setLeft(R.left())
             self.background.setTop(R.top())
@@ -267,9 +268,9 @@ class ConceptNode(AbstractResizableNode):
             R.setTop(toY)
 
             ## CLAMP SIZE
-            if R.height() < minBoundH:
-                D.setY(D.y() - minBoundH + R.height())
-                R.setTop(R.top() - minBoundH + R.height())
+            if R.height() < mbh:
+                D.setY(D.y() - mbh + R.height())
+                R.setTop(R.top() - mbh + R.height())
 
             self.background.setTop(R.top())
             self.selection.setTop(R.top())
@@ -289,12 +290,12 @@ class ConceptNode(AbstractResizableNode):
             R.setTop(toY)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() + minBoundW - R.width())
-                R.setRight(R.right() + minBoundW - R.width())
-            if R.height() < minBoundH:
-                D.setY(D.y() - minBoundH + R.height())
-                R.setTop(R.top() - minBoundH + R.height())
+            if R.width() < mbw:
+                D.setX(D.x() + mbw - R.width())
+                R.setRight(R.right() + mbw - R.width())
+            if R.height() < mbh:
+                D.setY(D.y() - mbh + R.height())
+                R.setTop(R.top() - mbh + R.height())
 
             self.background.setRight(R.right())
             self.background.setTop(R.top())
@@ -312,9 +313,9 @@ class ConceptNode(AbstractResizableNode):
             R.setLeft(toX)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() - minBoundW + R.width())
-                R.setLeft(R.left() - minBoundW + R.width())
+            if R.width() < mbw:
+                D.setX(D.x() - mbw + R.width())
+                R.setLeft(R.left() - mbw + R.width())
 
             self.background.setLeft(R.left())
             self.selection.setLeft(R.left())
@@ -329,9 +330,9 @@ class ConceptNode(AbstractResizableNode):
             R.setRight(toX)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() + minBoundW - R.width())
-                R.setRight(R.right() + minBoundW - R.width())
+            if R.width() < mbw:
+                D.setX(D.x() + mbw - R.width())
+                R.setRight(R.right() + mbw - R.width())
 
             self.background.setRight(R.right())
             self.selection.setRight(R.right())
@@ -351,12 +352,12 @@ class ConceptNode(AbstractResizableNode):
             R.setBottom(toY)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() - minBoundW + R.width())
-                R.setLeft(R.left() - minBoundW + R.width())
-            if R.height() < minBoundH:
-                D.setY(D.y() + minBoundH - R.height())
-                R.setBottom(R.bottom() + minBoundH - R.height())
+            if R.width() < mbw:
+                D.setX(D.x() - mbw + R.width())
+                R.setLeft(R.left() - mbw + R.width())
+            if R.height() < mbh:
+                D.setY(D.y() + mbh - R.height())
+                R.setBottom(R.bottom() + mbh - R.height())
 
             self.background.setLeft(R.left())
             self.background.setBottom(R.bottom())
@@ -374,9 +375,9 @@ class ConceptNode(AbstractResizableNode):
             R.setBottom(toY)
 
             ## CLAMP SIZE
-            if R.height() < minBoundH:
-                D.setY(D.y() + minBoundH - R.height())
-                R.setBottom(R.bottom() + minBoundH - R.height())
+            if R.height() < mbh:
+                D.setY(D.y() + mbh - R.height())
+                R.setBottom(R.bottom() + mbh - R.height())
 
             self.background.setBottom(R.bottom())
             self.selection.setBottom(R.bottom())
@@ -396,12 +397,12 @@ class ConceptNode(AbstractResizableNode):
             R.setBottom(toY)
 
             ## CLAMP SIZE
-            if R.width() < minBoundW:
-                D.setX(D.x() + minBoundW - R.width())
-                R.setRight(R.right() + minBoundW - R.width())
-            if R.height() < minBoundH:
-                D.setY(D.y() + minBoundH - R.height())
-                R.setBottom(R.bottom() + minBoundH - R.height())
+            if R.width() < mbw:
+                D.setX(D.x() + mbw - R.width())
+                R.setRight(R.right() + mbw - R.width())
+            if R.height() < mbh:
+                D.setY(D.y() + mbh - R.height())
+                R.setBottom(R.bottom() + mbh - R.height())
 
             self.background.setRight(R.right())
             self.background.setBottom(R.bottom())
