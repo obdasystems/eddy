@@ -602,14 +602,13 @@ class MainWindow(QMainWindow):
 
         self.actionToggleEdgeEquivalence.setIcon(self.iconEquivalence)
         self.actionToggleEdgeEquivalence.setShortcut('ALT+C')
+        self.actionToggleEdgeEquivalence.setEnabled(False)
         connect(self.actionToggleEdgeEquivalence.triggered, self.doToggleEdgeEquivalence)
 
         self.actionSwapEdge.setIcon(self.iconSwapHorizontal)
         self.actionSwapEdge.setShortcut('ALT+S')
+        self.actionSwapEdge.setEnabled(False)
         connect(self.actionSwapEdge.triggered, self.doSwapEdge)
-
-        self.addAction(self.actionSwapEdge)
-        self.addAction(self.actionToggleEdgeEquivalence)
 
     def configureWidgets(self):
         """
