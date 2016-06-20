@@ -257,7 +257,7 @@ INFO_KEY_VALUE = 'Value'
 #################################
 
 MENU_COMPOSE = 'Compose'
-MENU_EDIT = 'Edit'
+MENU_EDIT = '\u200CEdit'
 MENU_FILE = 'File'
 MENU_HELP = 'Help'
 MENU_REFACTOR = 'Refactor'
@@ -271,7 +271,7 @@ MENU_SET_SPECIAL = 'Special type'
 MENU_SWITCH_OPERATOR = 'Switch to'
 MENU_TOOLBARS = 'Toolbars'
 MENU_TOOLS = 'Tools'
-MENU_VIEW = 'View'
+MENU_VIEW = '\u200CView'
 
 #############################################
 # META
