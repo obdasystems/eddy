@@ -374,12 +374,12 @@ class AbstractEdge(AbstractItem):
         """
         source = self.source
         zValue = source.zValue() + 0.1
-        if hasattr(source, 'label'):
+        if source.label:
             zValue = max(zValue, source.label.zValue())
         if self.target:
             target = self.target
             zValue = max(zValue, target.zValue())
-            if hasattr(target, 'label'):
+            if target.label:
                 zValue = max(zValue, target.label.zValue())
         self.setZValue(zValue)
 

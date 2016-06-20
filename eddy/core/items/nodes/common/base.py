@@ -67,6 +67,7 @@ class AbstractNode(AbstractItem):
         self.background = None
         self.selection = None
         self.polygon = None
+        self.label = None
 
         self.setAcceptHoverEvents(True)
         self.setCacheMode(AbstractItem.DeviceCoordinateCache)
@@ -301,7 +302,7 @@ class AbstractNode(AbstractItem):
         elif len(__args) == 2:
             pos = QPointF(__args[0], __args[1])
         else:
-            raise TypeError('too many arguments; expected {}, got {}'.format(2, len(__args)))
+            raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
         super().setPos(pos + super().pos() - self.pos())
 
     def redraw(self, selected=None, valid=None, **kwargs):
@@ -724,13 +725,13 @@ class AbstractResizableNode(AbstractNode):
 
             if bound.size() != self.mousePressBound.size():
 
-                BC = QRectF if isinstance(self.background, QRectF) else QPolygonF
-                SC = QRectF if isinstance(self.selection, QRectF) else QPolygonF
-                PC = QRectF if isinstance(self.polygon, QRectF) else QPolygonF
+                bFunc = QRectF if isinstance(self.background, QRectF) else QPolygonF
+                sFunc = QRectF if isinstance(self.selection, QRectF) else QPolygonF
+                pFunc = QRectF if isinstance(self.polygon, QRectF) else QPolygonF
 
-                background = BC(self.background)
-                selection = SC(self.selection)
-                polygon = PC(self.polygon)
+                background = bFunc(self.background)
+                selection = sFunc(self.selection)
+                polygon = pFunc(self.polygon)
 
                 data = {
                     'undo': {
@@ -738,14 +739,14 @@ class AbstractResizableNode(AbstractNode):
                         'selection': self.mousePressSelection,
                         'polygon': self.mousePressPolygon,
                         'anchors': self.mousePressData,
-                        'moved': hasattr(self, 'label') and self.label.isMoved(),
+                        'moved': self.label is not None and self.label.isMoved(),
                     },
                     'redo': {
                         'background': background,
                         'selection': selection,
                         'polygon': polygon,
                         'anchors': {edge: pos for edge, pos in self.anchors.items()},
-                        'moved': hasattr(self, 'label') and self.label.isMoved(),
+                        'moved': self.label is not None and self.label.isMoved(),
                     }
                 }
 

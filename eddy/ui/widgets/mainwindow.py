@@ -1211,7 +1211,7 @@ class MainWindow(QMainWindow):
         diagram = self.mdi.activeDiagram
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            node = first([x for x in diagram.selectedNodes() if hasattr(x, 'label')])
+            node = first([x for x in diagram.selectedNodes() if x.label is not None])
             if node and node.label.isMovable():
                 undo = node.label.pos()
                 redo = node.label.defaultPos()
