@@ -95,8 +95,11 @@ class MenuFactory(QObject):
             action.setData((edge, breakpoint))
             menu.addAction(action)
         else:
+            # BUILD THE MENU
             menu.addAction(mainwindow.actionDelete)
             menu.addAction(mainwindow.actionSwapEdge)
+            # SETUP ACTIONS STATE
+            mainwindow.actionSwapEdge.setVisible(edge.isSwapAllowed())
         return menu
 
     @staticmethod
@@ -122,17 +125,8 @@ class MenuFactory(QObject):
             menu.addSeparator()
             menu.addAction(mainwindow.actionToggleEdgeEquivalence)
             # SETUP ACTIONS STATE
-            swapOn = True
-            completeOn = True
-            validate = diagram.project.validator.validate
-            if not validate(edge.target, edge, edge.source).valid:
-                swapOn = False
-            if edge.source.identity in {Identity.Attribute, Identity.Role}:
-                if edge.target.type() is Item.ComplementNode:
-                    completeOn = False
-            mainwindow.actionToggleEdgeEquivalence.setVisible(completeOn)
-            mainwindow.actionToggleEdgeEquivalence.setChecked(edge.equivalence)
-            mainwindow.actionSwapEdge.setVisible(swapOn)
+            mainwindow.actionToggleEdgeEquivalence.setVisible(edge.isEquivalenceAllowed())
+            mainwindow.actionSwapEdge.setVisible(edge.isSwapAllowed())
         return menu
 
     @staticmethod
@@ -157,9 +151,7 @@ class MenuFactory(QObject):
             menu.addAction(mainwindow.actionSwapEdge)
             menu.addSeparator()
             # SETUP ACTIONS STATE
-            validate = diagram.project.validator.validate
-            result = validate(edge.target, edge, edge.source)
-            mainwindow.actionSwapEdge.setVisible(result.valid)
+            mainwindow.actionSwapEdge.setVisible(edge.isSwapAllowed())
         return menu
 
     @staticmethod

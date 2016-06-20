@@ -600,7 +600,6 @@ class MainWindow(QMainWindow):
         connect(self.actionRemoveEdgeBreakpoint.triggered, self.doRemoveBreakpoint)
 
         self.actionToggleEdgeEquivalence.setShortcut('ALT+C')
-        self.actionToggleEdgeEquivalence.setCheckable(True)
         connect(self.actionToggleEdgeEquivalence.triggered, self.doToggleEdgeEquivalence)
 
         self.actionSwapEdge.setIcon(self.iconSwapHorizontal)
@@ -1459,8 +1458,7 @@ class MainWindow(QMainWindow):
         diagram = self.mdi.activeDiagram
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            validate = self.project.validator.validate
-            selected = [e for e in diagram.selectedEdges() if validate(e.target, e, e.source).valid]
+            selected = [e for e in diagram.selectedEdges() if e.isSwapAllowed()]
             if selected:
                 self.project.undoStack.push(CommandEdgeSwap(diagram, selected))
 
