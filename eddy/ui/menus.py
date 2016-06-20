@@ -120,7 +120,7 @@ class MenuFactory(QObject):
             menu.addAction(mainwindow.actionDelete)
             menu.addAction(mainwindow.actionSwapEdge)
             menu.addSeparator()
-            menu.addAction(mainwindow.actionSetEdgeEquivalence)
+            menu.addAction(mainwindow.actionToggleEdgeEquivalence)
             # SETUP ACTIONS STATE
             swapOn = True
             completeOn = True
@@ -130,8 +130,8 @@ class MenuFactory(QObject):
             if edge.source.identity in {Identity.Attribute, Identity.Role}:
                 if edge.target.type() is Item.ComplementNode:
                     completeOn = False
-            mainwindow.actionSetEdgeEquivalence.setVisible(completeOn)
-            mainwindow.actionSetEdgeEquivalence.setChecked(edge.equivalence)
+            mainwindow.actionToggleEdgeEquivalence.setVisible(completeOn)
+            mainwindow.actionToggleEdgeEquivalence.setChecked(edge.equivalence)
             mainwindow.actionSwapEdge.setVisible(swapOn)
         return menu
 

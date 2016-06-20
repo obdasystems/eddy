@@ -606,7 +606,7 @@ class InclusionEdgeInfo(EdgeInfo):
         self.equivalenceBox = CheckBox(parent)
         self.equivalenceBox.setFont(arial12r)
         self.equivalenceBox.setCheckable(True)
-        connect(self.equivalenceBox.clicked, self.mainwindow.doSetEdgeComplete)
+        connect(self.equivalenceBox.clicked, self.mainwindow.doToggleEdgeEquivalence)
 
         self.generalLayout.addRow(self.equivalenceKey, parent)
 

@@ -283,6 +283,13 @@ class AbstractEdge(AbstractItem):
         """
         pass
 
+    def isSwapAllowed(self):
+        """
+        Returns True if this edge can be swapped, False otherwise.
+        :rtype: bool
+        """
+        return self.project.validator.validate(self.target, self, self.source).valid
+
     def moveBy(self, x, y):
         """
         Move the edge by the given deltas.

@@ -280,7 +280,7 @@ class MainWindow(QMainWindow):
         self.actionComposePropertyRange = QAction(_('ACTION_COMPOSE_PROPERTY_RANGE_N'), self)
         self.actionRemoveEdgeBreakpoint = QAction(_('ACTION_REMOVE_EDGE_BREAKPOINT_N'), self)
         self.actionSwapEdge = QAction(_('ACTION_EDGE_SWAP_N'), self)
-        self.actionSetEdgeEquivalence = QAction(_('ACTION_TOGGLE_EDGE_EQUIVALENCE_N'), self)
+        self.actionToggleEdgeEquivalence = QAction(_('ACTION_EDGE_TOGGLE_EQUIVALENCE_N'), self)
 
         self.actionsRefactorBrush = []
         self.actionsSetBrush = []
@@ -599,16 +599,16 @@ class MainWindow(QMainWindow):
         self.actionRemoveEdgeBreakpoint.setIcon(self.iconDelete)
         connect(self.actionRemoveEdgeBreakpoint.triggered, self.doRemoveBreakpoint)
 
-        self.actionSetEdgeEquivalence.setShortcut('ALT+C')
-        self.actionSetEdgeEquivalence.setCheckable(True)
-        connect(self.actionSetEdgeEquivalence.triggered, self.doSetEdgeComplete)
+        self.actionToggleEdgeEquivalence.setShortcut('ALT+C')
+        self.actionToggleEdgeEquivalence.setCheckable(True)
+        connect(self.actionToggleEdgeEquivalence.triggered, self.doToggleEdgeEquivalence)
 
         self.actionSwapEdge.setIcon(self.iconSwapHorizontal)
         self.actionSwapEdge.setShortcut('ALT+S')
         connect(self.actionSwapEdge.triggered, self.doSwapEdge)
 
         self.addAction(self.actionSwapEdge)
-        self.addAction(self.actionSetEdgeEquivalence)
+        self.addAction(self.actionToggleEdgeEquivalence)
 
     def configureWidgets(self):
         """
@@ -722,6 +722,9 @@ class MainWindow(QMainWindow):
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionBringToFront)
         self.menuEdit.addAction(self.actionSendToBack)
+        self.menuEdit.addSeparator()
+        self.menuEdit.addAction(self.actionSwapEdge)
+        self.menuEdit.addAction(self.actionToggleEdgeEquivalence)
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionSelectAll)
         self.menuEdit.addAction(self.actionCenterDiagram)
@@ -1532,23 +1535,6 @@ class MainWindow(QMainWindow):
             item.setSelected(True)
 
     @pyqtSlot()
-    def doSetEdgeComplete(self):
-        """
-        Set/unset the 'complete' attribute for all the selected inclusion edges.
-        """
-        diagram = self.mdi.activeDiagram
-        if diagram:
-            diagram.setMode(DiagramMode.Idle)
-            f1 = lambda x: x.type() is Item.InclusionEdge
-            f2 = lambda x: x.source.identity is not Identity.Attribute or x.target.type() is not Item.ComplementNode
-            f3 = lambda x: x.source.identity is not Identity.Role or x.target.type() is not Item.ComplementNode
-            selected = [e for e in diagram.selectedEdges() if f1(e) and f2(e) and f3(e)]
-            if selected:
-                comp = sum(edge.equivalence for edge in selected) <= len(selected) / 2
-                data = {edge: {'from': edge.equivalence, 'to': comp} for edge in selected}
-                self.project.undoStack.push(CommandEdgeToggleEquivalence(diagram, data))
-
-    @pyqtSlot()
     def doSnapToGrid(self):
         """
         Toggle snap to grid setting.
@@ -1559,6 +1545,21 @@ class MainWindow(QMainWindow):
         for subwindow in self.mdi.subWindowList():
             viewport = subwindow.view.viewport()
             viewport.update()
+
+    @pyqtSlot()
+    def doToggleEdgeEquivalence(self):
+        """
+        Set/unset the 'equivalence' attribute for all the selected Inclusion edges.
+        """
+        diagram = self.mdi.activeDiagram
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            selected = diagram.selectedEdges()
+            selected = [e for e in selected if e.type() is Item.InclusionEdge and e.isEquivalenceAllowed()]
+            if selected:
+                comp = sum(edge.equivalence for edge in selected) <= len(selected) / 2
+                data = {edge: {'from': edge.equivalence, 'to': comp} for edge in selected}
+                self.project.undoStack.push(CommandEdgeToggleEquivalence(diagram, data))
 
     @pyqtSlot()
     def doUpdateState(self):
@@ -1572,11 +1573,15 @@ class MainWindow(QMainWindow):
         isPredicateSelected = False
         isProjectEmpty = self.project.isEmpty()
         isUndoStackClean = self.project.undoStack.isClean()
+        isEdgeSwapEnabled = False
+        isEdgeToggleEnabled = False
 
         if self.mdi.subWindowList():
+
             diagram = self.mdi.activeDiagram
             predicates = {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.IndividualNode}
             if diagram:
+
                 nodes = diagram.selectedNodes()
                 edges = diagram.selectedEdges()
                 isDiagramActive = True
@@ -1584,6 +1589,16 @@ class MainWindow(QMainWindow):
                 isEdgeSelected = first(edges) is not None
                 isNodeSelected = first(nodes) is not None
                 isPredicateSelected = any([i.type() in predicates for i in nodes])
+
+                if isEdgeSelected:
+                    for edge in edges:
+                        if not isEdgeSwapEnabled:
+                            isEdgeSwapEnabled = edge.isSwapAllowed()
+                        if not isEdgeToggleEnabled:
+                            if edge.type() is Item.InclusionEdge:
+                                isEdgeToggleEnabled = edge.isEquivalenceAllowed()
+                        if isEdgeSwapEnabled and isEdgeToggleEnabled:
+                            break
 
         self.actionBringToFront.setEnabled(isNodeSelected)
         self.actionCenterDiagram.setEnabled(isDiagramActive)
@@ -1596,8 +1611,10 @@ class MainWindow(QMainWindow):
         self.actionSaveAs.setEnabled(isDiagramActive)
         self.actionSelectAll.setEnabled(isDiagramActive)
         self.actionSendToBack.setEnabled(isNodeSelected)
-        self.actionSnapToGrid.setEnabled(isDiagramActive)
         self.buttonSetBrush.setEnabled(isPredicateSelected)
+        self.actionSnapToGrid.setEnabled(isDiagramActive)
+        self.actionSwapEdge.setEnabled(isEdgeSelected and isEdgeSwapEnabled)
+        self.actionToggleEdgeEquivalence.setEnabled(isEdgeSelected and isEdgeToggleEnabled)
         self.zoom.setEnabled(isDiagramActive)
 
     @pyqtSlot('QGraphicsItem', int)

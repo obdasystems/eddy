@@ -38,7 +38,7 @@ from PyQt5.QtCore import QPointF, QLineF, Qt
 from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor
 from PyQt5.QtGui import QPixmap, QPainterPath
 
-from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.edges.common.base import AbstractEdge
 
 
@@ -150,6 +150,16 @@ class InclusionEdge(AbstractEdge):
         painter.setBrush(QColor(0, 0, 0))
         painter.drawPolygon(head)
         return pixmap
+
+    def isEquivalenceAllowed(self):
+        """
+        Returns True if this Inclusion edge can express equivalence, False otherwise.
+        :rtype: bool
+        """
+        if self.source.identity in {Identity.Attribute, Identity.Role}:
+            if self.target.type() is Item.ComplementNode:
+                return False
+        return True
 
     def paint(self, painter, option, widget=None):
         """
