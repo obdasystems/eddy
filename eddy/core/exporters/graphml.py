@@ -239,7 +239,7 @@ class GraphmlExporter(AbstractExporter):
         :type edge: InclusionEdge
         :rtype: QDomElement
         """
-        return self.exportGenericEdge(edge, 'line', 'standard' if edge.complete else '', 'standard')
+        return self.exportGenericEdge(edge, 'line', 'standard' if edge.equivalence else '', 'standard')
 
     def exportInputEdge(self, edge):
         """

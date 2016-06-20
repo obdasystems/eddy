@@ -35,7 +35,8 @@
 from math import sin, cos, radians, pi as M_PI
 
 from PyQt5.QtCore import QPointF, QLineF, Qt
-from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
+from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor
+from PyQt5.QtGui import QPixmap, QPainterPath
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.items.edges.common.base import AbstractEdge
@@ -47,13 +48,13 @@ class InclusionEdge(AbstractEdge):
     """
     Type = Item.InclusionEdge
 
-    def __init__(self, complete=False, **kwargs):
+    def __init__(self, equivalence=False, **kwargs):
         """
         Initialize the edge.
-        :type complete: bool
+        :type equivalence: bool
         """
         super().__init__(**kwargs)
-        self.complete = complete
+        self.equivalence = equivalence
         self.tail = QPolygonF()
 
     #############################################
@@ -87,7 +88,7 @@ class InclusionEdge(AbstractEdge):
             'source': self.source,
             'target': self.target,
             'breakpoints': self.breakpoints[:],
-            'complete': self.complete,
+            'equivalence': self.equivalence,
         }
         return diagram.factory.create(self.type(), **kwargs)
 
@@ -250,7 +251,7 @@ class InclusionEdge(AbstractEdge):
                 self.path.lineTo(p2)
                 self.selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), boxSize))
                 self.head = createHead(p2, subpath.angle(), headSize)
-                if self.complete:
+                if self.equivalence:
                     self.tail = createTail(p1, subpath.angle(), headSize)
 
         elif len(collection) > 1:
@@ -281,7 +282,7 @@ class InclusionEdge(AbstractEdge):
                 self.selection.addPolygon(createSelectionArea(p21, p22, subpathN.angle(), boxSize))
 
                 self.head = createHead(p22, subpathN.angle(), headSize)
-                if self.complete:
+                if self.equivalence:
                     self.tail = createTail(p11, subpath1.angle(), headSize)
 
         self.redraw(selected=self.isSelected(), visible=self.canDraw())

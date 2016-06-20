@@ -119,7 +119,7 @@ class OWL2Validator(AbstractValidator):
                 identity = first({source.identity, target.identity} - {Identity.Neutral}).value.lower()
                 raise SyntaxError(_('SYNTAX_INCLUSION_COMPLEMENT_INVALID_SOURCE', identity, source.name))
 
-            if target.type() is Item.ComplementNode and edge.complete:
+            if target.type() is Item.ComplementNode and edge.equivalence:
                 # Complement nodes can only be the target of Role and Attribute inclusions since they
                 # are used to generate OWLDisjointObjectPropertiesAxiom and OWLDisjointDataPropertiesAxiom.
                 # Differently we allow inclusions targeting concept nodes to source from complement nodes.

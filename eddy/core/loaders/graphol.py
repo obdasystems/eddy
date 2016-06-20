@@ -126,7 +126,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: AttributeNode
         """
-        label = self.extractLabelInsideElement(element)
+        label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.AttributeNode, element)
         node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
         node.setText(label.text())
@@ -147,7 +147,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: ConceptNode
         """
-        label = self.extractLabelInsideElement(element)
+        label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.ConceptNode, element)
         node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
         node.setText(label.text())
@@ -176,7 +176,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: DomainRestrictionNode
         """
-        label = self.extractLabelInsideElement(element)
+        label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.DomainRestrictionNode, element)
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
@@ -196,7 +196,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: FacetNode
         """
-        label = self.extractLabelInsideElement(element)
+        label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.FacetNode, element)
         node.setText(label.text())
         return node
@@ -207,7 +207,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: IndividualNode
         """
-        label = self.extractLabelInsideElement(element)
+        label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.IndividualNode, element)
         node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
         node.setText(label.text())
@@ -239,7 +239,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: RangeRestrictionNode
         """
-        label = self.extractLabelInsideElement(element)
+        label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.RangeRestrictionNode, element)
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
@@ -251,7 +251,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: RoleNode
         """
-        label = self.extractLabelInsideElement(element)
+        label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.RoleNode, element)
         node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
         node.setText(label.text())
@@ -283,7 +283,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: ValueDomainNode
         """
-        label = self.extractLabelInsideElement(element)
+        label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.ValueDomainNode, element)
         node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
         node.setText(label.text())
@@ -309,7 +309,7 @@ class GrapholLoader(AbstractLoader):
         :rtype: InclusionEdge
         """
         edge = self.buildGenericEdge(Item.InclusionEdge, element)
-        edge.complete = bool(int(element.attribute('complete', '0')))
+        edge.equivalence = self.getEdgeEquivalenceFromElement(element)
         return edge
 
     def buildInputEdge(self, element):
@@ -340,10 +340,10 @@ class GrapholLoader(AbstractLoader):
         :rtype: AbstractEdge
         """
         points = []
-        point = self.extractPointInsideElement(element)
+        point = self.getPointInsideElement(element)
         while not point.isNull():
             points.append(QPointF(int(point.attribute('x')), int(point.attribute('y'))))
-            point = self.extractPointBesideElement(point)
+            point = self.getPointBesideElement(point)
 
         kwargs = {
             'id': element.attribute('id'),
@@ -373,7 +373,7 @@ class GrapholLoader(AbstractLoader):
         :type element: QDomElement
         :rtype: AbstractNode
         """
-        geometry = self.extractGeometryInsideElement(element)
+        geometry = self.getGeometryFromElement(element)
         kwargs = {
             'id': element.attribute('id'),
             'height': int(geometry.attribute('height')),
@@ -384,7 +384,18 @@ class GrapholLoader(AbstractLoader):
         return node
 
     @staticmethod
-    def extractGeometryInsideElement(element):
+    def getEdgeEquivalenceFromElement(element):
+        """
+        Returns the value of the 'equivalence' attribute from the given element.
+        :type element: QDomElement
+        :rtype: bool
+        """
+        if element.hasAttribute('equivalence'):
+            return bool(int(element.attribute('equivalence', '0')))
+        return bool(int(element.attribute('complete', '0')))
+
+    @staticmethod
+    def getGeometryFromElement(element):
         """
         Returns the geometry element inside the given one.
         :type element: QDomElement
@@ -392,12 +403,11 @@ class GrapholLoader(AbstractLoader):
         """
         search = element.firstChildElement('geometry')
         if search.isNull():
-            # KEEP BACKWARDS COMPATIBILITY
             search = element.firstChildElement('shape:geometry')
         return search
 
     @staticmethod
-    def extractLabelInsideElement(element):
+    def getLabelFromElement(element):
         """
         Returns the label element inside the given one.
         :type element: QDomElement
@@ -405,12 +415,11 @@ class GrapholLoader(AbstractLoader):
         """
         search = element.firstChildElement('label')
         if search.isNull():
-            # KEEP BACKWARDS COMPATIBILITY
             search = element.firstChildElement('shape:label')
         return search
 
     @staticmethod
-    def extractPointBesideElement(element):
+    def getPointBesideElement(element):
         """
         Returns the point element beside the given one.
         :type element: QDomElement
@@ -418,12 +427,11 @@ class GrapholLoader(AbstractLoader):
         """
         search = element.nextSiblingElement('point')
         if search.isNull():
-            # KEEP BACKWARDS COMPATIBILITY
             search = element.nextSiblingElement('line:point')
         return search
 
     @staticmethod
-    def extractPointInsideElement(element):
+    def getPointInsideElement(element):
         """
         Returns the point element inside the given one.
         :type element: QDomElement
@@ -431,7 +439,6 @@ class GrapholLoader(AbstractLoader):
         """
         search = element.firstChildElement('point')
         if search.isNull():
-            # KEEP BACKWARDS COMPATIBILITY
             search = element.firstChildElement('line:point')
         return search
 

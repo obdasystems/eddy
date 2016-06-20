@@ -975,7 +975,7 @@ class OWLExporter(AbstractExporter):
 
             if e.type() is Item.InclusionEdge:
 
-                if not e.complete:
+                if not e.equivalence:
 
                     if e.source.identity is Identity.Concept and e.target.identity is Identity.Concept:
                         self.axiomSubclassOf(e)

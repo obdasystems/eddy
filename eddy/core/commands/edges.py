@@ -220,9 +220,9 @@ class CommandEdgeBreakpointRemove(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandEdgeToggleComplete(QUndoCommand):
+class CommandEdgeToggleEquivalence(QUndoCommand):
     """
-    This command is used to toggle the complete attribute of inclusion edges.
+    This command is used to toggle the 'equivalence' attribute of Inclusion edges.
     """
     def __init__(self, diagram, data):
         """
@@ -234,23 +234,23 @@ class CommandEdgeToggleComplete(QUndoCommand):
         self.data = data
 
         if len(data) == 1:
-            name = _('COMMAND_EDGE_TOGGLE_COMPLETE', first(data.keys()).name)
+            name = _('COMMAND_EDGE_TOGGLE_EQUIVALENCE', first(data.keys()).name)
         else:
-            name = _('COMMAND_EDGE_TOGGLE_COMPLETE_MULTI', len(data))
+            name = _('COMMAND_EDGE_TOGGLE_EQUIVALENCE_MULTI', len(data))
 
         super().__init__(name)
 
     def redo(self):
         """redo the command"""
         for edge in self.data:
-            edge.complete = self.data[edge]['to']
+            edge.equivalence = self.data[edge]['to']
             edge.updateEdge()
         self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         for edge in self.data:
-            edge.complete = self.data[edge]['from']
+            edge.equivalence = self.data[edge]['from']
             edge.updateEdge()
         self.diagram.sgnUpdated.emit()
 
@@ -285,9 +285,9 @@ class CommandEdgeSwap(QUndoCommand):
                 self.inputs[edge.source]['redo'].append(edge.id)
 
         if len(edges) == 1:
-            name = _('COMMAND_EDGE_TOGGLE_COMPLETE', first(edges).name)
+            name = _('COMMAND_EDGE_TOGGLE_EQUIVALENCE', first(edges).name)
         else:
-            name = _('COMMAND_EDGE_TOGGLE_COMPLETE_MULTI', len(edges))
+            name = _('COMMAND_EDGE_TOGGLE_EQUIVALENCE_MULTI', len(edges))
 
         super().__init__(name)
 

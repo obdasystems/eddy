@@ -260,7 +260,7 @@ class GraphmlLoader(AbstractLoader):
                     polyLineEdge = data.firstChildElement('y:PolyLineEdge')
                     arrows = polyLineEdge.firstChildElement('y:Arrows')
                     if arrows.attribute('source', '') == 'standard' and arrows.attribute('target', '') == 'standard':
-                        edge.complete = True
+                        edge.equivalence = True
                 data = data.nextSiblingElement('data')
             edge.updateEdge()
         return edge

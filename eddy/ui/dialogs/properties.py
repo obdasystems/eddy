@@ -172,7 +172,7 @@ class DiagramProperty(PropertyDialog):
         self.setWindowTitle(_('PROPERTY_DIAGRAM_WINDOW_TITLE', self.diagram.name))
         self.setWindowIcon(QIcon(':/images/eddy'))
 
-        connect(self.confirmationBox.accepted, self.complete)
+        connect(self.confirmationBox.accepted, self.equivalence)
         connect(self.confirmationBox.rejected, self.reject)
 
     #############################################
@@ -360,7 +360,7 @@ class NodeProperty(PropertyDialog):
         self.setWindowTitle(_('PROPERTY_NODE_WINDOW_TITLE', self.node))
         self.setWindowIcon(QIcon(':/images/eddy'))
 
-        connect(self.confirmationBox.accepted, self.complete)
+        connect(self.confirmationBox.accepted, self.equivalence)
         connect(self.confirmationBox.rejected, self.reject)
 
     #############################################

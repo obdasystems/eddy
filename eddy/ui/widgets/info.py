@@ -600,15 +600,15 @@ class InclusionEdgeInfo(EdgeInfo):
 
         arial12r = Font('Arial', 12)
 
-        self.completeKey = Key(_('INFO_KEY_COMPLETE'), self)
-        self.completeKey.setFont(arial12r)
+        self.equivalenceKey = Key(_('INFO_KEY_EQUIVALENCE'), self)
+        self.equivalenceKey.setFont(arial12r)
         parent = Parent(self)
-        self.completeBox = CheckBox(parent)
-        self.completeBox.setFont(arial12r)
-        self.completeBox.setCheckable(True)
-        connect(self.completeBox.clicked, self.mainwindow.doSetEdgeComplete)
+        self.equivalenceBox = CheckBox(parent)
+        self.equivalenceBox.setFont(arial12r)
+        self.equivalenceBox.setCheckable(True)
+        connect(self.equivalenceBox.clicked, self.mainwindow.doSetEdgeComplete)
 
-        self.generalLayout.addRow(self.completeKey, parent)
+        self.generalLayout.addRow(self.equivalenceKey, parent)
 
     #############################################
     #   INTERFACE
@@ -620,7 +620,7 @@ class InclusionEdgeInfo(EdgeInfo):
         :type edge: InclusionEdge
         """
         super().updateData(edge)
-        self.completeBox.setChecked(edge.complete)
+        self.equivalenceBox.setChecked(edge.equivalence)
 
 
 class NodeInfo(AbstractInfo):

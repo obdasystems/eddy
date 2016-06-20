@@ -50,7 +50,7 @@ from eddy.core.commands.common import CommandItemsRemove
 from eddy.core.commands.common import CommandItemsTranslate
 from eddy.core.commands.edges import CommandEdgeBreakpointRemove
 from eddy.core.commands.edges import CommandEdgeSwap
-from eddy.core.commands.edges import CommandEdgeToggleComplete
+from eddy.core.commands.edges import CommandEdgeToggleEquivalence
 from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.commands.nodes import CommandNodeLabelMove
 from eddy.core.commands.nodes import CommandNodeOperatorSwitchTo
@@ -280,7 +280,7 @@ class MainWindow(QMainWindow):
         self.actionComposePropertyRange = QAction(_('ACTION_COMPOSE_PROPERTY_RANGE_N'), self)
         self.actionRemoveEdgeBreakpoint = QAction(_('ACTION_REMOVE_EDGE_BREAKPOINT_N'), self)
         self.actionSwapEdge = QAction(_('ACTION_EDGE_SWAP_N'), self)
-        self.actionSetEdgeComplete = QAction(_('ACTION_TOGGLE_EDGE_COMPLETE_N'), self)
+        self.actionSetEdgeEquivalence = QAction(_('ACTION_TOGGLE_EDGE_EQUIVALENCE_N'), self)
 
         self.actionsRefactorBrush = []
         self.actionsSetBrush = []
@@ -599,16 +599,16 @@ class MainWindow(QMainWindow):
         self.actionRemoveEdgeBreakpoint.setIcon(self.iconDelete)
         connect(self.actionRemoveEdgeBreakpoint.triggered, self.doRemoveBreakpoint)
 
-        self.actionSetEdgeComplete.setShortcut('ALT+C')
-        self.actionSetEdgeComplete.setCheckable(True)
-        connect(self.actionSetEdgeComplete.triggered, self.doSetEdgeComplete)
+        self.actionSetEdgeEquivalence.setShortcut('ALT+C')
+        self.actionSetEdgeEquivalence.setCheckable(True)
+        connect(self.actionSetEdgeEquivalence.triggered, self.doSetEdgeComplete)
 
         self.actionSwapEdge.setIcon(self.iconSwapHorizontal)
         self.actionSwapEdge.setShortcut('ALT+S')
         connect(self.actionSwapEdge.triggered, self.doSwapEdge)
 
         self.addAction(self.actionSwapEdge)
-        self.addAction(self.actionSetEdgeComplete)
+        self.addAction(self.actionSetEdgeEquivalence)
 
     def configureWidgets(self):
         """
@@ -1544,9 +1544,9 @@ class MainWindow(QMainWindow):
             f3 = lambda x: x.source.identity is not Identity.Role or x.target.type() is not Item.ComplementNode
             selected = [e for e in diagram.selectedEdges() if f1(e) and f2(e) and f3(e)]
             if selected:
-                comp = sum(edge.complete for edge in selected) <= len(selected) / 2
-                data = {edge: {'from': edge.complete, 'to': comp} for edge in selected}
-                self.project.undoStack.push(CommandEdgeToggleComplete(diagram, data))
+                comp = sum(edge.equivalence for edge in selected) <= len(selected) / 2
+                data = {edge: {'from': edge.equivalence, 'to': comp} for edge in selected}
+                self.project.undoStack.push(CommandEdgeToggleEquivalence(diagram, data))
 
     @pyqtSlot()
     def doSnapToGrid(self):

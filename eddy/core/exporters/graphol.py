@@ -268,7 +268,7 @@ class GrapholExporter(AbstractExporter):
         :rtype: QDomElement
         """
         element = self.exportGenericEdge(edge)
-        element.setAttribute('complete', int(edge.complete))
+        element.setAttribute('equivalence', int(edge.equivalence))
         return element
 
     def exportInputEdge(self, edge):
