@@ -50,7 +50,7 @@ from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import first, isEmpty, clamp
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.project import Project
-from eddy.core.qt import ColoredIcon, Font
+from eddy.core.qt import BrushIcon, Font
 from eddy.core.regex import RE_CAMEL_SPACE
 
 from eddy.lang import gettext as _
@@ -778,7 +778,7 @@ class PredicateNodeInfo(NodeInfo):
             color = action.data()
             brush = QBrush(QColor(color.value))
             if node.brush == brush:
-                self.brushButton.setIcon(ColoredIcon(12, 12, color.value, '#000000'))
+                self.brushButton.setIcon(BrushIcon(12, 12, color.value, '#000000'))
                 self.brushButton.setText(color.value)
                 break
 

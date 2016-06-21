@@ -33,7 +33,7 @@
 
 
 from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QLabel, QVBoxLayout
 from PyQt5.QtWidgets import QMessageBox, QDialogButtonBox, QWidget
 
@@ -125,7 +125,7 @@ class CardinalityRestrictionForm(QDialog):
             v2 = int(self.maxField.text())
             if v1 > v2:
                 msgbox = QMessageBox(self)
-                msgbox.setIconPixmap(QPixmap(':/icons/48/warning'))
+                msgbox.setIconPixmap(QIcon(':/icons/48/ic_warning_black').pixmap(48))
                 msgbox.setWindowIcon(QIcon(':/images/eddy'))
                 msgbox.setWindowTitle(_('FORM_CARDINALITY_ERROR_WINDOW_TITLE'))
                 msgbox.setText(_('FORM_CARDINALITY_ERROR_MESSAGE', v1, v2))

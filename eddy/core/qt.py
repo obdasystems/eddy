@@ -38,7 +38,6 @@ from PyQt5.QtGui import QColor, QBrush, QPen, QFont
 from PyQt5.QtWidgets import QPushButton, QToolButton
 
 from eddy.core.datatypes.system import Platform
-from eddy.core.functions.misc import shaded
 
 
 class Font(QFont):
@@ -58,9 +57,9 @@ class Font(QFont):
         super().__init__(family, size, weight, italic)
 
 
-class ColoredIcon(QIcon):
+class BrushIcon(QIcon):
     """
-    This class extends QIcon and automatically creates an icon filled with the given color..
+    This class extends QIcon and automatically creates an icon filled with the given color.
     """
     def __init__(self, width, height, color, border=None):
         """
@@ -81,21 +80,6 @@ class ColoredIcon(QIcon):
             painter.drawPath(path)
         painter.end()
         super().__init__(pixmap)
-
-
-class Icon(QIcon):
-    """
-    This class extends QIcon providing automatic generation of shaded icon for disabled status.
-    """
-    def __init__(self, path, opacity=0.25):
-        """
-        Initialize the icon.
-        :type path: str
-        :type opacity: float
-        """
-        super().__init__()
-        self.addPixmap(QPixmap(path), QIcon.Normal)
-        self.addPixmap(shaded(QPixmap(path), opacity), QIcon.Disabled)
 
 
 class PHCQPushButton(QPushButton):

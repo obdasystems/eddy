@@ -34,11 +34,8 @@
 
 import itertools
 
+from PyQt5.QtCore import QPointF
 from traceback import format_exception as f_exc
-
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QPainter, QPixmap
-
 from eddy.core.regex import RE_QUOTED
 
 
@@ -185,22 +182,6 @@ def rangeF(start, stop, step):
         x = round(x + step, 4)
 
 
-def shaded(pixmap, opacity=0.25):
-    """
-    Constructs a copy of the given pixmap using the specified opacity.
-    :type pixmap: QPixmap
-    :type opacity: T <= int | float
-    :rtype: QPixmap
-    """
-    o = QPixmap(pixmap.size())
-    o.fill(Qt.transparent)
-    p = QPainter(o)
-    p.setOpacity(clamp(opacity, 0.0, 1.0))
-    p.drawPixmap(0, 0, pixmap)
-    p.end()
-    return o
-
-
 def snap(point, size, perform=True):
     """
     Snap each component of the given point according to the given size.
@@ -236,4 +217,4 @@ def uncapitalize(s):
     :type s: str
     :rtype: str
     """
-    return '{}{}'.format(s[:1].lower(), s[1:])
+    return '{0}{1}'.format(s[:1].lower(), s[1:])

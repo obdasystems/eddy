@@ -123,15 +123,15 @@ class ItemFactory(QObject):
         raise RuntimeError('unknown item type ({0})'.format(item))
 
     @classmethod
-    def imageForItem(cls, item, width, height):
+    def iconForItem(cls, item, width, height):
         """
-        Returns a pixmap representing the given item.
+        Returns an icon representing the given item.
         :type item: Item
         :type width: int
         :type height: int
-        :rtype: QPixmap
+        :rtype: QIcon
         """
-        return ItemFactory.classForItem(item).image(w=width, h=height)
+        return ItemFactory.classForItem(item).icon(width=width, height=height)
 
     def create(self, item, **kwargs):
         """

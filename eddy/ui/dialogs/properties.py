@@ -172,7 +172,7 @@ class DiagramProperty(PropertyDialog):
         self.setWindowTitle(_('PROPERTY_DIAGRAM_WINDOW_TITLE', self.diagram.name))
         self.setWindowIcon(QIcon(':/images/eddy'))
 
-        connect(self.confirmationBox.accepted, self.equivalence)
+        connect(self.confirmationBox.accepted, self.complete)
         connect(self.confirmationBox.rejected, self.reject)
 
     #############################################
@@ -360,7 +360,7 @@ class NodeProperty(PropertyDialog):
         self.setWindowTitle(_('PROPERTY_NODE_WINDOW_TITLE', self.node))
         self.setWindowIcon(QIcon(':/images/eddy'))
 
-        connect(self.confirmationBox.accepted, self.equivalence)
+        connect(self.confirmationBox.accepted, self.complete)
         connect(self.confirmationBox.rejected, self.reject)
 
     #############################################
@@ -570,12 +570,12 @@ class OrderedInputNodeProperty(NodeProperty):
             self.list.setDragDropMode(QAbstractItemView.NoDragDrop)
 
             self.buttonUp = QPushButton(self)
-            self.buttonUp.setIcon(QIcon(':/icons/24/arrow-up'))
+            self.buttonUp.setIcon(QIcon(':/icons/24/ic_keyboard_arrow_up_black'))
             self.buttonUp.setFixedSize(20, 20)
             connect(self.buttonUp.clicked, self.moveUp)
 
             self.buttonDown = QPushButton(self)
-            self.buttonDown.setIcon(QIcon(':/icons/24/arrow-down'))
+            self.buttonDown.setIcon(QIcon(':/icons/24/ic_keyboard_arrow_down_black'))
             self.buttonDown.setFixedSize(20, 20)
             connect(self.buttonDown.clicked, self.moveDown)
 

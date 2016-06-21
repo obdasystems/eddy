@@ -33,7 +33,7 @@
 
 
 from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QBrush
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QBrush, QIcon
 
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
 from eddy.core.items.nodes.common.restriction import RestrictionNode
@@ -97,22 +97,30 @@ class DomainRestrictionNode(RestrictionNode):
     #################################
 
     @classmethod
-    def image(cls, **kwargs):
+    def icon(cls, width, height, **kwargs):
         """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
+        Returns an icon of this item suitable for the palette.
+        :type width: int
+        :type height: int
+        :rtype: QIcon
         """
-        # INITIALIZATION
-        pixmap = QPixmap(kwargs['w'], kwargs['h'])
-        pixmap.fill(Qt.transparent)
-        painter = QPainter(pixmap)
-        # TEXT ABOVE THE SHAPE
-        painter.setFont(Font('Arial', 9, Font.Light))
-        painter.translate(0, 0)
-        painter.drawText(QRectF(0, 0, kwargs['w'], kwargs['h'] / 2), Qt.AlignCenter, 'restriction')
-        # ITEM SHAPE
-        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-        painter.setBrush(QColor(252, 252, 252))
-        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
-        painter.drawRect(QRectF(-18 / 2, -18 / 2 + 6, 18, 18))
-        return pixmap
+        icon = QIcon()
+        for i in (1.0, 2.0):
+            # CREATE THE PIXMAP
+            pixmap = QPixmap(width * i, height * i)
+            pixmap.setDevicePixelRatio(i)
+            pixmap.fill(Qt.transparent)
+            # PAINT THE TEXT ABOVE THE SHAPE
+            painter = QPainter(pixmap)
+            painter.setFont(Font('Arial', 9, Font.Light))
+            painter.translate(0, 0)
+            painter.drawText(QRectF(0, 0, width, height / 2), Qt.AlignCenter, 'restriction')
+            # PAINT THE SHAPE
+            painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+            painter.setBrush(QColor(252, 252, 252))
+            painter.translate(width / 2, height / 2)
+            painter.drawRect(QRectF(-18 / 2, -18 / 2 + 6, 18, 18))
+            painter.end()
+            # ADD THE PIXMAP TO THE ICON
+            icon.addPixmap(pixmap)
+        return icon

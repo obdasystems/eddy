@@ -33,7 +33,7 @@
 
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPainter, QPixmap, QIcon
+from PyQt5.QtGui import QPainter, QIcon
 from PyQt5.QtWidgets import QWidget, QStyleOption, QStyle, QHBoxLayout
 from PyQt5.QtWidgets import QLabel, QDockWidget, QPushButton
 
@@ -67,30 +67,33 @@ class DockWidget(QDockWidget):
 
 class DockTitleWidget(QWidget):
     """
-    This class implements the title widget of docking area widgets.
+    This class implements the title area of docking area widgets.
     """
+    IconSize = 18
+
     def __init__(self, title, icon, parent=None):
         """
         Initialize the widget.
         :type title: str
-        :type icon: icon
+        :type icon: str
         :type parent: QDockWidget
         """
         super().__init__(parent)
         # CREATE TITLEBAR ICON AND TITLE
+        size = DockTitleWidget.IconSize
         self.imageLabel = QLabel(self)
-        self.imageLabel.setPixmap(QPixmap(icon))
+        self.imageLabel.setPixmap(QIcon(':/icons/{0}/{1}'.format(size, icon)).pixmap(size))
         self.imageLabel.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
         self.imageLabel.setContentsMargins(0, 0, 0, 0)
-        self.imageLabel.setFixedSize(18, 18)
+        self.imageLabel.setFixedSize(size, size)
         self.titleLabel = QLabel(title, self)
         self.titleLabel.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
         self.titleLabel.setContentsMargins(4, 0, 0, 0)
         self.titleLabel.setFont(Font('Arial', 13))
         # CREATE STANDARD BUTTONS
         close = QPushButton(self)
-        close.setIcon(QIcon(':/icons/18/close'))
-        close.setFixedSize(18, 18)
+        close.setIcon(QIcon(':/icons/{0}/ic_close_black'.format(size)))
+        close.setFixedSize(size, size)
         connect(close.clicked, parent.close)
         self.buttons = [close]
         # CONFIGURE LAYOUT

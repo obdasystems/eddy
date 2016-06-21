@@ -35,7 +35,8 @@
 from math import sin, cos, radians, pi as M_PI
 
 from PyQt5.QtCore import QPointF, QLineF, Qt
-from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor, QPixmap, QPainterPath
+from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor
+from PyQt5.QtGui import QPixmap, QPainterPath, QIcon
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import Platform
@@ -105,40 +106,45 @@ class MembershipEdge(AbstractEdge):
         return QPolygonF([pos1, pos2, pos3])
 
     @classmethod
-    def image(cls, **kwargs):
+    def icon(cls, width, height, **kwargs):
         """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
+        Returns an icon of this item suitable for the palette.
+        :type width: int
+        :type height: int
+        :rtype: QIcon
         """
-        # INITIALIZATION
-        pixmap = QPixmap(kwargs['w'], kwargs['h'])
-        pixmap.fill(Qt.transparent)
-        painter = QPainter(pixmap)
-        # INITIALIZE EDGE LINE
-        pp1 = QPointF(((kwargs['w'] - 52) / 2), kwargs['h'] / 2)
-        pp2 = QPointF(((kwargs['w'] - 52) / 2) + 52 - 2, kwargs['h'] / 2)
-        line = QLineF(pp1, pp2)
-        # CALCULATE HEAD COORDINATES
-        angle = radians(line.angle())
-        p1 = QPointF(line.p2().x() + 2, line.p2().y())
-        p2 = p1 - QPointF(sin(angle + M_PI / 3.0) * 8, cos(angle + M_PI / 3.0) * 8)
-        p3 = p1 - QPointF(sin(angle + M_PI - M_PI / 3.0) * 8, cos(angle + M_PI - M_PI / 3.0) * 8)
-        # INITIALIZE EDGE HEAD
-        head = QPolygonF([p1, p2, p3])
-        # DRAW THE POLYGON
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-        painter.drawLine(line)
-        # DRAW HEAD
-        painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-        painter.setBrush(QColor(0, 0, 0))
-        painter.drawPolygon(head)
-        # DRAW THE TEXT ON TOP OF THE EDGE
-        space = 2 if Platform.identify() is Platform.Darwin else 0
-        painter.setFont(Font('Arial', 9, Font.Light))
-        painter.drawText(pp1.x() + space, (kwargs['h'] / 2) - 4, 'instanceOf')
-
-        return pixmap
+        icon = QIcon()
+        for i in (1.0, 2.0):
+            # CREATE THE PIXMAP
+            pixmap = QPixmap(width * i, height * i)
+            pixmap.setDevicePixelRatio(i)
+            pixmap.fill(Qt.transparent)
+            # CREATE THE LINE
+            pp1 = QPointF(((width - 54) / 2), height / 2)
+            pp2 = QPointF(((width - 54) / 2) + 54 - 2, height / 2)
+            l1 = QLineF(pp1, pp2)
+            # CREATE THE HEAD
+            a1 = l1.angle()
+            p1 = QPointF(l1.p2().x() + 2, l1.p2().y())
+            p2 = p1 - QPointF(sin(a1 + M_PI / 3.0) * 8, cos(a1 + M_PI / 3.0) * 8)
+            p3 = p1 - QPointF(sin(a1 + M_PI - M_PI / 3.0) * 8, cos(a1 + M_PI - M_PI / 3.0) * 8)
+            h1 = QPolygonF([p1, p2, p3])
+            # DRAW THE EDGE
+            painter = QPainter(pixmap)
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+            painter.drawLine(l1)
+            painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+            painter.setBrush(QColor(0, 0, 0))
+            painter.drawPolygon(h1)
+            # DRAW THE TEXT
+            s1 = 2 if Platform.identify() is Platform.Darwin else 0
+            painter.setFont(Font('Arial', 9, Font.Light))
+            painter.drawText(pp1.x() + s1, (height / 2) - 4, 'instanceOf')
+            painter.end()
+            # ADD THE PIXMAP TO THE ICON
+            icon.addPixmap(pixmap)
+        return icon
 
     def paint(self, painter, option, widget=None):
         """

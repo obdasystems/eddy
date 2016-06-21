@@ -33,7 +33,8 @@
 
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
-from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter, QPen, QColor, QPixmap, QBrush
+from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
+from PyQt5.QtGui import QPixmap, QBrush, QIcon, QColor, QPen
 
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.owl import Datatype, Facet
@@ -234,17 +235,18 @@ class ValueRestrictionNode(AbstractNode):
         return self.polygon[self.IndexBL].y() - self.polygon[self.IndexTL].y()
 
     @classmethod
-    def image(cls, **kwargs):
+    def icon(cls, width, height, **kwargs):
         """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
+        Returns an icon of this item suitable for the palette.
+        :type width: int
+        :type height: int
+        :rtype: QIcon
         """
-        # INITIALIZATION
-        pixmap = QPixmap(kwargs['w'], kwargs['h'])
-        pixmap.fill(Qt.transparent)
-        painter = QPainter(pixmap)
-
-        polygon = QPolygonF([
+        # LOW RESOLUTION PIXMAP
+        pixmap1 = QPixmap(width, height)
+        pixmap1.setDevicePixelRatio(1.0)
+        pixmap1.fill(Qt.transparent)
+        polygonA = QPolygonF([
             QPointF(+27 - 10, -17),  # 0
             QPointF(-27, -17),       # 1
             QPointF(-27, +17),       # 2
@@ -252,24 +254,53 @@ class ValueRestrictionNode(AbstractNode):
             QPointF(+27, -17 + 10),  # 4
             QPointF(+27 - 10, -17),  # 5
         ])
-
-        fold = QPolygonF([
-            QPointF(polygon[cls.IndexTR].x(), polygon[cls.IndexTR].y()),
-            QPointF(polygon[cls.IndexTR].x(), polygon[cls.IndexTR].y() + 10),
-            QPointF(polygon[cls.IndexRT].x(), polygon[cls.IndexRT].y()),
-            QPointF(polygon[cls.IndexTR].x(), polygon[cls.IndexTR].y()),
+        polygonB = QPolygonF([
+            QPointF(polygonA[cls.IndexTR].x(), polygonA[cls.IndexTR].y()),
+            QPointF(polygonA[cls.IndexTR].x(), polygonA[cls.IndexTR].y() + 10),
+            QPointF(polygonA[cls.IndexRT].x(), polygonA[cls.IndexRT].y()),
+            QPointF(polygonA[cls.IndexTR].x(), polygonA[cls.IndexTR].y()),
         ])
-
-        # ITEM SHAPE
+        painter = QPainter(pixmap1)
         painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
         painter.setBrush(QColor(252, 252, 252))
-        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
-        painter.drawPolygon(polygon)
-        painter.drawPolygon(fold)
-        # TEXT WITHIN THE SHAPE
+        painter.translate(width / 2, height / 2)
+        painter.drawPolygon(polygonA)
+        painter.drawPolygon(polygonB)
         painter.setFont(Font('Arial', 10, Font.Light))
-        painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'value\nrestriction')
-        return pixmap
+        painter.drawText(polygonA.boundingRect(), Qt.AlignCenter, 'value\nrestriction')
+        painter.end()
+        # HIGH RESOLUTION PIXMAP
+        pixmap2 = QPixmap(width * 2, height * 2)
+        pixmap2.setDevicePixelRatio(2.0)
+        pixmap2.fill(Qt.transparent)
+        polygonA = QPolygonF([
+            QPointF(+27 - 10, -17),  # 0
+            QPointF(-27, -17),       # 1
+            QPointF(-27, +17),       # 2
+            QPointF(+27, +17),       # 3
+            QPointF(+27, -17 + 10),  # 4
+            QPointF(+27 - 10, -17),  # 5
+        ])
+        polygonB = QPolygonF([
+            QPointF(polygonA[cls.IndexTR].x(), polygonA[cls.IndexTR].y()),
+            QPointF(polygonA[cls.IndexTR].x(), polygonA[cls.IndexTR].y() + 10),
+            QPointF(polygonA[cls.IndexRT].x(), polygonA[cls.IndexRT].y()),
+            QPointF(polygonA[cls.IndexTR].x(), polygonA[cls.IndexTR].y()),
+        ])
+        painter = QPainter(pixmap2)
+        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+        painter.setBrush(QColor(252, 252, 252))
+        painter.translate(width, height)
+        painter.drawPolygon(polygonA)
+        painter.drawPolygon(polygonB)
+        painter.setFont(Font('Arial', 20, Font.Light))
+        painter.drawText(polygonA.boundingRect(), Qt.AlignCenter, 'value\nrestriction')
+        painter.end()
+        # BUILD THE ICON
+        icon = QIcon()
+        icon.addPixmap(pixmap1)
+        icon.addPixmap(pixmap2)
+        return icon
 
     def paint(self, painter, option, widget=None):
         """

@@ -33,7 +33,7 @@
 
 
 from PyQt5.QtCore import QRectF, QPointF, Qt
-from PyQt5.QtGui import QPainterPath, QPainter, QPixmap
+from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QIcon
 from PyQt5.QtGui import QColor, QPen, QBrush
 
 from eddy.core.datatypes.graphol import Identity, Item, Special
@@ -155,25 +155,33 @@ class ConceptNode(AbstractResizableNode):
         return self.polygon.height()
 
     @classmethod
-    def image(cls, **kwargs):
+    def icon(cls, width, height, **kwargs):
         """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
+        Returns an icon of this item suitable for the palette.
+        :type width: int
+        :type height: int
+        :rtype: QIcon
         """
-        # INITIALIZATION
-        pixmap = QPixmap(kwargs['w'], kwargs['h'])
-        pixmap.fill(Qt.transparent)
-        painter = QPainter(pixmap)
-        rect = cls.createPolygon(54, 34)
-        # DRAW THE RECTANGLE
-        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-        painter.setBrush(QColor(252, 252, 252))
-        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
-        painter.drawRect(rect)
-        # TEXT WITHIN THE RECTANGLE
-        painter.setFont(Font('Arial', 11, Font.Light))
-        painter.drawText(rect, Qt.AlignCenter, 'concept')
-        return pixmap
+        icon = QIcon()
+        for i in (1.0, 2.0):
+            # CREATE THE PIXMAP
+            pixmap = QPixmap(width * i, height * i)
+            pixmap.setDevicePixelRatio(i)
+            pixmap.fill(Qt.transparent)
+            # PAINT THE SHAPE
+            polygon = cls.createPolygon(54, 34)
+            painter = QPainter(pixmap)
+            painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+            painter.setBrush(QColor(252, 252, 252))
+            painter.translate(width / 2, height / 2)
+            painter.drawRect(polygon)
+            # PAINT THE TEXT INSIDE THE SHAPE
+            painter.setFont(Font('Arial', 11, Font.Light))
+            painter.drawText(polygon, Qt.AlignCenter, 'concept')
+            painter.end()
+            # ADD THE PIXMAP TO THE ICON
+            icon.addPixmap(pixmap)
+        return icon
 
     def paint(self, painter, option, widget=None):
         """

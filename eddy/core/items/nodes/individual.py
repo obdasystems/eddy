@@ -36,7 +36,7 @@ import math
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
-from PyQt5.QtGui import QPen, QColor, QPixmap, QBrush
+from PyQt5.QtGui import QPen, QColor, QPixmap, QBrush, QIcon
 
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.owl import Datatype
@@ -206,25 +206,34 @@ class IndividualNode(AbstractResizableNode):
         return self.polygon[self.IndexTR].y() - self.polygon[self.IndexBR].y()
 
     @classmethod
-    def image(cls, **kwargs):
+    def icon(cls, width, height, **kwargs):
         """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
+        Returns an icon of this item suitable for the palette.
+        :type width: int
+        :type height: int
+        :rtype: QIcon
         """
-        # INITIALIZATION
-        pixmap = QPixmap(kwargs['w'], kwargs['h'])
-        pixmap.fill(Qt.transparent)
-        painter = QPainter(pixmap)
-        polygon = cls.createPolygon(40, 40)
-        # ITEM SHAPE
-        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-        painter.setBrush(QColor(252, 252, 252))
-        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
-        painter.drawPolygon(polygon)
-        # TEXT WITHIN THE SHAPE
-        painter.setFont(Font('Arial', 9, Font.Light))
-        painter.drawText(-16, 4, 'instance')
-        return pixmap
+        icon = QIcon()
+        for i in (1.0, 2.0):
+            # CREATE THE PIXMAP
+            pixmap = QPixmap(width * i, height * i)
+            pixmap.setDevicePixelRatio(i)
+            pixmap.fill(Qt.transparent)
+            # PAINT THE SHAPE
+            polygon = cls.createPolygon(40, 40)
+            painter = QPainter(pixmap)
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+            painter.setBrush(QColor(252, 252, 252))
+            painter.translate(width / 2, height / 2)
+            painter.drawPolygon(polygon)
+            # PAINT THE TEXT INSIDE THE SHAPE
+            painter.setFont(Font('Arial', 9, Font.Light))
+            painter.drawText(-16, 4, 'instance')
+            painter.end()
+            # ADD THE PIXMAP TO THE ICON
+            icon.addPixmap(pixmap)
+        return icon
 
     def paint(self, painter, option, widget=None):
         """

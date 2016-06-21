@@ -164,7 +164,7 @@ class RestrictionNode(AbstractNode):
 
     @classmethod
     @abstractmethod
-    def image(cls, **kwargs):
+    def icon(cls, **kwargs):
         """
         Returns an image suitable for the palette.
         :rtype: QPixmap

@@ -34,7 +34,7 @@
 
 from PyQt5.QtCore import QPointF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
-from PyQt5.QtGui import QPen, QColor, QPixmap, QBrush
+from PyQt5.QtGui import QPen, QColor, QPixmap, QBrush, QIcon
 
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.owl import Facet
@@ -265,49 +265,54 @@ class FacetNode(AbstractNode):
         return self.polygonA[self.IndexBL].y() - self.polygonB[self.IndexTL].y()
 
     @classmethod
-    def image(cls, **kwargs):
+    def icon(cls, width, height, **kwargs):
         """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
+        Returns an icon of this item suitable for the palette.
+        :type width: int
+        :type height: int
+        :rtype: QIcon
         """
-        # INITIALIZATION
-        pixmap = QPixmap(kwargs['w'], kwargs['h'])
-        pixmap.fill(Qt.transparent)
-        painter = QPainter(pixmap)
-
-        w = 54
-        h = 32
-        s = 4
-
-        polygonA = QPolygonF([
-            QPointF(-w / 2 + s, -h / 2),  # 0
-            QPointF(+w / 2, -h / 2),      # 1
-            QPointF(+w / 2 - s / 2, 0),   # 2
-            QPointF(-w / 2 + s / 2, 0),   # 3
-            QPointF(-w / 2 + s, -h / 2),  # 4
-        ])
-
-        polygonB = QPolygonF([
-            QPointF(-w / 2 + s / 2, 0),   # 0
-            QPointF(+w / 2 - s / 2, 0),   # 1
-            QPointF(+w / 2 - s, +h / 2),  # 2
-            QPointF(-w / 2, +h / 2),      # 3
-            QPointF(-w / 2 + s / 2, 0),   # 4
-        ])
-
-        # ITEM SHAPE
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
-        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-        painter.setBrush(QColor(222, 222, 222))
-        painter.drawPolygon(polygonA)
-        painter.setBrush(QBrush(QColor(252, 252, 252)))
-        painter.drawPolygon(polygonB)
-        # TEXT WITHIN THE SHAPE
-        painter.setFont(Font('Arial', 9, Font.Light))
-        painter.drawText(QPointF(-19, -5), Facet.length.value)
-        painter.drawText(QPointF(-8, 12), '"32"')
-        return pixmap
+        icon = QIcon()
+        for i in (1.0, 2.0):
+            # CREATE THE PIXMAP
+            pixmap = QPixmap(width * i, height * i)
+            pixmap.setDevicePixelRatio(i)
+            pixmap.fill(Qt.transparent)
+            # PAINT THE SHAPES
+            w = 54
+            h = 32
+            s = 4
+            polygonA = QPolygonF([
+                QPointF(-w / 2 + s, -h / 2),  # 0
+                QPointF(+w / 2, -h / 2),      # 1
+                QPointF(+w / 2 - s / 2, 0),   # 2
+                QPointF(-w / 2 + s / 2, 0),   # 3
+                QPointF(-w / 2 + s, -h / 2),  # 4
+            ])
+            polygonB = QPolygonF([
+                QPointF(-w / 2 + s / 2, 0),   # 0
+                QPointF(+w / 2 - s / 2, 0),   # 1
+                QPointF(+w / 2 - s, +h / 2),  # 2
+                QPointF(-w / 2, +h / 2),      # 3
+                QPointF(-w / 2 + s / 2, 0),   # 4
+            ])
+            painter = QPainter(pixmap)
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+            painter.setBrush(QColor(252, 252, 252))
+            painter.translate(width / 2, height / 2)
+            painter.setBrush(QColor(222, 222, 222))
+            painter.drawPolygon(polygonA)
+            painter.setBrush(QBrush(QColor(252, 252, 252)))
+            painter.drawPolygon(polygonB)
+            # PAINT THE TEXT INSIDE THE SHAPES
+            painter.setFont(Font('Arial', 9, Font.Light))
+            painter.drawText(QPointF(-19, -5), Facet.length.value)
+            painter.drawText(QPointF(-8, 12), '"32"')
+            painter.end()
+            # ADD THE PIXMAP TO THE ICON
+            icon.addPixmap(pixmap)
+        return icon
 
     def paint(self, painter, option, widget=None):
         """

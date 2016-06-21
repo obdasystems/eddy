@@ -34,8 +34,9 @@
 
 import os
 
-from PyQt5.QtCore import Qt, QEvent, QTextStream, pyqtSignal, pyqtSlot, QSettings
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtCore import pyqtSignal, pyqtSlot
+from PyQt5.QtCore import Qt, QEvent, QTextStream, QSettings
+from PyQt5.QtGui import QIcon
 from PyQt5.QtNetwork import QLocalSocket, QLocalServer
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
@@ -173,6 +174,8 @@ class Eddy(QApplication):
         self.setStyle(clean)
         self.setStyleSheet(clean.stylesheet)
 
+        self.setAttribute(Qt.AA_UseHighDpiPixmaps)
+
         #############################################
         # CLOSE THE SPLASH SCREEN
         #################################
@@ -302,7 +305,7 @@ class Eddy(QApplication):
 
             except ProjectNotFoundError:
                 msgbox = QMessageBox()
-                msgbox.setIconPixmap(QPixmap(':/icons/48/error'))
+                msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
                 msgbox.setText(_('PROJECT_NOT_FOUND_MESSAGE', os.path.basename(path)))
                 msgbox.setStandardButtons(QMessageBox.Close)
                 msgbox.setWindowIcon(QIcon(':/images/eddy'))
@@ -310,7 +313,7 @@ class Eddy(QApplication):
                 msgbox.exec_()
             except ProjectNotValidError as e:
                 msgbox = QMessageBox()
-                msgbox.setIconPixmap(QPixmap(':/icons/48/error'))
+                msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
                 msgbox.setText(_('PROJECT_NOT_VALID_MESSAGE', os.path.basename(path)))
                 msgbox.setTextFormat(Qt.RichText)
                 msgbox.setDetailedText(format_exception(e))

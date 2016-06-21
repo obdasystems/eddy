@@ -112,7 +112,7 @@ class Palette(QWidget):
 
         # CREATE CONTROL WIDGET
         self.btnMenu = QToolButton()
-        self.btnMenu.setIcon(QIcon(':/icons/18/settings'))
+        self.btnMenu.setIcon(QIcon(':/icons/18/ic_settings_black'))
         self.btnMenu.setContentsMargins(0, 0, 0, 0)
         self.btnMenu.setFixedSize(18, 18)
         self.btnMenu.setMenu(self.menu)
@@ -256,11 +256,10 @@ class Button(QToolButton):
         """
         super().__init__(parent)
         self.item = item
-        self.pixmap = ItemFactory.imageForItem(item, Button.Width, Button.Height)
         self.startPos = None
         self.setCheckable(True)
         self.setContentsMargins(0, 0, 0, 0)
-        self.setIcon(QIcon(self.pixmap))
+        self.setIcon(ItemFactory.iconForItem(item, Button.Width, Button.Height))
         self.setIconSize(QSize(Button.Width, Button.Height))
 
     #############################################
@@ -292,7 +291,7 @@ class Button(QToolButton):
                     mimeData.setText(str(self.item.value))
                     drag = QDrag(self)
                     drag.setMimeData(mimeData)
-                    drag.setPixmap(self.pixmap)
+                    drag.setPixmap(self.icon().pixmap(Button.Width, Button.Height))
                     drag.setHotSpot(self.startPos - self.rect().topLeft())
                     drag.exec_(Qt.CopyAction)
 

@@ -33,11 +33,11 @@
 
 
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QToolButton
 
 from eddy.core.functions.misc import clamp, rangeF
 from eddy.core.functions.signals import connect
-from eddy.core.qt import Icon
 
 
 class Zoom(QWidget):
@@ -62,11 +62,11 @@ class Zoom(QWidget):
         self.levels = [x for x in rangeF(Zoom.Min, Zoom.Max + Zoom.Step, Zoom.Step)]
 
         self.buttonZoomIn = QToolButton()
-        self.buttonZoomIn.setIcon(Icon(':/icons/24/zoom-in'))
+        self.buttonZoomIn.setIcon(QIcon(':/icons/24/ic_zoom_in_black'))
         self.buttonZoomOut = QToolButton()
-        self.buttonZoomOut.setIcon(Icon(':/icons/24/zoom-out'))
+        self.buttonZoomOut.setIcon(QIcon(':/icons/24/ic_zoom_out_black'))
         self.buttonZoomReset = QToolButton()
-        self.buttonZoomReset.setIcon(Icon(':/icons/24/zoom-reset'))
+        self.buttonZoomReset.setIcon(QIcon(':/icons/24/ic_zoom_reset_black'))
 
         connect(self.buttonZoomIn.clicked, self.zoomIn)
         connect(self.buttonZoomOut.clicked, self.zoomOut)

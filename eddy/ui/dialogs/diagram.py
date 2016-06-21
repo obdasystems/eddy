@@ -37,7 +37,7 @@ import os
 from abc import ABCMeta
 
 from PyQt5.QtCore import Qt, pyqtSlot, QRectF, QSettings
-from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QWidget, QVBoxLayout, QFormLayout
 from PyQt5.QtWidgets import QDialogButtonBox, QMessageBox, QLabel, QFrame
 
@@ -218,7 +218,7 @@ class NewDiagramDialog(AbstractDiagramDialog):
             exporter.run()
         except Exception as e:
             msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QPixmap(':/icons/48/error'))
+            msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
             msgbox.setWindowIcon(QIcon(':/images/eddy'))
             msgbox.setWindowTitle(_('DIAGRAM_CREATION_FAILED_WINDOW_TITLE'))
             msgbox.setStandardButtons(QMessageBox.Close)

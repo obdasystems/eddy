@@ -33,7 +33,8 @@
 
 
 from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QPainterPath, QBrush
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
+from PyQt5.QtGui import QPainterPath, QBrush, QIcon
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Datatype
@@ -151,26 +152,34 @@ class ValueDomainNode(AbstractNode):
         return self.polygon.height()
 
     @classmethod
-    def image(cls, **kwargs):
+    def icon(cls, width, height, **kwargs):
         """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
+        Returns an icon of this item suitable for the palette.
+        :type width: int
+        :type height: int
+        :rtype: QIcon
         """
-        # INITIALIZATION
-        pixmap = QPixmap(kwargs['w'], kwargs['h'])
-        pixmap.fill(Qt.transparent)
-        painter = QPainter(pixmap)
-        rect = cls.createPolygon(54, 34)
-        # ITEM SHAPE
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin))
-        painter.setBrush(QColor(252, 252, 252))
-        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
-        painter.drawRoundedRect(rect, 6, 6)
-        # TEXT WITHIN THE SHAPE
-        painter.setFont(Font('Arial', 10, Font.Light))
-        painter.drawText(rect, Qt.AlignCenter, 'xsd:string')
-        return pixmap
+        icon = QIcon()
+        for i in (1.0, 2.0):
+            # CREATE THE PIXMAP
+            pixmap = QPixmap(width * i, height * i)
+            pixmap.setDevicePixelRatio(i)
+            pixmap.fill(Qt.transparent)
+            # PAINT THE SHAPE
+            polygon = cls.createPolygon(54, 34)
+            painter = QPainter(pixmap)
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin))
+            painter.setBrush(QColor(252, 252, 252))
+            painter.translate(width / 2, height / 2)
+            painter.drawRoundedRect(polygon, 6, 6)
+            # PAINT THE TEXT INSIDE THE SHAPE
+            painter.setFont(Font('Arial', 10, Font.Light))
+            painter.drawText(polygon, Qt.AlignCenter, 'xsd:string')
+            painter.end()
+            # ADD THE PIXMAP TO THE ICON
+            icon.addPixmap(pixmap)
+        return icon
 
     def paint(self, painter, option, widget=None):
         """

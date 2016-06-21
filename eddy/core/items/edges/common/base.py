@@ -276,10 +276,12 @@ class AbstractEdge(AbstractItem):
 
     @classmethod
     @abstractmethod
-    def image(cls, **kwargs):
+    def icon(cls, width, height, **kwargs):
         """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
+        Returns an icon of this item suitable for the palette.
+        :type width: int
+        :type height: int
+        :rtype: QIcon
         """
         pass
 

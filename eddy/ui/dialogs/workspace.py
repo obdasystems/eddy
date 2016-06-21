@@ -155,7 +155,7 @@ class WorkspaceDialog(QDialog):
             mkdir(path)
         except Exception as e:
             msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QPixmap(':/icons/48/error'))
+            msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
             msgbox.setWindowIcon(QIcon(':/images/eddy'))
             msgbox.setWindowTitle(_('WORKSPACE_CREATION_FAILED_WINDOW_TITLE'))
             msgbox.setStandardButtons(QMessageBox.Close)

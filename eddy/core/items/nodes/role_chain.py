@@ -33,7 +33,7 @@
 
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QBrush
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPen, QColor, QBrush
 
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
@@ -110,26 +110,34 @@ class RoleChainNode(OperatorNode):
         return node
 
     @classmethod
-    def image(cls, **kwargs):
+    def icon(cls, width, height, **kwargs):
         """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
+        Returns an icon of this item suitable for the palette.
+        :type width: int
+        :type height: int
+        :rtype: QIcon
         """
-        # INITIALIZATION
-        pixmap = QPixmap(kwargs['w'], kwargs['h'])
-        pixmap.fill(Qt.transparent)
-        painter = QPainter(pixmap)
-        polygon = cls.createPolygon(46, 30)
-        # ITEM SHAPE
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-        painter.setBrush(QColor(252, 252, 252))
-        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2)
-        painter.drawPolygon(polygon)
-        # TEXT WITHIN THE SHAPE
-        painter.setFont(Font('Arial', 11, Font.Light))
-        painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'chain')
-        return pixmap
+        icon = QIcon()
+        for i in (1.0, 2.0):
+            # CREATE THE PIXMAP
+            pixmap = QPixmap(width * i, height * i)
+            pixmap.setDevicePixelRatio(i)
+            pixmap.fill(Qt.transparent)
+            # PAINT THE SHAPE
+            polygon = cls.createPolygon(46, 30)
+            painter = QPainter(pixmap)
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
+            painter.setBrush(QColor(252, 252, 252))
+            painter.translate(width / 2, height / 2)
+            painter.drawPolygon(polygon)
+            # PAINT THE TEXT INSIDE THE SHAPE
+            painter.setFont(Font('Arial', 11, Font.Light))
+            painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'chain')
+            painter.end()
+            # ADD THE PIXMAP TO THE ICON
+            icon.addPixmap(pixmap)
+        return icon
 
     def removeEdge(self, edge):
         """
