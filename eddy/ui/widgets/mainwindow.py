@@ -585,6 +585,7 @@ class MainWindow(QMainWindow):
         self.buttonSetBrush.setIcon(QIcon(':/icons/24/ic_format_color_fill_black'))
         self.buttonSetBrush.setMenu(self.menuSetBrush)
         self.buttonSetBrush.setPopupMode(QToolButton.InstantPopup)
+        self.buttonSetBrush.setStatusTip(_('ACTION_SET_BRUSH_S'))
         self.buttonSetBrush.setEnabled(False)
 
         #############################################
