@@ -562,7 +562,7 @@ class AbstractResizableNode(AbstractNode):
         brush0 = QBrush(Qt.NoBrush)
         brush1 = QBrush(QColor(43, 173, 63, 160))
         brush2 = QBrush(QColor(179, 12, 12, 160))
-        brush3 = QBrush(QColor(132, 255, 0, 255))
+        brush3 = QBrush(QColor(0, 200, 255, 255))
 
         pen0 = QPen(Qt.NoPen)
         pen1 = QPen(QColor(0, 0, 0, 255), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
