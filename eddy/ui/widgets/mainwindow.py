@@ -341,7 +341,7 @@ class MainWindow(QMainWindow):
 
         self.actionSaveAs.setIcon(QIcon(':/icons/24/ic_save_black'))
         self.actionSaveAs.setShortcut(QKeySequence.SaveAs)
-        self.actionSaveAs.setStatusTip(_('ACTION_SAVE_AS'))
+        self.actionSaveAs.setStatusTip(_('ACTION_SAVE_AS_S'))
         self.actionSaveAs.setEnabled(False)
         connect(self.actionSaveAs.triggered, self.doSaveAs)
 
@@ -560,11 +560,13 @@ class MainWindow(QMainWindow):
         connect(self.actionRemoveEdgeBreakpoint.triggered, self.doRemoveBreakpoint)
 
         self.actionToggleEdgeEquivalence.setIcon(QIcon(':/icons/24/ic_equivalence_black'))
+        self.actionToggleEdgeEquivalence.setStatusTip(_('ACTION_TOGGLE_EDGE_EQUIVALENCE_S'))
         self.actionToggleEdgeEquivalence.setShortcut('ALT+C')
         self.actionToggleEdgeEquivalence.setEnabled(False)
         connect(self.actionToggleEdgeEquivalence.triggered, self.doToggleEdgeEquivalence)
 
         self.actionSwapEdge.setIcon(QIcon(':/icons/24/ic_swap_horiz_black'))
+        self.actionSwapEdge.setStatusTip(_('ACTION_SWAP_EDGE_S'))
         self.actionSwapEdge.setShortcut('ALT+S')
         self.actionSwapEdge.setEnabled(False)
         connect(self.actionSwapEdge.triggered, self.doSwapEdge)

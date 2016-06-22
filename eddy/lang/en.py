@@ -96,11 +96,13 @@ ACTION_PASTE_S = 'Paste previously copied items'
 ACTION_PRINT_S = 'Print the current project'
 ACTION_QUIT_S = 'Quit {0}'
 ACTION_SAVE_S = 'Save the current project'
-ACTION_SAVE_AS = 'Create a copy of the active diagram'
+ACTION_SAVE_AS_S = 'Create a copy of the active diagram'
 ACTION_SELECT_ALL_S = 'Select all items in the active diagram'
 ACTION_SEND_TO_BACK_S = 'Send selected items to back'
-ACTION_SNAP_TO_GRID_S = 'Snap diagram elements to the grid'
+ACTION_SNAP_TO_GRID_S = 'Align diagram elements to the grid'
+ACTION_SWAP_EDGE_S = 'Swap the direction of all the selected edges'
 ACTION_SYNTAX_CHECK_S = 'Run syntax validation on the current project'
+ACTION_TOGGLE_EDGE_EQUIVALENCE_S = 'Toggle the equivalence flag for all the selected inclusion edges'
 
 #############################################
 # UNDO / REDO COMMANDS
