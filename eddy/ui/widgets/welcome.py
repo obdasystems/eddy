@@ -36,7 +36,7 @@ import os
 import webbrowser
 
 from PyQt5.QtCore import Qt, QSettings, pyqtSlot, QSize, pyqtSignal
-from PyQt5.QtGui import QPixmap, QIcon, QPainter
+from PyQt5.QtGui import QIcon, QPainter
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog, QMenu
 from PyQt5.QtWidgets import QLabel, QWidget, QStyleOption, QStyle, QAction
 
@@ -116,7 +116,7 @@ class Welcome(QWidget):
         self.innerWidgetR.setContentsMargins(0, 30, 0, 0)
 
         self.appPix = QLabel(self)
-        self.appPix.setPixmap(QPixmap(':/icons/128/ic_eddy'))
+        self.appPix.setPixmap(QIcon(':/icons/128/ic_eddy').pixmap(128))
         self.appPix.setContentsMargins(0, 0, 0, 0)
         self.appName = QLabel(APPNAME, self)
         self.appName.setFont(arial28rsc)
