@@ -82,5 +82,5 @@ class About(QDialog):
 
         self.setFixedWidth(520)
         self.setFixedHeight(self.sizeHint().height())
-        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(_('ABOUT_DIALOG_WINDOW_TITLE', APPNAME))

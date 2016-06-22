@@ -170,7 +170,7 @@ class DiagramProperty(PropertyDialog):
         self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
 
         self.setWindowTitle(_('PROPERTY_DIAGRAM_WINDOW_TITLE', self.diagram.name))
-        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
 
         connect(self.confirmationBox.accepted, self.complete)
         connect(self.confirmationBox.rejected, self.reject)
@@ -358,7 +358,7 @@ class NodeProperty(PropertyDialog):
         self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
 
         self.setWindowTitle(_('PROPERTY_NODE_WINDOW_TITLE', self.node))
-        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
 
         connect(self.confirmationBox.accepted, self.complete)
         connect(self.confirmationBox.rejected, self.reject)

@@ -308,7 +308,7 @@ class Eddy(QApplication):
                 msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
                 msgbox.setText(_('PROJECT_NOT_FOUND_MESSAGE', os.path.basename(path)))
                 msgbox.setStandardButtons(QMessageBox.Close)
-                msgbox.setWindowIcon(QIcon(':/images/eddy'))
+                msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
                 msgbox.setWindowTitle(_('PROJECT_NOT_FOUND_WINDOW_TITLE'))
                 msgbox.exec_()
             except ProjectNotValidError as e:
@@ -318,7 +318,7 @@ class Eddy(QApplication):
                 msgbox.setTextFormat(Qt.RichText)
                 msgbox.setDetailedText(format_exception(e))
                 msgbox.setStandardButtons(QMessageBox.Close)
-                msgbox.setWindowIcon(QIcon(':/images/eddy'))
+                msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
                 msgbox.setWindowTitle(_('PROJECT_NOT_VALID_WINDOW_TITLE'))
                 msgbox.exec_()
             else:

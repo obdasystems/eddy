@@ -259,7 +259,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.mdi)
         self.setDockOptions(MainWindow.AnimatedDocks|MainWindow.AllowTabbedDocks)
         self.setMinimumSize(1140, 720)
-        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(self.project)
 
         self.configureActions()
@@ -1033,7 +1033,7 @@ class MainWindow(QMainWindow):
                 except Exception as e:
                     msgbox = QMessageBox(self)
                     msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                    msgbox.setWindowIcon(QIcon(':/images/eddy'))
+                    msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
                     msgbox.setWindowTitle(_('DIAGRAM_LOAD_FAILED_WINDOW_TITLE'))
                     msgbox.setStandardButtons(QMessageBox.Close)
                     msgbox.setText(_('DIAGRAM_LOAD_FAILED_MESSAGE', path))
@@ -1206,7 +1206,7 @@ class MainWindow(QMainWindow):
         if diagram:
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
-            msgbox.setWindowIcon(QIcon(':/images/eddy'))
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle(_('DIAGRAM_REMOVE_POPUP_TITLE', diagram.name))
             msgbox.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
             msgbox.setTextFormat(Qt.RichText)
@@ -1244,7 +1244,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-            msgbox.setWindowIcon(QIcon(':/images/eddy'))
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle(_('PROJECT_SAVE_FAILED_WINDOW_TITLE'))
             msgbox.setStandardButtons(QMessageBox.Close)
             msgbox.setText(_('PROJECT_SAVE_FAILED_MESSAGE'))
@@ -1479,7 +1479,7 @@ class MainWindow(QMainWindow):
 
         msgbox = QMessageBox(self)
         msgbox.setIconPixmap(icon.pixmap(48))
-        msgbox.setWindowIcon(QIcon(':/images/eddy'))
+        msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
         msgbox.setWindowTitle(_('SYNTAX_MANUAL_WINDOW_TITLE'))
         msgbox.setStandardButtons(QMessageBox.Close)
         msgbox.setText(message)
@@ -1663,7 +1663,7 @@ class MainWindow(QMainWindow):
         if not self.project.undoStack.isClean():
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
-            msgbox.setWindowIcon(QIcon(':/images/eddy'))
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle(_('PROJECT_CLOSING_SAVE_CHANGES_WINDOW_TITLE'))
             msgbox.setStandardButtons(QMessageBox.Cancel|QMessageBox.No|QMessageBox.Yes)
             msgbox.setText(_('PROJECT_CLOSING_SAVE_CHANGES_MESSAGE'))
@@ -1811,7 +1811,7 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 msgbox = QMessageBox(self)
                 msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                msgbox.setWindowIcon(QIcon(':/images/eddy'))
+                msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
                 msgbox.setWindowTitle(_('DIAGRAM_IMPORT_FAILED_WINDOW_TITLE'))
                 msgbox.setStandardButtons(QMessageBox.Close)
                 msgbox.setText(_('DIAGRAM_IMPORT_FAILED_MESSAGE', path))
@@ -1830,7 +1830,7 @@ class MainWindow(QMainWindow):
             parts = ['{0}) {1}'.format(k, format_exception(v)) for k, v in enums]
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(QIcon(':/icons/48/ic_warning_black').pixmap(48))
-            msgbox.setWindowIcon(QIcon(':/images/eddy'))
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle(_('DIAGRAM_IMPORT_PARTIAL_WINDOW_TITLE'))
             msgbox.setStandardButtons(QMessageBox.Close)
             msgbox.setTextFormat(Qt.RichText)

@@ -116,7 +116,7 @@ class OWLExportDialog(QDialog):
         self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
 
         self.setWindowTitle(_('PROJECT_EXPORT_OWL_WINDOW_TITLE'))
-        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
         self.setFixedSize(self.sizeHint())
 
         connect(self.confirmationBox.accepted, self.run)
@@ -137,7 +137,7 @@ class OWLExportDialog(QDialog):
         if isinstance(exception, MalformedDiagramError):
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(QIcon(':/icons/48/ic_warning_black').pixmap(48))
-            msgbox.setWindowIcon(QIcon(':/images/eddy'))
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle(_('PROJECT_EXPORT_OWL_MALFORMED_EXPRESSION_WINDOW_TITLE'))
             msgbox.setText(_('PROJECT_EXPORT_OWL_MALFORMED_EXPRESSION_MESSAGE', exception.item, exception))
             msgbox.setInformativeText(_('PROJECT_EXPORT_OWL_MALFORMED_EXPRESSION_QUESTION'))
@@ -149,7 +149,7 @@ class OWLExportDialog(QDialog):
         else:
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-            msgbox.setWindowIcon(QIcon(':/images/eddy'))
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle(_('PROJECT_EXPORT_OWL_ERRORED_WINDOW_TITLE'))
             msgbox.setStandardButtons(QMessageBox.Close)
             msgbox.setText(_('PROJECT_EXPORT_OWL_ERRORED_MESSAGE'))
@@ -168,7 +168,7 @@ class OWLExportDialog(QDialog):
 
         msgbox = QMessageBox(self)
         msgbox.setIconPixmap(QIcon(':/icons/24/ic_info_outline_black').pixmap(48))
-        msgbox.setWindowIcon(QIcon(':/images/eddy'))
+        msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
         msgbox.setText(_('PROJECT_EXPORT_OWL_COMPLETED_WINDOW_TITLE'))
         msgbox.setInformativeText(_('PROJECT_EXPORT_OWL_COMPLETED_MESSAGE'))
         msgbox.setStandardButtons(QMessageBox.Yes|QMessageBox.No)

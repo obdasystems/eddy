@@ -103,7 +103,7 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
         if not msgbox:
             msgbox = QMessageBox()
             msgbox.setIconPixmap(QPixmap(':/images/eddy-sad'))
-            msgbox.setWindowIcon(QIcon(':/images/eddy'))
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Fatal error!')
             msgbox.setText(_('EXCEPT_HOOK_MESSAGE', APPNAME))
             msgbox.setInformativeText(_('EXCEPT_HOOK_INFORMATIVE_MESSAGE', BUG_TRACKER))

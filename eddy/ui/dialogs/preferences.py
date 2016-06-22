@@ -125,7 +125,7 @@ class PreferencesDialog(QDialog):
         self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
-        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(_('PREFERENCES_WINDOW_TITLE'))
 
         connect(self.confirmationBox.accepted, self.accept)

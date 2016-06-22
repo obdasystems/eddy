@@ -116,7 +116,7 @@ class Welcome(QWidget):
         self.innerWidgetR.setContentsMargins(0, 30, 0, 0)
 
         self.appPix = QLabel(self)
-        self.appPix.setPixmap(QPixmap(':/images/eddy'))
+        self.appPix.setPixmap(QPixmap(':/icons/128/ic_eddy'))
         self.appPix.setContentsMargins(0, 0, 0, 0)
         self.appName = QLabel(APPNAME, self)
         self.appName.setFont(arial28rsc)
@@ -191,7 +191,7 @@ class Welcome(QWidget):
 
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setFixedSize(700, 400)
-        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(_('WELCOME_WINDOW_TITLE', APPNAME))
         connect(self.sgnCreateSession, application.doCreateSession)
 

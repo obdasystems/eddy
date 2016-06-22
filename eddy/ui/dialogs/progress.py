@@ -62,7 +62,7 @@ class BusyProgressDialog(QDialog):
         self.progressBar.setFormat(title or 'Busy ...')
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.addWidget(self.progressBar)
-        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(title or 'Busy ...')
         self.setFixedSize(self.sizeHint())
 

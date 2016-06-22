@@ -105,7 +105,7 @@ class CardinalityRestrictionForm(QDialog):
         self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
-        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(_('FORM_CARDINALITY_WINDOW_TITLE'))
 
         connect(self.confirmationBox.accepted, self.accept)
@@ -126,7 +126,7 @@ class CardinalityRestrictionForm(QDialog):
             if v1 > v2:
                 msgbox = QMessageBox(self)
                 msgbox.setIconPixmap(QIcon(':/icons/48/ic_warning_black').pixmap(48))
-                msgbox.setWindowIcon(QIcon(':/images/eddy'))
+                msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
                 msgbox.setWindowTitle(_('FORM_CARDINALITY_ERROR_WINDOW_TITLE'))
                 msgbox.setText(_('FORM_CARDINALITY_ERROR_MESSAGE', v1, v2))
                 msgbox.setTextFormat(Qt.RichText)
@@ -210,7 +210,7 @@ class ValueForm(QDialog):
         self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
-        self.setWindowIcon(QIcon(':/images/eddy'))
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(_('FORM_VALUE_WINDOW_TITLE'))
 
         connect(self.confirmationBox.accepted, self.accept)

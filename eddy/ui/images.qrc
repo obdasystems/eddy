@@ -146,6 +146,10 @@
   <file alias="ic_warning_black">../../artwork/icons/48/ic_warning_black_48dp_1x.png</file>
   <file alias="ic_warning_black@2x">../../artwork/icons/48/ic_warning_black_48dp_2x.png</file>
 </qresource>
+<qresource prefix="/icons/128">
+  <file alias="ic_eddy">../../artwork/icons/128/ic_eddy_128dp_1x.png</file>
+  <file alias="ic_eddy@2x">../../artwork/icons/128/ic_eddy_128dp_2x.png</file>
+</qresource>
 <qresource prefix="/images">
     <file alias="eddy">../../artwork/images/eddy.png</file>
     <file alias="eddy-sad">../../artwork/images/eddy_sad.png</file>
