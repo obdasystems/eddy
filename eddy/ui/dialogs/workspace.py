@@ -135,6 +135,7 @@ class WorkspaceDialog(QDialog):
         self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(_('WORKSPACE_WINDOW_TITLE'))
 
         connect(self.btnBrowse.clicked, self.choosePath)
