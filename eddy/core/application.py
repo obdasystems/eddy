@@ -223,7 +223,7 @@ class Eddy(QApplication):
         if show:
             if not self._splash:
                 if options and not options.nosplash:
-                    self._splash = Splash(':/images/eddy-splash', mtime=4)
+                    self._splash = Splash(self, mtime=4)
                     self._splash.show()
         else:
             if self._splash:

@@ -151,10 +151,12 @@
   <file alias="ic_eddy@2x">../../artwork/icons/128/ic_eddy_128dp_2x.png</file>
 </qresource>
 <qresource prefix="/images">
-    <file alias="eddy">../../artwork/images/eddy.png</file>
-    <file alias="eddy-sad">../../artwork/images/eddy_sad.png</file>
-    <file alias="eddy-smile">../../artwork/images/eddy_smile.png</file>
-    <file alias="eddy-smile-small-noframe">../../artwork/images/eddy_smile_small_noframe.png</file>
-    <file alias="eddy-splash">../../artwork/images/eddy_splash.png</file>
+  <file alias="eddy">../../artwork/images/eddy.png</file>
+  <file alias="eddy-sad">../../artwork/images/eddy_sad.png</file>
+  <file alias="eddy-smile">../../artwork/images/eddy_smile.png</file>
+  <file alias="eddy-smile-small-noframe">../../artwork/images/eddy_smile_small_noframe.png</file>
+  <file alias="eddy-splash">../../artwork/images/eddy_splash.png</file>
+  <file alias="im_eddy_splash">../../artwork/images/im_eddy_splash_380dp_1x.png</file>
+  <file alias="im_eddy_splash@2x">../../artwork/images/im_eddy_splash_380dp_2x.png</file>
 </qresource>
 </RCC>

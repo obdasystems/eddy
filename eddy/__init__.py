@@ -34,7 +34,7 @@
 
 __appname__ = 'Eddy'
 __author__ = 'Daniele Pantaleone'
-__copyright__ = 'Copyright © 2016 Daniele Pantaleone'
+__copyright__ = 'Copyright © 2015 Daniele Pantaleone'
 __email__ = 'danielepantaleone@me.com'
 __license__ = 'GPL'
 __organization__ = 'Sapienza University'

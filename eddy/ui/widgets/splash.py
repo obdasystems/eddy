@@ -35,7 +35,7 @@
 from time import time, sleep
 
 from PyQt5.QtCore import Qt, QRect
-from PyQt5.QtGui import QPixmap, QPainter, QColor, QPen
+from PyQt5.QtGui import QPainter, QColor, QPen, QIcon
 from PyQt5.QtWidgets import QSplashScreen, QApplication
 
 from eddy import APPNAME, COPYRIGHT, VERSION
@@ -52,23 +52,22 @@ class Splash(QSplashScreen):
     >>> import sys
     >>> from PyQt5.QtWidgets import QApplication
     >>> app = QApplication(sys.argv)
-    >>> with Splash(':/images/eddy-splash', mtime=5):
+    >>> with Splash(app, 5):
     >>>     app.do_something_heavy()
 
     will draw a 5 seconds (at least) splash screen on the screen.
     The with statement body can be used to initialize the application and process heavy stuff.
     """
-    def __init__(self, path, mtime=2):
+    def __init__(self, eddy, mtime=2):
         """
         Initialize Eddy's splash screen.
-        :type path: str
+        :type eddy: QApplication
         :type mtime: float
         """
-        super().__init__(QPixmap(path), Qt.WindowStaysOnTopHint)
-        self.setAttribute(Qt.WA_TranslucentBackground)
+        pixmap = QIcon(':/images/im_eddy_splash').pixmap(380 * eddy.devicePixelRatio())
+        pixmap.setDevicePixelRatio(eddy.devicePixelRatio())
+        super().__init__(pixmap, Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
-        self.setMask(self.pixmap().mask())
-        self.setFixedSize(self.pixmap().width(), self.pixmap().height())
         self.mtime = time() + mtime
 
     #############################################
@@ -114,10 +113,43 @@ class Splash(QSplashScreen):
         """
         super().paintEvent(paintEvent)
         painter = QPainter(self)
-        painter.setFont(Font('Arial', 12, Font.Light))
+
+        font1 = Font('Arial', 40, Font.Light)
+        font1.setCapitalization(Font.SmallCaps)
+        font2 = Font('Arial', 18, Font.Light)
+        font2.setCapitalization(Font.SmallCaps)
+        font3 = Font('Arial', 12, Font.Light)
+
+        LICENSE = 'Licensed under the GNU General Public License v3'
+        CREDITS = 'Eddy is developed by the DASI Lab group of the\n' \
+                  '"Dipartimento di Informatica e Sistemistica A. Ruberti" at\n' \
+                  '"Sapienza University of Rome"'
+
+        # APPNAME
+        painter.setFont(font1)
+        painter.setPen(QPen(QColor(255, 255, 255), 1.0, Qt.SolidLine))
+        painter.drawText(QRect(31, 160, 380, 400), Qt.AlignTop | Qt.AlignLeft, APPNAME)
+        # VERSION
+        painter.setFont(font2)
+        painter.setPen(QPen(QColor(255, 255, 255), 1.0, Qt.SolidLine))
+        painter.drawText(QRect(34, 204, 380, 400), Qt.AlignTop | Qt.AlignLeft, 'Version {0}'.format(VERSION))
+        # COPYRIGHT
+        painter.setFont(font3)
+        painter.setPen(QPen(QColor(122, 101, 104), 1.0, Qt.SolidLine))
+        painter.drawText(QRect(0, 254, 360, 40), Qt.AlignTop | Qt.AlignHCenter, COPYRIGHT)
+        # CREDITS
+        painter.setFont(font3)
+        painter.setPen(QPen(QColor(122, 101, 104), 1.0, Qt.SolidLine))
+        painter.drawText(QRect(0, 278, 360, 80), Qt.AlignTop | Qt.AlignHCenter, CREDITS)
+        # LICENSE
+        painter.setFont(font3)
+        painter.setPen(QPen(QColor(122, 101, 104), 1.0, Qt.SolidLine))
+        painter.drawText(QRect(0, 332, 360, 40), Qt.AlignTop | Qt.AlignHCenter, LICENSE)
+
+
         ## BOUNDING RECT (0, 194, 400, 86)
-        painter.setPen(QPen(QColor(212, 212, 212), 1.0, Qt.SolidLine))
-        painter.drawText(QRect(0, 202, 396, 14), Qt.AlignTop|Qt.AlignRight, '{0} v{1}'.format(APPNAME, VERSION))
-        painter.drawText(QRect(0, 216, 396, 14), Qt.AlignTop|Qt.AlignRight, COPYRIGHT)
-        painter.drawText(QRect(0, 230, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Licensed under the GNU GPL v3')
-        painter.drawText(QRect(0, 258, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Starting up...')
+
+        # painter.drawText(QRect(0, 202, 396, 14), Qt.AlignTop|Qt.AlignRight, '{0} v{1}'.format(APPNAME, VERSION))
+        # painter.drawText(QRect(0, 216, 396, 14), Qt.AlignTop|Qt.AlignRight, COPYRIGHT)
+        # painter.drawText(QRect(0, 230, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Licensed under the GNU GPL v3')
+        # painter.drawText(QRect(0, 258, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Starting up...')
