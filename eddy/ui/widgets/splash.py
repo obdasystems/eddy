@@ -145,11 +145,3 @@ class Splash(QSplashScreen):
         painter.setFont(font3)
         painter.setPen(QPen(QColor(122, 101, 104), 1.0, Qt.SolidLine))
         painter.drawText(QRect(0, 332, 360, 40), Qt.AlignTop | Qt.AlignHCenter, LICENSE)
-
-
-        ## BOUNDING RECT (0, 194, 400, 86)
-
-        # painter.drawText(QRect(0, 202, 396, 14), Qt.AlignTop|Qt.AlignRight, '{0} v{1}'.format(APPNAME, VERSION))
-        # painter.drawText(QRect(0, 216, 396, 14), Qt.AlignTop|Qt.AlignRight, COPYRIGHT)
-        # painter.drawText(QRect(0, 230, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Licensed under the GNU GPL v3')
-        # painter.drawText(QRect(0, 258, 396, 14), Qt.AlignTop|Qt.AlignRight, 'Starting up...')
