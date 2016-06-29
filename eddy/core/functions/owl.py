@@ -32,7 +32,6 @@
 ##########################################################################
 
 
-import os
 import re
 
 from eddy.core.functions.misc import isEmpty
@@ -47,7 +46,7 @@ def OWLAnnotationText(content):
     :rtype: str
     """
     cleaned = content.lower()
-    cleaned.replace(os.linesep, '')
+    cleaned.replace('\n', '')
     cleaned.strip()
     return cleaned
 
@@ -62,13 +61,13 @@ def OWLFunctionalDocumentFilter(content):
     """
     result = []
     extend = result.extend
-    for row in (i for i in content.split(os.linesep) if not i.startswith('#')):
+    for row in (i for i in content.split('\n') if not i.startswith('#')):
         if not isEmpty(row):
             if RE_OWL_ONTOLOGY_FUNCTIONAL_TAG.search(row):
-                extend([os.linesep, row, os.linesep, os.linesep])
+                extend(['\n', row, '\n', '\n'])
             else:
-                extend([row, os.linesep])
-    return ''.join(result).rstrip(os.linesep)
+                extend([row, '\n'])
+    return ''.join(result).rstrip('\n')
 
 
 def OWLShortIRI(prefix, resource):
