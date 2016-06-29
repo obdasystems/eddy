@@ -44,6 +44,10 @@ ontologies that can be rendered as ER diagrams have in Graphol a similar diagram
   Domenico Lembo, Daniele Pantaleone, Valerio Santarelli, Domenico Fabio Savo<br/>
   *Proc. of the 15th International Conference on Principles of Knowledge Representation and Reasoning, KR-2016, Cape Town, South Africa, April 25-29, 2016*
 
+- **Design and development of an editor for the graphical specification of OWL ontologies** [PDF](https://drive.google.com/file/d/0BwGkBOchEhbJZXVZaU9WNTlCZWc/view)<br/>
+  Daniele Pantaleone, Academic Year 2015/2016<br/>
+  *Master thesis in Engineering in Computer Science (Advisor. Prof. Domenico Lembo)*
+
 ### Screenshot
 
 ![screenshot](/artwork/images/shot01.png?raw=true)
