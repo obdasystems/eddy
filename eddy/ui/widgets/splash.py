@@ -122,8 +122,8 @@ class Splash(QSplashScreen):
 
         LICENSE = 'Licensed under the GNU General Public License v3'
         CREDITS = 'Eddy is developed by the DASI Lab group of the\n' \
-                  '"Dipartimento di Informatica, Automatica e Gestionale\n' \
-                  'A. Ruberti" at Sapienza University of Rome"'
+                  '"Dipartimento di Ingegneria Informatica, Automatica e\n' \
+                  'Gestionale A. Ruberti" at Sapienza University of Rome"'
 
         # APPNAME
         painter.setFont(font1)
