@@ -258,7 +258,6 @@ class MainWindow(QMainWindow):
         self.setAcceptDrops(True)
         self.setCentralWidget(self.mdi)
         self.setDockOptions(MainWindow.AnimatedDocks|MainWindow.AllowTabbedDocks)
-        self.setMinimumSize(1140, 720)
         self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(self.project)
 
