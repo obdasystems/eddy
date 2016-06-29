@@ -36,7 +36,8 @@ ontologies that can be rendered as ER diagrams have in Graphol a similar diagram
 
 * [Domenico Lembo](http://www.dis.uniroma1.it/~lembo/)                         
 * [Valerio Santarelli](http://www.dis.uniroma1.it/~dottoratoii/students/valerio-santarelli)           
-* [Domenico Fabio Savo](http://www.dis.uniroma1.it/~savo/)                       
+* [Domenico Fabio Savo](http://www.dis.uniroma1.it/~savo/) 
+* [Daniele Pantaleone](https://github.com/danielepantaleone/) 
 * [Marco Console](http://www.dis.uniroma1.it/~dottoratoii/students/marco-console)                 
 
 ### Publications
