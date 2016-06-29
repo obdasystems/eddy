@@ -78,4 +78,11 @@ def OWLShortIRI(prefix, resource):
     :type resource: str
     :rtype: str
     """
-    return '{0}:{1}'.format(prefix, re.sub(RE_OWL_INVALID_CHAR, '_', str(resource)))
+    sp = re.split(RE_OWL_INVALID_CHAR, str(resource))
+    resource = sp[0]
+    for entry in sp[1:]:
+        sep = ''
+        if not entry.startswith('_') and not resource.endswith('_'):
+            sep = '_'
+        resource = '{0}{1}{2}'.format(resource, sep, entry)
+    return '{0}:{1}'.format(prefix, resource)
