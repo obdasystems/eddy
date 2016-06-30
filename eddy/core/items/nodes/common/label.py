@@ -32,13 +32,14 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QColor, QTextCursor, QPainterPath
+from PyQt5.QtCore import Qt, QPointF, pyqtSlot
+from PyQt5.QtGui import QColor, QPainterPath
 
 from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.commands.nodes import CommandNodeLabelMove
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.misc import isEmpty
+from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractLabel
 from eddy.core.qt import Font
 
@@ -67,6 +68,13 @@ class NodeLabel(AbstractLabel):
         self.focusInData = None
         self.mousePressPos = None
 
+        self.initUI()
+        self.updatePos()
+
+    def initUI(self):
+        """
+        Initialize the label UI.
+        """
         self.setDefaultTextColor(QColor(0, 0, 0, 255))
         self.setFlag(AbstractLabel.ItemIsMovable, self.movable)
         self.setFlag(AbstractLabel.ItemIsFocusable, self.editable)
@@ -74,25 +82,13 @@ class NodeLabel(AbstractLabel):
         self.setText(self.template)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
         self.setPos(self.defaultPos())
-        self.updatePos()
+
+        document = self.document()
+        connect(document.contentsChange[int, int, int], self.onContentsChanged)
 
     #############################################
     #   INTERFACE
     #################################
-
-    def center(self):
-        """
-        Returns the point at the center of the label in item coordinates.
-        :rtype: QPointF
-        """
-        return self.boundingRect().center()
-
-    def height(self):
-        """
-        Returns the height of the text label.
-        :rtype: int
-        """
-        return self.boundingRect().height()
 
     def isEditable(self):
         """
@@ -114,27 +110,6 @@ class NodeLabel(AbstractLabel):
         :return: bool
         """
         return (self.pos() - self.defaultPos()).manhattanLength() >= 1
-
-    def pos(self):
-        """
-        Returns the position of the label in parent's item coordinates.
-        :rtype: QPointF
-        """
-        return self.mapToParent(self.center())
-
-    def setPos(self, *__args):
-        """
-        Set the item position.
-        QGraphicsItem.setPos(QPointF)
-        QGraphicsItem.setPos(float, float)
-        """
-        if len(__args) == 1:
-            pos = __args[0]
-        elif len(__args) == 2:
-            pos = QPointF(__args[0], __args[1])
-        else:
-            raise TypeError('too many arguments; expected {}, got {}'.format(2, len(__args)))
-        super().setPos(pos - QPointF(self.width() / 2, self.height() / 2))
 
     def setEditable(self, editable):
         """
@@ -158,7 +133,7 @@ class NodeLabel(AbstractLabel):
         :type text: str.
         """
         moved = self.isMoved()
-        self.setPlainText(text)
+        super().setText(text)
         self.updatePos(moved)
 
     def shape(self):
@@ -170,13 +145,6 @@ class NodeLabel(AbstractLabel):
         path.addRect(self.boundingRect())
         return path
 
-    def text(self):
-        """
-        Returns the text of the label.
-        :rtype: str
-        """
-        return self.toPlainText().strip()
-
     def updatePos(self, moved=False):
         """
         Update the current text position with respect to its parent node.
@@ -184,13 +152,6 @@ class NodeLabel(AbstractLabel):
         """
         if not moved:
             self.setPos(self.defaultPos())
-
-    def width(self):
-        """
-        Returns the width of the text label.
-        :rtype: int
-        """
-        return self.boundingRect().width()
 
     #############################################
     #   EVENTS
@@ -201,17 +162,12 @@ class NodeLabel(AbstractLabel):
         Executed when the text item is focused.
         :type focusEvent: QFocusEvent
         """
-        # Make the label focusable only by performing a double click on the
-        # text: this will exclude any other type of focus action (dunno why
-        # but sometime the label gets the focus when hovering the mouse cursor
-        # on the text: mostly happens when loading a diagram from file)
+        # FOCUS ONLY ON DOUBLE CLICK
         if focusEvent.reason() == Qt.OtherFocusReason:
-            self.diagram.setMode(DiagramMode.EditText)
-            cursor = self.textCursor()
-            cursor.select(QTextCursor.BlockUnderCursor)
-            self.setTextCursor(cursor)
             self.focusInData = self.text()
             self.diagram.clearSelection()
+            self.diagram.setMode(DiagramMode.EditText)
+            self.setSelectedText(True)
             super().focusInEvent(focusEvent)
         else:
             self.clearFocus()
@@ -229,20 +185,25 @@ class NodeLabel(AbstractLabel):
             focusInData = self.focusInData
             currentData = self.text()
 
-            # The code below is a bit tricky: to be able to properly
-            # update the node in the project index we need to force
-            # the value of the label to it's previous one and let the
-            # command implementation update the index.
+            ###########################################################
+            # IMPORTANT!                                              #
+            # ####################################################### #
+            # The code below is a bit tricky: to be able to properly  #
+            # update the node in the project index we need to force   #
+            # the value of the label to it's previous one and let the #
+            # command implementation update the index.                #
+            ###########################################################
+
             self.setText(focusInData)
 
             if focusInData and focusInData != currentData:
-                command = CommandNodeLabelChange(self.diagram, self.parentItem(), focusInData, currentData)
+                node = self.parentItem()
+                command = CommandNodeLabelChange(self.diagram, node, focusInData, currentData)
                 self.project.undoStack.push(command)
 
-            cursor = self.textCursor()
-            cursor.clearSelection()
             self.focusInData = None
-            self.setTextCursor(cursor)
+            self.setSelectedText(False)
+            self.setAlignment(self.alignment())
             self.setTextInteractionFlags(Qt.NoTextInteraction)
             self.diagram.setMode(DiagramMode.Idle)
             self.diagram.sgnUpdated.emit()
@@ -273,14 +234,11 @@ class NodeLabel(AbstractLabel):
         """
         moved = self.isMoved()
         if keyEvent.key() in {Qt.Key_Enter, Qt.Key_Return}:
-            # Enter has been pressed: allow insertion of a newline
-            # character only if the shift modifier is being held.
             if keyEvent.modifiers() & Qt.ShiftModifier:
                 super().keyPressEvent(keyEvent)
             else:
                 self.clearFocus()
         else:
-            # Normal key press => allow insertion.
             super().keyPressEvent(keyEvent)
         self.updatePos(moved)
 
@@ -348,6 +306,20 @@ class NodeLabel(AbstractLabel):
 
         self.mousePressPos = None
 
+    #############################################
+    #   SLOTS
+    #################################
+
+    @pyqtSlot(int, int, int)
+    def onContentsChanged(self, position, charsRemoved, charsAdded):
+        """
+        Executed whenever the content of the text item changes.
+        :type position: int
+        :type charsRemoved: int
+        :type charsAdded: int
+        """
+        self.setAlignment(self.alignment())
+
 
 class FacetNodeQuotedLabel(NodeLabel):
     """
@@ -375,15 +347,13 @@ class FacetNodeQuotedLabel(NodeLabel):
         # but sometime the label gets the focus when hovering the mouse cursor
         # on the text: mostly happens when loading a diagram from file)
         if focusEvent.reason() == Qt.OtherFocusReason:
-            item = self.parentItem()
-            self.diagram.setMode(DiagramMode.EditText)
-            self.diagram.clearSelection()
+            node = self.parentItem()
             self.focusInData = self.text()
-            self.focusInFacet = item.facet
+            self.focusInFacet = node.facet
             self.setText(self.text().strip('"'))
-            cursor = self.textCursor()
-            cursor.select(QTextCursor.BlockUnderCursor)
-            self.setTextCursor(cursor)
+            self.diagram.clearSelection()
+            self.diagram.setMode(DiagramMode.EditText)
+            self.setSelectedText(True)
             super(NodeLabel, self).focusInEvent(focusEvent)
         else:
             self.clearFocus()
@@ -401,24 +371,28 @@ class FacetNodeQuotedLabel(NodeLabel):
             focusInData = self.focusInData
             currentData = '"{0}"'.format(self.text().strip('"'))
 
-            # The code below is a bit tricky: to be able to properly
-            # update the node in the project index we need to force
-            # the value of the label to it's previous one and let the
-            # command implementation update the index.
+            ###########################################################
+            # IMPORTANT!                                              #
+            # ####################################################### #
+            # The code below is a bit tricky: to be able to properly  #
+            # update the node in the project index we need to force   #
+            # the value of the label to it's previous one and let the #
+            # command implementation update the index.                #
+            ###########################################################
+
             self.setText(focusInData)
 
             if focusInData and focusInData != currentData:
                 item = self.parentItem()
-                data1 = item.compose(self.focusInFacet, focusInData)
-                data2 = item.compose(self.focusInFacet, currentData)
-                command = CommandNodeLabelChange(self.diagram, self.parentItem(), data1, data2)
+                undo = item.compose(self.focusInFacet, focusInData)
+                redo = item.compose(self.focusInFacet, currentData)
+                command = CommandNodeLabelChange(self.diagram, self.parentItem(), undo, redo)
                 self.project.undoStack.push(command)
 
-            cursor = self.textCursor()
-            cursor.clearSelection()
             self.focusInData = None
             self.focusInFacet = None
-            self.setTextCursor(cursor)
+            self.setSelectedText(False)
+            self.setAlignment(self.alignment())
             self.setTextInteractionFlags(Qt.NoTextInteraction)
             self.diagram.setMode(DiagramMode.Idle)
             self.diagram.sgnUpdated.emit()

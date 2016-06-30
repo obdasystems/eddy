@@ -34,8 +34,8 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QBrush, QPen
+from PyQt5.QtCore import Qt, QPointF
+from PyQt5.QtGui import QBrush, QPen, QTextBlockFormat, QTextCursor
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem
 
 from eddy.core.datatypes.graphol import Item
@@ -182,6 +182,7 @@ class AbstractLabel(QGraphicsTextItem):
         Initialize the label.
         :type parent: QObject
         """
+        self._alignment = Qt.AlignCenter
         super().__init__(parent)
 
     #############################################
@@ -208,6 +209,27 @@ class AbstractLabel(QGraphicsTextItem):
     #   INTERFACE
     #################################
 
+    def alignment(self):
+        """
+        Returns the text alignment.
+        :rtype: int
+        """
+        return self._alignment
+
+    def center(self):
+        """
+        Returns the point at the center of the shape.
+        :rtype: QPointF
+        """
+        return self.boundingRect().center()
+
+    def height(self):
+        """
+        Returns the height of the text label.
+        :rtype: int
+        """
+        return self.boundingRect().height()
+
     @staticmethod
     def isEdge():
         """
@@ -224,12 +246,94 @@ class AbstractLabel(QGraphicsTextItem):
         """
         return False
 
+    def pos(self):
+        """
+        Returns the position of the label in parent's item coordinates.
+        :rtype: QPointF
+        """
+        return self.mapToParent(self.center())
+
+    def setSelectedText(self, selected=True):
+        """
+        Select/deselect the text in the label.
+        :type selected: bool
+        """
+        cursor = self.textCursor()
+        if selected:
+            cursor.movePosition(QTextCursor.Start, QTextCursor.MoveAnchor)
+            cursor.movePosition(QTextCursor.End, QTextCursor.KeepAnchor)
+            cursor.select(QTextCursor.Document)
+        else:
+            cursor.clearSelection()
+            cursor.movePosition(QTextCursor.End, QTextCursor.MoveAnchor)
+        self.setTextCursor(cursor)
+
+    def setAlignment(self, alignment):
+        """
+        Set the text alignment.
+        :type alignment: int
+        """
+        self._alignment = alignment
+        self.setTextWidth(-1)
+        self.setTextWidth(self.boundingRect().width())
+        format_ = QTextBlockFormat()
+        format_.setAlignment(alignment)
+        cursor = self.textCursor()
+        position = cursor.position()
+        selected = cursor.selectedText()
+        startPos = cursor.selectionStart()
+        endPos = cursor.selectionEnd()
+        cursor.select(QTextCursor.Document)
+        cursor.mergeBlockFormat(format_)
+        if selected:
+            cursor.setPosition(startPos, QTextCursor.MoveAnchor)
+            cursor.setPosition(endPos, QTextCursor.KeepAnchor)
+            cursor.select(QTextCursor.BlockUnderCursor)
+        else:
+            cursor.setPosition(position)
+        self.setTextCursor(cursor)
+
+    def setPos(self, *__args):
+        """
+        Set the item position.
+        QGraphicsItem.setPos(QPointF)
+        QGraphicsItem.setPos(float, float)
+        """
+        if len(__args) == 1:
+            pos = __args[0]
+        elif len(__args) == 2:
+            pos = QPointF(__args[0], __args[1])
+        else:
+            raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
+        super().setPos(pos - QPointF(self.width() / 2, self.height() / 2))
+
+    def setText(self, text):
+        """
+        Set the given text as plain text.
+        :type text: str.
+        """
+        self.setPlainText(text)
+
+    def text(self):
+        """
+        Returns the text of the label.
+        :rtype: str
+        """
+        return self.toPlainText().strip()
+
     def type(self):
         """
         Returns the type of this item.
         :rtype: Item
         """
         return self.Type
+
+    def width(self):
+        """
+        Returns the width of the text label.
+        :rtype: int
+        """
+        return self.boundingRect().width()
 
     def __repr__(self):
         """

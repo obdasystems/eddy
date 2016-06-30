@@ -67,19 +67,12 @@ class EdgeLabel(AbstractLabel):
     #   INTERFACE
     #################################
 
-    def center(self):
+    def isCentered(self):
         """
-        Returns the point at the center of the shape.
-        :rtype: QPointF
+        Returns True if the label should be centered, False otherwise.
+        :rtype: bool
         """
-        return self.boundingRect().center()
-
-    def height(self):
-        """
-        Returns the height of the text label.
-        :rtype: int
-        """
-        return self.boundingRect().height()
+        return self.centered
 
     def paint(self, painter, option, widget=None):
         """
@@ -92,27 +85,6 @@ class EdgeLabel(AbstractLabel):
         if not parent.path.isEmpty():
             super().paint(painter, option, widget)
 
-    def pos(self):
-        """
-        Returns the position of the label in parent's item coordinates.
-        :rtype: QPointF
-        """
-        return self.mapToParent(self.center())
-
-    def setPos(self, pos):
-        """
-        Set the item position.
-        :type pos: QPointF
-        """
-        super().setPos(pos - QPointF(self.width() / 2, self.height() / 2))
-
-    def setText(self, text):
-        """
-        Set the given text as plain text.
-        :type text: str
-        """
-        self.setPlainText(text)
-
     def shape(self):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
@@ -121,13 +93,6 @@ class EdgeLabel(AbstractLabel):
         path = QPainterPath()
         path.addRect(self.boundingRect())
         return path
-
-    def text(self):
-        """
-        Returns the current shape text (shortcut for self.toPlainText()).
-        :rtype: str
-        """
-        return self.toPlainText()
 
     def updatePos(self, points):
         """
@@ -138,58 +103,38 @@ class EdgeLabel(AbstractLabel):
             return
 
         if self.centered:
-
             # Here the label should be centered in the edge path => we need to compute 2 different positions:
             #   1. when the edge path is composed of an even number of points (odd subpaths)
             #   2. when the edge path is composed of an odd number of points (even subpaths)
-
             if len(points) % 2 == 0:
-
                 # If we have an even number of points, compute the position of the label
                 # according to the middle point of the subpath connecting the middle points.
                 p1 = points[int(len(points) / 2) - 1]
                 p2 = points[int(len(points) / 2)]
-
                 mid = midpoint(p1, p2)
                 rad = angle(p1, p2)
-
                 spaceX = -40
                 spaceY = -16
-
                 self.setPos(QPointF(mid.x() + spaceX * sin(rad), mid.y() + spaceY * cos(rad)))
-
             else:
-
-                # If we have an even number of points compute the
+                # If we have an odd number of points compute the
                 # position of the label according the point in the middle.
                 mid = points[int(len(points) / 2)]
                 rad1 = angle(points[int(len(points) / 2) - 1], mid)
                 rad2 = angle(mid, points[int(len(points) / 2) + 1])
                 diff = rad2 - rad1
-
                 spaceX1 = 0
                 spaceX2 = 0
                 spaceY = -16
-
                 if 0 < diff < M_PI:
                     spaceX1 = -80 * sin(rad1)
                     spaceX2 = -80 * sin(rad2)
                     spaceY += spaceY * sin(diff) * 1.8
-
                 self.setPos(QPointF(mid.x() + spaceX1 + spaceX2, mid.y() + spaceY))
-
         else:
-
             # Here instead we will place the label near the intersection with the target shape: this is mostly
             # used for input edges connecting role chain nodes and property assertion nodes, so we can inspect
             # visually the partecipation order of connected nodes without having to scroll the diagram.
             rad = angle(points[-2], points[-1])
             pos = points[-1] - QPointF(sin(rad + M_PI / 3.0) * 20, cos(rad + M_PI / 3.0) * 20)
             self.setPos(pos)
-
-    def width(self):
-        """
-        Returns the width of the text label.
-        :rtype: int
-        """
-        return self.boundingRect().width()
