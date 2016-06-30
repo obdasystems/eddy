@@ -224,6 +224,13 @@ class AbstractLabel(QGraphicsTextItem):
         """
         return False
 
+    def type(self):
+        """
+        Returns the type of this item.
+        :rtype: Item
+        """
+        return self.Type
+
     def __repr__(self):
         """
         Returns repr(self).
