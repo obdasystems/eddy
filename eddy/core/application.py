@@ -141,11 +141,11 @@ class Eddy(QApplication):
 
         settings = QSettings(ORGANIZATION, APPNAME)
         examples = [
-            expandPath('@examples/animals'),
-            expandPath('@examples/diet'),
-            expandPath('@examples/family'),
-            expandPath('@examples/lubm'),
-            expandPath('@examples/pizza'),
+            expandPath('@examples/Animals'),
+            expandPath('@examples/Diet'),
+            expandPath('@examples/Family'),
+            expandPath('@examples/LUBM'),
+            expandPath('@examples/Pizza'),
         ]
 
         if not settings.contains('project/recent'):
