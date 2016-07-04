@@ -35,12 +35,13 @@
 #################################
 
 ABOUT_DIALOG_WINDOW_TITLE = 'About {0}'
-ABOUT_DIALOG_MESSAGE = '{TITLE}<br/>' \
-                       'Version: {VERSION}<br/>' \
-                       'Author: {AUTHOR}<br/>' \
-                       'Copyright: © 2015 {AUTHOR}<br/>' \
-                       'License: {LICENSE}<br/>' \
-                       'Homepage: <a href="{HOMEPAGE}">{HOMEPAGE}</a>'
+ABOUT_DIALOG_MESSAGE = \
+'{TITLE}<br/>' \
+'Version: {VERSION}<br/>' \
+'Author: {AUTHOR}<br/>' \
+'Copyright: © 2015 {AUTHOR}<br/>' \
+'License: {LICENSE}<br/>' \
+'Homepage: <a href="{HOMEPAGE}">{HOMEPAGE}</a>'
 
 #############################################
 # ACTIONS
@@ -59,7 +60,6 @@ ACTION_DELETE_CONFIRM_N = 'Delete...'
 ACTION_DIAG_WEBSITE_N = 'DIAG - Sapienza University'
 ACTION_DIAGRAM_PROPERTIES_N = 'Properties...'
 ACTION_EDGE_SWAP_N = 'Swap edge'
-ACTION_EDGE_TOGGLE_EQUIVALENCE_N = 'Toggle edge equivalence'
 ACTION_EXPORT_N = 'Export...'
 ACTION_GRAPHOL_WEBSITE_N = 'Visit Graphol website'
 ACTION_IMPORT_N = 'Import...'
@@ -78,8 +78,9 @@ ACTION_SAVE_N = 'Save'
 ACTION_SAVE_AS_N = 'Save As...'
 ACTION_SELECT_ALL_N = 'Select all'
 ACTION_SEND_TO_BACK_N = 'Send to Back'
-ACTION_SNAP_TO_GRID_N = 'Snap to grid'
 ACTION_SYNTAX_CHECK_N = 'Run syntax validation'
+ACTION_TOGGLE_EDGE_EQUIVALENCE_N = 'Toggle edge equivalence'
+ACTION_TOGGLE_GRID_N = 'Toggle the grid'
 
 ACTION_ABOUT_S = 'About {0}'
 ACTION_BRING_TO_FRONT_S = 'Bring selected items to front'
@@ -100,10 +101,10 @@ ACTION_SAVE_AS_S = 'Create a copy of the active diagram'
 ACTION_SELECT_ALL_S = 'Select all items in the active diagram'
 ACTION_SEND_TO_BACK_S = 'Send selected items to back'
 ACTION_SET_BRUSH_S = 'Change the background color of the selected predicate nodes'
-ACTION_SNAP_TO_GRID_S = 'Align diagram elements to the grid'
 ACTION_SWAP_EDGE_S = 'Swap the direction of all the selected edges'
 ACTION_SYNTAX_CHECK_S = 'Run syntax validation on the current project'
 ACTION_TOGGLE_EDGE_EQUIVALENCE_S = 'Toggle the equivalence flag for all the selected inclusion edges'
+ACTION_TOGGLE_GRID_S = 'Activate or deactivate the diagram grid'
 
 #############################################
 # UNDO / REDO COMMANDS

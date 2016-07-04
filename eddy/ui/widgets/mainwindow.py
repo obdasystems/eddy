@@ -222,7 +222,6 @@ class MainWindow(QMainWindow):
         self.actionSyntaxCheck = QAction(_('ACTION_SYNTAX_CHECK_N'), self)
         self.actionCenterDiagram = QAction(_('ACTION_CENTER_DIAGRAM_N'), self)
         self.actionDiagramProperties = QAction(_('ACTION_DIAGRAM_PROPERTIES_N'), self)
-        self.actionSnapToGrid = QAction(_('ACTION_SNAP_TO_GRID_N'), self)
         self.actionCut = QAction(_('ACTION_CUT_N'), self)
         self.actionCopy = QAction(_('ACTION_COPY_N'), self)
         self.actionPaste = QAction(_('ACTION_PASTE_N'), self)
@@ -237,7 +236,8 @@ class MainWindow(QMainWindow):
         self.actionComposePropertyRange = QAction(_('ACTION_COMPOSE_PROPERTY_RANGE_N'), self)
         self.actionRemoveEdgeBreakpoint = QAction(_('ACTION_REMOVE_EDGE_BREAKPOINT_N'), self)
         self.actionSwapEdge = QAction(_('ACTION_EDGE_SWAP_N'), self)
-        self.actionToggleEdgeEquivalence = QAction(_('ACTION_EDGE_TOGGLE_EQUIVALENCE_N'), self)
+        self.actionToggleEdgeEquivalence = QAction(_('ACTION_TOGGLE_EDGE_EQUIVALENCE_N'), self)
+        self.actionToggleGrid = QAction(_('ACTION_TOGGLE_GRID_N'), self)
 
         self.actionsRefactorBrush = []
         self.actionsSetBrush = []
@@ -383,11 +383,11 @@ class MainWindow(QMainWindow):
         icon = QIcon()
         icon.addFile(':/icons/24/ic_grid_on_black', mode=QIcon.Normal, state=QIcon.On)
         icon.addFile(':/icons/24/ic_grid_off_black', mode=QIcon.Normal, state=QIcon.Off)
-        self.actionSnapToGrid.setIcon(icon)
-        self.actionSnapToGrid.setStatusTip(_('ACTION_SNAP_TO_GRID_S'))
-        self.actionSnapToGrid.setCheckable(True)
-        self.actionSnapToGrid.setEnabled(False)
-        connect(self.actionSnapToGrid.triggered, self.doToggleSnapToGrid)
+        self.actionToggleGrid.setIcon(icon)
+        self.actionToggleGrid.setStatusTip(_('ACTION_TOGGLE_GRID_S'))
+        self.actionToggleGrid.setCheckable(True)
+        self.actionToggleGrid.setEnabled(False)
+        connect(self.actionToggleGrid.triggered, self.doToggleGrid)
 
         #############################################
         # ITEM GENERICS
@@ -692,7 +692,7 @@ class MainWindow(QMainWindow):
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionOpenPreferences)
 
-        self.menuView.addAction(self.actionSnapToGrid)
+        self.menuView.addAction(self.actionToggleGrid)
         self.menuView.addSeparator()
         self.menuView.addMenu(self.menuToolbars)
         self.menuView.addSeparator()
@@ -826,7 +826,7 @@ class MainWindow(QMainWindow):
         self.toolbarEditor.addSeparator()
         self.toolbarEditor.addWidget(self.buttonSetBrush)
 
-        self.toolbarView.addAction(self.actionSnapToGrid)
+        self.toolbarView.addAction(self.actionToggleGrid)
         self.toolbarView.addAction(self.actionCenterDiagram)
         self.toolbarView.addSeparator()
         self.toolbarView.addWidget(self.zoom.buttonZoomOut)
@@ -845,7 +845,7 @@ class MainWindow(QMainWindow):
         settings = QSettings(ORGANIZATION, APPNAME)
         self.restoreGeometry(settings.value('mainwindow/geometry', QByteArray(), QByteArray))
         self.restoreState(settings.value('mainwindow/state', QByteArray(), QByteArray))
-        self.actionSnapToGrid.setChecked(settings.value('diagram/grid', False, bool))
+        self.actionToggleGrid.setChecked(settings.value('diagram/grid', False, bool))
 
     #############################################
     #   SLOTS
@@ -1514,12 +1514,12 @@ class MainWindow(QMainWindow):
                 self.project.undoStack.push(CommandEdgeToggleEquivalence(diagram, data))
 
     @pyqtSlot()
-    def doToggleSnapToGrid(self):
+    def doToggleGrid(self):
         """
         Toggle snap to grid setting.
         """
         settings = QSettings(ORGANIZATION, APPNAME)
-        settings.setValue('diagram/grid', self.actionSnapToGrid.isChecked())
+        settings.setValue('diagram/grid', self.actionToggleGrid.isChecked())
         settings.sync()
         for subwindow in self.mdi.subWindowList():
             viewport = subwindow.view.viewport()
@@ -1576,9 +1576,9 @@ class MainWindow(QMainWindow):
         self.actionSelectAll.setEnabled(isDiagramActive)
         self.actionSendToBack.setEnabled(isNodeSelected)
         self.buttonSetBrush.setEnabled(isPredicateSelected)
-        self.actionSnapToGrid.setEnabled(isDiagramActive)
         self.actionSwapEdge.setEnabled(isEdgeSelected and isEdgeSwapEnabled)
         self.actionToggleEdgeEquivalence.setEnabled(isEdgeSelected and isEdgeToggleEnabled)
+        self.actionToggleGrid.setEnabled(isDiagramActive)
         self.zoom.setEnabled(isDiagramActive)
 
     @pyqtSlot('QGraphicsItem', int)
