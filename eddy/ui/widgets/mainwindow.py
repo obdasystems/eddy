@@ -387,7 +387,7 @@ class MainWindow(QMainWindow):
         self.actionSnapToGrid.setStatusTip(_('ACTION_SNAP_TO_GRID_S'))
         self.actionSnapToGrid.setCheckable(True)
         self.actionSnapToGrid.setEnabled(False)
-        connect(self.actionSnapToGrid.triggered, self.doSnapToGrid)
+        connect(self.actionSnapToGrid.triggered, self.doToggleSnapToGrid)
 
         #############################################
         # ITEM GENERICS
@@ -1499,18 +1499,6 @@ class MainWindow(QMainWindow):
             item.setSelected(True)
 
     @pyqtSlot()
-    def doSnapToGrid(self):
-        """
-        Toggle snap to grid setting.
-        """
-        settings = QSettings(ORGANIZATION, APPNAME)
-        settings.setValue('diagram/grid', self.actionSnapToGrid.isChecked())
-        settings.sync()
-        for subwindow in self.mdi.subWindowList():
-            viewport = subwindow.view.viewport()
-            viewport.update()
-
-    @pyqtSlot()
     def doToggleEdgeEquivalence(self):
         """
         Set/unset the 'equivalence' attribute for all the selected Inclusion edges.
@@ -1524,6 +1512,18 @@ class MainWindow(QMainWindow):
                 comp = sum(edge.equivalence for edge in selected) <= len(selected) / 2
                 data = {edge: {'from': edge.equivalence, 'to': comp} for edge in selected}
                 self.project.undoStack.push(CommandEdgeToggleEquivalence(diagram, data))
+
+    @pyqtSlot()
+    def doToggleSnapToGrid(self):
+        """
+        Toggle snap to grid setting.
+        """
+        settings = QSettings(ORGANIZATION, APPNAME)
+        settings.setValue('diagram/grid', self.actionSnapToGrid.isChecked())
+        settings.sync()
+        for subwindow in self.mdi.subWindowList():
+            viewport = subwindow.view.viewport()
+            viewport.update()
 
     @pyqtSlot()
     def doUpdateState(self):
