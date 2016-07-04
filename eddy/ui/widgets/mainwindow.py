@@ -49,6 +49,7 @@ from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION, BUG_TRACKER
 from eddy.core.commands.common import CommandComposeAxiom
 from eddy.core.commands.common import CommandItemsRemove
 from eddy.core.commands.common import CommandItemsTranslate
+from eddy.core.commands.common import CommandSnapItemsToGrid
 from eddy.core.commands.edges import CommandEdgeBreakpointRemove
 from eddy.core.commands.edges import CommandEdgeSwap
 from eddy.core.commands.edges import CommandEdgeToggleEquivalence
@@ -69,7 +70,7 @@ from eddy.core.exporters.graphml import GraphmlExporter
 from eddy.core.exporters.graphol import GrapholExporter
 from eddy.core.exporters.project import ProjectExporter
 from eddy.core.functions.fsystem import fexists, fcopy, fremove
-from eddy.core.functions.misc import snapF, first, format_exception, cutR, uncapitalize
+from eddy.core.functions.misc import snap, snapF, first, format_exception, cutR, uncapitalize
 from eddy.core.functions.path import expandPath, isSubPath, uniquePath, shortPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
@@ -125,11 +126,12 @@ class MainWindow(QMainWindow):
         # noinspection PyArgumentList
         QApplication.processEvents()
 
-        self.menuFile = self.menuBar().addMenu(_('MENU_FILE'))
-        self.menuEdit = self.menuBar().addMenu(_('MENU_EDIT'))
-        self.menuView = self.menuBar().addMenu(_('MENU_VIEW'))
-        self.menuTools = self.menuBar().addMenu(_('MENU_TOOLS'))
-        self.menuHelp = self.menuBar().addMenu(_('MENU_HELP'))
+        menuBar = self.menuBar()
+        self.menuFile = menuBar.addMenu(_('MENU_FILE'))
+        self.menuEdit = menuBar.addMenu(_('MENU_EDIT'))
+        self.menuView = menuBar.addMenu(_('MENU_VIEW'))
+        self.menuTools = menuBar.addMenu(_('MENU_TOOLS'))
+        self.menuHelp = menuBar.addMenu(_('MENU_HELP'))
 
         self.menuCompose = QMenu(_('MENU_COMPOSE'))
         self.menuRefactorBrush = QMenu(_('MENU_REFACTOR_BRUSH'))
@@ -236,6 +238,7 @@ class MainWindow(QMainWindow):
         self.actionComposePropertyRange = QAction(_('ACTION_COMPOSE_PROPERTY_RANGE_N'), self)
         self.actionRemoveEdgeBreakpoint = QAction(_('ACTION_REMOVE_EDGE_BREAKPOINT_N'), self)
         self.actionSwapEdge = QAction(_('ACTION_EDGE_SWAP_N'), self)
+        self.actionSnapToGrid = QAction(_('ACTION_SNAP_TO_GRID_N'), self)
         self.actionToggleEdgeEquivalence = QAction(_('ACTION_TOGGLE_EDGE_EQUIVALENCE_N'), self)
         self.actionToggleGrid = QAction(_('ACTION_TOGGLE_GRID_N'), self)
 
@@ -379,6 +382,11 @@ class MainWindow(QMainWindow):
 
         self.actionDiagramProperties.setIcon(QIcon(':/icons/24/ic_settings_black'))
         connect(self.actionDiagramProperties.triggered, self.doOpenDiagramProperties)
+
+        self.actionSnapToGrid.setIcon(QIcon(':/icons/24/ic_healing_black'))
+        self.actionSnapToGrid.setStatusTip(_('ACTION_SNAP_TO_GRID_S'))
+        self.actionSnapToGrid.setEnabled(False)
+        connect(self.actionSnapToGrid.triggered, self.doSnapTopGrid)
 
         icon = QIcon()
         icon.addFile(':/icons/24/ic_grid_on_black', mode=QIcon.Normal, state=QIcon.On)
@@ -688,6 +696,7 @@ class MainWindow(QMainWindow):
         self.menuEdit.addAction(self.actionToggleEdgeEquivalence)
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionSelectAll)
+        self.menuEdit.addAction(self.actionSnapToGrid)
         self.menuEdit.addAction(self.actionCenterDiagram)
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionOpenPreferences)
@@ -827,6 +836,7 @@ class MainWindow(QMainWindow):
         self.toolbarEditor.addWidget(self.buttonSetBrush)
 
         self.toolbarView.addAction(self.actionToggleGrid)
+        self.toolbarView.addAction(self.actionSnapToGrid)
         self.toolbarView.addAction(self.actionCenterDiagram)
         self.toolbarView.addSeparator()
         self.toolbarView.addWidget(self.zoom.buttonZoomOut)
@@ -1417,6 +1427,38 @@ class MainWindow(QMainWindow):
                     self.project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
+    def doSnapTopGrid(self):
+        """
+        Snap all the element sin the active diagram to the grid.
+        """
+        diagram = self.mdi.activeDiagram
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            data = {'redo': {'nodes': {}, 'edges': {}}, 'undo': {'nodes': {}, 'edges': {}}}
+            for item in diagram.items():
+                if item.isNode():
+                    undoPos = item.pos()
+                    redoPos = snap(undoPos, Diagram.GridSize)
+                    if undoPos != redoPos:
+                        data['undo']['nodes'][item] = {
+                            'pos': undoPos,
+                            'anchors': {k: v for k, v in item.anchors.items()}
+                        }
+                        data['redo']['nodes'][item] = {
+                            'pos': redoPos,
+                            'anchors': {k: v + redoPos - undoPos for k, v in item.anchors.items()}
+                        }
+                elif item.isEdge():
+                    undoPts = item.breakpoints
+                    redoPts = [snap(x, Diagram.GridSize) for x in undoPts]
+                    if undoPts != redoPts:
+                        data['undo']['edges'][item] = {'breakpoints': undoPts}
+                        data['redo']['edges'][item] = {'breakpoints': redoPts}
+
+            if data['undo']['nodes'] or data['undo']['edges']:
+                self.project.undoStack.push(CommandSnapItemsToGrid(diagram, data))
+
+    @pyqtSlot()
     def doSwapEdge(self):
         """
         Swap the selected edges by inverting source/target points.
@@ -1576,6 +1618,7 @@ class MainWindow(QMainWindow):
         self.actionSelectAll.setEnabled(isDiagramActive)
         self.actionSendToBack.setEnabled(isNodeSelected)
         self.buttonSetBrush.setEnabled(isPredicateSelected)
+        self.actionSnapToGrid.setEnabled(isDiagramActive)
         self.actionSwapEdge.setEnabled(isEdgeSelected and isEdgeSwapEnabled)
         self.actionToggleEdgeEquivalence.setEnabled(isEdgeSelected and isEdgeToggleEnabled)
         self.actionToggleGrid.setEnabled(isDiagramActive)
@@ -1786,7 +1829,7 @@ class MainWindow(QMainWindow):
 
     def createMdiSubWindow(self, widget):
         """
-        Create a subwindow in the MDI area that displays the given widget
+        Create a subwindow in the MDI area that displays the given widget.
         :type widget: QWidget
         :rtype: MdiSubWindow
         """

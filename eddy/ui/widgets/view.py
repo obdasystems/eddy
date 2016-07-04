@@ -331,7 +331,7 @@ class DiagramView(QGraphicsView):
         :type painter: QPainter
         :type rect: QRectF
         """
-        if self.mainwindow.actionSnapToGrid.isChecked():
+        if self.mainwindow.actionToggleGrid.isChecked():
             s = Diagram.GridSize
             x = int(rect.left()) - (int(rect.left()) % s)
             y = int(rect.top()) - (int(rect.top()) % s)

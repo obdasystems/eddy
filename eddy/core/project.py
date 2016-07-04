@@ -394,16 +394,6 @@ class Project(QObject):
                     del self.index[K_PREDICATE][item][name][K_META]
                     self.sgnMetaRemoved.emit(item, name)
 
-    @classmethod
-    def validate(cls, path):
-        """
-        Validate the structure of a project given its path.
-        Will raise an exception if the project does not exists of it's not valid.
-        :raise ProjectNotFoundError: if the given project does not exists.
-        :raise ProjectNotValidError: if the given project is not a valid one.
-        :type path: str
-        """
-
     #############################################
     #   SLOTS
     #################################

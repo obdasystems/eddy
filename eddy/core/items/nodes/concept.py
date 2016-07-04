@@ -226,7 +226,7 @@ class ConceptNode(AbstractResizableNode):
         :type mousePos: QPointF
         """
         mainwindow = self.project.parent()
-        snap = mainwindow.actionSnapToGrid.isChecked()
+        snap = mainwindow.actionToggleGrid.isChecked()
         size = self.diagram.GridSize
         offset = self.HandleSize + self.HandleMove
         moved = self.label.isMoved()

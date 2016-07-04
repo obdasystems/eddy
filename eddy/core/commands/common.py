@@ -247,6 +247,51 @@ class CommandItemsTranslate(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
+class CommandSnapItemsToGrid(QUndoCommand):
+    """
+    This command is used to snap diagram elements to the grid.
+    """
+    def __init__(self, diagram, data, name=None):
+        """
+        Initialize the command.
+        :type diagram: Diagram
+        :type data: dict
+        :type name: str
+        """
+        num = len(data['undo']['nodes']) + len(data['redo']['edges'])
+        super().__init__(name or _('COMMAND_ITEM_SNAP', num))
+        self.diagram = diagram
+        self.data = data
+
+    def redo(self):
+        """redo the command"""
+        edges = set()
+        for node in self.data['redo']['nodes']:
+            node.anchors = self.data['redo']['nodes'][node]['anchors']
+            node.setPos(self.data['redo']['nodes'][node]['pos'])
+            edges |= node.edges
+        for edge in self.data['redo']['edges']:
+            edge.breakpoints = self.data['redo']['edges'][edge]['breakpoints']
+            edges.add(edge)
+        for edge in edges:
+            edge.updateEdge()
+        self.diagram.sgnUpdated.emit()
+
+    def undo(self):
+        """undo the command"""
+        edges = set()
+        for node in self.data['undo']['nodes']:
+            node.anchors = self.data['undo']['nodes'][node]['anchors']
+            node.setPos(self.data['undo']['nodes'][node]['pos'])
+            edges |= node.edges
+        for edge in self.data['undo']['edges']:
+            edge.breakpoints = self.data['undo']['edges'][edge]['breakpoints']
+            edges.add(edge)
+        for edge in edges:
+            edge.updateEdge()
+        self.diagram.sgnUpdated.emit()
+
+
 class CommandSetProperty(QUndoCommand):
     """
     This command is used to set properties of graphol items.

@@ -50,7 +50,7 @@
 </qresource>
 <qresource prefix="/icons/24">
   <file alias="ic_add_document_black">../../artwork/icons/24/ic_add_document_black_24dp_1x.png</file>
-  <file alias="ic_add_document_black@2X">../../artwork/icons/24/ic_add_document_black_24dp_2x.png</file>
+  <file alias="ic_add_document_black@2x">../../artwork/icons/24/ic_add_document_black_24dp_2x.png</file>
   <file alias="ic_keyboard_arrow_down_black">../../artwork/icons/24/ic_keyboard_arrow_down_black_24dp_1x.png</file>
   <file alias="ic_keyboard_arrow_down_black@2x">../../artwork/icons/24/ic_keyboard_arrow_down_black_24dp_2x.png</file>
   <file alias="ic_keyboard_arrow_up_black">../../artwork/icons/24/ic_keyboard_arrow_up_black_24dp_1x.png</file>
@@ -79,6 +79,8 @@
   <file alias="ic_grid_off_black@2x">../../artwork/icons/24/ic_grid_off_black_24dp_2x.png</file>
   <file alias="ic_grid_on_black">../../artwork/icons/24/ic_grid_on_black_24dp_1x.png</file>
   <file alias="ic_grid_on_black@2x">../../artwork/icons/24/ic_grid_on_black_24dp_2x.png</file>
+  <file alias="ic_healing_black">../../artwork/icons/24/ic_healing_black_24dp_1x.png</file>
+  <file alias="ic_healing_black@2x">../../artwork/icons/24/ic_healing_black_24dp_2x.png</file>
   <file alias="ic_help_outline_black">../../artwork/icons/24/ic_help_outline_black_24dp_1x.png</file>
   <file alias="ic_help_outline_black@2x">../../artwork/icons/24/ic_help_outline_black_24dp_2x.png</file>
   <file alias="ic_label_outline_black">../../artwork/icons/24/ic_label_outline_black_24dp_1x.png</file>
@@ -155,7 +157,6 @@
   <file alias="eddy-sad">../../artwork/images/eddy_sad.png</file>
   <file alias="eddy-smile">../../artwork/images/eddy_smile.png</file>
   <file alias="eddy-smile-small-noframe">../../artwork/images/eddy_smile_small_noframe.png</file>
-  <file alias="eddy-splash">../../artwork/images/eddy_splash.png</file>
   <file alias="im_eddy_splash">../../artwork/images/im_eddy_splash_380dp_1x.png</file>
   <file alias="im_eddy_splash@2x">../../artwork/images/im_eddy_splash_380dp_2x.png</file>
 </qresource>
