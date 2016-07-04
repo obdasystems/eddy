@@ -285,9 +285,9 @@ class CommandEdgeSwap(QUndoCommand):
                 self.inputs[edge.source]['redo'].append(edge.id)
 
         if len(edges) == 1:
-            name = _('COMMAND_EDGE_TOGGLE_EQUIVALENCE', first(edges).name)
+            name = _('COMMAND_EDGE_SWAP', first(edges).name)
         else:
-            name = _('COMMAND_EDGE_TOGGLE_EQUIVALENCE_MULTI', len(edges))
+            name = _('COMMAND_EDGE_SWAP_MULTI', len(edges))
 
         super().__init__(name)
 
