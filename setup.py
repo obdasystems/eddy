@@ -197,7 +197,7 @@ class BuildExe(build_exe):
         Properly create a Linux executable.
         """
         if sys.platform.startswith('linux'):
-             path = os.path.join(self.build_exe, '{0}.sh'.format(APPNAME))
+             path = os.path.join(self.build_exe, 'run.sh')
              with open(path, mode='w') as f:
                 f.write("""#!/bin/sh
 APP="{0}"
@@ -216,7 +216,7 @@ $DIRNAME/$EXEC "$@"
 echo "... bye!"
 """.format(APPNAME, OPTS['EXEC_NAME'], VERSION))
 
-             for filename in [OPTS['EXEC_NAME'], '{0}.sh'.format(APPNAME)]:
+             for filename in [OPTS['EXEC_NAME'], 'run.sh']:
                  filepath = os.path.join(self.build_exe, filename)
                  st = os.stat(filepath)
                  os.chmod(filepath, st.st_mode | stat.S_IEXEC)
