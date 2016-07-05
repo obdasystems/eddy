@@ -33,9 +33,9 @@
 
 
 from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPen
-from PyQt5.QtGui import QColor, QPainterPath, QBrush
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPainterPath
 
+from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -57,8 +57,8 @@ class AttributeNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.brush = brush or QBrush(QColor(252, 252, 252))
-        self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
+        self.brush = brush or Brush.White255A
+        self.pen = Pen.SolidBlack1_1Pt
         self.polygon = self.createPolygon(20, 20)
         self.background = self.createBackground(28, 28)
         self.selection = self.createBackground(28, 28)
@@ -164,24 +164,26 @@ class AttributeNode(AbstractNode):
         return self.polygon.height()
 
     @classmethod
-    def icon(cls, **kwargs):
+    def icon(cls, width, height, **kwargs):
         """
         Returns an image suitable for the palette.
+        :type width: int
+        :type height: int
         :rtype: QPixmap
         """
         # INITIALIZATION
-        pixmap = QPixmap(kwargs['w'], kwargs['h'])
+        pixmap = QPixmap(width, height)
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
         # TEXT
         painter.setFont(Font('Arial', 9, Font.Light))
         painter.translate(0, 0)
-        painter.drawText(QRectF(0, 0, kwargs['w'], kwargs['h'] / 2), Qt.AlignCenter, 'attribute')
+        painter.drawText(QRectF(0, 0, width, height / 2), Qt.AlignCenter, 'attribute')
         # ITEM SHAPE
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine))
-        painter.setBrush(QColor(252, 252, 252))
-        painter.translate(kwargs['w'] / 2, kwargs['h'] / 2 + 6)
+        painter.setPen(Pen.SolidBlack1_1Pt)
+        painter.setBrush(Brush.White255A)
+        painter.translate(width / 2, height / 2 + 6)
         painter.drawEllipse(cls.createPolygon(18, 18))
         return pixmap
 
@@ -206,8 +208,8 @@ class AttributeNode(AbstractNode):
             painter.drawText(QRectF(0, 0, width, height / 2), Qt.AlignCenter, 'attribute')
             # PAINT THE SHAPE
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine))
-            painter.setBrush(QColor(252, 252, 252))
+            painter.setPen(Pen.SolidBlack1_1Pt)
+            painter.setBrush(Brush.White255A)
             painter.translate(width / 2, height / 2 + 6)
             painter.drawEllipse(cls.createPolygon(18, 18))
             painter.end()

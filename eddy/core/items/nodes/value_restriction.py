@@ -34,9 +34,10 @@
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
-from PyQt5.QtGui import QPixmap, QBrush, QIcon, QColor, QPen
+from PyQt5.QtGui import QPixmap, QIcon
 
 from eddy.core.datatypes.graphol import Identity, Item
+from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.owl import Datatype, Facet
 from eddy.core.functions.misc import cutL, cutR, first
 from eddy.core.items.nodes.common.base import AbstractNode
@@ -69,8 +70,8 @@ class ValueRestrictionNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.brush = brush or QBrush(QColor(252, 252, 252))
-        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
+        self.brush = brush or Brush.White255A
+        self.pen = Pen.SolidBlack1Pt
         self.polygon = self.createPolygon(self.MinWidth, self.MinHeight)
         self.fold = self.createFold(self.polygon, self.IndexTR, self.IndexRT)
         self.background = self.createBackground(self.MinWidth + 8, self.MinHeight + 8)
@@ -261,8 +262,8 @@ class ValueRestrictionNode(AbstractNode):
             QPointF(polygonA[cls.IndexTR].x(), polygonA[cls.IndexTR].y()),
         ])
         painter = QPainter(pixmap1)
-        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-        painter.setBrush(QColor(252, 252, 252))
+        painter.setPen(Pen.SolidBlack1Pt)
+        painter.setBrush(Brush.White255A)
         painter.translate(width / 2, height / 2)
         painter.drawPolygon(polygonA)
         painter.drawPolygon(polygonB)
@@ -288,8 +289,8 @@ class ValueRestrictionNode(AbstractNode):
             QPointF(polygonA[cls.IndexTR].x(), polygonA[cls.IndexTR].y()),
         ])
         painter = QPainter(pixmap2)
-        painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-        painter.setBrush(QColor(252, 252, 252))
+        painter.setPen(Pen.SolidBlack1Pt)
+        painter.setBrush(Brush.White255A)
         painter.translate(width, height)
         painter.drawPolygon(polygonA)
         painter.drawPolygon(polygonB)

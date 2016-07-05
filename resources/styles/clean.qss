@@ -33,14 +33,14 @@
 /**************************************************************************/
 /*                           WORKSPACE DIALOG                             */
 /**************************************************************************/
-WorkspaceDialog QWidget.head {
+WorkspaceDialog QWidget[class=head] {
 background: #FFFFFF;
 border-bottom: 1px solid #BABABA;
 }
 /**************************************************************************/
 /*                            WELCOME PANEL                               */
 /**************************************************************************/
-Welcome QWidget.outer-left {
+Welcome QWidget[class=outer-left] {
 background: #FFFFFF;
 border-right: 1px solid #BABABA;
 }
@@ -49,19 +49,19 @@ background: #FFFFFF;
 border-right: 1px solid #BABABA;
 }
 Welcome ProjectBlock:hover {
-background: #4FACF3;
+background: #42A5F5;
 border-right: 1px solid #BABABA;
 }
-Welcome ProjectBlock QLabel.name {
+Welcome ProjectBlock QLabel[class=name] {
 color: #000000;
 }
-Welcome ProjectBlock QLabel.path {
+Welcome ProjectBlock QLabel[class=path] {
 color: #555453;
 }
-Welcome QLabel.appname {
+Welcome QLabel[class=appname] {
 color: #000000;
 }
-Welcome QLabel.version {
+Welcome QLabel[class=version] {
 color: #3E3D3C;
 }
 Welcome PHCQPushButton {
@@ -83,7 +83,7 @@ margin: 0;
 padding: 5px;
 }
 Welcome QMenu::item:selected {
-background: #4FACF3;
+background: #42A5F5;
 color: #000000;
 }
 /**************************************************************************/
@@ -189,7 +189,7 @@ QDockWidget Palette {
 background: #F0F0F0;
 }
 QDockWidget Palette QToolButton:checked {
-background: #4facf3;
+background: #42A5F5;
 }
 /**************************************************************************/
 /*                              INFO WIDGET                               */
@@ -212,7 +212,7 @@ Info Integer,
 Info String,
 Info Select,
 Info Parent {
-background: #dfedfb;
+background: #E3F2FD;
 border-bottom: 1px solid #BABABA;
 border-left: 1px solid #BABABA;
 padding-left: 4px;
@@ -469,7 +469,7 @@ background: transparent;
 color: #C0C0C0;
 }
 QMenu::item:selected {
-background: #4FACF3;
+background: #42A5F5;
 color: #000000;
 }
 QMenu::separator {
@@ -523,7 +523,7 @@ QTreeView::item:hover {
 border: 0;
 }
 QTreeView::item:selected {
-background: #4FACF3;
+background: #42A5F5;
 color: #000000;
 }
 QTreeView::item:!selected {
@@ -531,7 +531,7 @@ background: #FFFFFF;
 color: #000000;
 }
 QTreeView::branch:selected {
-background: #4FACF3;
+background: #42A5F5;
 }
 QTreeView::branch:!selected {
 background: #FFFFFF;
@@ -576,6 +576,6 @@ font-weight: normal;
 /**************************************************************************/
 /*                            ERROR CAPTION                               */
 /**************************************************************************/
-QLabel.invalid {
+QLabel[class=invalid] {
 color: #EC3F3A;
 }

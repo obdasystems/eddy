@@ -33,8 +33,9 @@
 
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPen, QColor, QBrush
+from PyQt5.QtGui import QIcon, QPixmap, QPainter
 
+from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.items.nodes.common.operator import OperatorNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -54,7 +55,7 @@ class ComplementNode(OperatorNode):
         :type brush: QBrush
         """
         self._identity = Identity.Neutral
-        super().__init__(brush=QBrush(QColor(252, 252, 252)), **kwargs)
+        super().__init__(brush=Brush.White255A, **kwargs)
         self.label = NodeLabel(template='not',
                                editable=False,
                                movable=False,
@@ -117,8 +118,8 @@ class ComplementNode(OperatorNode):
             polygon = cls.createPolygon(46, 30)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-            painter.setBrush(QColor(252, 252, 252))
+            painter.setPen(Pen.SolidBlack1Pt)
+            painter.setBrush(Brush.White255A)
             painter.translate(width / 2, height / 2)
             painter.drawPolygon(polygon)
             # PAINT THE TEXT INSIDE THE SHAPE

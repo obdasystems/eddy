@@ -34,10 +34,10 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QPainter, QBrush, QColor
-from PyQt5.QtGui import QPainterPath, QPolygonF, QPen
+from PyQt5.QtCore import QPointF
+from PyQt5.QtGui import QPainter, QPainterPath, QPolygonF
 
+from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.items.nodes.common.base import AbstractNode
 
 
@@ -63,8 +63,8 @@ class OperatorNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.brush = brush or QBrush(QColor(252, 252, 252))
-        self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
+        self.brush = brush or Brush.White255A
+        self.pen = Pen.SolidBlack1_1Pt
         self.polygon = self.createPolygon(50, 30)
         self.background = self.createBackground(58, 38)
         self.selection = self.createSelection(58, 38)

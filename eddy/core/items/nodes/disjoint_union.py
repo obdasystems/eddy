@@ -33,8 +33,9 @@
 
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPen, QColor, QBrush
+from PyQt5.QtGui import QIcon, QPixmap, QPainter
 
+from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.operator import OperatorNode
 
@@ -52,7 +53,7 @@ class DisjointUnionNode(OperatorNode):
         :type brush: QBrush
         """
         self._identity = Identity.Neutral
-        super().__init__(brush=QBrush(QColor(0, 0, 0)), **kwargs)
+        super().__init__(brush=Brush.Black255A, **kwargs)
 
     #############################################
     #   PROPERTIES
@@ -108,8 +109,8 @@ class DisjointUnionNode(OperatorNode):
             polygon = cls.createPolygon(46, 30)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-            painter.setBrush(QColor(0, 0, 0))
+            painter.setPen(Pen.SolidBlack1Pt)
+            painter.setBrush(Brush.Black255A)
             painter.translate(width / 2, height / 2)
             painter.drawPolygon(polygon)
             painter.end()

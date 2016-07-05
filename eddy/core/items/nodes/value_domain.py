@@ -33,10 +33,10 @@
 
 
 from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
-from PyQt5.QtGui import QPainterPath, QBrush, QIcon
+from PyQt5.QtGui import QPixmap, QPainter, QPainterPath, QIcon
 
 from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.owl import Datatype
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -60,8 +60,8 @@ class ValueDomainNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.brush = brush or QBrush(QColor(252, 252, 252))
-        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
+        self.brush = brush or Brush.White255A
+        self.pen = Pen.SolidBlack1Pt
         self.polygon = self.createPolygon(self.MinWidth, self.MinHeight)
         self.background = self.createBackground(self.MinWidth + 8, self.MinHeight + 8)
         self.selection = self.createSelection(self.MinWidth + 8, self.MinHeight + 8)
@@ -169,8 +169,8 @@ class ValueDomainNode(AbstractNode):
             polygon = cls.createPolygon(54, 34)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin))
-            painter.setBrush(QColor(252, 252, 252))
+            painter.setPen(Pen.SolidBlack1Pt)
+            painter.setBrush(Brush.White255A)
             painter.translate(width / 2, height / 2)
             painter.drawRoundedRect(polygon, 6, 6)
             # PAINT THE TEXT INSIDE THE SHAPE

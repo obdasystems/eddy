@@ -34,8 +34,8 @@
 
 from PyQt5.QtCore import QRectF, QPointF, Qt
 from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QIcon
-from PyQt5.QtGui import QColor, QPen, QBrush
 
+from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.functions.misc import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
@@ -65,8 +65,8 @@ class ConceptNode(AbstractResizableNode):
         h = max(height, self.MinHeight)
         s = self.HandleSize
 
-        self.brush = brush or QBrush(QColor(252, 252, 252))
-        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
+        self.brush = brush or Brush.White255A
+        self.pen = Pen.SolidBlack1Pt
         self.polygon = self.createPolygon(w, h)
         self.background = self.createBackground(w + s, h + s)
         self.selection = self.createSelection(w + s, h + s)
@@ -171,8 +171,8 @@ class ConceptNode(AbstractResizableNode):
             # PAINT THE SHAPE
             polygon = cls.createPolygon(54, 34)
             painter = QPainter(pixmap)
-            painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-            painter.setBrush(QColor(252, 252, 252))
+            painter.setPen(Pen.SolidBlack1Pt)
+            painter.setBrush(Brush.White255A)
             painter.translate(width / 2, height / 2)
             painter.drawRect(polygon)
             # PAINT THE TEXT INSIDE THE SHAPE
@@ -209,7 +209,7 @@ class ConceptNode(AbstractResizableNode):
         for i in range(self.HandleNum):
             painter.setBrush(self.handleBrush[i])
             painter.setPen(self.handlePen[i])
-            painter.drawEllipse(self.handleBound[i])
+            painter.drawEllipse(self.handleShape[i])
 
     def painterPath(self):
         """
@@ -430,7 +430,7 @@ class ConceptNode(AbstractResizableNode):
         """
         path = QPainterPath()
         path.addRect(self.polygon)
-        for shape in self.handleBound:
+        for shape in self.handleShape:
             path.addEllipse(shape)
         return path
 

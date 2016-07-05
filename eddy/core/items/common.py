@@ -35,10 +35,11 @@
 from abc import ABCMeta, abstractmethod
 
 from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QBrush, QPen, QTextBlockFormat, QTextCursor
+from PyQt5.QtGui import QTextBlockFormat, QTextCursor
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem
 
 from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.misc import Brush, Pen
 
 
 class AbstractItem(QGraphicsItem):
@@ -58,10 +59,10 @@ class AbstractItem(QGraphicsItem):
         """
         super().__init__(**kwargs)
         self.id = id or diagram.guid.next(self.Prefix)
-        self.selectionBrush = QBrush(Qt.NoBrush)
-        self.selectionPen = QPen(Qt.NoPen)
-        self.brush = QBrush(Qt.NoBrush)
-        self.pen = QPen(Qt.NoPen)
+        self.selectionBrush = Brush.NoBrush
+        self.selectionPen = Pen.NoPen
+        self.brush = Brush.NoBrush
+        self.pen = Pen.NoPen
 
     #############################################
     #   PROPERTIES

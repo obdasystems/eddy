@@ -33,8 +33,9 @@
 
 
 from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QBrush, QIcon
+from PyQt5.QtGui import QPixmap, QPainter, QIcon
 
+from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
 from eddy.core.items.nodes.common.restriction import RestrictionNode
 from eddy.core.qt import Font
@@ -53,7 +54,7 @@ class RangeRestrictionNode(RestrictionNode):
         :type brush: QBrush
         """
         self._identity = Identity.Neutral
-        super().__init__(brush=QBrush(QColor(0, 0, 0)), **kwargs)
+        super().__init__(brush=Brush.Black255A, **kwargs)
 
     #############################################
     #   PROPERTIES
@@ -119,8 +120,8 @@ class RangeRestrictionNode(RestrictionNode):
             painter.translate(0, 0)
             painter.drawText(QRectF(0, 0, width, height / 2), Qt.AlignCenter, 'restriction')
             # PAINT THE SHAPE
-            painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-            painter.setBrush(QColor(0, 0, 0))
+            painter.setPen(Pen.SolidBlack1Pt)
+            painter.setBrush(Brush.Black255A)
             painter.translate(width / 2, height / 2)
             painter.drawRect(QRectF(-18 / 2, -18 / 2 + 6, 18, 18))
             painter.end()

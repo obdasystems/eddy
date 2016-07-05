@@ -34,9 +34,10 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import QRectF, Qt, QPointF
-from PyQt5.QtGui import QColor, QPainterPath, QPen, QBrush
+from PyQt5.QtCore import QRectF, QPointF
+from PyQt5.QtGui import QPainterPath
 
+from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Restriction
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -57,8 +58,8 @@ class RestrictionNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.brush = brush or QBrush(QColor(252, 252, 252))
-        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
+        self.brush = brush or Brush.White255A
+        self.pen = Pen.SolidBlack1Pt
         self.polygon = self.createPolygon(20, 20)
         self.background = self.createBackground(28, 28)
         self.selection = self.createSelection(28, 28)

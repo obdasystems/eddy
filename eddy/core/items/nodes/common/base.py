@@ -35,12 +35,11 @@
 from abc import ABCMeta, abstractmethod
 
 from PyQt5.QtCore import QPointF, QLineF, Qt, QRectF
-from PyQt5.QtGui import QColor, QPen, QBrush, QPolygonF
-from PyQt5.QtWidgets import QGraphicsItem
+from PyQt5.QtGui import QPolygonF
 
 from eddy.core.commands.nodes import CommandNodeRezize
 from eddy.core.datatypes.graphol import Item
-from eddy.core.datatypes.misc import DiagramMode
+from eddy.core.datatypes.misc import Brush, DiagramMode, Pen
 from eddy.core.items.common import AbstractItem
 
 
@@ -62,8 +61,8 @@ class AbstractNode(AbstractItem):
         self.anchors = dict()
         self.edges = set()
 
-        self.backgroundBrush = QBrush(Qt.NoBrush)
-        self.backgroundPen = QPen(Qt.NoPen)
+        self.backgroundBrush = Brush.NoBrush
+        self.backgroundPen = Pen.NoPen
         self.background = None
         self.selection = None
         self.polygon = None
@@ -312,29 +311,22 @@ class AbstractNode(AbstractItem):
         :type selected: bool
         :type valid: bool
         """
-        brush0 = QBrush(Qt.NoBrush)
-        brush1 = QBrush(QColor(43, 173, 63, 160))
-        brush2 = QBrush(QColor(179, 12, 12, 160))
-
-        pen0 = QPen(Qt.NoPen)
-        pen1 = QPen(QColor(0, 0, 0), 1.0, Qt.DashLine)
-
-        backgroundBrush = brush0
-        selectionPen = pen0
+        brush = Brush.NoBrush
+        pen = Pen.NoPen
 
         # ITEM SELECTION
         if selected:
-            selectionPen = pen1
-        self.selectionPen = selectionPen
+            pen = Pen.DashedBlack1Pt
+        self.selectionPen = pen
 
         # SYNTAX VALIDATION
         if valid is not None:
-            backgroundBrush = brush1 if valid else brush2
-        self.backgroundBrush = backgroundBrush
+            brush = Brush.Green160A if valid else Brush.Red160A
+        self.backgroundBrush = brush
 
         # FORCE CACHE REGENERATION
-        self.setCacheMode(QGraphicsItem.NoCache)
-        self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+        self.setCacheMode(AbstractItem.NoCache)
+        self.setCacheMode(AbstractItem.DeviceCoordinateCache)
 
         # SCHEDULE REPAINT
         self.update(self.boundingRect())
@@ -488,9 +480,9 @@ class AbstractResizableNode(AbstractNode):
         """
         super().__init__(**kwargs)
 
-        self.handleBound = [QRectF()] * self.HandleNum
-        self.handleBrush = [QBrush(Qt.NoBrush)] * self.HandleNum
-        self.handlePen = [QPen(Qt.NoPen)] * self.HandleNum
+        self.handleBrush = [Brush.NoBrush] * self.HandleNum
+        self.handlePen = [Pen.NoPen] * self.HandleNum
+        self.handleShape = [QRectF()] * self.HandleNum
 
         self.mousePressBackground = None
         self.mousePressSelection = None
@@ -545,8 +537,8 @@ class AbstractResizableNode(AbstractNode):
         """
         size = QPointF(3, 3)
         area = QRectF(point - size, point + size)
-        for i in range(len(self.handleBound)):
-            if self.handleBound[i].intersects(area):
+        for i in range(len(self.handleShape)):
+            if self.handleShape[i].intersects(area):
                 return i
         return None
 
@@ -559,46 +551,37 @@ class AbstractResizableNode(AbstractNode):
         """
         num = self.HandleNum
 
-        brush0 = QBrush(Qt.NoBrush)
-        brush1 = QBrush(QColor(43, 173, 63, 160))
-        brush2 = QBrush(QColor(179, 12, 12, 160))
-        brush3 = QBrush(QColor(0, 200, 255, 255))
-
-        pen0 = QPen(Qt.NoPen)
-        pen1 = QPen(QColor(0, 0, 0, 255), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-        pen2 = QPen(QColor(0, 0, 0), 1.0, Qt.DashLine)
-
-        backgroundBrush = brush0
-        handleBrush = [brush0] * num
-        handlePen = [pen0] * num
-        selectionPen = pen0
+        bBrush = Brush.NoBrush
+        hBrush = [Brush.NoBrush] * num
+        hPen = [Pen.NoPen] * num
+        sPen = Pen.NoPen
 
         # ITEM SELECTION & RESIZE HANDLES
         if selected:
             if handle is None:
-                handleBrush = [brush3] * num
-                handlePen = [pen1] * num
-                selectionPen = pen2
+                hBrush = [Brush.Blue255A] * num
+                hPen = [Pen.SolidBlack1Pt] * num
+                sPen = Pen.DashedBlack1Pt
             else:
                 for i in range(num):
                     if i == handle:
-                        handleBrush[i] = brush3
-                        handlePen[i] = pen1
+                        hBrush[i] = Brush.Blue255A
+                        hPen[i] = Pen.SolidBlack1Pt
 
         for i in range(num):
-            self.handleBrush[i] = handleBrush[i]
-            self.handlePen[i] = handlePen[i]
+            self.handleBrush[i] = hBrush[i]
+            self.handlePen[i] = hPen[i]
 
-        self.selectionPen = selectionPen
+        self.selectionPen = sPen
 
         # SYNTAX VALIDATION
         if valid is not None:
-            backgroundBrush = brush1 if valid else brush2
-        self.backgroundBrush = backgroundBrush
+            bBrush = Brush.Green160A if valid else Brush.Red160A
+        self.backgroundBrush = bBrush
 
         # FORCE CACHE REGENERATION
-        self.setCacheMode(QGraphicsItem.NoCache)
-        self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+        self.setCacheMode(AbstractItem.NoCache)
+        self.setCacheMode(AbstractItem.DeviceCoordinateCache)
 
         # SCHEDULE REPAINT
         self.update(self.boundingRect())
@@ -631,14 +614,14 @@ class AbstractResizableNode(AbstractNode):
         """
         s = self.HandleSize
         b = self.boundingRect()
-        self.handleBound[self.HandleTL] = QRectF(b.left(), b.top(), s, s)
-        self.handleBound[self.HandleTM] = QRectF(b.center().x() - s / 2, b.top(), s, s)
-        self.handleBound[self.HandleTR] = QRectF(b.right() - s, b.top(), s, s)
-        self.handleBound[self.HandleML] = QRectF(b.left(), b.center().y() - s / 2, s, s)
-        self.handleBound[self.HandleMR] = QRectF(b.right() - s, b.center().y() - s / 2, s, s)
-        self.handleBound[self.HandleBL] = QRectF(b.left(), b.bottom() - s, s, s)
-        self.handleBound[self.HandleBM] = QRectF(b.center().x() - s / 2, b.bottom() - s, s, s)
-        self.handleBound[self.HandleBR] = QRectF(b.right() - s, b.bottom() - s, s, s)
+        self.handleShape[self.HandleTL] = QRectF(b.left(), b.top(), s, s)
+        self.handleShape[self.HandleTM] = QRectF(b.center().x() - s / 2, b.top(), s, s)
+        self.handleShape[self.HandleTR] = QRectF(b.right() - s, b.top(), s, s)
+        self.handleShape[self.HandleML] = QRectF(b.left(), b.center().y() - s / 2, s, s)
+        self.handleShape[self.HandleMR] = QRectF(b.right() - s, b.center().y() - s / 2, s, s)
+        self.handleShape[self.HandleBL] = QRectF(b.left(), b.bottom() - s, s, s)
+        self.handleShape[self.HandleBM] = QRectF(b.center().x() - s / 2, b.bottom() - s, s, s)
+        self.handleShape[self.HandleBR] = QRectF(b.right() - s, b.bottom() - s, s, s)
 
     #############################################
     #   EVENTS

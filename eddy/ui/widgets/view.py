@@ -37,7 +37,7 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QPainterPath
 from PyQt5.QtWidgets import QGraphicsView, QApplication, QRubberBand
 
-from eddy.core.datatypes.misc import DiagramMode
+from eddy.core.datatypes.misc import DiagramMode, Pen
 from eddy.core.diagram import Diagram
 from eddy.core.functions.geometry import midpoint
 from eddy.core.functions.misc import clamp, rangeF, snapF
@@ -336,7 +336,7 @@ class DiagramView(QGraphicsView):
             x = int(rect.left()) - (int(rect.left()) % s)
             y = int(rect.top()) - (int(rect.top()) % s)
             points = (QPointF(i, j) for i in rangeF(x, rect.right(), s) for j in rangeF(y, rect.bottom(), s))
-            painter.setPen(Diagram.GridPen)
+            painter.setPen(Pen.SolidGrey0Pt)
             painter.drawPoints(*points)
 
     def moveBy(self, *__args):

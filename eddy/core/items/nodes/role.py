@@ -34,9 +34,9 @@
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPixmap, QPainter, QIcon
-from PyQt5.QtGui import QPen, QColor, QBrush
 
 from eddy.core.datatypes.graphol import Item, Special, Identity
+from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.functions.misc import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -69,8 +69,8 @@ class RoleNode(AbstractResizableNode):
         w = max(width, self.MinWidth)
         h = max(height, self.MinHeight)
         s = self.HandleSize
-        self.brush = brush or QBrush(QColor(252, 252, 252))
-        self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
+        self.brush = brush or Brush.White255A
+        self.pen = Pen.SolidBlack1_1Pt
         self.polygon = self.createPolygon(w, h)
         self.background = self.createBackground(w + s, h + s)
         self.selection = self.createSelection(w + s, h + s)
@@ -321,8 +321,8 @@ class RoleNode(AbstractResizableNode):
             polygon = cls.createPolygon(46, 34)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine))
-            painter.setBrush(QColor(252, 252, 252))
+            painter.setPen(Pen.SolidBlack1_1Pt)
+            painter.setBrush(Brush.White255A)
             painter.translate(width / 2, height / 2)
             painter.drawPolygon(polygon)
             # PAINT THE TEXT INSIDE THE SHAPE
@@ -360,7 +360,7 @@ class RoleNode(AbstractResizableNode):
         for i in range(self.HandleNum):
             painter.setBrush(self.handleBrush[i])
             painter.setPen(self.handlePen[i])
-            painter.drawEllipse(self.handleBound[i])
+            painter.drawEllipse(self.handleShape[i])
 
     def resize(self, mousePos):
         """
@@ -657,7 +657,7 @@ class RoleNode(AbstractResizableNode):
         """
         path = QPainterPath()
         path.addPolygon(self.polygon)
-        for shape in self.handleBound:
+        for shape in self.handleShape:
             path.addEllipse(shape)
         return path
 

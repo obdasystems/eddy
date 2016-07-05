@@ -36,7 +36,6 @@ import os
 import sys
 
 from PyQt5.QtCore import Qt, QPointF, QRectF, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QColor, QPen
 from PyQt5.QtWidgets import QGraphicsScene
 
 from eddy.core.commands.edges import CommandEdgeAdd
@@ -56,7 +55,6 @@ class Diagram(QGraphicsScene):
     """
     This class implements a graphol diagram.
     """
-    GridPen = QPen(QColor(80, 80, 80), 0, Qt.SolidLine)
     GridSize = 20
     MinSize = 2000
     MaxSize = 1000000

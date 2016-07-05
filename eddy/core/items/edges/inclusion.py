@@ -35,10 +35,11 @@
 from math import sin, cos, radians, pi as M_PI
 
 from PyQt5.QtCore import QPointF, QLineF, Qt
-from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor
+from PyQt5.QtGui import QPainter, QPolygonF
 from PyQt5.QtGui import QPixmap, QPainterPath, QIcon
 
 from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.items.edges.common.base import AbstractEdge
 
 
@@ -147,10 +148,10 @@ class InclusionEdge(AbstractEdge):
             # DRAW THE EDGE
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+            painter.setPen(Pen.SolidBlack1_1Pt)
             painter.drawLine(l1)
-            painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-            painter.setBrush(QColor(0, 0, 0))
+            painter.setPen(Pen.SolidBlack1_1Pt)
+            painter.setBrush(Brush.Black255A)
             painter.drawPolygon(h1)
             painter.end()
             # ADD THE PIXMAP TO THE ICON

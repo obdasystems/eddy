@@ -34,8 +34,9 @@
 
 from PyQt5.QtCore import QPointF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
-from PyQt5.QtGui import QPen, QColor, QPixmap, QBrush, QIcon
+from PyQt5.QtGui import QPixmap, QIcon
 
+from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.owl import Facet
 from eddy.core.functions.misc import cutL, first
@@ -70,9 +71,9 @@ class FacetNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.brushA = QBrush(QColor(222, 222, 222))
-        self.brushB = QBrush(QColor(252, 252, 252))
-        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
+        self.brushA = Brush.Grey255A
+        self.brushB = Brush.White255A
+        self.pen = Pen.SolidBlack1Pt
         self.polygon = self.createPolygon(self.MinWidth, self.MinHeight)
         self.polygonA = self.createPolygonA(self.MinWidth, self.MinHeight)
         self.polygonB = self.createPolygonB(self.MinWidth, self.MinHeight)
@@ -298,12 +299,12 @@ class FacetNode(AbstractNode):
             ])
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-            painter.setBrush(QColor(252, 252, 252))
+            painter.setPen(Pen.SolidBlack1Pt)
+            painter.setBrush(Brush.White255A)
             painter.translate(width / 2, height / 2)
-            painter.setBrush(QColor(222, 222, 222))
+            painter.setBrush(Brush.Grey255A)
             painter.drawPolygon(polygonA)
-            painter.setBrush(QBrush(QColor(252, 252, 252)))
+            painter.setBrush(Brush.White255A)
             painter.drawPolygon(polygonB)
             # PAINT THE TEXT INSIDE THE SHAPES
             painter.setFont(Font('Arial', 9, Font.Light))

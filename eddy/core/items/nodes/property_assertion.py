@@ -33,9 +33,9 @@
 
 
 from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
-from PyQt5.QtGui import QPainterPath, QBrush, QIcon
+from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QIcon
 
+from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.base import AbstractNode
@@ -58,8 +58,8 @@ class PropertyAssertionNode(AbstractNode):
         """
         self._identity = Identity.Neutral
         super().__init__(**kwargs)
-        self.brush = QBrush(QColor(252, 252, 252))
-        self.pen = QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine)
+        self.brush = Brush.White255A
+        self.pen = Pen.SolidBlack1Pt
         self.inputs = inputs or DistinctList()
         self.polygon = self.createPolygon(52, 30)
         self.background = self.createBackground(60, 38)
@@ -163,8 +163,8 @@ class PropertyAssertionNode(AbstractNode):
             polygon = cls.createPolygon(46, 30)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin))
-            painter.setBrush(QColor(252, 252, 252))
+            painter.setPen(Pen.SolidBlack1Pt)
+            painter.setBrush(Brush.White255A)
             painter.translate(width / 2, height / 2)
             painter.drawRoundedRect(polygon, 14, 14)
             painter.end()

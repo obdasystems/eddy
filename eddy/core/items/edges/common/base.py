@@ -37,13 +37,12 @@ from itertools import permutations
 from math import sin, cos, radians
 
 from PyQt5.QtCore import Qt, QPointF, QLineF, QRectF
-from PyQt5.QtGui import QPen, QPolygonF, QPainterPath, QBrush, QColor
-from PyQt5.QtWidgets import QGraphicsItem
+from PyQt5.QtGui import QPolygonF, QPainterPath
 
 from eddy.core.commands.edges import CommandEdgeAnchorMove
 from eddy.core.commands.edges import CommandEdgeBreakpointAdd
 from eddy.core.commands.edges import CommandEdgeBreakpointMove
-from eddy.core.datatypes.misc import DiagramMode
+from eddy.core.datatypes.misc import Brush, DiagramMode, Pen
 from eddy.core.functions.geometry import distance, projection
 from eddy.core.functions.misc import snap
 from eddy.core.items.common import AbstractItem
@@ -54,13 +53,6 @@ class AbstractEdge(AbstractItem):
     Base class for all the diagram edges.
     """
     __metaclass__ = ABCMeta
-
-    HeadBrushPattern = QBrush(QColor(0, 0, 0))
-    HeadPenPattern = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-    HandleBrushPattern = QBrush(QColor(79, 172, 243, 255))
-    HandlePenPattern = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-    PenPattern = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-    SelectionBrushPattern = QBrush(QColor(187, 222, 251))
 
     HandleSize = 8
     HeadSize = 12
@@ -79,12 +71,12 @@ class AbstractEdge(AbstractItem):
         self.source = source
         self.target = target
 
-        self.handleBrush = QBrush(Qt.NoBrush)
-        self.handlePen = QPen(Qt.NoPen)
-        self.headBrush = QBrush(Qt.NoBrush)
-        self.headPen = QPen(Qt.NoPen)
-        self.selectionBrush = QBrush(Qt.NoBrush)
-        self.selectionPen = QPen(Qt.NoPen)
+        self.handleBrush = Brush.NoBrush
+        self.handlePen = Pen.NoPen
+        self.headBrush = Brush.NoBrush
+        self.headPen = Pen.NoPen
+        self.selectionBrush = Brush.NoBrush
+        self.selectionPen = Pen.NoPen
 
         self.anchors = {}
         self.breakpoints = breakpoints or []
@@ -101,8 +93,8 @@ class AbstractEdge(AbstractItem):
         self.mousePressPos = None
 
         self.setAcceptHoverEvents(True)
-        self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
-        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        self.setCacheMode(AbstractItem.DeviceCoordinateCache)
+        self.setFlag(AbstractItem.ItemIsSelectable, True)
 
     #############################################
     #   INTERFACE
@@ -322,36 +314,33 @@ class AbstractEdge(AbstractItem):
         :type breakpoint: int
         :type anchor: AbstractNode
         """
-        noBrush = QBrush(Qt.NoBrush)
-        noPen = QPen(Qt.NoPen)
-
-        headBrush = noBrush
-        headPen = noPen
-        handleBrush = noBrush
-        handlePen = noPen
-        selectionBrush = noBrush
-        pen = noPen
+        headBrush = Brush.NoBrush
+        headPen = Pen.NoPen
+        handleBrush = Brush.NoBrush
+        handlePen = Pen.NoPen
+        selectionBrush = Brush.NoBrush
+        pen = Pen.NoPen
 
         if visible:
-            headBrush = self.HeadBrushPattern
-            headPen = self.HeadPenPattern
-            pen = self.PenPattern
+            headBrush = Brush.Black255A
+            headPen = Pen.SolidBlack1_1Pt
+            pen = Pen.SolidBlack1_1Pt
             if selected:
-                handleBrush = self.HandleBrushPattern
-                handlePen = self.HandlePenPattern
+                handleBrush = Brush.Blue255A
+                handlePen = Pen.SolidBlack1_1Pt
                 if breakpoint is None and anchor is None:
-                    selectionBrush = self.SelectionBrushPattern
+                    selectionBrush = Brush.Yellow255A
 
+        self.selectionBrush = selectionBrush
         self.headBrush = headBrush
         self.headPen = headPen
         self.handleBrush = handleBrush
         self.handlePen = handlePen
         self.pen = pen
-        self.selectionBrush = selectionBrush
 
         # FORCE CACHE REGENERATION
-        self.setCacheMode(QGraphicsItem.NoCache)
-        self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+        self.setCacheMode(AbstractItem.NoCache)
+        self.setCacheMode(AbstractItem.DeviceCoordinateCache)
 
         # SCHEDULE REPAINT
         self.update(self.boundingRect())

@@ -33,11 +33,11 @@
 
 
 from PyQt5.QtCore import Qt, QPointF, pyqtSlot
-from PyQt5.QtGui import QColor, QPainterPath
+from PyQt5.QtGui import QPainterPath
 
 from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.commands.nodes import CommandNodeLabelMove
-from eddy.core.datatypes.misc import DiagramMode
+from eddy.core.datatypes.misc import Brush, DiagramMode
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractLabel
@@ -75,7 +75,7 @@ class NodeLabel(AbstractLabel):
         """
         Initialize the label UI.
         """
-        self.setDefaultTextColor(QColor(0, 0, 0, 255))
+        self.setDefaultTextColor(Brush.Black255A.color())
         self.setFlag(AbstractLabel.ItemIsMovable, self.movable)
         self.setFlag(AbstractLabel.ItemIsFocusable, self.editable)
         self.setFont(Font('Arial', 12, Font.Light))

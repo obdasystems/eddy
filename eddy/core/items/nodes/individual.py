@@ -36,9 +36,10 @@ import math
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
-from PyQt5.QtGui import QPen, QColor, QPixmap, QBrush, QIcon
+from PyQt5.QtGui import QPixmap, QIcon
 
 from eddy.core.datatypes.graphol import Identity, Item
+from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.owl import Datatype
 from eddy.core.functions.misc import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
@@ -77,8 +78,8 @@ class IndividualNode(AbstractResizableNode):
         w = max(width, self.MinWidth)
         h = max(height, self.MinHeight)
         s = self.HandleSize
-        self.brush = brush or QBrush(QColor(252, 252, 252))
-        self.pen = QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine)
+        self.brush = brush or Brush.White255A
+        self.pen = Pen.SolidBlack1_1Pt
         self.polygon = self.createPolygon(w, h)
         self.background = self.createBackground(w + s, h + s)
         self.selection = self.createSelection(w + s, h + s)
@@ -223,8 +224,8 @@ class IndividualNode(AbstractResizableNode):
             polygon = cls.createPolygon(40, 40)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(QPen(QColor(0, 0, 0), 1.0, Qt.SolidLine))
-            painter.setBrush(QColor(252, 252, 252))
+            painter.setPen(Pen.SolidBlack1Pt)
+            painter.setBrush(Brush.White255A)
             painter.translate(width / 2, height / 2)
             painter.drawPolygon(polygon)
             # PAINT THE TEXT INSIDE THE SHAPE
@@ -262,7 +263,7 @@ class IndividualNode(AbstractResizableNode):
         for i in range(self.HandleNum):
             painter.setBrush(self.handleBrush[i])
             painter.setPen(self.handlePen[i])
-            painter.drawEllipse(self.handleBound[i])
+            painter.drawEllipse(self.handleShape[i])
 
     def resize(self, mousePos):
         """
@@ -645,7 +646,7 @@ class IndividualNode(AbstractResizableNode):
         """
         path = QPainterPath()
         path.addPolygon(self.polygon)
-        for shape in self.handleBound:
+        for shape in self.handleShape:
             path.addEllipse(shape)
         return path
 

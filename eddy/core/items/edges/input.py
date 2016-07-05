@@ -35,10 +35,11 @@
 from math import sin, cos, radians, pi as M_PI
 
 from PyQt5.QtCore import QPointF, QLineF, Qt
-from PyQt5.QtGui import QPainter, QPen, QPolygonF, QColor
-from PyQt5.QtGui import QPixmap, QPainterPath, QBrush, QIcon
+from PyQt5.QtGui import QPainter, QPolygonF
+from PyQt5.QtGui import QPixmap, QPainterPath, QIcon
 
 from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.items.edges.common.base import AbstractEdge
 from eddy.core.items.edges.common.label import EdgeLabel
 
@@ -47,10 +48,6 @@ class InputEdge(AbstractEdge):
     """
     This class implements the 'Input' edge.
     """
-    HeadBrushPattern = QBrush(QColor(252, 252, 252))
-    PenPattern = QPen(QColor(0, 0, 0), 1.1, Qt.CustomDashLine, Qt.RoundCap, Qt.RoundJoin)
-    PenPattern.setDashPattern([5, 5])
-
     HeadSize = 10
     Type = Item.InputEdge
 
@@ -134,15 +131,13 @@ class InputEdge(AbstractEdge):
             p3 = p2 - QPointF(sin(a1 + 3.0 / 4.0 * M_PI) * 8, cos(a1 + 3.0 / 4.0 * M_PI) * 8)
             p4 = p3 - QPointF(sin(a1 - 3.0 / 4.0 * M_PI) * 8, cos(a1 - 3.0 / 4.0 * M_PI) * 8)
             h1 = QPolygonF([p1, p2, p3, p4])
-            lp = QPen(QColor(0, 0, 0), 1.1, Qt.CustomDashLine, Qt.RoundCap, Qt.RoundJoin)
-            lp.setDashPattern([3, 3])
             # DRAW THE EDGE
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(lp)
+            painter.setPen(Pen.Custom_x3_DashedBlack1_1Pt)
             painter.drawLine(l1)
-            painter.setPen(QPen(QColor(0, 0, 0), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-            painter.setBrush(QColor(252, 252, 252))
+            painter.setPen(Pen.SolidBlack1_1Pt)
+            painter.setBrush(Brush.White255A)
             painter.drawPolygon(h1)
             painter.end()
             # ADD THE PIXMAP TO THE ICON
@@ -185,6 +180,45 @@ class InputEdge(AbstractEdge):
         path.addPath(self.path)
         path.addPolygon(self.head)
         return path
+
+    def redraw(self, selected=None, visible=None, breakpoint=None, anchor=None, **kwargs):
+        """
+        Schedule this item for redrawing.
+        :type selected: bool
+        :type visible: bool
+        :type breakpoint: int
+        :type anchor: AbstractNode
+        """
+        headBrush = Brush.NoBrush
+        headPen = Pen.NoPen
+        handleBrush = Brush.NoBrush
+        handlePen = Pen.NoPen
+        selectionBrush = Brush.NoBrush
+        pen = Pen.NoPen
+
+        if visible:
+            headBrush = Brush.White255A
+            headPen = Pen.SolidBlack1_1Pt
+            pen = Pen.Custom_x5_DashedBlack1_1Pt
+            if selected:
+                handleBrush = Brush.Blue255A
+                handlePen = Pen.SolidBlack1_1Pt
+                if breakpoint is None and anchor is None:
+                    selectionBrush = Brush.Yellow255A
+
+        self.selectionBrush = selectionBrush
+        self.headBrush = headBrush
+        self.headPen = headPen
+        self.handleBrush = handleBrush
+        self.handlePen = handlePen
+        self.pen = pen
+
+        # FORCE CACHE REGENERATION
+        self.setCacheMode(AbstractEdge.NoCache)
+        self.setCacheMode(AbstractEdge.DeviceCoordinateCache)
+
+        # SCHEDULE REPAINT
+        self.update(self.boundingRect())
 
     def shape(self):
         """
