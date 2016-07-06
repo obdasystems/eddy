@@ -83,7 +83,7 @@ class Diagram(QGraphicsScene):
         self.pasteY = Clipboard.PasteOffsetY
 
         self.mouseOverNode = None
-        self.mousePressData = {}
+        self.mousePressData = None
         self.mousePressEdge = None
         self.mousePressLabel = None
         self.mousePressLabelPos = None
