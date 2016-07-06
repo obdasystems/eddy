@@ -348,6 +348,7 @@ class Diagram(QGraphicsScene):
                 #################################
 
                 if self.isLabelMoveInProgress():
+
                     mainwindow = self.project.parent()
                     snapToGrid = mainwindow.actionToggleGrid.isChecked()
                     point = self.mousePressLabelPos + mousePos - self.mousePressPos
@@ -450,11 +451,13 @@ class Diagram(QGraphicsScene):
                 #################################
 
                 if self.isLabelMoveInProgress():
+
                     pos = self.mousePressLabel.pos()
                     if self.mousePressLabelPos != pos:
                         item = self.mousePressLabel.parentItem()
                         command = CommandLabelMove(self, item, self.mousePressLabelPos, pos)
                         self.project.undoStack.push(command)
+
                     self.setMode(DiagramMode.Idle)
 
             elif self.mode is DiagramMode.MoveNode:
@@ -465,19 +468,21 @@ class Diagram(QGraphicsScene):
 
                 if self.isNodeMoveInProgress():
 
-                    data = {
-                        'undo': self.mousePressData,
-                        'redo': {
-                            'nodes': {
-                                node: {
-                                    'anchors': {k: v for k, v in node.anchors.items()},
-                                    'pos': node.pos(),
-                                } for node in self.mousePressData['nodes']},
-                            'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}
+                    pos = self.mousePressNode.pos()
+                    if self.mousePressNodePos != pos:
+                        data = {
+                            'undo': self.mousePressData,
+                            'redo': {
+                                'nodes': {
+                                    node: {
+                                        'anchors': {k: v for k, v in node.anchors.items()},
+                                        'pos': node.pos(),
+                                    } for node in self.mousePressData['nodes']},
+                                'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}
+                            }
                         }
-                    }
+                        self.project.undoStack.push(CommandNodeMove(self, data))
 
-                    self.project.undoStack.push(CommandNodeMove(self, data))
                     self.setMode(DiagramMode.Idle)
 
         elif mouseButton == Qt.RightButton:
