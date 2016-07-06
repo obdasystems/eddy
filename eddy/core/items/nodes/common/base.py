@@ -331,38 +331,6 @@ class AbstractNode(AbstractItem):
         # SCHEDULE REPAINT
         self.update(self.boundingRect())
 
-    @abstractmethod
-    def setText(self, text):
-        """
-        Set the label text.
-        :type text: str
-        """
-        pass
-
-    @abstractmethod
-    def setTextPos(self, pos):
-        """
-        Set the label position.
-        :type pos: QPointF
-        """
-        pass
-
-    @abstractmethod
-    def text(self):
-        """
-        Returns the label text.
-        :rtype: str
-        """
-        pass
-
-    @abstractmethod
-    def textPos(self):
-        """
-        Returns the current label position.
-        :rtype: QPointF
-        """
-        pass
-
     def updateEdges(self):
         """
         Update all the edges attached to the node.

@@ -37,7 +37,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QLabel, QVBoxLayout
 from PyQt5.QtWidgets import QMessageBox, QDialogButtonBox, QWidget
 
-from eddy.core.commands.nodes import CommandNodeLabelChange
+from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.graphol import Identity
 from eddy.core.datatypes.owl import Datatype
 from eddy.core.functions.misc import isEmpty
@@ -233,7 +233,7 @@ class ValueForm(QDialog):
         data = node.composeValue(value, datatype)
         if node.text() != data:
             name = _('COMMAND_NODE_SET_INDIVIDUAL_AS', node.text(), data)
-            project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+            project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
         super().accept()
 
 
@@ -312,7 +312,7 @@ class RefactorNameForm(QDialog):
         project = self.node.project
         project.undoStack.beginMacro(_('COMMAND_NODE_REFACTOR_NAME', self.node.text(), name))
         for n in project.predicates(self.node.type(), self.node.text()):
-            project.undoStack.push(CommandNodeLabelChange(n.diagram, n, n.text(), name))
+            project.undoStack.push(CommandLabelChange(n.diagram, n, n.text(), name))
             project.undoStack.endMacro()
         super().accept()
 

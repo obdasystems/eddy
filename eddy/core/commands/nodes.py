@@ -34,7 +34,6 @@
 
 from PyQt5.QtWidgets import QUndoCommand
 
-from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.misc import first
 from eddy.core.items.common import AbstractItem
 
@@ -232,106 +231,6 @@ class CommandNodeMove(QUndoCommand):
         for edge in self.edges:
             edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
         # Emit updated signal.
-        self.diagram.sgnUpdated.emit()
-
-
-class CommandNodeLabelMove(QUndoCommand):
-    """
-    This command is used to move nodes labels.
-    """
-    def __init__(self, diagram, node, pos1, pos2):
-        """
-        Initialize the command.
-        :type diagram: Diagram
-        :type node: AbstractNode
-        :type pos1: QPointF
-        :type pos2: QPointF
-        """
-        super().__init__(_('COMMAND_NODE_MOVE_LABEL', node.name))
-        self.diagram = diagram
-        self.node = node
-        self.data = {'undo': pos1, 'redo': pos2}
-
-    def redo(self):
-        """redo the command"""
-        self.node.setTextPos(self.data['redo'])
-        self.diagram.sgnUpdated.emit()
-
-    def undo(self):
-        """undo the command"""
-        self.node.setTextPos(self.data['undo'])
-        self.diagram.sgnUpdated.emit()
-
-
-class CommandNodeLabelChange(QUndoCommand):
-    """
-    This command is used to edit nodes labels.
-    """
-    def __init__(self, diagram, node, undo, redo, name=None):
-        """
-        Initialize the command.
-        :type diagram: Diagram
-        :type node: AbstractNode
-        :type undo: str
-        :type redo: str
-        :type name: str
-        """
-        super().__init__(name or _('COMMAND_NODE_EDIT_LABEL', node.name))
-        self.diagram = diagram
-        self.project = diagram.project
-        self.node = node
-        self.data = {'undo': undo, 'redo': redo}
-
-    def redo(self):
-        """redo the command"""
-        # If the command is executed in a "refactor" command we won't have
-        # any meta except for the first node in the refactored collection
-        # so we don't have to remove nor add predicates from the meta index.
-        meta = self.project.meta(self.node.type(), self.data['undo'])
-        if meta:
-            self.project.removeMeta(self.node.type(), self.data['undo'])
-
-        self.project.doRemoveItem(self.diagram, self.node)
-        self.node.setText(self.data['redo'])
-        self.project.doAddItem(self.diagram, self.node)
-
-        if meta:
-            meta.predicate = self.data['redo']
-            self.project.addMeta(self.node.type(), self.data['redo'], meta)
-
-        if self.node.type() is Item.IndividualNode:
-            # Perform re-identification of connected Enumeration nodes.
-            f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.type() is Item.EnumerationNode
-            for node in self.node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-                self.diagram.identify(node)
-
-        self.diagram.sgnUpdated.emit()
-
-    def undo(self):
-        """undo the command"""
-        # If the command is executed in a "refactor" command we won't have
-        # any meta except for the first node in the refactored collection
-        # so we don't have to remove nor add predicates from the meta index.
-        meta = self.project.meta(self.node.type(), self.data['redo'])
-        if meta:
-            self.project.removeMeta(self.node.type(), self.data['redo'])
-
-        self.project.doRemoveItem(self.diagram, self.node)
-        self.node.setText(self.data['undo'])
-        self.project.doAddItem(self.diagram, self.node)
-
-        if meta:
-            meta.predicate = self.data['undo']
-            self.project.addMeta(self.node.type(), self.data['undo'], meta)
-
-        if self.node.type() is Item.IndividualNode:
-            # Perform re-identification of connected Enumeration nodes.
-            f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.type() is Item.EnumerationNode
-            for node in self.node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-                self.diagram.identify(node)
-
         self.diagram.sgnUpdated.emit()
 
 

@@ -41,7 +41,7 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QMenu, QScrollArea, QStyle
 from PyQt5.QtWidgets import QStackedWidget, QStyleOption
 
 from eddy.core.commands.common import CommandSetProperty
-from eddy.core.commands.nodes import CommandNodeLabelChange
+from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.project import CommandProjectSetIRI
 from eddy.core.commands.project import CommandProjectSetPrefix
 from eddy.core.datatypes.graphol import Item, Identity
@@ -747,10 +747,10 @@ class PredicateNodeInfo(NodeInfo):
                     if sender is self.nameField:
                         project.undoStack.beginMacro(_('COMMAND_NODE_REFACTOR_NAME', node.text(), data))
                         for n in project.predicates(node.type(), node.text()):
-                            project.undoStack.push(CommandNodeLabelChange(n.diagram, n, n.text(), data))
+                            project.undoStack.push(CommandLabelChange(n.diagram, n, n.text(), data))
                         project.undoStack.endMacro()
                     else:
-                        project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data))
+                        project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data))
             except RuntimeError:
                 pass
 
@@ -1017,7 +1017,7 @@ class ValueDomainNodeInfo(NodeInfo):
             data = datatype.value
             if node.text() != data:
                 name = _('COMMAND_NODE_SET_DATATYPE', node.shortname, data)
-                project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
         self.datatypeField.clearFocus()
 
@@ -1091,7 +1091,7 @@ class ValueNodeInfo(PredicateNodeInfo):
                 data = node.composeValue(value, datatype)
                 if node.text() != data:
                     name = _('COMMAND_NODE_SET_VALUE', data)
-                    project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                    project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
             except RuntimeError:
                 pass
 
@@ -1170,7 +1170,7 @@ class FacetNodeInfo(NodeInfo):
             data = node.compose(self.facetField.currentData(), self.valueField.value())
             if node.text() != data:
                 name = _('COMMAND_NODE_SET_FACET', node.text(), data)
-                project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
         self.facetField.clearFocus()
         self.valueField.clearFocus()

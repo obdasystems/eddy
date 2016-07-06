@@ -207,6 +207,20 @@ class InclusionEdge(AbstractEdge):
         path.addPolygon(self.tail)
         return path
 
+    def setText(self, text):
+        """
+        Set the label text.
+        :type text: str
+        """
+        pass
+
+    def setTextPos(self, pos):
+        """
+        Set the label position.
+        :type pos: QPointF
+        """
+        pass
+
     def shape(self):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
@@ -224,6 +238,20 @@ class InclusionEdge(AbstractEdge):
                 path.addEllipse(shape)
 
         return path
+
+    def text(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        pass
+
+    def textPos(self):
+        """
+        Returns the current label position.
+        :rtype: QPointF
+        """
+        pass
 
     def updateEdge(self, target=None):
         """

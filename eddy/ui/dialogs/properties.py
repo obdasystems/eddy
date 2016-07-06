@@ -42,9 +42,9 @@ from PyQt5.QtWidgets import QDialogButtonBox, QTabWidget, QFormLayout
 from PyQt5.QtWidgets import QListWidgetItem
 
 from eddy.core.commands.diagram import CommandDiagramResize
+from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.nodes import CommandNodeChangeInputsOrder
 from eddy.core.commands.nodes import CommandNodeChangeMeta
-from eddy.core.commands.nodes import CommandNodeLabelChange
 from eddy.core.commands.nodes import CommandNodeMove
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
@@ -530,8 +530,8 @@ class PredicateNodeProperty(NodeProperty):
                 item = self.node.type()
                 name = self.node.text()
                 project = self.diagram.project
-                return [CommandNodeLabelChange(n.diagram, n, n.text(), data) for n in project.predicates(item, name)]
-            return [CommandNodeLabelChange(self.diagram, self.node, self.node.text(), data)]
+                return [CommandLabelChange(n.diagram, n, n.text(), data) for n in project.predicates(item, name)]
+            return [CommandLabelChange(self.diagram, self.node, self.node.text(), data)]
         return [None]
 
 
@@ -742,7 +742,7 @@ class FacetNodeProperty(NodeProperty):
         """
         data = self.node.compose(self.facetField.currentData(), self.valueField.value())
         if self.node.text() != data:
-            return CommandNodeLabelChange(self.diagram, self.node, self.node.text(), data)
+            return CommandLabelChange(self.diagram, self.node, self.node.text(), data)
         return None
 
 
@@ -819,7 +819,7 @@ class ValueDomainNodeProperty(NodeProperty):
         datatype = self.datatypeField.currentData()
         data = datatype.value
         if self.node.text() != data:
-            return CommandNodeLabelChange(self.diagram, self.node, self.node.text(), data)
+            return CommandLabelChange(self.diagram, self.node, self.node.text(), data)
         return None
 
 
@@ -906,7 +906,7 @@ class ValueNodeProperty(NodeProperty):
         value = self.valueField.value()
         data = self.node.composeValue(value, datatype)
         if self.node.text() != data:
-            return CommandNodeLabelChange(self.diagram, self.node, self.node.text(), data)
+            return CommandLabelChange(self.diagram, self.node, self.node.text(), data)
         return None
 
 

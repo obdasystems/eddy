@@ -220,6 +220,20 @@ class InputEdge(AbstractEdge):
         # SCHEDULE REPAINT
         self.update(self.boundingRect())
 
+    def setText(self, text):
+        """
+        Set the label text.
+        :type text: str
+        """
+        self.label.setText(text)
+
+    def setTextPos(self, pos):
+        """
+        Set the label position.
+        :type pos: QPointF
+        """
+        self.label.setPos(pos)
+
     def shape(self):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
@@ -236,6 +250,20 @@ class InputEdge(AbstractEdge):
                 path.addEllipse(shape)
 
         return path
+
+    def text(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        return self.label.text()
+
+    def textPos(self):
+        """
+        Returns the current label position.
+        :rtype: QPointF
+        """
+        return self.label.pos()
 
     def updateEdge(self, target=None):
         """

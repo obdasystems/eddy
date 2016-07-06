@@ -34,15 +34,68 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QTextBlockFormat, QTextCursor
+from PyQt5.QtCore import Qt, QPointF, pyqtSlot
+from PyQt5.QtGui import QTextBlockFormat, QTextCursor, QPainterPath
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem
 
+from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.graphol import Item
-from eddy.core.datatypes.misc import Brush, Pen
+from eddy.core.datatypes.misc import Brush, Pen, DiagramMode
+from eddy.core.functions.misc import isEmpty
+from eddy.core.functions.signals import connect
+from eddy.core.qt import Font
 
 
-class AbstractItem(QGraphicsItem):
+class DiagramItemMixin:
+    """
+    Mixin implementation for all the diagram elements (nodes, edges and labels).
+    """
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def diagram(self):
+        """
+        Returns the diagram holding this label (alias for AbstractLabel.scene()).
+        :rtype: Diagram
+        """
+        return self.scene()
+
+    @property
+    def project(self):
+        """
+        Returns the project this label belongs to.
+        :rtype: Project
+        """
+        return self.diagram.parent()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def isEdge(self):
+        """
+        Returns True if this element is an edge, False otherwise.
+        :rtype: bool
+        """
+        return Item.InclusionEdge <= self.type() <= Item.MembershipEdge
+
+    def isLabel(self):
+        """
+        Returns True if this element is a label, False otherwise.
+        """
+        return self.type() is Item.Label
+
+    def isNode(self):
+        """
+        Returns True if this element is a node, False otherwise.
+        :rtype: bool
+        """
+        return Item.ConceptNode <= self.type() < Item.InclusionEdge
+
+
+class AbstractItem(QGraphicsItem, DiagramItemMixin):
     """
     Base class for all the diagram items.
     """
@@ -69,14 +122,6 @@ class AbstractItem(QGraphicsItem):
     #################################
 
     @property
-    def diagram(self):
-        """
-        Returns the diagram holding this item (alias for AbstractItem.scene()).
-        :rtype: Diagram
-        """
-        return self.scene()
-
-    @property
     def name(self):
         """
         Returns the item readable name.
@@ -84,14 +129,6 @@ class AbstractItem(QGraphicsItem):
         """
         item = self.type()
         return item.realname
-
-    @property
-    def project(self):
-        """
-        Returns the project this item belongs to.
-        :rtype: Project
-        """
-        return self.diagram.parent()
 
     @property
     def shortname(self):
@@ -127,20 +164,6 @@ class AbstractItem(QGraphicsItem):
         """
         pass
 
-    def isEdge(self):
-        """
-        Returns True if this element is an edge, False otherwise.
-        :rtype: bool
-        """
-        return Item.InclusionEdge <= self.type() <= Item.MembershipEdge
-
-    def isNode(self):
-        """
-        Returns True if this element is a node, False otherwise.
-        :rtype: bool
-        """
-        return Item.ConceptNode <= self.type() < Item.InclusionEdge
-
     @abstractmethod
     def painterPath(self):
         """
@@ -153,6 +176,38 @@ class AbstractItem(QGraphicsItem):
     def redraw(self, **kwargs):
         """
         Schedule this item for redrawing.
+        """
+        pass
+
+    @abstractmethod
+    def setText(self, text):
+        """
+        Set the label text.
+        :type text: str
+        """
+        pass
+
+    @abstractmethod
+    def setTextPos(self, pos):
+        """
+        Set the label position.
+        :type pos: QPointF
+        """
+        pass
+
+    @abstractmethod
+    def text(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        pass
+
+    @abstractmethod
+    def textPos(self):
+        """
+        Returns the current label position.
+        :rtype: QPointF
         """
         pass
 
@@ -170,7 +225,7 @@ class AbstractItem(QGraphicsItem):
         return '{0}:{1}'.format(self.__class__.__name__, self.id)
 
 
-class AbstractLabel(QGraphicsTextItem):
+class AbstractLabel(QGraphicsTextItem, DiagramItemMixin):
     """
     Base class for the diagram labels.
     """
@@ -178,33 +233,139 @@ class AbstractLabel(QGraphicsTextItem):
 
     Type = Item.Label
 
-    def __init__(self, parent=None):
+    def __init__(self, template='', movable=True, editable=True, parent=None):
         """
         Initialize the label.
+        :type template: str
+        :type movable: bool
+        :type editable: bool
         :type parent: QObject
         """
         self._alignment = Qt.AlignCenter
+        self._editable = bool(editable)
+        self._movable = bool(movable)
         super().__init__(parent)
+        self.focusInData = None
+        self.template = template
+        self.setDefaultTextColor(Brush.Black255A.color())
+        self.setFlag(AbstractLabel.ItemIsFocusable, self.isEditable())
+        self.setFont(Font('Arial', 12, Font.Light))
+        self.setText(self.template)
+        self.setTextInteractionFlags(Qt.NoTextInteraction)
+
+        document = self.document()
+        connect(document.contentsChange[int, int, int], self.onContentsChanged)
 
     #############################################
-    #   PROPERTIES
+    #   EVENTS
     #################################
 
-    @property
-    def diagram(self):
+    def focusInEvent(self, focusEvent):
         """
-        Returns the diagram holding this label (alias for AbstractLabel.scene()).
-        :rtype: Diagram
+        Executed when the text item is focused.
+        :type focusEvent: QFocusEvent
         """
-        return self.scene()
+        # FOCUS ONLY ON DOUBLE CLICK
+        if focusEvent.reason() == Qt.OtherFocusReason:
+            self.focusInData = self.text()
+            self.diagram.clearSelection()
+            self.diagram.setMode(DiagramMode.EditText)
+            self.setSelectedText(True)
+            super().focusInEvent(focusEvent)
+        else:
+            self.clearFocus()
 
-    @property
-    def project(self):
+    def focusOutEvent(self, focusEvent):
         """
-        Returns the project this label belongs to.
-        :rtype: Project
+        Executed when the text item lose the focus.
+        :type focusEvent: QFocusEvent
         """
-        return self.diagram.parent()
+        if self.diagram.mode is DiagramMode.EditText:
+
+            if isEmpty(self.text()):
+                self.setText(self.template)
+
+            focusInData = self.focusInData
+            currentData = self.text()
+
+            ###########################################################
+            # IMPORTANT!                                              #
+            # ####################################################### #
+            # The code below is a bit tricky: to be able to properly  #
+            # update the node in the project index we need to force   #
+            # the value of the label to it's previous one and let the #
+            # command implementation update the index.                #
+            ###########################################################
+
+            self.setText(focusInData)
+
+            if focusInData and focusInData != currentData:
+                node = self.parentItem()
+                command = CommandLabelChange(self.diagram, node, focusInData, currentData)
+                self.project.undoStack.push(command)
+
+            self.focusInData = None
+            self.setSelectedText(False)
+            self.setAlignment(self.alignment())
+            self.setTextInteractionFlags(Qt.NoTextInteraction)
+            self.diagram.setMode(DiagramMode.Idle)
+            self.diagram.sgnUpdated.emit()
+
+        super().focusOutEvent(focusEvent)
+
+    def hoverMoveEvent(self, moveEvent):
+        """
+        Executed when the mouse move over the text area (NOT PRESSED).
+        :type moveEvent: QGraphicsSceneHoverEvent
+        """
+        if self.isEditable() and self.hasFocus():
+            self.setCursor(Qt.IBeamCursor)
+            super().hoverMoveEvent(moveEvent)
+
+    def hoverLeaveEvent(self, moveEvent):
+        """
+        Executed when the mouse leaves the text area (NOT PRESSED).
+        :type moveEvent: QGraphicsSceneHoverEvent
+        """
+        self.setCursor(Qt.ArrowCursor)
+        super().hoverLeaveEvent(moveEvent)
+
+    def keyPressEvent(self, keyEvent):
+        """
+        Executed when a key is pressed.
+        :type keyEvent: QKeyEvent
+        """
+        if keyEvent.key() in {Qt.Key_Enter, Qt.Key_Return}:
+            if keyEvent.modifiers() & Qt.ShiftModifier:
+                super().keyPressEvent(keyEvent)
+            else:
+                self.clearFocus()
+        else:
+            super().keyPressEvent(keyEvent)
+
+    def mouseDoubleClickEvent(self, mouseEvent):
+        """
+        Executed when the mouse is double clicked on the text item.
+        :type mouseEvent: QGraphicsSceneMouseEvent
+        """
+        if self.isEditable():
+            super().mouseDoubleClickEvent(mouseEvent)
+            self.setTextInteractionFlags(Qt.TextEditorInteraction)
+            self.setFocus()
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @pyqtSlot(int, int, int)
+    def onContentsChanged(self, position, charsRemoved, charsAdded):
+        """
+        Executed whenever the content of the text item changes.
+        :type position: int
+        :type charsRemoved: int
+        :type charsAdded: int
+        """
+        self.setAlignment(self.alignment())
 
     #############################################
     #   INTERFACE
@@ -231,21 +392,19 @@ class AbstractLabel(QGraphicsTextItem):
         """
         return self.boundingRect().height()
 
-    @staticmethod
-    def isEdge():
+    def isEditable(self):
         """
-        Returns True if this element is an edge, False otherwise.
+        Returns True if the label is editable, else False.
         :rtype: bool
         """
-        return False
+        return self._editable
 
-    @staticmethod
-    def isNode():
+    def isMovable(self):
         """
-        Returns True if this element is a node, False otherwise.
+        Returns True if the label is movable, else False.
         :rtype: bool
         """
-        return False
+        return self._movable
 
     def pos(self):
         """
@@ -253,6 +412,21 @@ class AbstractLabel(QGraphicsTextItem):
         :rtype: QPointF
         """
         return self.mapToParent(self.center())
+
+    def setEditable(self, editable):
+        """
+        Set the editable status of the label.
+        :type editable: bool.
+        """
+        self._editable = bool(editable)
+        self.setFlag(AbstractLabel.ItemIsFocusable, self._editable)
+
+    def setMovable(self, movable):
+        """
+        Set the movable status of the Label.
+        :type movable: bool.
+        """
+        self._movable = bool(movable)
 
     def setSelectedText(self, selected=True):
         """
@@ -315,6 +489,15 @@ class AbstractLabel(QGraphicsTextItem):
         """
         self.setPlainText(text)
 
+    def shape(self):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRect(self.boundingRect())
+        return path
+
     def text(self):
         """
         Returns the text of the label.
@@ -328,6 +511,13 @@ class AbstractLabel(QGraphicsTextItem):
         :rtype: Item
         """
         return self.Type
+
+    @abstractmethod
+    def updatePos(self, *args, **kwargs):
+        """
+        Update the label position.
+        """
+        pass
 
     def width(self):
         """

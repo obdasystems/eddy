@@ -185,6 +185,13 @@ class MembershipEdge(AbstractEdge):
 
         return path
 
+    def setTextPos(self, pos):
+        """
+        Set the label position.
+        :type pos: QPointF
+        """
+        self.label.setPos(pos)
+
     def shape(self):
         """
         Returns the shape of this item as a QPainterPath in local coordinates.
@@ -201,6 +208,20 @@ class MembershipEdge(AbstractEdge):
                 path.addEllipse(shape)
 
         return path
+
+    def text(self):
+        """
+        Returns the label text.
+        :rtype: str
+        """
+        return self.label.text()
+
+    def textPos(self):
+        """
+        Returns the current label position.
+        :rtype: QPointF
+        """
+        return self.label.pos()
 
     def updateEdge(self, target=None):
         """

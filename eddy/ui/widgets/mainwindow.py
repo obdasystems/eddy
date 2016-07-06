@@ -53,8 +53,8 @@ from eddy.core.commands.common import CommandSnapItemsToGrid
 from eddy.core.commands.edges import CommandEdgeBreakpointRemove
 from eddy.core.commands.edges import CommandEdgeSwap
 from eddy.core.commands.edges import CommandEdgeToggleEquivalence
-from eddy.core.commands.nodes import CommandNodeLabelChange
-from eddy.core.commands.nodes import CommandNodeLabelMove
+from eddy.core.commands.labels import CommandLabelMove
+from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.nodes import CommandNodeOperatorSwitchTo
 from eddy.core.commands.nodes import CommandNodeSetBrush
 from eddy.core.commands.nodes import CommandNodeSetDepth
@@ -1193,7 +1193,7 @@ class MainWindow(QMainWindow):
             if node and node.label.isMovable():
                 undo = node.label.pos()
                 redo = node.label.defaultPos()
-                self.project.undoStack.push(CommandNodeLabelMove(diagram, node, undo, redo))
+                self.project.undoStack.push(CommandLabelMove(diagram, node, undo, redo))
 
     @pyqtSlot()
     def doRemoveBreakpoint(self):
@@ -1351,7 +1351,7 @@ class MainWindow(QMainWindow):
                         data = restriction.format(form.minValue or '-', form.maxValue or '-')
                 if data and node.text() != data:
                     name = _('COMMAND_NODE_SET_PROPERTY_RESTRICTION', node.shortname, data)
-                    self.project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                    self.project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
     def doSetIndividualAs(self):
@@ -1369,7 +1369,7 @@ class MainWindow(QMainWindow):
                     if node.identity is Identity.Value:
                         data = node.label.template
                         name = _('COMMAND_NODE_SET_INDIVIDUAL_AS', node.text(), data)
-                        self.project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                        self.project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
                 elif action.data() is Identity.Value:
                     form = ValueForm(node, self)
                     form.exec_()
@@ -1390,7 +1390,7 @@ class MainWindow(QMainWindow):
                 data = special.value
                 if node.text() != data:
                     name = _('COMMAND_NODE_SET_SPECIAL', node.shortname, data)
-                    self.project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                    self.project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
     def doSetDatatype(self):
@@ -1407,7 +1407,7 @@ class MainWindow(QMainWindow):
                 data = datatype.value
                 if node.text() != data:
                     name = _('COMMAND_NODE_SET_DATATYPE', node.shortname, data)
-                    self.project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                    self.project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
     def doSetFacet(self):
@@ -1424,7 +1424,7 @@ class MainWindow(QMainWindow):
                 if facet != node.facet:
                     data = node.compose(facet, node.value)
                     name = _('COMMAND_NODE_SET_FACET', node.facet.value, facet.value)
-                    self.project.undoStack.push(CommandNodeLabelChange(diagram, node, node.text(), data, name))
+                    self.project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
     def doSnapTopGrid(self):

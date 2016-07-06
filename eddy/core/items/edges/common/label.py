@@ -34,13 +34,11 @@
 
 from math import sin, cos, pi as M_PI
 
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QColor, QPainterPath
+from PyQt5.QtCore import QPointF
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.geometry import angle, midpoint
 from eddy.core.items.common import AbstractLabel
-from eddy.core.qt import Font
 
 
 class EdgeLabel(AbstractLabel):
@@ -49,19 +47,15 @@ class EdgeLabel(AbstractLabel):
     """
     Type = Item.Label
 
-    def __init__(self, text='', centered=True, parent=None):
+    def __init__(self, template='', centered=True, parent=None):
         """
         Initialize the label.
-        :type text: str
+        :type template: str
         :type centered: bool
         :type parent: QObject
         """
-        super().__init__(parent)
-        self.centered = centered
-        self.setDefaultTextColor(QColor(0, 0, 0, 255))
-        self.setFont(Font('Arial', 12, Font.Light))
-        self.setText(text)
-        self.setTextInteractionFlags(Qt.NoTextInteraction)
+        self._centered = centered
+        super().__init__(template, movable=False, editable=False, parent=parent)
 
     #############################################
     #   INTERFACE
@@ -72,7 +66,7 @@ class EdgeLabel(AbstractLabel):
         Returns True if the label should be centered, False otherwise.
         :rtype: bool
         """
-        return self.centered
+        return self._centered
 
     def paint(self, painter, option, widget=None):
         """
@@ -85,15 +79,6 @@ class EdgeLabel(AbstractLabel):
         if not parent.path.isEmpty():
             super().paint(painter, option, widget)
 
-    def shape(self):
-        """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
-        """
-        path = QPainterPath()
-        path.addRect(self.boundingRect())
-        return path
-
     def updatePos(self, points):
         """
         Update the current text position with respect to the shape.
@@ -102,7 +87,7 @@ class EdgeLabel(AbstractLabel):
         if not points:
             return
 
-        if self.centered:
+        if self.isCentered():
             # Here the label should be centered in the edge path => we need to compute 2 different positions:
             #   1. when the edge path is composed of an even number of points (odd subpaths)
             #   2. when the edge path is composed of an odd number of points (even subpaths)

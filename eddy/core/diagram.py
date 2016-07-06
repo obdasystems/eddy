@@ -40,6 +40,7 @@ from PyQt5.QtWidgets import QGraphicsScene
 
 from eddy.core.commands.edges import CommandEdgeAdd
 from eddy.core.commands.nodes import CommandNodeAdd, CommandNodeMove
+from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.graph import bfs
@@ -82,11 +83,13 @@ class Diagram(QGraphicsScene):
         self.pasteY = Clipboard.PasteOffsetY
 
         self.mouseOverNode = None
+        self.mousePressData = {}
         self.mousePressEdge = None
-        self.mousePressPos = None
+        self.mousePressLabel = None
+        self.mousePressLabelPos = None
         self.mousePressNode = None
         self.mousePressNodePos = None
-        self.mousePressData = {}
+        self.mousePressPos = None
 
         connect(self.sgnItemAdded, self.onConnectionChanged)
         connect(self.sgnItemRemoved, self.onConnectionChanged)
@@ -170,6 +173,7 @@ class Diagram(QGraphicsScene):
         Executed when a mouse button is clicked on the scene.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
+        mouseModifiers = mouseEvent.modifiers()
         mouseButtons = mouseEvent.buttons()
         mousePos = mouseEvent.scenePos()
 
@@ -188,8 +192,6 @@ class Diagram(QGraphicsScene):
                 self.project.undoStack.push(CommandNodeAdd(self, node))
                 self.sgnActionCompleted.emit(node, mouseEvent.modifiers())
 
-                super().mousePressEvent(mouseEvent)
-
             elif self.mode is DiagramMode.InsertEdge:
 
                 #############################################
@@ -203,46 +205,70 @@ class Diagram(QGraphicsScene):
                     self.mousePressEdge = edge
                     self.addItem(edge)
 
-                super().mousePressEvent(mouseEvent)
-
             else:
 
+                # Execute super at first since this may change the diagram
+                # mode: some actions are directly handle by graphics items
+                # (i.e: edge breakpoint move, edge anchor move, node shape
+                # resize) and we need to check whether any of them is being
+                # performed before handling the even locally.
                 super().mousePressEvent(mouseEvent)
 
                 if self.mode is DiagramMode.Idle:
 
-                    #############################################
-                    # ITEM SELECTION
-                    #################################
 
-                    # See if we have some nodes selected in the scene: this is needed because itemOnTopOf
-                    # will discard labels, so if we have a node whose label is overlapping the node shape,
-                    # clicking on the label will make itemOnTopOf return the node item instead of the label.
-                    selected = self.selectedNodes()
-                    if selected:
-                        # We have some nodes selected in the scene so we probably are going to do a
-                        # move operation, prepare data for mouse move event => select a node that will act
-                        # as mouse grabber to compute delta movements for each componenet in the selection.
-                        self.mousePressNode = self.itemOnTopOf(mousePos, edges=False)
-                        if self.mousePressNode:
-                            self.mousePressNodePos = self.mousePressNode.pos()
+                    if mouseModifiers & Qt.ShiftModifier:
+
+                        #############################################
+                        # LABEL MOVE
+                        #################################
+
+                        item = self.itemOnTopOf(mousePos, nodes=False, edges=False, labels=True)
+                        if item and item.isMovable():
+                            self.clearSelection()
+                            self.mousePressLabel = item
+                            self.mousePressLabelPos = item.pos()
                             self.mousePressPos = mousePos
-                            self.mousePressData = {
-                                'nodes': {
-                                    node: {
-                                        'anchors': {k: v for k, v in node.anchors.items()},
-                                        'pos': node.pos(),
-                                    } for node in selected},
-                                'edges': {}
-                            }
+                            self.setMode(DiagramMode.MoveText)
 
-                            # Figure out if the nodes we are moving are sharing edges: if so, move the edge
-                            # together with the nodes (which actually means moving the edge breakpoints).
-                            for node in self.mousePressData['nodes']:
-                                for edge in node.edges:
-                                    if edge not in self.mousePressData['edges']:
-                                        if edge.other(node).isSelected():
-                                            self.mousePressData['edges'][edge] = edge.breakpoints[:]
+                    else:
+
+                        #############################################
+                        # ITEM SELECTION
+                        #################################
+
+                        # See if we have some nodes selected in the scene: this
+                        # is needed because itemOnTopOf will discard labels, so
+                        # if we have a node whose label is overlapping the node
+                        # shape, clicking on the label will make itemOnTopOf
+                        # return the node item instead of the label.
+                        selected = self.selectedNodes()
+                        if selected:
+                            # We have some nodes selected in the scene so we probably
+                            # are going to do a move operation, prepare data for mouse
+                            # move event => select a node that will act as mouse grabber
+                            # to compute delta movements for each componenet in the selection.
+                            self.mousePressNode = self.itemOnTopOf(mousePos, edges=False)
+                            if self.mousePressNode:
+                                self.mousePressNodePos = self.mousePressNode.pos()
+                                self.mousePressPos = mousePos
+                                self.mousePressData = {
+                                    'nodes': {
+                                        node: {
+                                            'anchors': {k: v for k, v in node.anchors.items()},
+                                            'pos': node.pos(),
+                                        } for node in selected},
+                                    'edges': {}
+                                }
+
+                                # Figure out if the nodes we are moving are sharing edges:
+                                # if that's the case, move the edge together with the nodes
+                                # (which actually means moving the edge breakpoints).
+                                for node in self.mousePressData['nodes']:
+                                    for edge in node.edges:
+                                        if edge not in self.mousePressData['edges']:
+                                            if edge.other(node).isSelected():
+                                                self.mousePressData['edges'][edge] = edge.breakpoints[:]
 
     def mouseMoveEvent(self, mouseEvent):
         """
@@ -281,11 +307,19 @@ class Diagram(QGraphicsScene):
                             statusBar.showMessage(result.message)
                         else:
                             statusBar.clearMessage()
-
                     else:
                         statusBar.clearMessage()
                         self.mouseOverNode = None
                         self.project.validator.clear()
+
+            elif self.mode is DiagramMode.MoveText:
+
+                #############################################
+                # LABEL MOVE
+                #################################
+
+                if self.mousePressLabel:
+                    self.mousePressLabel.setPos(mousePos - self.mousePressPos)
 
             else:
 
@@ -306,19 +340,16 @@ class Diagram(QGraphicsScene):
                     delta = point - self.mousePressNodePos
                     edges = set()
 
-                    # Update all the breakpoint positions.
                     for edge, breakpoints in self.mousePressData['edges'].items():
                         for i in range(len(breakpoints)):
                             edge.breakpoints[i] = breakpoints[i] + delta
 
-                    # Move all the selected nodes.
                     for node, data in self.mousePressData['nodes'].items():
                         edges |= set(node.edges)
                         node.setPos(data['pos'] + delta)
                         for edge, pos in data['anchors'].items():
                             node.setAnchor(edge, pos + delta)
 
-                    # Update edges.
                     for edge in edges:
                         edge.updateEdge()
 
@@ -377,6 +408,19 @@ class Diagram(QGraphicsScene):
 
                     self.sgnActionCompleted.emit(edge, mouseEvent.modifiers())
 
+            elif self.mode is DiagramMode.MoveText:
+
+                #############################################
+                # LABEL MOVE
+                #################################
+
+                if self.mousePressLabel:
+                    pos = self.mousePressLabel.pos()
+                    if self.mousePressLabelPos != pos:
+                        item = self.mousePressLabel.parentItem()
+                        self.project.undoStack.push(CommandLabelMove(self, item, self.mousePressLabelPos, pos))
+                        self.setMode(DiagramMode.Idle)
+
             elif self.mode is DiagramMode.MoveNode:
 
                 #############################################
@@ -418,10 +462,13 @@ class Diagram(QGraphicsScene):
 
         super().mouseReleaseEvent(mouseEvent)
 
-        self.mousePressPos = None
+        self.mousePressData = None
+        self.mousePressLabel = None
+        self.mousePressLabelPos = None
         self.mousePressNode = None
         self.mousePressNodePos = None
-        self.mousePressData = None
+        self.mousePressPos = None
+
 
     #############################################
     #   SLOTS
@@ -480,7 +527,7 @@ class Diagram(QGraphicsScene):
             weak = set(generators[0])
 
             #############################################
-            #   SPECIAL CASES
+            # SPECIAL CASES
             #################################
 
             rr_admissible = {Identity.Role, Identity.Attribute, Identity.Concept, Identity.ValueDomain}
@@ -607,7 +654,7 @@ class Diagram(QGraphicsScene):
                         strong.discard(k)
 
             #############################################
-            #   FINAL COMPUTATION
+            # FINAL COMPUTATION
             #################################
 
             computed = Identity.Neutral
@@ -634,17 +681,24 @@ class Diagram(QGraphicsScene):
         """
         return len(self.project.items(self)) == 0
 
-    def itemOnTopOf(self, point, nodes=True, edges=True, skip=None):
+    def itemOnTopOf(self, point, nodes=True, edges=True, labels=False, skip=None):
         """
-        Returns the shape which is on top of the given point.
+        Returns the item which is on top of the given point.
+        By default the method perform the search only on nodes and edges.
+        Setting the 'labels' keyword argument to True will also make sure to include
+        nodes and edges labels in the result among which the top item will be extracted.
         :type point: QPointF
         :type nodes: bool
         :type edges: bool
+        :type labels: bool
         :type skip: iterable
-        :rtype: Item
+        :rtype: AbstractItem
         """
         skip = skip or {}
-        data = [x for x in self.items(point) if (nodes and x.isNode() or edges and x.isEdge()) and x not in skip]
+        data = [x for x in self.items(point)
+            if (nodes and x.isNode() or
+                edges and x.isEdge() or
+                labels and x.isLabel()) and x not in skip]
         if data:
             return max(data, key=lambda x: x.zValue())
         return None
