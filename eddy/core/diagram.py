@@ -318,7 +318,8 @@ class Diagram(QGraphicsScene):
                 # LABEL MOVE
                 #################################
 
-                if self.mousePressLabel:
+                if self.isLabelMoveInProgress():
+
                     self.mousePressLabel.setPos(mousePos - self.mousePressPos)
 
             else:
@@ -333,25 +334,27 @@ class Diagram(QGraphicsScene):
                     # ITEM MOVEMENT
                     #################################
 
-                    mainwindow = self.project.parent()
-                    snapToGrid = mainwindow.actionToggleGrid.isChecked()
-                    point = self.mousePressNodePos + mousePos - self.mousePressPos
-                    point = snap(point, Diagram.GridSize, snapToGrid)
-                    delta = point - self.mousePressNodePos
-                    edges = set()
+                    if self.isNodeMoveInProgress():
+                        
+                        mainwindow = self.project.parent()
+                        snapToGrid = mainwindow.actionToggleGrid.isChecked()
+                        point = self.mousePressNodePos + mousePos - self.mousePressPos
+                        point = snap(point, Diagram.GridSize, snapToGrid)
+                        delta = point - self.mousePressNodePos
+                        edges = set()
 
-                    for edge, breakpoints in self.mousePressData['edges'].items():
-                        for i in range(len(breakpoints)):
-                            edge.breakpoints[i] = breakpoints[i] + delta
+                        for edge, breakpoints in self.mousePressData['edges'].items():
+                            for i in range(len(breakpoints)):
+                                edge.breakpoints[i] = breakpoints[i] + delta
 
-                    for node, data in self.mousePressData['nodes'].items():
-                        edges |= set(node.edges)
-                        node.setPos(data['pos'] + delta)
-                        for edge, pos in data['anchors'].items():
-                            node.setAnchor(edge, pos + delta)
+                        for node, data in self.mousePressData['nodes'].items():
+                            edges |= set(node.edges)
+                            node.setPos(data['pos'] + delta)
+                            for edge, pos in data['anchors'].items():
+                                node.setAnchor(edge, pos + delta)
 
-                    for edge in edges:
-                        edge.updateEdge()
+                        for edge in edges:
+                            edge.updateEdge()
 
         super().mouseMoveEvent(mouseEvent)
 
@@ -360,6 +363,7 @@ class Diagram(QGraphicsScene):
         Executed when the mouse is released from the scene.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
+        mouseModifiers = mouseEvent.modifiers()
         mouseButton = mouseEvent.button()
         mousePos = mouseEvent.scenePos()
 
@@ -400,13 +404,11 @@ class Diagram(QGraphicsScene):
 
                     self.clearSelection()
                     self.project.validator.clear()
-                    self.mouseOverNode = None
-                    self.mousePressEdge = None
                     mainwindow = self.project.parent()
                     statusBar = mainwindow.statusBar()
                     statusBar.clearMessage()
 
-                    self.sgnActionCompleted.emit(edge, mouseEvent.modifiers())
+                    self.sgnActionCompleted.emit(edge, mouseModifiers)
 
             elif self.mode is DiagramMode.MoveText:
 
@@ -414,11 +416,12 @@ class Diagram(QGraphicsScene):
                 # LABEL MOVE
                 #################################
 
-                if self.mousePressLabel:
+                if self.isLabelMoveInProgress():
                     pos = self.mousePressLabel.pos()
                     if self.mousePressLabelPos != pos:
                         item = self.mousePressLabel.parentItem()
-                        self.project.undoStack.push(CommandLabelMove(self, item, self.mousePressLabelPos, pos))
+                        command = CommandLabelMove(self, item, self.mousePressLabelPos, pos)
+                        self.project.undoStack.push(command)
                         self.setMode(DiagramMode.Idle)
 
             elif self.mode is DiagramMode.MoveNode:
@@ -427,20 +430,22 @@ class Diagram(QGraphicsScene):
                 # ITEM MOVEMENT
                 #################################
 
-                data = {
-                    'undo': self.mousePressData,
-                    'redo': {
-                        'nodes': {
-                            node: {
-                                'anchors': {k: v for k, v in node.anchors.items()},
-                                'pos': node.pos(),
-                            } for node in self.mousePressData['nodes']},
-                        'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}
-                    }
-                }
+                if self.isNodeMoveInProgress():
 
-                self.project.undoStack.push(CommandNodeMove(self, data))
-                self.setMode(DiagramMode.Idle)
+                    data = {
+                        'undo': self.mousePressData,
+                        'redo': {
+                            'nodes': {
+                                node: {
+                                    'anchors': {k: v for k, v in node.anchors.items()},
+                                    'pos': node.pos(),
+                                } for node in self.mousePressData['nodes']},
+                            'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}
+                        }
+                    }
+
+                    self.project.undoStack.push(CommandNodeMove(self, data))
+                    self.setMode(DiagramMode.Idle)
 
         elif mouseButton == Qt.RightButton:
 
@@ -462,13 +467,14 @@ class Diagram(QGraphicsScene):
 
         super().mouseReleaseEvent(mouseEvent)
 
+        self.mouseOverNode = None
         self.mousePressData = None
+        self.mousePressEdge = None
         self.mousePressLabel = None
         self.mousePressLabelPos = None
         self.mousePressNode = None
         self.mousePressNodePos = None
         self.mousePressPos = None
-
 
     #############################################
     #   SLOTS
@@ -673,6 +679,27 @@ class Diagram(QGraphicsScene):
         :rtype: bool
         """
         return self.mode is DiagramMode.InsertEdge and self.mousePressEdge is not None
+
+    def isLabelMoveInProgress(self):
+        """
+        Returns True if a label is currently being moved, False otherwise.
+        :rtype: bool
+        """
+        return self.mode is DiagramMode.MoveText and \
+               self.mousePressLabel is not None and \
+               self.mousePressLabelPos is not None and \
+               self.mousePressPos is not None
+
+    def isNodeMoveInProgress(self):
+        """
+        Returns True if a node(s) is currently being moved, False otherwise.
+        :rtype: bool
+        """
+        return self.mode is DiagramMode.MoveNode and \
+               self.mousePressData is not None and \
+               self.mousePressNode is not None and \
+               self.mousePressNodePos is not None and \
+               self.mousePressPos is not None
 
     def isEmpty(self):
         """
