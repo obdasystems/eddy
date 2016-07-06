@@ -70,8 +70,8 @@ if sys.platform.startswith('darwin'):
     OPTS['EXEC_NAME'] = APPNAME
     OPTS['EXEC_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'eddy.icns')
     OPTS['DOCUMENT_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'document.icns')
-    OPTS['DMG_BACKGROUND'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'dmg_background.png')
-    OPTS['DMG_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'dmg_icon.icns')
+    OPTS['DMG_BACKGROUND'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'macos_background_dmg.png')
+    OPTS['DMG_ICON'] = os.path.join(OPTS['PROJECT_DIR'], 'artwork', 'images', 'macos_icon_dmg.icns')
 elif sys.platform.startswith('win32'):
     OPTS['AS_TO_EXE'] = True
     OPTS['DIST_NAME'] = '{0}-{1}-{2}-win{3}'.format(APPNAME, VERSION, LICENSE.lower(), platform.architecture()[0][:-3])
