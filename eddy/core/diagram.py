@@ -297,12 +297,12 @@ class Diagram(QGraphicsScene):
                     previousNode = self.mouseOverNode
 
                     if previousNode:
-                        previousNode.redraw(selected=False)
+                        previousNode.scheduleForRedraw(selected=False)
 
                     if currentNode:
                         self.mouseOverNode = currentNode
                         result = self.project.validator.validate(edge.source, edge, currentNode)
-                        currentNode.redraw(selected=False, valid=result.valid)
+                        currentNode.scheduleForRedraw(selected=False, valid=result.valid)
                         if not result.valid:
                             statusBar.showMessage(result.message)
                         else:
@@ -378,12 +378,12 @@ class Diagram(QGraphicsScene):
                 if self.isEdgeInsertionInProgress():
 
                     edge = self.mousePressEdge
-                    edge.source.redraw(selected=False)
+                    edge.source.scheduleForRedraw(selected=False)
                     currentNode = self.itemOnTopOf(mousePos, edges=False, skip={edge.source})
                     insertEdge = False
 
                     if currentNode:
-                        currentNode.redraw(selected=False)
+                        currentNode.scheduleForRedraw(selected=False)
                         result = self.project.validator.validate(edge.source, edge, currentNode)
                         if result.valid:
                             edge.target = currentNode
@@ -393,7 +393,7 @@ class Diagram(QGraphicsScene):
                     # insertion using the undo command that will also emit the sgnItemAdded
                     # signal hence all the widgets will be notified of the edge insertion.
                     # We do this because while creating the edge we need to display it so the
-                    # user knows what is he connecting, but we don't want to truly insert
+                    # user knows what he is connecting, but we don't want to truly insert
                     # it till it's necessary (when the mouse is released and the validator
                     # confirms that the generated expression is a valid graphol expression).
                     self.removeItem(edge)

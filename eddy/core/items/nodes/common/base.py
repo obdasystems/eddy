@@ -305,7 +305,7 @@ class AbstractNode(AbstractItem):
             raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
         super().setPos(pos + super().pos() - self.pos())
 
-    def redraw(self, selected=None, valid=None, **kwargs):
+    def scheduleForRedraw(self, selected=None, valid=None, **kwargs):
         """
         Schedule this item for redrawing.
         :type selected: bool
@@ -365,7 +365,7 @@ class AbstractNode(AbstractItem):
         :rtype: QVariant
         """
         if change == AbstractNode.ItemSelectedHasChanged:
-            self.redraw(selected=value)
+            self.scheduleForRedraw(selected=value)
         return super(AbstractNode, self).itemChange(change, value)
 
     def mousePressEvent(self, mouseEvent):
@@ -510,7 +510,7 @@ class AbstractResizableNode(AbstractNode):
                 return i
         return None
 
-    def redraw(self, selected=None, valid=None, handle=None, **kwargs):
+    def scheduleForRedraw(self, selected=None, valid=None, handle=None, **kwargs):
         """
         Schedule this item for redrawing.
         :type selected: bool
@@ -622,7 +622,7 @@ class AbstractResizableNode(AbstractNode):
         """
         if change == AbstractNode.ItemSelectedHasChanged:
             if self.diagram.mode is not DiagramMode.ResizeNode:
-                self.redraw(selected=value)
+                self.scheduleForRedraw(selected=value)
         return super(AbstractNode, self).itemChange(change, value)
 
     def mousePressEvent(self, mouseEvent):
@@ -652,7 +652,7 @@ class AbstractResizableNode(AbstractNode):
                 self.mousePressHandle = handle
                 self.mousePressPos = mousePos
 
-                self.redraw(selected=True, handle=handle)
+                self.scheduleForRedraw(selected=True, handle=handle)
 
         super().mousePressEvent(mouseEvent)
 
@@ -706,7 +706,7 @@ class AbstractResizableNode(AbstractNode):
 
             self.diagram.setMode(DiagramMode.Idle)
 
-        self.redraw(selected=self.isSelected())
+        self.scheduleForRedraw(selected=self.isSelected())
 
         super().mouseReleaseEvent(mouseEvent)
 

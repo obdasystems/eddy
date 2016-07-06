@@ -306,7 +306,7 @@ class AbstractEdge(AbstractItem):
             return self.source
         raise AttributeError('node {0} is not attached to edge {1}'.format(node, self))
 
-    def redraw(self, selected=None, visible=None, breakpoint=None, anchor=None, **kwargs):
+    def scheduleForRedraw(self, selected=None, visible=None, breakpoint=None, anchor=None, **kwargs):
         """
         Schedule this item for redrawing.
         :type selected: bool
@@ -425,7 +425,7 @@ class AbstractEdge(AbstractItem):
         :rtype: QVariant
         """
         if change == AbstractEdge.ItemSelectedHasChanged:
-            self.redraw(selected=value, visible=self.canDraw())
+            self.scheduleForRedraw(selected=value, visible=self.canDraw())
         return super(AbstractEdge, self).itemChange(change, value)
 
     def mousePressEvent(self, mouseEvent):
@@ -449,7 +449,7 @@ class AbstractEdge(AbstractItem):
                 self.setSelected(True)
                 self.mousePressAnchorNode = anchorNode
                 self.mousePressAnchorNodePos = QPointF(anchorNode.anchor(self))
-                self.redraw(selected=True, visible=self.canDraw(), anchor=anchorNode)
+                self.scheduleForRedraw(selected=True, visible=self.canDraw(), anchor=anchorNode)
             else:
                 breakPoint = self.breakpointAt(mousePos)
                 if breakPoint is not None:
@@ -458,7 +458,7 @@ class AbstractEdge(AbstractItem):
                     self.setSelected(True)
                     self.mousePressBreakPoint = breakPoint
                     self.mousePressBreakPointPos = QPointF(self.breakpoints[breakPoint])
-                    self.redraw(selected=True, visible=self.canDraw(), breakpoint=breakPoint)
+                    self.scheduleForRedraw(selected=True, visible=self.canDraw(), breakpoint=breakPoint)
 
         self.mousePressPos = mousePos
         super().mousePressEvent(mouseEvent)

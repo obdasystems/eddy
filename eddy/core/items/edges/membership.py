@@ -304,7 +304,7 @@ class MembershipEdge(AbstractEdge):
                 self.head = createHead(p22, subpathN.angle(), headSize)
 
         self.updateLabel(points)
-        self.redraw(selected=self.isSelected(), visible=self.canDraw())
+        self.scheduleForRedraw(selected=self.isSelected(), visible=self.canDraw())
 
     def updateLabel(self, points):
         """

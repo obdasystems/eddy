@@ -181,7 +181,7 @@ class InputEdge(AbstractEdge):
         path.addPolygon(self.head)
         return path
 
-    def redraw(self, selected=None, visible=None, breakpoint=None, anchor=None, **kwargs):
+    def scheduleForRedraw(self, selected=None, visible=None, breakpoint=None, anchor=None, **kwargs):
         """
         Schedule this item for redrawing.
         :type selected: bool
@@ -346,7 +346,7 @@ class InputEdge(AbstractEdge):
                 self.head = createHead(p22, subpathN.angle(), headSize)
 
         self.updateLabel(points)
-        self.redraw(selected=self.isSelected(), visible=self.canDraw())
+        self.scheduleForRedraw(selected=self.isSelected(), visible=self.canDraw())
 
     def updateLabel(self, points):
         """
