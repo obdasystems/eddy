@@ -455,7 +455,7 @@ class Diagram(QGraphicsScene):
                         item = self.mousePressLabel.parentItem()
                         command = CommandLabelMove(self, item, self.mousePressLabelPos, pos)
                         self.project.undoStack.push(command)
-                        self.setMode(DiagramMode.Idle)
+                    self.setMode(DiagramMode.Idle)
 
             elif self.mode is DiagramMode.MoveNode:
 
