@@ -370,32 +370,10 @@ class AbstractNode(AbstractItem):
 
     def mousePressEvent(self, mouseEvent):
         """
-        Executed when the mouse is pressed on the item.
+        Executed when the mouse is pressed on the item (EXCLUDED).
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        # Allow node selection only if we are in DiagramMode.Idle state: resizable
-        # nodes may have changed the diagram mode to DiagramMode.ResizeNode if a resize
-        # handle is selected, thus we don't need to perform (multi)selection.
-        if self.diagram.mode is DiagramMode.Idle:
-            # Here is a slightly modified version of the default behavior
-            # which improves the interaction with multiple selected nodes.
-            if mouseEvent.modifiers() & Qt.ControlModifier:
-                # If the control modifier is being held switch the selection flag.
-                self.setSelected(not self.isSelected())
-            else:
-                if self.diagram.selectedItems():
-                    # Some elements are already selected (previoust mouse press event).
-                    if not self.isSelected():
-                        # There are some items selected but we clicked on a node
-                        # which is not currently selected, so select only this one.
-                        self.diagram.clearSelection()
-                        self.setSelected(True)
-                else:
-                    # No node is selected and we just clicked on one so select it
-                    # since we filter out the Label, clear the diagram selection in
-                    # any case to avoid strange bugs.
-                    self.diagram.clearSelection()
-                    self.setSelected(True)
+        pass
 
     def mouseMoveEvent(self, mouseEvent):
         """
@@ -510,6 +488,14 @@ class AbstractResizableNode(AbstractNode):
                 return i
         return None
 
+    @abstractmethod
+    def resize(self, mousePos):
+        """
+        Perform interactive resize of the node.
+        :type mousePos: QPointF
+        """
+        pass
+
     def scheduleForRedraw(self, selected=None, valid=None, handle=None, **kwargs):
         """
         Schedule this item for redrawing.
@@ -553,14 +539,6 @@ class AbstractResizableNode(AbstractNode):
 
         # SCHEDULE REPAINT
         self.update(self.boundingRect())
-
-    @abstractmethod
-    def resize(self, mousePos):
-        """
-        Perform interactive resize of the node.
-        :type mousePos: QPointF
-        """
-        pass
 
     def updateAnchors(self, data, diff):
         """
@@ -640,14 +618,14 @@ class AbstractResizableNode(AbstractNode):
                 self.diagram.setMode(DiagramMode.ResizeNode)
                 self.setSelected(True)
 
-                BC = QRectF if isinstance(self.background, QRectF) else QPolygonF
-                SC = QRectF if isinstance(self.selection, QRectF) else QPolygonF
-                PC = QRectF if isinstance(self.polygon, QRectF) else QPolygonF
+                f1 = QRectF if isinstance(self.background, QRectF) else QPolygonF
+                f2 = QRectF if isinstance(self.selection, QRectF) else QPolygonF
+                f3 = QRectF if isinstance(self.polygon, QRectF) else QPolygonF
 
-                self.mousePressBackground = BC(self.background)
-                self.mousePressSelection = SC(self.selection)
-                self.mousePressPolygon = PC(self.polygon)
-                self.mousePressBound = SC(self.selection)
+                self.mousePressBackground = f1(self.background)
+                self.mousePressSelection = f2(self.selection)
+                self.mousePressPolygon = f3(self.polygon)
+                self.mousePressBound = f2(self.selection)
                 self.mousePressData = {edge: pos for edge, pos in self.anchors.items()}
                 self.mousePressHandle = handle
                 self.mousePressPos = mousePos
@@ -677,13 +655,9 @@ class AbstractResizableNode(AbstractNode):
 
             if bound.size() != self.mousePressBound.size():
 
-                bFunc = QRectF if isinstance(self.background, QRectF) else QPolygonF
-                sFunc = QRectF if isinstance(self.selection, QRectF) else QPolygonF
-                pFunc = QRectF if isinstance(self.polygon, QRectF) else QPolygonF
-
-                background = bFunc(self.background)
-                selection = sFunc(self.selection)
-                polygon = pFunc(self.polygon)
+                f1 = QRectF if isinstance(self.background, QRectF) else QPolygonF
+                f2 = QRectF if isinstance(self.selection, QRectF) else QPolygonF
+                f3 = QRectF if isinstance(self.polygon, QRectF) else QPolygonF
 
                 data = {
                     'undo': {
@@ -694,9 +668,9 @@ class AbstractResizableNode(AbstractNode):
                         'moved': self.label is not None and self.label.isMoved(),
                     },
                     'redo': {
-                        'background': background,
-                        'selection': selection,
-                        'polygon': polygon,
+                        'background': f1(self.background),
+                        'selection': f2(self.selection),
+                        'polygon': f3(self.polygon),
                         'anchors': {edge: pos for edge, pos in self.anchors.items()},
                         'moved': self.label is not None and self.label.isMoved(),
                     }

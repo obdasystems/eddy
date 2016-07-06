@@ -71,6 +71,14 @@ class NodeLabel(AbstractLabel):
         super().keyPressEvent(keyEvent)
         self.updatePos(moved)
 
+    def mousePressEvent(self, mouseEvent):
+        """
+        Executed when the mouse is pressed on the text item.
+        :type mouseEvent: QGraphicsSceneMouseEvent
+        """
+        if self.diagram.mode is DiagramMode.EditText:
+            super().mousePressEvent(mouseEvent)
+
     #############################################
     #   INTERFACE
     #################################
@@ -98,24 +106,6 @@ class NodeLabel(AbstractLabel):
         """
         if not moved:
             self.setPos(self.defaultPos())
-
-    def mousePressEvent(self, mouseEvent):
-        """
-        Executed when the mouse is pressed on the text item.
-        :type mouseEvent: QGraphicsSceneMouseEvent
-        """
-        if self.diagram.mode is DiagramMode.Idle:
-            # See if the mouse is hovering the parent item: if so see if the
-            # item is not selected and in case select it so the mouseMoveEvent
-            # in the Diagram class can perform the node movement.
-            parent = self.parentItem()
-            if parent in self.diagram.items(mouseEvent.scenePos()):
-                if not parent.isSelected():
-                    self.diagram.clearSelection()
-                    parent.setSelected(True)
-
-        elif self.diagram.mode is DiagramMode.EditText:
-            super().mousePressEvent(mouseEvent)
 
 
 class FacetNodeQuotedLabel(NodeLabel):

@@ -237,38 +237,67 @@ class Diagram(QGraphicsScene):
                         # ITEM SELECTION
                         #################################
 
-                        # See if we have some nodes selected in the scene: this
-                        # is needed because itemOnTopOf will discard labels, so
-                        # if we have a node whose label is overlapping the node
-                        # shape, clicking on the label will make itemOnTopOf
-                        # return the node item instead of the label.
-                        selected = self.selectedNodes()
-                        if selected:
-                            # We have some nodes selected in the scene so we probably
-                            # are going to do a move operation, prepare data for mouse
-                            # move event => select a node that will act as mouse grabber
-                            # to compute delta movements for each componenet in the selection.
-                            self.mousePressNode = self.itemOnTopOf(mousePos, edges=False)
-                            if self.mousePressNode:
-                                self.mousePressNodePos = self.mousePressNode.pos()
-                                self.mousePressPos = mousePos
-                                self.mousePressData = {
-                                    'nodes': {
-                                        node: {
-                                            'anchors': {k: v for k, v in node.anchors.items()},
-                                            'pos': node.pos(),
-                                        } for node in selected},
-                                    'edges': {}
-                                }
+                        item = self.itemOnTopOf(mousePos, labels=True)
+                        if item:
 
-                                # Figure out if the nodes we are moving are sharing edges:
-                                # if that's the case, move the edge together with the nodes
-                                # (which actually means moving the edge breakpoints).
-                                for node in self.mousePressData['nodes']:
-                                    for edge in node.edges:
-                                        if edge not in self.mousePressData['edges']:
-                                            if edge.other(node).isSelected():
-                                                self.mousePressData['edges'][edge] = edge.breakpoints[:]
+                            if item.isLabel():
+                                # If we are hitting a label, check whether the label
+                                # ois verlapping it's parent item and such item is
+                                # also intersecting the current mouse position: if so,
+                                # use the parent item as placeholder for the selection.
+                                parent = item.parentItem()
+                                items = self.items(mousePos)
+                                item =  parent if parent in items else None
+
+                            if item:
+
+                                if mouseModifiers & Qt.ControlModifier:
+                                    # CTRL => support item multi selection.
+                                    item.setSelected(not item.isSelected())
+                                else:
+                                    if self.selectedItems():
+                                        # Some elements have been already selected in the
+                                        # diagram, during a previous mouse press event.
+                                        if not item.isSelected():
+                                            # There are some items selected but we clicked
+                                            # on a node which is not currently selected, so
+                                            # make this node the only selected one.
+                                            self.clearSelection()
+                                            item.setSelected(True)
+                                    else:
+                                        # No item (nodes or edges) is selected and we just
+                                        # clicked on one so make sure to select this item and
+                                        # because selectedItems() filters out item Label's,
+                                        # clear out the selection on the diagram.
+                                        self.clearSelection()
+                                        item.setSelected(True)
+
+                                # If we have some nodes selected we need to prepare data for a
+                                # possible item move operation: we need to make sure to retrieve
+                                # the node below the mouse cursor that will act as as mouse grabber
+                                # to compute delta  movements for each component in the selection.
+                                selected = self.selectedNodes()
+                                if selected:
+                                    self.mousePressNode = self.itemOnTopOf(mousePos, edges=False)
+                                    if self.mousePressNode:
+                                        self.mousePressNodePos = self.mousePressNode.pos()
+                                        self.mousePressPos = mousePos
+                                        self.mousePressData = {
+                                            'nodes': {
+                                                node: {
+                                                    'anchors': {k: v for k, v in node.anchors.items()},
+                                                    'pos': node.pos(),
+                                                } for node in selected},
+                                            'edges': {}
+                                        }
+                                        # Figure out if the nodes we are moving are sharing edges:
+                                        # if that's the case, move the edge together with the nodes
+                                        # (which actually means moving the edge breakpoints).
+                                        for node in self.mousePressData['nodes']:
+                                            for edge in node.edges:
+                                                if edge not in self.mousePressData['edges']:
+                                                    if edge.other(node).isSelected():
+                                                        self.mousePressData['edges'][edge] = edge.breakpoints[:]
 
     def mouseMoveEvent(self, mouseEvent):
         """
@@ -319,7 +348,6 @@ class Diagram(QGraphicsScene):
                 #################################
 
                 if self.isLabelMoveInProgress():
-
                     self.mousePressLabel.setPos(mousePos - self.mousePressPos)
 
             else:
