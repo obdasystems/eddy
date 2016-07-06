@@ -348,7 +348,12 @@ class Diagram(QGraphicsScene):
                 #################################
 
                 if self.isLabelMoveInProgress():
-                    self.mousePressLabel.setPos(mousePos - self.mousePressPos)
+                    mainwindow = self.project.parent()
+                    snapToGrid = mainwindow.actionToggleGrid.isChecked()
+                    point = self.mousePressLabelPos + mousePos - self.mousePressPos
+                    point = snap(point, Diagram.GridSize / 4, snapToGrid)
+                    delta = point - self.mousePressLabelPos
+                    self.mousePressLabel.setPos(self.mousePressLabelPos + delta)
 
             else:
 
@@ -740,8 +745,6 @@ class Diagram(QGraphicsScene):
         """
         Returns the item which is on top of the given point.
         By default the method perform the search only on nodes and edges.
-        Setting the 'labels' keyword argument to True will also make sure to include
-        nodes and edges labels in the result among which the top item will be extracted.
         :type point: QPointF
         :type nodes: bool
         :type edges: bool
