@@ -88,12 +88,13 @@ class EdgeLabel(AbstractLabel):
             return
 
         if self.isCentered():
-            # Here the label should be centered in the edge path => we need to compute 2 different positions:
+            # Here the label should be centered in the edge path.
+            # In this case we need to handle 2 different situations:
             #   1. when the edge path is composed of an even number of points (odd subpaths)
             #   2. when the edge path is composed of an odd number of points (even subpaths)
             if len(points) % 2 == 0:
                 # If we have an even number of points, compute the position of the label
-                # according to the middle point of the subpath connecting the middle points.
+                # according to the midpoint of the subpath connecting the middle points.
                 p1 = points[int(len(points) / 2) - 1]
                 p2 = points[int(len(points) / 2)]
                 mid = midpoint(p1, p2)
@@ -102,8 +103,8 @@ class EdgeLabel(AbstractLabel):
                 spaceY = -16
                 self.setPos(QPointF(mid.x() + spaceX * sin(rad), mid.y() + spaceY * cos(rad)))
             else:
-                # If we have an odd number of points compute the
-                # position of the label according the point in the middle.
+                # If we have an odd number of points compute the position
+                # of the label according the point in the middle of the edge.
                 mid = points[int(len(points) / 2)]
                 rad1 = angle(points[int(len(points) / 2) - 1], mid)
                 rad2 = angle(mid, points[int(len(points) / 2) + 1])
@@ -117,9 +118,11 @@ class EdgeLabel(AbstractLabel):
                     spaceY += spaceY * sin(diff) * 1.8
                 self.setPos(QPointF(mid.x() + spaceX1 + spaceX2, mid.y() + spaceY))
         else:
-            # Here instead we will place the label near the intersection with the target shape: this is mostly
-            # used for input edges connecting role chain nodes and property assertion nodes, so we can inspect
-            # visually the partecipation order of connected nodes without having to scroll the diagram.
+            # Here instead we will place the label near the intersection with
+            # the target shape: this is mostly used for input edges connecting
+            # role chain nodes and property assertion nodes, so we can inspect
+            # visually the partecipation order of connected nodes without having
+            # to scroll the diagram.
             rad = angle(points[-2], points[-1])
             pos = points[-1] - QPointF(sin(rad + M_PI / 3.0) * 20, cos(rad + M_PI / 3.0) * 20)
             self.setPos(pos)
