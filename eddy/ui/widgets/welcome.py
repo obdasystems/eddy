@@ -37,14 +37,14 @@ import webbrowser
 
 from PyQt5.QtCore import Qt, QSettings, pyqtSlot, QSize, pyqtSignal
 from PyQt5.QtGui import QIcon, QPainter
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog, QMenu
-from PyQt5.QtWidgets import QLabel, QWidget, QStyleOption, QStyle, QAction
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog, QMenu, QAction
+from PyQt5.QtWidgets import QLabel, QWidget, QStyleOption, QStyle, QDesktopWidget
 
 from eddy import APPNAME, ORGANIZATION, VERSION
 from eddy import PROJECT_HOME, BUG_TRACKER, GRAPHOL_HOME, WORKSPACE
 from eddy.core.functions.misc import first
 from eddy.core.functions.path import shortPath, compressPath
-from eddy.core.functions.signals import connect, emit
+from eddy.core.functions.signals import connect
 from eddy.core.qt import Font, PHCQPushButton, PHCQToolButton
 from eddy.lang import gettext as _
 from eddy.ui.dialogs.project import ProjectDialog
@@ -211,6 +211,21 @@ class Welcome(QWidget):
         style.drawPrimitive(QStyle.PE_Widget, option, painter, self)
 
     #############################################
+    #   INTERFACE
+    #################################
+
+    def center(self):
+        """
+        Make sure to have the widget centered in the screen.
+        """
+        desktop = QDesktopWidget()
+        screen = desktop.screenGeometry()
+        widget = self.geometry()
+        x = (screen.width() - widget.width()) / 2
+        y = (screen.height() - widget.height()) / 2
+        self.move(x, y)
+
+    #############################################
     #   SLOTS
     #################################
 
@@ -221,7 +236,8 @@ class Welcome(QWidget):
         """
         form = ProjectDialog(self)
         if form.exec_() == ProjectDialog.Accepted:
-            emit(self.sgnCreateSession, form.pathField.value())
+            path = form.pathField.value()
+            self.sgnCreateSession.emit(path)
 
     @pyqtSlot()
     def doOpenProject(self):
@@ -236,7 +252,8 @@ class Welcome(QWidget):
         dialog.setViewMode(QFileDialog.Detail)
 
         if dialog.exec_() == QFileDialog.Accepted:
-            emit(self.sgnCreateSession, first(dialog.selectedFiles()))
+            path = first(dialog.selectedFiles())
+            self.sgnCreateSession.emit(path)
 
     @pyqtSlot(str)
     def doOpenRecentProject(self, path):
@@ -244,7 +261,7 @@ class Welcome(QWidget):
         Open a recent project in a new session of Eddy.
         :type path: str
         """
-        emit(self.sgnCreateSession, path)
+        self.sgnCreateSession.emit(path)
 
     @pyqtSlot()
     def doOpenURL(self):
@@ -314,7 +331,7 @@ class ProjectBlock(QWidget):
         :type mouseEvent: QMouseEvent
         """
         if mouseEvent.button() == Qt.LeftButton:
-            emit(self.sgnClicked, self.path)
+            self.sgnClicked.emit(self.path)
 
     def paintEvent(self, paintEvent):
         """

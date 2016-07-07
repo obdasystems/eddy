@@ -248,6 +248,7 @@ class Eddy(QApplication):
         if show:
             if not self._welcome:
                 self._welcome = Welcome(self)
+                self._welcome.center()
                 self._welcome.show()
         else:
             if self._welcome:
