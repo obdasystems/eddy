@@ -204,10 +204,6 @@ APP="{0}"
 EXEC="{1}"
 VERSION="{2}"
 DIRNAME=`dirname $0`
-TMP="$DIRNAME#?"
-if [ "$DIRNAME%$TMP" != "/" ]; then
-DIRNAME=$PWD/$DIRNAME
-fi
 LD_LIBRARY_PATH=$DIRNAME
 export LD_LIBRARY_PATH
 echo "Starting $APP $VERSION ..."
