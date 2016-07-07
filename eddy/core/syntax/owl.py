@@ -528,6 +528,15 @@ class OWL2Validator(AbstractValidator):
                     idB = node.identity.value
                     raise SyntaxError(_('SYNTAX_INPUT_DR_INVALID_QUALIFIED_RESTRICTION_OPERANDS', idA, idB))
 
+        elif target.type() is Item.FacetNode:
+
+            #############################################
+            # TARGET = FACET NODE
+            #################################
+
+            # Facet node cannot be target of any input.
+            raise SyntaxError(_('SYNTAX_INPUT_FACET_INVALID_TARGET'))
+
     @staticmethod
     def membership(source, edge, target):
         """

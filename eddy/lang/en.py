@@ -431,6 +431,7 @@ SYNTAX_INPUT_DR_INVALID_QUALIFIED_RESTRICTION = 'Invalid restriction ({0}) for q
 SYNTAX_INPUT_DR_INVALID_QUALIFIED_RESTRICTION_OPERANDS = 'Invalid inputs ({0} + {1}) for qualified restriction'
 SYNTAX_INPUT_DR_ATTRIBUTE_NO_SELF = 'Attributes do not have self'
 SYNTAX_INPUT_ENUMERATION_INVALID_TARGET_IDENTITY = 'Target node has an invalid identity: {0}'
+SYNTAX_INPUT_FACET_INVALID_TARGET = 'Facet not cannot be target of any input'
 SYNTAX_INPUT_PROP_ASSERTION_TOO_MANY_INSTANCES = 'Too many instances in input to {0}'
 SYNTAX_INPUT_PROP_ASSERTION_TOO_MANY_VALUES = 'Too many values in input to {0}'
 SYNTAX_INPUT_INVALID_COMPOSITION = 'Type mismatch: {0} between {1} and {2}'
