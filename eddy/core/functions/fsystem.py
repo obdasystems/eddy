@@ -32,6 +32,7 @@
 ##########################################################################
 
 
+import io
 import os
 import shutil
 
@@ -65,7 +66,7 @@ def fread(path):
     :rtype: str
     """
     path = expandPath(path)
-    with open(path, 'r') as ptr:
+    with io.open(path, 'r', encoding='utf8') as ptr:
         return ptr.read()
 
 
@@ -83,14 +84,14 @@ def fwrite(content, path):
     Safely write the given 'content' in the file identified by the given 'path'.
     If the given path identifies an already existing file, its content is not
     truncated unless the writing operation is completed successfully.
-    :type content: str
+    :type content: bytes
     :type path: str
     """
     path = expandPath(path)
     components = os.path.split(path)
     stage = os.path.join(components[0], '.{0}'.format(components[1]))
-    with open(stage, mode='wb') as ptr:
-        ptr.write(content.encode(encoding='UTF-8'))
+    with io.open(stage, 'wb', encoding='utf8') as ptr:
+        ptr.write(content)
     if os.path.isfile(path):
         os.remove(path)
     os.rename(stage, path)
