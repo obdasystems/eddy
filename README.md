@@ -1,4 +1,4 @@
-![Eddy](/artwork/images/eddy_banner.png?raw=true)
+![Eddy](/resources/artwork/images/eddy_banner.png?raw=true)
 
 [![Circle CI](https://img.shields.io/circleci/project/danielepantaleone/eddy/master.svg)](https://circleci.com/gh/danielepantaleone/eddy/tree/master)
 [![Build Status](https://travis-ci.org/danielepantaleone/eddy.svg?branch=master)](https://travis-ci.org/danielepantaleone/eddy)
@@ -50,7 +50,7 @@ ontologies that can be rendered as ER diagrams have in Graphol a similar diagram
 
 ### Screenshot
 
-![screenshot](/artwork/images/shot01.png?raw=true)
+![screenshot](/resources/artwork/images/shot01.png?raw=true)
 
 ### License
 
