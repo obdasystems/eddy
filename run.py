@@ -28,6 +28,7 @@
 #     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
 #     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
 #     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
+#     - Daniele Pantaleone <pantaleone@dis.uniroma1.it>                  #
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
