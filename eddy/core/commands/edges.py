@@ -3,7 +3,7 @@
 ##########################################################################
 #                                                                        #
 #  Eddy: an editor for the Graphol ontology language.                    #
-#  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
+#  Copyright (C) 2015 Daniele Pantaleone <pantaleone@dis.uniroma1.it>    #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
 #  it under the terms of the GNU General Public License as published by  #
