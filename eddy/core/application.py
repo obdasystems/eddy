@@ -48,6 +48,7 @@ from eddy.core.functions.fsystem import isdir, fexists
 from eddy.core.functions.misc import isEmpty, format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
+from eddy.core.output import getLogger
 from eddy.core.project import Project
 
 from eddy.ui.dialogs.progress import BusyProgressDialog
@@ -56,6 +57,9 @@ from eddy.ui.widgets.mainwindow import MainWindow
 from eddy.ui.widgets.splash import Splash
 from eddy.ui.widgets.welcome import Welcome
 from eddy.ui.style import Clean
+
+
+LOGGER = getLogger(APPNAME)
 
 
 class Eddy(QApplication):
@@ -72,37 +76,35 @@ class Eddy(QApplication):
         """
         super().__init__(argv)
 
-        self._splash = None
-        self._welcome = None
-
-        self.iSock = None
-        self.iStream = None
-        self.oSock = QLocalSocket()
-        self.oSock.connectToServer(APPID)
-        self.oStream = None
+        self.localServer = None
+        self.inputSocket = None
+        self.inputStream = None
+        self.outputSocket = QLocalSocket()
+        self.outputSocket.connectToServer(APPID)
+        self.outputStream = None
 
         self.pending = []
-        self.running = self.oSock.waitForConnected()
+        self.running = self.outputSocket.waitForConnected()
         self.mainwindow = None
-        self.server = None
+        self.welcome = None
 
-        if self.running and not options.tests:
+        if self.isAlreadyRunning() and not options.tests:
             # We allow to initialize multiple processes of Eddy only if we
             # are running the test suite to speed up tests execution time,
             # else we configure an output stream on which to route outgoing
             # messages to the alive Eddy process that will handle them.
-            self.oStream = QTextStream(self.oSock)
-            self.oStream.setCodec('UTF-8')
+            self.outputStream = QTextStream(self.outputSocket)
+            self.outputStream.setCodec('UTF-8')
         else:
-            # We are not running Eddy yet, so we initialize a local server
+            # We are not running Eddy yet, so we initialize a QLocalServer
             # to intercept incoming messages from future instances of Eddy
             # not to spawn multiple process.
-            self.server = QLocalServer()
-            self.server.listen(APPID)
-            self.oStream = None
-            self.oSock = None
+            self.localServer = QLocalServer()
+            self.localServer.listen(APPID)
+            self.outputStream = None
+            self.outputSocket = None
 
-            connect(self.server.newConnection, self.doAcceptConnection)
+            connect(self.localServer.newConnection, self.doAcceptConnection)
             connect(self.sgnMessageReceived, self.doReadMessage)
 
     #############################################
@@ -132,7 +134,10 @@ class Eddy(QApplication):
         # DRAW THE SPLASH SCREEN
         #################################
 
-        self.splash(show=True, options=options)
+        splash = None
+        if not options.nosplash:
+            splash = Splash(self, mtime=4)
+            splash.show()
 
         #############################################
         # CONFIGURE DEFAULTS
@@ -179,7 +184,9 @@ class Eddy(QApplication):
         # CLOSE THE SPLASH SCREEN
         #################################
 
-        self.splash(show=False)
+        if splash and not options.nosplash:
+            splash.sleep()
+            splash.close()
 
         #############################################
         # CONFIGURE THE WORKSPACE
@@ -191,16 +198,23 @@ class Eddy(QApplication):
             if window.exec_() == WorkspaceDialog.Rejected:
                 raise SystemExit
 
+    def isAlreadyRunning(self):
+        """
+        Returns True if there is already another instance of Eddy which is running, False otherwise.
+        :rtype: bool
+        """
+        return self.running
+
     def routePacket(self, argv):
         """
         Route input arguments to the already running Eddy process.
         :type argv: list
         :rtype: bool
         """
-        if self.oStream:
-            self.oStream = self.oStream << ' '.join(argv) << '\n'
-            self.oStream.flush()
-            return self.oSock.waitForBytesWritten()
+        if self.outputStream:
+            self.outputStream = self.outputStream << ' '.join(argv) << '\n'
+            self.outputStream.flush()
+            return self.outputSocket.waitForBytesWritten()
         return False
 
     def save(self):
@@ -213,46 +227,15 @@ class Eddy(QApplication):
             settings.setValue('mainwindow/state', self.mainwindow.saveState())
             settings.sync()
 
-    def splash(self, show=True, options=None):
-        """
-        Show/hide the splash screen.
-        :type show: bool
-        :type options: Namespace
-        """
-        if show:
-            if not self._splash:
-                if options and not options.nosplash:
-                    self._splash = Splash(self, mtime=4)
-                    self._splash.show()
-        else:
-            if self._splash:
-                self._splash.sleep()
-                self._splash.close()
-                self._splash = None
-
     def start(self, options):
         """
         Run the application by showing the welcome dialog.
         :type options: Namespace
         """
-        self.welcome(show=True)
+        self.welcome = Welcome(self)
+        self.welcome.show()
         if options.open and isdir(options.open):
             self.doCreateSession(options.open)
-
-    def welcome(self, show=True):
-        """
-        Show/hide the welcome screen.
-        :type show: bool
-        """
-        if show:
-            if not self._welcome:
-                self._welcome = Welcome(self)
-                self._welcome.center()
-                self._welcome.show()
-        else:
-            if self._welcome:
-                self._welcome.close()
-                self._welcome = None
 
     #############################################
     #   SLOTS
@@ -263,46 +246,43 @@ class Eddy(QApplication):
         """
         Executed whenever a new connection needs to be established.
         """
-        if self.iSock:
-            disconnect(self.iSock.readyRead, self.onReadyRead)
-
-        self.iSock = self.server.nextPendingConnection()
-
-        if self.iSock:
-            self.iStream = QTextStream(self.iSock)
-            self.iStream.setCodec('UTF-8')
-            connect(self.iSock.onReadyRead, self.onReadyRead)
+        if self.inputSocket:
+            # If the input socket is already connected, disconnecting
+            # so we can set it to listen on the new pending connection.
+            disconnect(self.inputSocket.readyRead, self.onReadyRead)
+        # Accept a new connectiong pending on the local server.
+        self.inputSocket = self.localServer.nextPendingConnection()
+        if self.inputSocket:
+            # If we have a connection, setup the stream to accept packets.
+            self.inputStream = QTextStream(self.inputSocket)
+            self.inputStream.setCodec('UTF-8')
+            connect(self.inputSocket.onReadyRead, self.onReadyRead)
 
     @pyqtSlot(str)
     def doCreateSession(self, path):
         """
-        Create a working session using the given project path.
+        Create a session using the given project path.
         :type path: str
         """
         with BusyProgressDialog('Loading project: {0}'.format(os.path.basename(path))):
 
             try:
-
-                # VALIDATE PROJECT PATH
+                # Validate path.
                 path = expandPath(path)
                 if not isdir(path):
                     raise ProjectNotFoundError
-
-                # VALIDATE PROJECT HOME
+                # Check for project home directory to be available.
                 home = os.path.join(path, Project.Home)
                 if not isdir(home):
                     raise ProjectNotValidError('missing project home: {0}'.format(home))
-
-                # VALIDATE PROJECT METADATA
+                # check for project metadata xml file.
                 meta = os.path.join(home, Project.MetaXML)
                 if not fexists(meta):
                     raise ProjectNotValidError('missing project metadata: {0}'.format(meta))
-
-                # VALIDATE PROJECT MODULE STRUCTURE
+                # Check for project XML structure file.
                 modules = os.path.join(home, Project.ModulesXML)
                 if not fexists(modules):
                     raise ProjectNotValidError('missing project structure: {0}'.format(modules))
-
             except ProjectNotFoundError:
                 msgbox = QMessageBox()
                 msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
@@ -343,7 +323,8 @@ class Eddy(QApplication):
                         settings.setValue('project/recent', projects)
                         settings.sync()
 
-                    self.welcome(show=False)
+                    if self.welcome:
+                        self.welcome.close()
                     self.mainwindow.show()
     
     @pyqtSlot()
@@ -368,7 +349,7 @@ class Eddy(QApplication):
         Executed whenever we need to read a message.
         """
         while True:
-            message = self.iStream.readLine()
+            message = self.inputStream.readLine()
             if isEmpty(message):
                 break
             self.sgnMessageReceived.emit(message)
@@ -379,4 +360,5 @@ class Eddy(QApplication):
         Quit Eddy.
         """
         self.save()
-        self.welcome(show=True)
+        self.welcome = Welcome(self)
+        self.welcome.show()

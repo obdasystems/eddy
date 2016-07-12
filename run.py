@@ -71,7 +71,6 @@ jnius_config.set_classpath(*classpath)
 
 
 from argparse import ArgumentParser
-from textwrap import dedent
 
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QMessageBox, QApplication
@@ -102,16 +101,16 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
         global msgbox
         if not msgbox:
             msgbox = QMessageBox()
-            msgbox.setDetailedText(format_exception(exc_value))
             msgbox.setIconPixmap(QPixmap(':/images/eddy-sad'))
-            msgbox.setInformativeText(dedent("""If the problem persists please
-            <a href="{0}">submit a bug report</a>.""".format(BUG_TRACKER)))
-            msgbox.setStandardButtons(QMessageBox.Close | QMessageBox.Ok)
-            msgbox.setText(dedent("""This is embarrassing ...\n\n
-            A critical error has just occurred.
-            {0} will continue to work, however a reboot is highly recommended.""".format(APPNAME)))
             msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Fatal error!')
+            msgbox.setText('This is embarrassing ...\n\n' \
+            'A critical error has just occurred. {0} will continue to work, ' \
+            'however a reboot is highly recommended.'.format(APPNAME))
+            msgbox.setInformativeText('If the problem persists you can '
+            '<a href="{0}">submit a bug report</a>.'.format(BUG_TRACKER))
+            msgbox.setDetailedText(format_exception(exc_value))
+            msgbox.setStandardButtons(QMessageBox.Close | QMessageBox.Ok)
             buttonOk = msgbox.button(QMessageBox.Ok)
             buttonOk.setText('Close')
             buttonQuit = msgbox.button(QMessageBox.Close)
@@ -139,7 +138,7 @@ def main():
 
     global app
     app = Eddy(options, sys.argv)
-    if app.running:
+    if app.isAlreadyRunning():
         app.routePacket(sys.argv)
         sys.exit(0)
 

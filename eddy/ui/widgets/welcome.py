@@ -196,6 +196,13 @@ class Welcome(QWidget):
         self.setWindowTitle('Welcome to {0}'.format(APPNAME))
         connect(self.sgnCreateSession, application.doCreateSession)
 
+        desktop = QDesktopWidget()
+        screen = desktop.screenGeometry()
+        widget = self.geometry()
+        x = (screen.width() - widget.width()) / 2
+        y = (screen.height() - widget.height()) / 2
+        self.move(x, y)
+
     #############################################
     #   EVENTS
     #################################
@@ -210,21 +217,6 @@ class Welcome(QWidget):
         painter = QPainter(self)
         style = self.style()
         style.drawPrimitive(QStyle.PE_Widget, option, painter, self)
-
-    #############################################
-    #   INTERFACE
-    #################################
-
-    def center(self):
-        """
-        Make sure to have the widget centered in the screen.
-        """
-        desktop = QDesktopWidget()
-        screen = desktop.screenGeometry()
-        widget = self.geometry()
-        x = (screen.width() - widget.width()) / 2
-        y = (screen.height() - widget.height()) / 2
-        self.move(x, y)
 
     #############################################
     #   SLOTS
