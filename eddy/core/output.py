@@ -51,7 +51,7 @@ def getLogger(name=APPNAME):
     global __output
     if not name in __output:
 
-        formatter = logging.Formatter(fmt='{asctime} [{levelname}] {message}', datefmt='%Y/%m/%d %H:%M:%S', style='{')
+        formatter = logging.Formatter(fmt='%(asctime)s [%(levelname)s] %(message)', datefmt='%Y/%m/%d %H:%M:%S')
         handler = logging.StreamHandler(sys.stderr)
         handler.setFormatter(formatter)
         logger = logging.getLogger(name)
