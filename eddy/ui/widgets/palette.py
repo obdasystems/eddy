@@ -42,7 +42,7 @@ from PyQt5.QtWidgets import QApplication, QStyleOption, QStyle
 
 from eddy import ORGANIZATION, APPNAME
 from eddy.core.datatypes.graphol import Item
-from eddy.core.functions.signals import emit, connect
+from eddy.core.functions.signals import connect
 from eddy.core.items.factory import ItemFactory
 from eddy.core.qt import Font
 
@@ -137,7 +137,7 @@ class Palette(QWidget):
         Executed when a button is clicked.
         """
         self.reset(self.sender())
-        emit(self.sgnButtonClicked, self.sender())
+        self.sgnButtonClicked.emit(self.sender())
 
     @pyqtSlot()
     def onMenuButtonClicked(self):

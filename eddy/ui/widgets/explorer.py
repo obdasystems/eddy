@@ -43,7 +43,7 @@ from PyQt5.QtWidgets import QHeaderView, QAction, QMenu
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.system import File
 from eddy.core.functions.misc import first, cutR
-from eddy.core.functions.signals import connect, emit
+from eddy.core.functions.signals import connect
 from eddy.core.qt import Font
 
 from eddy.ui.fields import StringField
@@ -169,7 +169,7 @@ class OntologyExplorer(QWidget):
         if QApplication.mouseButtons() & Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
             if item and item.data():
-                emit(self.sgnItemDoubleClicked['QGraphicsItem'], item.data())
+                self.sgnItemDoubleClicked.emit(item.data())
 
     @pyqtSlot('QModelIndex')
     def onItemPressed(self, index):
@@ -181,7 +181,7 @@ class OntologyExplorer(QWidget):
         if QApplication.mouseButtons() & Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
             if item and item.data():
-                emit(self.sgnItemClicked['QGraphicsItem'], item.data())
+                self.sgnItemClicked.emit(item.data())
 
     #############################################
     #   INTERFACE
@@ -332,7 +332,7 @@ class OntologyExplorerView(QTreeView):
                 item = model.itemFromIndex(index)
                 node = item.data()
                 if node:
-                    emit(self.widget.sgnItemRightClicked['QGraphicsItem'], node)
+                    self.widget.sgnItemRightClicked['QGraphicsItem'].emit(node)
                     menu = self.widget.mainwindow.menuFactory.create(self.widget.mainwindow, node.diagram, node)
                     menu.exec_(mouseEvent.screenPos().toPoint())
 
@@ -356,8 +356,8 @@ class ProjectExplorer(QWidget):
     """
     This class implements the project explorer used to display the project structure.
     """
-    sgnItemClicked = pyqtSignal([str], ['QGraphicsScene'])
-    sgnItemDoubleClicked = pyqtSignal([str], ['QGraphicsScene'])
+    sgnItemClicked = pyqtSignal('QGraphicsScene')
+    sgnItemDoubleClicked = pyqtSignal('QGraphicsScene')
 
     def __init__(self, parent):
         """
@@ -451,7 +451,7 @@ class ProjectExplorer(QWidget):
         if QApplication.mouseButtons() & Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
             if item and item.data():
-                emit(self.sgnItemDoubleClicked['QGraphicsScene'], item.data())
+                self.sgnItemDoubleClicked.emit(item.data())
 
     @pyqtSlot('QModelIndex')
     def onItemPressed(self, index):
@@ -463,7 +463,7 @@ class ProjectExplorer(QWidget):
         if QApplication.mouseButtons() & Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
             if item and item.data():
-                emit(self.sgnItemClicked['QGraphicsScene'], item.data())
+                self.sgnItemClicked.emit(item.data())
 
     #############################################
     #   EVENTS

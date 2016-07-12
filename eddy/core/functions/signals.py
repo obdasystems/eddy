@@ -78,17 +78,3 @@ def disconnect(signal, *args):
             signal.disconnect()
         except (RuntimeError, TypeError, AttributeError):
             pass
-
-
-def emit(signal, *args):
-    """
-    Emit the given signal passing the given arguments along.
-    This function is actually just a wrapper around the pyqtSignal
-    built-in, mostly needed to keep backwards compatibility in case
-    PyQt changes the signal interface, like it happened already with
-    the introduction of the new style for signals and slots introduced
-    in PyQt4 v4.5.
-    :type signal: pyqtSignal
-    :type args: list
-    """
-    signal.emit(*args)
