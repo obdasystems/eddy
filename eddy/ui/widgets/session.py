@@ -104,9 +104,9 @@ from eddy.ui.widgets.view import DiagramView
 from eddy.ui.widgets.zoom import Zoom
 
 
-class MainWindow(QMainWindow):
+class Session(QMainWindow):
     """
-    This class implements Eddy's main window.
+    This class implements Eddy's main working session.
     """
     sgnClosed = pyqtSignal()
     sgnQuit = pyqtSignal()
@@ -260,7 +260,7 @@ class MainWindow(QMainWindow):
 
         self.setAcceptDrops(True)
         self.setCentralWidget(self.mdi)
-        self.setDockOptions(MainWindow.AnimatedDocks|MainWindow.AllowTabbedDocks)
+        self.setDockOptions(Session.AnimatedDocks | Session.AllowTabbedDocks)
         self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(self.project)
 
@@ -853,8 +853,8 @@ class MainWindow(QMainWindow):
         QApplication.processEvents()
 
         settings = QSettings(ORGANIZATION, APPNAME)
-        self.restoreGeometry(settings.value('mainwindow/geometry', QByteArray(), QByteArray))
-        self.restoreState(settings.value('mainwindow/state', QByteArray(), QByteArray))
+        self.restoreGeometry(settings.value('session/geometry', QByteArray(), QByteArray))
+        self.restoreState(settings.value('session/state', QByteArray(), QByteArray))
         self.actionToggleGrid.setChecked(settings.value('diagram/grid', False, bool))
 
     #############################################

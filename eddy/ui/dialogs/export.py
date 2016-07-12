@@ -55,14 +55,14 @@ class OWLExportDialog(QDialog):
     """
     This class implements the form used to perform Graphol -> OWL ontology translation.
     """
-    def __init__(self, project, path, parent=None):
+    def __init__(self, project, path, session):
         """
         Initialize the form dialog.
         :type project: Project
         :type path: str
-        :type parent: MainWindow
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
 
         arial12r = Font('Arial', 12)
 
@@ -122,6 +122,18 @@ class OWLExportDialog(QDialog):
         connect(self.confirmationBox.rejected, self.reject)
 
     #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def session(self):
+        """
+        Returns the active session (aloas for OWLExportDialog.parent()).
+        :rtype: Session
+        """
+        return self.parent()
+
+    #############################################
     #   SLOTS
     #################################
 
@@ -143,8 +155,7 @@ class OWLExportDialog(QDialog):
             msgbox.setWindowTitle('Malformed expression')
             msgbox.exec_()
             if msgbox.result() == QMessageBox.Yes:
-                mainwindow = self.parent()
-                mainwindow.doFocusItem(exception.item)
+                self.session.doFocusItem(exception.item)
         else:
             msgbox = QMessageBox(self)
             msgbox.setDetailedText(format_exception(exception))

@@ -45,14 +45,14 @@ class PrinterExporter(PdfExporter):
     """
     This class can be used to print graphol projects.
     """
-    def __init__(self, project, printer, parent=None):
+    def __init__(self, project, printer, session=None):
         """
         Initialize the Pdf Exporter.
         :type project: Project
         :type printer: QPrinter
-        :type parent: QObject
+        :type session: Session
         """
-        super().__init__(project, parent=parent)
+        super().__init__(project, session=session)
         self.printer = printer
 
     #############################################

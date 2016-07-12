@@ -65,12 +65,12 @@ class PropertyDialog(QDialog):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, parent=None):
+    def __init__(self, session):
         """
         Initialize the property dialog.
-        :type parent: MainWindow
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
 
     #############################################
     #   PROPERTIES
@@ -79,24 +79,31 @@ class PropertyDialog(QDialog):
     @property
     def project(self):
         """
-        Returns the project loaded in the main window.
+        Returns the project loaded in the active session (alias for PropertyDialog.session.project).
         :rtype: Project 
         """
-        mainwindow = self.parent()
-        return mainwindow.project
+        return self.session.project
+
+    @property
+    def session(self):
+        """
+        Returns the active session (alias for PropertyDialog.parent()).
+        :rtype: Session
+        """
+        return self.parent()
 
 
 class DiagramProperty(PropertyDialog):
     """
     This class implements the diagram properties dialog.
     """
-    def __init__(self, diagram, parent=None):
+    def __init__(self, diagram, session):
         """
         Initialize the diagram properties dialog.
         :type diagram: Diagram
-        :type parent: QWidget
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
 
         self.diagram = diagram
 
@@ -223,14 +230,14 @@ class NodeProperty(PropertyDialog):
     """
     This class implements the 'Node property' dialog.
     """
-    def __init__(self, diagram, node, parent=None):
+    def __init__(self, diagram, node, session):
         """
         Initialize the node properties dialog.
         :type diagram: Diagram
         :type node: AbstractNode
-        :type parent: QWidget
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
 
         self.diagram = diagram
         self.node = node
@@ -419,14 +426,14 @@ class PredicateNodeProperty(NodeProperty):
     This class implements the property dialog for predicate nodes.
     Note that this dialog window is not used for value-domain nodes even though they are predicate nodes.
     """
-    def __init__(self, diagram, node, parent=None):
+    def __init__(self, diagram, node, session):
         """
         Initialize the node properties dialog.
         :type diagram: Diagram
         :type node: AbstractNode
-        :type parent: QWidget
+        :type session: Session
         """
-        super().__init__(diagram, node, parent)
+        super().__init__(diagram, node, session)
 
         arial12r = Font('Arial', 12)
 
@@ -539,14 +546,14 @@ class OrderedInputNodeProperty(NodeProperty):
     This class implements the propertiy dialog for constructor nodes having incoming input edges
     numbered according to source nodes partecipations to the axiom (Role chain and Property assertion).
     """
-    def __init__(self, diagram, node, parent=None):
+    def __init__(self, diagram, node, session):
         """
         Initialize the node properties dialog.
         :type diagram: Diagram
         :type node: AbstractNode
-        :type parent: QWidget
+        :type session: Session
         """
-        super().__init__(diagram, node, parent)
+        super().__init__(diagram, node, session)
 
         #############################################
         # ORDERING TAB
@@ -655,14 +662,14 @@ class FacetNodeProperty(NodeProperty):
     """
     This class implements the property dialog for facet nodes.
     """
-    def __init__(self, diagram, node, parent=None):
+    def __init__(self, diagram, node, session):
         """
         Initialize the node properties dialog.
         :type diagram: Diagram
         :type node: AbstractNode
-        :type parent: QWidget
+        :type session: Session
         """
-        super().__init__(diagram, node, parent)
+        super().__init__(diagram, node, session)
 
         arial12r = Font('Arial', 12)
 
@@ -749,14 +756,14 @@ class ValueDomainNodeProperty(NodeProperty):
     """
     This class implements the property dialog for value-domain nodes.
     """
-    def __init__(self, diagram, node, parent=None):
+    def __init__(self, diagram, node, session):
         """
         Initialize the node properties dialog.
         :type diagram: Diagram
         :type node: AbstractNode
-        :type parent: QWidget
+        :type session: Session
         """
-        super().__init__(diagram, node, parent)
+        super().__init__(diagram, node, session)
 
         arial12r = Font('Arial', 12)
 
@@ -826,14 +833,14 @@ class ValueNodeProperty(NodeProperty):
     """
     This class implements the property dialog for value nodes.
     """
-    def __init__(self, diagram, node, parent=None):
+    def __init__(self, diagram, node, session):
         """
         Initialize the node properties dialog.
         :type diagram: Diagram
         :type node: AbstractNode
-        :type parent: QWidget
+        :type session: Session
         """
-        super().__init__(diagram, node, parent)
+        super().__init__(diagram, node, session)
 
         arial12r = Font('Arial', 12)
 
@@ -913,25 +920,32 @@ class PropertyFactory(QObject):
     """
     This class can be used to produce properties dialog windows.
     """
-    def __init__(self, parent=None):
+    def __init__(self, session):
         """
         Initialize the factory.
-        :type parent: MainWindow
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
 
     #############################################
     #   PROPERTIES
     #################################
-    
+
     @property
     def project(self):
         """
-        Returns the project loaded in the main window.
+        Returns the project loaded in the active session (alias for PropertyDialog.session.project).
         :rtype: Project 
         """
-        mainwindow = self.parent()
-        return mainwindow.project
+        return self.session.project
+
+    @property
+    def session(self):
+        """
+        Returns the active session (alias for PropertyDialog.parent()).
+        :rtype: Session
+        """
+        return self.parent()
 
     #############################################
     #   INTERFACE
@@ -945,28 +959,28 @@ class PropertyFactory(QObject):
         :rtype: QDialog
         """
         if not node:
-            properties = DiagramProperty(diagram, self.parent())
+            properties = DiagramProperty(diagram, self.session)
         else:
             if node.type() is Item.AttributeNode:
-                properties = PredicateNodeProperty(diagram, node, self.parent())
+                properties = PredicateNodeProperty(diagram, node, self.session)
             elif node.type() is Item.ConceptNode:
-                properties = PredicateNodeProperty(diagram, node, self.parent())
+                properties = PredicateNodeProperty(diagram, node, self.session)
             elif node.type() is Item.RoleNode:
-                properties = PredicateNodeProperty(diagram, node, self.parent())
+                properties = PredicateNodeProperty(diagram, node, self.session)
             elif node.type() is Item.ValueDomainNode:
-                properties = ValueDomainNodeProperty(diagram, node, self.parent())
+                properties = ValueDomainNodeProperty(diagram, node, self.session)
             elif node.type() is Item.IndividualNode:
                 if node.identity is Identity.Instance:
-                    properties = PredicateNodeProperty(diagram, node, self.parent())
+                    properties = PredicateNodeProperty(diagram, node, self.session)
                 else:
-                    properties = ValueNodeProperty(diagram, node, self.parent())
+                    properties = ValueNodeProperty(diagram, node, self.session)
             elif node.type() is Item.PropertyAssertionNode:
-                properties = OrderedInputNodeProperty(diagram, node, self.parent())
+                properties = OrderedInputNodeProperty(diagram, node, self.session)
             elif node.type() is Item.RoleChainNode:
-                properties = OrderedInputNodeProperty(diagram, node, self.parent())
+                properties = OrderedInputNodeProperty(diagram, node, self.session)
             elif node.type() is Item.FacetNode:
-                properties = FacetNodeProperty(diagram, node, self.parent())
+                properties = FacetNodeProperty(diagram, node, self.session)
             else:
-                properties = NodeProperty(diagram, node, self.parent())
+                properties = NodeProperty(diagram, node, self.session)
         properties.setFixedSize(properties.sizeHint())
         return properties

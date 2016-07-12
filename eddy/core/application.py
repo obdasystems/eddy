@@ -53,7 +53,7 @@ from eddy.core.project import Project
 
 from eddy.ui.dialogs.progress import BusyProgressDialog
 from eddy.ui.dialogs.workspace import WorkspaceDialog
-from eddy.ui.widgets.mainwindow import MainWindow
+from eddy.ui.widgets.session import Session
 from eddy.ui.widgets.splash import Splash
 from eddy.ui.widgets.welcome import Welcome
 from eddy.ui.style import Clean
@@ -85,7 +85,7 @@ class Eddy(QApplication):
 
         self.pending = []
         self.running = self.outputSocket.waitForConnected()
-        self.mainwindow = None
+        self.session = None
         self.welcome = None
 
         if self.isAlreadyRunning() and not options.tests:
@@ -221,10 +221,10 @@ class Eddy(QApplication):
         """
         Save the state of the current active session.
         """
-        if self.mainwindow:
+        if self.session:
             settings = QSettings(ORGANIZATION, APPNAME)
-            settings.setValue('mainwindow/geometry', self.mainwindow.saveGeometry())
-            settings.setValue('mainwindow/state', self.mainwindow.saveState())
+            settings.setValue('session/geometry', self.session.saveGeometry())
+            settings.setValue('session/state', self.session.saveState())
             settings.sync()
 
     def start(self, options):
@@ -304,12 +304,12 @@ class Eddy(QApplication):
             else:
 
                 try:
-                    self.mainwindow = MainWindow(path)
+                    self.session = Session(path)
                 except Exception as e:
                     raise e
                 else:
-                    connect(self.mainwindow.sgnQuit, self.doQuit)
-                    connect(self.mainwindow.sgnClosed, self.onSessionClosed)
+                    connect(self.session.sgnQuit, self.doQuit)
+                    connect(self.session.sgnClosed, self.onSessionClosed)
                     settings = QSettings(ORGANIZATION, APPNAME)
                     projects = settings.value('project/recent', None, str) or []
 
@@ -325,7 +325,7 @@ class Eddy(QApplication):
 
                     if self.welcome:
                         self.welcome.close()
-                    self.mainwindow.show()
+                    self.session.show()
     
     @pyqtSlot()
     def doQuit(self):

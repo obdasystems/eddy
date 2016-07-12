@@ -63,12 +63,12 @@ class Info(QScrollArea):
     """
     Width = 216
 
-    def __init__(self, parent):
+    def __init__(self, session):
         """
         Initialize the info box.
-        :type parent: MainWindow
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
         self.diagram = None
         self.project = None
         self.setContentsMargins(0, 0, 0, 0)
@@ -78,16 +78,16 @@ class Info(QScrollArea):
         self.stacked = QStackedWidget(self)
         self.stacked.setContentsMargins(0, 0, 0, 0)
         self.infoEmpty = QWidget(self.stacked)
-        self.infoProject = ProjectInfo(parent, self.stacked)
-        self.infoEdge = EdgeInfo(parent, self.stacked)
-        self.infoInclusionEdge = InclusionEdgeInfo(parent, self.stacked)
-        self.infoNode = NodeInfo(parent, self.stacked)
-        self.infoPredicateNode = PredicateNodeInfo(parent, self.stacked)
-        self.infoAttributeNode = AttributeNodeInfo(parent, self.stacked)
-        self.infoRoleNode = RoleNodeInfo(parent, self.stacked)
-        self.infoValueNode = ValueNodeInfo(parent, self.stacked)
-        self.infoValueDomainNode = ValueDomainNodeInfo(parent, self.stacked)
-        self.infoFacet = FacetNodeInfo(parent, self.stacked)
+        self.infoProject = ProjectInfo(session, self.stacked)
+        self.infoEdge = EdgeInfo(session, self.stacked)
+        self.infoInclusionEdge = InclusionEdgeInfo(session, self.stacked)
+        self.infoNode = NodeInfo(session, self.stacked)
+        self.infoPredicateNode = PredicateNodeInfo(session, self.stacked)
+        self.infoAttributeNode = AttributeNodeInfo(session, self.stacked)
+        self.infoRoleNode = RoleNodeInfo(session, self.stacked)
+        self.infoValueNode = ValueNodeInfo(session, self.stacked)
+        self.infoValueDomainNode = ValueDomainNodeInfo(session, self.stacked)
+        self.infoFacet = FacetNodeInfo(session, self.stacked)
         self.stacked.addWidget(self.infoEmpty)
         self.stacked.addWidget(self.infoProject)
         self.stacked.addWidget(self.infoEdge)
@@ -343,15 +343,15 @@ class AbstractInfo(QWidget):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, mainwindow, parent=None):
+    def __init__(self, session, parent=None):
         """
         Initialize the base information box.
-        :type mainwindow: MainWindow
+        :type session: Session
         :type parent: QWidget
         """
         super().__init__(parent)
+        self.session = session
         self.setContentsMargins(0, 0, 0, 0)
-        self.mainwindow = mainwindow
 
     #############################################
     #   PROPERTIES
@@ -360,10 +360,10 @@ class AbstractInfo(QWidget):
     @property
     def project(self):
         """
-        Returns the project loaded in the main window.
+        Returns the project loaded in the current session.
         :rtype: Project
         """
-        return self.mainwindow.project
+        return self.session.project
 
     #############################################
     #   INTERFACE
@@ -381,13 +381,13 @@ class ProjectInfo(AbstractInfo):
     """
     This class implements the project information box.
     """
-    def __init__(self, mainwindow, parent=None):
+    def __init__(self, session, parent=None):
         """
         Initialize the project information box.
-        :type mainwindow: MainWindow
+        :type session: Session
         :type parent: QWidget
         """
-        super().__init__(mainwindow, parent)
+        super().__init__(session, parent)
 
         arial12r = Font('Arial', 12)
 
@@ -525,13 +525,13 @@ class EdgeInfo(AbstractInfo):
     """
     This class implements the information box for generic edges.
     """
-    def __init__(self, mainwindow, parent=None):
+    def __init__(self, session, parent=None):
         """
         Initialize the generic edge information box.
-        :type mainwindow: MainWindow
+        :type session: Session
         :type parent: QWidget
         """
-        super().__init__(mainwindow, parent)
+        super().__init__(session, parent)
 
         arial12r = Font('Arial', 12)
 
@@ -589,13 +589,13 @@ class InclusionEdgeInfo(EdgeInfo):
     """
     This class implements the information box for inclusion edges.
     """
-    def __init__(self, mainwindow, parent=None):
+    def __init__(self, session, parent=None):
         """
         Initialize the inclusion edge information box.
-        :type mainwindow: MainWindow
+        :type session: Session
         :type parent: QWidget
         """
-        super().__init__(mainwindow, parent)
+        super().__init__(session, parent)
 
         arial12r = Font('Arial', 12)
 
@@ -605,7 +605,7 @@ class InclusionEdgeInfo(EdgeInfo):
         self.equivalenceBox = CheckBox(parent)
         self.equivalenceBox.setFont(arial12r)
         self.equivalenceBox.setCheckable(True)
-        connect(self.equivalenceBox.clicked, self.mainwindow.doToggleEdgeEquivalence)
+        connect(self.equivalenceBox.clicked, self.session.doToggleEdgeEquivalence)
 
         self.generalLayout.addRow(self.equivalenceKey, parent)
 
@@ -626,13 +626,13 @@ class NodeInfo(AbstractInfo):
     """
     This class implements the information box for generic nodes.
     """
-    def __init__(self, mainwindow, parent=None):
+    def __init__(self, session, parent=None):
         """
         Initialize the generic node information box.
-        :type mainwindow: MainWindow
+        :type session: Session
         :type parent: QWidget
         """
-        super().__init__(mainwindow, parent)
+        super().__init__(session, parent)
 
         arial12r = Font('Arial', 12)
 
@@ -682,11 +682,13 @@ class PredicateNodeInfo(NodeInfo):
     """
     This class implements the information box for predicate nodes.
     """
-    def __init__(self, mainwindow, parent=None):
+    def __init__(self, session, parent=None):
         """
         Initialize the predicate node information box.
+        :type session: Session
+        :type parent: QWidget
         """
-        super().__init__(mainwindow, parent)
+        super().__init__(session, parent)
 
         arial12r = Font('Arial', 12)
 
@@ -772,8 +774,8 @@ class PredicateNodeInfo(NodeInfo):
         #################################
 
         if self.brushMenu.isEmpty():
-            self.brushMenu.addActions(self.mainwindow.actionsSetBrush)
-        for action in self.mainwindow.actionsSetBrush:
+            self.brushMenu.addActions(self.session.actionsSetBrush)
+        for action in self.session.actionsSetBrush:
             color = action.data()
             brush = QBrush(QColor(color.value))
             if node.brush == brush:
@@ -803,11 +805,13 @@ class AttributeNodeInfo(PredicateNodeInfo):
     """
     This class implements the information box for the Attribute node.
     """
-    def __init__(self, mainwindow, parent=None):
+    def __init__(self, session, parent=None):
         """
         Initialize the Attribute node information box.
+        :type session: Session
+        :type parent: QWidget
         """
-        super().__init__(mainwindow, parent)
+        super().__init__(session, parent)
 
         arial12r = Font('Arial', 12)
 
@@ -858,11 +862,13 @@ class RoleNodeInfo(PredicateNodeInfo):
     """
     This class implements the information box for the Role node.
     """
-    def __init__(self, mainwindow, parent=None):
+    def __init__(self, session, parent=None):
         """
         Initialize the Role node information box.
+        :type session: Session
+        :type parent: QWidget
         """
-        super().__init__(mainwindow, parent)
+        super().__init__(session, parent)
 
         arial12r = Font('Arial', 12)
 
@@ -980,11 +986,13 @@ class ValueDomainNodeInfo(NodeInfo):
     """
     This class implements the information box for the Value Domain node.
     """
-    def __init__(self, mainwindow, parent=None):
+    def __init__(self, session, parent=None):
         """
         Initialize the Value Domain node information box.
+        :type session: Session
+        :type parent: QWidget
         """
-        super().__init__(mainwindow, parent)
+        super().__init__(session, parent)
 
         arial12r = Font('Arial', 12)
 
@@ -1042,11 +1050,13 @@ class ValueNodeInfo(PredicateNodeInfo):
     """
     This class implements the information box for the Individual node with identity 'Value'.
     """
-    def __init__(self, mainwindow, parent=None):
+    def __init__(self, session, parent=None):
         """
         Initialize the Value node information box.
+        :type session: Session
+        :type parent: QWidget
         """
-        super().__init__(mainwindow, parent)
+        super().__init__(session, parent)
 
         arial12r = Font('Arial', 12)
 
@@ -1129,11 +1139,13 @@ class FacetNodeInfo(NodeInfo):
     """
     This class implements the information box for the Facet node.
     """
-    def __init__(self, mainwindow, parent=None):
+    def __init__(self, session, parent=None):
         """
         Initialize the Value Restriction node information box.
+        :type session: Session
+        :type parent: QWidget
         """
-        super().__init__(mainwindow, parent)
+        super().__init__(session, parent)
 
         arial12r = Font('Arial', 12)
 

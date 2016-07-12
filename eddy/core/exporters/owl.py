@@ -60,17 +60,17 @@ class OWLExporter(AbstractExporter):
     sgnProgress = pyqtSignal(int, int)
     sgnStarted = pyqtSignal()
 
-    def __init__(self, project, path, syntax, parent=None):
+    def __init__(self, project, path, syntax, session=None):
         """
         Initialize the OWL translator.
-        Note that if we specify a parent for this translator we won't be able
-        able to move the execution of the worker method to a different thread.
+        Note that if we specify a session (parent) for this translator we won't be
+        able able to move the execution of the worker method to a different thread.
         :type project: Project
         :type path: str
         :type syntax: OWLSyntax
-        :type parent: QObject
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
 
         self.path = path
         self.syntax = syntax

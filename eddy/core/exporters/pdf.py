@@ -48,14 +48,14 @@ class PdfExporter(AbstractExporter):
     """
     This class can be used to export graphol projects in PDF format.
     """
-    def __init__(self, project, path=None, parent=None):
+    def __init__(self, project, path=None, session=None):
         """
         Initialize the Pdf Exporter.
         :type project: Project
         :type path: str
-        :type parent: QObject
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
         self.path = path
         self.project = project
         self.printer = None

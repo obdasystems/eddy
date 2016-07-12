@@ -46,14 +46,14 @@ class GrapholExporter(AbstractExporter):
     """
     GrapholVersion = 1
 
-    def __init__(self, diagram, path=None, parent=None):
+    def __init__(self, diagram, path=None, session=None):
         """
         Initialize the graphol exporter.
         :type diagram: Diagram
         :type path: str
-        :type parent: QObject
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
 
         self.document = None
         self.diagram = diagram

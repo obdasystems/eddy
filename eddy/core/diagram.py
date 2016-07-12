@@ -123,6 +123,14 @@ class Diagram(QGraphicsScene):
         """
         return self.parent()
 
+    @property
+    def session(self):
+        """
+        Returns the session this diagram belongs to (alias for Diagram.project.parent()).
+        :rtype: Session
+        """
+        return self.project.parent()
+
     #############################################
     #   EVENTS
     #################################
@@ -158,8 +166,7 @@ class Diagram(QGraphicsScene):
         """
         super().dropEvent(dropEvent)
         if dropEvent.mimeData().hasFormat('text/plain'):
-            mainwindow = self.project.parent()
-            snapToGrid = mainwindow.actionToggleGrid.isChecked()
+            snapToGrid = self.session.actionToggleGrid.isChecked()
             node = self.factory.create(Item.forValue(dropEvent.mimeData().text()))
             node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
             self.project.undoStack.push(CommandNodeAdd(self, node))
@@ -186,8 +193,7 @@ class Diagram(QGraphicsScene):
                 # NODE INSERTION
                 #################################
 
-                mainwindow = self.project.parent()
-                snapToGrid = mainwindow.actionToggleGrid.isChecked()
+                snapToGrid = self.session.actionToggleGrid.isChecked()
                 node = self.factory.create(Item.forValue(self.modeParam))
                 node.setPos(snap(mousePos, Diagram.GridSize, snapToGrid))
                 self.project.undoStack.push(CommandNodeAdd(self, node))
@@ -318,8 +324,7 @@ class Diagram(QGraphicsScene):
 
                 if self.isEdgeInsertionInProgress():
 
-                    mainwindow = self.project.parent()
-                    statusBar = mainwindow.statusBar()
+                    statusBar = self.session.statusBar()
                     edge = self.mousePressEdge
                     edge.updateEdge(mousePos)
 
@@ -350,8 +355,7 @@ class Diagram(QGraphicsScene):
 
                 if self.isLabelMoveInProgress():
 
-                    mainwindow = self.project.parent()
-                    snapToGrid = mainwindow.actionToggleGrid.isChecked()
+                    snapToGrid = self.session.actionToggleGrid.isChecked()
                     point = self.mousePressLabelPos + mousePos - self.mousePressPos
                     point = snap(point, Diagram.GridSize / 4, snapToGrid)
                     delta = point - self.mousePressLabelPos
@@ -370,9 +374,8 @@ class Diagram(QGraphicsScene):
                     #################################
 
                     if self.isNodeMoveInProgress():
-                        
-                        mainwindow = self.project.parent()
-                        snapToGrid = mainwindow.actionToggleGrid.isChecked()
+
+                        snapToGrid = self.session.actionToggleGrid.isChecked()
                         point = self.mousePressNodePos + mousePos - self.mousePressPos
                         point = snap(point, Diagram.GridSize, snapToGrid)
                         delta = point - self.mousePressNodePos
@@ -439,8 +442,7 @@ class Diagram(QGraphicsScene):
 
                     self.clearSelection()
                     self.project.validator.clear()
-                    mainwindow = self.project.parent()
-                    statusBar = mainwindow.statusBar()
+                    statusBar = self.session.statusBar()
                     statusBar.clearMessage()
 
                     self.sgnActionCompleted.emit(edge, mouseModifiers)
@@ -500,8 +502,7 @@ class Diagram(QGraphicsScene):
                     item.setSelected(True)
 
                 self.mousePressPos = mousePos
-                mainwindow = self.project.parent()
-                menu = mainwindow.menuFactory.create(mainwindow, self, item, mousePos)
+                menu = self.session.menuFactory.create(self.session, self, item, mousePos)
                 menu.exec_(mouseEvent.screenPos())
 
         super().mouseReleaseEvent(mouseEvent)

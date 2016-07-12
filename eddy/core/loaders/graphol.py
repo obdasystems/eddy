@@ -53,20 +53,19 @@ class GrapholLoader(AbstractLoader):
     """
     GrapholVersion = 1
 
-    def __init__(self, project, path, parent):
+    def __init__(self, project, path, session):
         """
         Initialize the graphol loader.
         :type project: Project
         :type path: str
-        :type parent: MainWindow
+        :type session: Session
         """
-        super().__init__(parent)
-        
-        self.diagram = None
-        self.nodes = dict()
+        super().__init__(session)
+
         self.path = path
         self.project = project
-        self.mainwindow = project.parent()
+        self.diagram = None
+        self.nodes = dict()
 
         self.importFuncForItem = {
             Item.AttributeNode: self.buildAttributeNode,
@@ -515,9 +514,9 @@ class GrapholLoader(AbstractLoader):
         # 7) CONFIGURE SLOTS
         connect(self.diagram.sgnItemAdded, self.project.doAddItem)
         connect(self.diagram.sgnItemRemoved, self.project.doRemoveItem)
-        connect(self.diagram.sgnActionCompleted, self.mainwindow.onDiagramActionCompleted)
-        connect(self.diagram.sgnModeChanged, self.mainwindow.onDiagramModeChanged)
-        connect(self.diagram.selectionChanged, self.mainwindow.doUpdateState)
+        connect(self.diagram.sgnActionCompleted, self.session.onDiagramActionCompleted)
+        connect(self.diagram.sgnModeChanged, self.session.onDiagramModeChanged)
+        connect(self.diagram.selectionChanged, self.session.doUpdateState)
 
         # 8) RETURN GENERATED DIAGRAM
         return self.diagram

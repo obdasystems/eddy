@@ -59,13 +59,13 @@ class ProjectExporter(AbstractExporter):
     -   ...
     -   moduleN.graphol
     """
-    def __init__(self, project, parent=None):
+    def __init__(self, project, session):
         """
         Initialize the project exporter.
         :type project: Project
-        :type parent: MainWindow
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
 
         self.project = project
         self.projectMainPath = project.path

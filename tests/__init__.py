@@ -53,9 +53,9 @@ class EddyTestCase(unittest.TestCase):
         Initialize test case environment.
         """
         self.app = Eddy(['--nosplash', '--tests'])
-        self.mainwindow = self.app.mainwindow
-        self.mainwindow.activateWindow()
-        QTest.qWaitForWindowActive(self.mainwindow)
+        self.session = self.app.session
+        self.session.activateWindow()
+        QTest.qWaitForWindowActive(self.session)
 
     def tearDown(self):
         """
@@ -63,7 +63,9 @@ class EddyTestCase(unittest.TestCase):
         """
         self.app.quit()
 
-    ############################################## CUSTOM ASSERTIONS ###################################################
+    #############################################
+    #   CUSTOM ASSERTIONS
+    #################################
 
     def assertDictHasKey(self, key, container, msg=None):
         """Check for a given key to be in the given dictionary."""

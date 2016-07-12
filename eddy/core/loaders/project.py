@@ -63,13 +63,13 @@ class ProjectLoader(AbstractLoader):
     -   ...
     -   moduleN.graphol
     """
-    def __init__(self, path, parent):
+    def __init__(self, path, session):
         """
         Initialize the project loader.
         :type path: str
-        :type parent: MainWindow
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
 
         self.project = None
         self.metaDocument = None
@@ -190,10 +190,9 @@ class ProjectLoader(AbstractLoader):
         ontology = root.firstChildElement('ontology')
         prefix = ontology.firstChildElement('prefix').text()
         iri = ontology.firstChildElement('iri').text()
-        mainwindow = self.parent()
 
         # 2) CREATE AN EMPTY PROJECT
-        self.project = Project(path, prefix, iri, mainwindow)
+        self.project = Project(path, prefix, iri, self.session)
 
     def importMetaFromXML(self):
         """

@@ -57,16 +57,14 @@ class OntologyExplorer(QWidget):
     sgnItemDoubleClicked = pyqtSignal('QGraphicsItem')
     sgnItemRightClicked = pyqtSignal('QGraphicsItem')
 
-    def __init__(self, parent):
+    def __init__(self, session):
         """
         Initialize the ontology explorer.
-        :type parent: MainWindow
+        :type session: Session
         """
-        super().__init__(parent)
-        self.mainwindow = parent
+        super().__init__(session)
 
-        self.setContentsMargins(0, 0, 0, 0)
-        self.setMinimumWidth(216)
+        self.session = session
 
         self.iconAttribute = QIcon(':/icons/18/ic_treeview_attribute')
         self.iconCconcept = QIcon(':/icons/18/ic_treeview_concept')
@@ -91,6 +89,9 @@ class OntologyExplorer(QWidget):
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.search)
         self.mainLayout.addWidget(self.ontoview)
+
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setMinimumWidth(216)
 
         connect(self.ontoview.doubleClicked, self.onItemDoubleClicked)
         connect(self.ontoview.pressed, self.onItemPressed)
@@ -300,10 +301,18 @@ class OntologyExplorerView(QTreeView):
     #################################
 
     @property
+    def session(self):
+        """
+        Returns the reference to the Session holding the OntologyExplorer widget.
+        :rtype: Session
+        """
+        return self.widget.session
+
+    @property
     def widget(self):
         """
-        Returns the reference to the ProjectExporer widget.
-        :rtype: ProjectExplorer
+        Returns the reference to the OntologyExplorer widget.
+        :rtype: OntologyExplorer
         """
         return self.parent()
 
@@ -333,7 +342,7 @@ class OntologyExplorerView(QTreeView):
                 node = item.data()
                 if node:
                     self.widget.sgnItemRightClicked['QGraphicsItem'].emit(node)
-                    menu = self.widget.mainwindow.menuFactory.create(self.widget.mainwindow, node.diagram, node)
+                    menu = self.session.menuFactory.create(self.session, node.diagram, node)
                     menu.exec_(mouseEvent.screenPos().toPoint())
 
         super().mouseReleaseEvent(mouseEvent)
@@ -359,16 +368,14 @@ class ProjectExplorer(QWidget):
     sgnItemClicked = pyqtSignal('QGraphicsScene')
     sgnItemDoubleClicked = pyqtSignal('QGraphicsScene')
 
-    def __init__(self, parent):
+    def __init__(self, session):
         """
         Initialize the project explorer.
-        :type parent: MainWindow
+        :type session: Session
         """
-        super().__init__(parent)
-        self.mainwindow = parent
+        super().__init__(session)
 
-        self.setContentsMargins(0, 0, 0, 0)
-        self.setMinimumWidth(216)
+        self.session = session
 
         self.arial12r = Font('Arial', 12)
         self.arial12b = Font('Arial', 12)
@@ -383,10 +390,10 @@ class ProjectExplorer(QWidget):
 
         self.actionRenameDiagram = QAction('Rename...', self)
         self.actionRenameDiagram.setIcon(self.iconRename)
-        connect(self.actionRenameDiagram.triggered, self.mainwindow.doRenameDiagram)
+        connect(self.actionRenameDiagram.triggered, self.session.doRenameDiagram)
         self.actionDeleteDiagram = QAction('Delete...', self)
         self.actionDeleteDiagram.setIcon(self.iconDelete)
-        connect(self.actionDeleteDiagram.triggered, self.mainwindow.doRemoveDiagram)
+        connect(self.actionDeleteDiagram.triggered, self.session.doRemoveDiagram)
         
         self.root = QStandardItem()
         self.root.setFlags(self.root.flags() & ~Qt.ItemIsEditable)
@@ -404,6 +411,9 @@ class ProjectExplorer(QWidget):
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.projectview)
+
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setMinimumWidth(216)
 
         header = self.projectview.header()
         header.setStretchLastSection(False)
@@ -547,9 +557,17 @@ class ProjectExplorerView(QTreeView):
     #################################
 
     @property
+    def session(self):
+        """
+        Returns the reference to the Session holding the ProjectExplorer widget.
+        :rtype: Session
+        """
+        return self.widget.session
+
+    @property
     def widget(self):
         """
-        Returns the reference to the ProjectExporer widget.
+        Returns the reference to the ProjectExplorer widget.
         :rtype: ProjectExplorer
         """
         return self.parent()
@@ -580,15 +598,15 @@ class ProjectExplorerView(QTreeView):
                 diagram = item.data()
                 if diagram:
                     menu = QMenu()
-                    menu.addAction(self.widget.mainwindow.actionNewDiagram)
+                    menu.addAction(self.session.actionNewDiagram)
                     menu.addSeparator()
                     menu.addAction(self.widget.actionRenameDiagram)
                     menu.addAction(self.widget.actionDeleteDiagram)
                     menu.addSeparator()
-                    menu.addAction(self.widget.mainwindow.actionDiagramProperties)
+                    menu.addAction(self.session.actionDiagramProperties)
                     self.widget.actionRenameDiagram.setData(diagram)
                     self.widget.actionDeleteDiagram.setData(diagram)
-                    self.widget.mainwindow.actionDiagramProperties.setData(diagram)
+                    self.session.actionDiagramProperties.setData(diagram)
                     menu.exec_(mouseEvent.screenPos().toPoint())
 
         super().mouseReleaseEvent(mouseEvent)

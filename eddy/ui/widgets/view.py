@@ -58,15 +58,14 @@ class DiagramView(QGraphicsView):
 
     sgnScaled = pyqtSignal(float)
 
-    def __init__(self, diagram, mainwindow):
+    def __init__(self, diagram, session):
         """
         Initialize the view to browse the given diagram.
         :type diagram: Diagram
-        :type mainwindow: MainWindow
+        :type session: Session
         """
         super().__init__(diagram)
 
-        self.mainwindow = mainwindow
         self.mousePressCenterPos = None
         self.mousePressPos = None
         self.moveTimer = None
@@ -74,6 +73,7 @@ class DiagramView(QGraphicsView):
         self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
         self.rubberBand.hide()
         self.pinchFactor = 1.0
+        self.session = session
         self.zoom = 1.0
 
         self.setContextMenuPolicy(Qt.PreventContextMenu)
@@ -332,7 +332,7 @@ class DiagramView(QGraphicsView):
         :type painter: QPainter
         :type rect: QRectF
         """
-        if self.mainwindow.actionToggleGrid.isChecked():
+        if self.session.actionToggleGrid.isChecked():
             s = Diagram.GridSize
             x = int(rect.left()) - (int(rect.left()) % s)
             y = int(rect.top()) - (int(rect.top()) % s)

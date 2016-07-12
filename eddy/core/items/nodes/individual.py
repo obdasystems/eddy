@@ -271,8 +271,7 @@ class IndividualNode(AbstractResizableNode):
         Handle the interactive resize of the shape.
         :type mousePos: QPointF
         """
-        mainwindow = self.project.parent()
-        snap = mainwindow.actionToggleGrid.isChecked()
+        snap = self.session.actionToggleGrid.isChecked()
         size = self.diagram.GridSize
         offset = self.HandleSize + self.HandleMove
         moved = self.label.isMoved()

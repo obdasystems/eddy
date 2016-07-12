@@ -44,12 +44,24 @@ class AbstractLoader(QObject):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, parent=None):
+    def __init__(self, session):
         """
         Initialize the AbstractLoader.
-        :type parent: QObject
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def session(self):
+        """
+        Returns the active session (alias for AbstractLoader.parent()).
+        :rtype: Session
+        """
+        return self.parent()
 
     #############################################
     #   INTERFACE

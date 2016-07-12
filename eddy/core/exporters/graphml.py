@@ -51,14 +51,14 @@ class GraphmlExporter(AbstractExporter):
     KEY_URL = 'd2'
     KEY_DESCRIPTION = 'd3'
 
-    def __init__(self, diagram, path, parent=None):
+    def __init__(self, diagram, path, session):
         """
         Initialize the Graphml exporter.
         :type diagram: Diagram
         :type path: str
-        :type parent: QObject
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
 
         self.document = None
         self.diagram = diagram

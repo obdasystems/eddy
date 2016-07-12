@@ -55,19 +55,18 @@ class GraphmlLoader(AbstractLoader):
     """
     This class can be used to import graphol ontologies created using the graphol palette for yEd.
     """
-    def __init__(self, project, path, parent=None):
+    def __init__(self, project, path, session):
         """
         Initialize the graphml importer.
         :type project: Project
         :type path: str
-        :type parent: QObject
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
+        self.path = path
+        self.project = project
         self.diagram = None
         self.errors = []
-        self.project = project
-        self.mainwindow = project.parent()
-        self.path = path
         self.keys = dict()
         self.nodes = dict()
         
@@ -642,9 +641,9 @@ class GraphmlLoader(AbstractLoader):
         # 10) CONFIGURE SLOTS
         connect(self.diagram.sgnItemAdded, self.project.doAddItem)
         connect(self.diagram.sgnItemRemoved, self.project.doRemoveItem)
-        connect(self.diagram.sgnActionCompleted, self.mainwindow.onDiagramActionCompleted)
-        connect(self.diagram.sgnModeChanged, self.mainwindow.onDiagramModeChanged)
-        connect(self.diagram.selectionChanged, self.mainwindow.doUpdateState)
+        connect(self.diagram.sgnActionCompleted, self.session.onDiagramActionCompleted)
+        connect(self.diagram.sgnModeChanged, self.session.onDiagramModeChanged)
+        connect(self.diagram.selectionChanged, self.session.doUpdateState)
 
         # 11) RETURN GENERATED DIAGRAM
         return self.diagram

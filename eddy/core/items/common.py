@@ -58,7 +58,7 @@ class DiagramItemMixin:
     @property
     def diagram(self):
         """
-        Returns the diagram holding this label (alias for AbstractLabel.scene()).
+        Returns the diagram holding this item (alias for DiagramItemMixin.scene()).
         :rtype: Diagram
         """
         return self.scene()
@@ -66,10 +66,18 @@ class DiagramItemMixin:
     @property
     def project(self):
         """
-        Returns the project this label belongs to.
+        Returns the project this item belongs to (alias for DiagramItemMixin.diagram.parent()).
         :rtype: Project
         """
         return self.diagram.parent()
+
+    @property
+    def session(self):
+        """
+        Returns the session this item belongs to (alias for DiagramItemMixin.project.parent()).
+        :rtype: Session
+        """
+        return self.project.parent()
 
     #############################################
     #   INTERFACE
