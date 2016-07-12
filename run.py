@@ -71,6 +71,7 @@ jnius_config.set_classpath(*classpath)
 
 
 from argparse import ArgumentParser
+from textwrap import dedent
 
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QMessageBox, QApplication
@@ -79,8 +80,6 @@ from eddy import APPNAME, BUG_TRACKER
 from eddy.core.application import Eddy
 from eddy.core.functions.misc import format_exception
 from eddy.core.functions.signals import connect
-
-from eddy.lang import gettext as _
 
 # noinspection PyUnresolvedReferences
 from eddy.ui import images_rc
@@ -103,17 +102,20 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
         global msgbox
         if not msgbox:
             msgbox = QMessageBox()
+            msgbox.setDetailedText(format_exception(exc_value))
             msgbox.setIconPixmap(QPixmap(':/images/eddy-sad'))
+            msgbox.setInformativeText(dedent("""If the problem persists please
+            <a href="{0}">submit a bug report</a>.""".format(BUG_TRACKER)))
+            msgbox.setStandardButtons(QMessageBox.Close | QMessageBox.Ok)
+            msgbox.setText(dedent("""This is embarrassing ...\n\n
+            A critical error has just occurred.
+            {0} will continue to work, however a reboot is highly recommended.""".format(APPNAME)))
             msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Fatal error!')
-            msgbox.setText(_('EXCEPT_HOOK_MESSAGE', APPNAME))
-            msgbox.setInformativeText(_('EXCEPT_HOOK_INFORMATIVE_MESSAGE', BUG_TRACKER))
-            msgbox.setDetailedText(format_exception(exc_value))
-            msgbox.setStandardButtons(QMessageBox.Close|QMessageBox.Ok)
             buttonOk = msgbox.button(QMessageBox.Ok)
-            buttonOk.setText(_('EXCEPT_HOOK_BTN_CLOSE'))
+            buttonOk.setText('Close')
             buttonQuit = msgbox.button(QMessageBox.Close)
-            buttonQuit.setText(_('EXCEPT_HOOK_BTN_QUIT', APPNAME))
+            buttonQuit.setText('Quit {0}'.format(APPNAME))
             connect(buttonOk.clicked, msgbox.close)
             connect(buttonQuit.clicked, app.quit)
             # noinspection PyArgumentList

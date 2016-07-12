@@ -43,8 +43,6 @@ from eddy.core.exporters.common import AbstractExporter
 from eddy.core.items.common import AbstractItem
 from eddy.core.qt import Font
 
-from eddy.lang import gettext as _
-
 
 class PdfExporter(AbstractExporter):
     """
@@ -100,15 +98,15 @@ class PdfExporter(AbstractExporter):
 
         self.metamodel = QStandardItemModel()
         self.metamodel.setHorizontalHeaderLabels([
-            _('META_HEADER_PREDICATE'),
-            _('META_HEADER_TYPE'),
-            _('META_HEADER_FUNCTIONAL'),
-            _('META_HEADER_INVERSE_FUNCTIONAL'),
-            _('META_HEADER_ASYMMETRIC'),
-            _('META_HEADER_IRREFLEXIVE'),
-            _('META_HEADER_REFLEXIVE'),
-            _('META_HEADER_SYMMETRIC'),
-            _('META_HEADER_TRANSITIVE')])
+            'Predicate',
+            'Type',
+            'Functional',
+            'Inverse Functional',
+            'Asymmetric',
+            'Irreflexive',
+            'Reflexive',
+            'Symmetric',
+            'Transitive'])
 
         # GENERATE DATA
         for entry in metas:

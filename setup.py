@@ -43,6 +43,8 @@ import subprocess
 import sys
 import zipfile
 
+from textwrap import dedent
+
 from cx_Freeze import setup
 from cx_Freeze import Executable
 from cx_Freeze import build_exe
@@ -200,18 +202,18 @@ class BuildExe(build_exe):
         if sys.platform.startswith('linux'):
              path = os.path.join(self.build_exe, 'run.sh')
              with open(path, mode='w') as f:
-                f.write("""#!/bin/sh
-APP="{0}"
-EXEC="{1}"
-VERSION="{2}"
-DIRNAME=`dirname $0`
-LD_LIBRARY_PATH=$DIRNAME
-export LD_LIBRARY_PATH
-echo "Starting $APP $VERSION ..."
-chmod +x $DIRNAME/$EXEC
-$DIRNAME/$EXEC "$@"
-echo "... bye!"
-""".format(APPNAME, OPTS['EXEC_NAME'], VERSION))
+                f.write(dedent("""#!/bin/sh
+                APP="{0}"
+                EXEC="{1}"
+                VERSION="{2}"
+                DIRNAME=`dirname $0`
+                LD_LIBRARY_PATH=$DIRNAME
+                export LD_LIBRARY_PATH
+                echo "Starting $APP $VERSION ..."
+                chmod +x $DIRNAME/$EXEC
+                $DIRNAME/$EXEC "$@"
+                echo "... bye!"
+                """.format(APPNAME, OPTS['EXEC_NAME'], VERSION)))
 
              for filename in [OPTS['EXEC_NAME'], 'run.sh']:
                  filepath = os.path.join(self.build_exe, filename)
@@ -605,7 +607,6 @@ if sys.platform.startswith('darwin'):
 
 packages = [
     'eddy.core',
-    'eddy.lang',
     'eddy.ui',
 ]
 

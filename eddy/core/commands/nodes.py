@@ -38,8 +38,6 @@ from PyQt5.QtWidgets import QUndoCommand
 from eddy.core.functions.misc import first
 from eddy.core.items.common import AbstractItem
 
-from eddy.lang import gettext as _
-
 
 class CommandNodeAdd(QUndoCommand):
     """
@@ -51,7 +49,7 @@ class CommandNodeAdd(QUndoCommand):
         :type diagram: Diagram
         :type node: AbstractNode
         """
-        super().__init__(_('COMMAND_NODE_ADD', node.name))
+        super().__init__('add {0}'.format(node.name))
         self.diagram = diagram
         self.node = node
 
@@ -79,7 +77,7 @@ class CommandNodeSetDepth(QUndoCommand):
         :type node: AbstractNode
         :type zValue: float
         """
-        super().__init__(_('COMMAND_NODE_SET_DEPTH', node.name))
+        super().__init__('change {0} depth'.format(node.name))
         self.node = node
         self.diagram = diagram
         self.depth = {'redo': zValue, 'undo': node.zValue()}
@@ -108,7 +106,7 @@ class CommandNodeRezize(QUndoCommand):
         :type node: AbstractNode
         :type data: dict
         """
-        super().__init__(_('COMMAND_NODE_RESIZE', node.name))
+        super().__init__('resize {0}'.format(node.name))
         self.diagram = diagram
         self.node = node
         self.data = data
@@ -180,9 +178,9 @@ class CommandNodeMove(QUndoCommand):
             self.edges |= node.edges
 
         if len(data['redo']['nodes']) != 1:
-            name = _('COMMAND_NODE_MOVE_MULTI', len(data['redo']['nodes']))
+            name = 'move {0} nodes'.format(len(data['redo']['nodes']))
         else:
-            name = _('COMMAND_NODE_MOVE', first(data['redo']['nodes'].keys()).name)
+            name = 'move {0}'.format(first(data['redo']['nodes'].keys()).name)
 
         super().__init__(name)
 
@@ -246,7 +244,7 @@ class CommandNodeOperatorSwitchTo(QUndoCommand):
         :type node1: OperatorNode
         :type node2: OperatorNode
         """
-        super().__init__(_('COMMAND_NODE_OPERATOR_SWITCH', node1.name, node2.name))
+        super().__init__('switch {0} to {1}'.format(node1.name, node2.name))
         self.node = {'redo': node2, 'undo': node1}
         self.diagram = diagram
 
@@ -336,7 +334,7 @@ class CommandNodeChangeMeta(QUndoCommand):
         :type redo: PredicateMetadata
         :type name: str
         """
-        super().__init__(name or _('COMMAND_NODE_CHANGE_META', node.name))
+        super().__init__(name or 'change {0} metadata'.format(node.name))
         self.project = diagram.project
         self.data = {'redo': redo, 'undo': undo}
         self.node = node
@@ -364,7 +362,7 @@ class CommandNodeChangeInputsOrder(QUndoCommand):
         self.node = node
         self.diagram = diagram
         self.inputs = {'redo': inputs, 'undo': node.inputs}
-        super().__init__(_('COMMAND_NODE_CHANGE_INPUTS_ORDER', node.name))
+        super().__init__('change {0} inputs order'.format(node.name))
 
     def redo(self):
         """redo the command"""
@@ -393,7 +391,7 @@ class CommandNodeSetBrush(QUndoCommand):
         self.nodes = nodes
         self.brush = {x: {'undo': x.brush, 'redo': brush} for x in nodes}
         self.diagram = diagram
-        super().__init__(_('COMMAND_NODE_SET_BRUSH', brush.color().name(), len(nodes)))
+        super().__init__('set {0} brush on {1} node(s)'.format(brush.color().name(), len(nodes)))
 
     def redo(self):
         """redo the command"""

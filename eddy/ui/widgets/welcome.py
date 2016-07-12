@@ -47,7 +47,7 @@ from eddy.core.functions.misc import first
 from eddy.core.functions.path import shortPath, compressPath
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font, PHCQPushButton, PHCQToolButton
-from eddy.lang import gettext as _
+
 from eddy.ui.dialogs.project import ProjectDialog
 
 
@@ -97,13 +97,13 @@ class Welcome(QWidget):
         # RIGHT AREA
         #################################
 
-        self.actionBugTracker = QAction(_('WELCOME_ACTION_BUG_REPORT'), self)
+        self.actionBugTracker = QAction('Report a bug', self)
         self.actionBugTracker.setData(BUG_TRACKER)
         connect(self.actionBugTracker.triggered, self.doOpenURL)
-        self.actionGrapholWeb = QAction(_('WELCOME_ACTION_VISIT_GRAPHOL_WEBSITE'), self)
+        self.actionGrapholWeb = QAction('Visit Graphol website', self)
         self.actionGrapholWeb.setData(GRAPHOL_HOME)
         connect(self.actionGrapholWeb.triggered, self.doOpenURL)
-        self.actionProjectHome = QAction(_('WELCOME_ACTION_VISIT_EDDY_HOME'), self)
+        self.actionProjectHome = QAction('GitHub repository', self)
         self.actionProjectHome.setData(PROJECT_HOME)
         connect(self.actionProjectHome.triggered, self.doOpenURL)
 
@@ -122,7 +122,7 @@ class Welcome(QWidget):
         self.appName = QLabel(APPNAME, self)
         self.appName.setFont(arial28rsc)
         self.appName.setProperty('class', 'appname')
-        self.appVersion = QLabel(_('WELCOME_APP_VERSION', VERSION), self)
+        self.appVersion = QLabel('Version: {0}'.format(VERSION), self)
         self.appVersion.setFont(arial14r)
         self.appVersion.setProperty('class', 'version')
 
@@ -130,20 +130,20 @@ class Welcome(QWidget):
         self.buttonNewProject.setFont(arial13r)
         self.buttonNewProject.setIcon(QIcon(':/icons/24/ic_add_document_black'))
         self.buttonNewProject.setIconSize(QSize(24, 24))
-        self.buttonNewProject.setText(_('WELCOME_BTN_NEW_PROJECT'))
+        self.buttonNewProject.setText('Create new project')
         connect(self.buttonNewProject.clicked, self.doNewProject)
         self.buttonOpenProject = PHCQPushButton(self)
         self.buttonOpenProject.setFont(arial13r)
         self.buttonOpenProject.setIcon(QIcon(':/icons/24/ic_folder_open_black'))
         self.buttonOpenProject.setIconSize(QSize(24, 24))
-        self.buttonOpenProject.setText(_('WELCOME_BTN_OPEN_PROJECT'))
+        self.buttonOpenProject.setText('Open project')
         connect(self.buttonOpenProject.clicked, self.doOpenProject)
         
         self.buttonHelp = PHCQToolButton(self)
         self.buttonHelp.setFont(arial13r)
         self.buttonHelp.setIcon(QIcon(':/icons/24/ic_help_outline_black'))
         self.buttonHelp.setIconSize(QSize(24, 24))
-        self.buttonHelp.setText(_('WELCOME_BTN_HELP'))
+        self.buttonHelp.setText('Help')
         self.buttonHelp.setMenu(self.menuHelp)
         self.buttonHelp.setPopupMode(PHCQToolButton.InstantPopup)
         self.buttonHelp.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
@@ -193,7 +193,7 @@ class Welcome(QWidget):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setFixedSize(700, 400)
         self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-        self.setWindowTitle(_('WELCOME_WINDOW_TITLE', APPNAME))
+        self.setWindowTitle('Welcome to {0}'.format(APPNAME))
         connect(self.sgnCreateSession, application.doCreateSession)
 
     #############################################

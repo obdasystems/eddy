@@ -85,7 +85,7 @@ def fwrite(content, path):
     Safely write the given 'content' in the file identified by the given 'path'.
     If the given path identifies an already existing file, its content is not
     truncated unless the writing operation is completed successfully.
-    :type content: bytes
+    :type content: T <= bytes|str|unicode
     :type path: str
     """
     path = expandPath(path)

@@ -37,6 +37,7 @@ import os
 import webbrowser
 
 from collections import OrderedDict
+from textwrap import dedent
 
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
 from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent
@@ -80,8 +81,6 @@ from eddy.core.loaders.graphol import GrapholLoader
 from eddy.core.loaders.project import ProjectLoader
 from eddy.core.qt import BrushIcon
 from eddy.core.utils.clipboard import Clipboard
-
-from eddy.lang import gettext as _
 
 from eddy.ui.dialogs.about import About
 from eddy.ui.dialogs.diagram import NewDiagramDialog
@@ -128,23 +127,23 @@ class MainWindow(QMainWindow):
         QApplication.processEvents()
 
         menuBar = self.menuBar()
-        self.menuFile = menuBar.addMenu(_('MENU_FILE'))
-        self.menuEdit = menuBar.addMenu(_('MENU_EDIT'))
-        self.menuView = menuBar.addMenu(_('MENU_VIEW'))
-        self.menuTools = menuBar.addMenu(_('MENU_TOOLS'))
-        self.menuHelp = menuBar.addMenu(_('MENU_HELP'))
+        self.menuFile = menuBar.addMenu('File')
+        self.menuEdit = menuBar.addMenu('\u200CEdit')
+        self.menuView = menuBar.addMenu('\u200CView')
+        self.menuTools = menuBar.addMenu('Tools')
+        self.menuHelp = menuBar.addMenu('Help')
 
-        self.menuCompose = QMenu(_('MENU_COMPOSE'))
-        self.menuRefactorBrush = QMenu(_('MENU_REFACTOR_BRUSH'))
-        self.menuRefactor = QMenu(_('MENU_REFACTOR'))
-        self.menuSetBrush = QMenu(_('MENU_SET_BRUSH'))
-        self.menuSetDatatype = QMenu(_('MENU_SET_DATATYPE'))
-        self.menuSetFacet = QMenu(_('MENU_SET_FACET'))
-        self.menuSetIndividualAs = QMenu(_('MENU_SET_INDIVIDUAL_AS'))
-        self.menuSetPropertyRestriction = QMenu(_('MENU_SET_PROPERTY_RESTRICTION'))
-        self.menuSetSpecial = QMenu(_('MENU_SET_SPECIAL'))
-        self.menuSwitchOperator = QMenu(_('MENU_SWITCH_OPERATOR'))
-        self.menuToolbars = QMenu(_('MENU_TOOLBARS'))
+        self.menuCompose = QMenu('Compose')
+        self.menuRefactorBrush = QMenu('Select color')
+        self.menuRefactor = QMenu('Refactor')
+        self.menuSetBrush = QMenu('Select color')
+        self.menuSetDatatype = QMenu('Select type')
+        self.menuSetFacet = QMenu('Select facet')
+        self.menuSetIndividualAs = QMenu('Set as')
+        self.menuSetPropertyRestriction = QMenu('Select restriction')
+        self.menuSetSpecial = QMenu('Special type')
+        self.menuSwitchOperator = QMenu('Switch to')
+        self.menuToolbars = QMenu('Toolbars')
 
         #############################################
         # CREATE TOOLBARS
@@ -153,13 +152,13 @@ class MainWindow(QMainWindow):
         # noinspection PyArgumentList
         QApplication.processEvents()
 
-        self.toolbarDocument = self.addToolBar(_('TOOLBAR_DOCUMENT'))
+        self.toolbarDocument = self.addToolBar('Document')
         self.toolbarDocument.setObjectName('toolbarDocument')
-        self.toolbarEditor = self.addToolBar(_('TOOLBAR_EDITOR'))
+        self.toolbarEditor = self.addToolBar('Editor')
         self.toolbarEditor.setObjectName('toolbarEditor')
-        self.toolbarView = self.addToolBar(_('TOOLBAR_VIEW'))
+        self.toolbarView = self.addToolBar('View')
         self.toolbarView.setObjectName('toolbarView')
-        self.toolbarGraphol = self.addToolBar(_('TOOLBAR_GRAPHOL'))
+        self.toolbarGraphol = self.addToolBar('Graphol')
         self.toolbarGraphol.setObjectName('toolbarGraphol')
 
         #############################################
@@ -177,11 +176,11 @@ class MainWindow(QMainWindow):
         self.projectExplorer = ProjectExplorer(self)
         self.zoom = Zoom(self.toolbarView)
 
-        self.dockInfo = DockWidget(_('DOCK_INFO'), 'ic_info_outline_black', self)
-        self.dockOntologyExplorer = DockWidget(_('DOCK_ONTOLOGY_EXPLORER'), 'ic_explore_black', self)
-        self.dockOverview = DockWidget(_('DOCK_OVERVIEW'), 'ic_zoom_black', self)
-        self.dockPalette = DockWidget(_('DOCK_PALETTE'), 'ic_palette_black', self)
-        self.dockProjectExplorer = DockWidget(_('DOCK_PROJECT_EXPLORER'), 'ic_storage_black', self)
+        self.dockInfo = DockWidget('Info', 'ic_info_outline_black', self)
+        self.dockOntologyExplorer = DockWidget('Ontology Explorer', 'ic_explore_black', self)
+        self.dockOverview = DockWidget('Overview', 'ic_zoom_black', self)
+        self.dockPalette = DockWidget('Palette', 'ic_palette_black', self)
+        self.dockProjectExplorer = DockWidget('Project Explorer', 'ic_storage_black', self)
 
         self.buttonSetBrush = QToolButton()
 
@@ -209,39 +208,39 @@ class MainWindow(QMainWindow):
 
         self.actionUndo = self.project.undoStack.createUndoAction(self)
         self.actionRedo = self.project.undoStack.createRedoAction(self)
-        self.actionNewDiagram = QAction(_('ACTION_NEW_DIAGRAM_N'), self)
-        self.actionOpen = QAction(_('ACTION_OPEN_N'), self)
-        self.actionSave = QAction(_('ACTION_SAVE_N'), self)
-        self.actionSaveAs = QAction(_('ACTION_SAVE_AS_N'), self)
-        self.actionImport = QAction(_('ACTION_IMPORT_N'), self)
-        self.actionExport = QAction(_('ACTION_EXPORT_N'), self)
-        self.actionPrint = QAction(_('ACTION_PRINT_N'), self)
-        self.actionOpenPreferences = QAction(_('ACTION_OPEN_PREFERENCES_N'), self)
-        self.actionQuit = QAction(_('ACTION_QUIT_N'), self)
-        self.actionCloseProject = QAction(_('ACTION_CLOSE_PROJECT_N'), self)
-        self.actionAbout = QAction(_('ACTION_ABOUT', APPNAME), self)
-        self.actionDiagWeb = QAction(_('ACTION_DIAG_WEBSITE_N'), self)
-        self.actionGrapholWeb = QAction(_('ACTION_GRAPHOL_WEBSITE_N'), self)
-        self.actionSyntaxCheck = QAction(_('ACTION_SYNTAX_CHECK_N'), self)
-        self.actionCenterDiagram = QAction(_('ACTION_CENTER_DIAGRAM_N'), self)
-        self.actionDiagramProperties = QAction(_('ACTION_DIAGRAM_PROPERTIES_N'), self)
-        self.actionCut = QAction(_('ACTION_CUT_N'), self)
-        self.actionCopy = QAction(_('ACTION_COPY_N'), self)
-        self.actionPaste = QAction(_('ACTION_PASTE_N'), self)
-        self.actionDelete = QAction(_('ACTION_DELETE_N'), self)
-        self.actionBringToFront = QAction(_('ACTION_BRING_TO_FRONT_N'), self)
-        self.actionSendToBack = QAction(_('ACTION_SEND_TO_BACK_N'), self)
-        self.actionSelectAll = QAction(_('ACTION_SELECT_ALL_N'), self)
-        self.actionNodeProperties = QAction(_('ACTION_NODE_PROPERTIES_N'), self)
-        self.actionRelocateLabel = QAction(_('ACTION_RELOCATE_LABEL_N'), self)
-        self.actionRefactorName = QAction(_('ACTION_REFACTOR_NAME_N'), self)
-        self.actionComposePropertyDomain = QAction(_('ACTION_COMPOSE_PROPERTY_DOMAIN_N'), self)
-        self.actionComposePropertyRange = QAction(_('ACTION_COMPOSE_PROPERTY_RANGE_N'), self)
-        self.actionRemoveEdgeBreakpoint = QAction(_('ACTION_REMOVE_EDGE_BREAKPOINT_N'), self)
-        self.actionSwapEdge = QAction(_('ACTION_EDGE_SWAP_N'), self)
-        self.actionSnapToGrid = QAction(_('ACTION_SNAP_TO_GRID_N'), self)
-        self.actionToggleEdgeEquivalence = QAction(_('ACTION_TOGGLE_EDGE_EQUIVALENCE_N'), self)
-        self.actionToggleGrid = QAction(_('ACTION_TOGGLE_GRID_N'), self)
+        self.actionNewDiagram = QAction('New diagram...', self)
+        self.actionOpen = QAction('Open...', self)
+        self.actionSave = QAction('Save', self)
+        self.actionSaveAs = QAction('Save As...', self)
+        self.actionImport = QAction('Import...', self)
+        self.actionExport = QAction('Export...', self)
+        self.actionPrint = QAction('Print...', self)
+        self.actionOpenPreferences = QAction('Preferences', self)
+        self.actionQuit = QAction('Quit', self)
+        self.actionCloseProject = QAction('Close', self)
+        self.actionAbout = QAction('About {0}'.format(APPNAME), self)
+        self.actionDiagWeb = QAction('Visit DIAG website', self)
+        self.actionGrapholWeb = QAction('Visit Graphol website', self)
+        self.actionSyntaxCheck = QAction('Run syntax validation', self)
+        self.actionCenterDiagram = QAction('Center diagram', self)
+        self.actionDiagramProperties = QAction('Properties...', self)
+        self.actionCut = QAction('Cut', self)
+        self.actionCopy = QAction('Copy', self)
+        self.actionPaste = QAction('Paste', self)
+        self.actionDelete = QAction('Delete', self)
+        self.actionBringToFront = QAction('Bring to front', self)
+        self.actionSendToBack = QAction('Send to back', self)
+        self.actionSelectAll = QAction('Select all', self)
+        self.actionNodeProperties = QAction('Properties...', self)
+        self.actionRelocateLabel = QAction('Relocate label', self)
+        self.actionRefactorName = QAction('Rename...', self)
+        self.actionComposePropertyDomain = QAction('Domain', self)
+        self.actionComposePropertyRange = QAction('Range', self)
+        self.actionRemoveEdgeBreakpoint = QAction('Remove breakpoint', self)
+        self.actionSwapEdge = QAction('Swap edge', self)
+        self.actionSnapToGrid = QAction('Snap to grid', self)
+        self.actionToggleEdgeEquivalence = QAction('Toggle edge equivalence', self)
+        self.actionToggleGrid = QAction('Toggle the grid', self)
 
         self.actionsRefactorBrush = []
         self.actionsSetBrush = []
@@ -294,7 +293,7 @@ class MainWindow(QMainWindow):
         if Platform.identify() is not Platform.Darwin:
             self.actionOpenPreferences.setIcon(QIcon(':/icons/24/ic_settings_black'))
 
-        self.actionQuit.setStatusTip(_('ACTION_QUIT_S', APPNAME))
+        self.actionQuit.setStatusTip('Quit {0}'.format(APPNAME))
         self.actionQuit.setShortcut(QKeySequence.Quit)
         connect(self.actionQuit.triggered, self.doQuit)
 
@@ -302,7 +301,7 @@ class MainWindow(QMainWindow):
             self.actionQuit.setIcon(QIcon(':/icons/24/ic_power_settings_new_black'))
 
         self.actionAbout.setShortcut(QKeySequence.HelpContents)
-        self.actionAbout.setStatusTip(_('ACTION_ABOUT_S', APPNAME))
+        self.actionAbout.setStatusTip('About {0}'.format(APPNAME))
         self.actionAbout.setData(About)
         connect(self.actionAbout.triggered, self.doOpenDialog)
 
@@ -323,40 +322,40 @@ class MainWindow(QMainWindow):
 
         self.actionNewDiagram.setIcon(QIcon(':/icons/24/ic_add_document_black'))
         self.actionNewDiagram.setShortcut(QKeySequence.New)
-        self.actionNewDiagram.setStatusTip(_('ACTION_NEW_DIAGRAM_S'))
+        self.actionNewDiagram.setStatusTip('Create a new diagram')
         connect(self.actionNewDiagram.triggered, self.doNewDiagram)
 
         self.actionOpen.setIcon(QIcon(':/icons/24/ic_folder_open_black'))
         self.actionOpen.setShortcut(QKeySequence.Open)
-        self.actionOpen.setStatusTip(_('ACTION_OPEN_S'))
+        self.actionOpen.setStatusTip('Open a diagram and add it to the current project')
         connect(self.actionOpen.triggered, self.doOpen)
 
         self.actionCloseProject.setIcon(QIcon(':/icons/24/ic_close_black'))
         self.actionCloseProject.setShortcut(QKeySequence.Close)
-        self.actionCloseProject.setStatusTip(_('ACTION_CLOSE_PROJECT_S'))
+        self.actionCloseProject.setStatusTip('Close the current project')
         connect(self.actionCloseProject.triggered, self.doCloseProject)
 
         self.actionSave.setIcon(QIcon(':/icons/24/ic_save_black'))
         self.actionSave.setShortcut(QKeySequence.Save)
-        self.actionSave.setStatusTip(_('ACTION_SAVE_S'))
+        self.actionSave.setStatusTip('Save the current project')
         self.actionSave.setEnabled(False)
         connect(self.actionSave.triggered, self.doSave)
 
         self.actionSaveAs.setIcon(QIcon(':/icons/24/ic_save_black'))
         self.actionSaveAs.setShortcut(QKeySequence.SaveAs)
-        self.actionSaveAs.setStatusTip(_('ACTION_SAVE_AS_S'))
+        self.actionSaveAs.setStatusTip('Create a copy of the active diagram')
         self.actionSaveAs.setEnabled(False)
         connect(self.actionSaveAs.triggered, self.doSaveAs)
 
-        self.actionImport.setStatusTip(_('ACTION_IMPORT_S'))
+        self.actionImport.setStatusTip('Import a document in the current project')
         connect(self.actionImport.triggered, self.doImport)
 
-        self.actionExport.setStatusTip(_('ACTION_EXPORT_S'))
+        self.actionExport.setStatusTip('Export the current project')
         self.actionExport.setEnabled(not self.project.isEmpty())
         connect(self.actionExport.triggered, self.doExport)
 
         self.actionPrint.setIcon(QIcon(':/icons/24/ic_print_black'))
-        self.actionPrint.setStatusTip(_('ACTION_PRINT_S'))
+        self.actionPrint.setStatusTip('Print the current project')
         connect(self.actionPrint.triggered, self.doPrint)
 
         #############################################
@@ -364,7 +363,7 @@ class MainWindow(QMainWindow):
         #################################
 
         self.actionSyntaxCheck.setIcon(QIcon(':/icons/24/ic_spellcheck_black'))
-        self.actionSyntaxCheck.setStatusTip(_('ACTION_SYNTAX_CHECK_S'))
+        self.actionSyntaxCheck.setStatusTip('Run syntax validation on the current project')
         connect(self.actionSyntaxCheck.triggered, self.doSyntaxCheck)
 
         #############################################
@@ -377,7 +376,7 @@ class MainWindow(QMainWindow):
         self.actionRedo.setShortcut(QKeySequence.Redo)
 
         self.actionCenterDiagram.setIcon(QIcon(':/icons/24/ic_center_focus_strong_black'))
-        self.actionCenterDiagram.setStatusTip(_('ACTION_CENTER_DIAGRAM_S'))
+        self.actionCenterDiagram.setStatusTip('Center the active diagram')
         self.actionCenterDiagram.setEnabled(False)
         connect(self.actionCenterDiagram.triggered, self.doCenterDiagram)
 
@@ -385,7 +384,7 @@ class MainWindow(QMainWindow):
         connect(self.actionDiagramProperties.triggered, self.doOpenDiagramProperties)
 
         self.actionSnapToGrid.setIcon(QIcon(':/icons/24/ic_healing_black'))
-        self.actionSnapToGrid.setStatusTip(_('ACTION_SNAP_TO_GRID_S'))
+        self.actionSnapToGrid.setStatusTip('Align the elements in the active diagram to the grid')
         self.actionSnapToGrid.setEnabled(False)
         connect(self.actionSnapToGrid.triggered, self.doSnapTopGrid)
 
@@ -393,7 +392,7 @@ class MainWindow(QMainWindow):
         icon.addFile(':/icons/24/ic_grid_on_black', mode=QIcon.Normal, state=QIcon.On)
         icon.addFile(':/icons/24/ic_grid_off_black', mode=QIcon.Normal, state=QIcon.Off)
         self.actionToggleGrid.setIcon(icon)
-        self.actionToggleGrid.setStatusTip(_('ACTION_TOGGLE_GRID_S'))
+        self.actionToggleGrid.setStatusTip('Activate or deactivate the diagram grid')
         self.actionToggleGrid.setCheckable(True)
         self.actionToggleGrid.setEnabled(False)
         connect(self.actionToggleGrid.triggered, self.doToggleGrid)
@@ -404,41 +403,41 @@ class MainWindow(QMainWindow):
 
         self.actionCut.setIcon(QIcon(':/icons/24/ic_content_cut_black'))
         self.actionCut.setShortcut(QKeySequence.Cut)
-        self.actionCut.setStatusTip(_('ACTION_CUT_S'))
+        self.actionCut.setStatusTip('Cut selected items')
         self.actionCut.setEnabled(False)
         connect(self.actionCut.triggered, self.doCut)
 
         self.actionCopy.setIcon(QIcon(':/icons/24/ic_content_copy_black'))
         self.actionCopy.setShortcut(QKeySequence.Copy)
-        self.actionCopy.setStatusTip(_('ACTION_COPY_S'))
+        self.actionCopy.setStatusTip('Copy selected items')
         self.actionCopy.setEnabled(False)
         connect(self.actionCopy.triggered, self.doCopy)
 
         self.actionPaste.setIcon(QIcon(':/icons/24/ic_content_paste'))
         self.actionPaste.setShortcut(QKeySequence.Paste)
-        self.actionPaste.setStatusTip(_('ACTION_PASTE_S'))
+        self.actionPaste.setStatusTip('Paste previously copied items')
         self.actionPaste.setEnabled(False)
         connect(self.actionPaste.triggered, self.doPaste)
 
         self.actionDelete.setIcon(QIcon(':/icons/24/ic_delete_black'))
         self.actionDelete.setShortcut(QKeySequence.Delete)
-        self.actionDelete.setStatusTip(_('ACTION_DELETE_S'))
+        self.actionDelete.setStatusTip('Delete selected items')
         self.actionDelete.setEnabled(False)
         connect(self.actionDelete.triggered, self.doDelete)
 
         self.actionBringToFront.setIcon(QIcon(':/icons/24/ic_flip_to_front_black'))
-        self.actionBringToFront.setStatusTip(_('ACTION_BRING_TO_FRONT_S'))
+        self.actionBringToFront.setStatusTip('Bring selected items to front')
         self.actionBringToFront.setEnabled(False)
         connect(self.actionBringToFront.triggered, self.doBringToFront)
 
         self.actionSendToBack.setIcon(QIcon(':/icons/24/ic_flip_to_back_black'))
-        self.actionSendToBack.setStatusTip(_('ACTION_SEND_TO_BACK_S'))
+        self.actionSendToBack.setStatusTip('Send selected items to back')
         self.actionSendToBack.setEnabled(False)
         connect(self.actionSendToBack.triggered, self.doSendToBack)
 
         self.actionSelectAll.setIcon(QIcon(':/icons/24/ic_select_all_black'))
         self.actionSelectAll.setShortcut(QKeySequence.SelectAll)
-        self.actionSelectAll.setStatusTip(_('ACTION_SELECT_ALL_S'))
+        self.actionSelectAll.setStatusTip('Select all items in the active diagram')
         self.actionSelectAll.setEnabled(False)
         connect(self.actionSelectAll.triggered, self.doSelectAll)
 
@@ -568,13 +567,13 @@ class MainWindow(QMainWindow):
         connect(self.actionRemoveEdgeBreakpoint.triggered, self.doRemoveBreakpoint)
 
         self.actionToggleEdgeEquivalence.setIcon(QIcon(':/icons/24/ic_equivalence_black'))
-        self.actionToggleEdgeEquivalence.setStatusTip(_('ACTION_TOGGLE_EDGE_EQUIVALENCE_S'))
+        self.actionToggleEdgeEquivalence.setStatusTip('Toggle the equivalence for all the selected inclusion edges')
         self.actionToggleEdgeEquivalence.setShortcut('ALT+C')
         self.actionToggleEdgeEquivalence.setEnabled(False)
         connect(self.actionToggleEdgeEquivalence.triggered, self.doToggleEdgeEquivalence)
 
         self.actionSwapEdge.setIcon(QIcon(':/icons/24/ic_swap_horiz_black'))
-        self.actionSwapEdge.setStatusTip(_('ACTION_SWAP_EDGE_S'))
+        self.actionSwapEdge.setStatusTip('Swap the direction of all the selected edges')
         self.actionSwapEdge.setShortcut('ALT+S')
         self.actionSwapEdge.setEnabled(False)
         connect(self.actionSwapEdge.triggered, self.doSwapEdge)
@@ -593,7 +592,7 @@ class MainWindow(QMainWindow):
         self.buttonSetBrush.setIcon(QIcon(':/icons/24/ic_format_color_fill_black'))
         self.buttonSetBrush.setMenu(self.menuSetBrush)
         self.buttonSetBrush.setPopupMode(QToolButton.InstantPopup)
-        self.buttonSetBrush.setStatusTip(_('ACTION_SET_BRUSH_S'))
+        self.buttonSetBrush.setStatusTip('Change the background color of the selected predicate nodes')
         self.buttonSetBrush.setEnabled(False)
 
         #############################################
@@ -894,7 +893,7 @@ class MainWindow(QMainWindow):
                 moveY = snapF(((R1.bottom() - R2.bottom()) - (R2.top() - R1.top())) / 2, Diagram.GridSize)
                 if moveX or moveY:
                     items = [x for x in items if x.isNode() or x.isEdge()]
-                    command = CommandItemsTranslate(diagram, items, moveX, moveY, _('COMMAND_DIAGRAM_CENTER'))
+                    command = CommandItemsTranslate(diagram, items, moveX, moveY, 'center diagram')
                     self.project.undoStack.push(command)
                     self.mdi.activeView.centerOn(0, 0)
 
@@ -920,7 +919,7 @@ class MainWindow(QMainWindow):
             if node:
                 action = self.sender()
                 item = action.data()
-                name = _('COMMAND_COMPOSE_DOMAIN_RANGE_RESTRICTION', node.shortname, item.shortname)
+                name = 'compose {0} {1}'.format(node.shortname, item.shortname)
                 items = diagram.propertyComposition(node, item)
                 nodes = {x for x in items if x.isNode()}
                 edges = {x for x in items if x.isEdge()}
@@ -1045,12 +1044,12 @@ class MainWindow(QMainWindow):
                     diagram = worker.run()
                 except Exception as e:
                     msgbox = QMessageBox(self)
-                    msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                    msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-                    msgbox.setWindowTitle(_('DIAGRAM_LOAD_FAILED_WINDOW_TITLE'))
-                    msgbox.setStandardButtons(QMessageBox.Close)
-                    msgbox.setText(_('DIAGRAM_LOAD_FAILED_MESSAGE', path))
                     msgbox.setDetailedText(format_exception(e))
+                    msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+                    msgbox.setStandardButtons(QMessageBox.Close)
+                    msgbox.setText('Eddy could not load the specified diagram: {0}!'.format(path))
+                    msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+                    msgbox.setWindowTitle('Diagram load failed!')
                     msgbox.exec_()
                 else:
                     self.project.addDiagram(diagram)
@@ -1219,12 +1218,14 @@ class MainWindow(QMainWindow):
         if diagram:
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle(_('DIAGRAM_REMOVE_POPUP_TITLE', diagram.name))
+            msgbox.setInformativeText('<b>NOTE: This action is not reversible!</b>')
             msgbox.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
             msgbox.setTextFormat(Qt.RichText)
-            msgbox.setText(_('DIAGRAM_REMOVE_POPUP_QUESTION', diagram.name))
-            msgbox.setInformativeText(_('DIAGRAM_REMOVE_POPUP_INFORMATIVE_TEXT'))
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Remove diagram: {0}?'.format(diagram.name))
+            msgbox.setText(dedent("""Are you sure you want to remove diagram <b>{0}</b>?
+            If you continue, all the predicates that have been defined only in this
+            diagram will be lost!""".format(diagram.name)))
             msgbox.exec_()
             if msgbox.result() == QMessageBox.Yes:
                 subwindow = self.mdi.subWindowForDiagram(diagram)
@@ -1256,12 +1257,12 @@ class MainWindow(QMainWindow):
             worker.run()
         except Exception as e:
             msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle(_('PROJECT_SAVE_FAILED_WINDOW_TITLE'))
-            msgbox.setStandardButtons(QMessageBox.Close)
-            msgbox.setText(_('PROJECT_SAVE_FAILED_MESSAGE'))
             msgbox.setDetailedText(format_exception(e))
+            msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+            msgbox.setStandardButtons(QMessageBox.Close)
+            msgbox.setText('Eddy could not save the current project!')
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Save failed!')
             msgbox.exec_()
         else:
             self.project.undoStack.setClean()
@@ -1351,7 +1352,7 @@ class MainWindow(QMainWindow):
                     if form.exec_() == CardinalityRestrictionForm.Accepted:
                         data = restriction.format(form.minValue or '-', form.maxValue or '-')
                 if data and node.text() != data:
-                    name = _('COMMAND_NODE_SET_PROPERTY_RESTRICTION', node.shortname, data)
+                    name = 'change {0} to {1}'.format(node.shortname, data)
                     self.project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
@@ -1369,7 +1370,7 @@ class MainWindow(QMainWindow):
                 if action.data() is Identity.Instance:
                     if node.identity is Identity.Value:
                         data = node.label.template
-                        name = _('COMMAND_NODE_SET_INDIVIDUAL_AS', node.text(), data)
+                        name = 'change {0} to {1}'.format(node.text(), data)
                         self.project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
                 elif action.data() is Identity.Value:
                     form = ValueForm(node, self)
@@ -1390,7 +1391,7 @@ class MainWindow(QMainWindow):
                 special = action.data()
                 data = special.value
                 if node.text() != data:
-                    name = _('COMMAND_NODE_SET_SPECIAL', node.shortname, data)
+                    name = 'change {0} to {1}'.format(node.shortname, data)
                     self.project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
@@ -1407,7 +1408,7 @@ class MainWindow(QMainWindow):
                 datatype = action.data()
                 data = datatype.value
                 if node.text() != data:
-                    name = _('COMMAND_NODE_SET_DATATYPE', node.shortname, data)
+                    name = 'change {0} to {1}'.format(node.shortname, data)
                     self.project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
@@ -1424,7 +1425,7 @@ class MainWindow(QMainWindow):
                 facet = action.data()
                 if facet != node.facet:
                     data = node.compose(facet, node.value)
-                    name = _('COMMAND_NODE_SET_FACET', node.facet.value, facet.value)
+                    name = 'change {0} to {1}'.format(node.facet.value, facet.value)
                     self.project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
@@ -1494,8 +1495,8 @@ class MainWindow(QMainWindow):
         """
         item = None
         icon = QIcon(':/icons/48/ic_done_black')
-        message = _('SYNTAX_MANUAL_NO_ERROR_FOUND')
-        with BusyProgressDialog(_('SYNTAX_MANUAL_PROGRESS_TITLE'), 2, self):
+        message = 'No syntax error found!'
+        with BusyProgressDialog('Running syntax validation...', 1, self):
             for edge in self.project.edges():
                 source = edge.source
                 target = edge.target
@@ -1507,7 +1508,8 @@ class MainWindow(QMainWindow):
                         nameA = '{0} "{1}:{2}"'.format(source.name, source.text(), source.id)
                     if target.isPredicate():
                         nameB = '{0} "{1}:{2}"'.format(target.name, target.text(), target.id)
-                    message = _('SYNTAX_MANUAL_EDGE_ERROR', edge.name, nameA, nameB, uncapitalize(result.message))
+                    message = 'Syntax error detected on {0} from {1} to {2}: <i>{3}</i>.' \
+                    .format(edge.name, nameA, nameB, uncapitalize(result.message))
                     icon = QIcon(':/icons/48/ic_warning_black')
                     item = edge
                     break
@@ -1517,18 +1519,18 @@ class MainWindow(QMainWindow):
                         name = '{0} "{1}"'.format(node.name, node.id)
                         if node.isPredicate():
                             name = '{0} "{1}:{2}"'.format(node.name, node.text(), node.id)
-                        message = _('SYNTAX_MANUAL_NODE_IDENTITY_UNKNOWN', name)
+                        message = 'Unkown node identity detected on {0}.'.format(name)
                         icon = QIcon(':/icons/48/ic_warning_black')
                         item = node
                         break
 
         msgbox = QMessageBox(self)
         msgbox.setIconPixmap(icon.pixmap(48))
-        msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-        msgbox.setWindowTitle(_('SYNTAX_MANUAL_WINDOW_TITLE'))
         msgbox.setStandardButtons(QMessageBox.Close)
         msgbox.setText(message)
         msgbox.setTextFormat(Qt.RichText)
+        msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        msgbox.setWindowTitle('Syntax validation completed!')
         msgbox.exec_()
 
         if item:
@@ -1710,9 +1712,9 @@ class MainWindow(QMainWindow):
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
             msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle(_('PROJECT_CLOSING_SAVE_CHANGES_WINDOW_TITLE'))
+            msgbox.setWindowTitle('Save changes?')
             msgbox.setStandardButtons(QMessageBox.Cancel|QMessageBox.No|QMessageBox.Yes)
-            msgbox.setText(_('PROJECT_CLOSING_SAVE_CHANGES_MESSAGE'))
+            msgbox.setText('Your project contains unsaved changes. Do you want to save?')
             msgbox.exec_()
             if msgbox.result() == QMessageBox.Cancel:
                 close = False
@@ -1848,7 +1850,7 @@ class MainWindow(QMainWindow):
             raise IOError('file not found: {0}'.format(path))
 
         name = os.path.basename(path)
-        with BusyProgressDialog(_('DIAGRAM_IMPORT_PROGRESS_TITLE', name, 2, self)):
+        with BusyProgressDialog('Importing {0}...'.format(name), 2, self):
 
             worker = GraphmlLoader(self.project, path, self)
 
@@ -1856,12 +1858,12 @@ class MainWindow(QMainWindow):
                 diagram = worker.run()
             except Exception as e:
                 msgbox = QMessageBox(self)
-                msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle(_('DIAGRAM_IMPORT_FAILED_WINDOW_TITLE'))
-                msgbox.setStandardButtons(QMessageBox.Close)
-                msgbox.setText(_('DIAGRAM_IMPORT_FAILED_MESSAGE', path))
                 msgbox.setDetailedText(format_exception(e))
+                msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+                msgbox.setStandardButtons(QMessageBox.Close)
+                msgbox.setText('Eddy could not import the specified file: {0}!'.format(path))
+                msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+                msgbox.setWindowTitle('Diagram import failed!')
                 msgbox.exec_()
             else:
                 self.project.addDiagram(diagram)
@@ -1869,20 +1871,19 @@ class MainWindow(QMainWindow):
                 self.doSave()
 
         if worker.errors:
-            # If some errors have been generated during the import process, display
-            # them into a popup so the user can check whether the problem is in the
-            # .graphml document or Eddy is not handling the import properly.
             enums = enumerate(worker.errors, start=1)
             parts = ['{0}) {1}'.format(k, format_exception(v)) for k, v in enums]
             msgbox = QMessageBox(self)
+            msgbox.setDetailedText('\n'.join(parts))
             msgbox.setIconPixmap(QIcon(':/icons/48/ic_warning_black').pixmap(48))
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle(_('DIAGRAM_IMPORT_PARTIAL_WINDOW_TITLE'))
+            msgbox.setInformativeText('If needed, <a href="{0}">submit a bug report</a>.'.format(BUG_TRACKER))
             msgbox.setStandardButtons(QMessageBox.Close)
             msgbox.setTextFormat(Qt.RichText)
-            msgbox.setText(_('DIAGRAM_IMPORT_PARTIAL_MESSAGE', name, len(worker.errors)))
-            msgbox.setInformativeText(_('DIAGRAM_IMPORT_PARTIAL_INFORMATIVE_MESSAGE', BUG_TRACKER))
-            msgbox.setDetailedText('\n'.join(parts))
+            msgbox.setText(dedent("""Document <b>{0}</b> has been imported! However some errors
+            (<b>{1}</b>) have been generated during the import process. You can inspect detailed
+            information by expanding the box below.""".format(name, len(worker.errors))))
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Partial document import!')
             msgbox.exec_()
 
     def openFile(self, path):

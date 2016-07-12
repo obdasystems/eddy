@@ -33,13 +33,14 @@
 ##########################################################################
 
 
+from textwrap import dedent
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout, QHBoxLayout
 
 from eddy import APPNAME, AUTHOR, VERSION, LICENSE, PROJECT_HOME
 from eddy.core.qt import Font
-from eddy.lang import gettext as _
 
 
 class About(QDialog):
@@ -53,9 +54,15 @@ class About(QDialog):
         """
         super().__init__(parent)
 
-        message = _('ABOUT_DIALOG_MESSAGE', TITLE=APPNAME, VERSION=VERSION,
-                                            AUTHOR=AUTHOR, LICENSE=LICENSE,
-                                            HOMEPAGE=PROJECT_HOME)
+        message = dedent("""{TITLE}<br/>
+        Version: {VERSION}<br/>
+        Author: {AUTHOR}<br/>
+        Copyright: © 2015 {AUTHOR}<br/>
+        License: {LICENSE}<br/>
+        Homepage: <a href="{HOMEPAGE}">{HOMEPAGE}</a>""" \
+            .format(TITLE=APPNAME, VERSION=VERSION,
+                    AUTHOR=AUTHOR, LICENSE=LICENSE,
+                    HOMEPAGE=PROJECT_HOME))
 
         self.icon = QLabel(self)
         self.icon.setPixmap(QPixmap(':/images/eddy-smile'))
@@ -84,4 +91,4 @@ class About(QDialog):
         self.setFixedWidth(520)
         self.setFixedHeight(self.sizeHint().height())
         self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-        self.setWindowTitle(_('ABOUT_DIALOG_WINDOW_TITLE', APPNAME))
+        self.setWindowTitle('About {0}'.format(APPNAME))

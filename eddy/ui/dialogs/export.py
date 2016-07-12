@@ -48,8 +48,6 @@ from eddy.core.functions.path import openPath, expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font
 
-from eddy.lang import gettext as _
-
 from eddy.ui.fields import ComboBox
 
 
@@ -95,7 +93,7 @@ class OWLExportDialog(QDialog):
 
         self.formWidget = QWidget(self)
         self.formLayout = QFormLayout(self.formWidget)
-        self.formLayout.addRow(_('PROJECT_EXPORT_OWL_SYNTAX_KEY'), self.syntaxField)
+        self.formLayout.addRow('Syntax', self.syntaxField)
         self.formLayout.addRow(spacer)
         self.formLayout.addRow(self.progressBar)
 
@@ -116,7 +114,7 @@ class OWLExportDialog(QDialog):
         self.mainLayout.addWidget(self.formWidget)
         self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
 
-        self.setWindowTitle(_('PROJECT_EXPORT_OWL_WINDOW_TITLE'))
+        self.setWindowTitle('OWL Export')
         self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
         self.setFixedSize(self.sizeHint())
 
@@ -138,24 +136,24 @@ class OWLExportDialog(QDialog):
         if isinstance(exception, MalformedDiagramError):
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(QIcon(':/icons/48/ic_warning_black').pixmap(48))
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle(_('PROJECT_EXPORT_OWL_MALFORMED_EXPRESSION_WINDOW_TITLE'))
-            msgbox.setText(_('PROJECT_EXPORT_OWL_MALFORMED_EXPRESSION_MESSAGE', exception.item, exception))
-            msgbox.setInformativeText(_('PROJECT_EXPORT_OWL_MALFORMED_EXPRESSION_QUESTION'))
+            msgbox.setInformativeText('Do you want to see the error in the diagram?')
+            msgbox.setText('Malformed expression detected on {0}: {1}'.format(exception.item, exception))
             msgbox.setStandardButtons(QMessageBox.Yes|QMessageBox.No)
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Malformed expression')
             msgbox.exec_()
             if msgbox.result() == QMessageBox.Yes:
                 mainwindow = self.parent()
                 mainwindow.doFocusItem(exception.item)
         else:
             msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle(_('PROJECT_EXPORT_OWL_ERRORED_WINDOW_TITLE'))
-            msgbox.setStandardButtons(QMessageBox.Close)
-            msgbox.setText(_('PROJECT_EXPORT_OWL_ERRORED_MESSAGE'))
-            msgbox.setInformativeText(_('PROJECT_EXPORT_OWL_ERRORED_INFORMATIVE_MESSAGE', BUG_TRACKER))
             msgbox.setDetailedText(format_exception(exception))
+            msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+            msgbox.setInformativeText('Please <a href="{0}">submit a bug report</a>.'.format(BUG_TRACKER))
+            msgbox.setStandardButtons(QMessageBox.Close)
+            msgbox.setText('Diagram translation could not be completed!')
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Unhandled exception!')
             msgbox.exec_()
 
         self.reject()
@@ -169,10 +167,10 @@ class OWLExportDialog(QDialog):
 
         msgbox = QMessageBox(self)
         msgbox.setIconPixmap(QIcon(':/icons/24/ic_info_outline_black').pixmap(48))
+        msgbox.setInformativeText('Do you want to open the OWL ontology?')
+        msgbox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msgbox.setText('Translation completed!')
         msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-        msgbox.setText(_('PROJECT_EXPORT_OWL_COMPLETED_WINDOW_TITLE'))
-        msgbox.setInformativeText(_('PROJECT_EXPORT_OWL_COMPLETED_MESSAGE'))
-        msgbox.setStandardButtons(QMessageBox.Yes|QMessageBox.No)
         msgbox.exec_()
         if msgbox.result() == QMessageBox.Yes:
             openPath(self.path)

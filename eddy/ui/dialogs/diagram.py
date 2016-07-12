@@ -51,7 +51,7 @@ from eddy.core.functions.misc import cutR, format_exception, isEmpty
 from eddy.core.functions.path import isPathValid, shortPath, expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font
-from eddy.lang import gettext as _
+
 from eddy.ui.fields import StringField
 
 
@@ -81,7 +81,7 @@ class AbstractDiagramDialog(QDialog):
 
         self.nameLabel = QLabel(self)
         self.nameLabel.setFont(arial12r)
-        self.nameLabel.setText(_('DIAGRAM_DIALOG_NAME_LABEL'))
+        self.nameLabel.setText('Name')
         self.nameField = StringField(self)
         self.nameField.setFont(arial12r)
         self.nameField.setMinimumWidth(400)
@@ -91,7 +91,7 @@ class AbstractDiagramDialog(QDialog):
 
         self.pathLabel = QLabel(self)
         self.pathLabel.setFont(arial12r)
-        self.pathLabel.setText(_('DIAGRAM_DIALOG_LOCATION_LABEL'))
+        self.pathLabel.setText('Location')
         self.pathField = StringField(self)
         self.pathField.setFont(arial12r)
         self.pathField.setMinimumWidth(400)
@@ -134,6 +134,7 @@ class AbstractDiagramDialog(QDialog):
         self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
 
         connect(self.confirmationBox.accepted, self.accept)
         connect(self.confirmationBox.rejected, self.reject)
@@ -162,10 +163,10 @@ class AbstractDiagramDialog(QDialog):
             enabled = False
         else:
             if fexists(path):
-                caption = _('DIAGRAM_CAPTION_ALREADY_EXISTS', name)
+                caption = "Diagram '{0}' already exists!".format(name)
                 enabled = False
             elif not isPathValid(path):
-                caption = _('DIAGRAM_CAPTION_NAME_NOT_VALID', name)
+                caption = "'{0}' is not a valid diagram name!".format(name)
                 enabled = False
 
         self.caption.setText(caption)
@@ -196,7 +197,7 @@ class NewDiagramDialog(AbstractDiagramDialog):
         :type parent: QWidget
         """
         super().__init__(project, parent)
-        self.setWindowTitle(_('DIAGRAM_DIALOG_NEW_WINDOW_TITLE'))
+        self.setWindowTitle('New diagram')
 
     #############################################
     #   SLOTS
@@ -219,12 +220,12 @@ class NewDiagramDialog(AbstractDiagramDialog):
             exporter.run()
         except Exception as e:
             msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle(_('DIAGRAM_CREATION_FAILED_WINDOW_TITLE'))
-            msgbox.setStandardButtons(QMessageBox.Close)
-            msgbox.setText(_('DIAGRAM_CREATION_FAILED_MESSAGE', path))
             msgbox.setDetailedText(format_exception(e))
+            msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+            msgbox.setStandardButtons(QMessageBox.Close)
+            msgbox.setText('Eddy could not create the specified diagram: {0}!'.format(path))
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Diagram creation failed!')
             msgbox.exec_()
             super().reject()
         else:
@@ -245,7 +246,7 @@ class RenameDiagramDialog(AbstractDiagramDialog):
         super().__init__(project, parent)
         self.diagram = diagram
         self.nameField.setText(cutR(self.diagram.name, File.Graphol.extension))
-        self.setWindowTitle(_('DIAGRAM_DIALOG_RENAME_WINDOW_TITLE'))
+        self.setWindowTitle('Rename diagram')
 
     #############################################
     #   SLOTS
@@ -283,7 +284,7 @@ class RenameDiagramDialog(AbstractDiagramDialog):
             enabled = False
         else:
             if not isPathValid(path):
-                caption = _('DIAGRAM_CAPTION_NAME_NOT_VALID', name)
+                caption = "'{0}' is not a valid diagram name!".format(name)
                 enabled = False
             else:
                 if expandPath(path) == expandPath(self.diagram.path):
@@ -291,7 +292,7 @@ class RenameDiagramDialog(AbstractDiagramDialog):
                     enabled = False
                 else:
                     if fexists(path):
-                        caption = _('DIAGRAM_CAPTION_ALREADY_EXISTS', name)
+                        caption = "Diagram '{0}' already exists!".format(name)
                         enabled = False
 
         self.caption.setText(caption)

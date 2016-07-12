@@ -37,7 +37,6 @@ from PyQt5.QtWidgets import QUndoCommand
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.misc import first
-from eddy.lang import gettext as _
 
 
 class CommandItemsAdd(QUndoCommand):
@@ -50,39 +49,41 @@ class CommandItemsAdd(QUndoCommand):
         :type diagram: Diagram
         :type items: T <= tuple|list|set
         """
-        self.diagram = diagram
         self.items = items
+        self.diagram = diagram
         self.selected = diagram.selectedItems()
-
         if len(items) == 1:
-            name = _('COMMAND_ITEM_ADD', first(items).name)
+            name = 'add {0}'.format(first(items).name)
         else:
-            name = _('COMMAND_ITEM_ADD_MULTI', len(items))
-
+            name = 'add {0} items'.format(len(items))
         super().__init__(name)
 
     def redo(self):
         """redo the command"""
         self.diagram.clearSelection()
+        # Add all the items to the diagram.
         for item in self.items:
             self.diagram.addItem(item)
             self.diagram.sgnItemAdded.emit(self.diagram, item)
             item.setSelected(True)
-        # emit updated signal
+        # Emit updated signal.
         self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         self.diagram.clearSelection()
+        # Remove all the items from the diagram.
         for item in self.items:
             self.diagram.removeItem(item)
             self.diagram.sgnItemRemoved.emit(self.diagram, item)
+        # Restore the old selection.
         for item in self.selected:
             item.setSelected(True)
-        # emit updated signal
+        # Emit updated signal.
         self.diagram.sgnUpdated.emit()
 
 
+# TODO: restore selection
 class CommandItemsRemove(QUndoCommand):
     """
     This command is used to remove multiple items from a diagram.
@@ -112,9 +113,9 @@ class CommandItemsRemove(QUndoCommand):
                     self.inputs[node]['redo'].remove(edge.id)
 
         if len(items) == 1:
-            name = _('COMMAND_ITEM_REMOVE', first(items).name)
+            name = 'remove {0}'.format(first(items).name)
         else:
-            name = _('COMMAND_ITEM_REMOVE_MULTI', len(items))
+            name = 'remove {0} items'.format(len(items))
 
         super().__init__(name)
 
@@ -159,6 +160,7 @@ class CommandItemsRemove(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
+# TODO: check whether this can be replaced with the command to add multiple items
 class CommandComposeAxiom(QUndoCommand):
     """
     This command is used to compose axioms.
@@ -180,29 +182,29 @@ class CommandComposeAxiom(QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        # add items to the diagram
+        # Add items to the diagram.
         for item in self.nodes | self.edges:
             self.diagram.addItem(item)
             self.diagram.sgnItemAdded.emit(self.diagram, item)
-        # map edges over source and target nodes
+        # Map edges over source and target nodes.
         for edge in self.edges:
             edge.source.addEdge(edge)
             edge.target.addEdge(edge)
             edge.updateEdge()
-        # emit updated signal
+        # Emit updated signal.
         self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
-        # remove edge mappings from source and target nodes
+        # Remove edge mappings from source and target nodes.
         for edge in self.edges:
             edge.source.removeEdge(edge)
             edge.target.removeEdge(edge)
-        # remove items from the diagram
+        # Remove items from the diagram.
         for item in self.nodes | self.edges:
             self.diagram.removeItem(item)
             self.diagram.sgnItemRemoved.emit(self.diagram, item)
-        # emit updated signal
+        # Emit updated signal.
         self.diagram.sgnUpdated.emit()
 
 
@@ -219,7 +221,7 @@ class CommandItemsTranslate(QUndoCommand):
         :type moveY: float
         :type name: str
         """
-        super().__init__(name or _('COMMAND_ITEM_TRANSLATE', len(items)))
+        super().__init__(name or 'move {0} item(s)'.format(len(items)))
         self.diagram = diagram
         self.items = items
         self.moveX = moveX
@@ -260,36 +262,44 @@ class CommandSnapItemsToGrid(QUndoCommand):
         :type name: str
         """
         num = len(data['undo']['nodes']) + len(data['redo']['edges'])
-        super().__init__(name or _('COMMAND_ITEM_SNAP', num))
+        super().__init__(name or 'snap {0} item(s) to the grid'.format(num))
         self.diagram = diagram
         self.data = data
 
     def redo(self):
         """redo the command"""
         edges = set()
+        # Snap the nodes.
         for node in self.data['redo']['nodes']:
             node.anchors = self.data['redo']['nodes'][node]['anchors']
             node.setPos(self.data['redo']['nodes'][node]['pos'])
             edges |= node.edges
+        # Snap the edges.
         for edge in self.data['redo']['edges']:
             edge.breakpoints = self.data['redo']['edges'][edge]['breakpoints']
             edges.add(edge)
+        # Update all the edges.
         for edge in edges:
             edge.updateEdge()
+        # Emit updated signal.
         self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         edges = set()
+        # Un-snap the nodes.
         for node in self.data['undo']['nodes']:
             node.anchors = self.data['undo']['nodes'][node]['anchors']
             node.setPos(self.data['undo']['nodes'][node]['pos'])
             edges |= node.edges
+        # Un-snap the edges.
         for edge in self.data['undo']['edges']:
             edge.breakpoints = self.data['undo']['edges'][edge]['breakpoints']
             edges.add(edge)
+        # Update all the edges.
         for edge in edges:
             edge.updateEdge()
+        # Emit updated signal.
         self.diagram.sgnUpdated.emit()
 
 

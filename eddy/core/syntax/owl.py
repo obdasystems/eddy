@@ -40,8 +40,6 @@ from eddy.core.functions.misc import cutR, first
 from eddy.core.syntax.common import AbstractValidator
 from eddy.core.syntax.common import SyntaxValidationResult
 
-from eddy.lang import gettext as _
-
 
 class OWL2Validator(AbstractValidator):
     """
@@ -74,31 +72,31 @@ class OWL2Validator(AbstractValidator):
         """
         if source is target:
             # Self connection is forbidden.
-            raise SyntaxError(_('SYNTAX_SELF_CONNECTION'))
+            raise SyntaxError('Self connection is not valid')
 
         # Here we keep the ValueDomain as supported identity even though we deny the inclusion
         # between value-domain expressions, unless we are creating a DataPropertyRange axiom.
         # The reason for this is that if we remove the identity from the supported set the user
         # will see the message which explains that the inclusion is denied because it does not
         # involve two graphol expressions, while it actually does. We handle this special case
-        # here below, by passing the only allowed inclusion between value-domain expressions.
+        # here below, bypassing the only allowed inclusion between value-domain expressions.
         supported = {Identity.Concept, Identity.Role, Identity.Attribute, Identity.ValueDomain}
         remaining = source.Identities & target.Identities - {Identity.Neutral, Identity.Unknown}
 
         if remaining - supported:
             # Inclusion assertions can be specified only between graphol expressions: Concept
             # expressions, Role expressions, Value-Domain expressions, Attribute expressions.
-            raise SyntaxError(_('SYNTAX_INCLUSION_NO_GRAPHOL_EXPRESSION'))
+            raise SyntaxError('Type mismatch: inclusion must involve two graphol expressions')
 
         if Identity.Neutral not in {source.identity, target.identity} and source.identity is not target.identity:
             # If both nodes are not NEUTRAL and they have a different identity we can't create an inclusion.
             idA = source.identity.value
             idB = target.identity.value
-            raise SyntaxError(_('SYNTAX_INCLUSION_TYPE_MISMATCH', idA, idB))
+            raise SyntaxError('Type mismatch: inclusion between {0} and {1}'.format(idA, idB))
 
         if not remaining:
             # If source and target nodes do not share a common identity then we can't create an inclusion.
-            raise SyntaxError(_('SYNTAX_INCLUSION_NOT_COMPATIBLE', source.name, target.name))
+            raise SyntaxError('Type mismatch: {0} and {1} are not compatible'.format(source.name, target.name))
 
         if Identity.ValueDomain in {source.identity, target.identity}:
 
@@ -109,7 +107,7 @@ class OWL2Validator(AbstractValidator):
                 # attribute node, and therefor its identity is set to value-domain) and targeting
                 # a value-domain expression, either complex or atomic, eventually excluding the
                 # attribute range restriction as target.
-                raise SyntaxError(_('SYNTAX_INCLUSION_VALUE_DOMAIN_EXPRESSIONS'))
+                raise SyntaxError('Type mismatch: inclusion between value-domain expressions')
 
         if {Identity.Attribute, Identity.Role} & {source.identity, target.identity}:
 
@@ -118,25 +116,25 @@ class OWL2Validator(AbstractValidator):
                 # are used to generate OWLDisjointObjectPropertiesAxiom and OWLDisjointDataPropertiesAxiom.
                 # Differently we allow inclusions targeting concept nodes to source from complement nodes.
                 identity = first({source.identity, target.identity} - {Identity.Neutral}).value.lower()
-                raise SyntaxError(_('SYNTAX_INCLUSION_COMPLEMENT_INVALID_SOURCE', identity, source.name))
+                raise SyntaxError('Invalid source for {0} inclusion: {1}'.format(identity, source.name))
 
             if target.type() is Item.ComplementNode and edge.equivalence:
                 # Complement nodes can only be the target of Role and Attribute inclusions since they
                 # are used to generate OWLDisjointObjectPropertiesAxiom and OWLDisjointDataPropertiesAxiom.
                 # Differently we allow inclusions targeting concept nodes to source from complement nodes.
                 identity = first({source.identity, target.identity} - {Identity.Neutral}).value.lower()
-                raise SyntaxError(_('SYNTAX_EQUIVALENCE_COMPLEMENT_NOT_VALID', identity, source.name))
+                raise SyntaxError('{0} equivalence is forbidden when expressing disjointness'.format(identity, source.name))
 
         if source.type() is Item.RoleChainNode:
             # Role expressions constructed with chain nodes can be included only
             # in basic role expressions, that are either Role nodes or RoleInverse
             # nodes with one input Role node (this check is done elsewhere).
             if target.type() not in {Item.RoleNode, Item.RoleInverseNode}:
-                raise SyntaxError(_('SYNTAX_INCLUSION_CHAIN_AS_SOURCE_INVALID_TARGET', source.name, target.name))
+                raise SyntaxError('Inclusion between {0} and {0} is forbidden'.format(source.name, target.name))
 
         if target.type() is Item.RoleChainNode:
             # Role expressions constructed with chain nodes cannot be the target of any inclusion edge.
-            raise SyntaxError(_('SYNTAX_INCLUSION_CHAIN_AS_TARGET'))
+            raise SyntaxError('Role chain nodes cannot be target of a Role inclusion')
 
     @staticmethod
     def input(source, edge, target):
@@ -149,11 +147,11 @@ class OWL2Validator(AbstractValidator):
         """
         if source is target:
             # Self connection is forbidden.
-            raise SyntaxError(_('SYNTAX_SELF_CONNECTION'))
+            raise SyntaxError('Self connection is not valid')
 
         if not target.isConstructor():
             # Input edges can only target constructor nodes.
-            raise SyntaxError(_('SYNTAX_INPUT_INVALID_TARGET'))
+            raise SyntaxError('Input edges can only target constructor nodes')
 
         if target.type() in {Item.ComplementNode, Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode}:
 
@@ -163,7 +161,7 @@ class OWL2Validator(AbstractValidator):
 
             if source.identity not in target.Identities:
                 # Source node identity is not supported by this target node.
-                raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', target.name, source.identity.value))
+                raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.identity.value))
 
             if source.identity is Identity.ValueDomain and target.identity is Identity.Neutral:
                 # We are here connecting a Value-Domain node in input to an operator node whose
@@ -181,7 +179,7 @@ class OWL2Validator(AbstractValidator):
                 f4 = lambda x: x.type() is Item.InclusionEdge and x.source.type() is not Item.RangeRestrictionNode
                 for node in bfs(source=target, filter_on_edges=f1, filter_on_nodes=f2):
                     if node.outgoingNodes(filter_on_edges=f3) or node.incomingNodes(filter_on_edges=f4):
-                        raise SyntaxError(_('SYNTAX_INCLUSION_VALUE_DOMAIN_EXPRESSIONS'))
+                        raise SyntaxError('Type mismatch: inclusion between value-domain expressions')
 
             #############################################
             # TARGET = COMPLEMENT
@@ -191,7 +189,7 @@ class OWL2Validator(AbstractValidator):
 
                 if len(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge)) > 0:
                     # The Complement operator may have at most one node connected to it.
-                    raise SyntaxError(_('SYNTAX_INPUT_TOO_MANY_OPERANDS', target.name))
+                    raise SyntaxError('Too many inputs to {0}'.format(target.name))
 
                 if source.type() in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}:
                     # See if the source of the node matches an ObjectPropertyExpression
@@ -202,7 +200,7 @@ class OWL2Validator(AbstractValidator):
                     # Role expressions to Complement nodes that are given as inputs to Enumeration,
                     # Union and Disjoint Union operatore nodes.
                     if len(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x.source is target)) > 0:
-                        raise SyntaxError(_('SYNTAX_INPUT_COMPLEMENT_INVALID_EXPRESSION', source.identity.value))
+                        raise SyntaxError('Invalid negative {0} expression'.format(source.identity.value))
 
             else:
 
@@ -217,7 +215,7 @@ class OWL2Validator(AbstractValidator):
                         idA = source.identity.value
                         idB = target.identity.value
                         cmp = cutR(target.name, ' node')
-                        raise SyntaxError(_('SYNTAX_INPUT_INVALID_COMPOSITION', cmp, idA, idB))
+                        raise SyntaxError('Type mismatch: {0} between {1} and {2}'.format(cmp, idA, idB))
 
         elif target.type() is Item.EnumerationNode:
 
@@ -230,13 +228,13 @@ class OWL2Validator(AbstractValidator):
                 # represented by the Individual node, and has the job of composing a set
                 # if individuals (either Concept or ValueDomain, but not both together).
                 name = source.identity.value if source.identity is not Identity.Neutral else source.name
-                raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', target.name, name))
+                raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, name))
 
             if target.identity is Identity.Unknown:
                 # Target node has an unkown identity: we do not allow the connection => the
                 # user MUST fix the error first and then try to create again the connection
                 # (this most likely never happens).
-                raise SyntaxError(_('SYNTAX_INPUT_ENUMERATION_INVALID_TARGET_IDENTITY', target.identity.value))
+                raise SyntaxError('Target node has an invalid identity: {0}'.format(target.identity.value))
 
             if target.identity is not Identity.Neutral:
 
@@ -244,10 +242,10 @@ class OWL2Validator(AbstractValidator):
                 nameB = source.identity.value
 
                 if source.identity is Identity.Instance and target.identity is Identity.ValueDomain:
-                    raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', nameA, nameB))
+                    raise SyntaxError('Invalid input to {0}: {1}'.format(nameA, nameB))
 
                 if source.identity is Identity.Value and target.identity is Identity.Concept:
-                    raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', nameA, nameB))
+                    raise SyntaxError('Invalid input to {0}: {1}'.format(nameA, nameB))
 
         elif target.type() is Item.RoleInverseNode:
 
@@ -260,12 +258,12 @@ class OWL2Validator(AbstractValidator):
                 # domain and range of the role. Assume to have a Role labelled 'is_owner_of' whose instances
                 # are {(o1,o2), (o1,o3), (o4,o5)}: connecting this Role in input to a Role Inverse node will
                 # construct a new Role whose instances are {(o2,o1), (o3,o1), (o5,o4)}.
-                raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', target.name, source.name))
+                raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.name))
 
             if len(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge)) > 0:
                 # The Role Inverse operator may have at most one Role node connected to it: if we need to
                 # define multiple Role inverse we would need to use multiple Role Inverse operator nodes.
-                raise SyntaxError(_('SYNTAX_INPUT_TOO_MANY_OPERANDS', target.name))
+                raise SyntaxError('Too many inputs to {0}'.format(target.name))
 
         elif target.type() is Item.RoleChainNode:
 
@@ -281,7 +279,7 @@ class OWL2Validator(AbstractValidator):
                 # ObjectPropertyExpression := ObjectProperty | InverseObjectProperty => we need to match only
                 # Role nodes and Role Inverse nodes as sources of our edge (it's not possible to create a chain
                 # of chains, despite the identity matches Role in both expressions).
-                raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', target.name, source.name))
+                raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.name))
 
         elif target.type() is Item.DatatypeRestrictionNode:
 
@@ -293,7 +291,7 @@ class OWL2Validator(AbstractValidator):
                 # The DatatypeRestriction node is used to compose complex datatypes and
                 # accepts as inputs one value-domain node and n >= 1 facet
                 # nodes to compose the OWL 2 equivalent DatatypeRestriction.
-                raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', target.name, source.name))
+                raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.name))
 
             if source.type() is Item.ValueDomainNode:
 
@@ -301,7 +299,7 @@ class OWL2Validator(AbstractValidator):
                 f2 = lambda x: x.type() is Item.ValueDomainNode
                 if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
                     # The value-domain has already been attached to the DatatypeRestriction.
-                    raise SyntaxError(_('SYNTAX_INPUT_DATA_TOO_MANY_DATATYPE'))
+                    raise SyntaxError('Too many value-domain nodes in input to datatype restriction node')
 
             if source.type() is Item.FacetNode:
 
@@ -315,7 +313,7 @@ class OWL2Validator(AbstractValidator):
                     if source.facet not in Facet.forDatatype(node.datatype):
                         nameA = source.facet.value
                         nameB = node.datatype.value
-                        raise SyntaxError(_('SYNTAX_INPUT_DATA_INVALID_FACET', nameA , nameB))
+                        raise SyntaxError('Type mismatch: facet {0} is not supported by {1} datatype'.format(nameA , nameB))
 
         elif target.type() is Item.PropertyAssertionNode:
 
@@ -326,14 +324,14 @@ class OWL2Validator(AbstractValidator):
             if source.type() is not Item.IndividualNode:
                 # Property Assertion operators accepts only Individual nodes as input: they are
                 # used to construct ObjectPropertyAssertion and DataPropertyAssertion axioms.
-                raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', target.name, source.identity.value))
+                raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.identity.value))
 
             if len(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge)) >= 2:
                 # At most 2 Individual nodes can be connected to a PropertyAssertion node. As an example
                 # we can construct ObjectPropertyAssertion(presiede M.Draghi BCE) where the individuals
                 # are identified by M.Draghi and BCE, or DataPropertyAssertion(nome M.Draghi "Mario") where
                 # the individuals are identified by M.Draghi and "Mario".
-                raise SyntaxError(_('SYNTAX_INPUT_TOO_MANY_OPERANDS', target.name))
+                raise SyntaxError('Too many inputs to {0}'.format(target.name))
 
             if target.identity is Identity.RoleInstance:
 
@@ -341,7 +339,7 @@ class OWL2Validator(AbstractValidator):
                     # We are constructing an ObjectPropertyAssertion expression so we can't connect a Value.
                     idA = target.identity.value
                     idB = source.identity.value
-                    raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', idA, idB))
+                    raise SyntaxError('Invalid input to {0}: {1}'.format(idA, idB))
 
             if target.identity is Identity.AttributeInstance:
 
@@ -351,7 +349,7 @@ class OWL2Validator(AbstractValidator):
                     f2 = lambda x: x.identity is Identity.Instance
                     if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
                         # We are constructing a DataPropertyAssertion and so we can't have more than 1 instance.
-                        raise SyntaxError(_('SYNTAX_INPUT_PROP_ASSERTION_TOO_MANY_INSTANCES', target.identity.value))
+                        raise SyntaxError('Too many instances in input to {0}'.format(target.identity.value))
 
                 if source.identity is Identity.Value:
 
@@ -359,7 +357,7 @@ class OWL2Validator(AbstractValidator):
                     f2 = lambda x: x.identity is Identity.Value
                     if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
                         # At most one value can be given as input (2 instance | 1 instance + 1 value)
-                        raise SyntaxError(_('SYNTAX_INPUT_PROP_ASSERTION_TOO_MANY_VALUES', target.identity.value))
+                        raise SyntaxError('Too many values in input to {0}'.format(target.identity.value))
 
         elif target.type() is Item.DomainRestrictionNode:
 
@@ -369,7 +367,7 @@ class OWL2Validator(AbstractValidator):
 
             if len(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge)) >= 2:
                 # Domain Restriction node can have at most 2 inputs.
-                raise SyntaxError(_('SYNTAX_INPUT_TOO_MANY_OPERANDS', target.name))
+                raise SyntaxError('Too many inputs to {0}'.format(target.name))
 
             supported = {Identity.Concept, Identity.Attribute, Identity.Role, Identity.ValueDomain}
             if source.identity is not Identity.Neutral and source.identity not in supported:
@@ -378,12 +376,12 @@ class OWL2Validator(AbstractValidator):
                 #  - Attribute => OWL 2 DataPropertyExpression
                 #  - Concept => Qualified Existential/Universal Role Restriction
                 #  - ValueDomain => Qualified Existential Data Restriction
-                raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', target.name, source.identity.value))
+                raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.identity.value))
 
             if source.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode}:
                 # Exclude incompatible sources: note that while RoleChain has a correct identity
                 # it is excluded because it doesn't represent the OWL 2 ObjectPropertyExpression.
-                raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', target.name, source.name))
+                raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.name))
 
             # SOURCE => CONCEPT EXPRESSION || NEUTRAL
 
@@ -391,7 +389,8 @@ class OWL2Validator(AbstractValidator):
 
                 if target.restriction is Restriction.Self:
                     # Not a Qualified Restriction.
-                    raise SyntaxError(_('SYNTAX_INPUT_DR_INVALID_QUALIFIED_RESTRICTION', target.restriction.format()))
+                    restriction = target.restriction.format()
+                    raise SyntaxError('Invalid restriction ({0}) for qualified restriction'.format(restriction))
 
                 # A Concept can be given as input only if there is no input or if the other input is a Role.
                 node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
@@ -400,7 +399,7 @@ class OWL2Validator(AbstractValidator):
                     # so we can't construct a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError(_('SYNTAX_INPUT_DR_INVALID_QUALIFIED_RESTRICTION_OPERANDS', idA, idB))
+                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
 
             # SOURCE => ROLE EXPRESSION
 
@@ -413,7 +412,7 @@ class OWL2Validator(AbstractValidator):
                     # Not a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError(_('SYNTAX_INPUT_DR_INVALID_QUALIFIED_RESTRICTION_OPERANDS', idA, idB))
+                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
 
             # SOURCE => ATTRIBUTE
 
@@ -421,7 +420,7 @@ class OWL2Validator(AbstractValidator):
 
                 if target.restriction is Restriction.Self:
                     # Attributes don't have self.
-                    raise SyntaxError(_('SYNTAX_INPUT_DR_ATTRIBUTE_NO_SELF'))
+                    raise SyntaxError('Attributes do not have self')
 
                 # We can connect an Attribute in input only if there is no other input or if the
                 # other input is a ValueDomain and the node specifies a Qualified Restriction.
@@ -430,7 +429,7 @@ class OWL2Validator(AbstractValidator):
                     # Not a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError(_('SYNTAX_INPUT_DR_INVALID_QUALIFIED_RESTRICTION_OPERANDS', idA, idB))
+                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
 
             # SOURCE => VALUE-DOMAIN
 
@@ -438,7 +437,8 @@ class OWL2Validator(AbstractValidator):
 
                 if target.restriction is Restriction.Self:
                     # Not a Qualified Restriction.
-                    raise SyntaxError(_('SYNTAX_INPUT_DR_INVALID_QUALIFIED_RESTRICTION', target.restriction.format()))
+                    restriction = target.restriction.format()
+                    raise SyntaxError('Invalid restriction ({0}) for qualified restriction'.format(restriction))
 
                 # We can connect a ValueDomain in input only if there is no other input or if the
                 # other input is an Attribute and the node specifies a Qualified Restriction.
@@ -447,7 +447,7 @@ class OWL2Validator(AbstractValidator):
                     # Not a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError(_('SYNTAX_INPUT_DR_INVALID_QUALIFIED_RESTRICTION_OPERANDS', idA, idB))
+                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
 
         elif target.type() is Item.RangeRestrictionNode:
 
@@ -457,7 +457,7 @@ class OWL2Validator(AbstractValidator):
 
             if len(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge)) >= 2:
                 # Range Restriction node can have at most 2 inputs.
-                raise SyntaxError(_('SYNTAX_INPUT_TOO_MANY_OPERANDS', target.name))
+                raise SyntaxError('Too many inputs to {0}'.format(target.name))
 
             supported = {Identity.Concept, Identity.Attribute, Identity.Role, Identity.ValueDomain}
             if source.identity is not Identity.Neutral and source.identity not in supported:
@@ -466,12 +466,12 @@ class OWL2Validator(AbstractValidator):
                 #  - Attribute => OWL 2 DataPropertyExpression
                 #  - Concept => Qualified Existential/Universal Role Restriction
                 #  - ValueDomain => Qualified Existential Data Restriction
-                raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', target.name, source.identity.value))
+                raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.identity.value))
 
             if source.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode}:
                 # Exclude incompatible sources: not that while RoleChain has a correct identity
                 # it is excluded because it doesn't represent the OWL 2 ObjectPropertyExpression.
-                raise SyntaxError(_('SYNTAX_INPUT_INVALID_OPERAND', target.name, source.name))
+                raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.name))
 
             # SOURCE => CONCEPT EXPRESSION || NEUTRAL
 
@@ -484,7 +484,7 @@ class OWL2Validator(AbstractValidator):
                     # so we can't construct a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError(_('SYNTAX_INPUT_DR_INVALID_QUALIFIED_RESTRICTION_OPERANDS', idA, idB))
+                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
 
             # SOURCE => ROLE EXPRESSION
 
@@ -497,7 +497,7 @@ class OWL2Validator(AbstractValidator):
                     # Not a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError(_('SYNTAX_INPUT_DR_INVALID_QUALIFIED_RESTRICTION_OPERANDS', idA, idB))
+                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
 
             # SOURCE => ATTRIBUTE NODE
 
@@ -505,7 +505,7 @@ class OWL2Validator(AbstractValidator):
 
                 if target.restriction is Restriction.Self:
                     # Attributes don't have self.
-                    raise SyntaxError(_('SYNTAX_INPUT_DR_ATTRIBUTE_NO_SELF'))
+                    raise SyntaxError('Attributes do not have self')
 
                 # We can connect an Attribute in input only if there is no other input or if the
                 # other input is a ValueDomain and the node specifies a Qualified Restriction.
@@ -514,7 +514,7 @@ class OWL2Validator(AbstractValidator):
                     # Not a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError(_('SYNTAX_INPUT_DR_INVALID_QUALIFIED_RESTRICTION_OPERANDS', idA, idB))
+                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
 
             # SOURCE => VALUE-DOMAIN
 
@@ -527,7 +527,7 @@ class OWL2Validator(AbstractValidator):
                     # Not a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError(_('SYNTAX_INPUT_DR_INVALID_QUALIFIED_RESTRICTION_OPERANDS', idA, idB))
+                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
 
         elif target.type() is Item.FacetNode:
 
@@ -536,7 +536,7 @@ class OWL2Validator(AbstractValidator):
             #################################
 
             # Facet node cannot be target of any input.
-            raise SyntaxError(_('SYNTAX_INPUT_FACET_INVALID_TARGET'))
+            raise SyntaxError('Facet not cannot be target of any input')
 
     @staticmethod
     def membership(source, edge, target):
@@ -549,15 +549,15 @@ class OWL2Validator(AbstractValidator):
         """
         if source is target:
             # Self connection is forbidden.
-            raise SyntaxError(_('SYNTAX_SELF_CONNECTION'))
+            raise SyntaxError('Self connection is not valid')
 
         if source.identity is not Identity.Instance and source.type() is not Item.PropertyAssertionNode:
             # The source of the edge must be one of Instance or a Property Assertion node.
-            raise SyntaxError(_('SYNTAX_MEMBERSHIP_INVALID_SOURCE', source.identity.value))
+            raise SyntaxError('Invalid source for membership edge: {0}'.format(source.identity.value))
 
         if target.identity is not Identity.Concept and target.type() not in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}:
             # The target of the edge must be a ClassExpression, ObjectPropertyExpression or DataPropertyExpression.
-            raise SyntaxError(_('SYNTAX_MEMBERSHIP_INVALID_TARGET', target.name))
+            raise SyntaxError('Invalid target for membership edge: {0}'.format(target.name))
 
         if source.identity is Identity.Instance:
 
@@ -565,17 +565,17 @@ class OWL2Validator(AbstractValidator):
                 # If the source of the edge is an Instance it means that we are trying to construct a
                 # ClassAssertion and so the target of the edge MUST be a class expression.
                 # OWL 2: ClassAssertion(axiomAnnotations ClassExpression Individual)
-                raise SyntaxError(_('SYNTAX_MEMBERSHIP_INVALID_ASSERTION_TARGET', 'Concept', target.identity.value))
+                raise SyntaxError('Invalid target for Concept assertion: {0}'.format(target.identity.value))
 
         if source.type() is Item.PropertyAssertionNode:
 
             if source.identity is Identity.RoleInstance and target.type() not in {Item.RoleNode, Item.RoleInverseNode}:
                 # If the source of the edge is a Role Instance then we MUST target a Role expression.
-                raise SyntaxError(_('SYNTAX_MEMBERSHIP_INVALID_ASSERTION_TARGET', 'Role', target.name))
+                raise SyntaxError('Invalid target for Role assertion: {0}'.format(target.name))
 
             if source.identity is Identity.AttributeInstance and target.type() is not Item.AttributeNode:
                 # If the source of the edge is an Attribute Instance then we MUST target an Attribute.
-                raise SyntaxError(_('SYNTAX_MEMBERSHIP_INVALID_ASSERTION_TARGET', 'Attribute', target.name))
+                raise SyntaxError('Invalid target for Attribute assertion: {0}'.format(target.name))
 
     #############################################
     #   INTERFACE

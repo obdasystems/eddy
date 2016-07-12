@@ -36,6 +36,7 @@
 import os
 
 from PyQt5.QtCore import Qt, QSettings, pyqtSlot
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QFormLayout, QFrame
 from PyQt5.QtWidgets import QWidget, QDialogButtonBox, QLabel
 
@@ -47,7 +48,7 @@ from eddy.core.functions.path import expandPath, isPathValid
 from eddy.core.functions.signals import connect
 from eddy.core.project import Project
 from eddy.core.qt import Font
-from eddy.lang import gettext as _
+
 from eddy.ui.fields import StringField
 
 
@@ -75,7 +76,7 @@ class ProjectDialog(QDialog):
 
         self.nameLabel = QLabel(self)
         self.nameLabel.setFont(arial12r)
-        self.nameLabel.setText(_('PROJECT_NAME_LABEL'))
+        self.nameLabel.setText('Name')
         self.nameField = StringField(self)
         self.nameField.setFont(arial12r)
         self.nameField.setMinimumWidth(400)
@@ -84,25 +85,25 @@ class ProjectDialog(QDialog):
 
         self.prefixLabel = QLabel(self)
         self.prefixLabel.setFont(arial12r)
-        self.prefixLabel.setText(_('PROJECT_PREFIX_LABEL'))
+        self.prefixLabel.setText('Prefix')
         self.prefixField = StringField(self)
         self.prefixField.setFont(arial12r)
         self.prefixField.setMinimumWidth(400)
 
         self.iriLabel = QLabel(self)
         self.iriLabel.setFont(arial12r)
-        self.iriLabel.setText(_('PROJECT_IRI_LABEL'))
+        self.iriLabel.setText('IRI')
         self.iriField = StringField(self)
         self.iriField.setFont(arial12r)
         self.iriField.setMinimumWidth(400)
 
+        connect(self.iriField.textChanged, self.doProjectPathValidate)
         connect(self.nameField.textChanged, self.doProjectPathValidate)
         connect(self.prefixField.textChanged, self.doProjectPathValidate)
-        connect(self.iriField.textChanged, self.doProjectPathValidate)
 
         self.pathLabel = QLabel(self)
         self.pathLabel.setFont(arial12r)
-        self.pathLabel.setText(_('PROJECT_LOCATION_LABEL'))
+        self.pathLabel.setText('Location')
         self.pathField = StringField(self)
         self.pathField.setFont(arial12r)
         self.pathField.setMinimumWidth(400)
@@ -148,7 +149,8 @@ class ProjectDialog(QDialog):
         self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
-        self.setWindowTitle(_('PROJECT_WINDOW_TITLE'))
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setWindowTitle('New project')
 
         connect(self.confirmationBox.accepted, self.accept)
         connect(self.confirmationBox.rejected, self.reject)
@@ -193,10 +195,10 @@ class ProjectDialog(QDialog):
             enabled = False
         else:
             if isdir(path):
-                caption = _('PROJECT_CAPTION_ALREADY_EXISTS', name)
+                caption = "Project '{0}' already exists!".format(name)
                 enabled = False
             elif not isPathValid(path):
-                caption = _('PROJECT_CAPTION_NAME_NOT_VALID', name)
+                caption = "'{0}' is not a valid project name!".format(name)
                 enabled = False
 
         #############################################

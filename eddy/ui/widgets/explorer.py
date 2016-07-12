@@ -46,8 +46,6 @@ from eddy.core.functions.misc import first, cutR
 from eddy.core.functions.signals import connect, emit
 from eddy.core.qt import Font
 
-from eddy.lang import gettext as _
-
 from eddy.ui.fields import StringField
 
 
@@ -79,7 +77,7 @@ class OntologyExplorer(QWidget):
         self.search = StringField(self)
         self.search.setAcceptDrops(False)
         self.search.setClearButtonEnabled(True)
-        self.search.setPlaceholderText(_('ONTO_EXPLORER_SEARCH_PLACEHOLDER'))
+        self.search.setPlaceholderText('Search...')
         self.search.setFixedHeight(30)
         self.model = QStandardItemModel(self)
         self.proxy = QSortFilterProxyModel(self)
@@ -383,10 +381,10 @@ class ProjectExplorer(QWidget):
         self.iconDelete = QIcon(':/icons/24/ic_delete_black')
         self.iconRename = QIcon(':/icons/24/ic_label_outline_black')
 
-        self.actionRenameDiagram = QAction(_('ACTION_RENAME_DIAGRAM_N'), self)
+        self.actionRenameDiagram = QAction('Rename...', self)
         self.actionRenameDiagram.setIcon(self.iconRename)
         connect(self.actionRenameDiagram.triggered, self.mainwindow.doRenameDiagram)
-        self.actionDeleteDiagram = QAction(_('ACTION_DELETE_CONFIRM_N'), self)
+        self.actionDeleteDiagram = QAction('Delete...', self)
         self.actionDeleteDiagram.setIcon(self.iconDelete)
         connect(self.actionDeleteDiagram.triggered, self.mainwindow.doRemoveDiagram)
         

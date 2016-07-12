@@ -33,6 +33,8 @@
 ##########################################################################
 
 
+from textwrap import dedent
+
 from PyQt5.QtCore import Qt, QSettings, pyqtSlot
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QWidget
@@ -44,8 +46,6 @@ from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.path import isPathValid, expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font
-
-from eddy.lang import gettext as _
 
 from eddy.ui.fields import StringField
 
@@ -69,9 +69,11 @@ class WorkspaceDialog(QDialog):
         # HEAD AREA
         #################################
 
-        self.headTitle = QLabel(_('WORKSPACE_HEAD_TITLE'), self)
+        self.headTitle = QLabel('Select a workspace', self)
         self.headTitle.setFont(arial12b)
-        self.headDescription = QLabel(_('WORKSPACE_HEAD_DESCRIPTION'), self)
+        self.headDescription = QLabel(dedent("""
+        Eddy stores your projects in a directory called workspace.\n'
+        Please choose a workspace directory to use.""", self))
         self.headDescription.setFont(arial12r)
         self.headPix = QLabel(self)
         self.headPix.setPixmap(QPixmap(':/images/eddy-smile-small-noframe'))
@@ -97,7 +99,7 @@ class WorkspaceDialog(QDialog):
         # EDIT AREA
         #################################
 
-        self.workspacePrefix = QLabel(_('WORKSPACE_EDIT_FIELD_PREFIX'), self)
+        self.workspacePrefix = QLabel('Workspace', self)
         self.workspacePrefix.setFont(arial12r)
 
         self.workspaceField = StringField(self)
@@ -137,7 +139,7 @@ class WorkspaceDialog(QDialog):
 
         self.setFixedSize(self.sizeHint())
         self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-        self.setWindowTitle(_('WORKSPACE_WINDOW_TITLE'))
+        self.setWindowTitle('Configure workspace')
 
         connect(self.btnBrowse.clicked, self.choosePath)
         connect(self.confirmationBox.accepted, self.accept)
@@ -157,12 +159,12 @@ class WorkspaceDialog(QDialog):
             mkdir(path)
         except Exception as e:
             msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle(_('WORKSPACE_CREATION_FAILED_WINDOW_TITLE'))
-            msgbox.setStandardButtons(QMessageBox.Close)
-            msgbox.setText(_('WORKSPACE_CREATION_FAILED_MESSAGE', path))
             msgbox.setDetailedText(format_exception(e))
+            msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+            msgbox.setStandardButtons(QMessageBox.Close)
+            msgbox.setText('Eddy could not create the specified workspace: {0}!'.format(path))
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Workspace setup failed!')
             msgbox.exec_()
             super().reject()
         else:

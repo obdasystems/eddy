@@ -45,9 +45,6 @@ from eddy.core.functions.fsystem import fwrite
 from eddy.core.functions.misc import first, clamp, isEmpty, postfix
 from eddy.core.functions.owl import OWLShortIRI, OWLAnnotationText
 from eddy.core.functions.owl import OWLFunctionalDocumentFilter
-from eddy.core.functions.signals import emit
-
-from eddy.lang import gettext as _
 
 
 class OWLExporter(AbstractExporter):
@@ -140,9 +137,9 @@ class OWLExporter(AbstractExporter):
 
             incoming = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
             if not incoming:
-                raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_MISSING_OPERAND'))
+                raise MalformedDiagramError(node, 'missing operand(s)')
             if len(incoming) > 1:
-                raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_TOO_MANY_OPERANDS'))
+                raise MalformedDiagramError(node, 'too many operands')
 
             operand = first(incoming)
 
@@ -163,7 +160,7 @@ class OWLExporter(AbstractExporter):
                 elif operand.type() is Item.RangeRestrictionNode:
                     self.conv[node] = self.factory.getOWLObjectComplementOf(self.buildRangeRestriction(operand))
                 else:
-                    raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND', operand))
+                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
 
             elif operand.identity is Identity.ValueDomain:
 
@@ -182,7 +179,7 @@ class OWLExporter(AbstractExporter):
                 elif operand.type() is Item.RangeRestrictionNode:
                     self.conv[node] = self.factory.getOWLObjectComplementOf(self.buildRangeRestriction(operand))
                 else:
-                    raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND', operand))
+                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
 
             elif operand.identity is Identity.Role:
 
@@ -192,7 +189,7 @@ class OWLExporter(AbstractExporter):
                 elif operand.type() is Item.RoleInverseNode:
                     self.conv[node] = self.buildRoleInverse(operand)
                 else:
-                    raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND', operand))
+                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
 
             elif operand.identity is Identity.Attribute:
 
@@ -200,7 +197,7 @@ class OWLExporter(AbstractExporter):
                 if operand.type() is Item.AttributeNode:
                     self.conv[node] = self.buildAttribute(operand)
                 else:
-                    raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND', operand))
+                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
 
 
         return self.conv[node]
@@ -238,7 +235,7 @@ class OWLExporter(AbstractExporter):
 
             operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
             if not operand:
-                raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_MISSING_VALUE_DOMAIN'))
+                raise MalformedDiagramError(node, 'missing value domain node')
 
             datatypeEx = self.buildValueDomain(operand)
 
@@ -248,7 +245,7 @@ class OWLExporter(AbstractExporter):
 
             incoming = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)
             if not incoming:
-                raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_MISSING_FACET'))
+                raise MalformedDiagramError(node, 'missing facet node(s)')
 
             collection = self.HashSet()
             for i in incoming:
@@ -278,7 +275,7 @@ class OWLExporter(AbstractExporter):
 
             operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
             if not operand:
-                raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_MISSING_OPERAND'))
+                raise MalformedDiagramError(node, 'missing operand(s)')
 
             if operand.identity is Identity.Attribute:
 
@@ -310,7 +307,7 @@ class OWLExporter(AbstractExporter):
                 elif filler.type() is Item.RangeRestrictionNode:
                     dataRangeEx = self.buildRangeRestriction(filler)
                 else:
-                    raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND', filler))
+                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(filler))
 
                 if node.restriction is Restriction.Exists:
                     self.conv[node] = self.factory.getOWLDataSomeValuesFrom(dataPropEx, dataRangeEx)
@@ -325,14 +322,14 @@ class OWLExporter(AbstractExporter):
                     if max_c is not None:
                         cardinalities.add(self.factory.getOWLDataMinCardinality(max_c, dataPropEx, dataRangeEx))
                     if cardinalities.isEmpty():
-                        raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_MISSING_CARDINALITY'))
+                        raise MalformedDiagramError(node, 'missing cardinality')
                     elif cardinalities.size() >= 1:
                         cardinalities = jnius.cast(self.Set, cardinalities)
                         self.conv[node] = self.factory.getOWLDataIntersectionOf(cardinalities)
                     else:
                         self.conv[node] = cardinalities.iterator().next()
                 else:
-                    raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_RESTRICTION'))
+                    raise MalformedDiagramError(node, 'unsupported restriction')
 
             elif operand.identity is Identity.Role:
 
@@ -345,7 +342,7 @@ class OWLExporter(AbstractExporter):
                 elif operand.type() is Item.RoleInverseNode:
                     objectPropertyEx = self.buildRoleInverse(operand)
                 else:
-                    raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND', operand))
+                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
 
                 #############################################
                 # BUILD FILLER
@@ -369,7 +366,7 @@ class OWLExporter(AbstractExporter):
                 elif filler.type() is Item.RangeRestrictionNode:
                     classEx = self.buildRangeRestriction(filler)
                 else:
-                    raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND', filler))
+                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(filler))
 
                 if node.restriction is Restriction.Self:
                     self.conv[node] = self.factory.getOWLObjectHasSelf(objectPropertyEx)
@@ -386,7 +383,7 @@ class OWLExporter(AbstractExporter):
                     if max_c is not None:
                         cardinalities.add(self.factory.getOWLObjectMaxCardinality(max_c, objectPropertyEx, classEx))
                     if cardinalities.isEmpty():
-                        raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_MISSING_CARDINALITY'))
+                        raise MalformedDiagramError(node, 'missing cardinality')
                     elif cardinalities.size() >= 1:
                         cardinalities = jnius.cast(self.Set, cardinalities)
                         self.conv[node] = self.factory.getOWLObjectIntersectionOf(cardinalities)
@@ -408,7 +405,7 @@ class OWLExporter(AbstractExporter):
             for i in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
                 individuals.add(self.buildIndividual(i))
             if individuals.isEmpty():
-                raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_MISSING_OPERAND'))
+                raise MalformedDiagramError(node, 'missing operand(s)')
             individuals = jnius.cast(self.Set, individuals)
             self.conv[node] = self.factory.getOWLObjectOneOf(individuals)
         return self.conv[node]
@@ -422,7 +419,7 @@ class OWLExporter(AbstractExporter):
         if node not in self.conv:
             datatype = node.datatype
             if not datatype:
-                raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_DISCONNECTED_FACET'))
+                raise MalformedDiagramError(node, 'disconnected facet node')
             literalEx = self.factory.getOWLLiteral(node.value, self.OWL2Datatype.valueOf(datatype.owlapi))
             facetEx = self.OWLFacet.valueOf(node.facet.owlapi)
             self.conv[node] = self.factory.getOWLFacetRestriction(facetEx, literalEx)
@@ -475,10 +472,10 @@ class OWLExporter(AbstractExporter):
                 elif operand.type() is Item.DatatypeRestrictionNode:
                     collection.add(self.buildDatatypeRestriction(operand))
                 else:
-                    raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND', operand))
+                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
 
             if collection.isEmpty():
-                raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_MISSING_OPERAND'))
+                raise MalformedDiagramError(node, 'missing operand(s)')
 
             collection = jnius.cast(self.Set, collection)
 
@@ -498,14 +495,14 @@ class OWLExporter(AbstractExporter):
         if node not in self.conv:
 
             if len(node.inputs) < 2:
-                raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_MISSING_OPERAND'))
+                raise MalformedDiagramError(node, 'missing operand(s)')
             elif len(node.inputs) > 2:
-                raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_TOO_MANY_OPERANDS'))
+                raise MalformedDiagramError(node, 'too many operands')
 
             collection = []
             for n in [node.diagram.edge(i).other(node) for i in node.inputs]:
                 if n.type() is not Item.IndividualNode:
-                    raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND', n))
+                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(n))
                 collection.append(self.buildIndividual(n))
 
             self.conv[node] = collection
@@ -526,7 +523,7 @@ class OWLExporter(AbstractExporter):
 
             operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
             if not operand:
-                raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_MISSING_OPERAND'))
+                raise MalformedDiagramError(node, 'missing operand(s)')
 
             if operand.identity is Identity.Attribute:
 
@@ -551,7 +548,7 @@ class OWLExporter(AbstractExporter):
                 elif operand.type() is Item.RoleInverseNode:
                     objectPropertyEx = self.buildRoleInverse(operand).getInverseProperty()
                 else:
-                    raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND', operand))
+                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
 
                 #############################################
                 # BUILD FILLER
@@ -571,7 +568,7 @@ class OWLExporter(AbstractExporter):
                 elif filler.type() in {Item.UnionNode, Item.DisjointUnionNode}:
                     classEx = self.buildUnion(filler)
                 else:
-                    raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND', filler))
+                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(filler))
 
                 if node.restriction is Restriction.Self:
                     self.conv[node] = self.factory.getOWLObjectHasSelf(objectPropertyEx)
@@ -588,7 +585,7 @@ class OWLExporter(AbstractExporter):
                     if max_c is not None:
                         cardinalities.add(self.factory.getOWLObjectMaxCardinality(max_c, objectPropertyEx, classEx))
                     if cardinalities.isEmpty():
-                        raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_MISSING_CARDINALITY'))
+                        raise MalformedDiagramError(node, 'missing cardinality')
                     if cardinalities.size() >= 1:
                         cardinalities = jnius.cast(self.Set, cardinalities)
                         self.conv[node] = self.factory.getOWLObjectIntersectionOf(cardinalities)
@@ -620,11 +617,11 @@ class OWLExporter(AbstractExporter):
         """
         if node not in self.conv:
             if not node.inputs:
-                raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_MISSING_OPERAND'))
+                raise MalformedDiagramError(node, 'missing operand(s)')
             collection = self.LinkedList()
             for n in [node.diagram.edge(i).other(node) for i in node.inputs]:
                 if n.type() not in {Item.RoleNode, Item.RoleInverseNode}:
-                    raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND', n))
+                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(n))
                 elif n.type() is Item.RoleNode:
                     collection.add(self.buildRole(n))
                 elif n.type() is Item.RoleInverseNode:
@@ -644,7 +641,7 @@ class OWLExporter(AbstractExporter):
             f2 = lambda x: x.type() is Item.RoleNode
             operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
             if not operand:
-                raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_MISSING_OPERAND'))
+                raise MalformedDiagramError(node, 'missing operand(s)')
             self.conv[node] = self.buildRole(operand).getInverseProperty()
         return self.conv[node]
 
@@ -682,10 +679,10 @@ class OWLExporter(AbstractExporter):
                 elif item.type() is Item.DatatypeRestrictionNode:
                     collection.add(self.buildDatatypeRestriction(item))
                 else:
-                    raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_UNSUPPORTED_OPERAND', item))
+                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(item))
 
             if not collection.size():
-                raise MalformedDiagramError(node, _('PROJECT_EXPORT_OWL_MISSING_OPERAND'))
+                raise MalformedDiagramError(node, 'missing operand(s)')
 
             collection = jnius.cast(self.Set, collection)
 
@@ -997,7 +994,7 @@ class OWLExporter(AbstractExporter):
                     elif e.source.type() is Item.RangeRestrictionNode and e.target.identity is Identity.ValueDomain:
                         self.axiomDataPropertyRange(e)
                     else:
-                        raise MalformedDiagramError(e, _('PROJECT_EXPORT_OWL_MISMATCH_INCLUSION'))
+                        raise MalformedDiagramError(e, 'type mismatch in inclusion assertion')
 
                 else:
 
@@ -1008,7 +1005,7 @@ class OWLExporter(AbstractExporter):
                     elif e.source.identity is Identity.Attribute and e.target.identity is Identity.Attribute:
                         self.axiomEquivalentDataProperties(e)
                     else:
-                        raise MalformedDiagramError(e, _('PROJECT_EXPORT_OWL_MISMATCH_EQUIVALENCE'))
+                        raise MalformedDiagramError(e, 'type mismatch in equivalence assertion')
 
             elif e.type() is Item.MembershipEdge:
 
@@ -1019,7 +1016,7 @@ class OWLExporter(AbstractExporter):
                 elif e.source.identity is Identity.AttributeInstance:
                     self.axiomDataPropertyAssertion(e)
                 else:
-                    raise MalformedDiagramError(e, _('PROJECT_EXPORT_OWL_MISMATCH_MEMBERSHIP'))
+                    raise MalformedDiagramError(e, 'type mismatch in membership assertion')
 
             self.step(+1)
 
@@ -1047,7 +1044,7 @@ class OWLExporter(AbstractExporter):
             DocumentFormat = self.TurtleDocumentFormat
             DocumentFilter = lambda x: x
         else:
-            raise TypeError(_('PROJECT_EXPORT_OWL_UNSUPPORTED_SYNTAX', self.syntax))
+            raise TypeError('unsupported syntax ({0})'.format(self.syntax))
 
         # COPY PREFIXES
         ontoFormat = DocumentFormat()
@@ -1075,7 +1072,7 @@ class OWLExporter(AbstractExporter):
         self.max += increase
         self.num += num
         self.num = clamp(self.num, minval=0, maxval=self.max)
-        emit(self.sgnProgress, self.num, self.max)
+        self.sgnProgress.emit(self.num, self.max)
 
     #############################################
     #   MAIN WORKER
@@ -1084,15 +1081,15 @@ class OWLExporter(AbstractExporter):
     @pyqtSlot()
     def run(self):
         """
-        Main worker: will trigger the execution of the export() method and catch any exception raised.
+        Main worker.
         """
         try:
-            emit(self.sgnStarted)
+            self.sgnStarted.emit()
             self.export()
         except Exception as e:
-            emit(self.sgnErrored, e)
+            self.sgnErrored.emit(e)
         else:
-            emit(self.sgnCompleted)
+            self.sgnCompleted.emit()
         finally:
             jnius.detach()
-            emit(self.sgnFinished)
+            self.sgnFinished.emit()

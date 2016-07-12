@@ -35,8 +35,6 @@
 
 from PyQt5.QtWidgets import QUndoCommand
 
-from eddy.lang import gettext as _
-
 
 class CommandProjectSetIRI(QUndoCommand):
     """
@@ -49,7 +47,7 @@ class CommandProjectSetIRI(QUndoCommand):
         :type undo: str
         :type redo: str
         """
-        super().__init__(_('COMMAND_PROJECT_SET_IRI', redo))
+        super().__init__("set project IRI to '{0}'".format(redo))
         self.project = project
         self.data = {'undo': undo, 'redo': redo}
 
@@ -75,7 +73,7 @@ class CommandProjectSetPrefix(QUndoCommand):
         :type undo: str
         :type redo: str
         """
-        super().__init__(_('COMMAND_PROJECT_SET_PREFIX', redo))
+        super().__init__("set project prefix to '{0}'".format(redo))
         self.project = project
         self.data = {'undo': undo, 'redo': redo}
 

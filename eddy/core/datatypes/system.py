@@ -89,28 +89,6 @@ class File(Enum):
 
 
 @unique
-class Language(Enum):
-    """
-    This class defines available languages.
-    """
-    __order__ = 'English'
-
-    English = 'en'
-
-    @classmethod
-    def forValue(cls, value):
-        """
-        Returns the language matching the given value.
-        :type value: str
-        :rtype: File
-        """
-        for x in cls:
-            if x.value == value:
-                return x
-        return None
-
-
-@unique
 class Platform(Enum):
     """
     This class defines supported platforms.

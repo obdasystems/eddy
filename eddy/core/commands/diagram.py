@@ -35,8 +35,6 @@
 
 from PyQt5.QtWidgets import QUndoCommand
 
-from eddy.lang import gettext as _
-
 
 class CommandDiagramResize(QUndoCommand):
     """
@@ -48,7 +46,7 @@ class CommandDiagramResize(QUndoCommand):
         :type diagram: Diagram
         :type rect: QRectF
         """
-        super().__init__(_('COMMAND_DIAGRAM_RESIZE'))
+        super().__init__('resize diagram')
         self.diagram = diagram
         self.rect = {'redo': rect, 'undo': diagram.sceneRect()}
 

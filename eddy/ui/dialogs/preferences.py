@@ -39,14 +39,11 @@ from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import QDialogButtonBox, QTabWidget, QFormLayout
 
 from eddy import ORGANIZATION, APPNAME
-from eddy.core.datatypes.system import Language
 from eddy.core.diagram import Diagram
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font
 
-from eddy.lang import gettext as _
-
-from eddy.ui.fields import SpinBox, ComboBox
+from eddy.ui.fields import SpinBox
 
 
 class PreferencesDialog(QDialog):
@@ -64,41 +61,17 @@ class PreferencesDialog(QDialog):
         settings = QSettings(ORGANIZATION, APPNAME)
 
         #############################################
-        # GENERAL TAB
-        #################################
-
-        self.languageLabel = QLabel(self)
-        self.languageLabel.setFont(arial12r)
-        self.languageLabel.setText(_('PREFERENCES_LABEL_LANGUAGE'))
-        self.languageField = ComboBox(self)
-        self.languageField.setFixedWidth(200)
-        self.languageField.setFocusPolicy(Qt.StrongFocus)
-        self.languageField.setFont(arial12r)
-        self.languageField.setToolTip(_('PREFERENCES_FIELD_LANGUAGE_TOOLTIP', APPNAME))
-        for language in Language:
-            self.languageField.addItem(language.name, language.value)
-        language = settings.value('general/language', 'en', str)
-        for i in range(self.languageField.count()):
-            if self.languageField.itemData(i) == language:
-                self.languageField.setCurrentIndex(i)
-                break
-
-        self.generalWidget = QWidget()
-        self.generalLayout = QFormLayout(self.generalWidget)
-        self.generalLayout.addRow(self.languageLabel, self.languageField)
-
-        #############################################
         # EDITOR TAB
         #################################
 
         self.diagramSizeLabel = QLabel(self)
         self.diagramSizeLabel.setFont(arial12r)
-        self.diagramSizeLabel.setText(_('PREFERENCES_LABEL_DIAGRAM_SIZE'))
+        self.diagramSizeLabel.setText('Diagram size')
         self.diagramSizeField = SpinBox(self)
         self.diagramSizeField.setFont(arial12r)
         self.diagramSizeField.setRange(Diagram.MinSize, Diagram.MaxSize)
         self.diagramSizeField.setSingleStep(100)
-        self.diagramSizeField.setToolTip(_('PREFERENCES_FIELD_DIAGRAM_SIZE_TOOLTIP'))
+        self.diagramSizeField.setToolTip('This setting changes the default size of all the new created diagrams.')
         self.diagramSizeField.setValue(settings.value('diagram/size', 5000, int))
 
         self.editorWidget = QWidget()
@@ -118,8 +91,7 @@ class PreferencesDialog(QDialog):
         #################################
 
         self.mainWidget = QTabWidget(self)
-        self.mainWidget.addTab(self.generalWidget, _('PREFERENCES_TAB_GENERAL'))
-        self.mainWidget.addTab(self.editorWidget, _('PREFERENCES_TAB_EDITOR'))
+        self.mainWidget.addTab(self.editorWidget, 'Editor')
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.mainWidget)
@@ -127,7 +99,7 @@ class PreferencesDialog(QDialog):
 
         self.setFixedSize(self.sizeHint())
         self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-        self.setWindowTitle(_('PREFERENCES_WINDOW_TITLE'))
+        self.setWindowTitle('Preferences')
 
         connect(self.confirmationBox.accepted, self.accept)
         connect(self.confirmationBox.rejected, self.reject)
@@ -142,7 +114,6 @@ class PreferencesDialog(QDialog):
         Executed when the dialog is accepted.
         """
         settings = QSettings(ORGANIZATION, APPNAME)
-        settings.setValue('general/language', self.languageField.currentData())
         settings.setValue('diagram/size', self.diagramSizeField.value())
         settings.sync()
         super().accept()

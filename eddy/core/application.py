@@ -50,8 +50,6 @@ from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.project import Project
 
-from eddy.lang import gettext as _
-
 from eddy.ui.dialogs.progress import BusyProgressDialog
 from eddy.ui.dialogs.workspace import WorkspaceDialog
 from eddy.ui.widgets.mainwindow import MainWindow
@@ -281,7 +279,7 @@ class Eddy(QApplication):
         Create a working session using the given project path.
         :type path: str
         """
-        with BusyProgressDialog(_('PROJECT_LOADING', os.path.basename(path))):
+        with BusyProgressDialog('Loading project: {0}'.format(os.path.basename(path))):
 
             try:
 
@@ -293,35 +291,35 @@ class Eddy(QApplication):
                 # VALIDATE PROJECT HOME
                 home = os.path.join(path, Project.Home)
                 if not isdir(home):
-                    raise ProjectNotValidError(_('PROJECT_ERROR_MISSING_HOME', home))
+                    raise ProjectNotValidError('missing project home: {0}'.format(home))
 
                 # VALIDATE PROJECT METADATA
                 meta = os.path.join(home, Project.MetaXML)
                 if not fexists(meta):
-                    raise ProjectNotValidError(_('PROJECT_ERROR_MISSING_META', meta))
+                    raise ProjectNotValidError('missing project metadata: {0}'.format(meta))
 
                 # VALIDATE PROJECT MODULE STRUCTURE
                 modules = os.path.join(home, Project.ModulesXML)
                 if not fexists(modules):
-                    raise ProjectNotValidError(_('PROJECT_ERROR_MISSING_STRUCTURE', modules))
+                    raise ProjectNotValidError('missing project structure: {0}'.format(modules))
 
             except ProjectNotFoundError:
                 msgbox = QMessageBox()
                 msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                msgbox.setText(_('PROJECT_NOT_FOUND_MESSAGE', os.path.basename(path)))
+                msgbox.setText('Project <b>{0}</b> not found!'.format(os.path.basename(path)))
                 msgbox.setStandardButtons(QMessageBox.Close)
                 msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle(_('PROJECT_NOT_FOUND_WINDOW_TITLE'))
+                msgbox.setWindowTitle('Project not found!')
                 msgbox.exec_()
             except ProjectNotValidError as e:
                 msgbox = QMessageBox()
                 msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                msgbox.setText(_('PROJECT_NOT_VALID_MESSAGE', os.path.basename(path)))
+                msgbox.setText('Project <b>{0}</b> is not valid!'.format(os.path.basename(path)))
                 msgbox.setTextFormat(Qt.RichText)
                 msgbox.setDetailedText(format_exception(e))
                 msgbox.setStandardButtons(QMessageBox.Close)
                 msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle(_('PROJECT_NOT_VALID_WINDOW_TITLE'))
+                msgbox.setWindowTitle('Project not valid!')
                 msgbox.exec_()
             else:
 

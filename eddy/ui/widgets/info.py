@@ -54,8 +54,6 @@ from eddy.core.project import Project
 from eddy.core.qt import BrushIcon, Font
 from eddy.core.regex import RE_CAMEL_SPACE
 
-from eddy.lang import gettext as _
-
 from eddy.ui.fields import IntegerField, StringField, CheckBox, ComboBox
 
 
@@ -393,21 +391,21 @@ class ProjectInfo(AbstractInfo):
 
         arial12r = Font('Arial', 12)
 
-        self.prefixKey = Key(_('INFO_KEY_PREFIX'), self)
+        self.prefixKey = Key('Prefix', self)
         self.prefixKey.setFont(arial12r)
         self.prefixField = String(self)
         self.prefixField.setFont(arial12r)
         self.prefixField.setReadOnly(False)
         connect(self.prefixField.editingFinished, self.prefixEditingFinished)
 
-        self.iriKey = Key(_('INFO_KEY_IRI'), self)
+        self.iriKey = Key('IRI', self)
         self.iriKey.setFont(arial12r)
         self.iriField = String(self)
         self.iriField.setFont(arial12r)
         self.iriField.setReadOnly(False)
         connect(self.iriField.editingFinished, self.iriEditingFinished)
 
-        self.ontologyPropHeader = Header(_('INFO_HEADER_ONTOLOGY_PROPERTIES'), self)
+        self.ontologyPropHeader = Header('Ontology properties', self)
         self.ontologyPropHeader.setFont(arial12r)
 
         self.ontologyPropLayout = QFormLayout()
@@ -415,37 +413,37 @@ class ProjectInfo(AbstractInfo):
         self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
         self.ontologyPropLayout.addRow(self.iriKey, self.iriField)
 
-        self.conceptsKey = Key(_('INFO_KEY_CONCEPT'), self)
+        self.conceptsKey = Key('Concept', self)
         self.conceptsKey.setFont(arial12r)
         self.conceptsField = Integer(self)
         self.conceptsField.setFont(arial12r)
         self.conceptsField.setReadOnly(True)
 
-        self.rolesKey = Key(_('INFO_KEY_ROLE'), self)
+        self.rolesKey = Key('Role', self)
         self.rolesKey.setFont(arial12r)
         self.rolesField = Integer(self)
         self.rolesField.setFont(arial12r)
         self.rolesField.setReadOnly(True)
 
-        self.attributesKey = Key(_('INFO_KEY_ATTRIBUTE'), self)
+        self.attributesKey = Key('Attribute', self)
         self.attributesKey.setFont(arial12r)
         self.attributesField = Integer(self)
         self.attributesField.setFont(arial12r)
         self.attributesField.setReadOnly(True)
 
-        self.inclusionsKey = Key(_('INFO_KEY_INCLUSION'), self)
+        self.inclusionsKey = Key('Inclusion', self)
         self.inclusionsKey.setFont(arial12r)
         self.inclusionsField = Integer(self)
         self.inclusionsField.setFont(arial12r)
         self.inclusionsField.setReadOnly(True)
 
-        self.membershipKey = Key(_('INFO_KEY_MEMBERSHIP'), self)
+        self.membershipKey = Key('Membership', self)
         self.membershipKey.setFont(arial12r)
         self.membershipField = Integer(self)
         self.membershipField.setFont(arial12r)
         self.membershipField.setReadOnly(True)
 
-        self.atomicPredHeader = Header(_('INFO_HEADER_ATOMIC_PREDICATES'), self)
+        self.atomicPredHeader = Header('Atomic predicates', self)
         self.atomicPredHeader.setFont(arial12r)
 
         self.atomicPredLayout = QFormLayout()
@@ -454,7 +452,7 @@ class ProjectInfo(AbstractInfo):
         self.atomicPredLayout.addRow(self.rolesKey, self.rolesField)
         self.atomicPredLayout.addRow(self.attributesKey, self.attributesField)
 
-        self.assertionsHeader = Header(_('INFO_HEADER_ASSERTIONS'), self)
+        self.assertionsHeader = Header('Assertions', self)
         self.assertionsHeader.setFont(arial12r)
 
         self.assertionsLayout = QFormLayout()
@@ -537,22 +535,22 @@ class EdgeInfo(AbstractInfo):
 
         arial12r = Font('Arial', 12)
 
-        self.h1 = Header(_('INFO_HEADER_GENERAL'), self)
+        self.h1 = Header('General', self)
         self.h1.setFont(arial12r)
 
-        self.typeKey = Key(_('INFO_KEY_TYPE'), self)
+        self.typeKey = Key('Type', self)
         self.typeKey.setFont(arial12r)
         self.typeField = String(self)
         self.typeField.setFont(arial12r)
         self.typeField.setReadOnly(True)
 
-        self.sourceKey = Key(_('INFO_KEY_SOURCE'), self)
+        self.sourceKey = Key('Source', self)
         self.sourceKey.setFont(arial12r)
         self.sourceField = String(self)
         self.sourceField.setFont(arial12r)
         self.sourceField.setReadOnly(True)
 
-        self.targetKey = Key(_('INFO_KEY_TARGET'), self)
+        self.targetKey = Key('Target', self)
         self.targetKey.setFont(arial12r)
         self.targetField = String(self)
         self.targetField.setFont(arial12r)
@@ -601,7 +599,7 @@ class InclusionEdgeInfo(EdgeInfo):
 
         arial12r = Font('Arial', 12)
 
-        self.equivalenceKey = Key(_('INFO_KEY_EQUIVALENCE'), self)
+        self.equivalenceKey = Key('Equivalence', self)
         self.equivalenceKey.setFont(arial12r)
         parent = Parent(self)
         self.equivalenceBox = CheckBox(parent)
@@ -640,19 +638,19 @@ class NodeInfo(AbstractInfo):
 
         self.node = None
 
-        self.idKey = Key(_('INFO_KEY_ID'), self)
+        self.idKey = Key('ID', self)
         self.idKey.setFont(arial12r)
         self.idField = String(self)
         self.idField.setFont(arial12r)
         self.idField.setReadOnly(True)
 
-        self.identityKey = Key(_('INFO_KEY_IDENTITY'), self)
+        self.identityKey = Key('Identity', self)
         self.identityKey.setFont(arial12r)
         self.identityField = String(self)
         self.identityField.setFont(arial12r)
         self.identityField.setReadOnly(True)
 
-        self.nodePropHeader = Header(_('INFO_HEADER_NODE_PROPERTIES'), self)
+        self.nodePropHeader = Header('Node properties', self)
         self.nodePropHeader.setFont(arial12r)
         self.nodePropLayout = QFormLayout()
         self.nodePropLayout.setSpacing(0)
@@ -692,14 +690,14 @@ class PredicateNodeInfo(NodeInfo):
 
         arial12r = Font('Arial', 12)
 
-        self.textKey = Key(_('INFO_KEY_LABEL'), self)
+        self.textKey = Key('Label', self)
         self.textKey.setFont(arial12r)
         self.textField = String(self)
         self.textField.setFont(arial12r)
         self.textField.setReadOnly(False)
         connect(self.textField.editingFinished, self.editingFinished)
 
-        self.brushKey = Key(_('INFO_KEY_COLOR'), self)
+        self.brushKey = Key('Color', self)
         self.brushKey.setFont(arial12r)
         self.brushMenu = QMenu(self)
         self.brushButton = Button()
@@ -710,14 +708,14 @@ class PredicateNodeInfo(NodeInfo):
         self.nodePropLayout.addRow(self.brushKey, self.brushButton)
         self.nodePropLayout.addRow(self.textKey, self.textField)
 
-        self.nameKey = Key(_('INFO_KEY_NAME'), self)
+        self.nameKey = Key('Name', self)
         self.nameKey.setFont(arial12r)
         self.nameField = String(self)
         self.nameField.setFont(arial12r)
         self.nameField.setReadOnly(False)
         connect(self.nameField.editingFinished, self.editingFinished)
 
-        self.predPropHeader = Header(_('INFO_HEADER_PREDICATE_PROPERTIES'), self)
+        self.predPropHeader = Header('Predicate properties', self)
         self.predPropHeader.setFont(arial12r)
         self.predPropLayout = QFormLayout()
         self.predPropLayout.setSpacing(0)
@@ -746,7 +744,7 @@ class PredicateNodeInfo(NodeInfo):
                     diagram = node.diagram
                     project = node.project
                     if sender is self.nameField:
-                        project.undoStack.beginMacro(_('COMMAND_NODE_REFACTOR_NAME', node.text(), data))
+                        project.undoStack.beginMacro('change predicate "{0}" to "{1}"'.format(node.text(), data))
                         for n in project.predicates(node.type(), node.text()):
                             project.undoStack.push(CommandLabelChange(n.diagram, n, n.text(), data))
                         project.undoStack.endMacro()
@@ -813,7 +811,7 @@ class AttributeNodeInfo(PredicateNodeInfo):
 
         arial12r = Font('Arial', 12)
 
-        self.functKey = Key(_('INFO_KEY_FUNCTIONAL'), self)
+        self.functKey = Key('Funct.', self)
         self.functKey.setFont(arial12r)
         functParent = Parent(self)
         self.functBox = CheckBox(functParent)
@@ -839,7 +837,7 @@ class AttributeNodeInfo(PredicateNodeInfo):
         sender = self.sender()
         checked = sender.isChecked()
         attribute = sender.property('attribute')
-        name = _('COMMAND_ITEM_SET_PROPERTY', 'un' if checked else '', node.shortname, attribute)
+        name = '{0}set {1} {2} property'.format('un' if checked else '', node.shortname, attribute)
         data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
         project.undoStack.push(CommandSetProperty(diagram, node, data, name))
 
@@ -868,7 +866,7 @@ class RoleNodeInfo(PredicateNodeInfo):
 
         arial12r = Font('Arial', 12)
 
-        self.functKey = Key(_('INFO_KEY_FUNCTIONAL'), self)
+        self.functKey = Key('Funct.', self)
         self.functKey.setFont(arial12r)
         functParent = Parent(self)
         self.functBox = CheckBox(functParent)
@@ -877,7 +875,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.functBox.setProperty('attribute', 'functional')
         connect(self.functBox.clicked, self.flagChanged)
 
-        self.invFunctKey = Key(_('INFO_KEY_INVERSE_FUNCTIONAL'), self)
+        self.invFunctKey = Key('Inv. Funct.', self)
         self.invFunctKey.setFont(arial12r)
         invFunctParent = Parent(self)
         self.invFunctBox = CheckBox(invFunctParent)
@@ -886,7 +884,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.invFunctBox.setProperty('attribute', 'inverseFunctional')
         connect(self.invFunctBox.clicked, self.flagChanged)
 
-        self.asymmetricKey = Key(_('INFO_KEY_ASYMMETRIC'), self)
+        self.asymmetricKey = Key('Asymmetric', self)
         self.asymmetricKey.setFont(arial12r)
         asymmetricParent = Parent(self)
         self.asymmetricBox = CheckBox(asymmetricParent)
@@ -895,7 +893,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.asymmetricBox.setProperty('attribute', 'asymmetric')
         connect(self.asymmetricBox.clicked, self.flagChanged)
 
-        self.irreflexiveKey = Key(_('INFO_KEY_IRREFLEXIVE'), self)
+        self.irreflexiveKey = Key('Irreflexive', self)
         self.irreflexiveKey.setFont(arial12r)
         irreflexiveParent = Parent(self)
         self.irreflexiveBox = CheckBox(irreflexiveParent)
@@ -904,7 +902,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.irreflexiveBox.setProperty('attribute', 'irreflexive')
         connect(self.irreflexiveBox.clicked, self.flagChanged)
 
-        self.reflexiveKey = Key(_('INFO_KEY_REFLEXIVE'), self)
+        self.reflexiveKey = Key('Reflexive', self)
         self.reflexiveKey.setFont(arial12r)
         reflexiveParent = Parent(self)
         self.reflexiveBox = CheckBox(reflexiveParent)
@@ -913,7 +911,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.reflexiveBox.setProperty('attribute', 'reflexive')
         connect(self.reflexiveBox.clicked, self.flagChanged)
 
-        self.symmetricKey = Key(_('INFO_KEY_SYMMETRIC'), self)
+        self.symmetricKey = Key('Symmetric', self)
         self.symmetricKey.setFont(arial12r)
         symmetricParent = Parent(self)
         self.symmetricBox = CheckBox(symmetricParent)
@@ -922,7 +920,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.symmetricBox.setProperty('attribute', 'symmetric')
         connect(self.symmetricBox.clicked, self.flagChanged)
 
-        self.transitiveKey = Key(_('INFO_KEY_TRANSITIVE'), self)
+        self.transitiveKey = Key('Transitive', self)
         self.transitiveKey.setFont(arial12r)
         transitiveParent = Parent(self)
         self.transitiveBox = CheckBox(transitiveParent)
@@ -955,7 +953,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         checked = sender.isChecked()
         attribute = sender.property('attribute')
         prop = RE_CAMEL_SPACE.sub('\g<1> \g<2>', attribute).lower()
-        name = _('COMMAND_ITEM_SET_PROPERTY', 'un' if checked else '', node.shortname, prop)
+        name = '{0}set {1} {2} property'.format('un' if checked else '', node.shortname, prop)
         data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
         project.undoStack.push(CommandSetProperty(diagram, node, data, name))
 
@@ -990,7 +988,7 @@ class ValueDomainNodeInfo(NodeInfo):
 
         arial12r = Font('Arial', 12)
 
-        self.datatypeKey = Key(_('INFO_KEY_DATATYPE'), self)
+        self.datatypeKey = Key('Datatype', self)
         self.datatypeKey.setFont(arial12r)
         self.datatypeField = Select(self)
         self.datatypeField.setFont(arial12r)
@@ -1017,7 +1015,7 @@ class ValueDomainNodeInfo(NodeInfo):
             datatype = self.datatypeField.currentData()
             data = datatype.value
             if node.text() != data:
-                name = _('COMMAND_NODE_SET_DATATYPE', node.shortname, data)
+                name = 'change {0} to {1}'.format(node.shortname, data)
                 project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
         self.datatypeField.clearFocus()
@@ -1052,13 +1050,13 @@ class ValueNodeInfo(PredicateNodeInfo):
 
         arial12r = Font('Arial', 12)
 
-        self.datatypeKey = Key(_('INFO_KEY_DATATYPE'), self)
+        self.datatypeKey = Key('Datatype', self)
         self.datatypeKey.setFont(arial12r)
         self.datatypeField = Select(self)
         self.datatypeField.setFont(arial12r)
         connect(self.datatypeField.activated, self.valueChanged)
 
-        self.valueKey = Key(_('INFO_KEY_VALUE'), self)
+        self.valueKey = Key('Value', self)
         self.valueKey.setFont(arial12r)
         self.valueField = String(self)
         self.valueField.setFont(arial12r)
@@ -1091,7 +1089,7 @@ class ValueNodeInfo(PredicateNodeInfo):
                 value = self.valueField.value()
                 data = node.composeValue(value, datatype)
                 if node.text() != data:
-                    name = _('COMMAND_NODE_SET_VALUE', data)
+                    name = 'change value to {0}'.format(data)
                     project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
             except RuntimeError:
                 pass
@@ -1139,13 +1137,13 @@ class FacetNodeInfo(NodeInfo):
 
         arial12r = Font('Arial', 12)
 
-        self.facetKey = Key(_('INFO_KEY_FACET'), self)
+        self.facetKey = Key('Facet', self)
         self.facetKey.setFont(arial12r)
         self.facetField = Select(self)
         self.facetField.setFont(arial12r)
         connect(self.facetField.activated, self.facetChanged)
 
-        self.valueKey = Key(_('INFO_KEY_VALUE'), self)
+        self.valueKey = Key('Value', self)
         self.valueKey.setFont(arial12r)
         self.valueField = String(self)
         self.valueField.setFont(arial12r)
@@ -1170,7 +1168,7 @@ class FacetNodeInfo(NodeInfo):
             project = node.project
             data = node.compose(self.facetField.currentData(), self.valueField.value())
             if node.text() != data:
-                name = _('COMMAND_NODE_SET_FACET', node.text(), data)
+                name = 'change {0} to {1}'.format(node.text(), data)
                 project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
         self.facetField.clearFocus()

@@ -55,8 +55,6 @@ from eddy.core.functions.misc import clamp, isEmpty, first
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font
 
-from eddy.lang import gettext as _
-
 from eddy.ui.fields import IntegerField, StringField, TextField
 from eddy.ui.fields import CheckBox, ComboBox, SpinBox
 
@@ -110,7 +108,7 @@ class DiagramProperty(PropertyDialog):
 
         self.nodesLabel = QLabel(self)
         self.nodesLabel.setFont(arial12r)
-        self.nodesLabel.setText(_('PROPERTY_DIAGRAM_LABEL_NUM_NODES'))
+        self.nodesLabel.setText('N° nodes')
         self.nodesField = IntegerField(self)
         self.nodesField.setFixedWidth(300)
         self.nodesField.setFont(arial12r)
@@ -119,7 +117,7 @@ class DiagramProperty(PropertyDialog):
 
         self.edgesLabel = QLabel(self)
         self.edgesLabel.setFont(arial12r)
-        self.edgesLabel.setText(_('PROPERTY_DIAGRAM_LABEL_NUM_EDGES'))
+        self.edgesLabel.setText('N° edges')
         self.edgesField = IntegerField(self)
         self.edgesField.setFixedWidth(300)
         self.edgesField.setFont(arial12r)
@@ -139,7 +137,7 @@ class DiagramProperty(PropertyDialog):
 
         self.diagramSizeLabel = QLabel(self)
         self.diagramSizeLabel.setFont(arial12r)
-        self.diagramSizeLabel.setText(_('PROPERTY_DIAGRAM_LABEL_SIZE'))
+        self.diagramSizeLabel.setText('Size')
         self.diagramSizeField = SpinBox(self)
         self.diagramSizeField.setFont(arial12r)
         self.diagramSizeField.setRange(Diagram.MinSize, Diagram.MaxSize)
@@ -163,14 +161,14 @@ class DiagramProperty(PropertyDialog):
         #################################
 
         self.mainWidget = QTabWidget(self)
-        self.mainWidget.addTab(self.generalWidget, _('PROPERTY_DIAGRAM_TAB_GENERAL'))
-        self.mainWidget.addTab(self.geometryWidget, _('PROPERTY_DIAGRAM_TAB_GEOMETRY'))
+        self.mainWidget.addTab(self.generalWidget,'General')
+        self.mainWidget.addTab(self.geometryWidget, 'Geometry')
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.mainWidget)
         self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
 
-        self.setWindowTitle(_('PROPERTY_DIAGRAM_WINDOW_TITLE', self.diagram.name))
+        self.setWindowTitle('Properties: {0}'.format(self.diagram.name))
         self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
 
         connect(self.confirmationBox.accepted, self.complete)
@@ -187,7 +185,7 @@ class DiagramProperty(PropertyDialog):
         """
         commands = [self.diagramSizeChanged()]
         if any(commands):
-            self.project.undoStack.beginMacro(_('COMMAND_DIAGRAM_EDIT_PROPERTIES', self.diagram.name))
+            self.project.undoStack.beginMacro('edit {0} properties'.format(self.diagram.name))
             for command in commands:
                 if command:
                     self.project.undoStack.push(command)
@@ -245,7 +243,7 @@ class NodeProperty(PropertyDialog):
 
         self.idLabel = QLabel(self)
         self.idLabel.setFont(arial12r)
-        self.idLabel.setText(_('PROPERTY_NODE_LABEL_ID'))
+        self.idLabel.setText('ID')
         self.idField = StringField(self)
         self.idField.setFont(arial12r)
         self.idField.setReadOnly(True)
@@ -254,7 +252,7 @@ class NodeProperty(PropertyDialog):
 
         self.typeLabel = QLabel(self)
         self.typeLabel.setFont(arial12r)
-        self.typeLabel.setText(_('PROPERTY_NODE_LABEL_TYPE'))
+        self.typeLabel.setText('Type')
         self.typeField = StringField(self)
         self.typeField.setFont(arial12r)
         self.typeField.setReadOnly(True)
@@ -263,7 +261,7 @@ class NodeProperty(PropertyDialog):
 
         self.identityLabel = QLabel(self)
         self.identityLabel.setFont(arial12r)
-        self.identityLabel.setText(_('PROPERTY_NODE_LABEL_IDENTITY'))
+        self.identityLabel.setText('Identity')
         self.identityField = StringField(self)
         self.identityField.setFont(arial12r)
         self.identityField.setReadOnly(True)
@@ -272,7 +270,7 @@ class NodeProperty(PropertyDialog):
 
         self.neighboursLabel = QLabel(self)
         self.neighboursLabel.setFont(arial12r)
-        self.neighboursLabel.setText(_('PROPERTY_NODE_LABEL_NEIGHBOURS'))
+        self.neighboursLabel.setText('Neighbours')
         self.neighboursField = IntegerField(self)
         self.neighboursField.setFont(arial12r)
         self.neighboursField.setReadOnly(True)
@@ -295,7 +293,7 @@ class NodeProperty(PropertyDialog):
 
         self.xLabel = QLabel(self)
         self.xLabel.setFont(arial12r)
-        self.xLabel.setText(_('PROPERTY_NODE_LABEL_X'))
+        self.xLabel.setText('X')
         self.xField = SpinBox(self)
         self.xField.setFixedWidth(60)
         self.xField.setFont(arial12r)
@@ -304,7 +302,7 @@ class NodeProperty(PropertyDialog):
 
         self.yLabel = QLabel(self)
         self.yLabel.setFont(arial12r)
-        self.yLabel.setText(_('PROPERTY_NODE_LABEL_Y'))
+        self.yLabel.setText('Y')
         self.yField = SpinBox(self)
         self.yField.setFixedWidth(60)
         self.yField.setFont(arial12r)
@@ -313,7 +311,7 @@ class NodeProperty(PropertyDialog):
 
         self.widthLabel = QLabel(self)
         self.widthLabel.setFont(arial12r)
-        self.widthLabel.setText(_('PROPERTY_NODE_LABEL_WIDTH'))
+        self.widthLabel.setText('Width')
         self.widthField = SpinBox(self)
         self.widthField.setFixedWidth(60)
         self.widthField.setFont(arial12r)
@@ -323,7 +321,7 @@ class NodeProperty(PropertyDialog):
 
         self.heightLabel = QLabel(self)
         self.heightLabel.setFont(arial12r)
-        self.heightLabel.setText(_('PROPERTY_NODE_LABEL_HEIGHT'))
+        self.heightLabel.setText('Height')
         self.heightField = SpinBox(self)
         self.heightField.setFixedWidth(60)
         self.heightField.setFont(arial12r)
@@ -351,14 +349,14 @@ class NodeProperty(PropertyDialog):
         #################################
 
         self.mainWidget = QTabWidget(self)
-        self.mainWidget.addTab(self.generalWidget, _('PROPERTY_NODE_TAB_GENERAL'))
-        self.mainWidget.addTab(self.geometryWidget, _('PROPERTY_NODE_TAB_GEOMETRY'))
+        self.mainWidget.addTab(self.generalWidget, 'General')
+        self.mainWidget.addTab(self.geometryWidget, 'Geometry')
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.mainWidget)
         self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
 
-        self.setWindowTitle(_('PROPERTY_NODE_WINDOW_TITLE', self.node))
+        self.setWindowTitle('Properties: {0}'.format(self.node))
         self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
 
         connect(self.confirmationBox.accepted, self.complete)
@@ -375,7 +373,7 @@ class NodeProperty(PropertyDialog):
         """
         commands = [self.positionChanged()]
         if any(commands):
-            self.project.undoStack.beginMacro(_('COMMAND_NODE_EDIT_PROPERTIES', self.node.name))
+            self.project.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
             for command in commands:
                 if command:
                     self.project.undoStack.push(command)
@@ -436,7 +434,7 @@ class PredicateNodeProperty(NodeProperty):
 
         self.urlLabel = QLabel(self)
         self.urlLabel.setFont(arial12r)
-        self.urlLabel.setText(_('PROPERTY_NODE_LABEL_URL'))
+        self.urlLabel.setText('URL')
         self.urlField = StringField(self)
         self.urlField.setFixedWidth(300)
         self.urlField.setFont(arial12r)
@@ -444,7 +442,7 @@ class PredicateNodeProperty(NodeProperty):
 
         self.descriptionLabel = QLabel(self)
         self.descriptionLabel.setFont(arial12r)
-        self.descriptionLabel.setText(_('PROPERTY_NODE_LABEL_DESCRIPTION'))
+        self.descriptionLabel.setText('Description')
         self.descriptionField = TextField(self)
         self.descriptionField.setFixedSize(300, 160)
         self.descriptionField.setFont(arial12r)
@@ -459,7 +457,7 @@ class PredicateNodeProperty(NodeProperty):
 
         self.textLabel = QLabel(self)
         self.textLabel.setFont(arial12r)
-        self.textLabel.setText(_('PROPERTY_NODE_LABEL_TEXT'))
+        self.textLabel.setText('Text')
         self.textField = StringField(self)
         self.textField.setFixedWidth(300)
         self.textField.setFont(arial12r)
@@ -467,7 +465,7 @@ class PredicateNodeProperty(NodeProperty):
 
         self.refactorLabel = QLabel(self)
         self.refactorLabel.setFont(arial12r)
-        self.refactorLabel.setText(_('PROPERTY_NODE_LABEL_REFACTOR'))
+        self.refactorLabel.setText('Refactor')
         self.refactorField = CheckBox(self)
         self.refactorField.setFont(arial12r)
         self.refactorField.setChecked(False)
@@ -481,7 +479,7 @@ class PredicateNodeProperty(NodeProperty):
         self.labelLayout.addRow(self.textLabel, self.textField)
         self.labelLayout.addRow(self.refactorLabel, self.refactorField)
 
-        self.mainWidget.addTab(self.labelWidget, _('PROPERTY_NODE_TAB_LABEL'))
+        self.mainWidget.addTab(self.labelWidget, 'Label')
 
     #############################################
     #   SLOTS
@@ -495,7 +493,7 @@ class PredicateNodeProperty(NodeProperty):
         commands = [self.positionChanged(), self.metaDataChanged()]
         commands.extend(self.textChanged())
         if any(commands):
-            self.project.undoStack.beginMacro(_('COMMAND_NODE_EDIT_PROPERTIES', self.node.name))
+            self.project.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
             for command in commands:
                 if command:
                     self.project.undoStack.push(command)
@@ -560,7 +558,7 @@ class OrderedInputNodeProperty(NodeProperty):
 
             self.sortLabel = QLabel(self)
             self.sortLabel.setFont(arial12r)
-            self.sortLabel.setText(_('PROPERTY_NODE_LABEL_SORT'))
+            self.sortLabel.setText('Sort')
             self.list = QListWidget(self)
             for i in self.node.inputs:
                 edge = self.diagram.edge(i)
@@ -592,7 +590,7 @@ class OrderedInputNodeProperty(NodeProperty):
             self.orderLayout = QFormLayout(self.orderWidget)
             self.orderLayout.addRow(self.sortLabel, outLayout)
 
-            self.mainWidget.addTab(self.orderWidget, _('PROPERTY_NODE_TAB_ORDERING'))
+            self.mainWidget.addTab(self.orderWidget, 'Ordering')
 
     #############################################
     #   SLOTS
@@ -627,7 +625,7 @@ class OrderedInputNodeProperty(NodeProperty):
         """
         commands = [self.positionChanged(), self.orderingChanged()]
         if any(commands):
-            self.project.undoStack.beginMacro(_('COMMAND_NODE_EDIT_PROPERTIES', self.node.name))
+            self.project.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
             for command in commands:
                 if command:
                     self.project.undoStack.push(command)
@@ -684,7 +682,7 @@ class FacetNodeProperty(NodeProperty):
 
         self.facetLabel = QLabel(self)
         self.facetLabel.setFont(arial12r)
-        self.facetLabel.setText(_('PROPERTY_NODE_LABEL_FACET'))
+        self.facetLabel.setText('Facet')
         self.facetField = ComboBox(self)
         self.facetField.setFixedWidth(200)
         self.facetField.setFocusPolicy(Qt.StrongFocus)
@@ -701,7 +699,7 @@ class FacetNodeProperty(NodeProperty):
 
         self.valueLabel = QLabel(self)
         self.valueLabel.setFont(arial12r)
-        self.valueLabel.setText(_('PROPERTY_NODE_LABEL_VALUE'))
+        self.valueLabel.setText('Value')
         self.valueField = StringField(self)
         self.valueField.setFixedWidth(200)
         self.valueField.setFont(arial12r)
@@ -712,7 +710,7 @@ class FacetNodeProperty(NodeProperty):
         self.facetLayout.addRow(self.facetLabel, self.facetField)
         self.facetLayout.addRow(self.valueLabel, self.valueField)
 
-        self.mainWidget.addTab(self.facetWidget, _('PROPERTY_NODE_TAB_FACET'))
+        self.mainWidget.addTab(self.facetWidget, 'Facet')
 
     #############################################
     #   SLOTS
@@ -725,7 +723,7 @@ class FacetNodeProperty(NodeProperty):
         """
         commands = [self.positionChanged(), self.facetChanged()]
         if any(commands):
-            self.project.undoStack.beginMacro(_('COMMAND_NODE_EDIT_PROPERTIES', self.node.name))
+            self.project.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
             for command in commands:
                 if command:
                     self.project.undoStack.push(command)
@@ -768,7 +766,7 @@ class ValueDomainNodeProperty(NodeProperty):
 
         self.datatypeLabel = QLabel(self)
         self.datatypeLabel.setFont(arial12r)
-        self.datatypeLabel.setText(_('PROPERTY_NODE_LABEL_DATATYPE'))
+        self.datatypeLabel.setText('Datatype')
         self.datatypeField = ComboBox(self)
         self.datatypeField.setFixedWidth(200)
         self.datatypeField.setFocusPolicy(Qt.StrongFocus)
@@ -788,7 +786,7 @@ class ValueDomainNodeProperty(NodeProperty):
         self.datatypeLayout = QFormLayout(self.datatypeWidget)
         self.datatypeLayout.addRow(self.datatypeLabel, self.datatypeField)
 
-        self.mainWidget.addTab(self.datatypeWidget, _('PROPERTY_NODE_TAB_DATATYPE'))
+        self.mainWidget.addTab(self.datatypeWidget, 'Datatype')
 
     #############################################
     #   SLOTS
@@ -801,7 +799,7 @@ class ValueDomainNodeProperty(NodeProperty):
         """
         commands = [self.positionChanged(), self.datatypeChanged()]
         if any(commands):
-            self.project.undoStack.beginMacro(_('COMMAND_NODE_EDIT_PROPERTIES', self.node.name))
+            self.project.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
             for command in commands:
                 if command:
                     self.project.undoStack.push(command)
@@ -845,7 +843,7 @@ class ValueNodeProperty(NodeProperty):
 
         self.datatypeLabel = QLabel(self)
         self.datatypeLabel.setFont(arial12r)
-        self.datatypeLabel.setText(_('PROPERTY_NODE_LABEL_DATATYPE'))
+        self.datatypeLabel.setText('Datatype')
         self.datatypeField = ComboBox(self)
         self.datatypeField.setFixedWidth(200)
         self.datatypeField.setFocusPolicy(Qt.StrongFocus)
@@ -863,7 +861,7 @@ class ValueNodeProperty(NodeProperty):
 
         self.valueLabel = QLabel(self)
         self.valueLabel.setFont(arial12r)
-        self.valueLabel.setText(_('PROPERTY_NODE_LABEL_VALUE'))
+        self.valueLabel.setText('Value')
         self.valueField = StringField(self)
         self.valueField.setFixedWidth(200)
         self.valueField.setFont(arial12r)
@@ -874,7 +872,7 @@ class ValueNodeProperty(NodeProperty):
         self.valueLayout.addRow(self.datatypeLabel, self.datatypeField)
         self.valueLayout.addRow(self.valueLabel, self.valueField)
 
-        self.mainWidget.addTab(self.valueWidget, _('PROPERTY_NODE_TAB_VALUE'))
+        self.mainWidget.addTab(self.valueWidget, 'Datatype')
 
     #############################################
     #   SLOTS
@@ -887,7 +885,7 @@ class ValueNodeProperty(NodeProperty):
         """
         commands = [self.positionChanged(), self.valueChanged()]
         if any(commands):
-            self.project.undoStack.beginMacro(_('COMMAND_NODE_EDIT_PROPERTIES', self.node.name))
+            self.project.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
             for command in commands:
                 if command:
                     self.project.undoStack.push(command)

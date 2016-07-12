@@ -40,8 +40,6 @@ from PyQt5.QtWidgets import QTableView
 from eddy.core.datatypes.graphol import Item
 from eddy.core.exporters.pdf import PdfExporter
 
-from eddy.lang import gettext as _
-
 
 class PrinterExporter(PdfExporter):
     """
@@ -82,15 +80,15 @@ class PrinterExporter(PdfExporter):
 
         self.metamodel = QStandardItemModel()
         self.metamodel.setHorizontalHeaderLabels([
-            _('META_HEADER_PREDICATE'),
-            _('META_HEADER_TYPE'),
-            _('META_HEADER_FUNCTIONAL'),
-            _('META_HEADER_INVERSE_FUNCTIONAL'),
-            _('META_HEADER_ASYMMETRIC'),
-            _('META_HEADER_IRREFLEXIVE'),
-            _('META_HEADER_REFLEXIVE'),
-            _('META_HEADER_SYMMETRIC'),
-            _('META_HEADER_TRANSITIVE')])
+            'Predicate',
+            'Type',
+            'Functional',
+            'Inverse Functional',
+            'Asymmetric',
+            'Irreflexive',
+            'Reflexive',
+            'Symmetric',
+            'Transitive'])
 
         # GENERATE DATA
         for entry in metas:

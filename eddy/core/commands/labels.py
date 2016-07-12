@@ -36,7 +36,6 @@
 from PyQt5.QtWidgets import QUndoCommand
 
 from eddy.core.datatypes.graphol import Item
-from eddy.lang import gettext as _
 
 
 class CommandLabelChange(QUndoCommand):
@@ -52,7 +51,7 @@ class CommandLabelChange(QUndoCommand):
         :type redo: str
         :type name: str
         """
-        super().__init__(name or _('COMMAND_ITEM_EDIT_LABEL', item.name))
+        super().__init__(name or 'edit {0} label'.format(item.name))
         self.diagram = diagram
         self.project = diagram.project
         self.data = {'undo': undo, 'redo': redo}
@@ -131,7 +130,7 @@ class CommandLabelMove(QUndoCommand):
         :type pos1: QPointF
         :type pos2: QPointF
         """
-        super().__init__(_('COMMAND_ITEM_MOVE_LABEL', item.name))
+        super().__init__('move {0} label'.format(item.name))
         self.diagram = diagram
         self.item = item
         self.data = {'undo': pos1, 'redo': pos2}
