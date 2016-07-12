@@ -127,7 +127,7 @@ border: 1px solid #BABABA;
 border-bottom: 0;
 min-width: 140px;
 }
-QMdiArea QTabBar::tab:top:!last {
+QMdiArea QTabBar::tab:top:first {
 border: 1px solid #BABABA;
 border-left: 0;
 border-right: 0;
