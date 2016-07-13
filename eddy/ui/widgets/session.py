@@ -261,18 +261,18 @@ class Session(QMainWindow):
         # noinspection PyArgumentList
         QApplication.processEvents()
 
-        self.setAcceptDrops(True)
-        self.setCentralWidget(self.mdi)
-        self.setDockOptions(Session.AnimatedDocks | Session.AllowTabbedDocks)
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-        self.setWindowTitle(self.project)
-
         self.configureActions()
         self.configureWidgets()
         self.configureMenus()
         self.configureStatusBar()
         self.configureToolbars()
         self.configureState()
+
+        self.setAcceptDrops(True)
+        self.setCentralWidget(self.mdi)
+        self.setDockOptions(QMainWindow.AnimatedDocks|QMainWindow.AllowTabbedDocks)
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setWindowTitle(self.project)
 
     #############################################
     #   MAIN WINDOW CONFIGURATION

@@ -311,7 +311,6 @@ class ProjectLoader(AbstractLoader):
 
         connect(self.project.undoStack.cleanChanged, self.session.doUpdateState)
 
-        LOGGER.debug('Project loaded: %s', os.path.basename(self.projectMainPath))
         LOGGER.separator('-')
 
         return self.project

@@ -265,8 +265,6 @@ class Eddy(QApplication):
         """
         with BusyProgressDialog('Loading project: {0}'.format(os.path.basename(path))):
 
-            LOGGER.info('Creating session for %s', path)
-
             try:
                 self.session = Session(path)
             except ProjectNotFoundError as e:
@@ -294,7 +292,6 @@ class Eddy(QApplication):
             else:
                 connect(self.session.sgnQuit, self.doQuit)
                 connect(self.session.sgnClosed, self.onSessionClosed)
-                LOGGER.info('Session created for %s', path)
 
                 settings = QSettings(ORGANIZATION, APPNAME)
                 projects = settings.value('project/recent', None, str) or []
