@@ -49,21 +49,21 @@ class MalformedDiagramError(RuntimeError):
         self.item = item
 
 
-class ParseError(Exception):
+class ParseError(RuntimeError):
     """
     Raised whenever it's not possible to complete a document parsing.
     """
     pass
 
 
-class ProjectNotFoundError(Exception):
+class ProjectNotFoundError(RuntimeError):
     """
     Raised whenever we are not able to find a project given its path.
     """
     pass
 
 
-class ProjectNotValidError(Exception):
+class ProjectNotValidError(RuntimeError):
     """
     Raised whenever a found project has an invalid structure.
     """
