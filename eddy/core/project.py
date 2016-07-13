@@ -79,15 +79,15 @@ class Project(QObject):
     sgnMetaRemoved = pyqtSignal(Item, str)
     sgnUpdated = pyqtSignal()
 
-    def __init__(self, path, prefix, iri, parent=None):
+    def __init__(self, path, prefix, iri, session=None):
         """
         Initialize the graphol project.
         :type path: str
         :type prefix: str
         :type iri: str
-        :type parent: QObject
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
 
         self.index = {
             K_DIAGRAM: {},
@@ -118,6 +118,14 @@ class Project(QObject):
         :rtype: str
         """
         return os.path.basename(cutR(self.path, os.path.sep, os.path.altsep))
+
+    @property
+    def session(self):
+        """
+        Returns the session this project is loaded into (alias doe Project.parent()).
+        :rtype: Session
+        """
+        return self.parent()
 
     #############################################
     #   INTERFACE
