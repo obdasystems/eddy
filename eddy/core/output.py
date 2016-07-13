@@ -53,9 +53,10 @@ class OutputHandler(logging.Logger):
         if self.isEnabledFor(logging.INFO):
             spacer = OutputHandler.HeadSpacer
             separator = OutputHandler.HeadSeparator
+            msg = msg % args % kwargs
             num = (OutputHandler.HeadLength - len(msg) - 2) / 2
-            msg = '{0}{1}{2}{3}{4}'.format(separator * int(ceil(num)), spacer, msg, spacer, separator * int(floor(num)))
-            self._log(logging.INFO, msg, args, **kwargs)
+            msg = '%s%s%s%s%s' % (separator * int(ceil(num)), spacer, msg, spacer, separator * int(floor(num)))
+            self.info( msg)
 
 
 logging.addLevelName(logging.CRITICAL, 'CRITICAL')
