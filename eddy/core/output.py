@@ -36,7 +36,26 @@
 import sys
 import logging
 
+from math import ceil, floor
 from eddy import APPNAME
+
+
+class OutputHandler(logging.Logger):
+
+    HeadLength = 90
+    HeadSeparator = '-'
+    HeadSpacer = ' '
+
+    def head(self, msg, *args, **kwargs):
+        """
+        Log 'msg % args' with severity 'INFO' decorating it with the heading pattern.
+        """
+        if self.isEnabledFor(logging.INFO):
+            spacer = OutputHandler.HeadSpacer
+            separator = OutputHandler.HeadSeparator
+            num = (OutputHandler.HeadLength - len(msg) - 2) / 2
+            msg = '{0}{1}{2}{3}{4}'.format(separator * int(ceil(num)), spacer, msg, spacer, separator * int(floor(num)))
+            self._log(logging.INFO, msg, args, **kwargs)
 
 
 logging.addLevelName(logging.CRITICAL, 'CRITICAL')
@@ -44,6 +63,8 @@ logging.addLevelName(logging.ERROR,    'ERROR   ')
 logging.addLevelName(logging.INFO,     'INFO    ')
 logging.addLevelName(logging.WARNING,  'WARNING ')
 logging.addLevelName(logging.DEBUG,    'DEBUG   ')
+
+logging.setLoggerClass(OutputHandler)
 
 
 __output = dict()
@@ -58,7 +79,7 @@ def getLogger(name=APPNAME):
     global __output
     if not name in __output:
 
-        formatter = logging.Formatter(fmt='%(asctime)s %(levelname)s %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%Y/%m/%d %H:%M:%S')
         handler = logging.StreamHandler(sys.stderr)
         handler.setFormatter(formatter)
         logger = logging.getLogger(name)
