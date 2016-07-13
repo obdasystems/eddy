@@ -206,7 +206,7 @@ def shortPath(path):
     Convert the given path into a short one.
     The following tokens will be reintroduced:
 
-        - ~ => will be expanded to the user home directory ($HOME)
+        - ~ => user home directory ($HOME)
 
     :type path: str
     :rtype: str
