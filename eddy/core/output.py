@@ -33,10 +33,17 @@
 ##########################################################################
 
 
-import logging
 import sys
+import logging
 
 from eddy import APPNAME
+
+
+logging.addLevelName(logging.CRITICAL, 'CRITICAL')
+logging.addLevelName(logging.ERROR,    'ERROR   ')
+logging.addLevelName(logging.INFO,     'INFO    ')
+logging.addLevelName(logging.WARNING,  'WARNING ')
+logging.addLevelName(logging.DEBUG,    'DEBUG   ')
 
 
 __output = dict()
@@ -51,7 +58,7 @@ def getLogger(name=APPNAME):
     global __output
     if not name in __output:
 
-        formatter = logging.Formatter(fmt='%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
+        formatter = logging.Formatter(fmt='%(asctime)s %(levelname)s %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
         handler = logging.StreamHandler(sys.stderr)
         handler.setFormatter(formatter)
         logger = logging.getLogger(name)
