@@ -41,22 +41,31 @@ from eddy import APPNAME
 
 
 class OutputHandler(logging.Logger):
+    """
+    Custom logging output handler class.
+    """
+    HeadLength = 92
 
-    HeadLength = 90
-    HeadSeparator = '-'
-    HeadSpacer = ' '
-
-    def head(self, msg, *args, **kwargs):
+    def header(self, msg, *args, **kwargs):
         """
         Log 'msg % args' with severity 'INFO' decorating it with the heading pattern.
         """
         if self.isEnabledFor(logging.INFO):
-            spacer = OutputHandler.HeadSpacer
-            separator = OutputHandler.HeadSeparator
+            separator = kwargs.pop('separator', '-')
             msg = msg % args % kwargs
             num = (OutputHandler.HeadLength - len(msg) - 2) / 2
-            msg = '%s%s%s%s%s' % (separator * int(ceil(num)), spacer, msg, spacer, separator * int(floor(num)))
-            self.info( msg)
+            msg = '%s %s %s' % (separator * int(ceil(num)), msg, separator * int(floor(num)))
+            self.info(msg)
+
+    def separator(self, separator=''):
+        """
+        Log a separator with severity 'INFO'.
+        """
+        if self.isEnabledFor(logging.INFO):
+            separator *= OutputHandler.HeadLength
+            if len(separator) > OutputHandler.HeadLength:
+                separator = separator[:OutputHandler.HeadLength]
+            self.info(separator)
 
 
 logging.addLevelName(logging.CRITICAL, 'CRITICAL')
