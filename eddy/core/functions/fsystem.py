@@ -91,7 +91,7 @@ def fwrite(content, path):
     path = expandPath(path)
     components = os.path.split(path)
     stage = os.path.join(components[0], '.{0}'.format(components[1]))
-    with io.open(stage, 'wb', encoding='utf8') as ptr:
+    with io.open(stage, 'w', encoding='utf8') as ptr:
         ptr.write(content)
     if os.path.isfile(path):
         os.remove(path)
