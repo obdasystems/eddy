@@ -79,6 +79,7 @@ from eddy import APPNAME, BUG_TRACKER
 from eddy.core.application import Eddy
 from eddy.core.functions.misc import format_exception
 from eddy.core.functions.signals import connect
+from eddy.core.output import getLogger
 
 # noinspection PyUnresolvedReferences
 from eddy.ui import images_rc
@@ -86,6 +87,9 @@ from eddy.ui import images_rc
 
 app = None
 msgbox = None
+
+
+LOGGER = getLogger(__name__)
 
 
 def base_except_hook(exc_type, exc_value, exc_traceback):
@@ -100,6 +104,7 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
     else:
         global msgbox
         if not msgbox:
+            LOGGER.critical(format_exception(exc_value))
             msgbox = QMessageBox()
             msgbox.setIconPixmap(QPixmap(':/images/eddy-sad'))
             msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))

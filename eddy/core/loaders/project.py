@@ -39,12 +39,19 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtXml import QDomDocument
 
 from eddy.core.datatypes.graphol import Item
-from eddy.core.exceptions import ParseError
+from eddy.core.exceptions import ProjectNotFoundError
+from eddy.core.exceptions import ProjectNotValidError
+from eddy.core.exceptions import DiagramNotFoundError
+from eddy.core.exceptions import DiagramNotValidError
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.fsystem import fread, fexists, isdir
+from eddy.core.functions.signals import connect
 from eddy.core.loaders.common import AbstractLoader
 from eddy.core.loaders.graphol import GrapholLoader
+from eddy.core.output import getLogger
 from eddy.core.project import Project
+
+LOGGER = getLogger(__name__)
 
 
 class ProjectLoader(AbstractLoader):
@@ -76,9 +83,9 @@ class ProjectLoader(AbstractLoader):
         self.modulesDocument = None
 
         self.projectMainPath = expandPath(path)
-        self.projectDataPath = os.path.join(self.projectMainPath, Project.Home)
-        self.projectMetaDataPath = os.path.join(self.projectDataPath, Project.MetaXML)
-        self.projectModulesDataPath = os.path.join(self.projectDataPath, Project.ModulesXML)
+        self.projectHomePath = os.path.join(self.projectMainPath, Project.Home)
+        self.projectMetaDataPath = os.path.join(self.projectHomePath, Project.MetaXML)
+        self.projectModulesDataPath = os.path.join(self.projectHomePath, Project.ModulesXML)
 
         self.metaFuncForItem = {
             Item.AttributeNode: self.buildAttributeMetadata,
@@ -117,6 +124,17 @@ class ProjectLoader(AbstractLoader):
     #   AUXILIARY METHODS
     #################################
 
+    def buildAttributeMetadata(self, element):
+        """
+        Build role metadata using the given QDomElement.
+        :type element: QDomElement
+        :rtype: AttributeMetaData
+        """
+        meta = self.buildPredicateMetadata(element)
+        functional = element.firstChildElement('functional')
+        meta.functional = bool(int(functional.text()))
+        return meta
+
     def buildPredicateMetadata(self, element):
         """
         Build predicate metadata using the given QDomElement.
@@ -130,17 +148,6 @@ class ProjectLoader(AbstractLoader):
         meta = self.project.meta(item, name)
         meta.description = description.text()
         meta.url = url.text()
-        return meta
-
-    def buildAttributeMetadata(self, element):
-        """
-        Build role metadata using the given QDomElement.
-        :type element: QDomElement
-        :rtype: AttributeMetaData
-        """
-        meta = self.buildPredicateMetadata(element)
-        functional = element.firstChildElement('functional')
-        meta.functional = bool(int(functional.text()))
         return meta
 
     def buildRoleMetadata(self, element):
@@ -173,25 +180,29 @@ class ProjectLoader(AbstractLoader):
     def importProjectFromXML(self):
         """
         Initialize the project instance by reading project metadata from XML file.
+        :raise ProjectNotValidError: If the project metadata file is missing or not readable.
         """
         # noinspection PyArgumentList
         QApplication.processEvents()
 
+        LOGGER.info('Loading project metadata from %s', self.projectMetaDataPath)
+
         if not fexists(self.projectMetaDataPath):
-            raise IOError('missing project metadata file: {0}'.format(self.projectMetaDataPath))
+            raise ProjectNotValidError('missing project metadata: {0}'.format(self.projectMetaDataPath))
 
         self.metaDocument = QDomDocument()
         if not self.metaDocument.setContent(fread(self.projectMetaDataPath)):
-            raise ParseError('could read project data')
+            raise ProjectNotValidError('could read project metadata from {0}'.format(self.projectMetaDataPath))
 
-        # 1) INITIALIZE PROJECT SPECIFIC DATA
         path = self.projectMainPath
         root = self.metaDocument.documentElement()
         ontology = root.firstChildElement('ontology')
         prefix = ontology.firstChildElement('prefix').text()
         iri = ontology.firstChildElement('iri').text()
 
-        # 2) CREATE AN EMPTY PROJECT
+        LOGGER.debug('Loaded ontology prefix: %s', prefix)
+        LOGGER.debug('Loaded ontology IRI: %s', iri)
+
         self.project = Project(path, prefix, iri, self.session)
 
     def importMetaFromXML(self):
@@ -201,11 +212,11 @@ class ProjectLoader(AbstractLoader):
         # noinspection PyArgumentList
         QApplication.processEvents()
 
-        # 1) INITIALIZE PREDICATES METADATA ELEMENT
+        LOGGER.info('Loading ontology predicate metadata from %s', self.projectMetaDataPath)
+
         root = self.metaDocument.documentElement()
         predicates = root.firstChildElement('predicates')
 
-        # 2) IMPORT ALL PREDICATE METADATA INTO THE PROJECT
         predicate = predicates.firstChildElement('predicate')
         while not predicate.isNull():
 
@@ -218,6 +229,7 @@ class ProjectLoader(AbstractLoader):
                 meta = func(predicate)
                 self.project.addMeta(meta.item, meta.predicate, meta)
             except Exception:
+                LOGGER.exception('Failed to create metadata for predicate %s', predicate)
                 pass
             finally:
                 predicate = predicate.nextSiblingElement('predicate')
@@ -225,31 +237,42 @@ class ProjectLoader(AbstractLoader):
     def importModulesFromXML(self):
         """
         Import project modules from XML file.
+        :raise ProjectNotValidError: If the project structure file is missing or not readable.
         """
         # noinspection PyArgumentList
         QApplication.processEvents()
 
+        LOGGER.info('Loading project structure from %s', self.projectModulesDataPath)
+
         if not fexists(self.projectModulesDataPath):
-            raise IOError('missing project modules file: {0}'.format(self.projectModulesDataPath))
+            raise ProjectNotValidError('missing project structure: {0}'.format(self.projectModulesDataPath))
 
         self.modulesDocument = QDomDocument()
         if not self.modulesDocument.setContent(fread(self.projectModulesDataPath)):
-            raise ParseError('could read project modules')
+            raise ProjectNotValidError('could read project structure from {0}'.format(self.projectModulesDataPath))
 
-        # 1) INITIALIZE PROJECT MODULES ELEMENT
         root = self.modulesDocument.documentElement()
         modules = root.firstChildElement('modules')
 
-        # 2) IMPORT ALL THE MODULES INTO THE PROJECT
         module = modules.firstChildElement('module')
         while not module.isNull():
+
             # noinspection PyArgumentList
             QApplication.processEvents()
-            path = os.path.join(self.project.path, module.text())
-            if fexists(path):
-                worker = GrapholLoader(self.project, path, self.parent())
+
+            name = module.text()
+            path = os.path.join(self.project.path, name)
+
+            try:
+                worker = GrapholLoader(self.project, path, self.session)
+            except (DiagramNotFoundError, DiagramNotValidError) as e:
+                LOGGER.warning('Failed to load project module %s: %s', name, e)
+            except Exception:
+                LOGGER.exception('Failed to load project module %s', name)
+            else:
                 self.project.addDiagram(worker.run())
-            module = module.nextSiblingElement('module')
+            finally:
+                module = module.nextSiblingElement('module')
 
     #############################################
     #   PROJECT GENERATION
@@ -258,16 +281,37 @@ class ProjectLoader(AbstractLoader):
     def run(self):
         """
         Perform project import.
+        :raise ProjectNotFoundError: If the given path does not identify a project.
+        :raise ProjectNotValidError: If one of the project data file is missing or not readable.
         :rtype: Project
         """
-        if not isdir(self.projectMainPath):
-            raise IOError('project not found: {0}'.format(self.projectMainPath))
+        LOGGER.header('Loading project: %s', os.path.basename(self.projectMainPath))
 
-        if not isdir(self.projectDataPath):
-            raise IOError('missing project structure: {0}'.format(self.projectDataPath))
+        #############################################
+        # VALIDATE PROJECT
+        #################################
+
+        if not isdir(self.projectMainPath):
+            raise ProjectNotFoundError('project not found: {0}'.format(self.projectMainPath))
+
+        if not isdir(self.projectHomePath):
+            raise ProjectNotValidError('missing project home: {0}'.format(self.projectHomePath))
+
+        #############################################
+        # IMPORT PROJECT
+        #################################
 
         self.importProjectFromXML()
         self.importModulesFromXML()
         self.importMetaFromXML()
+
+        #############################################
+        # CONFIGURE PROJECT SIGNALS
+        #################################
+
+        connect(self.project.undoStack.cleanChanged, self.session.doUpdateState)
+
+        LOGGER.debug('Project loaded: %s', os.path.basename(self.projectMainPath))
+        LOGGER.separator('-')
 
         return self.project

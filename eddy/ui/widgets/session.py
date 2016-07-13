@@ -47,7 +47,7 @@ from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QToolButton
 from PyQt5.QtWidgets import QMenu, QApplication, QMessageBox
 from PyQt5.QtWidgets import QStyle, QFileDialog
 
-from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION, BUG_TRACKER
+from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION
 from eddy.core.commands.common import CommandComposeAxiom
 from eddy.core.commands.common import CommandItemsRemove
 from eddy.core.commands.common import CommandItemsTranslate
@@ -79,6 +79,7 @@ from eddy.core.items.common import AbstractItem
 from eddy.core.loaders.graphml import GraphmlLoader
 from eddy.core.loaders.graphol import GrapholLoader
 from eddy.core.loaders.project import ProjectLoader
+from eddy.core.output import getLogger
 from eddy.core.qt import BrushIcon
 from eddy.core.utils.clipboard import Clipboard
 
@@ -104,6 +105,9 @@ from eddy.ui.widgets.view import DiagramView
 from eddy.ui.widgets.zoom import Zoom
 
 
+LOGGER = getLogger(__name__)
+
+
 class Session(QMainWindow):
     """
     This class implements Eddy's main working session.
@@ -118,6 +122,12 @@ class Session(QMainWindow):
         :type parent: QWidget
         """
         super().__init__(parent)
+
+        #############################################
+        # LOAD THE GIVEN PROJECT
+        #################################
+
+        self.project = ProjectLoader(path, self).run()
 
         #############################################
         # CREATE MENUS
@@ -183,13 +193,6 @@ class Session(QMainWindow):
         self.dockProjectExplorer = DockWidget('Project Explorer', 'ic_storage_black', self)
 
         self.buttonSetBrush = QToolButton()
-
-        #############################################
-        # LOAD THE GIVEN PROJECT
-        #################################
-
-        self.project = ProjectLoader(path, self).run()
-        connect(self.project.undoStack.cleanChanged, self.doUpdateState)
 
         #############################################
         # CREATE UTILITIES
@@ -1852,9 +1855,8 @@ class Session(QMainWindow):
         name = os.path.basename(path)
         with BusyProgressDialog('Importing {0}...'.format(name), 2, self):
 
-            worker = GraphmlLoader(self.project, path, self)
-
             try:
+                worker = GraphmlLoader(self.project, path, self)
                 diagram = worker.run()
             except Exception as e:
                 msgbox = QMessageBox(self)
@@ -1869,22 +1871,6 @@ class Session(QMainWindow):
                 self.project.addDiagram(diagram)
                 self.doFocusDiagram(diagram)
                 self.doSave()
-
-        if worker.errors:
-            enums = enumerate(worker.errors, start=1)
-            parts = ['{0}) {1}'.format(k, format_exception(v)) for k, v in enums]
-            msgbox = QMessageBox(self)
-            msgbox.setDetailedText('\n'.join(parts))
-            msgbox.setIconPixmap(QIcon(':/icons/48/ic_warning_black').pixmap(48))
-            msgbox.setInformativeText('If needed, <a href="{0}">submit a bug report</a>.'.format(BUG_TRACKER))
-            msgbox.setStandardButtons(QMessageBox.Close)
-            msgbox.setTextFormat(Qt.RichText)
-            msgbox.setText(dedent("""Document <b>{0}</b> has been imported! However some errors
-            (<b>{1}</b>) have been generated during the import process. You can inspect detailed
-            information by expanding the box below.""".format(name, len(worker.errors))))
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle('Partial document import!')
-            msgbox.exec_()
 
     def openFile(self, path):
         """

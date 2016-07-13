@@ -39,12 +39,16 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtXml import QDomDocument
 
 from eddy.core.datatypes.collections import DistinctList
-from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.diagram import Diagram
-from eddy.core.exceptions import ParseError
+from eddy.core.exceptions import DiagramNotFoundError, DiagramNotValidError
 from eddy.core.functions.fsystem import fread, fexists
 from eddy.core.functions.signals import connect
 from eddy.core.loaders.common import AbstractLoader
+from eddy.core.output import getLogger
+
+
+LOGGER = getLogger(__name__)
 
 
 class GrapholLoader(AbstractLoader):
@@ -65,6 +69,7 @@ class GrapholLoader(AbstractLoader):
         self.path = path
         self.project = project
         self.diagram = None
+        self.edges = dict()
         self.nodes = dict()
 
         self.importFuncForItem = {
@@ -346,12 +351,10 @@ class GrapholLoader(AbstractLoader):
             point = self.getPointBesideElement(point)
 
         kwargs = {
-            'id': element.attribute('id'),
-            'source': self.nodes[element.attribute('source')],
-            'target': self.nodes[element.attribute('target')],
-            'breakpoints': points[1:-1],
-        }
-
+        'id': element.attribute('id'),
+        'source': self.nodes[element.attribute('source')],
+        'target': self.nodes[element.attribute('target')],
+        'breakpoints': points[1:-1]}
         edge = self.diagram.factory.create(item, **kwargs)
 
         path = edge.source.painterPath()
@@ -375,10 +378,9 @@ class GrapholLoader(AbstractLoader):
         """
         geometry = self.getGeometryFromElement(element)
         kwargs = {
-            'id': element.attribute('id'),
-            'height': int(geometry.attribute('height')),
-            'width': int(geometry.attribute('width')),
-        }
+        'id': element.attribute('id'),
+        'height': int(geometry.attribute('height')),
+        'width': int(geometry.attribute('width'))}
         node = self.diagram.factory.create(item, **kwargs)
         node.setPos(QPointF(int(geometry.attribute('x')), int(geometry.attribute('y'))))
         return node
@@ -460,63 +462,104 @@ class GrapholLoader(AbstractLoader):
     def run(self):
         """
         Perform diagram import from .graphol file format.
+        :raise DiagramNotFoundError: If the given path does not identify a .graphol module.
+        :raise DiagramNotValidError: If the given path identifies an invalid .graphol module.
         :rtype: Diagram
         """
+        LOGGER.info('Loading diagram: %s', self.path)
+
         if not fexists(self.path):
-            raise IOError('file not found: {0}'.format(self.path))
+            raise DiagramNotFoundError('diagram not found: {0}'.format(self.path))
 
         document = QDomDocument()
         if not document.setContent(fread(self.path)):
-            raise ParseError('could not initialize QDomDocument')
+            raise DiagramNotValidError('could not parse diagram from {0}'.format(self.path))
 
-        # 1) INITIALIZE XML ROOT ELEMENT
         root = document.documentElement()
-
-        # 2) READ GRAPH INITIALIZATION DATA
         graph = root.firstChildElement('graph')
         size = max(int(graph.attribute('width', '10000')), int(graph.attribute('height', '10000')))
 
-        # 3) CREATE A DIAGRAM
+        #############################################
+        # CREATE AN EMPTY DIAGRAM
+        #################################
+
         self.diagram = Diagram(self.path, self.project)
         self.diagram.setSceneRect(QRectF(-size / 2, -size / 2, size, size))
         self.diagram.setItemIndexMethod(Diagram.NoIndex)
 
-        # 4) GENERATE NODES
+        LOGGER.debug('Initialzing empty diagram with size: %s', size)
+
+        #############################################
+        # LOAD NODES
+        #################################
+
         element = graph.firstChildElement('node')
         while not element.isNull():
+
             # noinspection PyArgumentList
             QApplication.processEvents()
-            item = self.itemFromGrapholNode(element)
-            func = self.importFuncForItem[item]
-            node = func(element)
-            self.diagram.addItem(node)
-            self.diagram.guid.update(node.id)
-            self.nodes[node.id] = node
-            element = element.nextSiblingElement('node')
 
-        # 5) GENERATE EDGES
+            try:
+                item = self.itemFromGrapholNode(element)
+                func = self.importFuncForItem[item]
+                node = func(element)
+            except Exception:
+                LOGGER.exception('Failed to create node %s', element.attribute('id'))
+            else:
+                self.diagram.addItem(node)
+                self.diagram.guid.update(node.id)
+                self.nodes[node.id] = node
+            finally:
+                element = element.nextSiblingElement('node')
+
+        LOGGER.debug('Loaded nodes: %s', len(self.nodes))
+
+        #############################################
+        # LOAD EDGES
+        #################################
+
         element = graph.firstChildElement('edge')
         while not element.isNull():
+
             # noinspection PyArgumentList
             QApplication.processEvents()
-            item = self.itemFromGrapholNode(element)
-            func = self.importFuncForItem[item]
-            edge = func(element)
-            self.diagram.addItem(edge)
-            self.diagram.guid.update(edge.id)
-            edge.updateEdge()
-            element = element.nextSiblingElement('edge')
 
-        # 6) RUN IDENTIFICATION ALGORITHM
-        for node in self.nodes.values():
-            self.diagram.identify(node)
+            try:
+                item = self.itemFromGrapholNode(element)
+                func = self.importFuncForItem[item]
+                edge = func(element)
+            except Exception:
+                LOGGER.exception('Failed to create edge %s', element.attribute('id'))
+            else:
+                self.diagram.addItem(edge)
+                self.diagram.guid.update(edge.id)
+                self.edges[edge.id] = edge
+                edge.updateEdge()
+            finally:
+                element = element.nextSiblingElement('edge')
 
-        # 7) CONFIGURE SLOTS
+        LOGGER.debug('Loaded edges: %s', len(self.edges))
+
+        #############################################
+        # IDENTIFY NODES
+        #################################
+
+        nodes = [n for n in self.nodes.values() if Identity.Neutral in n.Identities]
+        if nodes:
+            LOGGER.debug('Running identification algorithm for %s nodes', len(nodes))
+            for node in nodes:
+                self.diagram.identify(node)
+
+        #############################################
+        # CONFIGURE DIAGRAM SIGNALS
+        #################################
+
         connect(self.diagram.sgnItemAdded, self.project.doAddItem)
         connect(self.diagram.sgnItemRemoved, self.project.doRemoveItem)
         connect(self.diagram.sgnActionCompleted, self.session.onDiagramActionCompleted)
         connect(self.diagram.sgnModeChanged, self.session.onDiagramModeChanged)
         connect(self.diagram.selectionChanged, self.session.doUpdateState)
 
-        # 8) RETURN GENERATED DIAGRAM
+        LOGGER.debug('Diagram created: %s', self.diagram.name)
+
         return self.diagram

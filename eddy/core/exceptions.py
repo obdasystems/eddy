@@ -33,6 +33,19 @@
 ##########################################################################
 
 
+class DiagramNotFoundError(RuntimeError):
+    """
+    Raised whenever we are not able to find a diagram given its path.
+    """
+    pass
+
+
+class DiagramNotValidError(RuntimeError):
+    """
+    Raised whenever a diagram appear to have an invalid structure.
+    """
+    pass
+
 
 class MalformedDiagramError(RuntimeError):
     """

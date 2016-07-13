@@ -44,12 +44,11 @@ from PyQt5.QtWidgets import QApplication, QMessageBox
 from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE
 from eddy.core.exceptions import ProjectNotFoundError
 from eddy.core.exceptions import ProjectNotValidError
-from eddy.core.functions.fsystem import isdir, fexists
+from eddy.core.functions.fsystem import isdir
 from eddy.core.functions.misc import isEmpty, format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.output import getLogger
-from eddy.core.project import Project
 
 from eddy.ui.dialogs.progress import BusyProgressDialog
 from eddy.ui.dialogs.workspace import WorkspaceDialog
@@ -59,7 +58,7 @@ from eddy.ui.widgets.welcome import Welcome
 from eddy.ui.style import Clean
 
 
-LOGGER = getLogger(APPNAME)
+LOGGER = getLogger(__name__)
 
 
 class Eddy(QApplication):
@@ -266,24 +265,12 @@ class Eddy(QApplication):
         """
         with BusyProgressDialog('Loading project: {0}'.format(os.path.basename(path))):
 
+            LOGGER.info('Creating session for %s', path)
+
             try:
-                # Validate path.
-                path = expandPath(path)
-                if not isdir(path):
-                    raise ProjectNotFoundError
-                # Check for project home directory to be available.
-                home = os.path.join(path, Project.Home)
-                if not isdir(home):
-                    raise ProjectNotValidError('missing project home: {0}'.format(home))
-                # check for project metadata xml file.
-                meta = os.path.join(home, Project.MetaXML)
-                if not fexists(meta):
-                    raise ProjectNotValidError('missing project metadata: {0}'.format(meta))
-                # Check for project XML structure file.
-                modules = os.path.join(home, Project.ModulesXML)
-                if not fexists(modules):
-                    raise ProjectNotValidError('missing project structure: {0}'.format(modules))
-            except ProjectNotFoundError:
+                self.session = Session(path)
+            except ProjectNotFoundError as e:
+                LOGGER.warning('Failed to create session for %s: %s', path, e)
                 msgbox = QMessageBox()
                 msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
                 msgbox.setText('Project <b>{0}</b> not found!'.format(os.path.basename(path)))
@@ -292,6 +279,7 @@ class Eddy(QApplication):
                 msgbox.setWindowTitle('Project not found!')
                 msgbox.exec_()
             except ProjectNotValidError as e:
+                LOGGER.warning('Failed to create session for %s: %s', path, e)
                 msgbox = QMessageBox()
                 msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
                 msgbox.setText('Project <b>{0}</b> is not valid!'.format(os.path.basename(path)))
@@ -301,31 +289,30 @@ class Eddy(QApplication):
                 msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
                 msgbox.setWindowTitle('Project not valid!')
                 msgbox.exec_()
+            except Exception as e:
+                raise e
             else:
+                connect(self.session.sgnQuit, self.doQuit)
+                connect(self.session.sgnClosed, self.onSessionClosed)
+                LOGGER.info('Session created for %s', path)
+
+                settings = QSettings(ORGANIZATION, APPNAME)
+                projects = settings.value('project/recent', None, str) or []
 
                 try:
-                    self.session = Session(path)
-                except Exception as e:
-                    raise e
-                else:
-                    connect(self.session.sgnQuit, self.doQuit)
-                    connect(self.session.sgnClosed, self.onSessionClosed)
-                    settings = QSettings(ORGANIZATION, APPNAME)
-                    projects = settings.value('project/recent', None, str) or []
+                    projects.remove(path)
+                except ValueError:
+                    pass
+                finally:
+                    projects.insert(0, path)
+                    projects = projects[:8]
+                    settings.setValue('project/recent', projects)
+                    settings.sync()
 
-                    try:
-                        projects.remove(path)
-                    except ValueError:
-                        pass
-                    finally:
-                        projects.insert(0, path)
-                        projects = projects[:8]
-                        settings.setValue('project/recent', projects)
-                        settings.sync()
+                if self.welcome:
+                    self.welcome.close()
+                self.session.show()
 
-                    if self.welcome:
-                        self.welcome.close()
-                    self.session.show()
     
     @pyqtSlot()
     def doQuit(self):

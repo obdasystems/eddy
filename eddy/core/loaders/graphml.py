@@ -39,9 +39,11 @@ from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtXml import QDomDocument
 
-from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import Diagram
+from eddy.core.exceptions import DiagramNotFoundError
+from eddy.core.exceptions import DiagramNotValidError
 from eddy.core.exceptions import ParseError
 from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.fsystem import fread
@@ -49,6 +51,10 @@ from eddy.core.functions.misc import snapF, cutR, isEmpty, snap
 from eddy.core.functions.path import uniquePath
 from eddy.core.functions.signals import connect
 from eddy.core.loaders.common import AbstractLoader
+from eddy.core.output import getLogger
+
+
+LOGGER = getLogger(__name__)
 
 
 class GraphmlLoader(AbstractLoader):
@@ -66,8 +72,8 @@ class GraphmlLoader(AbstractLoader):
         self.path = path
         self.project = project
         self.diagram = None
-        self.errors = []
         self.keys = dict()
+        self.edges = dict()
         self.nodes = dict()
         
         self.importFuncForItem = {
@@ -296,12 +302,19 @@ class GraphmlLoader(AbstractLoader):
         Build an edge using the given item type and QDomElement.
         :type item: Item
         :type element: QDomElement
+        raise ParseError: If one of the endpoints of the edge is not available.
         :rtype: AbstractEdge
         """
         data = element.firstChildElement('data')
         while not data.isNull():
 
             if data.attribute('key', '') == self.keys['edge_key']:
+
+                if not element.attribute('source') in self.nodes:
+                    raise ParseError('missing source node ({0})'.format(element.attribute('source')))
+                if not element.attribute('target') in self.nodes:
+                    raise ParseError('missing target node ({0})'.format(element.attribute('target')))
+
                 points = []
                 polyLineEdge = data.firstChildElement('y:PolyLineEdge')
                 path = polyLineEdge.firstChildElement('y:Path')
@@ -387,7 +400,7 @@ class GraphmlLoader(AbstractLoader):
 
         return None
 
-    def itemFromGraphmlNode(self, element):
+    def itemFromXmlNode(self, element):
         """
         Returns the item matching the given Graphml node.
         :type element: QDomElement
@@ -538,18 +551,25 @@ class GraphmlLoader(AbstractLoader):
     def run(self):
         """
         Perform diagram import from .graphml file format.
+        :raise DiagramNotFoundError: If the given path does not identify a .graphml module.
+        :raise DiagramNotValidError: If the given path identifies an invalid .graphml module.
         """
+        LOGGER.info('Loading diagram: %s', self.path)
+
         if not fexists(self.path):
-            raise IOError('file not found: {0}'.format(self.path))
+            raise DiagramNotFoundError('diagram not found: {0}'.format(self.path))
 
         document = QDomDocument()
         if not document.setContent(fread(self.path)):
-            raise ParseError('could not initialize QDomDocument')
+            raise DiagramNotValidError('could not parse diagram from {0}'.format(self.path))
 
-        # 1) INITIALIZE XML ROOT ELEMENT
         root = document.documentElement()
+        graph = root.firstChildElement('graph')
 
-        # 2) READ KEYS FROM THE DOCUMENT
+        #############################################
+        # READ NECESSARY DATA FROM DOCUMENT HEADER
+        #################################
+
         key = root.firstChildElement('key')
         while not key.isNull():
             if key.attribute('yfiles.type', '') == 'nodegraphics':
@@ -558,17 +578,30 @@ class GraphmlLoader(AbstractLoader):
                 self.keys['edge_key'] = key.attribute('id')
             key = key.nextSiblingElement('key')
 
-        # 3) CREATE AN ARBIRARY DIAGRAM
+        if not 'node_key' in self.keys:
+            raise DiagramNotValidError('could not parse node keys from {0}'.format(self.path))
+        if not 'edge_key' in self.keys:
+            raise DiagramNotValidError('could not parse edge keys from {0}'.format(self.path))
+
+        LOGGER.debug('Using node_key: %s', self.keys['node_key'])
+        LOGGER.debug('Using edge_key: %s', self.keys['edge_key'])
+
+        #############################################
+        # CREATE AN EMPTY DIAGRAM
+        #################################
+
         name = cutR(os.path.basename(self.path), File.Graphml.extension)
         path = uniquePath(self.project.path, name, File.Graphol.extension)
         self.diagram = Diagram(path, self.project)
         self.diagram.setSceneRect(QRectF(-Diagram.MaxSize / 2, -Diagram.MaxSize / 2, Diagram.MaxSize, Diagram.MaxSize))
         self.diagram.setItemIndexMethod(Diagram.NoIndex)
 
-        # 4) INITIALIZE GRAPH ELEMENT
-        graph = root.firstChildElement('graph')
+        LOGGER.debug('Initialzing empty diagram with size: %s', Diagram.MaxSize)
 
-        # 5) GENERATE NODES
+        #############################################
+        # LOAD NODES
+        #################################
+
         element = graph.firstChildElement('node')
         while not element.isNull():
 
@@ -576,13 +609,17 @@ class GraphmlLoader(AbstractLoader):
             QApplication.processEvents()
 
             try:
-                item = self.itemFromGraphmlNode(element)
+                item = self.itemFromXmlNode(element)
+                if not item:
+                    raise ParseError('could not identify item for XML node')
                 func = self.importFuncForItem[item]
                 node = func(element)
                 if not node:
-                    raise ValueError('unknown node with id {0}'.format(element.attribute('id')))
-            except Exception as e:
-                self.errors.append(e)
+                    raise ParseError('could not generate item for XML node')
+            except ParseError as e:
+                LOGGER.warning('Failed to create node %s: %s', element.attribute('id'), e)
+            except Exception:
+                LOGGER.exception('Failed to create node %s', element.attribute('id'))
             else:
                 self.diagram.addItem(node)
                 self.diagram.guid.update(node.id)
@@ -590,7 +627,12 @@ class GraphmlLoader(AbstractLoader):
             finally:
                 element = element.nextSiblingElement('node')
 
-        # 6) GENERATE EDGES
+        LOGGER.debug('Loaded nodes: %s', len(self.nodes))
+
+        #############################################
+        # LOAD EDGES
+        #################################
+
         element = graph.firstChildElement('edge')
         while not element.isNull():
 
@@ -598,21 +640,31 @@ class GraphmlLoader(AbstractLoader):
             QApplication.processEvents()
 
             try:
-                item = self.itemFromGraphmlNode(element)
+                item = self.itemFromXmlNode(element)
+                if not item:
+                    raise ParseError('could not identify item for XML node')
                 func = self.importFuncForItem[item]
                 edge = func(element)
                 if not edge:
-                    raise ValueError('unknown edge with id {0}'.format(element.attribute('id')))
-            except Exception as e:
-                self.errors.append(e)
+                    raise ParseError('could not generate item for XML node')
+            except ParseError as e:
+                LOGGER.warning('Failed to create edge %s: %s', element.attribute('id'), e)
+            except Exception:
+                LOGGER.exception('Failed to create edge %s', element.attribute('id'))
             else:
                 self.diagram.addItem(edge)
                 self.diagram.guid.update(edge.id)
+                self.edges[edge.id] = edge
                 edge.updateEdge()
             finally:
                 element = element.nextSiblingElement('edge')
 
-        # 7) CENTER DIAGRAM
+        LOGGER.debug('Loaded edges: %s', len(self.edges))
+
+        #############################################
+        # CENTER THE DIAGRAM
+        #################################
+
         R1 = self.diagram.sceneRect()
         R2 = self.diagram.visibleRect(margin=0)
         moveX = snapF(((R1.right() - R2.right()) - (R2.left() - R1.left())) / 2, Diagram.GridSize)
@@ -629,21 +681,36 @@ class GraphmlLoader(AbstractLoader):
                 if item.isEdge():
                     item.updateEdge()
 
-        # 8) RESIZE DIAGRAM
+        #############################################
+        # RESIZE THE DIAGRAM
+        #################################
+
         R3 = self.diagram.visibleRect(margin=20)
-        size = max(R3.width(), R3.height(), Diagram.MinSize)
+        size = int(max(R3.width(), R3.height(), Diagram.MinSize))
         self.diagram.setSceneRect(QRectF(-size / 2, -size / 2, size, size))
 
-        # 9) RUN IDENTIFICATION ALGORITHM
-        for node in self.nodes.values():
-            self.diagram.identify(node)
+        LOGGER.debug('Diagram resized: %s -> %s', Diagram.MaxSize, size)
 
-        # 10) CONFIGURE SLOTS
+        #############################################
+        # IDENTIFY NODES
+        #################################
+
+        nodes = [n for n in self.nodes.values() if Identity.Neutral in n.Identities]
+        if nodes:
+            LOGGER.debug('Running identification algorithm for %s nodes', len(nodes))
+            for node in nodes:
+                self.diagram.identify(node)
+
+        #############################################
+        # CONFIGURE DIAGRAM SIGNALS
+        #################################
+
         connect(self.diagram.sgnItemAdded, self.project.doAddItem)
         connect(self.diagram.sgnItemRemoved, self.project.doRemoveItem)
         connect(self.diagram.sgnActionCompleted, self.session.onDiagramActionCompleted)
         connect(self.diagram.sgnModeChanged, self.session.onDiagramModeChanged)
         connect(self.diagram.selectionChanged, self.session.doUpdateState)
 
-        # 11) RETURN GENERATED DIAGRAM
+        LOGGER.debug('Diagram created: %s', self.diagram.name)
+
         return self.diagram
