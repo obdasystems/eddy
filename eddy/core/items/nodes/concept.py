@@ -226,7 +226,7 @@ class ConceptNode(AbstractResizableNode):
         Handle the interactive resize of the shape.
         :type mousePos: QPointF
         """
-        snap = self.session.actionToggleGrid.isChecked()
+        snap = self.session.action('toggle_grid').isChecked()
         size = self.diagram.GridSize
         offset = self.HandleSize + self.HandleMove
         moved = self.label.isMoved()

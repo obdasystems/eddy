@@ -166,7 +166,7 @@ class Diagram(QGraphicsScene):
         """
         super().dropEvent(dropEvent)
         if dropEvent.mimeData().hasFormat('text/plain'):
-            snapToGrid = self.session.actionToggleGrid.isChecked()
+            snapToGrid = self.session.action('toggle_grid').isChecked()
             node = self.factory.create(Item.forValue(dropEvent.mimeData().text()))
             node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
             self.project.undoStack.push(CommandNodeAdd(self, node))
@@ -193,7 +193,7 @@ class Diagram(QGraphicsScene):
                 # NODE INSERTION
                 #################################
 
-                snapToGrid = self.session.actionToggleGrid.isChecked()
+                snapToGrid = self.session.action('toggle_grid').isChecked()
                 node = self.factory.create(Item.forValue(self.modeParam))
                 node.setPos(snap(mousePos, Diagram.GridSize, snapToGrid))
                 self.project.undoStack.push(CommandNodeAdd(self, node))
@@ -355,7 +355,7 @@ class Diagram(QGraphicsScene):
 
                 if self.isLabelMoveInProgress():
 
-                    snapToGrid = self.session.actionToggleGrid.isChecked()
+                    snapToGrid = self.session.action('toggle_grid').isChecked()
                     point = self.mousePressLabelPos + mousePos - self.mousePressPos
                     point = snap(point, Diagram.GridSize / 4, snapToGrid)
                     delta = point - self.mousePressLabelPos
@@ -375,7 +375,7 @@ class Diagram(QGraphicsScene):
 
                     if self.isNodeMoveInProgress():
 
-                        snapToGrid = self.session.actionToggleGrid.isChecked()
+                        snapToGrid = self.session.action('toggle_grid').isChecked()
                         point = self.mousePressNodePos + mousePos - self.mousePressPos
                         point = snap(point, Diagram.GridSize, snapToGrid)
                         delta = point - self.mousePressNodePos

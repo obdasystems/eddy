@@ -40,12 +40,11 @@ from collections import OrderedDict
 from textwrap import dedent
 
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
-from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent
+from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, QSize
 from PyQt5.QtGui import QBrush, QColor, QCursor
 from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
-from PyQt5.QtWidgets import QMainWindow, QAction, QStatusBar, QToolButton
-from PyQt5.QtWidgets import QMenu, QApplication, QMessageBox
-from PyQt5.QtWidgets import QStyle, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QStatusBar, QToolButton
+from PyQt5.QtWidgets import QStyle, QMenu, QAction, QActionGroup, QFileDialog
 
 from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION
 from eddy.core.commands.common import CommandComposeAxiom
@@ -72,18 +71,20 @@ from eddy.core.exporters.graphml import GraphmlExporter
 from eddy.core.exporters.graphol import GrapholExporter
 from eddy.core.exporters.project import ProjectExporter
 from eddy.core.functions.fsystem import fexists, fcopy, fremove
-from eddy.core.functions.misc import snap, snapF, first, format_exception, cutR, uncapitalize
+from eddy.core.functions.misc import first, format_exception
+from eddy.core.functions.misc import snap, snapF, cutR, uncapitalize
 from eddy.core.functions.path import expandPath, isSubPath, uniquePath, shortPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
 from eddy.core.loaders.graphml import GraphmlLoader
 from eddy.core.loaders.graphol import GrapholLoader
 from eddy.core.loaders.project import ProjectLoader
+from eddy.core.misc import HasActionSystem
 from eddy.core.output import getLogger
 from eddy.core.qt import BrushIcon
 from eddy.core.utils.clipboard import Clipboard
 
-from eddy.ui.dialogs.about import About
+from eddy.ui.dialogs.about import AboutDialog
 from eddy.ui.dialogs.diagram import NewDiagramDialog
 from eddy.ui.dialogs.diagram import RenameDiagramDialog
 from eddy.ui.dialogs.forms import CardinalityRestrictionForm
@@ -108,20 +109,20 @@ from eddy.ui.widgets.zoom import Zoom
 LOGGER = getLogger(__name__)
 
 
-class Session(QMainWindow):
+class Session(HasActionSystem, QMainWindow):
     """
     This class implements Eddy's main working session.
     """
     sgnClosed = pyqtSignal()
     sgnQuit = pyqtSignal()
 
-    def __init__(self, path, parent=None):
+    def __init__(self, path, **kwargs):
         """
-        Initialize the application main window.
+        Initialize the application main working session.
         :type path: str
-        :type parent: QWidget
+        :type kwargs: dict
         """
-        super().__init__(parent)
+        super().__init__(**kwargs)
 
         #############################################
         # LOAD THE GIVEN PROJECT
@@ -132,9 +133,6 @@ class Session(QMainWindow):
         #############################################
         # CREATE MENUS
         #################################
-
-        # noinspection PyArgumentList
-        QApplication.processEvents()
 
         menuBar = self.menuBar()
         self.menuFile = menuBar.addMenu('File')
@@ -159,9 +157,6 @@ class Session(QMainWindow):
         # CREATE TOOLBARS
         #################################
 
-        # noinspection PyArgumentList
-        QApplication.processEvents()
-
         self.toolbarDocument = self.addToolBar('Document')
         self.toolbarDocument.setObjectName('toolbarDocument')
         self.toolbarEditor = self.addToolBar('Editor')
@@ -174,9 +169,6 @@ class Session(QMainWindow):
         #############################################
         # CREATE WIDGETS
         #################################
-
-        # noinspection PyArgumentList
-        QApplication.processEvents()
 
         self.info = Info(self)
         self.mdi = MdiArea(self)
@@ -202,65 +194,6 @@ class Session(QMainWindow):
         self.menuFactory = MenuFactory(self)
         self.propertyFactory = PropertyFactory(self)
 
-        #############################################
-        # CREATE ACTIONS
-        #################################
-
-        # noinspection PyArgumentList
-        QApplication.processEvents()
-
-        self.actionUndo = self.project.undoStack.createUndoAction(self)
-        self.actionRedo = self.project.undoStack.createRedoAction(self)
-        self.actionNewDiagram = QAction('New diagram...', self)
-        self.actionOpen = QAction('Open...', self)
-        self.actionSave = QAction('Save', self)
-        self.actionSaveAs = QAction('Save As...', self)
-        self.actionImport = QAction('Import...', self)
-        self.actionExport = QAction('Export...', self)
-        self.actionPrint = QAction('Print...', self)
-        self.actionOpenPreferences = QAction('Preferences', self)
-        self.actionQuit = QAction('Quit', self)
-        self.actionCloseProject = QAction('Close', self)
-        self.actionAbout = QAction('About {0}'.format(APPNAME), self)
-        self.actionDiagWeb = QAction('Visit DIAG website', self)
-        self.actionGrapholWeb = QAction('Visit Graphol website', self)
-        self.actionSyntaxCheck = QAction('Run syntax validation', self)
-        self.actionCenterDiagram = QAction('Center diagram', self)
-        self.actionDiagramProperties = QAction('Properties...', self)
-        self.actionCut = QAction('Cut', self)
-        self.actionCopy = QAction('Copy', self)
-        self.actionPaste = QAction('Paste', self)
-        self.actionDelete = QAction('Delete', self)
-        self.actionBringToFront = QAction('Bring to front', self)
-        self.actionSendToBack = QAction('Send to back', self)
-        self.actionSelectAll = QAction('Select all', self)
-        self.actionNodeProperties = QAction('Properties...', self)
-        self.actionRelocateLabel = QAction('Relocate label', self)
-        self.actionRefactorName = QAction('Rename...', self)
-        self.actionComposePropertyDomain = QAction('Domain', self)
-        self.actionComposePropertyRange = QAction('Range', self)
-        self.actionRemoveEdgeBreakpoint = QAction('Remove breakpoint', self)
-        self.actionSwapEdge = QAction('Swap edge', self)
-        self.actionSnapToGrid = QAction('Snap to grid', self)
-        self.actionToggleEdgeEquivalence = QAction('Toggle edge equivalence', self)
-        self.actionToggleGrid = QAction('Toggle the grid', self)
-
-        self.actionsRefactorBrush = []
-        self.actionsSetBrush = []
-        self.actionsSetSpecial = []
-        self.actionsSetPropertyRestriction = []
-        self.actionsSetDatatype = []
-        self.actionsSetFacet = []
-        self.actionsSetIndividualAs = []
-        self.actionsSwitchOperator = []
-
-        #############################################
-        # CONFIGURE MAIN WINDOW
-        #################################
-
-        # noinspection PyArgumentList
-        QApplication.processEvents()
-
         self.configureActions()
         self.configureWidgets()
         self.configureMenus()
@@ -275,271 +208,336 @@ class Session(QMainWindow):
         self.setWindowTitle(self.project)
 
     #############################################
-    #   MAIN WINDOW CONFIGURATION
+    #   SESSION CONFIGURATION
     #################################
 
     def configureActions(self):
         """
         Configure previously initialized actions.
         """
-        # noinspection PyArgumentList
-        QApplication.processEvents()
-
         #############################################
         # APPLICATION GENERIC
         #################################
 
-        self.actionOpenPreferences.setShortcut(QKeySequence.Preferences)
-        self.actionOpenPreferences.setData(PreferencesDialog)
-        connect(self.actionOpenPreferences.triggered, self.doOpenDialog)
+        action = QAction(
+            QIcon(':/icons/24/ic_settings_black'), 'Preferences', self,
+            objectName='open_preferences', shortcut=QKeySequence.Preferences,
+            statusTip='Open application preferences', triggered=self.doOpenDialog)
+        action.setData(PreferencesDialog)
+        self.addAction(action)
 
-        if Platform.identify() is not Platform.Darwin:
-            self.actionOpenPreferences.setIcon(QIcon(':/icons/24/ic_settings_black'))
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_power_settings_new_black'), 'Quit', self,
+            objectName='quit', shortcut=QKeySequence.Quit,
+            statusTip='Quit {0}'.format(APPNAME), triggered=self.doQuit))
 
-        self.actionQuit.setStatusTip('Quit {0}'.format(APPNAME))
-        self.actionQuit.setShortcut(QKeySequence.Quit)
-        connect(self.actionQuit.triggered, self.doQuit)
+        action = QAction(
+            QIcon(':/icons/24/ic_help_outline_black'), 'About {0}'.format(APPNAME), self,
+            objectName='about', shortcut=QKeySequence.HelpContents,
+            statusTip='About {0}'.format(APPNAME), triggered=self.doOpenDialog)
+        action.setData(AboutDialog)
+        self.addAction(action)
 
-        if Platform.identify() is not Platform.Darwin:
-            self.actionQuit.setIcon(QIcon(':/icons/24/ic_power_settings_new_black'))
+        action = QAction(
+            QIcon(':/icons/24/ic_link_black'), 'Visit DIAG website', self,
+            objectName='diag_web', statusTip='Visit DIAG website',
+            triggered=self.doOpenURL)
+        action.setData(DIAG_HOME)
+        self.addAction(action)
 
-        self.actionAbout.setShortcut(QKeySequence.HelpContents)
-        self.actionAbout.setStatusTip('About {0}'.format(APPNAME))
-        self.actionAbout.setData(About)
-        connect(self.actionAbout.triggered, self.doOpenDialog)
+        action = QAction(
+            QIcon(':/icons/24/ic_link_black'), 'Visit Graphol website', self,
+            objectName='graphol_web', statusTip='Visit Graphol website',
+            triggered=self.doOpenURL)
+        action.setData(GRAPHOL_HOME)
+        self.addAction(action)
 
-        if Platform.identify() is not Platform.Darwin:
-            self.actionAbout.setIcon(QIcon(':/icons/24/ic_help_outline_black'))
-
-        self.actionDiagWeb.setIcon(QIcon(':/icons/24/ic_link_black'))
-        self.actionDiagWeb.setData(DIAG_HOME)
-        connect(self.actionDiagWeb.triggered, self.doOpenURL)
-
-        self.actionGrapholWeb.setIcon(QIcon(':/icons/24/ic_link_black'))
-        self.actionGrapholWeb.setData(GRAPHOL_HOME)
-        connect(self.actionGrapholWeb.triggered, self.doOpenURL)
+        if Platform.identify() is Platform.Darwin:
+            self.action('about').setIcon(QIcon())
+            self.action('open_preferences').setIcon(QIcon())
+            self.action('quit').setIcon(QIcon())
 
         #############################################
         # PROJECT / DIAGRAM MANAGEMENT
         #################################
 
-        self.actionNewDiagram.setIcon(QIcon(':/icons/24/ic_add_document_black'))
-        self.actionNewDiagram.setShortcut(QKeySequence.New)
-        self.actionNewDiagram.setStatusTip('Create a new diagram')
-        connect(self.actionNewDiagram.triggered, self.doNewDiagram)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_add_document_black'), 'New diagram...', self,
+            objectName='new_diagram', shortcut=QKeySequence.New,
+            statusTip='Create a new diagram', triggered=self.doNewDiagram))
 
-        self.actionOpen.setIcon(QIcon(':/icons/24/ic_folder_open_black'))
-        self.actionOpen.setShortcut(QKeySequence.Open)
-        self.actionOpen.setStatusTip('Open a diagram and add it to the current project')
-        connect(self.actionOpen.triggered, self.doOpen)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_folder_open_black'), 'Open...', self,
+            objectName='open', shortcut=QKeySequence.Open,
+            statusTip='Open a diagram and add it to the current project',
+            triggered=self.doOpen))
 
-        self.actionCloseProject.setIcon(QIcon(':/icons/24/ic_close_black'))
-        self.actionCloseProject.setShortcut(QKeySequence.Close)
-        self.actionCloseProject.setStatusTip('Close the current project')
-        connect(self.actionCloseProject.triggered, self.doCloseProject)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_close_black'), 'Close', self,
+            objectName='close_project', shortcut=QKeySequence.Close,
+            statusTip='Close the current project', triggered=self.doClose))
 
-        self.actionSave.setIcon(QIcon(':/icons/24/ic_save_black'))
-        self.actionSave.setShortcut(QKeySequence.Save)
-        self.actionSave.setStatusTip('Save the current project')
-        self.actionSave.setEnabled(False)
-        connect(self.actionSave.triggered, self.doSave)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_save_black'), 'Save', self,
+            objectName='save', shortcut=QKeySequence.Save,
+            statusTip='Save the current project', enabled=False,
+            triggered=self.doSave))
 
-        self.actionSaveAs.setIcon(QIcon(':/icons/24/ic_save_black'))
-        self.actionSaveAs.setShortcut(QKeySequence.SaveAs)
-        self.actionSaveAs.setStatusTip('Create a copy of the active diagram')
-        self.actionSaveAs.setEnabled(False)
-        connect(self.actionSaveAs.triggered, self.doSaveAs)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_save_black'), 'Save As...', self,
+            objectName='save_as', shortcut=QKeySequence.SaveAs,
+            statusTip='Create a copy of the active diagram', enabled=False,
+            triggered=self.doSaveAs))
 
-        self.actionImport.setStatusTip('Import a document in the current project')
-        connect(self.actionImport.triggered, self.doImport)
+        self.addAction(QAction(
+            'Import...', self, objectName='import',
+            statusTip='Import a document in the current project',
+            triggered=self.doImport))
 
-        self.actionExport.setStatusTip('Export the current project')
-        self.actionExport.setEnabled(not self.project.isEmpty())
-        connect(self.actionExport.triggered, self.doExport)
+        self.addAction(QAction(
+            'Export...', self, objectName='export',
+            statusTip='Export the current project in a different format',
+            enabled=not self.project.isEmpty(), triggered=self.doExport))
 
-        self.actionPrint.setIcon(QIcon(':/icons/24/ic_print_black'))
-        self.actionPrint.setStatusTip('Print the current project')
-        connect(self.actionPrint.triggered, self.doPrint)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_print_black'), 'Print...', self,
+            objectName='print', shortcut=QKeySequence.Print,
+            statusTip='Print the current project', enabled=False,
+            triggered=self.doPrint))
 
         #############################################
         # PROJECT SPECIFIC
         #################################
 
-        self.actionSyntaxCheck.setIcon(QIcon(':/icons/24/ic_spellcheck_black'))
-        self.actionSyntaxCheck.setStatusTip('Run syntax validation on the current project')
-        connect(self.actionSyntaxCheck.triggered, self.doSyntaxCheck)
+        action = self.project.undoStack.createUndoAction(self)
+        action.setIcon(QIcon(':/icons/24/ic_undo_black'))
+        action.setObjectName('undo')
+        action.setShortcut(QKeySequence.Undo)
+        self.addAction(action)
+
+        action = self.project.undoStack.createRedoAction(self)
+        action.setIcon(QIcon(':/icons/24/ic_redo_black'))
+        action.setObjectName('redo')
+        action.setShortcut(QKeySequence.Redo)
+        self.addAction(action)
+
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_spellcheck_black'), 'Run syntax check', self,
+            objectName='syntax_check', triggered=self.doSyntaxCheck,
+            statusTip = 'Run syntax validation on the current project'))
 
         #############################################
         # DIAGRAM SPECIFIC
         #################################
 
-        self.actionUndo.setIcon(QIcon(':/icons/24/ic_undo_black'))
-        self.actionUndo.setShortcut(QKeySequence.Undo)
-        self.actionRedo.setIcon(QIcon(':/icons/24/ic_redo_black'))
-        self.actionRedo.setShortcut(QKeySequence.Redo)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_center_focus_strong_black'), 'Center diagram', self,
+            objectName='center_diagram', statusTip='Center the active diagram',
+            enabled=False, triggered=self.doCenterDiagram))
 
-        self.actionCenterDiagram.setIcon(QIcon(':/icons/24/ic_center_focus_strong_black'))
-        self.actionCenterDiagram.setStatusTip('Center the active diagram')
-        self.actionCenterDiagram.setEnabled(False)
-        connect(self.actionCenterDiagram.triggered, self.doCenterDiagram)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_settings_black'), 'Properties...', self,
+            objectName='diagram_properties',
+            statusTip='Open current diagram properties',
+            triggered=self.doOpenDiagramProperties))
 
-        self.actionDiagramProperties.setIcon(QIcon(':/icons/24/ic_settings_black'))
-        connect(self.actionDiagramProperties.triggered, self.doOpenDiagramProperties)
-
-        self.actionSnapToGrid.setIcon(QIcon(':/icons/24/ic_healing_black'))
-        self.actionSnapToGrid.setStatusTip('Align the elements in the active diagram to the grid')
-        self.actionSnapToGrid.setEnabled(False)
-        connect(self.actionSnapToGrid.triggered, self.doSnapTopGrid)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_healing_black'), 'Snap to grid', self,
+            objectName='snap_to_grid', enabled=False,
+            statusTip='Align the elements in the active diagram to the grid',
+            triggered=self.doSnapTopGrid))
 
         icon = QIcon()
-        icon.addFile(':/icons/24/ic_grid_on_black', mode=QIcon.Normal, state=QIcon.On)
-        icon.addFile(':/icons/24/ic_grid_off_black', mode=QIcon.Normal, state=QIcon.Off)
-        self.actionToggleGrid.setIcon(icon)
-        self.actionToggleGrid.setStatusTip('Activate or deactivate the diagram grid')
-        self.actionToggleGrid.setCheckable(True)
-        self.actionToggleGrid.setEnabled(False)
-        connect(self.actionToggleGrid.triggered, self.doToggleGrid)
+        icon.addFile(':/icons/24/ic_grid_on_black', QSize(), QIcon.Normal, QIcon.On)
+        icon.addFile(':/icons/24/ic_grid_off_black', QSize(), QIcon.Normal, QIcon.Off)
+        self.addAction(QAction(
+            icon, 'Toggle the grid', self, objectName='toggle_grid', enabled=False,
+            checkable=True, statusTip='Activate or deactivate the diagram grid',
+            triggered=self.doToggleGrid))
 
         #############################################
         # ITEM GENERICS
         #################################
 
-        self.actionCut.setIcon(QIcon(':/icons/24/ic_content_cut_black'))
-        self.actionCut.setShortcut(QKeySequence.Cut)
-        self.actionCut.setStatusTip('Cut selected items')
-        self.actionCut.setEnabled(False)
-        connect(self.actionCut.triggered, self.doCut)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_content_cut_black'), 'Cut', self,
+            objectName='cut', enabled=False, shortcut=QKeySequence.Cut,
+            statusTip='Cut selected items', triggered=self.doCut))
 
-        self.actionCopy.setIcon(QIcon(':/icons/24/ic_content_copy_black'))
-        self.actionCopy.setShortcut(QKeySequence.Copy)
-        self.actionCopy.setStatusTip('Copy selected items')
-        self.actionCopy.setEnabled(False)
-        connect(self.actionCopy.triggered, self.doCopy)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_content_copy_black'), 'Copy', self,
+            objectName='copy', enabled=False, shortcut=QKeySequence.Copy,
+            statusTip='Copy selected items', triggered=self.doCopy))
 
-        self.actionPaste.setIcon(QIcon(':/icons/24/ic_content_paste'))
-        self.actionPaste.setShortcut(QKeySequence.Paste)
-        self.actionPaste.setStatusTip('Paste previously copied items')
-        self.actionPaste.setEnabled(False)
-        connect(self.actionPaste.triggered, self.doPaste)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_content_paste_black'), 'Paste', self,
+            objectName='paste', enabled=False, shortcut=QKeySequence.Paste,
+            statusTip='Paste previously copied items', triggered=self.doPaste))
 
-        self.actionDelete.setIcon(QIcon(':/icons/24/ic_delete_black'))
-        self.actionDelete.setShortcut(QKeySequence.Delete)
-        self.actionDelete.setStatusTip('Delete selected items')
-        self.actionDelete.setEnabled(False)
-        connect(self.actionDelete.triggered, self.doDelete)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_delete_black'), 'Delete', self,
+            objectName='delete', enabled=False, shortcut=QKeySequence.Delete,
+            statusTip='Delete selected items', triggered=self.doDelete))
 
-        self.actionBringToFront.setIcon(QIcon(':/icons/24/ic_flip_to_front_black'))
-        self.actionBringToFront.setStatusTip('Bring selected items to front')
-        self.actionBringToFront.setEnabled(False)
-        connect(self.actionBringToFront.triggered, self.doBringToFront)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_flip_to_front_black'), 'Bring to front', self,
+            objectName='bring_to_front', enabled=False,
+            statusTip='Bring selected items to front',
+            triggered=self.doBringToFront))
 
-        self.actionSendToBack.setIcon(QIcon(':/icons/24/ic_flip_to_back_black'))
-        self.actionSendToBack.setStatusTip('Send selected items to back')
-        self.actionSendToBack.setEnabled(False)
-        connect(self.actionSendToBack.triggered, self.doSendToBack)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_flip_to_back_black'), 'Send to back', self,
+            objectName='send_to_back', enabled=False,
+            statusTip='Send selected items to back',
+            triggered=self.doSendToBack))
 
-        self.actionSelectAll.setIcon(QIcon(':/icons/24/ic_select_all_black'))
-        self.actionSelectAll.setShortcut(QKeySequence.SelectAll)
-        self.actionSelectAll.setStatusTip('Select all items in the active diagram')
-        self.actionSelectAll.setEnabled(False)
-        connect(self.actionSelectAll.triggered, self.doSelectAll)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_select_all_black'), 'Select all', self,
+            objectName='select_all', enabled=False,
+            statusTip='Select all items in the active diagram',
+            triggered=self.doSelectAll))
 
         #############################################
-        # NODE GENERICS
+        # EDGE RELATED
         #################################
-        
-        self.actionNodeProperties.setIcon(QIcon(':/icons/24/ic_settings_black'))
-        connect(self.actionNodeProperties.triggered, self.doOpenNodeProperties)
-        
-        self.actionRefactorName.setIcon(QIcon(':/icons/24/ic_label_outline_black'))
-        connect(self.actionRefactorName.triggered, self.doRefactorName)
 
-        self.actionRelocateLabel.setIcon(QIcon(':/icons/24/ic_refresh_black'))
-        connect(self.actionRelocateLabel.triggered, self.doRelocateLabel)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_delete_black'), 'Remove breakpoint', self,
+            objectName='remove_breakpoint', statusTip='Remove the selected edge breakpoint',
+            triggered=self.doRemoveBreakpoint))
 
-        action = QAction(Special.Top.value, self)
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_equivalence_black'), 'Toggle edge equivalence', self,
+            objectName='toggle_edge_equivalence', shortcut='ALT+C', enabled=False,
+            statusTip='Toggle the equivalence for all the selected inclusion edges',
+            triggered=self.doToggleEdgeEquivalence))
+
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_swap_horiz_black'), 'Swap edge', self,
+            objectName='swap_edge', shortcut='ALT+S', enabled=False,
+            statusTip='Swap the direction of all the selected edges',
+            triggered=self.doSwapEdge))
+
+        #############################################
+        # NODE RELATED
+        #################################
+
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_settings_black'), 'Properties...', self,
+            objectName='node_properties',
+            triggered=self.doOpenNodeProperties))
+
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_label_outline_black'), 'Rename...', self,
+            objectName='refactor_name',
+            triggered=self.doRefactorName))
+
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_refresh_black'), 'Relocate label', self,
+            objectName='relocate_label',
+            triggered=self.doRelocateLabel))
+
+        action = QAction(
+            QIcon(':/icons/24/ic_top_black'), Special.Top.value, self,
+            objectName='special_top',
+            triggered=self.doSetNodeSpecial)
         action.setData(Special.Top)
-        action.setIcon(QIcon(':/icons/24/ic_top'))
-        connect(action.triggered, self.doSetNodeSpecial)
-        self.actionsSetSpecial.append(action)
-        action = QAction(Special.Bottom.value, self)
+        self.addAction(action)
+
+        action = QAction(
+            QIcon(':/icons/24/ic_bottom_black'), Special.Bottom.value, self,
+            objectName='special_bottom',
+            triggered=self.doSetNodeSpecial)
         action.setData(Special.Bottom)
-        action.setIcon(QIcon(':/icons/24/ic_bottom'))
-        connect(action.triggered, self.doSetNodeSpecial)
-        self.actionsSetSpecial.append(action)
+        self.addAction(action)
 
-        for color in Color:
-            size = self.style().pixelMetric(QStyle.PM_ToolBarIconSize)
-            action = QAction(color.name, self)
-            action.setIcon(BrushIcon(size, size, color.value))
-            action.setCheckable(False)
-            action.setData(color)
-            connect(action.triggered, self.doSetNodeBrush)
-            self.actionsSetBrush.append(action)
+        style = self.style()
+        isize = style.pixelMetric(QStyle.PM_ToolBarIconSize)
 
-        for color in Color:
-            size = self.style().pixelMetric(QStyle.PM_ToolBarIconSize)
-            action = QAction(color.name, self)
-            action.setIcon(BrushIcon(size, size, color.value))
-            action.setCheckable(False)
-            action.setData(color)
-            connect(action.triggered, self.doRefactorBrush)
-            self.actionsRefactorBrush.append(action)
+        for name, trigger in [('brush', self.doSetNodeBrush), ('refactor_brush', self.doRefactorBrush)]:
+            group = QActionGroup(self, objectName=name)
+            for color in Color:
+                action = QAction(
+                    BrushIcon(isize, isize, color.value), color.name, self,
+                    checkable=False, triggered=trigger)
+                action.setData(color)
+                group.addAction(action)
+
+            self.addAction(group)
 
         #############################################
         # ROLE / ATTRIBUTE SPECIFIC
         #################################
 
-        self.actionComposePropertyDomain.setIcon(QIcon(':/icons/24/ic_square_outline_black'))
-        self.actionComposePropertyDomain.setData(Item.DomainRestrictionNode)
-        connect(self.actionComposePropertyDomain.triggered, self.doComposePropertyExpression)
+        action = QAction(
+            QIcon(':/icons/24/ic_square_outline_black'), 'Domain', self,
+            objectName='property_domain',
+            triggered=self.doComposePropertyExpression)
+        action.setData(Item.DomainRestrictionNode)
+        self.addAction(action)
 
-        self.actionComposePropertyRange.setIcon(QIcon(':/icons/24/ic_square_black'))
-        self.actionComposePropertyRange.setData(Item.RangeRestrictionNode)
-        connect(self.actionComposePropertyRange.triggered, self.doComposePropertyExpression)
+        action = QAction(
+            QIcon(':/icons/24/ic_square_black'), 'Range', self,
+            objectName='property_range',
+            triggered=self.doComposePropertyExpression)
+        action.setData(Item.RangeRestrictionNode)
+        self.addAction(action)
 
         #############################################
         # PROPERTY DOMAIN / RANGE SPECIFIC
         #################################
 
+        group = QActionGroup(self, objectName='restriction')
         for restriction in Restriction:
-            action = QAction(restriction.value, self)
-            action.setCheckable(True)
+            action = QAction(restriction.value, group,
+                objectName=restriction.name, checkable=True,
+                triggered=self.doSetPropertyRestriction)
             action.setData(restriction)
-            connect(action.triggered, self.doSetPropertyRestriction)
-            self.actionsSetPropertyRestriction.append(action)
+            group.addAction(action)
+
+        self.addAction(group)
 
         #############################################
         # VALUE-DOMAIN SPECIFIC
         #################################
 
+        group = QActionGroup(self, objectName='datatype')
         for datatype in Datatype:
-            action = QAction(datatype.value, self)
-            action.setCheckable(True)
+            action = QAction(datatype.value, group,
+                objectName=datatype.name, checkable=True,
+                triggered=self.doSetDatatype)
             action.setData(datatype)
-            connect(action.triggered, self.doSetDatatype)
-            self.actionsSetDatatype.append(action)
+            group.addAction(action)
+
+        self.addAction(group)
 
         #############################################
         # INDIVIDUAL SPECIFIC
         #################################
 
+        group = QActionGroup(self, objectName='individual_as')
         for identity in (Identity.Instance, Identity.Value):
-            action = QAction(identity.value, self)
+            action = QAction(identity.value, group,
+                objectName=identity.name,
+                triggered=self.doSetIndividualAs)
             action.setData(identity)
-            connect(action.triggered, self.doSetIndividualAs)
-            self.actionsSetIndividualAs.append(action)
+            group.addAction(action)
+
+        self.addAction(group)
 
         #############################################
         # FACET SPECIFIC
         #################################
 
+        group = QActionGroup(self, objectName='facet')
         for facet in Facet:
-            action = QAction(facet.value, self)
-            action.setCheckable(True)
+            action = QAction(facet.value, group,
+                objectName=facet.name, checkable=True,
+                triggered=self.doSetFacet)
             action.setData(facet)
-            connect(action.triggered, self.doSetFacet)
-            self.actionsSetFacet.append(action)
+            group.addAction(action)
+
+        self.addAction(group)
 
         #############################################
         # OPERATORS SPECIFIC
@@ -555,39 +553,20 @@ class Session(QMainWindow):
         data[Item.RoleInverseNode] = 'Role inverse'
         data[Item.UnionNode] = 'Union'
 
+        group = QActionGroup(self, objectName='switch_operator')
         for k, v in data.items():
-            action = QAction(v, self)
-            action.setCheckable(True)
+            action = QAction(v, group,
+                objectName=k.name, checkable=True,
+                triggered=self.doSwitchOperatorNode)
             action.setData(k)
-            connect(action.triggered, self.doSwitchOperatorNode)
-            self.actionsSwitchOperator.append(action)
+            group.addAction(action)
 
-        #############################################
-        # EDGE SPECIFIC
-        #################################
-
-        self.actionRemoveEdgeBreakpoint.setIcon(QIcon(':/icons/24/ic_delete_black'))
-        connect(self.actionRemoveEdgeBreakpoint.triggered, self.doRemoveBreakpoint)
-
-        self.actionToggleEdgeEquivalence.setIcon(QIcon(':/icons/24/ic_equivalence_black'))
-        self.actionToggleEdgeEquivalence.setStatusTip('Toggle the equivalence for all the selected inclusion edges')
-        self.actionToggleEdgeEquivalence.setShortcut('ALT+C')
-        self.actionToggleEdgeEquivalence.setEnabled(False)
-        connect(self.actionToggleEdgeEquivalence.triggered, self.doToggleEdgeEquivalence)
-
-        self.actionSwapEdge.setIcon(QIcon(':/icons/24/ic_swap_horiz_black'))
-        self.actionSwapEdge.setStatusTip('Swap the direction of all the selected edges')
-        self.actionSwapEdge.setShortcut('ALT+S')
-        self.actionSwapEdge.setEnabled(False)
-        connect(self.actionSwapEdge.triggered, self.doSwapEdge)
+        self.addAction(group)
 
     def configureWidgets(self):
         """
         Configure previously initialized widgets.
         """
-        # noinspection PyArgumentList
-        QApplication.processEvents()
-
         #############################################
         # CONFIGURE TOOLBAR WIDGETS
         #################################
@@ -662,49 +641,46 @@ class Session(QMainWindow):
         """
         Configure previously initialized menus.
         """
-        # noinspection PyArgumentList
-        QApplication.processEvents()
-
         #############################################
         # MENU BAR RELATED
         #################################
 
-        self.menuFile.addAction(self.actionNewDiagram)
-        self.menuFile.addAction(self.actionOpen)
+        self.menuFile.addAction(self.action('new_diagram'))
+        self.menuFile.addAction(self.action('open'))
         self.menuFile.addSeparator()
-        self.menuFile.addAction(self.actionSave)
-        self.menuFile.addAction(self.actionSaveAs)
-        self.menuFile.addAction(self.actionCloseProject)
+        self.menuFile.addAction(self.action('save'))
+        self.menuFile.addAction(self.action('save_as'))
+        self.menuFile.addAction(self.action('close_project'))
         self.menuFile.addSeparator()
-        self.menuFile.addAction(self.actionImport)
-        self.menuFile.addAction(self.actionExport)
+        self.menuFile.addAction(self.action('import'))
+        self.menuFile.addAction(self.action('export'))
 
         self.menuFile.addSeparator()
-        self.menuFile.addAction(self.actionPrint)
+        self.menuFile.addAction(self.action('print'))
         self.menuFile.addSeparator()
-        self.menuFile.addAction(self.actionQuit)
+        self.menuFile.addAction(self.action('quit'))
 
-        self.menuEdit.addAction(self.actionUndo)
-        self.menuEdit.addAction(self.actionRedo)
+        self.menuEdit.addAction(self.action('undo'))
+        self.menuEdit.addAction(self.action('redo'))
         self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actionCut)
-        self.menuEdit.addAction(self.actionCopy)
-        self.menuEdit.addAction(self.actionPaste)
-        self.menuEdit.addAction(self.actionDelete)
+        self.menuEdit.addAction(self.action('cut'))
+        self.menuEdit.addAction(self.action('copy'))
+        self.menuEdit.addAction(self.action('paste'))
+        self.menuEdit.addAction(self.action('delete'))
         self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actionBringToFront)
-        self.menuEdit.addAction(self.actionSendToBack)
+        self.menuEdit.addAction(self.action('bring_to_front'))
+        self.menuEdit.addAction(self.action('send_to_back'))
         self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actionSwapEdge)
-        self.menuEdit.addAction(self.actionToggleEdgeEquivalence)
+        self.menuEdit.addAction(self.action('swap_edge'))
+        self.menuEdit.addAction(self.action('toggle_edge_equivalence'))
         self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actionSelectAll)
-        self.menuEdit.addAction(self.actionSnapToGrid)
-        self.menuEdit.addAction(self.actionCenterDiagram)
+        self.menuEdit.addAction(self.action('select_all'))
+        self.menuEdit.addAction(self.action('snap_to_grid'))
+        self.menuEdit.addAction(self.action('center_diagram'))
         self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actionOpenPreferences)
+        self.menuEdit.addAction(self.action('open_preferences'))
 
-        self.menuView.addAction(self.actionToggleGrid)
+        self.menuView.addAction(self.action('toggle_grid'))
         self.menuView.addSeparator()
         self.menuView.addMenu(self.menuToolbars)
         self.menuView.addSeparator()
@@ -719,31 +695,31 @@ class Session(QMainWindow):
         self.menuToolbars.addAction(self.toolbarGraphol.toggleViewAction())
         self.menuToolbars.addAction(self.toolbarView.toggleViewAction())
 
-        self.menuTools.addAction(self.actionSyntaxCheck)
+        self.menuTools.addAction(self.action('syntax_check'))
 
-        self.menuHelp.addAction(self.actionAbout)
+        self.menuHelp.addAction(self.action('about'))
         self.menuHelp.addSeparator()
-        self.menuHelp.addAction(self.actionDiagWeb)
-        self.menuHelp.addAction(self.actionGrapholWeb)
+        self.menuHelp.addAction(self.action('diag_web'))
+        self.menuHelp.addAction(self.action('graphol_web'))
 
         #############################################
         # NODE GENERIC
         #################################
 
         self.menuSetBrush.setIcon(QIcon(':/icons/24/ic_format_color_fill_black'))
-        for action in self.actionsSetBrush:
+        for action in self.action('brush').actions():
             self.menuSetBrush.addAction(action)
 
         self.menuSetSpecial.setIcon(QIcon(':/icons/24/ic_star_black'))
-        for action in self.actionsSetSpecial:
-            self.menuSetSpecial.addAction(action)
+        self.menuSetSpecial.addAction(self.action('special_top'))
+        self.menuSetSpecial.addAction(self.action('special_bottom'))
 
         self.menuRefactorBrush.setIcon(QIcon(':/icons/24/ic_format_color_fill_black'))
-        for action in self.actionsRefactorBrush:
+        for action in self.action('refactor_brush').actions():
             self.menuRefactorBrush.addAction(action)
 
         self.menuRefactor.setIcon(QIcon(':/icons/24/ic_format_shapes_black'))
-        self.menuRefactor.addAction(self.actionRefactorName)
+        self.menuRefactor.addAction(self.action('refactor_name'))
         self.menuRefactor.addMenu(self.menuRefactorBrush)
 
         #############################################
@@ -751,15 +727,15 @@ class Session(QMainWindow):
         #################################
 
         self.menuCompose.setIcon(QIcon(':/icons/24/ic_create_black'))
-        self.menuCompose.addAction(self.actionComposePropertyDomain)
-        self.menuCompose.addAction(self.actionComposePropertyRange)
+        self.menuCompose.addAction(self.action('property_domain'))
+        self.menuCompose.addAction(self.action('property_range'))
 
         #############################################
         # VALUE-DOMAIN SPECIFIC
         #################################
 
         self.menuSetDatatype.setIcon(QIcon(':/icons/24/ic_refresh_black'))
-        for action in self.actionsSetDatatype:
+        for action in self.action('datatype').actions():
             self.menuSetDatatype.addAction(action)
 
         #############################################
@@ -767,7 +743,7 @@ class Session(QMainWindow):
         #################################
 
         self.menuSetFacet.setIcon(QIcon(':/icons/24/ic_refresh_black'))
-        for action in self.actionsSetFacet:
+        for action in self.action('facet').actions():
             self.menuSetFacet.addAction(action)
 
         #############################################
@@ -775,7 +751,7 @@ class Session(QMainWindow):
         #################################
 
         self.menuSetPropertyRestriction.setIcon(QIcon(':/icons/24/ic_refresh_black'))
-        for action in self.actionsSetPropertyRestriction:
+        for action in self.action('restriction').actions():
             self.menuSetPropertyRestriction.addAction(action)
 
         #############################################
@@ -783,7 +759,7 @@ class Session(QMainWindow):
         #################################
 
         self.menuSetIndividualAs.setIcon(QIcon(':/icons/24/ic_refresh_black'))
-        for action in self.actionsSetIndividualAs:
+        for action in self.action('individual_as').actions():
             self.menuSetIndividualAs.addAction(action)
 
         #############################################
@@ -791,16 +767,13 @@ class Session(QMainWindow):
         #################################
 
         self.menuSwitchOperator.setIcon(QIcon(':/icons/24/ic_refresh_black'))
-        for action in self.actionsSwitchOperator:
+        for action in self.action('switch_operator').actions():
             self.menuSwitchOperator.addAction(action)
     
     def configureStatusBar(self):
         """
         Configure the status bar.
         """
-        # noinspection PyArgumentList
-        QApplication.processEvents()
-
         statusbar = QStatusBar(self)
         statusbar.setSizeGripEnabled(False)
         self.setStatusBar(statusbar)
@@ -809,56 +782,50 @@ class Session(QMainWindow):
         """
         Configure previously initialized toolbars.
         """
-        # noinspection PyArgumentList
-        QApplication.processEvents()
-
         self.toolbarDocument.setContextMenuPolicy(Qt.PreventContextMenu)
         self.toolbarEditor.setContextMenuPolicy(Qt.PreventContextMenu)
         self.toolbarView.setContextMenuPolicy(Qt.PreventContextMenu)
         self.toolbarGraphol.setContextMenuPolicy(Qt.PreventContextMenu)
 
-        self.toolbarDocument.addAction(self.actionNewDiagram)
-        self.toolbarDocument.addAction(self.actionOpen)
-        self.toolbarDocument.addAction(self.actionSave)
-        self.toolbarDocument.addAction(self.actionPrint)
+        self.toolbarDocument.addAction(self.action('new_diagram'))
+        self.toolbarDocument.addAction(self.action('open'))
+        self.toolbarDocument.addAction(self.action('save'))
+        self.toolbarDocument.addAction(self.action('print'))
 
-        self.toolbarEditor.addAction(self.actionUndo)
-        self.toolbarEditor.addAction(self.actionRedo)
+        self.toolbarEditor.addAction(self.action('undo'))
+        self.toolbarEditor.addAction(self.action('redo'))
         self.toolbarEditor.addSeparator()
-        self.toolbarEditor.addAction(self.actionCut)
-        self.toolbarEditor.addAction(self.actionCopy)
-        self.toolbarEditor.addAction(self.actionPaste)
-        self.toolbarEditor.addAction(self.actionDelete)
+        self.toolbarEditor.addAction(self.action('cut'))
+        self.toolbarEditor.addAction(self.action('copy'))
+        self.toolbarEditor.addAction(self.action('paste'))
+        self.toolbarEditor.addAction(self.action('delete'))
         self.toolbarEditor.addSeparator()
-        self.toolbarEditor.addAction(self.actionBringToFront)
-        self.toolbarEditor.addAction(self.actionSendToBack)
+        self.toolbarEditor.addAction(self.action('bring_to_front'))
+        self.toolbarEditor.addAction(self.action('send_to_back'))
         self.toolbarEditor.addSeparator()
-        self.toolbarEditor.addAction(self.actionSwapEdge)
-        self.toolbarEditor.addAction(self.actionToggleEdgeEquivalence)
+        self.toolbarEditor.addAction(self.action('swap_edge'))
+        self.toolbarEditor.addAction(self.action('toggle_edge_equivalence'))
         self.toolbarEditor.addSeparator()
         self.toolbarEditor.addWidget(self.buttonSetBrush)
 
-        self.toolbarView.addAction(self.actionToggleGrid)
-        self.toolbarView.addAction(self.actionSnapToGrid)
-        self.toolbarView.addAction(self.actionCenterDiagram)
+        self.toolbarView.addAction(self.action('toggle_grid'))
+        self.toolbarView.addAction(self.action('snap_to_grid'))
+        self.toolbarView.addAction(self.action('center_diagram'))
         self.toolbarView.addSeparator()
         self.toolbarView.addWidget(self.zoom.buttonZoomOut)
         self.toolbarView.addWidget(self.zoom.buttonZoomIn)
         self.toolbarView.addWidget(self.zoom.buttonZoomReset)
 
-        self.toolbarGraphol.addAction(self.actionSyntaxCheck)
+        self.toolbarGraphol.addAction(self.action('syntax_check'))
 
     def configureState(self):
         """
         Configure application state by reading the preferences file.
         """
-        # noinspection PyArgumentList
-        QApplication.processEvents()
-
         settings = QSettings(ORGANIZATION, APPNAME)
         self.restoreGeometry(settings.value('session/geometry', QByteArray(), QByteArray))
         self.restoreState(settings.value('session/state', QByteArray(), QByteArray))
-        self.actionToggleGrid.setChecked(settings.value('diagram/grid', False, bool))
+        self.action('toggle_grid').setChecked(settings.value('diagram/grid', False, bool))
 
     #############################################
     #   SLOTS
@@ -901,7 +868,7 @@ class Session(QMainWindow):
                     self.mdi.activeView.centerOn(0, 0)
 
     @pyqtSlot()
-    def doCloseProject(self):
+    def doClose(self):
         """
         Close the currently active subwindow.
         """
@@ -1567,7 +1534,7 @@ class Session(QMainWindow):
         Toggle snap to grid setting.
         """
         settings = QSettings(ORGANIZATION, APPNAME)
-        settings.setValue('diagram/grid', self.actionToggleGrid.isChecked())
+        settings.setValue('diagram/grid', self.action('toggle_grid').isChecked())
         settings.sync()
         for subwindow in self.mdi.subWindowList():
             viewport = subwindow.view.viewport()
@@ -1612,22 +1579,22 @@ class Session(QMainWindow):
                         if isEdgeSwapEnabled and isEdgeToggleEnabled:
                             break
 
-        self.actionBringToFront.setEnabled(isNodeSelected)
-        self.actionCenterDiagram.setEnabled(isDiagramActive)
-        self.actionCut.setEnabled(isNodeSelected)
-        self.actionCopy.setEnabled(isNodeSelected)
-        self.actionDelete.setEnabled(isNodeSelected or isEdgeSelected)
-        self.actionExport.setEnabled(not isProjectEmpty)
-        self.actionPaste.setEnabled(not isClipboardEmpty)
-        self.actionSave.setEnabled(not isUndoStackClean)
-        self.actionSaveAs.setEnabled(isDiagramActive)
-        self.actionSelectAll.setEnabled(isDiagramActive)
-        self.actionSendToBack.setEnabled(isNodeSelected)
+        self.action('bring_to_front').setEnabled(isNodeSelected)
+        self.action('center_diagram').setEnabled(isDiagramActive)
+        self.action('cut').setEnabled(isNodeSelected)
+        self.action('copy').setEnabled(isNodeSelected)
+        self.action('delete').setEnabled(isNodeSelected or isEdgeSelected)
+        self.action('export').setEnabled(not isProjectEmpty)
+        self.action('paste').setEnabled(not isClipboardEmpty)
+        self.action('save').setEnabled(not isUndoStackClean)
+        self.action('save_as').setEnabled(isDiagramActive)
+        self.action('select_all').setEnabled(isDiagramActive)
+        self.action('send_to_back').setEnabled(isNodeSelected)
+        self.action('snap_to_grid').setEnabled(isDiagramActive)
+        self.action('swap_edge').setEnabled(isEdgeSelected and isEdgeSwapEnabled)
+        self.action('toggle_edge_equivalence').setEnabled(isEdgeSelected and isEdgeToggleEnabled)
+        self.action('toggle_grid').setEnabled(isDiagramActive)
         self.buttonSetBrush.setEnabled(isPredicateSelected)
-        self.actionSnapToGrid.setEnabled(isDiagramActive)
-        self.actionSwapEdge.setEnabled(isEdgeSelected and isEdgeSwapEnabled)
-        self.actionToggleEdgeEquivalence.setEnabled(isEdgeSelected and isEdgeToggleEnabled)
-        self.actionToggleGrid.setEnabled(isDiagramActive)
         self.zoom.setEnabled(isDiagramActive)
 
     @pyqtSlot('QGraphicsItem', int)
@@ -1796,7 +1763,7 @@ class Session(QMainWindow):
                 widget.redraw()
             except AttributeError:
                 pass
-
+        # noinspection PyUnresolvedReferences
         return super().eventFilter(source, event)
 
     def keyReleaseEvent(self, keyEvent):

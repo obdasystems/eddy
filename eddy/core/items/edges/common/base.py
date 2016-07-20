@@ -121,7 +121,7 @@ class AbstractEdge(AbstractItem):
         """
         nodePos = node.pos()
         diagram = self.diagram
-        snapToGrid = self.session.actionToggleGrid.isChecked()
+        snapToGrid = self.session.action('toggle_grid').isChecked()
         mousePos = snap(mousePos, diagram.GridSize, snapToGrid)
         path = self.mapFromItem(node, node.painterPath())
         if path.contains(mousePos):
@@ -199,7 +199,7 @@ class AbstractEdge(AbstractItem):
         :type mousePos: QPointF
         """
         diagram = self.diagram
-        snapToGrid = self.session.actionToggleGrid.isChecked()
+        snapToGrid = self.session.action('toggle_grid').isChecked()
         self.breakpoints[breakpoint] = snap(mousePos, diagram.GridSize, snapToGrid)
 
     def canDraw(self):

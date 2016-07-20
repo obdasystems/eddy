@@ -55,8 +55,8 @@
   <file alias="ic_keyboard_arrow_down_black@2x">../../resources/artwork/icons/24/ic_keyboard_arrow_down_black_24dp_2x.png</file>
   <file alias="ic_keyboard_arrow_up_black">../../resources/artwork/icons/24/ic_keyboard_arrow_up_black_24dp_1x.png</file>
   <file alias="ic_keyboard_arrow_up_black@2x">../../resources/artwork/icons/24/ic_keyboard_arrow_up_black_24dp_2x.png</file>
-  <file alias="ic_bottom">../../resources/artwork/icons/24/ic_bottom_24dp_1x.png</file>
-  <file alias="ic_bottom@2x">../../resources/artwork/icons/24/ic_bottom_24dp_2x.png</file>
+  <file alias="ic_bottom_black">../../resources/artwork/icons/24/ic_bottom_black_24dp_1x.png</file>
+  <file alias="ic_bottom_black@2x">../../resources/artwork/icons/24/ic_bottom_black_24dp_2x.png</file>
   <file alias="ic_center_focus_strong_black">../../resources/artwork/icons/24/ic_center_focus_strong_black_24dp_1x.png</file>
   <file alias="ic_center_focus_strong_black@2x">../../resources/artwork/icons/24/ic_center_focus_strong_black_24dp_2x.png</file>
   <file alias="ic_close_black">../../resources/artwork/icons/24/ic_close_black_24dp_1x.png</file>
@@ -97,8 +97,8 @@
   <file alias="ic_folder_open_black@2x">../../resources/artwork/icons/24/ic_folder_open_black_24dp_2x.png</file>
   <file alias="ic_palette_black">../../resources/artwork/icons/24/ic_palette_black_24dp_1x.png</file>
   <file alias="ic_palette_black@2x">../../resources/artwork/icons/24/ic_palette_black_24dp_2x.png</file>
-  <file alias="ic_content_paste">../../resources/artwork/icons/24/ic_content_paste_black_24dp_1x.png</file>
-  <file alias="ic_content_paste@2x">../../resources/artwork/icons/24/ic_content_paste_black_24dp_2x.png</file>
+  <file alias="ic_content_paste_black">../../resources/artwork/icons/24/ic_content_paste_black_24dp_1x.png</file>
+  <file alias="ic_content_paste_black@2x">../../resources/artwork/icons/24/ic_content_paste_black_24dp_2x.png</file>
   <file alias="ic_square_black">../../resources/artwork/icons/24/ic_square_black_24dp_1x.png</file>
   <file alias="ic_square_black@2x">../../resources/artwork/icons/24/ic_square_black_24dp_2x.png</file>
   <file alias="ic_square_outline_black">../../resources/artwork/icons/24/ic_square_outline_black_24dp_1x.png</file>
@@ -125,8 +125,8 @@
   <file alias="ic_swap_horiz_black@2x">../../resources/artwork/icons/24/ic_swap_horiz_black_24dp_2x.png</file>
   <file alias="ic_swap_vert_black">../../resources/artwork/icons/24/ic_swap_vert_black_24dp_1x.png</file>
   <file alias="ic_swap_vert_black@2x">../../resources/artwork/icons/24/ic_swap_vert_black_24dp_2x.png</file>
-  <file alias="ic_top">../../resources/artwork/icons/24/ic_top_24dp_1x.png</file>
-  <file alias="ic_top@2x">../../resources/artwork/icons/24/ic_top_24dp_2x.png</file>
+  <file alias="ic_top_black">../../resources/artwork/icons/24/ic_top_black_24dp_1x.png</file>
+  <file alias="ic_top_black@2x">../../resources/artwork/icons/24/ic_top_black_24dp_2x.png</file>
   <file alias="ic_undo_black">../../resources/artwork/icons/24/ic_undo_black_24dp_1x.png</file>
   <file alias="ic_undo_black@2x">../../resources/artwork/icons/24/ic_undo_black_24dp_2x.png</file>
   <file alias="ic_zoom_in_black">../../resources/artwork/icons/24/ic_zoom_in_black_24dp_1x.png</file>

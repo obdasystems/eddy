@@ -107,7 +107,7 @@ class DiagramMode(IntEnum):
 
 class Pen(object):
     """
-    This class defines the pend used in Eddy.
+    This class defines the pens used in Eddy.
     """
     NoPen = QPen(Qt.NoPen)
     Custom_x3_DashedBlack1_1Pt = QPen(Brush.Black255A, 1.1, Qt.CustomDashLine, Qt.RoundCap, Qt.RoundJoin)

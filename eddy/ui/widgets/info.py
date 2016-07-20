@@ -774,8 +774,8 @@ class PredicateNodeInfo(NodeInfo):
         #################################
 
         if self.brushMenu.isEmpty():
-            self.brushMenu.addActions(self.session.actionsSetBrush)
-        for action in self.session.actionsSetBrush:
+            self.brushMenu.addActions(self.session.action('brush').actions())
+        for action in self.session.action('brush').actions():
             color = action.data()
             brush = QBrush(QColor(color.value))
             if node.brush == brush:

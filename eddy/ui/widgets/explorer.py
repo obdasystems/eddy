@@ -598,15 +598,15 @@ class ProjectExplorerView(QTreeView):
                 diagram = item.data()
                 if diagram:
                     menu = QMenu()
-                    menu.addAction(self.session.actionNewDiagram)
+                    menu.addAction(self.session.action('new_diagram'))
                     menu.addSeparator()
                     menu.addAction(self.widget.actionRenameDiagram)
                     menu.addAction(self.widget.actionDeleteDiagram)
                     menu.addSeparator()
-                    menu.addAction(self.session.actionDiagramProperties)
+                    menu.addAction(self.session.action('diagram_properties'))
                     self.widget.actionRenameDiagram.setData(diagram)
                     self.widget.actionDeleteDiagram.setData(diagram)
-                    self.session.actionDiagramProperties.setData(diagram)
+                    self.session.action('diagram_properties').setData(diagram)
                     menu.exec_(mouseEvent.screenPos().toPoint())
 
         super().mouseReleaseEvent(mouseEvent)

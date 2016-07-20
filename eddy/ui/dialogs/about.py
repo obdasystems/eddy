@@ -43,7 +43,7 @@ from eddy import APPNAME, AUTHOR, VERSION, LICENSE, PROJECT_HOME
 from eddy.core.qt import Font
 
 
-class About(QDialog):
+class AboutDialog(QDialog):
     """
     This class is used to display the 'About' dialog.
     """

@@ -332,7 +332,7 @@ class DiagramView(QGraphicsView):
         :type painter: QPainter
         :type rect: QRectF
         """
-        if self.session.actionToggleGrid.isChecked():
+        if self.session.action('toggle_grid').isChecked():
             s = Diagram.GridSize
             x = int(rect.left()) - (int(rect.left()) % s)
             y = int(rect.top()) - (int(rect.top()) % s)
