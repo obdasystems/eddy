@@ -77,7 +77,7 @@ class NodeLabel(AbstractLabel):
         Executed when the mouse is pressed on the text item.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        if self.diagram.mode is DiagramMode.EditText:
+        if self.diagram.mode is DiagramMode.LabelEdit:
             super().mousePressEvent(mouseEvent)
 
     #############################################
@@ -140,7 +140,7 @@ class FacetNodeQuotedLabel(NodeLabel):
             self.focusInFacet = node.facet
             self.setText(self.text().strip('"'))
             self.diagram.clearSelection()
-            self.diagram.setMode(DiagramMode.EditText)
+            self.diagram.setMode(DiagramMode.LabelEdit)
             self.setSelectedText(True)
             super(AbstractLabel, self).focusInEvent(focusEvent)
         else:
@@ -151,7 +151,7 @@ class FacetNodeQuotedLabel(NodeLabel):
         Executed when the text item lose the focus.
         :type focusEvent: QFocusEvent
         """
-        if self.diagram.mode is DiagramMode.EditText:
+        if self.diagram.mode is DiagramMode.LabelEdit:
 
             if isEmpty(self.text()):
                 self.setText(self.template)

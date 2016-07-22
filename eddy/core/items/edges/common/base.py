@@ -444,7 +444,7 @@ class AbstractEdge(AbstractItem):
             anchorNode = self.anchorAt(mousePos)
             if anchorNode is not None:
                 self.diagram.clearSelection()
-                self.diagram.setMode(DiagramMode.AnchorPointMove)
+                self.diagram.setMode(DiagramMode.EdgeAnchorMove)
                 self.setSelected(True)
                 self.mousePressAnchorNode = anchorNode
                 self.mousePressAnchorNodePos = QPointF(anchorNode.anchor(self))
@@ -453,7 +453,7 @@ class AbstractEdge(AbstractItem):
                 breakPoint = self.breakpointAt(mousePos)
                 if breakPoint is not None:
                     self.diagram.clearSelection()
-                    self.diagram.setMode(DiagramMode.BreakPointMove)
+                    self.diagram.setMode(DiagramMode.EdgeBreakPointMove)
                     self.setSelected(True)
                     self.mousePressBreakPoint = breakPoint
                     self.mousePressBreakPointPos = QPointF(self.breakpoints[breakPoint])
@@ -470,7 +470,7 @@ class AbstractEdge(AbstractItem):
         """
         mousePos = mouseEvent.pos()
 
-        if self.diagram.mode is DiagramMode.AnchorPointMove:
+        if self.diagram.mode is DiagramMode.EdgeAnchorMove:
             self.anchorMove(self.mousePressAnchorNode, mousePos)
             self.updateEdge()
         else:
@@ -485,12 +485,12 @@ class AbstractEdge(AbstractItem):
                     pass
                 else:
                     self.diagram.clearSelection()
-                    self.diagram.setMode(DiagramMode.BreakPointMove)
+                    self.diagram.setMode(DiagramMode.EdgeBreakPointMove)
                     self.setSelected(True)
                     self.mousePressBreakPoint = breakPoint
                     self.mousePressBreakPointPos = QPointF(self.breakpoints[breakPoint])
 
-            if self.diagram.mode is DiagramMode.BreakPointMove:
+            if self.diagram.mode is DiagramMode.EdgeBreakPointMove:
                 self.breakpointMove(self.mousePressBreakPoint, mousePos)
                 self.updateEdge()
 
@@ -499,13 +499,13 @@ class AbstractEdge(AbstractItem):
         Executed when the mouse is released from the selection box.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        if self.diagram.mode is DiagramMode.AnchorPointMove:
+        if self.diagram.mode is DiagramMode.EdgeAnchorMove:
             anchorNode = self.mousePressAnchorNode
             anchorNodePos = QPointF(anchorNode.anchor(self))
             if anchorNodePos != self.mousePressAnchorNodePos:
                 data = {'undo': self.mousePressAnchorNodePos, 'redo': anchorNodePos}
                 self.project.undoStack.push(CommandEdgeAnchorMove(self.diagram, self, anchorNode, data))
-        elif self.diagram.mode is DiagramMode.BreakPointMove:
+        elif self.diagram.mode is DiagramMode.EdgeBreakPointMove:
             breakPoint = self.mousePressBreakPoint
             breakPointPos = self.breakpoints[breakPoint]
             if breakPointPos != self.mousePressBreakPointPos:

@@ -187,7 +187,7 @@ class Diagram(QGraphicsScene):
 
         if mouseButtons & Qt.LeftButton:
 
-            if self.mode is DiagramMode.InsertNode:
+            if self.mode is DiagramMode.NodeAdd:
 
                 #############################################
                 # NODE INSERTION
@@ -199,7 +199,7 @@ class Diagram(QGraphicsScene):
                 self.project.undoStack.push(CommandNodeAdd(self, node))
                 self.sgnActionCompleted.emit(node, mouseEvent.modifiers())
 
-            elif self.mode is DiagramMode.InsertEdge:
+            elif self.mode is DiagramMode.EdgeAdd:
 
                 #############################################
                 # EDGE INSERTION
@@ -236,7 +236,7 @@ class Diagram(QGraphicsScene):
                             self.mousePressLabel = item
                             self.mousePressLabelPos = item.pos()
                             self.mousePressPos = mousePos
-                            self.setMode(DiagramMode.MoveText)
+                            self.setMode(DiagramMode.LabelMove)
 
                     else:
 
@@ -316,7 +316,7 @@ class Diagram(QGraphicsScene):
 
         if mouseButtons & Qt.LeftButton:
 
-            if self.mode is DiagramMode.InsertEdge:
+            if self.mode is DiagramMode.EdgeAdd:
 
                 #############################################
                 # EDGE INSERTION
@@ -347,7 +347,7 @@ class Diagram(QGraphicsScene):
                         self.mouseOverNode = None
                         self.project.validator.clear()
 
-            elif self.mode is DiagramMode.MoveText:
+            elif self.mode is DiagramMode.LabelMove:
 
                 #############################################
                 # LABEL MOVE
@@ -365,9 +365,9 @@ class Diagram(QGraphicsScene):
 
                 if self.mode is DiagramMode.Idle:
                     if self.mousePressNode:
-                        self.setMode(DiagramMode.MoveNode)
+                        self.setMode(DiagramMode.NodeMove)
 
-                if self.mode is DiagramMode.MoveNode:
+                if self.mode is DiagramMode.NodeMove:
 
                     #############################################
                     # ITEM MOVEMENT
@@ -407,7 +407,7 @@ class Diagram(QGraphicsScene):
 
         if mouseButton == Qt.LeftButton:
 
-            if self.mode is DiagramMode.InsertEdge:
+            if self.mode is DiagramMode.EdgeAdd:
 
                 #############################################
                 # EDGE INSERTION
@@ -447,7 +447,7 @@ class Diagram(QGraphicsScene):
 
                     self.sgnActionCompleted.emit(edge, mouseModifiers)
 
-            elif self.mode is DiagramMode.MoveText:
+            elif self.mode is DiagramMode.LabelMove:
 
                 #############################################
                 # LABEL MOVE
@@ -463,7 +463,7 @@ class Diagram(QGraphicsScene):
 
                     self.setMode(DiagramMode.Idle)
 
-            elif self.mode is DiagramMode.MoveNode:
+            elif self.mode is DiagramMode.NodeMove:
 
                 #############################################
                 # ITEM MOVEMENT
@@ -718,14 +718,14 @@ class Diagram(QGraphicsScene):
         Returns True if an edge insertion is currently in progress, False otherwise.
         :rtype: bool
         """
-        return self.mode is DiagramMode.InsertEdge and self.mousePressEdge is not None
+        return self.mode is DiagramMode.EdgeAdd and self.mousePressEdge is not None
 
     def isLabelMoveInProgress(self):
         """
         Returns True if a label is currently being moved, False otherwise.
         :rtype: bool
         """
-        return self.mode is DiagramMode.MoveText and \
+        return self.mode is DiagramMode.LabelMove and \
                self.mousePressLabel is not None and \
                self.mousePressLabelPos is not None and \
                self.mousePressPos is not None
@@ -735,7 +735,7 @@ class Diagram(QGraphicsScene):
         Returns True if a node(s) is currently being moved, False otherwise.
         :rtype: bool
         """
-        return self.mode is DiagramMode.MoveNode and \
+        return self.mode is DiagramMode.NodeMove and \
                self.mousePressData is not None and \
                self.mousePressNode is not None and \
                self.mousePressNodePos is not None and \

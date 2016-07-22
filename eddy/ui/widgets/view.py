@@ -223,11 +223,11 @@ class DiagramView(QGraphicsView):
                     self.diagram.setSelectionArea(self.mapToScene(path))
                     self.rubberBand.setGeometry(area.toRect())
 
-                # TODO: add label move
-                if self.diagram.mode in { DiagramMode.BreakPointMove,
-                                          DiagramMode.InsertEdge,
-                                          DiagramMode.MoveNode,
-                                          DiagramMode.ResizeNode,
+                if self.diagram.mode in { DiagramMode.EdgeBreakPointMove,
+                                          DiagramMode.EdgeAdd,
+                                          DiagramMode.NodeMove,
+                                          DiagramMode.NodeResize,
+                                          DiagramMode.LabelMove,
                                           DiagramMode.RubberBandDrag }:
 
                     #############################################

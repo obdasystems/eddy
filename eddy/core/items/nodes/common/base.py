@@ -600,7 +600,7 @@ class AbstractResizableNode(AbstractNode):
         :rtype: QVariant
         """
         if change == AbstractNode.ItemSelectedHasChanged:
-            if self.diagram.mode is not DiagramMode.ResizeNode:
+            if self.diagram.mode is not DiagramMode.NodeResize:
                 self.scheduleForRedraw(selected=value)
         return super(AbstractNode, self).itemChange(change, value)
 
@@ -616,7 +616,7 @@ class AbstractResizableNode(AbstractNode):
             if handle is not None:
 
                 self.diagram.clearSelection()
-                self.diagram.setMode(DiagramMode.ResizeNode)
+                self.diagram.setMode(DiagramMode.NodeResize)
                 self.setSelected(True)
 
                 f1 = QRectF if isinstance(self.background, QRectF) else QPolygonF
@@ -640,7 +640,7 @@ class AbstractResizableNode(AbstractNode):
         Executed when the mouse is being moved over the item while being pressed.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        if self.diagram.mode is DiagramMode.ResizeNode:
+        if self.diagram.mode is DiagramMode.NodeResize:
             self.resize(mouseEvent.pos())
             self.updateEdges()
         super().mouseMoveEvent(mouseEvent)
@@ -650,7 +650,7 @@ class AbstractResizableNode(AbstractNode):
         Executed when the mouse is released from the item.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        if self.diagram.mode is DiagramMode.ResizeNode:
+        if self.diagram.mode is DiagramMode.NodeResize:
 
             bound = self.boundingRect()
 

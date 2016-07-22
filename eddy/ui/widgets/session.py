@@ -1622,7 +1622,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         Executed when the scene operation mode changes.
         :type mode: DiagramMode
         """
-        if mode not in (DiagramMode.InsertNode, DiagramMode.InsertEdge):
+        if mode not in (DiagramMode.NodeAdd, DiagramMode.EdgeAdd):
             self.palette_.reset()
 
     @pyqtSlot('QToolButton')
@@ -1638,9 +1638,9 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
                 diagram.setMode(DiagramMode.Idle)
             else:
                 if Item.ConceptNode <= button.item < Item.InclusionEdge:
-                    diagram.setMode(DiagramMode.InsertNode, button.item)
+                    diagram.setMode(DiagramMode.NodeAdd, button.item)
                 elif Item.InclusionEdge <= button.item <= Item.MembershipEdge:
-                    diagram.setMode(DiagramMode.InsertEdge, button.item)
+                    diagram.setMode(DiagramMode.EdgeAdd, button.item)
 
     @pyqtSlot('QMdiSubWindow')
     def onSubWindowActivated(self, subwindow):

@@ -93,14 +93,14 @@ class DiagramMode(IntEnum):
     This class defines the diagram operational modes.
     """
     Idle = 0
-    InsertNode = 1
-    MoveNode = 2
-    ResizeNode = 3
-    InsertEdge = 4
-    AnchorPointMove = 5
-    BreakPointMove = 6
-    MoveText = 7
-    EditText = 8
+    NodeAdd = 1
+    NodeMove = 2
+    NodeResize = 3
+    EdgeAdd = 4
+    EdgeAnchorMove = 5
+    EdgeBreakPointMove = 6
+    LabelMove = 7
+    LabelEdit = 8
     RubberBandDrag = 9
     SceneDrag = 10
 
