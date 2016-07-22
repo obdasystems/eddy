@@ -1781,7 +1781,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         if keyEvent.key() == Qt.Key_Control:
             diagram = self.mdi.activeDiagram
-            if diagram and not diagram.isEdgeInsertionInProgress():
+            if diagram and not diagram.isEdgeAddInProgress():
                 diagram.setMode(DiagramMode.Idle)
         super().keyReleaseEvent(keyEvent)
 

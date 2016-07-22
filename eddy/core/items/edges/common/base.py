@@ -432,7 +432,7 @@ class AbstractEdge(AbstractItem):
         Executed when the mouse is pressed on the selection box.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        mousePos = mouseEvent.pos()
+        self.mousePressPos = mouseEvent.pos()
 
         if self.diagram.mode is DiagramMode.Idle:
             # Check first if we need to start an anchor point movement: we need
@@ -441,7 +441,7 @@ class AbstractEdge(AbstractItem):
             # breakpoint retrieval is executed first, no breakpoint is found
             # and hence a new one will be added upon mouseMoveEvent (even a small
             # move will cause this).
-            anchorNode = self.anchorAt(mousePos)
+            anchorNode = self.anchorAt(self.mousePressPos)
             if anchorNode is not None:
                 self.diagram.clearSelection()
                 self.diagram.setMode(DiagramMode.EdgeAnchorMove)
@@ -450,7 +450,7 @@ class AbstractEdge(AbstractItem):
                 self.mousePressAnchorNodePos = QPointF(anchorNode.anchor(self))
                 self.scheduleForRedraw(selected=True, visible=self.canDraw(), anchor=anchorNode)
             else:
-                breakPoint = self.breakpointAt(mousePos)
+                breakPoint = self.breakpointAt(self.mousePressPos)
                 if breakPoint is not None:
                     self.diagram.clearSelection()
                     self.diagram.setMode(DiagramMode.EdgeBreakPointMove)
@@ -459,7 +459,6 @@ class AbstractEdge(AbstractItem):
                     self.mousePressBreakPointPos = QPointF(self.breakpoints[breakPoint])
                     self.scheduleForRedraw(selected=True, visible=self.canDraw(), breakpoint=breakPoint)
 
-        self.mousePressPos = mousePos
         super().mousePressEvent(mouseEvent)
 
     # noinspection PyTypeChecker
@@ -512,13 +511,11 @@ class AbstractEdge(AbstractItem):
                 data = {'undo': self.mousePressBreakPointPos, 'redo': breakPointPos}
                 self.project.undoStack.push(CommandEdgeBreakpointMove(self.diagram, self, breakPoint, data))
 
-        self.diagram.setMode(DiagramMode.Idle)
-        self.updateEdge()
-
         self.mousePressAnchorNode = None
         self.mousePressAnchorNodePos = None
         self.mousePressBreakPoint = None
         self.mousePressBreakPointPos = None
         self.mousePressPos = None
 
-        super().mouseReleaseEvent(mouseEvent)
+        self.diagram.setMode(DiagramMode.Idle)
+        self.updateEdge()

@@ -49,8 +49,12 @@ from eddy.core.functions.misc import snap, snapF, partition, first
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.items.factory import ItemFactory
+from eddy.core.output import getLogger
 from eddy.core.utils.clipboard import Clipboard
 from eddy.core.utils.guid import GUID
+
+
+LOGGER = getLogger(__name__)
 
 
 class Diagram(QGraphicsScene):
@@ -249,7 +253,7 @@ class Diagram(QGraphicsScene):
 
                             if item.isLabel():
                                 # If we are hitting a label, check whether the label
-                                # ois verlapping it's parent item and such item is
+                                # is overlapping it's parent item and such item is
                                 # also intersecting the current mouse position: if so,
                                 # use the parent item as placeholder for the selection.
                                 parent = item.parentItem()
@@ -322,7 +326,7 @@ class Diagram(QGraphicsScene):
                 # EDGE INSERTION
                 #################################
 
-                if self.isEdgeInsertionInProgress():
+                if self.isEdgeAddInProgress():
 
                     statusBar = self.session.statusBar()
                     edge = self.mousePressEdge
@@ -413,7 +417,7 @@ class Diagram(QGraphicsScene):
                 # EDGE INSERTION
                 #################################
 
-                if self.isEdgeInsertionInProgress():
+                if self.isEdgeAddInProgress():
 
                     edge = self.mousePressEdge
                     edge.source.scheduleForRedraw(selected=False)
@@ -713,7 +717,7 @@ class Diagram(QGraphicsScene):
             for node in weak - strong - excluded:
                 node.identity = computed
 
-    def isEdgeInsertionInProgress(self):
+    def isEdgeAddInProgress(self):
         """
         Returns True if an edge insertion is currently in progress, False otherwise.
         :rtype: bool
@@ -846,6 +850,7 @@ class Diagram(QGraphicsScene):
         :type param: Item
         """
         if self.mode != mode or self.modeParam != param:
+            LOGGER.debug('Diagram mode changed: mode=%s, param=%s', mode, param)
             self.mode = mode
             self.modeParam = param
             self.sgnModeChanged.emit(mode)
