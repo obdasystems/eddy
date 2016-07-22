@@ -70,6 +70,7 @@ from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphml import GraphmlExporter
 from eddy.core.exporters.graphol import GrapholExporter
 from eddy.core.exporters.project import ProjectExporter
+from eddy.core.factory import MenuFactory, PropertyFactory
 from eddy.core.functions.fsystem import fexists, fcopy, fremove
 from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.misc import snap, snapF, cutR, uncapitalize
@@ -92,8 +93,6 @@ from eddy.ui.dialogs.forms import RefactorNameForm
 from eddy.ui.dialogs.forms import ValueForm
 from eddy.ui.dialogs.preferences import PreferencesDialog
 from eddy.ui.dialogs.progress import BusyProgressDialog
-from eddy.ui.dialogs.properties import PropertyFactory
-from eddy.ui.menus import MenuFactory
 from eddy.ui.widgets.dock import DockWidget
 from eddy.ui.widgets.explorer import OntologyExplorer
 from eddy.ui.widgets.explorer import ProjectExplorer
@@ -131,6 +130,14 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         self.project = ProjectLoader(path, self).run()
 
         #############################################
+        # CREATE UTILITIES
+        #################################
+
+        self.clipboard = Clipboard(self)
+        self.mf = MenuFactory(self)
+        self.pf = PropertyFactory(self)
+
+        #############################################
         # CREATE TOOLBARS
         #################################
 
@@ -164,12 +171,8 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         self.buttonSetBrush = QToolButton()
 
         #############################################
-        # CREATE UTILITIES
+        # CONFIGURE SESSION
         #################################
-
-        self.clipboard = Clipboard(self)
-        self.menuFactory = MenuFactory(self)
-        self.propertyFactory = PropertyFactory(self)
 
         self.configureActions()
         self.configureWidgets()
@@ -1083,7 +1086,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         diagram = self.sender().data() or self.mdi.activeDiagram
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            properties = self.propertyFactory.create(diagram)
+            properties = self.pf.create(diagram)
             properties.exec_()
 
     @pyqtSlot()
@@ -1096,7 +1099,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
             diagram.setMode(DiagramMode.Idle)
             node = first(diagram.selectedNodes())
             if node:
-                properties = self.propertyFactory.create(diagram, node)
+                properties = self.pf.create(diagram, node)
                 properties.exec_()
 
     @pyqtSlot()

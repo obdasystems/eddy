@@ -35,7 +35,7 @@
 
 from abc import ABCMeta
 
-from PyQt5.QtCore import Qt, QPointF, pyqtSlot, QObject, QRectF
+from PyQt5.QtCore import Qt, QPointF, pyqtSlot, QRectF
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QDialog, QPushButton, QHBoxLayout, QLabel
 from PyQt5.QtWidgets import QListWidget, QAbstractItemView, QVBoxLayout
@@ -48,7 +48,7 @@ from eddy.core.commands.nodes import CommandNodeChangeInputsOrder
 from eddy.core.commands.nodes import CommandNodeChangeMeta
 from eddy.core.commands.nodes import CommandNodeMove
 from eddy.core.datatypes.collections import DistinctList
-from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.owl import Facet, Datatype
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import clamp, isEmpty, first
@@ -914,73 +914,3 @@ class ValueNodeProperty(NodeProperty):
         if self.node.text() != data:
             return CommandLabelChange(self.diagram, self.node, self.node.text(), data)
         return None
-
-
-class PropertyFactory(QObject):
-    """
-    This class can be used to produce properties dialog windows.
-    """
-    def __init__(self, session):
-        """
-        Initialize the factory.
-        :type session: Session
-        """
-        super().__init__(session)
-
-    #############################################
-    #   PROPERTIES
-    #################################
-
-    @property
-    def project(self):
-        """
-        Returns the project loaded in the active session (alias for PropertyDialog.session.project).
-        :rtype: Project 
-        """
-        return self.session.project
-
-    @property
-    def session(self):
-        """
-        Returns the active session (alias for PropertyDialog.parent()).
-        :rtype: Session
-        """
-        return self.parent()
-
-    #############################################
-    #   INTERFACE
-    #################################
-    
-    def create(self, diagram, node=None):
-        """
-        Build and return a property dialog according to the given parameters.
-        :type diagram: Diagram
-        :type node: AbstractNode
-        :rtype: QDialog
-        """
-        if not node:
-            properties = DiagramProperty(diagram, self.session)
-        else:
-            if node.type() is Item.AttributeNode:
-                properties = PredicateNodeProperty(diagram, node, self.session)
-            elif node.type() is Item.ConceptNode:
-                properties = PredicateNodeProperty(diagram, node, self.session)
-            elif node.type() is Item.RoleNode:
-                properties = PredicateNodeProperty(diagram, node, self.session)
-            elif node.type() is Item.ValueDomainNode:
-                properties = ValueDomainNodeProperty(diagram, node, self.session)
-            elif node.type() is Item.IndividualNode:
-                if node.identity is Identity.Instance:
-                    properties = PredicateNodeProperty(diagram, node, self.session)
-                else:
-                    properties = ValueNodeProperty(diagram, node, self.session)
-            elif node.type() is Item.PropertyAssertionNode:
-                properties = OrderedInputNodeProperty(diagram, node, self.session)
-            elif node.type() is Item.RoleChainNode:
-                properties = OrderedInputNodeProperty(diagram, node, self.session)
-            elif node.type() is Item.FacetNode:
-                properties = FacetNodeProperty(diagram, node, self.session)
-            else:
-                properties = NodeProperty(diagram, node, self.session)
-        properties.setFixedSize(properties.sizeHint())
-        return properties

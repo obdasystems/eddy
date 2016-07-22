@@ -502,7 +502,7 @@ class Diagram(QGraphicsScene):
                     item.setSelected(True)
 
                 self.mousePressPos = mousePos
-                menu = self.session.menuFactory.create(self.session, self, item, mousePos)
+                menu = self.session.mf.create(self, item, mousePos)
                 menu.exec_(mouseEvent.screenPos())
 
         super().mouseReleaseEvent(mouseEvent)
