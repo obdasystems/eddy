@@ -44,7 +44,7 @@ LOGGER = getLogger(__name__)
 
 class HasActionSystem(object):
     """
-    Mixin which adds the ability to store and retrieve actions from/to a QObject.
+    Mixin which adds the ability to store and retrieve actions.
     """
     def __init__(self, **kwargs):
         """
@@ -52,8 +52,8 @@ class HasActionSystem(object):
         :type kwargs: dict
         """
         super().__init__(**kwargs)
-        self._actionsDict = {}
-        self._actionsList = []
+        self._actionDict = {}
+        self._actionList = []
 
     def action(self, objectName):
         """
@@ -61,14 +61,14 @@ class HasActionSystem(object):
         :type objectName: str
         :rtype: T <= QAction|QActionGroup
         """
-        return self._actionsDict.get(objectName, None)
+        return self._actionDict.get(objectName, None)
 
     def actions(self):
         """
         Returns the list of QAction.
         :rtype: list
         """
-        return self._actionsList
+        return self._actionList
 
     def addAction(self, action):
         """
@@ -78,8 +78,10 @@ class HasActionSystem(object):
         """
         if isEmpty(action.objectName()):
             raise ValueError("missing objectName in %s" % action.__class__.__name__)
-        self._actionsList.append(action)
-        self._actionsDict[action.objectName()] = action
+        if action.objectName() in self._actionDict:
+            raise ValueError("duplicate action found: %s" % action.objectName())
+        self._actionList.append(action)
+        self._actionDict[action.objectName()] = action
         LOGGER.debug("Added %s(%s)", action.__class__.__name__, action.objectName())
         return action
 
@@ -100,8 +102,10 @@ class HasActionSystem(object):
         """
         if isEmpty(action.objectName()):
             raise ValueError("missing objectName in %s" % action.__class__.__name__)
-        self._actionsList.insert(self._actionsList.index(before), action)
-        self._actionsDict[action.objectName()] = action
+        if action.objectName() in self._actionDict:
+            raise ValueError("duplicate action found: %s" % action.objectName())
+        self._actionList.insert(self._actionList.index(before), action)
+        self._actionDict[action.objectName()] = action
         LOGGER.debug("Added %s(%s) before %s(%s)",
                      action.__class__.__name__, action.objectName(),
                      before.__class__.__name__, before.objectName())
@@ -122,6 +126,95 @@ class HasActionSystem(object):
         :type action: T <= QAction|QActionGroup
         :rtype: T <= QAction|QActionGroup
         """
-        self._actionsList.remove(action)
-        del self._actionsDict[action.objectName()]
+        self._actionList.remove(action)
+        del self._actionDict[action.objectName()]
         return action
+
+
+class HasMenuSystem(object):
+    """
+    Mixin which adds the ability to store and retrieve menus.
+    """
+    def __init__(self, **kwargs):
+        """
+        Initialize the object with default parameters.
+        :type kwargs: dict
+        """
+        super().__init__(**kwargs)
+        self._menuDict = {}
+        self._menuList = []
+
+    def addMenu(self, menu):
+        """
+        Add a QMenu to the set.
+        :type menu: QMenu
+        :rtype: QMenu
+        """
+        if isEmpty(menu.objectName()):
+            raise ValueError("missing objectName in %s" % menu.__class__.__name__)
+        if menu.objectName() in self._menuDict:
+            raise ValueError("duplicate menu found: %s" % menu.objectName())
+        self._menuList.append(menu)
+        self._menuDict[menu.objectName()] = menu
+        LOGGER.debug("Added %s(%s)", menu.__class__.__name__, menu.objectName())
+        return menu
+
+    def addMenus(self, menus):
+        """
+        Add the given group of QMenu to the set.
+        :type menus: T <= list|tuple
+        """
+        for menu in menus:
+            self.addMenu(menu)
+
+    def insertMenu(self, menu, before):
+        """
+        Insert the given QMenu before the given one.
+        :type menu: QMenu
+        :type before: QMenu
+        :rtype: QMenu
+        """
+        if isEmpty(menu.objectName()):
+            raise ValueError("missing objectName in %s" % menu.__class__.__name__)
+        if menu.objectName() in self._menuDict:
+            raise ValueError("duplicate menu found: %s" % menu.objectName())
+        self._menuList.insert(self._menuList.index(before), menu)
+        self._menuDict[menu.objectName()] = menu
+        LOGGER.debug("Added %s(%s) before %s(%s)",
+                     menu.__class__.__name__, menu.objectName(),
+                     before.__class__.__name__, before.objectName())
+        return menu
+
+    def insertMenus(self, menus, before):
+        """
+        Insert the given group of QMenu before the given one.
+        :type menus: T <= list|tuple
+        :type before: QMenu
+        """
+        for menu in menus:
+            self.insertMenu(menu, before)
+            
+    def menu(self, objectName):
+        """
+        Returns the reference to a QMenu given it's objectName.
+        :type objectName: str
+        :rtype: QMenu
+        """
+        return self._menuDict.get(objectName, None)
+
+    def menus(self):
+        """
+        Returns the list of QMenu.
+        :rtype: list
+        """
+        return self._menuList
+
+    def removeMenu(self, menu):
+        """
+        Removes the given QMenu from the set.
+        :type menu: QMenu
+        :rtype: QMenu
+        """
+        self._menuList.remove(menu)
+        del self._menuDict[menu.objectName()]
+        return menu

@@ -211,10 +211,10 @@ class MenuFactory(QObject):
         """
         # BUILD THE MENU
         menu = self.buildGenericNodeMenu(session, diagram, node)
-        menu.insertMenu(session.action('node_properties'), session.menuRefactor)
-        menu.insertMenu(session.action('node_properties'), session.menuSetBrush)
-        menu.insertMenu(session.action('node_properties'), session.menuCompose)
-        menu.insertMenu(session.action('node_properties'), session.menuSetSpecial)
+        menu.insertMenu(session.action('node_properties'), session.menu('refactor'))
+        menu.insertMenu(session.action('node_properties'), session.menu('brush'))
+        menu.insertMenu(session.action('node_properties'), session.menu('compose'))
+        menu.insertMenu(session.action('node_properties'), session.menu('special'))
         self.insertLabelSpecificActions(menu, session, node)
         menu.insertSeparator(session.action('node_properties'))
         # SETUP ACTIONS STATE
@@ -263,9 +263,9 @@ class MenuFactory(QObject):
         """
         # BUILD THE MENU
         menu = self.buildGenericNodeMenu(session, diagram, node)
-        menu.insertMenu(session.action('node_properties'), session.menuRefactor)
-        menu.insertMenu(session.action('node_properties'), session.menuSetBrush)
-        menu.insertMenu(session.action('node_properties'), session.menuSetSpecial)
+        menu.insertMenu(session.action('node_properties'), session.menu('refactor'))
+        menu.insertMenu(session.action('node_properties'), session.menu('brush'))
+        menu.insertMenu(session.action('node_properties'), session.menu('special'))
         self.insertLabelSpecificActions(menu, session, node)
         menu.insertSeparator(session.action('node_properties'))
         # SETUP ACTIONS STATE
@@ -310,7 +310,7 @@ class MenuFactory(QObject):
         # BUILD THE MENU
         menu = self.buildGenericNodeMenu(session, diagram, node)
         menu.addSeparator()
-        menu.insertMenu(session.action('node_properties'), session.menuSetPropertyRestriction)
+        menu.insertMenu(session.action('node_properties'), session.menu('property_restriction'))
         self.insertLabelSpecificActions(menu, session, node)
         menu.insertSeparator(session.action('node_properties'))
         # SETUP ACTIONS STATE
@@ -359,7 +359,7 @@ class MenuFactory(QObject):
         """
         # BUILD THE MENU
         menu = self.buildGenericNodeMenu(session, diagram, node)
-        menu.insertMenu(session.action('node_properties'), session.menuSetFacet)
+        menu.insertMenu(session.action('node_properties'), session.menu('facet'))
         menu.insertSeparator(session.action('node_properties'))
 
         #############################################
@@ -396,9 +396,9 @@ class MenuFactory(QObject):
         """
         # BUILD THE MENU
         menu = self.buildGenericNodeMenu(session, diagram, node)
-        menu.insertMenu(session.action('node_properties'), session.menuRefactor)
-        menu.insertMenu(session.action('node_properties'), session.menuSetBrush)
-        menu.insertMenu(session.action('node_properties'), session.menuSetIndividualAs)
+        menu.insertMenu(session.action('node_properties'), session.menu('refactor'))
+        menu.insertMenu(session.action('node_properties'), session.menu('brush'))
+        menu.insertMenu(session.action('node_properties'), session.menu('set_individual_as'))
         self.insertLabelSpecificActions(menu, session, node)
         menu.insertSeparator(session.action('node_properties'))
 
@@ -469,7 +469,7 @@ class MenuFactory(QObject):
         """
         # BUILD THE MENU
         menu = self.buildGenericNodeMenu(session, diagram, node)
-        menu.insertMenu(session.action('node_properties'), session.menuSwitchOperator)
+        menu.insertMenu(session.action('node_properties'), session.menu('switch_operator'))
         menu.insertSeparator(session.action('node_properties'))
         # RESET ACTIONS STATE
         for action in session.action('switch_operator').actions():
@@ -501,7 +501,7 @@ class MenuFactory(QObject):
         f2 = lambda x: x.identity is Identity.Attribute
         if not first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)):
             menu.addSeparator()
-            menu.insertMenu(session.action('node_properties'), session.menuSetPropertyRestriction)
+            menu.insertMenu(session.action('node_properties'), session.menu('property_restriction'))
             # SETUP ACTIONS STATE
             for action in session.action('restriction').actions():
                 action.setChecked(node.restriction is action.data())
@@ -520,10 +520,10 @@ class MenuFactory(QObject):
         """
         # BUILD THE MENU
         menu = self.buildGenericNodeMenu(session, diagram, node)
-        menu.insertMenu(session.action('node_properties'), session.menuRefactor)
-        menu.insertMenu(session.action('node_properties'), session.menuSetBrush)
-        menu.insertMenu(session.action('node_properties'), session.menuCompose)
-        menu.insertMenu(session.action('node_properties'), session.menuSetSpecial)
+        menu.insertMenu(session.action('node_properties'), session.menu('refactor'))
+        menu.insertMenu(session.action('node_properties'), session.menu('brush'))
+        menu.insertMenu(session.action('node_properties'), session.menu('compose'))
+        menu.insertMenu(session.action('node_properties'), session.menu('special'))
         self.insertLabelSpecificActions(menu, session, node)
         menu.insertSeparator(session.action('node_properties'))
         # SETUP ACTIONS STATE
@@ -594,7 +594,7 @@ class MenuFactory(QObject):
         """
         # BUILD THE MENU
         menu = self.buildGenericNodeMenu(session, diagram, node)
-        menu.insertMenu(session.action('node_properties'), session.menuSetDatatype)
+        menu.insertMenu(session.action('node_properties'), session.menu('datatype'))
         menu.insertSeparator(session.action('node_properties'))
         # SETUP ACTIONS STATE
         for action in session.action('datatype').actions():
