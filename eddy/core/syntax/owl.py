@@ -100,7 +100,7 @@ class OWL2Validator(AbstractValidator):
 
         if Identity.ValueDomain in {source.identity, target.identity}:
 
-            if source.type() is not Item.RangeRestrictionNode:
+            if source.type() is not Item.RangeRestrictionNode or target.type() is Item.RangeRestrictionNode:
                 # Inclusions between value-domain expressions is not yet supported. However,
                 # we allow inclusions between value-domain expressions only if we are tracing
                 # an inclusion edge sourcing from a range restriction node (whose input is an
@@ -108,6 +108,10 @@ class OWL2Validator(AbstractValidator):
                 # a value-domain expression, either complex or atomic, eventually excluding the
                 # attribute range restriction as target.
                 raise SyntaxError('Type mismatch: inclusion between value-domain expressions')
+
+        #############################################
+        # INCLUSION WITH ROLE/ATTRIBUTE COMPLEMENT
+        #################################
 
         if {Identity.Attribute, Identity.Role} & {source.identity, target.identity}:
 
@@ -124,6 +128,10 @@ class OWL2Validator(AbstractValidator):
                 # Differently we allow inclusions targeting concept nodes to source from complement nodes.
                 identity = first({source.identity, target.identity} - {Identity.Neutral}).value.lower()
                 raise SyntaxError('{0} equivalence is forbidden when expressing disjointness'.format(identity, source.name))
+
+        #############################################
+        # INCLUSION WITH ROLE CHAIN
+        #################################
 
         if source.type() is Item.RoleChainNode:
             # Role expressions constructed with chain nodes can be included only
