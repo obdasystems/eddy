@@ -34,7 +34,6 @@
 
 
 import os
-
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
@@ -48,8 +47,7 @@ from eddy.core.functions.misc import cutR
 from eddy.core.functions.path import openPath
 from eddy.core.items.nodes.common.meta import MetaFactory
 from eddy.core.syntax.owl import OWL2Validator
-
-from eddy.ui.dialogs.export import OWLExportDialog
+from export import OWLExportDialog
 
 
 K_DIAGRAM = 'diagrams'

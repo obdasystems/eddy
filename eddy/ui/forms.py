@@ -45,7 +45,9 @@ from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font
 
-from eddy.ui.fields import IntegerField, StringField, ComboBox
+from eddy.ui.fields import ComboBox
+from eddy.ui.fields import IntegerField
+from eddy.ui.fields import StringField
 
 
 class CardinalityRestrictionForm(QDialog):

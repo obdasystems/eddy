@@ -85,24 +85,24 @@ from eddy.core.output import getLogger
 from eddy.core.qt import BrushIcon
 from eddy.core.utils.clipboard import Clipboard
 
-from eddy.ui.dialogs.about import AboutDialog
-from eddy.ui.dialogs.diagram import NewDiagramDialog
-from eddy.ui.dialogs.diagram import RenameDiagramDialog
-from eddy.ui.dialogs.forms import CardinalityRestrictionForm
-from eddy.ui.dialogs.forms import RefactorNameForm
-from eddy.ui.dialogs.forms import ValueForm
-from eddy.ui.dialogs.preferences import PreferencesDialog
-from eddy.ui.dialogs.progress import BusyProgressDialog
-from eddy.ui.widgets.dock import DockWidget
-from eddy.ui.widgets.explorer import OntologyExplorer
-from eddy.ui.widgets.explorer import ProjectExplorer
-from eddy.ui.widgets.info import Info
-from eddy.ui.widgets.mdi import MdiArea
-from eddy.ui.widgets.mdi import MdiSubWindow
-from eddy.ui.widgets.overview import Overview
-from eddy.ui.widgets.palette import Palette
-from eddy.ui.widgets.view import DiagramView
-from eddy.ui.widgets.zoom import Zoom
+from eddy.ui.about import AboutDialog
+from eddy.ui.diagram import NewDiagramDialog
+from eddy.ui.diagram import RenameDiagramDialog
+from eddy.ui.dock import DockWidget
+from eddy.ui.explorer import OntologyExplorer
+from eddy.ui.explorer import ProjectExplorer
+from eddy.ui.forms import CardinalityRestrictionForm
+from eddy.ui.forms import RefactorNameForm
+from eddy.ui.forms import ValueForm
+from eddy.ui.info import Info
+from eddy.ui.mdi import MdiArea
+from eddy.ui.mdi import MdiSubWindow
+from eddy.ui.overview import Overview
+from eddy.ui.palette import Palette
+from eddy.ui.preferences import PreferencesDialog
+from eddy.ui.progress import BusyProgressDialog
+from eddy.ui.view import DiagramView
+from eddy.ui.zoom import Zoom
 
 
 LOGGER = getLogger(__name__)

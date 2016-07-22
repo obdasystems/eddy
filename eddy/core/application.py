@@ -50,12 +50,12 @@ from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.output import getLogger
 
-from eddy.ui.dialogs.progress import BusyProgressDialog
-from eddy.ui.dialogs.workspace import WorkspaceDialog
-from eddy.ui.widgets.session import Session
-from eddy.ui.widgets.splash import Splash
-from eddy.ui.widgets.welcome import Welcome
+from eddy.ui.progress import BusyProgressDialog
+from eddy.ui.session import Session
+from eddy.ui.splash import Splash
 from eddy.ui.style import Clean
+from eddy.ui.workspace import WorkspaceDialog
+from eddy.ui.welcome import Welcome
 
 
 LOGGER = getLogger(__name__)

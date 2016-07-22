@@ -54,7 +54,10 @@ from eddy.core.project import Project
 from eddy.core.qt import BrushIcon, Font
 from eddy.core.regex import RE_CAMEL_SPACE
 
-from eddy.ui.fields import IntegerField, StringField, CheckBox, ComboBox
+from eddy.ui.fields import IntegerField
+from eddy.ui.fields import StringField
+from eddy.ui.fields import CheckBox
+from eddy.ui.fields import ComboBox
 
 
 class Info(QScrollArea):

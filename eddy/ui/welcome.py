@@ -48,7 +48,7 @@ from eddy.core.functions.path import shortPath, compressPath
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font, PHCQPushButton, PHCQToolButton
 
-from eddy.ui.dialogs.project import ProjectDialog
+from eddy.ui.project import ProjectDialog
 
 
 class Welcome(QWidget):

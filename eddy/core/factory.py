@@ -36,16 +36,16 @@
 from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import QMenu
 
-from dialogs.properties import DiagramProperty
-from dialogs.properties import FacetNodeProperty
-from dialogs.properties import NodeProperty
-from dialogs.properties import OrderedInputNodeProperty
-from dialogs.properties import PredicateNodeProperty
-from dialogs.properties import ValueDomainNodeProperty
-from dialogs.properties import ValueNodeProperty
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
 from eddy.core.datatypes.owl import Facet
 from eddy.core.functions.misc import first
+from properties import DiagramProperty
+from properties import FacetNodeProperty
+from properties import NodeProperty
+from properties import OrderedInputNodeProperty
+from properties import PredicateNodeProperty
+from properties import ValueDomainNodeProperty
+from properties import ValueNodeProperty
 
 
 class MenuFactory(QObject):

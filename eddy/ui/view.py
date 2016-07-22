@@ -43,8 +43,7 @@ from eddy.core.diagram import Diagram
 from eddy.core.functions.geometry import midpoint
 from eddy.core.functions.misc import clamp, rangeF, snapF
 from eddy.core.functions.signals import disconnect, connect
-
-from eddy.ui.widgets.zoom import Zoom
+from zoom import Zoom
 
 
 class DiagramView(QGraphicsView):
