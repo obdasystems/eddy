@@ -60,8 +60,6 @@ class CardinalityRestrictionForm(QDialog):
         :type parent: QWidget
         """
         super().__init__(parent)
-        self.minValue = None
-        self.maxValue = None
 
         arial12r = Font('Arial', 12)
 
@@ -121,9 +119,9 @@ class CardinalityRestrictionForm(QDialog):
         """
         Validate the form and trigger accept() if the form is valid.
         """
-        if not isEmpty(self.minField.text()) and not isEmpty(self.maxField.text()):
-            v1 = int(self.minField.text())
-            v2 = int(self.maxField.text())
+        v1 = self.min()
+        v2 = self.max()
+        if v1 is not None and v2 is not None:
             if v1 > v2:
                 msgbox = QMessageBox(self)
                 msgbox.setIconPixmap(QIcon(':/icons/48/ic_warning_black').pixmap(48))
@@ -135,12 +133,31 @@ class CardinalityRestrictionForm(QDialog):
                 msgbox.exec_()
                 return
 
-        if not isEmpty(self.minField.text()):
-            self.minValue = int(self.minField.text())
-        if not isEmpty(self.maxField.text()):
-            self.maxValue = int(self.maxField.text())
-
         super().accept()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def max(self):
+        """
+        Returns the maximum cardinality value.
+        :rtype: int
+        """
+        try:
+            return int(self.maxField.text())
+        except ValueError:
+            return None
+
+    def min(self):
+        """
+        Returns the minimum cardinality value.
+        :rtype: int
+        """
+        try:
+            return int(self.minField.text())
+        except ValueError:
+            return None
 
 
 class RefactorNameForm(QDialog):

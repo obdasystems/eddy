@@ -64,7 +64,7 @@ class RestrictionNode(AbstractNode):
         self.polygon = self.createPolygon(20, 20)
         self.background = self.createBackground(28, 28)
         self.selection = self.createSelection(28, 28)
-        self.label = NodeLabel(template=Restriction.Exists.format(),
+        self.label = NodeLabel(template=Restriction.Exists.toString(),
                                editable=False,
                                pos=lambda: self.center() - QPointF(0, 22),
                                parent=self)

@@ -157,14 +157,14 @@ class Restriction(Enum):
         """
         value = value.lower().strip()
         for x in {Restriction.Exists, Restriction.Forall, Restriction.Self}:
-            if value == x.format():
+            if value == x.toString():
                 return x
         match = RE_CARDINALITY.match(value)
         if match:
             return Restriction.Cardinality
         return None
 
-    def format(self, *args):
+    def toString(self, *args):
         """
         Returns a formatted representation of the restriction.
         :rtype: str

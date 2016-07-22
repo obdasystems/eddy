@@ -1324,11 +1324,11 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
                 action = self.sender()
                 restriction = action.data()
                 if restriction is not Restriction.Cardinality:
-                    data = restriction.format()
+                    data = restriction.toString()
                 else:
                     form = CardinalityRestrictionForm(self)
                     if form.exec_() == CardinalityRestrictionForm.Accepted:
-                        data = restriction.format(form.minValue or '-', form.maxValue or '-')
+                        data = restriction.toString(form.min() or '-', form.max() or '-')
                 if data and node.text() != data:
                     name = 'change {0} to {1}'.format(node.shortname, data)
                     self.project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))

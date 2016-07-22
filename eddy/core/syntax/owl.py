@@ -401,7 +401,7 @@ class OWL2Validator(AbstractValidator):
 
                 if target.restriction is Restriction.Self:
                     # Not a Qualified Restriction.
-                    restriction = target.restriction.format()
+                    restriction = target.restriction.toString()
                     raise SyntaxError('Invalid restriction ({0}) for qualified restriction'.format(restriction))
 
                 # A Concept can be given as input only if there is no input or if the other input is a Role.
@@ -449,7 +449,7 @@ class OWL2Validator(AbstractValidator):
 
                 if target.restriction is Restriction.Self:
                     # Not a Qualified Restriction.
-                    restriction = target.restriction.format()
+                    restriction = target.restriction.toString()
                     raise SyntaxError('Invalid restriction ({0}) for qualified restriction'.format(restriction))
 
                 # We can connect a ValueDomain in input only if there is no other input or if the
