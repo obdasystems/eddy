@@ -301,6 +301,18 @@ class OWL2Validator(AbstractValidator):
                     # The value-domain has already been attached to the DatatypeRestriction.
                     raise SyntaxError('Too many value-domain nodes in input to datatype restriction node')
 
+                # Check if a Facet node is already connected to this node: if
+                # so we need to check whether the datatype in input and the
+                # already connected Facet are compatible.
+                f1 = lambda x: x.type() is Item.InputEdge
+                f2 = lambda x: x.type() is Item.FacetNode
+                node = first(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+                if node:
+                    if node.facet not in Facet.forDatatype(source.datatype):
+                        nA = source.datatype.value
+                        nB = node.facet.value
+                        raise SyntaxError('Type mismatch: datatype {0} is not supported by facet {1}'.format(nA, nB))
+
             if source.type() is Item.FacetNode:
 
                 # We need to check if the DatatypeRestriction node has already datatype
@@ -311,9 +323,9 @@ class OWL2Validator(AbstractValidator):
                 node = first(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
                 if node:
                     if source.facet not in Facet.forDatatype(node.datatype):
-                        nameA = source.facet.value
-                        nameB = node.datatype.value
-                        raise SyntaxError('Type mismatch: facet {0} is not supported by {1} datatype'.format(nameA , nameB))
+                        nA = source.facet.value
+                        nB = node.datatype.value
+                        raise SyntaxError('Type mismatch: facet {0} is not supported by datatype {1}'.format(nA , nB))
 
         elif target.type() is Item.PropertyAssertionNode:
 
