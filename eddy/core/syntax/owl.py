@@ -225,6 +225,14 @@ class OWL2Validator(AbstractValidator):
                         cmp = cutR(target.name, ' node')
                         raise SyntaxError('Type mismatch: {0} between {1} and {2}'.format(cmp, idA, idB))
 
+                if Identity.ValueDomain in {source.identity, target.identity}:
+
+                    if source.type() is Item.RangeRestrictionNode:
+                        # Deny the connection of Attribute range with Union|Intersection nodes: even
+                        # though the identity matches the Attribute range restriction node is used only to
+                        # express a DataPropertyRange axiom and we can't give it in input to an AND|OR node.
+                        raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.name))
+
         elif target.type() is Item.EnumerationNode:
 
             #############################################
