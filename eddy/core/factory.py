@@ -406,7 +406,7 @@ class MenuFactory(QObject):
         menu = self.buildGenericNodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
-        menu.insertMenu(self.session.action('node_properties'), self.session.menu('set_individual_as'))
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('switch_individual'))
         self.insertLabelActions(menu, node)
         menu.insertSeparator(self.session.action('node_properties'))
 
@@ -441,7 +441,7 @@ class MenuFactory(QObject):
                     instance = instance and (node.identity is Identity.Instance or num < 2)
                     value = value and (node.identity is Identity.Value or num < 2)
 
-        for a in self.session.action('individual_as').actions():
+        for a in self.session.action('switch_individual').actions():
             a.setVisible(a.data() is Identity.Instance and instance or a.data() is Identity.Value and value)
 
         #############################################

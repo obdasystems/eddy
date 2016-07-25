@@ -491,7 +491,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         # INDIVIDUAL SPECIFIC
         #################################
 
-        group = QActionGroup(self, objectName='individual_as')
+        group = QActionGroup(self, objectName='switch_individual')
         for identity in (Identity.Instance, Identity.Value):
             action = QAction(identity.value, group,
                 objectName=identity.name,
@@ -753,9 +753,9 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         # INDIVIDUAL SPECIFIC
         #################################
 
-        menu = QMenu('Set as', objectName='set_individual_as')
+        menu = QMenu('Switch to', objectName='switch_individual')
         menu.setIcon(QIcon(':/icons/24/ic_refresh_black'))
-        menu.addActions(self.action('individual_as').actions())
+        menu.addActions(self.action('switch_individual').actions())
         self.addMenu(menu)
 
         #############################################
