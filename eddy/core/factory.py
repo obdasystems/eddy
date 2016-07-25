@@ -442,6 +442,7 @@ class MenuFactory(QObject):
                     value = value and (node.identity is Identity.Value or num < 2)
 
         for a in self.session.action('switch_individual').actions():
+            a.setChecked(a.data() is node.identity)
             a.setVisible(a.data() is Identity.Instance and instance or a.data() is Identity.Value and value)
 
         #############################################

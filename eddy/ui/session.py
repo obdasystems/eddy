@@ -495,6 +495,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         for identity in (Identity.Instance, Identity.Value):
             action = QAction(identity.value, group,
                 objectName=identity.name,
+                checkable=True,
                 triggered=self.doSetIndividualAs)
             action.setData(identity)
             group.addAction(action)
