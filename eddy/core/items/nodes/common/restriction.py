@@ -210,7 +210,7 @@ class RestrictionNode(AbstractNode):
         """
         restriction = Restriction.forLabel(text)
         if not restriction:
-            text = Restriction.Exists.format()
+            text = Restriction.Exists.toString()
         self.label.setText(text)
 
     def setTextPos(self, pos):
