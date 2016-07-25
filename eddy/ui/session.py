@@ -999,13 +999,14 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         dialog = QFileDialog(self)
         dialog.setAcceptMode(QFileDialog.AcceptOpen)
         dialog.setDirectory(expandPath('~'))
-        dialog.setFileMode(QFileDialog.ExistingFile)
+        dialog.setFileMode(QFileDialog.ExistingFiles)
         dialog.setViewMode(QFileDialog.Detail)
         dialog.setNameFilters([File.Graphml.value])
         if dialog.exec_():
-            path = first(dialog.selectedFiles())
-            if File.forPath(path) is File.Graphml:
-                self.importFromGraphml(path)
+            if File.forValue(dialog.selectedNameFilter()) is File.Graphml:
+                selected = [x for x in dialog.selectedFiles() if File.forPath(x) is File.Graphml]
+                if selected:
+                    self.importFromGraphml(selected)
 
     @pyqtSlot(str)
     def doLoadDiagram(self, path):
@@ -1820,32 +1821,31 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         subwindow.showMaximized()
         return subwindow
 
-    def importFromGraphml(self, path):
+    def importFromGraphml(self, paths):
         """
-        Import from .graphml file format, adding the new diagram to the project and MDI area.
-        :type path: str
+        Import from .graphml file format, adding the new diagrams to the project and MDI area.
+        :type paths: T <= list|tuple|set
         """
-        if not fexists(path):
-            raise IOError('file not found: {0}'.format(path))
-
-        name = os.path.basename(path)
-        with BusyProgressDialog('Importing {0}...'.format(name), 2, self):
-
+        paths = [x for x in paths if fexists(x)]
+        if paths:
             try:
-                worker = GraphmlLoader(self.project, path, self)
-                diagram = worker.run()
+                with BusyProgressDialog(parent=self) as progress:
+                    for path in paths:
+                        progress.setWindowTitle('Importing {0}...'.format(os.path.basename(path)))
+                        worker = GraphmlLoader(self.project, path, self)
+                        diagram = worker.run()
+                        self.project.addDiagram(diagram)
+                        self.doFocusDiagram(diagram)
             except Exception as e:
                 msgbox = QMessageBox(self)
                 msgbox.setDetailedText(format_exception(e))
                 msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
                 msgbox.setStandardButtons(QMessageBox.Close)
-                msgbox.setText('Eddy could not import the specified file: {0}!'.format(path))
+                msgbox.setText('Eddy could not import all the selected files!')
                 msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle('Diagram import failed!')
+                msgbox.setWindowTitle('Import failed!')
                 msgbox.exec_()
-            else:
-                self.project.addDiagram(diagram)
-                self.doFocusDiagram(diagram)
+            finally:
                 self.doSave()
 
     def openFile(self, path):

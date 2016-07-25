@@ -91,6 +91,7 @@ class BusyProgressDialog(QDialog):
         Draw the dialog.
         """
         self.show()
+        return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         """
