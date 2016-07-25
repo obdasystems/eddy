@@ -728,7 +728,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         #################################
 
         menu = QMenu('Select type', objectName='datatype')
-        menu.setIcon(QIcon(':/icons/24/ic_refresh_black'))
+        menu.setIcon(QIcon(':/icons/24/ic_transform_black'))
         menu.addActions(self.action('datatype').actions())
         self.addMenu(menu)
 
@@ -737,7 +737,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         #################################
 
         menu = QMenu('Select facet', objectName='facet')
-        menu.setIcon(QIcon(':/icons/24/ic_refresh_black'))
+        menu.setIcon(QIcon(':/icons/24/ic_transform_black'))
         menu.addActions(self.action('facet').actions())
         self.addMenu(menu)
 
@@ -746,7 +746,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         #################################
 
         menu = QMenu('Select restriction', objectName='property_restriction')
-        menu.setIcon(QIcon(':/icons/24/ic_refresh_black'))
+        menu.setIcon(QIcon(':/icons/24/ic_transform_black'))
         menu.addActions(self.action('restriction').actions())
         self.addMenu(menu)
 
@@ -755,7 +755,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         #################################
 
         menu = QMenu('Switch to', objectName='switch_individual')
-        menu.setIcon(QIcon(':/icons/24/ic_refresh_black'))
+        menu.setIcon(QIcon(':/icons/24/ic_transform_black'))
         menu.addActions(self.action('switch_individual').actions())
         self.addMenu(menu)
 
@@ -764,7 +764,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         #################################
 
         menu = QMenu('Switch to', objectName='switch_operator')
-        menu.setIcon(QIcon(':/icons/24/ic_refresh_black'))
+        menu.setIcon(QIcon(':/icons/24/ic_transform_black'))
         menu.addActions(self.action('switch_operator').actions())
         self.addMenu(menu)
 
