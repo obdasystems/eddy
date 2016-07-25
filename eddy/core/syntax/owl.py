@@ -471,13 +471,12 @@ class OWL2Validator(AbstractValidator):
                 # Range Restriction node can have at most 2 inputs.
                 raise SyntaxError('Too many inputs to {0}'.format(target.name))
 
-            supported = {Identity.Concept, Identity.Attribute, Identity.Role, Identity.ValueDomain}
+            supported = {Identity.Concept, Identity.Attribute, Identity.Role}
             if source.identity is not Identity.Neutral and source.identity not in supported:
                 # Range Restriction node takes as input:
                 #  - Role => OWL 2 ObjectPropertyExpression
                 #  - Attribute => OWL 2 DataPropertyExpression
                 #  - Concept => Qualified Existential/Universal Role Restriction
-                #  - ValueDomain => Qualified Existential Data Restriction
                 raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.identity.value))
 
             if source.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode}:
