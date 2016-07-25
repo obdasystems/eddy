@@ -63,9 +63,8 @@ class AttributeNode(AbstractNode):
         self.polygon = self.createPolygon(20, 20)
         self.background = self.createBackground(28, 28)
         self.selection = self.createBackground(28, 28)
-        self.label = NodeLabel(template='attribute',
-                               pos=lambda: self.center() - QPointF(0, 22),
-                               parent=self)
+        self.label = NodeLabel(template='attribute', pos=lambda: self.center() - QPointF(0, 22), parent=self)
+        self.label.setAlignment(Qt.AlignCenter)
 
     #############################################
     #   PROPERTIES
@@ -256,6 +255,7 @@ class AttributeNode(AbstractNode):
         :type text: str
         """
         self.label.setText(text)
+        self.label.setAlignment(Qt.AlignCenter)
 
     def setTextPos(self, pos):
         """

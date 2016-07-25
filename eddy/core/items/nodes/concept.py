@@ -71,9 +71,8 @@ class ConceptNode(AbstractResizableNode):
         self.polygon = self.createPolygon(w, h)
         self.background = self.createBackground(w + s, h + s)
         self.selection = self.createSelection(w + s, h + s)
-        self.label = NodeLabel(template='concept',
-                               pos=self.center,
-                               parent=self)
+        self.label = NodeLabel(template='concept', pos=self.center, parent=self)
+        self.label.setAlignment(Qt.AlignCenter)
         self.updateHandles()
         self.updateTextPos()
 
@@ -440,6 +439,7 @@ class ConceptNode(AbstractResizableNode):
         :type text: str
         """
         self.label.setText(text)
+        self.label.setAlignment(Qt.AlignCenter)
 
     def setTextPos(self, pos):
         """

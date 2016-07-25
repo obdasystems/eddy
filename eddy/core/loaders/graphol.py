@@ -350,12 +350,12 @@ class GrapholLoader(AbstractLoader):
             points.append(QPointF(int(point.attribute('x')), int(point.attribute('y'))))
             point = self.getPointBesideElement(point)
 
-        kwargs = {
-        'id': element.attribute('id'),
-        'source': self.nodes[element.attribute('source')],
-        'target': self.nodes[element.attribute('target')],
-        'breakpoints': points[1:-1]}
-        edge = self.diagram.factory.create(item, **kwargs)
+        edge = self.diagram.factory.create(item, **{
+            'id': element.attribute('id'),
+            'source': self.nodes[element.attribute('source')],
+            'target': self.nodes[element.attribute('target')],
+            'breakpoints': points[1:-1]
+        })
 
         path = edge.source.painterPath()
         if path.contains(edge.source.mapFromScene(points[0])):
@@ -377,11 +377,12 @@ class GrapholLoader(AbstractLoader):
         :rtype: AbstractNode
         """
         geometry = self.getGeometryFromElement(element)
-        kwargs = {
-        'id': element.attribute('id'),
-        'height': int(geometry.attribute('height')),
-        'width': int(geometry.attribute('width'))}
-        node = self.diagram.factory.create(item, **kwargs)
+        node = self.diagram.factory.create(item, **{
+            'id': element.attribute('id'),
+            'height': int(geometry.attribute('height')),
+            'width': int(geometry.attribute('width'))
+        })
+
         node.setPos(QPointF(int(geometry.attribute('x')), int(geometry.attribute('y'))))
         return node
 

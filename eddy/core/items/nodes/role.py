@@ -75,9 +75,8 @@ class RoleNode(AbstractResizableNode):
         self.polygon = self.createPolygon(w, h)
         self.background = self.createBackground(w + s, h + s)
         self.selection = self.createSelection(w + s, h + s)
-        self.label = NodeLabel(template='role',
-                               pos=self.center,
-                               parent=self)
+        self.label = NodeLabel(template='role', pos=self.center, parent=self)
+        self.label.setAlignment(Qt.AlignCenter)
         self.updateHandles()
         self.updateTextPos()
 
@@ -649,6 +648,7 @@ class RoleNode(AbstractResizableNode):
         :type pos: QPointF
         """
         self.label.setPos(pos)
+        self.label.setAlignment(Qt.AlignCenter)
 
     def shape(self):
         """
