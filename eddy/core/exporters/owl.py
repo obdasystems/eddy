@@ -38,7 +38,7 @@ import jnius
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
 
 from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
-from eddy.core.datatypes.owl import OWLSyntax
+from eddy.core.datatypes.owl import OWLSyntax, Datatype, Facet
 from eddy.core.exceptions import MalformedDiagramError
 from eddy.core.exporters.common import AbstractExporter
 from eddy.core.functions.fsystem import fwrite
@@ -420,9 +420,9 @@ class OWLExporter(AbstractExporter):
             datatype = node.datatype
             if not datatype:
                 raise MalformedDiagramError(node, 'disconnected facet node')
-            literalEx = self.factory.getOWLLiteral(node.value, self.OWL2Datatype.valueOf(datatype.owlapi))
-            facetEx = self.OWLFacet.valueOf(node.facet.owlapi)
-            self.conv[node] = self.factory.getOWLFacetRestriction(facetEx, literalEx)
+            literal = self.factory.getOWLLiteral(node.value, self.getOWLApiDatatype(datatype))
+            facet = self.getOWLApiFacet(node.facet)
+            self.conv[node] = self.factory.getOWLFacetRestriction(facet, literal)
         return self.conv[node]
 
     def buildIndividual(self, node):
@@ -435,14 +435,14 @@ class OWLExporter(AbstractExporter):
             if node.identity is Identity.Instance:
                 self.conv[node] = self.factory.getOWLNamedIndividual(OWLShortIRI(self.ontoPrefix, node.text()), self.pm)
             elif node.identity is Identity.Value:
-                self.conv[node] = self.factory.getOWLLiteral(node.value, self.OWL2Datatype.valueOf(node.datatype.owlapi))
+                self.conv[node] = self.factory.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
         return self.conv[node]
 
     def buildIntersection(self, node):
         """
         Build and returns a OWL intersection using the given graphol node.
         :type node: IntersectionNode
-        :rtype: T <= OWLObjectIntersectionOf | OWLDataIntersectionOf
+        :rtype: T <= OWLObjectIntersectionOf|OWLDataIntersectionOf
         """
         if node not in self.conv:
 
@@ -513,7 +513,7 @@ class OWLExporter(AbstractExporter):
         """
         Build and returns a OWL range restriction using the given graphol node.
         :type node: DomainRestrictionNode
-        :rtype: T <= OWLClassExpression | OWLDataProperty
+        :rtype: T <= OWLClassExpression|OWLDataProperty
         """
         if node not in self.conv:
 
@@ -649,7 +649,7 @@ class OWLExporter(AbstractExporter):
         """
         Build and returns a OWL union using the given graphol node.
         :type node: UnionNode
-        :rtype: T <= OWLObjectUnionOf | OWLDataUnionOf
+        :rtype: T <= OWLObjectUnionOf|OWLDataUnionOf
         """
         if node not in self.conv:
 
@@ -700,7 +700,7 @@ class OWLExporter(AbstractExporter):
         :rtype: OWLDatatype
         """
         if node not in self.conv:
-            self.conv[node] = self.factory.getOWLDatatype(self.OWL2Datatype.valueOf(node.datatype.owlapi).getIRI())
+            self.conv[node] = self.getOWLApiDatatype(node.datatype)
         return self.conv[node]
 
     #############################################
@@ -853,9 +853,9 @@ class OWLExporter(AbstractExporter):
         Generate a OWL ObjectPropertyAssertion axiom.
         :type edge: InstanceOf
         """
-        operand1 = self.conv[edge.source][0]
-        operand2 = self.conv[edge.source][1]
-        self.axioms.add(self.factory.getOWLObjectPropertyAssertionAxiom(self.conv[edge.target], operand1, operand2))
+        op1 = self.conv[edge.source][0]
+        op2 = self.conv[edge.source][1]
+        self.axioms.add(self.factory.getOWLObjectPropertyAssertionAxiom(self.conv[edge.target], op1, op2))
 
     def axiomSubclassOf(self, edge):
         """
@@ -1063,6 +1063,108 @@ class OWLExporter(AbstractExporter):
     #   AUXILIARY METHODS
     #################################
 
+    def getOWLApiDatatype(self, datatype):
+        """
+        Returns the OWLDatatype matching the given Datatype.
+        :type datatype: Datatype
+        :rtype: OWLDatatype
+        """
+        if datatype is Datatype.anyURI:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_ANY_URI',).getIRI())
+        elif datatype is Datatype.base64Binary:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BASE_64_BINARY', ).getIRI())
+        elif datatype is Datatype.boolean:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BOOLEAN', ).getIRI())
+        elif datatype is Datatype.byte:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BYTE', ).getIRI())
+        elif datatype is Datatype.dateTime:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DATE_TIME', ).getIRI())
+        elif datatype is Datatype.dateTimeStamp:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DATE_TIME_STAMP', ).getIRI())
+        elif datatype is Datatype.decimal:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DECIMAL', ).getIRI())
+        elif datatype is Datatype.double:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DOUBLE', ).getIRI())
+        elif datatype is Datatype.float:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_FLOAT', ).getIRI())
+        elif datatype is Datatype.hexBinary:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_HEX_BINARY', ).getIRI())
+        elif datatype is Datatype.int:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_INT', ).getIRI())
+        elif datatype is Datatype.integer:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_INTEGER', ).getIRI())
+        elif datatype is Datatype.language:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_LANGUAGE', ).getIRI())
+        elif datatype is Datatype.literal:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('RDFS_LITERAL', ).getIRI())
+        elif datatype is Datatype.long:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_LONG', ).getIRI())
+        elif datatype is Datatype.Name:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NAME', ).getIRI())
+        elif datatype is Datatype.NCName:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NCNAME', ).getIRI())
+        elif datatype is Datatype.negativeInteger:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NEGATIVE_INTEGER', ).getIRI())
+        elif datatype is Datatype.NMTOKEN:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NMTOKEN', ).getIRI())
+        elif datatype is Datatype.nonNegativeInteger:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NON_NEGATIVE_INTEGER', ).getIRI())
+        elif datatype is Datatype.nonPositiveInteger:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NON_POSITIVE_INTEGER', ).getIRI())
+        elif datatype is Datatype.normalizedString:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NORMALIZED_STRING', ).getIRI())
+        elif datatype is Datatype.plainLiteral:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('RDF_PLAIN_LITERAL', ).getIRI())
+        elif datatype is Datatype.positiveInteger:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_POSITIVE_INTEGER', ).getIRI())
+        elif datatype is Datatype.rational:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('OWL_RATIONAL', ).getIRI())
+        elif datatype is Datatype.real:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('OWL_REAL', ).getIRI())
+        elif datatype is Datatype.short:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_SHORT', ).getIRI())
+        elif datatype is Datatype.string:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_STRING', ).getIRI())
+        elif datatype is Datatype.token:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_TOKEN', ).getIRI())
+        elif datatype is Datatype.unsignedByte:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_BYTE', ).getIRI())
+        elif datatype is Datatype.unsignedInt:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_INT', ).getIRI())
+        elif datatype is Datatype.unsignedLong:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_LONG', ).getIRI())
+        elif datatype is Datatype.unsignedShort:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_SHORT', ).getIRI())
+        elif datatype is Datatype.xmlLiteral:
+            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('RDF_XML_LITERAL', ).getIRI())
+        raise ValueError('invalid datatype supplied: {0}'.format(datatype))
+    
+    def getOWLApiFacet(self, facet):
+        """
+        Returns the OWLFacet matching the given Facet.
+        :type facet: Facet
+        :rtype: OWLFacet 
+        """
+        if facet is Facet.maxExclusive:
+            return self.OWLFacet.valueOf('MAX_EXCLUSIVE')
+        elif facet is Facet.maxInclusive:
+            return self.OWLFacet.valueOf('MAX_INCLUSIVE')
+        elif facet is Facet.minExclusive:
+            return self.OWLFacet.valueOf('MIN_EXCLUSIVE')
+        elif facet is Facet.minInclusive:
+            return self.OWLFacet.valueOf('MIN_INCLUSIVE')
+        elif facet is Facet.langRange:
+            return self.OWLFacet.valueOf('LANG_RANGE')
+        elif facet is Facet.length:
+            return self.OWLFacet.valueOf('LENGTH')
+        elif facet is Facet.maxLength:
+            return self.OWLFacet.valueOf('MIN_LENGTH')
+        elif facet is Facet.minLength:
+            return self.OWLFacet.valueOf('MIN_LENGTH')
+        elif facet is Facet.pattern:
+            return self.OWLFacet.valueOf('PATTERN')
+        raise ValueError('invalid facet supplied: {0}'.format(facet))
+    
     def step(self, num, increase=0):
         """
         Increments the progress by the given step and emits the progress signal.
