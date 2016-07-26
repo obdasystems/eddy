@@ -397,12 +397,12 @@ class CommandNodeSetBrush(QUndoCommand):
         """redo the command"""
         for node in self.nodes:
             node.brush = self.brush[node]['redo']
-            node.scheduleForRedraw(selected=node.isSelected())
+            node.redraw(selected=node.isSelected())
         self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """redo the command"""
         for node in self.nodes:
             node.brush = self.brush[node]['undo']
-            node.scheduleForRedraw(selected=node.isSelected())
+            node.redraw(selected=node.isSelected())
         self.diagram.sgnUpdated.emit()

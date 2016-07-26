@@ -72,7 +72,7 @@ class FacetNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.brushA = Brush.Grey255A
+        self.brushA = Brush.LightGrey255A
         self.brushB = Brush.White255A
         self.pen = Pen.SolidBlack1Pt
         self.polygon = self.createPolygon(self.MinWidth, self.MinHeight)
@@ -303,7 +303,7 @@ class FacetNode(AbstractNode):
             painter.setPen(Pen.SolidBlack1Pt)
             painter.setBrush(Brush.White255A)
             painter.translate(width / 2, height / 2)
-            painter.setBrush(Brush.Grey255A)
+            painter.setBrush(Brush.LightGrey255A)
             painter.drawPolygon(polygonA)
             painter.setBrush(Brush.White255A)
             painter.drawPolygon(polygonB)

@@ -331,4 +331,4 @@ class InclusionEdge(AbstractEdge):
                 if self.equivalence:
                     self.tail = createTail(p11, subpath1.angle(), headSize)
 
-        self.scheduleForRedraw(selected=self.isSelected(), visible=self.canDraw())
+        self.redraw(selected=self.isSelected(), visible=self.canDraw())

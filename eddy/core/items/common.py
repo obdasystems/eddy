@@ -182,7 +182,7 @@ class AbstractItem(QGraphicsItem, DiagramItemMixin):
         pass
 
     @abstractmethod
-    def scheduleForRedraw(self, **kwargs):
+    def redraw(self, **kwargs):
         """
         Schedule this item for redrawing.
         """

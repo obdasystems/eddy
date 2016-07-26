@@ -336,12 +336,12 @@ class Diagram(QGraphicsScene):
                     previousNode = self.mouseOverNode
 
                     if previousNode:
-                        previousNode.scheduleForRedraw(selected=False)
+                        previousNode.redraw(selected=False)
 
                     if currentNode:
                         self.mouseOverNode = currentNode
                         result = self.project.validator.validate(edge.source, edge, currentNode)
-                        currentNode.scheduleForRedraw(selected=False, valid=result.valid)
+                        currentNode.redraw(selected=False, valid=result.valid)
                         if not result.valid:
                             statusBar.showMessage(result.message)
                         else:
@@ -420,12 +420,12 @@ class Diagram(QGraphicsScene):
                 if self.isEdgeAddInProgress():
 
                     edge = self.mousePressEdge
-                    edge.source.scheduleForRedraw(selected=False)
+                    edge.source.redraw(selected=False)
                     currentNode = self.itemOnTopOf(mousePos, edges=False, skip={edge.source})
                     insertEdge = False
 
                     if currentNode:
-                        currentNode.scheduleForRedraw(selected=False)
+                        currentNode.redraw(selected=False)
                         result = self.project.validator.validate(edge.source, edge, currentNode)
                         if result.valid:
                             edge.target = currentNode

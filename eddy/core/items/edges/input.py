@@ -135,7 +135,7 @@ class InputEdge(AbstractEdge):
             # DRAW THE EDGE
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(Pen.Custom_x3_DashedBlack1_1Pt)
+            painter.setPen(Pen.DashedBlack1_1Pt_x3)
             painter.drawLine(l1)
             painter.setPen(Pen.SolidBlack1_1Pt)
             painter.setBrush(Brush.White255A)
@@ -182,7 +182,7 @@ class InputEdge(AbstractEdge):
         path.addPolygon(self.head)
         return path
 
-    def scheduleForRedraw(self, selected=None, visible=None, breakpoint=None, anchor=None, **kwargs):
+    def redraw(self, selected=None, visible=None, breakpoint=None, anchor=None, **kwargs):
         """
         Schedule this item for redrawing.
         :type selected: bool
@@ -200,7 +200,7 @@ class InputEdge(AbstractEdge):
         if visible:
             headBrush = Brush.White255A
             headPen = Pen.SolidBlack1_1Pt
-            pen = Pen.Custom_x5_DashedBlack1_1Pt
+            pen = Pen.DashedBlack1_1Pt_x5
             if selected:
                 handleBrush = Brush.Blue255A
                 handlePen = Pen.SolidBlack1_1Pt
@@ -347,7 +347,7 @@ class InputEdge(AbstractEdge):
                 self.head = createHead(p22, subpathN.angle(), headSize)
 
         self.updateLabel(points)
-        self.scheduleForRedraw(selected=self.isSelected(), visible=self.canDraw())
+        self.redraw(selected=self.isSelected(), visible=self.canDraw())
 
     def updateLabel(self, points):
         """
