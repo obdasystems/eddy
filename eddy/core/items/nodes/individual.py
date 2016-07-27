@@ -655,7 +655,7 @@ class IndividualNode(AbstractResizableNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addPolygon(self.polygon)
+        path.addPolygon(self.polygon.geometry())
         for polygon in self.handles:
             path.addEllipse(polygon.geometry())
         return path
