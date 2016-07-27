@@ -40,6 +40,10 @@ ontologies that can be rendered as ER diagrams have in Graphol a similar diagram
 
 ### Related papers
 
+- **Eddy: A Graphical Editor for OWL 2 Ontologies** [PDF](http://www.ijcai.org/Proceedings/16/Papers/646.pdf)<br/>
+  Domenico Lembo, Daniele Pantaleone, Valerio Santarelli, Domenico Fabio Savo<br/>
+  *Proc. of the 25th International Joint Conference on Artificial Intelligence, IJCAI-16, New York, NY, USA, July 9-15, 2016*
+
 - **Easy OWL Drawing with the Graphol Visual Ontology Language** [PDF](http://www.aaai.org/ocs/index.php/KR/KR16/paper/view/12904/12524)<br/>
   Domenico Lembo, Daniele Pantaleone, Valerio Santarelli, Domenico Fabio Savo<br/>
   *Proc. of the 15th International Conference on Principles of Knowledge Representation and Reasoning, KR-2016, Cape Town, South Africa, April 25-29, 2016*
