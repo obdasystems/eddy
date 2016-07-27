@@ -346,7 +346,7 @@ class ValueForm(QDialog):
         project = node.project
         datatype = self.datatypeField.currentData()
         value = self.valueField.value()
-        data = node.composeValue(value, datatype)
+        data = node.compose(value, datatype)
         if node.text() != data:
             name = 'change {0} to {1}'.format(node.text(), data)
             project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))

@@ -77,7 +77,7 @@ class EdgeLabel(AbstractLabel):
         :type widget: QWidget
         """
         parent = self.parentItem()
-        if not parent.path.isEmpty():
+        if not parent.path.geometry().isEmpty():
             super().paint(painter, option, widget)
 
     def updatePos(self, points):

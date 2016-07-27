@@ -41,6 +41,7 @@ from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.owl import Datatype
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
+from eddy.core.polygon import Polygon
 from eddy.core.qt import Font
 
 
@@ -50,10 +51,8 @@ class ValueDomainNode(AbstractNode):
     """
     Identities = {Identity.ValueDomain}
     Type = Item.ValueDomainNode
-    MinHeight = 40
-    MinWidth = 90
 
-    def __init__(self, width=MinWidth, height=MinHeight, brush=None, **kwargs):
+    def __init__(self, width=90, height=40, brush=None, **kwargs):
         """
         Initialize the ValueDomain node.
         :type width: int
@@ -61,16 +60,10 @@ class ValueDomainNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.brush = brush or Brush.White255A
-        self.pen = Pen.SolidBlack1Pt
-        self.polygon = self.createPolygon(self.MinWidth, self.MinHeight)
-        self.background = self.createBackground(self.MinWidth + 8, self.MinHeight + 8)
-        self.selection = self.createSelection(self.MinWidth + 8, self.MinHeight + 8)
-        self.label = NodeLabel(template=Datatype.string.value,
-                               editable=False,
-                               movable=False,
-                               pos=self.center,
-                               parent=self)
+        self.background = Polygon(QRectF(-49, -24, 98, 48))
+        self.selection = Polygon(QRectF(-49, -24, 98, 48))
+        self.polygon = Polygon(QRectF(-45, -20, 90, 40), brush or Brush.White255A, Pen.SolidBlack1Pt)
+        self.label = NodeLabel(Datatype.string.value, pos=self.center, editable=False, movable=False, parent=self)
         self.updateLayout()
         self.updateTextPos()
 
@@ -111,46 +104,44 @@ class ValueDomainNode(AbstractNode):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        return self.selection
+        return self.selection.geometry()
+
+    def brush(self):
+        """
+        Returns the brush used to paint the shape of this node.
+        :rtype: QBrush
+        """
+        return self.polygon.brush()
 
     def copy(self, diagram):
         """
         Create a copy of the current item.
         :type diagram: Diagram
         """
-        kwargs = {'id': self.id, 'brush': self.brush, 'height': self.height(), 'width': self.width()}
-        node = diagram.factory.create(self.type(), **kwargs)
+        node = diagram.factory.create(self.type(), **{
+            'id': self.id,
+            'brush': self.brush(),
+            'height': self.height(),
+            'width': self.width()
+        })
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
-    @staticmethod
-    def createBackground(width, height):
+    def geometry(self):
         """
-        Returns the initialized background polygon according to the given width/height.
-        :type width: int
-        :type height: int
+        Returns the geometry of the shape of this node.
         :rtype: QRectF
         """
-        return QRectF(-width / 2, -height / 2, width, height)
-
-    @staticmethod
-    def createPolygon(width, height):
-        """
-        Returns the initialized polygon according to the given width/height.
-        :type width: int
-        :type height: int
-        :rtype: QRectF
-        """
-        return QRectF(-width / 2, -height / 2, width, height)
+        return self.polygon.geometry()
 
     def height(self):
         """
         Returns the height of the shape.
         :rtype: int
         """
-        return self.polygon.height()
+        return self.polygon.geometry().height()
 
     @classmethod
     def icon(cls, width, height, **kwargs):
@@ -167,16 +158,15 @@ class ValueDomainNode(AbstractNode):
             pixmap.setDevicePixelRatio(i)
             pixmap.fill(Qt.transparent)
             # PAINT THE SHAPE
-            polygon = cls.createPolygon(54, 34)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
             painter.setPen(Pen.SolidBlack1Pt)
             painter.setBrush(Brush.White255A)
             painter.translate(width / 2, height / 2)
-            painter.drawRoundedRect(polygon, 6, 6)
+            painter.drawRoundedRect(QRectF(-27, -17, 54, 34), 6, 6)
             # PAINT THE TEXT INSIDE THE SHAPE
             painter.setFont(Font('Arial', 10, Font.Light))
-            painter.drawText(polygon, Qt.AlignCenter, 'xsd:string')
+            painter.drawText(QRectF(-27, -17, 54, 34), Qt.AlignCenter, 'xsd:string')
             painter.end()
             # ADD THE PIXMAP TO THE ICON
             icon.addPixmap(pixmap)
@@ -192,18 +182,18 @@ class ValueDomainNode(AbstractNode):
         # SET THE RECT THAT NEEDS TO BE REPAINTED
         painter.setClipRect(option.exposedRect)
         # SELECTION AREA
-        painter.setPen(self.selectionPen)
-        painter.setBrush(self.selectionBrush)
-        painter.drawRect(self.selection)
+        painter.setPen(self.selection.pen())
+        painter.setBrush(self.selection.brush())
+        painter.drawRect(self.selection.geometry())
         # SYNTAX VALIDATION
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(self.backgroundPen)
-        painter.setBrush(self.backgroundBrush)
-        painter.drawRoundedRect(self.background, 8, 8)
+        painter.setPen(self.background.pen())
+        painter.setBrush(self.background.brush())
+        painter.drawRoundedRect(self.background.geometry(), 8, 8)
         # SHAPE
-        painter.setBrush(self.brush)
-        painter.setPen(self.pen)
-        painter.drawRoundedRect(self.polygon, 8, 8)
+        painter.setPen(self.polygon.pen())
+        painter.setBrush(self.polygon.brush())
+        painter.drawRoundedRect(self.polygon.geometry(), 8, 8)
 
     def painterPath(self):
         """
@@ -211,8 +201,15 @@ class ValueDomainNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRoundedRect(self.polygon, 8, 8)
+        path.addRoundedRect(self.polygon.geometry(), 8, 8)
         return path
+
+    def pen(self):
+        """
+        Returns the pen used to paint the shape of this node.
+        :rtype: QPen
+        """
+        return self.polygon.pen()
 
     def setText(self, text):
         """
@@ -236,7 +233,7 @@ class ValueDomainNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRoundedRect(self.polygon, 8, 8)
+        path.addRoundedRect(self.polygon.geometry(), 8, 8)
         return path
 
     def text(self):
@@ -263,10 +260,10 @@ class ValueDomainNode(AbstractNode):
         """
         Update current shape rect according to the selected datatype.
         """
-        width = max(self.label.width() + 16, self.MinWidth)
-        self.polygon = self.createPolygon(width, self.MinHeight)
-        self.background = self.createBackground(width + 8, self.MinHeight + 8)
-        self.selection = self.createSelection(width + 8, self.MinHeight + 8)
+        width = max(self.label.width() + 16, 90)
+        self.polygon.setGeometry(QRectF(-width / 2, -24, width, 48))
+        self.background.setGeometry(QRectF(-(width + 8) / 2, -24, width + 8, 48))
+        self.selection.setGeometry(QRectF(-(width + 8) / 2, -24, width + 8, 48))
         self.updateTextPos()
         self.updateEdges()
 
@@ -275,4 +272,4 @@ class ValueDomainNode(AbstractNode):
         Returns the width of the shape.
         :rtype: int
         """
-        return self.polygon.width()
+        return self.polygon.geometry().width()

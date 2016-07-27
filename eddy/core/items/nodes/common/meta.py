@@ -64,7 +64,7 @@ class MetaFactory(QObject):
             return AttributeMetaData(item, predicate)
         return PredicateMetaData(item, predicate)
 
-
+# TODO: inherit from object instead?
 class PredicateMetaData(QObject):
     """
     This class implements the basic predicate node metadata container.

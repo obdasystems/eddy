@@ -41,7 +41,7 @@ from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem
 
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.graphol import Item
-from eddy.core.datatypes.misc import Brush, Pen, DiagramMode
+from eddy.core.datatypes.misc import Brush, DiagramMode
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
 from eddy.core.qt import Font
@@ -121,10 +121,6 @@ class AbstractItem(QGraphicsItem, DiagramItemMixin):
         """
         super().__init__(**kwargs)
         self.id = id or diagram.guid.next(self.Prefix)
-        self.selectionBrush = Brush.NoBrush
-        self.selectionPen = Pen.NoPen
-        self.brush = Brush.NoBrush
-        self.pen = Pen.NoPen
 
     #############################################
     #   PROPERTIES
@@ -184,7 +180,7 @@ class AbstractItem(QGraphicsItem, DiagramItemMixin):
     @abstractmethod
     def redraw(self, **kwargs):
         """
-        Schedule this item for redrawing.
+        Perform the redrawing of this item.
         """
         pass
 

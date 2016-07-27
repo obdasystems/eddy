@@ -33,8 +33,8 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QPixmap, QPainter
+from PyQt5.QtCore import Qt, QPointF, QRectF
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPolygonF
 
 from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Item, Identity
@@ -56,11 +56,7 @@ class RoleInverseNode(OperatorNode):
         :type brush: QBrush
         """
         super().__init__(brush=Brush.White255A, **kwargs)
-        self.label = NodeLabel(template='inv',
-                               editable=False,
-                               movable=False,
-                               pos=self.center,
-                               parent=self)
+        self.label = NodeLabel('inv', pos=self.center, editable=False, movable=False, parent=self)
 
     #############################################
     #   PROPERTIES
@@ -91,8 +87,11 @@ class RoleInverseNode(OperatorNode):
         Create a copy of the current item.
         :type diagram: Diagram
         """
-        kwargs = {'id': self.id, 'height': self.height(), 'width': self.width()}
-        node = diagram.factory.create(self.type(), **kwargs)
+        node = diagram.factory.create(self.type(), **{
+            'id': self.id,
+            'height': self.height(),
+            'width': self.width()
+        })
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
@@ -113,16 +112,23 @@ class RoleInverseNode(OperatorNode):
             pixmap.setDevicePixelRatio(i)
             pixmap.fill(Qt.transparent)
             # PAINT THE SHAPE
-            polygon = cls.createPolygon(46, 30)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
             painter.setPen(Pen.SolidBlack1Pt)
             painter.setBrush(Brush.White255A)
             painter.translate(width / 2, height / 2)
-            painter.drawPolygon(polygon)
+            painter.drawPolygon(QPolygonF([
+                QPointF(-23, 0),
+                QPointF(-23 + 6, +15),
+                QPointF(+23 - 6, +15),
+                QPointF(+23, 0),
+                QPointF(+23 - 6, -15),
+                QPointF(-23 + 6, -15),
+                QPointF(-23, 0),
+            ]))
             # PAINT THE TEXT INSIDE THE SHAPE
             painter.setFont(Font('Arial', 11, Font.Light))
-            painter.drawText(polygon.boundingRect(), Qt.AlignCenter, 'inv')
+            painter.drawText(QRectF(-23, -15, 46, 30), Qt.AlignCenter, 'inv')
             painter.end()
             # ADD THE PIXMAP TO THE ICON
             icon.addPixmap(pixmap)

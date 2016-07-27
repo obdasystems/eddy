@@ -40,6 +40,7 @@ from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
+from eddy.core.polygon import Polygon
 from eddy.core.qt import Font
 
 
@@ -58,11 +59,9 @@ class AttributeNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.brush = brush or Brush.White255A
-        self.pen = Pen.SolidBlack1_1Pt
-        self.polygon = self.createPolygon(20, 20)
-        self.background = self.createBackground(28, 28)
-        self.selection = self.createBackground(28, 28)
+        self.background = Polygon(QRectF(-14, -14, 28, 28))
+        self.selection = Polygon(QRectF(-14, -14, 28, 28))
+        self.polygon = Polygon(QRectF(-10, -10, 20, 20), brush or Brush.White255A, Pen.SolidBlack1_1Pt)
         self.label = NodeLabel(template='attribute', pos=lambda: self.center() - QPointF(0, 22), parent=self)
         self.label.setAlignment(Qt.AlignCenter)
 
@@ -122,70 +121,44 @@ class AttributeNode(AbstractNode):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        return self.selection
+        return self.selection.geometry()
+
+    def brush(self):
+        """
+        Returns the brush used to paint the shape of this node.
+        :rtype: QBrush
+        """
+        return self.polygon.brush()
 
     def copy(self, diagram):
         """
         Create a copy of the current item.
         :type diagram: Diagram
         """
-        kwargs = {'id': self.id, 'brush': self.brush, 'height': self.height(), 'width': self.width()}
-        node = diagram.factory.create(self.type(), **kwargs)
+        node = diagram.factory.create(self.type(), **{
+            'id': self.id,
+            'brush': self.brush(),
+            'height': self.height(),
+            'width': self.width()
+        })
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
-    @staticmethod
-    def createBackground(width, height):
+    def geometry(self):
         """
-        Returns the initialized background polygon according to the given width/height.
-        :type width: int
-        :type height: int
-        :rtype: T QRectF
-        """
-        return QRectF(-width / 2, -height / 2, width, height)
-
-    @staticmethod
-    def createPolygon(width, height):
-        """
-        Returns the initialized polygon according to the given width/height.
-        :type width: int
-        :type height: int
+        Returns the geometry of the shape of this node.
         :rtype: QRectF
         """
-        return QRectF(-width / 2, -height / 2, width, height)
+        return self.polygon.geometry()
 
     def height(self):
         """
         Returns the height of the shape.
         :rtype: int
         """
-        return self.polygon.height()
-
-    @classmethod
-    def icon(cls, width, height, **kwargs):
-        """
-        Returns an image suitable for the palette.
-        :type width: int
-        :type height: int
-        :rtype: QPixmap
-        """
-        # INITIALIZATION
-        pixmap = QPixmap(width, height)
-        pixmap.fill(Qt.transparent)
-        painter = QPainter(pixmap)
-        # TEXT
-        painter.setFont(Font('Arial', 9, Font.Light))
-        painter.translate(0, 0)
-        painter.drawText(QRectF(0, 0, width, height / 2), Qt.AlignCenter, 'attribute')
-        # ITEM SHAPE
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(Pen.SolidBlack1_1Pt)
-        painter.setBrush(Brush.White255A)
-        painter.translate(width / 2, height / 2 + 6)
-        painter.drawEllipse(cls.createPolygon(18, 18))
-        return pixmap
+        return self.polygon.geometry().height()
 
     @classmethod
     def icon(cls, width, height, **kwargs):
@@ -211,7 +184,7 @@ class AttributeNode(AbstractNode):
             painter.setPen(Pen.SolidBlack1_1Pt)
             painter.setBrush(Brush.White255A)
             painter.translate(width / 2, height / 2 + 6)
-            painter.drawEllipse(cls.createPolygon(18, 18))
+            painter.drawEllipse(QRectF(-9, -9, 18, 18))
             painter.end()
             # ADD THE PIXMAP TO THE ICON
             icon.addPixmap(pixmap)
@@ -227,18 +200,18 @@ class AttributeNode(AbstractNode):
         # SET THE RECT THAT NEEDS TO BE REPAINTED
         painter.setClipRect(option.exposedRect)
         # SELECTION AREA
-        painter.setPen(self.selectionPen)
-        painter.setBrush(self.selectionBrush)
-        painter.drawRect(self.selection)
+        painter.setPen(self.selection.pen())
+        painter.setBrush(self.selection.brush())
+        painter.drawRect(self.selection.geometry())
         # SYNTAX VALIDATION
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(self.backgroundPen)
-        painter.setBrush(self.backgroundBrush)
-        painter.drawEllipse(self.background)
+        painter.setPen(self.background.pen())
+        painter.setBrush(self.background.brush())
+        painter.drawEllipse(self.background.geometry())
         # ITEM SHAPE
-        painter.setPen(self.pen)
-        painter.setBrush(self.brush)
-        painter.drawEllipse(self.polygon)
+        painter.setPen(self.polygon.pen())
+        painter.setBrush(self.polygon.brush())
+        painter.drawEllipse(self.polygon.geometry())
 
     def painterPath(self):
         """
@@ -246,8 +219,15 @@ class AttributeNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addEllipse(self.polygon)
+        path.addEllipse(self.polygon.geometry())
         return path
+
+    def pen(self):
+        """
+        Returns the pen used to paint the shape of this node.
+        :rtype: QPen
+        """
+        return self.polygon.pen()
 
     def setText(self, text):
         """
@@ -270,7 +250,7 @@ class AttributeNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addEllipse(self.polygon)
+        path.addEllipse(self.polygon.geometry())
         return path
 
     def text(self):
@@ -298,4 +278,4 @@ class AttributeNode(AbstractNode):
         Returns the width of the shape.
         :rtype: int
         """
-        return self.polygon.width()
+        return self.polygon.geometry().width()

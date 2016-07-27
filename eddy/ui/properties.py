@@ -910,7 +910,7 @@ class ValueNodeProperty(NodeProperty):
         """
         datatype = self.datatypeField.currentData()
         value = self.valueField.value()
-        data = self.node.composeValue(value, datatype)
+        data = self.node.compose(value, datatype)
         if self.node.text() != data:
             return CommandLabelChange(self.diagram, self.node, self.node.text(), data)
         return None

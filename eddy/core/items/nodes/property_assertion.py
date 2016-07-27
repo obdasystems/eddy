@@ -40,6 +40,7 @@ from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.base import AbstractNode
+from eddy.core.polygon import Polygon
 
 
 class PropertyAssertionNode(AbstractNode):
@@ -57,14 +58,11 @@ class PropertyAssertionNode(AbstractNode):
         :type brush: QBrush
         :type inputs: DistinctList
         """
-        self._identity = Identity.Neutral
         super().__init__(**kwargs)
-        self.brush = Brush.White255A
-        self.pen = Pen.SolidBlack1Pt
         self.inputs = inputs or DistinctList()
-        self.polygon = self.createPolygon(52, 30)
-        self.background = self.createBackground(60, 38)
-        self.selection = self.createSelection(60, 38)
+        self.background = Polygon(QRectF(-34, -19, 68, 38))
+        self.selection = Polygon(QRectF(-34, -19, 68, 38))
+        self.polygon = Polygon(QRectF(-26, -15, 52, 30), Brush.White255A, Pen.SolidBlack1Pt)
 
     #############################################
     #   PROPERTIES
@@ -107,7 +105,14 @@ class PropertyAssertionNode(AbstractNode):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        return self.selection
+        return self.selection.geometry()
+
+    def brush(self):
+        """
+        Returns the brush used to paint the shape of this node.
+        :rtype: QBrush
+        """
+        return self.polygon.brush()
 
     def copy(self, diagram):
         """
@@ -119,32 +124,19 @@ class PropertyAssertionNode(AbstractNode):
         node.setPos(self.pos())
         return node
 
-    @staticmethod
-    def createBackground(width, height):
+    def geometry(self):
         """
-        Returns the initialized background polygon according to the given width/height.
-        :type width: int
-        :type height: int
-        :rtype: QRectF
+        Returns the geometry of the shape of this node.
+        :rtype: QPolygonF
         """
-        return QRectF(-width / 2, -height / 2, width, height)
-
-    @staticmethod
-    def createPolygon(width, height):
-        """
-        Returns the initialized polygon according to the given width/height.
-        :type width: int
-        :type height: int
-        :rtype: QRectF
-        """
-        return QRectF(-width / 2, -height / 2, width, height)
+        return self.polygon.geometry()
 
     def height(self):
         """
         Returns the height of the shape.
         :rtype: int
         """
-        return self.polygon.height()
+        return self.polygon.geometry().height()
 
     @classmethod
     def icon(cls, width, height, **kwargs):
@@ -161,13 +153,12 @@ class PropertyAssertionNode(AbstractNode):
             pixmap.setDevicePixelRatio(i)
             pixmap.fill(Qt.transparent)
             # PAINT THE SHAPE
-            polygon = cls.createPolygon(46, 30)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
             painter.setPen(Pen.SolidBlack1Pt)
             painter.setBrush(Brush.White255A)
             painter.translate(width / 2, height / 2)
-            painter.drawRoundedRect(polygon, 14, 14)
+            painter.drawRoundedRect(QRectF(-23, -15, 46, 30), 14, 14)
             painter.end()
             # ADD THE PIXMAP TO THE ICON
             icon.addPixmap(pixmap)
@@ -183,18 +174,18 @@ class PropertyAssertionNode(AbstractNode):
         # SET THE RECT THAT NEEDS TO BE REPAINTED
         painter.setClipRect(option.exposedRect)
         # SELECTION AREA
-        painter.setPen(self.selectionPen)
-        painter.setBrush(self.selectionBrush)
-        painter.drawRect(self.background)
+        painter.setPen(self.selection.pen())
+        painter.setBrush(self.selection.brush())
+        painter.drawRect(self.selection.geometry())
         # SYNTAX VALIDATION
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(self.backgroundPen)
-        painter.setBrush(self.backgroundBrush)
-        painter.drawRoundedRect(self.background, 16, 16)
+        painter.setPen(self.background.pen())
+        painter.setBrush(self.background.brush())
+        painter.drawRoundedRect(self.background.geometry(), 16, 16)
         # SHAPE
-        painter.setPen(self.pen)
-        painter.setBrush(self.brush)
-        painter.drawRoundedRect(self.polygon, 16, 16)
+        painter.setPen(self.polygon.pen())
+        painter.setBrush(self.polygon.brush())
+        painter.drawRoundedRect(self.polygon.geometry(), 16, 16)
 
     def painterPath(self):
         """
@@ -202,8 +193,15 @@ class PropertyAssertionNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRoundedRect(self.polygon, 16, 16)
+        path.addRoundedRect(self.polygon.geometry(), 16, 16)
         return path
+
+    def pen(self):
+        """
+        Returns the pen used to paint the shape of this node.
+        :rtype: QPen
+        """
+        return self.polygon.pen()
 
     def shape(self):
         """
@@ -211,7 +209,7 @@ class PropertyAssertionNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRoundedRect(self.polygon, 16, 16)
+        path.addRoundedRect(self.polygon.geometry(), 16, 16)
         return path
 
     def removeEdge(self, edge):
@@ -267,4 +265,4 @@ class PropertyAssertionNode(AbstractNode):
         Returns the width of the shape.
         :rtype: int
         """
-        return self.polygon.width()
+        return self.polygon.geometry().width()

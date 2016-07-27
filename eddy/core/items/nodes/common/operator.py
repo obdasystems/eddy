@@ -35,11 +35,12 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import QPointF
+from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QPainter, QPainterPath, QPolygonF
 
 from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.items.nodes.common.base import AbstractNode
+from eddy.core.polygon import Polygon
 
 
 class OperatorNode(AbstractNode):
@@ -64,11 +65,20 @@ class OperatorNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-        self.brush = brush or Brush.White255A
-        self.pen = Pen.SolidBlack1_1Pt
-        self.polygon = self.createPolygon(50, 30)
-        self.background = self.createBackground(58, 38)
-        self.selection = self.createSelection(58, 38)
+
+        createPolygon = lambda x, y: QPolygonF([
+            QPointF(-x / 2, 0),
+            QPointF(-x / 2 + 6, +y / 2),
+            QPointF(+x / 2 - 6, +y / 2),
+            QPointF(+x / 2, 0),
+            QPointF(+x / 2 - 6, -y / 2),
+            QPointF(-x / 2 + 6, -y / 2),
+            QPointF(-x / 2, 0),
+        ])
+
+        self.background = Polygon(createPolygon(58, 38))
+        self.selection = Polygon(QRectF(-29, -19, 58, 38))
+        self.polygon = Polygon(createPolygon(50, 30), brush or Brush.White255A, Pen.SolidBlack1_1Pt)
 
     #############################################
     #   PROPERTIES
@@ -101,50 +111,29 @@ class OperatorNode(AbstractNode):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        return self.selection
+        return self.selection.geometry()
 
-    @staticmethod
-    def createBackground(width, height):
+    def brush(self):
         """
-        Returns the initialized background polygon according to the given width/height.
-        :type width: int
-        :type height: int
+        Returns the brush used to paint the shape of this node.
+        :rtype: QBrush
+        """
+        return self.polygon.brush()
+
+    def geometry(self):
+        """
+        Returns the geometry of the shape of this node.
         :rtype: QPolygonF
         """
-        return QPolygonF([
-            QPointF(-width / 2, 0),                # 0
-            QPointF(-width / 2 + 6, +height / 2),  # 1
-            QPointF(+width / 2 - 6, +height / 2),  # 2
-            QPointF(+width / 2, 0),                # 3
-            QPointF(+width / 2 - 6, -height / 2),  # 4
-            QPointF(-width / 2 + 6, -height / 2),  # 5
-            QPointF(-width / 2, 0)                 # 6
-        ])
-
-    @staticmethod
-    def createPolygon(width, height):
-        """
-        Returns the initialized polygon according to the given width/height.
-        :type width: int
-        :type height: int
-        :rtype: QPolygonF
-        """
-        return QPolygonF([
-            QPointF(-width / 2, 0),                # 0
-            QPointF(-width / 2 + 6, +height / 2),  # 1
-            QPointF(+width / 2 - 6, +height / 2),  # 2
-            QPointF(+width / 2, 0),                # 3
-            QPointF(+width / 2 - 6, -height / 2),  # 4
-            QPointF(-width / 2 + 6, -height / 2),  # 5
-            QPointF(-width / 2, 0)                 # 6
-        ])
+        return self.polygon.geometry()
 
     def height(self):
         """
         Returns the height of the shape.
         :rtype: int
         """
-        return self.polygon[self.IndexBL].y() - self.polygon[self.IndexTL].y()
+        polygon = self.polygon.geometry()
+        return polygon[self.IndexBL].y() - polygon[self.IndexTL].y()
 
     def paint(self, painter, option, widget=None):
         """
@@ -153,19 +142,21 @@ class OperatorNode(AbstractNode):
         :type option: QStyleOptionGraphicsItem
         :type widget: QWidget
         """
+        # SET THE RECT THAT NEEDS TO BE REPAINTED
+        painter.setClipRect(option.exposedRect)
         # SELECTION AREA
-        painter.setPen(self.selectionPen)
-        painter.setBrush(self.selectionBrush)
-        painter.drawRect(self.selection)
+        painter.setPen(self.selection.pen())
+        painter.setBrush(self.selection.brush())
+        painter.drawRect(self.selection.geometry())
         # SYNTAX VALIDATION
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(self.backgroundPen)
-        painter.setBrush(self.backgroundBrush)
-        painter.drawPolygon(self.background)
-        # SHAPE
-        painter.setPen(self.pen)
-        painter.setBrush(self.brush)
-        painter.drawPolygon(self.polygon)
+        painter.setPen(self.background.pen())
+        painter.setBrush(self.background.brush())
+        painter.drawPolygon(self.background.geometry())
+        # ITEM SHAPE
+        painter.setPen(self.polygon.pen())
+        painter.setBrush(self.polygon.brush())
+        painter.drawPolygon(self.polygon.geometry())
 
     def painterPath(self):
         """
@@ -173,8 +164,15 @@ class OperatorNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addPolygon(self.polygon)
+        path.addPolygon(self.polygon.geometry())
         return path
+
+    def pen(self):
+        """
+        Returns the pen used to paint the shape of this node.
+        :rtype: QPen
+        """
+        return self.polygon.pen()
 
     def setText(self, text):
         """
@@ -196,7 +194,7 @@ class OperatorNode(AbstractNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addPolygon(self.polygon)
+        path.addPolygon(self.polygon.geometry())
         return path
 
     def text(self):
@@ -224,4 +222,5 @@ class OperatorNode(AbstractNode):
         Returns the width of the shape.
         :rtype: int
         """
-        return self.polygon[self.IndexMR].x() - self.polygon[self.IndexML].x()
+        polygon = self.polygon.geometry()
+        return polygon[self.IndexMR].x() - polygon[self.IndexML].x()

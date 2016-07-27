@@ -54,7 +54,6 @@ class RangeRestrictionNode(RestrictionNode):
         Initialize the node.
         :type brush: QBrush
         """
-        self._identity = Identity.Neutral
         super().__init__(brush=Brush.Black255A, **kwargs)
 
     #############################################

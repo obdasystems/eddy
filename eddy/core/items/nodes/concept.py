@@ -41,6 +41,7 @@ from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.functions.misc import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
+from eddy.core.polygon import Polygon
 from eddy.core.qt import Font
 
 
@@ -50,10 +51,8 @@ class ConceptNode(AbstractResizableNode):
     """
     Identities = {Identity.Concept}
     Type = Item.ConceptNode
-    MinHeight = 50
-    MinWidth = 110
 
-    def __init__(self, width=MinWidth, height=MinHeight, brush=None, **kwargs):
+    def __init__(self, width=110, height=50, brush=None, **kwargs):
         """
         Initialize the node.
         :type width: int
@@ -61,19 +60,14 @@ class ConceptNode(AbstractResizableNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-
-        w = max(width, self.MinWidth)
-        h = max(height, self.MinHeight)
-        s = self.HandleSize
-
-        self.brush = brush or Brush.White255A
-        self.pen = Pen.SolidBlack1Pt
-        self.polygon = self.createPolygon(w, h)
-        self.background = self.createBackground(w + s, h + s)
-        self.selection = self.createSelection(w + s, h + s)
+        w = max(width, 110)
+        h = max(height, 50)
+        self.background = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
+        self.selection = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
+        self.polygon = Polygon(QRectF(-w / 2, -h / 2, w, h), brush or Brush.White255A, Pen.SolidBlack1Pt)
         self.label = NodeLabel(template='concept', pos=self.center, parent=self)
         self.label.setAlignment(Qt.AlignCenter)
-        self.updateHandles()
+        self.updateResizeHandles()
         self.updateTextPos()
 
     #############################################
@@ -113,46 +107,44 @@ class ConceptNode(AbstractResizableNode):
         Returns the shape bounding rectangle.
         :rtype: QRectF
         """
-        return self.selection
+        return self.selection.geometry()
+
+    def brush(self):
+        """
+        Returns the brush used to paint the shape of this node.
+        :rtype: QBrush
+        """
+        return self.polygon.brush()
 
     def copy(self, diagram):
         """
         Create a copy of the current item.
         :type diagram: Diagram
         """
-        kwargs = {'id': self.id, 'brush': self.brush, 'height': self.height(), 'width': self.width()}
-        node = diagram.factory.create(self.type(), **kwargs)
+        node = diagram.factory.create(self.type(), **{
+            'id': self.id,
+            'brush': self.brush(),
+            'height': self.height(),
+            'width': self.width()
+        })
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
-    @staticmethod
-    def createBackground(width, height):
+    def geometry(self):
         """
-        Returns the initialized background polygon according to the given width/height.
-        :type width: int
-        :type height: int
+        Returns the geometry of the shape of this node.
         :rtype: QRectF
         """
-        return QRectF(-width / 2, -height / 2, width, height)
-
-    @staticmethod
-    def createPolygon(width, height):
-        """
-        Returns the initialized polygon according to the given width/height.
-        :type width: int
-        :type height: int
-        :rtype: QRectF
-        """
-        return QRectF(-width / 2, -height / 2, width, height)
+        return self.polygon.geometry()
 
     def height(self):
         """
         Returns the height of the shape.
         :rtype: int
         """
-        return self.polygon.height()
+        return self.polygon.geometry().height()
 
     @classmethod
     def icon(cls, width, height, **kwargs):
@@ -169,15 +161,14 @@ class ConceptNode(AbstractResizableNode):
             pixmap.setDevicePixelRatio(i)
             pixmap.fill(Qt.transparent)
             # PAINT THE SHAPE
-            polygon = cls.createPolygon(54, 34)
             painter = QPainter(pixmap)
             painter.setPen(Pen.SolidBlack1Pt)
             painter.setBrush(Brush.White255A)
             painter.translate(width / 2, height / 2)
-            painter.drawRect(polygon)
+            painter.drawRect(QRectF(-27, -17, 54, 34))
             # PAINT THE TEXT INSIDE THE SHAPE
             painter.setFont(Font('Arial', 11, Font.Light))
-            painter.drawText(polygon, Qt.AlignCenter, 'concept')
+            painter.drawText(QRectF(-27, -17, 54, 34), Qt.AlignCenter, 'concept')
             painter.end()
             # ADD THE PIXMAP TO THE ICON
             icon.addPixmap(pixmap)
@@ -193,23 +184,23 @@ class ConceptNode(AbstractResizableNode):
         # SET THE RECT THAT NEEDS TO BE REPAINTED
         painter.setClipRect(option.exposedRect)
         # SELECTION AREA
-        painter.setPen(self.selectionPen)
-        painter.setBrush(self.selectionBrush)
-        painter.drawRect(self.selection)
+        painter.setPen(self.selection.pen())
+        painter.setBrush(self.selection.brush())
+        painter.drawRect(self.selection.geometry())
         # SYNTAX VALIDATION
-        painter.setPen(self.backgroundPen)
-        painter.setBrush(self.backgroundBrush)
-        painter.drawRect(self.background)
+        painter.setPen(self.background.pen())
+        painter.setBrush(self.background.brush())
+        painter.drawRect(self.background.geometry())
         # ITEM SHAPE
-        painter.setPen(self.pen)
-        painter.setBrush(self.brush)
-        painter.drawRect(self.polygon)
+        painter.setPen(self.polygon.pen())
+        painter.setBrush(self.polygon.brush())
+        painter.drawRect(self.polygon.geometry())
         # RESIZE HANDLES
         painter.setRenderHint(QPainter.Antialiasing)
-        for i in range(self.HandleNum):
-            painter.setBrush(self.handleBrush[i])
-            painter.setPen(self.handlePen[i])
-            painter.drawEllipse(self.handleShape[i])
+        for polygon in self.handles:
+            painter.setPen(polygon.pen())
+            painter.setBrush(polygon.brush())
+            painter.drawEllipse(polygon.geometry())
 
     def painterPath(self):
         """
@@ -217,8 +208,15 @@ class ConceptNode(AbstractResizableNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRect(self.polygon)
+        path.addRect(self.polygon.geometry())
         return path
+
+    def pen(self):
+        """
+        Returns the pen used to paint the shape of this node.
+        :rtype: QPen
+        """
+        return self.polygon.pen()
 
     def resize(self, mousePos):
         """
@@ -227,200 +225,206 @@ class ConceptNode(AbstractResizableNode):
         """
         snap = self.session.action('toggle_grid').isChecked()
         size = self.diagram.GridSize
-        offset = self.HandleSize + self.HandleMove
         moved = self.label.isMoved()
+
+        background = self.background.geometry()
+        selection = self.selection.geometry()
+        polygon = self.polygon.geometry()
 
         R = QRectF(self.boundingRect())
         D = QPointF(0, 0)
 
-        mbh = self.MinHeight + offset * 2
-        mbw = self.MinWidth + offset * 2
+        mbrh = 58
+        mbrw = 118
 
         self.prepareGeometryChange()
 
-        if self.mousePressHandle == self.HandleTL:
+        if self.mp_Handle == self.HandleTL:
 
-            fromX = self.mousePressBound.left()
-            fromY = self.mousePressBound.top()
-            toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, size, -offset, snap)
-            toY = snapF(toY, size, -offset, snap)
+            fromX = self.mp_Bound.left()
+            fromY = self.mp_Bound.top()
+            toX = fromX + mousePos.x() - self.mp_Pos.x()
+            toY = fromY + mousePos.y() - self.mp_Pos.y()
+            toX = snapF(toX, size, -4, snap)
+            toY = snapF(toY, size, -4, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setLeft(toX)
             R.setTop(toY)
 
             ## CLAMP SIZE
-            if R.width() < mbw:
-                D.setX(D.x() - mbw + R.width())
-                R.setLeft(R.left() - mbw + R.width())
-            if R.height() < mbh:
-                D.setY(D.y() - mbh + R.height())
-                R.setTop(R.top() - mbh + R.height())
+            if R.width() < mbrw:
+                D.setX(D.x() - mbrw + R.width())
+                R.setLeft(R.left() - mbrw + R.width())
+            if R.height() < mbrh:
+                D.setY(D.y() - mbrh + R.height())
+                R.setTop(R.top() - mbrh + R.height())
 
-            self.background.setLeft(R.left())
-            self.background.setTop(R.top())
-            self.selection.setLeft(R.left())
-            self.selection.setTop(R.top())
-            self.polygon.setLeft(R.left() + offset)
-            self.polygon.setTop(R.top() + offset)
+            background.setLeft(R.left())
+            background.setTop(R.top())
+            selection.setLeft(R.left())
+            selection.setTop(R.top())
+            polygon.setLeft(R.left() + 4)
+            polygon.setTop(R.top() + 4)
 
-        elif self.mousePressHandle == self.HandleTM:
+        elif self.mp_Handle == self.HandleTM:
 
-            fromY = self.mousePressBound.top()
-            toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapF(toY, size, -offset, snap)
+            fromY = self.mp_Bound.top()
+            toY = fromY + mousePos.y() - self.mp_Pos.y()
+            toY = snapF(toY, size, -4, snap)
             D.setY(toY - fromY)
             R.setTop(toY)
 
             ## CLAMP SIZE
-            if R.height() < mbh:
-                D.setY(D.y() - mbh + R.height())
-                R.setTop(R.top() - mbh + R.height())
+            if R.height() < mbrh:
+                D.setY(D.y() - mbrh + R.height())
+                R.setTop(R.top() - mbrh + R.height())
 
-            self.background.setTop(R.top())
-            self.selection.setTop(R.top())
-            self.polygon.setTop(R.top() + offset)
+            background.setTop(R.top())
+            selection.setTop(R.top())
+            polygon.setTop(R.top() + 4)
 
-        elif self.mousePressHandle == self.HandleTR:
+        elif self.mp_Handle == self.HandleTR:
 
-            fromX = self.mousePressBound.right()
-            fromY = self.mousePressBound.top()
-            toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, size, +offset, snap)
-            toY = snapF(toY, size, -offset, snap)
+            fromX = self.mp_Bound.right()
+            fromY = self.mp_Bound.top()
+            toX = fromX + mousePos.x() - self.mp_Pos.x()
+            toY = fromY + mousePos.y() - self.mp_Pos.y()
+            toX = snapF(toX, size, +4, snap)
+            toY = snapF(toY, size, -4, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setRight(toX)
             R.setTop(toY)
 
             ## CLAMP SIZE
-            if R.width() < mbw:
-                D.setX(D.x() + mbw - R.width())
-                R.setRight(R.right() + mbw - R.width())
-            if R.height() < mbh:
-                D.setY(D.y() - mbh + R.height())
-                R.setTop(R.top() - mbh + R.height())
+            if R.width() < mbrw:
+                D.setX(D.x() + mbrw - R.width())
+                R.setRight(R.right() + mbrw - R.width())
+            if R.height() < mbrh:
+                D.setY(D.y() - mbrh + R.height())
+                R.setTop(R.top() - mbrh + R.height())
 
-            self.background.setRight(R.right())
-            self.background.setTop(R.top())
-            self.selection.setRight(R.right())
-            self.selection.setTop(R.top())
-            self.polygon.setRight(R.right() - offset)
-            self.polygon.setTop(R.top() + offset)
+            background.setRight(R.right())
+            background.setTop(R.top())
+            selection.setRight(R.right())
+            selection.setTop(R.top())
+            polygon.setRight(R.right() - 4)
+            polygon.setTop(R.top() + 4)
 
-        elif self.mousePressHandle == self.HandleML:
+        elif self.mp_Handle == self.HandleML:
 
-            fromX = self.mousePressBound.left()
-            toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapF(toX, size, -offset, snap)
+            fromX = self.mp_Bound.left()
+            toX = fromX + mousePos.x() - self.mp_Pos.x()
+            toX = snapF(toX, size, -4, snap)
             D.setX(toX - fromX)
             R.setLeft(toX)
 
             ## CLAMP SIZE
-            if R.width() < mbw:
-                D.setX(D.x() - mbw + R.width())
-                R.setLeft(R.left() - mbw + R.width())
+            if R.width() < mbrw:
+                D.setX(D.x() - mbrw + R.width())
+                R.setLeft(R.left() - mbrw + R.width())
 
-            self.background.setLeft(R.left())
-            self.selection.setLeft(R.left())
-            self.polygon.setLeft(R.left() + offset)
+            background.setLeft(R.left())
+            selection.setLeft(R.left())
+            polygon.setLeft(R.left() + 4)
 
-        elif self.mousePressHandle == self.HandleMR:
+        elif self.mp_Handle == self.HandleMR:
 
-            fromX = self.mousePressBound.right()
-            toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toX = snapF(toX, size, +offset, snap)
+            fromX = self.mp_Bound.right()
+            toX = fromX + mousePos.x() - self.mp_Pos.x()
+            toX = snapF(toX, size, +4, snap)
             D.setX(toX - fromX)
             R.setRight(toX)
 
             ## CLAMP SIZE
-            if R.width() < mbw:
-                D.setX(D.x() + mbw - R.width())
-                R.setRight(R.right() + mbw - R.width())
+            if R.width() < mbrw:
+                D.setX(D.x() + mbrw - R.width())
+                R.setRight(R.right() + mbrw - R.width())
 
-            self.background.setRight(R.right())
-            self.selection.setRight(R.right())
-            self.polygon.setRight(R.right() - offset)
+            background.setRight(R.right())
+            selection.setRight(R.right())
+            polygon.setRight(R.right() - 4)
 
-        elif self.mousePressHandle == self.HandleBL:
+        elif self.mp_Handle == self.HandleBL:
 
-            fromX = self.mousePressBound.left()
-            fromY = self.mousePressBound.bottom()
-            toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, size, -offset, snap)
-            toY = snapF(toY, size, +offset, snap)
+            fromX = self.mp_Bound.left()
+            fromY = self.mp_Bound.bottom()
+            toX = fromX + mousePos.x() - self.mp_Pos.x()
+            toY = fromY + mousePos.y() - self.mp_Pos.y()
+            toX = snapF(toX, size, -4, snap)
+            toY = snapF(toY, size, +4, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setLeft(toX)
             R.setBottom(toY)
 
             ## CLAMP SIZE
-            if R.width() < mbw:
-                D.setX(D.x() - mbw + R.width())
-                R.setLeft(R.left() - mbw + R.width())
-            if R.height() < mbh:
-                D.setY(D.y() + mbh - R.height())
-                R.setBottom(R.bottom() + mbh - R.height())
+            if R.width() < mbrw:
+                D.setX(D.x() - mbrw + R.width())
+                R.setLeft(R.left() - mbrw + R.width())
+            if R.height() < mbrh:
+                D.setY(D.y() + mbrh - R.height())
+                R.setBottom(R.bottom() + mbrh - R.height())
 
-            self.background.setLeft(R.left())
-            self.background.setBottom(R.bottom())
-            self.selection.setLeft(R.left())
-            self.selection.setBottom(R.bottom())
-            self.polygon.setLeft(R.left() + offset)
-            self.polygon.setBottom(R.bottom() - offset)
+            background.setLeft(R.left())
+            background.setBottom(R.bottom())
+            selection.setLeft(R.left())
+            selection.setBottom(R.bottom())
+            polygon.setLeft(R.left() + 4)
+            polygon.setBottom(R.bottom() - 4)
 
-        elif self.mousePressHandle == self.HandleBM:
+        elif self.mp_Handle == self.HandleBM:
 
-            fromY = self.mousePressBound.bottom()
-            toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toY = snapF(toY, size, +offset, snap)
+            fromY = self.mp_Bound.bottom()
+            toY = fromY + mousePos.y() - self.mp_Pos.y()
+            toY = snapF(toY, size, +4, snap)
             D.setY(toY - fromY)
             R.setBottom(toY)
 
             ## CLAMP SIZE
-            if R.height() < mbh:
-                D.setY(D.y() + mbh - R.height())
-                R.setBottom(R.bottom() + mbh - R.height())
+            if R.height() < mbrh:
+                D.setY(D.y() + mbrh - R.height())
+                R.setBottom(R.bottom() + mbrh - R.height())
 
-            self.background.setBottom(R.bottom())
-            self.selection.setBottom(R.bottom())
-            self.polygon.setBottom(R.bottom() - offset)
+            background.setBottom(R.bottom())
+            selection.setBottom(R.bottom())
+            polygon.setBottom(R.bottom() - 4)
 
-        elif self.mousePressHandle == self.HandleBR:
+        elif self.mp_Handle == self.HandleBR:
 
-            fromX = self.mousePressBound.right()
-            fromY = self.mousePressBound.bottom()
-            toX = fromX + mousePos.x() - self.mousePressPos.x()
-            toY = fromY + mousePos.y() - self.mousePressPos.y()
-            toX = snapF(toX, size, +offset, snap)
-            toY = snapF(toY, size, +offset, snap)
+            fromX = self.mp_Bound.right()
+            fromY = self.mp_Bound.bottom()
+            toX = fromX + mousePos.x() - self.mp_Pos.x()
+            toY = fromY + mousePos.y() - self.mp_Pos.y()
+            toX = snapF(toX, size, +4, snap)
+            toY = snapF(toY, size, +4, snap)
             D.setX(toX - fromX)
             D.setY(toY - fromY)
             R.setRight(toX)
             R.setBottom(toY)
 
             ## CLAMP SIZE
-            if R.width() < mbw:
-                D.setX(D.x() + mbw - R.width())
-                R.setRight(R.right() + mbw - R.width())
-            if R.height() < mbh:
-                D.setY(D.y() + mbh - R.height())
-                R.setBottom(R.bottom() + mbh - R.height())
+            if R.width() < mbrw:
+                D.setX(D.x() + mbrw - R.width())
+                R.setRight(R.right() + mbrw - R.width())
+            if R.height() < mbrh:
+                D.setY(D.y() + mbrh - R.height())
+                R.setBottom(R.bottom() + mbrh - R.height())
 
-            self.background.setRight(R.right())
-            self.background.setBottom(R.bottom())
-            self.selection.setRight(R.right())
-            self.selection.setBottom(R.bottom())
-            self.polygon.setRight(R.right() - offset)
-            self.polygon.setBottom(R.bottom() - offset)
+            background.setRight(R.right())
+            background.setBottom(R.bottom())
+            selection.setRight(R.right())
+            selection.setBottom(R.bottom())
+            polygon.setRight(R.right() - 4)
+            polygon.setBottom(R.bottom() - 4)
 
-        self.updateHandles()
+        self.background.setGeometry(background)
+        self.selection.setGeometry(selection)
+        self.polygon.setGeometry(polygon)
+        self.updateResizeHandles()
         self.updateTextPos(moved=moved)
-        self.updateAnchors(self.mousePressData, D)
+        self.updateAnchors(self.mp_Data, D)
 
     def shape(self):
         """
@@ -428,9 +432,9 @@ class ConceptNode(AbstractResizableNode):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addRect(self.polygon)
-        for shape in self.handleShape:
-            path.addEllipse(shape)
+        path.addRect(self.polygon.geometry())
+        for polygon in self.handles:
+            path.addEllipse(polygon.geometry())
         return path
 
     def setText(self, text):
@@ -473,4 +477,4 @@ class ConceptNode(AbstractResizableNode):
         Returns the width of the shape.
         :rtype: int
         """
-        return self.polygon.width()
+        return self.polygon.geometry().width()

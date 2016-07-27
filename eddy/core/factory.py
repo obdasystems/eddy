@@ -114,7 +114,7 @@ class MenuFactory(QObject):
         :rtype: QMenu
         """
         menu = QMenu()
-        breakpoint = edge.breakpointAt(pos)
+        breakpoint = edge.breakPointAt(pos)
         if breakpoint is not None:
             action = self.session.actions('remove_breakpoint')
             action.setData((edge, breakpoint))
@@ -136,7 +136,7 @@ class MenuFactory(QObject):
         :rtype: QMenu
         """
         menu = QMenu()
-        breakpoint = edge.breakpointAt(pos)
+        breakpoint = edge.breakPointAt(pos)
         if breakpoint is not None:
             action = self.session.actions('remove_breakpoint')
             action.setData((edge, breakpoint))
@@ -161,7 +161,7 @@ class MenuFactory(QObject):
         :rtype: QMenu
         """
         menu = QMenu()
-        breakpoint = edge.breakpointAt(pos)
+        breakpoint = edge.breakPointAt(pos)
         if breakpoint is not None:
             action = self.session.actions('remove_breakpoint')
             action.setData((edge, breakpoint))
@@ -184,7 +184,7 @@ class MenuFactory(QObject):
         :rtype: QMenu
         """
         menu = QMenu()
-        breakpoint = edge.breakpointAt(pos)
+        breakpoint = edge.breakPointAt(pos)
         if breakpoint is not None:
             action = self.session.actions('remove_breakpoint')
             action.setData((edge, breakpoint))

@@ -42,6 +42,7 @@ from PyQt5.QtGui import QPixmap, QPainterPath, QIcon
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.items.edges.common.base import AbstractEdge
+from eddy.core.polygon import Polygon
 
 
 class InclusionEdge(AbstractEdge):
@@ -57,7 +58,7 @@ class InclusionEdge(AbstractEdge):
         """
         super().__init__(**kwargs)
         self.equivalence = equivalence
-        self.tail = QPolygonF()
+        self.tail = Polygon(QPolygonF())
 
     #############################################
     #   INTERFACE
@@ -69,15 +70,13 @@ class InclusionEdge(AbstractEdge):
         :rtype: QRectF
         """
         path = QPainterPath()
-        path.addPath(self.selection)
-        path.addPolygon(self.head)
-        path.addPolygon(self.tail)
-
-        for shape in self.handles:
-            path.addEllipse(shape)
-        for shape in self.anchors.values():
-            path.addEllipse(shape)
-
+        path.addPath(self.selection.geometry())
+        path.addPolygon(self.head.geometry())
+        path.addPolygon(self.tail.geometry())
+        for polygon in self.handles:
+            path.addEllipse(polygon.geometry())
+        for polygon in self.anchors.values():
+            path.addEllipse(polygon.geometry())
         return path.controlPointRect()
 
     def copy(self, diagram):
@@ -85,42 +84,41 @@ class InclusionEdge(AbstractEdge):
         Create a copy of the current item.
         :type diagram: Diagram
         """
-        kwargs = {
+        return diagram.factory.create(self.type(), **{
             'id': self.id,
             'source': self.source,
             'target': self.target,
             'breakpoints': self.breakpoints[:],
             'equivalence': self.equivalence,
-        }
-        return diagram.factory.create(self.type(), **kwargs)
+        })
 
     @staticmethod
-    def createHead(pos1, angle, size):
+    def createHead(p1, angle, size):
         """
         Create the head polygon.
-        :type pos1: QPointF
+        :type p1: QPointF
         :type angle: float
         :type size: int
         :rtype: QPolygonF
         """
         rad = radians(angle)
-        pos2 = pos1 - QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-        pos3 = pos1 - QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-        return QPolygonF([pos1, pos2, pos3])
+        p2 = p1 - QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+        p3 = p1 - QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+        return QPolygonF([p1, p2, p3])
 
     @staticmethod
-    def createTail(pos1, angle, size):
+    def createTail(p1, angle, size):
         """
         Create the tail polygon.
-        :type pos1: QPointF
+        :type p1: QPointF
         :type angle: float
         :type size: int
         :rtype: QPolygonF
         """
         rad = radians(angle)
-        pos2 = pos1 + QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-        pos3 = pos1 + QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-        return QPolygonF([pos1, pos2, pos3])
+        p2 = p1 + QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+        p3 = p1 + QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+        return QPolygonF([p1, p2, p3])
 
     @classmethod
     def icon(cls, width, height, **kwargs):
@@ -137,23 +135,23 @@ class InclusionEdge(AbstractEdge):
             pixmap.setDevicePixelRatio(i)
             pixmap.fill(Qt.transparent)
             # CREATE THE LINE
-            p1 = QPointF(((width - 54) / 2), height / 2)
-            p2 = QPointF(((width - 54) / 2) + 54 - 2, height / 2)
-            l1 = QLineF(p1, p2)
+            P1 = QPointF(((width - 54) / 2), height / 2)
+            P2 = QPointF(((width - 54) / 2) + 54 - 2, height / 2)
+            L1 = QLineF(P1, P2)
             # CREATE THE HEAD
-            a1 = l1.angle()
-            p1 = QPointF(l1.p2().x() + 2, l1.p2().y())
-            p2 = p1 - QPointF(sin(a1 + M_PI / 3.0) * 8, cos(a1 + M_PI / 3.0) * 8)
-            p3 = p1 - QPointF(sin(a1 + M_PI - M_PI / 3.0) * 8, cos(a1 + M_PI - M_PI / 3.0) * 8)
-            h1 = QPolygonF([p1, p2, p3])
+            A1 = L1.angle()
+            P1 = QPointF(L1.p2().x() + 2, L1.p2().y())
+            P2 = P1 - QPointF(sin(A1 + M_PI / 3.0) * 8, cos(A1 + M_PI / 3.0) * 8)
+            P3 = P1 - QPointF(sin(A1 + M_PI - M_PI / 3.0) * 8, cos(A1 + M_PI - M_PI / 3.0) * 8)
+            H1 = QPolygonF([P1, P2, P3])
             # DRAW THE EDGE
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
             painter.setPen(Pen.SolidBlack1_1Pt)
-            painter.drawLine(l1)
+            painter.drawLine(L1)
             painter.setPen(Pen.SolidBlack1_1Pt)
             painter.setBrush(Brush.Black255A)
-            painter.drawPolygon(h1)
+            painter.drawPolygon(H1)
             painter.end()
             # ADD THE PIXMAP TO THE ICON
             icon.addPixmap(pixmap)
@@ -180,22 +178,28 @@ class InclusionEdge(AbstractEdge):
         painter.setClipRect(option.exposedRect)
         # SELECTION AREA
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillPath(self.selection, self.selectionBrush)
+        painter.fillPath(self.selection.geometry(), self.selection.brush())
         # EDGE LINE
-        painter.setPen(self.pen)
-        painter.drawPath(self.path)
-        # HEAD/TAIL POLYGON
-        painter.setPen(self.headPen)
-        painter.setBrush(self.headBrush)
-        painter.drawPolygon(self.head)
-        painter.drawPolygon(self.tail)
-        # BREAKPOINTS AND ANCHOR POINTS
-        painter.setPen(self.handlePen)
-        painter.setBrush(self.handleBrush)
-        for shape in self.handles:
-            painter.drawEllipse(shape)
-        for shape in self.anchors.values():
-            painter.drawEllipse(shape)
+        painter.setPen(self.path.pen())
+        painter.drawPath(self.path.geometry())
+        # HEAD POLYGON
+        painter.setPen(self.head.pen())
+        painter.setBrush(self.head.brush())
+        painter.drawPolygon(self.head.geometry())
+        # TAIL POLYGON
+        painter.setPen(self.tail.pen())
+        painter.setBrush(self.tail.brush())
+        painter.drawPolygon(self.tail.geometry())
+        # BREAKPOINTS
+        for polygon in self.handles:
+            painter.setPen(polygon.pen())
+            painter.setBrush(polygon.brush())
+            painter.drawEllipse(polygon.geometry())
+        # ANCHOR POINTS
+        for polygon in self.anchors.values():
+            painter.setPen(polygon.pen())
+            painter.setBrush(polygon.brush())
+            painter.drawEllipse(polygon.geometry())
 
     def painterPath(self):
         """
@@ -203,9 +207,9 @@ class InclusionEdge(AbstractEdge):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addPath(self.path)
-        path.addPolygon(self.head)
-        path.addPolygon(self.tail)
+        path.addPath(self.path.geometry())
+        path.addPolygon(self.head.geometry())
+        path.addPolygon(self.tail.geometry())
         return path
 
     def setText(self, text):
@@ -228,15 +232,15 @@ class InclusionEdge(AbstractEdge):
         :rtype: QPainterPath
         """
         path = QPainterPath()
-        path.addPath(self.selection)
-        path.addPolygon(self.head)
-        path.addPolygon(self.tail)
+        path.addPath(self.selection.geometry())
+        path.addPolygon(self.head.geometry())
+        path.addPolygon(self.tail.geometry())
 
         if self.isSelected():
-            for shape in self.handles:
-                path.addEllipse(shape)
-            for shape in self.anchors.values():
-                path.addEllipse(shape)
+            for polygon in self.handles:
+                path.addEllipse(polygon.geometry())
+            for polygon in self.anchors.values():
+                path.addEllipse(polygon.geometry())
 
         return path
 
@@ -259,8 +263,6 @@ class InclusionEdge(AbstractEdge):
         Update the edge painter path and the selection polygon.
         :type target: QPointF
         """
-        boxSize = self.SelectionSize
-        headSize = self.HeadSize
         sourceNode = self.source
         targetNode = self.target
         sourcePos = sourceNode.anchor(self)
@@ -282,10 +284,10 @@ class InclusionEdge(AbstractEdge):
 
         collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
 
-        self.path = QPainterPath()
-        self.selection = QPainterPath()
-        self.head = QPolygonF()
-        self.tail = QPolygonF()
+        path = QPainterPath()
+        selection = QPainterPath()
+        head = QPolygonF()
+        tail = QPolygonF()
 
         if len(collection) == 1:
 
@@ -293,12 +295,12 @@ class InclusionEdge(AbstractEdge):
             p1 = sourceNode.intersection(subpath)
             p2 = targetNode.intersection(subpath) if targetNode else subpath.p2()
             if p1 is not None and p2 is not None:
-                self.path.moveTo(p1)
-                self.path.lineTo(p2)
-                self.selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), boxSize))
-                self.head = createHead(p2, subpath.angle(), headSize)
+                path.moveTo(p1)
+                path.lineTo(p2)
+                selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), 8))
+                head = createHead(p2, subpath.angle(), 12)
                 if self.equivalence:
-                    self.tail = createTail(p1, subpath.angle(), headSize)
+                    tail = createTail(p1, subpath.angle(), 12)
 
         elif len(collection) > 1:
 
@@ -312,23 +314,27 @@ class InclusionEdge(AbstractEdge):
                 p12 = subpath1.p2()
                 p21 = subpathN.p1()
 
-                self.path.moveTo(p11)
-                self.path.lineTo(p12)
-                self.selection.addPolygon(createSelectionArea(p11, p12, subpath1.angle(), boxSize))
+                path.moveTo(p11)
+                path.lineTo(p12)
+                selection.addPolygon(createSelectionArea(p11, p12, subpath1.angle(), 8))
 
                 for subpath in collection[1:-1]:
                     p1 = subpath.p1()
                     p2 = subpath.p2()
-                    self.path.moveTo(p1)
-                    self.path.lineTo(p2)
-                    self.selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), boxSize))
+                    path.moveTo(p1)
+                    path.lineTo(p2)
+                    selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), 8))
 
-                self.path.moveTo(p21)
-                self.path.lineTo(p22)
-                self.selection.addPolygon(createSelectionArea(p21, p22, subpathN.angle(), boxSize))
-
-                self.head = createHead(p22, subpathN.angle(), headSize)
+                path.moveTo(p21)
+                path.lineTo(p22)
+                selection.addPolygon(createSelectionArea(p21, p22, subpathN.angle(), 8))
+                head = createHead(p22, subpathN.angle(), 12)
                 if self.equivalence:
-                    self.tail = createTail(p11, subpath1.angle(), headSize)
+                    tail = createTail(p11, subpath1.angle(), 12)
+
+        self.path.setGeometry(path)
+        self.head.setGeometry(head)
+        self.tail.setGeometry(tail)
+        self.selection.setGeometry(selection)
 
         self.redraw(selected=self.isSelected(), visible=self.canDraw())

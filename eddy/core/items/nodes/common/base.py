@@ -39,9 +39,10 @@ from PyQt5.QtCore import QPointF, QLineF, Qt, QRectF
 from PyQt5.QtGui import QPolygonF
 
 from eddy.core.commands.nodes import CommandNodeRezize
-from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import Brush, DiagramMode, Pen
 from eddy.core.items.common import AbstractItem
+from eddy.core.polygon import Polygon
 
 
 class AbstractNode(AbstractItem):
@@ -59,11 +60,11 @@ class AbstractNode(AbstractItem):
         """
         super().__init__(**kwargs)
 
+        self._identity = Identity.Neutral
+
         self.anchors = dict()
         self.edges = set()
 
-        self.backgroundBrush = Brush.NoBrush
-        self.backgroundPen = Pen.NoPen
         self.background = None
         self.selection = None
         self.polygon = None
@@ -130,6 +131,14 @@ class AbstractNode(AbstractItem):
             self.anchors[edge] = self.mapToScene(self.center())
             return self.anchors[edge]
 
+    @abstractmethod
+    def brush(self):
+        """
+        Returns the brush used to paint the shape of this node.
+        :rtype: QBrush
+        """
+        pass
+
     def center(self):
         """
         Returns the point at the center of the shape in item's coordinate.
@@ -145,37 +154,13 @@ class AbstractNode(AbstractItem):
         """
         pass
 
-    @staticmethod
     @abstractmethod
-    def createBackground(width, height):
+    def geometry(self):
         """
-        Returns the initialized background polygon according to the given width/height.
-        :type width: int
-        :type height: int
-        :rtype: T <= QRectF | QPolygonF
+        Returns the geometry of the shape of this node.
+        :rtype: T <= QRectF|QPolygonF
         """
         pass
-
-    @staticmethod
-    @abstractmethod
-    def createPolygon(width, height):
-        """
-        Returns the initialized polygon according to the given width/height.
-        :type width: int
-        :type height: int
-        :rtype: T <= QRectF | QPolygonF
-        """
-        pass
-
-    @staticmethod
-    def createSelection(width, height):
-        """
-        Returns the initialized selection polygon according to the given width/height.
-        :type width: int
-        :type height: int
-        :rtype: QRectF
-        """
-        return QRectF(-width / 2, -height / 2, width, height)
 
     @abstractmethod
     def height(self):
@@ -270,6 +255,14 @@ class AbstractNode(AbstractItem):
         """
         pass
 
+    @abstractmethod
+    def pen(self):
+        """
+        Returns the pen used to paint the shape of this node.
+        :rtype: QPen
+        """
+        pass
+
     def pos(self):
         """
         Returns the position of this node in scene coordinates.
@@ -308,22 +301,21 @@ class AbstractNode(AbstractItem):
 
     def redraw(self, selected=None, valid=None, **kwargs):
         """
-        Schedule this item for redrawing.
+        Perform the redrawing of this item.
         :type selected: bool
         :type valid: bool
         """
-        brush = Brush.NoBrush
-        pen = Pen.NoPen
-
         # ITEM SELECTION
+        pen = Pen.NoPen
         if selected:
             pen = Pen.DashedBlack1Pt
-        self.selectionPen = pen
+        self.selection.setPen(pen)
 
         # SYNTAX VALIDATION
+        brush = Brush.NoBrush
         if valid is not None:
             brush = Brush.Green160A if valid else Brush.Red160A
-        self.backgroundBrush = brush
+        self.background.setBrush(brush)
 
         # FORCE CACHE REGENERATION
         self.setCacheMode(AbstractItem.NoCache)
@@ -406,11 +398,7 @@ class AbstractResizableNode(AbstractNode):
     HandleBM = 6
     HandleBR = 7
 
-    HandleNum = 8
-    HandleMove = -4
-    HandleSize = 8
-
-    HandleCursors = [
+    Cursors = [
         Qt.SizeFDiagCursor,
         Qt.SizeVerCursor,
         Qt.SizeBDiagCursor,
@@ -427,17 +415,15 @@ class AbstractResizableNode(AbstractNode):
         """
         super().__init__(**kwargs)
 
-        self.handleBrush = [Brush.NoBrush] * self.HandleNum
-        self.handlePen = [Pen.NoPen] * self.HandleNum
-        self.handleShape = [QRectF()] * self.HandleNum
+        self.handles = [Polygon(QRectF()) for _ in range(8)]
 
-        self.mousePressBackground = None
-        self.mousePressSelection = None
-        self.mousePressPolygon = None
-        self.mousePressBound = None
-        self.mousePressData = None
-        self.mousePressHandle = None
-        self.mousePressPos = None
+        self.mp_Background = None
+        self.mp_Selection = None
+        self.mp_Polygon = None
+        self.mp_Bound = None
+        self.mp_Data = None
+        self.mp_Handle = None
+        self.mp_Pos = None
 
     #############################################
     #   PROPERTIES
@@ -472,7 +458,7 @@ class AbstractResizableNode(AbstractNode):
         :rtype: int
         """
         try:
-            return self.HandleCursors[index]
+            return self.Cursors[index]
         except (TypeError, IndexError):
             return Qt.ArrowCursor
 
@@ -484,8 +470,8 @@ class AbstractResizableNode(AbstractNode):
         """
         size = QPointF(3, 3)
         area = QRectF(point - size, point + size)
-        for i in range(len(self.handleShape)):
-            if self.handleShape[i].intersects(area):
+        for i in range(len(self.handles)):
+            if self.handles[i].geometry().intersects(area):
                 return i
         return None
 
@@ -499,40 +485,39 @@ class AbstractResizableNode(AbstractNode):
 
     def redraw(self, selected=None, valid=None, handle=None, **kwargs):
         """
-        Schedule this item for redrawing.
+        Perform the redrawing of this item.
         :type selected: bool
         :type valid: bool
         :type handle: int
         """
-        num = self.HandleNum
-
-        bBrush = Brush.NoBrush
-        hBrush = [Brush.NoBrush] * num
-        hPen = [Pen.NoPen] * num
-        sPen = Pen.NoPen
-
-        # ITEM SELECTION & RESIZE HANDLES
+        # RESIZE HANDLES
+        brush = [Brush.NoBrush] * 8
+        pen = [Pen.NoPen] * 8
         if selected:
             if handle is None:
-                hBrush = [Brush.Blue255A] * num
-                hPen = [Pen.SolidBlack1Pt] * num
-                sPen = Pen.DashedBlack1Pt
+                brush = [Brush.Blue255A] * 8
+                pen = [Pen.SolidBlack1Pt] * 8
             else:
-                for i in range(num):
+                for i in range(8):
                     if i == handle:
-                        hBrush[i] = Brush.Blue255A
-                        hPen[i] = Pen.SolidBlack1Pt
+                        brush[i] = Brush.Blue255A
+                        pen[i] = Pen.SolidBlack1Pt
 
-        for i in range(num):
-            self.handleBrush[i] = hBrush[i]
-            self.handlePen[i] = hPen[i]
+        for i in range(8):
+            self.handles[i].setBrush(brush[i])
+            self.handles[i].setPen(pen[i])
 
-        self.selectionPen = sPen
+        # ITEM SELECTION
+        pen = Pen.NoPen
+        if selected and handle is None:
+            pen = Pen.DashedBlack1Pt
+        self.selection.setPen(pen)
 
         # SYNTAX VALIDATION
+        brush = Brush.NoBrush
         if valid is not None:
-            bBrush = Brush.Green160A if valid else Brush.Red160A
-        self.backgroundBrush = bBrush
+            brush = Brush.Green160A if valid else Brush.Red160A
+        self.background.setBrush(brush)
 
         # FORCE CACHE REGENERATION
         self.setCacheMode(AbstractItem.NoCache)
@@ -555,20 +540,19 @@ class AbstractResizableNode(AbstractNode):
                     newPos = self.intersection(QLineF(newPos, self.pos()))
                 self.setAnchor(edge, newPos)
 
-    def updateHandles(self):
+    def updateResizeHandles(self):
         """
         Update current resize handles according to the shape size and position.
         """
-        s = self.HandleSize
         b = self.boundingRect()
-        self.handleShape[self.HandleTL] = QRectF(b.left(), b.top(), s, s)
-        self.handleShape[self.HandleTM] = QRectF(b.center().x() - s / 2, b.top(), s, s)
-        self.handleShape[self.HandleTR] = QRectF(b.right() - s, b.top(), s, s)
-        self.handleShape[self.HandleML] = QRectF(b.left(), b.center().y() - s / 2, s, s)
-        self.handleShape[self.HandleMR] = QRectF(b.right() - s, b.center().y() - s / 2, s, s)
-        self.handleShape[self.HandleBL] = QRectF(b.left(), b.bottom() - s, s, s)
-        self.handleShape[self.HandleBM] = QRectF(b.center().x() - s / 2, b.bottom() - s, s, s)
-        self.handleShape[self.HandleBR] = QRectF(b.right() - s, b.bottom() - s, s, s)
+        self.handles[self.HandleTL].setGeometry(QRectF(b.left(), b.top(), 8, 8))
+        self.handles[self.HandleTM].setGeometry(QRectF(b.center().x() - 4, b.top(), 8, 8))
+        self.handles[self.HandleTR].setGeometry(QRectF(b.right() - 8, b.top(), 8, 8))
+        self.handles[self.HandleML].setGeometry(QRectF(b.left(), b.center().y() - 4, 8, 8))
+        self.handles[self.HandleMR].setGeometry(QRectF(b.right() - 8, b.center().y() - 4, 8, 8))
+        self.handles[self.HandleBL].setGeometry(QRectF(b.left(), b.bottom() - 8, 8, 8))
+        self.handles[self.HandleBM].setGeometry(QRectF(b.center().x() - 4, b.bottom() - 8, 8, 8))
+        self.handles[self.HandleBR].setGeometry(QRectF(b.right() - 8, b.bottom() - 8, 8, 8))
 
     #############################################
     #   EVENTS
@@ -619,17 +603,13 @@ class AbstractResizableNode(AbstractNode):
                 self.diagram.setMode(DiagramMode.NodeResize)
                 self.setSelected(True)
 
-                f1 = QRectF if isinstance(self.background, QRectF) else QPolygonF
-                f2 = QRectF if isinstance(self.selection, QRectF) else QPolygonF
-                f3 = QRectF if isinstance(self.polygon, QRectF) else QPolygonF
-
-                self.mousePressBackground = f1(self.background)
-                self.mousePressSelection = f2(self.selection)
-                self.mousePressPolygon = f3(self.polygon)
-                self.mousePressBound = f2(self.selection)
-                self.mousePressData = {edge: pos for edge, pos in self.anchors.items()}
-                self.mousePressHandle = handle
-                self.mousePressPos = mousePos
+                self.mp_Background = self.background.geometry().__class__(self.background.geometry())
+                self.mp_Selection = self.selection.geometry().__class__(self.selection.geometry())
+                self.mp_Polygon = self.polygon.geometry().__class__(self.polygon.geometry())
+                self.mp_Bound = self.boundingRect().__class__(self.boundingRect())
+                self.mp_Data = {edge: pos for edge, pos in self.anchors.items()}
+                self.mp_Handle = handle
+                self.mp_Pos = mousePos
 
                 self.redraw(selected=True, handle=handle)
 
@@ -652,26 +632,20 @@ class AbstractResizableNode(AbstractNode):
         """
         if self.diagram.mode is DiagramMode.NodeResize:
 
-            bound = self.boundingRect()
-
-            if bound.size() != self.mousePressBound.size():
-
-                f1 = QRectF if isinstance(self.background, QRectF) else QPolygonF
-                f2 = QRectF if isinstance(self.selection, QRectF) else QPolygonF
-                f3 = QRectF if isinstance(self.polygon, QRectF) else QPolygonF
+            if self.boundingRect().size() != self.mp_Bound.size():
 
                 data = {
                     'undo': {
-                        'background': self.mousePressBackground,
-                        'selection': self.mousePressSelection,
-                        'polygon': self.mousePressPolygon,
-                        'anchors': self.mousePressData,
+                        'background': self.mp_Background,
+                        'selection': self.mp_Selection,
+                        'polygon': self.mp_Polygon,
+                        'anchors': self.mp_Data,
                         'moved': self.label is not None and self.label.isMoved(),
                     },
                     'redo': {
-                        'background': f1(self.background),
-                        'selection': f2(self.selection),
-                        'polygon': f3(self.polygon),
+                        'background': self.background.geometry().__class__(self.background.geometry()),
+                        'selection': self.selection.geometry().__class__(self.selection.geometry()),
+                        'polygon': self.polygon.geometry().__class__(self.polygon.geometry()),
                         'anchors': {edge: pos for edge, pos in self.anchors.items()},
                         'moved': self.label is not None and self.label.isMoved(),
                     }
@@ -683,14 +657,15 @@ class AbstractResizableNode(AbstractNode):
 
         self.redraw(selected=self.isSelected())
 
+        self.mp_Background = None
+        self.mp_Selection = None
+        self.mp_Polygon = None
+        self.mp_Bound = None
+        self.mp_Data = None
+        self.mp_Handle = None
+        self.mp_Pos = None
+
         super().mouseReleaseEvent(mouseEvent)
 
-        self.mousePressBackground = None
-        self.mousePressSelection = None
-        self.mousePressPolygon = None
-        self.mousePressBound = None
-        self.mousePressData = None
-        self.mousePressHandle = None
-        self.mousePressPos = None
         self.updateEdges()
         self.update()

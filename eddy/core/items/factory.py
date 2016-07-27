@@ -64,13 +64,29 @@ class ItemFactory(QObject):
     """
     This class can be used to produce graphol items.
     """
-    def __init__(self, parent=None):
+    def __init__(self, diagram):
         """
         Initialize the factory.
-        :type parent: Diagram
+        :type diagram: Diagram
         """
-        super().__init__(parent)
-    
+        super().__init__(diagram)
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def diagram(self):
+        """
+        Returns the diagram used to create the item (alias for ItemFactory.parent()).
+        :rtype: Diagram
+        """
+        return self.parent()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
     @classmethod
     def classForItem(cls, item):
         """
@@ -141,4 +157,4 @@ class ItemFactory(QObject):
         :type kwargs: dict
         :rtype: AbstractItem
         """
-        return ItemFactory.classForItem(item)(diagram=self.parent(), **kwargs)
+        return ItemFactory.classForItem(item)(diagram=self.diagram, **kwargs)

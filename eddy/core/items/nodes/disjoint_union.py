@@ -33,8 +33,8 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QPixmap, QPainter
+from PyQt5.QtCore import Qt, QPointF
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPolygonF
 
 from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Item, Identity
@@ -53,7 +53,6 @@ class DisjointUnionNode(OperatorNode):
         Initialize the node.
         :type brush: QBrush
         """
-        self._identity = Identity.Neutral
         super().__init__(brush=Brush.Black255A, **kwargs)
 
     #############################################
@@ -87,8 +86,11 @@ class DisjointUnionNode(OperatorNode):
         Create a copy of the current item.
         :type diagram: Diagram
         """
-        kwargs = {'id': self.id, 'height': self.height(), 'width': self.width()}
-        node = diagram.factory.create(self.type(), **kwargs)
+        node = diagram.factory.create(self.type(), **{
+            'id': self.id,
+            'height': self.height(),
+            'width': self.width()
+        })
         node.setPos(self.pos())
         return node
 
@@ -107,13 +109,20 @@ class DisjointUnionNode(OperatorNode):
             pixmap.setDevicePixelRatio(i)
             pixmap.fill(Qt.transparent)
             # PAINT THE SHAPE
-            polygon = cls.createPolygon(46, 30)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
             painter.setPen(Pen.SolidBlack1Pt)
             painter.setBrush(Brush.Black255A)
             painter.translate(width / 2, height / 2)
-            painter.drawPolygon(polygon)
+            painter.drawPolygon(QPolygonF([
+                QPointF(-23, 0),
+                QPointF(-23 + 6, +15),
+                QPointF(+23 - 6, +15),
+                QPointF(+23, 0),
+                QPointF(+23 - 6, -15),
+                QPointF(-23 + 6, -15),
+                QPointF(-23, 0),
+            ]))
             painter.end()
             # ADD THE PIXMAP TO THE ICON
             icon.addPixmap(pixmap)

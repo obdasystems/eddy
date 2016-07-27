@@ -47,6 +47,7 @@ from eddy.core.datatypes.misc import Brush, DiagramMode, Pen
 from eddy.core.functions.geometry import distance, projection
 from eddy.core.functions.misc import snap
 from eddy.core.items.common import AbstractItem
+from eddy.core.polygon import Polygon
 
 
 class AbstractEdge(AbstractItem):
@@ -55,10 +56,7 @@ class AbstractEdge(AbstractItem):
     """
     __metaclass__ = ABCMeta
 
-    HandleSize = 8
-    HeadSize = 12
     Prefix = 'e'
-    SelectionSize = 8
 
     def __init__(self, source, target=None, breakpoints=None, **kwargs):
         """
@@ -72,26 +70,18 @@ class AbstractEdge(AbstractItem):
         self.source = source
         self.target = target
 
-        self.handleBrush = Brush.NoBrush
-        self.handlePen = Pen.NoPen
-        self.headBrush = Brush.NoBrush
-        self.headPen = Pen.NoPen
-        self.selectionBrush = Brush.NoBrush
-        self.selectionPen = Pen.NoPen
+        self.anchors = {} # {AbstractNode: Polygon}
+        self.breakpoints = breakpoints or [] # [QPointF]
+        self.handles = [] # [Polygon]
+        self.head = Polygon(QPolygonF())
+        self.path = Polygon(QPainterPath())
+        self.selection = Polygon(QPainterPath())
 
-        self.anchors = {}
-        self.breakpoints = breakpoints or []
-        self.handles = []
-        self.head = QPolygonF()
-
-        self.path = QPainterPath()
-        self.selection = QPainterPath()
-
-        self.mousePressAnchorNode = None
-        self.mousePressAnchorNodePos = None
-        self.mousePressBreakPoint = None
-        self.mousePressBreakPointPos = None
-        self.mousePressPos = None
+        self.mp_AnchorNode = None
+        self.mp_AnchorNodePos = None
+        self.mp_BreakPoint = None
+        self.mp_BreakPointPos = None
+        self.mp_Pos = None
 
         self.setAcceptHoverEvents(True)
         self.setCacheMode(AbstractItem.DeviceCoordinateCache)
@@ -109,7 +99,7 @@ class AbstractEdge(AbstractItem):
         size = QPointF(3, 3)
         area = QRectF(point - size, point + size)
         for k, v, in self.anchors.items():
-            if v.intersects(area):
+            if v.geometry().intersects(area):
                 return k
         return None
 
@@ -120,9 +110,8 @@ class AbstractEdge(AbstractItem):
         :type mousePos: QPointF
         """
         nodePos = node.pos()
-        diagram = self.diagram
         snapToGrid = self.session.action('toggle_grid').isChecked()
-        mousePos = snap(mousePos, diagram.GridSize, snapToGrid)
+        mousePos = snap(mousePos, self.diagram.GridSize, snapToGrid)
         path = self.mapFromItem(node, node.painterPath())
         if path.contains(mousePos):
             # Mouse is inside the shape => use this position as anchor point.
@@ -138,7 +127,7 @@ class AbstractEdge(AbstractItem):
 
         node.setAnchor(self, pos)
 
-    def breakpointAdd(self, mousePos):
+    def breakPointAdd(self, mousePos):
         """
         Create a new breakpoint from the given mouse position returning its index.
         :type mousePos: QPointF
@@ -179,7 +168,7 @@ class AbstractEdge(AbstractItem):
         self.project.undoStack.push(CommandEdgeBreakpointAdd(self.diagram, self, index, point))
         return index
 
-    def breakpointAt(self, point):
+    def breakPointAt(self, point):
         """
         Returns the index of the breakpoint whose handle is being pressed.
         :type point: QPointF
@@ -187,20 +176,19 @@ class AbstractEdge(AbstractItem):
         """
         size = QPointF(3, 3)
         area = QRectF(point - size, point + size)
-        for i in range(len(self.handles)):
-            if self.handles[i].intersects(area):
-                return i
+        for polygon in self.handles:
+            if polygon.geometry().intersects(area):
+                return self.handles.index(polygon)
         return None
 
-    def breakpointMove(self, breakpoint, mousePos):
+    def breakPointMove(self, breakpoint, mousePos):
         """
         Move the selected breakpoint.
         :type breakpoint: int
         :type mousePos: QPointF
         """
-        diagram = self.diagram
         snapToGrid = self.session.action('toggle_grid').isChecked()
-        self.breakpoints[breakpoint] = snap(mousePos, diagram.GridSize, snapToGrid)
+        self.breakpoints[breakpoint] = snap(mousePos, self.diagram.GridSize, snapToGrid)
 
     def canDraw(self):
         """
@@ -213,9 +201,9 @@ class AbstractEdge(AbstractItem):
         if self.target:
             source = self.source
             target = self.target
-            sourcePP = self.mapFromItem(source, source.painterPath())
-            targetPP = self.mapFromItem(target, target.painterPath())
-            if sourcePP.intersects(targetPP):
+            sp = self.mapFromItem(source, source.painterPath())
+            tp = self.mapFromItem(target, target.painterPath())
+            if sp.intersects(tp):
                 for point in self.breakpoints:
                     if not source.contains(self.mapToItem(source, point)):
                         if not target.contains(self.mapToItem(target, point)):
@@ -241,19 +229,19 @@ class AbstractEdge(AbstractItem):
         :rtype: list
         """
         # Get the source node painter path (the source node is always available).
-        SP = self.mapFromItem(source, source.painterPath())
-        TP = self.mapFromItem(target, target.painterPath()) if target else None
+        sp = self.mapFromItem(source, source.painterPath())
+        tp = self.mapFromItem(target, target.painterPath()) if target else None
         # Exclude all the "subpaths" which are not visible (obscured by the shapes).
         return [x for x in (QLineF(points[i], points[i + 1]) for i in range(len(points) - 1)) \
-                    if (not SP.contains(x.p1()) or not SP.contains(x.p2())) and \
-                        (not TP or (not TP.contains(x.p1()) or not TP.contains(x.p2())))]
+                    if (not sp.contains(x.p1()) or not sp.contains(x.p2())) and \
+                        (not tp or (not tp.contains(x.p1()) or not tp.contains(x.p2())))]
 
     @staticmethod
-    def createSelectionArea(pos1, pos2, angle, size):
+    def createSelectionArea(p1, p2, angle, size):
         """
         Constructs the selection polygon between pos1 and pos2 according to the given angle.
-        :type pos1: QPointF
-        :type pos2: QPointF
+        :type p1: QPointF
+        :type p2: QPointF
         :type angle: float
         :type size: int
         :rtype: QPolygonF
@@ -263,7 +251,7 @@ class AbstractEdge(AbstractItem):
         y = size / 2 * cos(rad)
         a = QPointF(+x, +y)
         b = QPointF(-x, -y)
-        return QPolygonF([pos1 + a, pos1 + b, pos2 + b, pos2 + a])
+        return QPolygonF([p1 + a, p1 + b, p2 + b, p2 + a])
 
     @classmethod
     @abstractmethod
@@ -289,8 +277,7 @@ class AbstractEdge(AbstractItem):
         :type x: float
         :type y: float
         """
-        move = QPointF(x, y)
-        self.breakpoints = [p + move for p in self.breakpoints]
+        self.breakpoints = [p + QPointF(x, y) for p in self.breakpoints]
 
     def other(self, node):
         """
@@ -307,35 +294,45 @@ class AbstractEdge(AbstractItem):
 
     def redraw(self, selected=None, visible=None, breakpoint=None, anchor=None, **kwargs):
         """
-        Schedule this item for redrawing.
+        Perform the redrawing of this item.
         :type selected: bool
         :type visible: bool
         :type breakpoint: int
         :type anchor: AbstractNode
         """
+        anchorBrush = Brush.NoBrush
+        anchorPen = Pen.NoPen
         headBrush = Brush.NoBrush
         headPen = Pen.NoPen
         handleBrush = Brush.NoBrush
         handlePen = Pen.NoPen
+        pathPen = Pen.NoPen
         selectionBrush = Brush.NoBrush
-        pen = Pen.NoPen
 
         if visible:
             headBrush = Brush.Black255A
             headPen = Pen.SolidBlack1_1Pt
-            pen = Pen.SolidBlack1_1Pt
+            pathPen = Pen.SolidBlack1_1Pt
             if selected:
+                anchorBrush = Brush.Blue255A
+                anchorPen = Pen.SolidBlack1_1Pt
                 handleBrush = Brush.Blue255A
                 handlePen = Pen.SolidBlack1_1Pt
                 if breakpoint is None and anchor is None:
                     selectionBrush = Brush.Yellow255A
 
-        self.selectionBrush = selectionBrush
-        self.headBrush = headBrush
-        self.headPen = headPen
-        self.handleBrush = handleBrush
-        self.handlePen = handlePen
-        self.pen = pen
+        self.head.setBrush(headBrush)
+        self.head.setPen(headPen)
+        self.path.setPen(pathPen)
+        self.selection.setBrush(selectionBrush)
+
+        for polygon in self.handles:
+            polygon.setBrush(handleBrush)
+            polygon.setPen(handlePen)
+
+        for polygon in self.anchors.values():
+            polygon.setBrush(anchorBrush)
+            polygon.setPen(anchorPen)
 
         # FORCE CACHE REGENERATION
         self.setCacheMode(AbstractItem.NoCache)
@@ -347,23 +344,24 @@ class AbstractEdge(AbstractItem):
     def updateAnchors(self):
         """
         Update edge anchors (update only the polygon: the real anchor point is in the node).
+        Note that this function will create new Polygon instances which by default have an empty pen and brush.
+        Calling self.redraw() will correctly update the brush and the pen for anchors point rendering.
         """
         source = self.source
         target = self.target
-        size = self.HandleSize
         if source and target:
             p = source.anchor(self)
-            self.anchors[source] = QRectF(p.x() - size / 2, p.y() - size / 2, size, size)
+            self.anchors[source] = Polygon(QRectF(p.x() - 4, p.y() - 4, 8, 8))
             p = target.anchor(self)
-            self.anchors[target] = QRectF(p.x() - size / 2, p.y() - size / 2, size, size)
+            self.anchors[target] = Polygon(QRectF(p.x() - 4, p.y() - 4, 8, 8))
 
     def updateBreakPoints(self):
         """
         Update edge breakpoints (update only the polygon: the breakpoint is created by the user).
+        Note that this function will create new Polygon instances which by default have an empty pen and brush.
+        Calling self.redraw() will correctly update the brush and the pen for breakpoints point rendering.
         """
-        size = self.HandleSize
-        points = self.breakpoints
-        self.handles = [QRectF(p.x() - size / 2, p.y() - size / 2, size, size) for p in points]
+        self.handles = [Polygon(QRectF(p.x() - 4, p.y() - 4, 8, 8)) for p in self.breakpoints]
 
     def updateZValue(self):
         """
@@ -432,7 +430,7 @@ class AbstractEdge(AbstractItem):
         Executed when the mouse is pressed on the selection box.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        self.mousePressPos = mouseEvent.pos()
+        self.mp_Pos = mouseEvent.pos()
 
         if self.diagram.mode is DiagramMode.Idle:
             # Check first if we need to start an anchor point movement: we need
@@ -441,22 +439,22 @@ class AbstractEdge(AbstractItem):
             # breakpoint retrieval is executed first, no breakpoint is found
             # and hence a new one will be added upon mouseMoveEvent (even a small
             # move will cause this).
-            anchorNode = self.anchorAt(self.mousePressPos)
+            anchorNode = self.anchorAt(self.mp_Pos)
             if anchorNode is not None:
                 self.diagram.clearSelection()
                 self.diagram.setMode(DiagramMode.EdgeAnchorMove)
                 self.setSelected(True)
-                self.mousePressAnchorNode = anchorNode
-                self.mousePressAnchorNodePos = QPointF(anchorNode.anchor(self))
+                self.mp_AnchorNode = anchorNode
+                self.mp_AnchorNodePos = QPointF(anchorNode.anchor(self))
                 self.redraw(selected=True, visible=self.canDraw(), anchor=anchorNode)
             else:
-                breakPoint = self.breakpointAt(self.mousePressPos)
+                breakPoint = self.breakPointAt(self.mp_Pos)
                 if breakPoint is not None:
                     self.diagram.clearSelection()
                     self.diagram.setMode(DiagramMode.EdgeBreakPointMove)
                     self.setSelected(True)
-                    self.mousePressBreakPoint = breakPoint
-                    self.mousePressBreakPointPos = QPointF(self.breakpoints[breakPoint])
+                    self.mp_BreakPoint = breakPoint
+                    self.mp_BreakPointPos = QPointF(self.breakpoints[breakPoint])
                     self.redraw(selected=True, visible=self.canDraw(), breakpoint=breakPoint)
 
         super().mousePressEvent(mouseEvent)
@@ -470,27 +468,28 @@ class AbstractEdge(AbstractItem):
         mousePos = mouseEvent.pos()
 
         if self.diagram.mode is DiagramMode.EdgeAnchorMove:
-            self.anchorMove(self.mousePressAnchorNode, mousePos)
+            self.anchorMove(self.mp_AnchorNode, mousePos)
             self.updateEdge()
         else:
 
             if self.diagram.mode is DiagramMode.Idle:
 
                 try:
-                    # If we are still idle we didn't succeeded in selecting a breakpoint
-                    # so we need to create a new one and switch the operation mode.
-                    breakPoint = self.breakpointAdd(self.mousePressPos)
+                    # If we are still idle we didn't succeeded in
+                    # selecting a breakpoint so we need to create
+                    # a new one and switch the operational mode.
+                    breakPoint = self.breakPointAdd(self.mp_Pos)
                 except:
                     pass
                 else:
                     self.diagram.clearSelection()
                     self.diagram.setMode(DiagramMode.EdgeBreakPointMove)
                     self.setSelected(True)
-                    self.mousePressBreakPoint = breakPoint
-                    self.mousePressBreakPointPos = QPointF(self.breakpoints[breakPoint])
+                    self.mp_BreakPoint = breakPoint
+                    self.mp_BreakPointPos = QPointF(self.breakpoints[breakPoint])
 
             if self.diagram.mode is DiagramMode.EdgeBreakPointMove:
-                self.breakpointMove(self.mousePressBreakPoint, mousePos)
+                self.breakPointMove(self.mp_BreakPoint, mousePos)
                 self.updateEdge()
 
     def mouseReleaseEvent(self, mouseEvent):
@@ -499,23 +498,23 @@ class AbstractEdge(AbstractItem):
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
         if self.diagram.mode is DiagramMode.EdgeAnchorMove:
-            anchorNode = self.mousePressAnchorNode
+            anchorNode = self.mp_AnchorNode
             anchorNodePos = QPointF(anchorNode.anchor(self))
-            if anchorNodePos != self.mousePressAnchorNodePos:
-                data = {'undo': self.mousePressAnchorNodePos, 'redo': anchorNodePos}
+            if anchorNodePos != self.mp_AnchorNodePos:
+                data = {'undo': self.mp_AnchorNodePos, 'redo': anchorNodePos}
                 self.project.undoStack.push(CommandEdgeAnchorMove(self.diagram, self, anchorNode, data))
         elif self.diagram.mode is DiagramMode.EdgeBreakPointMove:
-            breakPoint = self.mousePressBreakPoint
+            breakPoint = self.mp_BreakPoint
             breakPointPos = self.breakpoints[breakPoint]
-            if breakPointPos != self.mousePressBreakPointPos:
-                data = {'undo': self.mousePressBreakPointPos, 'redo': breakPointPos}
+            if breakPointPos != self.mp_BreakPointPos:
+                data = {'undo': self.mp_BreakPointPos, 'redo': breakPointPos}
                 self.project.undoStack.push(CommandEdgeBreakpointMove(self.diagram, self, breakPoint, data))
 
-        self.mousePressAnchorNode = None
-        self.mousePressAnchorNodePos = None
-        self.mousePressBreakPoint = None
-        self.mousePressBreakPointPos = None
-        self.mousePressPos = None
+        self.mp_AnchorNode = None
+        self.mp_AnchorNodePos = None
+        self.mp_BreakPoint = None
+        self.mp_BreakPointPos = None
+        self.mp_Pos = None
 
         self.diagram.setMode(DiagramMode.Idle)
         self.updateEdge()

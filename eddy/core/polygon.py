@@ -38,18 +38,23 @@ from PyQt5.QtGui import QPolygonF
 from datatypes.misc import Brush, Pen
 
 
-class Shape(object):
+class Polygon(object):
     """
     This class is used to store shape data for Diagram item objects.
+    For each object it will store:
+
+        - geometrical data to be drawn on screen (either QRectF, QPolygonF or QPainterPath);
+        - the brush used to draw the geometrical shape;
+        - the pen used to draw the geometrical shape.
     """
-    def __init__(self, polygon=QPolygonF(), brush=Brush.NoBrush, pen=Pen.NoPen):
+    def __init__(self, geometry=QPolygonF(), brush=Brush.NoBrush, pen=Pen.NoPen):
         """
-        Initialize the shape.
-        :type polygon: T <= QRectF|QPolygonF
+        Initialize the polygon.
+        :type geometry: T <= QRectF|QPolygonF|QPainterPath
         :type brush: QBrush
         :type pen: QPen
         """
-        self._polygon = polygon
+        self._geometry = geometry
         self._brush = brush
         self._pen = pen
 
@@ -64,19 +69,19 @@ class Shape(object):
         """
         return self._brush
 
+    def geometry(self):
+        """
+        Returns the polygon geometry.
+        :rtype: T <= QRectF|QPolygonF|QPainterPath
+        """
+        return self._geometry
+
     def pen(self):
         """
         Returns the pen used to draw the shape.
         :rtype: QPen
         """
-        return self._brush
-
-    def polygon(self):
-        """
-        Returns the shape polygon.
-        :rtype: T <= QRectF|QPolygonF
-        """
-        return self._polygon
+        return self._pen
 
     def setBrush(self, brush):
         """
@@ -85,16 +90,16 @@ class Shape(object):
         """
         self._brush = brush
 
+    def setGeometry(self, geometry):
+        """
+        Set the shape polygon.
+        :type geometry: T <= QRectF|QPolygonF|QPainterPath
+        """
+        self._geometry = geometry
+
     def setPen(self, pen):
         """
         Set the brush used to draw the shape.
         :type pen: QPen
         """
         self._pen = pen
-
-    def setPolygon(self, polygon):
-        """
-        Set the shape polygon.
-        :type polygon: T <= QRectF|QPolygonF
-        """
-        self._polygon = polygon

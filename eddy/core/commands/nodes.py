@@ -117,14 +117,14 @@ class CommandNodeRezize(QUndoCommand):
         for edge in self.node.edges:
             edge.setCacheMode(AbstractItem.NoCache)
 
-        self.node.background = self.data['redo']['background']
-        self.node.selection = self.data['redo']['selection']
-        self.node.polygon = self.data['redo']['polygon']
+        self.node.background.setGeometry(self.data['redo']['background'])
+        self.node.selection.setGeometry(self.data['redo']['selection'])
+        self.node.polygon.setGeometry(self.data['redo']['polygon'])
 
         for edge, pos in self.data['redo']['anchors'].items():
             self.node.setAnchor(edge, pos)
 
-        self.node.updateHandles()
+        self.node.updateResizeHandles()
         self.node.updateTextPos(moved=self.data['redo']['moved'])
         self.node.updateEdges()
         self.node.update()
@@ -141,14 +141,14 @@ class CommandNodeRezize(QUndoCommand):
         for edge in self.node.edges:
             edge.setCacheMode(AbstractItem.NoCache)
 
-        self.node.background = self.data['undo']['background']
-        self.node.selection = self.data['undo']['selection']
-        self.node.polygon = self.data['undo']['polygon']
+        self.node.background.setGeometry(self.data['undo']['background'])
+        self.node.selection.setGeometry(self.data['undo']['selection'])
+        self.node.polygon.setGeometry(self.data['undo']['polygon'])
 
         for edge, pos in self.data['undo']['anchors'].items():
             self.node.setAnchor(edge, pos)
 
-        self.node.updateHandles()
+        self.node.updateResizeHandles()
         self.node.updateTextPos(moved=self.data['undo']['moved'])
         self.node.updateEdges()
         self.node.update()
