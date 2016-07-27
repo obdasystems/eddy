@@ -64,19 +64,18 @@ class MetaFactory(QObject):
             return AttributeMetaData(item, predicate)
         return PredicateMetaData(item, predicate)
 
-# TODO: inherit from object instead?
-class PredicateMetaData(QObject):
+
+class PredicateMetaData(object):
     """
     This class implements the basic predicate node metadata container.
     """
-    def __init__(self, item, predicate, parent=None):
+    def __init__(self, item, predicate):
         """
         Initialize the metadata container.
         :type item: Item
         :type predicate: str
-        :type parent: QObject
         """
-        super().__init__(parent)
+        super().__init__()
         self.item = item
         self.predicate = predicate
         self.description = ''
@@ -131,14 +130,13 @@ class AttributeMetaData(PredicateMetaData):
     """
     This class implements the attribute predicate node metadata container.
     """
-    def __init__(self, item, predicate, parent=None):
+    def __init__(self, item, predicate):
         """
         Initialize the attribute metadata container.
         :type item: Item
         :type predicate: str
-        :type parent: QObject
         """
-        super().__init__(item, predicate, parent)
+        super().__init__(item, predicate)
         self.functional = False
 
     #############################################
@@ -193,14 +191,13 @@ class RoleMetaData(PredicateMetaData):
     """
     This class implements the role predicate node metadata container.
     """
-    def __init__(self, item, predicate, parent=None):
+    def __init__(self, item, predicate):
         """
         Initialize the role metadata container.
         :type item: Item
         :type predicate: str
-        :type parent: QObject
         """
-        super().__init__(item, predicate, parent)
+        super().__init__(item, predicate)
         self.asymmetric = False
         self.functional = False
         self.inverseFunctional = False
