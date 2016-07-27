@@ -87,14 +87,14 @@ class Diagram(QGraphicsScene):
         self.pasteX = Clipboard.PasteOffsetX
         self.pasteY = Clipboard.PasteOffsetY
 
-        self.mouseOverNode = None
-        self.mousePressData = None
-        self.mousePressEdge = None
-        self.mousePressLabel = None
-        self.mousePressLabelPos = None
-        self.mousePressNode = None
-        self.mousePressNodePos = None
-        self.mousePressPos = None
+        self.mo_Node = None
+        self.mp_Data = None
+        self.mp_Edge = None
+        self.mp_Label = None
+        self.mp_LabelPos = None
+        self.mp_Node = None
+        self.mp_NodePos = None
+        self.mp_Pos = None
 
         connect(self.sgnItemAdded, self.onConnectionChanged)
         connect(self.sgnItemRemoved, self.onConnectionChanged)
@@ -213,7 +213,7 @@ class Diagram(QGraphicsScene):
                 if node:
                     edge = self.factory.create(Item.forValue(self.modeParam), source=node)
                     edge.updateEdge(mousePos)
-                    self.mousePressEdge = edge
+                    self.mp_Edge = edge
                     self.addItem(edge)
 
             else:
@@ -237,9 +237,9 @@ class Diagram(QGraphicsScene):
                         item = self.itemOnTopOf(mousePos, nodes=False, edges=False, labels=True)
                         if item and item.isMovable():
                             self.clearSelection()
-                            self.mousePressLabel = item
-                            self.mousePressLabelPos = item.pos()
-                            self.mousePressPos = mousePos
+                            self.mp_Label = item
+                            self.mp_LabelPos = item.pos()
+                            self.mp_Pos = mousePos
                             self.setMode(DiagramMode.LabelMove)
 
                     else:
@@ -289,11 +289,11 @@ class Diagram(QGraphicsScene):
                                 # to compute delta  movements for each component in the selection.
                                 selected = self.selectedNodes()
                                 if selected:
-                                    self.mousePressNode = self.itemOnTopOf(mousePos, edges=False)
-                                    if self.mousePressNode:
-                                        self.mousePressNodePos = self.mousePressNode.pos()
-                                        self.mousePressPos = mousePos
-                                        self.mousePressData = {
+                                    self.mp_Node = self.itemOnTopOf(mousePos, edges=False)
+                                    if self.mp_Node:
+                                        self.mp_NodePos = self.mp_Node.pos()
+                                        self.mp_Pos = mousePos
+                                        self.mp_Data = {
                                             'nodes': {
                                                 node: {
                                                     'anchors': {k: v for k, v in node.anchors.items()},
@@ -304,11 +304,11 @@ class Diagram(QGraphicsScene):
                                         # Figure out if the nodes we are moving are sharing edges:
                                         # if that's the case, move the edge together with the nodes
                                         # (which actually means moving the edge breakpoints).
-                                        for node in self.mousePressData['nodes']:
+                                        for node in self.mp_Data['nodes']:
                                             for edge in node.edges:
-                                                if edge not in self.mousePressData['edges']:
+                                                if edge not in self.mp_Data['edges']:
                                                     if edge.other(node).isSelected():
-                                                        self.mousePressData['edges'][edge] = edge.breakpoints[:]
+                                                        self.mp_Data['edges'][edge] = edge.breakpoints[:]
 
     def mouseMoveEvent(self, mouseEvent):
         """
@@ -329,17 +329,17 @@ class Diagram(QGraphicsScene):
                 if self.isEdgeAddInProgress():
 
                     statusBar = self.session.statusBar()
-                    edge = self.mousePressEdge
+                    edge = self.mp_Edge
                     edge.updateEdge(mousePos)
 
                     currentNode = self.itemOnTopOf(mousePos, edges=False, skip={edge.source})
-                    previousNode = self.mouseOverNode
+                    previousNode = self.mo_Node
 
                     if previousNode:
                         previousNode.redraw(selected=False)
 
                     if currentNode:
-                        self.mouseOverNode = currentNode
+                        self.mo_Node = currentNode
                         result = self.project.validator.validate(edge.source, edge, currentNode)
                         currentNode.redraw(selected=False, valid=result.valid)
                         if not result.valid:
@@ -348,7 +348,7 @@ class Diagram(QGraphicsScene):
                             statusBar.clearMessage()
                     else:
                         statusBar.clearMessage()
-                        self.mouseOverNode = None
+                        self.mo_Node = None
                         self.project.validator.clear()
 
             elif self.mode is DiagramMode.LabelMove:
@@ -360,15 +360,15 @@ class Diagram(QGraphicsScene):
                 if self.isLabelMoveInProgress():
 
                     snapToGrid = self.session.action('toggle_grid').isChecked()
-                    point = self.mousePressLabelPos + mousePos - self.mousePressPos
+                    point = self.mp_LabelPos + mousePos - self.mp_Pos
                     point = snap(point, Diagram.GridSize / 4, snapToGrid)
-                    delta = point - self.mousePressLabelPos
-                    self.mousePressLabel.setPos(self.mousePressLabelPos + delta)
+                    delta = point - self.mp_LabelPos
+                    self.mp_Label.setPos(self.mp_LabelPos + delta)
 
             else:
 
                 if self.mode is DiagramMode.Idle:
-                    if self.mousePressNode:
+                    if self.mp_Node:
                         self.setMode(DiagramMode.NodeMove)
 
                 if self.mode is DiagramMode.NodeMove:
@@ -380,16 +380,16 @@ class Diagram(QGraphicsScene):
                     if self.isNodeMoveInProgress():
 
                         snapToGrid = self.session.action('toggle_grid').isChecked()
-                        point = self.mousePressNodePos + mousePos - self.mousePressPos
+                        point = self.mp_NodePos + mousePos - self.mp_Pos
                         point = snap(point, Diagram.GridSize, snapToGrid)
-                        delta = point - self.mousePressNodePos
+                        delta = point - self.mp_NodePos
                         edges = set()
 
-                        for edge, breakpoints in self.mousePressData['edges'].items():
+                        for edge, breakpoints in self.mp_Data['edges'].items():
                             for i in range(len(breakpoints)):
                                 edge.breakpoints[i] = breakpoints[i] + delta
 
-                        for node, data in self.mousePressData['nodes'].items():
+                        for node, data in self.mp_Data['nodes'].items():
                             edges |= set(node.edges)
                             node.setPos(data['pos'] + delta)
                             for edge, pos in data['anchors'].items():
@@ -419,7 +419,7 @@ class Diagram(QGraphicsScene):
 
                 if self.isEdgeAddInProgress():
 
-                    edge = self.mousePressEdge
+                    edge = self.mp_Edge
                     edge.source.redraw(selected=False)
                     currentNode = self.itemOnTopOf(mousePos, edges=False, skip={edge.source})
                     insertEdge = False
@@ -459,10 +459,10 @@ class Diagram(QGraphicsScene):
 
                 if self.isLabelMoveInProgress():
 
-                    pos = self.mousePressLabel.pos()
-                    if self.mousePressLabelPos != pos:
-                        item = self.mousePressLabel.parentItem()
-                        command = CommandLabelMove(self, item, self.mousePressLabelPos, pos)
+                    pos = self.mp_Label.pos()
+                    if self.mp_LabelPos != pos:
+                        item = self.mp_Label.parentItem()
+                        command = CommandLabelMove(self, item, self.mp_LabelPos, pos)
                         self.project.undoStack.push(command)
 
                     self.setMode(DiagramMode.Idle)
@@ -475,17 +475,17 @@ class Diagram(QGraphicsScene):
 
                 if self.isNodeMoveInProgress():
 
-                    pos = self.mousePressNode.pos()
-                    if self.mousePressNodePos != pos:
+                    pos = self.mp_Node.pos()
+                    if self.mp_NodePos != pos:
                         data = {
-                            'undo': self.mousePressData,
+                            'undo': self.mp_Data,
                             'redo': {
                                 'nodes': {
                                     node: {
                                         'anchors': {k: v for k, v in node.anchors.items()},
                                         'pos': node.pos(),
-                                    } for node in self.mousePressData['nodes']},
-                                'edges': {x: x.breakpoints[:] for x in self.mousePressData['edges']}
+                                    } for node in self.mp_Data['nodes']},
+                                'edges': {x: x.breakpoints[:] for x in self.mp_Data['edges']}
                             }
                         }
                         self.project.undoStack.push(CommandNodeMove(self, data))
@@ -505,20 +505,20 @@ class Diagram(QGraphicsScene):
                     self.clearSelection()
                     item.setSelected(True)
 
-                self.mousePressPos = mousePos
+                self.mp_Pos = mousePos
                 menu = self.session.mf.create(self, item, mousePos)
                 menu.exec_(mouseEvent.screenPos())
 
         super().mouseReleaseEvent(mouseEvent)
 
-        self.mouseOverNode = None
-        self.mousePressData = None
-        self.mousePressEdge = None
-        self.mousePressLabel = None
-        self.mousePressLabelPos = None
-        self.mousePressNode = None
-        self.mousePressNodePos = None
-        self.mousePressPos = None
+        self.mo_Node = None
+        self.mp_Data = None
+        self.mp_Edge = None
+        self.mp_Label = None
+        self.mp_LabelPos = None
+        self.mp_Node = None
+        self.mp_NodePos = None
+        self.mp_Pos = None
 
     #############################################
     #   SLOTS
@@ -722,7 +722,7 @@ class Diagram(QGraphicsScene):
         Returns True if an edge insertion is currently in progress, False otherwise.
         :rtype: bool
         """
-        return self.mode is DiagramMode.EdgeAdd and self.mousePressEdge is not None
+        return self.mode is DiagramMode.EdgeAdd and self.mp_Edge is not None
 
     def isLabelMoveInProgress(self):
         """
@@ -730,9 +730,9 @@ class Diagram(QGraphicsScene):
         :rtype: bool
         """
         return self.mode is DiagramMode.LabelMove and \
-               self.mousePressLabel is not None and \
-               self.mousePressLabelPos is not None and \
-               self.mousePressPos is not None
+               self.mp_Label is not None and \
+               self.mp_LabelPos is not None and \
+               self.mp_Pos is not None
 
     def isNodeMoveInProgress(self):
         """
@@ -740,10 +740,10 @@ class Diagram(QGraphicsScene):
         :rtype: bool
         """
         return self.mode is DiagramMode.NodeMove and \
-               self.mousePressData is not None and \
-               self.mousePressNode is not None and \
-               self.mousePressNodePos is not None and \
-               self.mousePressPos is not None
+               self.mp_Data is not None and \
+               self.mp_Node is not None and \
+               self.mp_NodePos is not None and \
+               self.mp_Pos is not None
 
     def isEmpty(self):
         """
