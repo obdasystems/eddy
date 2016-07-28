@@ -64,7 +64,7 @@ class ValueDomainNode(AbstractNode):
         self.selection = Polygon(QRectF(-49, -24, 98, 48))
         self.polygon = Polygon(QRectF(-45, -20, 90, 40), brush or Brush.White255A, Pen.SolidBlack1Pt)
         self.label = NodeLabel(Datatype.string.value, pos=self.center, editable=False, movable=False, parent=self)
-        self.updateGeometry()
+        self.updateNode()
         self.updateTextPos()
 
     #############################################
@@ -197,7 +197,7 @@ class ValueDomainNode(AbstractNode):
         """
         datatype = Datatype.forValue(text) or Datatype.string
         self.label.setText(datatype.value)
-        self.updateGeometry()
+        self.updateNode()
 
     def setTextPos(self, pos):
         """
@@ -235,12 +235,12 @@ class ValueDomainNode(AbstractNode):
         """
         self.label.updatePos(*args, **kwargs)
 
-    def updateGeometry(self):
+    def updateNode(self):
         """
-        Update current shape layout according to the selected datatype.
+        Update the current node.
         """
         width = max(self.label.width() + 16, 90)
-        self.polygon.setGeometry(QRectF(-width / 2, -24, width, 48))
+        self.polygon.setGeometry(QRectF(-width / 2, -20, width, 40))
         self.background.setGeometry(QRectF(-(width + 8) / 2, -24, width + 8, 48))
         self.selection.setGeometry(QRectF(-(width + 8) / 2, -24, width + 8, 48))
         self.updateTextPos()
