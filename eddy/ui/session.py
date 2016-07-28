@@ -1113,7 +1113,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             if not self.clipboard.empty():
-                self.clipboard.paste(diagram, diagram.mousePressPos)
+                self.clipboard.paste(diagram, diagram.mp_Pos)
 
     @pyqtSlot()
     def doPrint(self):
