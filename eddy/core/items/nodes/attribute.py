@@ -65,7 +65,6 @@ class AttributeNode(AbstractNode):
         self.polygon = Polygon(QRectF(-10, -10, 20, 20), brush or Brush.White255A, Pen.SolidBlack1_1Pt)
         self.label = NodeLabel(template='attribute', pos=lambda: self.center() - QPointF(0, 22), parent=self)
         self.label.setAlignment(Qt.AlignCenter)
-        self.updateGeometry()
 
     #############################################
     #   PROPERTIES
@@ -277,9 +276,9 @@ class AttributeNode(AbstractNode):
         """
         return self.label.pos()
 
-    def updateGeometry(self):
+    def updateNode(self, *args, **kwargs):
         """
-        Update the shape geometry by generating necessary additional polygons.
+        Update the current node.
         """
         path1 = QPainterPath()
         path1.addEllipse(self.polygon.geometry())

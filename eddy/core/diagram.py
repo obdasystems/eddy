@@ -545,7 +545,9 @@ class Diagram(QGraphicsScene):
         :type item: AbstractItem
         """
         super(Diagram, self).addItem(item)
-        item.redraw()
+        if item.isNode():
+            item.updateNode()
+            item.redraw()
 
     def edge(self, eid):
         """

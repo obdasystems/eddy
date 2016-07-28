@@ -78,13 +78,7 @@ class CommandLabelChange(QUndoCommand):
             meta.predicate = self.data['redo']
             self.project.addMeta(self.item.type(), self.data['redo'], meta)
 
-        # IDENTIFY CONNECTED ENUMERATION NODES
-        if self.item.type() is Item.IndividualNode:
-            f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.type() is Item.EnumerationNode
-            for node in self.item.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-                self.diagram.identify(node)
-
+        self.updateNodes()
         self.diagram.sgnUpdated.emit()
 
     def undo(self):
@@ -108,14 +102,29 @@ class CommandLabelChange(QUndoCommand):
             meta.predicate = self.data['undo']
             self.project.addMeta(self.item.type(), self.data['undo'], meta)
 
-        # IDENTIFY CONNECTED ENUMERATION NODES
+        self.updateNodes()
+        self.diagram.sgnUpdated.emit()
+
+    #############################################
+    # AUXILIARY METHODS
+    #################################
+
+    def updateNodes(self):
+        """
+        Perform node updates.
+        """
+        # UPDATE PREDICATE NODE STATE TO REFLECT THE CHANGES
+        for key in ('undo', 'redo'):
+            for node in self.project.predicates(self.item.type(), self.data[key]):
+                node.updateNode()
+                node.redraw()
+
+        # IDENTITFY ENUMERATION NODES
         if self.item.type() is Item.IndividualNode:
             f1 = lambda x: x.type() is Item.InputEdge
             f2 = lambda x: x.type() is Item.EnumerationNode
             for node in self.item.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2):
                 self.diagram.identify(node)
-
-        self.diagram.sgnUpdated.emit()
 
 
 class CommandLabelMove(QUndoCommand):

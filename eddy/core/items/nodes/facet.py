@@ -411,7 +411,7 @@ class FacetNode(AbstractNode):
         """
         return self.boundingRect().center()
 
-    def updateNode(self):
+    def updateNode(self, *args, **kwargs):
         """
         Update the current node.
         """

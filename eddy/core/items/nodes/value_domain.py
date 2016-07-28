@@ -235,7 +235,7 @@ class ValueDomainNode(AbstractNode):
         """
         self.label.updatePos(*args, **kwargs)
 
-    def updateNode(self):
+    def updateNode(self, *args, **kwargs):
         """
         Update the current node.
         """

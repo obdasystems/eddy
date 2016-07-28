@@ -245,6 +245,7 @@ class ProjectLoader(AbstractLoader):
         predicates = self.project.predicates()
         LOGGER.info('Refreshing state for %s predicate nodes', len(predicates))
         for node in predicates:
+            node.updateNode()
             node.redraw()
 
     def importModulesFromXML(self):

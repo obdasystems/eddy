@@ -51,8 +51,8 @@ class RoleNode(AbstractResizableNode):
     """
     IndexL = 0
     IndexB = 1
-    IndexT = 3
     IndexR = 2
+    IndexT = 3
     IndexE = 4
 
     Identities = {Identity.Role}
@@ -78,6 +78,8 @@ class RoleNode(AbstractResizableNode):
             QPointF(-x / 2, 0)
         ])
 
+        self.fpolygon = Polygon(QPainterPath())
+        self.ipolygon = Polygon(QPainterPath())
         self.background = Polygon(createPolygon(w + 8, h + 8))
         self.selection = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush or Brush.White255A, Pen.SolidBlack1_1Pt)
@@ -124,9 +126,13 @@ class RoleNode(AbstractResizableNode):
         Set the functional property of the predicated represented by this node.
         :type value: bool
         """
+        functional = bool(value)
         meta = self.project.meta(self.type(), self.text())
-        meta.functional = bool(value)
+        meta.functional = functional
         self.project.addMeta(self.type(), self.text(), meta)
+        for node in self.project.predicates(self.type(), self.text()):
+            node.updateNode(functional=functional)
+            node.redraw(functional=functional, selected=node.isSelected())
 
     @property
     def identity(self):
@@ -159,9 +165,13 @@ class RoleNode(AbstractResizableNode):
         Set the inverse functional property of the predicated represented by this node.
         :type value: bool
         """
+        inverseFunctional = bool(value)
         meta = self.project.meta(self.type(), self.text())
-        meta.inverseFunctional = bool(value)
+        meta.inverseFunctional = inverseFunctional
         self.project.addMeta(self.type(), self.text(), meta)
+        for node in self.project.predicates(self.type(), self.text()):
+            node.updateNode(inverseFunctional=inverseFunctional)
+            node.redraw(inverseFunctional=inverseFunctional, selected=node.isSelected())
     
     @property
     def irreflexive(self):
@@ -338,6 +348,14 @@ class RoleNode(AbstractResizableNode):
         painter.setPen(self.polygon.pen())
         painter.setBrush(self.polygon.brush())
         painter.drawPolygon(self.polygon.geometry())
+        # FUNCTIONALITY
+        painter.setPen(self.fpolygon.pen())
+        painter.setBrush(self.fpolygon.brush())
+        painter.drawPath(self.fpolygon.geometry())
+        # INVERSE FUNCTIONALITY
+        painter.setPen(self.ipolygon.pen())
+        painter.setBrush(self.ipolygon.brush())
+        painter.drawPath(self.ipolygon.geometry())
         # RESIZE HANDLES
         painter.setRenderHint(QPainter.Antialiasing)
         for polygon in self.handles:
@@ -353,6 +371,40 @@ class RoleNode(AbstractResizableNode):
         path = QPainterPath()
         path.addPolygon(self.polygon.geometry())
         return path
+
+    def redraw(self, functional=None, inverseFunctional=None, **kwargs):
+        """
+        Perform the redrawing of this item.
+        :type functional: bool
+        :type inverseFunctional: bool
+        """
+        if functional is None:
+            functional = self.functional
+        if inverseFunctional is None:
+            inverseFunctional = self.inverseFunctional
+
+        # FUNCTIONAL POLYGON
+        pen = Pen.NoPen
+        brush = Brush.NoBrush
+        if functional:
+            pen = Pen.SolidBlack1_1Pt
+            brush = Brush.White255A
+
+        self.fpolygon.setPen(pen)
+        self.fpolygon.setBrush(brush)
+
+        # INVERSE FUNCTIONAL POLYGON
+        pen = Pen.NoPen
+        brush = Brush.NoBrush
+        if inverseFunctional:
+            pen = Pen.SolidBlack1_1Pt
+            brush = Brush.Black255A
+
+        self.ipolygon.setPen(pen)
+        self.ipolygon.setBrush(brush)
+
+        # SELECTION + SYNTAX VALIDATION + HANDLES + REFRESH
+        super(RoleNode, self).redraw(**kwargs)
 
     def resize(self, mousePos):
         """
@@ -623,6 +675,7 @@ class RoleNode(AbstractResizableNode):
         self.updateResizeHandles()
         self.updateTextPos(moved=moved)
         self.updateAnchors(self.mp_Data, D)
+        self.updateNode()
 
     def setText(self, text):
         """
@@ -663,6 +716,79 @@ class RoleNode(AbstractResizableNode):
         :rtype: QPointF
         """
         return self.label.pos()
+
+    def updateNode(self, functional=None, inverseFunctional=None):
+        """
+        Update the current node.
+        :type functional: bool
+        :type inverseFunctional: bool
+        """
+        if functional is None:
+            functional = self.functional
+        if inverseFunctional is None:
+            inverseFunctional = self.inverseFunctional
+
+        polygon = self.polygon.geometry()
+
+        fpolygon = QPainterPath()
+        ipolygon = QPainterPath()
+
+        if functional and not inverseFunctional:
+            # FUNCTIONALITY
+            path = QPainterPath()
+            path.addPolygon(QPolygonF([
+                polygon[self.IndexL] + QPointF(+5, 0),
+                polygon[self.IndexB] + QPointF(0, -4),
+                polygon[self.IndexR] + QPointF(-5, 0),
+                polygon[self.IndexT] + QPointF(0, +4),
+                polygon[self.IndexL] + QPointF(+5, 0),
+            ]))
+            fpolygon.addPolygon(polygon)
+            fpolygon = fpolygon.subtracted(path)
+
+        if not functional and inverseFunctional:
+            # INVERSE FUNCTIONALITY
+            path = QPainterPath()
+            path.addPolygon(QPolygonF([
+                polygon[self.IndexL] + QPointF(+5, 0),
+                polygon[self.IndexB] + QPointF(0, -4),
+                polygon[self.IndexR] + QPointF(-5, 0),
+                polygon[self.IndexT] + QPointF(0, +4),
+                polygon[self.IndexL] + QPointF(+5, 0),
+            ]))
+            ipolygon.addPolygon(polygon)
+            ipolygon = ipolygon.subtracted(path)
+
+        if functional and inverseFunctional:
+            # FUNCTIONALITY
+            path = QPainterPath()
+            path.addPolygon(QPolygonF([
+                polygon[self.IndexL] + QPointF(+5, 0),
+                polygon[self.IndexB] + QPointF(0, -4),
+                polygon[self.IndexB],
+                polygon[self.IndexR],
+                polygon[self.IndexT],
+                polygon[self.IndexT] + QPointF(0, +4),
+                polygon[self.IndexL] + QPointF(+5, 0),
+            ]))
+            fpolygon.addPolygon(polygon)
+            fpolygon = fpolygon.subtracted(path)
+            # INVERSE FUNCTIONALITY
+            path = QPainterPath()
+            path.addPolygon(QPolygonF([
+                polygon[self.IndexL],
+                polygon[self.IndexB],
+                polygon[self.IndexB] + QPointF(0, -4),
+                polygon[self.IndexR] + QPointF(-5, 0),
+                polygon[self.IndexT] + QPointF(0, +4),
+                polygon[self.IndexT],
+                polygon[self.IndexL],
+            ]))
+            ipolygon.addPolygon(polygon)
+            ipolygon = ipolygon.subtracted(path)
+
+        self.fpolygon.setGeometry(fpolygon)
+        self.ipolygon.setGeometry(ipolygon)
 
     def updateTextPos(self, *args, **kwargs):
         """

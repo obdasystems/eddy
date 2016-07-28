@@ -349,6 +349,12 @@ class AbstractNode(AbstractItem):
         for edge in self.edges:
             edge.updateEdge()
 
+    def updateNode(self, *args, **kwargs):
+        """
+        Update the current node.
+        """
+        pass
+
     @abstractmethod
     def updateTextPos(self, *args, **kwargs):
         """
