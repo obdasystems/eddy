@@ -120,7 +120,7 @@ class Project(QObject):
     @property
     def session(self):
         """
-        Returns the session this project is loaded into (alias doe Project.parent()).
+        Returns the session this project is loaded into (alias for Project.parent()).
         :rtype: Session
         """
         return self.parent()
@@ -349,20 +349,54 @@ class Project(QObject):
         except (KeyError, TypeError):
             return set()
 
-    def predicates(self, item, name, diagram=None):
+    def predicates(self, item=None, name=None, diagram=None):
         """
-        Returns a collection of predicate nodes belonging to the given diagram and that match
-        the given item type and predicate name. If no diagram is supplied the lookup is
-        performed across all the diagrams belonging to this project.
+        Returns a collection of predicate nodes belonging to the given diagram.
+        If no diagram is supplied the lookup is performed across all the diagrams belonging to this project.
         :type item: Item
         :type name: str
         :type diagram: Diagram
         :rtype: set
         """
         try:
-            if not diagram:
-                return set.union(*self.index[K_PREDICATE][item][name][K_NODE].values())
-            return self.index[K_PREDICATE][item][name][K_NODE][diagram.id]
+
+            if not item and not name:
+                collection = set()
+                if not diagram:
+                    for i in self.index[K_PREDICATE]:
+                        for j in self.index[K_PREDICATE][i]:
+                            collection.union(*self.index[K_PREDICATE][i][j][K_NODE].values())
+                else:
+                    for i in self.index[K_PREDICATE]:
+                        for j in self.index[K_PREDICATE][i]:
+                            collection.union(self.index[K_PREDICATE][i][j][K_NODE][diagram.id])
+                return collection
+
+            if item and not name:
+                collection = set()
+                if not diagram:
+                    for i in self.index[K_PREDICATE][item]:
+                        collection.union(*self.index[K_PREDICATE][item][i][K_NODE].values())
+                else:
+                    for i in self.index[K_PREDICATE][item]:
+                        collection.union(self.index[K_PREDICATE][item][i][K_NODE][diagram.id])
+                return collection
+
+            if not item and name:
+                collection = set()
+                if not diagram:
+                    for i in self.index[K_PREDICATE]:
+                        collection.union(*self.index[K_PREDICATE][i][name][K_NODE].values())
+                else:
+                    for i in self.index[K_PREDICATE]:
+                        collection.union(self.index[K_PREDICATE][i][name][K_NODE][diagram.id])
+                return collection
+
+            if item and name:
+                if not diagram:
+                    return set.union(*self.index[K_PREDICATE][item][name][K_NODE].values())
+                return self.index[K_PREDICATE][item][name][K_NODE][diagram.id]
+
         except KeyError:
             return set()
 
