@@ -103,7 +103,7 @@ class Palette(QWidget):
         # CREATE TOGGLE MENU
         self.menu = QMenu()
         for item in self.items:
-            action = QAction(item.realname.title(), self)
+            action = QAction(item.realName.title(), self)
             action.setCheckable(True)
             action.setChecked(self.display[item])
             action.setFont(Font('Arial', 11))

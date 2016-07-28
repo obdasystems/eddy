@@ -898,7 +898,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
             if node:
                 action = self.sender()
                 item = action.data()
-                name = 'compose {0} {1}'.format(node.shortname, item.shortname)
+                name = 'compose {0} {1}'.format(node.shortName, item.shortName)
                 items = diagram.propertyComposition(node, item)
                 nodes = {x for x in items if x.isNode()}
                 edges = {x for x in items if x.isEdge()}
@@ -1332,7 +1332,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
                     if form.exec_() == CardinalityRestrictionForm.Accepted:
                         data = restriction.toString(form.min() or '-', form.max() or '-')
                 if data and node.text() != data:
-                    name = 'change {0} to {1}'.format(node.shortname, data)
+                    name = 'change {0} to {1}'.format(node.shortName, data)
                     self.project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
@@ -1371,7 +1371,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
                 special = action.data()
                 data = special.value
                 if node.text() != data:
-                    name = 'change {0} to {1}'.format(node.shortname, data)
+                    name = 'change {0} to {1}'.format(node.shortName, data)
                     self.project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
@@ -1388,7 +1388,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
                 datatype = action.data()
                 data = datatype.value
                 if node.text() != data:
-                    name = 'change {0} to {1}'.format(node.shortname, data)
+                    name = 'change {0} to {1}'.format(node.shortName, data)
                     self.project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()

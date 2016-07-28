@@ -120,7 +120,7 @@ class Item(IntEnum):
         return None
 
     @property
-    def realname(self):
+    def realName(self):
         """
         Returns the item readable name, i.e: attribute node, concept node.
         :rtype: str
@@ -128,12 +128,12 @@ class Item(IntEnum):
         return RE_CAMEL_SPACE.sub('\g<1> \g<2>', self.name).lower()
 
     @property
-    def shortname(self):
+    def shortName(self):
         """
         Returns the item short name, i.e: attribute, concept.
         :rtype: str
         """
-        return cutR(self.realname, ' node', ' edge')
+        return cutR(self.realName, ' node', ' edge')
     
 
 @unique

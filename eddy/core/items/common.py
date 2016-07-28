@@ -133,18 +133,18 @@ class AbstractItem(QGraphicsItem, DiagramItemMixin):
         :rtype: str
         """
         item = self.type()
-        return item.realname
+        return item.realName
 
     @property
-    def shortname(self):
+    def shortName(self):
         """
         Returns the item readable short name, i.e:
-        * .name = datatype restriction node | .shortname = datatype restriction
-        * .name = inclusion edge | .shortname = inclusion
+        * .name = datatype restriction node | .shortName = datatype restriction
+        * .name = inclusion edge | .shortName = inclusion
         :rtype: str
         """
         item = self.type()
-        return item.shortname
+        return item.shortName
 
     #############################################
     #   INTERFACE

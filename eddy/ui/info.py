@@ -583,7 +583,7 @@ class EdgeInfo(AbstractInfo):
         """
         self.sourceField.setValue(edge.source.id)
         self.targetField.setValue(edge.target.id)
-        self.typeField.setValue(edge.shortname.capitalize())
+        self.typeField.setValue(edge.shortName.capitalize())
         self.typeField.home(True)
         self.typeField.deselect()
 
@@ -844,7 +844,7 @@ class AttributeNodeInfo(PredicateNodeInfo):
         sender = self.sender()
         checked = sender.isChecked()
         attribute = sender.property('attribute')
-        name = '{0}set {1} {2} property'.format('un' if checked else '', node.shortname, attribute)
+        name = '{0}set {1} {2} property'.format('un' if checked else '', node.shortName, attribute)
         data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
         project.undoStack.push(CommandSetProperty(diagram, node, data, name))
 
@@ -962,7 +962,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         checked = sender.isChecked()
         attribute = sender.property('attribute')
         prop = RE_CAMEL_SPACE.sub('\g<1> \g<2>', attribute).lower()
-        name = '{0}set {1} {2} property'.format('un' if checked else '', node.shortname, prop)
+        name = '{0}set {1} {2} property'.format('un' if checked else '', node.shortName, prop)
         data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
         project.undoStack.push(CommandSetProperty(diagram, node, data, name))
 
@@ -1026,7 +1026,7 @@ class ValueDomainNodeInfo(NodeInfo):
             datatype = self.datatypeField.currentData()
             data = datatype.value
             if node.text() != data:
-                name = 'change {0} to {1}'.format(node.shortname, data)
+                name = 'change {0} to {1}'.format(node.shortName, data)
                 project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
         self.datatypeField.clearFocus()

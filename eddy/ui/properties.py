@@ -264,7 +264,7 @@ class NodeProperty(PropertyDialog):
         self.typeField.setFont(arial12r)
         self.typeField.setReadOnly(True)
         self.typeField.setFixedWidth(300)
-        self.typeField.setValue(node.shortname.capitalize())
+        self.typeField.setValue(node.shortName.capitalize())
 
         self.identityLabel = QLabel(self)
         self.identityLabel.setFont(arial12r)
