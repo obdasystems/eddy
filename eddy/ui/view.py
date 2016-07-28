@@ -65,9 +65,10 @@ class DiagramView(QGraphicsView):
         """
         super().__init__(diagram)
 
-        self.mousePressCenterPos = None
-        self.mousePressPos = None
-        self.moveTimer = None
+        self.mp_CenterPos = None
+        self.mp_Pos = None
+        self.mv_Timer = None
+
         self.rubberBandOrigin = None
         self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
         self.rubberBand.hide()
@@ -157,8 +158,8 @@ class DiagramView(QGraphicsView):
             #################################
 
             visibleRect = self.visibleRect()
-            self.mousePressCenterPos = visibleRect.center()
-            self.mousePressPos = mousePos
+            self.mp_CenterPos = visibleRect.center()
+            self.mp_Pos = mousePos
 
         else:
 
@@ -188,7 +189,7 @@ class DiagramView(QGraphicsView):
 
         if mouseButtons & Qt.RightButton:
 
-            if (mouseEvent.pos() - self.mousePressPos).manhattanLength() >= QApplication.startDragDistance():
+            if (mouseEvent.pos() - self.mp_Pos).manhattanLength() >= QApplication.startDragDistance():
 
                 #############################################
                 # SCENE DRAG
@@ -199,8 +200,8 @@ class DiagramView(QGraphicsView):
                     viewport.setCursor(Qt.ClosedHandCursor)
 
                 mousePos /= self.zoom
-                mousePressPos = self.mousePressPos / self.zoom
-                self.centerOn(self.mousePressCenterPos - mousePos + mousePressPos)
+                mousePressPos = self.mp_Pos / self.zoom
+                self.centerOn(self.mp_CenterPos - mousePos + mousePressPos)
 
         else:
 
@@ -258,8 +259,8 @@ class DiagramView(QGraphicsView):
         Executed when the mouse is released from the view.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        self.mousePressCenterPos = None
-        self.mousePressPos = None
+        self.mp_CenterPos = None
+        self.mp_Pos = None
         self.rubberBandOrigin = None
         self.rubberBand.hide()
 
@@ -383,7 +384,7 @@ class DiagramView(QGraphicsView):
         :type delta: QPointF
         :type rate: float
         """
-        if self.moveTimer:
+        if self.mv_Timer:
             self.stopMove()
 
         # Move the view: this is needed before the timer so that if we keep
@@ -395,18 +396,18 @@ class DiagramView(QGraphicsView):
         # Setup a timer for future move, so the view keeps moving
         # also if we are not moving the mouse anymore but we are
         # holding the position outside the viewport rect.
-        self.moveTimer = QTimer()
-        connect(self.moveTimer.timeout, self.moveBy, delta)
-        self.moveTimer.start(rate)
+        self.mv_Timer = QTimer()
+        connect(self.mv_Timer.timeout, self.moveBy, delta)
+        self.mv_Timer.start(rate)
 
     def stopMove(self):
         """
         Stop the view movement by destroying the timer object causing it.
         """
-        if self.moveTimer:
-            self.moveTimer.stop()
-            disconnect(self.moveTimer.timeout)
-            self.moveTimer = None
+        if self.mv_Timer:
+            self.mv_Timer.stop()
+            disconnect(self.mv_Timer.timeout)
+            self.mv_Timer = None
 
     def visibleRect(self):
         """
