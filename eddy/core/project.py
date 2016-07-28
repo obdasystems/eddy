@@ -365,31 +365,31 @@ class Project(QObject):
                 if not diagram:
                     for i in self.index[K_PREDICATE]:
                         for j in self.index[K_PREDICATE][i]:
-                            collection.union(*self.index[K_PREDICATE][i][j][K_NODE].values())
+                            collection.update(*self.index[K_PREDICATE][i][j][K_NODE].values())
                 else:
                     for i in self.index[K_PREDICATE]:
                         for j in self.index[K_PREDICATE][i]:
-                            collection.union(self.index[K_PREDICATE][i][j][K_NODE][diagram.id])
+                            collection.update(self.index[K_PREDICATE][i][j][K_NODE][diagram.id])
                 return collection
 
             if item and not name:
                 collection = set()
                 if not diagram:
                     for i in self.index[K_PREDICATE][item]:
-                        collection.union(*self.index[K_PREDICATE][item][i][K_NODE].values())
+                        collection.update(*self.index[K_PREDICATE][item][i][K_NODE].values())
                 else:
                     for i in self.index[K_PREDICATE][item]:
-                        collection.union(self.index[K_PREDICATE][item][i][K_NODE][diagram.id])
+                        collection.update(self.index[K_PREDICATE][item][i][K_NODE][diagram.id])
                 return collection
 
             if not item and name:
                 collection = set()
                 if not diagram:
                     for i in self.index[K_PREDICATE]:
-                        collection.union(*self.index[K_PREDICATE][i][name][K_NODE].values())
+                        collection.update(*self.index[K_PREDICATE][i][name][K_NODE].values())
                 else:
                     for i in self.index[K_PREDICATE]:
-                        collection.union(self.index[K_PREDICATE][i][name][K_NODE][diagram.id])
+                        collection.update(self.index[K_PREDICATE][i][name][K_NODE][diagram.id])
                 return collection
 
             if item and name:
