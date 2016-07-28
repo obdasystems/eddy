@@ -47,11 +47,11 @@ from eddy.core.commands.project import CommandProjectSetIRI
 from eddy.core.commands.project import CommandProjectSetPrefix
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Facet, Datatype
+from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import first, isEmpty, clamp
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.project import Project
-from eddy.core.qt import BrushIcon, Font
 from eddy.core.regex import RE_CAMEL_SPACE
 
 from eddy.ui.fields import IntegerField

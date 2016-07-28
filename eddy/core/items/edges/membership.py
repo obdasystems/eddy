@@ -44,7 +44,7 @@ from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import Platform
 from eddy.core.items.edges.common.base import AbstractEdge
 from eddy.core.items.edges.common.label import EdgeLabel
-from eddy.core.qt import Font
+from eddy.core.datatypes.qt import Font
 
 
 class MembershipEdge(AbstractEdge):

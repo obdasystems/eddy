@@ -44,7 +44,7 @@ from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import Brush, DiagramMode
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
-from eddy.core.qt import Font
+from eddy.core.datatypes.qt import Font
 
 
 class DiagramItemMixin:

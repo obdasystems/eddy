@@ -39,9 +39,9 @@ from PyQt5.QtPrintSupport import QPrinter
 from PyQt5.QtWidgets import QTableView
 
 from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.qt import Font
 from eddy.core.exporters.common import AbstractExporter
 from eddy.core.items.common import AbstractItem
-from eddy.core.qt import Font
 
 
 class PdfExporter(AbstractExporter):

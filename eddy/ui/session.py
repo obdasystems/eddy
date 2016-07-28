@@ -65,6 +65,7 @@ from eddy.core.datatypes.graphol import Restriction
 from eddy.core.datatypes.graphol import Special
 from eddy.core.datatypes.misc import Color, DiagramMode
 from eddy.core.datatypes.owl import Datatype, Facet
+from eddy.core.datatypes.qt import BrushIcon
 from eddy.core.datatypes.system import Platform, File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphml import GraphmlExporter
@@ -82,7 +83,6 @@ from eddy.core.loaders.graphol import GrapholLoader
 from eddy.core.loaders.project import ProjectLoader
 from eddy.core.misc import HasActionSystem, HasMenuSystem
 from eddy.core.output import getLogger
-from eddy.core.qt import BrushIcon
 from eddy.core.utils.clipboard import Clipboard
 
 from eddy.ui.about import AboutDialog

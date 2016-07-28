@@ -41,13 +41,13 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QFormLayout, QFrame
 from PyQt5.QtWidgets import QWidget, QDialogButtonBox, QLabel
 
 from eddy import ORGANIZATION, APPNAME, WORKSPACE
+from eddy.core.datatypes.qt import Font
 from eddy.core.exporters.project import ProjectExporter
 from eddy.core.functions.fsystem import isdir
 from eddy.core.functions.misc import cutR, isEmpty
 from eddy.core.functions.path import expandPath, isPathValid
 from eddy.core.functions.signals import connect
 from eddy.core.project import Project
-from eddy.core.qt import Font
 
 from eddy.ui.fields import StringField
 

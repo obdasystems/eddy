@@ -40,7 +40,7 @@ from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.operator import OperatorNode
 from eddy.core.items.nodes.common.label import NodeLabel
-from eddy.core.qt import Font
+from eddy.core.datatypes.qt import Font
 
 
 class IntersectionNode(OperatorNode):

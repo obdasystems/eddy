@@ -41,11 +41,11 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QWidget
 from PyQt5.QtWidgets import QDialogButtonBox, QFileDialog, QPushButton, QMessageBox
 
 from eddy import ORGANIZATION, APPNAME, WORKSPACE
+from eddy.core.datatypes.qt import Font
 from eddy.core.functions.fsystem import mkdir
 from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.path import isPathValid, expandPath
 from eddy.core.functions.signals import connect
-from eddy.core.qt import Font
 
 from eddy.ui.fields import StringField
 

@@ -41,12 +41,12 @@ from PyQt5.QtWidgets import QMessageBox
 
 from eddy import BUG_TRACKER
 from eddy.core.datatypes.owl import OWLSyntax
+from eddy.core.datatypes.qt import Font
 from eddy.core.exceptions import MalformedDiagramError
 from eddy.core.exporters.owl import OWLExporter
 from eddy.core.functions.misc import format_exception
 from eddy.core.functions.path import openPath, expandPath
 from eddy.core.functions.signals import connect
-from eddy.core.qt import Font
 
 from eddy.ui.fields import ComboBox
 

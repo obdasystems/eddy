@@ -43,6 +43,7 @@ from PyQt5.QtWidgets import QDialog, QWidget, QVBoxLayout, QFormLayout
 from PyQt5.QtWidgets import QDialogButtonBox, QMessageBox, QLabel, QFrame
 
 from eddy import ORGANIZATION, APPNAME
+from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphol import GrapholExporter
@@ -50,7 +51,6 @@ from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.misc import cutR, format_exception, isEmpty
 from eddy.core.functions.path import isPathValid, shortPath, expandPath
 from eddy.core.functions.signals import connect
-from eddy.core.qt import Font
 
 from eddy.ui.fields import StringField
 

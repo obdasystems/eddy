@@ -43,7 +43,7 @@ from eddy.core.datatypes.owl import Datatype, Facet
 from eddy.core.functions.misc import cutL, cutR, first
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
-from eddy.core.qt import Font
+from eddy.core.datatypes.qt import Font
 from eddy.core.regex import RE_VALUE_RESTRICTION
 
 

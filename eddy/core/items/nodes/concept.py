@@ -42,7 +42,7 @@ from eddy.core.functions.misc import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.polygon import Polygon
-from eddy.core.qt import Font
+from eddy.core.datatypes.qt import Font
 
 
 class ConceptNode(AbstractResizableNode):

@@ -41,10 +41,10 @@ from PyQt5.QtWidgets import QStyleOption, QStyle, QApplication
 from PyQt5.QtWidgets import QHeaderView, QAction, QMenu
 
 from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.functions.misc import first, cutR
 from eddy.core.functions.signals import connect
-from eddy.core.qt import Font
 
 from eddy.ui.fields import StringField
 

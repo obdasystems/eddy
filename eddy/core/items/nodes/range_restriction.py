@@ -39,7 +39,7 @@ from PyQt5.QtGui import QPixmap, QPainter, QIcon
 from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
 from eddy.core.items.nodes.common.restriction import RestrictionNode
-from eddy.core.qt import Font
+from eddy.core.datatypes.qt import Font
 
 
 class RangeRestrictionNode(RestrictionNode):

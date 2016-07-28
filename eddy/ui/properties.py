@@ -50,10 +50,10 @@ from eddy.core.commands.nodes import CommandNodeMove
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.owl import Facet, Datatype
+from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import clamp, isEmpty, first
 from eddy.core.functions.signals import connect
-from eddy.core.qt import Font
 
 from eddy.ui.fields import IntegerField, StringField, TextField
 from eddy.ui.fields import CheckBox, ComboBox, SpinBox

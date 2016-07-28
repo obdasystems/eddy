@@ -42,9 +42,9 @@ from PyQt5.QtWidgets import QApplication, QStyleOption, QStyle
 
 from eddy import ORGANIZATION, APPNAME
 from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
 from eddy.core.items.factory import ItemFactory
-from eddy.core.qt import Font
 
 
 class Palette(QWidget):

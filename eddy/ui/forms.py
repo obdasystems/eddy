@@ -41,9 +41,9 @@ from PyQt5.QtWidgets import QMessageBox, QDialogButtonBox, QWidget
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.graphol import Identity
 from eddy.core.datatypes.owl import Datatype
+from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
-from eddy.core.qt import Font
 
 from eddy.ui.fields import ComboBox
 from eddy.ui.fields import IntegerField

@@ -43,10 +43,10 @@ from PyQt5.QtWidgets import QLabel, QWidget, QStyleOption, QStyle, QDesktopWidge
 
 from eddy import APPNAME, ORGANIZATION, VERSION
 from eddy import PROJECT_HOME, BUG_TRACKER, GRAPHOL_HOME, WORKSPACE
+from eddy.core.datatypes.qt import Font, PHCQPushButton, PHCQToolButton
 from eddy.core.functions.misc import first
 from eddy.core.functions.path import shortPath, compressPath
 from eddy.core.functions.signals import connect
-from eddy.core.qt import Font, PHCQPushButton, PHCQToolButton
 
 from eddy.ui.project import ProjectDialog
 

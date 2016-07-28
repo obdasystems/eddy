@@ -40,7 +40,7 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout, QHBoxLayout
 
 from eddy import APPNAME, AUTHOR, VERSION, LICENSE, PROJECT_HOME
-from eddy.core.qt import Font
+from eddy.core.datatypes.qt import Font
 
 
 class AboutDialog(QDialog):

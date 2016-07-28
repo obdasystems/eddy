@@ -44,7 +44,7 @@ from eddy.core.functions.misc import first
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import FacetQuotedLabel, NodeLabel
 from eddy.core.polygon import Polygon
-from eddy.core.qt import Font
+from eddy.core.datatypes.qt import Font
 from eddy.core.regex import RE_FACET, RE_VALUE_RESTRICTION
 
 

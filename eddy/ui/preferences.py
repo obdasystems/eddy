@@ -39,9 +39,9 @@ from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import QDialogButtonBox, QTabWidget, QFormLayout
 
 from eddy import ORGANIZATION, APPNAME
+from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.signals import connect
-from eddy.core.qt import Font
 
 from eddy.ui.fields import SpinBox
 

@@ -38,8 +38,8 @@ from PyQt5.QtGui import QPainter, QIcon
 from PyQt5.QtWidgets import QWidget, QStyleOption, QStyle, QHBoxLayout
 from PyQt5.QtWidgets import QLabel, QDockWidget, QPushButton
 
+from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
-from eddy.core.qt import Font
 
 
 class DockWidget(QDockWidget):
