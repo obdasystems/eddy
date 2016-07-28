@@ -175,8 +175,8 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         #################################
 
         self.configureActions()
-        self.configureWidgets()
         self.configureMenus()
+        self.configureWidgets()
         self.configureStatusBar()
         self.configureToolbars()
         self.configureState()
