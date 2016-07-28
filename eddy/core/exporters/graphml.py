@@ -285,7 +285,7 @@ class GraphmlExporter(AbstractExporter):
         #################################
 
         fill = self.document.createElement('y:Fill')
-        fill.setAttribute('color', node.brush.color().name())
+        fill.setAttribute('color', node.brush().color().name())
         fill.setAttribute('transparent', 'false')
 
         #############################################
@@ -407,7 +407,7 @@ class GraphmlExporter(AbstractExporter):
         #################################
 
         fill = self.document.createElement('y:Fill')
-        fill.setAttribute('color', node.brush.color().name())
+        fill.setAttribute('color', node.brush().color().name())
         fill.setAttribute('transparent', 'false')
 
         #############################################
