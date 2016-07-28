@@ -957,7 +957,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
             dialog.setAcceptMode(QFileDialog.AcceptSave)
             dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QFileDialog.AnyFile)
-            dialog.setNameFilters([File.Owl.value, File.Pdf.value])
+            dialog.setNameFilters([File.Csv.value, File.Owl.value, File.Pdf.value])
             dialog.setViewMode(QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             if dialog.exec_():

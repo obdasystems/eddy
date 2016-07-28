@@ -33,93 +33,74 @@
 ##########################################################################
 
 
-import sys
+import io
+import csv
 
-from enum import unique, Enum
+from operator import itemgetter
+
+from eddy.core.datatypes.collections import DistinctList
+from eddy.core.datatypes.graphol import Item
+from eddy.core.exporters.common import AbstractExporter
+from eddy.core.functions.fsystem import fwrite
 
 
-@unique
-class File(Enum):
+class CsvExporter(AbstractExporter):
     """
-    This class defines supported filetypes.
+    This class can be used to export Graphol projects into CSV format.
     """
-    __order__ = 'Csv Graphml Graphol Owl Pdf'
+    K_NAME = 'NAME'
+    K_TYPE = 'TYPE'
+    K_DESCRIPTION = 'DESCRIPTION'
+    K_DIAGRAMS = 'DIAGRAMS'
 
-    Csv = 'Csv (*.csv)'
-    Graphml = 'Graphml (*.graphml)'
-    Graphol = 'Graphol (*.graphol)'
-    Owl = 'Owl (*.owl)'
-    Pdf = 'PDF (*.pdf)'
+    Types = [
+        Item.AttributeNode,
+        Item.ConceptNode,
+        Item.RoleNode,
+    ]
 
-    @classmethod
-    def forPath(cls, path):
+    def __init__(self, project, path, session=None):
         """
-        Returns the File matching the given path.
+        Initialize the CSV exporter.
+        :type project: Project
         :type path: str
-        :rtype: File
+        :type session: Session
         """
-        for x in cls:
-            if path.endswith(x.extension):
-                return x
-        return None
+        super().__init__(session)
+        self.project = project
+        self.path = path
 
-    @classmethod
-    def forValue(cls, value):
+    def run(self):
         """
-        Returns the File matching the given value.
-        :type value: str
-        :rtype: File
+        Perform CSV file generation.
         """
-        for x in cls:
-            if x.value == value:
-                return x
-        return None
+        csvdata = {x: {} for x in self.Types}
 
-    @property
-    def extension(self):
-        """
-        The extension associated with the Enum member.
-        :rtype: str
-        """
-        return {
-            File.Graphml: '.graphml',
-            File.Graphol: '.graphol',
-            File.Owl: '.owl',
-            File.Pdf: '.pdf'
-        }[self]
+        for node in self.project.predicates():
+            if node.type() in csvdata:
+                # If there is no data for this predicate node, create a new entry.
+                if not node.text() in csvdata[node.type()]:
+                    meta = self.project.meta(node.type(), node.text())
+                    csvdata[node.type()][node.text()] = {
+                        self.K_NAME: meta.predicate,
+                        self.K_TYPE: meta.item.shortName,
+                        self.K_DESCRIPTION: meta.description,
+                        self.K_DIAGRAMS: DistinctList(),
+                    }
+                # Append the name of the diagram to the diagram list.
+                csvdata[node.type()][node.text()][self.K_DIAGRAMS] += [node.diagram.name]
 
+        # Collect data in a buffer.
+        buffer = io.StringIO()
+        writer = csv.writer(buffer)
+        writer.writerow((self.K_NAME, self.K_TYPE, self.K_DESCRIPTION, self.K_DIAGRAMS))
+        for i, j in sorted(((v, k) for k in csvdata for v in csvdata[k]), key=itemgetter(0)):
+            writer.writerow((
+                csvdata[j][i][self.K_NAME],
+                csvdata[j][i][self.K_TYPE],
+                csvdata[j][i][self.K_DESCRIPTION],
+                sorted(csvdata[j][i][self.K_DIAGRAMS]),
+            ))
 
-@unique
-class Platform(Enum):
-    """
-    This class defines supported platforms.
-    """
-    __order__ = 'Darwin Linux Windows'
-
-    Darwin = 'Darwin'
-    Linux = 'Linux'
-    Windows = 'Windows'
-    Unknown = 'Unknown'
-
-    @classmethod
-    def identify(cls):
-        """
-        Returns the current platform identifier.
-        :rtype: Platform
-        """
-        return Platform.forValue(sys.platform)
-
-    @classmethod
-    def forValue(cls, value):
-        """
-        Returns the platform identified by the the given value.
-        :type value: str
-        :rtype: Platform
-        """
-        if value.startswith('darwin'):
-            return Platform.Darwin
-        if value.startswith('linux'):
-            return Platform.Linux
-        if value.startswith('win') or value.startswith('cygwin'):
-            return Platform.Windows
-        return Platform.Unknown
+        # Write to disk.
+        fwrite(buffer.getvalue(), self.path)

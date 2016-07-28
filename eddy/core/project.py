@@ -41,6 +41,7 @@ from PyQt5.QtWidgets import QUndoStack
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
+from eddy.core.exporters.csv import CsvExporter
 from eddy.core.exporters.pdf import PdfExporter
 from eddy.core.exporters.printer import PrinterExporter
 from eddy.core.functions.misc import cutR
@@ -234,10 +235,27 @@ class Project(QObject):
         :type path: str
         :type file: File
         """
+        if file is File.Csv:
+            self.exportToCsv(path)
         if file is File.Owl:
             self.exportToOwl(path)
         elif file is File.Pdf:
             self.exportToPdf(path)
+
+    def exportToCsv(self, path):
+        """
+        Export the current project in CSV format.
+        :type path: str
+        """
+        if not self.isEmpty():
+
+            try:
+                exporter = CsvExporter(self, path)
+                exporter.run()
+            except Exception as e:
+                raise e
+            else:
+                openPath(path)
 
     def exportToOwl(self, path):
         """
