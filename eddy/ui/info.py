@@ -781,7 +781,7 @@ class PredicateNodeInfo(NodeInfo):
         for action in self.session.action('brush').actions():
             color = action.data()
             brush = QBrush(QColor(color.value))
-            if node.brush == brush:
+            if node.brush() == brush:
                 self.brushButton.setIcon(BrushIcon(12, 12, color.value, '#000000'))
                 self.brushButton.setText(color.value)
                 break

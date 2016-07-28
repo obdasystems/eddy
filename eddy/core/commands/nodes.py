@@ -389,20 +389,20 @@ class CommandNodeSetBrush(QUndoCommand):
         :type brush: QBrush
         """
         self.nodes = nodes
-        self.brush = {x: {'undo': x.brush, 'redo': brush} for x in nodes}
+        self.brush = {x: {'undo': x.brush(), 'redo': brush} for x in nodes}
         self.diagram = diagram
         super().__init__('set {0} brush on {1} node(s)'.format(brush.color().name(), len(nodes)))
 
     def redo(self):
         """redo the command"""
         for node in self.nodes:
-            node.brush = self.brush[node]['redo']
+            node.setBrush(self.brush[node]['redo'])
             node.redraw(selected=node.isSelected())
         self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """redo the command"""
         for node in self.nodes:
-            node.brush = self.brush[node]['undo']
+            node.setBrush(self.brush[node]['undo'])
             node.redraw(selected=node.isSelected())
         self.diagram.sgnUpdated.emit()

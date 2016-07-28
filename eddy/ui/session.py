@@ -1307,7 +1307,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
             color = action.data()
             brush = QBrush(QColor(color.value))
             supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
-            selected = {x for x in diagram.selectedNodes() if x.type() in supported and x.brush != brush}
+            selected = {x for x in diagram.selectedNodes() if x.type() in supported and x.brush() != brush}
             if selected:
                 self.project.undoStack.push(CommandNodeSetBrush(diagram, selected, brush))
 
