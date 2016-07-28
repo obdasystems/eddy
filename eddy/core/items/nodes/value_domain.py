@@ -106,13 +106,6 @@ class ValueDomainNode(AbstractNode):
         """
         return self.selection.geometry()
 
-    def brush(self):
-        """
-        Returns the brush used to paint the shape of this node.
-        :rtype: QBrush
-        """
-        return self.polygon.brush()
-
     def copy(self, diagram):
         """
         Create a copy of the current item.
@@ -128,13 +121,6 @@ class ValueDomainNode(AbstractNode):
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
-
-    def geometry(self):
-        """
-        Returns the geometry of the shape of this node.
-        :rtype: QRectF
-        """
-        return self.polygon.geometry()
 
     def height(self):
         """
@@ -203,13 +189,6 @@ class ValueDomainNode(AbstractNode):
         path = QPainterPath()
         path.addRoundedRect(self.polygon.geometry(), 8, 8)
         return path
-
-    def pen(self):
-        """
-        Returns the pen used to paint the shape of this node.
-        :rtype: QPen
-        """
-        return self.polygon.pen()
 
     def setText(self, text):
         """

@@ -133,7 +133,7 @@ class GrapholLoader(AbstractLoader):
         """
         label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.AttributeNode, element)
-        node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
+        node.setBrush(QBrush(QColor(element.attribute('color', '#fcfcfc'))))
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return node
@@ -154,7 +154,7 @@ class GrapholLoader(AbstractLoader):
         """
         label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.ConceptNode, element)
-        node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
+        node.setBrush(QBrush(QColor(element.attribute('color', '#fcfcfc'))))
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return node
@@ -214,7 +214,7 @@ class GrapholLoader(AbstractLoader):
         """
         label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.IndividualNode, element)
-        node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
+        node.setBrush(QBrush(QColor(element.attribute('color', '#fcfcfc'))))
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return node
@@ -258,7 +258,7 @@ class GrapholLoader(AbstractLoader):
         """
         label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.RoleNode, element)
-        node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
+        node.setBrush(QBrush(QColor(element.attribute('color', '#fcfcfc'))))
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return node
@@ -290,7 +290,7 @@ class GrapholLoader(AbstractLoader):
         """
         label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.ValueDomainNode, element)
-        node.brush = QBrush(QColor(element.attribute('color', '#fcfcfc')))
+        node.setBrush(QBrush(QColor(element.attribute('color', '#fcfcfc'))))
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return node

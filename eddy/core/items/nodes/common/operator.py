@@ -113,20 +113,6 @@ class OperatorNode(AbstractNode):
         """
         return self.selection.geometry()
 
-    def brush(self):
-        """
-        Returns the brush used to paint the shape of this node.
-        :rtype: QBrush
-        """
-        return self.polygon.brush()
-
-    def geometry(self):
-        """
-        Returns the geometry of the shape of this node.
-        :rtype: QPolygonF
-        """
-        return self.polygon.geometry()
-
     def height(self):
         """
         Returns the height of the shape.
@@ -166,13 +152,6 @@ class OperatorNode(AbstractNode):
         path = QPainterPath()
         path.addPolygon(self.polygon.geometry())
         return path
-
-    def pen(self):
-        """
-        Returns the pen used to paint the shape of this node.
-        :rtype: QPen
-        """
-        return self.polygon.pen()
 
     def setText(self, text):
         """

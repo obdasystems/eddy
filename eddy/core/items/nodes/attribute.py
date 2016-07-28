@@ -81,11 +81,12 @@ class AttributeNode(AbstractNode):
     @functional.setter
     def functional(self, value):
         """
-        Set the functional property of the predicated represented by this node.
+        Set the functional property of the predicate represented by this node.
         :type value: bool
         """
+        functional = bool(value)
         meta = self.project.meta(self.type(), self.text())
-        meta.functional = bool(value)
+        meta.functional = functional
         self.project.addMeta(self.type(), self.text(), meta)
 
     @property
@@ -123,13 +124,6 @@ class AttributeNode(AbstractNode):
         """
         return self.selection.geometry()
 
-    def brush(self):
-        """
-        Returns the brush used to paint the shape of this node.
-        :rtype: QBrush
-        """
-        return self.polygon.brush()
-
     def copy(self, diagram):
         """
         Create a copy of the current item.
@@ -145,13 +139,6 @@ class AttributeNode(AbstractNode):
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
-
-    def geometry(self):
-        """
-        Returns the geometry of the shape of this node.
-        :rtype: QRectF
-        """
-        return self.polygon.geometry()
 
     def height(self):
         """
@@ -221,13 +208,6 @@ class AttributeNode(AbstractNode):
         path = QPainterPath()
         path.addEllipse(self.polygon.geometry())
         return path
-
-    def pen(self):
-        """
-        Returns the pen used to paint the shape of this node.
-        :rtype: QPen
-        """
-        return self.polygon.pen()
 
     def setText(self, text):
         """

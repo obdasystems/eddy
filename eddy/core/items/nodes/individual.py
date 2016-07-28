@@ -147,13 +147,6 @@ class IndividualNode(AbstractResizableNode):
         """
         return self.selection.geometry()
 
-    def brush(self):
-        """
-        Returns the brush used to paint the shape of this node.
-        :rtype: QBrush
-        """
-        return self.polygon.brush()
-
     @staticmethod
     def compose(value, datatype):
         """
@@ -179,13 +172,6 @@ class IndividualNode(AbstractResizableNode):
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
-
-    def geometry(self):
-        """
-        Returns the geometry of the shape of this node.
-        :rtype: QPolygonF
-        """
-        return self.polygon.geometry()
 
     def height(self):
         """
@@ -271,13 +257,6 @@ class IndividualNode(AbstractResizableNode):
         path = QPainterPath()
         path.addPolygon(self.polygon.geometry())
         return path
-
-    def pen(self):
-        """
-        Returns the pen used to paint the shape of this node.
-        :rtype: QPen
-        """
-        return self.polygon.pen()
 
     def resize(self, mousePos):
         """

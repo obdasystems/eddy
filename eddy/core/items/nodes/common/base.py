@@ -131,13 +131,12 @@ class AbstractNode(AbstractItem):
             self.anchors[edge] = self.mapToScene(self.center())
             return self.anchors[edge]
 
-    @abstractmethod
     def brush(self):
         """
         Returns the brush used to paint the shape of this node.
         :rtype: QBrush
         """
-        pass
+        return self.polygon.brush()
 
     def center(self):
         """
@@ -154,13 +153,12 @@ class AbstractNode(AbstractItem):
         """
         pass
 
-    @abstractmethod
     def geometry(self):
         """
         Returns the geometry of the shape of this node.
-        :rtype: T <= QRectF|QPolygonF
+        :rtype: QPolygonF
         """
-        pass
+        return self.polygon.geometry()
 
     @abstractmethod
     def height(self):
@@ -255,13 +253,12 @@ class AbstractNode(AbstractItem):
         """
         pass
 
-    @abstractmethod
     def pen(self):
         """
         Returns the pen used to paint the shape of this node.
         :rtype: QPen
         """
-        pass
+        return self.polygon.pen()
 
     def pos(self):
         """
@@ -284,6 +281,27 @@ class AbstractNode(AbstractItem):
         :type pos: QPointF
         """
         self.anchors[edge] = pos
+
+    def setBrush(self, brush):
+        """
+        Set the brush used to paint the shape of this node.
+        :type brush: QBrush
+        """
+        self.polygon.setBrush(brush)
+
+    def setGeometry(self, geometry):
+        """
+        Set the geometry used to paint the shape of this node.
+        :type geometry: T <= QRectF|QPolygonF
+        """
+        self.polygon.setGeometry(geometry)
+
+    def setPen(self, pen):
+        """
+        Set the pen used to paint the shape of this node.
+        :type pen: QPen
+        """
+        self.polygon.setPen(pen)
 
     def setPos(self, *__args):
         """
