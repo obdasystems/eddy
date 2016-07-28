@@ -75,9 +75,9 @@ class FacetNode(AbstractNode):
         self.polygonA = Polygon(self.createPolygonA(80, 40), Brush.LightGrey255A, Pen.SolidBlack1Pt)
         self.polygonB = Polygon(self.createPolygonA(80, 40), Brush.White255A, Pen.SolidBlack1Pt)
         self.labelA = NodeLabel(Facet.length.value, pos=self.centerA, editable=False, movable=False, parent=self)
-        self.labelB = FacetQuotedLabel('"32"', movable=False, pos=self.centerB, parent=self)
+        self.labelB = FacetQuotedLabel(template='"32"', movable=False, pos=self.centerB, parent=self)
         self.updateTextPos()
-        self.updateGeometry()
+        self.updateNode()
 
     #############################################
     #   PROPERTIES
@@ -192,7 +192,7 @@ class FacetNode(AbstractNode):
         })
         node.setPos(self.pos())
         node.setText(self.text())
-        node.updateGeometry()
+        node.updateNode()
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
@@ -372,14 +372,14 @@ class FacetNode(AbstractNode):
         if match:
             self.labelA.setText((Facet.forValue(match.group('facet')) or Facet.length).value)
             self.labelB.setText('"{0}"'.format(match.group('value')))
-            self.updateGeometry()
+            self.updateNode()
         else:
             # USE THE OLD VALUE-RESTRICTION PATTERN
             match = RE_VALUE_RESTRICTION.match(text)
             if match:
                 self.labelA.setText((Facet.forValue(match.group('facet')) or Facet.length).value)
                 self.labelB.setText('"{0}"'.format(match.group('value')))
-                self.updateGeometry()
+                self.updateNode()
 
     def setTextPos(self, pos):
         """
@@ -411,9 +411,9 @@ class FacetNode(AbstractNode):
         """
         return self.boundingRect().center()
 
-    def updateGeometry(self):
+    def updateNode(self):
         """
-        Update current geometry rect according to the selected facet.
+        Update the current node.
         """
         width = max(self.labelA.width() + 16, self.labelB.width() + 16, 80)
         self.background.setGeometry(self.createPolygon(width + 8, 48))
