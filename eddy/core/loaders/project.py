@@ -212,6 +212,10 @@ class ProjectLoader(AbstractLoader):
         # noinspection PyArgumentList
         QApplication.processEvents()
 
+        #############################################
+        # LOAD PREDICATE METADATA
+        #################################
+
         LOGGER.info('Loading ontology predicate metadata from %s', self.projectMetaDataPath)
 
         root = self.metaDocument.documentElement()
@@ -233,6 +237,15 @@ class ProjectLoader(AbstractLoader):
                 pass
             finally:
                 predicate = predicate.nextSiblingElement('predicate')
+
+        #############################################
+        # UPDATE LAYOUT ACCORDING TO METADATA
+        #################################
+
+        predicates = self.project.predicates()
+        LOGGER.info('Refreshing state for %s predicate nodes', len(predicates))
+        for node in predicates:
+            node.redraw()
 
     def importModulesFromXML(self):
         """

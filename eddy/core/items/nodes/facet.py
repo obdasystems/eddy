@@ -77,7 +77,7 @@ class FacetNode(AbstractNode):
         self.labelA = NodeLabel(Facet.length.value, pos=self.centerA, editable=False, movable=False, parent=self)
         self.labelB = FacetQuotedLabel('"32"', movable=False, pos=self.centerB, parent=self)
         self.updateTextPos()
-        self.updateLayout()
+        self.updateGeometry()
 
     #############################################
     #   PROPERTIES
@@ -192,7 +192,7 @@ class FacetNode(AbstractNode):
         })
         node.setPos(self.pos())
         node.setText(self.text())
-        node.updateLayout()
+        node.updateGeometry()
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
@@ -372,14 +372,14 @@ class FacetNode(AbstractNode):
         if match:
             self.labelA.setText((Facet.forValue(match.group('facet')) or Facet.length).value)
             self.labelB.setText('"{0}"'.format(match.group('value')))
-            self.updateLayout()
+            self.updateGeometry()
         else:
             # USE THE OLD VALUE-RESTRICTION PATTERN
             match = RE_VALUE_RESTRICTION.match(text)
             if match:
                 self.labelA.setText((Facet.forValue(match.group('facet')) or Facet.length).value)
                 self.labelB.setText('"{0}"'.format(match.group('value')))
-                self.updateLayout()
+                self.updateGeometry()
 
     def setTextPos(self, pos):
         """
@@ -411,9 +411,9 @@ class FacetNode(AbstractNode):
         """
         return self.boundingRect().center()
 
-    def updateLayout(self):
+    def updateGeometry(self):
         """
-        Update current shape rect according to the selected datatype.
+        Update current geometry rect according to the selected facet.
         """
         width = max(self.labelA.width() + 16, self.labelB.width() + 16, 80)
         self.background.setGeometry(self.createPolygon(width + 8, 48))

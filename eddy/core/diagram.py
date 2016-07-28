@@ -539,6 +539,14 @@ class Diagram(QGraphicsScene):
     #   INTERFACE
     #################################
 
+    def addItem(self, item):
+        """
+        Add an item to the Diagram (will redraw the item to reflect its status).
+        :type item: AbstractItem
+        """
+        super(Diagram, self).addItem(item)
+        item.redraw()
+
     def edge(self, eid):
         """
         Returns the edge matching the given id or None if no edge is found.
@@ -553,13 +561,6 @@ class Diagram(QGraphicsScene):
         :rtype: set
         """
         return self.project.edges(self)
-
-    def height(self):
-        """
-        Returns the height of the diagram.
-        :rtype: int
-        """
-        return self.sceneRect().height()
 
     @staticmethod
     def identify(node):
@@ -872,10 +873,3 @@ class Diagram(QGraphicsScene):
                     y.update({b.top(), b.bottom()})
             return QRectF(QPointF(min(x) - margin, min(y) - margin), QPointF(max(x) + margin, max(y) + margin))
         return QRectF()
-
-    def width(self):
-        """
-        Returns the width of the diagram.
-        :rtype: int
-        """
-        return self.sceneRect().width()

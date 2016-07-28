@@ -59,11 +59,13 @@ class AttributeNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
+        self.fpolygon = Polygon(QPainterPath())
         self.background = Polygon(QRectF(-14, -14, 28, 28))
         self.selection = Polygon(QRectF(-14, -14, 28, 28))
         self.polygon = Polygon(QRectF(-10, -10, 20, 20), brush or Brush.White255A, Pen.SolidBlack1_1Pt)
         self.label = NodeLabel(template='attribute', pos=lambda: self.center() - QPointF(0, 22), parent=self)
         self.label.setAlignment(Qt.AlignCenter)
+        self.updateGeometry()
 
     #############################################
     #   PROPERTIES
@@ -88,6 +90,9 @@ class AttributeNode(AbstractNode):
         meta = self.project.meta(self.type(), self.text())
         meta.functional = functional
         self.project.addMeta(self.type(), self.text(), meta)
+        # Redraw all the predicate nodes identifying the current predicate.
+        for node in self.project.predicates(self.type(), self.text()):
+            node.redraw(functional=functional, selected=node.isSelected())
 
     @property
     def identity(self):
@@ -199,6 +204,10 @@ class AttributeNode(AbstractNode):
         painter.setPen(self.polygon.pen())
         painter.setBrush(self.polygon.brush())
         painter.drawEllipse(self.polygon.geometry())
+        # FUNCTIONALITY
+        painter.setPen(self.fpolygon.pen())
+        painter.setBrush(self.fpolygon.brush())
+        painter.drawPath(self.fpolygon.geometry())
 
     def painterPath(self):
         """
@@ -208,6 +217,27 @@ class AttributeNode(AbstractNode):
         path = QPainterPath()
         path.addEllipse(self.polygon.geometry())
         return path
+
+    def redraw(self, functional=None, **kwargs):
+        """
+        Perform the redrawing of this item.
+        :type functional: bool
+        """
+        if functional is None:
+            functional = self.functional
+
+        # FUNCTIONAL POLYGON
+        pen = Pen.NoPen
+        brush = Brush.NoBrush
+        if functional:
+            pen = Pen.SolidBlack1_1Pt
+            brush = Brush.White255A
+
+        self.fpolygon.setPen(pen)
+        self.fpolygon.setBrush(brush)
+
+        # SELECTION + SYNTAX VALIDATION + REFRESH
+        super(AttributeNode, self).redraw(**kwargs)
 
     def setText(self, text):
         """
@@ -246,6 +276,16 @@ class AttributeNode(AbstractNode):
         :rtype: QPointF
         """
         return self.label.pos()
+
+    def updateGeometry(self):
+        """
+        Update the shape geometry by generating necessary additional polygons.
+        """
+        path1 = QPainterPath()
+        path1.addEllipse(self.polygon.geometry())
+        path2 = QPainterPath()
+        path2.addEllipse(QRectF(-7, -7, 14, 14))
+        self.fpolygon.setGeometry(path1.subtracted(path2))
 
     def updateTextPos(self, *args, **kwargs):
         """
