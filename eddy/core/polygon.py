@@ -43,9 +43,13 @@ class Polygon(object):
     This class is used to store shape data for Diagram item objects.
     For each object it will store:
 
-        - geometrical data to be drawn on screen (either QRectF, QPolygonF or QPainterPath);
-        - the brush used to draw the geometrical shape;
-        - the pen used to draw the geometrical shape.
+        - Geometrical data to be drawn on screen (either QRectF, QPolygonF or QPainterPath).
+        - The QBrush used to draw the geometrical shape.
+        - The QPen used to draw the geometrical shape.
+
+    Note that is class is meant to be used just as a container for shape related elements
+    and thus, despite its name, does not provide any geometrical functionality, which are
+    instead available in the geometry of the polygon.
     """
     def __init__(self, geometry=QPolygonF(), brush=Brush.NoBrush, pen=Pen.NoPen):
         """
