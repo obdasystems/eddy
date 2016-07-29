@@ -63,7 +63,7 @@ class RestrictionNode(AbstractNode):
 
         self.background = Polygon(QRectF(-14, -14, 28, 28))
         self.selection = Polygon(QRectF(-14, -14, 28, 28))
-        self.polygon = Polygon(QRectF(-10, -10, 20, 20), Brush.White255A, Pen.SolidBlack1Pt)
+        self.polygon = Polygon(QRectF(-10, -10, 20, 20), brush or Brush.White255A, Pen.SolidBlack1Pt)
         self.label = NodeLabel(Restriction.Exists.toString(),
                                pos=lambda: self.center() - QPointF(0, 22),
                                editable=False, parent=self)
