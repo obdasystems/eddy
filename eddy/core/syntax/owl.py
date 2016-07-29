@@ -487,8 +487,13 @@ class OWL2Validator(AbstractValidator):
                 # Range Restriction node can have at most 2 inputs.
                 raise SyntaxError('Too many inputs to {0}'.format(target.name))
 
-            if source.identity is not Identity.Neutral and \
-                source.identity not in {Identity.Concept, Identity.Attribute, Identity.Role}:
+            f1 = lambda x: x.type() is Item.InputEdge and x is not edge
+            f2 = lambda x: x.type() is Item.AttributeNode
+            if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) >= 1:
+                # Range restriction node having an attribute as input can receive no other input.
+                raise SyntaxError('Too many inputs to attribute range restriction')
+
+            if source.identity not in {Identity.Concept, Identity.Attribute, Identity.Role, Identity.Neutral}:
                 # Range Restriction node takes as input:
                 #  - Role => OWL 2 ObjectPropertyExpression
                 #  - Attribute => OWL 2 DataPropertyExpression
@@ -500,9 +505,9 @@ class OWL2Validator(AbstractValidator):
                 # it is excluded because it doesn't represent the OWL 2 ObjectPropertyExpression.
                 raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.name))
 
-            # SOURCE => CONCEPT EXPRESSION || NEUTRAL
+            # SOURCE => CONCEPT EXPRESSION
 
-            if source.identity in {Identity.Concept, Identity.Neutral}:
+            if source.identity is Identity.Concept:
 
                 # We can connect a Concept in input iff there is no other input or if the other input is a Role.
                 node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
