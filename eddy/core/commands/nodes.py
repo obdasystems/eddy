@@ -126,6 +126,7 @@ class CommandNodeRezize(QUndoCommand):
 
         self.node.updateResizeHandles()
         self.node.updateTextPos(moved=self.data['redo']['moved'])
+        self.node.updateNode()
         self.node.updateEdges()
         self.node.update()
 
@@ -150,6 +151,7 @@ class CommandNodeRezize(QUndoCommand):
 
         self.node.updateResizeHandles()
         self.node.updateTextPos(moved=self.data['undo']['moved'])
+        self.node.updateNode()
         self.node.updateEdges()
         self.node.update()
 
