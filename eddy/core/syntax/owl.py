@@ -397,8 +397,8 @@ class OWL2Validator(AbstractValidator):
                 # Domain Restriction node can have at most 2 inputs.
                 raise SyntaxError('Too many inputs to {0}'.format(target.name))
 
-            supported = {Identity.Concept, Identity.Attribute, Identity.Role, Identity.ValueDomain}
-            if source.identity is not Identity.Neutral and source.identity not in supported:
+            if source.identity is not Identity.Neutral and \
+                source.identity not in {Identity.Concept, Identity.Attribute, Identity.Role, Identity.ValueDomain}:
                 # Domain Restriction node takes as input:
                 #  - Role => OWL 2 ObjectPropertyExpression
                 #  - Attribute => OWL 2 DataPropertyExpression
@@ -406,7 +406,7 @@ class OWL2Validator(AbstractValidator):
                 #  - ValueDomain => Qualified Existential Data Restriction
                 raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.identity.value))
 
-            if source.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode}:
+            if source.type() is Item.RoleChainNode:
                 # Exclude incompatible sources: note that while RoleChain has a correct identity
                 # it is excluded because it doesn't represent the OWL 2 ObjectPropertyExpression.
                 raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.name))
