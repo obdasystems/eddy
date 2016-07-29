@@ -417,8 +417,8 @@ class OWL2Validator(AbstractValidator):
 
                 if target.restriction is Restriction.Self:
                     # Not a Qualified Restriction.
-                    restriction = target.restriction.toString()
-                    raise SyntaxError('Invalid restriction ({0}) for qualified restriction'.format(restriction))
+                    name = target.restriction.toString()
+                    raise SyntaxError('Invalid restriction type for qualified restriction: {0}'.format(name))
 
                 # A Concept can be given as input only if there is no input or if the other input is a Role.
                 node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
@@ -427,7 +427,7 @@ class OWL2Validator(AbstractValidator):
                     # so we can't construct a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
+                    raise SyntaxError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
 
             # SOURCE => ROLE EXPRESSION
 
@@ -440,7 +440,7 @@ class OWL2Validator(AbstractValidator):
                     # Not a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
+                    raise SyntaxError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
 
             # SOURCE => ATTRIBUTE
 
@@ -457,7 +457,7 @@ class OWL2Validator(AbstractValidator):
                     # Not a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
+                    raise SyntaxError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
 
             # SOURCE => VALUE-DOMAIN
 
@@ -465,8 +465,8 @@ class OWL2Validator(AbstractValidator):
 
                 if target.restriction is Restriction.Self:
                     # Not a Qualified Restriction.
-                    restriction = target.restriction.toString()
-                    raise SyntaxError('Invalid restriction ({0}) for qualified restriction'.format(restriction))
+                    name = target.restriction.toString()
+                    raise SyntaxError('Invalid restriction type for qualified restriction: {0}'.format(name))
 
                 # We can connect a ValueDomain in input only if there is no other input or if the
                 # other input is an Attribute and the node specifies a Qualified Restriction.
@@ -475,7 +475,7 @@ class OWL2Validator(AbstractValidator):
                     # Not a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
+                    raise SyntaxError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
 
         elif target.type() is Item.RangeRestrictionNode:
 
@@ -487,15 +487,15 @@ class OWL2Validator(AbstractValidator):
                 # Range Restriction node can have at most 2 inputs.
                 raise SyntaxError('Too many inputs to {0}'.format(target.name))
 
-            supported = {Identity.Concept, Identity.Attribute, Identity.Role}
-            if source.identity is not Identity.Neutral and source.identity not in supported:
+            if source.identity is not Identity.Neutral and \
+                source.identity not in {Identity.Concept, Identity.Attribute, Identity.Role}:
                 # Range Restriction node takes as input:
                 #  - Role => OWL 2 ObjectPropertyExpression
                 #  - Attribute => OWL 2 DataPropertyExpression
                 #  - Concept => Qualified Existential/Universal Role Restriction
                 raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.identity.value))
 
-            if source.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode, Item.RoleChainNode}:
+            if source.type() is Item.RoleChainNode:
                 # Exclude incompatible sources: not that while RoleChain has a correct identity
                 # it is excluded because it doesn't represent the OWL 2 ObjectPropertyExpression.
                 raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.name))
@@ -511,7 +511,7 @@ class OWL2Validator(AbstractValidator):
                     # so we can't construct a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
+                    raise SyntaxError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
 
             # SOURCE => ROLE EXPRESSION
 
@@ -524,7 +524,7 @@ class OWL2Validator(AbstractValidator):
                     # Not a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
+                    raise SyntaxError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
 
             # SOURCE => ATTRIBUTE NODE
 
@@ -541,7 +541,7 @@ class OWL2Validator(AbstractValidator):
                     # Not a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
+                    raise SyntaxError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
 
             # SOURCE => VALUE-DOMAIN
 
@@ -554,7 +554,7 @@ class OWL2Validator(AbstractValidator):
                     # Not a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
-                    raise SyntaxError('Invalid inputs ({0} + {1}) for qualified restriction'.format(idA, idB))
+                    raise SyntaxError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
 
         elif target.type() is Item.FacetNode:
 
