@@ -397,8 +397,7 @@ class OWL2Validator(AbstractValidator):
                 # Domain Restriction node can have at most 2 inputs.
                 raise SyntaxError('Too many inputs to {0}'.format(target.name))
 
-            if source.identity is not Identity.Neutral and \
-                source.identity not in {Identity.Concept, Identity.Attribute, Identity.Role, Identity.ValueDomain}:
+            if source.identity not in {Identity.Concept, Identity.Attribute, Identity.Role, Identity.ValueDomain, Identity.Neutral}:
                 # Domain Restriction node takes as input:
                 #  - Role => OWL 2 ObjectPropertyExpression
                 #  - Attribute => OWL 2 DataPropertyExpression
@@ -411,9 +410,37 @@ class OWL2Validator(AbstractValidator):
                 # it is excluded because it doesn't represent the OWL 2 ObjectPropertyExpression.
                 raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.name))
 
+            # SOURCE => NEUTRAL
+
+            if source.identity is Identity.Neutral:
+
+                if not source.Identities & {Identity.Concept, Identity.Attribute, Identity.Role, Identity.ValueDomain}:
+                    # We can connect a Neutral node in input only if the source node admits a supported
+                    # identity among the declared ones: Concept || Attribute || Role || ValueDomain.
+                    raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.name))
+
+                node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
+                if node:
+
+                    if node.identity is Identity.Role and Identity.Concept not in source.Identities:
+                        # If the target node has a Role in input, we can connect the source
+                        # node iff it admits the Concept identity among the declared ones.
+                        raise SyntaxError('Unsupported input for qualified restriction: {0}'.format(source.name))
+
+                    if node.identity is Identity.Attribute and Identity.ValueDomain not in source.Identities:
+                        # If the target node has a Attribute in input, we can connect the source
+                        # node iff it admits the ValueDomain identity among the declared ones.
+                        raise SyntaxError('Unsupported input for qualified restriction: {0}'.format(source.name))
+
+                    if not source.Identities & {Identity.Attribute, Identity.Role}:
+                        # If we get here it means that we have an invalid combination of inputs for a
+                        # qualified domain restriction since we'll end up having Concept + Concept,
+                        # Concept + ValueDomain, ValueDomain + Concept, ValueDomain + ValueDomain
+                        raise SyntaxError('Unsupported input for qualified restriction: {0}'.format(source.name))
+
             # SOURCE => CONCEPT EXPRESSION || NEUTRAL
 
-            if source.identity in {Identity.Concept, Identity.Neutral}:
+            if source.identity is Identity.Concept:
 
                 if target.restriction is Restriction.Self:
                     # Not a Qualified Restriction.
@@ -423,8 +450,7 @@ class OWL2Validator(AbstractValidator):
                 # A Concept can be given as input only if there is no input or if the other input is a Role.
                 node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
                 if node and node.identity is not Identity.Role:
-                    # We found another input on this node which is not a Role
-                    # so we can't construct a Qualified Restriction.
+                    # Not a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
                     raise SyntaxError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
@@ -505,6 +531,24 @@ class OWL2Validator(AbstractValidator):
                 # it is excluded because it doesn't represent the OWL 2 ObjectPropertyExpression.
                 raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.name))
 
+            # SOURCE => NEUTRAL
+
+            if source.identity is Identity.Neutral:
+
+                if not source.Identities & {Identity.Concept, Identity.Attribute, Identity.Role}:
+                    # We can connect a Neutral node in input only if the source node admits a
+                    # supported identity among the declared ones: Concept || Attribute || Role.
+                    raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.name))
+
+                # FIXME
+                f1 = lambda x: x.type() is Item.InputEdge and x is not edge
+                f2 = lambda x: x.identity is Identity.Role
+                node = first(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+                if node and Identity.Concept not in source.Identities:
+                    # If the target node has a Role in input, we can connect the source
+                    # node iff it admits the Concept identity among the declared ones.
+                    raise SyntaxError('Unsupported input for qualified restriction: {0}'.format(source.name))
+
             # SOURCE => CONCEPT EXPRESSION
 
             if source.identity is Identity.Concept:
@@ -512,8 +556,7 @@ class OWL2Validator(AbstractValidator):
                 # We can connect a Concept in input iff there is no other input or if the other input is a Role.
                 node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
                 if node and node.identity is not Identity.Role:
-                    # We found another input on this node which is not a Role
-                    # so we can't construct a Qualified Restriction.
+                    # Not a Qualified Restriction.
                     idA = source.identity.value
                     idB = node.identity.value
                     raise SyntaxError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
