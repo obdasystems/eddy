@@ -59,7 +59,7 @@ class ProjectExporter(AbstractExporter):
     -   ...
     -   moduleN.graphol
     """
-    def __init__(self, project, session):
+    def __init__(self, project, session=None):
         """
         Initialize the project exporter.
         :type project: Project
