@@ -160,7 +160,6 @@ class CommandItemsRemove(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-# TODO: check whether this can be replaced with the command to add multiple items
 class CommandComposeAxiom(QUndoCommand):
     """
     This command is used to compose axioms.
@@ -182,28 +181,30 @@ class CommandComposeAxiom(QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        # Add items to the diagram.
-        for item in self.nodes | self.edges:
-            self.diagram.addItem(item)
-            self.diagram.sgnItemAdded.emit(self.diagram, item)
         # Map edges over source and target nodes.
         for edge in self.edges:
             edge.source.addEdge(edge)
             edge.target.addEdge(edge)
+        # Add items to the diagram.
+        for item in self.nodes | self.edges:
+            self.diagram.addItem(item)
+            self.diagram.sgnItemAdded.emit(self.diagram, item)
+        # Update edges.
+        for edge in self.edges:
             edge.updateEdge()
         # Emit updated signal.
         self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
-        # Remove edge mappings from source and target nodes.
-        for edge in self.edges:
-            edge.source.removeEdge(edge)
-            edge.target.removeEdge(edge)
         # Remove items from the diagram.
         for item in self.nodes | self.edges:
             self.diagram.removeItem(item)
             self.diagram.sgnItemRemoved.emit(self.diagram, item)
+        # Remove edge mappings from source and target nodes.
+        for edge in self.edges:
+            edge.source.removeEdge(edge)
+            edge.target.removeEdge(edge)
         # Emit updated signal.
         self.diagram.sgnUpdated.emit()
 
