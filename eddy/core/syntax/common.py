@@ -42,20 +42,61 @@ class SyntaxValidationResult(object):
     """
     This class can be used to store syntax validation results.
     """
-    def __init__(self, source, edge, target, valid, message=''):
+    def __init__(self, source, edge, target, valid):
         """
         Initialize the syntax validation result.
         :type source: AbstractNode
         :type edge: AbstractEdge
         :type target: AbstractNode
         :type valid: bool
-        :type message: str
         """
-        self.edge = edge
-        self.source = source
-        self.target = target
-        self.message = message
-        self.valid = valid
+        self._edge = edge
+        self._source = source
+        self._target = target
+        self._valid = valid
+        self._message = ''
+
+    def edge(self):
+        """
+        Returns the edgeof the validated triple.
+        :rtype: AbstractEdge
+        """
+        return self._edge
+
+    def isValid(self):
+        """
+        Tells whether the result is valid.
+        :rtype: bool
+        """
+        return self._valid
+
+    def message(self):
+        """
+        Returns the message used as result for the validated triple.
+        :rtype: str
+        """
+        return self._message or ''
+
+    def setMessage(self, message):
+        """
+        Sets the message used as result for the validated triple.
+        :type: str
+        """
+        self._message = message
+
+    def source(self):
+        """
+        Returns the source node of the validated triple.
+        :rtype: AbstractNode
+        """
+        return self._source
+
+    def target(self):
+        """
+        Returns the target node of the validated triple.
+        :rtype: AbstractNode
+        """
+        return self._target
 
     def __contains__(self, item):
         """
@@ -64,7 +105,7 @@ class SyntaxValidationResult(object):
         :rtype: bool
         """
         try:
-            return self.source is item[0] and self.edge is item[1] and self.target is item[2]
+            return self._source is item[0] and self._edge is item[1] and self._target is item[2]
         except IndexError:
             return False
 
@@ -82,8 +123,8 @@ class AbstractValidator(QObject):
         Initialize the validator.
         :type parent: QObject
         """
+        self._result = None
         super().__init__(parent)
-        self.result = None
 
     #############################################
     #   INTERFACE
@@ -93,26 +134,40 @@ class AbstractValidator(QObject):
         """
         Clear the validator by removing the latest validation result.
         """
-        self.result = None
+        self._result = None
+
+    def result(self):
+        """
+        Returns the last validation result entry.
+        :rtype: SyntaxValidationResult
+        """
+        return self._result
 
     @abstractmethod
     def run(self, source, edge, target):
         """
-        Run the validation algorithm on the given triple and generates the SyntaxValidationResult instance.
+        Run the validation algorithm on the given triple and generates the result instance.
         :type source: AbstractNode
         :type edge: AbstractEdge
         :type target: AbstractNode
         """
         pass
 
+    def setResult(self, result):
+        """
+        Sets the validation result entry.
+        :type result: SyntaxValidationResult
+        """
+        self._result = result
+
     def validate(self, source, edge, target):
         """
-        Returns the SyntaxValidationResult for the given triple.
+        Returns the result of the validation for the given triple.
         :type source: AbstractNode
         :type edge: AbstractEdge
         :type target: AbstractNode
         :rtype: SyntaxValidationResult
         """
-        if not self.result or (source, edge, target) not in self.result:
+        if not self._result or (source, edge, target) not in self._result:
             self.run(source, edge, target)
-        return self.result
+        return self._result

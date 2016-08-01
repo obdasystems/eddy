@@ -1481,7 +1481,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
                 source = edge.source
                 target = edge.target
                 result = self.project.validator.validate(source, edge, target)
-                if not result.valid:
+                if not result.isValid():
                     nameA = '{0} "{1}"'.format(source.name, source.id)
                     nameB = '{0} "{1}"'.format(target.name, target.id)
                     if source.isPredicate():
@@ -1489,7 +1489,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
                     if target.isPredicate():
                         nameB = '{0} "{1}:{2}"'.format(target.name, target.text(), target.id)
                     message = 'Syntax error detected on {0} from {1} to {2}: <i>{3}</i>.' \
-                    .format(edge.name, nameA, nameB, uncapitalize(result.message))
+                    .format(edge.name, nameA, nameB, uncapitalize(result.message()))
                     icon = QIcon(':/icons/48/ic_warning_black')
                     item = edge
                     break

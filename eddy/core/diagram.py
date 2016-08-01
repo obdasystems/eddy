@@ -341,9 +341,9 @@ class Diagram(QGraphicsScene):
                     if currentNode:
                         self.mo_Node = currentNode
                         result = self.project.validator.validate(edge.source, edge, currentNode)
-                        currentNode.redraw(selected=False, valid=result.valid)
-                        if not result.valid:
-                            statusBar.showMessage(result.message)
+                        currentNode.redraw(selected=False, valid=result.isValid())
+                        if not result.isValid():
+                            statusBar.showMessage(result.message())
                         else:
                             statusBar.clearMessage()
                     else:
@@ -427,7 +427,7 @@ class Diagram(QGraphicsScene):
                     if currentNode:
                         currentNode.redraw(selected=False)
                         result = self.project.validator.validate(edge.source, edge, currentNode)
-                        if result.valid:
+                        if result.isValid():
                             edge.target = currentNode
                             insertEdge = True
 
@@ -583,6 +583,7 @@ class Diagram(QGraphicsScene):
             # SPECIAL CASES
             #################################
 
+            # FIXME
             rr_admissible = {Identity.Role, Identity.Attribute, Identity.Concept, Identity.ValueDomain}
 
             # FILTERS
