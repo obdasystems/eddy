@@ -82,6 +82,7 @@ class File(Enum):
         :rtype: str
         """
         return {
+            File.Csv: '.csv',
             File.Graphml: '.graphml',
             File.Graphol: '.graphol',
             File.Owl: '.owl',
