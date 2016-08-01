@@ -583,14 +583,11 @@ class Diagram(QGraphicsScene):
             # SPECIAL CASES
             #################################
 
-            # FIXME
-            rr_admissible = {Identity.Role, Identity.Attribute, Identity.Concept, Identity.ValueDomain}
-
             # FILTERS
             f1 = lambda x: x.type() is Item.InputEdge
             f2 = lambda x: x.type() is Item.IndividualNode
             f3 = lambda x: x.type() is Item.MembershipEdge
-            f4 = lambda x: x.identity in rr_admissible and Identity.Neutral not in x.Identities
+            f4 = lambda x: x.identity in {Identity.Role, Identity.Attribute, Identity.Concept} and Identity.Neutral not in x.Identities
             f5 = lambda x: x.type() in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
             f6 = lambda x: x.type() is Item.IndividualNode
 
@@ -637,7 +634,7 @@ class Diagram(QGraphicsScene):
 
                     # RANGE RESTRICTION:
                     #
-                    #   - If it has ATTRIBUTE|VALUE-DOMAIN as inputs => Identity is VALUE-DOMAIN
+                    #   - If it has ATTRIBUTE as input => Identity is VALUE-DOMAIN
                     #   - If it has ROLE|CONCEPT as inputs => Identity is CONCEPT
                     #
                     # After establishing the identity for this node, we discard all the

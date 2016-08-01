@@ -269,7 +269,7 @@ class AbstractEdge(AbstractItem):
         Returns True if this edge can be swapped, False otherwise.
         :rtype: bool
         """
-        return self.project.validator.validate(self.target, self, self.source).valid
+        return self.project.validator.validate(self.target, self, self.source).isValid()
 
     def moveBy(self, x, y):
         """
