@@ -128,7 +128,7 @@ class OWLExportDialog(QDialog):
     @property
     def session(self):
         """
-        Returns the active session (aloas for OWLExportDialog.parent()).
+        Returns the active session (alias for OWLExportDialog.parent()).
         :rtype: Session
         """
         return self.parent()

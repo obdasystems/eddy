@@ -43,8 +43,9 @@ from PyQt5.QtCore import pyqtSlot, pyqtSignal
 from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, QSize
 from PyQt5.QtGui import QBrush, QColor, QCursor
 from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QStatusBar, QToolButton
-from PyQt5.QtWidgets import QStyle, QMenu, QAction, QActionGroup, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QStatusBar
+from PyQt5.QtWidgets import QToolButton, QStyle, QFileDialog
+from PyQt5.QtWidgets import QMenu, QAction, QActionGroup
 
 from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION
 from eddy.core.commands.common import CommandComposeAxiom
@@ -74,8 +75,9 @@ from eddy.core.exporters.project import ProjectExporter
 from eddy.core.factory import MenuFactory, PropertyFactory
 from eddy.core.functions.fsystem import fexists, fcopy, fremove
 from eddy.core.functions.misc import first, format_exception
-from eddy.core.functions.misc import snap, snapF, cutR, uncapitalize
-from eddy.core.functions.path import expandPath, isSubPath, uniquePath, shortPath
+from eddy.core.functions.misc import snap, snapF, cutR
+from eddy.core.functions.path import expandPath, isSubPath
+from eddy.core.functions.path import uniquePath, shortPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
 from eddy.core.loaders.graphml import GraphmlLoader
@@ -101,9 +103,9 @@ from eddy.ui.overview import Overview
 from eddy.ui.palette import Palette
 from eddy.ui.preferences import PreferencesDialog
 from eddy.ui.progress import BusyProgressDialog
+from eddy.ui.syntax import SyntaxValidationDialog
 from eddy.ui.view import DiagramView
 from eddy.ui.zoom import Zoom
-
 
 LOGGER = getLogger(__name__)
 
@@ -1473,55 +1475,8 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Perform syntax checking on the active diagram.
         """
-        item = None
-        icon = QIcon(':/icons/48/ic_done_black')
-        message = 'No syntax error found!'
-        with BusyProgressDialog('Running syntax validation...', 1, self):
-            for edge in self.project.edges():
-                source = edge.source
-                target = edge.target
-                result = self.project.validator.validate(source, edge, target)
-                if not result.isValid():
-                    nameA = '{0} "{1}"'.format(source.name, source.id)
-                    nameB = '{0} "{1}"'.format(target.name, target.id)
-                    if source.isPredicate():
-                        nameA = '{0} "{1}:{2}"'.format(source.name, source.text(), source.id)
-                    if target.isPredicate():
-                        nameB = '{0} "{1}:{2}"'.format(target.name, target.text(), target.id)
-                    message = 'Syntax error detected on {0} from {1} to {2}: <i>{3}</i>.' \
-                    .format(edge.name, nameA, nameB, uncapitalize(result.message()))
-                    icon = QIcon(':/icons/48/ic_warning_black')
-                    item = edge
-                    break
-            else:
-                for node in self.project.nodes():
-                    if node.identity is Identity.Unknown:
-                        name = '{0} "{1}"'.format(node.name, node.id)
-                        if node.isPredicate():
-                            name = '{0} "{1}:{2}"'.format(node.name, node.text(), node.id)
-                        message = 'Unkown node identity detected on {0}.'.format(name)
-                        icon = QIcon(':/icons/48/ic_warning_black')
-                        item = node
-                        break
-
-        msgbox = QMessageBox(self)
-        msgbox.setIconPixmap(icon.pixmap(48))
-        msgbox.setStandardButtons(QMessageBox.Close)
-        msgbox.setText(message)
-        msgbox.setTextFormat(Qt.RichText)
-        msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-        msgbox.setWindowTitle('Syntax validation completed!')
-        msgbox.exec_()
-
-        if item:
-            focus = item
-            if item.isEdge():
-                if item.breakpoints:
-                    focus = item.breakpoints[int(len(item.breakpoints)/2)]
-            self.doFocusDiagram(item.diagram)
-            self.mdi.activeView.centerOn(focus)
-            self.mdi.activeDiagram.clearSelection()
-            item.setSelected(True)
+        dialog = SyntaxValidationDialog(self.project, self)
+        dialog.exec_()
 
     @pyqtSlot()
     def doToggleEdgeEquivalence(self):
