@@ -76,6 +76,7 @@ def expandPath(path):
         - @root => Eddy's root (matches @eddy if running a frozen application)
         - @resources => Eddy's resources directory
         - @examples => Eddy's examples directory
+        - @plugins => Eddy's plugins directory
         - ~ => will be expanded to the user home directory ($HOME)
 
     :type path: str
@@ -91,6 +92,8 @@ def expandPath(path):
         path = os.path.join(resourcesPath(), path[11:])
     elif path.startswith('@examples/') or path.startswith('@examples\\'):
         path = os.path.join(examplesPath(), path[10:])
+    elif path.startswith('@plugins/') or path.startswith('@plugins\\'):
+        path = os.path.join(examplesPath(), path[9:])
     return os.path.normpath(os.path.expanduser(path))
 
 
@@ -180,6 +183,14 @@ def openPath(path):
             os.system('open "{0}"'.format(path))
         elif platform is Platform.Linux:
             os.system('xdg-open "{0}"'.format(path))
+
+
+def pluginsPath():
+    """
+    Returns the path to the plugins directory.
+    :rtype: str
+    """
+    return os.path.join(modulePath(), 'plugins')
 
 
 def resourcesPath():
