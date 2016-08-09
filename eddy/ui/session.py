@@ -136,17 +136,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         self.project = ProjectLoader(path, self).run()
 
         #############################################
-        # CREATE UTILITIES
+        # INITIALIZE MAIN STUFF
         #################################
 
         self.clipboard = Clipboard(self)
         self.undoStack = QUndoStack(self)
+        self.mdi = MdiArea(self)
         self.mf = MenuFactory(self)
         self.pf = PropertyFactory(self)
-
-        #############################################
-        # CREATE NECESSARY TOOLBARS
-        #################################
 
         self.addWidget(QToolBar('Document', objectName='document_toolbar'))
         self.addWidget(QToolBar('Editor', objectName='editor_toolbar'))
@@ -165,18 +162,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         self.initToolBars()
         self.initPlugins()
         self.initState()
-
-    #############################################
-    #   PROPERTIES
-    #################################
-
-    @property
-    def mdi(self):
-        """
-        Returns the reference to the MDI area widget.
-        :rtype: MdiArea
-        """
-        return self.widget('mdi')
 
     #############################################
     #   SESSION CONFIGURATION
@@ -903,8 +888,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         """
         Configure application built-in widgets.
         """
-        self.addWidget(MdiArea(self, objectName='mdi'))
-
         button = QToolButton(objectName='button_set_brush')
         button.setIcon(QIcon(':/icons/24/ic_format_color_fill_black'))
         button.setMenu(self.menu('brush'))
