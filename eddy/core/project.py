@@ -110,7 +110,7 @@ class Project(QObject):
         self.path = path
         self.prefix = prefix
 
-        self.metaFactory = MetaFactory(self)
+        self.mf = MetaFactory(self)
         self.validator = OWL2Validator(self)
 
     #############################################
@@ -335,7 +335,7 @@ class Project(QObject):
         try:
             return self.index[K_PREDICATE][item][name][K_META]
         except KeyError:
-            return self.metaFactory.create(item, name)
+            return self.mf.create(item, name)
 
     def metas(self, *types):
         """
