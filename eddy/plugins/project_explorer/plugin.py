@@ -78,7 +78,6 @@ class ProjectExplorer(AbstractPlugin):
         """
         return 'project_explorer'
 
-    # noinspection PyTypeChecker
     def startup(self):
         """
         Perform initialization tasks for the plugin.

@@ -34,12 +34,11 @@
 
 
 from PyQt5.QtCore import Qt, QEvent, QMimeData, pyqtSlot
-from PyQt5.QtCore import QRectF, QPointF, QLineF, QSize
-from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QRectF, QPointF, QLineF, QSize, QSettings
 from PyQt5.QtGui import QDrag, QIcon, QPixmap, QPainter, QPolygonF
-from PyQt5.QtWidgets import QApplication, QToolButton
+from PyQt5.QtWidgets import QApplication, QToolButton, QStyle
 from PyQt5.QtWidgets import QMenu, QAction, QActionGroup
-from PyQt5.QtWidgets import QWidget, QGridLayout, QStyleOption, QStyle
+from PyQt5.QtWidgets import QWidget, QGridLayout, QStyleOption
 
 from math import ceil, sin, cos, pi as M_PI, sqrt
 from verlib import NormalizedVersion
