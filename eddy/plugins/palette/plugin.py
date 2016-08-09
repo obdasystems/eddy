@@ -213,7 +213,7 @@ class Palette(AbstractPlugin):
         menu.addAction(self.widget('palette_dock').toggleViewAction())
 
         # CONFIGURE SIGNALS/SLOTS
-        self.debug('Configuring Project specific signals/slots')
+        self.debug('Configuring project specific signals/slots')
         connect(self.project.sgnDiagramAdded, self.onDiagramAdded)
         connect(self.project.sgnDiagramRemoved, self.onDiagramRemoved)
         for diagram in self.project.diagrams():

@@ -212,7 +212,7 @@ class Info(AbstractPlugin):
         menu.addAction(self.widget('info_dock').toggleViewAction())
 
         # CONFIGURE SIGNAL/SLOTS
-        self.debug('Configuring MDI area and Project specific signals/slots')
+        self.debug('Configuring MDI area and project specific signals/slots')
         connect(self.session.mdi.subWindowActivated, self.onSubWindowActivated)
         connect(self.project.sgnUpdated, self.onProjectUpdated)
 

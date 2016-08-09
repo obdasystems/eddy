@@ -48,7 +48,7 @@ from PyQt5.QtGui import QBrush, QColor, QCursor
 from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QStatusBar
 from PyQt5.QtWidgets import QToolButton, QStyle, QFileDialog
-from PyQt5.QtWidgets import QMenu, QAction, QActionGroup
+from PyQt5.QtWidgets import QMenu, QAction, QActionGroup, QToolBar
 
 from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION
 from eddy.core.commands.common import CommandComposeAxiom
@@ -146,17 +146,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         self.pf = PropertyFactory(self)
 
         #############################################
-        # CREATE TOOLBARS
+        # CREATE NECESSARY TOOLBARS
         #################################
 
-        self.toolbarDocument = self.addToolBar('Document')
-        self.toolbarDocument.setObjectName('toolbarDocument')
-        self.toolbarEditor = self.addToolBar('Editor')
-        self.toolbarEditor.setObjectName('toolbarEditor')
-        self.toolbarView = self.addToolBar('View')
-        self.toolbarView.setObjectName('toolbarView')
-        self.toolbarGraphol = self.addToolBar('Graphol')
-        self.toolbarGraphol.setObjectName('toolbarGraphol')
+        self.addWidget(QToolBar('Document', objectName='document_toolbar'))
+        self.addWidget(QToolBar('Editor', objectName='editor_toolbar'))
+        self.addWidget(QToolBar('View', objectName='view_toolbar'))
+        self.addWidget(QToolBar('View', objectName='graphol_toolbar'))
 
         #############################################
         # CONFIGURE SESSION
@@ -500,8 +496,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         group = QActionGroup(self, objectName='switch_individual')
         for identity in (Identity.Instance, Identity.Value):
             action = QAction(identity.value, group,
-                objectName=identity.name,
-                checkable=True,
+                objectName=identity.name, checkable=True,
                 triggered=self.doSetIndividualAs)
             action.setData(identity)
             group.addAction(action)
@@ -590,10 +585,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         self.addMenu(menu)
 
         menu = QMenu('Toolbars', objectName='toolbars')
-        menu.addAction(self.toolbarDocument.toggleViewAction())
-        menu.addAction(self.toolbarEditor.toggleViewAction())
-        menu.addAction(self.toolbarGraphol.toggleViewAction())
-        menu.addAction(self.toolbarView.toggleViewAction())
+        menu.addAction(self.widget('document_toolbar').toggleViewAction())
+        menu.addAction(self.widget('editor_toolbar').toggleViewAction())
+        menu.addAction(self.widget('graphol_toolbar').toggleViewAction())
+        menu.addAction(self.widget('view_toolbar').toggleViewAction())
         self.addMenu(menu)
 
         menu = QMenu('\u200CView', objectName='view')
@@ -864,37 +859,45 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         """
         Configure application built-in toolbars.
         """
-        self.toolbarDocument.setContextMenuPolicy(Qt.PreventContextMenu)
-        self.toolbarEditor.setContextMenuPolicy(Qt.PreventContextMenu)
-        self.toolbarView.setContextMenuPolicy(Qt.PreventContextMenu)
-        self.toolbarGraphol.setContextMenuPolicy(Qt.PreventContextMenu)
+        toolbar = self.widget('document_toolbar')
+        toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
+        toolbar.addAction(self.action('new_diagram'))
+        toolbar.addAction(self.action('open'))
+        toolbar.addAction(self.action('save'))
+        toolbar.addAction(self.action('print'))
 
-        self.toolbarDocument.addAction(self.action('new_diagram'))
-        self.toolbarDocument.addAction(self.action('open'))
-        self.toolbarDocument.addAction(self.action('save'))
-        self.toolbarDocument.addAction(self.action('print'))
+        toolbar = self.widget('editor_toolbar')
+        toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
+        toolbar.addAction(self.action('undo'))
+        toolbar.addAction(self.action('redo'))
+        toolbar.addSeparator()
+        toolbar.addAction(self.action('cut'))
+        toolbar.addAction(self.action('copy'))
+        toolbar.addAction(self.action('paste'))
+        toolbar.addAction(self.action('delete'))
+        toolbar.addSeparator()
+        toolbar.addAction(self.action('bring_to_front'))
+        toolbar.addAction(self.action('send_to_back'))
+        toolbar.addSeparator()
+        toolbar.addAction(self.action('swap_edge'))
+        toolbar.addAction(self.action('toggle_edge_equivalence'))
+        toolbar.addSeparator()
+        toolbar.addWidget(self.widget('button_set_brush'))
 
-        self.toolbarEditor.addAction(self.action('undo'))
-        self.toolbarEditor.addAction(self.action('redo'))
-        self.toolbarEditor.addSeparator()
-        self.toolbarEditor.addAction(self.action('cut'))
-        self.toolbarEditor.addAction(self.action('copy'))
-        self.toolbarEditor.addAction(self.action('paste'))
-        self.toolbarEditor.addAction(self.action('delete'))
-        self.toolbarEditor.addSeparator()
-        self.toolbarEditor.addAction(self.action('bring_to_front'))
-        self.toolbarEditor.addAction(self.action('send_to_back'))
-        self.toolbarEditor.addSeparator()
-        self.toolbarEditor.addAction(self.action('swap_edge'))
-        self.toolbarEditor.addAction(self.action('toggle_edge_equivalence'))
-        self.toolbarEditor.addSeparator()
-        self.toolbarEditor.addWidget(self.widget('button_set_brush'))
+        toolbar = self.widget('view_toolbar')
+        toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
+        toolbar.addAction(self.action('toggle_grid'))
+        toolbar.addAction(self.action('snap_to_grid'))
+        toolbar.addAction(self.action('center_diagram'))
 
-        self.toolbarView.addAction(self.action('toggle_grid'))
-        self.toolbarView.addAction(self.action('snap_to_grid'))
-        self.toolbarView.addAction(self.action('center_diagram'))
+        toolbar = self.widget('graphol_toolbar')
+        toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
+        toolbar.addAction(self.action('syntax_check'))
 
-        self.toolbarGraphol.addAction(self.action('syntax_check'))
+        self.addToolBar(Qt.TopToolBarArea, self.widget('document_toolbar'))
+        self.addToolBar(Qt.TopToolBarArea, self.widget('editor_toolbar'))
+        self.addToolBar(Qt.TopToolBarArea, self.widget('view_toolbar'))
+        self.addToolBar(Qt.TopToolBarArea, self.widget('graphol_toolbar'))
 
     def initWidgets(self):
         """

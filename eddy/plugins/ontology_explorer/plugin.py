@@ -105,7 +105,7 @@ class OntologyExplorer(AbstractPlugin):
         menu.addAction(self.widget('ontology_explorer_dock').toggleViewAction())
 
         # CONFIGURE SIGNALS/SLOTS
-        self.debug('Configuring Session and Project specific signals/slots')
+        self.debug('Configuring session and project specific signals/slots')
         connect(self.widget('ontology_explorer').sgnItemDoubleClicked, self.session.doFocusItem)
         connect(self.widget('ontology_explorer').sgnItemRightClicked, self.session.doFocusItem)
         connect(self.project.sgnItemAdded, self.widget('ontology_explorer').doAddNode)

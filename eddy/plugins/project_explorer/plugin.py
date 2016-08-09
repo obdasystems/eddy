@@ -104,7 +104,7 @@ class ProjectExplorer(AbstractPlugin):
         menu.addAction(self.widget('project_explorer_dock').toggleViewAction())
 
         # CONFIGURE SIGNALS/SLOTS
-        self.debug('Configuring Session and Project specific signals/slots')
+        self.debug('Configuring session and project specific signals/slots')
         connect(self.widget('project_explorer').sgnItemDoubleClicked, self.session.doFocusDiagram)
         connect(self.project.sgnDiagramAdded, self.widget('project_explorer').doAddDiagram)
         connect(self.project.sgnDiagramRemoved, self.widget('project_explorer').doRemoveDiagram)

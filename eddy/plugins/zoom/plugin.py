@@ -214,16 +214,16 @@ class Zoom(AbstractPlugin):
             objectName='button_zoom_reset'))
 
         # CONFIGURE SIGNALS/SLOTS
-        self.debug('Configuring Session and MDI area specific signals/slots')
+        self.debug('Configuring session and MDI area specific signals/slots')
         connect(self.session.mdi.subWindowActivated, self.onSubWindowActivated)
         connect(self.session.sgnUpdateState, self.doUpdateState)
 
         # CREATE VIEW TOOLBAR BUTTONS
         self.debug('Installing zoom controls in "view" toolbar')
-        self.session.toolbarView.addSeparator()
-        self.session.toolbarView.addWidget(self.widget('button_zoom_out'))
-        self.session.toolbarView.addWidget(self.widget('button_zoom_in'))
-        self.session.toolbarView.addWidget(self.widget('button_zoom_reset'))
+        self.session.widget('view_toolbar').addSeparator()
+        self.session.widget('view_toolbar').addWidget(self.widget('button_zoom_out'))
+        self.session.widget('view_toolbar').addWidget(self.widget('button_zoom_in'))
+        self.session.widget('view_toolbar').addWidget(self.widget('button_zoom_reset'))
         
         super().startup()
 
