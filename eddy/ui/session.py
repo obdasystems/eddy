@@ -84,7 +84,7 @@ from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.misc import snap, snapF, cutR
 from eddy.core.functions.path import expandPath, isSubPath
 from eddy.core.functions.path import uniquePath, shortPath
-from eddy.core.functions.signals import connect, disconnect
+from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractItem
 from eddy.core.loaders.graphml import GraphmlLoader
 from eddy.core.loaders.graphol import GrapholLoader
@@ -105,7 +105,6 @@ from eddy.ui.preferences import PreferencesDialog
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationDialog
 from eddy.ui.view import DiagramView
-from eddy.ui.zoom import Zoom
 
 
 LOGGER = getLogger(__name__)
@@ -113,10 +112,16 @@ LOGGER = getLogger(__name__)
 
 class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, QMainWindow):
     """
-    This class implements Eddy's main working session.
+    Extends QMainWindow and implements Eddy main working session.
+    Additionally to built-in signals, this class emits:
+
+    * sgnClosed: whenever the current session is closed.
+    * sgnQuit: whenever the application is to be terminated.
+    * sgnUpdateState: to notify that something in the session state changed.
     """
     sgnClosed = pyqtSignal()
     sgnQuit = pyqtSignal()
+    sgnUpdateState = pyqtSignal()
 
     def __init__(self, path, **kwargs):
         """
@@ -154,31 +159,29 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         self.toolbarGraphol.setObjectName('toolbarGraphol')
 
         #############################################
-        # CREATE WIDGETS
-        #################################
-
-        self.mdi = MdiArea(self)
-        self.zoom = Zoom(self.toolbarView)
-
-        self.buttonSetBrush = QToolButton()
-
-        #############################################
         # CONFIGURE SESSION
         #################################
 
         self.initActions()
         self.initMenus()
         self.initWidgets()
+        self.initSignals()
         self.initStatusBar()
         self.initToolBars()
         self.initPlugins()
         self.initState()
 
-        self.setAcceptDrops(True)
-        self.setCentralWidget(self.mdi)
-        self.setDockOptions(QMainWindow.AnimatedDocks|QMainWindow.AllowTabbedDocks)
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-        self.setWindowTitle(self.project)
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def mdi(self):
+        """
+        Returns the reference to the MDI area widget.
+        :rtype: MdiArea
+        """
+        return self.widget('mdi')
 
     #############################################
     #   SESSION CONFIGURATION
@@ -307,7 +310,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         self.addAction(QAction(
             QIcon(':/icons/24/ic_spellcheck_black'), 'Run syntax check',
             self, objectName='syntax_check', triggered=self.doSyntaxCheck,
-            statusTip = 'Run syntax validation on the current project'))
+            statusTip='Run syntax validation on the current project'))
 
         #############################################
         # DIAGRAM SPECIFIC
@@ -440,8 +443,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
             group = QActionGroup(self, objectName=name)
             for color in Color:
                 action = QAction(
-                    BrushIcon(isize, isize, color.value), color.name, self,
-                    checkable=False, triggered=trigger)
+                    BrushIcon(isize, isize, color.value), color.name,
+                    self, checkable=False, triggered=trigger)
                 action.setData(color)
                 group.addAction(action)
             self.addAction(group)
@@ -826,14 +829,28 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
                             LOGGER.info('Plugin started: %s v%s', p.name(), p.version())
                             self.addPlugin(p)
 
+    def initSignals(self):
+        """
+        Connect Session specific signals to their slots.
+        """
+        connect(self.sgnUpdateState, self.doUpdateState)
+
     def initState(self):
         """
-        Configure application state by reading the preferences file.
+        Configure application state.
         """
+        # CONFIGURE BY READING APPLICATION SETTINGS
         settings = QSettings(ORGANIZATION, APPNAME)
         self.restoreGeometry(settings.value('session/geometry', QByteArray(), QByteArray))
         self.restoreState(settings.value('session/state', QByteArray(), QByteArray))
         self.action('toggle_grid').setChecked(settings.value('diagram/grid', False, bool))
+
+        # INITIALIZE DEFAULT OPTIONS
+        self.setAcceptDrops(True)
+        self.setCentralWidget(self.mdi)
+        self.setDockOptions(Session.AnimatedDocks | Session.AllowTabbedDocks)
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setWindowTitle(self.project)
 
     def initStatusBar(self):
         """
@@ -845,7 +862,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
 
     def initToolBars(self):
         """
-        Configure previously initialized toolbars.
+        Configure application built-in toolbars.
         """
         self.toolbarDocument.setContextMenuPolicy(Qt.PreventContextMenu)
         self.toolbarEditor.setContextMenuPolicy(Qt.PreventContextMenu)
@@ -871,37 +888,27 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         self.toolbarEditor.addAction(self.action('swap_edge'))
         self.toolbarEditor.addAction(self.action('toggle_edge_equivalence'))
         self.toolbarEditor.addSeparator()
-        self.toolbarEditor.addWidget(self.buttonSetBrush)
+        self.toolbarEditor.addWidget(self.widget('button_set_brush'))
 
         self.toolbarView.addAction(self.action('toggle_grid'))
         self.toolbarView.addAction(self.action('snap_to_grid'))
         self.toolbarView.addAction(self.action('center_diagram'))
-        self.toolbarView.addSeparator()
-        self.toolbarView.addWidget(self.zoom.buttonZoomOut)
-        self.toolbarView.addWidget(self.zoom.buttonZoomIn)
-        self.toolbarView.addWidget(self.zoom.buttonZoomReset)
 
         self.toolbarGraphol.addAction(self.action('syntax_check'))
 
     def initWidgets(self):
         """
-        Configure previously initialized widgets.
+        Configure application built-in widgets.
         """
-        #############################################
-        # CONFIGURE TOOLBAR WIDGETS
-        #################################
+        self.addWidget(MdiArea(self, objectName='mdi'))
 
-        self.buttonSetBrush.setIcon(QIcon(':/icons/24/ic_format_color_fill_black'))
-        self.buttonSetBrush.setMenu(self.menu('brush'))
-        self.buttonSetBrush.setPopupMode(QToolButton.InstantPopup)
-        self.buttonSetBrush.setStatusTip('Change the background color of the selected predicate nodes')
-        self.buttonSetBrush.setEnabled(False)
-
-        #############################################
-        # CONFIGURE SIGNALS
-        #################################
-
-        connect(self.mdi.subWindowActivated, self.onSubWindowActivated)
+        button = QToolButton(objectName='button_set_brush')
+        button.setIcon(QIcon(':/icons/24/ic_format_color_fill_black'))
+        button.setMenu(self.menu('brush'))
+        button.setPopupMode(QToolButton.InstantPopup)
+        button.setStatusTip('Change the background color of the selected predicate nodes')
+        button.setEnabled(False)
+        self.addWidget(button)
 
     #############################################
     #   SLOTS
@@ -982,7 +989,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
             diagram.pasteX = Clipboard.PasteOffsetX
             diagram.pasteY = Clipboard.PasteOffsetY
             self.clipboard.update(diagram)
-            self.doUpdateState()
+            self.sgnUpdateState.emit()
 
     @pyqtSlot()
     def doCut(self):
@@ -995,7 +1002,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
             diagram.pasteX = 0
             diagram.pasteY = 0
             self.clipboard.update(diagram)
-            self.doUpdateState()
+            self.sgnUpdateState.emit()
             items = diagram.selectedItems()
             if items:
                 items.extend([x for item in items if item.isNode() for x in item.edges if x not in items])
@@ -1586,11 +1593,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         isEdgeToggleEnabled = False
 
         if self.mdi.subWindowList():
-
             diagram = self.mdi.activeDiagram()
             predicates = {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.IndividualNode}
             if diagram:
-
                 nodes = diagram.selectedNodes()
                 edges = diagram.selectedEdges()
                 isDiagramActive = True
@@ -1598,7 +1603,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
                 isEdgeSelected = first(edges) is not None
                 isNodeSelected = first(nodes) is not None
                 isPredicateSelected = any([i.type() in predicates for i in nodes])
-
                 if isEdgeSelected:
                     for edge in edges:
                         if not isEdgeSwapEnabled:
@@ -1624,34 +1628,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         self.action('swap_edge').setEnabled(isEdgeSelected and isEdgeSwapEnabled)
         self.action('toggle_edge_equivalence').setEnabled(isEdgeSelected and isEdgeToggleEnabled)
         self.action('toggle_grid').setEnabled(isDiagramActive)
-        self.buttonSetBrush.setEnabled(isPredicateSelected)
-        self.zoom.setEnabled(isDiagramActive)
-
-    @pyqtSlot('QMdiSubWindow')
-    def onSubWindowActivated(self, subwindow):
-        """
-        Executed when the active subwindow changes.
-        :type subwindow: MdiSubWindow
-        """
-        if subwindow:
-
-            view = subwindow.view
-            diagram = subwindow.diagram
-            diagram.setMode(DiagramMode.Idle)
-            disconnect(self.zoom.sgnChanged)
-            disconnect(view.sgnScaled)
-            self.zoom.adjust(view.zoom)
-            connect(self.zoom.sgnChanged, view.onZoomChanged)
-            connect(view.sgnScaled, self.zoom.scaleChanged)
-            self.setWindowTitle(self.project, diagram)
-
-        else:
-
-            if not self.mdi.subWindowList():
-                self.zoom.zoomReset()
-                self.setWindowTitle(self.project)
-
-        self.doUpdateState()
+        self.widget('button_set_brush').setEnabled(isPredicateSelected)
 
     #############################################
     #   EVENTS

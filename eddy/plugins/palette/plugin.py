@@ -221,7 +221,7 @@ class Palette(AbstractPlugin):
             connect(diagram.sgnItemInsertionCompleted, self.onDiagramItemInsertionCompleted)
             connect(diagram.sgnModeChanged, self.onDiagramModeChanged)
 
-        # CONFIGURE SIGNALS/SLOTS AND CREATE DOCKING AREA WIDGET
+        # CREATE DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
         self.session.addDockWidget(Qt.LeftDockWidgetArea, self.widget('palette_dock'))
 

@@ -63,7 +63,16 @@ K_TYPE = 'types'
 # noinspection PyTypeChecker
 class Project(QObject):
     """
-    This class implements a graphol project.
+    Extension of QObject which implements a Graphol project.
+    Additionally to built-in signals, this class emits:
+
+    * sgnDiagramAdded: whenever a Diagram is added to the Project.
+    * sgnDiagramRemoved: whenever a Diagram is removed from the Project.
+    * sgnItemAdded: whenever an item is added to the Project.
+    * sgnItemRemoved: whenever an item is removed from the Project.
+    * sgnMetaAdded: whenever predicate metadata are added to the Project.
+    * sgnMetaRemoved: whenever predicate metadata are removed from the Project.
+    * sgnUpdated: whenever the Project is updated in any of its parts.
     """
     Home = '.eddy'
     Version = 1

@@ -62,11 +62,11 @@ class Diagram(QGraphicsScene):
     Extension of QGraphicsScene which implements a single Graphol diagram.
     Additionally to built-in signals, this class emits:
 
-    * sgnItemAdded('QGraphicsScene', 'QGraphicsItem'): whenever an element is added to the Diagram;
-    * sgnItemInsertionCompleted('QGraphicsItem', int): whenever an item 'MANUAL' insertion process is completed;
-    * sgnItemRemoved('QGraphicsScene', 'QGraphicsItem'): whenever an element is removed from the Diagram;
-    * sgnModeChanged(DiagramMode): whenever the Diagram operational mode (or its parameter) changes;
-    * sgnUpdated(): whenever the Diagram has been updated in any of its parts.
+    * sgnItemAdded: whenever an element is added to the Diagram.
+    * sgnItemInsertionCompleted: whenever an item 'MANUAL' insertion process is completed.
+    * sgnItemRemoved: whenever an element is removed from the Diagram.
+    * sgnModeChanged: whenever the Diagram operational mode (or its parameter) changes.
+    * sgnUpdated: whenever the Diagram has been updated in any of its parts.
     """
     GridSize = 20
     MinSize = 2000

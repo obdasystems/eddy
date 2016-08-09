@@ -33,34 +33,70 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtWidgets import QMdiArea, QMdiSubWindow
 from PyQt5.QtWidgets import QTabWidget, QAction, QTabBar
 
+from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.signals import connect
 
 
 class MdiArea(QMdiArea):
     """
-    This class implements the MDI area where diagrams are rendered.
+    Extends QMdiArea providing a widget where to render Graphol diagrams.
     """
-    def __init__(self, parent=None):
+    def __init__(self, session, **kwargs):
         """
         Initialize the MDI area.
-        :type parent: QWidget
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session, **kwargs)
 
+        # CONFIGURE WIDGET
         self.setContentsMargins(0, 0, 0, 0)
         self.setViewMode(MdiArea.TabbedView)
         self.setTabPosition(QTabWidget.North)
         self.setTabsClosable(True)
         self.setTabsMovable(True)
 
+        # DO NOT EXPAND MDI AREA TABS
         for child in self.children():
             if isinstance(child, QTabBar):
                 child.setExpanding(False)
                 break
+
+        # CONNECT SUBWINDOW ACTIVATED SIGNAL
+        connect(self.subWindowActivated, self.onSubWindowActivated)
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def session(self):
+        """
+        Returns the reference to the active Session (alias for MdiArea.parent()).
+        :rtype: Session
+        """
+        return self.parent()
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @pyqtSlot('QMdiSubWindow')
+    def onSubWindowActivated(self, subwindow):
+        """
+        Executed when the active subwindow changes.
+        :type subwindow: MdiSubWindow
+        """
+        self.session.sgnUpdateState.emit()
+        if subwindow:
+            subwindow.diagram.setMode(DiagramMode.Idle)
+            self.session.setWindowTitle(self.session.project, subwindow.diagram)
+        else:
+            if not self.subWindowList():
+                self.session.setWindowTitle(self.session.project)
 
     #############################################
     #   INTERFACE
