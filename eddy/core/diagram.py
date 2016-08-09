@@ -180,7 +180,7 @@ class Diagram(QGraphicsScene):
             snapToGrid = self.session.action('toggle_grid').isChecked()
             node = self.factory.create(Item.forValue(dropEvent.mimeData().text()))
             node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
-            self.session.undoStack.push(CommandNodeAdd(self, node))
+            self.session.undostack.push(CommandNodeAdd(self, node))
             self.sgnItemInsertionCompleted.emit(node, dropEvent.modifiers())
             dropEvent.setDropAction(Qt.CopyAction)
             dropEvent.accept()
@@ -207,7 +207,7 @@ class Diagram(QGraphicsScene):
                 snapToGrid = self.session.action('toggle_grid').isChecked()
                 node = self.factory.create(Item.forValue(self.modeParam))
                 node.setPos(snap(mousePos, Diagram.GridSize, snapToGrid))
-                self.session.undoStack.push(CommandNodeAdd(self, node))
+                self.session.undostack.push(CommandNodeAdd(self, node))
                 self.sgnItemInsertionCompleted.emit(node, mouseEvent.modifiers())
 
             elif self.mode is DiagramMode.EdgeAdd:
@@ -448,7 +448,7 @@ class Diagram(QGraphicsScene):
                     self.removeItem(edge)
 
                     if insertEdge:
-                        self.session.undoStack.push(CommandEdgeAdd(self, edge))
+                        self.session.undostack.push(CommandEdgeAdd(self, edge))
                         edge.updateEdge()
 
                     self.clearSelection()
@@ -470,7 +470,7 @@ class Diagram(QGraphicsScene):
                     if self.mp_LabelPos != pos:
                         item = self.mp_Label.parentItem()
                         command = CommandLabelMove(self, item, self.mp_LabelPos, pos)
-                        self.session.undoStack.push(command)
+                        self.session.undostack.push(command)
 
                     self.setMode(DiagramMode.Idle)
 
@@ -495,7 +495,7 @@ class Diagram(QGraphicsScene):
                                 'edges': {x: x.breakpoints[:] for x in self.mp_Data['edges']}
                             }
                         }
-                        self.session.undoStack.push(CommandNodeMove(self, data))
+                        self.session.undostack.push(CommandNodeMove(self, data))
 
                     self.setMode(DiagramMode.Idle)
 

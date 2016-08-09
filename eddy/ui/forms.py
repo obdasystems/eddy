@@ -254,10 +254,10 @@ class RefactorNameForm(QDialog):
         Accepts the rename form and perform refactoring.
         """
         name = self.renameField.value()
-        self.session.undoStack.beginMacro('change predicate "{0}" to "{1}"'.format(self.node.text(), name))
+        self.session.undostack.beginMacro('change predicate "{0}" to "{1}"'.format(self.node.text(), name))
         for n in self.project.predicates(self.node.type(), self.node.text()):
-            self.session.undoStack.push(CommandLabelChange(n.diagram, n, n.text(), name))
-        self.session.undoStack.endMacro()
+            self.session.undostack.push(CommandLabelChange(n.diagram, n, n.text(), name))
+        self.session.undostack.endMacro()
         super().accept()
 
     @pyqtSlot()
@@ -389,5 +389,5 @@ class ValueForm(QDialog):
         data = node.compose(value, datatype)
         if node.text() != data:
             name = 'change {0} to {1}'.format(node.text(), data)
-            self.session.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+            self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
         super().accept()

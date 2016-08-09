@@ -140,7 +140,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         #################################
 
         self.clipboard = Clipboard(self)
-        self.undoStack = QUndoStack(self)
+        self.undostack = QUndoStack(self)
         self.mdi = MdiArea(self)
         self.mf = MenuFactory(self)
         self.pf = PropertyFactory(self)
@@ -275,13 +275,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         # PROJECT SPECIFIC
         #################################
 
-        action = self.undoStack.createUndoAction(self)
+        action = self.undostack.createUndoAction(self)
         action.setIcon(QIcon(':/icons/24/ic_undo_black'))
         action.setObjectName('undo')
         action.setShortcut(QKeySequence.Undo)
         self.addAction(action)
 
-        action = self.undoStack.createRedoAction(self)
+        action = self.undostack.createRedoAction(self)
         action.setIcon(QIcon(':/icons/24/ic_redo_black'))
         action.setObjectName('redo')
         action.setShortcut(QKeySequence.Redo)
@@ -812,7 +812,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         """
         Connect session specific signals to their slots.
         """
-        connect(self.undoStack.cleanChanged, self.doUpdateState)
+        connect(self.undostack.cleanChanged, self.doUpdateState)
         connect(self.sgnUpdateState, self.doUpdateState)
 
     def initState(self):
@@ -914,7 +914,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
                     if item.zValue() >= zValue:
                         zValue = item.zValue() + 0.2
                 if zValue != node.zValue():
-                    self.undoStack.push(CommandNodeSetDepth(diagram, node, zValue))
+                    self.undostack.push(CommandNodeSetDepth(diagram, node, zValue))
 
     @pyqtSlot()
     def doCenterDiagram(self):
@@ -933,7 +933,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
                 if moveX or moveY:
                     items = [x for x in items if x.isNode() or x.isEdge()]
                     command = CommandItemsTranslate(diagram, items, moveX, moveY, 'center diagram')
-                    self.undoStack.push(command)
+                    self.undostack.push(command)
                     self.mdi.activeView().centerOn(0, 0)
 
     @pyqtSlot()
@@ -962,7 +962,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
                 items = diagram.propertyComposition(node, item)
                 nodes = {x for x in items if x.isNode()}
                 edges = {x for x in items if x.isEdge()}
-                self.undoStack.push(CommandComposeAxiom(name, diagram, node, nodes, edges))
+                self.undostack.push(CommandComposeAxiom(name, diagram, node, nodes, edges))
 
     @pyqtSlot()
     def doCopy(self):
@@ -992,7 +992,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
             items = diagram.selectedItems()
             if items:
                 items.extend([x for item in items if item.isNode() for x in item.edges if x not in items])
-                self.undoStack.push(CommandItemsRemove(diagram, items))
+                self.undostack.push(CommandItemsRemove(diagram, items))
 
     @pyqtSlot()
     def doDelete(self):
@@ -1005,7 +1005,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
             items = diagram.selectedItems()
             if items:
                 items.extend([x for item in items if item.isNode() for x in item.edges if x not in items])
-                self.undoStack.push(CommandItemsRemove(diagram, items))
+                self.undostack.push(CommandItemsRemove(diagram, items))
 
     @pyqtSlot()
     def doExport(self):
@@ -1205,7 +1205,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
                 action = self.sender()
                 color = action.data()
                 nodes = self.project.predicates(node.type(), node.text())
-                self.undoStack.push(CommandNodeSetBrush(diagram, nodes, QBrush(QColor(color.value))))
+                self.undostack.push(CommandNodeSetBrush(diagram, nodes, QBrush(QColor(color.value))))
 
     @pyqtSlot()
     def doRefactorName(self):
@@ -1233,7 +1233,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
             if node and node.label.isMovable():
                 undo = node.label.pos()
                 redo = node.label.defaultPos()
-                self.undoStack.push(CommandLabelMove(diagram, node, undo, redo))
+                self.undostack.push(CommandLabelMove(diagram, node, undo, redo))
 
     @pyqtSlot()
     def doRemoveBreakpoint(self):
@@ -1246,7 +1246,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
             action = self.sender()
             edge, breakpoint = action.data()
             if 0 <= breakpoint < len(edge.breakpoints):
-                self.undoStack.push(CommandEdgeBreakpointRemove(diagram, edge, breakpoint))
+                self.undostack.push(CommandEdgeBreakpointRemove(diagram, edge, breakpoint))
 
     @pyqtSlot()
     def doRemoveDiagram(self):
@@ -1305,7 +1305,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
             msgbox.setWindowTitle('Save failed!')
             msgbox.exec_()
         else:
-            self.undoStack.setClean()
+            self.undostack.setClean()
 
     @pyqtSlot()
     def doSaveAs(self):
@@ -1353,7 +1353,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
                     if item.zValue() <= zValue:
                         zValue = item.zValue() - 0.2
                 if zValue != node.zValue():
-                    self.undoStack.push(CommandNodeSetDepth(diagram, node, zValue))
+                    self.undostack.push(CommandNodeSetDepth(diagram, node, zValue))
 
     @pyqtSlot()
     def doSetNodeBrush(self):
@@ -1369,7 +1369,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
             supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
             selected = {x for x in diagram.selectedNodes() if x.type() in supported and x.brush() != brush}
             if selected:
-                self.undoStack.push(CommandNodeSetBrush(diagram, selected, brush))
+                self.undostack.push(CommandNodeSetBrush(diagram, selected, brush))
 
     @pyqtSlot()
     def doSetPropertyRestriction(self):
@@ -1393,7 +1393,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
                         data = restriction.toString(form.min() or '-', form.max() or '-')
                 if data and node.text() != data:
                     name = 'change {0} to {1}'.format(node.shortName, data)
-                    self.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                    self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
     def doSetIndividualAs(self):
@@ -1411,7 +1411,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
                     if node.identity is Identity.Value:
                         data = node.label.template
                         name = 'change {0} to {1}'.format(node.text(), data)
-                        self.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                        self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
                 elif action.data() is Identity.Value:
                     form = ValueForm(node, self)
                     form.exec_()
@@ -1432,7 +1432,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
                 data = special.value
                 if node.text() != data:
                     name = 'change {0} to {1}'.format(node.shortName, data)
-                    self.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                    self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
     def doSetDatatype(self):
@@ -1449,7 +1449,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
                 data = datatype.value
                 if node.text() != data:
                     name = 'change {0} to {1}'.format(node.shortName, data)
-                    self.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                    self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
     def doSetFacet(self):
@@ -1466,7 +1466,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
                 if facet != node.facet:
                     data = node.compose(facet, node.value)
                     name = 'change {0} to {1}'.format(node.facet.value, facet.value)
-                    self.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                    self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
     def doSnapTopGrid(self):
@@ -1498,7 +1498,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
                         data['redo']['edges'][item] = {'breakpoints': redoPts}
 
             if data['undo']['nodes'] or data['undo']['edges']:
-                self.undoStack.push(CommandSnapItemsToGrid(diagram, data))
+                self.undostack.push(CommandSnapItemsToGrid(diagram, data))
 
     @pyqtSlot()
     def doSwapEdge(self):
@@ -1510,7 +1510,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
             diagram.setMode(DiagramMode.Idle)
             selected = [e for e in diagram.selectedEdges() if e.isSwapAllowed()]
             if selected:
-                self.undoStack.push(CommandEdgeSwap(diagram, selected))
+                self.undostack.push(CommandEdgeSwap(diagram, selected))
 
     @pyqtSlot()
     def doSwitchOperatorNode(self):
@@ -1526,7 +1526,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
                 if node.type() is not action.data():
                     xnode = diagram.factory.create(action.data())
                     xnode.setPos(node.pos())
-                    self.undoStack.push(CommandNodeOperatorSwitchTo(diagram, node, xnode))
+                    self.undostack.push(CommandNodeOperatorSwitchTo(diagram, node, xnode))
 
     @pyqtSlot()
     def doSyntaxCheck(self):
@@ -1549,7 +1549,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
             if selected:
                 comp = sum(edge.equivalence for edge in selected) <= len(selected) / 2
                 data = {edge: {'from': edge.equivalence, 'to': comp} for edge in selected}
-                self.undoStack.push(CommandEdgeToggleEquivalence(diagram, data))
+                self.undostack.push(CommandEdgeToggleEquivalence(diagram, data))
 
     @pyqtSlot()
     def doToggleGrid(self):
@@ -1574,7 +1574,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         isNodeSelected = False
         isPredicateSelected = False
         isProjectEmpty = self.project.isEmpty()
-        isUndoStackClean = self.undoStack.isClean()
+        isUndoStackClean = self.undostack.isClean()
         isEdgeSwapEnabled = False
         isEdgeToggleEnabled = False
 
@@ -1627,7 +1627,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         """
         close = True
         save = False
-        if not self.undoStack.isClean():
+        if not self.undostack.isClean():
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
             msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
