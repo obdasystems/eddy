@@ -192,11 +192,11 @@ class DiagramProperty(PropertyDialog):
         """
         commands = [self.diagramSizeChanged()]
         if any(commands):
-            self.project.undoStack.beginMacro('edit {0} properties'.format(self.diagram.name))
+            self.session.undoStack.beginMacro('edit {0} properties'.format(self.diagram.name))
             for command in commands:
                 if command:
-                    self.project.undoStack.push(command)
-            self.project.undoStack.endMacro()
+                    self.session.undoStack.push(command)
+            self.session.undoStack.endMacro()
         super().accept()
 
     #############################################
@@ -380,11 +380,11 @@ class NodeProperty(PropertyDialog):
         """
         commands = [self.positionChanged()]
         if any(commands):
-            self.project.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
+            self.session.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
             for command in commands:
                 if command:
-                    self.project.undoStack.push(command)
-            self.project.undoStack.endMacro()
+                    self.session.undoStack.push(command)
+            self.session.undoStack.endMacro()
         super().accept()
 
     #############################################
@@ -500,11 +500,11 @@ class PredicateNodeProperty(NodeProperty):
         commands = [self.positionChanged(), self.metaDataChanged()]
         commands.extend(self.textChanged())
         if any(commands):
-            self.project.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
+            self.session.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
             for command in commands:
                 if command:
-                    self.project.undoStack.push(command)
-            self.project.undoStack.endMacro()
+                    self.session.undoStack.push(command)
+            self.session.undoStack.endMacro()
         super().accept()
 
     #############################################
@@ -632,11 +632,11 @@ class OrderedInputNodeProperty(NodeProperty):
         """
         commands = [self.positionChanged(), self.orderingChanged()]
         if any(commands):
-            self.project.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
+            self.session.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
             for command in commands:
                 if command:
-                    self.project.undoStack.push(command)
-            self.project.undoStack.endMacro()
+                    self.session.undoStack.push(command)
+            self.session.undoStack.endMacro()
         super().accept()
 
     #############################################
@@ -730,11 +730,11 @@ class FacetNodeProperty(NodeProperty):
         """
         commands = [self.positionChanged(), self.facetChanged()]
         if any(commands):
-            self.project.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
+            self.session.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
             for command in commands:
                 if command:
-                    self.project.undoStack.push(command)
-            self.project.undoStack.endMacro()
+                    self.session.undoStack.push(command)
+            self.session.undoStack.endMacro()
         super().accept()
 
     #############################################
@@ -806,11 +806,11 @@ class ValueDomainNodeProperty(NodeProperty):
         """
         commands = [self.positionChanged(), self.datatypeChanged()]
         if any(commands):
-            self.project.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
+            self.session.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
             for command in commands:
                 if command:
-                    self.project.undoStack.push(command)
-            self.project.undoStack.endMacro()
+                    self.session.undoStack.push(command)
+            self.session.undoStack.endMacro()
         super().accept()
 
     #############################################
@@ -892,11 +892,11 @@ class ValueNodeProperty(NodeProperty):
         """
         commands = [self.positionChanged(), self.valueChanged()]
         if any(commands):
-            self.project.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
+            self.session.undoStack.beginMacro('edit {0} properties'.format(self.node.name))
             for command in commands:
                 if command:
-                    self.project.undoStack.push(command)
-            self.project.undoStack.endMacro()
+                    self.session.undoStack.push(command)
+            self.session.undoStack.endMacro()
         super().accept()
 
     #############################################

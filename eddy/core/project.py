@@ -34,10 +34,10 @@
 
 
 import os
+
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
-from PyQt5.QtWidgets import QUndoStack
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
@@ -111,8 +111,6 @@ class Project(QObject):
         self.prefix = prefix
 
         self.metaFactory = MetaFactory(self)
-        self.undoStack = QUndoStack(self)
-        self.undoStack.setUndoLimit(100)
         self.validator = OWL2Validator(self)
 
     #############################################
@@ -130,7 +128,7 @@ class Project(QObject):
     @property
     def session(self):
         """
-        Returns the session this project is loaded into (alias for Project.parent()).
+        Returns the reference to the active session (alias for Project.parent()).
         :rtype: Session
         """
         return self.parent()

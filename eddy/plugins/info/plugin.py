@@ -687,7 +687,7 @@ class ProjectInfo(AbstractInfo):
         project = self.project
         iri = self.iriField.value()
         if project.iri != iri:
-            project.undoStack.push(CommandProjectSetIRI(project, project.iri, iri))
+            self.session.undoStack.push(CommandProjectSetIRI(project, project.iri, iri))
         self.iriField.clearFocus()
 
     @pyqtSlot()
@@ -698,7 +698,7 @@ class ProjectInfo(AbstractInfo):
         project = self.project
         prefix = self.prefixField.value()
         if project.prefix != prefix:
-            project.undoStack.push(CommandProjectSetPrefix(project, project.prefix, prefix))
+            self.session.undoStack.push(CommandProjectSetPrefix(project, project.prefix, prefix))
         self.prefixField.clearFocus()
 
     #############################################
@@ -950,12 +950,12 @@ class PredicateNodeInfo(NodeInfo):
                     diagram = node.diagram
                     project = node.project
                     if sender is self.nameField:
-                        project.undoStack.beginMacro('change predicate "{0}" to "{1}"'.format(node.text(), data))
+                        self.session.undoStack.beginMacro('change predicate "{0}" to "{1}"'.format(node.text(), data))
                         for n in project.predicates(node.type(), node.text()):
-                            project.undoStack.push(CommandLabelChange(n.diagram, n, n.text(), data))
-                        project.undoStack.endMacro()
+                            self.session.undoStack.push(CommandLabelChange(n.diagram, n, n.text(), data))
+                            self.session.undoStack.endMacro()
                     else:
-                        project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data))
+                        self.session.undoStack.push(CommandLabelChange(diagram, node, node.text(), data))
             except RuntimeError:
                 pass
 
@@ -1047,7 +1047,7 @@ class AttributeNodeInfo(PredicateNodeInfo):
         attribute = sender.property('attribute')
         name = '{0}set {1} {2} property'.format('un' if checked else '', node.shortName, attribute)
         data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
-        project.undoStack.push(CommandSetProperty(diagram, node, data, name))
+        self.session.undoStack.push(CommandSetProperty(diagram, node, data, name))
 
     #############################################
     #   INTERFACE
@@ -1165,7 +1165,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         prop = RE_CAMEL_SPACE.sub('\g<1> \g<2>', attribute).lower()
         name = '{0}set {1} {2} property'.format('un' if checked else '', node.shortName, prop)
         data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
-        project.undoStack.push(CommandSetProperty(diagram, node, data, name))
+        self.session.undoStack.push(CommandSetProperty(diagram, node, data, name))
 
     #############################################
     #   INTERFACE
@@ -1228,7 +1228,7 @@ class ValueDomainNodeInfo(NodeInfo):
             data = datatype.value
             if node.text() != data:
                 name = 'change {0} to {1}'.format(node.shortName, data)
-                project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                self.session.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
         self.datatypeField.clearFocus()
 
@@ -1304,7 +1304,7 @@ class ValueNodeInfo(PredicateNodeInfo):
                 data = node.compose(value, datatype)
                 if node.text() != data:
                     name = 'change value to {0}'.format(data)
-                    project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                    self.session.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
             except RuntimeError:
                 pass
 
@@ -1385,7 +1385,7 @@ class FacetNodeInfo(NodeInfo):
             data = node.compose(self.facetField.currentData(), self.valueField.value())
             if node.text() != data:
                 name = 'change {0} to {1}'.format(node.text(), data)
-                project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                self.session.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
         self.facetField.clearFocus()
         self.valueField.clearFocus()

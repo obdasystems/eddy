@@ -296,7 +296,7 @@ class AbstractLabel(QGraphicsTextItem, DiagramItemMixin):
             if focusInData and focusInData != currentData:
                 node = self.parentItem()
                 command = CommandLabelChange(self.diagram, node, focusInData, currentData)
-                self.project.undoStack.push(command)
+                self.session.undoStack.push(command)
 
             self.focusInData = None
             self.setSelectedText(False)

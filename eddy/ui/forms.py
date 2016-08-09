@@ -164,13 +164,14 @@ class RefactorNameForm(QDialog):
     """
     This class implements the form used to rename nodes during refactor operations.
     """
-    def __init__(self, node, parent=None):
+    def __init__(self, node, session):
         """
         Initialize the form dialog.
         :type node: AbstractNode
-        :type parent: QWidget
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
+
         self.node = node
 
         arial12r = Font('Arial', 12)
@@ -224,6 +225,26 @@ class RefactorNameForm(QDialog):
         connect(self.confirmationBox.rejected, self.reject)
 
     #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def project(self):
+        """
+        Returns the reference to the active project.
+        :rtype: Project
+        """
+        return self.session.project
+
+    @property
+    def session(self):
+        """
+        Returns the reference to the active session (alias for RefactorNameForm.parent()).
+        :rtype: Session
+        """
+        return self.parent()
+
+    #############################################
     #   SLOTS
     #################################
 
@@ -233,11 +254,10 @@ class RefactorNameForm(QDialog):
         Accepts the rename form and perform refactoring.
         """
         name = self.renameField.value()
-        project = self.node.project
-        project.undoStack.beginMacro('change predicate "{0}" to "{1}"'.format(self.node.text(), name))
-        for n in project.predicates(self.node.type(), self.node.text()):
-            project.undoStack.push(CommandLabelChange(n.diagram, n, n.text(), name))
-            project.undoStack.endMacro()
+        self.session.undoStack.beginMacro('change predicate "{0}" to "{1}"'.format(self.node.text(), name))
+        for n in self.project.predicates(self.node.type(), self.node.text()):
+            self.session.undoStack.push(CommandLabelChange(n.diagram, n, n.text(), name))
+        self.session.undoStack.endMacro()
         super().accept()
 
     @pyqtSlot()
@@ -262,13 +282,14 @@ class ValueForm(QDialog):
     """
     This class implements the form used to select the Value of an Individual node.
     """
-    def __init__(self, node, parent=None):
+    def __init__(self, node, session):
         """
         Initialize the form dialog.
         :type node: IndividualNode
-        :type parent: QWidget
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
+
         self.node = node
 
         arial12r = Font('Arial', 12)
@@ -333,6 +354,26 @@ class ValueForm(QDialog):
         connect(self.confirmationBox.rejected, self.reject)
 
     #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def project(self):
+        """
+        Returns the reference to the active project.
+        :rtype: Project
+        """
+        return self.session.project
+
+    @property
+    def session(self):
+        """
+        Returns the reference to the active session (alias for RefactorNameForm.parent()).
+        :rtype: Session
+        """
+        return self.parent()
+
+    #############################################
     #   SLOTS
     #################################
 
@@ -343,11 +384,10 @@ class ValueForm(QDialog):
         """
         node = self.node
         diagram = node.diagram
-        project = node.project
         datatype = self.datatypeField.currentData()
         value = self.valueField.value()
         data = node.compose(value, datatype)
         if node.text() != data:
             name = 'change {0} to {1}'.format(node.text(), data)
-            project.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+            self.session.undoStack.push(CommandLabelChange(diagram, node, node.text(), data, name))
         super().accept()

@@ -175,7 +175,7 @@ class FacetQuotedLabel(NodeLabel):
                 undo = item.compose(self.focusInFacet, focusInData)
                 redo = item.compose(self.focusInFacet, currentData)
                 command = CommandLabelChange(self.diagram, self.parentItem(), undo, redo)
-                self.project.undoStack.push(command)
+                self.session.undoStack.push(command)
 
             self.focusInData = None
             self.focusInFacet = None

@@ -45,14 +45,30 @@ class Clipboard(QObject):
     PasteOffsetX = 20
     PasteOffsetY = 10
 
-    def __init__(self, parent=None):
+    def __init__(self, session):
         """
         Initialize the clipboard.
-        :type parent: QObject
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
         self.edges = {}
         self.nodes = {}
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def session(self):
+        """
+        Returns the reference to the active session (alias for Clipboard.parent()).
+        :rtype: Session
+        """
+        return self.parent()
+
+    #############################################
+    #   INTERFACE
+    #################################
 
     def clear(self):
         """
@@ -148,7 +164,7 @@ class Clipboard(QObject):
             diagram.pasteX += self.PasteOffsetX
             diagram.pasteY += self.PasteOffsetY
 
-        diagram.project.undoStack.push(CommandItemsAdd(diagram, items))
+        self.session.undoStack.push(CommandItemsAdd(diagram, items))
 
     def size(self):
         """

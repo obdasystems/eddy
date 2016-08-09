@@ -316,10 +316,4 @@ class ProjectLoader(AbstractLoader):
         self.importModulesFromXML()
         self.importMetaFromXML()
 
-        #############################################
-        # CONFIGURE PROJECT SIGNALS
-        #################################
-
-        connect(self.project.undoStack.cleanChanged, self.session.doUpdateState)
-
         return self.project
