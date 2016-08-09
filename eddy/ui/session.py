@@ -808,6 +808,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
                             LOGGER.info('Plugin started: %s v%s', p.name(), p.version())
                             self.addPlugin(p)
 
+                    pluginList = self.plugins()
+                    if pluginList:
+                        LOGGER.info('%s plugin(s) started: %s', len(pluginList), ', '.join(p.name() for p in pluginList))
+
     def initSignals(self):
         """
         Connect session specific signals to their slots.
