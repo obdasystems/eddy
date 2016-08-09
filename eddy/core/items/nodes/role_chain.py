@@ -33,15 +33,13 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QPointF, QRectF
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPolygonF
+from PyQt5.QtCore import QPointF
 
-from eddy.core.datatypes.misc import Brush, Pen
+from eddy.core.datatypes.misc import Brush
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.operator import OperatorNode
 from eddy.core.items.nodes.common.label import NodeLabel
-from eddy.core.datatypes.qt import Font
 
 
 class RoleChainNode(OperatorNode):
@@ -109,43 +107,6 @@ class RoleChainNode(OperatorNode):
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
-
-    @classmethod
-    def icon(cls, width, height, **kwargs):
-        """
-        Returns an icon of this item suitable for the palette.
-        :type width: int
-        :type height: int
-        :rtype: QIcon
-        """
-        icon = QIcon()
-        for i in (1.0, 2.0):
-            # CREATE THE PIXMAP
-            pixmap = QPixmap(width * i, height * i)
-            pixmap.setDevicePixelRatio(i)
-            pixmap.fill(Qt.transparent)
-            # PAINT THE SHAPE
-            painter = QPainter(pixmap)
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(Pen.SolidBlack1Pt)
-            painter.setBrush(Brush.White255A)
-            painter.translate(width / 2, height / 2)
-            painter.drawPolygon(QPolygonF([
-                QPointF(-23, 0),
-                QPointF(-23 + 6, +15),
-                QPointF(+23 - 6, +15),
-                QPointF(+23, 0),
-                QPointF(+23 - 6, -15),
-                QPointF(-23 + 6, -15),
-                QPointF(-23, 0),
-            ]))
-            # PAINT THE TEXT INSIDE THE SHAPE
-            painter.setFont(Font('Arial', 11, Font.Light))
-            painter.drawText(QRectF(-23, -15, 46, 30), Qt.AlignCenter, 'chain')
-            painter.end()
-            # ADD THE PIXMAP TO THE ICON
-            icon.addPixmap(pixmap)
-        return icon
 
     def removeEdge(self, edge):
         """

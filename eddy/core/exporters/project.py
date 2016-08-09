@@ -79,10 +79,7 @@ class ProjectExporter(AbstractExporter):
         self.metaFuncForItem = {
             Item.AttributeNode: self.exportAttributeMetadata,
             Item.ConceptNode: self.exportPredicateMeta,
-            Item.IndividualNode: self.exportPredicateMeta,
             Item.RoleNode: self.exportRoleMetadata,
-            Item.ValueDomainNode: self.exportPredicateMeta,
-            Item.ValueRestrictionNode: self.exportPredicateMeta,
         }
 
         self.itemToXml = {
@@ -102,7 +99,6 @@ class ProjectExporter(AbstractExporter):
             Item.RoleInverseNode: 'role-inverse',
             Item.UnionNode: 'union',
             Item.ValueDomainNode: 'value-domain',
-            Item.ValueRestrictionNode: 'value-restriction',
             Item.InclusionEdge: 'inclusion',
             Item.InputEdge: 'input',
             Item.MembershipEdge: 'membership',

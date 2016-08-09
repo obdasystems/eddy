@@ -33,8 +33,8 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainter, QPainterPath, QIcon
+from PyQt5.QtCore import QRectF
+from PyQt5.QtGui import QPainter, QPainterPath
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import Brush, Pen
@@ -42,7 +42,6 @@ from eddy.core.datatypes.owl import Datatype
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.polygon import Polygon
-from eddy.core.datatypes.qt import Font
 
 
 class ValueDomainNode(AbstractNode):
@@ -128,35 +127,6 @@ class ValueDomainNode(AbstractNode):
         :rtype: int
         """
         return self.polygon.geometry().height()
-
-    @classmethod
-    def icon(cls, width, height, **kwargs):
-        """
-        Returns an icon of this item suitable for the palette.
-        :type width: int
-        :type height: int
-        :rtype: QIcon
-        """
-        icon = QIcon()
-        for i in (1.0, 2.0):
-            # CREATE THE PIXMAP
-            pixmap = QPixmap(width * i, height * i)
-            pixmap.setDevicePixelRatio(i)
-            pixmap.fill(Qt.transparent)
-            # PAINT THE SHAPE
-            painter = QPainter(pixmap)
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(Pen.SolidBlack1Pt)
-            painter.setBrush(Brush.White255A)
-            painter.translate(width / 2, height / 2)
-            painter.drawRoundedRect(QRectF(-27, -17, 54, 34), 6, 6)
-            # PAINT THE TEXT INSIDE THE SHAPE
-            painter.setFont(Font('Arial', 10, Font.Light))
-            painter.drawText(QRectF(-27, -17, 54, 34), Qt.AlignCenter, 'xsd:string')
-            painter.end()
-            # ADD THE PIXMAP TO THE ICON
-            icon.addPixmap(pixmap)
-        return icon
 
     def paint(self, painter, option, widget=None):
         """

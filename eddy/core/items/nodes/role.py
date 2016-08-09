@@ -34,7 +34,7 @@
 
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
-from PyQt5.QtGui import QPolygonF, QPainterPath, QPixmap, QPainter, QIcon
+from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
 
 from eddy.core.datatypes.graphol import Item, Special, Identity
 from eddy.core.datatypes.misc import Brush, Pen
@@ -42,7 +42,6 @@ from eddy.core.functions.misc import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.polygon import Polygon
-from eddy.core.datatypes.qt import Font
 
 
 class RoleNode(AbstractResizableNode):
@@ -291,40 +290,6 @@ class RoleNode(AbstractResizableNode):
         """
         polygon = self.polygon.geometry()
         return polygon[self.IndexB].y() - polygon[self.IndexT].y()
-
-    @classmethod
-    def icon(cls, width, height, **kwargs):
-        """
-        Returns an icon of this item suitable for the palette.
-        :type width: int
-        :type height: int
-        :rtype: QIcon
-        """
-        icon = QIcon()
-        for i in (1.0, 2.0):
-            # CREATE THE PIXMAP
-            pixmap = QPixmap(width * i, height * i)
-            pixmap.setDevicePixelRatio(i)
-            pixmap.fill(Qt.transparent)
-            # PAINT THE SHAPE
-            painter = QPainter(pixmap)
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(Pen.SolidBlack1_1Pt)
-            painter.setBrush(Brush.White255A)
-            painter.translate(width / 2, height / 2)
-            painter.drawPolygon(QPolygonF([QPointF(-23, 0),
-                QPointF(0, +17),
-                QPointF(+23, 0),
-                QPointF(0, -17),
-                QPointF(-23, 0)
-            ]))
-            # PAINT THE TEXT INSIDE THE SHAPE
-            painter.setFont(Font('Arial', 11, Font.Light))
-            painter.drawText(QRectF(-23, -17, 46, 34), Qt.AlignCenter, 'role')
-            painter.end()
-            # ADD THE PIXMAP TO THE ICON
-            icon.addPixmap(pixmap)
-        return icon
 
     def paint(self, painter, option, widget=None):
         """

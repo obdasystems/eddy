@@ -260,8 +260,8 @@ class SyntaxValidationDialog(QDialog):
                 except IndexError:
                     pass
             self.session.doFocusDiagram(item.diagram)
-            self.session.mdi.activeView.centerOn(focus)
-            self.session.mdi.activeDiagram.clearSelection()
+            self.session.mdi.activeView().centerOn(focus)
+            self.session.mdi.activeDiagram().clearSelection()
             item.setSelected(True)
         self.close()
 

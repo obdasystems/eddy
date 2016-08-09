@@ -63,13 +63,12 @@ class MdiArea(QMdiArea):
                 break
 
     #############################################
-    #   PROPERTIES
+    #   INTERFACE
     #################################
 
-    @property
     def activeDiagram(self):
         """
-        Returns active diagram.
+        Returns the reference to the active diagram, or None if there is no active diagram..
         :rtype: Diagram
         """
         subwindow = self.activeSubWindow()
@@ -79,20 +78,15 @@ class MdiArea(QMdiArea):
                 return view.scene()
         return None
 
-    @property
     def activeView(self):
         """
-        Returns active diagram view.
+        Returns the reference to the active diagram view, or None if there is no active view.
         :rtype: DiagramView
         """
         subwindow = self.activeSubWindow()
         if subwindow:
             return subwindow.widget()
         return None
-
-    #############################################
-    #   INTERFACE
-    #################################
 
     def addSubWindow(self, subwindow, flags=0):
         """

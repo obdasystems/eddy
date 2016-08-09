@@ -184,61 +184,6 @@ QDockWidget DockTitleWidget QToolButton::menu-indicator {
 image: none;
 }
 /**************************************************************************/
-/*                                PALETTE                                 */
-/**************************************************************************/
-QDockWidget Palette {
-background: #F0F0F0;
-}
-QDockWidget Palette QToolButton:checked {
-background: #42A5F5;
-}
-/**************************************************************************/
-/*                              INFO WIDGET                               */
-/**************************************************************************/
-Info {
-background: #FFFFFF;
-}
-Info Header {
-background: #5A5050;
-padding-left: 4px;
-color: #FFFFFF;
-}
-Info Key {
-background: #BBDEFB;
-border-bottom: 1px solid #BABABA;
-padding-left: 4px;
-}
-Info Button,
-Info Integer,
-Info String,
-Info Select,
-Info Parent {
-background: #E3F2FD;
-border-bottom: 1px solid #BABABA;
-border-left: 1px solid #BABABA;
-padding-left: 4px;
-}
-Info Button {
-text-align:left;
-}
-Info Button::menu-indicator {
-image: none;
-}
-Info Select:!editable,
-Info Select::drop-down:editable {
- background: #FFFFFF;
-}
-Info Select:!editable:on,
-Info Select::drop-down:editable:on {
-background: #FFFFFF;
-}
-Info QCheckBox {
-background: #FFFFFF;
-spacing: 0;
-margin-left: 4px;
-margin-top: 2px;
-}
-/**************************************************************************/
 /*                              PREFERENCES                               */
 /**************************************************************************/
 PreferencesDialog QTabWidget::pane {

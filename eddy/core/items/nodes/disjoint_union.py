@@ -33,10 +33,9 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPolygonF
+from PyQt5.QtCore import QPointF
 
-from eddy.core.datatypes.misc import Brush, Pen
+from eddy.core.datatypes.misc import Brush
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.operator import OperatorNode
 
@@ -93,40 +92,6 @@ class DisjointUnionNode(OperatorNode):
         })
         node.setPos(self.pos())
         return node
-
-    @classmethod
-    def icon(cls, width, height, **kwargs):
-        """
-        Returns an icon of this item suitable for the palette.
-        :type width: int
-        :type height: int
-        :rtype: QIcon
-        """
-        icon = QIcon()
-        for i in (1.0, 2.0):
-            # CREATE THE PIXMAP
-            pixmap = QPixmap(width * i, height * i)
-            pixmap.setDevicePixelRatio(i)
-            pixmap.fill(Qt.transparent)
-            # PAINT THE SHAPE
-            painter = QPainter(pixmap)
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(Pen.SolidBlack1Pt)
-            painter.setBrush(Brush.Black255A)
-            painter.translate(width / 2, height / 2)
-            painter.drawPolygon(QPolygonF([
-                QPointF(-23, 0),
-                QPointF(-23 + 6, +15),
-                QPointF(+23 - 6, +15),
-                QPointF(+23, 0),
-                QPointF(+23 - 6, -15),
-                QPointF(-23 + 6, -15),
-                QPointF(-23, 0),
-            ]))
-            painter.end()
-            # ADD THE PIXMAP TO THE ICON
-            icon.addPixmap(pixmap)
-        return icon
 
     def setText(self, text):
         """

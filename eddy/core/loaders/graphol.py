@@ -90,7 +90,6 @@ class GrapholLoader(AbstractLoader):
             Item.RoleInverseNode: self.buildRoleInverseNode,
             Item.UnionNode: self.buildUnionNode,
             Item.ValueDomainNode: self.buildValueDomainNode,
-            Item.ValueRestrictionNode: self.buildFacetNode,
             Item.InclusionEdge: self.buildInclusionEdge,
             Item.InputEdge: self.buildInputEdge,
             Item.MembershipEdge: self.buildMembershipEdge,
@@ -114,7 +113,7 @@ class GrapholLoader(AbstractLoader):
             'role-inverse': Item.RoleInverseNode,
             'union': Item.UnionNode,
             'value-domain': Item.ValueDomainNode,
-            'value-restriction': Item.ValueRestrictionNode,
+            'value-restriction': Item.FacetNode,
             'inclusion': Item.InclusionEdge,
             'input': Item.InputEdge,
             'instance-of': Item.MembershipEdge,
@@ -557,8 +556,6 @@ class GrapholLoader(AbstractLoader):
 
         connect(self.diagram.sgnItemAdded, self.project.doAddItem)
         connect(self.diagram.sgnItemRemoved, self.project.doRemoveItem)
-        connect(self.diagram.sgnActionCompleted, self.session.onDiagramActionCompleted)
-        connect(self.diagram.sgnModeChanged, self.session.onDiagramModeChanged)
         connect(self.diagram.selectionChanged, self.session.doUpdateState)
 
         LOGGER.debug('Diagram created: %s', self.diagram.name)

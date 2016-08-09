@@ -34,14 +34,13 @@
 
 
 from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPainterPath
+from PyQt5.QtGui import QPainter, QPainterPath
 
 from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.polygon import Polygon
-from eddy.core.datatypes.qt import Font
 
 
 class AttributeNode(AbstractNode):
@@ -150,36 +149,6 @@ class AttributeNode(AbstractNode):
         :rtype: int
         """
         return self.polygon.geometry().height()
-
-    @classmethod
-    def icon(cls, width, height, **kwargs):
-        """
-        Returns an icon of this item suitable for the palette.
-        :type width: int
-        :type height: int
-        :rtype: QIcon
-        """
-        icon = QIcon()
-        for i in (1.0, 2.0):
-            # CREATE THE PIXMAP
-            pixmap = QPixmap(width * i, height * i)
-            pixmap.setDevicePixelRatio(i)
-            pixmap.fill(Qt.transparent)
-            # PAINT THE TEXT ABOVE THE SHAPE
-            painter = QPainter(pixmap)
-            painter.setFont(Font('Arial', 9, Font.Light))
-            painter.translate(0, 0)
-            painter.drawText(QRectF(0, 0, width, height / 2), Qt.AlignCenter, 'attribute')
-            # PAINT THE SHAPE
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(Pen.SolidBlack1_1Pt)
-            painter.setBrush(Brush.White255A)
-            painter.translate(width / 2, height / 2 + 6)
-            painter.drawEllipse(QRectF(-9, -9, 18, 18))
-            painter.end()
-            # ADD THE PIXMAP TO THE ICON
-            icon.addPixmap(pixmap)
-        return icon
 
     def paint(self, painter, option, widget=None):
         """

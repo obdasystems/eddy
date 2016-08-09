@@ -44,7 +44,7 @@ from PyQt5.QtWidgets import QApplication, QMessageBox
 from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE
 from eddy.core.exceptions import ProjectNotFoundError
 from eddy.core.exceptions import ProjectNotValidError
-from eddy.core.functions.fsystem import isdir
+from eddy.core.functions.fsystem import is_dir
 from eddy.core.functions.misc import isEmpty, format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
@@ -163,7 +163,7 @@ class Eddy(QApplication):
             # filesystem. If they do not exists we remove them from our recent list.
             recentList = []
             for path in map(expandPath, settings.value('project/recent')):
-                if isdir(path):
+                if is_dir(path):
                     recentList.append(path)
 
             settings.setValue('project/recent', recentList or examples)
@@ -192,7 +192,7 @@ class Eddy(QApplication):
         #################################
 
         workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
-        if not isdir(workspace):
+        if not is_dir(workspace):
             window = WorkspaceDialog()
             if window.exec_() == WorkspaceDialog.Rejected:
                 raise SystemExit
@@ -233,7 +233,7 @@ class Eddy(QApplication):
         """
         self.welcome = Welcome(self)
         self.welcome.show()
-        if options.open and isdir(options.open):
+        if options.open and is_dir(options.open):
             self.doCreateSession(options.open)
 
     #############################################

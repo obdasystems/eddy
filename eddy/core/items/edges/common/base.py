@@ -253,17 +253,6 @@ class AbstractEdge(AbstractItem):
         b = QPointF(-x, -y)
         return QPolygonF([p1 + a, p1 + b, p2 + b, p2 + a])
 
-    @classmethod
-    @abstractmethod
-    def icon(cls, width, height, **kwargs):
-        """
-        Returns an icon of this item suitable for the palette.
-        :type width: int
-        :type height: int
-        :rtype: QIcon
-        """
-        pass
-
     def isSwapAllowed(self):
         """
         Returns True if this edge can be swapped, False otherwise.

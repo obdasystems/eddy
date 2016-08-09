@@ -33,23 +33,103 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QSortFilterProxyModel, Qt, QSize
-from PyQt5.QtCore import pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QPainter, QStandardItemModel, QStandardItem, QIcon
-from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout
-from PyQt5.QtWidgets import QStyleOption, QStyle, QApplication
-from PyQt5.QtWidgets import QHeaderView, QAction, QMenu
+from PyQt5.QtCore import Qt, QSize, QSortFilterProxyModel, pyqtSlot, pyqtSignal
+from PyQt5.QtGui import QIcon, QPainter, QStandardItem, QStandardItemModel
+from PyQt5.QtWidgets import QApplication, QHeaderView, QTreeView, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QStyleOption, QStyle
+
+from verlib import NormalizedVersion
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
-from eddy.core.functions.misc import first, cutR
+from eddy.core.functions.misc import cutR, first
 from eddy.core.functions.signals import connect
+from eddy.core.plugin import AbstractPlugin
 
+from eddy.ui.dock import DockWidget
 from eddy.ui.fields import StringField
 
 
-class OntologyExplorer(QWidget):
+class OntologyExplorer(AbstractPlugin):
+    """
+    This plugin provides the Ontology Explorer widget.
+    """
+    def __init__(self, session):
+        """
+        Initialize the plugin.
+        :type session: session
+        """
+        super().__init__(session)
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @classmethod
+    def name(cls):
+        """
+        Returns the readable name of the plugin.
+        :rtype: str
+        """
+        return 'Ontology Explorer'
+
+    def objectName(self):
+        """
+        Returns the system name of the plugin.
+        :rtype: str
+        """
+        return 'ontology_explorer'
+
+    def startup(self):
+        """
+        Perform initialization tasks for the plugin.
+        """
+        # INITIALIZE THE WIDGET
+        self.debug('Creating ontology explorer widget')
+        widget = OntologyExplorerWidget(self)
+        widget.setObjectName('ontology_explorer')
+        self.addWidget(widget)
+
+        # CREATE DOCKING AREA WIDGET
+        self.debug('Creating docking area widget')
+        widget = DockWidget('Ontology Explorer', QIcon(':icons/18/ic_explore_black'), self.session)
+        widget.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        widget.setObjectName('ontology_explorer_dock')
+        widget.setWidget(self.widget('ontology_explorer'))
+        self.addWidget(widget)
+
+        # CREATE ENTRY IN VIEW MENU
+        self.debug('Creating docking area widget toggle in "view" menu')
+        menu = self.session.menu('view')
+        menu.addAction(self.widget('ontology_explorer_dock').toggleViewAction())
+
+        # CONFIGURE SIGNALS/SLOTS
+        self.debug('Configuring Session and Project specific signals/slots')
+        connect(self.widget('ontology_explorer').sgnItemDoubleClicked, self.session.doFocusItem)
+        connect(self.widget('ontology_explorer').sgnItemRightClicked, self.session.doFocusItem)
+        connect(self.project.sgnItemAdded, self.widget('ontology_explorer').doAddNode)
+        connect(self.project.sgnItemRemoved, self.widget('ontology_explorer').doRemoveNode)
+        for node in self.project.nodes():
+            # FIXME: do not call slot directly
+            self.widget('ontology_explorer').doAddNode(node.diagram, node)
+
+        # CREATE DOCKING AREA WIDGET
+        self.debug('Installing docking area widget')
+        self.session.addDockWidget(Qt.RightDockWidgetArea, self.widget('ontology_explorer_dock'))
+
+        super().startup()
+
+    @classmethod
+    def version(cls):
+        """
+        Returns the version of the plugin.
+        :rtype: NormalizedVersion
+        """
+        return NormalizedVersion('0.1')
+
+
+class OntologyExplorerWidget(QWidget):
     """
     This class implements the ontology explorer used to list ontology predicates.
     """
@@ -57,14 +137,14 @@ class OntologyExplorer(QWidget):
     sgnItemDoubleClicked = pyqtSignal('QGraphicsItem')
     sgnItemRightClicked = pyqtSignal('QGraphicsItem')
 
-    def __init__(self, session):
+    def __init__(self, plugin):
         """
-        Initialize the ontology explorer.
-        :type session: Session
+        Initialize the ontology explorer widget.
+        :type plugin: Session
         """
-        super().__init__(session)
+        super().__init__(plugin.session)
 
-        self.session = session
+        self.plugin = plugin
 
         self.iconAttribute = QIcon(':/icons/18/ic_treeview_attribute')
         self.iconCconcept = QIcon(':/icons/18/ic_treeview_concept')
@@ -93,9 +173,33 @@ class OntologyExplorer(QWidget):
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumWidth(216)
 
+        header = self.ontoview.header()
+        header.setStretchLastSection(False)
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+
         connect(self.ontoview.doubleClicked, self.onItemDoubleClicked)
         connect(self.ontoview.pressed, self.onItemPressed)
         connect(self.search.textChanged, self.doFilterItem)
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def project(self):
+        """
+        Returns the reference to the active project.
+        :rtype: Session
+        """
+        return self.session.project
+
+    @property
+    def session(self):
+        """
+        Returns the reference to the active session.
+        :rtype: Session
+        """
+        return self.plugin.parent()
 
     #############################################
     #   EVENTS
@@ -188,21 +292,6 @@ class OntologyExplorer(QWidget):
     #   INTERFACE
     #################################
 
-    def browse(self, project):
-        """
-        Set the ontology explorer to browse the given project.
-        :type project: Project
-        """
-        for node in project.nodes():
-            self.doAddNode(node.diagram, node)
-
-        header = self.ontoview.header()
-        header.setStretchLastSection(False)
-        header.setSectionResizeMode(QHeaderView.ResizeToContents)
-
-        connect(project.sgnItemAdded, self.doAddNode)
-        connect(project.sgnItemRemoved, self.doRemoveNode)
-
     def childFor(self, parent, diagram, node):
         """
         Search the item representing this node among parent children.
@@ -279,12 +368,12 @@ class OntologyExplorerView(QTreeView):
     """
     This class implements the ontology explorer tree view.
     """
-    def __init__(self, parent):
+    def __init__(self, widget):
         """
         Initialize the ontology explorer view.
-        :type parent: QWidget
+        :type widget: OntologyExplorerWidget
         """
-        super().__init__(parent)
+        super().__init__(widget)
         self.setContextMenuPolicy(Qt.PreventContextMenu)
         self.setEditTriggers(QTreeView.NoEditTriggers)
         self.setFont(Font('Arial', 12))
@@ -312,7 +401,7 @@ class OntologyExplorerView(QTreeView):
     def widget(self):
         """
         Returns the reference to the OntologyExplorer widget.
-        :rtype: OntologyExplorer
+        :rtype: OntologyExplorerWidget
         """
         return self.parent()
 
@@ -341,272 +430,8 @@ class OntologyExplorerView(QTreeView):
                 item = model.itemFromIndex(index)
                 node = item.data()
                 if node:
-                    self.widget.sgnItemRightClicked['QGraphicsItem'].emit(node)
+                    self.widget.sgnItemRightClicked.emit(node)
                     menu = self.session.mf.create(node.diagram, node)
-                    menu.exec_(mouseEvent.screenPos().toPoint())
-
-        super().mouseReleaseEvent(mouseEvent)
-
-    #############################################
-    #   INTERFACE
-    #################################
-
-    def sizeHintForColumn(self, column):
-        """
-        Returns the size hint for the given column.
-        This will make the column of the treeview as wide as the widget that contains the view.
-        :type column: int
-        :rtype: int
-        """
-        return max(super().sizeHintForColumn(column), self.viewport().width())
-
-
-class ProjectExplorer(QWidget):
-    """
-    This class implements the project explorer used to display the project structure.
-    """
-    sgnItemClicked = pyqtSignal('QGraphicsScene')
-    sgnItemDoubleClicked = pyqtSignal('QGraphicsScene')
-
-    def __init__(self, session):
-        """
-        Initialize the project explorer.
-        :type session: Session
-        """
-        super().__init__(session)
-
-        self.session = session
-
-        self.arial12r = Font('Arial', 12)
-        self.arial12b = Font('Arial', 12)
-        self.arial12b.setBold(True)
-
-        self.iconRoot = QIcon(':/icons/18/ic_folder_open_black')
-        self.iconBlank = QIcon(':/icons/18/ic_document_blank')
-        self.iconGraphol = QIcon(':/icons/18/ic_document_graphol')
-        self.iconOwl = QIcon(':/icons/18/ic_document_owl')
-        self.iconDelete = QIcon(':/icons/24/ic_delete_black')
-        self.iconRename = QIcon(':/icons/24/ic_label_outline_black')
-
-        self.actionRenameDiagram = QAction('Rename...', self)
-        self.actionRenameDiagram.setIcon(self.iconRename)
-        connect(self.actionRenameDiagram.triggered, self.session.doRenameDiagram)
-        self.actionDeleteDiagram = QAction('Delete...', self)
-        self.actionDeleteDiagram.setIcon(self.iconDelete)
-        connect(self.actionDeleteDiagram.triggered, self.session.doRemoveDiagram)
-        
-        self.root = QStandardItem()
-        self.root.setFlags(self.root.flags() & ~Qt.ItemIsEditable)
-        self.root.setFont(self.arial12b)
-        self.root.setIcon(self.iconRoot)
-
-        self.model = QStandardItemModel(self)
-        self.proxy = QSortFilterProxyModel(self)
-        self.proxy.setDynamicSortFilter(False)
-        self.proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        self.proxy.setSortCaseSensitivity(Qt.CaseSensitive)
-        self.proxy.setSourceModel(self.model)
-        self.projectview = ProjectExplorerView(self)
-        self.projectview.setModel(self.proxy)
-        self.mainLayout = QVBoxLayout(self)
-        self.mainLayout.setContentsMargins(0, 0, 0, 0)
-        self.mainLayout.addWidget(self.projectview)
-
-        self.setContentsMargins(0, 0, 0, 0)
-        self.setMinimumWidth(216)
-
-        header = self.projectview.header()
-        header.setStretchLastSection(False)
-        header.setSectionResizeMode(QHeaderView.ResizeToContents)
-
-        connect(self.projectview.doubleClicked, self.onItemDoubleClicked)
-        connect(self.projectview.pressed, self.onItemPressed)
-
-    #############################################
-    #   SLOTS
-    #################################
-
-    @pyqtSlot('QGraphicsScene')
-    def doAddDiagram(self, diagram):
-        """
-        Add a diagram in the treeview.
-        :type diagram: Diagram
-        """
-        if not self.findItem(diagram.name):
-            item = QStandardItem(diagram.name)
-            item.setData(diagram)
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-            item.setFont(self.arial12r)
-            item.setIcon(self.iconGraphol)
-            self.root.appendRow(item)
-            self.proxy.sort(0, Qt.AscendingOrder)
-
-    @pyqtSlot('QGraphicsScene')
-    def doRemoveDiagram(self, diagram):
-        """
-        Remove a diagram from the treeview.
-        :type diagram: Diagram
-        """
-        item = self.findItem(diagram.name)
-        if item:
-            self.root.removeRow(item.index().row())
-
-    @pyqtSlot('QModelIndex')
-    def onItemDoubleClicked(self, index):
-        """
-        Executed when an item in the treeview is double clicked.
-        :type index: QModelIndex
-        """
-        # noinspection PyArgumentList
-        if QApplication.mouseButtons() & Qt.LeftButton:
-            item = self.model.itemFromIndex(self.proxy.mapToSource(index))
-            if item and item.data():
-                self.sgnItemDoubleClicked.emit(item.data())
-
-    @pyqtSlot('QModelIndex')
-    def onItemPressed(self, index):
-        """
-        Executed when an item in the treeview is clicked.
-        :type index: QModelIndex
-        """
-        # noinspection PyArgumentList
-        if QApplication.mouseButtons() & Qt.LeftButton:
-            item = self.model.itemFromIndex(self.proxy.mapToSource(index))
-            if item and item.data():
-                self.sgnItemClicked.emit(item.data())
-
-    #############################################
-    #   EVENTS
-    #################################
-
-    def paintEvent(self, paintEvent):
-        """
-        This is needed for the widget to pick the stylesheet.
-        :type paintEvent: QPaintEvent
-        """
-        option = QStyleOption()
-        option.initFrom(self)
-        painter = QPainter(self)
-        style = self.style()
-        style.drawPrimitive(QStyle.PE_Widget, option, painter, self)
-
-    #############################################
-    #   INTERFACE
-    #################################
-
-    def browse(self, project):
-        """
-        Set the project explorer to browse the given project.
-        :type project: Project
-        """
-        self.model.clear()
-        self.model.appendRow(self.root)
-        self.root.setText(project.name)
-
-        for diagram in project.diagrams():
-            self.doAddDiagram(diagram)
-
-        sindex = self.root.index()
-        pindex = self.proxy.mapFromSource(sindex)
-        self.projectview.expand(pindex)
-
-        connect(project.sgnDiagramAdded, self.doAddDiagram)
-        connect(project.sgnDiagramRemoved, self.doRemoveDiagram)
-
-    def findItem(self, name):
-        """
-        Find the item with the given name inside the root element.
-        :type name: str
-        """
-        for i in range(self.root.rowCount()):
-            item = self.root.child(i)
-            if item.text() == name:
-                return item
-        return None
-
-    def sizeHint(self):
-        """
-        Returns the recommended size for this widget.
-        :rtype: QSize
-        """
-        return QSize(216, 266)
-
-
-class ProjectExplorerView(QTreeView):
-    """
-    This class implements the project explorer tree view.
-    """
-    def __init__(self, parent):
-        """
-        Initialize the project explorer view.
-        :type parent: QWidget
-        """
-        super().__init__(parent)
-        self.setContextMenuPolicy(Qt.PreventContextMenu)
-        self.setEditTriggers(QTreeView.NoEditTriggers)
-        self.setFocusPolicy(Qt.NoFocus)
-        self.setHeaderHidden(True)
-        self.setHorizontalScrollMode(QTreeView.ScrollPerPixel)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.setSelectionMode(QTreeView.SingleSelection)
-        self.setSortingEnabled(True)
-        self.setWordWrap(True)
-
-    #############################################
-    #   PROPERTIES
-    #################################
-
-    @property
-    def session(self):
-        """
-        Returns the reference to the Session holding the ProjectExplorer widget.
-        :rtype: Session
-        """
-        return self.widget.session
-
-    @property
-    def widget(self):
-        """
-        Returns the reference to the ProjectExplorer widget.
-        :rtype: ProjectExplorer
-        """
-        return self.parent()
-
-    #############################################
-    #   EVENTS
-    #################################
-
-    def mousePressEvent(self, mouseEvent):
-        """
-        Executed when the mouse is pressed on the treeview.
-        :type mouseEvent: QMouseEvent
-        """
-        self.clearSelection()
-        super().mousePressEvent(mouseEvent)
-
-    def mouseReleaseEvent(self, mouseEvent):
-        """
-        Executed when the mouse is released from the tree view.
-        :type mouseEvent: QMouseEvent
-        """
-        if mouseEvent.button() == Qt.RightButton:
-            index = first(self.selectedIndexes())
-            if index:
-                model = self.model().sourceModel()
-                index = self.model().mapToSource(index)
-                item = model.itemFromIndex(index)
-                diagram = item.data()
-                if diagram:
-                    menu = QMenu()
-                    menu.addAction(self.session.action('new_diagram'))
-                    menu.addSeparator()
-                    menu.addAction(self.widget.actionRenameDiagram)
-                    menu.addAction(self.widget.actionDeleteDiagram)
-                    menu.addSeparator()
-                    menu.addAction(self.session.action('diagram_properties'))
-                    self.widget.actionRenameDiagram.setData(diagram)
-                    self.widget.actionDeleteDiagram.setData(diagram)
-                    self.session.action('diagram_properties').setData(diagram)
                     menu.exec_(mouseEvent.screenPos().toPoint())
 
         super().mouseReleaseEvent(mouseEvent)

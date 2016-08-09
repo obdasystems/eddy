@@ -44,7 +44,7 @@ from eddy.core.exceptions import ProjectNotValidError
 from eddy.core.exceptions import DiagramNotFoundError
 from eddy.core.exceptions import DiagramNotValidError
 from eddy.core.functions.path import expandPath
-from eddy.core.functions.fsystem import fread, fexists, isdir
+from eddy.core.functions.fsystem import fread, fexists, is_dir
 from eddy.core.functions.signals import connect
 from eddy.core.loaders.common import AbstractLoader
 from eddy.core.loaders.graphol import GrapholLoader
@@ -90,10 +90,7 @@ class ProjectLoader(AbstractLoader):
         self.metaFuncForItem = {
             Item.AttributeNode: self.buildAttributeMetadata,
             Item.ConceptNode: self.buildPredicateMetadata,
-            Item.IndividualNode: self.buildPredicateMetadata,
             Item.RoleNode: self.buildRoleMetadata,
-            Item.ValueDomainNode: self.buildPredicateMetadata,
-            Item.ValueRestrictionNode: self.buildPredicateMetadata,
         }
 
         self.itemFromXml = {
@@ -104,6 +101,7 @@ class ProjectLoader(AbstractLoader):
             'disjoint-union': Item.DisjointUnionNode,
             'domain-restriction': Item.DomainRestrictionNode,
             'enumeration': Item.EnumerationNode,
+            'facet': Item.FacetNode,
             'individual': Item.IndividualNode,
             'intersection': Item.IntersectionNode,
             'property-assertion': Item.PropertyAssertionNode,
@@ -113,7 +111,6 @@ class ProjectLoader(AbstractLoader):
             'role-inverse': Item.RoleInverseNode,
             'union': Item.UnionNode,
             'value-domain': Item.ValueDomainNode,
-            'value-restriction': Item.ValueRestrictionNode,
             'inclusion': Item.InclusionEdge,
             'input': Item.InputEdge,
             'instance-of': Item.MembershipEdge,
@@ -305,10 +302,10 @@ class ProjectLoader(AbstractLoader):
         # VALIDATE PROJECT
         #################################
 
-        if not isdir(self.projectMainPath):
+        if not is_dir(self.projectMainPath):
             raise ProjectNotFoundError('project not found: {0}'.format(self.projectMainPath))
 
-        if not isdir(self.projectHomePath):
+        if not is_dir(self.projectHomePath):
             raise ProjectNotValidError('missing project home: {0}'.format(self.projectHomePath))
 
         #############################################
@@ -324,7 +321,5 @@ class ProjectLoader(AbstractLoader):
         #################################
 
         connect(self.project.undoStack.cleanChanged, self.session.doUpdateState)
-
-        LOGGER.separator('-')
 
         return self.project

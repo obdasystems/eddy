@@ -34,7 +34,7 @@
 
 
 from PyQt5.QtCore import QRectF, QPointF, Qt
-from PyQt5.QtGui import QPainterPath, QPainter, QPixmap, QIcon
+from PyQt5.QtGui import QPainterPath, QPainter
 
 from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Identity, Item, Special
@@ -42,7 +42,6 @@ from eddy.core.functions.misc import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.polygon import Polygon
-from eddy.core.datatypes.qt import Font
 
 
 class ConceptNode(AbstractResizableNode):
@@ -131,34 +130,6 @@ class ConceptNode(AbstractResizableNode):
         :rtype: int
         """
         return self.polygon.geometry().height()
-
-    @classmethod
-    def icon(cls, width, height, **kwargs):
-        """
-        Returns an icon of this item suitable for the palette.
-        :type width: int
-        :type height: int
-        :rtype: QIcon
-        """
-        icon = QIcon()
-        for i in (1.0, 2.0):
-            # CREATE THE PIXMAP
-            pixmap = QPixmap(width * i, height * i)
-            pixmap.setDevicePixelRatio(i)
-            pixmap.fill(Qt.transparent)
-            # PAINT THE SHAPE
-            painter = QPainter(pixmap)
-            painter.setPen(Pen.SolidBlack1Pt)
-            painter.setBrush(Brush.White255A)
-            painter.translate(width / 2, height / 2)
-            painter.drawRect(QRectF(-27, -17, 54, 34))
-            # PAINT THE TEXT INSIDE THE SHAPE
-            painter.setFont(Font('Arial', 11, Font.Light))
-            painter.drawText(QRectF(-27, -17, 54, 34), Qt.AlignCenter, 'concept')
-            painter.end()
-            # ADD THE PIXMAP TO THE ICON
-            icon.addPixmap(pixmap)
-        return icon
 
     def paint(self, painter, option, widget=None):
         """

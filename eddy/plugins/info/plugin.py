@@ -33,13 +33,14 @@
 ##########################################################################
 
 
-from abc import ABCMeta, abstractmethod
+from PyQt5.QtCore import Qt, QEvent, QSize, pyqtSlot
+from PyQt5.QtGui import QIcon, QPainter, QBrush, QColor
+from PyQt5.QtWidgets import QScrollArea, QStackedWidget, QWidget
+from PyQt5.QtWidgets import QStyleOption, QPushButton, QLabel, QStyle
+from PyQt5.QtWidgets import QFormLayout, QVBoxLayout, QMenu, QSizePolicy
 
-from PyQt5.QtCore import pyqtSlot, Qt, QEvent, QSize
-from PyQt5.QtGui import QBrush, QColor, QPainter
-from PyQt5.QtWidgets import QFormLayout, QSizePolicy, QLabel, QVBoxLayout
-from PyQt5.QtWidgets import QWidget, QPushButton, QMenu, QScrollArea, QStyle
-from PyQt5.QtWidgets import QStackedWidget, QStyleOption
+from abc import ABCMeta, abstractmethod
+from verlib import NormalizedVersion
 
 from eddy.core.commands.common import CommandSetProperty
 from eddy.core.commands.labels import CommandLabelChange
@@ -48,49 +49,215 @@ from eddy.core.commands.project import CommandProjectSetPrefix
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Facet, Datatype
 from eddy.core.datatypes.qt import BrushIcon, Font
-from eddy.core.diagram import Diagram
-from eddy.core.functions.misc import first, isEmpty, clamp
+from eddy.core.functions.misc import first, clamp, isEmpty
 from eddy.core.functions.signals import connect, disconnect
+from eddy.core.plugin import AbstractPlugin
 from eddy.core.project import Project
 from eddy.core.regex import RE_CAMEL_SPACE
 
-from eddy.ui.fields import IntegerField
-from eddy.ui.fields import StringField
-from eddy.ui.fields import CheckBox
-from eddy.ui.fields import ComboBox
+from eddy.ui.dock import DockWidget
+from eddy.ui.fields import IntegerField, StringField
+from eddy.ui.fields import CheckBox, ComboBox
 
 
-class Info(QScrollArea):
+class Info(AbstractPlugin):
     """
-    This class implements the information box.
+    This plugin provides the Info widget.
     """
-    Width = 216
-
     def __init__(self, session):
         """
-        Initialize the info box.
-        :type session: Session
+        Initialize the plugin.
+        :type session: session
         """
         super().__init__(session)
+
+    #############################################
+    #   EVENTS
+    #################################
+
+    def eventFilter(self, source, event):
+        """
+        Filters events if this object has been installed as an event filter for the watched object.
+        :type source: QObject
+        :type event: QEvent
+        :rtype: bool
+        """
+        if event.type() == QEvent.Resize:
+            widget = source.widget()
+            widget.redraw()
+        return super().eventFilter(source, event)
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @pyqtSlot()
+    def onDiagramItemAdded(self):
+        """
+        Executed whenever a new element is added to the active diagram.
+        """
+        self.widget('info').stack()
+
+    @pyqtSlot()
+    def onDiagramItemRemoved(self):
+        """
+        Executed whenever a new element is removed from the active diagram.
+        """
+        self.widget('info').stack()
+
+    @pyqtSlot()
+    def onDiagramSelectionChanged(self):
+        """
+        Executed whenever the selection of the active diagram changes.
+        """
+        self.widget('info').stack()
+
+    @pyqtSlot()
+    def onDiagramUpdated(self):
+        """
+        Executed whenever the active diagram is updated.
+        """
+        self.widget('info').stack()
+
+    @pyqtSlot()
+    def onProjectUpdated(self):
+        """
+        Executed whenever the current project is updated.
+        """
+        self.widget('info').stack()
+
+    @pyqtSlot('QMdiSubWindow')
+    def onSubWindowActivated(self, subwindow):
+        """
+        Executed when the active subwindow changes.
+        :type subwindow: MdiSubWindow
+        """
+        if subwindow:
+            # If we have an active subwindow, we change the info
+            # widget to browse the diagram within such subwindow.
+            widget = self.widget('info')
+            if widget.diagram:
+                # If the info widget is currently inspecting a
+                # diagram, detach signals from the subwindow which
+                # is going out of focus, before connecting new ones.
+                self.debug('Disconnecting from diagram: %s', widget.diagram.name)
+                disconnect(widget.diagram.selectionChanged, self.onDiagramSelectionChanged)
+                disconnect(widget.diagram.sgnItemAdded, self.onDiagramItemAdded)
+                disconnect(widget.diagram.sgnItemRemoved, self.onDiagramItemRemoved)
+                disconnect(widget.diagram.sgnUpdated, self.onDiagramUpdated)
+            # Attach the new view/diagram to the info widget.
+            self.debug('Connecting to diagram: %s', subwindow.diagram.name)
+            connect(subwindow.diagram.selectionChanged, self.onDiagramSelectionChanged)
+            connect(subwindow.diagram.sgnItemAdded, self.onDiagramItemAdded)
+            connect(subwindow.diagram.sgnItemRemoved, self.onDiagramItemRemoved)
+            connect(subwindow.diagram.sgnUpdated, self.onDiagramUpdated)
+            widget.setDiagram(subwindow.diagram)
+            widget.stack()
+        else:
+            if not self.session.mdi.subWindowList():
+                # If we don't have any active subwindow (which means that
+                # they have been all closed and not just out of focus) we
+                # detach the widget from the last inspected diagram.
+                widget = self.widget('info')
+                if widget.diagram:
+                    self.debug('Disconnecting from diagram: %s', widget.diagram.name)
+                    disconnect(widget.diagram.selectionChanged, self.onDiagramSelectionChanged)
+                    disconnect(widget.diagram.sgnItemAdded, self.onDiagramItemAdded)
+                    disconnect(widget.diagram.sgnItemRemoved, self.onDiagramItemRemoved)
+                    disconnect(widget.diagram.sgnUpdated, self.onDiagramUpdated)
+                widget.setDiagram(None)
+                widget.stack()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @classmethod
+    def name(cls):
+        """
+        Returns the readable name of the plugin.
+        :rtype: str
+        """
+        return 'Info'
+
+    def objectName(self):
+        """
+        Returns the system name of the plugin.
+        :rtype: str
+        """
+        return 'info'
+
+    def startup(self):
+        """
+        Perform initialization tasks for the plugin.
+        """
+        # INITIALIZE THE WIDGET
+        self.debug('Creating info widget')
+        widget = InfoWidget(self)
+        widget.setObjectName('info')
+        self.addWidget(widget)
+
+        # CREATE DOCKING AREA WIDGET
+        self.debug('Creating docking area widget')
+        widget = DockWidget('Info', QIcon(':/icons/18/ic_info_outline_black'), self.session)
+        widget.installEventFilter(self)
+        widget.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        widget.setObjectName('info_dock')
+        widget.setWidget(self.widget('info'))
+        self.addWidget(widget)
+
+        # CREATE ENTRY IN VIEW MENU
+        self.debug('Creating docking area widget toggle in "view" menu')
+        menu = self.session.menu('view')
+        menu.addAction(self.widget('info_dock').toggleViewAction())
+
+        # CONFIGURE SIGNAL/SLOTS
+        self.debug('Configuring MDI area and Project specific signals/slots')
+        connect(self.session.mdi.subWindowActivated, self.onSubWindowActivated)
+        connect(self.project.sgnUpdated, self.onProjectUpdated)
+
+        # CREATE DOCKING AREA WIDGET
+        self.debug('Installing docking area widget')
+        self.session.addDockWidget(Qt.RightDockWidgetArea, self.widget('info_dock'))
+
+        super().startup()
+
+    @classmethod
+    def version(cls):
+        """
+        Returns the version of the plugin.
+        :rtype: NormalizedVersion
+        """
+        return NormalizedVersion('0.1')
+
+
+class InfoWidget(QScrollArea):
+    """
+    This class implements the information box widget.
+    """
+    def __init__(self, plugin):
+        """
+        Initialize the info box.
+        :type plugin: Info
+        """
+        super().__init__(plugin.session)
+
         self.diagram = None
-        self.project = None
-        self.setContentsMargins(0, 0, 0, 0)
-        self.setMinimumSize(QSize(216, 120))
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.plugin = plugin
+
         self.stacked = QStackedWidget(self)
         self.stacked.setContentsMargins(0, 0, 0, 0)
         self.infoEmpty = QWidget(self.stacked)
-        self.infoProject = ProjectInfo(session, self.stacked)
-        self.infoEdge = EdgeInfo(session, self.stacked)
-        self.infoInclusionEdge = InclusionEdgeInfo(session, self.stacked)
-        self.infoNode = NodeInfo(session, self.stacked)
-        self.infoPredicateNode = PredicateNodeInfo(session, self.stacked)
-        self.infoAttributeNode = AttributeNodeInfo(session, self.stacked)
-        self.infoRoleNode = RoleNodeInfo(session, self.stacked)
-        self.infoValueNode = ValueNodeInfo(session, self.stacked)
-        self.infoValueDomainNode = ValueDomainNodeInfo(session, self.stacked)
-        self.infoFacet = FacetNodeInfo(session, self.stacked)
+        self.infoProject = ProjectInfo(self.session, self.stacked)
+        self.infoEdge = EdgeInfo(self.session, self.stacked)
+        self.infoInclusionEdge = InclusionEdgeInfo(self.session, self.stacked)
+        self.infoNode = NodeInfo(self.session, self.stacked)
+        self.infoPredicateNode = PredicateNodeInfo(self.session, self.stacked)
+        self.infoAttributeNode = AttributeNodeInfo(self.session, self.stacked)
+        self.infoRoleNode = RoleNodeInfo(self.session, self.stacked)
+        self.infoValueNode = ValueNodeInfo(self.session, self.stacked)
+        self.infoValueDomainNode = ValueDomainNodeInfo(self.session, self.stacked)
+        self.infoFacet = FacetNodeInfo(self.session, self.stacked)
         self.stacked.addWidget(self.infoEmpty)
         self.stacked.addWidget(self.infoProject)
         self.stacked.addWidget(self.infoEdge)
@@ -102,10 +269,81 @@ class Info(QScrollArea):
         self.stacked.addWidget(self.infoValueNode)
         self.stacked.addWidget(self.infoValueDomainNode)
         self.stacked.addWidget(self.infoFacet)
+
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setMinimumSize(QSize(216, 120))
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setWidget(self.stacked)
         self.setWidgetResizable(True)
+
+        self.setStyleSheet("""
+        InfoWidget {
+        background: #FFFFFF;
+        }
+        InfoWidget Header {
+        background: #5A5050;
+        padding-left: 4px;
+        color: #FFFFFF;
+        }
+        InfoWidget Key {
+        background: #BBDEFB;
+        border-bottom: 1px solid #BABABA;
+        padding-left: 4px;
+        }
+        InfoWidget Button,
+        InfoWidget Integer,
+        InfoWidget String,
+        InfoWidget Select,
+        InfoWidget Parent {
+        background: #E3F2FD;
+        border-bottom: 1px solid #BABABA;
+        border-left: 1px solid #BABABA;
+        padding-left: 4px;
+        }
+        InfoWidget Button {
+        text-align:left;
+        }
+        InfoWidget Button::menu-indicator {
+        image: none;
+        }
+        InfoWidget Select:!editable,
+        InfoWidget Select::drop-down:editable {
+        background: #FFFFFF;
+        }
+        InfoWidget Select:!editable:on,
+        InfoWidget Select::drop-down:editable:on {
+        background: #FFFFFF;
+        }
+        InfoWidget QCheckBox {
+        background: #FFFFFF;
+        spacing: 0;
+        margin-left: 4px;
+        margin-top: 2px;
+        }""")
+
         scrollbar = self.verticalScrollBar()
         scrollbar.installEventFilter(self)
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def project(self):
+        """
+        Returns the reference to the active project.
+        :rtype: Session
+        """
+        return self.session.project
+
+    @property
+    def session(self):
+        """
+        Returns the reference to the active session.
+        :rtype: Session
+        """
+        return self.plugin.parent()
 
     #############################################
     #   EVENTS
@@ -123,10 +361,31 @@ class Info(QScrollArea):
         return super().eventFilter(source, event)
 
     #############################################
-    #   SLOTS
+    #   INTERFACE
     #################################
 
-    @pyqtSlot()
+    def redraw(self):
+        """
+        Redraw the content of the widget.
+        """
+        width = self.width()
+        scrollbar = self.verticalScrollBar()
+        if scrollbar.isVisible():
+            width -= scrollbar.width()
+        widget = self.stacked.currentWidget()
+        widget.setFixedWidth(width)
+        sizeHint = widget.sizeHint()
+        height = sizeHint.height()
+        self.stacked.setFixedWidth(width)
+        self.stacked.setFixedHeight(clamp(height, 0))
+
+    def setDiagram(self, diagram):
+        """
+        Sets the widget to inspect the given diagram.
+        :type diagram: diagram
+        """
+        self.diagram = diagram
+
     def stack(self):
         """
         Set the current stacked widget.
@@ -173,64 +432,6 @@ class Info(QScrollArea):
         if prev is not show:
             scrollbar = self.verticalScrollBar()
             scrollbar.setValue(0)
-
-    #############################################
-    #   INTERFACE
-    #################################
-
-    def browse(self, something):
-        """
-        Set the widget to inspect the given diagram.
-        :type something: T <= Project|Diagram
-        """
-        self.reset()
-
-        if isinstance(something, Project):
-            self.project = something
-            connect(self.project.sgnUpdated, self.stack)
-            self.stack()
-        elif isinstance(something, Diagram):
-            self.diagram = something
-            connect(self.diagram.selectionChanged, self.stack)
-            connect(self.diagram.sgnItemAdded, self.stack)
-            connect(self.diagram.sgnItemRemoved, self.stack)
-            connect(self.diagram.sgnUpdated, self.stack)
-            self.stack()
-
-    def redraw(self):
-        """
-        Redraw the content of the widget.
-        """
-        width = self.width()
-        scrollbar = self.verticalScrollBar()
-        if scrollbar.isVisible():
-            width -= scrollbar.width()
-
-        widget = self.stacked.currentWidget()
-        widget.setFixedWidth(width)
-        self.stacked.setFixedWidth(width)
-
-        sizeHint = widget.sizeHint()
-        height = sizeHint.height()
-        self.stacked.setFixedHeight(clamp(height, 0))
-
-    def reset(self):
-        """
-        Clear the widget from inspecting the current diagram.
-        """
-        if self.diagram:
-
-            try:
-                disconnect(self.diagram.selectionChanged, self.stack)
-                disconnect(self.diagram.sgnItemAdded, self.stack)
-                disconnect(self.diagram.sgnItemRemoved, self.stack)
-                disconnect(self.diagram.sgnUpdated, self.stack)
-            except RuntimeError:
-                pass
-            finally:
-                self.diagram = None
-
-        self.stack()
 
 
 #############################################

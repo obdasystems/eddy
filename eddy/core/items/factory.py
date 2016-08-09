@@ -57,7 +57,6 @@ from eddy.core.items.nodes.role_chain import RoleChainNode
 from eddy.core.items.nodes.role_inverse import RoleInverseNode
 from eddy.core.items.nodes.union import UnionNode
 from eddy.core.items.nodes.value_domain import ValueDomainNode
-from eddy.core.items.nodes.value_restriction import ValueRestrictionNode
 
 
 class ItemFactory(QObject):
@@ -129,8 +128,6 @@ class ItemFactory(QObject):
             return UnionNode
         if item is Item.ValueDomainNode:
             return ValueDomainNode
-        if item is Item.ValueRestrictionNode:
-            return ValueRestrictionNode
         if item is Item.InclusionEdge:
             return InclusionEdge
         if item is Item.InputEdge:

@@ -168,16 +168,6 @@ class AbstractNode(AbstractItem):
         """
         pass
 
-    @classmethod
-    @abstractmethod
-    def icon(cls, width, height, **kwargs):
-        """
-        Returns an icon of this item suitable for the palette.
-        :type width: int
-        :type height: int
-        :rtype: QIcon
-        """
-
     def incomingNodes(self, filter_on_edges=None, filter_on_nodes=None):
         """
         Returns the set of incoming nodes.
@@ -219,7 +209,7 @@ class AbstractNode(AbstractItem):
         Returns True if this node is a predicate node, False otherwise.
         :rtype: bool
         """
-        return Item.ConceptNode <= self.type() <= Item.ValueRestrictionNode
+        return Item.ConceptNode <= self.type() <= Item.IndividualNode
 
     def moveBy(self, x, y):
         """

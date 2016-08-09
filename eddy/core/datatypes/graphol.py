@@ -67,10 +67,10 @@ class Item(IntEnum):
     This class defines all the available elements for graphol diagrams.
     """
     __order__ = 'ConceptNode AttributeNode RoleNode ValueDomainNode IndividualNode ' \
-                'ValueRestrictionNode DomainRestrictionNode RangeRestrictionNode ' \
-                'UnionNode EnumerationNode ComplementNode RoleChainNode RoleInverseNode ' \
-                'DatatypeRestrictionNode DisjointUnionNode PropertyAssertionNode ' \
-                'FacetNode InclusionEdge InputEdge MembershipEdge Label Undefined'
+                'DomainRestrictionNode RangeRestrictionNode UnionNode EnumerationNode ' \
+                'ComplementNode RoleChainNode RoleInverseNode DatatypeRestrictionNode ' \
+                'DisjointUnionNode PropertyAssertionNode FacetNode InclusionEdge ' \
+                'InputEdge MembershipEdge Label Undefined'
 
     # PREDICATES
     ConceptNode = 65537
@@ -78,30 +78,29 @@ class Item(IntEnum):
     RoleNode = 65539
     ValueDomainNode = 65540
     IndividualNode = 65541
-    ValueRestrictionNode = 65542
 
     # CONSTRUCTORS
-    DomainRestrictionNode = 65543
-    RangeRestrictionNode = 65544
-    UnionNode = 65545
-    EnumerationNode = 65546
-    ComplementNode = 65547
-    RoleChainNode = 65548
-    IntersectionNode = 65549
-    RoleInverseNode = 65550
-    DatatypeRestrictionNode = 65551
-    DisjointUnionNode = 65552
-    PropertyAssertionNode = 65553
-    FacetNode = 65554
+    DomainRestrictionNode = 65542
+    RangeRestrictionNode = 65543
+    UnionNode = 65544
+    EnumerationNode = 65545
+    ComplementNode = 65546
+    RoleChainNode = 65547
+    IntersectionNode = 65548
+    RoleInverseNode = 65549
+    DatatypeRestrictionNode = 65550
+    DisjointUnionNode = 65551
+    PropertyAssertionNode = 65552
+    FacetNode = 65553
 
     # EDGES
-    InclusionEdge = 65555
-    InputEdge = 65556
-    MembershipEdge = 65557
+    InclusionEdge = 65554
+    InputEdge = 65555
+    MembershipEdge = 65556
 
     # EXTRA
-    Label = 65558
-    Undefined = 65559
+    Label = 65557
+    Undefined = 65558
 
     @classmethod
     def forValue(cls, value):

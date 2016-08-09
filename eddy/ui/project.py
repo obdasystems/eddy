@@ -43,7 +43,7 @@ from PyQt5.QtWidgets import QWidget, QDialogButtonBox, QLabel
 from eddy import ORGANIZATION, APPNAME, WORKSPACE
 from eddy.core.datatypes.qt import Font
 from eddy.core.exporters.project import ProjectExporter
-from eddy.core.functions.fsystem import isdir
+from eddy.core.functions.fsystem import is_dir
 from eddy.core.functions.misc import cutR, isEmpty
 from eddy.core.functions.path import expandPath, isPathValid
 from eddy.core.functions.signals import connect
@@ -194,7 +194,7 @@ class ProjectDialog(QDialog):
             caption = ''
             enabled = False
         else:
-            if isdir(path):
+            if is_dir(path):
                 caption = "Project '{0}' already exists!".format(name)
                 enabled = False
             elif not isPathValid(path):

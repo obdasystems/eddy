@@ -43,13 +43,14 @@ class File(Enum):
     """
     This class defines supported filetypes.
     """
-    __order__ = 'Csv Graphml Graphol Owl Pdf'
+    __order__ = 'Csv Graphml Graphol Owl Pdf Zip'
 
     Csv = 'Csv (*.csv)'
     Graphml = 'Graphml (*.graphml)'
     Graphol = 'Graphol (*.graphol)'
     Owl = 'Owl (*.owl)'
     Pdf = 'PDF (*.pdf)'
+    Zip = 'ZIP (*.zip)'
 
     @classmethod
     def forPath(cls, path):
@@ -86,7 +87,8 @@ class File(Enum):
             File.Graphml: '.graphml',
             File.Graphol: '.graphol',
             File.Owl: '.owl',
-            File.Pdf: '.pdf'
+            File.Pdf: '.pdf',
+            File.Zip: '.zip',
         }[self]
 
 

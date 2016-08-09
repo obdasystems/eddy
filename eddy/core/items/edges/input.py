@@ -35,9 +35,9 @@
 
 from math import sin, cos, radians, pi as M_PI
 
-from PyQt5.QtCore import QPointF, QLineF, Qt
+from PyQt5.QtCore import QPointF
 from PyQt5.QtGui import QPainter, QPolygonF
-from PyQt5.QtGui import QPixmap, QPainterPath, QIcon
+from PyQt5.QtGui import QPainterPath
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import Brush, Pen
@@ -102,44 +102,6 @@ class InputEdge(AbstractEdge):
         p3 = p2 - QPointF(sin(rad + 3.0 / 4.0 * M_PI) * size, cos(rad + 3.0 / 4.0 * M_PI) * size)
         p4 = p3 - QPointF(sin(rad - 3.0 / 4.0 * M_PI) * size, cos(rad - 3.0 / 4.0 * M_PI) * size)
         return QPolygonF([p1, p2, p3, p4])
-
-    @classmethod
-    def icon(cls, width, height, **kwargs):
-        """
-        Returns an icon of this item suitable for the palette.
-        :type width: int
-        :type height: int
-        :rtype: QIcon
-        """
-        icon = QIcon()
-        for i in (1.0, 2.0):
-            # CREATE THE PIXMAP
-            pixmap = QPixmap(width * i, height * i)
-            pixmap.setDevicePixelRatio(i)
-            pixmap.fill(Qt.transparent)
-            # CREATE THE LINE
-            P1 = QPointF(((width - 54) / 2), height / 2)
-            P2 = QPointF(((width - 54) / 2) + 54 - 2, height / 2)
-            L1 = QLineF(P1, P2)
-            # CREATE THE HEAD
-            A1 = L1.angle()
-            P1 = QPointF(L1.p2().x() + 2, L1.p2().y())
-            P2 = P1 - QPointF(sin(A1 + M_PI / 4.0) * 8, cos(A1 + M_PI / 4.0) * 8)
-            P3 = P2 - QPointF(sin(A1 + 3.0 / 4.0 * M_PI) * 8, cos(A1 + 3.0 / 4.0 * M_PI) * 8)
-            p4 = P3 - QPointF(sin(A1 - 3.0 / 4.0 * M_PI) * 8, cos(A1 - 3.0 / 4.0 * M_PI) * 8)
-            H1 = QPolygonF([P1, P2, P3, p4])
-            # DRAW THE EDGE
-            painter = QPainter(pixmap)
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(Pen.DashedBlack1_1Pt_x3)
-            painter.drawLine(L1)
-            painter.setPen(Pen.SolidBlack1_1Pt)
-            painter.setBrush(Brush.White255A)
-            painter.drawPolygon(H1)
-            painter.end()
-            # ADD THE PIXMAP TO THE ICON
-            icon.addPixmap(pixmap)
-        return icon
 
     def paint(self, painter, option, widget=None):
         """

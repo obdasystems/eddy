@@ -93,7 +93,6 @@ class GraphmlLoader(AbstractLoader):
             Item.RoleInverseNode: self.buildRoleInverseNode,
             Item.UnionNode: self.buildUnionNode,
             Item.ValueDomainNode: self.buildValueDomainNode,
-            Item.ValueRestrictionNode: self.buildFacetNode,
             Item.InclusionEdge: self.buildInclusionEdge,
             Item.InputEdge: self.buildInputEdge,
             Item.MembershipEdge: self.buildMembershipEdge,
@@ -478,7 +477,7 @@ class GraphmlLoader(AbstractLoader):
                 # UML NOTE NODE
                 nodeNode = data.firstChildElement('y:UMLNoteNode')
                 if not nodeNode.isNull():
-                    return Item.ValueRestrictionNode
+                    return Item.FacetNode
 
             # EDGE
             if data.attribute('key', '') == self.keys['edge_key']:
@@ -707,8 +706,6 @@ class GraphmlLoader(AbstractLoader):
 
         connect(self.diagram.sgnItemAdded, self.project.doAddItem)
         connect(self.diagram.sgnItemRemoved, self.project.doRemoveItem)
-        connect(self.diagram.sgnActionCompleted, self.session.onDiagramActionCompleted)
-        connect(self.diagram.sgnModeChanged, self.session.onDiagramModeChanged)
         connect(self.diagram.selectionChanged, self.session.doUpdateState)
 
         LOGGER.debug('Diagram created: %s', self.diagram.name)

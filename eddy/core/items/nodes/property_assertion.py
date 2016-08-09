@@ -33,8 +33,8 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QIcon
+from PyQt5.QtCore import QRectF
+from PyQt5.QtGui import QPainterPath, QPainter
 
 from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.collections import DistinctList
@@ -123,32 +123,6 @@ class PropertyAssertionNode(AbstractNode):
         :rtype: int
         """
         return self.polygon.geometry().height()
-
-    @classmethod
-    def icon(cls, width, height, **kwargs):
-        """
-        Returns an icon of this item suitable for the palette.
-        :type width: int
-        :type height: int
-        :rtype: QIcon
-        """
-        icon = QIcon()
-        for i in (1.0, 2.0):
-            # CREATE THE PIXMAP
-            pixmap = QPixmap(width * i, height * i)
-            pixmap.setDevicePixelRatio(i)
-            pixmap.fill(Qt.transparent)
-            # PAINT THE SHAPE
-            painter = QPainter(pixmap)
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(Pen.SolidBlack1Pt)
-            painter.setBrush(Brush.White255A)
-            painter.translate(width / 2, height / 2)
-            painter.drawRoundedRect(QRectF(-23, -15, 46, 30), 14, 14)
-            painter.end()
-            # ADD THE PIXMAP TO THE ICON
-            icon.addPixmap(pixmap)
-        return icon
 
     def paint(self, painter, option, widget=None):
         """

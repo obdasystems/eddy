@@ -46,14 +46,14 @@ class DockWidget(QDockWidget):
     """
     This class implements the container for docking area widgets.
     """
-    def __init__(self, title, icon, parent=None):
+    def __init__(self, title, icon, session):
         """
         Initialize the dock widget.
         :type title: str
-        :type icon: str
-        :type parent: QWidget
+        :type icon: QIcon
+        :type session: Session
         """
-        super().__init__(title, parent, Qt.Widget)
+        super().__init__(title, session, Qt.Widget)
         self.setTitleBarWidget(DockTitleWidget(title, icon, self))
 
     def addTitleBarButton(self, button):
@@ -70,31 +70,28 @@ class DockTitleWidget(QWidget):
     """
     This class implements the title area of docking area widgets.
     """
-    IconSize = 18
-
     def __init__(self, title, icon, parent=None):
         """
         Initialize the widget.
         :type title: str
-        :type icon: str
+        :type icon: QIcon
         :type parent: QDockWidget
         """
         super().__init__(parent)
         # CREATE TITLEBAR ICON AND TITLE
-        size = DockTitleWidget.IconSize
         self.imageLabel = QLabel(self)
-        self.imageLabel.setPixmap(QIcon(':/icons/{0}/{1}'.format(size, icon)).pixmap(size))
+        self.imageLabel.setPixmap(icon.pixmap(18))
         self.imageLabel.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
         self.imageLabel.setContentsMargins(0, 0, 0, 0)
-        self.imageLabel.setFixedSize(size, size)
+        self.imageLabel.setFixedSize(18, 18)
         self.titleLabel = QLabel(title, self)
         self.titleLabel.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
         self.titleLabel.setContentsMargins(4, 0, 0, 0)
         self.titleLabel.setFont(Font('Arial', 13))
         # CREATE STANDARD BUTTONS
         close = QPushButton(self)
-        close.setIcon(QIcon(':/icons/{0}/ic_close_black'.format(size)))
-        close.setFixedSize(size, size)
+        close.setIcon(QIcon(':/icons/18/ic_close_black'))
+        close.setFixedSize(18, 18)
         connect(close.clicked, parent.close)
         self.buttons = [close]
         # CONFIGURE LAYOUT

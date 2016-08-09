@@ -33,13 +33,9 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainter, QIcon
-
-from eddy.core.datatypes.misc import Brush, Pen
+from eddy.core.datatypes.misc import Brush
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
 from eddy.core.items.nodes.common.restriction import RestrictionNode
-from eddy.core.datatypes.qt import Font
 
 
 class RangeRestrictionNode(RestrictionNode):
@@ -95,36 +91,3 @@ class RangeRestrictionNode(RestrictionNode):
                 # Attribute qualified restriction => Attribute + ValueDomain
                 return True
         return False
-
-    #############################################
-    #   INTERFACE
-    #################################
-
-    @classmethod
-    def icon(cls, width, height, **kwargs):
-        """
-        Returns an icon of this item suitable for the palette.
-        :type width: int
-        :type height: int
-        :rtype: QIcon
-        """
-        icon = QIcon()
-        for i in (1.0, 2.0):
-            # CREATE THE PIXMAP
-            pixmap = QPixmap(width * i, height * i)
-            pixmap.setDevicePixelRatio(i)
-            pixmap.fill(Qt.transparent)
-            # PAINT THE TEXT ABOVE THE SHAPE
-            painter = QPainter(pixmap)
-            painter.setFont(Font('Arial', 9, Font.Light))
-            painter.translate(0, 0)
-            painter.drawText(QRectF(0, 0, width, height / 2), Qt.AlignCenter, 'restriction')
-            # PAINT THE SHAPE
-            painter.setPen(Pen.SolidBlack1Pt)
-            painter.setBrush(Brush.Black255A)
-            painter.translate(width / 2, height / 2)
-            painter.drawRect(QRectF(-18 / 2, -18 / 2 + 6, 18, 18))
-            painter.end()
-            # ADD THE PIXMAP TO THE ICON
-            icon.addPixmap(pixmap)
-        return icon

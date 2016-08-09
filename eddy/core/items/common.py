@@ -158,17 +158,6 @@ class AbstractItem(QGraphicsItem, DiagramItemMixin):
         """
         pass
 
-    @classmethod
-    @abstractmethod
-    def icon(cls, width, height, **kwargs):
-        """
-        Returns an icon of this item suitable for the palette.
-        :type width: int
-        :type height: int
-        :rtype: QIcon
-        """
-        pass
-
     @abstractmethod
     def painterPath(self):
         """

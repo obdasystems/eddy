@@ -33,11 +33,14 @@
 ##########################################################################
 
 
+import importlib
+import importlib.util
 import os
+import textwrap
 import webbrowser
+import zipimport
 
 from collections import OrderedDict
-from textwrap import dedent
 
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
 from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, QSize
@@ -60,6 +63,8 @@ from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.nodes import CommandNodeOperatorSwitchTo
 from eddy.core.commands.nodes import CommandNodeSetBrush
 from eddy.core.commands.nodes import CommandNodeSetDepth
+from eddy.core.common import HasActionSystem, HasMenuSystem
+from eddy.core.common import HasPluginSystem, HasWidgetSystem
 from eddy.core.datatypes.graphol import Identity
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.graphol import Restriction
@@ -73,7 +78,8 @@ from eddy.core.exporters.graphml import GraphmlExporter
 from eddy.core.exporters.graphol import GrapholExporter
 from eddy.core.exporters.project import ProjectExporter
 from eddy.core.factory import MenuFactory, PropertyFactory
-from eddy.core.functions.fsystem import fexists, fcopy, fremove
+from eddy.core.functions.fsystem import fcopy, fremove
+from eddy.core.functions.fsystem import is_package, fexists
 from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.misc import snap, snapF, cutR
 from eddy.core.functions.path import expandPath, isSubPath
@@ -83,34 +89,29 @@ from eddy.core.items.common import AbstractItem
 from eddy.core.loaders.graphml import GraphmlLoader
 from eddy.core.loaders.graphol import GrapholLoader
 from eddy.core.loaders.project import ProjectLoader
-from eddy.core.misc import HasActionSystem, HasMenuSystem
 from eddy.core.output import getLogger
+from eddy.core.plugin import AbstractPlugin
 from eddy.core.utils.clipboard import Clipboard
 
 from eddy.ui.about import AboutDialog
 from eddy.ui.diagram import NewDiagramDialog
 from eddy.ui.diagram import RenameDiagramDialog
-from eddy.ui.dock import DockWidget
-from eddy.ui.explorer import OntologyExplorer
-from eddy.ui.explorer import ProjectExplorer
 from eddy.ui.forms import CardinalityRestrictionForm
 from eddy.ui.forms import RefactorNameForm
 from eddy.ui.forms import ValueForm
-from eddy.ui.info import Info
 from eddy.ui.mdi import MdiArea
 from eddy.ui.mdi import MdiSubWindow
-from eddy.ui.overview import Overview
-from eddy.ui.palette import Palette
 from eddy.ui.preferences import PreferencesDialog
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationDialog
 from eddy.ui.view import DiagramView
 from eddy.ui.zoom import Zoom
 
+
 LOGGER = getLogger(__name__)
 
 
-class Session(HasActionSystem, HasMenuSystem, QMainWindow):
+class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, QMainWindow):
     """
     This class implements Eddy's main working session.
     """
@@ -156,19 +157,8 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         # CREATE WIDGETS
         #################################
 
-        self.info = Info(self)
         self.mdi = MdiArea(self)
-        self.ontologyExplorer = OntologyExplorer(self)
-        self.overview = Overview(self)
-        self.palette_ = Palette(self)
-        self.projectExplorer = ProjectExplorer(self)
         self.zoom = Zoom(self.toolbarView)
-
-        self.dockInfo = DockWidget('Info', 'ic_info_outline_black', self)
-        self.dockOntologyExplorer = DockWidget('Ontology Explorer', 'ic_explore_black', self)
-        self.dockOverview = DockWidget('Overview', 'ic_zoom_black', self)
-        self.dockPalette = DockWidget('Palette', 'ic_palette_black', self)
-        self.dockProjectExplorer = DockWidget('Project Explorer', 'ic_storage_black', self)
 
         self.buttonSetBrush = QToolButton()
 
@@ -176,12 +166,13 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         # CONFIGURE SESSION
         #################################
 
-        self.configureActions()
-        self.configureMenus()
-        self.configureWidgets()
-        self.configureStatusBar()
-        self.configureToolbars()
-        self.configureState()
+        self.initActions()
+        self.initMenus()
+        self.initWidgets()
+        self.initStatusBar()
+        self.initToolBars()
+        self.initPlugins()
+        self.initState()
 
         self.setAcceptDrops(True)
         self.setCentralWidget(self.mdi)
@@ -193,7 +184,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
     #   SESSION CONFIGURATION
     #################################
 
-    def configureActions(self):
+    def initActions(self):
         """
         Configure application built-in actions.
         """
@@ -247,6 +238,16 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
             QIcon(':/icons/24/ic_add_document_black'), 'New diagram...',
             self, objectName='new_diagram', shortcut=QKeySequence.New,
             statusTip='Create a new diagram', triggered=self.doNewDiagram))
+
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_label_outline_black'), 'Rename...',
+            self, objectName='rename_diagram', statusTip='Rename a diagram',
+            triggered=self.doRenameDiagram))
+
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_delete_black'), 'Delete...',
+            self, objectName='remove_diagram', statusTip='Delete a diagram',
+            triggered=self.doRemoveDiagram))
 
         self.addAction(QAction(
             QIcon(':/icons/24/ic_folder_open_black'), 'Open...',
@@ -539,81 +540,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
             group.addAction(action)
         self.addAction(group)
 
-    def configureWidgets(self):
-        """
-        Configure previously initialized widgets.
-        """
-        #############################################
-        # CONFIGURE TOOLBAR WIDGETS
-        #################################
-
-        self.buttonSetBrush.setIcon(QIcon(':/icons/24/ic_format_color_fill_black'))
-        self.buttonSetBrush.setMenu(self.menu('brush'))
-        self.buttonSetBrush.setPopupMode(QToolButton.InstantPopup)
-        self.buttonSetBrush.setStatusTip('Change the background color of the selected predicate nodes')
-        self.buttonSetBrush.setEnabled(False)
-
-        #############################################
-        # CONFIGURE DOCK WIDGETS
-        #################################
-
-        self.dockOntologyExplorer.installEventFilter(self)
-        self.dockOntologyExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockOntologyExplorer.setObjectName('ontologyExplorer')
-        self.dockOntologyExplorer.setWidget(self.ontologyExplorer)
-
-        self.dockInfo.installEventFilter(self)
-        self.dockInfo.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockInfo.setObjectName('info')
-        self.dockInfo.setWidget(self.info)
-
-        self.dockOverview.installEventFilter(self)
-        self.dockOverview.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockOverview.setObjectName('overview')
-        self.dockOverview.setWidget(self.overview)
-
-        self.dockPalette.installEventFilter(self)
-        self.dockPalette.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockPalette.setObjectName('palette')
-        self.dockPalette.setWidget(self.palette_)
-
-        self.dockProjectExplorer.installEventFilter(self)
-        self.dockProjectExplorer.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockProjectExplorer.setObjectName('projectExplorer')
-        self.dockProjectExplorer.setWidget(self.projectExplorer)
-
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.dockPalette)
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.dockProjectExplorer)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.dockOverview)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.dockInfo)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.dockOntologyExplorer)
-
-        #############################################
-        # CONFIGURE DOCK WIDGETS CONTROLS
-        #################################
-
-        for button in self.palette_.controls():
-            self.dockPalette.addTitleBarButton(button)
-
-        #############################################
-        # CONFIGURE WIDGETS INSPECTIONS
-        #################################
-
-        self.info.browse(self.project)
-        self.ontologyExplorer.browse(self.project)
-        self.projectExplorer.browse(self.project)
-
-        #############################################
-        # CONFIGURE SIGNALS
-        #################################
-
-        connect(self.mdi.subWindowActivated, self.onSubWindowActivated)
-        connect(self.palette_.sgnButtonClicked['QToolButton'], self.onPaletteClicked)
-        connect(self.ontologyExplorer.sgnItemDoubleClicked['QGraphicsItem'], self.doFocusItem)
-        connect(self.ontologyExplorer.sgnItemRightClicked['QGraphicsItem'], self.doFocusItem)
-        connect(self.projectExplorer.sgnItemDoubleClicked['QGraphicsScene'], self.doFocusDiagram)
-
-    def configureMenus(self):
+    def initMenus(self):
         """
         Configure application built-in menus.
         """
@@ -671,11 +598,6 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         menu.addSeparator()
         menu.addMenu(self.menu('toolbars'))
         menu.addSeparator()
-        menu.addAction(self.dockInfo.toggleViewAction())
-        menu.addAction(self.dockOntologyExplorer.toggleViewAction())
-        menu.addAction(self.dockOverview.toggleViewAction())
-        menu.addAction(self.dockPalette.toggleViewAction())
-        menu.addAction(self.dockProjectExplorer.toggleViewAction())
         self.addMenu(menu)
 
         menu = QMenu('Tools', objectName='tools')
@@ -780,16 +702,148 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         menuBar.addMenu(self.menu('view'))
         menuBar.addMenu(self.menu('tools'))
         menuBar.addMenu(self.menu('help'))
-    
-    def configureStatusBar(self):
+
+    def initPlugins(self):
+        """
+        Load and initialize application plugins.
+        """
+        def import_module_from_directory(directory):
+            """
+            Import a module from the given directory.
+            If the directory does not idenfity a module, no import is performed.
+            :type directory: str
+            """
+            if is_package(directory):
+                spec = importlib.util.find_spec(os.path.basename(directory), directory)
+                if spec:
+                    spec.loader.load_module()
+                    LOGGER.debug('Added plugin search path (directory): %s', directory)
+
+        def import_module_from_zip(archive):
+            """
+            Import a module from the given ZIP archive.
+            If the given path does not identify a ZIP archive, no import is performed.
+            :type archive: str
+            """
+            if fexists(archive) and File.forPath(archive) is File.Zip:
+                importer = zipimport.zipimporter(archive)
+                if importer:
+                    importer.load_module(os.path.basename(archive).rstrip(File.Zip.extension))
+                    LOGGER.debug('Added plugin search path (ZIP): %s', archive)
+
+        def plugins_topological_sort(source):
+            """
+            Perform topological sort on the plugin subclass list yielding the result.
+            :type source: list
+            """
+            pending = [(s.name(), set(s.requirements())) for s in source]
+            emitted = []
+            while pending:
+                next_pending = []
+                next_emitted = []
+                for entry in pending:
+                    name, deps = entry
+                    deps.difference_update(emitted)
+                    if deps:
+                        next_pending.append(entry)
+                    else:
+                        yield name
+                        emitted.append(name)
+                        next_emitted.append(name)
+                if not next_emitted:
+                    raise RuntimeError("cyclic or missing dependancy detected: %r" % (next_pending,))
+                pending = next_pending
+                emitted = next_emitted
+
+        LOGGER.header('Loading plugins')
+
+        #############################################
+        # SEARCH PLUGINS
+        #################################
+
+        for file_or_directory in os.listdir(expandPath('@plugins/')):
+            import_module_from_directory(os.path.join(expandPath('@plugins/'), file_or_directory))
+            import_module_from_zip(os.path.join(expandPath('@plugins/'), file_or_directory))
+
+        subclasses = AbstractPlugin.subclasses()
+        if subclasses:
+
+            LOGGER.info('Found %s plugin(s): %s', len(subclasses), ', '.join(s.name() for s in subclasses))
+
+            #############################################
+            # FILTER PLUGINS WITH MISSING REQUIREMENTS
+            #################################
+
+            subclassList = []
+            for subclass in subclasses:
+                if subclass.requirements():
+                    missing = [r for r in subclass.requirements() if r not in {s.name() for s in subclasses}]
+                    if missing:
+                        LOGGER.warning('Plugin %s has unmet dependencies: %s', subclass.name(), ', '.join(missing))
+                        continue
+
+                subclassList.append(subclass)
+
+            if subclassList:
+
+                #############################################
+                # SORT PLUGINS BASED ON REQUIREMENTS
+                #################################
+
+                subclassDict = {subclass.name(): subclass for subclass in subclassList}
+                subclassList = [subclassDict[i] for i in plugins_topological_sort(subclassList)]
+
+                LOGGER.info('Loading %s plugin(s): %s', len(subclasses), ', '.join(s.name() for s in subclassList))
+
+                #############################################
+                # LOAD PLUGINS
+                #################################
+
+                pluginList = []
+                for subclass in subclasses:
+                    try:
+                        plugin = subclass(self)
+                    except Exception:
+                        LOGGER.exception('Failed to load plugin: %s v%s', subclass.name(), subclass.version())
+                    else:
+                        LOGGER.info('Plugin loaded: %s v%s', subclass.name(), subclass.version())
+                        pluginList.append(plugin)
+
+                if pluginList:
+
+                    LOGGER.info('Starting %s plugin(s): %s', len(pluginList), ', '.join(p.name() for p in pluginList))
+
+                    #############################################
+                    # STARTUP PLUGINS
+                    #################################
+
+                    for p in pluginList:
+                        try:
+                            p.startup()
+                        except Exception:
+                            LOGGER.exception('Failed to start plugin: %s v%s', p.name(), p.version())
+                        else:
+                            LOGGER.info('Plugin started: %s v%s', p.name(), p.version())
+                            self.addPlugin(p)
+
+    def initState(self):
+        """
+        Configure application state by reading the preferences file.
+        """
+        settings = QSettings(ORGANIZATION, APPNAME)
+        self.restoreGeometry(settings.value('session/geometry', QByteArray(), QByteArray))
+        self.restoreState(settings.value('session/state', QByteArray(), QByteArray))
+        self.action('toggle_grid').setChecked(settings.value('diagram/grid', False, bool))
+
+    def initStatusBar(self):
         """
         Configure the status bar.
         """
         statusbar = QStatusBar(self)
         statusbar.setSizeGripEnabled(False)
         self.setStatusBar(statusbar)
-    
-    def configureToolbars(self):
+
+    def initToolBars(self):
         """
         Configure previously initialized toolbars.
         """
@@ -829,14 +883,25 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
 
         self.toolbarGraphol.addAction(self.action('syntax_check'))
 
-    def configureState(self):
+    def initWidgets(self):
         """
-        Configure application state by reading the preferences file.
+        Configure previously initialized widgets.
         """
-        settings = QSettings(ORGANIZATION, APPNAME)
-        self.restoreGeometry(settings.value('session/geometry', QByteArray(), QByteArray))
-        self.restoreState(settings.value('session/state', QByteArray(), QByteArray))
-        self.action('toggle_grid').setChecked(settings.value('diagram/grid', False, bool))
+        #############################################
+        # CONFIGURE TOOLBAR WIDGETS
+        #################################
+
+        self.buttonSetBrush.setIcon(QIcon(':/icons/24/ic_format_color_fill_black'))
+        self.buttonSetBrush.setMenu(self.menu('brush'))
+        self.buttonSetBrush.setPopupMode(QToolButton.InstantPopup)
+        self.buttonSetBrush.setStatusTip('Change the background color of the selected predicate nodes')
+        self.buttonSetBrush.setEnabled(False)
+
+        #############################################
+        # CONFIGURE SIGNALS
+        #################################
+
+        connect(self.mdi.subWindowActivated, self.onSubWindowActivated)
 
     #############################################
     #   SLOTS
@@ -847,7 +912,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Bring the selected item to the top of the diagram.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             for node in diagram.selectedNodes():
@@ -863,7 +928,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Center the active diagram.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             items = diagram.items()
@@ -876,7 +941,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
                     items = [x for x in items if x.isNode() or x.isEdge()]
                     command = CommandItemsTranslate(diagram, items, moveX, moveY, 'center diagram')
                     self.project.undoStack.push(command)
-                    self.mdi.activeView.centerOn(0, 0)
+                    self.mdi.activeView().centerOn(0, 0)
 
     @pyqtSlot()
     def doClose(self):
@@ -892,7 +957,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Compose a property domain using the selected role/attribute node.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             supported = {Item.RoleNode, Item.AttributeNode}
@@ -911,7 +976,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Make a copy of selected items.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             diagram.pasteX = Clipboard.PasteOffsetX
@@ -924,7 +989,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Cut selected items from the active diagram.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             diagram.pasteX = 0
@@ -941,7 +1006,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Delete the currently selected items from the active diagram.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             items = diagram.selectedItems()
@@ -989,8 +1054,8 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         :type item: AbstractItem
         """
         self.doFocusDiagram(item.diagram)
-        self.mdi.activeDiagram.clearSelection()
-        self.mdi.activeView.centerOn(item)
+        self.mdi.activeDiagram().clearSelection()
+        self.mdi.activeView().centerOn(item)
         item.setSelected(True)
 
     @pyqtSlot()
@@ -1087,7 +1152,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Executed when scene properties needs to be displayed.
         """
-        diagram = self.sender().data() or self.mdi.activeDiagram
+        diagram = self.sender().data() or self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             properties = self.pf.create(diagram)
@@ -1098,7 +1163,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Executed when node properties needs to be displayed.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             node = first(diagram.selectedNodes())
@@ -1111,7 +1176,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Paste previously copied items.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             if not self.clipboard.empty():
@@ -1138,7 +1203,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Change the node brush for all the predicate nodes matching the selected predicate.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
@@ -1154,7 +1219,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Rename all the instance of the selected predicate node.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
@@ -1168,7 +1233,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Reset the selected node label to its default position.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             node = first([x for x in diagram.selectedNodes() if x.label is not None])
@@ -1182,7 +1247,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Remove the edge breakpoint specified in the action triggering this slot.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             action = self.sender()
@@ -1205,7 +1270,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
             msgbox.setTextFormat(Qt.RichText)
             msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Remove diagram: {0}?'.format(diagram.name))
-            msgbox.setText(dedent("""Are you sure you want to remove diagram <b>{0}</b>?
+            msgbox.setText(textwrap.dedent("""Are you sure you want to remove diagram <b>{0}</b>?
             If you continue, all the predicates that have been defined only in this
             diagram will be lost!""".format(diagram.name)))
             msgbox.exec_()
@@ -1254,7 +1319,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Creates a copy of the currently open diagram.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             dialog = QFileDialog(self)
             dialog.setAcceptMode(QFileDialog.AcceptSave)
@@ -1274,7 +1339,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Select all the items in the active diagrsm.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             path = QPainterPath()
             path.addRect(diagram.sceneRect())
@@ -1286,7 +1351,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Send the selected item to the back of the diagram.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             for node in diagram.selectedNodes():
@@ -1302,7 +1367,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Set the brush of selected nodes.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             action = self.sender()
@@ -1318,7 +1383,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Set a property domain / range restriction.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             supported = {Item.DomainRestrictionNode, Item.RangeRestrictionNode}
@@ -1343,7 +1408,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         Set an invididual node either to Instance or Value.
         Will bring up the Value Form if needed.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             node = first([x for x in diagram.selectedNodes() if x.type() is Item.IndividualNode])
@@ -1363,7 +1428,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Set the special type of the selected node.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             action = self.sender()
@@ -1381,7 +1446,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Set the datatype of the selected value-domain node.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             node = first([x for x in diagram.selectedNodes() if x.type() is Item.ValueDomainNode])
@@ -1398,7 +1463,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Set the facet of a Facet node.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             node = first([x for x in diagram.selectedNodes() if x.type() is Item.FacetNode])
@@ -1415,7 +1480,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Snap all the element sin the active diagram to the grid.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             data = {'redo': {'nodes': {}, 'edges': {}}, 'undo': {'nodes': {}, 'edges': {}}}
@@ -1447,7 +1512,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Swap the selected edges by inverting source/target points.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             selected = [e for e in diagram.selectedEdges() if e.isSwapAllowed()]
@@ -1459,7 +1524,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Switch the selected operator node to a different type.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             node = first([x for x in diagram.selectedNodes() if Item.UnionNode <= x.type() <= Item.DisjointUnionNode])
@@ -1483,7 +1548,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         """
         Set/unset the 'equivalence' attribute for all the selected Inclusion edges.
         """
-        diagram = self.mdi.activeDiagram
+        diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             selected = diagram.selectedEdges()
@@ -1522,7 +1587,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
 
         if self.mdi.subWindowList():
 
-            diagram = self.mdi.activeDiagram
+            diagram = self.mdi.activeDiagram()
             predicates = {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.IndividualNode}
             if diagram:
 
@@ -1562,46 +1627,6 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         self.buttonSetBrush.setEnabled(isPredicateSelected)
         self.zoom.setEnabled(isDiagramActive)
 
-    @pyqtSlot('QGraphicsItem', int)
-    def onDiagramActionCompleted(self, item, modifiers):
-        """
-        Executed after an item insertion process ends.
-        :type item: AbstractItem
-        :type modifiers: int
-        """
-        diagram = self.mdi.activeDiagram
-        if diagram:
-            if not modifiers & Qt.ControlModifier:
-                button = self.palette_.button(item.type())
-                button.setChecked(False)
-                diagram.setMode(DiagramMode.Idle)
-
-    @pyqtSlot(DiagramMode)
-    def onDiagramModeChanged(self, mode):
-        """
-        Executed when the scene operation mode changes.
-        :type mode: DiagramMode
-        """
-        if mode not in (DiagramMode.NodeAdd, DiagramMode.EdgeAdd):
-            self.palette_.reset()
-
-    @pyqtSlot('QToolButton')
-    def onPaletteClicked(self, button):
-        """
-        Executed whenever a palette button is clicked.
-        :type button: Button
-        """
-        diagram = self.mdi.activeDiagram
-        if diagram:
-            diagram.clearSelection()
-            if not button.isChecked():
-                diagram.setMode(DiagramMode.Idle)
-            else:
-                if Item.ConceptNode <= button.item < Item.InclusionEdge:
-                    diagram.setMode(DiagramMode.NodeAdd, button.item)
-                elif Item.InclusionEdge <= button.item <= Item.MembershipEdge:
-                    diagram.setMode(DiagramMode.EdgeAdd, button.item)
-
     @pyqtSlot('QMdiSubWindow')
     def onSubWindowActivated(self, subwindow):
         """
@@ -1613,8 +1638,6 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
             view = subwindow.view
             diagram = subwindow.diagram
             diagram.setMode(DiagramMode.Idle)
-            self.info.browse(diagram)
-            self.overview.browse(view)
             disconnect(self.zoom.sgnChanged)
             disconnect(view.sgnScaled)
             self.zoom.adjust(view.zoom)
@@ -1625,8 +1648,6 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         else:
 
             if not self.mdi.subWindowList():
-                self.info.reset()
-                self.overview.reset()
                 self.zoom.zoomReset()
                 self.setWindowTitle(self.project)
 
@@ -1737,7 +1758,7 @@ class Session(HasActionSystem, HasMenuSystem, QMainWindow):
         :type keyEvent: QKeyEvent
         """
         if keyEvent.key() == Qt.Key_Control:
-            diagram = self.mdi.activeDiagram
+            diagram = self.mdi.activeDiagram()
             if diagram and not diagram.isEdgeAddInProgress():
                 diagram.setMode(DiagramMode.Idle)
         super().keyReleaseEvent(keyEvent)

@@ -59,14 +59,21 @@ LOGGER = getLogger(__name__)
 
 class Diagram(QGraphicsScene):
     """
-    This class implements a graphol diagram.
+    Extension of QGraphicsScene which implements a single Graphol diagram.
+    Additionally to built-in signals, this class emits:
+
+    * sgnItemAdded('QGraphicsScene', 'QGraphicsItem'): whenever an element is added to the Diagram;
+    * sgnItemInsertionCompleted('QGraphicsItem', int): whenever an item 'MANUAL' insertion process is completed;
+    * sgnItemRemoved('QGraphicsScene', 'QGraphicsItem'): whenever an element is removed from the Diagram;
+    * sgnModeChanged(DiagramMode): whenever the Diagram operational mode (or its parameter) changes;
+    * sgnUpdated(): whenever the Diagram has been updated in any of its parts.
     """
     GridSize = 20
     MinSize = 2000
     MaxSize = 1000000
 
-    sgnActionCompleted = pyqtSignal('QGraphicsItem', int)
     sgnItemAdded = pyqtSignal('QGraphicsScene', 'QGraphicsItem')
+    sgnItemInsertionCompleted = pyqtSignal('QGraphicsItem', int)
     sgnItemRemoved = pyqtSignal('QGraphicsScene', 'QGraphicsItem')
     sgnModeChanged = pyqtSignal(DiagramMode)
     sgnUpdated = pyqtSignal()
@@ -174,7 +181,7 @@ class Diagram(QGraphicsScene):
             node = self.factory.create(Item.forValue(dropEvent.mimeData().text()))
             node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
             self.project.undoStack.push(CommandNodeAdd(self, node))
-            self.sgnActionCompleted.emit(node, dropEvent.modifiers())
+            self.sgnItemInsertionCompleted.emit(node, dropEvent.modifiers())
             dropEvent.setDropAction(Qt.CopyAction)
             dropEvent.accept()
         else:
@@ -201,7 +208,7 @@ class Diagram(QGraphicsScene):
                 node = self.factory.create(Item.forValue(self.modeParam))
                 node.setPos(snap(mousePos, Diagram.GridSize, snapToGrid))
                 self.project.undoStack.push(CommandNodeAdd(self, node))
-                self.sgnActionCompleted.emit(node, mouseEvent.modifiers())
+                self.sgnItemInsertionCompleted.emit(node, mouseEvent.modifiers())
 
             elif self.mode is DiagramMode.EdgeAdd:
 
@@ -449,7 +456,7 @@ class Diagram(QGraphicsScene):
                     statusBar = self.session.statusBar()
                     statusBar.clearMessage()
 
-                    self.sgnActionCompleted.emit(edge, mouseModifiers)
+                    self.sgnItemInsertionCompleted.emit(edge, mouseModifiers)
 
             elif self.mode is DiagramMode.LabelMove:
 
