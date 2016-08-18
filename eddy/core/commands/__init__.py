@@ -2,7 +2,7 @@
 
 ##########################################################################
 #                                                                        #
-#  Eddy: an editor for the Graphol ontology language.                    #
+#  Eddy: a graphical editor for the specification of Graphol ontologies  #
 #  Copyright (C) 2015 Daniele Pantaleone <pantaleone@dis.uniroma1.it>    #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
@@ -18,7 +18,7 @@
 #  You should have received a copy of the GNU General Public License     #
 #  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
 #                                                                        #
-##########################################################################
+#  #####################                          #####################  #
 #                                                                        #
 #  Graphol is developed by members of the DASI-lab group of the          #
 #  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
