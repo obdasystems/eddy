@@ -137,6 +137,19 @@ class Palette(AbstractPlugin):
         # FIXME: https://bugreports.qt.io/browse/QTBUG-36862
         self.widget('palette_toggle').setAttribute(Qt.WA_UnderMouse, False)
 
+    @pyqtSlot()
+    def onSessionReady(self):
+        """
+        Executed whenever the main session completes the startup sequence.
+        """
+        self.debug('Connecting to project: %s', self.project.name)
+        connect(self.project.sgnDiagramAdded, self.onDiagramAdded)
+        connect(self.project.sgnDiagramRemoved, self.onDiagramRemoved)
+        for diagram in self.project.diagrams():
+            self.debug('Connecting to diagram: %s', diagram.name)
+            connect(diagram.sgnItemInsertionCompleted, self.onDiagramItemInsertionCompleted)
+            connect(diagram.sgnModeChanged, self.onDiagramModeChanged)
+
     #############################################
     #   INTERFACE
     #################################
@@ -211,16 +224,10 @@ class Palette(AbstractPlugin):
         menu = self.session.menu('view')
         menu.addAction(self.widget('palette_dock').toggleViewAction())
 
-        # CONFIGURE SIGNALS/SLOTS
-        self.debug('Configuring project specific signals/slots')
-        connect(self.project.sgnDiagramAdded, self.onDiagramAdded)
-        connect(self.project.sgnDiagramRemoved, self.onDiagramRemoved)
-        for diagram in self.project.diagrams():
-            self.debug('Connecting to diagram: %s', diagram.name)
-            connect(diagram.sgnItemInsertionCompleted, self.onDiagramItemInsertionCompleted)
-            connect(diagram.sgnModeChanged, self.onDiagramModeChanged)
+        self.debug('Configuring session specific signals')
+        connect(self.session.sgnReady, self.onSessionReady)
 
-        # CREATE DOCKING AREA WIDGET
+        # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
         self.session.addDockWidget(Qt.LeftDockWidgetArea, self.widget('palette_dock'))
 

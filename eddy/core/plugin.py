@@ -116,8 +116,13 @@ class AbstractPlugin(QObject, HasActionSystem, HasMenuSystem, HasWidgetSystem):
     def startup(self):
         """
         Executed whenever the plugin is to be started, after all the plugins
-        have been loaded. Plugins overriding this method have to either emit
+        have been loaded.Plugins overriding this method have to either emit
         the sgnStarted signal their own or call the super method.
+        NOTE: this method is executed before the project is loaded in the
+        main session, so any attempt to refer to self.project from within this
+        method will raise an exception. To setup project specific signals/slots,
+        it's possible to make use of the sgnReady signal emitted by the main
+        session when the startup sequence completes.
         """
         self.sgnStarted.emit(self.objectName())
 

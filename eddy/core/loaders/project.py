@@ -45,11 +45,11 @@ from eddy.core.exceptions import DiagramNotFoundError
 from eddy.core.exceptions import DiagramNotValidError
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.fsystem import fread, fexists, is_dir
-from eddy.core.functions.signals import connect
 from eddy.core.loaders.common import AbstractLoader
 from eddy.core.loaders.graphol import GrapholLoader
 from eddy.core.output import getLogger
 from eddy.core.project import Project
+
 
 LOGGER = getLogger(__name__)
 
@@ -315,5 +315,7 @@ class ProjectLoader(AbstractLoader):
         self.importProjectFromXML()
         self.importModulesFromXML()
         self.importMetaFromXML()
+
+        LOGGER.separator('-')
 
         return self.project

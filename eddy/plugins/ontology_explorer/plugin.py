@@ -44,7 +44,7 @@ from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.functions.misc import cutR, first
-from eddy.core.functions.signals import connect
+from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
 
 from eddy.ui.dock import DockWidget
@@ -55,12 +55,34 @@ class OntologyExplorer(AbstractPlugin):
     """
     This plugin provides the Ontology Explorer widget.
     """
+    sgnFakeItemAdded = pyqtSignal('QGraphicsScene', 'QGraphicsItem')
+
     def __init__(self, session):
         """
         Initialize the plugin.
         :type session: session
         """
         super().__init__(session)
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @pyqtSlot()
+    def onSessionReady(self):
+        """
+        Executed whenever the main session completes the startup sequence.
+        """
+        # CONNECT TO PROJECT SPECIFIC SIGNALS
+        widget = self.widget('ontology_explorer')
+        self.debug('Connecting to project: %s', self.project.name)
+        connect(self.project.sgnItemAdded, widget.doAddNode)
+        connect(self.project.sgnItemRemoved, widget.doRemoveNode)
+        # FILL IN ONTOLOGY EXPLORER WITH DATA
+        connect(self.sgnFakeItemAdded, widget.doAddNode)
+        for node in self.project.nodes():
+            self.sgnFakeItemAdded.emit(node.diagram, node)
+        disconnect(self.sgnFakeItemAdded, widget.doAddNode)
 
     #############################################
     #   INTERFACE
@@ -104,17 +126,11 @@ class OntologyExplorer(AbstractPlugin):
         menu = self.session.menu('view')
         menu.addAction(self.widget('ontology_explorer_dock').toggleViewAction())
 
-        # CONFIGURE SIGNALS/SLOTS
-        self.debug('Configuring session and project specific signals/slots')
-        connect(self.widget('ontology_explorer').sgnItemDoubleClicked, self.session.doFocusItem)
-        connect(self.widget('ontology_explorer').sgnItemRightClicked, self.session.doFocusItem)
-        connect(self.project.sgnItemAdded, self.widget('ontology_explorer').doAddNode)
-        connect(self.project.sgnItemRemoved, self.widget('ontology_explorer').doRemoveNode)
-        for node in self.project.nodes():
-            # FIXME: do not call slot directly
-            self.widget('ontology_explorer').doAddNode(node.diagram, node)
+        # CONFIGURE SIGNALS
+        self.debug('Configuring session specific signals')
+        connect(self.session.sgnReady, self.onSessionReady)
 
-        # CREATE DOCKING AREA WIDGET
+        # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
         self.session.addDockWidget(Qt.RightDockWidgetArea, self.widget('ontology_explorer_dock'))
 
@@ -180,6 +196,8 @@ class OntologyExplorerWidget(QWidget):
         connect(self.ontoview.doubleClicked, self.onItemDoubleClicked)
         connect(self.ontoview.pressed, self.onItemPressed)
         connect(self.search.textChanged, self.doFilterItem)
+        connect(self.sgnItemDoubleClicked, self.session.doFocusItem)
+        connect(self.sgnItemRightClicked, self.session.doFocusItem)
 
     #############################################
     #   PROPERTIES

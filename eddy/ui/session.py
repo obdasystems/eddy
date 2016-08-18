@@ -50,7 +50,7 @@ from PyQt5.QtWidgets import QMainWindow, QMessageBox, QStatusBar
 from PyQt5.QtWidgets import QToolButton, QStyle, QFileDialog, QUndoStack
 from PyQt5.QtWidgets import QMenu, QAction, QActionGroup, QToolBar
 
-from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION
+from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION, VERSION
 from eddy.core.clipboard import Clipboard
 from eddy.core.commands.common import CommandComposeAxiom
 from eddy.core.commands.common import CommandItemsRemove
@@ -115,10 +115,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
 
     * sgnClosed: whenever the current session is closed.
     * sgnQuit: whenever the application is to be terminated.
+    * sgnReady: after the session startup sequence completes.
     * sgnUpdateState: to notify that something in the session state changed.
     """
     sgnClosed = pyqtSignal()
     sgnQuit = pyqtSignal()
+    sgnReady = pyqtSignal()
     sgnUpdateState = pyqtSignal()
 
     def __init__(self, path, **kwargs):
@@ -130,12 +132,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         super().__init__(**kwargs)
 
         #############################################
-        # LOAD THE GIVEN PROJECT
-        #################################
-
-        self.project = ProjectLoader(path, self).run()
-
-        #############################################
         # INITIALIZE MAIN STUFF
         #################################
 
@@ -144,6 +140,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         self.mdi = MdiArea(self)
         self.mf = MenuFactory(self)
         self.pf = PropertyFactory(self)
+
+        # ------------------------------------------------------- #
+        # Because toolbars are needed both by widgets and actions #
+        # they need to be initialized outside 'init' methods not  #
+        # to generate cyclic dependencies:                        #
+        # ------------------------------------------------------- #
+        # * TOOLBARS  -> WIDGETS && ACTIONS                       #
+        # * WIDGETS   -> MENUS                                    #
+        # * MENUS     -> ACTIONS && TOOLBARS                      #
+        # ------------------------------------------------------- #
 
         self.addWidget(QToolBar('Document', objectName='document_toolbar'))
         self.addWidget(QToolBar('Editor', objectName='editor_toolbar'))
@@ -162,6 +168,26 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         self.initToolBars()
         self.initPlugins()
         self.initState()
+
+        #############################################
+        # LOAD THE GIVEN PROJECT
+        #################################
+
+        self.project = ProjectLoader(path, self).run()
+
+        #############################################
+        # COMPLETE SESSION SETUP
+        #################################
+
+        self.setAcceptDrops(True)
+        self.setCentralWidget(self.mdi)
+        self.setDockOptions(Session.AnimatedDocks | Session.AllowTabbedDocks)
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setWindowTitle(self.project)
+
+        self.sgnReady.emit()
+
+        LOGGER.header('Session startup completed: %s v%s', APPNAME, VERSION)
 
     #############################################
     #   SESSION CONFIGURATION
@@ -263,7 +289,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         self.addAction(QAction(
             'Export...', self, objectName='export',
             statusTip='Export the current project in a different format',
-            enabled=not self.project.isEmpty(), triggered=self.doExport))
+            enabled=False, triggered=self.doExport))
 
         self.addAction(QAction(
             QIcon(':/icons/24/ic_print_black'), 'Print...', self,
@@ -817,24 +843,17 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         Connect session specific signals to their slots.
         """
         connect(self.undostack.cleanChanged, self.doUpdateState)
+        connect(self.sgnReady, self.doUpdateState)
         connect(self.sgnUpdateState, self.doUpdateState)
 
     def initState(self):
         """
-        Configure application state.
+        Configure application state by reading the preferences file.
         """
-        # CONFIGURE BY READING APPLICATION SETTINGS
         settings = QSettings(ORGANIZATION, APPNAME)
         self.restoreGeometry(settings.value('session/geometry', QByteArray(), QByteArray))
         self.restoreState(settings.value('session/state', QByteArray(), QByteArray))
         self.action('toggle_grid').setChecked(settings.value('diagram/grid', False, bool))
-
-        # INITIALIZE DEFAULT OPTIONS
-        self.setAcceptDrops(True)
-        self.setCentralWidget(self.mdi)
-        self.setDockOptions(Session.AnimatedDocks | Session.AllowTabbedDocks)
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-        self.setWindowTitle(self.project)
 
     def initStatusBar(self):
         """

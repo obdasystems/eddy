@@ -33,16 +33,19 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QSize, QSortFilterProxyModel, pyqtSlot, pyqtSignal
-from PyQt5.QtGui import QIcon, QPainter, QStandardItem, QStandardItemModel
-from PyQt5.QtWidgets import QApplication, QHeaderView, QTreeView, QVBoxLayout
-from PyQt5.QtWidgets import QWidget, QStyleOption, QStyle, QMenu
+from PyQt5.QtCore import Qt, QSize, QSortFilterProxyModel
+from PyQt5.QtCore import pyqtSlot, pyqtSignal
+from PyQt5.QtGui import QIcon, QPainter
+from PyQt5.QtGui import QStandardItem, QStandardItemModel
+from PyQt5.QtWidgets import QApplication, QHeaderView, QTreeView
+from PyQt5.QtWidgets import QVBoxLayout, QWidget, QStyleOption
+from PyQt5.QtWidgets import QStyle, QMenu
 
 from verlib import NormalizedVersion
 
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import first
-from eddy.core.functions.signals import connect
+from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
 
 from eddy.ui.dock import DockWidget
@@ -58,6 +61,21 @@ class ProjectExplorer(AbstractPlugin):
         :type session: session
         """
         super().__init__(session)
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @pyqtSlot()
+    def onSessionReady(self):
+        """
+        Executed whenever the main session completes the startup sequence.
+        """
+        widget = self.widget('project_explorer')
+        self.debug('Connecting to project: %s', self.project.name)
+        connect(self.project.sgnDiagramAdded, widget.doAddDiagram)
+        connect(self.project.sgnDiagramRemoved, widget.doRemoveDiagram)
+        widget.setProject(self.project)
 
     #############################################
     #   INTERFACE
@@ -86,7 +104,6 @@ class ProjectExplorer(AbstractPlugin):
         self.debug('Creating project explorer widget')
         widget = ProjectExplorerWidget(self)
         widget.setObjectName('project_explorer')
-        widget.setProject(self.project)
         self.addWidget(widget)
 
         # CREATE DOCKING AREA WIDGET
@@ -103,12 +120,10 @@ class ProjectExplorer(AbstractPlugin):
         menu.addAction(self.widget('project_explorer_dock').toggleViewAction())
 
         # CONFIGURE SIGNALS/SLOTS
-        self.debug('Configuring session and project specific signals/slots')
-        connect(self.widget('project_explorer').sgnItemDoubleClicked, self.session.doFocusDiagram)
-        connect(self.project.sgnDiagramAdded, self.widget('project_explorer').doAddDiagram)
-        connect(self.project.sgnDiagramRemoved, self.widget('project_explorer').doRemoveDiagram)
+        self.debug('Configuring session specific signals')
+        connect(self.session.sgnReady, self.onSessionReady)
 
-        # CREATE DOCKING AREA WIDGET
+        # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
         self.session.addDockWidget(Qt.LeftDockWidgetArea, self.widget('project_explorer_dock'))
 
@@ -127,6 +142,7 @@ class ProjectExplorerWidget(QWidget):
     """
     This class implements the project explorer used to display the project structure.
     """
+    sgnFakeDiagramAdded = pyqtSignal('QGraphicsScene')
     sgnItemClicked = pyqtSignal('QGraphicsScene')
     sgnItemDoubleClicked = pyqtSignal('QGraphicsScene')
 
@@ -175,6 +191,7 @@ class ProjectExplorerWidget(QWidget):
 
         connect(self.projectview.doubleClicked, self.onItemDoubleClicked)
         connect(self.projectview.pressed, self.onItemPressed)
+        connect(self.sgnItemDoubleClicked, self.session.doFocusDiagram)
 
     #############################################
     #   PROPERTIES
@@ -279,9 +296,10 @@ class ProjectExplorerWidget(QWidget):
         self.model.clear()
         self.model.appendRow(self.root)
         self.root.setText(project.name)
+        connect(self.sgnFakeDiagramAdded, self.doAddDiagram)
         for diagram in project.diagrams():
-            # FIXME: don't call slot directly
-            self.doAddDiagram(diagram)
+            self.sgnFakeDiagramAdded.emit(diagram)
+        disconnect(self.sgnFakeDiagramAdded)
         sindex = self.root.index()
         pindex = self.proxy.mapFromSource(sindex)
         self.projectview.expand(pindex)

@@ -126,6 +126,14 @@ class Info(AbstractPlugin):
         """
         self.widget('info').stack()
 
+    @pyqtSlot()
+    def onSessionReady(self):
+        """
+        Executed whenever the main session completes the startup sequence.
+        """
+        self.debug('Connecting to project: %s', self.project.name)
+        connect(self.project.sgnUpdated, self.onProjectUpdated)
+
     @pyqtSlot('QMdiSubWindow')
     def onSubWindowActivated(self, subwindow):
         """
@@ -212,11 +220,11 @@ class Info(AbstractPlugin):
         menu.addAction(self.widget('info_dock').toggleViewAction())
 
         # CONFIGURE SIGNAL/SLOTS
-        self.debug('Configuring MDI area and project specific signals/slots')
+        self.debug('Configuring session and MDI area specific signals')
+        connect(self.session.sgnReady, self.onSessionReady)
         connect(self.session.mdi.subWindowActivated, self.onSubWindowActivated)
-        connect(self.project.sgnUpdated, self.onProjectUpdated)
 
-        # CREATE DOCKING AREA WIDGET
+        # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
         self.session.addDockWidget(Qt.RightDockWidgetArea, self.widget('info_dock'))
 
