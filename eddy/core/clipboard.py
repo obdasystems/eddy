@@ -33,17 +33,24 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QObject, QPointF
+from PyQt5.QtCore import QObject, QPointF, pyqtSignal
 
 from eddy.core.commands.common import CommandItemsAdd
 
 
 class Clipboard(QObject):
     """
-    Clipboard implementation.
+    Extension of QObject which implements the Clipboard.
+    Additionally to built-in signals, this class emits:
+
+    * sgnCleared: whenever the clipboard is cleared.
+    * sgnUpdated: whenever the clipboard is updated with new elements.
     """
     PasteOffsetX = 20
     PasteOffsetY = 10
+
+    sgnCleared = pyqtSignal()
+    sgnUpdated = pyqtSignal()
 
     def __init__(self, session):
         """
@@ -76,6 +83,7 @@ class Clipboard(QObject):
         """
         self.edges.clear()
         self.nodes.clear()
+        self.sgnCleared.emit()
 
     def empty(self):
         """
@@ -181,10 +189,8 @@ class Clipboard(QObject):
         """
         nodes = diagram.selectedNodes()
         if nodes:
-
             self.edges = {}
             self.nodes = {node.id: node.copy(diagram) for node in nodes}
-
             for node in nodes:
                 for edge in node.edges:
                     if edge.id not in self.edges and edge.other(node).isSelected():
@@ -194,6 +200,7 @@ class Clipboard(QObject):
                         copy.target = self.nodes[edge.target.id]
                         copy.target.setAnchor(copy, edge.target.anchor(edge))
                         self.edges[edge.id] = copy
+            self.sgnUpdated.emit()
 
     def __repr__(self):
         """
