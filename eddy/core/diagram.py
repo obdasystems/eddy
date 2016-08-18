@@ -39,6 +39,7 @@ import sys
 from PyQt5.QtCore import Qt, QPointF, QRectF, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QGraphicsScene
 
+from eddy.core.clipboard import Clipboard
 from eddy.core.commands.edges import CommandEdgeAdd
 from eddy.core.commands.nodes import CommandNodeAdd, CommandNodeMove
 from eddy.core.commands.labels import CommandLabelMove
@@ -48,10 +49,9 @@ from eddy.core.functions.graph import bfs
 from eddy.core.functions.misc import snap, snapF, partition, first
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
+from eddy.core.guid import GUID
 from eddy.core.items.factory import ItemFactory
 from eddy.core.output import getLogger
-from eddy.core.utils.clipboard import Clipboard
-from eddy.core.utils.guid import GUID
 
 
 LOGGER = getLogger(__name__)

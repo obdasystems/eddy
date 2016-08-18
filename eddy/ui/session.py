@@ -51,6 +51,7 @@ from PyQt5.QtWidgets import QToolButton, QStyle, QFileDialog, QUndoStack
 from PyQt5.QtWidgets import QMenu, QAction, QActionGroup, QToolBar
 
 from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION
+from eddy.core.clipboard import Clipboard
 from eddy.core.commands.common import CommandComposeAxiom
 from eddy.core.commands.common import CommandItemsRemove
 from eddy.core.commands.common import CommandItemsTranslate
@@ -89,7 +90,6 @@ from eddy.core.loaders.graphol import GrapholLoader
 from eddy.core.loaders.project import ProjectLoader
 from eddy.core.output import getLogger
 from eddy.core.plugin import AbstractPlugin
-from eddy.core.utils.clipboard import Clipboard
 
 from eddy.ui.about import AboutDialog
 from eddy.ui.diagram import NewDiagramDialog
