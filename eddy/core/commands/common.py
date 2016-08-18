@@ -66,6 +66,7 @@ class CommandItemsAdd(QUndoCommand):
             self.diagram.addItem(item)
             self.diagram.sgnItemAdded.emit(self.diagram, item)
             item.setSelected(True)
+            item.updateEdgeOrNode()
         # Emit updated signal.
         self.diagram.sgnUpdated.emit()
 
@@ -79,6 +80,7 @@ class CommandItemsAdd(QUndoCommand):
         # Restore the old selection.
         for item in self.selected:
             item.setSelected(True)
+            item.updateEdgeOrNode()
         # Emit updated signal.
         self.diagram.sgnUpdated.emit()
 

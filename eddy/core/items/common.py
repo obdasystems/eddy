@@ -212,6 +212,27 @@ class AbstractItem(QGraphicsItem, DiagramItemMixin):
         """
         return self.Type
 
+    def updateEdge(self, *args, **kwargs):
+        """
+        Update the edge geometry if this item is an edge.
+        """
+        pass
+
+    def updateNode(self, *args, **kwargs):
+        """
+        Update the node geometry if this item is a node.
+        """
+        pass
+
+    def updateEdgeOrNode(self, *args, **kwargs):
+        """
+        Convenience method which calls node or edge update function depending on the type of the item.
+        """
+        if self.isNode():
+            self.updateNode(*args, **kwargs)
+        elif self.isEdge():
+            self.updateEdge(*args, **kwargs)
+
     def __repr__(self):
         """
         Returns repr(self).

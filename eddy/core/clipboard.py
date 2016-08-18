@@ -149,7 +149,6 @@ class Clipboard(QObject):
                 item.moveBy(offset.x(), offset.y())
                 if item.isNode():
                     item.setZValue(zValue + 0.1)
-                    item.updateNode()
                     zValue += 0.1
                 elif item.isEdge():
                     item.updateEdge()
@@ -165,7 +164,6 @@ class Clipboard(QObject):
                 item.moveBy(diagram.pasteX, diagram.pasteY)
                 if item.isNode():
                     item.setZValue(zValue + 0.1)
-                    item.updateNode()
                     zValue += 0.1
                 elif item.isEdge():
                     item.updateEdge()
@@ -189,6 +187,7 @@ class Clipboard(QObject):
         """
         nodes = diagram.selectedNodes()
         if nodes:
+
             self.edges = {}
             self.nodes = {node.id: node.copy(diagram) for node in nodes}
             for node in nodes:
@@ -200,6 +199,7 @@ class Clipboard(QObject):
                         copy.target = self.nodes[edge.target.id]
                         copy.target.setAnchor(copy, edge.target.anchor(edge))
                         self.edges[edge.id] = copy
+
             self.sgnUpdated.emit()
 
     def __repr__(self):
