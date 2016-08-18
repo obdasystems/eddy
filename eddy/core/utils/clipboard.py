@@ -141,6 +141,7 @@ class Clipboard(QObject):
                 item.moveBy(offset.x(), offset.y())
                 if item.isNode():
                     item.setZValue(zValue + 0.1)
+                    item.updateNode()
                     zValue += 0.1
                 elif item.isEdge():
                     item.updateEdge()
