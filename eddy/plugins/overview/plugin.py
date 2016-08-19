@@ -35,7 +35,7 @@
 
 from PyQt5.QtCore import Qt, QEvent, QSize, pyqtSlot
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QGraphicsView
+from PyQt5.QtWidgets import QGraphicsView, QMdiSubWindow
 
 from verlib import NormalizedVersion
 
@@ -90,7 +90,7 @@ class Overview(AbstractPlugin):
         """
         self.widget('overview').redraw()
 
-    @pyqtSlot('QMdiSubWindow')
+    @pyqtSlot(QMdiSubWindow)
     def onSubWindowActivated(self, subwindow):
         """
         Executed when the active subwindow changes.
@@ -172,7 +172,7 @@ class Overview(AbstractPlugin):
         menu.addAction(self.widget('overview_dock').toggleViewAction())
 
         # CONFIGURE SIGNALS/SLOTS
-        self.debug('Configuring MDI area specific signals/slots')
+        self.debug('Configuring MDI area specific signals')
         connect(self.session.mdi.subWindowActivated, self.onSubWindowActivated)
 
         # CREATE DOCKING AREA WIDGET

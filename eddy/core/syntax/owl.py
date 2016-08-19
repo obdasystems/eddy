@@ -69,7 +69,7 @@ class OWL2Validator(AbstractValidator):
         """
         try:
 
-            LOGGER.debug('Running validation algorithm: (%s) ---%s--> (%s)', source, edge, target)
+            #LOGGER.debug('Running validation algorithm: (%s) ---%s--> (%s)', source, edge, target)
 
             #############################################
             # EDGE = INCLUSION

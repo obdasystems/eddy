@@ -35,15 +35,17 @@
 
 from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QDialog, QProgressBar, QDesktopWidget
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox
-from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QApplication
+from PyQt5.QtWidgets import QDialog, QProgressBar, QMessageBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTextEdit
+from PyQt5.QtWidgets import QDesktopWidget, QApplication
+from PyQt5.QtWidgets import QHBoxLayout, QPushButton
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
 
 
+# FIXME: this is bugged as hell!
 class SyntaxValidationDialog(QDialog):
     """
     This class implements the modal dialog used to perform manual syntax validation.
@@ -93,6 +95,7 @@ class SyntaxValidationDialog(QDialog):
         self.buttonShow.setFont(arial12r)
 
         self.buttonBox = QWidget(self)
+        self.buttonBox.setVisible(False)
         self.buttonBoxLayout = QHBoxLayout(self.buttonBox)
         self.buttonBoxLayout.setContentsMargins(10, 0, 10, 10)
         self.buttonBoxLayout.addWidget(self.buttonAbort, 0, Qt.AlignRight)
@@ -110,6 +113,7 @@ class SyntaxValidationDialog(QDialog):
         self.messageField.setFont(arial12r)
 
         self.messageBox = QWidget(self)
+        self.messageBox.setVisible(False)
         self.messageBoxLayout = QVBoxLayout(self.messageBox)
         self.messageBoxLayout.setContentsMargins(10, 0, 10, 10)
         self.messageBoxLayout.addWidget(self.messageField)
@@ -124,15 +128,16 @@ class SyntaxValidationDialog(QDialog):
         self.mainLayout.addWidget(self.buttonBox, 0, Qt.AlignRight)
         self.mainLayout.addWidget(self.messageBox)
 
-        self.setWindowTitle('Running syntax validation...')
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-        self.setFixedSize(self.sizeHint())
-
         connect(self.sgnProgress, self.doProgress)
         connect(self.sgnWarning, self.doWarning)
         connect(self.buttonAbort.clicked, self.doAbort)
         connect(self.buttonIgnore.clicked, self.doIgnore)
         connect(self.buttonShow.clicked, self.doShow)
+
+        self.setAttribute(Qt.WA_DeleteOnClose, True)
+        self.setWindowTitle('Running syntax validation...')
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setFixedSize(self.sizeHint())
 
         desktop = QDesktopWidget()
         screen = desktop.screenGeometry()
@@ -140,13 +145,6 @@ class SyntaxValidationDialog(QDialog):
         x = (screen.width() - widget.width()) / 2
         y = (screen.height() - widget.height()) / 2
         self.move(x, y)
-
-        #############################################
-        # HIDE AUXILIARY WIDGETS
-        #################################
-
-        self.buttonBox.setVisible(False)
-        self.messageBox.setVisible(False)
 
     #############################################
     #   PROPERTIES
@@ -210,7 +208,6 @@ class SyntaxValidationDialog(QDialog):
                 item = self.items[self.i]
                 self.progressBar.setValue(self.i)
 
-                # noinspection PyArgumentList
                 QApplication.processEvents()
 
                 if item.isEdge():
@@ -237,10 +234,12 @@ class SyntaxValidationDialog(QDialog):
                         break
 
                 self.i += 1
+                print('{} - {}'.format(self.i, len(self.items)))
 
             if message:
                 self.sgnWarning.emit(message)
             else:
+                print("HERE")
                 self.close(popup=True)
         else:
             self.close(popup=True)

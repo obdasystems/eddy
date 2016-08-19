@@ -72,10 +72,14 @@ jnius_config.set_classpath(*classpath)
 
 from argparse import ArgumentParser
 
+from PyQt5.Qt import PYQT_VERSION_STR
+from PyQt5.QtCore import QT_VERSION_STR
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QMessageBox, QApplication
 
-from eddy import APPNAME, BUG_TRACKER
+from sip import SIP_VERSION_STR
+
+from eddy import APPNAME, COPYRIGHT, VERSION, BUG_TRACKER
 from eddy.core.application import Eddy
 from eddy.core.functions.misc import format_exception
 from eddy.core.functions.signals import connect
@@ -146,6 +150,15 @@ def main():
     if app.isAlreadyRunning():
         app.routePacket(sys.argv)
         sys.exit(0)
+
+    LOGGER.separator(separator='-')
+    LOGGER.frame('%s v%s', APPNAME, VERSION, separator='|')
+    LOGGER.frame(COPYRIGHT, separator='|')
+    LOGGER.separator(separator='-')
+    LOGGER.frame('Qt version: %s', QT_VERSION_STR, separator='|')
+    LOGGER.frame('PyQt version: %s', PYQT_VERSION_STR, separator='|')
+    LOGGER.frame('SIP version: %s', SIP_VERSION_STR, separator='|')
+    LOGGER.separator(separator='-')
 
     app.configure(options)
     app.start(options)

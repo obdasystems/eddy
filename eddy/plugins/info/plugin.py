@@ -36,8 +36,9 @@
 from PyQt5.QtCore import Qt, QEvent, QSize, pyqtSlot
 from PyQt5.QtGui import QIcon, QPainter, QBrush, QColor
 from PyQt5.QtWidgets import QScrollArea, QStackedWidget, QWidget
-from PyQt5.QtWidgets import QStyleOption, QPushButton, QLabel, QStyle
-from PyQt5.QtWidgets import QFormLayout, QVBoxLayout, QMenu, QSizePolicy
+from PyQt5.QtWidgets import QStyleOption, QPushButton, QLabel
+from PyQt5.QtWidgets import QFormLayout, QVBoxLayout, QMenu
+from PyQt5.QtWidgets import QMdiSubWindow, QSizePolicy, QStyle
 
 from abc import ABCMeta, abstractmethod
 from verlib import NormalizedVersion
@@ -134,7 +135,7 @@ class Info(AbstractPlugin):
         self.debug('Connecting to project: %s', self.project.name)
         connect(self.project.sgnUpdated, self.onProjectUpdated)
 
-    @pyqtSlot('QMdiSubWindow')
+    @pyqtSlot(QMdiSubWindow)
     def onSubWindowActivated(self, subwindow):
         """
         Executed when the active subwindow changes.

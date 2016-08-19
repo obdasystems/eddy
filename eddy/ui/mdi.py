@@ -84,7 +84,7 @@ class MdiArea(QMdiArea):
     #   SLOTS
     #################################
 
-    @pyqtSlot('QMdiSubWindow')
+    @pyqtSlot(QMdiSubWindow)
     def onSubWindowActivated(self, subwindow):
         """
         Executed when the active subwindow changes.
@@ -124,7 +124,7 @@ class MdiArea(QMdiArea):
             return subwindow.widget()
         return None
 
-    def addSubWindow(self, subwindow, flags=0):
+    def addSubWindow(self, subwindow, flags=0, **kwargs):
         """
         Add a subwindow to the MDI area.
         :type subwindow: MdiSubWindow

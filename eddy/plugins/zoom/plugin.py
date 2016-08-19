@@ -35,7 +35,7 @@
 
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QToolButton
+from PyQt5.QtWidgets import QToolButton, QMdiSubWindow
 
 from verlib import NormalizedVersion
 
@@ -108,7 +108,7 @@ class Zoom(AbstractPlugin):
         """
         self.adjust(level)
 
-    @pyqtSlot('QMdiSubWindow')
+    @pyqtSlot(QMdiSubWindow)
     def onSubWindowActivated(self, subwindow):
         """
         Executed when the active subwindow changes.

@@ -46,6 +46,17 @@ class OutputHandler(logging.Logger):
     """
     HeadLength = 92
 
+    def frame(self, msg, *args, **kwargs):
+        """
+        Log 'msg % args' with severity 'INFO' decorating it with the frame pattern.
+        """
+        if self.isEnabledFor(logging.INFO):
+            separator = kwargs.pop('separator', '-')
+            msg = msg % args % kwargs
+            num = OutputHandler.HeadLength - len(msg) - len(separator) * 2 - 2
+            msg = '%s %s%s %s' % (separator, msg, ' ' * num, separator)
+            self.info(msg)
+
     def header(self, msg, *args, **kwargs):
         """
         Log 'msg % args' with severity 'INFO' decorating it with the heading pattern.
