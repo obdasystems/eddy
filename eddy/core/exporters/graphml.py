@@ -37,32 +37,30 @@ from PyQt5.QtCore import QPointF
 from PyQt5.QtXml import QDomDocument
 
 from eddy.core.datatypes.graphol import Item
-from eddy.core.exporters.common import AbstractExporter
+from eddy.core.datatypes.system import File
+from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.functions.fsystem import fwrite
 from eddy.core.functions.misc import isEmpty
 
 
-class GraphmlExporter(AbstractExporter):
+class GraphmlDiagramExporter(AbstractDiagramExporter):
     """
-    This class can be used to export graphol diagrams in Graphml format.
+    Extends AbstractDiagramExporter with facilities to export the structure of Graphol diagrams in Graphml format.
     """
-    KEY_NODE = 'd0'
-    KEY_EDGE = 'd1'
-    KEY_URL = 'd2'
-    KEY_DESCRIPTION = 'd3'
+    KeyNode = 'd0'
+    KeyEdge = 'd1'
+    KeyUrl = 'd2'
+    KeyDescription = 'd3'
 
-    def __init__(self, diagram, path, session):
+    def __init__(self, diagram, session):
         """
         Initialize the Graphml exporter.
         :type diagram: Diagram
-        :type path: str
         :type session: Session
         """
-        super().__init__(session)
+        super(GraphmlDiagramExporter, self).__init__(diagram, session)
 
         self.document = None
-        self.diagram = diagram
-        self.path = path
         self.missing = {Item.FacetNode, Item.PropertyAssertionNode}
 
         self.exportFuncForItem = {
@@ -348,7 +346,7 @@ class GraphmlExporter(AbstractExporter):
         #################################
 
         dataNode = self.document.createElement('data')
-        dataNode.setAttribute('key', GraphmlExporter.KEY_NODE)
+        dataNode.setAttribute('key', GraphmlDiagramExporter.KeyNode)
         dataNode.appendChild(genericNode)
 
         #############################################
@@ -361,7 +359,7 @@ class GraphmlExporter(AbstractExporter):
             wikiURL = meta.url
 
         dataURL = self.document.createElement('data')
-        dataURL.setAttribute('key', GraphmlExporter.KEY_URL)
+        dataURL.setAttribute('key', GraphmlDiagramExporter.KeyUrl)
         dataURL.appendChild(self.document.createTextNode(wikiURL))
 
         #############################################
@@ -369,7 +367,7 @@ class GraphmlExporter(AbstractExporter):
         #################################
 
         dataWIKI = self.document.createElement('data')
-        dataWIKI.setAttribute('key', GraphmlExporter.KEY_DESCRIPTION)
+        dataWIKI.setAttribute('key', GraphmlDiagramExporter.KeyDescription)
         dataWIKI.appendChild(self.document.createTextNode(meta.description))
 
         #############################################
@@ -492,7 +490,7 @@ class GraphmlExporter(AbstractExporter):
         #################################
 
         data = self.document.createElement('data')
-        data.setAttribute('key', GraphmlExporter.KEY_NODE)
+        data.setAttribute('key', GraphmlDiagramExporter.KeyNode)
         data.appendChild(shapeNode)
 
         #############################################
@@ -626,7 +624,7 @@ class GraphmlExporter(AbstractExporter):
         #################################
 
         data = self.document.createElement('data')
-        data.setAttribute('key', GraphmlExporter.KEY_EDGE)
+        data.setAttribute('key', GraphmlDiagramExporter.KeyEdge)
         data.appendChild(polyLineEdge)
 
         #############################################
@@ -679,9 +677,10 @@ class GraphmlExporter(AbstractExporter):
     #   DOCUMENT GENERATION
     #################################
 
-    def run(self):
+    def export(self, path):
         """
-        Perform graphol document generation.
+        Perform Graphml document generation.
+        :type path: str
         """
         # 1) CREATE THE DOCUMENT
         self.document = QDomDocument()
@@ -700,13 +699,13 @@ class GraphmlExporter(AbstractExporter):
         # 3) CREATE ELEMENT KEYS
         key = self.document.createElement('key')
         key.setAttribute('for', 'node')
-        key.setAttribute('id', GraphmlExporter.KEY_NODE)
+        key.setAttribute('id', GraphmlDiagramExporter.KeyNode)
         key.setAttribute('yfiles.type', 'nodegraphics')
         root.appendChild(key)
 
         key = self.document.createElement('key')
         key.setAttribute('for', 'edge')
-        key.setAttribute('id', GraphmlExporter.KEY_EDGE)
+        key.setAttribute('id', GraphmlDiagramExporter.KeyEdge)
         key.setAttribute('yfiles.type', 'edgegraphics')
         root.appendChild(key)
 
@@ -714,14 +713,14 @@ class GraphmlExporter(AbstractExporter):
         key.setAttribute('attr.name', 'url')
         key.setAttribute('attr.type', 'string')
         key.setAttribute('for', 'node')
-        key.setAttribute('id', GraphmlExporter.KEY_URL)
+        key.setAttribute('id', GraphmlDiagramExporter.KeyUrl)
         root.appendChild(key)
 
         key = self.document.createElement('key')
         key.setAttribute('attr.name', 'description')
         key.setAttribute('attr.type', 'string')
         key.setAttribute('for', 'node')
-        key.setAttribute('id', GraphmlExporter.KEY_DESCRIPTION)
+        key.setAttribute('id', GraphmlDiagramExporter.KeyDescription)
         root.appendChild(key)
 
         # 4) CREATE THE GRAPH NODE
@@ -746,4 +745,12 @@ class GraphmlExporter(AbstractExporter):
         root.appendChild(graph)
 
         # 8) GENERATE THE FILE
-        fwrite(self.document.toString(2), self.path)
+        fwrite(self.document.toString(2), path)
+
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the export.
+        :return: File
+        """
+        return File.GraphML

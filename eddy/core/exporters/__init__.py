@@ -31,7 +31,3 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-
-#
-# from eddy.core.exporters.graphol import GrapholExporter
-# from eddy.core.exporters.owl import OWLExporter

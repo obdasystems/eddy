@@ -42,7 +42,7 @@ from PyQt5.QtWidgets import QWidget, QDialogButtonBox, QLabel
 
 from eddy import ORGANIZATION, APPNAME, WORKSPACE
 from eddy.core.datatypes.qt import Font
-from eddy.core.exporters.project import ProjectExporter
+from eddy.core.exporters.graphol import GrapholProjectExporter
 from eddy.core.functions.fsystem import is_dir
 from eddy.core.functions.misc import cutR, isEmpty
 from eddy.core.functions.path import expandPath, isPathValid
@@ -156,6 +156,31 @@ class ProjectDialog(QDialog):
         connect(self.confirmationBox.rejected, self.reject)
 
     #############################################
+    #   INTERFACE
+    #################################
+
+    def iri(self):
+        """
+        Returns the value of the iri field (trimmed).
+        :rtype: str
+        """
+        return self.iriField.value()
+
+    def path(self):
+        """
+        Returns the value of the path field (expanded).
+        :rtype: str
+        """
+        return expandPath(self.pathField.value())
+
+    def prefix(self):
+        """
+        Returns the value of the prefix field (trimmed).
+        :rtype: str
+        """
+        return self.prefixField.value()
+
+    #############################################
     # SLOTS
     #################################
 
@@ -164,15 +189,9 @@ class ProjectDialog(QDialog):
         """
         Accept the project form and creates a new empty project.
         """
-        path = self.pathField.value()
-        prefix = self.prefixField.value()
-        iri = self.iriField.value()
-
-        # CREATE THE PROJECT
-        project = Project(path, prefix, iri)
-        exporter = ProjectExporter(project)
-        exporter.run()
-
+        project = Project(self.path(), self.prefix(), self.iri())
+        exporter = GrapholProjectExporter(project)
+        exporter.export()
         super().accept()
 
     @pyqtSlot()

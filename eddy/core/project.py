@@ -37,18 +37,11 @@ import os
 
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
-from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 
 from eddy.core.datatypes.graphol import Item
-from eddy.core.datatypes.system import File
-from eddy.core.exporters.csv import CsvExporter
-from eddy.core.exporters.pdf import PdfExporter
-from eddy.core.exporters.printer import PrinterExporter
 from eddy.core.functions.misc import cutR
-from eddy.core.functions.path import openPath
 from eddy.core.items.nodes.common.meta import MetaFactory
 from eddy.core.syntax.owl import OWL2Validator
-from export import OWLExportDialog
 
 
 K_DIAGRAM = 'diagrams'
@@ -236,59 +229,6 @@ class Project(QObject):
         except (KeyError, TypeError):
             return set()
 
-    def export(self, path, file):
-        """
-        Export the current project.
-        :type path: str
-        :type file: File
-        """
-        if file is File.Csv:
-            self.exportToCsv(path)
-        if file is File.Owl:
-            self.exportToOwl(path)
-        elif file is File.Pdf:
-            self.exportToPdf(path)
-
-    def exportToCsv(self, path):
-        """
-        Export the current project in CSV format.
-        :type path: str
-        """
-        if not self.isEmpty():
-
-            try:
-                exporter = CsvExporter(self, path)
-                exporter.run()
-            except Exception as e:
-                raise e
-            else:
-                openPath(path)
-
-    def exportToOwl(self, path):
-        """
-        Export the current project in OWL syntax.
-        :type path: str
-        :rtype: bool
-        """
-        if not self.isEmpty():
-            dialog = OWLExportDialog(self, path, self.parent())
-            dialog.exec_()
-
-    def exportToPdf(self, path):
-        """
-        Export the current project in PDF format.
-        :type path: str
-        """
-        if not self.isEmpty():
-
-            try:
-                exporter = PdfExporter(self, path)
-                exporter.run()
-            except Exception as e:
-                raise e
-            else:
-                openPath(path)
-
     def isEmpty(self):
         """
         Returns True if the project contains no element, False otherwise.
@@ -424,18 +364,6 @@ class Project(QObject):
 
         except KeyError:
             return set()
-
-    def print(self):
-        """
-        Print the current project.
-        """
-        if not self.isEmpty():
-            printer = QPrinter(QPrinter.HighResolution)
-            printer.setOutputFormat(QPrinter.NativeFormat)
-            dialog = QPrintDialog(printer)
-            if dialog.exec_() == QPrintDialog.Accepted:
-                exporter = PrinterExporter(self, printer)
-                exporter.run()
 
     def removeDiagram(self, diagram):
         """

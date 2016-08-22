@@ -43,12 +43,12 @@ class File(Enum):
     """
     This class defines supported filetypes.
     """
-    __order__ = 'Csv Graphml Graphol Owl Pdf Zip'
+    __order__ = 'Csv GraphML Graphol Owl Pdf Zip'
 
-    Csv = 'Csv (*.csv)'
-    Graphml = 'Graphml (*.graphml)'
+    Csv = 'Comma-separated values (*.csv)'
+    GraphML = 'GraphML (*.graphml)'
     Graphol = 'Graphol (*.graphol)'
-    Owl = 'Owl (*.owl)'
+    Owl = 'Web Ontology Language (*.owl)'
     Pdf = 'PDF (*.pdf)'
     Zip = 'ZIP (*.zip)'
 
@@ -84,12 +84,28 @@ class File(Enum):
         """
         return {
             File.Csv: '.csv',
-            File.Graphml: '.graphml',
+            File.GraphML: '.graphml',
             File.Graphol: '.graphol',
             File.Owl: '.owl',
             File.Pdf: '.pdf',
             File.Zip: '.zip',
         }[self]
+
+    def __lt__(self, other):
+        """
+        Returns True if the current File is "lower" than the given other one.
+        :type other: File
+        :rtype: bool
+        """
+        return self.value < other.value
+
+    def __gt__(self, other):
+        """
+        Returns True if the current File is "greater" than the given other one.
+        :type other: File
+        :rtype: bool
+        """
+        return self.value > other.value
 
 
 @unique

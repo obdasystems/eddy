@@ -40,7 +40,7 @@ from PyQt5.QtCore import QObject
 
 class AbstractExporter(QObject):
     """
-    Base class for all the exporters.
+    Extends QObject providing the base class for all the exporters.
     """
     __metaclass__ = ABCMeta
 
@@ -68,9 +68,90 @@ class AbstractExporter(QObject):
     #################################
 
     @abstractmethod
-    def run(self):
+    def export(self, path):
         """
         Perform the export.
+        :type path: str
         """
         pass
 
+    @abstractmethod
+    def filetype(self):
+        """
+        Returns the type of the file that will be used for the export.
+        :return: File
+        """
+        pass
+
+
+class AbstractDiagramExporter(AbstractExporter):
+    """
+    Extends AbstractExporter providing the base class for all the Diagram exporters.
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, diagram, session):
+        """
+        Initialize the AbstractExporter.
+        :type diagram: Diagram
+        :type session: Session
+        """
+        super().__init__(session)
+        self.diagram = diagram
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @abstractmethod
+    def export(self, path):
+        """
+        Perform the export.
+        :type path: str
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the export.
+        :return: File
+        """
+        pass
+
+
+class AbstractProjectExporter(AbstractExporter):
+    """
+    Extends AbstractExporter providing the base class for all the Project exporters.
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, project, session):
+        """
+        Initialize the AbstractExporter.
+        :type project: Project
+        :type session: Session
+        """
+        super().__init__(session)
+        self.project = project
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @abstractmethod
+    def export(self, path):
+        """
+        Perform the export.
+        :type path: str
+        """
+        pass
+
+    @abstractmethod
+    def filetype(self):
+        """
+        Returns the type of the file that will be used for the export.
+        :return: File
+        """
+        pass

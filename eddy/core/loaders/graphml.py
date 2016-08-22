@@ -589,7 +589,7 @@ class GraphmlLoader(AbstractLoader):
         # CREATE AN EMPTY DIAGRAM
         #################################
 
-        name = cutR(os.path.basename(self.path), File.Graphml.extension)
+        name = cutR(os.path.basename(self.path), File.GraphML.extension)
         path = uniquePath(self.project.path, name, File.Graphol.extension)
         self.diagram = Diagram(path, self.project)
         self.diagram.setSceneRect(QRectF(-Diagram.MaxSize / 2, -Diagram.MaxSize / 2, Diagram.MaxSize, Diagram.MaxSize))

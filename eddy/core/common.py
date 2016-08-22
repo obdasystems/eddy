@@ -35,6 +35,8 @@
 
 from PyQt5.QtWidgets import QAction
 
+from eddy.core.exporters.common import AbstractDiagramExporter
+from eddy.core.exporters.common import AbstractProjectExporter
 from eddy.core.functions.misc import isEmpty
 from eddy.core.output import getLogger
 
@@ -396,3 +398,233 @@ class HasWidgetSystem(object):
         self._widgetList.remove(widget)
         del self._widgetDict[widget.objectName()]
         return widget
+
+
+class HasDiagramExportSystem(object):
+    """
+    Mixin which adds the ability to store and retrieve Diagram exporters.
+    """
+    def __init__(self, **kwargs):
+        """
+        Initialize the object with default parameters.
+        :type kwargs: dict
+        """
+        super().__init__(**kwargs)
+        self._diagramExporterDict = {}
+        self._diagramExporterList = []
+
+    def addDiagramExporter(self, exporter):
+        """
+        Add a diagram exporter class to the set.
+        :type exporter: class
+        """
+        if not issubclass(exporter, AbstractDiagramExporter):
+            raise ValueError("diagram exporter must be subclass of eddy.core.exporters.common.AbstractDiagramExporter")
+        filetype = exporter.filetype()
+        if filetype in self._diagramExporterDict:
+            raise ValueError("duplicate diagram exporter found for filetype %s" % filetype.value)
+        self._diagramExporterList.append(exporter)
+        self._diagramExporterDict[filetype] = exporter
+        #LOGGER.debug("Added diagram exporter %s -> %s", exporter.__name__, filetype.value)
+
+    def addDiagramExporters(self, exporters):
+        """
+        Add the given group of diagram exporter classes to the set.
+        :type exporters: T <= list|tuple
+        """
+        for exporter in exporters:
+            self.addDiagramExporter(exporter)
+
+    def createDiagramExporter(self, filetype, diagram, session=None):
+        """
+        Creates an instance of a diagram exporter for the given filetype.
+        :type filetype: File
+        :type diagram: Diagram
+        :type session: Session
+        :rtype: AbstractDiagramExporter
+        """
+        exporter = self.diagramExporter(filetype)
+        if not exporter:
+            raise ValueError("missing diagram exporter for filetype %s", filetype.value)
+        return exporter(diagram, session)
+
+    def diagramExporter(self, filetype):
+        """
+        Returns the reference to a diagram exporter class given a filetype.
+        :type filetype: File
+        :rtype: class
+        """
+        return self._diagramExporterDict.get(filetype, None)
+
+    def diagramExporters(self, exclude=None):
+        """
+        Returns the list of diagram exporter classes.
+        :type exclude: T <= list|tuple|set
+        :rtype: list
+        """
+        collection = self._diagramExporterList
+        if exclude:
+            collection = [x for x in collection if x.filetype() not in exclude]
+        return sorted(collection, key=lambda x: x.filetype())
+
+    def diagramNameFilters(self, exclude=None):
+        """
+        Returns the list of diagram name filters
+        :type exclude: T <= list|tuple|set
+        :rtype: list
+        """
+        collection = [x.filetype() for x in self.diagramExporters(exclude)]
+        collection = [x.value for x in collection]
+        return collection
+
+    def insertDiagramExporter(self, exporter, before):
+        """
+        Insert the given project exporter class before the given one.
+        :type exporter: class
+        :type before: class
+        """
+        if not issubclass(exporter, AbstractDiagramExporter):
+            raise ValueError("diagram exporter must be subclass of eddy.core.exporters.common.AbstractDiagramExporter")
+        filetype1 = exporter.filetype()
+        # filetype2 = before.filetype()
+        if filetype1 in self._diagramExporterDict:
+            raise ValueError("duplicate diagram exporter found for filetype %s" % filetype1.value)
+        self._diagramExporterList.insert(self._diagramExporterList.index(before), exporter)
+        self._diagramExporterDict[filetype1] = exporter
+        # LOGGER.debug("Added diagram exporter %s -> %s before project exporter %s -> %s",
+        #              exporter.__name__, filetype.value,
+        #              before.__name__, filetype1.value)
+
+    def insertDiagramExporters(self, exporters, before):
+        """
+        Insert the given group of diagram exporter classes before the given one.
+        :type exporters: T <= list|tuple
+        :type before: class
+        """
+        for exporter in exporters:
+            self.insertDiagramExporter(exporter, before)
+
+    def removeDiagramExporter(self, exporter):
+        """
+        Removes the given diagram exporter class from the set.
+        :type exporter: class
+        :rtype: class
+        """
+        self._diagramExporterList.remove(exporter)
+        del self._diagramExporterDict[exporter.filetype()]
+        return exporter
+
+
+class HasProjectExportSystem(object):
+    """
+    Mixin which adds the ability to store and retrieve Project exporters.
+    """
+    def __init__(self, **kwargs):
+        """
+        Initialize the object with default parameters.
+        :type kwargs: dict
+        """
+        super().__init__(**kwargs)
+        self._projectExporterDict = {}
+        self._projectExporterList = []
+
+    def addProjectExporter(self, exporter):
+        """
+        Add a project exporter class to the set.
+        :type exporter: class
+        """
+        if not issubclass(exporter, AbstractProjectExporter):
+            raise ValueError("project exporter must be subclass of eddy.core.exporters.common.AbstractProjectExporter")
+        filetype = exporter.filetype()
+        if filetype in self._projectExporterDict:
+            raise ValueError("duplicate project exporter found for filetype %s" % filetype.value)
+        self._projectExporterList.append(exporter)
+        self._projectExporterDict[filetype] = exporter
+        #LOGGER.debug("Added project exporter %s -> %s", exporter.__name__, filetype.value)
+
+    def addProjectExporters(self, exporters):
+        """
+        Add the given group of project exporter classes to the set.
+        :type exporters: T <= list|tuple
+        """
+        for exporter in exporters:
+            self.addProjectExporter(exporter)
+
+    def createProjectExporter(self, filetype, project, session=None):
+        """
+        Creates an instance of a project exporter for the given filetype.
+        :type filetype: File
+        :type project: Project
+        :type session: Session
+        :rtype: AbstractProjectExporter
+        """
+        exporter = self.projectExporter(filetype)
+        if not exporter:
+            raise ValueError("missing project exporter for filetype %s", filetype.value)
+        return exporter(project, session)
+
+    def insertProjectExporter(self, exporter, before):
+        """
+        Insert the given project exporter class before the given one.
+        :type exporter: class
+        :type before: class
+        """
+        if not issubclass(exporter, AbstractProjectExporter):
+            raise ValueError("project exporter must be subclass of eddy.core.exporters.common.AbstractProjectExporter")
+        filetype1 = exporter.filetype()
+        # filetype2 = before.filetype()
+        if filetype1 in self._projectExporterDict:
+            raise ValueError("duplicate project exporter found for filetype %s" % filetype1.value)
+        self._projectExporterList.insert(self._projectExporterList.index(before), exporter)
+        self._projectExporterDict[filetype1] = exporter
+        # LOGGER.debug("Added project exporter %s -> %s before project exporter %s -> %s",
+        #              exporter.__name__, filetype.value,
+        #              before.__name__, filetype1.value)
+
+    def insertProjectExporters(self, exporters, before):
+        """
+        Insert the given group of project exporter classes before the given one.
+        :type exporters: T <= list|tuple
+        :type before: class
+        """
+        for exporter in exporters:
+            self.insertProjectExporter(exporter, before)
+
+    def projectExporter(self, filetype):
+        """
+        Returns the reference to a project exporter class given a filetype.
+        :type filetype: File
+        :rtype: class
+        """
+        return self._projectExporterDict.get(filetype, None)
+
+    def projectExporters(self, exclude=None):
+        """
+        Returns the list of project exporter classes.
+        :type exclude: T <= list|tuple|set
+        :rtype: list
+        """
+        collection = self._projectExporterList
+        if exclude:
+            collection = [x for x in collection if x.filetype() not in exclude]
+        return sorted(collection, key=lambda x: x.filetype())
+
+    def projectNameFilters(self, exclude=None):
+        """
+        Returns the list of project name filters
+        :type exclude: T <= list|tuple|set
+        :rtype: list
+        """
+        collection = [x.filetype() for x in self.projectExporters(exclude)]
+        collection = [x.value for x in collection]
+        return collection
+
+    def removeProjectExporter(self, exporter):
+        """
+        Removes the given project exporter class from the set.
+        :type exporter: class
+        :rtype: class
+        """
+        self._projectExporterList.remove(exporter)
+        del self._projectExporterDict[exporter.filetype()]
+        return exporter

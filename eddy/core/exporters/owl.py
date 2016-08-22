@@ -33,26 +33,251 @@
 ##########################################################################
 
 
-import jnius
+from jnius import autoclass, cast, detach
 
+from PyQt5.QtCore import Qt, QObject, QThread
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QMessageBox
+from PyQt5.QtWidgets import QFrame, QProgressBar, QVBoxLayout, QWidget
 
+from eddy import BUG_TRACKER
+from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
 from eddy.core.datatypes.owl import OWLSyntax, Datatype, Facet
+from eddy.core.datatypes.system import File
 from eddy.core.exceptions import MalformedDiagramError
-from eddy.core.exporters.common import AbstractExporter
+from eddy.core.exporters.common import AbstractProjectExporter
 from eddy.core.functions.fsystem import fwrite
-from eddy.core.functions.misc import first, clamp, isEmpty, postfix
+from eddy.core.functions.misc import first, clamp, isEmpty, postfix, format_exception
 from eddy.core.functions.owl import OWLShortIRI, OWLAnnotationText
 from eddy.core.functions.owl import OWLFunctionalDocumentFilter
+from eddy.core.functions.path import expandPath, openPath
+from eddy.core.functions.signals import connect
+
+from eddy.ui.fields import ComboBox
 
 
-class OWLExporter(AbstractExporter):
+class OWLProjectExporter(AbstractProjectExporter):
     """
-    This class can be used to export Graphol projects into OWL ontologies.
-    Due to the deep usage of Java OWL api the worker method of this class should be run in a separate thread.
-    It has not been implemented as a QThread so it's possible to change Thread affinity at runtime.
-    For more information see: http://doc.qt.io/qt-5/qobject.html#moveToThread
+    Extends AbstractProjectExporter with facilities to export a Graphol project into an OWL ontology.
+    """
+    def __init__(self, project, session=None):
+        """
+        Initialize the OWL Project exporter
+        :type project: Project
+        :type session: Session
+        """
+        super(OWLProjectExporter, self).__init__(project, session)
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def export(self, path):
+        """
+        Perform OWL ontology generation.
+        :type path: str
+        """
+        if not self.project.isEmpty():
+            dialog = OWLProjectExporterDialog(self.project, path, self.session)
+            dialog.exec_()
+
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the export.
+        :return: File
+        """
+        return File.Owl
+
+
+class OWLProjectExporterDialog(QDialog):
+    """
+    Extends QDialog providing
+    This class implements the form used to perform Graphol -> OWL ontology translation.
+    """
+    def __init__(self, project, path, session):
+        """
+        Initialize the form dialog.
+        :type project: Project
+        :type path: str
+        :type session: Session
+        """
+        super(OWLProjectExporterDialog, self).__init__(session)
+
+        arial12r = Font('Arial', 12)
+
+        self.path = expandPath(path)
+        self.project = project
+        self.worker = None
+        self.workerThread = None
+
+        #############################################
+        # FORM AREA
+        #################################
+
+        self.syntaxField = ComboBox(self)
+        for syntax in OWLSyntax:
+            self.syntaxField.addItem(syntax.value, syntax)
+        self.syntaxField.setCurrentIndex(0)
+        self.syntaxField.setFixedWidth(300)
+        self.syntaxField.setFont(arial12r)
+
+        spacer = QFrame()
+        spacer.setFrameShape(QFrame.HLine)
+        spacer.setFrameShadow(QFrame.Sunken)
+
+        self.progressBar = QProgressBar(self)
+        self.progressBar.setAlignment(Qt.AlignHCenter)
+        self.progressBar.setRange(0, 100)
+        self.progressBar.setValue(0)
+
+        self.formWidget = QWidget(self)
+        self.formLayout = QFormLayout(self.formWidget)
+        self.formLayout.addRow('Syntax', self.syntaxField)
+        self.formLayout.addRow(spacer)
+        self.formLayout.addRow(self.progressBar)
+
+        #############################################
+        # CONFIRMATION AREA
+        #################################
+
+        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.confirmationBox.setContentsMargins(10, 0, 10, 10)
+        self.confirmationBox.setFont(arial12r)
+
+        #############################################
+        # CONFIGURE LAYOUT
+        #################################
+
+        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.addWidget(self.formWidget)
+        self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
+
+        self.setWindowTitle('OWL Export')
+        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setFixedSize(self.sizeHint())
+
+        connect(self.confirmationBox.accepted, self.run)
+        connect(self.confirmationBox.rejected, self.reject)
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def syntax(self):
+        """
+        Returns the value of the OWL syntax field.
+        :rtype: OWLSyntax
+        """
+        return self.syntaxField.currentData()
+
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def session(self):
+        """
+        Returns the active session (alias for OWLProjectExporterDialog.parent()).
+        :rtype: Session
+        """
+        return self.parent()
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @pyqtSlot(Exception)
+    def onErrored(self, exception):
+        """
+        Executed whenever the translation errors.
+        :type exception: Exception
+        """
+        self.workerThread.quit()
+
+        if isinstance(exception, MalformedDiagramError):
+            msgbox = QMessageBox(self)
+            msgbox.setIconPixmap(QIcon(':/icons/48/ic_warning_black').pixmap(48))
+            msgbox.setInformativeText('Do you want to see the error in the diagram?')
+            msgbox.setText('Malformed expression detected on {0}: {1}'.format(exception.item, exception))
+            msgbox.setStandardButtons(QMessageBox.Yes|QMessageBox.No)
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Malformed expression')
+            msgbox.exec_()
+            if msgbox.result() == QMessageBox.Yes:
+                self.session.doFocusItem(exception.item)
+        else:
+            msgbox = QMessageBox(self)
+            msgbox.setDetailedText(format_exception(exception))
+            msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+            msgbox.setInformativeText('Please <a href="{0}">submit a bug report</a>.'.format(BUG_TRACKER))
+            msgbox.setStandardButtons(QMessageBox.Close)
+            msgbox.setText('Diagram translation could not be completed!')
+            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Unhandled exception!')
+            msgbox.exec_()
+
+        self.reject()
+
+    @pyqtSlot()
+    def onCompleted(self):
+        """
+        Executed whenever the translation completes.
+        """
+        self.workerThread.quit()
+
+        msgbox = QMessageBox(self)
+        msgbox.setIconPixmap(QIcon(':/icons/24/ic_info_outline_black').pixmap(48))
+        msgbox.setInformativeText('Do you want to open the OWL ontology?')
+        msgbox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msgbox.setText('Translation completed!')
+        msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        msgbox.exec_()
+        if msgbox.result() == QMessageBox.Yes:
+            openPath(self.path)
+
+        self.accept()
+
+    @pyqtSlot(int, int)
+    def onProgress(self, current, total):
+        """
+        Update the progress bar showing the translation advancement.
+        :type current: int
+        :type total: int
+        """
+        self.progressBar.setRange(0, total)
+        self.progressBar.setValue(current)
+
+    @pyqtSlot()
+    def onStarted(self):
+        """
+        Executed whenever the translation starts.
+        """
+        self.confirmationBox.setEnabled(False)
+
+    @pyqtSlot()
+    def run(self):
+        """
+        Perform the Graphol -> OWL translation in a separate thread.
+        """
+        self.workerThread = QThread()
+        self.worker = OWLProjectExporterWorker(self.project, self.path, self.syntax())
+        self.worker.moveToThread(self.workerThread)
+        connect(self.worker.sgnStarted, self.onStarted)
+        connect(self.worker.sgnCompleted, self.onCompleted)
+        connect(self.worker.sgnErrored, self.onErrored)
+        connect(self.worker.sgnProgress, self.onProgress)
+        connect(self.workerThread.started, self.worker.run)
+        self.workerThread.start()
+
+
+class OWLProjectExporterWorker(QObject):
+    """
+    Extends QObject providing a worker thread that will perform the OWL ontology generation.
     """
     sgnCompleted = pyqtSignal()
     sgnErrored = pyqtSignal(Exception)
@@ -60,51 +285,165 @@ class OWLExporter(AbstractExporter):
     sgnProgress = pyqtSignal(int, int)
     sgnStarted = pyqtSignal()
 
-    def __init__(self, project, path, syntax, session=None):
+    def __init__(self, project, path, syntax):
         """
-        Initialize the OWL translator.
-        Note that if we specify a session (parent) for this translator we won't be
-        able able to move the execution of the worker method to a different thread.
+        Initialize the OWL Exporter worker.
         :type project: Project
         :type path: str
         :type syntax: OWLSyntax
-        :type session: Session
         """
-        super().__init__(session)
+        super(OWLProjectExporterWorker, self).__init__()
 
         self.path = path
-        self.syntax = syntax
         self.project = project
         self.ontoIRI = self.project.iri
         self.ontoPrefix = self.project.prefix
+        self.syntax = syntax
 
         self.axioms = set()
         self.conv = dict()
-        self.factory = None
+        self.df = None
         self.num = 0
         self.man = None
         self.max = len(self.project.nodes()) + len(self.project.edges())
         self.ontology = None
         self.pm = None
 
-        self.DefaultPrefixManager = jnius.autoclass('org.semanticweb.owlapi.util.DefaultPrefixManager')
-        self.FunctionalSyntaxDocumentFormat = jnius.autoclass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
-        self.HashSet = jnius.autoclass('java.util.HashSet')
-        self.IRI = jnius.autoclass('org.semanticweb.owlapi.model.IRI')
-        self.LinkedList = jnius.autoclass('java.util.LinkedList')
-        self.List = jnius.autoclass('java.util.List')
-        self.ManchesterSyntaxDocumentFormat = jnius.autoclass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
-        self.OWLAnnotationValue = jnius.autoclass('org.semanticweb.owlapi.model.OWLAnnotationValue')
-        self.OWLFacet = jnius.autoclass('org.semanticweb.owlapi.vocab.OWLFacet')
-        self.OWL2Datatype = jnius.autoclass('org.semanticweb.owlapi.vocab.OWL2Datatype')
-        self.OWLManager = jnius.autoclass('org.semanticweb.owlapi.apibinding.OWLManager')
-        self.OWLOntologyDocumentTarget = jnius.autoclass('org.semanticweb.owlapi.io.OWLOntologyDocumentTarget')
-        self.RDFXMLDocumentFormat = jnius.autoclass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
-        self.PrefixManager = jnius.autoclass('org.semanticweb.owlapi.model.PrefixManager')
-        self.Set = jnius.autoclass('java.util.Set')
-        self.StringDocumentTarget = jnius.autoclass('org.semanticweb.owlapi.io.StringDocumentTarget')
-        self.TurtleDocumentFormat = jnius.autoclass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
+        self.DefaultPrefixManager = autoclass('org.semanticweb.owlapi.util.DefaultPrefixManager')
+        self.FunctionalSyntaxDocumentFormat = autoclass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
+        self.HashSet = autoclass('java.util.HashSet')
+        self.IRI = autoclass('org.semanticweb.owlapi.model.IRI')
+        self.LinkedList = autoclass('java.util.LinkedList')
+        self.List = autoclass('java.util.List')
+        self.ManchesterSyntaxDocumentFormat = autoclass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
+        self.OWLAnnotationValue = autoclass('org.semanticweb.owlapi.model.OWLAnnotationValue')
+        self.OWLFacet = autoclass('org.semanticweb.owlapi.vocab.OWLFacet')
+        self.OWL2Datatype = autoclass('org.semanticweb.owlapi.vocab.OWL2Datatype')
+        self.OWLManager = autoclass('org.semanticweb.owlapi.apibinding.OWLManager')
+        self.OWLOntologyDocumentTarget = autoclass('org.semanticweb.owlapi.io.OWLOntologyDocumentTarget')
+        self.RDFXMLDocumentFormat = autoclass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
+        self.PrefixManager = autoclass('org.semanticweb.owlapi.model.PrefixManager')
+        self.Set = autoclass('java.util.Set')
+        self.StringDocumentTarget = autoclass('org.semanticweb.owlapi.io.StringDocumentTarget')
+        self.TurtleDocumentFormat = autoclass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
 
+    #############################################
+    #   AUXILIARY METHODS
+    #################################
+
+    def getOWLApiDatatype(self, datatype):
+        """
+        Returns the OWLDatatype matching the given Datatype.
+        :type datatype: Datatype
+        :rtype: OWLDatatype
+        """
+        if datatype is Datatype.anyURI:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_ANY_URI').getIRI())
+        elif datatype is Datatype.base64Binary:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BASE_64_BINARY').getIRI())
+        elif datatype is Datatype.boolean:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BOOLEAN').getIRI())
+        elif datatype is Datatype.byte:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BYTE').getIRI())
+        elif datatype is Datatype.dateTime:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DATE_TIME').getIRI())
+        elif datatype is Datatype.dateTimeStamp:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DATE_TIME_STAMP').getIRI())
+        elif datatype is Datatype.decimal:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DECIMAL').getIRI())
+        elif datatype is Datatype.double:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DOUBLE').getIRI())
+        elif datatype is Datatype.float:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_FLOAT').getIRI())
+        elif datatype is Datatype.hexBinary:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_HEX_BINARY').getIRI())
+        elif datatype is Datatype.int:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_INT').getIRI())
+        elif datatype is Datatype.integer:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_INTEGER').getIRI())
+        elif datatype is Datatype.language:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_LANGUAGE').getIRI())
+        elif datatype is Datatype.literal:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('RDFS_LITERAL').getIRI())
+        elif datatype is Datatype.long:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_LONG').getIRI())
+        elif datatype is Datatype.Name:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NAME').getIRI())
+        elif datatype is Datatype.NCName:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NCNAME').getIRI())
+        elif datatype is Datatype.negativeInteger:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NEGATIVE_INTEGER').getIRI())
+        elif datatype is Datatype.NMTOKEN:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NMTOKEN').getIRI())
+        elif datatype is Datatype.nonNegativeInteger:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NON_NEGATIVE_INTEGER').getIRI())
+        elif datatype is Datatype.nonPositiveInteger:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NON_POSITIVE_INTEGER').getIRI())
+        elif datatype is Datatype.normalizedString:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NORMALIZED_STRING').getIRI())
+        elif datatype is Datatype.plainLiteral:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('RDF_PLAIN_LITERAL').getIRI())
+        elif datatype is Datatype.positiveInteger:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_POSITIVE_INTEGER').getIRI())
+        elif datatype is Datatype.rational:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('OWL_RATIONAL').getIRI())
+        elif datatype is Datatype.real:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('OWL_REAL').getIRI())
+        elif datatype is Datatype.short:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_SHORT').getIRI())
+        elif datatype is Datatype.string:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_STRING').getIRI())
+        elif datatype is Datatype.token:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_TOKEN').getIRI())
+        elif datatype is Datatype.unsignedByte:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_BYTE').getIRI())
+        elif datatype is Datatype.unsignedInt:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_INT').getIRI())
+        elif datatype is Datatype.unsignedLong:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_LONG').getIRI())
+        elif datatype is Datatype.unsignedShort:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_SHORT').getIRI())
+        elif datatype is Datatype.xmlLiteral:
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('RDF_XML_LITERAL').getIRI())
+        raise ValueError('invalid datatype supplied: {0}'.format(datatype))
+
+    def getOWLApiFacet(self, facet):
+        """
+        Returns the OWLFacet matching the given Facet.
+        :type facet: Facet
+        :rtype: OWLFacet 
+        """
+        if facet is Facet.maxExclusive:
+            return self.OWLFacet.valueOf('MAX_EXCLUSIVE')
+        elif facet is Facet.maxInclusive:
+            return self.OWLFacet.valueOf('MAX_INCLUSIVE')
+        elif facet is Facet.minExclusive:
+            return self.OWLFacet.valueOf('MIN_EXCLUSIVE')
+        elif facet is Facet.minInclusive:
+            return self.OWLFacet.valueOf('MIN_INCLUSIVE')
+        elif facet is Facet.langRange:
+            return self.OWLFacet.valueOf('LANG_RANGE')
+        elif facet is Facet.length:
+            return self.OWLFacet.valueOf('LENGTH')
+        elif facet is Facet.maxLength:
+            return self.OWLFacet.valueOf('MIN_LENGTH')
+        elif facet is Facet.minLength:
+            return self.OWLFacet.valueOf('MIN_LENGTH')
+        elif facet is Facet.pattern:
+            return self.OWLFacet.valueOf('PATTERN')
+        raise ValueError('invalid facet supplied: {0}'.format(facet))
+    
+    def step(self, num, increase=0):
+        """
+        Increments the progress by the given step and emits the progress signal.
+        :type num: int
+        :type increase: int
+        """
+        self.max += increase
+        self.num += num
+        self.num = clamp(self.num, minval=0, maxval=self.max)
+        self.sgnProgress.emit(self.num, self.max)
+        
     #############################################
     #   NODES PRE-PROCESSING
     #################################
@@ -117,11 +456,11 @@ class OWLExporter(AbstractExporter):
         """
         if node not in self.conv:
             if node.special is Special.Top:
-                self.conv[node] = self.factory.getOWLTopDataProperty()
+                self.conv[node] = self.df.getOWLTopDataProperty()
             elif node.special is Special.Bottom:
-                self.conv[node] = self.factory.getOWLBottomDataProperty()
+                self.conv[node] = self.df.getOWLBottomDataProperty()
             else:
-                self.conv[node] = self.factory.getOWLDataProperty(OWLShortIRI(self.ontoPrefix, node.text()), self.pm)
+                self.conv[node] = self.df.getOWLDataProperty(OWLShortIRI(self.ontoPrefix, node.text()), self.pm)
         return self.conv[node]
 
     def buildComplement(self, node):
@@ -146,38 +485,38 @@ class OWLExporter(AbstractExporter):
             if operand.identity is Identity.Concept:
 
                 if operand.type() is Item.ConceptNode:
-                    self.conv[node] = self.factory.getOWLObjectComplementOf(self.buildConcept(operand))
+                    self.conv[node] = self.df.getOWLObjectComplementOf(self.buildConcept(operand))
                 elif operand.type() is Item.ComplementNode:
-                    self.conv[node] = self.factory.getOWLObjectComplementOf(self.buildComplement(operand))
+                    self.conv[node] = self.df.getOWLObjectComplementOf(self.buildComplement(operand))
                 elif operand.type() is Item.EnumerationNode:
-                    self.conv[node] = self.factory.getOWLObjectComplementOf(self.buildEnumeration(operand))
+                    self.conv[node] = self.df.getOWLObjectComplementOf(self.buildEnumeration(operand))
                 elif operand.type() is Item.IntersectionNode:
-                    self.conv[node] = self.factory.getOWLObjectComplementOf(self.buildIntersection(operand))
+                    self.conv[node] = self.df.getOWLObjectComplementOf(self.buildIntersection(operand))
                 elif operand.type() in {Item.UnionNode, Item.DisjointUnionNode}:
-                    self.conv[node] = self.factory.getOWLObjectComplementOf(self.buildUnion(operand))
+                    self.conv[node] = self.df.getOWLObjectComplementOf(self.buildUnion(operand))
                 elif operand.type() is Item.DomainRestrictionNode:
-                    self.conv[node] = self.factory.getOWLObjectComplementOf(self.buildDomainRestriction(operand))
+                    self.conv[node] = self.df.getOWLObjectComplementOf(self.buildDomainRestriction(operand))
                 elif operand.type() is Item.RangeRestrictionNode:
-                    self.conv[node] = self.factory.getOWLObjectComplementOf(self.buildRangeRestriction(operand))
+                    self.conv[node] = self.df.getOWLObjectComplementOf(self.buildRangeRestriction(operand))
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
 
             elif operand.identity is Identity.ValueDomain:
 
                 if operand.type() is Item.ValueDomainNode:
-                    self.conv[node] = self.factory.getOWLDataComplementOf(self.buildValueDomain(operand))
+                    self.conv[node] = self.df.getOWLDataComplementOf(self.buildValueDomain(operand))
                 elif operand.type() is Item.ComplementNode:
-                    self.conv[node] = self.factory.getOWLDataComplementOf(self.buildComplement(operand))
+                    self.conv[node] = self.df.getOWLDataComplementOf(self.buildComplement(operand))
                 elif operand.type() is Item.EnumerationNode:
-                    self.conv[node] = self.factory.getOWLDataComplementOf(self.buildEnumeration(operand))
+                    self.conv[node] = self.df.getOWLDataComplementOf(self.buildEnumeration(operand))
                 elif operand.type() is Item.IntersectionNode:
-                    self.conv[node] = self.factory.getOWLDataComplementOf(self.buildIntersection(operand))
+                    self.conv[node] = self.df.getOWLDataComplementOf(self.buildIntersection(operand))
                 elif operand.type() in {Item.UnionNode, Item.DisjointUnionNode}:
-                    self.conv[node] = self.factory.getOWLDataComplementOf(self.buildUnion(operand))
+                    self.conv[node] = self.df.getOWLDataComplementOf(self.buildUnion(operand))
                 elif operand.type() is Item.DatatypeRestrictionNode:
-                    self.conv[node] = self.factory.getOWLDataComplementOf(self.buildDatatypeRestriction(operand))
+                    self.conv[node] = self.df.getOWLDataComplementOf(self.buildDatatypeRestriction(operand))
                 elif operand.type() is Item.RangeRestrictionNode:
-                    self.conv[node] = self.factory.getOWLObjectComplementOf(self.buildRangeRestriction(operand))
+                    self.conv[node] = self.df.getOWLObjectComplementOf(self.buildRangeRestriction(operand))
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
 
@@ -199,7 +538,6 @@ class OWLExporter(AbstractExporter):
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
 
-
         return self.conv[node]
 
     def buildConcept(self, node):
@@ -210,11 +548,11 @@ class OWLExporter(AbstractExporter):
         """
         if node not in self.conv:
             if node.special is Special.Top:
-                self.conv[node] = self.factory.getOWLThing()
+                self.conv[node] = self.df.getOWLThing()
             elif node.special is Special.Bottom:
-                self.conv[node] = self.factory.getOWLNothing()
+                self.conv[node] = self.df.getOWLNothing()
             else:
-                self.conv[node] = self.factory.getOWLClass(OWLShortIRI(self.ontoPrefix, node.text()), self.pm)
+                self.conv[node] = self.df.getOWLClass(OWLShortIRI(self.ontoPrefix, node.text()), self.pm)
         return self.conv[node]
 
     def buildDatatypeRestriction(self, node):
@@ -255,8 +593,8 @@ class OWLExporter(AbstractExporter):
             # BUILD DATATYPE RESTRICTION
             #################################
 
-            collection = jnius.cast(self.Set, collection)
-            self.conv[node] = self.factory.getOWLDatatypeRestriction(datatypeEx, collection)
+            collection = cast(self.Set, collection)
+            self.conv[node] = self.df.getOWLDatatypeRestriction(datatypeEx, collection)
 
         return self.conv[node]
 
@@ -291,7 +629,7 @@ class OWLExporter(AbstractExporter):
 
                 filler = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
                 if not filler:
-                    dataRangeEx = self.factory.getTopDatatype()
+                    dataRangeEx = self.df.getTopDatatype()
                 elif filler.type() is Item.ValueDomainNode:
                     dataRangeEx = self.buildValueDomain(filler)
                 elif filler.type() is Item.ComplementNode:
@@ -310,22 +648,22 @@ class OWLExporter(AbstractExporter):
                     raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(filler))
 
                 if node.restriction is Restriction.Exists:
-                    self.conv[node] = self.factory.getOWLDataSomeValuesFrom(dataPropEx, dataRangeEx)
+                    self.conv[node] = self.df.getOWLDataSomeValuesFrom(dataPropEx, dataRangeEx)
                 elif node.restriction is Restriction.Forall:
-                    self.conv[node] = self.factory.getOWLDataAllValuesFrom(dataPropEx, dataRangeEx)
+                    self.conv[node] = self.df.getOWLDataAllValuesFrom(dataPropEx, dataRangeEx)
                 elif node.restriction is Restriction.Cardinality:
                     cardinalities = self.HashSet()
                     min_c = node.cardinality['min']
                     max_c = node.cardinality['max']
                     if min_c is not None:
-                        cardinalities.add(self.factory.getOWLDataMinCardinality(min_c, dataPropEx, dataRangeEx))
+                        cardinalities.add(self.df.getOWLDataMinCardinality(min_c, dataPropEx, dataRangeEx))
                     if max_c is not None:
-                        cardinalities.add(self.factory.getOWLDataMinCardinality(max_c, dataPropEx, dataRangeEx))
+                        cardinalities.add(self.df.getOWLDataMinCardinality(max_c, dataPropEx, dataRangeEx))
                     if cardinalities.isEmpty():
                         raise MalformedDiagramError(node, 'missing cardinality')
                     elif cardinalities.size() >= 1:
-                        cardinalities = jnius.cast(self.Set, cardinalities)
-                        self.conv[node] = self.factory.getOWLDataIntersectionOf(cardinalities)
+                        cardinalities = cast(self.Set, cardinalities)
+                        self.conv[node] = self.df.getOWLDataIntersectionOf(cardinalities)
                     else:
                         self.conv[node] = cardinalities.iterator().next()
                 else:
@@ -350,7 +688,7 @@ class OWLExporter(AbstractExporter):
 
                 filler = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f4))
                 if not filler:
-                    classEx = self.factory.getOWLThing()
+                    classEx = self.df.getOWLThing()
                 elif filler.type() is Item.ConceptNode:
                     classEx = self.buildConcept(filler)
                 elif filler.type() is Item.ComplementNode:
@@ -369,24 +707,24 @@ class OWLExporter(AbstractExporter):
                     raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(filler))
 
                 if node.restriction is Restriction.Self:
-                    self.conv[node] = self.factory.getOWLObjectHasSelf(objectPropertyEx)
+                    self.conv[node] = self.df.getOWLObjectHasSelf(objectPropertyEx)
                 elif node.restriction is Restriction.Exists:
-                    self.conv[node] = self.factory.getOWLObjectSomeValuesFrom(objectPropertyEx, classEx)
+                    self.conv[node] = self.df.getOWLObjectSomeValuesFrom(objectPropertyEx, classEx)
                 elif node.restriction is Restriction.Forall:
-                    self.conv[node] = self.factory.getOWLObjectAllValuesFrom(objectPropertyEx, classEx)
+                    self.conv[node] = self.df.getOWLObjectAllValuesFrom(objectPropertyEx, classEx)
                 elif node.restriction is Restriction.Cardinality:
                     cardinalities = self.HashSet()
                     min_c = node.cardinality['min']
                     max_c = node.cardinality['max']
                     if min_c is not None:
-                        cardinalities.add(self.factory.getOWLObjectMinCardinality(min_c, objectPropertyEx, classEx))
+                        cardinalities.add(self.df.getOWLObjectMinCardinality(min_c, objectPropertyEx, classEx))
                     if max_c is not None:
-                        cardinalities.add(self.factory.getOWLObjectMaxCardinality(max_c, objectPropertyEx, classEx))
+                        cardinalities.add(self.df.getOWLObjectMaxCardinality(max_c, objectPropertyEx, classEx))
                     if cardinalities.isEmpty():
                         raise MalformedDiagramError(node, 'missing cardinality')
                     elif cardinalities.size() >= 1:
-                        cardinalities = jnius.cast(self.Set, cardinalities)
-                        self.conv[node] = self.factory.getOWLObjectIntersectionOf(cardinalities)
+                        cardinalities = cast(self.Set, cardinalities)
+                        self.conv[node] = self.df.getOWLObjectIntersectionOf(cardinalities)
                     else:
                         self.conv[node] = cardinalities.iterator().next()
 
@@ -406,8 +744,8 @@ class OWLExporter(AbstractExporter):
                 individuals.add(self.buildIndividual(i))
             if individuals.isEmpty():
                 raise MalformedDiagramError(node, 'missing operand(s)')
-            individuals = jnius.cast(self.Set, individuals)
-            self.conv[node] = self.factory.getOWLObjectOneOf(individuals)
+            individuals = cast(self.Set, individuals)
+            self.conv[node] = self.df.getOWLObjectOneOf(individuals)
         return self.conv[node]
 
     def buildFacet(self, node):
@@ -420,9 +758,9 @@ class OWLExporter(AbstractExporter):
             datatype = node.datatype
             if not datatype:
                 raise MalformedDiagramError(node, 'disconnected facet node')
-            literal = self.factory.getOWLLiteral(node.value, self.getOWLApiDatatype(datatype))
+            literal = self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(datatype))
             facet = self.getOWLApiFacet(node.facet)
-            self.conv[node] = self.factory.getOWLFacetRestriction(facet, literal)
+            self.conv[node] = self.df.getOWLFacetRestriction(facet, literal)
         return self.conv[node]
 
     def buildIndividual(self, node):
@@ -433,9 +771,9 @@ class OWLExporter(AbstractExporter):
         """
         if node not in self.conv:
             if node.identity is Identity.Instance:
-                self.conv[node] = self.factory.getOWLNamedIndividual(OWLShortIRI(self.ontoPrefix, node.text()), self.pm)
+                self.conv[node] = self.df.getOWLNamedIndividual(OWLShortIRI(self.ontoPrefix, node.text()), self.pm)
             elif node.identity is Identity.Value:
-                self.conv[node] = self.factory.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
+                self.conv[node] = self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
         return self.conv[node]
 
     def buildIntersection(self, node):
@@ -477,12 +815,12 @@ class OWLExporter(AbstractExporter):
             if collection.isEmpty():
                 raise MalformedDiagramError(node, 'missing operand(s)')
 
-            collection = jnius.cast(self.Set, collection)
+            collection = cast(self.Set, collection)
 
             if node.identity is Identity.Concept:
-                self.conv[node] = self.factory.getOWLObjectIntersectionOf(collection)
+                self.conv[node] = self.df.getOWLObjectIntersectionOf(collection)
             elif node.identity is Identity.ValueDomain:
-                self.conv[node] = self.factory.getOWLDataIntersectionOf(collection)
+                self.conv[node] = self.df.getOWLDataIntersectionOf(collection)
 
         return self.conv[node]
 
@@ -556,7 +894,7 @@ class OWLExporter(AbstractExporter):
 
                 filler = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
                 if not filler:
-                    classEx = self.factory.getOWLThing()
+                    classEx = self.df.getOWLThing()
                 elif filler.type() is Item.ConceptNode:
                     classEx = self.buildConcept(filler)
                 elif filler.type() is Item.ComplementNode:
@@ -571,24 +909,24 @@ class OWLExporter(AbstractExporter):
                     raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(filler))
 
                 if node.restriction is Restriction.Self:
-                    self.conv[node] = self.factory.getOWLObjectHasSelf(objectPropertyEx)
+                    self.conv[node] = self.df.getOWLObjectHasSelf(objectPropertyEx)
                 elif node.restriction is Restriction.Exists:
-                    self.conv[node] = self.factory.getOWLObjectSomeValuesFrom(objectPropertyEx, classEx)
+                    self.conv[node] = self.df.getOWLObjectSomeValuesFrom(objectPropertyEx, classEx)
                 elif node.restriction is Restriction.Forall:
-                    self.conv[node] = self.factory.getOWLObjectAllValuesFrom(objectPropertyEx, classEx)
+                    self.conv[node] = self.df.getOWLObjectAllValuesFrom(objectPropertyEx, classEx)
                 elif node.restriction is Restriction.Cardinality:
                     cardinalities = self.HashSet()
                     min_c = node.cardinality['min']
                     max_c = node.cardinality['max']
                     if min_c is not None:
-                        cardinalities.add(self.factory.getOWLObjectMinCardinality(min_c, objectPropertyEx, classEx))
+                        cardinalities.add(self.df.getOWLObjectMinCardinality(min_c, objectPropertyEx, classEx))
                     if max_c is not None:
-                        cardinalities.add(self.factory.getOWLObjectMaxCardinality(max_c, objectPropertyEx, classEx))
+                        cardinalities.add(self.df.getOWLObjectMaxCardinality(max_c, objectPropertyEx, classEx))
                     if cardinalities.isEmpty():
                         raise MalformedDiagramError(node, 'missing cardinality')
                     if cardinalities.size() >= 1:
-                        cardinalities = jnius.cast(self.Set, cardinalities)
-                        self.conv[node] = self.factory.getOWLObjectIntersectionOf(cardinalities)
+                        cardinalities = cast(self.Set, cardinalities)
+                        self.conv[node] = self.df.getOWLObjectIntersectionOf(cardinalities)
                     else:
                         self.conv[node] = cardinalities.iterator().next()
 
@@ -602,11 +940,11 @@ class OWLExporter(AbstractExporter):
         """
         if node not in self.conv:
             if node.special is Special.Top:
-                self.conv[node] = self.factory.getOWLTopObjectProperty()
+                self.conv[node] = self.df.getOWLTopObjectProperty()
             elif node.special is Special.Bottom:
-                self.conv[node] = self.factory.getOWLBottomObjectProperty()
+                self.conv[node] = self.df.getOWLBottomObjectProperty()
             else:
-                self.conv[node] = self.factory.getOWLObjectProperty(OWLShortIRI(self.ontoPrefix, node.text()), self.pm)
+                self.conv[node] = self.df.getOWLObjectProperty(OWLShortIRI(self.ontoPrefix, node.text()), self.pm)
         return self.conv[node]
 
     def buildRoleChain(self, node):
@@ -626,7 +964,7 @@ class OWLExporter(AbstractExporter):
                     collection.add(self.buildRole(n))
                 elif n.type() is Item.RoleInverseNode:
                     collection.add(self.buildRoleInverse(n))
-            collection = jnius.cast(self.List, collection)
+            collection = cast(self.List, collection)
             self.conv[node] = collection
         return self.conv[node]
 
@@ -684,12 +1022,12 @@ class OWLExporter(AbstractExporter):
             if not collection.size():
                 raise MalformedDiagramError(node, 'missing operand(s)')
 
-            collection = jnius.cast(self.Set, collection)
+            collection = cast(self.Set, collection)
 
             if node.identity is Identity.Concept:
-                self.conv[node] = self.factory.getOWLObjectUnionOf(collection)
+                self.conv[node] = self.df.getOWLObjectUnionOf(collection)
             elif node.identity is Identity.ValueDomain:
-                self.conv[node] = self.factory.getOWLDataUnionOf(collection)
+                self.conv[node] = self.df.getOWLDataUnionOf(collection)
 
         return self.conv[node]
 
@@ -714,11 +1052,11 @@ class OWLExporter(AbstractExporter):
         """
         meta = self.project.meta(node.type(), node.text())
         if meta and not isEmpty(meta.description):
-            prop = self.factory.getOWLAnnotationProperty(self.IRI.create("Description"))
-            value = self.factory.getOWLLiteral(OWLAnnotationText(meta.description))
-            value = jnius.cast(self.OWLAnnotationValue, value)
-            annotation = self.factory.getOWLAnnotation(prop, value)
-            self.axioms.add(self.factory.getOWLAnnotationAssertionAxiom(self.conv[node].getIRI(), annotation))
+            prop = self.df.getOWLAnnotationProperty(self.IRI.create("Description"))
+            value = self.df.getOWLLiteral(OWLAnnotationText(meta.description))
+            value = cast(self.OWLAnnotationValue, value)
+            annotation = self.df.getOWLAnnotation(prop, value)
+            self.axioms.add(self.df.getOWLAnnotationAssertionAxiom(self.conv[node].getIRI(), annotation))
 
     def axiomDataProperty(self, node):
         """
@@ -728,14 +1066,14 @@ class OWLExporter(AbstractExporter):
         meta = self.project.meta(node.type(), node.text())
         if meta:
             if meta.functional:
-                self.axioms.add(self.factory.getOWLFunctionalDataPropertyAxiom(self.conv[node]))
+                self.axioms.add(self.df.getOWLFunctionalDataPropertyAxiom(self.conv[node]))
 
     def axiomClassAssertion(self, edge):
         """
         Generate a OWL ClassAssertion axiom.
         :type edge: InstanceOf
         """
-        self.axioms.add(self.factory.getOWLClassAssertionAxiom(self.conv[edge.target], self.conv[edge.source]))
+        self.axioms.add(self.df.getOWLClassAssertionAxiom(self.conv[edge.target], self.conv[edge.source]))
 
     def axiomDataPropertyAssertion(self, edge):
         """
@@ -744,21 +1082,21 @@ class OWLExporter(AbstractExporter):
         """
         operand1 = self.conv[edge.source][0]
         operand2 = self.conv[edge.source][1]
-        self.axioms.add(self.factory.getOWLDataPropertyAssertionAxiom(self.conv[edge.target], operand1, operand2))
+        self.axioms.add(self.df.getOWLDataPropertyAssertionAxiom(self.conv[edge.target], operand1, operand2))
 
     def axiomDataPropertyRange(self, edge):
         """
         Generate a OWL DataPropertyRange axiom.
         :type edge: InclusionEdge
         """
-        self.axioms.add(self.factory.getOWLDataPropertyRangeAxiom(self.conv[edge.source], self.conv[edge.target]))
+        self.axioms.add(self.df.getOWLDataPropertyRangeAxiom(self.conv[edge.source], self.conv[edge.target]))
 
     def axiomDeclaration(self, node):
         """
         Generate a OWL Declaration axiom.
         :type node: AbstractNode
         """
-        self.axioms.add(self.factory.getOWLDeclarationAxiom(self.conv[node]))
+        self.axioms.add(self.df.getOWLDeclarationAxiom(self.conv[node]))
 
     def axiomDisjointClasses(self, node):
         """
@@ -768,8 +1106,8 @@ class OWLExporter(AbstractExporter):
         collection = self.HashSet()
         for j in node.incomingNodes(lambda x: x.type() is Item.InputEdge):
             collection.add(self.conv[j])
-        collection = jnius.cast(self.Set, collection)
-        self.axioms.add(self.factory.getOWLDisjointClassesAxiom(collection))
+        collection = cast(self.Set, collection)
+        self.axioms.add(self.df.getOWLDisjointClassesAxiom(collection))
 
     def axiomDisjointDataProperties(self, edge):
         """
@@ -779,8 +1117,8 @@ class OWLExporter(AbstractExporter):
         collection = self.HashSet()
         collection.add(self.conv[edge.source])
         collection.add(self.conv[edge.target])
-        collection = jnius.cast(self.Set, collection)
-        self.axioms.add(self.factory.getOWLDisjointDataPropertiesAxiom(collection))
+        collection = cast(self.Set, collection)
+        self.axioms.add(self.df.getOWLDisjointDataPropertiesAxiom(collection))
 
     def axiomDisjointObjectProperties(self, edge):
         """
@@ -790,8 +1128,8 @@ class OWLExporter(AbstractExporter):
         collection = self.HashSet()
         collection.add(self.conv[edge.source])
         collection.add(self.conv[edge.target])
-        collection = jnius.cast(self.Set, collection)
-        self.axioms.add(self.factory.getOWLDisjointObjectPropertiesAxiom(collection))
+        collection = cast(self.Set, collection)
+        self.axioms.add(self.df.getOWLDisjointObjectPropertiesAxiom(collection))
 
     def axiomEquivalentClasses(self, edge):
         """
@@ -801,8 +1139,8 @@ class OWLExporter(AbstractExporter):
         collection = self.HashSet()
         collection.add(self.conv[edge.source])
         collection.add(self.conv[edge.target])
-        collection = jnius.cast(self.Set, collection)
-        self.axioms.add(self.factory.getOWLEquivalentClassesAxiom(collection))
+        collection = cast(self.Set, collection)
+        self.axioms.add(self.df.getOWLEquivalentClassesAxiom(collection))
 
     def axiomEquivalentDataProperties(self, edge):
         """
@@ -812,8 +1150,8 @@ class OWLExporter(AbstractExporter):
         collection = self.HashSet()
         collection.add(self.conv[edge.source])
         collection.add(self.conv[edge.target])
-        collection = jnius.cast(self.Set, collection)
-        self.axioms.add(self.factory.getOWLEquivalentDataPropertiesAxiom(collection))
+        collection = cast(self.Set, collection)
+        self.axioms.add(self.df.getOWLEquivalentDataPropertiesAxiom(collection))
 
     def axiomEquivalentObjectProperties(self, edge):
         """
@@ -823,8 +1161,8 @@ class OWLExporter(AbstractExporter):
         collection = self.HashSet()
         collection.add(self.conv[edge.source])
         collection.add(self.conv[edge.target])
-        collection = jnius.cast(self.Set, collection)
-        self.axioms.add(self.factory.getOWLEquivalentObjectPropertiesAxiom(collection))
+        collection = cast(self.Set, collection)
+        self.axioms.add(self.df.getOWLEquivalentObjectPropertiesAxiom(collection))
 
     def axiomObjectProperty(self, node):
         """
@@ -834,348 +1172,57 @@ class OWLExporter(AbstractExporter):
         meta = self.project.meta(node.type(), node.text())
         if meta:
             if meta.functional:
-                self.axioms.add(self.factory.getOWLFunctionalObjectPropertyAxiom(self.conv[node]))
+                self.axioms.add(self.df.getOWLFunctionalObjectPropertyAxiom(self.conv[node]))
             if meta.inverseFunctional:
-                self.axioms.add(self.factory.getOWLInverseFunctionalObjectPropertyAxiom(self.conv[node]))
+                self.axioms.add(self.df.getOWLInverseFunctionalObjectPropertyAxiom(self.conv[node]))
             if meta.asymmetric:
-                self.axioms.add(self.factory.getOWLAsymmetricObjectPropertyAxiom(self.conv[node]))
+                self.axioms.add(self.df.getOWLAsymmetricObjectPropertyAxiom(self.conv[node]))
             if meta.irreflexive:
-                self.axioms.add(self.factory.getOWLIrreflexiveObjectPropertyAxiom(self.conv[node]))
+                self.axioms.add(self.df.getOWLIrreflexiveObjectPropertyAxiom(self.conv[node]))
             if meta.reflexive:
-                self.axioms.add(self.factory.getOWLReflexiveObjectPropertyAxiom(self.conv[node]))
+                self.axioms.add(self.df.getOWLReflexiveObjectPropertyAxiom(self.conv[node]))
             if meta.symmetric:
-                self.axioms.add(self.factory.getOWLSymmetricObjectPropertyAxiom(self.conv[node]))
+                self.axioms.add(self.df.getOWLSymmetricObjectPropertyAxiom(self.conv[node]))
             if meta.transitive:
-                self.axioms.add(self.factory.getOWLTransitiveObjectPropertyAxiom(self.conv[node]))
+                self.axioms.add(self.df.getOWLTransitiveObjectPropertyAxiom(self.conv[node]))
 
     def axiomObjectPropertyAssertion(self, edge):
         """
         Generate a OWL ObjectPropertyAssertion axiom.
         :type edge: InstanceOf
         """
-        op1 = self.conv[edge.source][0]
-        op2 = self.conv[edge.source][1]
-        self.axioms.add(self.factory.getOWLObjectPropertyAssertionAxiom(self.conv[edge.target], op1, op2))
+        operand1 = self.conv[edge.source][0]
+        operand2 = self.conv[edge.source][1]
+        self.axioms.add(self.df.getOWLObjectPropertyAssertionAxiom(self.conv[edge.target], operand1, operand2))
 
     def axiomSubclassOf(self, edge):
         """
         Generate a OWL SubclassOf axiom.
         :type edge: InclusionEdge
         """
-        self.axioms.add(self.factory.getOWLSubClassOfAxiom(self.conv[edge.source], self.conv[edge.target]))
+        self.axioms.add(self.df.getOWLSubClassOfAxiom(self.conv[edge.source], self.conv[edge.target]))
 
     def axiomSubDataPropertyOfAxiom(self, edge):
         """
         Generate a OWL SubDataPropertyOf axiom.
         :type edge: InclusionEdge
         """
-        self.axioms.add(self.factory.getOWLSubDataPropertyOfAxiom(self.conv[edge.source], self.conv[edge.target]))
+        self.axioms.add(self.df.getOWLSubDataPropertyOfAxiom(self.conv[edge.source], self.conv[edge.target]))
 
     def axiomSubObjectPropertyOf(self, edge):
         """
         Generate a OWL SubObjectPropertyOf axiom.
         :type edge: InclusionEdge
         """
-        self.axioms.add(self.factory.getOWLSubObjectPropertyOfAxiom(self.conv[edge.source], self.conv[edge.target]))
+        self.axioms.add(self.df.getOWLSubObjectPropertyOfAxiom(self.conv[edge.source], self.conv[edge.target]))
 
     def axiomSubPropertyChainOf(self, edge):
         """
         Generate a OWL SubPropertyChainOf axiom.
         :type edge: InclusionEdge
         """
-        self.axioms.add(self.factory.getOWLSubPropertyChainOfAxiom(self.conv[edge.source], self.conv[edge.target]))
-
-    #############################################
-    #   ONTOLOGY GENERATION
-    #################################
-
-    def export(self):
-        """
-        Perform OWL ontology generation.
-        """
-        #############################################
-        # INITIALIZE ONTOLOGY
-        #################################
-
-        # FIXME: https://github.com/owlcs/owlapi/issues/529
-        self.man = self.OWLManager.createOWLOntologyManager()
-        self.factory = self.man.getOWLDataFactory()
-        self.ontology = self.man.createOntology(self.IRI.create(self.ontoIRI.rstrip('#')))
-        self.pm = self.DefaultPrefixManager()
-        self.pm.setPrefix(self.project.prefix, postfix(self.ontoIRI, '#'))
-
-        jnius.cast(self.PrefixManager, self.pm)
-
-        #############################################
-        # NODES CONVERSION
-        #################################
-
-        for n in self.project.nodes():
-
-            if n.type() is Item.ConceptNode:                            # CONCEPT
-                self.buildConcept(n)
-            elif n.type() is Item.AttributeNode:                        # ATTRIBUTE
-                self.buildAttribute(n)
-            elif n.type() is Item.RoleNode:                             # ROLE
-                self.buildRole(n)
-            elif n.type() is Item.ValueDomainNode:                      # VALUE-DOMAIN
-                self.buildValueDomain(n)
-            elif n.type() is Item.IndividualNode:                       # INDIVIDUAL
-                self.buildIndividual(n)
-            elif n.type() is Item.FacetNode:                            # FACET
-                self.buildFacet(n)
-            elif n.type() is Item.RoleInverseNode:                      # ROLE INVERSE
-                self.buildRoleInverse(n)
-            elif n.type() is Item.RoleChainNode:                        # ROLE CHAIN
-                self.buildRoleChain(n)
-            elif n.type() is Item.ComplementNode:                       # COMPLEMENT
-                self.buildComplement(n)
-            elif n.type() is Item.EnumerationNode:                      # ENUMERATION
-                self.buildEnumeration(n)
-            elif n.type() is Item.IntersectionNode:                     # INTERSECTION
-                self.buildIntersection(n)
-            elif n.type() in {Item.UnionNode, Item.DisjointUnionNode}:  # UNION / DISJOINT UNION
-                self.buildUnion(n)
-            elif n.type() is Item.DatatypeRestrictionNode:              # DATATYPE RESTRICTION
-                self.buildDatatypeRestriction(n)
-            elif n.type() is Item.PropertyAssertionNode:                # PROPERTY ASSERTION
-                self.buildPropertyAssertion(n)
-            elif n.type() is Item.DomainRestrictionNode:                # DOMAIN RESTRICTION
-                self.buildDomainRestriction(n)
-            elif n.type() is Item.RangeRestrictionNode:                 # RANGE RESTRICTION
-                self.buildRangeRestriction(n)
-
-            self.step(+1)
-
-        #############################################
-        # AXIOMS FROM NODES
-        #################################
-
-        for n in self.project.nodes():
-
-            if n.type() in {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.ValueDomainNode}:
-                self.axiomDeclaration(n)
-                if n.type() is Item.AttributeNode:
-                    self.axiomDataProperty(n)
-                elif n.type() is Item.RoleNode:
-                    self.axiomObjectProperty(n)
-            elif n.type() is Item.DisjointUnionNode:
-                self.axiomDisjointClasses(n)
-
-            if n.isPredicate():
-                self.axiomAnnotation(n)
-
-        #############################################
-        # AXIOMS FROM EDGES
-        #################################
-
-        for e in self.project.edges():
-
-            if e.type() is Item.InclusionEdge:
-
-                if not e.equivalence:
-
-                    if e.source.identity is Identity.Concept and e.target.identity is Identity.Concept:
-                        self.axiomSubclassOf(e)
-                    elif e.source.identity is Identity.Role and e.target.identity is Identity.Role:
-                        if e.source.type() is Item.RoleChainNode:
-                            self.axiomSubPropertyChainOf(e)
-                        elif e.source.type() in {Item.RoleNode, Item.RoleInverseNode}:
-                            if e.target.type() is Item.ComplementNode:
-                                self.axiomDisjointObjectProperties(e)
-                            elif e.target.type() in {Item.RoleNode, Item.RoleInverseNode}:
-                                self.axiomSubObjectPropertyOf(e)
-                    elif e.source.identity is Identity.Attribute and e.target.identity is Identity.Attribute:
-                        if e.source.type() is Item.AttributeNode:
-                            if e.target.type() is Item.ComplementNode:
-                                self.axiomDisjointDataProperties(e)
-                            elif e.target.type() is Item.AttributeNode:
-                                self.axiomSubDataPropertyOfAxiom(e)
-                    elif e.source.type() is Item.RangeRestrictionNode and e.target.identity is Identity.ValueDomain:
-                        self.axiomDataPropertyRange(e)
-                    else:
-                        raise MalformedDiagramError(e, 'type mismatch in inclusion assertion')
-
-                else:
-
-                    if e.source.identity is Identity.Concept and e.target.identity is Identity.Concept:
-                        self.axiomEquivalentClasses(e)
-                    elif e.source.identity is Identity.Role and e.target.identity is Identity.Role:
-                        self.axiomEquivalentObjectProperties(e)
-                    elif e.source.identity is Identity.Attribute and e.target.identity is Identity.Attribute:
-                        self.axiomEquivalentDataProperties(e)
-                    else:
-                        raise MalformedDiagramError(e, 'type mismatch in equivalence assertion')
-
-            elif e.type() is Item.MembershipEdge:
-
-                if e.source.identity is Identity.Instance and e.target.identity is Identity.Concept:
-                    self.axiomClassAssertion(e)
-                elif e.source.identity is Identity.RoleInstance:
-                    self.axiomObjectPropertyAssertion(e)
-                elif e.source.identity is Identity.AttributeInstance:
-                    self.axiomDataPropertyAssertion(e)
-                else:
-                    raise MalformedDiagramError(e, 'type mismatch in membership assertion')
-
-            self.step(+1)
-
-        #############################################
-        # APPLY GENERATED AXIOMS
-        #################################
-
-        for axiom in self.axioms:
-            self.man.addAxiom(self.ontology, axiom)
-
-        #############################################
-        # SERIALIZE THE ONTOLOGY
-        #################################
-
-        if self.syntax is OWLSyntax.Functional:
-            DocumentFormat = self.FunctionalSyntaxDocumentFormat
-            DocumentFilter = OWLFunctionalDocumentFilter
-        elif self.syntax is OWLSyntax.Manchester:
-            DocumentFormat = self.ManchesterSyntaxDocumentFormat
-            DocumentFilter = lambda x: x
-        elif self.syntax is OWLSyntax.RDF:
-            DocumentFormat = self.RDFXMLDocumentFormat
-            DocumentFilter = lambda x: x
-        elif self.syntax is OWLSyntax.Turtle:
-            DocumentFormat = self.TurtleDocumentFormat
-            DocumentFilter = lambda x: x
-        else:
-            raise TypeError('unsupported syntax ({0})'.format(self.syntax))
-
-        # COPY PREFIXES
-        ontoFormat = DocumentFormat()
-        ontoFormat.copyPrefixesFrom(self.pm)
-        # CREARE TARGET STREAM
-        stream = self.StringDocumentTarget()
-        stream = jnius.cast(self.OWLOntologyDocumentTarget, stream)
-        # SAVE THE ONTOLOGY TO DISK
-        self.man.setOntologyFormat(self.ontology, ontoFormat)
-        self.man.saveOntology(self.ontology, stream)
-        stream = jnius.cast(self.StringDocumentTarget, stream)
-        string = DocumentFilter(stream.toString())
-        fwrite(string, self.path)
-
-    #############################################
-    #   AUXILIARY METHODS
-    #################################
-
-    def getOWLApiDatatype(self, datatype):
-        """
-        Returns the OWLDatatype matching the given Datatype.
-        :type datatype: Datatype
-        :rtype: OWLDatatype
-        """
-        if datatype is Datatype.anyURI:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_ANY_URI',).getIRI())
-        elif datatype is Datatype.base64Binary:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BASE_64_BINARY', ).getIRI())
-        elif datatype is Datatype.boolean:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BOOLEAN', ).getIRI())
-        elif datatype is Datatype.byte:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BYTE', ).getIRI())
-        elif datatype is Datatype.dateTime:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DATE_TIME', ).getIRI())
-        elif datatype is Datatype.dateTimeStamp:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DATE_TIME_STAMP', ).getIRI())
-        elif datatype is Datatype.decimal:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DECIMAL', ).getIRI())
-        elif datatype is Datatype.double:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DOUBLE', ).getIRI())
-        elif datatype is Datatype.float:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_FLOAT', ).getIRI())
-        elif datatype is Datatype.hexBinary:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_HEX_BINARY', ).getIRI())
-        elif datatype is Datatype.int:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_INT', ).getIRI())
-        elif datatype is Datatype.integer:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_INTEGER', ).getIRI())
-        elif datatype is Datatype.language:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_LANGUAGE', ).getIRI())
-        elif datatype is Datatype.literal:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('RDFS_LITERAL', ).getIRI())
-        elif datatype is Datatype.long:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_LONG', ).getIRI())
-        elif datatype is Datatype.Name:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NAME', ).getIRI())
-        elif datatype is Datatype.NCName:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NCNAME', ).getIRI())
-        elif datatype is Datatype.negativeInteger:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NEGATIVE_INTEGER', ).getIRI())
-        elif datatype is Datatype.NMTOKEN:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NMTOKEN', ).getIRI())
-        elif datatype is Datatype.nonNegativeInteger:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NON_NEGATIVE_INTEGER', ).getIRI())
-        elif datatype is Datatype.nonPositiveInteger:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NON_POSITIVE_INTEGER', ).getIRI())
-        elif datatype is Datatype.normalizedString:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NORMALIZED_STRING', ).getIRI())
-        elif datatype is Datatype.plainLiteral:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('RDF_PLAIN_LITERAL', ).getIRI())
-        elif datatype is Datatype.positiveInteger:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_POSITIVE_INTEGER', ).getIRI())
-        elif datatype is Datatype.rational:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('OWL_RATIONAL', ).getIRI())
-        elif datatype is Datatype.real:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('OWL_REAL', ).getIRI())
-        elif datatype is Datatype.short:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_SHORT', ).getIRI())
-        elif datatype is Datatype.string:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_STRING', ).getIRI())
-        elif datatype is Datatype.token:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_TOKEN', ).getIRI())
-        elif datatype is Datatype.unsignedByte:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_BYTE', ).getIRI())
-        elif datatype is Datatype.unsignedInt:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_INT', ).getIRI())
-        elif datatype is Datatype.unsignedLong:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_LONG', ).getIRI())
-        elif datatype is Datatype.unsignedShort:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_SHORT', ).getIRI())
-        elif datatype is Datatype.xmlLiteral:
-            self.factory.getOWLDatatype(self.OWL2Datatype.valueOf('RDF_XML_LITERAL', ).getIRI())
-        raise ValueError('invalid datatype supplied: {0}'.format(datatype))
-    
-    def getOWLApiFacet(self, facet):
-        """
-        Returns the OWLFacet matching the given Facet.
-        :type facet: Facet
-        :rtype: OWLFacet 
-        """
-        if facet is Facet.maxExclusive:
-            return self.OWLFacet.valueOf('MAX_EXCLUSIVE')
-        elif facet is Facet.maxInclusive:
-            return self.OWLFacet.valueOf('MAX_INCLUSIVE')
-        elif facet is Facet.minExclusive:
-            return self.OWLFacet.valueOf('MIN_EXCLUSIVE')
-        elif facet is Facet.minInclusive:
-            return self.OWLFacet.valueOf('MIN_INCLUSIVE')
-        elif facet is Facet.langRange:
-            return self.OWLFacet.valueOf('LANG_RANGE')
-        elif facet is Facet.length:
-            return self.OWLFacet.valueOf('LENGTH')
-        elif facet is Facet.maxLength:
-            return self.OWLFacet.valueOf('MIN_LENGTH')
-        elif facet is Facet.minLength:
-            return self.OWLFacet.valueOf('MIN_LENGTH')
-        elif facet is Facet.pattern:
-            return self.OWLFacet.valueOf('PATTERN')
-        raise ValueError('invalid facet supplied: {0}'.format(facet))
-    
-    def step(self, num, increase=0):
-        """
-        Increments the progress by the given step and emits the progress signal.
-        :type num: int
-        :type increase: int
-        """
-        self.max += increase
-        self.num += num
-        self.num = clamp(self.num, minval=0, maxval=self.max)
-        self.sgnProgress.emit(self.num, self.max)
-
+        self.axioms.add(self.df.getOWLSubPropertyChainOfAxiom(self.conv[edge.source], self.conv[edge.target]))
+        
     #############################################
     #   MAIN WORKER
     #################################
@@ -1186,12 +1233,179 @@ class OWLExporter(AbstractExporter):
         Main worker.
         """
         try:
+            
             self.sgnStarted.emit()
-            self.export()
+
+            #############################################
+            # INITIALIZE ONTOLOGY
+            #################################
+
+            # FIXME: https://github.com/owlcs/owlapi/issues/529
+            self.man = self.OWLManager.createOWLOntologyManager()
+            self.df = self.man.getOWLDataFactory()
+            self.ontology = self.man.createOntology(self.IRI.create(self.ontoIRI.rstrip('#')))
+            self.pm = self.DefaultPrefixManager()
+            self.pm.setPrefix(self.project.prefix, postfix(self.ontoIRI, '#'))
+
+            cast(self.PrefixManager, self.pm)
+
+            #############################################
+            # NODES CONVERSION
+            #################################
+
+            for n in self.project.nodes():
+
+                if n.type() is Item.ConceptNode:  # CONCEPT
+                    self.buildConcept(n)
+                elif n.type() is Item.AttributeNode:  # ATTRIBUTE
+                    self.buildAttribute(n)
+                elif n.type() is Item.RoleNode:  # ROLE
+                    self.buildRole(n)
+                elif n.type() is Item.ValueDomainNode:  # VALUE-DOMAIN
+                    self.buildValueDomain(n)
+                elif n.type() is Item.IndividualNode:  # INDIVIDUAL
+                    self.buildIndividual(n)
+                elif n.type() is Item.FacetNode:  # FACET
+                    self.buildFacet(n)
+                elif n.type() is Item.RoleInverseNode:  # ROLE INVERSE
+                    self.buildRoleInverse(n)
+                elif n.type() is Item.RoleChainNode:  # ROLE CHAIN
+                    self.buildRoleChain(n)
+                elif n.type() is Item.ComplementNode:  # COMPLEMENT
+                    self.buildComplement(n)
+                elif n.type() is Item.EnumerationNode:  # ENUMERATION
+                    self.buildEnumeration(n)
+                elif n.type() is Item.IntersectionNode:  # INTERSECTION
+                    self.buildIntersection(n)
+                elif n.type() in {Item.UnionNode, Item.DisjointUnionNode}:  # UNION / DISJOINT UNION
+                    self.buildUnion(n)
+                elif n.type() is Item.DatatypeRestrictionNode:  # DATATYPE RESTRICTION
+                    self.buildDatatypeRestriction(n)
+                elif n.type() is Item.PropertyAssertionNode:  # PROPERTY ASSERTION
+                    self.buildPropertyAssertion(n)
+                elif n.type() is Item.DomainRestrictionNode:  # DOMAIN RESTRICTION
+                    self.buildDomainRestriction(n)
+                elif n.type() is Item.RangeRestrictionNode:  # RANGE RESTRICTION
+                    self.buildRangeRestriction(n)
+
+                self.step(+1)
+
+            #############################################
+            # AXIOMS FROM NODES
+            #################################
+
+            for n in self.project.nodes():
+
+                if n.type() in {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.ValueDomainNode}:
+                    self.axiomDeclaration(n)
+                    if n.type() is Item.AttributeNode:
+                        self.axiomDataProperty(n)
+                    elif n.type() is Item.RoleNode:
+                        self.axiomObjectProperty(n)
+                elif n.type() is Item.DisjointUnionNode:
+                    self.axiomDisjointClasses(n)
+
+                if n.isPredicate():
+                    self.axiomAnnotation(n)
+
+            #############################################
+            # AXIOMS FROM EDGES
+            #################################
+
+            for e in self.project.edges():
+
+                if e.type() is Item.InclusionEdge:
+
+                    if not e.equivalence:
+
+                        if e.source.identity is Identity.Concept and e.target.identity is Identity.Concept:
+                            self.axiomSubclassOf(e)
+                        elif e.source.identity is Identity.Role and e.target.identity is Identity.Role:
+                            if e.source.type() is Item.RoleChainNode:
+                                self.axiomSubPropertyChainOf(e)
+                            elif e.source.type() in {Item.RoleNode, Item.RoleInverseNode}:
+                                if e.target.type() is Item.ComplementNode:
+                                    self.axiomDisjointObjectProperties(e)
+                                elif e.target.type() in {Item.RoleNode, Item.RoleInverseNode}:
+                                    self.axiomSubObjectPropertyOf(e)
+                        elif e.source.identity is Identity.Attribute and e.target.identity is Identity.Attribute:
+                            if e.source.type() is Item.AttributeNode:
+                                if e.target.type() is Item.ComplementNode:
+                                    self.axiomDisjointDataProperties(e)
+                                elif e.target.type() is Item.AttributeNode:
+                                    self.axiomSubDataPropertyOfAxiom(e)
+                        elif e.source.type() is Item.RangeRestrictionNode and e.target.identity is Identity.ValueDomain:
+                            self.axiomDataPropertyRange(e)
+                        else:
+                            raise MalformedDiagramError(e, 'type mismatch in inclusion assertion')
+
+                    else:
+
+                        if e.source.identity is Identity.Concept and e.target.identity is Identity.Concept:
+                            self.axiomEquivalentClasses(e)
+                        elif e.source.identity is Identity.Role and e.target.identity is Identity.Role:
+                            self.axiomEquivalentObjectProperties(e)
+                        elif e.source.identity is Identity.Attribute and e.target.identity is Identity.Attribute:
+                            self.axiomEquivalentDataProperties(e)
+                        else:
+                            raise MalformedDiagramError(e, 'type mismatch in equivalence assertion')
+
+                elif e.type() is Item.MembershipEdge:
+
+                    if e.source.identity is Identity.Instance and e.target.identity is Identity.Concept:
+                        self.axiomClassAssertion(e)
+                    elif e.source.identity is Identity.RoleInstance:
+                        self.axiomObjectPropertyAssertion(e)
+                    elif e.source.identity is Identity.AttributeInstance:
+                        self.axiomDataPropertyAssertion(e)
+                    else:
+                        raise MalformedDiagramError(e, 'type mismatch in membership assertion')
+
+                self.step(+1)
+
+            #############################################
+            # APPLY GENERATED AXIOMS
+            #################################
+
+            for axiom in self.axioms:
+                self.man.addAxiom(self.ontology, axiom)
+
+            #############################################
+            # SERIALIZE THE ONTOLOGY
+            #################################
+
+            if self.syntax is OWLSyntax.Functional:
+                DocumentFormat = self.FunctionalSyntaxDocumentFormat
+                DocumentFilter = OWLFunctionalDocumentFilter
+            elif self.syntax is OWLSyntax.Manchester:
+                DocumentFormat = self.ManchesterSyntaxDocumentFormat
+                DocumentFilter = lambda x: x
+            elif self.syntax is OWLSyntax.RDF:
+                DocumentFormat = self.RDFXMLDocumentFormat
+                DocumentFilter = lambda x: x
+            elif self.syntax is OWLSyntax.Turtle:
+                DocumentFormat = self.TurtleDocumentFormat
+                DocumentFilter = lambda x: x
+            else:
+                raise TypeError('unsupported syntax ({0})'.format(self.syntax))
+
+            # COPY PREFIXES
+            ontoFormat = DocumentFormat()
+            ontoFormat.copyPrefixesFrom(self.pm)
+            # CREARE TARGET STREAM
+            stream = self.StringDocumentTarget()
+            stream = cast(self.OWLOntologyDocumentTarget, stream)
+            # SAVE THE ONTOLOGY TO DISK
+            self.man.setOntologyFormat(self.ontology, ontoFormat)
+            self.man.saveOntology(self.ontology, stream)
+            stream = cast(self.StringDocumentTarget, stream)
+            string = DocumentFilter(stream.toString())
+            fwrite(string, self.path)
+            
         except Exception as e:
             self.sgnErrored.emit(e)
         else:
             self.sgnCompleted.emit()
         finally:
-            jnius.detach()
+            detach()
             self.sgnFinished.emit()

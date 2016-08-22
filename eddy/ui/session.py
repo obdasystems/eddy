@@ -66,6 +66,7 @@ from eddy.core.commands.nodes import CommandNodeSetBrush
 from eddy.core.commands.nodes import CommandNodeSetDepth
 from eddy.core.common import HasActionSystem, HasMenuSystem
 from eddy.core.common import HasPluginSystem, HasWidgetSystem
+from eddy.core.common import HasDiagramExportSystem, HasProjectExportSystem
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.graphol import Restriction, Special
 from eddy.core.datatypes.misc import Color, DiagramMode
@@ -73,9 +74,12 @@ from eddy.core.datatypes.owl import Datatype, Facet
 from eddy.core.datatypes.qt import BrushIcon
 from eddy.core.datatypes.system import Platform, File
 from eddy.core.diagram import Diagram
-from eddy.core.exporters.graphml import GraphmlExporter
-from eddy.core.exporters.graphol import GrapholExporter
-from eddy.core.exporters.project import ProjectExporter
+from eddy.core.exporters.graphml import GraphmlDiagramExporter
+from eddy.core.exporters.graphol import GrapholDiagramExporter
+from eddy.core.exporters.graphol import GrapholProjectExporter
+from eddy.core.exporters.owl import OWLProjectExporter
+from eddy.core.exporters.pdf import PdfDiagramExporter
+from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import MenuFactory, PropertyFactory
 from eddy.core.functions.fsystem import fcopy, fremove
 from eddy.core.functions.fsystem import is_package, fexists
@@ -108,7 +112,13 @@ from eddy.ui.view import DiagramView
 LOGGER = getLogger(__name__)
 
 
-class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, QMainWindow):
+class Session(HasActionSystem,
+              HasMenuSystem,
+              HasPluginSystem,
+              HasWidgetSystem,
+              HasDiagramExportSystem,
+              HasProjectExportSystem,
+              QMainWindow):
     """
     Extends QMainWindow and implements Eddy main working session.
     Additionally to built-in signals, this class emits:
@@ -163,6 +173,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         self.initActions()
         self.initMenus()
         self.initWidgets()
+        self.initExporters()
         self.initSignals()
         self.initStatusBar()
         self.initToolBars()
@@ -294,7 +305,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         self.addAction(QAction(
             QIcon(':/icons/24/ic_print_black'), 'Print...', self,
             objectName='print', shortcut=QKeySequence.Print,
-            statusTip='Print the current project', enabled=False,
+            statusTip='Print the active diagram', enabled=False,
             triggered=self.doPrint))
 
         #############################################
@@ -547,6 +558,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
             action.setData(k)
             group.addAction(action)
         self.addAction(group)
+
+    def initExporters(self):
+        """
+        Initialize diagram and project exporters.
+        """
+        self.addDiagramExporter(GraphmlDiagramExporter)
+        self.addDiagramExporter(GrapholDiagramExporter)
+        self.addDiagramExporter(PdfDiagramExporter)
+        self.addProjectExporter(GrapholProjectExporter)
+        self.addProjectExporter(OWLProjectExporter)
 
     def initMenus(self):
         """
@@ -1040,13 +1061,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
             dialog.setAcceptMode(QFileDialog.AcceptSave)
             dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QFileDialog.AnyFile)
-            dialog.setNameFilters([File.Csv.value, File.Owl.value, File.Pdf.value])
+            dialog.setNameFilters(self.projectNameFilters(exclude={File.Graphol}))
             dialog.setViewMode(QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             if dialog.exec_():
-                file = File.forValue(dialog.selectedNameFilter())
+                filetype = File.forValue(dialog.selectedNameFilter())
                 path = first(dialog.selectedFiles())
-                self.project.export(path, file)
+                exporter = self.createProjectExporter(filetype, self.project, self)
+                exporter.export(path)
 
     @pyqtSlot('QGraphicsScene')
     def doFocusDiagram(self, diagram):
@@ -1084,10 +1106,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         dialog.setDirectory(expandPath('~'))
         dialog.setFileMode(QFileDialog.ExistingFiles)
         dialog.setViewMode(QFileDialog.Detail)
-        dialog.setNameFilters([File.Graphml.value])
+        dialog.setNameFilters([File.GraphML.value])
         if dialog.exec_():
-            if File.forValue(dialog.selectedNameFilter()) is File.Graphml:
-                selected = [x for x in dialog.selectedFiles() if File.forPath(x) is File.Graphml]
+            if File.forValue(dialog.selectedNameFilter()) is File.GraphML:
+                selected = [x for x in dialog.selectedFiles() if File.forPath(x) is File.GraphML]
                 if selected:
                     self.importFromGraphml(selected)
 
@@ -1201,10 +1223,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
     @pyqtSlot()
     def doPrint(self):
         """
-        Print the current project.
+        Print the active diagram.
         """
-        if not self.project.isEmpty():
-            self.project.print()
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            exporter = PrinterDiagramExporter(diagram, self)
+            exporter.export()
 
     @pyqtSlot()
     def doQuit(self):
@@ -1316,8 +1340,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         Save the current project.
         """
         try:
-            worker = ProjectExporter(self.project, self)
-            worker.run()
+            exporter = self.createProjectExporter(File.Graphol, self.project, self)
+            exporter.export()
         except Exception as e:
             msgbox = QMessageBox(self)
             msgbox.setDetailedText(format_exception(e))
@@ -1339,16 +1363,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         if diagram:
             dialog = QFileDialog(self)
             dialog.setAcceptMode(QFileDialog.AcceptSave)
-            dialog.setDirectory(self.project.path)
+            dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QFileDialog.AnyFile)
-            dialog.setNameFilters([File.Graphol.value, File.Graphml.value])
-            dialog.setOption(QFileDialog.DontConfirmOverwrite, True)
+            dialog.setNameFilters(self.diagramNameFilters())
             dialog.setViewMode(QFileDialog.Detail)
-            dialog.selectFile(diagram.name)
+            dialog.selectFile(cutR(diagram.name, File.Graphol.extension))
             if dialog.exec_():
-                file = File.forValue(dialog.selectedNameFilter())
+                filetype = File.forValue(dialog.selectedNameFilter())
                 path = first(dialog.selectedFiles())
-                self.saveFile(diagram, path, file)
+                exporter = self.createDiagramExporter(filetype, diagram, self)
+                exporter.export(path)
 
     @pyqtSlot()
     def doSelectAll(self):
@@ -1828,23 +1852,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
             self.doLoadDiagram(path)
             self.doFocusDiagram(self.project.diagram(path))
             self.doSave()
-
-    def saveFile(self, diagram, path, file):
-        """
-        Save the given diagram in a file identified by the given path.
-        :type diagram: Diagram
-        :type path: str
-        :type file: File
-        """
-        base = os.path.dirname(path)
-        name = cutR(os.path.basename(path), file.extension)
-        path = uniquePath(base, name, file.extension)
-        if file is File.Graphol:
-            worker = GrapholExporter(diagram, path, self)
-            worker.run()
-        elif file is File.Graphml:
-            worker = GraphmlExporter(diagram, path, self)
-            worker.run()
 
     def setWindowTitle(self, project, diagram=None):
         """

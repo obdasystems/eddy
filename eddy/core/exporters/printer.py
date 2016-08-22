@@ -33,108 +33,58 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPainter, QStandardItemModel
-from PyQt5.QtWidgets import QTableView
+from PyQt5.QtGui import QPainter
+from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 
-from eddy.core.datatypes.graphol import Item
-from eddy.core.exporters.pdf import PdfExporter
+from eddy.core.exporters.common import AbstractDiagramExporter
+from eddy.core.items.common import AbstractItem
 
 
-class PrinterExporter(PdfExporter):
+class PrinterDiagramExporter(AbstractDiagramExporter):
     """
-    This class can be used to print graphol projects.
+    Extends AbstractDiagramExporter with facilities to print the structure of Graphol diagrams.
     """
-    def __init__(self, project, printer, session=None):
+    def __init__(self, diagram, session=None):
         """
-        Initialize the Pdf Exporter.
-        :type project: Project
-        :type printer: QPrinter
+        Initialize the Printer Exporter.
         :type session: Session
         """
-        super().__init__(project, session=session)
-        self.printer = printer
+        super(PrinterDiagramExporter, self).__init__(diagram, session)
 
     #############################################
-    #   ELEMENTS EXPORT
+    #   INTERFACE
     #################################
 
-    def exportDiagrams(self):
+    def export(self, *args, **kwargs):
         """
-        Export all the diagrams in the current project.
+        Print the diagram.
         """
-        for diagram in sorted(self.project.diagrams(), key=lambda x: x.name.lower()):
-            if not diagram.isEmpty():
-                source = diagram.visibleRect(margin=20)
-                if self.newPage:
-                    self.printer.newPage()
-                diagram.clearSelection()
-                diagram.render(self.painter, source=source)
-                self.newPage = True
+        shape = self.diagram.visibleRect(margin=20)
+        if shape:
+            printer = QPrinter(QPrinter.HighResolution)
+            printer.setOutputFormat(QPrinter.NativeFormat)
+            dialog = QPrintDialog(printer)
+            if dialog.exec_() == QPrintDialog.Accepted:
+                painter = QPainter()
+                if painter.begin(printer):
+                    # TURN CACHING OFF
+                    for item in self.diagram.items():
+                        if item.isNode() or item.isEdge():
+                            item.setCacheMode(AbstractItem.NoCache)
+                    # RENDER THE DIAGRAM IN THE PAINTER
+                    self.diagram.render(painter, source=shape)
+                    # TURN CACHING ON
+                    for item in self.diagram.items():
+                        if item.isNode() or item.isEdge():
+                            item.setCacheMode(AbstractItem.DeviceCoordinateCache)
+                    # COMPLETE THE PRINT
+                    painter.end()
 
-    def exportMetaData(self):
+    @classmethod
+    def filetype(cls):
         """
-        Export elements metadata.
+        Returns the type of the file that will be used for the export.
+        In this particular case we don't have any type, so we return None
+        :return: File
         """
-        metas = sorted(self.project.metas(Item.AttributeNode, Item.RoleNode), key=lambda x: x[1].lower())
-
-        self.metamodel = QStandardItemModel()
-        self.metamodel.setHorizontalHeaderLabels([
-            'Predicate',
-            'Type',
-            'Functional',
-            'Inverse Functional',
-            'Asymmetric',
-            'Irreflexive',
-            'Reflexive',
-            'Symmetric',
-            'Transitive'])
-
-        # GENERATE DATA
-        for entry in metas:
-            meta = self.project.meta(entry[0], entry[1])
-            func = self.exportFuncForItem[meta.item]
-            data = func(meta)
-            self.metamodel.appendRow(data)
-
-        self.metaview = QTableView()
-        self.metaview.setStyleSheet("""
-        QTableView {
-        border: 0;
-        }
-        QHeaderView {
-        background: #D3D3D3;
-        }""")
-
-        self.metaview.setModel(self.metamodel)
-        self.metaview.resizeColumnsToContents()
-        self.metaview.setFixedWidth(sum(self.metaview.columnWidth(i) for i in range(self.metamodel.columnCount())))
-        self.metaview.setFixedHeight(sum(self.metaview.rowHeight(i) for i in \
-                                         range(self.metamodel.rowCount())) + self.metaview.horizontalHeader().height())
-        self.metaview.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.metaview.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.metaview.verticalHeader().setVisible(False)
-
-        if self.newPage:
-            self.printer.newPage()
-
-        xscale = self.printer.pageRect().width() / self.metaview.width()
-        yscale = self.printer.pageRect().height() / self.metaview.height()
-        self.painter.scale(min(xscale, yscale), min(xscale, yscale))
-        self.metaview.render(self.painter)
-
-    #############################################
-    #   DOCUMENT GENERATION
-    #################################
-
-    def run(self):
-        """
-        Perform document generation.
-        """
-        self.painter = QPainter()
-        self.painter.begin(self.printer)
-        self.setCachingOff()
-        self.exportDiagrams()
-        self.exportMetaData()
-        self.setCachingOn()
-        self.painter.end()
+        return None

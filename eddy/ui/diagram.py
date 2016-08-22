@@ -46,7 +46,7 @@ from eddy import ORGANIZATION, APPNAME
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import Diagram
-from eddy.core.exporters.graphol import GrapholExporter
+from eddy.core.exporters.graphol import GrapholDiagramExporter
 from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.misc import cutR, format_exception, isEmpty
 from eddy.core.functions.path import isPathValid, shortPath, expandPath
@@ -200,6 +200,17 @@ class NewDiagramDialog(AbstractDiagramDialog):
         self.setWindowTitle('New diagram')
 
     #############################################
+    #   INTERFACE
+    #################################
+
+    def path(self):
+        """
+        Returns the value of the path field (expanded).
+        :rtype: str
+        """
+        return expandPath(self.pathField.value())
+
+    #############################################
     #   SLOTS
     #################################
 
@@ -210,14 +221,13 @@ class NewDiagramDialog(AbstractDiagramDialog):
         """
         settings = QSettings(ORGANIZATION, APPNAME)
         size = settings.value('diagram/size', 5000, int)
-        path = expandPath(self.pathField.value())
 
         try:
-            diagram = Diagram(self.pathField.value(), self.project)
+            diagram = Diagram(self.path(), self.project)
             diagram.setSceneRect(QRectF(-size / 2, -size / 2, size, size))
             diagram.setItemIndexMethod(Diagram.NoIndex)
-            exporter = GrapholExporter(diagram)
-            exporter.run()
+            exporter = GrapholDiagramExporter(diagram)
+            exporter.export()
         except Exception as e:
             msgbox = QMessageBox(self)
             msgbox.setDetailedText(format_exception(e))
