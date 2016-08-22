@@ -339,7 +339,7 @@ class DiagramView(QGraphicsView):
             x = int(rect.left()) - (int(rect.left()) % s)
             y = int(rect.top()) - (int(rect.top()) % s)
             points = (QPointF(i, j) for i in rangeF(x, rect.right(), s) for j in rangeF(y, rect.bottom(), s))
-            painter.setPen(QPen(QBrush(QColor(80, 80, 80, 255)), 0, Qt.SolidLine))
+            painter.setPen(QPen(QBrush(QColor(80, 80, 80, 255)), 1, Qt.SolidLine))
             painter.drawPoints(*points)
 
     def moveBy(self, *__args):
