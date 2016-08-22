@@ -34,8 +34,8 @@
 
 
 from PyQt5.QtCore import QPointF
+from PyQt5.QtGui import QBrush, QColor
 
-from eddy.core.datatypes.misc import Brush
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.operator import OperatorNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -53,7 +53,7 @@ class UnionNode(OperatorNode):
         Initialize the node.
         :type brush: QBrush
         """
-        super().__init__(brush=Brush.White255A, **kwargs)
+        super(UnionNode, self).__init__(brush=QBrush(QColor(252, 252, 252, 255)), **kwargs)
         self.label = NodeLabel('or', pos=self.center, editable=False, movable=False, parent=self)
 
     #############################################

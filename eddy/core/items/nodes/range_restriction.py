@@ -33,7 +33,8 @@
 ##########################################################################
 
 
-from eddy.core.datatypes.misc import Brush
+from PyQt5.QtGui import QBrush, QColor
+
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
 from eddy.core.items.nodes.common.restriction import RestrictionNode
 
@@ -50,7 +51,7 @@ class RangeRestrictionNode(RestrictionNode):
         Initialize the node.
         :type brush: QBrush
         """
-        super().__init__(brush=Brush.Black255A, **kwargs)
+        super(RangeRestrictionNode, self).__init__(brush=QBrush(QColor(0, 0, 0, 255)), **kwargs)
 
     #############################################
     #   PROPERTIES

@@ -39,11 +39,12 @@ from math import sin, cos, radians
 
 from PyQt5.QtCore import Qt, QPointF, QLineF, QRectF
 from PyQt5.QtGui import QPolygonF, QPainterPath
+from PyQt5.QtGui import QPen, QBrush, QColor
 
 from eddy.core.commands.edges import CommandEdgeAnchorMove
 from eddy.core.commands.edges import CommandEdgeBreakpointAdd
 from eddy.core.commands.edges import CommandEdgeBreakpointMove
-from eddy.core.datatypes.misc import Brush, DiagramMode, Pen
+from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.geometry import distance, projection
 from eddy.core.functions.misc import snap
 from eddy.core.items.common import AbstractItem
@@ -289,26 +290,26 @@ class AbstractEdge(AbstractItem):
         :type breakpoint: int
         :type anchor: AbstractNode
         """
-        anchorBrush = Brush.NoBrush
-        anchorPen = Pen.NoPen
-        headBrush = Brush.NoBrush
-        headPen = Pen.NoPen
-        handleBrush = Brush.NoBrush
-        handlePen = Pen.NoPen
-        pathPen = Pen.NoPen
-        selectionBrush = Brush.NoBrush
+        anchorBrush = QBrush(Qt.NoBrush)
+        anchorPen = QPen(Qt.NoPen)
+        headBrush = QBrush(Qt.NoBrush)
+        headPen = QPen(Qt.NoPen)
+        handleBrush = QBrush(Qt.NoBrush)
+        handlePen = QPen(Qt.NoPen)
+        pathPen = QPen(Qt.NoPen)
+        selectionBrush = QBrush(Qt.NoBrush)
 
         if visible:
-            headBrush = Brush.Black255A
-            headPen = Pen.SolidBlack1_1Pt
-            pathPen = Pen.SolidBlack1_1Pt
+            headBrush = QBrush(QColor(0, 0, 0, 255))
+            headPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            pathPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
             if selected:
-                anchorBrush = Brush.Blue255A
-                anchorPen = Pen.SolidBlack1_1Pt
-                handleBrush = Brush.Blue255A
-                handlePen = Pen.SolidBlack1_1Pt
+                anchorBrush = QBrush(QColor(66, 165, 245, 255))
+                anchorPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+                handleBrush = QBrush(QColor(66, 165, 245, 255))
+                handlePen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
                 if breakpoint is None and anchor is None:
-                    selectionBrush = Brush.Yellow255A
+                    selectionBrush = QBrush(QColor(251, 255, 148, 255))
 
         self.head.setBrush(headBrush)
         self.head.setPen(headPen)

@@ -33,10 +33,10 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QPointF, QRectF
+from PyQt5.QtCore import Qt, QPointF, QRectF
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
+from PyQt5.QtGui import QPen, QBrush, QColor
 
-from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.owl import Facet
 from eddy.core.functions.misc import first
@@ -56,6 +56,10 @@ class FacetNode(AbstractNode):
     IndexBL = 3
     IndexEE = 4
 
+    DefaultBrushA = QBrush(QColor(222, 222, 222, 255))
+    DefaultBrushB = QBrush(QColor(252, 252, 252, 255))
+    DefaultPenA = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+    DefaultPenB = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     Identities = {Identity.Facet}
     Type = Item.FacetNode
 
@@ -66,12 +70,12 @@ class FacetNode(AbstractNode):
         :type height: int
         :type brush: QBrush
         """
-        super().__init__(**kwargs)
+        super(FacetNode, self).__init__(**kwargs)
         self.background = Polygon(self.createPolygon(88, 48))
         self.selection = Polygon(QRectF(-44, -24, 88, 48))
         self.polygon = Polygon(self.createPolygon(80, 40))
-        self.polygonA = Polygon(self.createPolygonA(80, 40), Brush.LightGrey255A, Pen.SolidBlack1Pt)
-        self.polygonB = Polygon(self.createPolygonA(80, 40), Brush.White255A, Pen.SolidBlack1Pt)
+        self.polygonA = Polygon(self.createPolygonA(80, 40), FacetNode.DefaultBrushA, FacetNode.DefaultPenA)
+        self.polygonB = Polygon(self.createPolygonA(80, 40), FacetNode.DefaultBrushB, FacetNode.DefaultPenB)
         self.labelA = NodeLabel(Facet.length.value, pos=self.centerA, editable=False, movable=False, parent=self)
         self.labelB = FacetQuotedLabel(template='"32"', movable=False, pos=self.centerB, parent=self)
         self.updateTextPos()

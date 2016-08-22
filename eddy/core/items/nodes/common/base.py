@@ -36,11 +36,11 @@
 from abc import ABCMeta, abstractmethod
 
 from PyQt5.QtCore import QPointF, QLineF, Qt, QRectF
-from PyQt5.QtGui import QPolygonF
+from PyQt5.QtGui import QPolygonF, QPen, QBrush, QColor
 
 from eddy.core.commands.nodes import CommandNodeRezize
 from eddy.core.datatypes.graphol import Item, Identity
-from eddy.core.datatypes.misc import Brush, DiagramMode, Pen
+from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.items.common import AbstractItem
 from eddy.core.polygon import Polygon
 
@@ -314,15 +314,15 @@ class AbstractNode(AbstractItem):
         :type valid: bool
         """
         # ITEM SELECTION
-        pen = Pen.NoPen
+        pen = QPen(Qt.NoPen)
         if selected:
-            pen = Pen.DashedBlack1Pt
+            pen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.DashLine)
         self.selection.setPen(pen)
 
         # SYNTAX VALIDATION
-        brush = Brush.NoBrush
+        brush = QBrush(Qt.NoBrush)
         if valid is not None:
-            brush = Brush.Green160A if valid else Brush.Red160A
+            brush = QBrush(QColor(43, 173, 63, 160)) if valid else QBrush(QColor(179, 12, 12, 160))
         self.background.setBrush(brush)
 
         # FORCE CACHE REGENERATION
@@ -505,32 +505,32 @@ class AbstractResizableNode(AbstractNode):
         :type handle: int
         """
         # RESIZE HANDLES
-        brush = [Brush.NoBrush] * 8
-        pen = [Pen.NoPen] * 8
+        brush = [QBrush(Qt.NoBrush)] * 8
+        pen = [QPen(Qt.NoPen)] * 8
         if selected:
             if handle is None:
-                brush = [Brush.Blue255A] * 8
-                pen = [Pen.SolidBlack1Pt] * 8
+                brush = [QBrush(QColor(66, 165, 245, 255))] * 8
+                pen = [QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)] * 8
             else:
                 for i in range(8):
                     if i == handle:
-                        brush[i] = Brush.Blue255A
-                        pen[i] = Pen.SolidBlack1Pt
+                        brush[i] = QBrush(QColor(66, 165, 245, 255))
+                        pen[i] = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
 
         for i in range(8):
             self.handles[i].setBrush(brush[i])
             self.handles[i].setPen(pen[i])
 
         # ITEM SELECTION
-        pen = Pen.NoPen
+        pen = QPen(Qt.NoPen)
         if selected and handle is None:
-            pen = Pen.DashedBlack1Pt
+            pen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.DashLine)
         self.selection.setPen(pen)
 
         # SYNTAX VALIDATION
-        brush = Brush.NoBrush
+        brush = QBrush(Qt.NoBrush)
         if valid is not None:
-            brush = Brush.Green160A if valid else Brush.Red160A
+            brush = QBrush(QColor(43, 173, 63, 160)) if valid else QBrush(QColor(179, 12, 12, 160))
         self.background.setBrush(brush)
 
         # FORCE CACHE REGENERATION

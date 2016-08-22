@@ -36,12 +36,13 @@
 from abc import ABCMeta, abstractmethod
 
 from PyQt5.QtCore import Qt, QPointF, pyqtSlot
-from PyQt5.QtGui import QTextBlockFormat, QTextCursor, QPainterPath
+from PyQt5.QtGui import QTextBlockFormat, QTextCursor
+from PyQt5.QtGui import QPainterPath, QColor, QBrush
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem
 
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.graphol import Item
-from eddy.core.datatypes.misc import Brush, DiagramMode
+from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
 from eddy.core.datatypes.qt import Font
@@ -262,7 +263,7 @@ class AbstractLabel(QGraphicsTextItem, DiagramItemMixin):
         super().__init__(parent)
         self.focusInData = None
         self.template = template
-        self.setDefaultTextColor(Brush.Black255A.color())
+        self.setDefaultTextColor(QBrush(QColor(0, 0, 0, 255)).color())
         self.setFlag(AbstractLabel.ItemIsFocusable, self.isEditable())
         self.setFont(Font('Arial', 12, Font.Light))
         self.setText(self.template)

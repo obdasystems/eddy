@@ -34,10 +34,10 @@
 
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
+from PyQt5.QtGui import QColor, QBrush, QPen
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
 
 from eddy.core.datatypes.graphol import Item, Special, Identity
-from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.functions.misc import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -54,6 +54,8 @@ class RoleNode(AbstractResizableNode):
     IndexT = 3
     IndexE = 4
 
+    DefaultBrush = QBrush(QColor(252, 252, 252, 255))
+    DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     Identities = {Identity.Role}
     Type = Item.RoleNode
 
@@ -64,7 +66,7 @@ class RoleNode(AbstractResizableNode):
         :type height: int
         :type brush: QBrush
         """
-        super().__init__(**kwargs)
+        super(RoleNode, self).__init__(**kwargs)
         
         w = max(width, 70)
         h = max(height, 50)
@@ -81,7 +83,7 @@ class RoleNode(AbstractResizableNode):
         self.ipolygon = Polygon(QPainterPath())
         self.background = Polygon(createPolygon(w + 8, h + 8))
         self.selection = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
-        self.polygon = Polygon(createPolygon(w, h), brush or Brush.White255A, Pen.SolidBlack1_1Pt)
+        self.polygon = Polygon(createPolygon(w, h), brush or RoleNode.DefaultBrush, RoleNode.DefaultPen)
         self.label = NodeLabel(template='role', pos=self.center, parent=self)
         self.label.setAlignment(Qt.AlignCenter)
         self.updateResizeHandles()
@@ -349,21 +351,21 @@ class RoleNode(AbstractResizableNode):
             inverseFunctional = self.inverseFunctional
 
         # FUNCTIONAL POLYGON
-        pen = Pen.NoPen
-        brush = Brush.NoBrush
+        pen = QPen(Qt.NoPen)
+        brush = QBrush(Qt.NoBrush)
         if functional:
-            pen = Pen.SolidBlack1_1Pt
-            brush = Brush.White255A
+            pen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            brush = QBrush(QColor(252, 252, 252, 255))
 
         self.fpolygon.setPen(pen)
         self.fpolygon.setBrush(brush)
 
         # INVERSE FUNCTIONAL POLYGON
-        pen = Pen.NoPen
-        brush = Brush.NoBrush
+        pen = QPen(Qt.NoPen)
+        brush = QBrush(Qt.NoBrush)
         if inverseFunctional:
-            pen = Pen.SolidBlack1_1Pt
-            brush = Brush.Black255A
+            pen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            brush = QBrush(QColor(0, 0, 0, 255))
 
         self.ipolygon.setPen(pen)
         self.ipolygon.setBrush(brush)

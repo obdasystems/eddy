@@ -34,8 +34,8 @@
 
 
 from PyQt5.QtCore import QPointF
+from PyQt5.QtGui import QBrush, QColor
 
-from eddy.core.datatypes.misc import Brush
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.operator import OperatorNode
 
@@ -52,7 +52,7 @@ class DisjointUnionNode(OperatorNode):
         Initialize the node.
         :type brush: QBrush
         """
-        super().__init__(brush=Brush.Black255A, **kwargs)
+        super(DisjointUnionNode, self).__init__(brush=QBrush(QColor(0, 0, 0, 255)), **kwargs)
 
     #############################################
     #   PROPERTIES

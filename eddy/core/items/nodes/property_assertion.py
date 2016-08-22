@@ -33,10 +33,10 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QRectF
+from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPainterPath, QPainter
+from PyQt5.QtGui import QBrush, QColor, QPen
 
-from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.base import AbstractNode
@@ -47,6 +47,8 @@ class PropertyAssertionNode(AbstractNode):
     """
     This class implements the 'Property Assertion' node.
     """
+    DefaultBrush = QBrush(QColor(252, 252, 252, 255))
+    DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     Identities = {Identity.RoleInstance, Identity.AttributeInstance, Identity.Neutral}
     Type = Item.PropertyAssertionNode
 
@@ -62,7 +64,7 @@ class PropertyAssertionNode(AbstractNode):
         self.inputs = inputs or DistinctList()
         self.background = Polygon(QRectF(-34, -19, 68, 38))
         self.selection = Polygon(QRectF(-34, -19, 68, 38))
-        self.polygon = Polygon(QRectF(-26, -15, 52, 30), Brush.White255A, Pen.SolidBlack1Pt)
+        self.polygon = Polygon(QRectF(-26, -15, 52, 30), PropertyAssertionNode.DefaultBrush, PropertyAssertionNode.DefaultPen)
 
     #############################################
     #   PROPERTIES

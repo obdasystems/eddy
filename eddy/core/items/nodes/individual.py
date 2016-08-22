@@ -36,10 +36,10 @@
 import math
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
+from PyQt5.QtGui import QBrush, QColor, QPen
 from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
 
 from eddy.core.datatypes.graphol import Identity, Item
-from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.owl import Datatype
 from eddy.core.functions.misc import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
@@ -62,6 +62,8 @@ class IndividualNode(AbstractResizableNode):
     IndexTL = 7
     IndexEE = 8
 
+    DefaultBrush = QBrush(QColor(252, 252, 252, 255))
+    DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     Identities = {Identity.Instance, Identity.Value}
     Type = Item.IndividualNode
 
@@ -72,7 +74,7 @@ class IndividualNode(AbstractResizableNode):
         :type height: int
         :type brush: QBrush
         """
-        super().__init__(**kwargs)
+        super(IndividualNode, self).__init__(**kwargs)
 
         w = max(width, 60)
         h = max(height, 60)
@@ -91,7 +93,7 @@ class IndividualNode(AbstractResizableNode):
 
         self.background = Polygon(createPolygon(w + 8, h + 8))
         self.selection = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
-        self.polygon = Polygon(createPolygon(w, h), brush or Brush.White255A, Pen.SolidBlack1Pt)
+        self.polygon = Polygon(createPolygon(w, h), brush or IndividualNode.DefaultBrush, IndividualNode.DefaultPen)
         self.label = NodeLabel(template='instance', pos=self.center, parent=self)
         self.label.setAlignment(Qt.AlignCenter)
         self.updateResizeHandles()

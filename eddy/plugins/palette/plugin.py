@@ -35,7 +35,8 @@
 
 from PyQt5.QtCore import Qt, QEvent, QMimeData, pyqtSlot
 from PyQt5.QtCore import QRectF, QPointF, QLineF, QSize, QSettings
-from PyQt5.QtGui import QDrag, QIcon, QPixmap, QPainter, QPolygonF
+from PyQt5.QtGui import QDrag, QIcon, QPixmap, QPainter
+from PyQt5.QtGui import QPolygonF, QPen, QColor, QBrush
 from PyQt5.QtWidgets import QApplication, QToolButton, QStyle
 from PyQt5.QtWidgets import QMenu, QAction, QActionGroup
 from PyQt5.QtWidgets import QWidget, QGridLayout, QStyleOption
@@ -46,7 +47,6 @@ from verlib import NormalizedVersion
 from eddy import APPNAME, ORGANIZATION
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.datatypes.graphol import Item
-from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.owl import Facet
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import Platform
@@ -526,8 +526,8 @@ class PaletteButton(QToolButton):
 
             if item is Item.ConceptNode:
                 painter = QPainter(pixmap)
-                painter.setPen(Pen.SolidBlack1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
                 painter.drawRect(QRectF(-27, -17, 54, 34))
                 painter.setFont(Font('Arial', 11, Font.Light))
@@ -542,8 +542,8 @@ class PaletteButton(QToolButton):
 
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1_1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
                 painter.drawPolygon(QPolygonF([
                     QPointF(-23, 0),
@@ -567,8 +567,8 @@ class PaletteButton(QToolButton):
                 painter.translate(0, 0)
                 painter.drawText(QRectF(0, 0, 60, 22), Qt.AlignCenter, 'attribute')
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1_1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.translate(30, 30)
                 painter.drawEllipse(QRectF(-9, -9, 18, 18))
                 painter.end()
@@ -581,8 +581,8 @@ class PaletteButton(QToolButton):
 
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
                 painter.drawRoundedRect(QRectF(-27, -17, 54, 34), 6, 6)
                 painter.setFont(Font('Arial', 10, Font.Light))
@@ -597,8 +597,8 @@ class PaletteButton(QToolButton):
 
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
                 painter.drawPolygon(QPolygonF([
                     QPointF(-20, -((40 / (1 + sqrt(2))) / 2)),
@@ -637,12 +637,12 @@ class PaletteButton(QToolButton):
                 ])
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
-                painter.setBrush(Brush.LightGrey255A)
+                painter.setBrush(QBrush(QColor(222, 222, 222, 255)))
                 painter.drawPolygon(polygonA)
-                painter.setBrush(Brush.White255A)
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.drawPolygon(polygonB)
                 painter.setFont(Font('Arial', 9, Font.Light))
                 painter.drawText(QPointF(-19, -5), Facet.length.value)
@@ -659,8 +659,8 @@ class PaletteButton(QToolButton):
                 painter.setFont(Font('Arial', 9, Font.Light))
                 painter.translate(0, 0)
                 painter.drawText(QRectF(0, 0, 60, 22), Qt.AlignCenter, 'restriction')
-                painter.setPen(Pen.SolidBlack1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
                 painter.drawRect(QRectF(-18 / 2, -18 / 2 + 6, 18, 18))
                 painter.end()
@@ -675,8 +675,8 @@ class PaletteButton(QToolButton):
                 painter.setFont(Font('Arial', 9, Font.Light))
                 painter.translate(0, 0)
                 painter.drawText(QRectF(0, 0, 60, 22), Qt.AlignCenter, 'restriction')
-                painter.setPen(Pen.SolidBlack1Pt)
-                painter.setBrush(Brush.Black255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(0, 0, 0, 255)))
                 painter.translate(30, 22)
                 painter.drawRect(QRectF(-18 / 2, -18 / 2 + 6, 18, 18))
                 painter.end()
@@ -689,8 +689,8 @@ class PaletteButton(QToolButton):
 
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
                 painter.drawPolygon(QPolygonF([
                     QPointF(-23, 0),
@@ -713,8 +713,8 @@ class PaletteButton(QToolButton):
 
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
                 painter.drawPolygon(QPolygonF([
                     QPointF(-23, 0),
@@ -737,8 +737,8 @@ class PaletteButton(QToolButton):
 
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
                 painter.drawPolygon(QPolygonF([
                     QPointF(-23, 0),
@@ -761,8 +761,8 @@ class PaletteButton(QToolButton):
 
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
                 painter.drawPolygon(QPolygonF([
                     QPointF(-23, 0),
@@ -785,8 +785,8 @@ class PaletteButton(QToolButton):
 
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
                 painter.drawPolygon(QPolygonF([
                     QPointF(-23, 0),
@@ -809,8 +809,8 @@ class PaletteButton(QToolButton):
 
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
                 painter.drawPolygon(QPolygonF([
                     QPointF(-23, 0),
@@ -833,8 +833,8 @@ class PaletteButton(QToolButton):
 
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
                 painter.drawPolygon(QPolygonF([
                     QPointF(-23, 0),
@@ -857,8 +857,8 @@ class PaletteButton(QToolButton):
 
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1Pt)
-                painter.setBrush(Brush.Black255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(0, 0, 0, 255)))
                 painter.translate(30, 22)
                 painter.drawPolygon(QPolygonF([
                     QPointF(-23, 0),
@@ -879,8 +879,8 @@ class PaletteButton(QToolButton):
 
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
                 painter.drawRoundedRect(QRectF(-23, -15, 46, 30), 14, 14)
                 painter.end()
@@ -901,10 +901,10 @@ class PaletteButton(QToolButton):
                 H1 = QPolygonF([P1, P2, P3])
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1_1Pt)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
                 painter.drawLine(L1)
-                painter.setPen(Pen.SolidBlack1_1Pt)
-                painter.setBrush(Brush.Black255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(0, 0, 0, 255)))
                 painter.drawPolygon(H1)
                 painter.end()
 
@@ -925,10 +925,12 @@ class PaletteButton(QToolButton):
                 H1 = QPolygonF([P1, P2, P3, p4])
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.DashedBlack1_1Pt_x3)
+                pen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.CustomDashLine, Qt.RoundCap, Qt.RoundJoin)
+                pen.setDashPattern([3, 3])
+                painter.setPen(pen)
                 painter.drawLine(L1)
-                painter.setPen(Pen.SolidBlack1_1Pt)
-                painter.setBrush(Brush.White255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(252, 252, 252, 255)))
                 painter.drawPolygon(H1)
                 painter.end()
 
@@ -949,10 +951,10 @@ class PaletteButton(QToolButton):
                 S1 = 2 if Platform.identify() is Platform.Darwin else 0
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
-                painter.setPen(Pen.SolidBlack1_1Pt)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
                 painter.drawLine(L1)
-                painter.setPen(Pen.SolidBlack1_1Pt)
-                painter.setBrush(Brush.Black255A)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(0, 0, 0, 255)))
                 painter.drawPolygon(H1)
                 painter.setFont(Font('Arial', 9, Font.Light))
                 painter.drawText(PP1.x() + S1, 18, 'instanceOf')

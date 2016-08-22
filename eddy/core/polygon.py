@@ -33,9 +33,10 @@
 ##########################################################################
 
 
-from PyQt5.QtGui import QPolygonF
+from PyQt5.QtCore import Qt
 
-from datatypes.misc import Brush, Pen
+from PyQt5.QtGui import QPen, QBrush, QPolygonF
+
 
 
 class Polygon(object):
@@ -51,7 +52,7 @@ class Polygon(object):
     and thus, despite its name, does not provide any geometrical functionality, which are
     instead available in the geometry of the polygon.
     """
-    def __init__(self, geometry=QPolygonF(), brush=Brush.NoBrush, pen=Pen.NoPen):
+    def __init__(self, geometry=QPolygonF(), brush=QBrush(Qt.NoBrush), pen=QPen(Qt.NoPen)):
         """
         Initialize the polygon.
         :type geometry: T <= QRectF|QPolygonF|QPainterPath

@@ -33,7 +33,8 @@
 ##########################################################################
 
 
-from eddy.core.datatypes.misc import Brush
+from PyQt5.QtGui import QBrush, QColor
+
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
 from eddy.core.items.nodes.common.restriction import RestrictionNode
 
@@ -50,7 +51,7 @@ class DomainRestrictionNode(RestrictionNode):
         Initialize the node.
         :type brush: QBrush
         """
-        super().__init__(brush=Brush.White255A, **kwargs)
+        super(DomainRestrictionNode, self).__init__(brush=QBrush(QColor(252, 252, 252, 255)), **kwargs)
 
     #############################################
     #   PROPERTIES
@@ -82,10 +83,6 @@ class DomainRestrictionNode(RestrictionNode):
         f2 = lambda x: x.identity in {Identity.Concept, Identity.Role}
         f3 = lambda x: x.identity in {Identity.Attribute, Identity.ValueDomain}
         if self.restriction in {Restriction.Cardinality, Restriction.Exists, Restriction.Forall}:
-            if len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) >= 2:
-                # Role qualified restriction => Role + Concept
-                return True
-            if len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) >= 2:
-                # Attribute qualified restriction => Attribute + ValueDomain
-                return True
+            return len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) >= 2 or \
+                   len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) >= 2
         return False

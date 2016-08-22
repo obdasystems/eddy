@@ -34,8 +34,8 @@
 
 
 from PyQt5.QtCore import QPointF
+from PyQt5.QtGui import QBrush, QColor
 
-from eddy.core.datatypes.misc import Brush
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.items.nodes.common.operator import OperatorNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -53,7 +53,7 @@ class ComplementNode(OperatorNode):
         Initialize the node.
         :type brush: QBrush
         """
-        super().__init__(brush=Brush.White255A, **kwargs)
+        super(ComplementNode, self).__init__(brush=QBrush(QColor(252, 252, 252, 255)), **kwargs)
         self.label = NodeLabel('not', pos=self.center, editable=False, movable=False, parent=self)
 
     #############################################

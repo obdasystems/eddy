@@ -35,10 +35,9 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import QRectF, QPointF
-from PyQt5.QtGui import QPainterPath
+from PyQt5.QtCore import Qt, QRectF, QPointF
+from PyQt5.QtGui import QPainterPath, QPen, QBrush, QColor
 
-from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Restriction
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -52,6 +51,9 @@ class RestrictionNode(AbstractNode):
     """
     __metaclass__ = ABCMeta
 
+    DefaultBrush = QBrush(QColor(252, 252, 252, 255))
+    DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+
     def __init__(self, width=20, height=20, brush=None, **kwargs):
         """
         Initialize the node.
@@ -63,7 +65,7 @@ class RestrictionNode(AbstractNode):
 
         self.background = Polygon(QRectF(-14, -14, 28, 28))
         self.selection = Polygon(QRectF(-14, -14, 28, 28))
-        self.polygon = Polygon(QRectF(-10, -10, 20, 20), brush or Brush.White255A, Pen.SolidBlack1Pt)
+        self.polygon = Polygon(QRectF(-10, -10, 20, 20), brush or RestrictionNode.DefaultBrush, RestrictionNode.DefaultPen)
         self.label = NodeLabel(Restriction.Exists.toString(),
                                pos=lambda: self.center() - QPointF(0, 22),
                                editable=False, parent=self)
@@ -145,15 +147,6 @@ class RestrictionNode(AbstractNode):
         :rtype: int
         """
         return self.polygon.geometry().height()
-
-    @classmethod
-    @abstractmethod
-    def icon(cls, **kwargs):
-        """
-        Returns an image suitable for the palette.
-        :rtype: QPixmap
-        """
-        pass
 
     def paint(self, painter, option, widget=None):
         """

@@ -33,25 +33,7 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QBrush, QColor, QPen
-
 from enum import Enum, unique, IntEnum
-
-
-class Brush(object):
-    """
-    This class defines the brushes used in Eddy.
-    """
-    NoBrush = QBrush(Qt.NoBrush)
-    Black255A = QBrush(QColor(0, 0, 0, 255))
-    Blue255A = QBrush(QColor(66, 165, 245, 255))
-    Green160A = QBrush(QColor(43, 173, 63, 160))
-    Grey255A = QBrush(QColor(80, 80, 80, 255))
-    LightGrey255A = QBrush(QColor(222, 222, 222, 255))
-    Red160A = QBrush(QColor(179, 12, 12, 160))
-    Yellow255A = QBrush(QColor(251, 255, 148, 255))
-    White255A = QBrush(QColor(252, 252, 252, 255))
 
 
 @unique
@@ -104,18 +86,3 @@ class DiagramMode(IntEnum):
     LabelEdit = 8
     RubberBandDrag = 9
     SceneDrag = 10
-
-
-class Pen(object):
-    """
-    This class defines the pens used in Eddy.
-    """
-    NoPen = QPen(Qt.NoPen)
-    DashedBlack1Pt = QPen(Brush.Black255A, 1.0, Qt.DashLine)
-    DashedBlack1_1Pt_x3 = QPen(Brush.Black255A, 1.1, Qt.CustomDashLine, Qt.RoundCap, Qt.RoundJoin)
-    DashedBlack1_1Pt_x3.setDashPattern([3, 3])
-    DashedBlack1_1Pt_x5 = QPen(Brush.Black255A, 1.1, Qt.CustomDashLine, Qt.RoundCap, Qt.RoundJoin)
-    DashedBlack1_1Pt_x5.setDashPattern([5, 5])
-    SolidBlack1Pt = QPen(Brush.Black255A, 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-    SolidBlack1_1Pt = QPen(Brush.Black255A, 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-    SolidGrey0Pt = QPen(Brush.Grey255A, 0, Qt.SolidLine)

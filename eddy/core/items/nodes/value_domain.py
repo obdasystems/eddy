@@ -33,11 +33,11 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QRectF
+from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPainter, QPainterPath
+from PyQt5.QtGui import QPen, QBrush, QColor
 
 from eddy.core.datatypes.graphol import Item, Identity
-from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.owl import Datatype
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -48,6 +48,8 @@ class ValueDomainNode(AbstractNode):
     """
     This class implements the 'Value-Domain' node.
     """
+    DefaultBrush = QBrush(QColor(252, 252, 252, 255))
+    DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     Identities = {Identity.ValueDomain}
     Type = Item.ValueDomainNode
 
@@ -58,10 +60,10 @@ class ValueDomainNode(AbstractNode):
         :type height: int
         :type brush: QBrush
         """
-        super().__init__(**kwargs)
+        super(ValueDomainNode, self).__init__(**kwargs)
         self.background = Polygon(QRectF(-49, -24, 98, 48))
         self.selection = Polygon(QRectF(-49, -24, 98, 48))
-        self.polygon = Polygon(QRectF(-45, -20, 90, 40), brush or Brush.White255A, Pen.SolidBlack1Pt)
+        self.polygon = Polygon(QRectF(-45, -20, 90, 40), brush or ValueDomainNode.DefaultBrush, ValueDomainNode.DefaultPen)
         self.label = NodeLabel(Datatype.string.value, pos=self.center, editable=False, movable=False, parent=self)
         self.updateNode()
         self.updateTextPos()

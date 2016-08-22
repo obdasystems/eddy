@@ -142,9 +142,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem, 
         self.pf = PropertyFactory(self)
 
         # ------------------------------------------------------- #
-        # Because toolbars are needed both by widgets and actions #
-        # they need to be initialized outside 'init' methods not  #
-        # to generate cyclic dependencies:                        #
+        # Because toolbars are needed both by built-in widgets    #
+        # and built-in actions, they need to be initialized       #
+        # outside 'init' methods not to generate cycles:          #
         # ------------------------------------------------------- #
         # * TOOLBARS  -> WIDGETS && ACTIONS                       #
         # * WIDGETS   -> MENUS                                    #

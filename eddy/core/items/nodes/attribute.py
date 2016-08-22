@@ -35,8 +35,8 @@
 
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPainter, QPainterPath
+from PyQt5.QtGui import QBrush, QColor, QPen
 
-from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -47,6 +47,8 @@ class AttributeNode(AbstractNode):
     """
     This class implements the 'Attribute' node.
     """
+    DefaultBrush = QBrush(QColor(252, 252, 252, 255))
+    DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     Identities = {Identity.Attribute}
     Type = Item.AttributeNode
 
@@ -57,11 +59,11 @@ class AttributeNode(AbstractNode):
         :type height: int
         :type brush: QBrush
         """
-        super().__init__(**kwargs)
+        super(AttributeNode, self).__init__(**kwargs)
         self.fpolygon = Polygon(QPainterPath())
         self.background = Polygon(QRectF(-14, -14, 28, 28))
         self.selection = Polygon(QRectF(-14, -14, 28, 28))
-        self.polygon = Polygon(QRectF(-10, -10, 20, 20), brush or Brush.White255A, Pen.SolidBlack1_1Pt)
+        self.polygon = Polygon(QRectF(-10, -10, 20, 20), brush or AttributeNode.DefaultBrush, AttributeNode.DefaultPen)
         self.label = NodeLabel(template='attribute', pos=lambda: self.center() - QPointF(0, 22), parent=self)
         self.label.setAlignment(Qt.AlignCenter)
 
@@ -195,11 +197,11 @@ class AttributeNode(AbstractNode):
             functional = self.functional
 
         # FUNCTIONAL POLYGON
-        pen = Pen.NoPen
-        brush = Brush.NoBrush
+        pen = QPen(Qt.NoPen)
+        brush = QBrush(Qt.NoBrush)
         if functional:
-            pen = Pen.SolidBlack1_1Pt
-            brush = Brush.White255A
+            pen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            brush = QBrush(QColor(252, 252, 252, 255))
 
         self.fpolygon.setPen(pen)
         self.fpolygon.setBrush(brush)

@@ -35,8 +35,8 @@
 
 from PyQt5.QtCore import QRectF, QPointF, Qt
 from PyQt5.QtGui import QPainterPath, QPainter
+from PyQt5.QtGui import QBrush, QColor, QPen
 
-from eddy.core.datatypes.misc import Brush, Pen
 from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.functions.misc import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
@@ -48,6 +48,8 @@ class ConceptNode(AbstractResizableNode):
     """
     This class implements the 'Concept' node.
     """
+    DefaultBrush = QBrush(QColor(252, 252, 252, 255))
+    DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
     Identities = {Identity.Concept}
     Type = Item.ConceptNode
 
@@ -58,12 +60,12 @@ class ConceptNode(AbstractResizableNode):
         :type height: int
         :type brush: QBrush
         """
-        super().__init__(**kwargs)
+        super(ConceptNode, self).__init__(**kwargs)
         w = max(width, 110)
         h = max(height, 50)
         self.background = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
         self.selection = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
-        self.polygon = Polygon(QRectF(-w / 2, -h / 2, w, h), brush or Brush.White255A, Pen.SolidBlack1Pt)
+        self.polygon = Polygon(QRectF(-w / 2, -h / 2, w, h), brush or ConceptNode.DefaultBrush, ConceptNode.DefaultPen)
         self.label = NodeLabel(template='concept', pos=self.center, parent=self)
         self.label.setAlignment(Qt.AlignCenter)
         self.updateResizeHandles()

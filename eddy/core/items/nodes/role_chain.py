@@ -34,8 +34,8 @@
 
 
 from PyQt5.QtCore import QPointF
+from PyQt5.QtGui import QBrush, QColor
 
-from eddy.core.datatypes.misc import Brush
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.operator import OperatorNode
@@ -55,7 +55,7 @@ class RoleChainNode(OperatorNode):
         :type brush: QBrush
         :type inputs: DistinctList
         """
-        super().__init__(brush=Brush.White255A, **kwargs)
+        super(RoleChainNode, self).__init__(brush=QBrush(QColor(252, 252, 252, 255)), **kwargs)
         self.inputs = inputs or DistinctList()
         self.label = NodeLabel('chain', pos=self.center, editable=False, movable=False, parent=self)
 
