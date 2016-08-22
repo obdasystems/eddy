@@ -162,7 +162,8 @@ class InputEdge(AbstractEdge):
         if visible:
             headBrush = QBrush(QColor(252, 252, 252, 255))
             headPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-            pathPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            pathPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.CustomDashLine, Qt.RoundCap, Qt.RoundJoin)
+            pathPen.setDashPattern([5, 5])
             if selected:
                 anchorBrush = QBrush(QColor(66, 165, 245, 255))
                 anchorPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
