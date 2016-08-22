@@ -40,7 +40,7 @@ __email__ = 'pantaleone@dis.uniroma1.it'
 __license__ = 'GPL'
 __organization__ = 'Sapienza University'
 __status__ = 'Alpha'
-__version__ = '0.8.4'
+__version__ = '0.9'
 
 
 APPID = "60119D28-5488-4663-879E-34FCD9C5C38C"
