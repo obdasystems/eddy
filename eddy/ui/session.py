@@ -113,7 +113,6 @@ from eddy.ui.view import DiagramView
 LOGGER = getLogger(__name__)
 
 
-# TODO: use signals to trigger slots
 class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
               HasDiagramExportSystem, HasProjectExportSystem, HasDiagramLoadSystem,
               HasProjectLoadSystem, QMainWindow):
@@ -387,6 +386,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             QIcon(':/icons/24/ic_delete_black'), 'Delete', self,
             objectName='delete', enabled=False, shortcut=QKeySequence.Delete,
             statusTip='Delete selected items', triggered=self.doDelete))
+
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_delete_forever_black'), 'Purge', self,
+            objectName='purge', enabled=False, triggered=self.doPurge,
+            statusTip='Delete selected items by also removing no more necessary elements'))
 
         self.addAction(QAction(
             QIcon(':/icons/24/ic_flip_to_front_black'), 'Bring to front',
@@ -921,6 +925,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         toolbar.addAction(self.action('copy'))
         toolbar.addAction(self.action('paste'))
         toolbar.addAction(self.action('delete'))
+        toolbar.addAction(self.action('purge'))
         toolbar.addSeparator()
         toolbar.addAction(self.action('bring_to_front'))
         toolbar.addAction(self.action('send_to_back'))
@@ -1264,6 +1269,34 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if diagram:
             exporter = PrinterDiagramExporter(diagram, self)
             exporter.export()
+
+    @pyqtSlot()
+    def doPurge(self):
+        """
+        Delete the currently selected items by also removing no more necessary elements.
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            items = set(diagram.selectedItems())
+            purge = set()
+            for item in items:
+                if item.isNode():
+                    for node in item.definition():
+                        if item.isConstructor():
+                            if node not in items:
+                                # Here we examine a node which is included in the definition of a node
+                                # in the original selection, but it's not included in the selection itself.
+                                # If the node contribute only to the definition on this node and has no
+                                # relation with any other node in the diagram, which is not in the original
+                                # item selection, we will remove it.
+                                if node.adjacentNodes(filter_on_nodes=lambda x: x not in items):
+                                    continue
+                        purge.add(node)
+            collection = list(items|purge)
+            if collection:
+                collection.extend([x for item in collection if item.isNode() for x in item.edges if x not in collection])
+                self.undostack.push(CommandItemsRemove(diagram, collection))
 
     @pyqtSlot()
     def doQuit(self):
@@ -1686,6 +1719,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.action('cut').setEnabled(isNodeSelected)
         self.action('copy').setEnabled(isNodeSelected)
         self.action('delete').setEnabled(isNodeSelected or isEdgeSelected)
+        self.action('purge').setEnabled(isNodeSelected)
         self.action('export').setEnabled(not isProjectEmpty)
         self.action('paste').setEnabled(not isClipboardEmpty)
         self.action('save').setEnabled(not isUndoStackClean)

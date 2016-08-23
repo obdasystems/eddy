@@ -198,6 +198,13 @@ class FacetNode(AbstractNode):
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
+    def definition(self):
+        """
+        Returns the list of nodes which contribute to the definition of this very node.
+        :rtype: set
+        """
+        return set(self.incomingNodes(filter_on_edges=lambda x: x.type() is Item.InputEdge))
+
     @staticmethod
     def createPolygon(w, h):
         """

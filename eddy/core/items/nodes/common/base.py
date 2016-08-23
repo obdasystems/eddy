@@ -153,6 +153,13 @@ class AbstractNode(AbstractItem):
         """
         pass
 
+    def definition(self):
+        """
+        Returns the list of nodes which contribute to the definition of this very node.
+        :rtype: set
+        """
+        return set()
+
     def geometry(self):
         """
         Returns the geometry of the shape of this node.

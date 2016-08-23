@@ -39,6 +39,7 @@ from PyQt5.QtCore import Qt, QPointF, QRectF
 from PyQt5.QtGui import QPainter, QPainterPath, QPolygonF
 from PyQt5.QtGui import QPen, QColor, QBrush
 
+from eddy.core.datatypes.graphol import Item
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.polygon import Polygon
 
@@ -115,6 +116,13 @@ class OperatorNode(AbstractNode):
         :rtype: QRectF
         """
         return self.selection.geometry()
+
+    def definition(self):
+        """
+        Returns the list of nodes which contribute to the definition of this very node.
+        :rtype: set
+        """
+        return set(self.incomingNodes(filter_on_edges=lambda x: x.type() is Item.InputEdge))
 
     def height(self):
         """

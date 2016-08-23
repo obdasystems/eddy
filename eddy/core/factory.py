@@ -120,6 +120,7 @@ class MenuFactory(QObject):
             menu.addAction(action)
         else:
             menu.addAction(self.session.action('delete'))
+            menu.addAction(self.session.action('purge'))
             menu.addAction(self.session.action('swap_edge'))
             self.session.action('swap_edge').setVisible(edge.isSwapAllowed())
         return menu
@@ -198,6 +199,7 @@ class MenuFactory(QObject):
         """
         menu = QMenu()
         menu.addAction(self.session.action('delete'))
+        menu.addAction(self.session.action('purge'))
         menu.addSeparator()
         menu.addAction(self.session.action('cut'))
         menu.addAction(self.session.action('copy'))

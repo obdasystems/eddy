@@ -284,7 +284,16 @@ class RoleNode(AbstractResizableNode):
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
-    
+
+    def definition(self):
+        """
+        Returns the list of nodes which contribute to the definition of this very node.
+        :rtype: set
+        """
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}
+        return set(self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+
     def height(self):
         """
         Returns the height of the shape.

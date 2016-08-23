@@ -119,6 +119,13 @@ class PropertyAssertionNode(AbstractNode):
         node.setPos(self.pos())
         return node
 
+    def definition(self):
+        """
+        Returns the list of nodes which contribute to the definition of this very node.
+        :rtype: set
+        """
+        return set(self.incomingNodes(filter_on_edges=lambda x: x.type() is Item.InputEdge))
+
     def height(self):
         """
         Returns the height of the shape.

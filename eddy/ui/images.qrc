@@ -68,7 +68,9 @@
   <file alias="ic_content_cut_black">../../resources/icons/24/ic_content_cut_black_24dp_1x.png</file>
   <file alias="ic_content_cut_black@2x">../../resources/icons/24/ic_content_cut_black_24dp_2x.png</file>
   <file alias="ic_delete_black">../../resources/icons/24/ic_delete_black_24dp_1x.png</file>
-  <file alias="ic_delete_black@2x">../../resources/icons/24/ic_delete_black_24dp_1x.png</file>
+  <file alias="ic_delete_black@2x">../../resources/icons/24/ic_delete_black_24dp_2x.png</file>
+  <file alias="ic_delete_forever_black">../../resources/icons/24/ic_delete_forever_black_24dp_1x.png</file>
+  <file alias="ic_delete_forever_black@2x">../../resources/icons/24/ic_delete_forever_black_24dp_2x.png</file>
   <file alias="ic_equivalence_black">../../resources/icons/24/ic_equivalence_black_24dp_1x.png</file>
   <file alias="ic_equivalence_black@2x">../../resources/icons/24/ic_equivalence_black_24dp_2x.png</file>
   <file alias="ic_format_color_fill_black">../../resources/icons/24/ic_format_color_fill_black_24dp_1x.png</file>
