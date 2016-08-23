@@ -43,10 +43,8 @@ from eddy.core.diagram import Diagram
 from eddy.core.functions.geometry import midpoint
 from eddy.core.functions.misc import clamp, rangeF, snapF
 from eddy.core.functions.signals import disconnect, connect
-from zoom import Zoom
 
 
-# TODO: remove relation with Zoom
 class DiagramView(QGraphicsView):
     """
     This class implements the main view used to display diagrams within the MDI area.
@@ -55,6 +53,10 @@ class DiagramView(QGraphicsView):
     MoveBound = 10
     PinchGuard = (0.70, 1.50)
     PinchSize = 0.12
+    ZoomDefault = 1.00
+    ZoomMin = 0.10
+    ZoomMax = 5.00
+    ZoomStep = 0.10
 
     sgnScaled = pyqtSignal(float)
 
@@ -132,11 +134,11 @@ class DiagramView(QGraphicsView):
             modifiers & Qt.ControlModifier and \
                 key in {Qt.Key_Minus, Qt.Key_Plus, Qt.Key_0}:
 
-            zoom = Zoom.Default
+            zoom = DiagramView.ZoomDefault
             if key in {Qt.Key_Minus, Qt.Key_Plus}:
                 zoom = self.zoom
-                zoom += +Zoom.Step if key == Qt.Key_Plus else -Zoom.Step
-                zoom = clamp(zoom, Zoom.Min, Zoom.Max)
+                zoom += +DiagramView.ZoomStep if key == Qt.Key_Plus else -DiagramView.ZoomStep
+                zoom = clamp(zoom, DiagramView.ZoomMin, DiagramView.ZoomMax)
 
             if zoom != self.zoom:
                 self.scaleView(zoom)
@@ -287,8 +289,8 @@ class DiagramView(QGraphicsView):
             wheelAngle = wheelEvent.angleDelta()
 
             zoom = self.zoom
-            zoom += +Zoom.Step if wheelAngle.y() > 0 else -Zoom.Step
-            zoom = clamp(zoom, Zoom.Min, Zoom.Max)
+            zoom += +DiagramView.ZoomStep if wheelAngle.y() > 0 else -DiagramView.ZoomStep
+            zoom = clamp(zoom, DiagramView.ZoomMin, DiagramView.ZoomMax)
 
             if zoom != self.zoom:
                 self.scaleViewOnPoint(zoom, wheelPos)
@@ -316,8 +318,8 @@ class DiagramView(QGraphicsView):
                 if pinchFactor < DiagramView.PinchGuard[0] or pinchFactor > DiagramView.PinchGuard[1]:
                     if pinchFactor != self.pinchFactor:
                         zoom = self.zoom
-                        zoom += +Zoom.Step if pinchFactor > self.pinchFactor else -Zoom.Step
-                        zoom = clamp(zoom, Zoom.Min, Zoom.Max)
+                        zoom += +DiagramView.ZoomStep if pinchFactor > self.pinchFactor else -DiagramView.ZoomStep
+                        zoom = clamp(zoom, DiagramView.ZoomMin, DiagramView.ZoomMax)
                         self.pinchFactor = pinchFactor
                         if zoom != self.zoom:
                             self.scaleViewOnPoint(zoom, p2.toPoint())

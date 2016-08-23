@@ -43,16 +43,13 @@ from eddy.core.functions.misc import clamp, rangeF
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
 
+from eddy.ui.view import DiagramView
+
 
 class Zoom(AbstractPlugin):
     """
     This plugin provides the Zoom control used to scale the MDI area.
     """
-    Default = 1.00
-    Min = 0.10
-    Max = 5.00
-    Step = 0.10
-
     sgnChanged = pyqtSignal(float)
 
     def __init__(self, session):
@@ -61,8 +58,8 @@ class Zoom(AbstractPlugin):
         :type session: session
         """
         super().__init__(session)
-        self.level = Zoom.Default
-        self.levels = [x for x in rangeF(Zoom.Min, Zoom.Max + Zoom.Step, Zoom.Step)]
+        self.level = DiagramView.ZoomDefault
+        self.levels = [x for x in rangeF(DiagramView.ZoomMin, DiagramView.ZoomMax + DiagramView.ZoomStep, DiagramView.ZoomStep)]
         self.view = None
 
     #############################################
@@ -82,7 +79,7 @@ class Zoom(AbstractPlugin):
         Increase the main view zoom level.
         :type _: bool
         """
-        self.setLevel(self.level + Zoom.Step)
+        self.setLevel(self.level + DiagramView.ZoomStep)
 
     @pyqtSlot(bool)
     def doZoomOut(self, _=False):
@@ -90,7 +87,7 @@ class Zoom(AbstractPlugin):
         Decrese the main view zoom level.
         :type _: bool
         """
-        self.setLevel(self.level - Zoom.Step)
+        self.setLevel(self.level - DiagramView.ZoomStep)
 
     @pyqtSlot(bool)
     def doZoomReset(self, _=False):
@@ -98,7 +95,7 @@ class Zoom(AbstractPlugin):
         Reset the zoom control to the default index.
         :type _: bool
         """
-        self.setLevel(Zoom.Default)
+        self.setLevel(DiagramView.ZoomDefault)
 
     @pyqtSlot(float)
     def onScaleChanged(self, level):
@@ -135,7 +132,7 @@ class Zoom(AbstractPlugin):
                     self.debug('Disconnecting from diagram: %s', self.view.diagram.name)
                     disconnect(self.sgnChanged, self.view.onZoomChanged)
                     disconnect(self.view.sgnScaled, self.onScaleChanged)
-                self.setLevel(Zoom.Default)
+                self.setLevel(DiagramView.ZoomDefault)
                 self.setView(None)
 
     #############################################
@@ -172,14 +169,14 @@ class Zoom(AbstractPlugin):
         """
         self.widget('button_zoom_in').setEnabled(enabled and self.level < max(self.levels))
         self.widget('button_zoom_out').setEnabled(enabled and self.level > min(self.levels))
-        self.widget('button_zoom_reset').setEnabled(enabled and self.level != Zoom.Default)
+        self.widget('button_zoom_reset').setEnabled(enabled and self.level != DiagramView.ZoomDefault)
 
     def setLevel(self, level):
         """
         Set the zoom level according to the given value.
         :type level: float
         """
-        level = clamp(level, Zoom.Min, Zoom.Max)
+        level = clamp(level, DiagramView.ZoomMin, DiagramView.ZoomMax)
         if level != self.level:
             self.level = level
             self.refresh(enabled=True)
@@ -188,7 +185,7 @@ class Zoom(AbstractPlugin):
     def setView(self, view):
         """
         Sets the view currently controlled by the Zoom controls.
-        :type view: DiagramView
+        :type view: T <= DiagramView|None
         """
         self.view = view
         self.refresh(enabled=view is not None)
