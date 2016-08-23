@@ -37,13 +37,15 @@ import sys
 
 from enum import unique, Enum
 
+from eddy.core.regex import RE_FILE_EXTENSION
+
 
 @unique
 class File(Enum):
     """
     This class defines supported filetypes.
     """
-    __order__ = 'Csv GraphML Graphol Owl Pdf Zip'
+    __order__ = 'Csv GraphML Graphol Owl Pdf Zip Xml'
 
     Csv = 'Comma-separated values (*.csv)'
     GraphML = 'GraphML (*.graphml)'
@@ -51,6 +53,7 @@ class File(Enum):
     Owl = 'Web Ontology Language (*.owl)'
     Pdf = 'PDF (*.pdf)'
     Zip = 'ZIP (*.zip)'
+    Xml = 'XML (*.xml)'
 
     @classmethod
     def forPath(cls, path):
@@ -82,14 +85,10 @@ class File(Enum):
         The extension associated with the Enum member.
         :rtype: str
         """
-        return {
-            File.Csv: '.csv',
-            File.GraphML: '.graphml',
-            File.Graphol: '.graphol',
-            File.Owl: '.owl',
-            File.Pdf: '.pdf',
-            File.Zip: '.zip',
-        }[self]
+        match = RE_FILE_EXTENSION.match(self.value)
+        if match:
+            return match.group('extension')
+        return None
 
     def __lt__(self, other):
         """
