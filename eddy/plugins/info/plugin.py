@@ -962,7 +962,7 @@ class PredicateNodeInfo(NodeInfo):
                         self.session.undostack.beginMacro('change predicate "{0}" to "{1}"'.format(node.text(), data))
                         for n in project.predicates(node.type(), node.text()):
                             self.session.undostack.push(CommandLabelChange(n.diagram, n, n.text(), data))
-                            self.session.undostack.endMacro()
+                        self.session.undostack.endMacro()
                     else:
                         self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data))
             except RuntimeError:
