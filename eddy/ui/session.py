@@ -43,7 +43,7 @@ import zipimport
 from collections import OrderedDict
 
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
-from PyQt5.QtCore import Qt, QSettings, QByteArray, QEvent, QSize
+from PyQt5.QtCore import Qt, QSettings, QByteArray, QSize
 from PyQt5.QtGui import QBrush, QColor, QCursor
 from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QStatusBar
