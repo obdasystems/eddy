@@ -973,6 +973,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         diagram = self.mdi.activeDiagram()
         if diagram:
+            commands = []
             diagram.setMode(DiagramMode.Idle)
             for node in diagram.selectedNodes():
                 zValue = 0
@@ -980,7 +981,15 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     if item.zValue() >= zValue:
                         zValue = item.zValue() + 0.2
                 if zValue != node.zValue():
-                    self.undostack.push(CommandNodeSetDepth(diagram, node, zValue))
+                    commands.append(CommandNodeSetDepth(diagram, node, zValue))
+            if commands:
+                if len(commands) > 1:
+                    self.undostack.beginMacro('change the depth of {0} nodes'.format(len(commands)))
+                    for command in commands:
+                        self.undostack.push(command)
+                    self.undostack.endMacro()
+                else:
+                    self.undostack.push(first(commands))
 
     @pyqtSlot()
     def doCenterDiagram(self):
@@ -1461,6 +1470,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         diagram = self.mdi.activeDiagram()
         if diagram:
+            commands = []
             diagram.setMode(DiagramMode.Idle)
             for node in diagram.selectedNodes():
                 zValue = 0
@@ -1468,8 +1478,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     if item.zValue() <= zValue:
                         zValue = item.zValue() - 0.2
                 if zValue != node.zValue():
-                    self.undostack.push(CommandNodeSetDepth(diagram, node, zValue))
-
+                    commands.append(CommandNodeSetDepth(diagram, node, zValue))
+            if commands:
+                if len(commands) > 1:
+                    self.undostack.beginMacro('change the depth of {0} nodes'.format(len(commands)))
+                    for command in commands:
+                        self.undostack.push(command)
+                    self.undostack.endMacro()
+                else:
+                    self.undostack.push(first(commands))
+            
     @pyqtSlot()
     def doSetNodeBrush(self):
         """
