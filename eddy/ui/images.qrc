@@ -101,6 +101,8 @@
   <file alias="ic_palette_black@2x">../../resources/icons/24/ic_palette_black_24dp_2x.png</file>
   <file alias="ic_content_paste_black">../../resources/icons/24/ic_content_paste_black_24dp_1x.png</file>
   <file alias="ic_content_paste_black@2x">../../resources/icons/24/ic_content_paste_black_24dp_2x.png</file>
+  <file alias="ic_not_interested_black">../../resources/icons/24/ic_not_interested_black_24dp_1x.png</file>
+  <file alias="ic_not_interested_black@2x">../../resources/icons/24/ic_not_interested_black_24dp_2x.png</file>
   <file alias="ic_square_black">../../resources/icons/24/ic_square_black_24dp_1x.png</file>
   <file alias="ic_square_black@2x">../../resources/icons/24/ic_square_black_24dp_2x.png</file>
   <file alias="ic_square_outline_black">../../resources/icons/24/ic_square_outline_black_24dp_1x.png</file>

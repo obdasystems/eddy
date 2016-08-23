@@ -730,7 +730,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #################################
 
         menu = QMenu('Select restriction', objectName='property_restriction')
-        menu.setIcon(QIcon(':/icons/24/ic_transform_black'))
+        menu.setIcon(QIcon(':/icons/24/ic_not_interested_black'))
         menu.addActions(self.action('restriction').actions())
         self.addMenu(menu)
 
