@@ -45,13 +45,17 @@ class File(Enum):
     """
     This class defines supported filetypes.
     """
-    __order__ = 'Csv GraphML Graphol Owl Pdf Zip Xml'
+    __order__ = 'Bmp Csv GraphML Graphol Html Jpeg Owl Pdf Png Zip Xml'
 
+    Bmp = 'Bitmap (*.bmp)'
     Csv = 'Comma-separated values (*.csv)'
     GraphML = 'GraphML (*.graphml)'
     Graphol = 'Graphol (*.graphol)'
+    Html = 'Hyper-Text Markup Language (*.html)'
+    Jpeg = 'JPEG (*.jpg)'
     Owl = 'Web Ontology Language (*.owl)'
-    Pdf = 'PDF (*.pdf)'
+    Pdf = 'Portable Document Format (*.pdf)'
+    Png = 'PNG (*.png)'
     Zip = 'ZIP (*.zip)'
     Xml = 'XML (*.xml)'
 
