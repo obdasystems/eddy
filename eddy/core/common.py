@@ -37,6 +37,8 @@ from PyQt5.QtWidgets import QAction
 
 from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.exporters.common import AbstractProjectExporter
+from eddy.core.loaders.common import AbstractDiagramLoader
+from eddy.core.loaders.common import AbstractProjectLoader
 from eddy.core.functions.misc import isEmpty
 from eddy.core.output import getLogger
 
@@ -456,6 +458,16 @@ class HasDiagramExportSystem(object):
         """
         return self._diagramExporterDict.get(filetype, None)
 
+    def diagramExporterNameFilters(self, exclude=None):
+        """
+        Returns the list of diagram exporter name filters.
+        :type exclude: T <= list|tuple|set
+        :rtype: list
+        """
+        collection = [x.filetype() for x in self.diagramExporters(exclude)]
+        collection = [x.value for x in collection]
+        return collection
+
     def diagramExporters(self, exclude=None):
         """
         Returns the list of diagram exporter classes.
@@ -467,19 +479,9 @@ class HasDiagramExportSystem(object):
             collection = [x for x in collection if x.filetype() not in exclude]
         return sorted(collection, key=lambda x: x.filetype())
 
-    def diagramNameFilters(self, exclude=None):
-        """
-        Returns the list of diagram name filters
-        :type exclude: T <= list|tuple|set
-        :rtype: list
-        """
-        collection = [x.filetype() for x in self.diagramExporters(exclude)]
-        collection = [x.value for x in collection]
-        return collection
-
     def insertDiagramExporter(self, exporter, before):
         """
-        Insert the given project exporter class before the given one.
+        Insert the given diagram exporter class before the given one.
         :type exporter: class
         :type before: class
         """
@@ -491,7 +493,7 @@ class HasDiagramExportSystem(object):
             raise ValueError("duplicate diagram exporter found for filetype %s" % filetype1.value)
         self._diagramExporterList.insert(self._diagramExporterList.index(before), exporter)
         self._diagramExporterDict[filetype1] = exporter
-        # LOGGER.debug("Added diagram exporter %s -> %s before project exporter %s -> %s",
+        # LOGGER.debug("Added diagram exporter %s -> %s before diagram exporter %s -> %s",
         #              exporter.__name__, filetype.value,
         #              before.__name__, filetype1.value)
 
@@ -598,6 +600,16 @@ class HasProjectExportSystem(object):
         """
         return self._projectExporterDict.get(filetype, None)
 
+    def projectExporterNameFilters(self, exclude=None):
+        """
+        Returns the list of project exporter name filters.
+        :type exclude: T <= list|tuple|set
+        :rtype: list
+        """
+        collection = [x.filetype() for x in self.projectExporters(exclude)]
+        collection = [x.value for x in collection]
+        return collection
+
     def projectExporters(self, exclude=None):
         """
         Returns the list of project exporter classes.
@@ -609,16 +621,6 @@ class HasProjectExportSystem(object):
             collection = [x for x in collection if x.filetype() not in exclude]
         return sorted(collection, key=lambda x: x.filetype())
 
-    def projectNameFilters(self, exclude=None):
-        """
-        Returns the list of project name filters
-        :type exclude: T <= list|tuple|set
-        :rtype: list
-        """
-        collection = [x.filetype() for x in self.projectExporters(exclude)]
-        collection = [x.value for x in collection]
-        return collection
-
     def removeProjectExporter(self, exporter):
         """
         Removes the given project exporter class from the set.
@@ -628,3 +630,234 @@ class HasProjectExportSystem(object):
         self._projectExporterList.remove(exporter)
         del self._projectExporterDict[exporter.filetype()]
         return exporter
+    
+
+class HasDiagramLoadSystem(object):
+    """
+    Mixin which adds the ability to store and retrieve Diagram loaders.
+    """
+    def __init__(self, **kwargs):
+        """
+        Initialize the object with default parameters.
+        :type kwargs: dict
+        """
+        super().__init__(**kwargs)
+        self._diagramLoaderDict = {}
+        self._diagramLoaderList = []
+
+    def addDiagramLoader(self, loader):
+        """
+        Add a diagram loader class to the set.
+        :type loader: class
+        """
+        if not issubclass(loader, AbstractDiagramLoader):
+            raise ValueError("diagram loader must be subclass of eddy.core.loaders.common.AbstractDiagramLoader")
+        filetype = loader.filetype()
+        if filetype in self._diagramLoaderDict:
+            raise ValueError("duplicate diagram loader found for filetype %s" % filetype.value)
+        self._diagramLoaderList.append(loader)
+        self._diagramLoaderDict[filetype] = loader
+        #LOGGER.debug("Added diagram loader %s -> %s", loader.__name__, filetype.value)
+
+    def addDiagramLoaders(self, loaders):
+        """
+        Add the given group of diagram loader classes to the set.
+        :type loaders: T <= list|tuple
+        """
+        for loader in loaders:
+            self.addDiagramLoader(loader)
+
+    def createDiagramLoader(self, filetype, path, project, session=None):
+        """
+        Creates an instance of a diagram loader for the given filetype.
+        :type filetype: File
+        :type path: str
+        :type project: Project
+        :type session: Session
+        :rtype: AbstractDiagramLoader
+        """
+        loader = self.diagramLoader(filetype)
+        if not loader:
+            raise ValueError("missing diagram loader for filetype %s", filetype.value)
+        return loader(path, project, session)
+
+    def diagramLoader(self, filetype):
+        """
+        Returns the reference to a diagram loader class given a filetype.
+        :type filetype: File
+        :rtype: class
+        """
+        return self._diagramLoaderDict.get(filetype, None)
+
+    def diagramLoaderNameFilters(self, exclude=None):
+        """
+        Returns the list of diagram loader name filters.
+        :type exclude: T <= list|tuple|set
+        :rtype: list
+        """
+        collection = [x.filetype() for x in self.diagramLoaders(exclude)]
+        collection = [x.value for x in collection]
+        return collection
+
+    def diagramLoaders(self, exclude=None):
+        """
+        Returns the list of diagram loader classes.
+        :type exclude: T <= list|tuple|set
+        :rtype: list
+        """
+        collection = self._diagramLoaderList
+        if exclude:
+            collection = [x for x in collection if x.filetype() not in exclude]
+        return sorted(collection, key=lambda x: x.filetype())
+
+    def insertDiagramLoader(self, loader, before):
+        """
+        Insert the given diagram loader class before the given one.
+        :type loader: class
+        :type before: class
+        """
+        if not issubclass(loader, AbstractDiagramLoader):
+            raise ValueError("diagram loader must be subclass of eddy.core.loaders.common.AbstractDiagramLoader")
+        filetype1 = loader.filetype()
+        # filetype2 = before.filetype()
+        if filetype1 in self._diagramLoaderDict:
+            raise ValueError("duplicate diagram loader found for filetype %s" % filetype1.value)
+        self._diagramLoaderList.insert(self._diagramLoaderList.index(before), loader)
+        self._diagramLoaderDict[filetype1] = loader
+        # LOGGER.debug("Added diagram loader %s -> %s before diagram loader %s -> %s",
+        #              loader.__name__, filetype.value,
+        #              before.__name__, filetype1.value)
+
+    def insertDiagramLoaders(self, loaders, before):
+        """
+        Insert the given group of diagram loader classes before the given one.
+        :type loaders: T <= list|tuple
+        :type before: class
+        """
+        for loader in loaders:
+            self.insertDiagramLoader(loader, before)
+
+    def removeDiagramLoader(self, loader):
+        """
+        Removes the given diagram loader class from the set.
+        :type loader: class
+        :rtype: class
+        """
+        self._diagramLoaderList.remove(loader)
+        del self._diagramLoaderDict[loader.filetype()]
+        return loader
+
+
+class HasProjectLoadSystem(object):
+    """
+    Mixin which adds the ability to store and retrieve Project loaders.
+    """
+    def __init__(self, **kwargs):
+        """
+        Initialize the object with default parameters.
+        :type kwargs: dict
+        """
+        super().__init__(**kwargs)
+        self._projectLoaderDict = {}
+        self._projectLoaderList = []
+
+    def addProjectLoader(self, loader):
+        """
+        Add a project loader class to the set.
+        :type loader: class
+        """
+        if not issubclass(loader, AbstractProjectLoader):
+            raise ValueError("project loader must be subclass of eddy.core.loaders.common.AbstractProjectLoader")
+        filetype = loader.filetype()
+        if filetype in self._projectLoaderDict:
+            raise ValueError("duplicate project loader found for filetype %s" % filetype.value)
+        self._projectLoaderList.append(loader)
+        self._projectLoaderDict[filetype] = loader
+        #LOGGER.debug("Added project loader %s -> %s", loader.__name__, filetype.value)
+
+    def addProjectLoaders(self, loaders):
+        """
+        Add the given group of project loader classes to the set.
+        :type loaders: T <= list|tuple
+        """
+        for loader in loaders:
+            self.addProjectLoader(loader)
+
+    def createProjectLoader(self, filetype, path, session=None):
+        """
+        Creates an instance of a diagram loader for the given filetype.
+        :type filetype: File
+        :type path: str
+        :type session: Session
+        :rtype: AbstractDiagramLoader
+        """
+        loader = self.projectLoader(filetype)
+        if not loader:
+            raise ValueError("missing project loader for filetype %s", filetype.value)
+        return loader(path, session)
+
+    def insertProjectLoader(self, loader, before):
+        """
+        Insert the given project loader class before the given one.
+        :type loader: class
+        :type before: class
+        """
+        if not issubclass(loader, AbstractProjectLoader):
+            raise ValueError("project loader must be subclass of eddy.core.loaders.common.AbstractProjectLoader")
+        filetype1 = loader.filetype()
+        # filetype2 = before.filetype()
+        if filetype1 in self._projectLoaderDict:
+            raise ValueError("duplicate project loader found for filetype %s" % filetype1.value)
+        self._projectLoaderList.insert(self._projectLoaderList.index(before), loader)
+        self._projectLoaderDict[filetype1] = loader
+        # LOGGER.debug("Added project loader %s -> %s before project loader %s -> %s",
+        #              loader.__name__, filetype.value,
+        #              before.__name__, filetype1.value)
+
+    def insertProjectLoaders(self, loaders, before):
+        """
+        Insert the given group of project loader classes before the given one.
+        :type loaders: T <= list|tuple
+        :type before: class
+        """
+        for loader in loaders:
+            self.insertProjectLoader(loader, before)
+
+    def projectLoader(self, filetype):
+        """
+        Returns the reference to a project loader class given a filetype.
+        :type filetype: File
+        :rtype: class
+        """
+        return self._projectLoaderDict.get(filetype, None)
+
+    def projectLoaderNameFilters(self, exclude=None):
+        """
+        Returns the list of project loader name filters.
+        :type exclude: T <= list|tuple|set
+        :rtype: list
+        """
+        collection = [x.filetype() for x in self.projectLoaders(exclude)]
+        collection = [x.value for x in collection]
+        return collection
+
+    def projectLoaders(self, exclude=None):
+        """
+        Returns the list of project loader classes.
+        :type exclude: T <= list|tuple|set
+        :rtype: list
+        """
+        collection = self._projectLoaderList
+        if exclude:
+            collection = [x for x in collection if x.filetype() not in exclude]
+        return sorted(collection, key=lambda x: x.filetype())
+
+    def removeProjectLoader(self, loader):
+        """
+        Removes the given project loader class from the set.
+        :type loader: class
+        :rtype: class
+        """
+        self._projectLoaderList.remove(loader)
+        del self._projectLoaderDict[loader.filetype()]
+        return loader

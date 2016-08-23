@@ -43,7 +43,7 @@ from eddy.core.functions.fsystem import fwrite
 from eddy.core.functions.misc import isEmpty
 
 
-class GraphmlDiagramExporter(AbstractDiagramExporter):
+class GraphMLDiagramExporter(AbstractDiagramExporter):
     """
     Extends AbstractDiagramExporter with facilities to export the structure of Graphol diagrams in Graphml format.
     """
@@ -58,7 +58,7 @@ class GraphmlDiagramExporter(AbstractDiagramExporter):
         :type diagram: Diagram
         :type session: Session
         """
-        super(GraphmlDiagramExporter, self).__init__(diagram, session)
+        super(GraphMLDiagramExporter, self).__init__(diagram, session)
 
         self.document = None
         self.missing = {Item.FacetNode, Item.PropertyAssertionNode}
@@ -346,7 +346,7 @@ class GraphmlDiagramExporter(AbstractDiagramExporter):
         #################################
 
         dataNode = self.document.createElement('data')
-        dataNode.setAttribute('key', GraphmlDiagramExporter.KeyNode)
+        dataNode.setAttribute('key', GraphMLDiagramExporter.KeyNode)
         dataNode.appendChild(genericNode)
 
         #############################################
@@ -359,7 +359,7 @@ class GraphmlDiagramExporter(AbstractDiagramExporter):
             wikiURL = meta.url
 
         dataURL = self.document.createElement('data')
-        dataURL.setAttribute('key', GraphmlDiagramExporter.KeyUrl)
+        dataURL.setAttribute('key', GraphMLDiagramExporter.KeyUrl)
         dataURL.appendChild(self.document.createTextNode(wikiURL))
 
         #############################################
@@ -367,7 +367,7 @@ class GraphmlDiagramExporter(AbstractDiagramExporter):
         #################################
 
         dataWIKI = self.document.createElement('data')
-        dataWIKI.setAttribute('key', GraphmlDiagramExporter.KeyDescription)
+        dataWIKI.setAttribute('key', GraphMLDiagramExporter.KeyDescription)
         dataWIKI.appendChild(self.document.createTextNode(meta.description))
 
         #############################################
@@ -490,7 +490,7 @@ class GraphmlDiagramExporter(AbstractDiagramExporter):
         #################################
 
         data = self.document.createElement('data')
-        data.setAttribute('key', GraphmlDiagramExporter.KeyNode)
+        data.setAttribute('key', GraphMLDiagramExporter.KeyNode)
         data.appendChild(shapeNode)
 
         #############################################
@@ -624,7 +624,7 @@ class GraphmlDiagramExporter(AbstractDiagramExporter):
         #################################
 
         data = self.document.createElement('data')
-        data.setAttribute('key', GraphmlDiagramExporter.KeyEdge)
+        data.setAttribute('key', GraphMLDiagramExporter.KeyEdge)
         data.appendChild(polyLineEdge)
 
         #############################################
@@ -699,13 +699,13 @@ class GraphmlDiagramExporter(AbstractDiagramExporter):
         # 3) CREATE ELEMENT KEYS
         key = self.document.createElement('key')
         key.setAttribute('for', 'node')
-        key.setAttribute('id', GraphmlDiagramExporter.KeyNode)
+        key.setAttribute('id', GraphMLDiagramExporter.KeyNode)
         key.setAttribute('yfiles.type', 'nodegraphics')
         root.appendChild(key)
 
         key = self.document.createElement('key')
         key.setAttribute('for', 'edge')
-        key.setAttribute('id', GraphmlDiagramExporter.KeyEdge)
+        key.setAttribute('id', GraphMLDiagramExporter.KeyEdge)
         key.setAttribute('yfiles.type', 'edgegraphics')
         root.appendChild(key)
 
@@ -713,14 +713,14 @@ class GraphmlDiagramExporter(AbstractDiagramExporter):
         key.setAttribute('attr.name', 'url')
         key.setAttribute('attr.type', 'string')
         key.setAttribute('for', 'node')
-        key.setAttribute('id', GraphmlDiagramExporter.KeyUrl)
+        key.setAttribute('id', GraphMLDiagramExporter.KeyUrl)
         root.appendChild(key)
 
         key = self.document.createElement('key')
         key.setAttribute('attr.name', 'description')
         key.setAttribute('attr.type', 'string')
         key.setAttribute('for', 'node')
-        key.setAttribute('id', GraphmlDiagramExporter.KeyDescription)
+        key.setAttribute('id', GraphMLDiagramExporter.KeyDescription)
         root.appendChild(key)
 
         # 4) CREATE THE GRAPH NODE

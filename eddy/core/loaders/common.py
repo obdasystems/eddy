@@ -40,16 +40,18 @@ from PyQt5.QtCore import QObject
 
 class AbstractLoader(QObject):
     """
-    Base class for all the loaders.
+    Extends QObject providing the base class for all the loaders.
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, session):
+    def __init__(self, path, session):
         """
         Initialize the AbstractLoader.
+        :type path: str
         :type session: Session
         """
-        super().__init__(session)
+        super(QObject, self).__init__(session)
+        self.path = path
 
     #############################################
     #   PROPERTIES
@@ -67,10 +69,92 @@ class AbstractLoader(QObject):
     #   INTERFACE
     #################################
 
+    @classmethod
     @abstractmethod
-    def run(self):
+    def filetype(cls):
         """
-        Perform the import.
+        Returns the type of the file that will be used for the import.
+        :return: File
         """
         pass
 
+    @abstractmethod
+    def load(self):
+        """
+        Perform the load.
+        """
+        pass
+
+
+class AbstractDiagramLoader(AbstractLoader):
+    """
+    Extends AbstractLoader providing the base class for all the Diagram loaders.
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, path, project, session):
+        """
+        Initialize the AbstractDiagramLoader.
+        :type path: str
+        :type project: Project
+        :type session: Session
+        """
+        super(AbstractDiagramLoader, self).__init__(path, session)
+        self.project = project
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @classmethod
+    @abstractmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the import.
+        :return: File
+        """
+        pass
+
+    @abstractmethod
+    def load(self):
+        """
+        Perform the load.
+        :rtype: Diagram
+        """
+        pass
+
+
+class AbstractProjectLoader(AbstractLoader):
+    """
+    Extends AbstractLoader providing the base class for all the Project loaders.
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, path, session):
+        """
+        Initialize the AbstractProjectLoader.
+        :type path: str
+        :type session: Session
+        """
+        super(AbstractProjectLoader, self).__init__(path, session)
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @classmethod
+    @abstractmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the import.
+        :return: File
+        """
+        pass
+
+    @abstractmethod
+    def load(self):
+        """
+        Perform the load.
+        :rtype: Project
+        """
+        pass

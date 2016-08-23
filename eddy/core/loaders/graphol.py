@@ -33,6 +33,8 @@
 ##########################################################################
 
 
+import os
+
 from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtWidgets import QApplication
@@ -40,34 +42,39 @@ from PyQt5.QtXml import QDomDocument
 
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.datatypes.system import File
 from eddy.core.diagram import Diagram
-from eddy.core.exceptions import DiagramNotFoundError, DiagramNotValidError
-from eddy.core.functions.fsystem import fread, fexists
+from eddy.core.exceptions import ProjectNotFoundError
+from eddy.core.exceptions import ProjectNotValidError
+from eddy.core.exceptions import DiagramNotFoundError
+from eddy.core.exceptions import DiagramNotValidError
+from eddy.core.functions.fsystem import fread, fexists, is_dir
+from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
-from eddy.core.loaders.common import AbstractLoader
+from eddy.core.loaders.common import AbstractDiagramLoader
+from eddy.core.loaders.common import AbstractProjectLoader
 from eddy.core.output import getLogger
+from eddy.core.project import Project
 
 
 LOGGER = getLogger(__name__)
 
 
-class GrapholLoader(AbstractLoader):
+class GrapholDiagramLoader(AbstractDiagramLoader):
     """
-    This class can be used to load graphol diagrams from file.
+    Extends AbstractDiagramLoader with facilities to load diagrams from Graphol file format.
     """
     GrapholVersion = 1
 
-    def __init__(self, project, path, session):
+    def __init__(self, path, project, session):
         """
-        Initialize the graphol loader.
-        :type project: Project
+        Initialize the Graphol diagram loader.
         :type path: str
+        :type project: Project
         :type session: Session
         """
-        super().__init__(session)
+        super(GrapholDiagramLoader, self).__init__(path, project, session)
 
-        self.path = path
-        self.project = project
         self.diagram = None
         self.edges = dict()
         self.nodes = dict()
@@ -456,14 +463,22 @@ class GrapholLoader(AbstractLoader):
             return None
 
     #############################################
-    #   DIAGRAM GENERATION
+    #   INTERFACE
     #################################
 
-    def run(self):
+    @classmethod
+    def filetype(cls):
         """
-        Perform diagram import from .graphol file format.
-        :raise DiagramNotFoundError: If the given path does not identify a .graphol module.
-        :raise DiagramNotValidError: If the given path identifies an invalid .graphol module.
+        Returns the type of the file that will be used for the import.
+        :return: File
+        """
+        return File.Graphol
+
+    def load(self):
+        """
+        Perform diagram import from Graphol file format.
+        :raise DiagramNotFoundError: If the given path does not identify a Graphol module.
+        :raise DiagramNotValidError: If the given path identifies an invalid Graphol module.
         :rtype: Diagram
         """
         LOGGER.info('Loading diagram: %s', self.path)
@@ -496,7 +511,6 @@ class GrapholLoader(AbstractLoader):
         element = graph.firstChildElement('node')
         while not element.isNull():
 
-            # noinspection PyArgumentList
             QApplication.processEvents()
 
             try:
@@ -521,7 +535,6 @@ class GrapholLoader(AbstractLoader):
         element = graph.firstChildElement('edge')
         while not element.isNull():
 
-            # noinspection PyArgumentList
             QApplication.processEvents()
 
             try:
@@ -561,3 +574,274 @@ class GrapholLoader(AbstractLoader):
         LOGGER.debug('Diagram created: %s', self.diagram.name)
 
         return self.diagram
+
+
+class GrapholProjectLoader(AbstractProjectLoader):
+    """
+    Extends AbstractProjectLoader with facilities to load Graphol projects.
+    This class can be used to load projects.
+
+    A graphol project is stored within a directory whose structure is the following:
+
+    - projectname/
+    -   .eddy/              # subdirectory which contains project specific information
+    -       meta.xml        # contains ontology and predicates meta information
+    -       modules.xml     # contains the paths of all the modules of the ontology
+
+    -   module1.graphol
+    -   module2.graphol
+    -   ...
+    -   moduleN.graphol
+    """
+    def __init__(self, path, session):
+        """
+        Initialize the project loader.
+        :type path: str
+        :type session: Session
+        """
+        super().__init__(path, session)
+
+        self.project = None
+        self.metaDocument = None
+        self.modulesDocument = None
+
+        self.projectMainPath = expandPath(self.path)
+        self.projectHomePath = os.path.join(self.projectMainPath, Project.Home)
+        self.projectMetaDataPath = os.path.join(self.projectHomePath, Project.MetaXML)
+        self.projectModulesDataPath = os.path.join(self.projectHomePath, Project.ModulesXML)
+
+        self.metaFuncForItem = {
+            Item.AttributeNode: self.buildAttributeMetadata,
+            Item.ConceptNode: self.buildPredicateMetadata,
+            Item.RoleNode: self.buildRoleMetadata,
+        }
+
+        self.itemFromXml = {
+            'attribute': Item.AttributeNode,
+            'complement': Item.ComplementNode,
+            'concept': Item.ConceptNode,
+            'datatype-restriction': Item.DatatypeRestrictionNode,
+            'disjoint-union': Item.DisjointUnionNode,
+            'domain-restriction': Item.DomainRestrictionNode,
+            'enumeration': Item.EnumerationNode,
+            'facet': Item.FacetNode,
+            'individual': Item.IndividualNode,
+            'intersection': Item.IntersectionNode,
+            'property-assertion': Item.PropertyAssertionNode,
+            'range-restriction': Item.RangeRestrictionNode,
+            'role': Item.RoleNode,
+            'role-chain': Item.RoleChainNode,
+            'role-inverse': Item.RoleInverseNode,
+            'union': Item.UnionNode,
+            'value-domain': Item.ValueDomainNode,
+            'inclusion': Item.InclusionEdge,
+            'input': Item.InputEdge,
+            'instance-of': Item.MembershipEdge,
+            'membership': Item.MembershipEdge,
+        }
+
+    #############################################
+    #   AUXILIARY METHODS
+    #################################
+
+    def buildAttributeMetadata(self, element):
+        """
+        Build role metadata using the given QDomElement.
+        :type element: QDomElement
+        :rtype: AttributeMetaData
+        """
+        meta = self.buildPredicateMetadata(element)
+        functional = element.firstChildElement('functional')
+        meta.functional = bool(int(functional.text()))
+        return meta
+
+    def buildPredicateMetadata(self, element):
+        """
+        Build predicate metadata using the given QDomElement.
+        :type element: QDomElement
+        :rtype: PredicateMetaData
+        """
+        item = self.itemFromXml[element.attribute('type')]
+        name = element.attribute('name')
+        description = element.firstChildElement('description')
+        url = element.firstChildElement('url')
+        meta = self.project.meta(item, name)
+        meta.description = description.text()
+        meta.url = url.text()
+        return meta
+
+    def buildRoleMetadata(self, element):
+        """
+        Build role metadata using the given QDomElement.
+        :type element: QDomElement
+        :rtype: AttributeMetaData
+        """
+        meta = self.buildPredicateMetadata(element)
+        functional = element.firstChildElement('functional')
+        inverseFunctional = element.firstChildElement('inverseFunctional')
+        asymmetric = element.firstChildElement('asymmetric')
+        irreflexive = element.firstChildElement('irreflexive')
+        reflexive = element.firstChildElement('reflexive')
+        symmetric = element.firstChildElement('symmetric')
+        transitive = element.firstChildElement('transitive')
+        meta.functional = bool(int(functional.text()))
+        meta.inverseFunctional = bool(int(inverseFunctional.text()))
+        meta.asymmetric = bool(int(asymmetric.text()))
+        meta.irreflexive = bool(int(irreflexive.text()))
+        meta.reflexive = bool(int(reflexive.text()))
+        meta.symmetric = bool(int(symmetric.text()))
+        meta.transitive = bool(int(transitive.text()))
+        return meta
+
+    #############################################
+    #   IMPORT PROJECT FROM XML
+    #################################
+
+    def importProjectFromXML(self):
+        """
+        Initialize the project instance by reading project metadata from XML file.
+        :raise ProjectNotValidError: If the project metadata file is missing or not readable.
+        """
+        QApplication.processEvents()
+
+        LOGGER.info('Loading project metadata from %s', self.projectMetaDataPath)
+
+        if not fexists(self.projectMetaDataPath):
+            raise ProjectNotValidError('missing project metadata: {0}'.format(self.projectMetaDataPath))
+
+        self.metaDocument = QDomDocument()
+        if not self.metaDocument.setContent(fread(self.projectMetaDataPath)):
+            raise ProjectNotValidError('could read project metadata from {0}'.format(self.projectMetaDataPath))
+
+        path = self.projectMainPath
+        root = self.metaDocument.documentElement()
+        ontology = root.firstChildElement('ontology')
+        prefix = ontology.firstChildElement('prefix').text()
+        iri = ontology.firstChildElement('iri').text()
+
+        LOGGER.debug('Loaded ontology prefix: %s', prefix)
+        LOGGER.debug('Loaded ontology IRI: %s', iri)
+
+        self.project = Project(path, prefix, iri, self.session)
+
+    def importMetaFromXML(self):
+        """
+        Import predicate metadata from XML file.
+        """
+        QApplication.processEvents()
+
+        #############################################
+        # LOAD PREDICATE METADATA
+        #################################
+
+        LOGGER.info('Loading ontology predicate metadata from %s', self.projectMetaDataPath)
+
+        root = self.metaDocument.documentElement()
+        predicates = root.firstChildElement('predicates')
+
+        predicate = predicates.firstChildElement('predicate')
+        while not predicate.isNull():
+
+            QApplication.processEvents()
+
+            try:
+                item = self.itemFromXml[predicate.attribute('type')]
+                func = self.metaFuncForItem[item]
+                meta = func(predicate)
+                self.project.addMeta(meta.item, meta.predicate, meta)
+            except Exception:
+                LOGGER.exception('Failed to create metadata for predicate %s', predicate)
+                pass
+            finally:
+                predicate = predicate.nextSiblingElement('predicate')
+
+        #############################################
+        # UPDATE LAYOUT ACCORDING TO METADATA
+        #################################
+
+        predicates = self.project.predicates()
+        LOGGER.info('Refreshing state for %s predicate nodes', len(predicates))
+        for node in predicates:
+            node.updateNode()
+            node.redraw()
+
+    def importModulesFromXML(self):
+        """
+        Import project modules from XML file.
+        :raise ProjectNotValidError: If the project structure file is missing or not readable.
+        """
+        QApplication.processEvents()
+
+        LOGGER.info('Loading project structure from %s', self.projectModulesDataPath)
+
+        if not fexists(self.projectModulesDataPath):
+            raise ProjectNotValidError('missing project structure: {0}'.format(self.projectModulesDataPath))
+
+        self.modulesDocument = QDomDocument()
+        if not self.modulesDocument.setContent(fread(self.projectModulesDataPath)):
+            raise ProjectNotValidError('could read project structure from {0}'.format(self.projectModulesDataPath))
+
+        root = self.modulesDocument.documentElement()
+        modules = root.firstChildElement('modules')
+
+        module = modules.firstChildElement('module')
+        while not module.isNull():
+
+            QApplication.processEvents()
+
+            name = module.text()
+            path = os.path.join(self.project.path, name)
+
+            try:
+                loader = GrapholDiagramLoader(path, self.project, self.session)
+            except (DiagramNotFoundError, DiagramNotValidError) as e:
+                LOGGER.warning('Failed to load project module %s: %s', name, e)
+            except Exception:
+                LOGGER.exception('Failed to load project module %s', name)
+            else:
+                self.project.addDiagram(loader.load())
+            finally:
+                module = module.nextSiblingElement('module')
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the import.
+        :return: File
+        """
+        return File.Graphol
+
+    def load(self):
+        """
+        Perform project import.
+        :raise ProjectNotFoundError: If the given path does not identify a project.
+        :raise ProjectNotValidError: If one of the project data file is missing or not readable.
+        :rtype: Project
+        """
+        LOGGER.header('Loading project: %s', os.path.basename(self.projectMainPath))
+
+        #############################################
+        # VALIDATE PROJECT
+        #################################
+
+        if not is_dir(self.projectMainPath):
+            raise ProjectNotFoundError('project not found: {0}'.format(self.projectMainPath))
+
+        if not is_dir(self.projectHomePath):
+            raise ProjectNotValidError('missing project home: {0}'.format(self.projectHomePath))
+
+        #############################################
+        # IMPORT PROJECT
+        #################################
+
+        self.importProjectFromXML()
+        self.importModulesFromXML()
+        self.importMetaFromXML()
+
+        LOGGER.separator('-')
+
+        return self.project

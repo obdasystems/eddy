@@ -67,6 +67,7 @@ from eddy.core.commands.nodes import CommandNodeSetDepth
 from eddy.core.common import HasActionSystem, HasMenuSystem
 from eddy.core.common import HasPluginSystem, HasWidgetSystem
 from eddy.core.common import HasDiagramExportSystem, HasProjectExportSystem
+from eddy.core.common import HasDiagramLoadSystem, HasProjectLoadSystem
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.graphol import Restriction, Special
 from eddy.core.datatypes.misc import Color, DiagramMode
@@ -74,7 +75,7 @@ from eddy.core.datatypes.owl import Datatype, Facet
 from eddy.core.datatypes.qt import BrushIcon
 from eddy.core.datatypes.system import Platform, File
 from eddy.core.diagram import Diagram
-from eddy.core.exporters.graphml import GraphmlDiagramExporter
+from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.graphol import GrapholDiagramExporter
 from eddy.core.exporters.graphol import GrapholProjectExporter
 from eddy.core.exporters.owl import OWLProjectExporter
@@ -89,9 +90,9 @@ from eddy.core.functions.path import expandPath, isSubPath
 from eddy.core.functions.path import uniquePath, shortPath
 from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractItem
-from eddy.core.loaders.graphml import GraphmlLoader
-from eddy.core.loaders.graphol import GrapholLoader
-from eddy.core.loaders.project import ProjectLoader
+from eddy.core.loaders.graphml import GraphMLDiagramLoader
+from eddy.core.loaders.graphol import GrapholDiagramLoader
+from eddy.core.loaders.graphol import GrapholProjectLoader
 from eddy.core.output import getLogger
 from eddy.core.plugin import AbstractPlugin
 
@@ -112,13 +113,10 @@ from eddy.ui.view import DiagramView
 LOGGER = getLogger(__name__)
 
 
-class Session(HasActionSystem,
-              HasMenuSystem,
-              HasPluginSystem,
-              HasWidgetSystem,
-              HasDiagramExportSystem,
-              HasProjectExportSystem,
-              QMainWindow):
+# TODO: use signals to trigger slots
+class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
+              HasDiagramExportSystem, HasProjectExportSystem, HasDiagramLoadSystem,
+              HasProjectLoadSystem, QMainWindow):
     """
     Extends QMainWindow and implements Eddy main working session.
     Additionally to built-in signals, this class emits:
@@ -174,6 +172,7 @@ class Session(HasActionSystem,
         self.initMenus()
         self.initWidgets()
         self.initExporters()
+        self.initLoaders()
         self.initSignals()
         self.initStatusBar()
         self.initToolBars()
@@ -184,7 +183,8 @@ class Session(HasActionSystem,
         # LOAD THE GIVEN PROJECT
         #################################
 
-        self.project = ProjectLoader(path, self).run()
+        loader = self.createProjectLoader(File.Graphol, path, self)
+        self.project = loader.load()
 
         #############################################
         # COMPLETE SESSION SETUP
@@ -563,11 +563,19 @@ class Session(HasActionSystem,
         """
         Initialize diagram and project exporters.
         """
-        self.addDiagramExporter(GraphmlDiagramExporter)
+        self.addDiagramExporter(GraphMLDiagramExporter)
         self.addDiagramExporter(GrapholDiagramExporter)
         self.addDiagramExporter(PdfDiagramExporter)
         self.addProjectExporter(GrapholProjectExporter)
         self.addProjectExporter(OWLProjectExporter)
+
+    def initLoaders(self):
+        """
+        Initialize diagram and project loaders.
+        """
+        self.addDiagramLoader(GraphMLDiagramLoader)
+        self.addDiagramLoader(GrapholDiagramLoader)
+        self.addProjectLoader(GrapholProjectLoader)
 
     def initMenus(self):
         """
@@ -1061,7 +1069,7 @@ class Session(HasActionSystem,
             dialog.setAcceptMode(QFileDialog.AcceptSave)
             dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QFileDialog.AnyFile)
-            dialog.setNameFilters(self.projectNameFilters(exclude={File.Graphol}))
+            dialog.setNameFilters(self.projectExporterNameFilters(exclude={File.Graphol}))
             dialog.setViewMode(QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             if dialog.exec_():
@@ -1106,12 +1114,30 @@ class Session(HasActionSystem,
         dialog.setDirectory(expandPath('~'))
         dialog.setFileMode(QFileDialog.ExistingFiles)
         dialog.setViewMode(QFileDialog.Detail)
-        dialog.setNameFilters([File.GraphML.value])
+        dialog.setNameFilters(self.diagramLoaderNameFilters(exclude={File.Graphol}))
         if dialog.exec_():
-            if File.forValue(dialog.selectedNameFilter()) is File.GraphML:
-                selected = [x for x in dialog.selectedFiles() if File.forPath(x) is File.GraphML]
-                if selected:
-                    self.importFromGraphml(selected)
+            filetype = File.forValue(dialog.selectedNameFilter())
+            selected = [x for x in dialog.selectedFiles() if File.forPath(x) is filetype and fexists(x)]
+            if selected:
+                try:
+                    with BusyProgressDialog(parent=self) as progress:
+                        for path in selected:
+                            progress.setWindowTitle('Importing {0}...'.format(os.path.basename(path)))
+                            loader = self.createDiagramLoader(filetype, path, self.project, self)
+                            diagram = loader.load()
+                            self.project.addDiagram(diagram)
+                            self.doFocusDiagram(diagram)
+                except Exception as e:
+                    msgbox = QMessageBox(self)
+                    msgbox.setDetailedText(format_exception(e))
+                    msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+                    msgbox.setStandardButtons(QMessageBox.Close)
+                    msgbox.setText('Eddy could not import all the selected files!')
+                    msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+                    msgbox.setWindowTitle('Import failed!')
+                    msgbox.exec_()
+                finally:
+                    self.doSave()
 
     @pyqtSlot(str)
     def doLoadDiagram(self, path):
@@ -1123,10 +1149,10 @@ class Session(HasActionSystem,
 
             if File.forPath(path) is File.Graphol:
 
-                worker = GrapholLoader(self.project, path, self)
+                loader = self.createDiagramLoader(File.Graphol, path, self.project, self)
 
                 try:
-                    diagram = worker.run()
+                    diagram = loader.run()
                 except Exception as e:
                     msgbox = QMessageBox(self)
                     msgbox.setDetailedText(format_exception(e))
@@ -1365,7 +1391,7 @@ class Session(HasActionSystem,
             dialog.setAcceptMode(QFileDialog.AcceptSave)
             dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QFileDialog.AnyFile)
-            dialog.setNameFilters(self.diagramNameFilters())
+            dialog.setNameFilters(self.diagramExporterNameFilters())
             dialog.setViewMode(QFileDialog.Detail)
             dialog.selectFile(cutR(diagram.name, File.Graphol.extension))
             if dialog.exec_():
@@ -1806,33 +1832,6 @@ class Session(HasActionSystem,
         subwindow = self.mdi.addSubWindow(subwindow)
         subwindow.showMaximized()
         return subwindow
-
-    def importFromGraphml(self, paths):
-        """
-        Import from .graphml file format, adding the new diagrams to the project and MDI area.
-        :type paths: T <= list|tuple|set
-        """
-        paths = [x for x in paths if fexists(x)]
-        if paths:
-            try:
-                with BusyProgressDialog(parent=self) as progress:
-                    for path in paths:
-                        progress.setWindowTitle('Importing {0}...'.format(os.path.basename(path)))
-                        worker = GraphmlLoader(self.project, path, self)
-                        diagram = worker.run()
-                        self.project.addDiagram(diagram)
-                        self.doFocusDiagram(diagram)
-            except Exception as e:
-                msgbox = QMessageBox(self)
-                msgbox.setDetailedText(format_exception(e))
-                msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                msgbox.setStandardButtons(QMessageBox.Close)
-                msgbox.setText('Eddy could not import all the selected files!')
-                msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle('Import failed!')
-                msgbox.exec_()
-            finally:
-                self.doSave()
 
     def openFile(self, path):
         """

@@ -50,27 +50,26 @@ from eddy.core.functions.fsystem import fread
 from eddy.core.functions.misc import snapF, cutR, isEmpty, snap
 from eddy.core.functions.path import uniquePath
 from eddy.core.functions.signals import connect
-from eddy.core.loaders.common import AbstractLoader
+from eddy.core.loaders.common import AbstractDiagramLoader
 from eddy.core.output import getLogger
 
 
 LOGGER = getLogger(__name__)
 
 
-class GraphmlLoader(AbstractLoader):
+class GraphMLDiagramLoader(AbstractDiagramLoader):
     """
-    This class can be used to import graphol ontologies created using the graphol palette for yEd.
+    Extends AbstractDiagramLoader with facilities to load diagrams from GraphML file format.
     """
-    def __init__(self, project, path, session):
+    def __init__(self, path, project, session):
         """
-        Initialize the graphml importer.
-        :type project: Project
+        Initialize the GraphML importer.
         :type path: str
+        :type project: Project
         :type session: Session
         """
-        super().__init__(session)
-        self.path = path
-        self.project = project
+        super(GraphMLDiagramLoader, self).__init__(path, project, session)
+
         self.diagram = None
         self.keys = dict()
         self.edges = dict()
@@ -544,10 +543,18 @@ class GraphmlLoader(AbstractLoader):
                     QPointF(float(geometry.attribute('width')) / 2, float(geometry.attribute('height')) / 2), Diagram.GridSize)
 
     #############################################
-    #   DIAGRAM GENERATION
+    #   INTERFACE
     #################################
 
-    def run(self):
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the import.
+        :return: File
+        """
+        return File.GraphML
+
+    def load(self):
         """
         Perform diagram import from .graphml file format.
         :raise DiagramNotFoundError: If the given path does not identify a .graphml module.
@@ -604,7 +611,6 @@ class GraphmlLoader(AbstractLoader):
         element = graph.firstChildElement('node')
         while not element.isNull():
 
-            # noinspection PyArgumentList
             QApplication.processEvents()
 
             try:
@@ -635,7 +641,6 @@ class GraphmlLoader(AbstractLoader):
         element = graph.firstChildElement('edge')
         while not element.isNull():
 
-            # noinspection PyArgumentList
             QApplication.processEvents()
 
             try:
@@ -671,11 +676,9 @@ class GraphmlLoader(AbstractLoader):
         if moveX or moveY:
             collection = [x for x in self.diagram.items() if x.isNode() or x.isEdge()]
             for item in collection:
-                # noinspection PyArgumentList
                 QApplication.processEvents()
                 item.moveBy(moveX, moveY)
             for item in collection:
-                # noinspection PyArgumentList
                 QApplication.processEvents()
                 if item.isEdge():
                     item.updateEdge()
