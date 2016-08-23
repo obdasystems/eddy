@@ -75,8 +75,9 @@ class AbstractExporter(QObject):
         """
         pass
 
+    @classmethod
     @abstractmethod
-    def filetype(self):
+    def filetype(cls):
         """
         Returns the type of the file that will be used for the export.
         :return: File
@@ -148,8 +149,9 @@ class AbstractProjectExporter(AbstractExporter):
         """
         pass
 
+    @classmethod
     @abstractmethod
-    def filetype(self):
+    def filetype(cls):
         """
         Returns the type of the file that will be used for the export.
         :return: File
