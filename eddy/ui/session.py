@@ -1814,23 +1814,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         else:
             dropEvent.ignore()
 
-    def eventFilter(self, source, event):
-        """
-        Filters events if this object has been installed as an event filter for the watched object.
-        :type source: QObject
-        :type event: QEvent
-        :rtype: bool
-        """
-        if event.type() == QEvent.Resize:
-
-            try:
-                widget = source.widget()
-                widget.redraw()
-            except AttributeError:
-                pass
-        # noinspection PyUnresolvedReferences
-        return super().eventFilter(source, event)
-
     def keyReleaseEvent(self, keyEvent):
         """
         Executed when a keyboard button is released from the scene.
