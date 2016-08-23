@@ -114,10 +114,10 @@ class MenuFactory(QObject):
         menu = QMenu()
         menu.addAction(self.session.action('delete'))
         menu.addAction(self.session.action('purge'))
-        menu.addSeparator()
-        menu.addAction(self.session.action('bring_to_front'))
-        menu.addAction(self.session.action('send_to_back'))
         if any([x.isNode() for x in items]):
+            menu.addSeparator()
+            menu.addAction(self.session.action('bring_to_front'))
+            menu.addAction(self.session.action('send_to_back'))
             menu.addSeparator()
             menu.addAction(self.session.action('cut'))
             menu.addAction(self.session.action('copy'))
