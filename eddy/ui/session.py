@@ -1047,7 +1047,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             supported = {Item.RoleNode, Item.AttributeNode}
-            node = first([x for x in diagram.selectedNodes() if x.type() in supported])
+            node = first(diagram.selectedNodes(lambda x: x.type() in supported))
             if node:
                 action = self.sender()
                 item = action.data()
@@ -1130,7 +1130,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             view = self.createDiagramView(diagram)
             subwindow = self.createMdiSubWindow(view)
             subwindow.showMaximized()
-
         self.mdi.setActiveSubWindow(subwindow)
         self.mdi.update()
 
@@ -1341,8 +1340,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
-            node = first([x for x in diagram.selectedNodes() if x.type() in supported])
+            fn = lambda x: x.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
+            node = first(diagram.selectedNodes(filter_on_nodes=fn))
             if node:
                 action = self.sender()
                 color = action.data()
@@ -1357,8 +1356,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
-            node = first([x for x in diagram.selectedNodes() if x.type() in supported])
+            fn = lambda x: x.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
+            node = first(diagram.selectedNodes(filter_on_nodes=fn))
             if node:
                  dialog = RefactorNameForm(node, self)
                  dialog.exec_()
@@ -1371,7 +1370,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            node = first([x for x in diagram.selectedNodes() if x.label is not None])
+            fn = lambda x: x.label is not None
+            node = first(diagram.selectedNodes(filter_on_nodes=fn))
             if node and node.label.isMovable():
                 undo = node.label.pos()
                 redo = node.label.defaultPos()
@@ -1518,7 +1518,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             color = action.data()
             brush = QBrush(QColor(color.value))
             supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
-            selected = {x for x in diagram.selectedNodes() if x.type() in supported and x.brush() != brush}
+            fn = lambda x: x.type() in supported and x.brush() != brush
+            selected = diagram.selectedNodes(filter_on_nodes=fn)
             if selected:
                 self.undostack.push(CommandNodeSetBrush(diagram, selected, brush))
 
@@ -1530,8 +1531,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            supported = {Item.DomainRestrictionNode, Item.RangeRestrictionNode}
-            node = first([x for x in diagram.selectedNodes() if x.type() in supported])
+            fn = lambda x: x.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}
+            node = first(diagram.selectedNodes(filter_on_nodes=fn))
             if node:
                 data = None
                 action = self.sender()
@@ -1555,7 +1556,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            node = first([x for x in diagram.selectedNodes() if x.type() is Item.IndividualNode])
+            fn = lambda x: x.type() is Item.IndividualNode
+            node = first(diagram.selectedNodes(filter_on_nodes=fn))
             if node:
                 action = self.sender()
                 if action.data() is Identity.Instance:
@@ -1576,8 +1578,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             action = self.sender()
-            supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode}
-            node = first([x for x in diagram.selectedNodes() if x.type() in supported])
+            fn = lambda x: x.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode}
+            node = first(diagram.selectedNodes(filter_on_nodes=fn))
             if node:
                 special = action.data()
                 data = special.value
@@ -1593,7 +1595,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            node = first([x for x in diagram.selectedNodes() if x.type() is Item.ValueDomainNode])
+            fn = lambda x: x.type() is Item.ValueDomainNode
+            node = first(diagram.selectedNodes(filter_on_nodes=fn))
             if node:
                 action = self.sender()
                 datatype = action.data()
@@ -1610,7 +1613,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            node = first([x for x in diagram.selectedNodes() if x.type() is Item.FacetNode])
+            fn = lambda x: x.type() is Item.FacetNode
+            node = first(diagram.selectedNodes(filter_on_nodes=fn))
             if node:
                 action = self.sender()
                 facet = action.data()
@@ -1659,7 +1663,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            selected = [e for e in diagram.selectedEdges() if e.isSwapAllowed()]
+            fe = lambda x: x.isSwapAllowed()
+            selected = diagram.selectedEdges(filter_on_edges=fe)
             if selected:
                 self.undostack.push(CommandEdgeSwap(diagram, selected))
 
@@ -1715,8 +1720,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            selected = diagram.selectedEdges()
-            selected = [e for e in selected if e.type() is Item.InclusionEdge and e.isEquivalenceAllowed()]
+            fe = lambda x: x.type() is Item.InclusionEdge and x.isEquivalenceAllowed()
+            selected = diagram.selectedEdges(filter_on_edges=fe)
             if selected:
                 comp = sum(edge.equivalence for edge in selected) <= len(selected) / 2
                 data = {edge: {'from': edge.equivalence, 'to': comp} for edge in selected}
