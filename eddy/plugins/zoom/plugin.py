@@ -146,6 +146,7 @@ class Zoom(AbstractPlugin):
         :type level: float
         """
         self.level = level
+        self.refresh(enabled=True)
 
     @classmethod
     def name(cls):
