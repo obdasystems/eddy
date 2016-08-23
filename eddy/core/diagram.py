@@ -84,7 +84,7 @@ class Diagram(QGraphicsScene):
         :type path: str
         :type parent: Project
         """
-        super().__init__(parent)
+        super(Diagram, self).__init__(parent)
 
         self.factory = ItemFactory(self)
         self.guid = GUID(self)
@@ -151,7 +151,7 @@ class Diagram(QGraphicsScene):
         Executed when a dragged element enters the scene area.
         :type dragEvent: QGraphicsSceneDragDropEvent
         """
-        super().dragEnterEvent(dragEvent)
+        super(Diagram, self).dragEnterEvent(dragEvent)
         if dragEvent.mimeData().hasFormat('text/plain'):
             dragEvent.setDropAction(Qt.CopyAction)
             dragEvent.accept()
@@ -163,7 +163,7 @@ class Diagram(QGraphicsScene):
         Executed when an element is dragged over the scene.
         :type dragEvent: QGraphicsSceneDragDropEvent
         """
-        super().dragMoveEvent(dragEvent)
+        super(Diagram, self).dragMoveEvent(dragEvent)
         if dragEvent.mimeData().hasFormat('text/plain'):
             dragEvent.setDropAction(Qt.CopyAction)
             dragEvent.accept()
@@ -175,7 +175,7 @@ class Diagram(QGraphicsScene):
         Executed when a dragged element is dropped on the diagram.
         :type dropEvent: QGraphicsSceneDragDropEvent
         """
-        super().dropEvent(dropEvent)
+        super(Diagram, self).dropEvent(dropEvent)
         if dropEvent.mimeData().hasFormat('text/plain'):
             snapToGrid = self.session.action('toggle_grid').isChecked()
             node = self.factory.create(Item.forValue(dropEvent.mimeData().text()))
@@ -230,7 +230,7 @@ class Diagram(QGraphicsScene):
                 # (i.e: edge breakpoint move, edge anchor move, node shape
                 # resize) and we need to check whether any of them is being
                 # performed before handling the even locally.
-                super().mousePressEvent(mouseEvent)
+                super(Diagram, self).mousePressEvent(mouseEvent)
 
                 if self.mode is DiagramMode.Idle:
 
@@ -405,7 +405,7 @@ class Diagram(QGraphicsScene):
                         for edge in edges:
                             edge.updateEdge()
 
-        super().mouseMoveEvent(mouseEvent)
+        super(Diagram, self).mouseMoveEvent(mouseEvent)
 
     def mouseReleaseEvent(self, mouseEvent):
         """
@@ -508,15 +508,21 @@ class Diagram(QGraphicsScene):
                 #################################
 
                 item = self.itemOnTopOf(mousePos)
-                if item:
+                if not item:
                     self.clearSelection()
-                    item.setSelected(True)
+                    items = []
+                else:
+                    items = self.selectedItems()
+                    if item not in items:
+                        self.clearSelection()
+                        item.setSelected(True)
+                        items = [item]
 
                 self.mp_Pos = mousePos
-                menu = self.session.mf.create(self, item, mousePos)
+                menu = self.session.mf.create(self, items, mousePos)
                 menu.exec_(mouseEvent.screenPos())
 
-        super().mouseReleaseEvent(mouseEvent)
+        super(Diagram, self).mouseReleaseEvent(mouseEvent)
 
         self.mo_Node = None
         self.mp_Data = None

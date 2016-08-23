@@ -36,6 +36,10 @@
 from PyQt5.QtCore import QObject, QPointF, pyqtSignal
 
 from eddy.core.commands.common import CommandItemsAdd
+from eddy.core.output import getLogger
+
+
+LOGGER = getLogger(__name__)
 
 
 class Clipboard(QObject):
@@ -83,6 +87,7 @@ class Clipboard(QObject):
         """
         self.edges.clear()
         self.nodes.clear()
+        LOGGER.debug('Clipboard cleared!')
         self.sgnCleared.emit()
 
     def empty(self):
@@ -200,6 +205,7 @@ class Clipboard(QObject):
                         copy.target.setAnchor(copy, edge.target.anchor(edge))
                         self.edges[edge.id] = copy
 
+            LOGGER.debug('Clipboard updated: nodes=%s, edges=%s', len(self.nodes), len(self.edges))
             self.sgnUpdated.emit()
 
     def __repr__(self):

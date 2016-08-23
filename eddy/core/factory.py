@@ -101,6 +101,29 @@ class MenuFactory(QObject):
         return menu
 
     #############################################
+    #   COMPOUND
+    #################################
+
+    def buildCompoundItemMenu(self, diagram, items):
+        """
+        Build and return a QMenu instance for the selection of items.
+        :type diagram: Diagram
+        :type items: T <= list|tuple
+        :rtype: QMenu
+        """
+        menu = QMenu()
+        menu.addAction(self.session.action('delete'))
+        menu.addAction(self.session.action('purge'))
+        menu.addSeparator()
+        menu.addAction(self.session.action('bring_to_front'))
+        menu.addAction(self.session.action('send_to_back'))
+        if any([x.isNode() for x in items]):
+            menu.addSeparator()
+            menu.addAction(self.session.action('cut'))
+            menu.addAction(self.session.action('copy'))
+        return menu
+
+    #############################################
     #   EDGES
     #################################
 
@@ -582,16 +605,23 @@ class MenuFactory(QObject):
     #   FACTORY
     #################################
 
-    def create(self, diagram, item, pos=None):
+    def create(self, diagram, items, pos=None):
         """
         Build and return a QMenu instance according to the given parameters.
         :type diagram: Diagram
-        :type item: AbstractItem
+        :type items: T <= list|tuple
         :type pos: QPointF
         :rtype: QMenu
         """
-        if not item:
+        ## NO ITEM
+        if not items:
             return self.buildDiagramMenu(diagram)
+
+        ## MULTIPLE ITEMS
+        if len(items) > 1:
+            return self.buildCompoundItemMenu(diagram, items)
+
+        item = first(items)
 
         ## NODES
         if item.type() is Item.AttributeNode:
