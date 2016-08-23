@@ -836,26 +836,29 @@ class Diagram(QGraphicsScene):
         restriction.setPos(pos)
         return {restriction, edge}
 
-    def selectedEdges(self):
+    def selectedEdges(self, filter_on_edges=lambda x: True):
         """
         Returns the edges selected in the diagram.
+        :type filter_on_edges: callable
         :rtype: list
         """
-        return [x for x in super(Diagram, self).selectedItems() if x.isEdge()]
+        return [x for x in super(Diagram, self).selectedItems() if x.isEdge() and filter_on_edges(x)]
 
-    def selectedItems(self):
+    def selectedItems(self, filter_on_items=lambda x: True):
         """
         Returns the items selected in the diagram.
+        :type filter_on_items: callable
         :rtype: list
         """
-        return [x for x in super(Diagram, self).selectedItems() if x.isNode() or x.isEdge()]
+        return [x for x in super(Diagram, self).selectedItems() if (x.isNode() or x.isEdge()) and filter_on_items(x)]
 
-    def selectedNodes(self):
+    def selectedNodes(self, filter_on_nodes=lambda x: True):
         """
         Returns the nodes selected in the diagram.
+        :type filter_on_nodes: callable
         :rtype: list
         """
-        return [x for x in super(Diagram, self).selectedItems() if x.isNode()]
+        return [x for x in super(Diagram, self).selectedItems() if x.isNode() and filter_on_nodes(x)]
 
     def setMode(self, mode, param=None):
         """

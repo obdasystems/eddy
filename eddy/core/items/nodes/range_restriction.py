@@ -92,3 +92,17 @@ class RangeRestrictionNode(RestrictionNode):
                 # Attribute qualified restriction => Attribute + ValueDomain
                 return True
         return False
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def setText(self, text):
+        """
+        Set the label text making sure not to have 'self' as range.
+        :type text: str
+        """
+        restriction = Restriction.forLabel(text)
+        if not restriction or restriction is Restriction.Self:
+            text = Restriction.Exists.toString()
+        self.label.setText(text)

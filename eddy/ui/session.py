@@ -61,7 +61,7 @@ from eddy.core.commands.edges import CommandEdgeSwap
 from eddy.core.commands.edges import CommandEdgeToggleEquivalence
 from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.labels import CommandLabelChange
-from eddy.core.commands.nodes import CommandNodeOperatorSwitchTo
+from eddy.core.commands.nodes import CommandNodeSwitchTo
 from eddy.core.commands.nodes import CommandNodeSetBrush
 from eddy.core.commands.nodes import CommandNodeSetDepth
 from eddy.core.common import HasActionSystem, HasMenuSystem
@@ -507,6 +507,19 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             group.addAction(action)
         self.addAction(group)
 
+        data = OrderedDict()
+        data[Item.DomainRestrictionNode] = 'Domain'
+        data[Item.RangeRestrictionNode] = 'Range'
+
+        group = QActionGroup(self, objectName='switch_restriction')
+        for k, v in data.items():
+            action = QAction(v, group,
+                objectName=k.name, checkable=True,
+                triggered=self.doSwitchRestrictionNode)
+            action.setData(k)
+            group.addAction(action)
+        self.addAction(group)
+
         #############################################
         # VALUE-DOMAIN SPECIFIC
         #################################
@@ -719,6 +732,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu = QMenu('Select restriction', objectName='property_restriction')
         menu.setIcon(QIcon(':/icons/24/ic_transform_black'))
         menu.addActions(self.action('restriction').actions())
+        self.addMenu(menu)
+
+        menu = QMenu('Switch to', objectName='switch_restriction')
+        menu.setIcon(QIcon(':/icons/24/ic_transform_black'))
+        menu.addActions(self.action('switch_restriction').actions())
         self.addMenu(menu)
 
         #############################################
@@ -1653,13 +1671,33 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            node = first([x for x in diagram.selectedNodes() if Item.UnionNode <= x.type() <= Item.DisjointUnionNode])
+            fn = lambda x: Item.UnionNode <= x.type() <= Item.DisjointUnionNode
+            node = first([x for x in diagram.selectedNodes(filter_on_nodes=fn)])
             if node:
                 action = self.sender()
                 if node.type() is not action.data():
                     xnode = diagram.factory.create(action.data())
                     xnode.setPos(node.pos())
-                    self.undostack.push(CommandNodeOperatorSwitchTo(diagram, node, xnode))
+                    self.undostack.push(CommandNodeSwitchTo(diagram, node, xnode))
+
+    @pyqtSlot()
+    def doSwitchRestrictionNode(self):
+        """
+        Switch the selected restriction node to a different type.
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            fn = lambda x: x.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}
+            node = first([x for x in diagram.selectedNodes(filter_on_nodes=fn)])
+            if node:
+                action = self.sender()
+                if node.type() is not action.data():
+                    xnode = diagram.factory.create(action.data())
+                    xnode.setPos(node.pos())
+                    xnode.setText(node.text())
+                    xnode.setTextPos(node.textPos())
+                    self.undostack.push(CommandNodeSwitchTo(diagram, node, xnode))
 
     @pyqtSlot()
     def doSyntaxCheck(self):

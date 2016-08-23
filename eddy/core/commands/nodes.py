@@ -235,16 +235,16 @@ class CommandNodeMove(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandNodeOperatorSwitchTo(QUndoCommand):
+class CommandNodeSwitchTo(QUndoCommand):
     """
-    This command is used to change the type of hexagon based operator nodes.
+    This command is used to change the type of a node nodes.
     """
     def __init__(self, diagram, node1, node2):
         """
         Initialize the command.
         :type diagram: Diagram
-        :type node1: OperatorNode
-        :type node2: OperatorNode
+        :type node1: AbstractNode
+        :type node2: AbstractNode
         """
         super().__init__('switch {0} to {1}'.format(node1.name, node2.name))
         self.node = {'redo': node2, 'undo': node1}
