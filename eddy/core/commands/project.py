@@ -86,3 +86,29 @@ class CommandProjectSetPrefix(QUndoCommand):
         """undo the command"""
         self.project.prefix = self.data['undo']
         self.project.sgnUpdated.emit()
+
+
+class CommandProjectSetProfile(QUndoCommand):
+    """
+    This command is used to set the profile of a project.
+    """
+    def __init__(self, project, undo, redo):
+        """
+        Initialize the command.
+        :type project: Project
+        :type undo: str
+        :type redo: str
+        """
+        super().__init__("set project profile to '{0}'".format(redo))
+        self.project = project
+        self.data = {'undo': undo, 'redo': redo}
+
+    def redo(self):
+        """redo the command"""
+        self.project.profile = self.project.session.createProfile(self.data['redo'], self.project)
+        self.project.sgnUpdated.emit()
+
+    def undo(self):
+        """undo the command"""
+        self.project.profile = self.project.session.createProfile(self.data['undo'], self.project)
+        self.project.sgnUpdated.emit()

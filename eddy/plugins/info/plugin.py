@@ -47,6 +47,7 @@ from eddy.core.commands.common import CommandSetProperty
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.project import CommandProjectSetIRI
 from eddy.core.commands.project import CommandProjectSetPrefix
+from eddy.core.commands.project import CommandProjectSetProfile
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Facet, Datatype
 from eddy.core.datatypes.qt import BrushIcon, Font
@@ -134,6 +135,7 @@ class Info(AbstractPlugin):
         """
         self.debug('Connecting to project: %s', self.project.name)
         connect(self.project.sgnUpdated, self.onProjectUpdated)
+        self.widget('info').stack()
 
     @pyqtSlot(QMdiSubWindow)
     def onSubWindowActivated(self, subwindow):
@@ -267,7 +269,6 @@ class InfoWidget(QScrollArea):
         self.infoValueNode = ValueNodeInfo(self.session, self.stacked)
         self.infoValueDomainNode = ValueDomainNodeInfo(self.session, self.stacked)
         self.infoFacet = FacetNodeInfo(self.session, self.stacked)
-        self.stacked.addWidget(self.infoEmpty)
         self.stacked.addWidget(self.infoProject)
         self.stacked.addWidget(self.infoEdge)
         self.stacked.addWidget(self.infoInclusionEdge)
@@ -618,6 +619,13 @@ class ProjectInfo(AbstractInfo):
         self.iriField.setReadOnly(False)
         connect(self.iriField.editingFinished, self.iriEditingFinished)
 
+        self.profileKey = Key('Profile', self)
+        self.profileKey.setFont(arial12r)
+        self.profileField = Select(self)
+        self.profileField.setFont(arial12r)
+        self.profileField.addItems(self.session.profileNames())
+        connect(self.profileField.activated, self.profileChanged)
+
         self.ontologyPropHeader = Header('Ontology properties', self)
         self.ontologyPropHeader.setFont(arial12r)
 
@@ -625,6 +633,7 @@ class ProjectInfo(AbstractInfo):
         self.ontologyPropLayout.setSpacing(0)
         self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
         self.ontologyPropLayout.addRow(self.iriKey, self.iriField)
+        self.ontologyPropLayout.addRow(self.profileKey, self.profileField)
 
         self.conceptsKey = Key('Concept', self)
         self.conceptsKey.setFont(arial12r)
@@ -693,10 +702,9 @@ class ProjectInfo(AbstractInfo):
         """
         Executed whenever we finish to edit the ontology prefix
         """
-        project = self.project
         iri = self.iriField.value()
-        if project.iri != iri:
-            self.session.undostack.push(CommandProjectSetIRI(project, project.iri, iri))
+        if self.project.iri != iri:
+            self.session.undostack.push(CommandProjectSetIRI(self.project, self.project.iri, iri))
         self.iriField.clearFocus()
 
     @pyqtSlot()
@@ -704,11 +712,20 @@ class ProjectInfo(AbstractInfo):
         """
         Executed whenever we finish to edit the ontology prefix
         """
-        project = self.project
         prefix = self.prefixField.value()
-        if project.prefix != prefix:
-            self.session.undostack.push(CommandProjectSetPrefix(project, project.prefix, prefix))
+        if self.project.prefix != prefix:
+            self.session.undostack.push(CommandProjectSetPrefix(self.project, self.project.prefix, prefix))
         self.prefixField.clearFocus()
+
+    @pyqtSlot()
+    def profileChanged(self):
+        """
+        Executed when we need to change the project profile.
+        """
+        profile = self.profileField.currentText()
+        if self.project.profile.name() != profile:
+            self.session.undostack.push(CommandProjectSetProfile(self.project, self.project.profile.name(), profile))
+        self.profileField.clearFocus()
 
     #############################################
     #   INTERFACE
@@ -723,10 +740,17 @@ class ProjectInfo(AbstractInfo):
         self.prefixField.home(True)
         self.prefixField.clearFocus()
         self.prefixField.deselect()
+
         self.iriField.setValue(project.iri)
         self.iriField.home(True)
         self.iriField.clearFocus()
         self.iriField.deselect()
+
+        for i in range(self.profileField.count()):
+            if self.profileField.itemText(i) == self.project.profile.name():
+                self.profileField.setCurrentIndex(i)
+                break
+
         self.attributesField.setValue(project.count(predicate=Item.AttributeNode))
         self.conceptsField.setValue(project.count(predicate=Item.ConceptNode))
         self.rolesField.setValue(project.count(predicate=Item.RoleNode))
@@ -1050,7 +1074,6 @@ class AttributeNodeInfo(PredicateNodeInfo):
         """
         node = self.node
         diagram = node.diagram
-        project = node.project
         sender = self.sender()
         checked = sender.isChecked()
         attribute = sender.property('attribute')
@@ -1167,7 +1190,6 @@ class RoleNodeInfo(PredicateNodeInfo):
         """
         node = self.node
         diagram = node.diagram
-        project = node.project
         sender = self.sender()
         checked = sender.isChecked()
         attribute = sender.property('attribute')
@@ -1232,13 +1254,11 @@ class ValueDomainNodeInfo(NodeInfo):
         if self.node:
             node = self.node
             diagram = node.diagram
-            project = node.project
             datatype = self.datatypeField.currentData()
             data = datatype.value
             if node.text() != data:
                 name = 'change {0} to {1}'.format(node.shortName, data)
                 self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
-
         self.datatypeField.clearFocus()
 
     #############################################
@@ -1307,7 +1327,6 @@ class ValueNodeInfo(PredicateNodeInfo):
             try:
                 node = self.node
                 diagram = node.diagram
-                project = node.project
                 datatype = self.datatypeField.currentData()
                 value = self.valueField.value()
                 data = node.compose(value, datatype)
@@ -1390,7 +1409,6 @@ class FacetNodeInfo(NodeInfo):
         if self.node:
             node = self.node
             diagram = node.diagram
-            project = node.project
             data = node.compose(self.facetField.currentData(), self.valueField.value())
             if node.text() != data:
                 name = 'change {0} to {1}'.format(node.text(), data)

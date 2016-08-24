@@ -946,6 +946,13 @@ class HasProfileSystem(object):
         """
         return sorted(self._profileList, key=lambda x: x.name())
 
+    def profileNames(self):
+        """
+        Returns the list of profile names.
+        :rtype: list
+        """
+        return [x.name() for x in self.profiles()]
+
     def removeProfiles(self, profile):
         """
         Removes the given ontology profile class from the set.
