@@ -605,7 +605,7 @@ class Diagram(QGraphicsScene):
             f6 = lambda x: x.type() is Item.IndividualNode
 
             # CONVERTERS
-            c1 = lambda x: Identity.Concept if x.identity is Identity.Instance else Identity.ValueDomain
+            c1 = lambda x: Identity.Concept if x.identity is Identity.Individual else Identity.ValueDomain
             c2 = lambda x: Identity.Concept if x.identity in {Identity.Role, Identity.Concept} else Identity.ValueDomain
             c3 = lambda x: Identity.RoleInstance if x.identity is Identity.Role else Identity.AttributeInstance
 

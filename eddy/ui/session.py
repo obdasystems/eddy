@@ -548,7 +548,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #################################
 
         group = QActionGroup(self, objectName='switch_individual')
-        for identity in (Identity.Instance, Identity.Value):
+        for identity in (Identity.Individual, Identity.Value):
             action = QAction(identity.value, group,
                 objectName=identity.name, checkable=True,
                 triggered=self.doSetIndividualAs)
@@ -1577,7 +1577,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     @pyqtSlot()
     def doSetIndividualAs(self):
         """
-        Set an invididual node either to Instance or Value.
+        Set an invididual node either to Individual or Value.
         Will bring up the Value Form if needed.
         """
         diagram = self.mdi.activeDiagram()
@@ -1587,7 +1587,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             node = first(diagram.selectedNodes(filter_on_nodes=fn))
             if node:
                 action = self.sender()
-                if action.data() is Identity.Instance:
+                if action.data() is Identity.Individual:
                     if node.identity is Identity.Value:
                         data = node.label.template
                         name = 'change {0} to {1}'.format(node.text(), data)

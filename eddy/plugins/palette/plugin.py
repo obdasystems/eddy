@@ -611,8 +611,8 @@ class PaletteButton(QToolButton):
                     QPointF(-((40 / (1 + sqrt(2))) / 2), -20),
                     QPointF(-20, -((40 / (1 + sqrt(2))) / 2)),
                 ]))
-                painter.setFont(Font('Arial', 9, Font.Light))
-                painter.drawText(-16, 4, 'instance')
+                painter.setFont(Font('Arial', 8, Font.Light))
+                painter.drawText(-16, 4, 'individual')
                 painter.end()
 
             #############################################

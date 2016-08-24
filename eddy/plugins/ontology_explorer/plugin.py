@@ -346,7 +346,7 @@ class OntologyExplorerWidget(QWidget):
         if node.type() is Item.ConceptNode:
             return self.iconCconcept
         if node.type() is Item.IndividualNode:
-            if node.identity is Identity.Instance:
+            if node.identity is Identity.Individual:
                 return self.iconInstance
             if node.identity is Identity.Value:
                 return self.iconValue

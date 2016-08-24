@@ -64,7 +64,7 @@ class IndividualNode(AbstractResizableNode):
 
     DefaultBrush = QBrush(QColor(252, 252, 252, 255))
     DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-    Identities = {Identity.Instance, Identity.Value}
+    Identities = {Identity.Individual, Identity.Value}
     Type = Item.IndividualNode
 
     def __init__(self, width=60, height=60, brush=None, **kwargs):
@@ -123,7 +123,7 @@ class IndividualNode(AbstractResizableNode):
         match = RE_VALUE.match(self.text())
         if match:
             return Identity.Value
-        return Identity.Instance
+        return Identity.Individual
 
     @property
     def value(self):

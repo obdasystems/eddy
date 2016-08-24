@@ -45,7 +45,7 @@ class Identity(Enum):
     This class defines graphol expression identities.
     """
     __order__ = 'Neutral Concept Role Attribute ValueDomain ' \
-                'Instance Value RoleInstance AttributeInstance ' \
+                'Individual Value RoleInstance AttributeInstance ' \
                 'Facet Unknown'
 
     Neutral = 'Neutral'
@@ -53,7 +53,7 @@ class Identity(Enum):
     Role = 'Role'
     Attribute = 'Attribute'
     ValueDomain = 'Value Domain'
-    Instance = 'Instance'
+    Individual = 'Individual'
     Value = 'Value'
     RoleInstance = 'Role Instance'
     AttributeInstance = 'Attribute Instance'

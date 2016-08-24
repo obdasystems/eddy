@@ -256,7 +256,7 @@ class OWL2Profile(AbstractProfile):
                         nameA = target.name
                         nameB = source.identity.value
 
-                        if source.identity is Identity.Instance and target.identity is Identity.ValueDomain:
+                        if source.identity is Identity.Individual and target.identity is Identity.ValueDomain:
                             raise SyntaxError('Invalid input to {0}: {1}'.format(nameA, nameB))
 
                         if source.identity is Identity.Value and target.identity is Identity.Concept:
@@ -370,10 +370,10 @@ class OWL2Profile(AbstractProfile):
 
                     if target.identity is Identity.AttributeInstance:
 
-                        if source.identity is Identity.Instance:
+                        if source.identity is Identity.Individual:
 
                             f1 = lambda x: x.type() is Item.InputEdge and x is not edge
-                            f2 = lambda x: x.identity is Identity.Instance
+                            f2 = lambda x: x.identity is Identity.Individual
                             if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
                                 # We are constructing a DataPropertyAssertion and so we can't have more than 1 instance.
                                 raise SyntaxError('Too many instances in input to {0}'.format(target.identity.value))
@@ -613,7 +613,7 @@ class OWL2Profile(AbstractProfile):
                     # Self connection is forbidden.
                     raise SyntaxError('Self connection is not valid')
 
-                if source.identity is not Identity.Instance and source.type() is not Item.PropertyAssertionNode:
+                if source.identity is not Identity.Individual and source.type() is not Item.PropertyAssertionNode:
                     # The source of the edge must be one of Instance or a Property Assertion node.
                     raise SyntaxError('Invalid source for membership edge: {0}'.format(source.identity.value))
 
@@ -622,10 +622,10 @@ class OWL2Profile(AbstractProfile):
                     # The target of the edge must be a ClassExpression, ObjectPropertyExpression or DataPropertyExpression.
                     raise SyntaxError('Invalid target for membership edge: {0}'.format(target.name))
 
-                if source.identity is Identity.Instance:
+                if source.identity is Identity.Individual:
 
                     if target.identity is not Identity.Concept:
-                        # If the source of the edge is an Instance it means that we are trying to construct a
+                        # If the source of the edge is an Individual it means that we are trying to construct a
                         # ClassAssertion and so the target of the edge MUST be a class expression.
                         # OWL 2: ClassAssertion(axiomAnnotations ClassExpression Individual)
                         raise SyntaxError('Invalid target for Concept assertion: {0}'.format(target.identity.value))

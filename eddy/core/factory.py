@@ -445,12 +445,12 @@ class MenuFactory(QObject):
                     value = False
                 elif operand.identity is Identity.Attribute:
                     num = len(assertion.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
-                    instance = instance and (node.identity is Identity.Instance or num < 2)
+                    instance = instance and (node.identity is Identity.Individual or num < 2)
                     value = value and (node.identity is Identity.Value or num < 2)
 
         for a in self.session.action('switch_individual').actions():
             a.setChecked(a.data() is node.identity)
-            a.setVisible(a.data() is Identity.Instance and instance or a.data() is Identity.Value and value)
+            a.setVisible(a.data() is Identity.Individual and instance or a.data() is Identity.Value and value)
 
         #############################################
         # END CONSTRAIN IDENTITY SWITCH
@@ -740,7 +740,7 @@ class PropertyFactory(QObject):
             elif node.type() is Item.ValueDomainNode:
                 properties = ValueDomainNodeProperty(diagram, node, self.session)
             elif node.type() is Item.IndividualNode:
-                if node.identity is Identity.Instance:
+                if node.identity is Identity.Individual:
                     properties = PredicateNodeProperty(diagram, node, self.session)
                 else:
                     properties = ValueNodeProperty(diagram, node, self.session)

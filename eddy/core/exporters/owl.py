@@ -770,7 +770,7 @@ class OWLProjectExporterWorker(QObject):
         :rtype: OWLNamedIndividual
         """
         if node not in self.conv:
-            if node.identity is Identity.Instance:
+            if node.identity is Identity.Individual:
                 self.conv[node] = self.df.getOWLNamedIndividual(OWLShortIRI(self.ontoPrefix, node.text()), self.pm)
             elif node.identity is Identity.Value:
                 self.conv[node] = self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
@@ -1352,7 +1352,7 @@ class OWLProjectExporterWorker(QObject):
 
                 elif e.type() is Item.MembershipEdge:
 
-                    if e.source.identity is Identity.Instance and e.target.identity is Identity.Concept:
+                    if e.source.identity is Identity.Individual and e.target.identity is Identity.Concept:
                         self.axiomClassAssertion(e)
                     elif e.source.identity is Identity.RoleInstance:
                         self.axiomObjectPropertyAssertion(e)
