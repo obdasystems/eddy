@@ -94,7 +94,7 @@ class IndividualNode(AbstractResizableNode):
         self.background = Polygon(createPolygon(w + 8, h + 8))
         self.selection = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush or IndividualNode.DefaultBrush, IndividualNode.DefaultPen)
-        self.label = NodeLabel(template='instance', pos=self.center, parent=self)
+        self.label = NodeLabel(template='individual', pos=self.center, parent=self)
         self.label.setAlignment(Qt.AlignCenter)
         self.updateResizeHandles()
         self.updateTextPos()
