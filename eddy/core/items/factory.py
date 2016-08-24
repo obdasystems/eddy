@@ -136,17 +136,6 @@ class ItemFactory(QObject):
             return MembershipEdge
         raise RuntimeError('unknown item type ({0})'.format(item))
 
-    @classmethod
-    def iconForItem(cls, item, width, height):
-        """
-        Returns an icon representing the given item.
-        :type item: Item
-        :type width: int
-        :type height: int
-        :rtype: QIcon
-        """
-        return ItemFactory.classForItem(item).icon(width=width, height=height)
-
     def create(self, item, **kwargs):
         """
         Build and return a graphol item instance using to the given parameters.
