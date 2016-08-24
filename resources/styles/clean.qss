@@ -109,6 +109,19 @@ border: 1px solid #607D8B;
 QToolBar QToolButton::menu-indicator {
 image: none;
 }
+QToolBar QComboBox:!editable,
+QToolBar QComboBox::drop-down:editable {
+background: #FFFFFF;
+}
+QToolBar QComboBox:!editable:on,
+QToolBar QComboBox::drop-down:editable:on {
+background: #FFFFFF;
+}
+QToolBar QComboBox {
+background: #FFFFFF;
+spacing: 0;
+}
+
 /**************************************************************************/
 /*                              MAINWINDOW                                */
 /**************************************************************************/

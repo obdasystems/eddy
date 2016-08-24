@@ -42,11 +42,11 @@ class ComboBox(QComboBox):
     """
     This class implements a multi selection box.
     """
-    def __init__(self, parent=None):
+    def __init__(self, *args, **kwargs):
         """
         Initialize the spin box.
         """
-        super().__init__(parent)
+        super().__init__(*args, **kwargs)
         self.setAttribute(Qt.WA_MacShowFocusRect, 0)
         self._scrollEnabled = True
 

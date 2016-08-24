@@ -49,7 +49,7 @@ from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QStatusBar
 from PyQt5.QtWidgets import QToolButton, QStyle, QFileDialog
 from PyQt5.QtWidgets import QMenu, QAction, QActionGroup
-from PyQt5.QtWidgets import QComboBox, QUndoStack, QToolBar
+from PyQt5.QtWidgets import QUndoStack, QToolBar
 
 from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION, VERSION
 from eddy.core.clipboard import Clipboard
@@ -107,6 +107,7 @@ from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.ui.about import AboutDialog
 from eddy.ui.diagram import NewDiagramDialog
 from eddy.ui.diagram import RenameDiagramDialog
+from eddy.ui.fields import ComboBox
 from eddy.ui.forms import CardinalityRestrictionForm
 from eddy.ui.forms import RefactorNameForm
 from eddy.ui.forms import ValueForm
@@ -996,9 +997,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         button.setEnabled(False)
         self.addWidget(button)
 
-        combobox = QComboBox(objectName='profile_switch')
+        combobox = ComboBox(objectName='profile_switch')
         combobox.setEditable(False)
         combobox.setFont(Font('Arial', 12))
+        combobox.setFocusPolicy(Qt.StrongFocus)
+        combobox.setScrollEnabled(False)
         combobox.setStatusTip('Change the profile of the active project')
         combobox.addItems(self.profileNames())
         connect(combobox.activated, self.doSetProfile)
