@@ -35,9 +35,9 @@
 
 from math import sin, cos, radians, pi as M_PI
 
-from PyQt5.QtCore import QPointF
+from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPainter, QPolygonF
-from PyQt5.QtGui import QPainterPath
+from PyQt5.QtGui import QPainterPath, QBrush, QColor, QPen
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.edges.common.base import AbstractEdge
@@ -173,6 +173,23 @@ class InclusionEdge(AbstractEdge):
         path.addPolygon(self.head.geometry())
         path.addPolygon(self.tail.geometry())
         return path
+
+    def redraw(self, visible=None, **kwargs):
+        """
+        Perform the redrawing of this item.
+        :type visible: bool
+        """
+        tailBrush = QBrush(Qt.NoBrush)
+        tailPen = QPen(Qt.NoPen)
+
+        if visible:
+            tailBrush = QBrush(QColor(0, 0, 0, 255))
+            tailPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+
+        self.tail.setBrush(tailBrush)
+        self.tail.setPen(tailPen)
+
+        super(InclusionEdge, self).redraw(visible=visible, **kwargs)
 
     def setText(self, text):
         """
