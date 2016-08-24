@@ -64,10 +64,15 @@ from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.nodes import CommandNodeSwitchTo
 from eddy.core.commands.nodes import CommandNodeSetBrush
 from eddy.core.commands.nodes import CommandNodeSetDepth
-from eddy.core.common import HasActionSystem, HasMenuSystem
-from eddy.core.common import HasPluginSystem, HasWidgetSystem
-from eddy.core.common import HasDiagramExportSystem, HasProjectExportSystem
-from eddy.core.common import HasDiagramLoadSystem, HasProjectLoadSystem
+from eddy.core.common import HasActionSystem
+from eddy.core.common import HasMenuSystem
+from eddy.core.common import HasPluginSystem
+from eddy.core.common import HasWidgetSystem
+from eddy.core.common import HasDiagramExportSystem
+from eddy.core.common import HasProjectExportSystem
+from eddy.core.common import HasDiagramLoadSystem
+from eddy.core.common import HasProjectLoadSystem
+from eddy.core.common import HasProfileSystem
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.graphol import Restriction, Special
 from eddy.core.datatypes.misc import Color, DiagramMode
@@ -95,6 +100,7 @@ from eddy.core.loaders.graphol import GrapholDiagramLoader
 from eddy.core.loaders.graphol import GrapholProjectLoader
 from eddy.core.output import getLogger
 from eddy.core.plugin import AbstractPlugin
+from eddy.core.profiles.owl2 import OWL2Profile
 
 from eddy.ui.about import AboutDialog
 from eddy.ui.diagram import NewDiagramDialog
@@ -115,7 +121,7 @@ LOGGER = getLogger(__name__)
 
 class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
               HasDiagramExportSystem, HasProjectExportSystem, HasDiagramLoadSystem,
-              HasProjectLoadSystem, QMainWindow):
+              HasProjectLoadSystem, HasProfileSystem, QMainWindow):
     """
     Extends QMainWindow and implements Eddy main working session.
     Additionally to built-in signals, this class emits:
@@ -178,6 +184,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.initWidgets()
         self.initExporters()
         self.initLoaders()
+        self.initProfiles()
         self.initSignals()
         self.initStatusBar()
         self.initToolBars()
@@ -894,6 +901,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     pluginList = self.plugins()
                     if pluginList:
                         LOGGER.info('%s plugin(s) started: %s', len(pluginList), ', '.join(p.name() for p in pluginList))
+
+    def initProfiles(self):
+        """
+        Initialize the ontology profiles.
+        """
+        self.addProfile(OWL2Profile)
 
     def initSignals(self):
         """

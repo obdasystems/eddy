@@ -38,13 +38,110 @@ from abc import ABCMeta, abstractmethod
 from PyQt5.QtCore import QObject
 
 
-class SyntaxValidationResult(object):
+class AbstractProfile(QObject):
     """
-    This class can be used to store syntax validation results.
+    Extends QObject providing the base class for all the ontology profiles.
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, project):
+        """
+        Initialize the profile.
+        :type project: Project
+        """
+        super().__init__(project)
+        self._pvr = None
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def project(self):
+        """
+        Returns the reference to the active project (alias for AbstractProfile.parent()).
+        :rtype: Project
+        """
+        return self.parent()
+
+    @property
+    def session(self):
+        """
+        Returns the reference to the active session (alias for AbstractProfile.project.parent()).
+        :rtype: Session
+        """
+        return self.project.parent()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def check(self, source, edge, target):
+        """
+        Perform the validation of the given triple according to the current profile (if necessary).
+        :param source: AbstractNode
+        :param edge: AbstractEdge
+        :param target: AbstractNode
+        :rtype: ProfileValidationResult
+        """
+        if not self.pvr() or (source, edge, target) not in self.pvr():
+            self.validate(source, edge, target)
+        return self.pvr()
+
+    @classmethod
+    @abstractmethod
+    def name(cls):
+        """
+        Returns the name of the profile, i.e: OWL2, OWL2EL, OWL2QL, OWL2RL.
+        :rtype: str
+        """
+        pass
+
+    def objectName(self):
+        """
+        Returns the system name of the plugin.
+        :rtype: str
+        """
+        return self.name()
+
+    def pvr(self):
+        """
+        Returns the last profile validation result.
+        :rtype: ProfileValidationResult
+        """
+        return self._pvr
+
+    def reset(self):
+        """
+        Resets the profile in all its aspects.
+        """
+        self._pvr = None
+
+    def setPvr(self, pvr):
+        """
+        Set the profile validation result.
+        :type pvr: ProfileValidationResult
+        """
+        self._pvr = pvr
+
+    @abstractmethod
+    def validate(self, source, edge, target):
+        """
+        Perform the validation of the given triple and generate the ProfileValidationResult.
+        :param source: AbstractNode
+        :param edge: AbstractEdge
+        :param target: AbstractNode
+        """
+        pass
+
+
+class ProfileValidationResult(object):
+    """
+    This class can be used to store profile validation results.
     """
     def __init__(self, source, edge, target, valid):
         """
-        Initialize the syntax validation result.
+        Initialize the profile validation result.
         :type source: AbstractNode
         :type edge: AbstractEdge
         :type target: AbstractNode
@@ -58,7 +155,7 @@ class SyntaxValidationResult(object):
 
     def edge(self):
         """
-        Returns the edgeof the validated triple.
+        Returns the edge of the validated triple.
         :rtype: AbstractEdge
         """
         return self._edge
@@ -108,66 +205,3 @@ class SyntaxValidationResult(object):
             return self._source is item[0] and self._edge is item[1] and self._target is item[2]
         except IndexError:
             return False
-
-
-class AbstractValidator(QObject):
-    """
-    Base syntax validator class.
-    This class defines the base structure of syntax validators and enforce the implementation
-    of the 'run' method which is responsible of validation graphol triples: NODE -> EDGE -> NODE.
-    """
-    __metaclass__ = ABCMeta
-
-    def __init__(self, parent=None):
-        """
-        Initialize the validator.
-        :type parent: QObject
-        """
-        self._result = None
-        super().__init__(parent)
-
-    #############################################
-    #   INTERFACE
-    #################################
-
-    def clear(self):
-        """
-        Clear the validator by removing the latest validation result.
-        """
-        self._result = None
-
-    def result(self):
-        """
-        Returns the last validation result entry.
-        :rtype: SyntaxValidationResult
-        """
-        return self._result
-
-    @abstractmethod
-    def run(self, source, edge, target):
-        """
-        Run the validation algorithm on the given triple and generates the result instance.
-        :type source: AbstractNode
-        :type edge: AbstractEdge
-        :type target: AbstractNode
-        """
-        pass
-
-    def setResult(self, result):
-        """
-        Sets the validation result entry.
-        :type result: SyntaxValidationResult
-        """
-        self._result = result
-
-    def validate(self, source, edge, target):
-        """
-        Returns the result of the validation for the given triple.
-        :type source: AbstractNode
-        :type edge: AbstractEdge
-        :type target: AbstractNode
-        :rtype: SyntaxValidationResult
-        """
-        if not self._result or (source, edge, target) not in self._result:
-            self.run(source, edge, target)
-        return self._result

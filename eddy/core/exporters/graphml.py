@@ -54,7 +54,7 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
 
     def __init__(self, diagram, session):
         """
-        Initialize the Graphml exporter.
+        Initialize the GraphML exporter.
         :type diagram: Diagram
         :type session: Session
         """

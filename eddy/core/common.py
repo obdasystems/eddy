@@ -33,14 +33,13 @@
 ##########################################################################
 
 
-from PyQt5.QtWidgets import QAction
-
 from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.exporters.common import AbstractProjectExporter
 from eddy.core.loaders.common import AbstractDiagramLoader
 from eddy.core.loaders.common import AbstractProjectLoader
 from eddy.core.functions.misc import isEmpty
 from eddy.core.output import getLogger
+from eddy.core.profiles.common import AbstractProfile
 
 
 LOGGER = getLogger(__name__)
@@ -861,3 +860,98 @@ class HasProjectLoadSystem(object):
         self._projectLoaderList.remove(loader)
         del self._projectLoaderDict[loader.filetype()]
         return loader
+
+
+class HasProfileSystem(object):
+    """
+    Mixin which adds the ability to store and retrieve ontology profiles.
+    """
+    def __init__(self, **kwargs):
+        """
+        Initialize the object with default parameters.
+        :type kwargs: dict
+        """
+        super().__init__(**kwargs)
+        self._profileDict = {}
+        self._profileList = []
+
+    def addProfile(self, profile):
+        """
+        Add an ontology profile class to the set.
+        :type profile: class
+        """
+        if not issubclass(profile, AbstractProfile):
+            raise ValueError("ontology profile must be subclass of eddy.core.profiles.common.AbstractProfile")
+        if profile.name() in self._profileDict:
+            raise ValueError("duplicate ontology profile found: %s" % profile.name())
+        self._profileList.append(profile)
+        self._profileDict[profile.name()] = profile
+        # LOGGER.debug("Added ontology profile: %s", profile.name())
+
+    def addProfiles(self, profiles):
+        """
+        Add the given group of ontology profile classes to the set.
+        :type profiles: T <= list|tuple
+        """
+        for profile in profiles:
+            self.addProfile(profile)
+
+    def createProfile(self, name, project=None):
+        """
+        Creates an instance of an ontology profile for the given name.
+        :type name: str
+        :type project: Project
+        :rtype: AbstractProfile
+        """
+        profile = self.profile(name)
+        if not profile:
+            raise ValueError("missing ontology profile: %s", name)
+        return profile(project)
+
+    def insertProfile(self, profile, before):
+        """
+        Insert the given ontology profile before the given one.
+        :type profile: class
+        :type before: class
+        """
+        if not issubclass(profile, AbstractProfile):
+            raise ValueError("ontology profile must be subclass of eddy.core.profiles.common.AbstractProfile")
+        if profile.name() in self._profileDict:
+            raise ValueError("duplicate ontology profile found: %s" % profile.name())
+        self._profileList.insert(self._profileList.index(before), profile)
+        self._profileDict[profile.name()] = profile
+        # LOGGER.debug("Added ontology profile %s before project loader %s", profile.name(), before.name())
+
+    def insertProfiles(self, profiles, before):
+        """
+        Insert the given group of ontology profile classes before the given one.
+        :type profiles: T <= list|tuple
+        :type before: class
+        """
+        for profile in profiles:
+            self.insertProfile(profile, before)
+
+    def profile(self, name):
+        """
+        Returns the reference to an ontology profile class given it's name.
+        :type name: str
+        :rtype: class
+        """
+        return self._profileDict.get(name, None)
+
+    def profiles(self):
+        """
+        Returns the list of ontology profiles.
+        :rtype: list
+        """
+        return sorted(self._profileList, key=lambda x: x.name())
+
+    def removeProfiles(self, profile):
+        """
+        Removes the given ontology profile class from the set.
+        :type profile: class
+        :rtype: class
+        """
+        self._profileList.remove(profile)
+        del self._profileDict[profile.name()]
+        return profile

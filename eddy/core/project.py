@@ -41,7 +41,6 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.misc import cutR
 from eddy.core.items.nodes.common.meta import MetaFactory
-from eddy.core.syntax.owl import OWL2Validator
 
 
 K_DIAGRAM = 'diagrams'
@@ -80,12 +79,13 @@ class Project(QObject):
     sgnMetaRemoved = pyqtSignal(Item, str)
     sgnUpdated = pyqtSignal()
 
-    def __init__(self, path, prefix, iri, session=None):
+    def __init__(self, path, prefix, iri, profile, session=None):
         """
         Initialize the graphol project.
         :type path: str
         :type prefix: str
         :type iri: str
+        :type profile: AbstractProfile
         :type session: Session
         """
         super().__init__(session)
@@ -102,9 +102,10 @@ class Project(QObject):
         self.iri = iri
         self.path = path
         self.prefix = prefix
+        self.profile = profile
+        self.profile.setParent(self)
 
         self.mf = MetaFactory(self)
-        self.validator = OWL2Validator(self)
 
     #############################################
     #   PROPERTIES

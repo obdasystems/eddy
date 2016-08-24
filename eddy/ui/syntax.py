@@ -213,15 +213,15 @@ class SyntaxValidationDialog(QDialog):
                 if item.isEdge():
                     source = item.source
                     target = item.target
-                    result = self.project.validator.validate(source, item, target)
-                    if not result.isValid():
+                    pvr = self.project.profile.check(source, item, target)
+                    if not pvr.isValid():
                         nA = '{0} <b>{1}</b>'.format(source.name, source.id)
                         nB = '{0} <b>{1}</b>'.format(target.name, target.id)
                         if source.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
                             nA = '{0} <b>{1}:{2}</b>'.format(source.name, source.text(), source.id)
                         if target.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
                             nB = '{0} <b>{1}:{2}</b>'.format(target.name, target.text(), target.id)
-                        info = '{0}{1}'.format(result.message()[:1].lower(), result.message()[1:])
+                        info = '{0}{1}'.format(pvr.message()[:1].lower(), pvr.message()[1:])
                         message = 'Syntax error detected on {} from {} to {}: <i>{}</i>.'.format(item.name, nA, nB, info)
                         break
 

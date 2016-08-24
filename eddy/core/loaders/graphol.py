@@ -717,12 +717,16 @@ class GrapholProjectLoader(AbstractProjectLoader):
         root = self.metaDocument.documentElement()
         ontology = root.firstChildElement('ontology')
         prefix = ontology.firstChildElement('prefix').text()
-        iri = ontology.firstChildElement('iri').text()
-
         LOGGER.debug('Loaded ontology prefix: %s', prefix)
+        iri = ontology.firstChildElement('iri').text()
         LOGGER.debug('Loaded ontology IRI: %s', iri)
-
-        self.project = Project(path, prefix, iri, self.session)
+        profileName = ontology.firstChildElement('profile').text()
+        if not profileName:
+            profileName = 'OWL2'
+            LOGGER.warning('Missing ontology profile, using default: %s', profileName)
+        profile = self.session.createProfile(profileName)
+        LOGGER.debug('Loaded ontology profile: %s', profile.name())
+        self.project = Project(path, prefix, iri, profile, self.session)
 
     def importMetaFromXML(self):
         """

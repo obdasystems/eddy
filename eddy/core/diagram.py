@@ -347,16 +347,16 @@ class Diagram(QGraphicsScene):
 
                     if currentNode:
                         self.mo_Node = currentNode
-                        result = self.project.validator.validate(edge.source, edge, currentNode)
-                        currentNode.redraw(selected=False, valid=result.isValid())
-                        if not result.isValid():
-                            statusBar.showMessage(result.message())
+                        pvr = self.project.profile.check(edge.source, edge, currentNode)
+                        currentNode.redraw(selected=False, valid=pvr.isValid())
+                        if not pvr.isValid():
+                            statusBar.showMessage(pvr.message())
                         else:
                             statusBar.clearMessage()
                     else:
                         statusBar.clearMessage()
                         self.mo_Node = None
-                        self.project.validator.clear()
+                        self.project.profile.reset()
 
             elif self.mode is DiagramMode.LabelMove:
 
@@ -433,8 +433,8 @@ class Diagram(QGraphicsScene):
 
                     if currentNode:
                         currentNode.redraw(selected=False)
-                        result = self.project.validator.validate(edge.source, edge, currentNode)
-                        if result.isValid():
+                        pvr = self.project.profile.check(edge.source, edge, currentNode)
+                        if pvr.isValid():
                             edge.target = currentNode
                             insertEdge = True
 
@@ -443,7 +443,7 @@ class Diagram(QGraphicsScene):
                     # signal hence all the widgets will be notified of the edge insertion.
                     # We do this because while creating the edge we need to display it so the
                     # user knows what he is connecting, but we don't want to truly insert
-                    # it till it's necessary (when the mouse is released and the validator
+                    # it till it's necessary (when the mouse is released and the validation
                     # confirms that the generated expression is a valid graphol expression).
                     self.removeItem(edge)
 
@@ -452,7 +452,7 @@ class Diagram(QGraphicsScene):
                         edge.updateEdge()
 
                     self.clearSelection()
-                    self.project.validator.clear()
+                    self.project.profile.reset()
                     statusBar = self.session.statusBar()
                     statusBar.clearMessage()
 

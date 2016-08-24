@@ -550,9 +550,12 @@ class GrapholProjectExporter(AbstractProjectExporter):
         iri.appendChild(self.metaDocument.createTextNode(self.project.iri))
         prefix = self.metaDocument.createElement('prefix')
         prefix.appendChild(self.metaDocument.createTextNode(self.project.prefix))
+        profile = self.metaDocument.createElement('profile')
+        profile.appendChild(self.metaDocument.createTextNode(self.project.profile.name()))
         ontology = self.metaDocument.createElement('ontology')
         ontology.appendChild(prefix)
         ontology.appendChild(iri)
+        ontology.appendChild(profile)
         root.appendChild(ontology)
 
         # 4) APPEND PREDICATE METADATA

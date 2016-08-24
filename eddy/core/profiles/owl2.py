@@ -37,39 +37,33 @@ from eddy.core.datatypes.graphol import Identity, Item, Restriction
 from eddy.core.datatypes.owl import Facet
 from eddy.core.functions.graph import bfs
 from eddy.core.functions.misc import cutR, first
-from eddy.core.output import getLogger
-from eddy.core.syntax.common import AbstractValidator
-from eddy.core.syntax.common import SyntaxValidationResult
+from eddy.core.profiles.common import AbstractProfile, ProfileValidationResult
 
 
-LOGGER = getLogger(__name__)
-
-
-class OWL2Validator(AbstractValidator):
+class OWL2Profile(AbstractProfile):
     """
-    This class can be used to validate graphol triples according to the OWL2 syntax.
+    Extends AbstractProfile implementing the OWL2 (full) profile.
     """
-    def __init__(self, parent=None):
-        """
-        Initialize the validator.
-        :type parent: QObject
-        """
-        super().__init__(parent)
-
     #############################################
     #   INTERFACE
     #################################
 
-    def run(self, source, edge, target):
+    @classmethod
+    def name(cls):
         """
-        Run the validation algorithm on the given triple and generates the SyntaxValidationResult instance.
-        :type source: AbstractNode
-        :type edge: AbstractEdge
-        :type target: AbstractNode
+        Returns the name of the profile, i.e: OWL2, OWL2QL.
+        :rtype: str
+        """
+        return 'OWL2'
+
+    def validate(self, source, edge, target):
+        """
+        Perform the validation of the given triple and generate the ProfileValidationResult.
+        :param source: AbstractNode
+        :param edge: AbstractEdge
+        :param target: AbstractNode
         """
         try:
-
-            #LOGGER.debug('Running validation algorithm: (%s) ---%s--> (%s)', source, edge, target)
 
             #############################################
             # EDGE = INCLUSION
@@ -647,8 +641,8 @@ class OWL2Validator(AbstractValidator):
                         raise SyntaxError('Invalid target for Attribute assertion: {0}'.format(target.name))
 
         except SyntaxError as e:
-            result = SyntaxValidationResult(source, edge, target, False)
-            result.setMessage(e.msg)
-            self.setResult(result)
+            pvr = ProfileValidationResult(source, edge, target, False)
+            pvr.setMessage(e.msg)
+            self.setPvr(pvr)
         else:
-            self.setResult(SyntaxValidationResult(source, edge, target, True))
+            self.setPvr(ProfileValidationResult(source, edge, target, True))
