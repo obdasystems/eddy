@@ -33,29 +33,27 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
+from PyQt5.QtCore import Qt, QObject, QThread
+from PyQt5.QtCore import pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QProgressBar, QMessageBox
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTextEdit
-from PyQt5.QtWidgets import QDesktopWidget, QApplication
-from PyQt5.QtWidgets import QHBoxLayout, QPushButton
+from PyQt5.QtWidgets import QDesktopWidget, QHBoxLayout, QPushButton
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
 
 
-# FIXME: this is bugged as hell!
 class SyntaxValidationDialog(QDialog):
     """
-    This class implements the modal dialog used to perform manual syntax validation.
+    Extends QDialog with facilities to perform manual syntax validation.
     """
-    sgnProgress = pyqtSignal(int)
-    sgnWarning = pyqtSignal(str)
+    sgnWork = pyqtSignal(int)
 
     def __init__(self, project, session):
         """
-        Initialize the form dialog.
+        Initialize the dialog.
         :type project: Project
         :type session: Session
         """
@@ -65,8 +63,9 @@ class SyntaxValidationDialog(QDialog):
 
         self.i = 0
         self.items = list(project.edges()) + list(project.nodes())
-        self.popup = False
         self.project = project
+        self.workerThread = None
+        self.worker = None
 
         #############################################
         # TOP AREA
@@ -111,6 +110,7 @@ class SyntaxValidationDialog(QDialog):
         self.messageField.setAttribute(Qt.WA_MacShowFocusRect, 0)
         self.messageField.setFixedSize(400, 100)
         self.messageField.setFont(arial12r)
+        self.messageField.setReadOnly(True)
 
         self.messageBox = QWidget(self)
         self.messageBox.setVisible(False)
@@ -128,16 +128,15 @@ class SyntaxValidationDialog(QDialog):
         self.mainLayout.addWidget(self.buttonBox, 0, Qt.AlignRight)
         self.mainLayout.addWidget(self.messageBox)
 
-        connect(self.sgnProgress, self.doProgress)
-        connect(self.sgnWarning, self.doWarning)
         connect(self.buttonAbort.clicked, self.doAbort)
         connect(self.buttonIgnore.clicked, self.doIgnore)
         connect(self.buttonShow.clicked, self.doShow)
+        connect(self.sgnWork, self.doWork)
 
         self.setAttribute(Qt.WA_DeleteOnClose, True)
+        self.setFixedSize(self.sizeHint())
         self.setWindowTitle('Running syntax validation...')
         self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-        self.setFixedSize(self.sizeHint())
 
         desktop = QDesktopWidget()
         screen = desktop.screenGeometry()
@@ -145,6 +144,20 @@ class SyntaxValidationDialog(QDialog):
         x = (screen.width() - widget.width()) / 2
         y = (screen.height() - widget.height()) / 2
         self.move(x, y)
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def dispose(self):
+        """
+        Gracefully quits working thread.
+        """
+        if self.workerThread:
+            self.workerThread.quit()
+            if not self.workerThread.wait(2000):
+                self.workerThread.terminate()
+                self.workerThread.wait()
 
     #############################################
     #   PROPERTIES
@@ -162,12 +175,19 @@ class SyntaxValidationDialog(QDialog):
     #   EVENTS
     #################################
 
+    def closeEvent(self, closeEvent):
+        """
+        Executed when the dialog is closed.
+        :type closeEvent: QCloseEvent
+        """
+        self.dispose()
+
     def showEvent(self, showEvent):
         """
         Executed whenever the dialog is shown.
         :type showEvent: QShowEvent
         """
-        self.sgnProgress.emit(0)
+        self.sgnWork.emit(0)
 
     #############################################
     #   SLOTS
@@ -187,62 +207,7 @@ class SyntaxValidationDialog(QDialog):
         Executed when the ignore button is pressed.
         :type _: bool
         """
-        self.buttonBox.setVisible(False)
-        self.messageBox.setVisible(False)
-        self.messageField.setText('')
-        self.setFixedSize(self.sizeHint())
-        self.sgnProgress.emit(self.i + 1)
-
-    @pyqtSlot(int)
-    def doProgress(self, i):
-        """
-        Perform an advance step in the validation procedure.
-        :type i: int
-        """
-        if self.i < len(self.items):
-
-            self.i = i
-            message = None
-            while self.i < len(self.items):
-
-                item = self.items[self.i]
-                self.progressBar.setValue(self.i)
-
-                QApplication.processEvents()
-
-                if item.isEdge():
-                    source = item.source
-                    target = item.target
-                    pvr = self.project.profile.check(source, item, target)
-                    if not pvr.isValid():
-                        nA = '{0} <b>{1}</b>'.format(source.name, source.id)
-                        nB = '{0} <b>{1}</b>'.format(target.name, target.id)
-                        if source.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
-                            nA = '{0} <b>{1}:{2}</b>'.format(source.name, source.text(), source.id)
-                        if target.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
-                            nB = '{0} <b>{1}:{2}</b>'.format(target.name, target.text(), target.id)
-                        info = '{0}{1}'.format(pvr.message()[:1].lower(), pvr.message()[1:])
-                        message = 'Syntax error detected on {} from {} to {}: <i>{}</i>.'.format(item.name, nA, nB, info)
-                        break
-
-                if item.isNode():
-                    if item.identity is Identity.Unknown:
-                        name = '{0} "{1}"'.format(item.name, item.id)
-                        if item.isPredicate():
-                            name = '{0} "{1}:{2}"'.format(item.name, item.text(), item.id)
-                        message = 'Unkown node identity detected on {0}.'.format(name)
-                        break
-
-                self.i += 1
-                print('{} - {}'.format(self.i, len(self.items)))
-
-            if message:
-                self.sgnWarning.emit(message)
-            else:
-                print("HERE")
-                self.close(popup=True)
-        else:
-            self.close(popup=True)
+        self.sgnWork.emit(self.i + 1)
 
     @pyqtSlot(bool)
     def doShow(self, _=False):
@@ -264,34 +229,127 @@ class SyntaxValidationDialog(QDialog):
             item.setSelected(True)
         self.close()
 
-    @pyqtSlot(str)
-    def doWarning(self, message):
+    @pyqtSlot(int)
+    def doWork(self, i):
         """
-        Executed when a warning message needs to be displayed.
-        :type message: int
+        Perform on or more advancements step in the validation procedure.
+        :type i: int
+        """
+        # ADAPT DISPLAY
+        self.buttonBox.setVisible(False)
+        self.messageBox.setVisible(False)
+        self.messageField.setText('')
+        self.setFixedSize(self.sizeHint())
+        # MAKE SURE WE ARE CLEAR
+        self.dispose()
+        # RUN THE WORKER
+        self.workerThread = QThread()
+        self.worker = SyntaxValidationWorker(i, self.items, self.project)
+        self.worker.moveToThread(self.workerThread)
+        connect(self.worker.sgnCompleted, self.onCompleted)
+        connect(self.worker.sgnProgress, self.onProgress)
+        connect(self.worker.sgnSyntaxError, self.onSyntaxError)
+        connect(self.workerThread.started, self.worker.run)
+        self.workerThread.start()
+
+    @pyqtSlot()
+    def onCompleted(self):
+        """
+        Executed when the syntax validation procedure is completed.
+        """
+        msgbox = QMessageBox(self)
+        msgbox.setIconPixmap(QIcon(':/icons/48/ic_done_black').pixmap(48))
+        msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        msgbox.setWindowTitle('Done!')
+        msgbox.setStandardButtons(QMessageBox.Close)
+        msgbox.setText('Syntax validation completed!')
+        msgbox.setTextFormat(Qt.RichText)
+        msgbox.exec_()
+        self.close()
+
+    @pyqtSlot(int)
+    def onProgress(self, i):
+        """
+        Adjust the value of the progress bar.
+        :type i: int
+        """
+        if i < len(self.items):
+            self.i = i
+            self.progressBar.setValue(self.i)
+
+    @pyqtSlot(str)
+    def onSyntaxError(self, message):
+        """
+        Executed when a syntax error is detected.
+        :type message: str
         """
         self.buttonBox.setVisible(True)
         self.messageBox.setVisible(True)
         self.messageField.setHtml(message)
         self.setFixedSize(self.sizeHint())
 
-    #############################################
-    #   INTERFACE
-    #################################
 
-    def close(self, popup=False):
-        """
-        Close the modal window.
-        :type popup: bool
-        """
-        if popup:
-            msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QIcon(':/icons/48/ic_done_black').pixmap(48))
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle('Done!')
-            msgbox.setStandardButtons(QMessageBox.Close)
-            msgbox.setText('Syntax validation completed!')
-            msgbox.setTextFormat(Qt.RichText)
-            msgbox.exec_()
+class SyntaxValidationWorker(QObject):
+    """
+    Extends QObject providing a worker thread that will perform the project syntax validation.
+    """
+    sgnCompleted = pyqtSignal()
+    sgnProgress = pyqtSignal(int)
+    sgnSyntaxError = pyqtSignal(str)
 
-        return super().close()
+    def __init__(self, current, items, project):
+        """
+        Initialize the syntax validation worker.
+        :type current: int
+        :type items: list
+        :type project: Project
+        """
+        super(SyntaxValidationWorker, self).__init__()
+        self.project = project
+        self.items = items
+        self.i = current
+
+    @pyqtSlot()
+    def run(self):
+        """
+        Main worker.
+        """
+        errorMsg = None
+        while self.i < len(self.items):
+
+            item = self.items[self.i]
+
+            # UPDATE PROGRESS BAR
+            self.sgnProgress.emit(self.i)
+
+            # VALIDATE EDGE
+            if item.isEdge():
+                source = item.source
+                target = item.target
+                pvr = self.project.profile.check(source, item, target)
+                if not pvr.isValid():
+                    nA = '{0} <b>{1}</b>'.format(source.name, source.id)
+                    nB = '{0} <b>{1}</b>'.format(target.name, target.id)
+                    if source.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
+                        nA = '{0} <b>{1}:{2}</b>'.format(source.name, source.text(), source.id)
+                    if target.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
+                        nB = '{0} <b>{1}:{2}</b>'.format(target.name, target.text(), target.id)
+                    info = '{0}{1}'.format(pvr.message()[:1].lower(), pvr.message()[1:])
+                    errorMsg = 'Syntax error detected on {} from {} to {}: <i>{}</i>.'.format(item.name, nA, nB, info)
+                    break
+
+            # VALIDATE NODE
+            if item.isNode():
+                if item.identity is Identity.Unknown:
+                    name = '{0} "{1}"'.format(item.name, item.id)
+                    if item.isPredicate():
+                        name = '{0} "{1}:{2}"'.format(item.name, item.text(), item.id)
+                    errorMsg = 'Unkown node identity detected on {0}.'.format(name)
+                    break
+
+            self.i += 1
+
+        if errorMsg:
+            self.sgnSyntaxError.emit(errorMsg)
+        else:
+            self.sgnCompleted.emit()
