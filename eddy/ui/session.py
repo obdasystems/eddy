@@ -47,8 +47,9 @@ from PyQt5.QtCore import Qt, QSettings, QByteArray, QSize
 from PyQt5.QtGui import QBrush, QColor, QCursor
 from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QStatusBar
-from PyQt5.QtWidgets import QToolButton, QStyle, QFileDialog, QUndoStack
-from PyQt5.QtWidgets import QMenu, QAction, QActionGroup, QToolBar
+from PyQt5.QtWidgets import QToolButton, QStyle, QFileDialog
+from PyQt5.QtWidgets import QMenu, QAction, QActionGroup
+from PyQt5.QtWidgets import QComboBox, QUndoStack, QToolBar
 
 from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION, VERSION
 from eddy.core.clipboard import Clipboard
@@ -64,6 +65,7 @@ from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.nodes import CommandNodeSwitchTo
 from eddy.core.commands.nodes import CommandNodeSetBrush
 from eddy.core.commands.nodes import CommandNodeSetDepth
+from eddy.core.commands.project import CommandProjectSetProfile
 from eddy.core.common import HasActionSystem
 from eddy.core.common import HasMenuSystem
 from eddy.core.common import HasPluginSystem
@@ -77,7 +79,7 @@ from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.graphol import Restriction, Special
 from eddy.core.datatypes.misc import Color, DiagramMode
 from eddy.core.datatypes.owl import Datatype, Facet
-from eddy.core.datatypes.qt import BrushIcon
+from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.datatypes.system import Platform, File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
@@ -173,7 +175,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addWidget(QToolBar('Document', objectName='document_toolbar'))
         self.addWidget(QToolBar('Editor', objectName='editor_toolbar'))
         self.addWidget(QToolBar('View', objectName='view_toolbar'))
-        self.addWidget(QToolBar('View', objectName='graphol_toolbar'))
+        self.addWidget(QToolBar('Graphol', objectName='graphol_toolbar'))
 
         #############################################
         # CONFIGURE SESSION
@@ -181,10 +183,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         self.initActions()
         self.initMenus()
+        self.initProfiles()
         self.initWidgets()
         self.initExporters()
         self.initLoaders()
-        self.initProfiles()
         self.initSignals()
         self.initStatusBar()
         self.initToolBars()
@@ -339,7 +341,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addAction(QAction(
             QIcon(':/icons/24/ic_spellcheck_black'), 'Run syntax check',
             self, objectName='syntax_check', triggered=self.doSyntaxCheck,
-            statusTip='Run syntax validation on the current project'))
+            statusTip='Run syntax validation according to the selected profile'))
 
         #############################################
         # DIAGRAM SPECIFIC
@@ -974,6 +976,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         toolbar = self.widget('graphol_toolbar')
         toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
+        toolbar.addWidget(self.widget('profile_switch'))
         toolbar.addAction(self.action('syntax_check'))
 
         self.addToolBar(Qt.TopToolBarArea, self.widget('document_toolbar'))
@@ -992,6 +995,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         button.setStatusTip('Change the background color of the selected predicate nodes')
         button.setEnabled(False)
         self.addWidget(button)
+
+        combobox = QComboBox(objectName='profile_switch')
+        combobox.setEditable(False)
+        combobox.setFont(Font('Arial', 12))
+        combobox.setStatusTip('Change the profile of the active project')
+        combobox.addItems(self.profileNames())
+        connect(combobox.activated, self.doSetProfile)
+        self.addWidget(combobox)
 
     #############################################
     #   SLOTS
@@ -1637,6 +1648,17 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
     @pyqtSlot()
+    def doSetProfile(self):
+        """
+        Set the currently used project profile.
+        """
+        widget = self.widget('profile_switch')
+        profile = widget.currentText()
+        if self.project.profile.name() != profile:
+            self.undostack.push(CommandProjectSetProfile(self.project, self.project.profile.name(), profile))
+        widget.clearFocus()
+
+    @pyqtSlot()
     def doSnapTopGrid(self):
         """
         Snap all the element sin the active diagram to the grid.
@@ -1801,10 +1823,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.action('select_all').setEnabled(isDiagramActive)
         self.action('send_to_back').setEnabled(isNodeSelected)
         self.action('snap_to_grid').setEnabled(isDiagramActive)
+        self.action('syntax_check').setEnabled(not isProjectEmpty)
         self.action('swap_edge').setEnabled(isEdgeSelected and isEdgeSwapEnabled)
         self.action('toggle_edge_equivalence').setEnabled(isEdgeSelected and isEdgeToggleEnabled)
         self.action('toggle_grid').setEnabled(isDiagramActive)
         self.widget('button_set_brush').setEnabled(isPredicateSelected)
+        self.widget('profile_switch').setCurrentText(self.project.profile.name())
 
     #############################################
     #   EVENTS

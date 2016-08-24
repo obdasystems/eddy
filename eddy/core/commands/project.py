@@ -106,9 +106,11 @@ class CommandProjectSetProfile(QUndoCommand):
     def redo(self):
         """redo the command"""
         self.project.profile = self.project.session.createProfile(self.data['redo'], self.project)
+        self.project.session.sgnUpdateState.emit()
         self.project.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         self.project.profile = self.project.session.createProfile(self.data['undo'], self.project)
+        self.project.session.sgnUpdateState.emit()
         self.project.sgnUpdated.emit()
