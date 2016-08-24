@@ -36,16 +36,21 @@
 import os
 import webbrowser
 
-from PyQt5.QtCore import Qt, QSettings, pyqtSlot, QSize, pyqtSignal
+from PyQt5.QtCore import pyqtSlot, pyqtSignal
+from PyQt5.QtCore import Qt, QSettings, QSize
 from PyQt5.QtGui import QIcon, QPainter
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog, QMenu, QAction
-from PyQt5.QtWidgets import QLabel, QWidget, QStyleOption, QStyle, QDesktopWidget
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog
+from PyQt5.QtWidgets import QLabel, QWidget, QDesktopWidget, QMessageBox
+from PyQt5.QtWidgets import QMenu, QAction, QStyle, QStyleOption
 
 from eddy import APPNAME, ORGANIZATION, VERSION
-from eddy import PROJECT_HOME, BUG_TRACKER, GRAPHOL_HOME, WORKSPACE
+from eddy import PROJECT_HOME, BUG_TRACKER
+from eddy import GRAPHOL_HOME, WORKSPACE
+from eddy.core.functions.fsystem import is_dir, rmdir
+from eddy.core.functions.misc import first, format_exception
+from eddy.core.functions.path import expandPath, shortPath
+from eddy.core.functions.path import compressPath, isSubPath
 from eddy.core.datatypes.qt import Font, PHCQPushButton, PHCQToolButton
-from eddy.core.functions.misc import first
-from eddy.core.functions.path import shortPath, compressPath
 from eddy.core.functions.signals import connect
 
 from eddy.ui.project import ProjectDialog
@@ -63,7 +68,7 @@ class Welcome(QWidget):
         :type application: QApplication
         :type parent: QWidget
         """
-        super().__init__(parent)
+        super(Welcome, self).__init__(parent)
 
         arial12b = Font('Arial', 12)
         arial12b.setBold(True)
@@ -90,7 +95,8 @@ class Welcome(QWidget):
 
         for path in settings.value('project/recent', None, str) or []:
             project = ProjectBlock(path, self.innerWidgetL)
-            connect(project.sgnClicked, self.doOpenRecentProject)
+            connect(project.sgnDeleteProject, self.doDeleteProject)
+            connect(project.sgnOpenProject, self.doOpenRecentProject)
             self.innerLayoutL.addWidget(project, 0, Qt.AlignTop)
 
         #############################################
@@ -173,7 +179,7 @@ class Welcome(QWidget):
         self.outerWidgetL = QWidget(self)
         self.outerWidgetL.setProperty('class', 'outer-left')
         self.outerWidgetL.setContentsMargins(0, 0, 0, 0)
-        self.outerWidgetL.setFixedWidth(260)
+        self.outerWidgetL.setFixedWidth(280)
         self.outerLayoutL = QVBoxLayout(self.outerWidgetL)
         self.outerLayoutL.setContentsMargins(0, 0, 0, 0)
         self.outerLayoutL.addWidget(self.innerWidgetL, 0,  Qt.AlignTop)
@@ -191,7 +197,7 @@ class Welcome(QWidget):
         self.mainLayout.addWidget(self.outerWidgetR)
 
         self.setAttribute(Qt.WA_DeleteOnClose)
-        self.setFixedSize(700, 400)
+        self.setFixedSize(720, 400)
         self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Welcome to {0}'.format(APPNAME))
         connect(self.sgnCreateSession, application.doCreateSession)
@@ -221,6 +227,56 @@ class Welcome(QWidget):
     #############################################
     #   SLOTS
     #################################
+
+    @pyqtSlot(str)
+    def doDeleteProject(self, path):
+        """
+        Delete the given project.
+        :type path: str
+        """
+        msgbox = QMessageBox(self)
+        msgbox.setFont(Font('Arial', 10))
+        msgbox.setIconPixmap(QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
+        msgbox.setInformativeText('<b>NOTE: This action is not reversible!</b>')
+        msgbox.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
+        msgbox.setTextFormat(Qt.RichText)
+        msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        msgbox.setWindowTitle('Remove project: {0}?'.format(os.path.basename(path)))
+        msgbox.setText('Are you sure you want to remove project: <b>{0}</b>'.format(os.path.basename(path)))
+        msgbox.exec_()
+        if msgbox.result() == QMessageBox.Yes:
+            try:
+                # REMOVE THE PROJECT FROM DISK
+                rmdir(path)
+            except Exception as e:
+                msgbox = QMessageBox(self)
+                msgbox.setDetailedText(format_exception(e))
+                msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+                msgbox.setStandardButtons(QMessageBox.Close)
+                msgbox.setTextFormat(Qt.RichText)
+                msgbox.setText('Eddy could not remove the specified project: <b>{0}</b>!'.format(os.path.basename(path)))
+                msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+                msgbox.setWindowTitle('ERROR!')
+                msgbox.exec_()
+            else:
+                # UPDATE THE RECENT PROJECT LIST
+                recentList = []
+                settings = QSettings(ORGANIZATION, APPNAME)
+                for path in map(expandPath, settings.value('project/recent')):
+                    if is_dir(path):
+                        recentList.append(path)
+                settings.setValue('project/recent', recentList)
+                settings.sync()
+                # CLEAR CURRENT LAYOUT
+                for i in reversed(range(self.innerLayoutL.count())):
+                    item = self.innerLayoutL.itemAt(i)
+                    self.innerLayoutL.removeItem(item)
+                # DISPOSE NEW PROJECT BLOCK
+                for path in recentList:
+                    project = ProjectBlock(path, self.innerWidgetL)
+                    connect(project.sgnDeleteProject, self.doDeleteProject)
+                    connect(project.sgnOpenProject, self.doOpenRecentProject)
+                    self.innerLayoutL.addWidget(project, 0, Qt.AlignTop)
 
     @pyqtSlot()
     def doNewProject(self):
@@ -271,7 +327,8 @@ class ProjectBlock(QWidget):
     """
     This class implements the project block displayed in the welcome dialog.
     """
-    sgnClicked = pyqtSignal(str)
+    sgnDeleteProject = pyqtSignal(str)
+    sgnOpenProject = pyqtSignal(str)
 
     def __init__(self, project, parent=None):
         """
@@ -280,43 +337,58 @@ class ProjectBlock(QWidget):
         :type parent: QWidget
         """
         super().__init__(parent)
+
         arial12b = Font('Arial', 12)
         arial12b.setBold(True)
         arial12r = Font('Arial', 12)
+
         self.nameLabel = QLabel(os.path.basename(project), self)
         self.nameLabel.setContentsMargins(20, 0, 20, 0)
         self.nameLabel.setProperty('class', 'name')
         self.nameLabel.setFont(arial12b)
-        self.pathLabel = QLabel(compressPath(shortPath(project), 36), self)
+        self.pathLabel = QLabel(compressPath(shortPath(project), 34), self)
         self.pathLabel.setContentsMargins(20, 0, 20, 0)
         self.pathLabel.setProperty('class', 'path')
         self.pathLabel.setFont(arial12r)
-        self.mainLayout = QVBoxLayout(self)
+        self.deleteBtn = PHCQPushButton(self)
+        self.deleteBtn.setIcon(QIcon(':/icons/24/ic_delete_black'))
+        self.deleteBtn.setVisible(not isSubPath(expandPath('@examples/'), project))
+        connect(self.deleteBtn.clicked, self.onDeleteButtonClicked)
+        self.leftWidget = QWidget(self)
+        self.leftWidget.setContentsMargins(0, 0, 0, 0)
+        self.leftLayout = QVBoxLayout(self.leftWidget)
+        self.leftLayout.setContentsMargins(0, 0, 0, 0)
+        self.leftLayout.setSpacing(0)
+        self.leftLayout.addWidget(self.nameLabel)
+        self.leftLayout.addWidget(self.pathLabel)
+        self.rightWidget = QWidget(self)
+        self.rightWidget.setContentsMargins(0, 0, 10, 0)
+        self.rightLayout = QVBoxLayout(self.rightWidget)
+        self.rightLayout.setContentsMargins(0, 0, 0, 0)
+        self.rightLayout.setSpacing(0)
+        self.rightLayout.addWidget(self.deleteBtn)
+        self.mainLayout = QHBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
-        self.mainLayout.setSpacing(0)
-        self.mainLayout.addWidget(self.nameLabel)
-        self.mainLayout.addWidget(self.pathLabel)
+        self.mainLayout.addWidget(self.leftWidget)
+        self.mainLayout.addWidget(self.rightWidget, 1, Qt.AlignRight)
         self.setContentsMargins(0, 0, 0, 0)
         self.setFixedHeight(40)
         self.path = project
 
     #############################################
-    #   EVENTS
+    #   SLOTS
     #################################
 
-    def enterEvent(self, event):
+    @pyqtSlot()
+    def onDeleteButtonClicked(self):
         """
-        Executed when the mouse enter the widget.
-        :type event: QEvent
+        Executed when the delete button is clicked.
         """
-        self.setCursor(Qt.PointingHandCursor)
+        self.sgnDeleteProject.emit(self.path)
 
-    def leaveEvent(self, event):
-        """
-        Executed when the mouse leave the widget.
-        :type event: QEvent
-        """
-        self.unsetCursor()
+    #############################################
+    #   EVENTS
+    #################################
 
     def mouseReleaseEvent(self, mouseEvent):
         """
@@ -324,7 +396,7 @@ class ProjectBlock(QWidget):
         :type mouseEvent: QMouseEvent
         """
         if mouseEvent.button() == Qt.LeftButton:
-            self.sgnClicked.emit(self.path)
+            self.sgnOpenProject.emit(self.path)
 
     def paintEvent(self, paintEvent):
         """

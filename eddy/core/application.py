@@ -159,7 +159,7 @@ class Eddy(QApplication):
             # this problem by placing the list of example projects as recent project list.
             settings.setValue('project/recent', examples)
         else:
-            # If we have some projects in out recent list, check whether they exists on the
+            # If we have some projects in our recent list, check whether they exists on the
             # filesystem. If they do not exists we remove them from our recent list.
             recentList = []
             for path in map(expandPath, settings.value('project/recent')):
