@@ -38,7 +38,7 @@ from abc import ABCMeta, abstractmethod
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPainterPath, QPen, QBrush, QColor
 
-from eddy.core.datatypes.graphol import Restriction
+from eddy.core.datatypes.graphol import Restriction, Item, Identity
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.polygon import Polygon
@@ -67,8 +67,8 @@ class RestrictionNode(AbstractNode):
         self.selection = Polygon(QRectF(-14, -14, 28, 28))
         self.polygon = Polygon(QRectF(-10, -10, 20, 20), brush or RestrictionNode.DefaultBrush, RestrictionNode.DefaultPen)
         self.label = NodeLabel(Restriction.Exists.toString(),
-                               pos=lambda: self.center() - QPointF(0, 22),
-                               editable=False, parent=self)
+           pos=lambda: self.center() - QPointF(0, 22),
+           editable=False, parent=self)
 
     #############################################
     #   PROPERTIES
@@ -147,6 +147,23 @@ class RestrictionNode(AbstractNode):
         :rtype: int
         """
         return self.polygon.geometry().height()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def isQualifiedRestriction(self):
+        """
+        Tells whether this node expresses a qualified restriction.
+        :rtype: bool
+        """
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.identity in {Identity.Concept, Identity.Role}
+        f3 = lambda x: x.identity in {Identity.Attribute, Identity.ValueDomain}
+        if self.restriction in {Restriction.Cardinality, Restriction.Exists, Restriction.Forall}:
+            return len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) >= 2 or \
+                   len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) >= 2
+        return False
 
     def paint(self, painter, option, widget=None):
         """

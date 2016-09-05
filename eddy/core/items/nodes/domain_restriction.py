@@ -72,17 +72,3 @@ class DomainRestrictionNode(RestrictionNode):
         :type identity: Identity
         """
         pass
-
-    @property
-    def qualified(self):
-        """
-        Tells whether this node expresses a qualified restriction.
-        :rtype: bool
-        """
-        f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.identity in {Identity.Concept, Identity.Role}
-        f3 = lambda x: x.identity in {Identity.Attribute, Identity.ValueDomain}
-        if self.restriction in {Restriction.Cardinality, Restriction.Exists, Restriction.Forall}:
-            return len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) >= 2 or \
-                   len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) >= 2
-        return False

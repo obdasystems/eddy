@@ -75,24 +75,6 @@ class RangeRestrictionNode(RestrictionNode):
             identity = Identity.Unknown
         self._identity = identity
 
-    @property
-    def qualified(self):
-        """
-        Tells whether this node expresses a qualified restriction.
-        :rtype: bool
-        """
-        f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.identity in {Identity.Concept, Identity.Role}
-        f3 = lambda x: x.identity in {Identity.Attribute, Identity.ValueDomain}
-        if self.restriction in {Restriction.Cardinality, Restriction.Exists, Restriction.Forall}:
-            if len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) >= 2:
-                # Role qualified restriction => Role + Concept
-                return True
-            if len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) >= 2:
-                # Attribute qualified restriction => Attribute + ValueDomain
-                return True
-        return False
-
     #############################################
     #   INTERFACE
     #################################
