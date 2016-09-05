@@ -60,26 +60,6 @@ class RoleChainNode(OperatorNode):
         self.label = NodeLabel('chain', pos=self.center, editable=False, movable=False, parent=self)
 
     #############################################
-    #   PROPERTIES
-    #################################
-
-    @property
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        return Identity.Role
-
-    @identity.setter
-    def identity(self, identity):
-        """
-        Set the identity of the current node.
-        :type identity: Identity
-        """
-        pass
-
-    #############################################
     #   INTERFACE
     #################################
 
@@ -108,6 +88,13 @@ class RoleChainNode(OperatorNode):
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return Identity.Role
+
     def removeEdge(self, edge):
         """
         Remove the given edge from the current node.
@@ -121,6 +108,13 @@ class RoleChainNode(OperatorNode):
                 edge.updateEdge()
             except KeyError:
                 pass
+
+    def setIdentity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
 
     def setText(self, text):
         """

@@ -124,7 +124,7 @@ class InclusionEdge(AbstractEdge):
         Returns True if this Inclusion edge can express equivalence, False otherwise.
         :rtype: bool
         """
-        if self.source.identity in {Identity.Attribute, Identity.Role}:
+        if self.source.identity() in {Identity.Attribute, Identity.Role}:
             if self.target.type() is Item.ComplementNode:
                 return False
         return True

@@ -340,7 +340,7 @@ class SyntaxValidationWorker(QObject):
 
             # VALIDATE NODE
             if item.isNode():
-                if item.identity is Identity.Unknown:
+                if item.identity() is Identity.Unknown:
                     name = '{0} "{1}"'.format(item.name, item.id)
                     if item.isPredicate():
                         name = '{0} "{1}:{2}"'.format(item.name, item.text(), item.id)

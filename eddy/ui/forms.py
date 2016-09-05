@@ -313,7 +313,7 @@ class ValueForm(QDialog):
         self.valueField = StringField(self)
         self.valueField.setFixedWidth(300)
 
-        if node.identity is Identity.Value:
+        if node.identity() is Identity.Value:
             self.valueField.setValue(node.value)
             datatype = node.datatype
             for i in range(self.datatypeField.count()):

@@ -697,7 +697,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         # IDENTIFY NODES
         #################################
 
-        nodes = [n for n in self.nodes.values() if Identity.Neutral in n.Identities]
+        nodes = [n for n in self.nodes.values() if Identity.Neutral in n.identities()]
         if nodes:
             LOGGER.debug('Running identification algorithm for %s nodes', len(nodes))
             for node in nodes:

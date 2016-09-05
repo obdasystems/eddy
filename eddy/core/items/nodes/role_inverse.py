@@ -57,26 +57,6 @@ class RoleInverseNode(OperatorNode):
         self.label = NodeLabel('inv', pos=self.center, editable=False, movable=False, parent=self)
 
     #############################################
-    #   PROPERTIES
-    #################################
-
-    @property
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        return Identity.Role
-
-    @identity.setter
-    def identity(self, identity):
-        """
-        Set the identity of the current node.
-        :type identity: Identity
-        """
-        pass
-
-    #############################################
     #   INTERFACE
     #################################
 
@@ -94,6 +74,20 @@ class RoleInverseNode(OperatorNode):
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
+
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return Identity.Role
+
+    def setIdentity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
 
     def setText(self, text):
         """

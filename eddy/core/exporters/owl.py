@@ -472,7 +472,7 @@ class OWLProjectExporterWorker(QObject):
         if node not in self.conv:
 
             f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.identity in {Identity.Attribute, Identity.Concept, Identity.ValueDomain, Identity.Role}
+            f2 = lambda x: x.identity() in {Identity.Attribute, Identity.Concept, Identity.ValueDomain, Identity.Role}
 
             incoming = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
             if not incoming:
@@ -482,7 +482,7 @@ class OWLProjectExporterWorker(QObject):
 
             operand = first(incoming)
 
-            if operand.identity is Identity.Concept:
+            if operand.identity() is Identity.Concept:
 
                 if operand.type() is Item.ConceptNode:
                     self.conv[node] = self.df.getOWLObjectComplementOf(self.buildConcept(operand))
@@ -501,7 +501,7 @@ class OWLProjectExporterWorker(QObject):
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
 
-            elif operand.identity is Identity.ValueDomain:
+            elif operand.identity() is Identity.ValueDomain:
 
                 if operand.type() is Item.ValueDomainNode:
                     self.conv[node] = self.df.getOWLDataComplementOf(self.buildValueDomain(operand))
@@ -520,7 +520,7 @@ class OWLProjectExporterWorker(QObject):
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
 
-            elif operand.identity is Identity.Role:
+            elif operand.identity() is Identity.Role:
 
                 # OWLDisjointObjectPropertiesAxiom
                 if operand.type() is Item.RoleNode:
@@ -530,7 +530,7 @@ class OWLProjectExporterWorker(QObject):
                 else:
                     raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
 
-            elif operand.identity is Identity.Attribute:
+            elif operand.identity() is Identity.Attribute:
 
                 # OWLDisjointDataPropertiesAxiom
                 if operand.type() is Item.AttributeNode:
@@ -607,15 +607,15 @@ class OWLProjectExporterWorker(QObject):
         if node not in self.conv:
 
             f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.identity in {Identity.Role, Identity.Attribute}
-            f3 = lambda x: x.identity is Identity.ValueDomain
-            f4 = lambda x: x.identity is Identity.Concept
+            f2 = lambda x: x.identity() in {Identity.Role, Identity.Attribute}
+            f3 = lambda x: x.identity() is Identity.ValueDomain
+            f4 = lambda x: x.identity() is Identity.Concept
 
             operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
             if not operand:
                 raise MalformedDiagramError(node, 'missing operand(s)')
 
-            if operand.identity is Identity.Attribute:
+            if operand.identity() is Identity.Attribute:
 
                 #############################################
                 # BUILD OPERAND
@@ -669,7 +669,7 @@ class OWLProjectExporterWorker(QObject):
                 else:
                     raise MalformedDiagramError(node, 'unsupported restriction')
 
-            elif operand.identity is Identity.Role:
+            elif operand.identity() is Identity.Role:
 
                 #############################################
                 # BUILD OPERAND
@@ -770,9 +770,9 @@ class OWLProjectExporterWorker(QObject):
         :rtype: OWLNamedIndividual
         """
         if node not in self.conv:
-            if node.identity is Identity.Individual:
+            if node.identity() is Identity.Individual:
                 self.conv[node] = self.df.getOWLNamedIndividual(OWLShortIRI(self.ontoPrefix, node.text()), self.pm)
-            elif node.identity is Identity.Value:
+            elif node.identity() is Identity.Value:
                 self.conv[node] = self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
         return self.conv[node]
 
@@ -787,7 +787,7 @@ class OWLProjectExporterWorker(QObject):
             collection = self.HashSet()
 
             f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.identity in {Identity.Concept, Identity.ValueDomain}
+            f2 = lambda x: x.identity() in {Identity.Concept, Identity.ValueDomain}
 
             for operand in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
 
@@ -817,9 +817,9 @@ class OWLProjectExporterWorker(QObject):
 
             collection = cast(self.Set, collection)
 
-            if node.identity is Identity.Concept:
+            if node.identity() is Identity.Concept:
                 self.conv[node] = self.df.getOWLObjectIntersectionOf(collection)
-            elif node.identity is Identity.ValueDomain:
+            elif node.identity() is Identity.ValueDomain:
                 self.conv[node] = self.df.getOWLDataIntersectionOf(collection)
 
         return self.conv[node]
@@ -856,14 +856,14 @@ class OWLProjectExporterWorker(QObject):
         if node not in self.conv:
 
             f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.identity in {Identity.Role, Identity.Attribute}
-            f3 = lambda x: x.identity is Identity.Concept
+            f2 = lambda x: x.identity() in {Identity.Role, Identity.Attribute}
+            f3 = lambda x: x.identity() is Identity.Concept
 
             operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
             if not operand:
                 raise MalformedDiagramError(node, 'missing operand(s)')
 
-            if operand.identity is Identity.Attribute:
+            if operand.identity() is Identity.Attribute:
 
                 #############################################
                 # BUILD OPERAND
@@ -875,7 +875,7 @@ class OWLProjectExporterWorker(QObject):
                 # very node and a Value-Domain expression.
                 self.conv[node] = self.buildAttribute(operand)
 
-            elif operand.identity is Identity.Role:
+            elif operand.identity() is Identity.Role:
 
                 #############################################
                 # BUILD OPERAND
@@ -994,7 +994,7 @@ class OWLProjectExporterWorker(QObject):
             collection = self.HashSet()
 
             f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.identity in {Identity.Concept, Identity.ValueDomain}
+            f2 = lambda x: x.identity() in {Identity.Concept, Identity.ValueDomain}
 
             for item in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
 
@@ -1024,9 +1024,9 @@ class OWLProjectExporterWorker(QObject):
 
             collection = cast(self.Set, collection)
 
-            if node.identity is Identity.Concept:
+            if node.identity() is Identity.Concept:
                 self.conv[node] = self.df.getOWLObjectUnionOf(collection)
-            elif node.identity is Identity.ValueDomain:
+            elif node.identity() is Identity.ValueDomain:
                 self.conv[node] = self.df.getOWLDataUnionOf(collection)
 
         return self.conv[node]
@@ -1318,9 +1318,9 @@ class OWLProjectExporterWorker(QObject):
 
                     if not e.equivalence:
 
-                        if e.source.identity is Identity.Concept and e.target.identity is Identity.Concept:
+                        if e.source.identity() is Identity.Concept and e.target.identity() is Identity.Concept:
                             self.axiomSubclassOf(e)
-                        elif e.source.identity is Identity.Role and e.target.identity is Identity.Role:
+                        elif e.source.identity() is Identity.Role and e.target.identity() is Identity.Role:
                             if e.source.type() is Item.RoleChainNode:
                                 self.axiomSubPropertyChainOf(e)
                             elif e.source.type() in {Item.RoleNode, Item.RoleInverseNode}:
@@ -1328,35 +1328,35 @@ class OWLProjectExporterWorker(QObject):
                                     self.axiomDisjointObjectProperties(e)
                                 elif e.target.type() in {Item.RoleNode, Item.RoleInverseNode}:
                                     self.axiomSubObjectPropertyOf(e)
-                        elif e.source.identity is Identity.Attribute and e.target.identity is Identity.Attribute:
+                        elif e.source.identity() is Identity.Attribute and e.target.identity() is Identity.Attribute:
                             if e.source.type() is Item.AttributeNode:
                                 if e.target.type() is Item.ComplementNode:
                                     self.axiomDisjointDataProperties(e)
                                 elif e.target.type() is Item.AttributeNode:
                                     self.axiomSubDataPropertyOfAxiom(e)
-                        elif e.source.type() is Item.RangeRestrictionNode and e.target.identity is Identity.ValueDomain:
+                        elif e.source.type() is Item.RangeRestrictionNode and e.target.identity() is Identity.ValueDomain:
                             self.axiomDataPropertyRange(e)
                         else:
                             raise MalformedDiagramError(e, 'type mismatch in inclusion assertion')
 
                     else:
 
-                        if e.source.identity is Identity.Concept and e.target.identity is Identity.Concept:
+                        if e.source.identity() is Identity.Concept and e.target.identity() is Identity.Concept:
                             self.axiomEquivalentClasses(e)
-                        elif e.source.identity is Identity.Role and e.target.identity is Identity.Role:
+                        elif e.source.identity() is Identity.Role and e.target.identity() is Identity.Role:
                             self.axiomEquivalentObjectProperties(e)
-                        elif e.source.identity is Identity.Attribute and e.target.identity is Identity.Attribute:
+                        elif e.source.identity() is Identity.Attribute and e.target.identity() is Identity.Attribute:
                             self.axiomEquivalentDataProperties(e)
                         else:
                             raise MalformedDiagramError(e, 'type mismatch in equivalence assertion')
 
                 elif e.type() is Item.MembershipEdge:
 
-                    if e.source.identity is Identity.Individual and e.target.identity is Identity.Concept:
+                    if e.source.identity() is Identity.Individual and e.target.identity() is Identity.Concept:
                         self.axiomClassAssertion(e)
-                    elif e.source.identity is Identity.RoleInstance:
+                    elif e.source.identity() is Identity.RoleInstance:
                         self.axiomObjectPropertyAssertion(e)
-                    elif e.source.identity is Identity.AttributeInstance:
+                    elif e.source.identity() is Identity.AttributeInstance:
                         self.axiomDataPropertyAssertion(e)
                     else:
                         raise MalformedDiagramError(e, 'type mismatch in membership assertion')

@@ -273,7 +273,7 @@ class NodeProperty(PropertyDialog):
         self.identityField.setFont(arial12r)
         self.identityField.setReadOnly(True)
         self.identityField.setFixedWidth(300)
-        self.identityField.setValue(self.node.identity.value)
+        self.identityField.setValue(self.node.identity().value)
 
         self.neighboursLabel = QLabel(self)
         self.neighboursLabel.setFont(arial12r)

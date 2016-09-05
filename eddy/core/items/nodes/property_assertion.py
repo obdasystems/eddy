@@ -61,32 +61,12 @@ class PropertyAssertionNode(AbstractNode):
         :type inputs: DistinctList
         """
         super().__init__(**kwargs)
+        brush = PropertyAssertionNode.DefaultBrush
+        pen = PropertyAssertionNode.DefaultPen
         self.inputs = inputs or DistinctList()
         self.background = Polygon(QRectF(-34, -19, 68, 38))
         self.selection = Polygon(QRectF(-34, -19, 68, 38))
-        self.polygon = Polygon(QRectF(-26, -15, 52, 30), PropertyAssertionNode.DefaultBrush, PropertyAssertionNode.DefaultPen)
-
-    #############################################
-    #   PROPERTIES
-    #################################
-
-    @property
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        return self._identity
-
-    @identity.setter
-    def identity(self, identity):
-        """
-        Set the identity of the current node.
-        :type identity: Identity
-        """
-        if identity not in self.Identities:
-            identity = Identity.Unknown
-        self._identity = identity
+        self.polygon = Polygon(QRectF(-26, -15, 52, 30), brush, pen)
 
     #############################################
     #   INTERFACE

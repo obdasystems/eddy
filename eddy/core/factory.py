@@ -277,7 +277,7 @@ class MenuFactory(QObject):
                 },
             }
             for action in self.session.action('switch_operator').actions():
-                action.setVisible(action.data() in switch[node.identity])
+                action.setVisible(action.data() in switch[node.identity()])
         return menu
 
     def buildConceptNodeMenu(self, diagram, node):
@@ -334,7 +334,7 @@ class MenuFactory(QObject):
             action.setVisible(True)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('property_restriction'))
         f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.identity is Identity.Attribute
+        f2 = lambda x: x.identity() is Identity.Attribute
         qualified = node.isQualifiedRestriction()
         attribute = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
         for action in self.session.action('restriction').actions():
@@ -429,27 +429,27 @@ class MenuFactory(QObject):
         f3 = lambda x: x.type() is Item.IndividualNode
         f4 = lambda x: x.type() is Item.PropertyAssertionNode
         f5 = lambda x: x.type() is Item.MembershipEdge
-        f6 = lambda x: x.identity in {Identity.Attribute, Identity.Role}
+        f6 = lambda x: x.identity() in {Identity.Attribute, Identity.Role}
 
         enumeration = first(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
         if enumeration:
             num = len(enumeration.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
-            instance = enumeration.identity is Identity.Concept or num < 2
-            value = enumeration.identity is Identity.ValueDomain or num < 2
+            instance = enumeration.identity() is Identity.Concept or num < 2
+            value = enumeration.identity() is Identity.ValueDomain or num < 2
 
         assertion = first(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f4))
         if assertion:
             operand = first(assertion.outgoingNodes(filter_on_edges=f5, filter_on_nodes=f6))
             if operand:
-                if operand.identity is Identity.Role:
+                if operand.identity() is Identity.Role:
                     value = False
-                elif operand.identity is Identity.Attribute:
+                elif operand.identity() is Identity.Attribute:
                     num = len(assertion.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
-                    instance = instance and (node.identity is Identity.Individual or num < 2)
-                    value = value and (node.identity is Identity.Value or num < 2)
+                    instance = instance and (node.identity() is Identity.Individual or num < 2)
+                    value = value and (node.identity() is Identity.Value or num < 2)
 
         for a in self.session.action('switch_individual').actions():
-            a.setChecked(a.data() is node.identity)
+            a.setChecked(a.data() is node.identity())
             a.setVisible(a.data() is Identity.Individual and instance or a.data() is Identity.Value and value)
 
         #############################################
@@ -510,7 +510,7 @@ class MenuFactory(QObject):
             action.setChecked(node.type() is action.data())
             action.setVisible(True)
         f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.identity is Identity.Attribute
+        f2 = lambda x: x.identity() is Identity.Attribute
         if not first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)):
             qualified = node.isQualifiedRestriction()
             menu.insertMenu(self.session.action('node_properties'), self.session.menu('property_restriction'))
@@ -741,7 +741,7 @@ class PropertyFactory(QObject):
             elif node.type() is Item.ValueDomainNode:
                 properties = ValueDomainNodeProperty(diagram, node, self.session)
             elif node.type() is Item.IndividualNode:
-                if node.identity is Identity.Individual:
+                if node.identity() is Identity.Individual:
                     properties = PredicateNodeProperty(diagram, node, self.session)
                 else:
                     properties = ValueNodeProperty(diagram, node, self.session)

@@ -115,17 +115,6 @@ class IndividualNode(AbstractResizableNode):
         return None
 
     @property
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        match = RE_VALUE.match(self.text())
-        if match:
-            return Identity.Value
-        return Identity.Individual
-
-    @property
     def value(self):
         """
         Returns the value value associated with this node.
@@ -180,6 +169,16 @@ class IndividualNode(AbstractResizableNode):
         """
         polygon = self.polygon.geometry()
         return polygon[self.IndexTR].y() - polygon[self.IndexBR].y()
+
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        match = RE_VALUE.match(self.text())
+        if match:
+            return Identity.Value
+        return Identity.Individual
 
     def paint(self, painter, option, widget=None):
         """
@@ -589,16 +588,12 @@ class IndividualNode(AbstractResizableNode):
         self.updateTextPos(moved=moved)
         self.updateAnchors(self.mp_Data, D)
 
-    def shape(self):
+    def setIdentity(self, identity):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
+        Set the identity of the current node.
+        :type identity: Identity
         """
-        path = QPainterPath()
-        path.addPolygon(self.polygon.geometry())
-        for polygon in self.handles:
-            path.addEllipse(polygon.geometry())
-        return path
+        pass
 
     def setText(self, text):
         """
@@ -615,6 +610,17 @@ class IndividualNode(AbstractResizableNode):
         :type pos: QPointF
         """
         self.label.setPos(pos)
+
+    def shape(self):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addPolygon(self.polygon.geometry())
+        for polygon in self.handles:
+            path.addEllipse(polygon.geometry())
+        return path
 
     def text(self):
         """

@@ -85,28 +85,6 @@ class OperatorNode(AbstractNode):
         self.polygon = Polygon(createPolygon(50, 30), brush or OperatorNode.DefaultBrush, OperatorNode.DefaultPen)
 
     #############################################
-    #   PROPERTIES
-    #################################
-
-    @property
-    @abstractmethod
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        pass
-
-    @identity.setter
-    @abstractmethod
-    def identity(self, identity):
-        """
-        Set the identity of the current node.
-        :type identity: Identity
-        """
-        pass
-
-    #############################################
     #   INTERFACE
     #################################
 
@@ -116,6 +94,14 @@ class OperatorNode(AbstractNode):
         :rtype: QRectF
         """
         return self.selection.geometry()
+
+    @abstractmethod
+    def copy(self, diagram):
+        """
+        Create a copy of the current item.
+        :type diagram: Diagram
+        """
+        pass
 
     def definition(self):
         """

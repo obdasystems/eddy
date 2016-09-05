@@ -54,29 +54,8 @@ class IntersectionNode(OperatorNode):
         :type brush: QBrush
         """
         super(IntersectionNode, self).__init__(brush=QBrush(QColor(252, 252, 252, 255)), **kwargs)
-        self.label = NodeLabel('and', pos=self.center, editable=False, movable=False, parent=self)
-
-    #############################################
-    #   PROPERTIES
-    #################################
-
-    @property
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        return self._identity
-
-    @identity.setter
-    def identity(self, identity):
-        """
-        Set the identity of the current node.
-        :type identity: Identity
-        """
-        if identity not in self.Identities:
-            identity = Identity.Unknown
-        self._identity = identity
+        self.label = NodeLabel('and', pos=self.center,
+                editable=False, movable=False, parent=self)
 
     #############################################
     #   INTERFACE

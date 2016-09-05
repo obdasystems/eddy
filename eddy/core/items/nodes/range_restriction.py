@@ -54,28 +54,6 @@ class RangeRestrictionNode(RestrictionNode):
         super(RangeRestrictionNode, self).__init__(brush=QBrush(QColor(0, 0, 0, 255)), **kwargs)
 
     #############################################
-    #   PROPERTIES
-    #################################
-
-    @property
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        return self._identity
-
-    @identity.setter
-    def identity(self, identity):
-        """
-        Set the identity of the current node.
-        :type identity: Identity
-        """
-        if identity not in self.Identities:
-            identity = Identity.Unknown
-        self._identity = identity
-
-    #############################################
     #   INTERFACE
     #################################
 

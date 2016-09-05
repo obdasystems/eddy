@@ -65,36 +65,14 @@ class AbstractNode(AbstractItem):
         self.anchors = dict()
         self.edges = set()
 
-        self.background = None
-        self.selection = None
-        self.polygon = None
-        self.label = None
+        self.background = None # BACKGROUND POLYGON
+        self.selection = None # SELECTION POLYGON
+        self.polygon = None # MAIN POLYGON
+        self.label = None # ATTACHED LABEL
 
         self.setAcceptHoverEvents(True)
         self.setCacheMode(AbstractItem.DeviceCoordinateCache)
         self.setFlag(AbstractItem.ItemIsSelectable, True)
-
-    #############################################
-    #   PROPERTIES
-    #################################
-
-    @property
-    @abstractmethod
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        pass
-
-    @identity.setter
-    @abstractmethod
-    def identity(self, identity):
-        """
-        Set the identity of the current node.
-        :type identity: Identity
-        """
-        pass
 
     #############################################
     #   INTERFACE
@@ -174,6 +152,21 @@ class AbstractNode(AbstractItem):
         :rtype: int
         """
         pass
+
+    @classmethod
+    def identities(cls):
+        """
+        Returns the set of identities supported by this node.
+        :rtype: set
+        """
+        return cls.Identities
+
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return self._identity
 
     def incomingNodes(self, filter_on_edges=None, filter_on_nodes=None):
         """
@@ -292,6 +285,15 @@ class AbstractNode(AbstractItem):
         :type geometry: T <= QRectF|QPolygonF
         """
         self.polygon.setGeometry(geometry)
+
+    def setIdentity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        if identity not in self.identities():
+            identity = Identity.Unknown
+        self._identity = identity
 
     def setPen(self, pen):
         """
@@ -445,28 +447,6 @@ class AbstractResizableNode(AbstractNode):
         self.mp_Data = None
         self.mp_Handle = None
         self.mp_Pos = None
-
-    #############################################
-    #   PROPERTIES
-    #################################
-
-    @property
-    @abstractmethod
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        pass
-
-    @identity.setter
-    @abstractmethod
-    def identity(self, identity):
-        """
-        Set the identity of the current node.
-        :type identity: Identity
-        """
-        pass
 
     #############################################
     #   INTERFACE

@@ -60,10 +60,12 @@ class AttributeNode(AbstractNode):
         :type brush: QBrush
         """
         super(AttributeNode, self).__init__(**kwargs)
+        brush = brush or AttributeNode.DefaultBrush
+        pen = AttributeNode.DefaultPen
         self.fpolygon = Polygon(QPainterPath())
         self.background = Polygon(QRectF(-14, -14, 28, 28))
         self.selection = Polygon(QRectF(-14, -14, 28, 28))
-        self.polygon = Polygon(QRectF(-10, -10, 20, 20), brush or AttributeNode.DefaultBrush, AttributeNode.DefaultPen)
+        self.polygon = Polygon(QRectF(-10, -10, 20, 20), brush, pen)
         self.label = NodeLabel(template='attribute', pos=lambda: self.center() - QPointF(0, 22), parent=self)
         self.label.setAlignment(Qt.AlignCenter)
 
@@ -93,22 +95,6 @@ class AttributeNode(AbstractNode):
         # Redraw all the predicate nodes identifying the current predicate.
         for node in self.project.predicates(self.type(), self.text()):
             node.redraw(functional=functional, selected=node.isSelected())
-
-    @property
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        return Identity.Attribute
-
-    @identity.setter
-    def identity(self, identity):
-        """
-        Set the identity of the current node.
-        :type identity: Identity
-        """
-        pass
 
     @property
     def special(self):
@@ -160,6 +146,13 @@ class AttributeNode(AbstractNode):
         :rtype: int
         """
         return self.polygon.geometry().height()
+
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return Identity.Attribute
 
     def paint(self, painter, option, widget=None):
         """
@@ -217,6 +210,13 @@ class AttributeNode(AbstractNode):
 
         # SELECTION + SYNTAX VALIDATION + REFRESH
         super(AttributeNode, self).redraw(**kwargs)
+
+    def setIdentity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
 
     def setText(self, text):
         """

@@ -583,9 +583,9 @@ class Diagram(QGraphicsScene):
         Perform node identification.
         :type node: AbstractNode
         """
-        if Identity.Neutral in node.Identities:
+        if Identity.Neutral in node.identities():
 
-            predicate = lambda n1: Identity.Neutral in n1.Identities
+            predicate = lambda n1: Identity.Neutral in n1.identities()
             collection = bfs(source=node, filter_on_visit=predicate)
             generators = partition(predicate, collection)
             excluded = set()
@@ -600,17 +600,17 @@ class Diagram(QGraphicsScene):
             f1 = lambda x: x.type() is Item.InputEdge
             f2 = lambda x: x.type() is Item.IndividualNode
             f3 = lambda x: x.type() is Item.MembershipEdge
-            f4 = lambda x: x.identity in {Identity.Role, Identity.Attribute, Identity.Concept} and Identity.Neutral not in x.Identities
+            f4 = lambda x: x.identity() in {Identity.Role, Identity.Attribute, Identity.Concept} and Identity.Neutral not in x.identities()
             f5 = lambda x: x.type() in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
             f6 = lambda x: x.type() is Item.IndividualNode
 
             # CONVERTERS
-            c1 = lambda x: Identity.Concept if x.identity is Identity.Individual else Identity.ValueDomain
-            c2 = lambda x: Identity.Concept if x.identity in {Identity.Role, Identity.Concept} else Identity.ValueDomain
-            c3 = lambda x: Identity.RoleInstance if x.identity is Identity.Role else Identity.AttributeInstance
+            c1 = lambda x: Identity.Concept if x.identity() is Identity.Individual else Identity.ValueDomain
+            c2 = lambda x: Identity.Concept if x.identity() in {Identity.Role, Identity.Concept} else Identity.ValueDomain
+            c3 = lambda x: Identity.RoleInstance if x.identity() is Identity.Role else Identity.AttributeInstance
 
             # AUXILIARY FUNCTIONS
-            a1 = lambda x: x.identity is Identity.Value
+            a1 = lambda x: x.identity() is Identity.Value
 
             for node in weak:
 
@@ -635,11 +635,9 @@ class Diagram(QGraphicsScene):
                         if len(identities) > 1:
                             computed = Identity.Unknown
 
-                    node.identity = computed
-
-                    if node.identity is not Identity.Neutral:
+                    node.setIdentity(computed)
+                    if node.identity() is not Identity.Neutral:
                         strong.add(node)
-
                     for k in collection:
                         strong.discard(k)
 
@@ -664,11 +662,9 @@ class Diagram(QGraphicsScene):
                         if len(identities) > 1:
                             computed = Identity.Unknown
 
-                    node.identity = computed
-
-                    if node.identity is not Identity.Neutral:
+                    node.setIdentity(computed)
+                    if node.identity() is not Identity.Neutral:
                         strong.add(node)
-
                     for k in collection:
                         strong.discard(k)
 
@@ -694,7 +690,6 @@ class Diagram(QGraphicsScene):
 
                     outgoing = node.outgoingNodes(filter_on_edges=f3, filter_on_nodes=f5)
                     incoming = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f6)
-
                     computed = Identity.Neutral
 
                     # 1) USE MEMBERSHIP EDGE
@@ -710,8 +705,7 @@ class Diagram(QGraphicsScene):
                         if sum(map(a1, incoming)):
                             computed = Identity.AttributeInstance
 
-                    node.identity = computed
-
+                    node.setIdentity(computed)
                     excluded.add(node)
 
                     for k in incoming:
@@ -722,14 +716,14 @@ class Diagram(QGraphicsScene):
             #################################
 
             computed = Identity.Neutral
-            identities = {x.identity for x in strong}
+            identities = {x.identity() for x in strong}
             if identities:
                 computed = first(identities)
                 if len(identities) > 1:
                     computed = Identity.Unknown
 
             for node in weak - strong - excluded:
-                node.identity = computed
+                node.setIdentity(computed)
 
     def isEdgeAddInProgress(self):
         """

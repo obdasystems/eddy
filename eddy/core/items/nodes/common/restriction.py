@@ -33,7 +33,7 @@
 ##########################################################################
 
 
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QPainterPath, QPen, QBrush, QColor
@@ -91,24 +91,6 @@ class RestrictionNode(AbstractNode):
         return cardinality
 
     @property
-    @abstractmethod
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        pass
-
-    @identity.setter
-    @abstractmethod
-    def identity(self, identity):
-        """
-        Set the identity of the current node.
-        :type identity: Identity
-        """
-        pass
-
-    @property
     def restriction(self):
         """
         Returns the restriction type of the node.
@@ -159,8 +141,8 @@ class RestrictionNode(AbstractNode):
         :rtype: bool
         """
         f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.identity in {Identity.Concept, Identity.Role}
-        f3 = lambda x: x.identity in {Identity.Attribute, Identity.ValueDomain}
+        f2 = lambda x: x.identity() in {Identity.Concept, Identity.Role}
+        f3 = lambda x: x.identity() in {Identity.Attribute, Identity.ValueDomain}
         if self.restriction in {Restriction.Cardinality, Restriction.Exists, Restriction.Forall}:
             return len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) >= 2 or \
                    len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) >= 2

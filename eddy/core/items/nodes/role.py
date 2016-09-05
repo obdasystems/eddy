@@ -136,22 +136,6 @@ class RoleNode(AbstractResizableNode):
             node.redraw(functional=functional, selected=node.isSelected())
 
     @property
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        return Identity.Role
-
-    @identity.setter
-    def identity(self, identity):
-        """
-        Set the identity of the current node.
-        :type identity: Identity
-        """
-        pass
-    
-    @property
     def inverseFunctional(self):
         """
         Returns True if the predicate represented by this node is inverse functional, else False.
@@ -301,6 +285,13 @@ class RoleNode(AbstractResizableNode):
         """
         polygon = self.polygon.geometry()
         return polygon[self.IndexB].y() - polygon[self.IndexT].y()
+
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return Identity.Role
 
     def paint(self, painter, option, widget=None):
         """
@@ -652,6 +643,13 @@ class RoleNode(AbstractResizableNode):
         self.updateTextPos(moved=moved)
         self.updateAnchors(self.mp_Data, D)
         self.updateNode()
+
+    def setIdentity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
 
     def setText(self, text):
         """

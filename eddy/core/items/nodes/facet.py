@@ -110,22 +110,6 @@ class FacetNode(AbstractNode):
         return Facet.forValue(self.labelA.text())
 
     @property
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        return Identity.Facet
-
-    @identity.setter
-    def identity(self, identity):
-        """
-        Set the identity of the current node.
-        :type identity: Identity
-        """
-        pass
-
-    @property
     def value(self):
         """
         Returns the value of this facet node.
@@ -276,6 +260,13 @@ class FacetNode(AbstractNode):
         polygonB = self.polygonB.geometry()
         return polygonA[self.IndexBL].y() - polygonB[self.IndexTL].y()
 
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return Identity.Facet
+
     def paint(self, painter, option, widget=None):
         """
         Paint the node in the diagram.
@@ -324,6 +315,13 @@ class FacetNode(AbstractNode):
         :rtype: QPen
         """
         return self.polygonB.pen()
+
+    def setIdentity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
 
     def setText(self, text):
         """

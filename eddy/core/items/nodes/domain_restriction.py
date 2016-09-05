@@ -54,10 +54,9 @@ class DomainRestrictionNode(RestrictionNode):
         super(DomainRestrictionNode, self).__init__(brush=QBrush(QColor(252, 252, 252, 255)), **kwargs)
 
     #############################################
-    #   PROPERTIES
+    #   INTERFACE
     #################################
 
-    @property
     def identity(self):
         """
         Returns the identity of the current node.
@@ -65,8 +64,7 @@ class DomainRestrictionNode(RestrictionNode):
         """
         return Identity.Concept
 
-    @identity.setter
-    def identity(self, identity):
+    def setIdentity(self, identity):
         """
         Set the identity of the current node.
         :type identity: Identity

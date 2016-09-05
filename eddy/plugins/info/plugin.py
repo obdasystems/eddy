@@ -413,7 +413,7 @@ class InfoWidget(QScrollArea):
                             show = self.infoRoleNode
                         elif item.type() is Item.AttributeNode:
                             show = self.infoAttributeNode
-                        elif item.type() is Item.IndividualNode and item.identity is Identity.Value:
+                        elif item.type() is Item.IndividualNode and item.identity() is Identity.Value:
                             show = self.infoValueNode
                         else:
                             show = self.infoPredicateNode
@@ -909,7 +909,7 @@ class NodeInfo(AbstractInfo):
         :type node: AbstractNode
         """
         self.idField.setValue(node.id)
-        self.identityField.setValue(node.identity.value)
+        self.identityField.setValue(node.identity().value)
         self.node = node
 
 

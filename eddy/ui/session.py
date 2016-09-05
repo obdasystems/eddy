@@ -1658,7 +1658,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if node:
                 action = self.sender()
                 if action.data() is Identity.Individual:
-                    if node.identity is Identity.Value:
+                    if node.identity() is Identity.Value:
                         data = node.label.template
                         name = 'change {0} to {1}'.format(node.text(), data)
                         self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))

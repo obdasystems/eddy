@@ -61,9 +61,11 @@ class ValueDomainNode(AbstractNode):
         :type brush: QBrush
         """
         super(ValueDomainNode, self).__init__(**kwargs)
+        brush = brush or ValueDomainNode.DefaultBrush
+        pen = ValueDomainNode.DefaultPen
         self.background = Polygon(QRectF(-49, -24, 98, 48))
         self.selection = Polygon(QRectF(-49, -24, 98, 48))
-        self.polygon = Polygon(QRectF(-45, -20, 90, 40), brush or ValueDomainNode.DefaultBrush, ValueDomainNode.DefaultPen)
+        self.polygon = Polygon(QRectF(-45, -20, 90, 40), brush, pen)
         self.label = NodeLabel(Datatype.string.value, pos=self.center, editable=False, movable=False, parent=self)
         self.updateNode()
         self.updateTextPos()
@@ -79,22 +81,6 @@ class ValueDomainNode(AbstractNode):
         :rtype: Datatype
         """
         return Datatype.forValue(self.text())
-
-    @property
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        return Identity.ValueDomain
-
-    @identity.setter
-    def identity(self, identity):
-        """
-        Set the identity of the current node.
-        :type identity: Identity
-        """
-        pass
 
     #############################################
     #   INTERFACE

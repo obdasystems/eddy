@@ -76,22 +76,6 @@ class ConceptNode(AbstractResizableNode):
     #################################
 
     @property
-    def identity(self):
-        """
-        Returns the identity of the current node.
-        :rtype: Identity
-        """
-        return Identity.Concept
-
-    @identity.setter
-    def identity(self, identity):
-        """
-        Set the identity of the current node.
-        :type identity: Identity
-        """
-        pass
-
-    @property
     def special(self):
         """
         Returns the special type of this node.
@@ -132,6 +116,13 @@ class ConceptNode(AbstractResizableNode):
         :rtype: int
         """
         return self.polygon.geometry().height()
+
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return Identity.Concept
 
     def paint(self, painter, option, widget=None):
         """
@@ -378,16 +369,12 @@ class ConceptNode(AbstractResizableNode):
         self.updateTextPos(moved=moved)
         self.updateAnchors(self.mp_Data, D)
 
-    def shape(self):
+    def setIdentity(self, identity):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
-        :rtype: QPainterPath
+        Set the identity of the current node.
+        :type identity: Identity
         """
-        path = QPainterPath()
-        path.addRect(self.polygon.geometry())
-        for polygon in self.handles:
-            path.addEllipse(polygon.geometry())
-        return path
+        pass
 
     def setText(self, text):
         """
@@ -403,6 +390,17 @@ class ConceptNode(AbstractResizableNode):
         :type pos: QPointF
         """
         self.label.setPos(pos)
+
+    def shape(self):
+        """
+        Returns the shape of this item as a QPainterPath in local coordinates.
+        :rtype: QPainterPath
+        """
+        path = QPainterPath()
+        path.addRect(self.polygon.geometry())
+        for polygon in self.handles:
+            path.addEllipse(polygon.geometry())
+        return path
 
     def text(self):
         """
