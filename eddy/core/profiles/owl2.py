@@ -601,7 +601,7 @@ class OWL2Profile(AbstractProfile):
                     #################################
 
                     # Facet node cannot be target of any input.
-                    raise SyntaxError('Facet not cannot be target of any input')
+                    raise SyntaxError('Facet node cannot be target of any input')
 
             #############################################
             # EDGE = MEMBERSHIP
