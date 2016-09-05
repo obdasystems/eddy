@@ -1228,7 +1228,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 loader = self.createDiagramLoader(File.Graphol, path, self.project, self)
 
                 try:
-                    diagram = loader.run()
+                    diagram = loader.load()
                 except Exception as e:
                     msgbox = QMessageBox(self)
                     msgbox.setDetailedText(format_exception(e))
