@@ -233,7 +233,7 @@ class NewDiagramDialog(AbstractDiagramDialog):
             msgbox.setDetailedText(format_exception(e))
             msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
             msgbox.setStandardButtons(QMessageBox.Close)
-            msgbox.setText('Eddy could not create the specified diagram: {0}!'.format(path))
+            msgbox.setText('Eddy could not create the specified diagram: {0}!'.format(self.path()))
             msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Diagram creation failed!')
             msgbox.exec_()
