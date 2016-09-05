@@ -44,7 +44,7 @@ class AbstractProfile(QObject):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, project):
+    def __init__(self, project=None):
         """
         Initialize the profile.
         :type project: Project

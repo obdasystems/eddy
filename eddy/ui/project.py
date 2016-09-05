@@ -47,6 +47,7 @@ from eddy.core.functions.fsystem import is_dir
 from eddy.core.functions.misc import cutR, isEmpty
 from eddy.core.functions.path import expandPath, isPathValid
 from eddy.core.functions.signals import connect
+from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.project import Project
 
 from eddy.ui.fields import StringField
@@ -189,7 +190,7 @@ class ProjectDialog(QDialog):
         """
         Accept the project form and creates a new empty project.
         """
-        project = Project(self.path(), self.prefix(), self.iri())
+        project = Project(self.path(), self.prefix(), self.iri(), OWL2Profile())
         exporter = GrapholProjectExporter(project)
         exporter.export()
         super().accept()
