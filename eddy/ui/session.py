@@ -130,23 +130,28 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     Additionally to built-in signals, this class emits:
 
     * sgnClosed: whenever the current session is closed.
-    * sgnFocusDiagram: whenever a diagram is to be focused.
-    * sgnLoadDiagram: whenever a diagram is to be loaded.
+    * sgnDiagramFocus: whenever a diagram is to be focused.
+    * sgnDiagramLoad: whenever a diagram is to be loaded.
+    * sgnDiagramLoaded: to notify that a diagram has been loaded.
     * sgnPluginDisposed: to notify that a plugin has been destroyed.
     * sgnPluginLoaded: to notify that a plugin has been loaded.
     * sgnPluginStarted: to notify that a plugin startup sequence has been completed.
     * sgnProjectSave: whenever the current project is to be saved.
+    * sgnProjectSaved: to notify that the current project has been saved.
     * sgnQuit: whenever the application is to be terminated.
     * sgnReady: after the session startup sequence completes.
     * sgnUpdateState: to notify that something in the session state changed.
     """
     sgnClosed = pyqtSignal()
-    sgnFocusDiagram = pyqtSignal('QGraphicsScene')
-    sgnLoadDiagram = pyqtSignal(str)
+    sgnDiagramFocus = pyqtSignal('QGraphicsScene')
+    sgnDiagramFocused = pyqtSignal('QGraphicsScene')
+    sgnDiagramLoad = pyqtSignal(str)
+    sgnDiagramLoaded = pyqtSignal('QGraphicsScene')
     sgnPluginDisposed = pyqtSignal(str)
     sgnPluginLoaded = pyqtSignal(str)
     sgnPluginStarted = pyqtSignal(str)
     sgnProjectSave = pyqtSignal()
+    sgnProjectSaved = pyqtSignal()
     sgnQuit = pyqtSignal()
     sgnReady = pyqtSignal()
     sgnUpdateState = pyqtSignal()
@@ -933,8 +938,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Connect session specific signals to their slots.
         """
         connect(self.undostack.cleanChanged, self.doUpdateState)
-        connect(self.sgnFocusDiagram, self.doFocusDiagram)
-        connect(self.sgnLoadDiagram, self.doLoadDiagram)
+        connect(self.sgnDiagramFocus, self.doFocusDiagram)
+        connect(self.sgnDiagramLoad, self.doLoadDiagram)
         connect(self.sgnReady, self.doUpdateState)
         connect(self.sgnProjectSave, self.doSave)
         connect(self.sgnUpdateState, self.doUpdateState)
@@ -1176,6 +1181,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             subwindow.showMaximized()
         self.mdi.setActiveSubWindow(subwindow)
         self.mdi.update()
+        self.sgnDiagramFocused.emit(diagram)
 
     @pyqtSlot('QGraphicsItem')
     def doFocusItem(self, item):
@@ -1183,7 +1189,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Focus an item in its diagram.
         :type item: AbstractItem
         """
-        self.sgnFocusDiagram.emit(item.diagram)
+        self.sgnDiagramFocus.emit(item.diagram)
         self.mdi.activeDiagram().clearSelection()
         self.mdi.activeView().centerOn(item)
         item.setSelected(True)
@@ -1210,7 +1216,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                             loader = self.createDiagramLoader(filetype, path, self.project, self)
                             diagram = loader.load()
                             self.project.addDiagram(diagram)
-                            self.sgnFocusDiagram.emit(diagram)
+                            self.sgnDiagramFocus.emit(diagram)
                 except Exception as e:
                     msgbox = QMessageBox(self)
                     msgbox.setDetailedText(format_exception(e))
@@ -1248,6 +1254,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     msgbox.exec_()
                 else:
                     self.project.addDiagram(diagram)
+                    self.sgnDiagramLoaded.emit(diagram)
 
     @pyqtSlot()
     def doNewDiagram(self):
@@ -1257,8 +1264,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         form = NewDiagramDialog(self.project, self)
         if form.exec_() == NewDiagramDialog.Accepted:
             path = expandPath(form.pathField.value())
-            self.sgnLoadDiagram.emit(path)
-            self.sgnFocusDiagram.emit(self.project.diagram(path))
+            self.sgnDiagramLoad.emit(path)
+            self.sgnDiagramFocus.emit(self.project.diagram(path))
             self.sgnProjectSave.emit()
 
     @pyqtSlot()
@@ -1492,6 +1499,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             msgbox.exec_()
         else:
             self.undostack.setClean()
+            self.sgnProjectSaved.emit()
 
     @pyqtSlot()
     def doSaveAs(self):
@@ -2042,8 +2050,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 dest = uniquePath(self.project.path, name, File.Graphol.extension)
                 path = fcopy(path, dest)
 
-            self.sgnLoadDiagram.emit(path)
-            self.sgnFocusDiagram.emit(self.project.diagram(path))
+            self.sgnDiagramLoad.emit(path)
+            self.sgnDiagramFocus.emit(self.project.diagram(path))
             self.sgnProjectSave.emit()
 
     def setWindowTitle(self, project, diagram=None):
