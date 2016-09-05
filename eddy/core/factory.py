@@ -335,7 +335,7 @@ class MenuFactory(QObject):
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('property_restriction'))
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity is Identity.Attribute
-        qualified = node.qualified
+        qualified = node.isQualifiedRestriction()
         attribute = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
         for action in self.session.action('restriction').actions():
             action.setChecked(node.restriction is action.data())
@@ -512,10 +512,11 @@ class MenuFactory(QObject):
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity is Identity.Attribute
         if not first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)):
+            qualified = node.isQualifiedRestriction()
             menu.insertMenu(self.session.action('node_properties'), self.session.menu('property_restriction'))
             for action in self.session.action('restriction').actions():
                 action.setChecked(node.restriction is action.data())
-                action.setVisible(action.data() is not Restriction.Self)
+                action.setVisible(action.data() is not Restriction.Self or not qualified)
         menu.insertSeparator(self.session.action('node_properties'))
         self.insertLabelActions(menu, node)
         menu.insertSeparator(self.session.action('node_properties'))
