@@ -237,7 +237,7 @@ class CommandNodeMove(QUndoCommand):
 
 class CommandNodeSwitchTo(QUndoCommand):
     """
-    This command is used to change the type of a node nodes.
+    This command is used to change swap between 2 nodes.
     """
     def __init__(self, diagram, node1, node2):
         """

@@ -487,6 +487,15 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.addAction(group)
 
         #############################################
+        # ROLE SPECIFIC
+        #################################
+
+        self.addAction(QAction(
+            QIcon(':/icons/24/ic_swap_horiz_black'), 'Swap domain/range', self,
+            objectName='swap_domain_range', triggered=self.doSwapDomainRange,
+            statusTip='Swap the direction of all the occurrences of the selected role'))
+
+        #############################################
         # ROLE / ATTRIBUTE SPECIFIC
         #################################
 
@@ -1664,7 +1673,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     @pyqtSlot()
     def doSnapTopGrid(self):
         """
-        Snap all the element sin the active diagram to the grid.
+        Snap all the element in the active diagram to the grid.
         """
         diagram = self.mdi.activeDiagram()
         if diagram:
@@ -1692,6 +1701,45 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
             if data['undo']['nodes'] or data['undo']['edges']:
                 self.undostack.push(CommandSnapItemsToGrid(diagram, data))
+
+    @pyqtSlot()
+    def doSwapDomainRange(self):
+        """
+        Swap the direction of all the occurrences of the selected role.
+        """
+        def invert(item):
+            """
+            Invert the type of a node.
+            :type item: Item
+            :rtype: Item
+            """
+            if item is Item.DomainRestrictionNode:
+                return Item.RangeRestrictionNode
+            return Item.DomainRestrictionNode
+
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            f0 = lambda x: x.type() is Item.RoleNode
+            f1 = lambda x: x.type() is Item.InputEdge
+            f2 = lambda x: x.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}
+            node = first(x for x in diagram.selectedNodes(filter_on_nodes=f0))
+            if node:
+                collection = dict()
+                predicates = self.project.predicates(node.type(), node.text())
+                for predicate in predicates:
+                    for xnode in predicate.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                        if xnode not in collection:
+                            ynode = xnode.diagram.factory.create(invert(xnode.type()))
+                            ynode.setPos(xnode.pos())
+                            ynode.setText(xnode.text())
+                            ynode.setTextPos(xnode.textPos())
+                            collection[xnode] = ynode
+                if collection:
+                    self.undostack.beginMacro('swap {0} domain/range'.format(node.name))
+                    for xnode, ynode in collection.items():
+                        self.undostack.push(CommandNodeSwitchTo(xnode.diagram, xnode, ynode))
+                    self.undostack.endMacro()
 
     @pyqtSlot()
     def doSwapEdge(self):

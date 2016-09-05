@@ -530,6 +530,7 @@ class MenuFactory(QObject):
         :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
+        menu.insertAction(self.session.action('node_properties'), self.session.action('swap_domain_range'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('compose'))
