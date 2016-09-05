@@ -530,11 +530,11 @@ class MenuFactory(QObject):
         :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
-        menu.insertAction(self.session.action('node_properties'), self.session.action('swap_domain_range'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('compose'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('invert_role'))
         self.insertLabelActions(menu, node)
         menu.insertSeparator(self.session.action('node_properties'))
         self.session.action('refactor_name').setEnabled(node.special is None)
@@ -610,7 +610,6 @@ class MenuFactory(QObject):
         :type node: AbstractNode
         """
         if node.label.isMovable() and node.label.isMoved():
-            menu.insertSeparator(self.session.action('node_properties'))
             menu.insertAction(self.session.action('node_properties'), self.session.action('relocate_label'))
 
     #############################################

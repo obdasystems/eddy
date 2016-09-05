@@ -85,6 +85,6 @@ class RangeRestrictionNode(RestrictionNode):
         :type text: str
         """
         restriction = Restriction.forLabel(text)
-        if not restriction or restriction is Restriction.Self:
+        if not restriction:
             text = Restriction.Exists.toString()
         self.label.setText(text)
