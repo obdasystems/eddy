@@ -1717,12 +1717,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 return Item.RangeRestrictionNode
             return Item.DomainRestrictionNode
 
+        f0 = lambda x: x.type() is Item.RoleNode
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode} and \
+                       x.restriction is not Restriction.Self
+
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            f0 = lambda x: x.type() is Item.RoleNode
-            f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}
             node = first(x for x in diagram.selectedNodes(filter_on_nodes=f0))
             if node:
                 collection = dict()

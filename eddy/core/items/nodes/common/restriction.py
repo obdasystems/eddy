@@ -62,10 +62,11 @@ class RestrictionNode(AbstractNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-
+        brush = brush or RestrictionNode.DefaultBrush
+        pen = RestrictionNode.DefaultPen
         self.background = Polygon(QRectF(-14, -14, 28, 28))
         self.selection = Polygon(QRectF(-14, -14, 28, 28))
-        self.polygon = Polygon(QRectF(-10, -10, 20, 20), brush or RestrictionNode.DefaultBrush, RestrictionNode.DefaultPen)
+        self.polygon = Polygon(QRectF(-10, -10, 20, 20), brush, pen)
         self.label = NodeLabel(Restriction.Exists.toString(),
            pos=lambda: self.center() - QPointF(0, 22),
            editable=False, parent=self)
