@@ -222,8 +222,6 @@ class Zoom(AbstractPlugin):
         self.session.widget('view_toolbar').addWidget(self.widget('button_zoom_out'))
         self.session.widget('view_toolbar').addWidget(self.widget('button_zoom_in'))
         self.session.widget('view_toolbar').addWidget(self.widget('button_zoom_reset'))
-        
-        super().startup()
 
     @classmethod
     def version(cls):

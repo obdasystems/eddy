@@ -132,17 +132,23 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     * sgnClosed: whenever the current session is closed.
     * sgnFocusDiagram: whenever a diagram is to be focused.
     * sgnLoadDiagram: whenever a diagram is to be loaded.
+    * sgnPluginDisposed: to notify that a plugin has been destroyed.
+    * sgnPluginLoaded: to notify that a plugin has been loaded.
+    * sgnPluginStarted: to notify that a plugin startup sequence has been completed.
+    * sgnProjectSave: whenever the current project is to be saved.
     * sgnQuit: whenever the application is to be terminated.
     * sgnReady: after the session startup sequence completes.
-    * sgnSaveProject: whenever the current project is to be saved.
     * sgnUpdateState: to notify that something in the session state changed.
     """
     sgnClosed = pyqtSignal()
     sgnFocusDiagram = pyqtSignal('QGraphicsScene')
     sgnLoadDiagram = pyqtSignal(str)
+    sgnPluginDisposed = pyqtSignal(str)
+    sgnPluginLoaded = pyqtSignal(str)
+    sgnPluginStarted = pyqtSignal(str)
+    sgnProjectSave = pyqtSignal()
     sgnQuit = pyqtSignal()
     sgnReady = pyqtSignal()
-    sgnSaveProject = pyqtSignal()
     sgnUpdateState = pyqtSignal()
 
     def __init__(self, path, **kwargs):
@@ -890,8 +896,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     except Exception:
                         LOGGER.exception('Failed to load plugin: %s v%s', subclass.name(), subclass.version())
                     else:
-                        LOGGER.info('Plugin loaded: %s v%s', subclass.name(), subclass.version())
                         pluginList.append(plugin)
+                        LOGGER.info('Plugin loaded: %s v%s', subclass.name(), subclass.version())
+                        self.sgnPluginLoaded.emit(plugin.objectName())
 
                 if pluginList:
 
@@ -907,8 +914,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                         except Exception:
                             LOGGER.exception('Failed to start plugin: %s v%s', p.name(), p.version())
                         else:
-                            LOGGER.info('Plugin started: %s v%s', p.name(), p.version())
                             self.addPlugin(p)
+                            LOGGER.info('Plugin started: %s v%s', p.name(), p.version())
+                            self.sgnPluginStarted.emit(p.objectName())
 
                     pluginList = self.plugins()
                     if pluginList:
@@ -928,7 +936,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         connect(self.sgnFocusDiagram, self.doFocusDiagram)
         connect(self.sgnLoadDiagram, self.doLoadDiagram)
         connect(self.sgnReady, self.doUpdateState)
-        connect(self.sgnSaveProject, self.doSave)
+        connect(self.sgnProjectSave, self.doSave)
         connect(self.sgnUpdateState, self.doUpdateState)
 
     def initState(self):
@@ -1070,7 +1078,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Close the currently active subwindow.
         """
-        self.sgnSaveProject.emit()
+        self.sgnProjectSave.emit()
         self.close()
         self.sgnClosed.emit()
 
@@ -1213,7 +1221,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     msgbox.setWindowTitle('Import failed!')
                     msgbox.exec_()
                 finally:
-                    self.sgnSaveProject.emit()
+                    self.sgnProjectSave.emit()
 
     @pyqtSlot(str)
     def doLoadDiagram(self, path):
@@ -1251,7 +1259,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             path = expandPath(form.pathField.value())
             self.sgnLoadDiagram.emit(path)
             self.sgnFocusDiagram.emit(self.project.diagram(path))
-            self.sgnSaveProject.emit()
+            self.sgnProjectSave.emit()
 
     @pyqtSlot()
     def doOpen(self):
@@ -1365,7 +1373,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Quit Eddy.
         """
-        self.sgnSaveProject.emit()
+        self.sgnProjectSave.emit()
         self.sgnQuit.emit()
 
     @pyqtSlot()
@@ -1451,7 +1459,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     subwindow.close()
                 self.project.removeDiagram(diagram)
                 fremove(diagram.path)
-                self.sgnSaveProject.emit()
+                self.sgnProjectSave.emit()
 
     @pyqtSlot()
     def doRenameDiagram(self):
@@ -1463,7 +1471,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if diagram:
             form = RenameDiagramDialog(self.project, diagram, self)
             if form.exec_() == RenameDiagramDialog.Accepted:
-                self.sgnSaveProject.emit()
+                self.sgnProjectSave.emit()
 
     @pyqtSlot()
     def doSave(self):
@@ -1913,9 +1921,18 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             closeEvent.ignore()
         else:
             if save:
-                self.sgnSaveProject.emit()
+                # SAVE THE CURRENT PROJECT IF NEEDED
+                self.sgnProjectSave.emit()
+            # DISPOSE ALL THE PLUGINS
+            for plugin in self.plugins():
+                LOGGER.debug('Disposing plugin: %s', plugin.name())
+                plugin.dispose()
+                self.sgnPluginDisposed.emit(plugin.objectName())
+            # SHUTDOWN THE ACTIVE SESSION
             self.sgnClosed.emit()
             closeEvent.accept()
+
+            LOGGER.header('Session shutdown completed: %s v%s', APPNAME, VERSION)
 
     def dragEnterEvent(self, dragEvent):
         """
@@ -2027,7 +2044,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
             self.sgnLoadDiagram.emit(path)
             self.sgnFocusDiagram.emit(self.project.diagram(path))
-            self.sgnSaveProject.emit()
+            self.sgnProjectSave.emit()
 
     def setWindowTitle(self, project, diagram=None):
         """

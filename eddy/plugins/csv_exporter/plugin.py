@@ -84,7 +84,6 @@ class Csv(AbstractPlugin):
         """
         self.debug('Installing CSV file format exporter')
         self.session.addProjectExporter(CsvExporter)
-        super().startup()
 
     @classmethod
     def version(cls):

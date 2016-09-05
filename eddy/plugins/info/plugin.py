@@ -231,8 +231,6 @@ class Info(AbstractPlugin):
         self.debug('Installing docking area widget')
         self.session.addDockWidget(Qt.RightDockWidgetArea, self.widget('info_dock'))
 
-        super().startup()
-
     @classmethod
     def version(cls):
         """

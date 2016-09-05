@@ -231,8 +231,6 @@ class Palette(AbstractPlugin):
         self.debug('Installing docking area widget')
         self.session.addDockWidget(Qt.LeftDockWidgetArea, self.widget('palette_dock'))
 
-        super().startup()
-
     @classmethod
     def version(cls):
         """

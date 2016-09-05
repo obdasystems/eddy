@@ -127,8 +127,6 @@ class ProjectExplorer(AbstractPlugin):
         self.debug('Installing docking area widget')
         self.session.addDockWidget(Qt.LeftDockWidgetArea, self.widget('project_explorer_dock'))
 
-        super().startup()
-
     @classmethod
     def version(cls):
         """

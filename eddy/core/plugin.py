@@ -47,10 +47,6 @@ LOGGER = getLogger(__name__)
 class AbstractPlugin(QObject, HasActionSystem, HasMenuSystem, HasWidgetSystem):
     """
     Extension QObject which implements a plugin.
-    Additionally to built-in signals, this class emits:
-
-    * sgnStarted(str): whenever the plugin complete its startup sequence.
-    * sgnDisposed(str): whenever the plugin is destroyed.
     """
     __metaclass__ = ABCMeta
 
@@ -90,11 +86,9 @@ class AbstractPlugin(QObject, HasActionSystem, HasMenuSystem, HasWidgetSystem):
 
     def dispose(self):
         """
-        Executed whenever the plugin is going to be destroyed. Plugins overriding
-        this method have to either emit the sgnDisposed signal their own or call
-        the super method.
+        Executed whenever the plugin is going to be destroyed.
         """
-        self.sgnDisposed.emit(self.objectName())
+        pass
 
     @classmethod
     @abstractmethod
@@ -115,16 +109,13 @@ class AbstractPlugin(QObject, HasActionSystem, HasMenuSystem, HasWidgetSystem):
 
     def startup(self):
         """
-        Executed whenever the plugin is to be started, after all the plugins
-        have been loaded.Plugins overriding this method have to either emit
-        the sgnStarted signal their own or call the super method.
-        NOTE: this method is executed before the project is loaded in the
-        main session, so any attempt to refer to self.project from within this
-        method will raise an exception. To setup project specific signals/slots,
-        it's possible to make use of the sgnReady signal emitted by the main
-        session when the startup sequence completes.
+        Executed whenever the plugin is to be started, after all the plugins have been loaded.
+        NOTE: this method is executed before the project is loaded in the main session, so any
+        attempt to refer to self.project from within this method will raise an exception.
+        To setup project specific signals/slots, it's possible to make use of the sgnReady
+        signal emitted by the main session when the startup sequence completes.
         """
-        self.sgnStarted.emit(self.objectName())
+        pass
 
     @classmethod
     def requirements(cls):

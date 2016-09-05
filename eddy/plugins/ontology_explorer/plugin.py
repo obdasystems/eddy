@@ -134,8 +134,6 @@ class OntologyExplorer(AbstractPlugin):
         self.debug('Installing docking area widget')
         self.session.addDockWidget(Qt.RightDockWidgetArea, self.widget('ontology_explorer_dock'))
 
-        super().startup()
-
     @classmethod
     def version(cls):
         """
