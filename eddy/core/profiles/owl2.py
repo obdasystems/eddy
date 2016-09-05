@@ -37,7 +37,8 @@ from eddy.core.datatypes.graphol import Identity, Item, Restriction
 from eddy.core.datatypes.owl import Facet
 from eddy.core.functions.graph import bfs
 from eddy.core.functions.misc import cutR, first
-from eddy.core.profiles.common import AbstractProfile, ProfileValidationResult
+from eddy.core.profiles.common import AbstractProfile
+from eddy.core.profiles.common import ProfileValidationResult
 
 
 class OWL2Profile(AbstractProfile):
