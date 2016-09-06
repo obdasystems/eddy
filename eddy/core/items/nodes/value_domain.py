@@ -197,12 +197,16 @@ class ValueDomainNode(AbstractNode):
         """
         Update the current node.
         """
+        # POLYGON + BACKGROUND + SELECTION (GEOMETRY)
         width = max(self.label.width() + 16, 90)
         self.polygon.setGeometry(QRectF(-width / 2, -20, width, 40))
         self.background.setGeometry(QRectF(-(width + 8) / 2, -24, width + 8, 48))
         self.selection.setGeometry(QRectF(-(width + 8) / 2, -24, width + 8, 48))
         self.updateTextPos()
         self.updateEdges()
+
+        # SELECTION + BACKGROUND + CACHE REFRESH
+        super(ValueDomainNode, self).updateNode(**kwargs)
 
     def width(self):
         """

@@ -35,11 +35,12 @@
 
 from math import sin, cos, radians, pi as M_PI
 
-from PyQt5.QtCore import QPointF
+from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPainter, QPolygonF
-from PyQt5.QtGui import QPainterPath
+from PyQt5.QtGui import QPainterPath, QBrush, QColor, QPen
 
 from eddy.core.datatypes.graphol import Item
+from eddy.core.functions.geometry import createArea
 from eddy.core.items.edges.common.base import AbstractEdge
 from eddy.core.items.edges.common.label import EdgeLabel
 
@@ -186,11 +187,31 @@ class MembershipEdge(AbstractEdge):
         """
         return self.label.pos()
 
-    def updateEdge(self, target=None):
+    def updateEdge(self, selected=None, visible=None, breakpoint=None, anchor=None, target=None, **kwargs):
         """
-        Update the edge painter path and the selection polygon.
+        Update the current edge.
+        :type selected: bool
+        :type visible: bool
+        :type breakpoint: int
+        :type anchor: AbstractNode
         :type target: QPointF
         """
+        def createHead(point1, angle, size):
+            """
+            Create the head polygon.
+            :type point1: QPointF
+            :type angle: float
+            :type size: int
+            :rtype: QPolygonF
+            """
+            rad = radians(angle)
+            point2 = point1 - QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+            point3 = point1 - QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+            return QPolygonF([point1, point2, point3])
+
+        if visible is None:
+            visible = self.canDraw()
+
         sourceNode = self.source
         targetNode = self.target
         sourcePos = sourceNode.anchor(self)
@@ -198,80 +219,80 @@ class MembershipEdge(AbstractEdge):
 
         self.prepareGeometryChange()
 
-        self.updateAnchors()
-        self.updateBreakPoints()
-        self.updateZValue()
-
-        createSelectionArea = self.createSelectionArea
-        createHead = self.createHead
-
         ##########################################
-        # UPDATE EDGE PATH, SELECTION BOX AND HEAD
+        # PATH, SELECTION, HEAD, LABEL (GEOMETRY)
         #################################
 
-        # get the list of visible subpaths for this edge
         collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
 
-        path = QPainterPath()
         selection = QPainterPath()
+        path = QPainterPath()
         head = QPolygonF()
 
-        points = [] # will store all the points defining the edge not to recompute the path to update the label
-        append = points.append  # keep this shortcut and the one below since it saves a lot of computation
-        extend = points.extend  # more: http://blog.cdleary.com/2010/04/efficiency-of-list-comprehensions/
+        points = []
+        append = points.append
+        extend = points.extend
 
         if len(collection) == 1:
-
             subpath = collection[0]
             p1 = sourceNode.intersection(subpath)
             p2 = targetNode.intersection(subpath) if targetNode else subpath.p2()
             if p1 is not None and p2 is not None:
                 path.moveTo(p1)
                 path.lineTo(p2)
-                selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), 8))
+                selection.addPolygon(createArea(p1, p2, subpath.angle(), 8))
                 head = createHead(p2, subpath.angle(), 12)
                 extend((p1, p2))
-
         elif len(collection) > 1:
-
             subpath1 = collection[0]
             subpathN = collection[-1]
             p11 = sourceNode.intersection(subpath1)
             p22 = targetNode.intersection(subpathN)
-
             if p11 and p22:
-
                 p12 = subpath1.p2()
                 p21 = subpathN.p1()
-
                 path.moveTo(p11)
                 path.lineTo(p12)
-                selection.addPolygon(createSelectionArea(p11, p12, subpath1.angle(), 8))
+                selection.addPolygon(createArea(p11, p12, subpath1.angle(), 8))
                 extend((p11, p12))
-
                 for subpath in collection[1:-1]:
                     p1 = subpath.p1()
                     p2 = subpath.p2()
                     path.moveTo(p1)
                     path.lineTo(p2)
-                    selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), 8))
+                    selection.addPolygon(createArea(p1, p2, subpath.angle(), 8))
                     append(p2)
-
                 path.moveTo(p21)
                 path.lineTo(p22)
-                selection.addPolygon(createSelectionArea(p21, p22, subpathN.angle(), 8))
+                selection.addPolygon(createArea(p21, p22, subpathN.angle(), 8))
                 head = createHead(p22, subpathN.angle(), 12)
                 append(p22)
 
+        self.selection.setGeometry(selection)
         self.path.setGeometry(path)
         self.head.setGeometry(head)
-        self.selection.setGeometry(selection)
-        self.updateLabel(points)
-        self.redraw(selected=self.isSelected(), visible=self.canDraw())
 
-    def updateLabel(self, points):
-        """
-        Update the label text position.
-        :type points: T <= tuple | list
-        """
+        ##########################################
+        # LABEL (POSITION)
+        #################################
+
         self.label.updatePos(points)
+
+        ##########################################
+        # PATH, HEAD, TAIL (BRUSH)
+        #################################
+
+        headBrush = QBrush(Qt.NoBrush)
+        headPen = QPen(Qt.NoPen)
+        pathPen = QPen(Qt.NoPen)
+
+        if visible:
+            headBrush = QBrush(QColor(0, 0, 0, 255))
+            headPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            pathPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+
+        self.head.setBrush(headBrush)
+        self.head.setPen(headPen)
+        self.path.setPen(pathPen)
+
+        super(MembershipEdge, self).updateEdge(selected, visible, breakpoint, anchor, **kwargs)

@@ -316,22 +316,31 @@ class AbstractNode(AbstractItem):
             raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
         super().setPos(pos + super().pos() - self.pos())
 
-    def redraw(self, selected=None, valid=None, **kwargs):
+    def updateEdges(self):
         """
-        Perform the redrawing of this item.
+        Update all the edges attached to the node.
+        """
+        for edge in self.edges:
+            edge.updateEdge()
+
+    def updateNode(self, selected=None, valid=None, **kwargs):
+        """
+        Update the current node.
         :type selected: bool
         :type valid: bool
         """
-        # ITEM SELECTION
+        # ITEM SELECTION (PEN)
         pen = QPen(Qt.NoPen)
         if selected:
             pen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.DashLine)
         self.selection.setPen(pen)
 
-        # SYNTAX VALIDATION
+        # SYNTAX VALIDATION (BACKGROUND BRUSH)
         brush = QBrush(Qt.NoBrush)
         if valid is not None:
-            brush = QBrush(QColor(43, 173, 63, 160)) if valid else QBrush(QColor(179, 12, 12, 160))
+            brush = QBrush(QColor(179, 12, 12, 160))
+            if valid:
+                brush = QBrush(QColor(43, 173, 63, 160))
         self.background.setBrush(brush)
 
         # FORCE CACHE REGENERATION
@@ -340,19 +349,6 @@ class AbstractNode(AbstractItem):
 
         # SCHEDULE REPAINT
         self.update(self.boundingRect())
-
-    def updateEdges(self):
-        """
-        Update all the edges attached to the node.
-        """
-        for edge in self.edges:
-            edge.updateEdge()
-
-    def updateNode(self, *args, **kwargs):
-        """
-        Update the current node.
-        """
-        pass
 
     @abstractmethod
     def updateTextPos(self, *args, **kwargs):
@@ -381,7 +377,7 @@ class AbstractNode(AbstractItem):
         :rtype: QVariant
         """
         if change == AbstractNode.ItemSelectedHasChanged:
-            self.redraw(selected=value)
+            self.updateNode(selected=value)
         return super(AbstractNode, self).itemChange(change, value)
 
     def mousePressEvent(self, mouseEvent):
@@ -484,14 +480,26 @@ class AbstractResizableNode(AbstractNode):
         """
         pass
 
-    def redraw(self, selected=None, valid=None, handle=None, **kwargs):
+    def updateNode(self, selected=None, valid=None, handle=None, anchors=None, **kwargs):
         """
-        Perform the redrawing of this item.
+        Update the current node.
         :type selected: bool
         :type valid: bool
         :type handle: int
+        :type anchors: T <= list|tuple
         """
-        # RESIZE HANDLES
+        # RESIZE HANDLES (GEOMETRY)
+        b = self.boundingRect()
+        self.handles[self.HandleTL].setGeometry(QRectF(b.left(), b.top(), 8, 8))
+        self.handles[self.HandleTM].setGeometry(QRectF(b.center().x() - 4, b.top(), 8, 8))
+        self.handles[self.HandleTR].setGeometry(QRectF(b.right() - 8, b.top(), 8, 8))
+        self.handles[self.HandleML].setGeometry(QRectF(b.left(), b.center().y() - 4, 8, 8))
+        self.handles[self.HandleMR].setGeometry(QRectF(b.right() - 8, b.center().y() - 4, 8, 8))
+        self.handles[self.HandleBL].setGeometry(QRectF(b.left(), b.bottom() - 8, 8, 8))
+        self.handles[self.HandleBM].setGeometry(QRectF(b.center().x() - 4, b.bottom() - 8, 8, 8))
+        self.handles[self.HandleBR].setGeometry(QRectF(b.right() - 8, b.bottom() - 8, 8, 8))
+
+        # RESIZE HANDLES (PEN + BRUSH)
         brush = [QBrush(Qt.NoBrush)] * 8
         pen = [QPen(Qt.NoPen)] * 8
         if selected:
@@ -503,22 +511,32 @@ class AbstractResizableNode(AbstractNode):
                     if i == handle:
                         brush[i] = QBrush(QColor(66, 165, 245, 255))
                         pen[i] = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-
         for i in range(8):
             self.handles[i].setBrush(brush[i])
             self.handles[i].setPen(pen[i])
 
-        # ITEM SELECTION
+        # ITEM SELECTION (PEN)
         pen = QPen(Qt.NoPen)
         if selected and handle is None:
             pen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.DashLine)
         self.selection.setPen(pen)
 
-        # SYNTAX VALIDATION
+        # SYNTAX VALIDATION (BACKGROUND BRUSH)
         brush = QBrush(Qt.NoBrush)
         if valid is not None:
             brush = QBrush(QColor(43, 173, 63, 160)) if valid else QBrush(QColor(179, 12, 12, 160))
         self.background.setBrush(brush)
+
+        # ANCHOR POINTS (POSITION). NB: SHAPE IS IN THE EDGES
+        if anchors is not None:
+            mp_Data = anchors[0]
+            diff = anchors[1]
+            for edge, pos in mp_Data.items():
+                newPos = pos + diff * 0.5
+                painterPath = self.painterPath()
+                if not painterPath.contains(self.mapFromScene(newPos)):
+                    newPos = self.intersection(QLineF(newPos, self.pos()))
+                self.setAnchor(edge, newPos)
 
         # FORCE CACHE REGENERATION
         self.setCacheMode(AbstractItem.NoCache)
@@ -526,34 +544,6 @@ class AbstractResizableNode(AbstractNode):
 
         # SCHEDULE REPAINT
         self.update(self.boundingRect())
-
-    def updateAnchors(self, data, diff):
-        """
-        Update anchor points.
-        :type data: dict
-        :type diff: QPointF
-        """
-        if data:
-            for edge, pos in data.items():
-                newPos = pos + diff * 0.5
-                painterPath = self.painterPath()
-                if not painterPath.contains(self.mapFromScene(newPos)):
-                    newPos = self.intersection(QLineF(newPos, self.pos()))
-                self.setAnchor(edge, newPos)
-
-    def updateResizeHandles(self):
-        """
-        Update current resize handles according to the shape size and position.
-        """
-        b = self.boundingRect()
-        self.handles[self.HandleTL].setGeometry(QRectF(b.left(), b.top(), 8, 8))
-        self.handles[self.HandleTM].setGeometry(QRectF(b.center().x() - 4, b.top(), 8, 8))
-        self.handles[self.HandleTR].setGeometry(QRectF(b.right() - 8, b.top(), 8, 8))
-        self.handles[self.HandleML].setGeometry(QRectF(b.left(), b.center().y() - 4, 8, 8))
-        self.handles[self.HandleMR].setGeometry(QRectF(b.right() - 8, b.center().y() - 4, 8, 8))
-        self.handles[self.HandleBL].setGeometry(QRectF(b.left(), b.bottom() - 8, 8, 8))
-        self.handles[self.HandleBM].setGeometry(QRectF(b.center().x() - 4, b.bottom() - 8, 8, 8))
-        self.handles[self.HandleBR].setGeometry(QRectF(b.right() - 8, b.bottom() - 8, 8, 8))
 
     #############################################
     #   EVENTS
@@ -586,7 +576,7 @@ class AbstractResizableNode(AbstractNode):
         """
         if change == AbstractNode.ItemSelectedHasChanged:
             if self.diagram.mode is not DiagramMode.NodeResize:
-                self.redraw(selected=value)
+                self.updateNode(selected=value)
         return super(AbstractNode, self).itemChange(change, value)
 
     def mousePressEvent(self, mouseEvent):
@@ -612,7 +602,7 @@ class AbstractResizableNode(AbstractNode):
                 self.mp_Handle = handle
                 self.mp_Pos = mousePos
 
-                self.redraw(selected=True, handle=handle)
+                self.updateNode(selected=True, handle=handle)
 
         super().mousePressEvent(mouseEvent)
 
@@ -656,7 +646,7 @@ class AbstractResizableNode(AbstractNode):
 
             self.diagram.setMode(DiagramMode.Idle)
 
-        self.redraw(selected=self.isSelected())
+        self.updateNode(selected=self.isSelected())
 
         self.mp_Background = None
         self.mp_Selection = None

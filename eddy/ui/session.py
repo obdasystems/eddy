@@ -429,7 +429,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             QIcon(':/icons/24/ic_select_all_black'), 'Select all',
             self, objectName='select_all', enabled=False,
             statusTip='Select all items in the active diagram',
-            triggered=self.doSelectAll))
+            shortcut=QKeySequence.SelectAll, triggered=self.doSelectAll))
 
         #############################################
         # EDGE RELATED

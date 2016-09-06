@@ -78,8 +78,8 @@ class FacetNode(AbstractNode):
         self.polygonB = Polygon(self.createPolygonA(80, 40), FacetNode.DefaultBrushB, FacetNode.DefaultPenB)
         self.labelA = NodeLabel(Facet.length.value, pos=self.centerA, editable=False, movable=False, parent=self)
         self.labelB = FacetQuotedLabel(template='"32"', movable=False, pos=self.centerB, parent=self)
-        self.updateTextPos()
         self.updateNode()
+        self.updateTextPos()
 
     #############################################
     #   PROPERTIES
@@ -375,6 +375,7 @@ class FacetNode(AbstractNode):
         """
         Update the current node.
         """
+        # POLYGONS + BACKGROUND + SELECTION (GEOMETRY)
         width = max(self.labelA.width() + 16, self.labelB.width() + 16, 80)
         self.background.setGeometry(self.createPolygon(width + 8, 48))
         self.selection.setGeometry(QRectF(-(width + 8) / 2, -24, width + 8, 48))
@@ -383,6 +384,9 @@ class FacetNode(AbstractNode):
         self.polygonB.setGeometry(self.createPolygonB(width, 40))
         self.updateTextPos()
         self.updateEdges()
+
+        # SELECTION + BACKGROUND + CACHE REFRESH
+        super(FacetNode, self).updateNode(**kwargs)
 
     def updateTextPos(self, *args, **kwargs):
         """

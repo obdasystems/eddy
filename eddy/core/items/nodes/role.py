@@ -70,7 +70,9 @@ class RoleNode(AbstractResizableNode):
         
         w = max(width, 70)
         h = max(height, 50)
-        
+        brush = brush or RoleNode.DefaultBrush
+        pen = RoleNode.DefaultPen
+
         createPolygon = lambda x, y: QPolygonF([
             QPointF(-x / 2, 0),
             QPointF(0, +y / 2),
@@ -83,10 +85,10 @@ class RoleNode(AbstractResizableNode):
         self.ipolygon = Polygon(QPainterPath())
         self.background = Polygon(createPolygon(w + 8, h + 8))
         self.selection = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
-        self.polygon = Polygon(createPolygon(w, h), brush or RoleNode.DefaultBrush, RoleNode.DefaultPen)
+        self.polygon = Polygon(createPolygon(w, h), brush, pen)
         self.label = NodeLabel(template='role', pos=self.center, parent=self)
         self.label.setAlignment(Qt.AlignCenter)
-        self.updateResizeHandles()
+        self.updateNode()
         self.updateTextPos()
 
     #############################################
@@ -118,8 +120,11 @@ class RoleNode(AbstractResizableNode):
         Returns True if the predicate represented by this node is functional, else False.
         :rtype: bool
         """
-        meta = self.project.meta(self.type(), self.text())
-        return meta.functional
+        try:
+            meta = self.project.meta(self.type(), self.text())
+            return meta.functional
+        except (AttributeError, KeyError):
+            return False
 
     @functional.setter
     def functional(self, value):
@@ -132,8 +137,7 @@ class RoleNode(AbstractResizableNode):
         meta.functional = functional
         self.project.addMeta(self.type(), self.text(), meta)
         for node in self.project.predicates(self.type(), self.text()):
-            node.updateNode(functional=functional)
-            node.redraw(functional=functional, selected=node.isSelected())
+            node.updateNode(functional=functional, selected=node.isSelected())
 
     @property
     def inverseFunctional(self):
@@ -141,8 +145,11 @@ class RoleNode(AbstractResizableNode):
         Returns True if the predicate represented by this node is inverse functional, else False.
         :rtype: bool
         """
-        meta = self.project.meta(self.type(), self.text())
-        return meta.inverseFunctional
+        try:
+            meta = self.project.meta(self.type(), self.text())
+            return meta.inverseFunctional
+        except (AttributeError, KeyError):
+            return False
 
     @inverseFunctional.setter
     def inverseFunctional(self, value):
@@ -155,8 +162,7 @@ class RoleNode(AbstractResizableNode):
         meta.inverseFunctional = inverseFunctional
         self.project.addMeta(self.type(), self.text(), meta)
         for node in self.project.predicates(self.type(), self.text()):
-            node.updateNode(inverseFunctional=inverseFunctional)
-            node.redraw(inverseFunctional=inverseFunctional, selected=node.isSelected())
+            node.updateNode(inverseFunctional=inverseFunctional, selected=node.isSelected())
     
     @property
     def irreflexive(self):
@@ -276,7 +282,7 @@ class RoleNode(AbstractResizableNode):
         """
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}
-        return set(self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+        return self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)
 
     def height(self):
         """
@@ -338,40 +344,6 @@ class RoleNode(AbstractResizableNode):
         path = QPainterPath()
         path.addPolygon(self.polygon.geometry())
         return path
-
-    def redraw(self, functional=None, inverseFunctional=None, **kwargs):
-        """
-        Perform the redrawing of this item.
-        :type functional: bool
-        :type inverseFunctional: bool
-        """
-        if functional is None:
-            functional = self.functional
-        if inverseFunctional is None:
-            inverseFunctional = self.inverseFunctional
-
-        # FUNCTIONAL POLYGON
-        pen = QPen(Qt.NoPen)
-        brush = QBrush(Qt.NoBrush)
-        if functional:
-            pen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-            brush = QBrush(QColor(252, 252, 252, 255))
-
-        self.fpolygon.setPen(pen)
-        self.fpolygon.setBrush(brush)
-
-        # INVERSE FUNCTIONAL POLYGON
-        pen = QPen(Qt.NoPen)
-        brush = QBrush(Qt.NoBrush)
-        if inverseFunctional:
-            pen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-            brush = QBrush(QColor(0, 0, 0, 255))
-
-        self.ipolygon.setPen(pen)
-        self.ipolygon.setBrush(brush)
-
-        # SELECTION + SYNTAX VALIDATION + HANDLES + REFRESH
-        super(RoleNode, self).redraw(**kwargs)
 
     def resize(self, mousePos):
         """
@@ -639,10 +611,9 @@ class RoleNode(AbstractResizableNode):
         self.background.setGeometry(background)
         self.selection.setGeometry(selection)
         self.polygon.setGeometry(polygon)
-        self.updateResizeHandles()
+
+        self.updateNode(selected=True, handle=self.mp_Handle, anchors=(self.mp_Data, D))
         self.updateTextPos(moved=moved)
-        self.updateAnchors(self.mp_Data, D)
-        self.updateNode()
 
     def setIdentity(self, identity):
         """
@@ -691,7 +662,7 @@ class RoleNode(AbstractResizableNode):
         """
         return self.label.pos()
 
-    def updateNode(self, functional=None, inverseFunctional=None):
+    def updateNode(self, functional=None, inverseFunctional=None, **kwargs):
         """
         Update the current node.
         :type functional: bool
@@ -704,11 +675,9 @@ class RoleNode(AbstractResizableNode):
 
         polygon = self.polygon.geometry()
 
+        # FUNCTIONAL POLYGON (SHAPE)
         fpolygon = QPainterPath()
-        ipolygon = QPainterPath()
-
         if functional and not inverseFunctional:
-            # FUNCTIONALITY
             path = QPainterPath()
             path.addPolygon(QPolygonF([
                 polygon[self.IndexL] + QPointF(+5, 0),
@@ -720,8 +689,9 @@ class RoleNode(AbstractResizableNode):
             fpolygon.addPolygon(polygon)
             fpolygon = fpolygon.subtracted(path)
 
+        # INVERSE FUNCTIONAL POLYGON (SHAPE)
+        ipolygon = QPainterPath()
         if not functional and inverseFunctional:
-            # INVERSE FUNCTIONALITY
             path = QPainterPath()
             path.addPolygon(QPolygonF([
                 polygon[self.IndexL] + QPointF(+5, 0),
@@ -733,8 +703,8 @@ class RoleNode(AbstractResizableNode):
             ipolygon.addPolygon(polygon)
             ipolygon = ipolygon.subtracted(path)
 
+        # FUNCTIONAL + INVERSE FUNCTIONAL POLYGONS (SHAPE)
         if functional and inverseFunctional:
-            # FUNCTIONALITY
             path = QPainterPath()
             path.addPolygon(QPolygonF([
                 polygon[self.IndexL] + QPointF(+5, 0),
@@ -747,7 +717,6 @@ class RoleNode(AbstractResizableNode):
             ]))
             fpolygon.addPolygon(polygon)
             fpolygon = fpolygon.subtracted(path)
-            # INVERSE FUNCTIONALITY
             path = QPainterPath()
             path.addPolygon(QPolygonF([
                 polygon[self.IndexL],
@@ -761,8 +730,29 @@ class RoleNode(AbstractResizableNode):
             ipolygon.addPolygon(polygon)
             ipolygon = ipolygon.subtracted(path)
 
+        # FUNCTIONAL POLYGON (PEN + BRUSH)
+        fpen = QPen(Qt.NoPen)
+        fbrush = QBrush(Qt.NoBrush)
+        if functional:
+            fpen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            fbrush = QBrush(QColor(252, 252, 252, 255))
+
+        # INVERSE FUNCTIONAL POLYGON (PEN + BRUSH)
+        ipen = QPen(Qt.NoPen)
+        ibrush = QBrush(Qt.NoBrush)
+        if inverseFunctional:
+            ipen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            ibrush = QBrush(QColor(0, 0, 0, 255))
+
+        self.fpolygon.setPen(fpen)
+        self.fpolygon.setBrush(fbrush)
         self.fpolygon.setGeometry(fpolygon)
+        self.ipolygon.setPen(ipen)
+        self.ipolygon.setBrush(ibrush)
         self.ipolygon.setGeometry(ipolygon)
+
+        # SELECTION + BACKGROUND + HANDLES + ANCHORS + CACHE REFRESH
+        super(RoleNode, self).updateNode(**kwargs)
 
     def updateTextPos(self, *args, **kwargs):
         """

@@ -35,7 +35,6 @@
 
 from abc import ABCMeta, abstractmethod
 from itertools import permutations
-from math import sin, cos, radians
 
 from PyQt5.QtCore import Qt, QPointF, QLineF, QRectF
 from PyQt5.QtGui import QPolygonF, QPainterPath
@@ -237,23 +236,6 @@ class AbstractEdge(AbstractItem):
                     if (not sp.contains(x.p1()) or not sp.contains(x.p2())) and \
                         (not tp or (not tp.contains(x.p1()) or not tp.contains(x.p2())))]
 
-    @staticmethod
-    def createSelectionArea(p1, p2, angle, size):
-        """
-        Constructs the selection polygon between pos1 and pos2 according to the given angle.
-        :type p1: QPointF
-        :type p2: QPointF
-        :type angle: float
-        :type size: int
-        :rtype: QPolygonF
-        """
-        rad = radians(angle)
-        x = size / 2 * sin(rad)
-        y = size / 2 * cos(rad)
-        a = QPointF(+x, +y)
-        b = QPointF(-x, -y)
-        return QPolygonF([p1 + a, p1 + b, p2 + b, p2 + a])
-
     def isSwapAllowed(self):
         """
         Returns True if this edge can be swapped, False otherwise.
@@ -282,47 +264,62 @@ class AbstractEdge(AbstractItem):
             return self.source
         raise AttributeError('node {0} is not attached to edge {1}'.format(node, self))
 
-    def redraw(self, selected=None, visible=None, breakpoint=None, anchor=None, **kwargs):
+    def updateEdge(self, selected=None, visible=None, breakpoint=None, anchor=None, **kwargs):
         """
-        Perform the redrawing of this item.
+        Update the current edge.
         :type selected: bool
         :type visible: bool
         :type breakpoint: int
         :type anchor: AbstractNode
         """
+        if selected is None:
+            selected = self.isSelected()
+        if visible is None:
+            visible = self.canDraw()
+
+        source = self.source
+        target = self.target
+
+        # ANCHORS (GEOMETRY) --> NB: THE POINTS ARE IN THE ENDPOINTS
+        if source and target:
+            p = source.anchor(self)
+            self.anchors[source] = Polygon(QRectF(p.x() - 4, p.y() - 4, 8, 8))
+            p = target.anchor(self)
+            self.anchors[target] = Polygon(QRectF(p.x() - 4, p.y() - 4, 8, 8))
+
+        # BREAKPOINTS (GEOMETRY)
+        self.handles = [Polygon(QRectF(p.x() - 4, p.y() - 4, 8, 8)) for p in self.breakpoints]
+
+        # ANCHORS + BREAKPOINTS + SELECTION (BRUSH + PEN)
         anchorBrush = QBrush(Qt.NoBrush)
         anchorPen = QPen(Qt.NoPen)
-        headBrush = QBrush(Qt.NoBrush)
-        headPen = QPen(Qt.NoPen)
         handleBrush = QBrush(Qt.NoBrush)
         handlePen = QPen(Qt.NoPen)
-        pathPen = QPen(Qt.NoPen)
         selectionBrush = QBrush(Qt.NoBrush)
-
-        if visible:
-            headBrush = QBrush(QColor(0, 0, 0, 255))
-            headPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-            pathPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-            if selected:
-                anchorBrush = QBrush(QColor(66, 165, 245, 255))
-                anchorPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-                handleBrush = QBrush(QColor(66, 165, 245, 255))
-                handlePen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-                if breakpoint is None and anchor is None:
-                    selectionBrush = QBrush(QColor(251, 255, 148, 255))
-
-        self.head.setBrush(headBrush)
-        self.head.setPen(headPen)
-        self.path.setPen(pathPen)
-        self.selection.setBrush(selectionBrush)
-
-        for polygon in self.handles:
-            polygon.setBrush(handleBrush)
-            polygon.setPen(handlePen)
-
+        if visible and selected:
+            anchorBrush = QBrush(QColor(66, 165, 245, 255))
+            anchorPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            handleBrush = QBrush(QColor(66, 165, 245, 255))
+            handlePen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            if breakpoint is None and anchor is None:
+                selectionBrush = QBrush(QColor(251, 255, 148, 255))
         for polygon in self.anchors.values():
             polygon.setBrush(anchorBrush)
             polygon.setPen(anchorPen)
+        for polygon in self.handles:
+            polygon.setBrush(handleBrush)
+            polygon.setPen(handlePen)
+        self.selection.setBrush(selectionBrush)
+
+        # Z-VALUE (DEPTH)
+        zValue = source.zValue() + 0.1
+        if source.label:
+            zValue = max(zValue, source.label.zValue())
+        if target:
+            zValue = max(zValue, target.zValue())
+            if target.label:
+                zValue = max(zValue, target.label.zValue())
+        self.setZValue(zValue)
 
         # FORCE CACHE REGENERATION
         self.setCacheMode(AbstractItem.NoCache)
@@ -330,51 +327,6 @@ class AbstractEdge(AbstractItem):
 
         # SCHEDULE REPAINT
         self.update(self.boundingRect())
-
-    def updateAnchors(self):
-        """
-        Update edge anchors (update only the polygon: the real anchor point is in the node).
-        Note that this function will create new Polygon instances which by default have an empty pen and brush.
-        Calling self.redraw() will correctly update the brush and the pen for anchors point rendering.
-        """
-        source = self.source
-        target = self.target
-        if source and target:
-            p = source.anchor(self)
-            self.anchors[source] = Polygon(QRectF(p.x() - 4, p.y() - 4, 8, 8))
-            p = target.anchor(self)
-            self.anchors[target] = Polygon(QRectF(p.x() - 4, p.y() - 4, 8, 8))
-
-    def updateBreakPoints(self):
-        """
-        Update edge breakpoints (update only the polygon: the breakpoint is created by the user).
-        Note that this function will create new Polygon instances which by default have an empty pen and brush.
-        Calling self.redraw() will correctly update the brush and the pen for breakpoints point rendering.
-        """
-        self.handles = [Polygon(QRectF(p.x() - 4, p.y() - 4, 8, 8)) for p in self.breakpoints]
-
-    def updateZValue(self):
-        """
-        Update the edge Z value making sure it stays above source and target shapes (and respective labels).
-        """
-        source = self.source
-        zValue = source.zValue() + 0.1
-        if source.label:
-            zValue = max(zValue, source.label.zValue())
-        if self.target:
-            target = self.target
-            zValue = max(zValue, target.zValue())
-            if target.label:
-                zValue = max(zValue, target.label.zValue())
-        self.setZValue(zValue)
-
-    @abstractmethod
-    def updateEdge(self, target=None):
-        """
-        Update the edge painter path and the selection polygon.
-        :type target: QPointF
-        """
-        pass
 
     #############################################
     #   EVENTS
@@ -412,7 +364,7 @@ class AbstractEdge(AbstractItem):
         :rtype: QVariant
         """
         if change == AbstractEdge.ItemSelectedHasChanged:
-            self.redraw(selected=value, visible=self.canDraw())
+            self.updateEdge(selected=value)
         return super(AbstractEdge, self).itemChange(change, value)
 
     def mousePressEvent(self, mouseEvent):
@@ -436,7 +388,7 @@ class AbstractEdge(AbstractItem):
                 self.setSelected(True)
                 self.mp_AnchorNode = anchorNode
                 self.mp_AnchorNodePos = QPointF(anchorNode.anchor(self))
-                self.redraw(selected=True, visible=self.canDraw(), anchor=anchorNode)
+                self.updateEdge(selected=True, anchor=anchorNode)
             else:
                 breakPoint = self.breakPointAt(self.mp_Pos)
                 if breakPoint is not None:
@@ -445,7 +397,7 @@ class AbstractEdge(AbstractItem):
                     self.setSelected(True)
                     self.mp_BreakPoint = breakPoint
                     self.mp_BreakPointPos = QPointF(self.breakpoints[breakPoint])
-                    self.redraw(selected=True, visible=self.canDraw(), breakpoint=breakPoint)
+                    self.updateEdge(selected=True, breakpoint=breakPoint)
 
         super().mousePressEvent(mouseEvent)
 

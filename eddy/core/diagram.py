@@ -234,7 +234,6 @@ class Diagram(QGraphicsScene):
 
                 if self.mode is DiagramMode.Idle:
 
-
                     if mouseModifiers & Qt.ShiftModifier:
 
                         #############################################
@@ -343,12 +342,12 @@ class Diagram(QGraphicsScene):
                     previousNode = self.mo_Node
 
                     if previousNode:
-                        previousNode.redraw(selected=False)
+                        previousNode.updateNode(selected=False)
 
                     if currentNode:
                         self.mo_Node = currentNode
                         pvr = self.project.profile.check(edge.source, edge, currentNode)
-                        currentNode.redraw(selected=False, valid=pvr.isValid())
+                        currentNode.updateNode(selected=False, valid=pvr.isValid())
                         if not pvr.isValid():
                             statusBar.showMessage(pvr.message())
                         else:
@@ -427,12 +426,12 @@ class Diagram(QGraphicsScene):
                 if self.isEdgeAddInProgress():
 
                     edge = self.mp_Edge
-                    edge.source.redraw(selected=False)
+                    edge.source.updateNode(selected=False)
                     currentNode = self.itemOnTopOf(mousePos, edges=False, skip={edge.source})
                     insertEdge = False
 
                     if currentNode:
-                        currentNode.redraw(selected=False)
+                        currentNode.updateNode(selected=False)
                         pvr = self.project.profile.check(edge.source, edge, currentNode)
                         if pvr.isValid():
                             edge.target = currentNode
@@ -560,7 +559,6 @@ class Diagram(QGraphicsScene):
         super(Diagram, self).addItem(item)
         if item.isNode():
             item.updateNode()
-            item.redraw()
 
     def edge(self, eid):
         """

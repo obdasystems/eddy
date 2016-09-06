@@ -78,6 +78,8 @@ class IndividualNode(AbstractResizableNode):
 
         w = max(width, 60)
         h = max(height, 60)
+        brush = brush or IndividualNode.DefaultBrush
+        pen = IndividualNode.DefaultPen
 
         createPolygon = lambda x, y: QPolygonF([
             QPointF(-(x / 2), -((y / (1 + math.sqrt(2))) / 2)),
@@ -91,12 +93,13 @@ class IndividualNode(AbstractResizableNode):
             QPointF(-(x / 2), -((y / (1 + math.sqrt(2))) / 2)),
         ])
 
+
         self.background = Polygon(createPolygon(w + 8, h + 8))
         self.selection = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
-        self.polygon = Polygon(createPolygon(w, h), brush or IndividualNode.DefaultBrush, IndividualNode.DefaultPen)
+        self.polygon = Polygon(createPolygon(w, h), brush, pen)
         self.label = NodeLabel(template='individual', pos=self.center, parent=self)
         self.label.setAlignment(Qt.AlignCenter)
-        self.updateResizeHandles()
+        self.updateNode()
         self.updateTextPos()
 
     #############################################
@@ -584,9 +587,9 @@ class IndividualNode(AbstractResizableNode):
         self.background.setGeometry(background)
         self.selection.setGeometry(selection)
         self.polygon.setGeometry(polygon)
-        self.updateResizeHandles()
+
+        self.updateNode(selected=True, handle=self.mp_Handle, anchors=(self.mp_Data, D))
         self.updateTextPos(moved=moved)
-        self.updateAnchors(self.mp_Data, D)
 
     def setIdentity(self, identity):
         """

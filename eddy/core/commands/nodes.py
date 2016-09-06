@@ -124,7 +124,6 @@ class CommandNodeRezize(QUndoCommand):
         for edge, pos in self.data['redo']['anchors'].items():
             self.node.setAnchor(edge, pos)
 
-        self.node.updateResizeHandles()
         self.node.updateTextPos(moved=self.data['redo']['moved'])
         self.node.updateNode()
         self.node.updateEdges()
@@ -149,7 +148,6 @@ class CommandNodeRezize(QUndoCommand):
         for edge, pos in self.data['undo']['anchors'].items():
             self.node.setAnchor(edge, pos)
 
-        self.node.updateResizeHandles()
         self.node.updateTextPos(moved=self.data['undo']['moved'])
         self.node.updateNode()
         self.node.updateEdges()
@@ -399,12 +397,12 @@ class CommandNodeSetBrush(QUndoCommand):
         """redo the command"""
         for node in self.nodes:
             node.setBrush(self.brush[node]['redo'])
-            node.redraw(selected=node.isSelected())
+            node.updateNode(selected=node.isSelected())
         self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """redo the command"""
         for node in self.nodes:
             node.setBrush(self.brush[node]['undo'])
-            node.redraw(selected=node.isSelected())
+            node.updateNode(selected=node.isSelected())
         self.diagram.sgnUpdated.emit()

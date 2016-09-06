@@ -40,6 +40,7 @@ from PyQt5.QtGui import QPainter, QPolygonF
 from PyQt5.QtGui import QPainterPath, QBrush, QColor, QPen
 
 from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.functions.geometry import createArea
 from eddy.core.items.edges.common.base import AbstractEdge
 from eddy.core.polygon import Polygon
 
@@ -90,34 +91,6 @@ class InclusionEdge(AbstractEdge):
             'breakpoints': self.breakpoints[:],
             'equivalence': self.equivalence,
         })
-
-    @staticmethod
-    def createHead(p1, angle, size):
-        """
-        Create the head polygon.
-        :type p1: QPointF
-        :type angle: float
-        :type size: int
-        :rtype: QPolygonF
-        """
-        rad = radians(angle)
-        p2 = p1 - QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-        p3 = p1 - QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-        return QPolygonF([p1, p2, p3])
-
-    @staticmethod
-    def createTail(p1, angle, size):
-        """
-        Create the tail polygon.
-        :type p1: QPointF
-        :type angle: float
-        :type size: int
-        :rtype: QPolygonF
-        """
-        rad = radians(angle)
-        p2 = p1 + QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-        p3 = p1 + QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-        return QPolygonF([p1, p2, p3])
 
     def isEquivalenceAllowed(self):
         """
@@ -174,23 +147,6 @@ class InclusionEdge(AbstractEdge):
         path.addPolygon(self.tail.geometry())
         return path
 
-    def redraw(self, visible=None, **kwargs):
-        """
-        Perform the redrawing of this item.
-        :type visible: bool
-        """
-        tailBrush = QBrush(Qt.NoBrush)
-        tailPen = QPen(Qt.NoPen)
-
-        if visible:
-            tailBrush = QBrush(QColor(0, 0, 0, 255))
-            tailPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-
-        self.tail.setBrush(tailBrush)
-        self.tail.setPen(tailPen)
-
-        super(InclusionEdge, self).redraw(visible=visible, **kwargs)
-
     def setText(self, text):
         """
         Set the label text.
@@ -237,11 +193,44 @@ class InclusionEdge(AbstractEdge):
         """
         pass
 
-    def updateEdge(self, target=None):
+    def updateEdge(self, selected=None, visible=None, breakpoint=None, anchor=None, target=None, **kwargs):
         """
-        Update the edge painter path and the selection polygon.
+        Update the current edge.
+        :type selected: bool
+        :type visible: bool
+        :type breakpoint: int
+        :type anchor: AbstractNode
         :type target: QPointF
         """
+        def createHead(point1, angle, size):
+            """
+            Create the head polygon.
+            :type point1: QPointF
+            :type angle: float
+            :type size: int
+            :rtype: QPolygonF
+            """
+            rad = radians(angle)
+            point2 = point1 - QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+            point3 = point1 - QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+            return QPolygonF([point1, point2, point3])
+
+        def createTail(point1, angle, size):
+            """
+            Create the tail polygon.
+            :type point1: QPointF
+            :type angle: float
+            :type size: int
+            :rtype: QPolygonF
+            """
+            rad = radians(angle)
+            point2 = point1 + QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+            point3 = point1 + QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+            return QPolygonF([point1, point2, point3])
+
+        if visible is None:
+            visible = self.canDraw()
+
         sourceNode = self.source
         targetNode = self.target
         sourcePos = sourceNode.anchor(self)
@@ -249,71 +238,78 @@ class InclusionEdge(AbstractEdge):
 
         self.prepareGeometryChange()
 
-        self.updateAnchors()
-        self.updateBreakPoints()
-        self.updateZValue()
-
-        createSelectionArea = self.createSelectionArea
-        createHead = self.createHead
-        createTail = self.createTail
-
-        ################################################
-        # UPDATE EDGE PATH, SELECTION BOX, HEAD AND TAIL
+        ##########################################
+        # PATH, SELECTION, HEAD, TAIL (GEOMETRY)
         #################################
 
         collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
 
-        path = QPainterPath()
         selection = QPainterPath()
+        path = QPainterPath()
         head = QPolygonF()
         tail = QPolygonF()
 
         if len(collection) == 1:
-
             subpath = collection[0]
             p1 = sourceNode.intersection(subpath)
             p2 = targetNode.intersection(subpath) if targetNode else subpath.p2()
             if p1 is not None and p2 is not None:
                 path.moveTo(p1)
                 path.lineTo(p2)
-                selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), 8))
+                selection.addPolygon(createArea(p1, p2, subpath.angle(), 8))
                 head = createHead(p2, subpath.angle(), 12)
                 if self.equivalence:
                     tail = createTail(p1, subpath.angle(), 12)
-
         elif len(collection) > 1:
-
             subpath1 = collection[0]
             subpathN = collection[-1]
             p11 = sourceNode.intersection(subpath1)
             p22 = targetNode.intersection(subpathN)
-
             if p11 and p22:
-
                 p12 = subpath1.p2()
                 p21 = subpathN.p1()
-
                 path.moveTo(p11)
                 path.lineTo(p12)
-                selection.addPolygon(createSelectionArea(p11, p12, subpath1.angle(), 8))
-
+                selection.addPolygon(createArea(p11, p12, subpath1.angle(), 8))
                 for subpath in collection[1:-1]:
                     p1 = subpath.p1()
                     p2 = subpath.p2()
                     path.moveTo(p1)
                     path.lineTo(p2)
-                    selection.addPolygon(createSelectionArea(p1, p2, subpath.angle(), 8))
-
+                    selection.addPolygon(createArea(p1, p2, subpath.angle(), 8))
                 path.moveTo(p21)
                 path.lineTo(p22)
-                selection.addPolygon(createSelectionArea(p21, p22, subpathN.angle(), 8))
+                selection.addPolygon(createArea(p21, p22, subpathN.angle(), 8))
                 head = createHead(p22, subpathN.angle(), 12)
                 if self.equivalence:
                     tail = createTail(p11, subpath1.angle(), 12)
 
+        self.selection.setGeometry(selection)
         self.path.setGeometry(path)
         self.head.setGeometry(head)
         self.tail.setGeometry(tail)
-        self.selection.setGeometry(selection)
 
-        self.redraw(selected=self.isSelected(), visible=self.canDraw())
+        ##########################################
+        # PATH, HEAD, TAIL (BRUSH)
+        #################################
+
+        headBrush = QBrush(Qt.NoBrush)
+        headPen = QPen(Qt.NoPen)
+        pathPen = QPen(Qt.NoPen)
+        tailBrush = QBrush(Qt.NoBrush)
+        tailPen = QPen(Qt.NoPen)
+
+        if visible:
+            headBrush = QBrush(QColor(0, 0, 0, 255))
+            headPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            pathPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            tailBrush = QBrush(QColor(0, 0, 0, 255))
+            tailPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+
+        self.head.setBrush(headBrush)
+        self.head.setPen(headPen)
+        self.path.setPen(pathPen)
+        self.tail.setBrush(tailBrush)
+        self.tail.setPen(tailPen)
+
+        super(InclusionEdge, self).updateEdge(selected, visible, breakpoint, anchor, **kwargs)

@@ -117,7 +117,6 @@ class CommandLabelChange(QUndoCommand):
         for key in ('undo', 'redo'):
             for node in self.project.predicates(self.item.type(), self.data[key]):
                 node.updateNode()
-                node.redraw()
 
         # IDENTITFY ENUMERATION NODES
         if self.item.type() is Item.IndividualNode:

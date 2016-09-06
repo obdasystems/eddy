@@ -36,6 +36,7 @@
 import math
 
 from PyQt5.QtCore import QPointF
+from PyQt5.QtGui import QPolygonF
 
 
 def angle(p1, p2):
@@ -73,6 +74,23 @@ def intersection(l1, l2):
     if (T, L) == (B, R):
         return QPointF(L, T)
     return None
+
+
+def createArea(p1, p2, degrees, size):
+    """
+    Creates an area between the given QPointF and according to the given angle and size.
+    :type p1: QPointF
+    :type p2: QPointF
+    :type degrees: float
+    :type size: int
+    :rtype: QPolygonF
+    """
+    rad = math.radians(degrees)
+    x = size / 2 * math.sin(rad)
+    y = size / 2 * math.cos(rad)
+    a = QPointF(+x, +y)
+    b = QPointF(-x, -y)
+    return QPolygonF([p1 + a, p1 + b, p2 + b, p2 + a])
 
 
 def midpoint(p1, p2):

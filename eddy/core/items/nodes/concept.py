@@ -63,12 +63,14 @@ class ConceptNode(AbstractResizableNode):
         super(ConceptNode, self).__init__(**kwargs)
         w = max(width, 110)
         h = max(height, 50)
+        brush = brush or ConceptNode.DefaultBrush
+        pen = ConceptNode.DefaultPen
         self.background = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
         self.selection = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
-        self.polygon = Polygon(QRectF(-w / 2, -h / 2, w, h), brush or ConceptNode.DefaultBrush, ConceptNode.DefaultPen)
+        self.polygon = Polygon(QRectF(-w / 2, -h / 2, w, h), brush, pen)
         self.label = NodeLabel(template='concept', pos=self.center, parent=self)
         self.label.setAlignment(Qt.AlignCenter)
-        self.updateResizeHandles()
+        self.updateNode()
         self.updateTextPos()
 
     #############################################
@@ -169,7 +171,6 @@ class ConceptNode(AbstractResizableNode):
         snap = self.session.action('toggle_grid').isChecked()
         size = self.diagram.GridSize
         moved = self.label.isMoved()
-
         background = self.background.geometry()
         selection = self.selection.geometry()
         polygon = self.polygon.geometry()
@@ -365,9 +366,9 @@ class ConceptNode(AbstractResizableNode):
         self.background.setGeometry(background)
         self.selection.setGeometry(selection)
         self.polygon.setGeometry(polygon)
-        self.updateResizeHandles()
+
+        self.updateNode(selected=True, handle=self.mp_Handle, anchors=(self.mp_Data, D))
         self.updateTextPos(moved=moved)
-        self.updateAnchors(self.mp_Data, D)
 
     def setIdentity(self, identity):
         """

@@ -79,8 +79,11 @@ class AttributeNode(AbstractNode):
         Returns True if the predicate represented by this node is functional, else False.
         :rtype: bool
         """
-        meta = self.project.meta(self.type(), self.text())
-        return meta.functional
+        try:
+            meta = self.project.meta(self.type(), self.text())
+            return meta.functional
+        except (AttributeError, KeyError):
+            return False
 
     @functional.setter
     def functional(self, value):
@@ -94,7 +97,7 @@ class AttributeNode(AbstractNode):
         self.project.addMeta(self.type(), self.text(), meta)
         # Redraw all the predicate nodes identifying the current predicate.
         for node in self.project.predicates(self.type(), self.text()):
-            node.redraw(functional=functional, selected=node.isSelected())
+            node.updateNode(functional=functional, selected=node.isSelected())
 
     @property
     def special(self):
@@ -190,27 +193,6 @@ class AttributeNode(AbstractNode):
         path.addEllipse(self.polygon.geometry())
         return path
 
-    def redraw(self, functional=None, **kwargs):
-        """
-        Perform the redrawing of this item.
-        :type functional: bool
-        """
-        if functional is None:
-            functional = self.functional
-
-        # FUNCTIONAL POLYGON
-        pen = QPen(Qt.NoPen)
-        brush = QBrush(Qt.NoBrush)
-        if functional:
-            pen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-            brush = QBrush(QColor(252, 252, 252, 255))
-
-        self.fpolygon.setPen(pen)
-        self.fpolygon.setBrush(brush)
-
-        # SELECTION + SYNTAX VALIDATION + REFRESH
-        super(AttributeNode, self).redraw(**kwargs)
-
     def setIdentity(self, identity):
         """
         Set the identity of the current node.
@@ -256,15 +238,32 @@ class AttributeNode(AbstractNode):
         """
         return self.label.pos()
 
-    def updateNode(self, *args, **kwargs):
+    def updateNode(self, functional=None, **kwargs):
         """
         Update the current node.
+        :type functional: bool
         """
+        if functional is None:
+            functional = self.functional
+
+        # FUNCTIONAL POLYGON (SHAPE)
         path1 = QPainterPath()
         path1.addEllipse(self.polygon.geometry())
         path2 = QPainterPath()
         path2.addEllipse(QRectF(-7, -7, 14, 14))
         self.fpolygon.setGeometry(path1.subtracted(path2))
+
+        # FUNCTIONAL POLYGON (PEN & BRUSH)
+        pen = QPen(Qt.NoPen)
+        brush = QBrush(Qt.NoBrush)
+        if functional:
+            pen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            brush = QBrush(QColor(252, 252, 252, 255))
+        self.fpolygon.setPen(pen)
+        self.fpolygon.setBrush(brush)
+
+        # SELECTION + BACKGROUND + CACHE REFRESH
+        super(AttributeNode, self).updateNode(**kwargs)
 
     def updateTextPos(self, *args, **kwargs):
         """

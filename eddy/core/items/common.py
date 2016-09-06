@@ -168,13 +168,6 @@ class AbstractItem(QGraphicsItem, DiagramItemMixin):
         pass
 
     @abstractmethod
-    def redraw(self, **kwargs):
-        """
-        Perform the redrawing of this item.
-        """
-        pass
-
-    @abstractmethod
     def setText(self, text):
         """
         Set the label text.
