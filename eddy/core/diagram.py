@@ -219,7 +219,7 @@ class Diagram(QGraphicsScene):
                 node = self.itemOnTopOf(mousePos, edges=False)
                 if node:
                     edge = self.factory.create(Item.forValue(self.modeParam), source=node)
-                    edge.updateEdge(mousePos)
+                    edge.updateEdge(target=mousePos)
                     self.mp_Edge = edge
                     self.addItem(edge)
 
@@ -336,14 +336,13 @@ class Diagram(QGraphicsScene):
 
                     statusBar = self.session.statusBar()
                     edge = self.mp_Edge
-                    edge.updateEdge(mousePos)
+                    edge.updateEdge(target=mousePos)
 
-                    currentNode = self.itemOnTopOf(mousePos, edges=False, skip={edge.source})
                     previousNode = self.mo_Node
-
                     if previousNode:
                         previousNode.updateNode(selected=False)
 
+                    currentNode = self.itemOnTopOf(mousePos, edges=False, skip={edge.source})
                     if currentNode:
                         self.mo_Node = currentNode
                         pvr = self.project.profile.check(edge.source, edge, currentNode)
