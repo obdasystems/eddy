@@ -735,9 +735,9 @@ class Diagram(QGraphicsScene):
         :rtype: bool
         """
         return self.mode is DiagramMode.LabelMove and \
-               self.mp_Label is not None and \
-               self.mp_LabelPos is not None and \
-               self.mp_Pos is not None
+           self.mp_Label is not None and \
+           self.mp_LabelPos is not None and \
+           self.mp_Pos is not None
 
     def isNodeMoveInProgress(self):
         """
@@ -745,10 +745,10 @@ class Diagram(QGraphicsScene):
         :rtype: bool
         """
         return self.mode is DiagramMode.NodeMove and \
-               self.mp_Data is not None and \
-               self.mp_Node is not None and \
-               self.mp_NodePos is not None and \
-               self.mp_Pos is not None
+           self.mp_Data is not None and \
+           self.mp_Node is not None and \
+           self.mp_NodePos is not None and \
+           self.mp_Pos is not None
 
     def isEmpty(self):
         """
