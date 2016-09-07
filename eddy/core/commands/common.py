@@ -304,35 +304,3 @@ class CommandSnapItemsToGrid(QUndoCommand):
             edge.updateEdge()
         # Emit updated signal.
         self.diagram.sgnUpdated.emit()
-
-
-class CommandSetProperty(QUndoCommand):
-    """
-    This command is used to set properties of graphol items.
-    """
-    def __init__(self, diagram, item, collection, name):
-        """
-        Initialize the command.
-        :type diagram: Diagram
-        :type item: AbstractItem
-        :type collection: T <= tuple|list|set|dict
-        :type name: str
-        """
-        if not isinstance(collection, (list, tuple, set)):
-            collection = [collection]
-        self.item = item
-        self.diagram = diagram
-        self.collection = collection
-        super().__init__(name)
-
-    def redo(self):
-        """redo the command"""
-        for data in self.collection:
-            setattr(self.item, data['attribute'], data['redo'])
-        self.diagram.sgnUpdated.emit()
-
-    def undo(self):
-        """undo the command"""
-        for data in self.collection:
-            setattr(self.item, data['attribute'], data['undo'])
-        self.diagram.sgnUpdated.emit()
