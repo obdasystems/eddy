@@ -70,18 +70,6 @@ class AttributeNode(AbstractNode):
         self.label.setAlignment(Qt.AlignCenter)
 
     #############################################
-    #   PROPERTIES
-    #################################
-
-    @property
-    def special(self):
-        """
-        Returns the special type of this node.
-        :rtype: Special
-        """
-        return Special.forLabel(self.text())
-
-    #############################################
     #   INTERFACE
     #################################
 
@@ -218,6 +206,13 @@ class AttributeNode(AbstractNode):
         path = QPainterPath()
         path.addEllipse(self.polygon.geometry())
         return path
+
+    def special(self):
+        """
+        Returns the special type of this node.
+        :rtype: Special
+        """
+        return Special.forLabel(self.text())
 
     def text(self):
         """

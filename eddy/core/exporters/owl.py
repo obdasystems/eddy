@@ -455,9 +455,9 @@ class OWLProjectExporterWorker(QObject):
         :rtype: OWLDataProperty
         """
         if node not in self.conv:
-            if node.special is Special.Top:
+            if node.special() is Special.Top:
                 self.conv[node] = self.df.getOWLTopDataProperty()
-            elif node.special is Special.Bottom:
+            elif node.special() is Special.Bottom:
                 self.conv[node] = self.df.getOWLBottomDataProperty()
             else:
                 self.conv[node] = self.df.getOWLDataProperty(OWLShortIRI(self.ontoPrefix, node.text()), self.pm)
@@ -547,9 +547,9 @@ class OWLProjectExporterWorker(QObject):
         :rtype: OWLClass
         """
         if node not in self.conv:
-            if node.special is Special.Top:
+            if node.special() is Special.Top:
                 self.conv[node] = self.df.getOWLThing()
-            elif node.special is Special.Bottom:
+            elif node.special() is Special.Bottom:
                 self.conv[node] = self.df.getOWLNothing()
             else:
                 self.conv[node] = self.df.getOWLClass(OWLShortIRI(self.ontoPrefix, node.text()), self.pm)
@@ -939,9 +939,9 @@ class OWLProjectExporterWorker(QObject):
         :rtype: OWLObjectProperty
         """
         if node not in self.conv:
-            if node.special is Special.Top:
+            if node.special() is Special.Top:
                 self.conv[node] = self.df.getOWLTopObjectProperty()
-            elif node.special is Special.Bottom:
+            elif node.special() is Special.Bottom:
                 self.conv[node] = self.df.getOWLBottomObjectProperty()
             else:
                 self.conv[node] = self.df.getOWLObjectProperty(OWLShortIRI(self.ontoPrefix, node.text()), self.pm)

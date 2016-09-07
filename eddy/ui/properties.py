@@ -478,7 +478,7 @@ class PredicateNodeProperty(NodeProperty):
         self.refactorField.setChecked(False)
 
         if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
-            if node.special is not None:
+            if node.special() is not None:
                 self.refactorField.setEnabled(False)
 
         self.labelWidget = QWidget()

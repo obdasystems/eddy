@@ -248,7 +248,7 @@ class MenuFactory(QObject):
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
         self.insertLabelActions(menu, node)
         menu.insertSeparator(self.session.action('node_properties'))
-        self.session.action('refactor_name').setEnabled(node.special is None)
+        self.session.action('refactor_name').setEnabled(node.special() is None)
         return menu
 
     def buildComplementNodeMenu(self, diagram, node):
@@ -293,7 +293,7 @@ class MenuFactory(QObject):
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
         self.insertLabelActions(menu, node)
         menu.insertSeparator(self.session.action('node_properties'))
-        self.session.action('refactor_name').setEnabled(node.special is None)
+        self.session.action('refactor_name').setEnabled(node.special() is None)
         return menu
 
     def buildDatatypeRestrictionNodeMenu(self, diagram, node):
@@ -537,7 +537,7 @@ class MenuFactory(QObject):
         menu.insertAction(self.session.action('node_properties'), self.session.action('invert_role'))
         self.insertLabelActions(menu, node)
         menu.insertSeparator(self.session.action('node_properties'))
-        self.session.action('refactor_name').setEnabled(node.special is None)
+        self.session.action('refactor_name').setEnabled(node.special() is None)
         return menu
 
     def buildRoleInverseNodeMenu(self, diagram, node):

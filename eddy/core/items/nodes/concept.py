@@ -74,18 +74,6 @@ class ConceptNode(AbstractResizableNode):
         self.updateTextPos()
 
     #############################################
-    #   PROPERTIES
-    #################################
-
-    @property
-    def special(self):
-        """
-        Returns the special type of this node.
-        :rtype: Special
-        """
-        return Special.forLabel(self.text())
-
-    #############################################
     #   INTERFACE
     #################################
 
@@ -402,6 +390,13 @@ class ConceptNode(AbstractResizableNode):
         for polygon in self.handles:
             path.addEllipse(polygon.geometry())
         return path
+
+    def special(self):
+        """
+        Returns the special type of this node.
+        :rtype: Special
+        """
+        return Special.forLabel(self.text())
 
     def text(self):
         """
