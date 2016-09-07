@@ -44,10 +44,6 @@ class Identity(Enum):
     """
     This class defines graphol expression identities.
     """
-    __order__ = 'Neutral Concept Role Attribute ValueDomain ' \
-                'Individual Value RoleInstance AttributeInstance ' \
-                'Facet Unknown'
-
     Neutral = 'Neutral'
     Concept = 'Concept'
     Role = 'Role'
@@ -66,12 +62,6 @@ class Item(IntEnum):
     """
     This class defines all the available elements for graphol diagrams.
     """
-    __order__ = 'ConceptNode AttributeNode RoleNode ValueDomainNode IndividualNode ' \
-                'DomainRestrictionNode RangeRestrictionNode UnionNode EnumerationNode ' \
-                'ComplementNode RoleChainNode RoleInverseNode DatatypeRestrictionNode ' \
-                'DisjointUnionNode PropertyAssertionNode FacetNode InclusionEdge ' \
-                'InputEdge MembershipEdge Label Undefined'
-
     # PREDICATES
     ConceptNode = 65537
     AttributeNode = 65538
@@ -140,8 +130,6 @@ class Restriction(Enum):
     """
     This class defines all the available restrictions for domain and range restriction nodes.
     """
-    __order__ = 'Exists Forall Cardinality Self'
-
     Exists = 'Existential: exists'
     Forall = 'Universal: forall'
     Cardinality = 'Cardinality: (min, max)'
@@ -181,8 +169,6 @@ class Special(Enum):
     """
     This class defines special nodes types.
     """
-    __order__ = 'Top Bottom'
-
     Top = 'TOP'
     Bottom = 'BOTTOM'
 

@@ -45,8 +45,6 @@ class File(Enum):
     """
     This class defines supported filetypes.
     """
-    __order__ = 'Bmp Csv GraphML Graphol Html Jpeg Owl Pdf Png Zip Xml'
-
     Bmp = 'Bitmap (*.bmp)'
     Csv = 'Comma-separated values (*.csv)'
     GraphML = 'GraphML (*.graphml)'
@@ -116,8 +114,6 @@ class Platform(Enum):
     """
     This class defines supported platforms.
     """
-    __order__ = 'Darwin Linux Windows'
-
     Darwin = 'Darwin'
     Linux = 'Linux'
     Windows = 'Windows'

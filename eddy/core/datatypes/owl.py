@@ -41,12 +41,6 @@ class Datatype(Enum):
     """
     This class defines all the available datatypes for the value-domain node.
     """
-    __order__ = 'anyURI base64Binary boolean byte dateTime dateTimeStamp decimal ' \
-                'double float hexBinary int integer language literal long Name NCName ' \
-                'negativeInteger NMTOKEN nonNegativeInteger nonPositiveInteger ' \
-                'normalizedString plainLiteral positiveInteger rational real short ' \
-                'string token unsignedByte unsignedInt unsignedLong unsignedShort xmlLiteral'
-
     anyURI = 'xsd:anyURI'
     base64Binary = 'xsd:base64Binary'
     boolean = 'xsd:boolean'
@@ -100,8 +94,6 @@ class Facet(Enum):
     """
     This class defines available Facet restrictions for the value-restriction node.
     """
-    __order__ = 'maxExclusive maxInclusive minExclusive minInclusive langRange length maxLength minLength pattern'
-
     maxExclusive = 'xsd:maxExclusive'
     maxInclusive = 'xsd:maxInclusive'
     minExclusive = 'xsd:minExclusive'
@@ -180,8 +172,6 @@ class OWLSyntax(Enum):
     """
     This class defines available OWL syntax for exporting ontologies.
     """
-    __order__ = 'Functional Manchester RDF Turtle'
-
     Functional = 'Functional-style syntax'
     Manchester = 'Manchester OWL syntax'
     RDF = 'RDF/XML syntax for OWL'

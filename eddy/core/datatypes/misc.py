@@ -41,8 +41,6 @@ class Color(Enum):
     """
     This class defines predicate nodes available colors.
     """
-    __order__ = 'White Yellow Orange Red Magenta Purple Blue Teal Green Lime Grey Brown Beige'
-
     White = '#fcfcfc'
     Yellow = '#f0e50c'
     Orange = '#f29210'
