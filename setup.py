@@ -33,6 +33,7 @@
 ##########################################################################
 
 
+import cx_Freeze
 import distutils.core
 import distutils.log
 import os
@@ -41,13 +42,8 @@ import re
 import stat
 import subprocess
 import sys
+import textwrap
 import zipfile
-
-from textwrap import dedent
-
-from cx_Freeze import setup
-from cx_Freeze import Executable
-from cx_Freeze import build_exe
 
 from eddy import APPNAME, APPID, BUG_TRACKER, COPYRIGHT
 from eddy import DIAG_HOME, GRAPHOL_HOME, LICENSE
@@ -129,7 +125,7 @@ class Clean(distutils.core.Command):
 
 
 # noinspection PyUnresolvedReferences
-class BuildExe(build_exe):
+class BuildExe(cx_Freeze.build_exe):
     """
     Extends the build_exe command to:
        - add option 'dist_dir' (or --dist-dir as a command line parameter)
@@ -137,7 +133,7 @@ class BuildExe(build_exe):
        - produce a windows installer using InnoSetup (ony on windows platform)
     """
     dist_dir = None
-    user_options = build_exe.user_options
+    user_options = cx_Freeze.build_exe.user_options
     user_options.extend([('dist-dir=', 'd', "directory where to put final distributions in [default: dist]")])
 
     def initialize_options(self):
@@ -296,7 +292,7 @@ class BuildExe(build_exe):
         if sys.platform.startswith('linux'):
              path = os.path.join(self.build_exe, 'run.sh')
              with open(path, mode='w') as f:
-                f.write(dedent("""#!/bin/sh
+                f.write(textwrap.dedent("""#!/bin/sh
                 APP="{0}"
                 EXEC="{1}"
                 VERSION="{2}"
@@ -322,10 +318,7 @@ commands = {
 
 if sys.platform.startswith('darwin'):
 
-    from cx_Freeze import bdist_mac
-    from cx_Freeze import bdist_dmg
-
-    class BDistMac(bdist_mac):
+    class BDistMac(cx_Freeze.bdist_mac):
         """
         Extends bdist_mac adding the following changes:
            - properly lookup build_exe path (using BUILD_PATH)
@@ -496,7 +489,7 @@ if sys.platform.startswith('darwin'):
             plistlib.dump(contents, plist)
             plist.close()
 
-    class BDistDmg(bdist_dmg):
+    class BDistDmg(cx_Freeze.bdist_dmg):
         """
         Extends bdist_dmg adding the following changes:
            - correctly package app bundle instead of app bundle content.
@@ -504,7 +497,7 @@ if sys.platform.startswith('darwin'):
         dist_dir = None
         volume_background = None
         volume_icon = None
-        user_options = bdist_dmg.user_options
+        user_options = cx_Freeze.bdist_dmg.user_options
         user_options.extend([
             ('dist-dir=', 'd', "directory where to put final distributions in [default: dist]"),
             ('volume-background=', 'b', "the path to use as background of the generated volume"),
@@ -654,7 +647,7 @@ if sys.platform.startswith('linux'):
     ])
 
 
-setup(
+cx_Freeze.setup(
     cmdclass=commands,
     name=APPNAME,
     version=VERSION,
@@ -702,7 +695,7 @@ setup(
         }
     },
     executables=[
-        Executable(
+        cx_Freeze.Executable(
             script='run.py',
             base=EXEC_BASE,
             targetName=EXEC_NAME,
