@@ -58,7 +58,7 @@ def bfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None
                            being visited, unless they are connected through some other nodes
                            for which the callable returns True).
 
-    :type source: Node
+    :type source: AbstractNode
     :type filter_on_edges: callable
     :type filter_on_nodes callable
     :type filter_on_visit: callable
@@ -103,7 +103,7 @@ def dfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None
                            being visited, unless they are connected through some other nodes
                            for which the callable returns True).
 
-    :type source: Node
+    :type source: AbstractNode
     :type filter_on_edges: callable
     :type filter_on_nodes callable
     :type filter_on_visit: callable

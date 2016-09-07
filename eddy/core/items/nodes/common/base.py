@@ -527,7 +527,7 @@ class AbstractResizableNode(AbstractNode):
             brush = QBrush(QColor(43, 173, 63, 160)) if valid else QBrush(QColor(179, 12, 12, 160))
         self.background.setBrush(brush)
 
-        # ANCHOR POINTS (POSITION). NB: SHAPE IS IN THE EDGES
+        # ANCHOR POINTS (POSITION) -> NB: SHAPE IS IN THE EDGES
         if anchors is not None:
             mp_Data = anchors[0]
             diff = anchors[1]
