@@ -89,7 +89,7 @@ from eddy.core.exporters.owl import OWLProjectExporter
 from eddy.core.exporters.pdf import PdfDiagramExporter
 from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import MenuFactory, PropertyFactory
-from eddy.core.functions.fsystem import fcopy, fremove
+from eddy.core.functions.fsystem import fcopy, fremove, is_dir
 from eddy.core.functions.fsystem import is_package, fexists
 from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.misc import snap, snapF, cutR
@@ -855,6 +855,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #############################################
         # SEARCH PLUGINS
         #################################
+
+        if not is_dir('@plugins/'):
+            LOGGER.error('Could not find plugins directory: %s', expandPath('@plugins/'))
+            return
 
         for file_or_directory in os.listdir(expandPath('@plugins/')):
             import_module_from_directory(os.path.join(expandPath('@plugins/'), file_or_directory))
