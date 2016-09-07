@@ -1063,10 +1063,8 @@ class OWLProjectExporterWorker(QObject):
         Generate OWL Data Property specific axioms.
         :type node: AttributeNode
         """
-        meta = self.project.meta(node.type(), node.text())
-        if meta:
-            if meta.functional:
-                self.axioms.add(self.df.getOWLFunctionalDataPropertyAxiom(self.conv[node]))
+        if node.isFunctional():
+            self.axioms.add(self.df.getOWLFunctionalDataPropertyAxiom(self.conv[node]))
 
     def axiomClassAssertion(self, edge):
         """
@@ -1169,22 +1167,20 @@ class OWLProjectExporterWorker(QObject):
         Generate OWL ObjectProperty specific axioms.
         :type node: RoleNode
         """
-        meta = self.project.meta(node.type(), node.text())
-        if meta:
-            if meta.functional:
-                self.axioms.add(self.df.getOWLFunctionalObjectPropertyAxiom(self.conv[node]))
-            if meta.inverseFunctional:
-                self.axioms.add(self.df.getOWLInverseFunctionalObjectPropertyAxiom(self.conv[node]))
-            if meta.asymmetric:
-                self.axioms.add(self.df.getOWLAsymmetricObjectPropertyAxiom(self.conv[node]))
-            if meta.irreflexive:
-                self.axioms.add(self.df.getOWLIrreflexiveObjectPropertyAxiom(self.conv[node]))
-            if meta.reflexive:
-                self.axioms.add(self.df.getOWLReflexiveObjectPropertyAxiom(self.conv[node]))
-            if meta.symmetric:
-                self.axioms.add(self.df.getOWLSymmetricObjectPropertyAxiom(self.conv[node]))
-            if meta.transitive:
-                self.axioms.add(self.df.getOWLTransitiveObjectPropertyAxiom(self.conv[node]))
+        if node.isFunctional():
+            self.axioms.add(self.df.getOWLFunctionalObjectPropertyAxiom(self.conv[node]))
+        if node.isInverseFunctional():
+            self.axioms.add(self.df.getOWLInverseFunctionalObjectPropertyAxiom(self.conv[node]))
+        if node.isAsymmetric():
+            self.axioms.add(self.df.getOWLAsymmetricObjectPropertyAxiom(self.conv[node]))
+        if node.isIrreflexive():
+            self.axioms.add(self.df.getOWLIrreflexiveObjectPropertyAxiom(self.conv[node]))
+        if node.isReflexive():
+            self.axioms.add(self.df.getOWLReflexiveObjectPropertyAxiom(self.conv[node]))
+        if node.isSymmetric():
+            self.axioms.add(self.df.getOWLSymmetricObjectPropertyAxiom(self.conv[node]))
+        if node.isTransitive():
+            self.axioms.add(self.df.getOWLTransitiveObjectPropertyAxiom(self.conv[node]))
 
     def axiomObjectPropertyAssertion(self, edge):
         """

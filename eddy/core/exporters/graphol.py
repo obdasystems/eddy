@@ -432,7 +432,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
 
         self.metaFuncForItem = {
             Item.AttributeNode: self.exportAttributeMetadata,
-            Item.ConceptNode: self.exportPredicateMeta,
+            Item.ConceptNode: self.exportPredicateMetadata,
             Item.RoleNode: self.exportRoleMetadata,
         }
 
@@ -444,6 +444,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
             Item.DisjointUnionNode: 'disjoint-union',
             Item.DomainRestrictionNode: 'domain-restriction',
             Item.EnumerationNode: 'enumeration',
+            Item.FacetNode: 'facet',
             Item.IndividualNode: 'individual',
             Item.IntersectionNode: 'intersection',
             Item.PropertyAssertionNode: 'property-assertion',
@@ -462,7 +463,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
     #   AUXILIARY METHODS
     #################################
 
-    def exportPredicateMeta(self, item, name):
+    def exportPredicateMetadata(self, item, name):
         """
         Export predicate metadata.
         :type item: Item
@@ -474,9 +475,9 @@ class GrapholProjectExporter(AbstractProjectExporter):
         element.setAttribute('type', self.itemToXml[item])
         element.setAttribute('name', name)
         description = self.metaDocument.createElement('description')
-        description.appendChild(self.metaDocument.createTextNode(meta.description))
+        description.appendChild(self.metaDocument.createTextNode(meta.get('description', '')))
         url = self.metaDocument.createElement('url')
-        url.appendChild(self.metaDocument.createTextNode(meta.url))
+        url.appendChild(self.metaDocument.createTextNode(meta.get('url', '')))
         element.appendChild(url)
         element.appendChild(description)
         return element
@@ -488,10 +489,10 @@ class GrapholProjectExporter(AbstractProjectExporter):
         :type name: str
         :rtype: QDomElement
         """
-        element = self.exportPredicateMeta(item, name)
+        element = self.exportPredicateMetadata(item, name)
         meta = self.project.meta(item, name)
         functional = self.metaDocument.createElement('functional')
-        functional.appendChild(self.metaDocument.createTextNode(str(int(meta.functional))))
+        functional.appendChild(self.metaDocument.createTextNode(str(int(meta.get('functional', False)))))
         element.appendChild(functional)
         return element
 
@@ -502,22 +503,22 @@ class GrapholProjectExporter(AbstractProjectExporter):
         :type name: str
         :rtype: QDomElement
         """
-        element = self.exportPredicateMeta(item, name)
+        element = self.exportPredicateMetadata(item, name)
         meta = self.project.meta(item, name)
         functional = self.metaDocument.createElement('functional')
-        functional.appendChild(self.metaDocument.createTextNode(str(int(meta.functional))))
+        functional.appendChild(self.metaDocument.createTextNode(str(int(meta.get('functional', False)))))
         inverseFunctional = self.metaDocument.createElement('inverseFunctional')
-        inverseFunctional.appendChild(self.metaDocument.createTextNode(str(int(meta.inverseFunctional))))
+        inverseFunctional.appendChild(self.metaDocument.createTextNode(str(int(meta.get('inverseFunctional', False)))))
         asymmetric = self.metaDocument.createElement('asymmetric')
-        asymmetric.appendChild(self.metaDocument.createTextNode(str(int(meta.asymmetric))))
+        asymmetric.appendChild(self.metaDocument.createTextNode(str(int(meta.get('asymmetric', False)))))
         irreflexive = self.metaDocument.createElement('irreflexive')
-        irreflexive.appendChild(self.metaDocument.createTextNode(str(int(meta.irreflexive))))
+        irreflexive.appendChild(self.metaDocument.createTextNode(str(int(meta.get('irreflexive', False)))))
         reflexive = self.metaDocument.createElement('reflexive')
-        reflexive.appendChild(self.metaDocument.createTextNode(str(int(meta.reflexive))))
+        reflexive.appendChild(self.metaDocument.createTextNode(str(int(meta.get('reflexive', False)))))
         symmetric = self.metaDocument.createElement('symmetric')
-        symmetric.appendChild(self.metaDocument.createTextNode(str(int(meta.symmetric))))
+        symmetric.appendChild(self.metaDocument.createTextNode(str(int(meta.get('symmetric', False)))))
         transitive = self.metaDocument.createElement('transitive')
-        transitive.appendChild(self.metaDocument.createTextNode(str(int(meta.transitive))))
+        transitive.appendChild(self.metaDocument.createTextNode(str(int(meta.get('transitive', False)))))
         element.appendChild(functional)
         element.appendChild(inverseFunctional)
         element.appendChild(asymmetric)

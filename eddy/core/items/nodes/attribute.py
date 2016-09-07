@@ -74,32 +74,6 @@ class AttributeNode(AbstractNode):
     #################################
 
     @property
-    def functional(self):
-        """
-        Returns True if the predicate represented by this node is functional, else False.
-        :rtype: bool
-        """
-        try:
-            meta = self.project.meta(self.type(), self.text())
-            return meta.functional
-        except (AttributeError, KeyError):
-            return False
-
-    @functional.setter
-    def functional(self, value):
-        """
-        Set the functional property of the predicate represented by this node.
-        :type value: bool
-        """
-        functional = bool(value)
-        meta = self.project.meta(self.type(), self.text())
-        meta.functional = functional
-        self.project.addMeta(self.type(), self.text(), meta)
-        # Redraw all the predicate nodes identifying the current predicate.
-        for node in self.project.predicates(self.type(), self.text()):
-            node.updateNode(functional=functional, selected=node.isSelected())
-
-    @property
     def special(self):
         """
         Returns the special type of this node.
@@ -157,6 +131,16 @@ class AttributeNode(AbstractNode):
         """
         return Identity.Attribute
 
+    def isFunctional(self):
+        """
+        Returns True if the predicate represented by this node is functional, else False.
+        :rtype: bool
+        """
+        try:
+            return self.project.meta(self.type(), self.text())['functional']
+        except (AttributeError, KeyError):
+            return False
+
     def paint(self, painter, option, widget=None):
         """
         Paint the node in the diagram.
@@ -192,6 +176,17 @@ class AttributeNode(AbstractNode):
         path = QPainterPath()
         path.addEllipse(self.polygon.geometry())
         return path
+
+    def setFunctional(self, functional):
+        """
+        Set the functional property of the predicated represented by this node.
+        :type functional: bool
+        """
+        meta = self.project.meta(self.type(), self.text())
+        meta['functional'] = bool(functional)
+        self.project.addMeta(self.type(), self.text(), meta)
+        for node in self.project.predicates(self.type(), self.text()):
+            node.updateNode(functional=functional, selected=node.isSelected())
 
     def setIdentity(self, identity):
         """
@@ -244,7 +239,7 @@ class AttributeNode(AbstractNode):
         :type functional: bool
         """
         if functional is None:
-            functional = self.functional
+            functional = self.isFunctional()
 
         # FUNCTIONAL POLYGON (SHAPE)
         path1 = QPainterPath()

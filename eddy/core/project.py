@@ -40,7 +40,6 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.misc import cutR
-from eddy.core.items.nodes.common.meta import MetaFactory
 
 
 K_DIAGRAM = 'diagrams'
@@ -105,8 +104,6 @@ class Project(QObject):
         self.profile = profile
         self.profile.setParent(self)
 
-        self.mf = MetaFactory(self)
-
     #############################################
     #   PROPERTIES
     #################################
@@ -148,7 +145,7 @@ class Project(QObject):
         Create metadata for the given predicate type/name combination.
         :type item: Item
         :type name: str
-        :type metadata: PredicateMetaData
+        :type metadata: dict
         """
         self.index[K_PREDICATE][item][name][K_META] = metadata
         self.sgnMetaAdded.emit(item, name)
@@ -271,12 +268,12 @@ class Project(QObject):
         Returns predicate metadata.
         :type item: Item
         :type name: str
-        :rtype: PredicateMetaData
+        :rtype: dict
         """
         try:
             return self.index[K_PREDICATE][item][name][K_META]
         except KeyError:
-            return self.mf.create(item, name)
+            return dict()
 
     def metas(self, *types):
         """

@@ -96,157 +96,12 @@ class RoleNode(AbstractResizableNode):
     #################################
 
     @property
-    def asymmetric(self):
-        """
-        Returns True if the predicate represented by this node is asymmetric, False otherwise.
-        :rtype: bool
-        """
-        meta = self.project.meta(self.type(), self.text())
-        return meta.asymmetric
-
-    @asymmetric.setter
-    def asymmetric(self, value):
-        """
-        Set the asymmetric property for the predicate represented by this node.
-        :type value: bool
-        """
-        meta = self.project.meta(self.type(), self.text())
-        meta.asymmetric = bool(value)
-        self.project.addMeta(self.type(), self.text(), meta)
-
-    @property
-    def functional(self):
-        """
-        Returns True if the predicate represented by this node is functional, else False.
-        :rtype: bool
-        """
-        try:
-            meta = self.project.meta(self.type(), self.text())
-            return meta.functional
-        except (AttributeError, KeyError):
-            return False
-
-    @functional.setter
-    def functional(self, value):
-        """
-        Set the functional property of the predicated represented by this node.
-        :type value: bool
-        """
-        functional = bool(value)
-        meta = self.project.meta(self.type(), self.text())
-        meta.functional = functional
-        self.project.addMeta(self.type(), self.text(), meta)
-        for node in self.project.predicates(self.type(), self.text()):
-            node.updateNode(functional=functional, selected=node.isSelected())
-
-    @property
-    def inverseFunctional(self):
-        """
-        Returns True if the predicate represented by this node is inverse functional, else False.
-        :rtype: bool
-        """
-        try:
-            meta = self.project.meta(self.type(), self.text())
-            return meta.inverseFunctional
-        except (AttributeError, KeyError):
-            return False
-
-    @inverseFunctional.setter
-    def inverseFunctional(self, value):
-        """
-        Set the inverse functional property of the predicated represented by this node.
-        :type value: bool
-        """
-        inverseFunctional = bool(value)
-        meta = self.project.meta(self.type(), self.text())
-        meta.inverseFunctional = inverseFunctional
-        self.project.addMeta(self.type(), self.text(), meta)
-        for node in self.project.predicates(self.type(), self.text()):
-            node.updateNode(inverseFunctional=inverseFunctional, selected=node.isSelected())
-    
-    @property
-    def irreflexive(self):
-        """
-        Returns True if the predicate represented by this node is irreflexive, False otherwise.
-        :rtype: bool
-        """
-        meta = self.project.meta(self.type(), self.text())
-        return meta.irreflexive
-
-    @irreflexive.setter
-    def irreflexive(self, value):
-        """
-        Set the irreflexive property for the predicate represented by this node.
-        :type value: bool
-        """
-        meta = self.project.meta(self.type(), self.text())
-        meta.irreflexive = bool(value)
-        self.project.addMeta(self.type(), self.text(), meta)
-
-    @property
-    def reflexive(self):
-        """
-        Returns True if the predicate represented by this node is reflexive, False otherwise.
-        :rtype: bool
-        """
-        meta = self.project.meta(self.type(), self.text())
-        return meta.reflexive
-
-    @reflexive.setter
-    def reflexive(self, value):
-        """
-        Set the reflexive property for the predicate represented by this node.
-        :type value: bool
-        """
-        meta = self.project.meta(self.type(), self.text())
-        meta.reflexive = bool(value)
-        self.project.addMeta(self.type(), self.text(), meta)
-
-    @property
     def special(self):
         """
         Returns the special type of this node.
         :rtype: Special
         """
         return Special.forLabel(self.text())
-
-    @property
-    def symmetric(self):
-        """
-        Returns True if the predicate represented by this node is symmetric, False otherwise.
-        :rtype: bool
-        """
-        meta = self.project.meta(self.type(), self.text())
-        return meta.symmetric
-
-    @symmetric.setter
-    def symmetric(self, value):
-        """
-        Set the symmetric property for the predicate represented by this node.
-        :type value: bool
-        """
-        meta = self.project.meta(self.type(), self.text())
-        meta.symmetric = bool(value)
-        self.project.addMeta(self.type(), self.text(), meta)
-
-    @property
-    def transitive(self):
-        """
-        Returns True if the transitive represented by this node is symmetric, False otherwise.
-        :rtype: bool
-        """
-        meta = self.project.meta(self.type(), self.text())
-        return meta.transitive
-
-    @transitive.setter
-    def transitive(self, value):
-        """
-        Set the transitive property for the predicate represented by this node.
-        :type value: bool
-        """
-        meta = self.project.meta(self.type(), self.text())
-        meta.transitive = bool(value)
-        self.project.addMeta(self.type(), self.text(), meta)
 
     #############################################
     #   INTERFACE
@@ -298,6 +153,76 @@ class RoleNode(AbstractResizableNode):
         :rtype: Identity
         """
         return Identity.Role
+
+    def isAsymmetric(self):
+        """
+        Returns True if the predicate represented by this node is asymmetric, False otherwise.
+        :rtype: bool
+        """
+        try:
+            return self.project.meta(self.type(), self.text())['asymmetric']
+        except (AttributeError, KeyError):
+            return False
+
+    def isFunctional(self):
+        """
+        Returns True if the predicate represented by this node is functional, else False.
+        :rtype: bool
+        """
+        try:
+            return self.project.meta(self.type(), self.text())['functional']
+        except (AttributeError, KeyError):
+            return False
+
+    def isInverseFunctional(self):
+        """
+        Returns True if the predicate represented by this node is inverse functional, else False.
+        :rtype: bool
+        """
+        try:
+            return self.project.meta(self.type(), self.text())['inverseFunctional']
+        except (AttributeError, KeyError):
+            return False
+
+    def isIrreflexive(self):
+        """
+        Returns True if the predicate represented by this node is irreflexive, False otherwise.
+        :rtype: bool
+        """
+        try:
+            return self.project.meta(self.type(), self.text())['irreflexive']
+        except (AttributeError, KeyError):
+            return False
+
+    def isReflexive(self):
+        """
+        Returns True if the predicate represented by this node is reflexive, False otherwise.
+        :rtype: bool
+        """
+        try:
+            return self.project.meta(self.type(), self.text())['reflexive']
+        except (AttributeError, KeyError):
+            return False
+
+    def isSymmetric(self):
+        """
+        Returns True if the predicate represented by this node is symmetric, False otherwise.
+        :rtype: bool
+        """
+        try:
+            return self.project.meta(self.type(), self.text())['symmetric']
+        except (AttributeError, KeyError):
+            return False
+
+    def isTransitive(self):
+        """
+        Returns True if the transitive represented by this node is symmetric, False otherwise.
+        :rtype: bool
+        """
+        try:
+            return self.project.meta(self.type(), self.text())['transitive']
+        except (AttributeError, KeyError):
+            return False
 
     def paint(self, painter, option, widget=None):
         """
@@ -615,12 +540,79 @@ class RoleNode(AbstractResizableNode):
         self.updateNode(selected=True, handle=self.mp_Handle, anchors=(self.mp_Data, D))
         self.updateTextPos(moved=moved)
 
+    def setAsymmetric(self, asymmetric):
+        """
+        Set the asymmetric property for the predicate represented by this node.
+        :type asymmetric: bool
+        """
+        meta = self.project.meta(self.type(), self.text())
+        meta['asymmetric'] = bool(asymmetric)
+        self.project.addMeta(self.type(), self.text(), meta)
+
+    def setFunctional(self, functional):
+        """
+        Set the functional property of the predicated represented by this node.
+        :type functional: bool
+        """
+        meta = self.project.meta(self.type(), self.text())
+        meta['functional'] = bool(functional)
+        self.project.addMeta(self.type(), self.text(), meta)
+        for node in self.project.predicates(self.type(), self.text()):
+            node.updateNode(functional=functional, selected=node.isSelected())
+
     def setIdentity(self, identity):
         """
         Set the identity of the current node.
         :type identity: Identity
         """
         pass
+
+    def setInverseFunctional(self, inverseFunctional):
+        """
+        Set the inverse functional property of the predicated represented by this node.
+        :type inverseFunctional: bool
+        """
+        meta = self.project.meta(self.type(), self.text())
+        meta['inverseFunctional'] = bool(inverseFunctional)
+        self.project.addMeta(self.type(), self.text(), meta)
+        for node in self.project.predicates(self.type(), self.text()):
+            node.updateNode(inverseFunctional=inverseFunctional, selected=node.isSelected())
+
+    def setIrreflexive(self, irreflexive):
+        """
+        Set the irreflexive property for the predicate represented by this node.
+        :type irreflexive: bool
+        """
+        meta = self.project.meta(self.type(), self.text())
+        meta['irreflexive'] = bool(irreflexive)
+        self.project.addMeta(self.type(), self.text(), meta)
+
+    def setReflexive(self, reflexive):
+        """
+        Set the reflexive property for the predicate represented by this node.
+        :type reflexive: bool
+        """
+        meta = self.project.meta(self.type(), self.text())
+        meta['reflexive'] = bool(reflexive)
+        self.project.addMeta(self.type(), self.text(), meta)
+
+    def setSymmetric(self, symmetric):
+        """
+        Set the symmetric property for the predicate represented by this node.
+        :type symmetric: bool
+        """
+        meta = self.project.meta(self.type(), self.text())
+        meta['symmetric'] = bool(symmetric)
+        self.project.addMeta(self.type(), self.text(), meta)
+
+    def setTransitive(self, transitive):
+        """
+        Set the transitive property for the predicate represented by this node.
+        :type transitive: bool
+        """
+        meta = self.project.meta(self.type(), self.text())
+        meta['transitive'] = bool(transitive)
+        self.project.addMeta(self.type(), self.text(), meta)
 
     def setText(self, text):
         """
@@ -669,9 +661,9 @@ class RoleNode(AbstractResizableNode):
         :type inverseFunctional: bool
         """
         if functional is None:
-            functional = self.functional
+            functional = self.isFunctional()
         if inverseFunctional is None:
-            inverseFunctional = self.inverseFunctional
+            inverseFunctional = self.isInverseFunctional()
 
         polygon = self.polygon.geometry()
 

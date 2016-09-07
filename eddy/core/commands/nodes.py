@@ -342,10 +342,14 @@ class CommandNodeChangeMeta(QUndoCommand):
     def redo(self):
         """redo the command"""
         self.project.addMeta(self.node.type(), self.node.text(), self.data['redo'])
+        for node in self.project.predicates(self.node.type(), self.node.text()):
+            node.updateNode(selected=node.isSelected())
 
     def undo(self):
         """undo the command"""
         self.project.addMeta(self.node.type(), self.node.text(), self.data['undo'])
+        for node in self.project.predicates(self.node.type(), self.node.text()):
+            node.updateNode(selected=node.isSelected())
 
 
 class CommandNodeChangeInputsOrder(QUndoCommand):

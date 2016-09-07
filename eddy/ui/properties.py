@@ -445,7 +445,7 @@ class PredicateNodeProperty(NodeProperty):
         self.urlField = StringField(self)
         self.urlField.setFixedWidth(300)
         self.urlField.setFont(arial12r)
-        self.urlField.setValue(meta.url)
+        self.urlField.setValue(meta.get('url', ''))
 
         self.descriptionLabel = QLabel(self)
         self.descriptionLabel.setFont(arial12r)
@@ -453,7 +453,7 @@ class PredicateNodeProperty(NodeProperty):
         self.descriptionField = TextField(self)
         self.descriptionField.setFixedSize(300, 160)
         self.descriptionField.setFont(arial12r)
-        self.descriptionField.setValue(meta.description)
+        self.descriptionField.setValue(meta.get('description', ''))
 
         self.generalLayout.addRow(self.urlLabel, self.urlField)
         self.generalLayout.addRow(self.descriptionLabel, self.descriptionField)
@@ -518,8 +518,8 @@ class PredicateNodeProperty(NodeProperty):
         """
         meta = self.diagram.project.meta(self.node.type(), self.node.text())
         copy = meta.copy()
-        copy.description = self.descriptionField.value()
-        copy.url = self.urlField.value()
+        copy['description'] = self.descriptionField.value()
+        copy['url'] = self.urlField.value()
         if copy != meta:
             return CommandNodeChangeMeta(self.diagram, self.node, meta, copy)
         return None

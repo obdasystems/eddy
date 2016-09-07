@@ -33,6 +33,9 @@
 ##########################################################################
 
 
+from abc import ABCMeta, abstractmethod
+from verlib import NormalizedVersion
+
 from PyQt5.QtCore import Qt, QEvent, QSize, pyqtSlot
 from PyQt5.QtGui import QIcon, QPainter, QBrush, QColor
 from PyQt5.QtWidgets import QScrollArea, QStackedWidget, QWidget
@@ -40,11 +43,8 @@ from PyQt5.QtWidgets import QStyleOption, QPushButton, QLabel
 from PyQt5.QtWidgets import QFormLayout, QVBoxLayout, QMenu
 from PyQt5.QtWidgets import QMdiSubWindow, QSizePolicy, QStyle
 
-from abc import ABCMeta, abstractmethod
-from verlib import NormalizedVersion
-
-from eddy.core.commands.common import CommandSetProperty
 from eddy.core.commands.labels import CommandLabelChange
+from eddy.core.commands.nodes import CommandNodeChangeMeta
 from eddy.core.commands.project import CommandProjectSetIRI
 from eddy.core.commands.project import CommandProjectSetPrefix
 from eddy.core.commands.project import CommandProjectSetProfile
@@ -1056,7 +1056,7 @@ class AttributeNodeInfo(PredicateNodeInfo):
         self.functBox = CheckBox(functParent)
         self.functBox.setCheckable(True)
         self.functBox.setFont(arial12r)
-        self.functBox.setProperty('attribute', 'functional')
+        self.functBox.setProperty('key', 'functional')
         connect(self.functBox.clicked, self.flagChanged)
 
         self.predPropLayout.addRow(self.functKey, functParent)
@@ -1070,14 +1070,16 @@ class AttributeNodeInfo(PredicateNodeInfo):
         """
         Executed whenever one of the property fields changes.
         """
-        node = self.node
-        diagram = node.diagram
         sender = self.sender()
         checked = sender.isChecked()
-        attribute = sender.property('attribute')
-        name = '{0}set {1} {2} property'.format('un' if checked else '', node.shortName, attribute)
-        data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
-        self.session.undostack.push(CommandSetProperty(diagram, node, data, name))
+        key = sender.property('key')
+        meta = self.project.meta(self.node.type(), self.node.text())
+        copy = meta.copy()
+        copy[key] = checked
+        if copy != meta:
+            prop = RE_CAMEL_SPACE.sub('\g<1> \g<2>', key).lower()
+            name = '{0}set {1} {2} property'.format('' if checked else 'un', self.node.shortName, prop)
+            self.session.undostack.push(CommandNodeChangeMeta(self.node.diagram, self.node, meta, copy, name))
 
     #############################################
     #   INTERFACE
@@ -1089,7 +1091,7 @@ class AttributeNodeInfo(PredicateNodeInfo):
         :type node: AbstractNode
         """
         super().updateData(node)
-        self.functBox.setChecked(node.functional)
+        self.functBox.setChecked(node.isFunctional())
 
 
 class RoleNodeInfo(PredicateNodeInfo):
@@ -1112,7 +1114,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.functBox = CheckBox(functParent)
         self.functBox.setCheckable(True)
         self.functBox.setFont(arial12r)
-        self.functBox.setProperty('attribute', 'functional')
+        self.functBox.setProperty('key', 'functional')
         connect(self.functBox.clicked, self.flagChanged)
 
         self.invFunctKey = Key('Inv. Funct.', self)
@@ -1121,7 +1123,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.invFunctBox = CheckBox(invFunctParent)
         self.invFunctBox.setCheckable(True)
         self.invFunctBox.setFont(arial12r)
-        self.invFunctBox.setProperty('attribute', 'inverseFunctional')
+        self.invFunctBox.setProperty('key', 'inverseFunctional')
         connect(self.invFunctBox.clicked, self.flagChanged)
 
         self.asymmetricKey = Key('Asymmetric', self)
@@ -1130,7 +1132,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.asymmetricBox = CheckBox(asymmetricParent)
         self.asymmetricBox.setCheckable(True)
         self.asymmetricBox.setFont(arial12r)
-        self.asymmetricBox.setProperty('attribute', 'asymmetric')
+        self.asymmetricBox.setProperty('key', 'asymmetric')
         connect(self.asymmetricBox.clicked, self.flagChanged)
 
         self.irreflexiveKey = Key('Irreflexive', self)
@@ -1139,7 +1141,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.irreflexiveBox = CheckBox(irreflexiveParent)
         self.irreflexiveBox.setCheckable(True)
         self.irreflexiveBox.setFont(arial12r)
-        self.irreflexiveBox.setProperty('attribute', 'irreflexive')
+        self.irreflexiveBox.setProperty('key', 'irreflexive')
         connect(self.irreflexiveBox.clicked, self.flagChanged)
 
         self.reflexiveKey = Key('Reflexive', self)
@@ -1148,7 +1150,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.reflexiveBox = CheckBox(reflexiveParent)
         self.reflexiveBox.setCheckable(True)
         self.reflexiveBox.setFont(arial12r)
-        self.reflexiveBox.setProperty('attribute', 'reflexive')
+        self.reflexiveBox.setProperty('key', 'reflexive')
         connect(self.reflexiveBox.clicked, self.flagChanged)
 
         self.symmetricKey = Key('Symmetric', self)
@@ -1157,7 +1159,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.symmetricBox = CheckBox(symmetricParent)
         self.symmetricBox.setCheckable(True)
         self.symmetricBox.setFont(arial12r)
-        self.symmetricBox.setProperty('attribute', 'symmetric')
+        self.symmetricBox.setProperty('key', 'symmetric')
         connect(self.symmetricBox.clicked, self.flagChanged)
 
         self.transitiveKey = Key('Transitive', self)
@@ -1166,7 +1168,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.transitiveBox = CheckBox(transitiveParent)
         self.transitiveBox.setCheckable(True)
         self.transitiveBox.setFont(arial12r)
-        self.transitiveBox.setProperty('attribute', 'transitive')
+        self.transitiveBox.setProperty('key', 'transitive')
         connect(self.transitiveBox.clicked, self.flagChanged)
 
         self.predPropLayout.addRow(self.functKey, functParent)
@@ -1186,15 +1188,16 @@ class RoleNodeInfo(PredicateNodeInfo):
         """
         Executed whenever one of the property fields changes.
         """
-        node = self.node
-        diagram = node.diagram
         sender = self.sender()
         checked = sender.isChecked()
-        attribute = sender.property('attribute')
-        prop = RE_CAMEL_SPACE.sub('\g<1> \g<2>', attribute).lower()
-        name = '{0}set {1} {2} property'.format('un' if checked else '', node.shortName, prop)
-        data = {'attribute': attribute, 'undo': getattr(node, attribute), 'redo': checked}
-        self.session.undostack.push(CommandSetProperty(diagram, node, data, name))
+        key = sender.property('key')
+        meta = self.project.meta(self.node.type(), self.node.text())
+        copy = meta.copy()
+        copy[key] = checked
+        if copy != meta:
+            prop = RE_CAMEL_SPACE.sub('\g<1> \g<2>', key).lower()
+            name = '{0}set {1} {2} property'.format('' if checked else 'un', self.node.shortName, prop)
+            self.session.undostack.push(CommandNodeChangeMeta(self.node.diagram, self.node, meta, copy, name))
 
     #############################################
     #   INTERFACE
@@ -1206,13 +1209,13 @@ class RoleNodeInfo(PredicateNodeInfo):
         :type node: AbstractNode
         """
         super().updateData(node)
-        self.asymmetricBox.setChecked(node.asymmetric)
-        self.functBox.setChecked(node.functional)
-        self.invFunctBox.setChecked(node.inverseFunctional)
-        self.irreflexiveBox.setChecked(node.irreflexive)
-        self.reflexiveBox.setChecked(node.reflexive)
-        self.symmetricBox.setChecked(node.symmetric)
-        self.transitiveBox.setChecked(node.transitive)
+        self.asymmetricBox.setChecked(node.isAsymmetric())
+        self.functBox.setChecked(node.isFunctional())
+        self.invFunctBox.setChecked(node.isInverseFunctional())
+        self.irreflexiveBox.setChecked(node.isIrreflexive())
+        self.reflexiveBox.setChecked(node.isReflexive())
+        self.symmetricBox.setChecked(node.isSymmetric())
+        self.transitiveBox.setChecked(node.isTransitive())
 
 
 class ValueDomainNodeInfo(NodeInfo):

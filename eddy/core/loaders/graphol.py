@@ -651,8 +651,7 @@ class GrapholProjectLoader(AbstractProjectLoader):
         :rtype: AttributeMetaData
         """
         meta = self.buildPredicateMetadata(element)
-        functional = element.firstChildElement('functional')
-        meta.functional = bool(int(functional.text()))
+        meta['functional'] = bool(int(element.firstChildElement('functional').text()))
         return meta
 
     def buildPredicateMetadata(self, element):
@@ -663,11 +662,9 @@ class GrapholProjectLoader(AbstractProjectLoader):
         """
         item = self.itemFromXml[element.attribute('type')]
         name = element.attribute('name')
-        description = element.firstChildElement('description')
-        url = element.firstChildElement('url')
         meta = self.project.meta(item, name)
-        meta.description = description.text()
-        meta.url = url.text()
+        meta['description'] = element.firstChildElement('description').text()
+        meta['url'] = element.firstChildElement('url').text()
         return meta
 
     def buildRoleMetadata(self, element):
@@ -677,20 +674,13 @@ class GrapholProjectLoader(AbstractProjectLoader):
         :rtype: AttributeMetaData
         """
         meta = self.buildPredicateMetadata(element)
-        functional = element.firstChildElement('functional')
-        inverseFunctional = element.firstChildElement('inverseFunctional')
-        asymmetric = element.firstChildElement('asymmetric')
-        irreflexive = element.firstChildElement('irreflexive')
-        reflexive = element.firstChildElement('reflexive')
-        symmetric = element.firstChildElement('symmetric')
-        transitive = element.firstChildElement('transitive')
-        meta.functional = bool(int(functional.text()))
-        meta.inverseFunctional = bool(int(inverseFunctional.text()))
-        meta.asymmetric = bool(int(asymmetric.text()))
-        meta.irreflexive = bool(int(irreflexive.text()))
-        meta.reflexive = bool(int(reflexive.text()))
-        meta.symmetric = bool(int(symmetric.text()))
-        meta.transitive = bool(int(transitive.text()))
+        meta['functional'] = bool(int( element.firstChildElement('functional').text()))
+        meta['inverseFunctional'] = bool(int(element.firstChildElement('inverseFunctional').text()))
+        meta['asymmetric'] = bool(int(element.firstChildElement('asymmetric').text()))
+        meta['irreflexive'] = bool(int(element.firstChildElement('irreflexive').text()))
+        meta['reflexive'] = bool(int(element.firstChildElement('reflexive').text()))
+        meta['symmetric'] = bool(int(element.firstChildElement('symmetric').text()))
+        meta['transitive'] = bool(int(element.firstChildElement('transitive').text()))
         return meta
 
     #############################################
@@ -752,10 +742,9 @@ class GrapholProjectLoader(AbstractProjectLoader):
                 item = self.itemFromXml[predicate.attribute('type')]
                 func = self.metaFuncForItem[item]
                 meta = func(predicate)
-                self.project.addMeta(meta.item, meta.predicate, meta)
+                self.project.addMeta(item, predicate.attribute('name'), meta)
             except Exception:
-                LOGGER.exception('Failed to create metadata for predicate %s', predicate)
-                pass
+                LOGGER.exception('Failed to create metadata for predicate %s', predicate.attribute('name'))
             finally:
                 predicate = predicate.nextSiblingElement('predicate')
 
