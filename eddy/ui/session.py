@@ -811,8 +811,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if is_package(directory):
                 spec = importlib.util.find_spec(os.path.basename(directory), directory)
                 if spec:
-                    spec.loader.load_module()
-                    LOGGER.debug('Added plugin search path (directory): %s', directory)
+                    try:
+                        spec.loader.load_module()
+                    except Exception:
+                        LOGGER.error('Failed to load python module (directory): %s', directory, exc_info=True)
+                    else:
+                        LOGGER.debug('Added plugin search path (directory): %s', directory)
 
         def import_module_from_zip(archive):
             """
@@ -823,8 +827,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if fexists(archive) and File.forPath(archive) is File.Zip:
                 importer = zipimport.zipimporter(archive)
                 if importer:
-                    importer.load_module(os.path.basename(archive).rstrip(File.Zip.extension))
-                    LOGGER.debug('Added plugin search path (ZIP): %s', archive)
+                    try:
+                        importer.load_module(os.path.basename(archive).rstrip(File.Zip.extension))
+                    except Exception:
+                        LOGGER.error('Failed to load python module (ZIP): %s', archive, exc_info=True)
+                    else:
+                        LOGGER.debug('Added plugin search path (ZIP): %s', archive)
 
         def plugins_topological_sort(source):
             """
