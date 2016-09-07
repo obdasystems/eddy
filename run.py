@@ -34,6 +34,7 @@
 ##########################################################################
 
 
+import platform
 import os
 import sys
 import jnius_config
@@ -155,6 +156,7 @@ def main():
     LOGGER.frame('%s v%s', APPNAME, VERSION, separator='|')
     LOGGER.frame(COPYRIGHT, separator='|')
     LOGGER.separator(separator='-')
+    LOGGER.frame('Python version: %s', platform.python_version(), separator='|')
     LOGGER.frame('Qt version: %s', QT_VERSION_STR, separator='|')
     LOGGER.frame('PyQt version: %s', PYQT_VERSION_STR, separator='|')
     LOGGER.frame('SIP version: %s', SIP_VERSION_STR, separator='|')
