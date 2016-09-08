@@ -77,6 +77,7 @@ def expandPath(path):
         - @resources => Eddy's resources directory
         - @examples => Eddy's examples directory
         - @plugins => Eddy's plugins directory
+        - @support => Eddy's support directory
         - ~ => will be expanded to the user home directory ($HOME)
 
     :type path: str
@@ -94,6 +95,8 @@ def expandPath(path):
         path = os.path.join(examplesPath(), path[10:])
     elif path.startswith('@plugins/') or path.startswith('@plugins\\'):
         path = os.path.join(pluginsPath(), path[9:])
+    elif path.startswith('@support/') or path.startswith('@support\\'):
+        path = os.path.join(supportPath(), path[9:])
     return os.path.normpath(os.path.expanduser(path))
 
 
@@ -227,6 +230,14 @@ def shortPath(path):
         if path.startswith(absprefix):
             return path.replace(absprefix, prefix)
     return path
+
+
+def supportPath():
+    """
+    Returns the path to the support directory.
+    :rtype: str
+    """
+    return os.path.join(modulePath(), 'support')
 
 
 def uniquePath(base, name, extension):
