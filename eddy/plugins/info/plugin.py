@@ -983,7 +983,7 @@ class PredicateNodeInfo(NodeInfo):
                     if sender is self.nameField:
                         self.session.undostack.beginMacro('change predicate "{0}" to "{1}"'.format(node.text(), data))
                         for n in project.predicates(node.type(), node.text()):
-                            self.session.undostack.push(CommandLabelChange(n.diagram, n, n.text(), data))
+                            self.session.undostack.push(CommandLabelChange(n.diagram, n, n.text(), data, refactor=True))
                         self.session.undostack.endMacro()
                     else:
                         self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data))
@@ -1259,7 +1259,7 @@ class ValueDomainNodeInfo(NodeInfo):
             data = datatype.value
             if node.text() != data:
                 name = 'change {0} to {1}'.format(node.shortName, data)
-                self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
         self.datatypeField.clearFocus()
 
     #############################################
@@ -1333,7 +1333,7 @@ class ValueNodeInfo(PredicateNodeInfo):
                 data = node.compose(value, datatype)
                 if node.text() != data:
                     name = 'change value to {0}'.format(data)
-                    self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                    self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
             except RuntimeError:
                 pass
 
@@ -1413,7 +1413,7 @@ class FacetNodeInfo(NodeInfo):
             data = node.compose(self.facetField.currentData(), self.valueField.value())
             if node.text() != data:
                 name = 'change {0} to {1}'.format(node.text(), data)
-                self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
 
         self.facetField.clearFocus()
         self.valueField.clearFocus()

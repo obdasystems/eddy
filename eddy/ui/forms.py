@@ -255,8 +255,9 @@ class RefactorNameForm(QDialog):
         """
         name = self.renameField.value()
         self.session.undostack.beginMacro('change predicate "{0}" to "{1}"'.format(self.node.text(), name))
-        for n in self.project.predicates(self.node.type(), self.node.text()):
-            self.session.undostack.push(CommandLabelChange(n.diagram, n, n.text(), name))
+        for node in self.project.predicates(self.node.type(), self.node.text()):
+            command = CommandLabelChange(node.diagram, node, node.text(), name, refactor=True)
+            self.session.undostack.push(command)
         self.session.undostack.endMacro()
         super().accept()
 
@@ -389,5 +390,5 @@ class ValueForm(QDialog):
         data = node.compose(value, datatype)
         if node.text() != data:
             name = 'change {0} to {1}'.format(node.text(), data)
-            self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+            self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
         super().accept()

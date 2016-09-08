@@ -42,18 +42,20 @@ class CommandLabelChange(QUndoCommand):
     """
     This command is used to edit items' labels.
     """
-    def __init__(self, diagram, item, undo, redo, name=None):
+    def __init__(self, diagram, item, undo, redo, refactor=False, name=None):
         """
         Initialize the command.
         :type diagram: Diagram
         :type item: AbstractItem
         :type undo: str
         :type redo: str
+        :type refactor: bool
         :type name: str
         """
         super().__init__(name or 'edit {0} label'.format(item.name))
         self.diagram = diagram
         self.project = diagram.project
+        self.refactor = refactor
         self.data = {'undo': undo, 'redo': redo}
         self.item = item
 
@@ -61,7 +63,7 @@ class CommandLabelChange(QUndoCommand):
         """redo the command"""
         meta = None
         # BACKUP METADATA
-        if self.item.isNode():
+        if self.item.isNode() and self.refactor:
             meta = self.project.meta(self.item.type(), self.data['undo'])
             if meta:
                 self.project.removeMeta(self.item.type(), self.data['undo'])
@@ -73,9 +75,8 @@ class CommandLabelChange(QUndoCommand):
         if self.item.isNode():
             self.project.doAddItem(self.diagram, self.item)
 
-        # RESTORE METADATA
+        # # RESTORE METADATA
         if meta:
-            meta.predicate = self.data['redo']
             self.project.addMeta(self.item.type(), self.data['redo'], meta)
 
         self.updateNodes()
@@ -85,7 +86,7 @@ class CommandLabelChange(QUndoCommand):
         """undo the command"""
         meta = None
         # BACKUP METADATA
-        if self.item.isNode():
+        if self.item.isNode() and self.refactor:
             meta = self.project.meta(self.item.type(), self.data['redo'])
             if meta:
                 self.project.removeMeta(self.item.type(), self.data['redo'])
@@ -97,9 +98,8 @@ class CommandLabelChange(QUndoCommand):
         if self.item.isNode():
             self.project.doAddItem(self.diagram, self.item)
 
-        # RESTORE METADATA
+        # # RESTORE METADATA
         if meta:
-            meta.predicate = self.data['undo']
             self.project.addMeta(self.item.type(), self.data['undo'], meta)
 
         self.updateNodes()

@@ -1653,7 +1653,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                         data = restriction.toString(form.min() or '-', form.max() or '-')
                 if data and node.text() != data:
                     name = 'change {0} to {1}'.format(node.shortName, data)
-                    self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                    self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
 
     @QtCore.pyqtSlot()
     def doSetIndividualAs(self):
@@ -1672,7 +1672,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     if node.identity() is Identity.Value:
                         data = node.label.template
                         name = 'change {0} to {1}'.format(node.text(), data)
-                        self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                        self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
                 elif action.data() is Identity.Value:
                     form = ValueForm(node, self)
                     form.exec_()
@@ -1693,7 +1693,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 data = special.value
                 if node.text() != data:
                     name = 'change {0} to {1}'.format(node.shortName, data)
-                    self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                    self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
 
     @QtCore.pyqtSlot()
     def doSetDatatype(self):
@@ -1711,7 +1711,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 data = datatype.value
                 if node.text() != data:
                     name = 'change {0} to {1}'.format(node.shortName, data)
-                    self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                    self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
 
     @QtCore.pyqtSlot()
     def doSetFacet(self):
@@ -1729,7 +1729,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 if facet != node.facet:
                     data = node.compose(facet, node.value)
                     name = 'change {0} to {1}'.format(node.facet.value, facet.value)
-                    self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
+                    self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
 
     @QtCore.pyqtSlot()
     def doSetProfile(self):
