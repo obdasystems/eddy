@@ -116,6 +116,13 @@ class ValueDomainNode(AbstractNode):
         """
         return self.polygon.geometry().height()
 
+    def identity(self):
+        """
+        Returns the identity of the current node.
+        :rtype: Identity
+        """
+        return Identity.ValueDomain
+
     def paint(self, painter, option, widget=None):
         """
         Paint the node in the diagram.
@@ -147,6 +154,13 @@ class ValueDomainNode(AbstractNode):
         path = QPainterPath()
         path.addRoundedRect(self.polygon.geometry(), 8, 8)
         return path
+
+    def setIdentity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        pass
 
     def setText(self, text):
         """
