@@ -54,8 +54,12 @@ from eddy.core.functions.owl import OWLShortIRI, OWLAnnotationText
 from eddy.core.functions.owl import OWLFunctionalDocumentFilter
 from eddy.core.functions.path import expandPath, openPath
 from eddy.core.functions.signals import connect
+from eddy.core.output import getLogger
 
 from eddy.ui.fields import ComboBox
+
+
+LOGGER = getLogger(__name__)
 
 
 class OWLProjectExporter(AbstractProjectExporter):
@@ -211,6 +215,9 @@ class OWLProjectExporterDialog(QDialog):
             if msgbox.result() == QMessageBox.Yes:
                 self.session.doFocusItem(exception.item)
         else:
+            # LOG INTO CONSOLE
+            LOGGER.error('OWL2 translation could not be completed', exc_info=1)
+            # SHOW A POPUP WITH THE ERROR MESSAGE
             msgbox = QMessageBox(self)
             msgbox.setDetailedText(format_exception(exception))
             msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
@@ -1051,9 +1058,9 @@ class OWLProjectExporterWorker(QObject):
         :type node: AbstractNode
         """
         meta = self.project.meta(node.type(), node.text())
-        if meta and not isEmpty(meta.description):
+        if meta and not isEmpty(meta['description']):
             prop = self.df.getOWLAnnotationProperty(self.IRI.create("Description"))
-            value = self.df.getOWLLiteral(OWLAnnotationText(meta.description))
+            value = self.df.getOWLLiteral(OWLAnnotationText(meta['description']))
             value = cast(self.OWLAnnotationValue, value)
             annotation = self.df.getOWLAnnotation(prop, value)
             self.axioms.add(self.df.getOWLAnnotationAssertionAxiom(self.conv[node].getIRI(), annotation))
