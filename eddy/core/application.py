@@ -35,11 +35,10 @@
 
 import os
 
-from PyQt5.QtCore import pyqtSignal, pyqtSlot
-from PyQt5.QtCore import Qt, QEvent, QTextStream, QSettings
-from PyQt5.QtGui import QIcon
-from PyQt5.QtNetwork import QLocalSocket, QLocalServer
-from PyQt5.QtWidgets import QApplication, QMessageBox
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtNetwork
+from PyQt5 import QtWidgets
 
 from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE
 from eddy.core.exceptions import ProjectNotFoundError
@@ -61,11 +60,11 @@ from eddy.ui.welcome import Welcome
 LOGGER = getLogger(__name__)
 
 
-class Eddy(QApplication):
+class Eddy(QtWidgets.QApplication):
     """
-    This class implements the main Qt application.
+    This class implements the main QtCore.Qt application.
     """
-    sgnMessageReceived = pyqtSignal(str)
+    sgnMessageReceived = QtCore.pyqtSignal(str)
 
     def __init__(self, options, argv):
         """
@@ -78,7 +77,7 @@ class Eddy(QApplication):
         self.localServer = None
         self.inputSocket = None
         self.inputStream = None
-        self.outputSocket = QLocalSocket()
+        self.outputSocket = QtNetwork.QLocalSocket()
         self.outputSocket.connectToServer(APPID)
         self.outputStream = None
 
@@ -92,13 +91,13 @@ class Eddy(QApplication):
             # are running the test suite to speed up tests execution time,
             # else we configure an output stream on which to route outgoing
             # messages to the alive Eddy process that will handle them.
-            self.outputStream = QTextStream(self.outputSocket)
+            self.outputStream = QtCore.QTextStream(self.outputSocket)
             self.outputStream.setCodec('UTF-8')
         else:
-            # We are not running Eddy yet, so we initialize a QLocalServer
+            # We are not running Eddy yet, so we initialize a QtNetwork.QLocalServer
             # to intercept incoming messages from future instances of Eddy
             # not to spawn multiple process.
-            self.localServer = QLocalServer()
+            self.localServer = QtNetwork.QLocalServer()
             self.localServer.listen(APPID)
             self.outputStream = None
             self.outputSocket = None
@@ -113,9 +112,9 @@ class Eddy(QApplication):
     def event(self, event):
         """
         Executed when an event is received.
-        :type event: T <= QEvent | QFileOpenEvent
+        :type event: T <= QtCore.QEvent | QFileOpenEvent
         """
-        if event.type() == QEvent.FileOpen:
+        if event.type() == QtCore.QEvent.FileOpen:
             self.pending = [event.file()]
             return True
         return super().event(event)
@@ -142,7 +141,7 @@ class Eddy(QApplication):
         # CONFIGURE DEFAULTS
         #################################
 
-        settings = QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         examples = [
             expandPath('@examples/Animals'),
             expandPath('@examples/Diet'),
@@ -177,7 +176,7 @@ class Eddy(QApplication):
         self.setStyle(clean)
         self.setStyleSheet(clean.stylesheet)
 
-        self.setAttribute(Qt.AA_UseHighDpiPixmaps)
+        self.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
 
         #############################################
         # CLOSE THE SPLASH SCREEN
@@ -221,7 +220,7 @@ class Eddy(QApplication):
         Save the state of the current active session.
         """
         if self.session:
-            settings = QSettings(ORGANIZATION, APPNAME)
+            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
             settings.setValue('session/geometry', self.session.saveGeometry())
             settings.setValue('session/state', self.session.saveState())
             settings.sync()
@@ -240,7 +239,7 @@ class Eddy(QApplication):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doAcceptConnection(self):
         """
         Executed whenever a new connection needs to be established.
@@ -253,11 +252,11 @@ class Eddy(QApplication):
         self.inputSocket = self.localServer.nextPendingConnection()
         if self.inputSocket:
             # If we have a connection, setup the stream to accept packets.
-            self.inputStream = QTextStream(self.inputSocket)
+            self.inputStream = QtCore.QTextStream(self.inputSocket)
             self.inputStream.setCodec('UTF-8')
             connect(self.inputSocket.onReadyRead, self.onReadyRead)
 
-    @pyqtSlot(str)
+    @QtCore.pyqtSlot(str)
     def doCreateSession(self, path):
         """
         Create a session using the given project path.
@@ -269,22 +268,22 @@ class Eddy(QApplication):
                 self.session = Session(path)
             except ProjectNotFoundError as e:
                 LOGGER.warning('Failed to create session for %s: %s', path, e)
-                msgbox = QMessageBox()
-                msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+                msgbox = QtNetwork.QMessageBox()
+                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
                 msgbox.setText('Project <b>{0}</b> not found!'.format(os.path.basename(path)))
-                msgbox.setStandardButtons(QMessageBox.Close)
-                msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+                msgbox.setStandardButtons(QtNetwork.QMessageBox.Close)
+                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
                 msgbox.setWindowTitle('Project not found!')
                 msgbox.exec_()
             except ProjectNotValidError as e:
                 LOGGER.warning('Failed to create session for %s: %s', path, e)
-                msgbox = QMessageBox()
-                msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+                msgbox = QtNetwork.QMessageBox()
+                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
                 msgbox.setText('Project <b>{0}</b> is not valid!'.format(os.path.basename(path)))
-                msgbox.setTextFormat(Qt.RichText)
+                msgbox.setTextFormat(QtCore.Qt.RichText)
                 msgbox.setDetailedText(format_exception(e))
-                msgbox.setStandardButtons(QMessageBox.Close)
-                msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+                msgbox.setStandardButtons(QtNetwork.QMessageBox.Close)
+                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
                 msgbox.setWindowTitle('Project not valid!')
                 msgbox.exec_()
             except Exception as e:
@@ -293,7 +292,7 @@ class Eddy(QApplication):
                 connect(self.session.sgnQuit, self.doQuit)
                 connect(self.session.sgnClosed, self.onSessionClosed)
 
-                settings = QSettings(ORGANIZATION, APPNAME)
+                settings = QtCore.QSettings(ORGANIZATION, APPNAME)
                 projects = settings.value('project/recent', None, str) or []
 
                 try:
@@ -311,7 +310,7 @@ class Eddy(QApplication):
                 self.session.show()
 
     
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doQuit(self):
         """
         Quit Eddy.
@@ -319,7 +318,7 @@ class Eddy(QApplication):
         self.save()
         self.quit()
 
-    @pyqtSlot(str)
+    @QtCore.pyqtSlot(str)
     def doReadMessage(self, message):
         """
         Read a received message.
@@ -327,7 +326,7 @@ class Eddy(QApplication):
         """
         pass
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def onReadyRead(self):
         """
         Executed whenever we need to read a message.
@@ -338,7 +337,7 @@ class Eddy(QApplication):
                 break
             self.sgnMessageReceived.emit(message)
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def onSessionClosed(self):
         """
         Quit Eddy.

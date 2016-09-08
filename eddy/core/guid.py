@@ -33,12 +33,12 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QObject
+from PyQt5 import QtCore
 
 from eddy.core.regex import RE_DIGIT, RE_ITEM_PREFIX
 
 
-class GUID(QObject):
+class GUID(QtCore.QObject):
     """
     Class used to generate sequential ids for diagram elements.
     """

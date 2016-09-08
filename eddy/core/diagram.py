@@ -36,8 +36,8 @@
 import os
 import sys
 
-from PyQt5.QtCore import Qt, QPointF, QRectF, pyqtSignal, pyqtSlot
-from PyQt5.QtWidgets import QGraphicsScene
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 
 from eddy.core.clipboard import Clipboard
 from eddy.core.commands.edges import CommandEdgeAdd
@@ -57,9 +57,9 @@ from eddy.core.output import getLogger
 LOGGER = getLogger(__name__)
 
 
-class Diagram(QGraphicsScene):
+class Diagram(QtWidgets.QGraphicsScene):
     """
-    Extension of QGraphicsScene which implements a single Graphol diagram.
+    Extension of QtWidgets.QGraphicsScene which implements a single Graphol diagram.
     Additionally to built-in signals, this class emits:
 
     * sgnItemAdded: whenever an element is added to the Diagram.
@@ -72,11 +72,11 @@ class Diagram(QGraphicsScene):
     MinSize = 2000
     MaxSize = 1000000
 
-    sgnItemAdded = pyqtSignal('QGraphicsScene', 'QGraphicsItem')
-    sgnItemInsertionCompleted = pyqtSignal('QGraphicsItem', int)
-    sgnItemRemoved = pyqtSignal('QGraphicsScene', 'QGraphicsItem')
-    sgnModeChanged = pyqtSignal(DiagramMode)
-    sgnUpdated = pyqtSignal()
+    sgnItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
+    sgnItemInsertionCompleted = QtCore.pyqtSignal('QGraphicsItem', int)
+    sgnItemRemoved = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
+    sgnModeChanged = QtCore.pyqtSignal(DiagramMode)
+    sgnUpdated = QtCore.pyqtSignal()
 
     def __init__(self, path, parent):
         """
@@ -153,7 +153,7 @@ class Diagram(QGraphicsScene):
         """
         super(Diagram, self).dragEnterEvent(dragEvent)
         if dragEvent.mimeData().hasFormat('text/plain'):
-            dragEvent.setDropAction(Qt.CopyAction)
+            dragEvent.setDropAction(QtCore.Qt.CopyAction)
             dragEvent.accept()
         else:
             dragEvent.ignore()
@@ -165,7 +165,7 @@ class Diagram(QGraphicsScene):
         """
         super(Diagram, self).dragMoveEvent(dragEvent)
         if dragEvent.mimeData().hasFormat('text/plain'):
-            dragEvent.setDropAction(Qt.CopyAction)
+            dragEvent.setDropAction(QtCore.Qt.CopyAction)
             dragEvent.accept()
         else:
             dragEvent.ignore()
@@ -182,7 +182,7 @@ class Diagram(QGraphicsScene):
             node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
             self.session.undostack.push(CommandNodeAdd(self, node))
             self.sgnItemInsertionCompleted.emit(node, dropEvent.modifiers())
-            dropEvent.setDropAction(Qt.CopyAction)
+            dropEvent.setDropAction(QtCore.Qt.CopyAction)
             dropEvent.accept()
         else:
             dropEvent.ignore()
@@ -196,7 +196,7 @@ class Diagram(QGraphicsScene):
         mouseButtons = mouseEvent.buttons()
         mousePos = mouseEvent.scenePos()
 
-        if mouseButtons & Qt.LeftButton:
+        if mouseButtons & QtCore.Qt.LeftButton:
 
             if self.mode is DiagramMode.NodeAdd:
 
@@ -234,7 +234,7 @@ class Diagram(QGraphicsScene):
 
                 if self.mode is DiagramMode.Idle:
 
-                    if mouseModifiers & Qt.ShiftModifier:
+                    if mouseModifiers & QtCore.Qt.ShiftModifier:
 
                         #############################################
                         # LABEL MOVE
@@ -268,7 +268,7 @@ class Diagram(QGraphicsScene):
 
                             if item:
 
-                                if mouseModifiers & Qt.ControlModifier:
+                                if mouseModifiers & QtCore.Qt.ControlModifier:
                                     # CTRL => support item multi selection.
                                     item.setSelected(not item.isSelected())
                                 else:
@@ -324,7 +324,7 @@ class Diagram(QGraphicsScene):
         mouseButtons = mouseEvent.buttons()
         mousePos = mouseEvent.scenePos()
 
-        if mouseButtons & Qt.LeftButton:
+        if mouseButtons & QtCore.Qt.LeftButton:
 
             if self.mode is DiagramMode.EdgeAdd:
 
@@ -414,7 +414,7 @@ class Diagram(QGraphicsScene):
         mouseButton = mouseEvent.button()
         mousePos = mouseEvent.scenePos()
 
-        if mouseButton == Qt.LeftButton:
+        if mouseButton == QtCore.Qt.LeftButton:
 
             if self.mode is DiagramMode.EdgeAdd:
 
@@ -497,7 +497,7 @@ class Diagram(QGraphicsScene):
 
                     self.setMode(DiagramMode.Idle)
 
-        elif mouseButton == Qt.RightButton:
+        elif mouseButton == QtCore.Qt.RightButton:
 
             if self.mode is not DiagramMode.SceneDrag:
 
@@ -535,7 +535,7 @@ class Diagram(QGraphicsScene):
     #   SLOTS
     #################################
 
-    @pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def onConnectionChanged(self, _, item):
         """
         Executed whenever a connection is created/removed.
@@ -761,7 +761,7 @@ class Diagram(QGraphicsScene):
         """
         Returns the item which is on top of the given point.
         By default the method perform the search only on nodes and edges.
-        :type point: QPointF
+        :type point: QtCore.QPointF
         :type nodes: bool
         :type edges: bool
         :type labels: bool
@@ -804,22 +804,22 @@ class Diagram(QGraphicsScene):
         size = Diagram.GridSize
 
         offsets = (
-            QPointF(snapF(+source.width() / 2 + 70, size), 0),
-            QPointF(snapF(-source.width() / 2 - 70, size), 0),
-            QPointF(0, snapF(-source.height() / 2 - 70, size)),
-            QPointF(0, snapF(+source.height() / 2 + 70, size)),
-            QPointF(snapF(+source.width() / 2 + 70, size), snapF(-source.height() / 2 - 70, size)),
-            QPointF(snapF(-source.width() / 2 - 70, size), snapF(-source.height() / 2 - 70, size)),
-            QPointF(snapF(+source.width() / 2 + 70, size), snapF(+source.height() / 2 + 70, size)),
-            QPointF(snapF(-source.width() / 2 - 70, size), snapF(+source.height() / 2 + 70, size)),
+            QtCore.QPointF(snapF(+source.width() / 2 + 70, size), 0),
+            QtCore.QPointF(snapF(-source.width() / 2 - 70, size), 0),
+            QtCore.QPointF(0, snapF(-source.height() / 2 - 70, size)),
+            QtCore.QPointF(0, snapF(+source.height() / 2 + 70, size)),
+            QtCore.QPointF(snapF(+source.width() / 2 + 70, size), snapF(-source.height() / 2 - 70, size)),
+            QtCore.QPointF(snapF(-source.width() / 2 - 70, size), snapF(-source.height() / 2 - 70, size)),
+            QtCore.QPointF(snapF(+source.width() / 2 + 70, size), snapF(+source.height() / 2 + 70, size)),
+            QtCore.QPointF(snapF(-source.width() / 2 - 70, size), snapF(+source.height() / 2 + 70, size)),
         )
 
         pos = None
         num = sys.maxsize
-        rad = QPointF(restriction.width() / 2, restriction.height() / 2)
+        rad = QtCore.QPointF(restriction.width() / 2, restriction.height() / 2)
 
         for o in offsets:
-            count = len(self.items(QRectF(source.pos() + o - rad, source.pos() + o + rad)))
+            count = len(self.items(QtCore.QRectF(source.pos() + o - rad, source.pos() + o + rad)))
             if count < num:
                 num = count
                 pos = source.pos() + o
@@ -867,7 +867,7 @@ class Diagram(QGraphicsScene):
         """
         Returns a rectangle matching the area of visible items.
         :type margin: float
-        :rtype: QRectF
+        :rtype: QtCore.QRectF
         """
         items = self.items()
         if items:
@@ -878,5 +878,5 @@ class Diagram(QGraphicsScene):
                     b = item.mapRectToScene(item.boundingRect())
                     x.update({b.left(), b.right()})
                     y.update({b.top(), b.bottom()})
-            return QRectF(QPointF(min(x) - margin, min(y) - margin), QPointF(max(x) + margin, max(y) + margin))
-        return QRectF()
+            return QtCore.QRectF(QtCore.QPointF(min(x) - margin, min(y) - margin), QtCore.QPointF(max(x) + margin, max(y) + margin))
+        return QtCore.QRectF()

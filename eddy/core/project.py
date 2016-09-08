@@ -35,8 +35,7 @@
 
 import os
 
-from PyQt5.QtCore import QObject
-from PyQt5.QtCore import pyqtSignal, pyqtSlot
+from PyQt5 import QtCore
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.misc import cutR
@@ -52,9 +51,9 @@ K_TYPE = 'types'
 
 
 # noinspection PyTypeChecker
-class Project(QObject):
+class Project(QtCore.QObject):
     """
-    Extension of QObject which implements a Graphol project.
+    Extension of QtCore.QObject which implements a Graphol project.
     Additionally to built-in signals, this class emits:
 
     * sgnDiagramAdded: whenever a Diagram is added to the Project.
@@ -70,13 +69,13 @@ class Project(QObject):
     MetaXML = 'meta.xml'
     ModulesXML = 'modules.xml'
 
-    sgnDiagramAdded = pyqtSignal('QGraphicsScene')
-    sgnDiagramRemoved = pyqtSignal('QGraphicsScene')
-    sgnItemAdded = pyqtSignal('QGraphicsScene', 'QGraphicsItem')
-    sgnItemRemoved = pyqtSignal('QGraphicsScene', 'QGraphicsItem')
-    sgnMetaAdded = pyqtSignal(Item, str)
-    sgnMetaRemoved = pyqtSignal(Item, str)
-    sgnUpdated = pyqtSignal()
+    sgnDiagramAdded = QtCore.pyqtSignal('QGraphicsScene')
+    sgnDiagramRemoved = QtCore.pyqtSignal('QGraphicsScene')
+    sgnItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
+    sgnItemRemoved = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
+    sgnMetaAdded = QtCore.pyqtSignal(Item, str)
+    sgnMetaRemoved = QtCore.pyqtSignal(Item, str)
+    sgnUpdated = QtCore.pyqtSignal()
 
     def __init__(self, path, prefix, iri, profile, session=None):
         """
@@ -390,7 +389,7 @@ class Project(QObject):
     #   SLOTS
     #################################
 
-    @pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def doAddItem(self, diagram, item):
         """
         Executed whenever an item is added to a diagram belonging to this project.
@@ -433,7 +432,7 @@ class Project(QObject):
             # SIGNAL
             self.sgnItemAdded.emit(diagram, item)
 
-    @pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def doRemoveItem(self, diagram, item):
         """
         Executed whenever an item is removed from a diagram belonging to this project.

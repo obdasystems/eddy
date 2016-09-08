@@ -42,14 +42,9 @@ import zipimport
 
 from collections import OrderedDict
 
-from PyQt5.QtCore import pyqtSlot, pyqtSignal
-from PyQt5.QtCore import Qt, QSettings, QByteArray, QSize
-from PyQt5.QtGui import QBrush, QColor, QCursor
-from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QStatusBar
-from PyQt5.QtWidgets import QToolButton, QStyle, QFileDialog
-from PyQt5.QtWidgets import QMenu, QAction, QActionGroup
-from PyQt5.QtWidgets import QUndoStack, QToolBar
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION, VERSION
 from eddy.core.clipboard import Clipboard
@@ -124,9 +119,9 @@ LOGGER = getLogger(__name__)
 
 class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
               HasDiagramExportSystem, HasProjectExportSystem, HasDiagramLoadSystem,
-              HasProjectLoadSystem, HasProfileSystem, QMainWindow):
+              HasProjectLoadSystem, HasProfileSystem, QtWidgets.QMainWindow):
     """
-    Extends QMainWindow and implements Eddy main working session.
+    Extends QtWidgets.QMainWindow and implements Eddy main working session.
     Additionally to built-in signals, this class emits:
 
     * sgnClosed: whenever the current session is closed.
@@ -142,19 +137,19 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     * sgnReady: after the session startup sequence completes.
     * sgnUpdateState: to notify that something in the session state changed.
     """
-    sgnClosed = pyqtSignal()
-    sgnDiagramFocus = pyqtSignal('QGraphicsScene')
-    sgnDiagramFocused = pyqtSignal('QGraphicsScene')
-    sgnDiagramLoad = pyqtSignal(str)
-    sgnDiagramLoaded = pyqtSignal('QGraphicsScene')
-    sgnPluginDisposed = pyqtSignal(str)
-    sgnPluginLoaded = pyqtSignal(str)
-    sgnPluginStarted = pyqtSignal(str)
-    sgnProjectSave = pyqtSignal()
-    sgnProjectSaved = pyqtSignal()
-    sgnQuit = pyqtSignal()
-    sgnReady = pyqtSignal()
-    sgnUpdateState = pyqtSignal()
+    sgnClosed = QtCore.pyqtSignal()
+    sgnDiagramFocus = QtCore.pyqtSignal('QGraphicsScene')
+    sgnDiagramFocused = QtCore.pyqtSignal('QGraphicsScene')
+    sgnDiagramLoad = QtCore.pyqtSignal(str)
+    sgnDiagramLoaded = QtCore.pyqtSignal('QGraphicsScene')
+    sgnPluginDisposed = QtCore.pyqtSignal(str)
+    sgnPluginLoaded = QtCore.pyqtSignal(str)
+    sgnPluginStarted = QtCore.pyqtSignal(str)
+    sgnProjectSave = QtCore.pyqtSignal()
+    sgnProjectSaved = QtCore.pyqtSignal()
+    sgnQuit = QtCore.pyqtSignal()
+    sgnReady = QtCore.pyqtSignal()
+    sgnUpdateState = QtCore.pyqtSignal()
 
     def __init__(self, path, **kwargs):
         """
@@ -162,14 +157,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         :type path: str
         :type kwargs: dict
         """
-        super().__init__(**kwargs)
+        super(Session, self).__init__(**kwargs)
 
         #############################################
         # INITIALIZE MAIN STUFF
         #################################
 
         self.clipboard = Clipboard(self)
-        self.undostack = QUndoStack(self)
+        self.undostack = QtWidgets.QUndoStack(self)
         self.mdi = MdiArea(self)
         self.mf = MenuFactory(self)
         self.pf = PropertyFactory(self)
@@ -184,10 +179,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # * MENUS     -> ACTIONS && TOOLBARS                      #
         # ------------------------------------------------------- #
 
-        self.addWidget(QToolBar('Document', objectName='document_toolbar'))
-        self.addWidget(QToolBar('Editor', objectName='editor_toolbar'))
-        self.addWidget(QToolBar('View', objectName='view_toolbar'))
-        self.addWidget(QToolBar('Graphol', objectName='graphol_toolbar'))
+        self.addWidget(QtWidgets.QToolBar('Document', objectName='document_toolbar'))
+        self.addWidget(QtWidgets.QToolBar('Editor', objectName='editor_toolbar'))
+        self.addWidget(QtWidgets.QToolBar('View', objectName='view_toolbar'))
+        self.addWidget(QtWidgets.QToolBar('Graphol', objectName='graphol_toolbar'))
 
         #############################################
         # CONFIGURE SESSION
@@ -209,8 +204,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # LOAD THE GIVEN PROJECT
         #################################
 
-        loader = self.createProjectLoader(File.Graphol, path, self)
-        self.project = loader.load()
+        self.project = self.createProjectLoader(File.Graphol, path, self).load()
 
         #############################################
         # COMPLETE SESSION SETUP
@@ -219,7 +213,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.setAcceptDrops(True)
         self.setCentralWidget(self.mdi)
         self.setDockOptions(Session.AnimatedDocks | Session.AllowTabbedDocks)
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(self.project)
 
         self.sgnReady.emit()
@@ -238,99 +232,99 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # APPLICATION GENERIC
         #################################
 
-        action = QAction(
-            QIcon(':/icons/24/ic_settings_black'), 'Preferences', self,
-            objectName='open_preferences', shortcut=QKeySequence.Preferences,
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_settings_black'), 'Preferences', self,
+            objectName='open_preferences', shortcut=QtGui.QKeySequence.Preferences,
             statusTip='Open application preferences', triggered=self.doOpenDialog)
         action.setData(PreferencesDialog)
         self.addAction(action)
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_power_settings_new_black'), 'Quit', self,
-            objectName='quit', shortcut=QKeySequence.Quit,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_power_settings_new_black'), 'Quit', self,
+            objectName='quit', shortcut=QtGui.QKeySequence.Quit,
             statusTip='Quit {0}'.format(APPNAME), triggered=self.doQuit))
 
-        action = QAction(
-            QIcon(':/icons/24/ic_help_outline_black'), 'About {0}'.format(APPNAME),
-            self, objectName='about', shortcut=QKeySequence.HelpContents,
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_help_outline_black'), 'About {0}'.format(APPNAME),
+            self, objectName='about', shortcut=QtGui.QKeySequence.HelpContents,
             statusTip='About {0}'.format(APPNAME), triggered=self.doOpenDialog)
         action.setData(AboutDialog)
         self.addAction(action)
 
-        action = QAction(
-            QIcon(':/icons/24/ic_link_black'), 'Visit DIAG website', self,
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_link_black'), 'Visit DIAG website', self,
             objectName='diag_web', statusTip='Visit DIAG website',
             triggered=self.doOpenURL)
         action.setData(DIAG_HOME)
         self.addAction(action)
 
-        action = QAction(
-            QIcon(':/icons/24/ic_link_black'), 'Visit Graphol website', self,
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_link_black'), 'Visit Graphol website', self,
             objectName='graphol_web', statusTip='Visit Graphol website',
             triggered=self.doOpenURL)
         action.setData(GRAPHOL_HOME)
         self.addAction(action)
 
         if Platform.identify() is Platform.Darwin:
-            self.action('about').setIcon(QIcon())
-            self.action('open_preferences').setIcon(QIcon())
-            self.action('quit').setIcon(QIcon())
+            self.action('about').setIcon(QtGui.QIcon())
+            self.action('open_preferences').setIcon(QtGui.QIcon())
+            self.action('quit').setIcon(QtGui.QIcon())
 
         #############################################
         # PROJECT / DIAGRAM MANAGEMENT
         #################################
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_add_document_black'), 'New diagram...',
-            self, objectName='new_diagram', shortcut=QKeySequence.New,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_add_document_black'), 'New diagram...',
+            self, objectName='new_diagram', shortcut=QtGui.QKeySequence.New,
             statusTip='Create a new diagram', triggered=self.doNewDiagram))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_label_outline_black'), 'Rename...',
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_label_outline_black'), 'Rename...',
             self, objectName='rename_diagram', statusTip='Rename a diagram',
             triggered=self.doRenameDiagram))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_delete_black'), 'Delete...',
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_delete_black'), 'Delete...',
             self, objectName='remove_diagram', statusTip='Delete a diagram',
             triggered=self.doRemoveDiagram))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_folder_open_black'), 'Open...',
-            self, objectName='open', shortcut=QKeySequence.Open,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_folder_open_black'), 'Open...',
+            self, objectName='open', shortcut=QtGui.QKeySequence.Open,
             statusTip='Open a diagram and add it to the current project',
             triggered=self.doOpen))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_close_black'), 'Close', self,
-            objectName='close_project', shortcut=QKeySequence.Close,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_close_black'), 'Close', self,
+            objectName='close_project', shortcut=QtGui.QKeySequence.Close,
             statusTip='Close the current project', triggered=self.doClose))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_save_black'), 'Save', self,
-            objectName='save', shortcut=QKeySequence.Save,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_save_black'), 'Save', self,
+            objectName='save', shortcut=QtGui.QKeySequence.Save,
             statusTip='Save the current project', enabled=False,
             triggered=self.doSave))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_save_black'), 'Save As...', self,
-            objectName='save_as', shortcut=QKeySequence.SaveAs,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_save_black'), 'Save As...', self,
+            objectName='save_as', shortcut=QtGui.QKeySequence.SaveAs,
             statusTip='Create a copy of the active diagram',
             enabled=False, triggered=self.doSaveAs))
 
-        self.addAction(QAction(
+        self.addAction(QtWidgets.QAction(
             'Import...', self, objectName='import',
             statusTip='Import a document in the current project',
             triggered=self.doImport))
 
-        self.addAction(QAction(
+        self.addAction(QtWidgets.QAction(
             'Export...', self, objectName='export',
             statusTip='Export the current project in a different format',
             enabled=False, triggered=self.doExport))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_print_black'), 'Print...', self,
-            objectName='print', shortcut=QKeySequence.Print,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_print_black'), 'Print...', self,
+            objectName='print', shortcut=QtGui.QKeySequence.Print,
             statusTip='Print the active diagram', enabled=False,
             triggered=self.doPrint))
 
@@ -339,19 +333,19 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #################################
 
         action = self.undostack.createUndoAction(self)
-        action.setIcon(QIcon(':/icons/24/ic_undo_black'))
+        action.setIcon(QtGui.QIcon(':/icons/24/ic_undo_black'))
         action.setObjectName('undo')
-        action.setShortcut(QKeySequence.Undo)
+        action.setShortcut(QtGui.QKeySequence.Undo)
         self.addAction(action)
 
         action = self.undostack.createRedoAction(self)
-        action.setIcon(QIcon(':/icons/24/ic_redo_black'))
+        action.setIcon(QtGui.QIcon(':/icons/24/ic_redo_black'))
         action.setObjectName('redo')
-        action.setShortcut(QKeySequence.Redo)
+        action.setShortcut(QtGui.QKeySequence.Redo)
         self.addAction(action)
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_spellcheck_black'), 'Run syntax check',
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_spellcheck_black'), 'Run syntax check',
             self, objectName='syntax_check', triggered=self.doSyntaxCheck,
             statusTip='Run syntax validation according to the selected profile'))
 
@@ -359,27 +353,27 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # DIAGRAM SPECIFIC
         #################################
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_center_focus_strong_black'), 'Center diagram', self,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_center_focus_strong_black'), 'Center diagram', self,
             objectName='center_diagram', statusTip='Center the active diagram',
             enabled=False, triggered=self.doCenterDiagram))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_settings_black'), 'Properties...',
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_settings_black'), 'Properties...',
             self, objectName='diagram_properties',
             statusTip='Open current diagram properties',
             triggered=self.doOpenDiagramProperties))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_healing_black'), 'Snap to grid',
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_healing_black'), 'Snap to grid',
             self, objectName='snap_to_grid', enabled=False,
             statusTip='Align the elements in the active diagram to the grid',
             triggered=self.doSnapTopGrid))
 
-        icon = QIcon()
-        icon.addFile(':/icons/24/ic_grid_on_black', QSize(), QIcon.Normal, QIcon.On)
-        icon.addFile(':/icons/24/ic_grid_off_black', QSize(), QIcon.Normal, QIcon.Off)
-        self.addAction(QAction(
+        icon = QtGui.QIcon()
+        icon.addFile(':/icons/24/ic_grid_on_black', QtCore.QSize(), QtGui.QIcon.Normal, QtGui.QIcon.On)
+        icon.addFile(':/icons/24/ic_grid_off_black', QtCore.QSize(), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.addAction(QtWidgets.QAction(
             icon, 'Toggle the grid', self, objectName='toggle_grid', enabled=False,
             checkable=True, statusTip='Activate or deactivate the diagram grid',
             triggered=self.doToggleGrid))
@@ -388,66 +382,66 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # ITEM GENERICS
         #################################
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_content_cut_black'), 'Cut', self,
-            objectName='cut', enabled=False, shortcut=QKeySequence.Cut,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_content_cut_black'), 'Cut', self,
+            objectName='cut', enabled=False, shortcut=QtGui.QKeySequence.Cut,
             statusTip='Cut selected items', triggered=self.doCut))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_content_copy_black'), 'Copy', self,
-            objectName='copy', enabled=False, shortcut=QKeySequence.Copy,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_content_copy_black'), 'Copy', self,
+            objectName='copy', enabled=False, shortcut=QtGui.QKeySequence.Copy,
             statusTip='Copy selected items', triggered=self.doCopy))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_content_paste_black'), 'Paste', self,
-            objectName='paste', enabled=False, shortcut=QKeySequence.Paste,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_content_paste_black'), 'Paste', self,
+            objectName='paste', enabled=False, shortcut=QtGui.QKeySequence.Paste,
             statusTip='Paste previously copied items', triggered=self.doPaste))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_delete_black'), 'Delete', self,
-            objectName='delete', enabled=False, shortcut=QKeySequence.Delete,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_delete_black'), 'Delete', self,
+            objectName='delete', enabled=False, shortcut=QtGui.QKeySequence.Delete,
             statusTip='Delete selected items', triggered=self.doDelete))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_delete_forever_black'), 'Purge', self,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_delete_forever_black'), 'Purge', self,
             objectName='purge', enabled=False, triggered=self.doPurge,
             statusTip='Delete selected items by also removing no more necessary elements'))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_flip_to_front_black'), 'Bring to front',
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_flip_to_front_black'), 'Bring to front',
             self, objectName='bring_to_front', enabled=False,
             statusTip='Bring selected items to front',
             triggered=self.doBringToFront))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_flip_to_back_black'), 'Send to back',
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_flip_to_back_black'), 'Send to back',
             self, objectName='send_to_back', enabled=False,
             statusTip='Send selected items to back',
             triggered=self.doSendToBack))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_select_all_black'), 'Select all',
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_select_all_black'), 'Select all',
             self, objectName='select_all', enabled=False,
             statusTip='Select all items in the active diagram',
-            shortcut=QKeySequence.SelectAll, triggered=self.doSelectAll))
+            shortcut=QtGui.QKeySequence.SelectAll, triggered=self.doSelectAll))
 
         #############################################
         # EDGE RELATED
         #################################
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_delete_black'), 'Remove breakpoint', self,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_delete_black'), 'Remove breakpoint', self,
             objectName='remove_breakpoint', statusTip='Remove the selected edge breakpoint',
             triggered=self.doRemoveBreakpoint))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_equivalence_black'), 'Toggle edge equivalence', self,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_equivalence_black'), 'Toggle edge equivalence', self,
             objectName='toggle_edge_equivalence', shortcut='ALT+C', enabled=False,
             statusTip='Toggle the equivalence for all the selected inclusion edges',
             triggered=self.doToggleEdgeEquivalence))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_swap_horiz_black'), 'Swap edge', self,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_swap_horiz_black'), 'Swap edge', self,
             objectName='swap_edge', shortcut='ALT+S', enabled=False,
             statusTip='Swap the direction of all the selected edges',
             triggered=self.doSwapEdge))
@@ -456,41 +450,41 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # NODE RELATED
         #################################
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_settings_black'), 'Properties...',
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_settings_black'), 'Properties...',
             self, objectName='node_properties',
             triggered=self.doOpenNodeProperties))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_label_outline_black'), 'Rename...',
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_label_outline_black'), 'Rename...',
             self, objectName='refactor_name',
             triggered=self.doRefactorName))
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_refresh_black'), 'Relocate label',
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_refresh_black'), 'Relocate label',
             self, objectName='relocate_label',
             triggered=self.doRelocateLabel))
 
-        action = QAction(
-            QIcon(':/icons/24/ic_top_black'), Special.Top.value,
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_top_black'), Special.Top.value,
             self, objectName='special_top',
             triggered=self.doSetNodeSpecial)
         action.setData(Special.Top)
         self.addAction(action)
 
-        action = QAction(
-            QIcon(':/icons/24/ic_bottom_black'), Special.Bottom.value,
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_bottom_black'), Special.Bottom.value,
             self, objectName='special_bottom',
             triggered=self.doSetNodeSpecial)
         action.setData(Special.Bottom)
         self.addAction(action)
 
         style = self.style()
-        isize = style.pixelMetric(QStyle.PM_ToolBarIconSize)
+        isize = style.pixelMetric(QtWidgets.QStyle.PM_ToolBarIconSize)
         for name, trigger in (('brush', self.doSetNodeBrush), ('refactor_brush', self.doRefactorBrush)):
-            group = QActionGroup(self, objectName=name)
+            group = QtWidgets.QActionGroup(self, objectName=name)
             for color in Color:
-                action = QAction(
+                action = QtWidgets.QAction(
                     BrushIcon(isize, isize, color.value), color.name,
                     self, checkable=False, triggered=trigger)
                 action.setData(color)
@@ -501,8 +495,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # ROLE SPECIFIC
         #################################
 
-        self.addAction(QAction(
-            QIcon(':/icons/24/ic_square_half_black'), 'Invert Role', self,
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_square_half_black'), 'Invert Role', self,
             objectName='invert_role', triggered=self.doInvertRole,
             statusTip='Invert the selected role in all its occurrences'))
 
@@ -510,15 +504,15 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # ROLE / ATTRIBUTE SPECIFIC
         #################################
 
-        action = QAction(
-            QIcon(':/icons/24/ic_square_outline_black'), 'Domain',
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_square_outline_black'), 'Domain',
             self, objectName='property_domain',
             triggered=self.doComposePropertyExpression)
         action.setData(Item.DomainRestrictionNode)
         self.addAction(action)
 
-        action = QAction(
-            QIcon(':/icons/24/ic_square_black'), 'Range',
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_square_black'), 'Range',
             self, objectName='property_range',
             triggered=self.doComposePropertyExpression)
         action.setData(Item.RangeRestrictionNode)
@@ -528,9 +522,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # PROPERTY DOMAIN / RANGE SPECIFIC
         #################################
 
-        group = QActionGroup(self, objectName='restriction')
+        group = QtWidgets.QActionGroup(self, objectName='restriction')
         for restriction in Restriction:
-            action = QAction(restriction.value, group,
+            action = QtWidgets.QAction(restriction.value, group,
                 objectName=restriction.name, checkable=True,
                 triggered=self.doSetPropertyRestriction)
             action.setData(restriction)
@@ -541,9 +535,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         data[Item.DomainRestrictionNode] = 'Domain'
         data[Item.RangeRestrictionNode] = 'Range'
 
-        group = QActionGroup(self, objectName='switch_restriction')
+        group = QtWidgets.QActionGroup(self, objectName='switch_restriction')
         for k, v in data.items():
-            action = QAction(v, group,
+            action = QtWidgets.QAction(v, group,
                 objectName=k.name, checkable=True,
                 triggered=self.doSwitchRestrictionNode)
             action.setData(k)
@@ -554,9 +548,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # VALUE-DOMAIN SPECIFIC
         #################################
 
-        group = QActionGroup(self, objectName='datatype')
+        group = QtWidgets.QActionGroup(self, objectName='datatype')
         for datatype in Datatype:
-            action = QAction(datatype.value, group,
+            action = QtWidgets.QAction(datatype.value, group,
                 objectName=datatype.name, checkable=True,
                 triggered=self.doSetDatatype)
             action.setData(datatype)
@@ -567,9 +561,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # INDIVIDUAL SPECIFIC
         #################################
 
-        group = QActionGroup(self, objectName='switch_individual')
+        group = QtWidgets.QActionGroup(self, objectName='switch_individual')
         for identity in (Identity.Individual, Identity.Value):
-            action = QAction(identity.value, group,
+            action = QtWidgets.QAction(identity.value, group,
                 objectName=identity.name, checkable=True,
                 triggered=self.doSetIndividualAs)
             action.setData(identity)
@@ -580,9 +574,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # FACET SPECIFIC
         #################################
 
-        group = QActionGroup(self, objectName='facet')
+        group = QtWidgets.QActionGroup(self, objectName='facet')
         for facet in Facet:
-            action = QAction(facet.value, group,
+            action = QtWidgets.QAction(facet.value, group,
                 objectName=facet.name, checkable=True,
                 triggered=self.doSetFacet)
             action.setData(facet)
@@ -603,9 +597,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         data[Item.RoleInverseNode] = 'Role inverse'
         data[Item.UnionNode] = 'Union'
 
-        group = QActionGroup(self, objectName='switch_operator')
+        group = QtWidgets.QActionGroup(self, objectName='switch_operator')
         for k, v in data.items():
-            action = QAction(v, group,
+            action = QtWidgets.QAction(v, group,
                 objectName=k.name, checkable=True,
                 triggered=self.doSwitchOperatorNode)
             action.setData(k)
@@ -638,7 +632,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # MENU BAR RELATED
         #################################
 
-        menu = QMenu('File', objectName='file')
+        menu = QtWidgets.QMenu('File', objectName='file')
         menu.addAction(self.action('new_diagram'))
         menu.addAction(self.action('open'))
         menu.addSeparator()
@@ -654,7 +648,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu.addAction(self.action('quit'))
         self.addMenu(menu)
 
-        menu = QMenu('\u200CEdit', objectName='edit')
+        menu = QtWidgets.QMenu('\u200CEdit', objectName='edit')
         menu.addAction(self.action('undo'))
         menu.addAction(self.action('redo'))
         menu.addSeparator()
@@ -676,25 +670,25 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu.addAction(self.action('open_preferences'))
         self.addMenu(menu)
 
-        menu = QMenu('Toolbars', objectName='toolbars')
+        menu = QtWidgets.QMenu('Toolbars', objectName='toolbars')
         menu.addAction(self.widget('document_toolbar').toggleViewAction())
         menu.addAction(self.widget('editor_toolbar').toggleViewAction())
         menu.addAction(self.widget('graphol_toolbar').toggleViewAction())
         menu.addAction(self.widget('view_toolbar').toggleViewAction())
         self.addMenu(menu)
 
-        menu = QMenu('\u200CView', objectName='view')
+        menu = QtWidgets.QMenu('\u200CView', objectName='view')
         menu.addAction(self.action('toggle_grid'))
         menu.addSeparator()
         menu.addMenu(self.menu('toolbars'))
         menu.addSeparator()
         self.addMenu(menu)
 
-        menu = QMenu('Tools', objectName='tools')
+        menu = QtWidgets.QMenu('Tools', objectName='tools')
         menu.addAction(self.action('syntax_check'))
         self.addMenu(menu)
 
-        menu = QMenu('Help', objectName='help')
+        menu = QtWidgets.QMenu('Help', objectName='help')
         menu.addAction(self.action('about'))
         menu.addSeparator()
         menu.addAction(self.action('diag_web'))
@@ -705,24 +699,24 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # NODE GENERIC
         #################################
 
-        menu = QMenu('Select color', objectName='brush')
-        menu.setIcon(QIcon(':/icons/24/ic_format_color_fill_black'))
+        menu = QtWidgets.QMenu('Select color', objectName='brush')
+        menu.setIcon(QtGui.QIcon(':/icons/24/ic_format_color_fill_black'))
         menu.addActions(self.action('brush').actions())
         self.addMenu(menu)
 
-        menu = QMenu('Special type', objectName='special')
-        menu.setIcon(QIcon(':/icons/24/ic_star_black'))
+        menu = QtWidgets.QMenu('Special type', objectName='special')
+        menu.setIcon(QtGui.QIcon(':/icons/24/ic_star_black'))
         menu.addAction(self.action('special_top'))
         menu.addAction(self.action('special_bottom'))
         self.addMenu(menu)
 
-        menu = QMenu('Select color', objectName='refactor_brush')
-        menu.setIcon(QIcon(':/icons/24/ic_format_color_fill_black'))
+        menu = QtWidgets.QMenu('Select color', objectName='refactor_brush')
+        menu.setIcon(QtGui.QIcon(':/icons/24/ic_format_color_fill_black'))
         menu.addActions(self.action('refactor_brush').actions())
         self.addMenu(menu)
 
-        menu = QMenu('Refactor', objectName='refactor')
-        menu.setIcon(QIcon(':/icons/24/ic_format_shapes_black'))
+        menu = QtWidgets.QMenu('Refactor', objectName='refactor')
+        menu.setIcon(QtGui.QIcon(':/icons/24/ic_format_shapes_black'))
         menu.addAction(self.action('refactor_name'))
         menu.addMenu(self.menu('refactor_brush'))
         self.addMenu(menu)
@@ -731,8 +725,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # ROLE / ATTRIBUTE SPECIFIC
         #################################
 
-        menu = QMenu('Compose', objectName='compose')
-        menu.setIcon(QIcon(':/icons/24/ic_create_black'))
+        menu = QtWidgets.QMenu('Compose', objectName='compose')
+        menu.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
         menu.addAction(self.action('property_domain'))
         menu.addAction(self.action('property_range'))
         self.addMenu(menu)
@@ -741,8 +735,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # VALUE-DOMAIN SPECIFIC
         #################################
 
-        menu = QMenu('Select type', objectName='datatype')
-        menu.setIcon(QIcon(':/icons/24/ic_transform_black'))
+        menu = QtWidgets.QMenu('Select type', objectName='datatype')
+        menu.setIcon(QtGui.QIcon(':/icons/24/ic_transform_black'))
         menu.addActions(self.action('datatype').actions())
         self.addMenu(menu)
 
@@ -750,8 +744,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # FACET SPECIFIC
         #################################
 
-        menu = QMenu('Select facet', objectName='facet')
-        menu.setIcon(QIcon(':/icons/24/ic_transform_black'))
+        menu = QtWidgets.QMenu('Select facet', objectName='facet')
+        menu.setIcon(QtGui.QIcon(':/icons/24/ic_transform_black'))
         menu.addActions(self.action('facet').actions())
         self.addMenu(menu)
 
@@ -759,13 +753,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # PROPERTY DOMAIN / RANGE SPECIFIC
         #################################
 
-        menu = QMenu('Select restriction', objectName='property_restriction')
-        menu.setIcon(QIcon(':/icons/24/ic_not_interested_black'))
+        menu = QtWidgets.QMenu('Select restriction', objectName='property_restriction')
+        menu.setIcon(QtGui.QIcon(':/icons/24/ic_not_interested_black'))
         menu.addActions(self.action('restriction').actions())
         self.addMenu(menu)
 
-        menu = QMenu('Switch to', objectName='switch_restriction')
-        menu.setIcon(QIcon(':/icons/24/ic_transform_black'))
+        menu = QtWidgets.QMenu('Switch to', objectName='switch_restriction')
+        menu.setIcon(QtGui.QIcon(':/icons/24/ic_transform_black'))
         menu.addActions(self.action('switch_restriction').actions())
         self.addMenu(menu)
 
@@ -773,8 +767,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # INDIVIDUAL SPECIFIC
         #################################
 
-        menu = QMenu('Switch to', objectName='switch_individual')
-        menu.setIcon(QIcon(':/icons/24/ic_transform_black'))
+        menu = QtWidgets.QMenu('Switch to', objectName='switch_individual')
+        menu.setIcon(QtGui.QIcon(':/icons/24/ic_transform_black'))
         menu.addActions(self.action('switch_individual').actions())
         self.addMenu(menu)
 
@@ -782,8 +776,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # OPERATORS SPECIFIC
         #################################
 
-        menu = QMenu('Switch to', objectName='switch_operator')
-        menu.setIcon(QIcon(':/icons/24/ic_transform_black'))
+        menu = QtWidgets.QMenu('Switch to', objectName='switch_operator')
+        menu.setIcon(QtGui.QIcon(':/icons/24/ic_transform_black'))
         menu.addActions(self.action('switch_operator').actions())
         self.addMenu(menu)
 
@@ -960,16 +954,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Configure application state by reading the preferences file.
         """
-        settings = QSettings(ORGANIZATION, APPNAME)
-        self.restoreGeometry(settings.value('session/geometry', QByteArray(), QByteArray))
-        self.restoreState(settings.value('session/state', QByteArray(), QByteArray))
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        self.restoreGeometry(settings.value('session/geometry', QtCore.QByteArray(), QtCore.QByteArray))
+        self.restoreState(settings.value('session/state', QtCore.QByteArray(), QtCore.QByteArray))
         self.action('toggle_grid').setChecked(settings.value('diagram/grid', False, bool))
 
     def initStatusBar(self):
         """
         Configure the status bar.
         """
-        statusbar = QStatusBar(self)
+        statusbar = QtWidgets.QStatusBar(self)
         statusbar.setSizeGripEnabled(False)
         self.setStatusBar(statusbar)
 
@@ -978,14 +972,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Configure application built-in toolbars.
         """
         toolbar = self.widget('document_toolbar')
-        toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
+        toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         toolbar.addAction(self.action('new_diagram'))
         toolbar.addAction(self.action('open'))
         toolbar.addAction(self.action('save'))
         toolbar.addAction(self.action('print'))
 
         toolbar = self.widget('editor_toolbar')
-        toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
+        toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         toolbar.addAction(self.action('undo'))
         toolbar.addAction(self.action('redo'))
         toolbar.addSeparator()
@@ -1004,29 +998,29 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         toolbar.addWidget(self.widget('button_set_brush'))
 
         toolbar = self.widget('view_toolbar')
-        toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
+        toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         toolbar.addAction(self.action('toggle_grid'))
         toolbar.addAction(self.action('snap_to_grid'))
         toolbar.addAction(self.action('center_diagram'))
 
         toolbar = self.widget('graphol_toolbar')
-        toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
+        toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         toolbar.addWidget(self.widget('profile_switch'))
         toolbar.addAction(self.action('syntax_check'))
 
-        self.addToolBar(Qt.TopToolBarArea, self.widget('document_toolbar'))
-        self.addToolBar(Qt.TopToolBarArea, self.widget('editor_toolbar'))
-        self.addToolBar(Qt.TopToolBarArea, self.widget('view_toolbar'))
-        self.addToolBar(Qt.TopToolBarArea, self.widget('graphol_toolbar'))
+        self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('document_toolbar'))
+        self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('editor_toolbar'))
+        self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('view_toolbar'))
+        self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('graphol_toolbar'))
 
     def initWidgets(self):
         """
         Configure application built-in widgets.
         """
-        button = QToolButton(objectName='button_set_brush')
-        button.setIcon(QIcon(':/icons/24/ic_format_color_fill_black'))
+        button = QtWidgets.QToolButton(objectName='button_set_brush')
+        button.setIcon(QtGui.QIcon(':/icons/24/ic_format_color_fill_black'))
         button.setMenu(self.menu('brush'))
-        button.setPopupMode(QToolButton.InstantPopup)
+        button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         button.setStatusTip('Change the background color of the selected predicate nodes')
         button.setEnabled(False)
         self.addWidget(button)
@@ -1034,7 +1028,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         combobox = ComboBox(objectName='profile_switch')
         combobox.setEditable(False)
         combobox.setFont(Font('Arial', 12))
-        combobox.setFocusPolicy(Qt.StrongFocus)
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(False)
         combobox.setStatusTip('Change the profile of the active project')
         combobox.addItems(self.profileNames())
@@ -1045,7 +1039,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doBringToFront(self):
         """
         Bring the selected item to the top of the diagram.
@@ -1070,7 +1064,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 else:
                     self.undostack.push(first(commands))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doCenterDiagram(self):
         """
         Center the active diagram.
@@ -1090,7 +1084,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     self.undostack.push(command)
                     self.mdi.activeView().centerOn(0, 0)
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doClose(self):
         """
         Close the currently active subwindow.
@@ -1099,7 +1093,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.close()
         self.sgnClosed.emit()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doComposePropertyExpression(self):
         """
         Compose a property domain using the selected role/attribute node.
@@ -1118,7 +1112,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 edges = {x for x in items if x.isEdge()}
                 self.undostack.push(CommandComposeAxiom(name, diagram, node, nodes, edges))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doCopy(self):
         """
         Make a copy of selected items.
@@ -1131,7 +1125,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.clipboard.update(diagram)
             self.sgnUpdateState.emit()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doCut(self):
         """
         Cut selected items from the active diagram.
@@ -1148,7 +1142,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 items.extend([x for item in items if item.isNode() for x in item.edges if x not in items])
                 self.undostack.push(CommandItemsRemove(diagram, items))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doDelete(self):
         """
         Delete the currently selected items from the active diagram.
@@ -1161,18 +1155,18 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 items.extend([x for item in items if item.isNode() for x in item.edges if x not in items])
                 self.undostack.push(CommandItemsRemove(diagram, items))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doExport(self):
         """
         Export the current project.
         """
         if not self.project.isEmpty():
-            dialog = QFileDialog(self)
-            dialog.setAcceptMode(QFileDialog.AcceptSave)
+            dialog = QtWidgets.QFileDialog(self)
+            dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
             dialog.setDirectory(expandPath('~/'))
-            dialog.setFileMode(QFileDialog.AnyFile)
+            dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
             dialog.setNameFilters(self.projectExporterNameFilters(exclude={File.Graphol}))
-            dialog.setViewMode(QFileDialog.Detail)
+            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             if dialog.exec_():
                 filetype = File.forValue(dialog.selectedNameFilter())
@@ -1180,7 +1174,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 exporter = self.createProjectExporter(filetype, self.project, self)
                 exporter.export(path)
 
-    @pyqtSlot('QGraphicsScene')
+    @QtCore.pyqtSlot('QGraphicsScene')
     def doFocusDiagram(self, diagram):
         """
         Focus the given diagram in the MDI area.
@@ -1195,7 +1189,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.mdi.update()
         self.sgnDiagramFocused.emit(diagram)
 
-    @pyqtSlot('QGraphicsItem')
+    @QtCore.pyqtSlot('QGraphicsItem')
     def doFocusItem(self, item):
         """
         Focus an item in its diagram.
@@ -1206,16 +1200,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.mdi.activeView().centerOn(item)
         item.setSelected(True)
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doImport(self):
         """
         Import a document from a different file format.
         """
-        dialog = QFileDialog(self)
-        dialog.setAcceptMode(QFileDialog.AcceptOpen)
+        dialog = QtWidgets.QFileDialog(self)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setDirectory(expandPath('~'))
-        dialog.setFileMode(QFileDialog.ExistingFiles)
-        dialog.setViewMode(QFileDialog.Detail)
+        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
+        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         dialog.setNameFilters(self.diagramLoaderNameFilters(exclude={File.Graphol}))
         if dialog.exec_():
             filetype = File.forValue(dialog.selectedNameFilter())
@@ -1230,18 +1224,18 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                             self.project.addDiagram(diagram)
                             self.sgnDiagramFocus.emit(diagram)
                 except Exception as e:
-                    msgbox = QMessageBox(self)
+                    msgbox = QtWidgets.QMessageBox(self)
                     msgbox.setDetailedText(format_exception(e))
-                    msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                    msgbox.setStandardButtons(QMessageBox.Close)
+                    msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+                    msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
                     msgbox.setText('Eddy could not import all the selected files!')
-                    msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+                    msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
                     msgbox.setWindowTitle('Import failed!')
                     msgbox.exec_()
                 finally:
                     self.sgnProjectSave.emit()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doInvertRole(self):
         """
         Swap the direction of all the occurrences of the selected role.
@@ -1286,7 +1280,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                         self.undostack.push(CommandNodeSwitchTo(xnode.diagram, xnode, ynode))
                     self.undostack.endMacro()
 
-    @pyqtSlot(str)
+    @QtCore.pyqtSlot(str)
     def doLoadDiagram(self, path):
         """
         Load the given diagram and add it to the project.
@@ -1301,19 +1295,19 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 try:
                     diagram = loader.load()
                 except Exception as e:
-                    msgbox = QMessageBox(self)
+                    msgbox = QtWidgets.QMessageBox(self)
                     msgbox.setDetailedText(format_exception(e))
-                    msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                    msgbox.setStandardButtons(QMessageBox.Close)
+                    msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+                    msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
                     msgbox.setText('Eddy could not load the specified diagram: {0}!'.format(path))
-                    msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+                    msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
                     msgbox.setWindowTitle('Diagram load failed!')
                     msgbox.exec_()
                 else:
                     self.project.addDiagram(diagram)
                     self.sgnDiagramLoaded.emit(diagram)
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doNewDiagram(self):
         """
         Create a new diagram.
@@ -1325,21 +1319,21 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.sgnDiagramFocus.emit(self.project.diagram(path))
             self.sgnProjectSave.emit()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doOpen(self):
         """
         Open a document.
         """
-        dialog = QFileDialog(self)
-        dialog.setAcceptMode(QFileDialog.AcceptOpen)
+        dialog = QtWidgets.QFileDialog(self)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setDirectory(expandPath('~'))
-        dialog.setFileMode(QFileDialog.ExistingFile)
-        dialog.setViewMode(QFileDialog.Detail)
+        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         dialog.setNameFilters([File.Graphol.value])
         if dialog.exec_():
             self.openFile(first(dialog.selectedFiles()))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doOpenDialog(self):
         """
         Open a dialog window by initializing it using the class stored in action data.
@@ -1349,7 +1343,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         window = dialog(self)
         window.exec_()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doOpenURL(self):
         """
         Open a URL using the operating system default browser.
@@ -1359,7 +1353,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if weburl:
             webbrowser.open(weburl)
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doOpenDiagramProperties(self):
         """
         Executed when scene properties needs to be displayed.
@@ -1370,7 +1364,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             properties = self.pf.create(diagram)
             properties.exec_()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doOpenNodeProperties(self):
         """
         Executed when node properties needs to be displayed.
@@ -1383,7 +1377,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 properties = self.pf.create(diagram, node)
                 properties.exec_()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doPaste(self):
         """
         Paste previously copied items.
@@ -1394,7 +1388,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if not self.clipboard.empty():
                 self.clipboard.paste(diagram, diagram.mp_Pos)
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doPrint(self):
         """
         Print the active diagram.
@@ -1404,7 +1398,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             exporter = PrinterDiagramExporter(diagram, self)
             exporter.export()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doPurge(self):
         """
         Delete the currently selected items by also removing no more necessary elements.
@@ -1432,7 +1426,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 collection.extend([x for item in collection if item.isNode() for x in item.edges if x not in collection])
                 self.undostack.push(CommandItemsRemove(diagram, collection))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doQuit(self):
         """
         Quit Eddy.
@@ -1440,7 +1434,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.sgnProjectSave.emit()
         self.sgnQuit.emit()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doRefactorBrush(self):
         """
         Change the node brush for all the predicate nodes matching the selected predicate.
@@ -1454,9 +1448,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 action = self.sender()
                 color = action.data()
                 nodes = self.project.predicates(node.type(), node.text())
-                self.undostack.push(CommandNodeSetBrush(diagram, nodes, QBrush(QColor(color.value))))
+                self.undostack.push(CommandNodeSetBrush(diagram, nodes, QtGui.QBrush(QtGui.QColor(color.value))))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doRefactorName(self):
         """
         Rename all the instance of the selected predicate node.
@@ -1470,7 +1464,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                  dialog = RefactorNameForm(node, self)
                  dialog.exec_()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doRelocateLabel(self):
         """
         Reset the selected node label to its default position.
@@ -1485,7 +1479,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 redo = node.label.defaultPos()
                 self.undostack.push(CommandLabelMove(diagram, node, undo, redo))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doRemoveBreakpoint(self):
         """
         Remove the edge breakpoint specified in the action triggering this slot.
@@ -1498,7 +1492,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if 0 <= breakpoint < len(edge.breakpoints):
                 self.undostack.push(CommandEdgeBreakpointRemove(diagram, edge, breakpoint))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doRemoveDiagram(self):
         """
         Removes a diagram from the current project.
@@ -1506,18 +1500,18 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         action = self.sender()
         diagram = action.data()
         if diagram:
-            msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
+            msgbox = QtWidgets.QMessageBox(self)
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
             msgbox.setInformativeText('<b>NOTE: This action is not reversible!</b>')
-            msgbox.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
-            msgbox.setTextFormat(Qt.RichText)
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
+            msgbox.setTextFormat(QtCore.Qt.RichText)
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Remove diagram: {0}?'.format(diagram.name))
             msgbox.setText(textwrap.dedent("""Are you sure you want to remove diagram <b>{0}</b>?
             If you continue, all the predicates that have been defined only in this
             diagram will be lost!""".format(diagram.name)))
             msgbox.exec_()
-            if msgbox.result() == QMessageBox.Yes:
+            if msgbox.result() == QtWidgets.QMessageBox.Yes:
                 subwindow = self.mdi.subWindowForDiagram(diagram)
                 if subwindow:
                     subwindow.close()
@@ -1525,7 +1519,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 fremove(diagram.path)
                 self.sgnProjectSave.emit()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doRenameDiagram(self):
         """
         Renames a diagram.
@@ -1537,7 +1531,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if form.exec_() == RenameDiagramDialog.Accepted:
                 self.sgnProjectSave.emit()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSave(self):
         """
         Save the current project.
@@ -1546,31 +1540,31 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             exporter = self.createProjectExporter(File.Graphol, self.project, self)
             exporter.export()
         except Exception as e:
-            msgbox = QMessageBox(self)
+            msgbox = QtWidgets.QMessageBox(self)
             msgbox.setDetailedText(format_exception(e))
-            msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-            msgbox.setStandardButtons(QMessageBox.Close)
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
             msgbox.setText('Eddy could not save the current project!')
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Save failed!')
             msgbox.exec_()
         else:
             self.undostack.setClean()
             self.sgnProjectSaved.emit()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSaveAs(self):
         """
         Creates a copy of the currently open diagram.
         """
         diagram = self.mdi.activeDiagram()
         if diagram:
-            dialog = QFileDialog(self)
-            dialog.setAcceptMode(QFileDialog.AcceptSave)
+            dialog = QtWidgets.QFileDialog(self)
+            dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
             dialog.setDirectory(expandPath('~/'))
-            dialog.setFileMode(QFileDialog.AnyFile)
+            dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
             dialog.setNameFilters(self.diagramExporterNameFilters())
-            dialog.setViewMode(QFileDialog.Detail)
+            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(cutR(diagram.name, File.Graphol.extension))
             if dialog.exec_():
                 filetype = File.forValue(dialog.selectedNameFilter())
@@ -1578,19 +1572,19 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 exporter = self.createDiagramExporter(filetype, diagram, self)
                 exporter.export(path)
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSelectAll(self):
         """
         Select all the items in the active diagrsm.
         """
         diagram = self.mdi.activeDiagram()
         if diagram:
-            path = QPainterPath()
+            path = QtGui.QPainterPath()
             path.addRect(diagram.sceneRect())
             diagram.setSelectionArea(path)
             diagram.setMode(DiagramMode.Idle)
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSendToBack(self):
         """
         Send the selected item to the back of the diagram.
@@ -1615,7 +1609,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 else:
                     self.undostack.push(first(commands))
             
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSetNodeBrush(self):
         """
         Set the brush of selected nodes.
@@ -1625,14 +1619,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             diagram.setMode(DiagramMode.Idle)
             action = self.sender()
             color = action.data()
-            brush = QBrush(QColor(color.value))
+            brush = QtGui.QBrush(QtGui.QColor(color.value))
             supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
             fn = lambda x: x.type() in supported and x.brush() != brush
             selected = diagram.selectedNodes(filter_on_nodes=fn)
             if selected:
                 self.undostack.push(CommandNodeSetBrush(diagram, selected, brush))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSetPropertyRestriction(self):
         """
         Set a property domain / range restriction.
@@ -1656,7 +1650,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     name = 'change {0} to {1}'.format(node.shortName, data)
                     self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSetIndividualAs(self):
         """
         Set an invididual node either to Individual or Value.
@@ -1678,7 +1672,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     form = ValueForm(node, self)
                     form.exec_()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSetNodeSpecial(self):
         """
         Set the special type of the selected node.
@@ -1696,7 +1690,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     name = 'change {0} to {1}'.format(node.shortName, data)
                     self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSetDatatype(self):
         """
         Set the datatype of the selected value-domain node.
@@ -1714,7 +1708,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     name = 'change {0} to {1}'.format(node.shortName, data)
                     self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSetFacet(self):
         """
         Set the facet of a Facet node.
@@ -1732,7 +1726,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     name = 'change {0} to {1}'.format(node.facet.value, facet.value)
                     self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSetProfile(self):
         """
         Set the currently used project profile.
@@ -1743,7 +1737,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.undostack.push(CommandProjectSetProfile(self.project, self.project.profile.name(), profile))
         widget.clearFocus()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSnapTopGrid(self):
         """
         Snap all the element in the active diagram to the grid.
@@ -1775,7 +1769,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if data['undo']['nodes'] or data['undo']['edges']:
                 self.undostack.push(CommandSnapItemsToGrid(diagram, data))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSwapEdge(self):
         """
         Swap the selected edges by inverting source/target points.
@@ -1788,7 +1782,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if selected:
                 self.undostack.push(CommandEdgeSwap(diagram, selected))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSwitchOperatorNode(self):
         """
         Switch the selected operator node to a different type.
@@ -1805,7 +1799,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     xnode.setPos(node.pos())
                     self.undostack.push(CommandNodeSwitchTo(diagram, node, xnode))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSwitchRestrictionNode(self):
         """
         Switch the selected restriction node to a different type.
@@ -1824,7 +1818,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     xnode.setTextPos(node.textPos())
                     self.undostack.push(CommandNodeSwitchTo(diagram, node, xnode))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doSyntaxCheck(self):
         """
         Perform syntax checking on the active diagram.
@@ -1832,7 +1826,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog = SyntaxValidationDialog(self.project, self)
         dialog.exec_()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doToggleEdgeEquivalence(self):
         """
         Set/unset the 'equivalence' attribute for all the selected Inclusion edges.
@@ -1847,19 +1841,19 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 data = {edge: {'from': edge.equivalence, 'to': comp} for edge in selected}
                 self.undostack.push(CommandEdgeToggleEquivalence(diagram, data))
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doToggleGrid(self):
         """
         Toggle snap to grid setting.
         """
-        settings = QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         settings.setValue('diagram/grid', self.action('toggle_grid').isChecked())
         settings.sync()
         for subwindow in self.mdi.subWindowList():
             viewport = subwindow.view.viewport()
             viewport.update()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doUpdateState(self):
         """
         Update actions enabling/disabling them when needed.
@@ -1927,18 +1921,18 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         close = True
         save = False
         if not self.undostack.isClean():
-            msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox = QtWidgets.QMessageBox(self)
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Save changes?')
-            msgbox.setStandardButtons(QMessageBox.Cancel|QMessageBox.No|QMessageBox.Yes)
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Cancel|QtWidgets.QMessageBox.No|QtWidgets.QMessageBox.Yes)
             msgbox.setText('Your project contains unsaved changes. Do you want to save?')
             msgbox.exec_()
-            if msgbox.result() == QMessageBox.Cancel:
+            if msgbox.result() == QtWidgets.QMessageBox.Cancel:
                 close = False
-            elif msgbox.result() == QMessageBox.No:
+            elif msgbox.result() == QtWidgets.QMessageBox.No:
                 save = False
-            elif msgbox.result() == QMessageBox.Yes:
+            elif msgbox.result() == QtWidgets.QMessageBox.Yes:
                 save = True
 
         if not close:
@@ -1964,8 +1958,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         :type dragEvent: QDragEnterEvent
         """
         if dragEvent.mimeData().hasUrls():
-            self.setCursor(QCursor(Qt.DragCopyCursor))
-            dragEvent.setDropAction(Qt.CopyAction)
+            self.setCursor(QtGui.QCursor(QtCore.Qt.DragCopyCursor))
+            dragEvent.setDropAction(QtCore.Qt.CopyAction)
             dragEvent.accept()
         else:
             dragEvent.ignore()
@@ -1991,14 +1985,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         if dropEvent.mimeData().hasUrls():
             self.unsetCursor()
-            dropEvent.setDropAction(Qt.CopyAction)
+            dropEvent.setDropAction(QtCore.Qt.CopyAction)
             platform = Platform.identify()
             for url in dropEvent.mimeData().urls():
                 path = url.path()
                 if platform is Platform.Windows:
                     # On Windows the absolute path returned for each URL has a
                     # leading slash: this obviously is not correct on windows
-                    # platform when absolute url have the form C:\\Programs\\... (Qt bug?)
+                    # platform when absolute url have the form C:\\Programs\\... (QtCore.Qt bug?)
                     path = path.lstrip('/').lstrip('\\')
                 if fexists(path) and File.forPath(path) is File.Graphol:
                     self.openFile(path)
@@ -2011,18 +2005,18 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Executed when a keyboard button is released from the scene.
         :type keyEvent: QKeyEvent
         """
-        if keyEvent.key() == Qt.Key_Control:
+        if keyEvent.key() == QtCore.Qt.Key_Control:
             diagram = self.mdi.activeDiagram()
             if diagram and not diagram.isEdgeAddInProgress():
                 diagram.setMode(DiagramMode.Idle)
-        super().keyReleaseEvent(keyEvent)
+        super(Session, self).keyReleaseEvent(keyEvent)
 
     def showEvent(self, showEvent):
         """
         Executed when the window is shown.
         :type showEvent: QShowEvent
         """
-        self.setWindowState((self.windowState() & ~Qt.WindowMinimized) | Qt.WindowActive)
+        self.setWindowState((self.windowState() & ~QtCore.Qt.WindowMinimized) | QtCore.Qt.WindowActive)
         self.activateWindow()
         self.raise_()
 
@@ -2079,4 +2073,4 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         title = '{0} - [{1}]'.format(project.name, shortPath(project.path))
         if diagram:
             title = '{0} - {1}'.format(diagram.name, title)
-        super().setWindowTitle(title)
+        super(Session, self).setWindowTitle(title)

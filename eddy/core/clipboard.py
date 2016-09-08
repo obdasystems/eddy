@@ -33,7 +33,7 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QObject, QPointF, pyqtSignal
+from PyQt5 import QtCore
 
 from eddy.core.commands.common import CommandItemsAdd
 from eddy.core.output import getLogger
@@ -42,9 +42,9 @@ from eddy.core.output import getLogger
 LOGGER = getLogger(__name__)
 
 
-class Clipboard(QObject):
+class Clipboard(QtCore.QObject):
     """
-    Extension of QObject which implements the Clipboard.
+    Extension of QtCore.QObject which implements the Clipboard.
     Additionally to built-in signals, this class emits:
 
     * sgnCleared: whenever the clipboard is cleared.
@@ -53,8 +53,8 @@ class Clipboard(QObject):
     PasteOffsetX = 20
     PasteOffsetY = 10
 
-    sgnCleared = pyqtSignal()
-    sgnUpdated = pyqtSignal()
+    sgnCleared = QtCore.pyqtSignal()
+    sgnUpdated = QtCore.pyqtSignal()
 
     def __init__(self, session):
         """
@@ -101,7 +101,7 @@ class Clipboard(QObject):
         """
         Paste currently copied items in the given diagram.
         :type diagram: Diagram
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         def ncopy(node):
             """
@@ -149,7 +149,7 @@ class Clipboard(QObject):
             # Paste position has been given manually => figure out which node to use as anchor item and
             # adjust the paste position so that the anchor item is pasted right after the given position
             item = min(nodes, key=lambda x: x.boundingRect().top())
-            offset = pos - item.pos() + QPointF(item.width() / 2, item.height() / 2)
+            offset = pos - item.pos() + QtCore.QPointF(item.width() / 2, item.height() / 2)
             for item in items:
                 item.moveBy(offset.x(), offset.y())
                 if item.isNode():

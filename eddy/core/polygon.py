@@ -33,10 +33,8 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt
-
-from PyQt5.QtGui import QPen, QBrush, QPolygonF
-
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 
 class Polygon(object):
@@ -44,20 +42,20 @@ class Polygon(object):
     This class is used to store shape data for Diagram item objects.
     For each object it will store:
 
-        - Geometrical data to be drawn on screen (either QRectF, QPolygonF or QPainterPath).
-        - The QBrush used to draw the geometrical shape.
-        - The QPen used to draw the geometrical shape.
+        - Geometrical data to be drawn on screen (either QRectF, QtGui.QPolygonF or QPainterPath).
+        - The QtGui.QBrush used to draw the geometrical shape.
+        - The QtGui.QPen used to draw the geometrical shape.
 
     Note that this class is meant to be used just as a container for shape related elements
     and thus, despite its name, does not provide any geometrical functionality, which are
     instead available in the geometry of the polygon.
     """
-    def __init__(self, geometry=QPolygonF(), brush=QBrush(Qt.NoBrush), pen=QPen(Qt.NoPen)):
+    def __init__(self, geometry=QtGui.QPolygonF(), brush=QtGui.QBrush(QtCore.Qt.NoBrush), pen=QtGui.QPen(QtCore.Qt.NoPen)):
         """
         Initialize the polygon.
-        :type geometry: T <= QRectF|QPolygonF|QPainterPath
-        :type brush: QBrush
-        :type pen: QPen
+        :type geometry: T <= QRectF|QtGui.QPolygonF|QPainterPath
+        :type brush: QtGui.QBrush
+        :type pen: QtGui.QPen
         """
         self._geometry = geometry
         self._brush = brush
@@ -70,41 +68,41 @@ class Polygon(object):
     def brush(self):
         """
         Returns the brush used to draw the shape.
-        :rtype: QBrush
+        :rtype: QtGui.QBrush
         """
         return self._brush
 
     def geometry(self):
         """
         Returns the polygon geometry.
-        :rtype: T <= QRectF|QPolygonF|QPainterPath
+        :rtype: T <= QRectF|QtGui.QPolygonF|QPainterPath
         """
         return self._geometry
 
     def pen(self):
         """
         Returns the pen used to draw the shape.
-        :rtype: QPen
+        :rtype: QtGui.QPen
         """
         return self._pen
 
     def setBrush(self, brush):
         """
         Set the brush used to draw the shape.
-        :type brush: QBrush
+        :type brush: QtGui.QBrush
         """
         self._brush = brush
 
     def setGeometry(self, geometry):
         """
         Set the shape polygon.
-        :type geometry: T <= QRectF|QPolygonF|QPainterPath
+        :type geometry: T <= QRectF|QtGui.QPolygonF|QPainterPath
         """
         self._geometry = geometry
 
     def setPen(self, pen):
         """
         Set the brush used to draw the shape.
-        :type pen: QPen
+        :type pen: QtGui.QPen
         """
         self._pen = pen

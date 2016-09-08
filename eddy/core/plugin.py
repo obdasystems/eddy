@@ -35,7 +35,7 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5 import QtCore
 
 from eddy.core.common import HasActionSystem, HasMenuSystem, HasWidgetSystem
 from eddy.core.output import getLogger
@@ -44,14 +44,11 @@ from eddy.core.output import getLogger
 LOGGER = getLogger(__name__)
 
 
-class AbstractPlugin(QObject, HasActionSystem, HasMenuSystem, HasWidgetSystem):
+class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasWidgetSystem):
     """
-    Extension QObject which implements a plugin.
+    Extension QtCore.QObject which implements a plugin.
     """
     __metaclass__ = ABCMeta
-
-    sgnDisposed = pyqtSignal(str)
-    sgnStarted = pyqtSignal(str)
 
     def __init__(self, session):
         """
