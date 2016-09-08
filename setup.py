@@ -60,37 +60,21 @@ from PyQt5 import QtCore
 ###########################
 
 
-AS_TO_EXE = None
+MACOS = sys.platform.startswith('darwin')
+LINUX = sys.platform.startswith('linux')
+WIN32 = sys.platform.startswith('win32')
+
 BUILD_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'build')
 DIST_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'dist')
-DIST_NAME = '%s-%s-%s' % (APPNAME, VERSION, LICENSE.lower())
-DMG_BACKGROUND = None
-DMG_ICON = None
-EXEC_BASE = None
-EXEC_ICON = None
-EXEC_NAME = APPNAME
-PLATFORM_ARCH = platform.architecture()[0][:-3]
-PROJECT_DIR = expandPath(os.path.dirname(__file__))
+DIST_NAME = '%s-%s-%s_%s' % (APPNAME, VERSION, platform.system().lower(), platform.machine())
+DIST_PATH = os.path.join(BUILD_DIR, DIST_NAME)
+EXEC_BASE = 'Win32GUI' if WIN32 else None
+EXEC_ICON = expandPath('@resources/images/eddy%s' % '.icns' if MACOS else '.ico' if WIN32 else '.png')
+EXEC_NAME = '%s%s' % (APPNAME, '.exe' if WIN32 else '')
+
 QT_BASE_PATH = os.path.join(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PrefixPath), '..')
 QT_LIB_PATH = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.LibrariesPath),
 QT_PLUGINS_PATH = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath)
-
-if sys.platform.startswith('darwin'):
-    DIST_NAME = '%s-darwin' % DIST_NAME
-    EXEC_ICON = os.path.join(PROJECT_DIR, 'resources', 'images', 'eddy.icns')
-    DMG_BACKGROUND = os.path.join(PROJECT_DIR, 'resources', 'images', 'macos_background_dmg.png')
-    DMG_ICON = os.path.join(PROJECT_DIR, 'resources', 'images', 'macos_icon_dmg.icns')
-elif sys.platform.startswith('win32'):
-    AS_TO_EXE = True
-    DIST_NAME = '%s-win%s' % (DIST_NAME, PLATFORM_ARCH)
-    EXEC_BASE = 'Win32GUI'
-    EXEC_NAME = '%s.exe' % APPNAME
-    EXEC_ICON = os.path.join(PROJECT_DIR, 'resources', 'images', 'eddy.ico')
-else:
-    DIST_NAME = '%s-linux%s' % (DIST_NAME, PLATFORM_ARCH)
-    EXEC_ICON = os.path.join(PROJECT_DIR, 'resources', 'images', 'eddy.png')
-
-BUILD_PATH = os.path.join(BUILD_DIR, DIST_NAME)
 
 
 ###################################
@@ -180,14 +164,12 @@ class BuildExe(cx_Freeze.build_exe):
         """
         Create a ZIP distribution.
         """
-        distutils.log.info('packaging ZIP distribution: %s.zip', DIST_NAME)
         zippath = os.path.join(self.dist_dir, '%s.zip' % DIST_NAME)
         with zipfile.ZipFile(zippath, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for root, dirs, files in os.walk(self.build_exe):
                 for filename in files:
                     path = expandPath(os.path.join(root, filename))
                     arcname = os.path.join(DIST_NAME, os.path.relpath(path, self.build_exe))
-                    distutils.log.info('copying %s -> %s', path, arcname)
                     zipf.write(path, arcname)
 
     def package_plugins(self):
@@ -207,14 +189,13 @@ class BuildExe(cx_Freeze.build_exe):
                                 for filename in files:
                                     path = expandPath(os.path.join(root, filename))
                                     arcname = os.path.join(file_or_directory, os.path.relpath(path, plugin))
-                                    distutils.log.info('copying %s -> %s', path, arcname)
                                     zipf.write(path, arcname)
 
     def make_installer(self):
         """
         Create a Windows installer using InnoSetup
         """
-        if sys.platform.startswith('win32'):
+        if WIN32:
 
             import yaml
             with open(os.path.join('support', 'innosetup', 'build.yaml'), 'r') as f:
@@ -242,7 +223,7 @@ class BuildExe(cx_Freeze.build_exe):
             for filename in config['scripts']:
 
                 script_file = os.path.join('support', 'innosetup', filename)
-                print("building: {0}".format(script_file))
+                distutils.log.info("building: {0}".format(script_file))
 
                 try:
                     cmd = [
@@ -267,7 +248,7 @@ class BuildExe(cx_Freeze.build_exe):
                     ]
                     subprocess.call(cmd)
                 except Exception as e:
-                    print('ERROR: failed to build {0}: {1}'.format(script_file, e))
+                    distutils.log.error('Failed to build {0}: {1}'.format(script_file, e))
 
     def unix_2_dos(self):
         """
@@ -289,7 +270,7 @@ class BuildExe(cx_Freeze.build_exe):
         """
         Properly create a Linux executable.
         """
-        if sys.platform.startswith('linux'):
+        if LINUX:
              path = os.path.join(self.build_exe, 'run.sh')
              with open(path, mode='w') as f:
                 f.write(textwrap.dedent("""#!/bin/sh
@@ -316,12 +297,12 @@ commands = {
 }
 
 
-if sys.platform.startswith('darwin'):
+if MACOS:
 
     class BDistMac(cx_Freeze.bdist_mac):
         """
         Extends bdist_mac adding the following changes:
-           - properly lookup build_exe path (using BUILD_PATH)
+           - properly lookup build_exe path (using DIST_PATH)
            - generate a customized Info.plist
         """
         binDir = None
@@ -337,17 +318,9 @@ if sys.platform.startswith('darwin'):
             """
             if self.qt_menu_nib:
                 return self.qt_menu_nib
-
-            paths = [
-                expandPath(os.path.join(QT_BASE_PATH, 'Src/qtbase/src/plugins/platforms/cocoa/qt_menu.nib')),
-                expandPath('~/workspace/qt5/qtbase/src/plugins/platforms/cocoa'),
-                expandPath('~/Documents/workspace/qt5/qtbase/src/plugins/platforms/cocoa')
-            ]
-
-            for path in paths:
-                if os.path.exists(path):
-                    return path
-
+            path = expandPath(os.path.join(QT_BASE_PATH, 'Src/qtbase/src/plugins/platforms/cocoa/qt_menu.nib'))
+            if os.path.exists(path):
+                return path
             raise IOError("could not find qt_menu.nib: please install Qt5 source components")
 
         def setRelativeReferencePaths(self):
@@ -357,42 +330,26 @@ if sys.platform.startswith('darwin'):
             fail for files on which they do not apply.
             """
             files = []
-
             for root, dirs, dir_files in os.walk(self.binDir):
                 files.extend([os.path.join(root, f).replace(self.binDir + '/', '') for f in dir_files])
 
             for filename in files:
-
-                # Skip ZIP files since install_name_tool can't handle them.
                 if filename.endswith('.zip'):
                     continue
-
-                # Get the absolute filepath.
                 filepath = os.path.join(self.binDir, filename)
-
-                # Ensure write permissions.
                 mode = os.stat(filepath).st_mode
                 if not mode & stat.S_IWUSR:
                     os.chmod(filepath, mode | stat.S_IWUSR)
 
-                # Let the file itself know its place.
                 subprocess.call(('install_name_tool', '-id', '@executable_path/{0}'.format(filename), filepath))
-
-                # Find the references: call otool -L on the file.
                 otool = subprocess.Popen(('otool', '-L', filepath), stdout=subprocess.PIPE)
                 references = otool.stdout.readlines()[1:]
 
                 for reference in references:
-
-                    # Find the actual referenced file name.
                     referenced_file = reference.decode().strip().split()[0]
-
                     if referenced_file.startswith('@executable_path/'):
-                        # The referenced_file is already a relative path.
                         continue
-
                     path, name = os.path.split(referenced_file)
-
                     # Some referenced files have not previously been copied to the executable directory - the
                     # assumption is that you don't need to copy anything from /usr or /System, just from folders
                     # like /opt this fix should probably be elsewhere though.
@@ -410,7 +367,6 @@ if sys.platform.startswith('darwin'):
                                 new_reference = '@executable_path/{0}'.format(i)
 
                     if new_reference:
-                        # We provide the referenced file so change the reference.
                         subprocess.call(('install_name_tool', '-change', referenced_file, new_reference, filepath))
 
         def run(self):
@@ -433,7 +389,7 @@ if sys.platform.startswith('darwin'):
             self.mkpath(self.binDir)
             self.mkpath(self.frameworksDir)
 
-            self.copy_tree(BUILD_PATH, self.binDir)
+            self.copy_tree(DIST_PATH, self.binDir)
 
             if self.iconfile:
                 self.copy_file(self.iconfile, os.path.join(self.resourcesDir, 'icon.icns'))
@@ -530,11 +486,14 @@ if sys.platform.startswith('darwin'):
             """
             Build the DMG image.
             """
-            if os.path.exists(self.dmgName):
+            if not is_dir('@support/createdmg') or not fexists('@support/createdmg/create-dmg'):
+                raise OSError('unable to find create-dmg utility: please clone Eddy with all its submodules' )
+
+            if fexists(self.dmgName):
                 os.unlink(self.dmgName)
 
             stagingDir = os.path.join(self.buildDir, 'tmp')
-            if os.path.exists(stagingDir):
+            if is_dir(stagingDir):
                 rmdir(stagingDir)
 
             self.mkpath(stagingDir)
@@ -544,7 +503,7 @@ if sys.platform.startswith('darwin'):
                 raise OSError('could not move app bundle in staging directory')
 
             # We create the DMG disk image using the create-dmg submodule.
-            params = [os.path.join(PROJECT_DIR, 'support', 'createdmg', 'create-dmg')]
+            params = [expandPath('@support/createdmg/create-dmg')]
             params.extend(['--volname', self.volume_label])
             params.extend(['--text-size', '12'])
             params.extend(['--icon-size', '48'])
@@ -640,7 +599,7 @@ include_files = [
     ('README.md', 'README.md'),
 ]
 
-if sys.platform.startswith('linux'):
+if LINUX:
     include_files.extend([
         (os.path.join(QT_LIB_PATH, 'libQt5DBus.so.5'), 'libQt5DBus.so.5'),
         (os.path.join(QT_LIB_PATH, 'libQt5XcbQpa.so.5'), 'libQt5XcbQpa.so.5'),
@@ -677,21 +636,21 @@ cx_Freeze.setup(
         },
         'bdist_dmg': {
             'dist_dir': DIST_DIR,
-            'applications_shortcut': True,
-            'volume_label': '{0} {1}'.format(APPNAME, VERSION),
-            'volume_background': DMG_BACKGROUND,
-            'volume_icon': DMG_ICON,
+            'applications_shortcut': 1,
+            'volume_label': '%s %s' % (APPNAME, VERSION),
+            'volume_background': expandPath('@resources/images/macos_background_dmg.png'),
+            'volume_icon': expandPath('@resources/images/macos_icon_dmg.icns'),
         },
         'build_exe': {
-            'append_script_to_exe': AS_TO_EXE,
-            'build_exe': BUILD_PATH,
+            'append_script_to_exe': 1,
+            'build_exe': DIST_PATH,
             'dist_dir': DIST_DIR,
             'excludes': excludes,
             'includes': includes,
             'include_files': include_files,
             'optimize': 1,
             'packages': packages,
-            'silent': False,
+            'silent': 0,
         }
     },
     executables=[
