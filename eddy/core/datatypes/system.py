@@ -33,8 +33,6 @@
 ##########################################################################
 
 
-import sys
-
 from enum import unique, Enum
 
 from eddy.core.regex import RE_FILE_EXTENSION
@@ -107,37 +105,3 @@ class File(Enum):
         :rtype: bool
         """
         return self.value > other.value
-
-
-@unique
-class Platform(Enum):
-    """
-    This class defines supported platforms.
-    """
-    Darwin = 'Darwin'
-    Linux = 'Linux'
-    Windows = 'Windows'
-    Unknown = 'Unknown'
-
-    @classmethod
-    def identify(cls):
-        """
-        Returns the current platform identifier.
-        :rtype: Platform
-        """
-        return Platform.forValue(sys.platform)
-
-    @classmethod
-    def forValue(cls, value):
-        """
-        Returns the platform identified by the the given value.
-        :type value: str
-        :rtype: Platform
-        """
-        if value.startswith('darwin'):
-            return Platform.Darwin
-        if value.startswith('linux'):
-            return Platform.Linux
-        if value.startswith('win') or value.startswith('cygwin'):
-            return Platform.Windows
-        return Platform.Unknown

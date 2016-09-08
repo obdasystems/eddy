@@ -61,8 +61,8 @@ from PyQt5 import QtCore
 ###########################
 
 
-MACOS = sys.platform.startswith('darwin')
 LINUX = sys.platform.startswith('linux')
+MACOS = sys.platform.startswith('darwin')
 WIN32 = sys.platform.startswith('win32')
 
 BUILD_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'build')

@@ -33,12 +33,17 @@
 ##########################################################################
 
 
+import sys
+
 from PyQt5.QtCore import QRectF, QPointF, Qt
 from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPainterPath
 from PyQt5.QtGui import QColor, QBrush, QPen, QFont
 from PyQt5.QtWidgets import QPushButton, QToolButton
 
-from eddy.core.datatypes.system import Platform
+
+LINUX = sys.platform.startswith('linux')
+MACOS = sys.platform.startswith('darwin')
+WIN32 = sys.platform.startswith('win32')
 
 
 class Font(QFont):
@@ -53,9 +58,9 @@ class Font(QFont):
         :type weight: float
         :type italic: bool
         """
-        if Platform.identify() is not Platform.Darwin:
+        if not MACOS:
             size = int(round(size * 0.75))
-        super().__init__(family, size, weight, italic)
+        super(Font, self).__init__(family, size, weight, italic)
 
 
 class BrushIcon(QIcon):

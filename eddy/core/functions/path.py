@@ -37,8 +37,12 @@ import errno
 import os
 import sys
 
-from eddy.core.datatypes.system import Platform
 from eddy.core.functions.misc import cutR, clamp
+
+
+LINUX = sys.platform.startswith('linux')
+MACOS = sys.platform.startswith('darwin')
+WIN32 = sys.platform.startswith('win32')
 
 
 def compressPath(path, maxchars, dots=3):
@@ -126,7 +130,7 @@ def isPathValid(path):
         path = os.path.splitdrive(path)[1]
 
         root = os.path.sep
-        if Platform.identify() is Platform.Windows:
+        if WIN32:
             root = os.environ.get('HOMEDRIVE', 'C:')
         root = '{0}{1}'.format(cutR(root, os.path.sep), os.path.sep)
 
@@ -179,12 +183,11 @@ def openPath(path):
     """
     path = expandPath(path)
     if os.path.isfile(path) or os.path.isdir(path):
-        platform = Platform.identify()
-        if platform is Platform.Windows:
+        if WIN32:
             os.system('start {0}'.format(path))
-        elif platform is Platform.Darwin:
+        elif MACOS:
             os.system('open "{0}"'.format(path))
-        elif platform is Platform.Linux:
+        elif LINUX:
             os.system('xdg-open "{0}"'.format(path))
 
 

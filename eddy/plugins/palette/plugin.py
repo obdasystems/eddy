@@ -33,6 +33,8 @@
 ##########################################################################
 
 
+import sys
+
 from PyQt5.QtCore import Qt, QEvent, QMimeData, pyqtSlot
 from PyQt5.QtCore import QRectF, QPointF, QLineF, QSize, QSettings
 from PyQt5.QtGui import QDrag, QIcon, QPixmap, QPainter
@@ -49,11 +51,15 @@ from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.owl import Facet
 from eddy.core.datatypes.qt import Font
-from eddy.core.datatypes.system import Platform
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
 
 from eddy.ui.dock import DockWidget
+
+
+LINUX = sys.platform.startswith('linux')
+MACOS = sys.platform.startswith('darwin')
+WIN32 = sys.platform.startswith('win32')
 
 
 class Palette(AbstractPlugin):
@@ -946,7 +952,7 @@ class PaletteButton(QToolButton):
                 P2 = P1 - QPointF(sin(A1 + M_PI / 3.0) * 8, cos(A1 + M_PI / 3.0) * 8)
                 P3 = P1 - QPointF(sin(A1 + M_PI - M_PI / 3.0) * 8, cos(A1 + M_PI - M_PI / 3.0) * 8)
                 H1 = QPolygonF([P1, P2, P3])
-                S1 = 2 if Platform.identify() is Platform.Darwin else 0
+                S1 = 2 if MACOS else 0
                 painter = QPainter(pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
                 painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))

@@ -36,6 +36,7 @@
 import importlib
 import importlib.util
 import os
+import sys
 import textwrap
 import webbrowser
 import zipimport
@@ -75,7 +76,7 @@ from eddy.core.datatypes.graphol import Restriction, Special
 from eddy.core.datatypes.misc import Color, DiagramMode
 from eddy.core.datatypes.owl import Datatype, Facet
 from eddy.core.datatypes.qt import BrushIcon, Font
-from eddy.core.datatypes.system import Platform, File
+from eddy.core.datatypes.system import File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.graphol import GrapholDiagramExporter
@@ -113,6 +114,10 @@ from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationDialog
 from eddy.ui.view import DiagramView
 
+
+LINUX = sys.platform.startswith('linux')
+MACOS = sys.platform.startswith('darwin')
+WIN32 = sys.platform.startswith('win32')
 
 LOGGER = getLogger(__name__)
 
@@ -265,7 +270,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         action.setData(GRAPHOL_HOME)
         self.addAction(action)
 
-        if Platform.identify() is Platform.Darwin:
+        if MACOS:
             self.action('about').setIcon(QtGui.QIcon())
             self.action('open_preferences').setIcon(QtGui.QIcon())
             self.action('quit').setIcon(QtGui.QIcon())
@@ -1986,10 +1991,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if dropEvent.mimeData().hasUrls():
             self.unsetCursor()
             dropEvent.setDropAction(QtCore.Qt.CopyAction)
-            platform = Platform.identify()
             for url in dropEvent.mimeData().urls():
                 path = url.path()
-                if platform is Platform.Windows:
+                if WIN32:
                     # On Windows the absolute path returned for each URL has a
                     # leading slash: this obviously is not correct on windows
                     # platform when absolute url have the form C:\\Programs\\... (QtCore.Qt bug?)
@@ -2000,9 +2004,20 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         else:
             dropEvent.ignore()
 
+    def keyPressEvent(self, keyEvent):
+        """
+        Executed when a keyboard button is pressed
+        :type keyEvent: QKeyEvent
+        """
+        if MACOS:
+            if keyEvent.key() == QtCore.Qt.Key_Backspace:
+                action = self.action('delete')
+                action.trigger()
+        super(Session, self).keyPressEvent(keyEvent)
+
     def keyReleaseEvent(self, keyEvent):
         """
-        Executed when a keyboard button is released from the scene.
+        Executed when a keyboard button is released.
         :type keyEvent: QKeyEvent
         """
         if keyEvent.key() == QtCore.Qt.Key_Control:

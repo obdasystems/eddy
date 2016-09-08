@@ -39,8 +39,12 @@ import os
 import sys
 import jnius_config
 
-from eddy.core.datatypes.system import Platform
 from eddy.core.functions.path import expandPath
+
+
+LINUX = sys.platform.startswith('linux')
+MACOS = sys.platform.startswith('darwin')
+WIN32 = sys.platform.startswith('win32')
 
 
 #############################################
@@ -50,7 +54,7 @@ from eddy.core.functions.path import expandPath
 if os.path.isdir(expandPath('@resources/java/')):
     os.environ['JAVA_HOME'] = expandPath('@resources/java/')
 
-if Platform.identify() is Platform.Windows:
+if WIN32:
     path = os.getenv('Path', '')
     path = path.split(os.pathsep)
     path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'bin', 'client'))
