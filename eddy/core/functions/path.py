@@ -240,7 +240,7 @@ def supportPath():
     Returns the path to the support directory.
     :rtype: str
     """
-    return os.path.join(modulePath(), 'support')
+    return os.path.join(rootPath(), 'support')
 
 
 def uniquePath(base, name, extension):
