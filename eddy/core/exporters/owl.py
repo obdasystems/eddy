@@ -238,7 +238,7 @@ class OWLProjectExporterDialog(QDialog):
         self.workerThread.quit()
 
         msgbox = QMessageBox(self)
-        msgbox.setIconPixmap(QIcon(':/icons/24/ic_info_outline_black').pixmap(48))
+        msgbox.setIconPixmap(QIcon(':/icons/48/ic_done_black').pixmap(48))
         msgbox.setInformativeText('Do you want to open the OWL ontology?')
         msgbox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         msgbox.setText('Translation completed!')
