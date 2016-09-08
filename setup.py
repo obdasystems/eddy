@@ -38,6 +38,7 @@ import distutils.core
 import distutils.log
 import os
 import platform
+import py_compile
 import re
 import stat
 import subprocess
@@ -188,8 +189,17 @@ class BuildExe(cx_Freeze.build_exe):
                             if not root.endswith('__pycache__'):
                                 for filename in files:
                                     path = expandPath(os.path.join(root, filename))
-                                    arcname = os.path.join(file_or_directory, os.path.relpath(path, plugin))
-                                    zipf.write(path, arcname)
+                                    if path.endswith('.py'):
+                                        # Make sure to package a compiled version of a python script
+                                        # so we will not include any source file in the distributed app.
+                                        new_path = '%s.pyc' % path.rstrip('.py')
+                                        py_compile.compile(path, new_path)
+                                        arcname = os.path.join(file_or_directory, os.path.relpath(new_path, plugin))
+                                        zipf.write(new_path, arcname)
+                                        fremove(new_path)
+                                    else:
+                                        arcname = os.path.join(file_or_directory, os.path.relpath(path, plugin))
+                                        zipf.write(path, arcname)
 
     def make_installer(self):
         """
