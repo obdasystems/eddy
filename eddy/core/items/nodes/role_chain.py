@@ -33,8 +33,8 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QPointF
-from PyQt5.QtGui import QBrush, QColor
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
@@ -55,7 +55,7 @@ class RoleChainNode(OperatorNode):
         :type brush: QBrush
         :type inputs: DistinctList
         """
-        super(RoleChainNode, self).__init__(brush=QBrush(QColor(252, 252, 252, 255)), **kwargs)
+        super(RoleChainNode, self).__init__(brush=QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)), **kwargs)
         self.inputs = inputs or DistinctList()
         self.label = NodeLabel('chain', pos=self.center, editable=False, movable=False, parent=self)
 
@@ -126,7 +126,7 @@ class RoleChainNode(OperatorNode):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         self.label.setPos(pos)
 

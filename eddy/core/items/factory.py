@@ -33,7 +33,7 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QObject
+from PyQt5 import QtCore
 
 from eddy.core.datatypes.graphol import Item
 
@@ -59,7 +59,7 @@ from eddy.core.items.nodes.union import UnionNode
 from eddy.core.items.nodes.value_domain import ValueDomainNode
 
 
-class ItemFactory(QObject):
+class ItemFactory(QtCore.QObject):
     """
     This class can be used to produce graphol items.
     """

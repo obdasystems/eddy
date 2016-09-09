@@ -36,9 +36,8 @@
 from abc import ABCMeta, abstractmethod
 from itertools import permutations
 
-from PyQt5.QtCore import Qt, QPointF, QLineF, QRectF
-from PyQt5.QtGui import QPolygonF, QPainterPath
-from PyQt5.QtGui import QPen, QBrush, QColor
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.commands.edges import CommandEdgeAnchorMove
 from eddy.core.commands.edges import CommandEdgeBreakpointAdd
@@ -71,11 +70,11 @@ class AbstractEdge(AbstractItem):
         self.target = target
 
         self.anchors = {} # {AbstractNode: Polygon}
-        self.breakpoints = breakpoints or [] # [QPointF]
+        self.breakpoints = breakpoints or [] # [QtCore.QPointF]
         self.handles = [] # [Polygon]
-        self.head = Polygon(QPolygonF())
-        self.path = Polygon(QPainterPath())
-        self.selection = Polygon(QPainterPath())
+        self.head = Polygon(QtGui.QPolygonF())
+        self.path = Polygon(QtGui.QPainterPath())
+        self.selection = Polygon(QtGui.QPainterPath())
 
         self.mp_AnchorNode = None
         self.mp_AnchorNodePos = None
@@ -96,8 +95,8 @@ class AbstractEdge(AbstractItem):
         Returns the key of the anchor whose handle is being pressed.
         :type point: AbstractNode
         """
-        size = QPointF(3, 3)
-        area = QRectF(point - size, point + size)
+        size = QtCore.QPointF(3, 3)
+        area = QtCore.QRectF(point - size, point + size)
         for k, v, in self.anchors.items():
             if v.geometry().intersects(area):
                 return k
@@ -107,7 +106,7 @@ class AbstractEdge(AbstractItem):
         """
         Move the selected anchor point.
         :type node: AbstractNode
-        :type mousePos: QPointF
+        :type mousePos: QtCore.QPointF
         """
         nodePos = node.pos()
         snapToGrid = self.session.action('toggle_grid').isChecked()
@@ -118,9 +117,9 @@ class AbstractEdge(AbstractItem):
             pos = nodePos if distance(mousePos, nodePos) < 10.0 else mousePos
         else:
             # Mouse is outside the shape => use the intersection point as anchor point.
-            pos = node.intersection(QLineF(mousePos, nodePos))
+            pos = node.intersection(QtCore.QLineF(mousePos, nodePos))
             for pair in set(permutations([-1, -1, 0, 0, 1, 1], 2)):
-                p = pos + QPointF(*pair)
+                p = pos + QtCore.QPointF(*pair)
                 if path.contains(p):
                     pos = p
                     break
@@ -130,7 +129,7 @@ class AbstractEdge(AbstractItem):
     def breakPointAdd(self, mousePos):
         """
         Create a new breakpoint from the given mouse position returning its index.
-        :type mousePos: QPointF
+        :type mousePos: QtCore.QPointF
         :rtype: int
         """
         index = 0
@@ -143,7 +142,7 @@ class AbstractEdge(AbstractItem):
         points = [source] + self.breakpoints + [target]
 
         # Estimate between which breakpoints the new one is being added.
-        for subpath in (QLineF(points[i], points[i + 1]) for i in range(len(points) - 1)):
+        for subpath in (QtCore.QLineF(points[i], points[i + 1]) for i in range(len(points) - 1)):
             dis, pos = projection(subpath, mousePos)
             if dis < shortest:
                 point = pos
@@ -171,11 +170,11 @@ class AbstractEdge(AbstractItem):
     def breakPointAt(self, point):
         """
         Returns the index of the breakpoint whose handle is being pressed.
-        :type point: QPointF
+        :type point: QtCore.QPointF
         :rtype: int
         """
-        size = QPointF(3, 3)
-        area = QRectF(point - size, point + size)
+        size = QtCore.QPointF(3, 3)
+        area = QtCore.QRectF(point - size, point + size)
         for polygon in self.handles:
             if polygon.geometry().intersects(area):
                 return self.handles.index(polygon)
@@ -185,7 +184,7 @@ class AbstractEdge(AbstractItem):
         """
         Move the selected breakpoint.
         :type breakpoint: int
-        :type mousePos: QPointF
+        :type mousePos: QtCore.QPointF
         """
         snapToGrid = self.session.action('toggle_grid').isChecked()
         self.breakpoints[breakpoint] = snap(mousePos, self.diagram.GridSize, snapToGrid)
@@ -221,7 +220,7 @@ class AbstractEdge(AbstractItem):
 
     def computePath(self, source, target, points):
         """
-        Returns a list of QLineF instance representing all the visible edge pieces.
+        Returns a list of QtCore.QLineF instance representing all the visible edge pieces.
         Subpaths which are obscured by the source or target shape are excluded by this method.
         :type source: AbstractNode
         :type target: AbstractNode
@@ -232,7 +231,7 @@ class AbstractEdge(AbstractItem):
         sp = self.mapFromItem(source, source.painterPath())
         tp = self.mapFromItem(target, target.painterPath()) if target else None
         # Exclude all the "subpaths" which are not visible (obscured by the shapes).
-        return [x for x in (QLineF(points[i], points[i + 1]) for i in range(len(points) - 1)) \
+        return [x for x in (QtCore.QLineF(points[i], points[i + 1]) for i in range(len(points) - 1)) \
                     if (not sp.contains(x.p1()) or not sp.contains(x.p2())) and \
                         (not tp or (not tp.contains(x.p1()) or not tp.contains(x.p2())))]
 
@@ -249,7 +248,7 @@ class AbstractEdge(AbstractItem):
         :type x: float
         :type y: float
         """
-        self.breakpoints = [p + QPointF(x, y) for p in self.breakpoints]
+        self.breakpoints = [p + QtCore.QPointF(x, y) for p in self.breakpoints]
 
     def other(self, node):
         """
@@ -283,26 +282,26 @@ class AbstractEdge(AbstractItem):
         # ANCHORS (GEOMETRY) --> NB: THE POINTS ARE IN THE ENDPOINTS
         if source and target:
             p = source.anchor(self)
-            self.anchors[source] = Polygon(QRectF(p.x() - 4, p.y() - 4, 8, 8))
+            self.anchors[source] = Polygon(QtCore.QRectF(p.x() - 4, p.y() - 4, 8, 8))
             p = target.anchor(self)
-            self.anchors[target] = Polygon(QRectF(p.x() - 4, p.y() - 4, 8, 8))
+            self.anchors[target] = Polygon(QtCore.QRectF(p.x() - 4, p.y() - 4, 8, 8))
 
         # BREAKPOINTS (GEOMETRY)
-        self.handles = [Polygon(QRectF(p.x() - 4, p.y() - 4, 8, 8)) for p in self.breakpoints]
+        self.handles = [Polygon(QtCore.QRectF(p.x() - 4, p.y() - 4, 8, 8)) for p in self.breakpoints]
 
         # ANCHORS + BREAKPOINTS + SELECTION (BRUSH + PEN)
-        anchorBrush = QBrush(Qt.NoBrush)
-        anchorPen = QPen(Qt.NoPen)
-        handleBrush = QBrush(Qt.NoBrush)
-        handlePen = QPen(Qt.NoPen)
-        selectionBrush = QBrush(Qt.NoBrush)
+        anchorBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
+        anchorPen = QtGui.QPen(QtCore.Qt.NoPen)
+        handleBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
+        handlePen = QtGui.QPen(QtCore.Qt.NoPen)
+        selectionBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
         if visible and selected:
-            anchorBrush = QBrush(QColor(66, 165, 245, 255))
-            anchorPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-            handleBrush = QBrush(QColor(66, 165, 245, 255))
-            handlePen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            anchorBrush = QtGui.QBrush(QtGui.QColor(66, 165, 245, 255))
+            anchorPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
+            handleBrush = QtGui.QBrush(QtGui.QColor(66, 165, 245, 255))
+            handlePen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
             if breakpoint is None and anchor is None:
-                selectionBrush = QBrush(QColor(251, 255, 148, 255))
+                selectionBrush = QtGui.QBrush(QtGui.QColor(251, 255, 148, 255))
         for polygon in self.anchors.values():
             polygon.setBrush(anchorBrush)
             polygon.setPen(anchorPen)
@@ -337,7 +336,7 @@ class AbstractEdge(AbstractItem):
         Executed when the mouse enters the shape (NOT PRESSED).
         :type hoverEvent: QGraphicsSceneHoverEvent
         """
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(QtCore.Qt.PointingHandCursor)
         super().hoverEnterEvent(hoverEvent)
 
     def hoverMoveEvent(self, hoverEvent):
@@ -345,7 +344,7 @@ class AbstractEdge(AbstractItem):
         Executed when the mouse moves over the shape (NOT PRESSED).
         :type hoverEvent: QGraphicsSceneHoverEvent
         """
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(QtCore.Qt.PointingHandCursor)
         super().hoverMoveEvent(hoverEvent)
 
     def hoverLeaveEvent(self, hoverEvent):
@@ -353,7 +352,7 @@ class AbstractEdge(AbstractItem):
         Executed when the mouse leaves the shape (NOT PRESSED).
         :type hoverEvent: QGraphicsSceneHoverEvent
         """
-        self.setCursor(Qt.ArrowCursor)
+        self.setCursor(QtCore.Qt.ArrowCursor)
         super().hoverLeaveEvent(hoverEvent)
 
     def itemChange(self, change, value):
@@ -387,7 +386,7 @@ class AbstractEdge(AbstractItem):
                 self.diagram.setMode(DiagramMode.EdgeAnchorMove)
                 self.setSelected(True)
                 self.mp_AnchorNode = anchorNode
-                self.mp_AnchorNodePos = QPointF(anchorNode.anchor(self))
+                self.mp_AnchorNodePos = QtCore.QPointF(anchorNode.anchor(self))
                 self.updateEdge(selected=True, anchor=anchorNode)
             else:
                 breakPoint = self.breakPointAt(self.mp_Pos)
@@ -396,7 +395,7 @@ class AbstractEdge(AbstractItem):
                     self.diagram.setMode(DiagramMode.EdgeBreakPointMove)
                     self.setSelected(True)
                     self.mp_BreakPoint = breakPoint
-                    self.mp_BreakPointPos = QPointF(self.breakpoints[breakPoint])
+                    self.mp_BreakPointPos = QtCore.QPointF(self.breakpoints[breakPoint])
                     self.updateEdge(selected=True, breakpoint=breakPoint)
 
         super().mousePressEvent(mouseEvent)
@@ -428,7 +427,7 @@ class AbstractEdge(AbstractItem):
                     self.diagram.setMode(DiagramMode.EdgeBreakPointMove)
                     self.setSelected(True)
                     self.mp_BreakPoint = breakPoint
-                    self.mp_BreakPointPos = QPointF(self.breakpoints[breakPoint])
+                    self.mp_BreakPointPos = QtCore.QPointF(self.breakpoints[breakPoint])
 
             if self.diagram.mode is DiagramMode.EdgeBreakPointMove:
                 self.breakPointMove(self.mp_BreakPoint, mousePos)
@@ -441,7 +440,7 @@ class AbstractEdge(AbstractItem):
         """
         if self.diagram.mode is DiagramMode.EdgeAnchorMove:
             anchorNode = self.mp_AnchorNode
-            anchorNodePos = QPointF(anchorNode.anchor(self))
+            anchorNodePos = QtCore.QPointF(anchorNode.anchor(self))
             if anchorNodePos != self.mp_AnchorNodePos:
                 data = {'undo': self.mp_AnchorNodePos, 'redo': anchorNodePos}
                 self.session.undostack.push(CommandEdgeAnchorMove(self.diagram, self, anchorNode, data))

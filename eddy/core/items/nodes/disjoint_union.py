@@ -33,8 +33,8 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QPointF
-from PyQt5.QtGui import QBrush, QColor
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.operator import OperatorNode
@@ -52,7 +52,7 @@ class DisjointUnionNode(OperatorNode):
         Initialize the node.
         :type brush: QBrush
         """
-        super(DisjointUnionNode, self).__init__(brush=QBrush(QColor(0, 0, 0, 255)), **kwargs)
+        super(DisjointUnionNode, self).__init__(brush=QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), **kwargs)
 
     #############################################
     #   INTERFACE
@@ -81,7 +81,7 @@ class DisjointUnionNode(OperatorNode):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         pass
 

@@ -35,10 +35,9 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import Qt, QPointF, pyqtSlot
-from PyQt5.QtGui import QTextBlockFormat, QTextCursor
-from PyQt5.QtGui import QPainterPath, QColor, QBrush
-from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.graphol import Item
@@ -105,7 +104,7 @@ class DiagramItemMixin:
         return Item.ConceptNode <= self.type() < Item.InclusionEdge
 
 
-class AbstractItem(QGraphicsItem, DiagramItemMixin):
+class AbstractItem(QtWidgets.QGraphicsItem, DiagramItemMixin):
     """
     Base class for all the diagram items.
     """
@@ -162,7 +161,7 @@ class AbstractItem(QGraphicsItem, DiagramItemMixin):
     @abstractmethod
     def painterPath(self):
         """
-        Returns the current shape as QPainterPath (used for collision detection).
+        Returns the current shape as QtGui.QPainterPath (used for collision detection).
         :rtype: QPainterPath
         """
         pass
@@ -179,7 +178,7 @@ class AbstractItem(QGraphicsItem, DiagramItemMixin):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         pass
 
@@ -234,7 +233,7 @@ class AbstractItem(QGraphicsItem, DiagramItemMixin):
         return '{0}:{1}'.format(self.__class__.__name__, self.id)
 
 
-class AbstractLabel(QGraphicsTextItem, DiagramItemMixin):
+class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
     """
     Base class for the diagram labels.
     """
@@ -250,17 +249,17 @@ class AbstractLabel(QGraphicsTextItem, DiagramItemMixin):
         :type editable: bool
         :type parent: QObject
         """
-        self._alignment = Qt.AlignCenter
+        self._alignment = QtCore.Qt.AlignCenter
         self._editable = bool(editable)
         self._movable = bool(movable)
         super().__init__(parent)
         self.focusInData = None
         self.template = template
-        self.setDefaultTextColor(QBrush(QColor(0, 0, 0, 255)).color())
+        self.setDefaultTextColor(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)).color())
         self.setFlag(AbstractLabel.ItemIsFocusable, self.isEditable())
         self.setFont(Font('Arial', 12, Font.Light))
         self.setText(self.template)
-        self.setTextInteractionFlags(Qt.NoTextInteraction)
+        self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
 
         document = self.document()
         connect(document.contentsChange[int, int, int], self.onContentsChanged)
@@ -275,7 +274,7 @@ class AbstractLabel(QGraphicsTextItem, DiagramItemMixin):
         :type focusEvent: QFocusEvent
         """
         # FOCUS ONLY ON DOUBLE CLICK
-        if focusEvent.reason() == Qt.OtherFocusReason:
+        if focusEvent.reason() == QtCore.Qt.OtherFocusReason:
             self.focusInData = self.text()
             self.diagram.clearSelection()
             self.diagram.setMode(DiagramMode.LabelEdit)
@@ -316,7 +315,7 @@ class AbstractLabel(QGraphicsTextItem, DiagramItemMixin):
             self.focusInData = None
             self.setSelectedText(False)
             self.setAlignment(self.alignment())
-            self.setTextInteractionFlags(Qt.NoTextInteraction)
+            self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
             self.diagram.setMode(DiagramMode.Idle)
             self.diagram.sgnUpdated.emit()
 
@@ -328,7 +327,7 @@ class AbstractLabel(QGraphicsTextItem, DiagramItemMixin):
         :type moveEvent: QGraphicsSceneHoverEvent
         """
         if self.isEditable() and self.hasFocus():
-            self.setCursor(Qt.IBeamCursor)
+            self.setCursor(QtCore.Qt.IBeamCursor)
             super().hoverMoveEvent(moveEvent)
 
     def hoverLeaveEvent(self, moveEvent):
@@ -336,7 +335,7 @@ class AbstractLabel(QGraphicsTextItem, DiagramItemMixin):
         Executed when the mouse leaves the text area (NOT PRESSED).
         :type moveEvent: QGraphicsSceneHoverEvent
         """
-        self.setCursor(Qt.ArrowCursor)
+        self.setCursor(QtCore.Qt.ArrowCursor)
         super().hoverLeaveEvent(moveEvent)
 
     def keyPressEvent(self, keyEvent):
@@ -344,8 +343,8 @@ class AbstractLabel(QGraphicsTextItem, DiagramItemMixin):
         Executed when a key is pressed.
         :type keyEvent: QKeyEvent
         """
-        if keyEvent.key() in {Qt.Key_Enter, Qt.Key_Return}:
-            if keyEvent.modifiers() & Qt.ShiftModifier:
+        if keyEvent.key() in {QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return}:
+            if keyEvent.modifiers() & QtCore.Qt.ShiftModifier:
                 super().keyPressEvent(keyEvent)
             else:
                 self.clearFocus()
@@ -359,14 +358,14 @@ class AbstractLabel(QGraphicsTextItem, DiagramItemMixin):
         """
         if self.isEditable():
             super().mouseDoubleClickEvent(mouseEvent)
-            self.setTextInteractionFlags(Qt.TextEditorInteraction)
+            self.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
             self.setFocus()
 
     #############################################
     #   SLOTS
     #################################
 
-    @pyqtSlot(int, int, int)
+    @QtCore.pyqtSlot(int, int, int)
     def onContentsChanged(self, position, charsRemoved, charsAdded):
         """
         Executed whenever the content of the text item changes.
@@ -444,12 +443,12 @@ class AbstractLabel(QGraphicsTextItem, DiagramItemMixin):
         """
         cursor = self.textCursor()
         if selected:
-            cursor.movePosition(QTextCursor.Start, QTextCursor.MoveAnchor)
-            cursor.movePosition(QTextCursor.End, QTextCursor.KeepAnchor)
-            cursor.select(QTextCursor.Document)
+            cursor.movePosition(QtGui.QTextCursor.Start, QtGui.QTextCursor.MoveAnchor)
+            cursor.movePosition(QtGui.QTextCursor.End, QtGui.QTextCursor.KeepAnchor)
+            cursor.select(QtGui.QTextCursor.Document)
         else:
             cursor.clearSelection()
-            cursor.movePosition(QTextCursor.End, QTextCursor.MoveAnchor)
+            cursor.movePosition(QtGui.QTextCursor.End, QtGui.QTextCursor.MoveAnchor)
         self.setTextCursor(cursor)
 
     def setAlignment(self, alignment):
@@ -460,19 +459,19 @@ class AbstractLabel(QGraphicsTextItem, DiagramItemMixin):
         self._alignment = alignment
         self.setTextWidth(-1)
         self.setTextWidth(self.boundingRect().width())
-        format_ = QTextBlockFormat()
+        format_ = QtGui.QTextBlockFormat()
         format_.setAlignment(alignment)
         cursor = self.textCursor()
         position = cursor.position()
         selected = cursor.selectedText()
         startPos = cursor.selectionStart()
         endPos = cursor.selectionEnd()
-        cursor.select(QTextCursor.Document)
+        cursor.select(QtGui.QTextCursor.Document)
         cursor.mergeBlockFormat(format_)
         if selected:
-            cursor.setPosition(startPos, QTextCursor.MoveAnchor)
-            cursor.setPosition(endPos, QTextCursor.KeepAnchor)
-            cursor.select(QTextCursor.BlockUnderCursor)
+            cursor.setPosition(startPos, QtGui.QTextCursor.MoveAnchor)
+            cursor.setPosition(endPos, QtGui.QTextCursor.KeepAnchor)
+            cursor.select(QtGui.QTextCursor.BlockUnderCursor)
         else:
             cursor.setPosition(position)
         self.setTextCursor(cursor)
@@ -480,16 +479,16 @@ class AbstractLabel(QGraphicsTextItem, DiagramItemMixin):
     def setPos(self, *__args):
         """
         Set the item position.
-        QGraphicsItem.setPos(QPointF)
-        QGraphicsItem.setPos(float, float)
+        QtWidgets.QGraphicsItem.setPos(QtCore.QPointF)
+        QtWidgets.QGraphicsItem.setPos(float, float)
         """
         if len(__args) == 1:
             pos = __args[0]
         elif len(__args) == 2:
-            pos = QPointF(__args[0], __args[1])
+            pos = QtCore.QPointF(__args[0], __args[1])
         else:
             raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
-        super().setPos(pos - QPointF(self.width() / 2, self.height() / 2))
+        super().setPos(pos - QtCore.QPointF(self.width() / 2, self.height() / 2))
 
     def setText(self, text):
         """
@@ -500,10 +499,10 @@ class AbstractLabel(QGraphicsTextItem, DiagramItemMixin):
 
     def shape(self):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
+        Returns the shape of this item as a QtGui.QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addRect(self.boundingRect())
         return path
 

@@ -35,8 +35,8 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import QPointF, QLineF, Qt, QRectF
-from PyQt5.QtGui import QPolygonF, QPen, QBrush, QColor
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.commands.nodes import CommandNodeRezize
 from eddy.core.datatypes.graphol import Item, Identity
@@ -112,7 +112,7 @@ class AbstractNode(AbstractItem):
     def brush(self):
         """
         Returns the brush used to paint the shape of this node.
-        :rtype: QBrush
+        :rtype: QtGui.QBrush
         """
         return self.polygon.brush()
 
@@ -141,7 +141,7 @@ class AbstractNode(AbstractItem):
     def geometry(self):
         """
         Returns the geometry of the shape of this node.
-        :rtype: QPolygonF
+        :rtype: QtGui.QPolygonF
         """
         return self.polygon.geometry()
 
@@ -185,15 +185,15 @@ class AbstractNode(AbstractItem):
     def intersection(self, line):
         """
         Returns the intersection of the shape with the given line (in scene coordinates).
-        :type line: QLineF
+        :type line: QtCore.QLineF
         :rtype: QPointF
         """
-        intersection = QPointF()
+        intersection = QtCore.QPointF()
         path = self.painterPath()
         polygon = self.mapToScene(path.toFillPolygon(self.transform()))
         for i in range(0, polygon.size() - 1):
-            polyline = QLineF(polygon[i], polygon[i + 1])
-            if polyline.intersect(line, intersection) == QLineF.BoundedIntersection:
+            polyline = QtCore.QLineF(polygon[i], polygon[i + 1])
+            if polyline.intersect(line, intersection) == QtCore.QLineF.BoundedIntersection:
                 return intersection
         return None
 
@@ -217,7 +217,7 @@ class AbstractNode(AbstractItem):
         :type x: T <= float | int
         :type y: T <= float | int
         """
-        move = QPointF(x, y)
+        move = QtCore.QPointF(x, y)
         self.setPos(self.pos() + move)
         self.anchors = {edge: pos + move for edge, pos in self.anchors.items()}
 
@@ -246,7 +246,7 @@ class AbstractNode(AbstractItem):
     def pen(self):
         """
         Returns the pen used to paint the shape of this node.
-        :rtype: QPen
+        :rtype: QtGui.QPen
         """
         return self.polygon.pen()
 
@@ -268,7 +268,7 @@ class AbstractNode(AbstractItem):
         """
         Set the given position as anchor for the given edge.
         :type edge: AbstractEdge
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         self.anchors[edge] = pos
 
@@ -282,7 +282,7 @@ class AbstractNode(AbstractItem):
     def setGeometry(self, geometry):
         """
         Set the geometry used to paint the shape of this node.
-        :type geometry: T <= QRectF|QPolygonF
+        :type geometry: T <= QtCore.QRectF|QtGui.QPolygonF
         """
         self.polygon.setGeometry(geometry)
 
@@ -298,20 +298,20 @@ class AbstractNode(AbstractItem):
     def setPen(self, pen):
         """
         Set the pen used to paint the shape of this node.
-        :type pen: QPen
+        :type pen: QtGui.QPen
         """
         self.polygon.setPen(pen)
 
     def setPos(self, *__args):
         """
         Set the item position.
-        QGraphicsItem.setPos(QPointF)
+        QGraphicsItem.setPos(QtCore.QPointF)
         QGraphicsItem.setPos(float, float)
         """
         if len(__args) == 1:
             pos = __args[0]
         elif len(__args) == 2:
-            pos = QPointF(__args[0], __args[1])
+            pos = QtCore.QPointF(__args[0], __args[1])
         else:
             raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
         super().setPos(pos + super().pos() - self.pos())
@@ -330,17 +330,17 @@ class AbstractNode(AbstractItem):
         :type valid: bool
         """
         # ITEM SELECTION (PEN)
-        pen = QPen(Qt.NoPen)
+        pen = QtGui.QPen(QtCore.Qt.NoPen)
         if selected:
-            pen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.DashLine)
+            pen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.DashLine)
         self.selection.setPen(pen)
 
         # SYNTAX VALIDATION (BACKGROUND BRUSH)
-        brush = QBrush(Qt.NoBrush)
+        brush = QtGui.QBrush(QtCore.Qt.NoBrush)
         if valid is not None:
-            brush = QBrush(QColor(179, 12, 12, 160))
+            brush = QtGui.QBrush(QtGui.QColor(179, 12, 12, 160))
             if valid:
-                brush = QBrush(QColor(43, 173, 63, 160))
+                brush = QtGui.QBrush(QtGui.QColor(43, 173, 63, 160))
         self.background.setBrush(brush)
 
         # FORCE CACHE REGENERATION
@@ -418,14 +418,14 @@ class AbstractResizableNode(AbstractNode):
     HandleBR = 7
 
     Cursors = [
-        Qt.SizeFDiagCursor,
-        Qt.SizeVerCursor,
-        Qt.SizeBDiagCursor,
-        Qt.SizeHorCursor,
-        Qt.SizeHorCursor,
-        Qt.SizeBDiagCursor,
-        Qt.SizeVerCursor,
-        Qt.SizeFDiagCursor,
+        QtCore.Qt.SizeFDiagCursor,
+        QtCore.Qt.SizeVerCursor,
+        QtCore.Qt.SizeBDiagCursor,
+        QtCore.Qt.SizeHorCursor,
+        QtCore.Qt.SizeHorCursor,
+        QtCore.Qt.SizeBDiagCursor,
+        QtCore.Qt.SizeVerCursor,
+        QtCore.Qt.SizeFDiagCursor,
     ]
 
     def __init__(self, **kwargs):
@@ -434,7 +434,7 @@ class AbstractResizableNode(AbstractNode):
         """
         super().__init__(**kwargs)
 
-        self.handles = [Polygon(QRectF()) for _ in range(8)]
+        self.handles = [Polygon(QtCore.QRectF()) for _ in range(8)]
 
         self.mp_Background = None
         self.mp_Selection = None
@@ -457,16 +457,16 @@ class AbstractResizableNode(AbstractNode):
         try:
             return self.Cursors[index]
         except (TypeError, IndexError):
-            return Qt.ArrowCursor
+            return QtCore.Qt.ArrowCursor
 
     def handleAt(self, point):
         """
         Returns the index of the resize handle below the given point.
-        :type point: QPointF
+        :type point: QtCore.QPointF
         :rtype: int
         """
-        size = QPointF(3, 3)
-        area = QRectF(point - size, point + size)
+        size = QtCore.QPointF(3, 3)
+        area = QtCore.QRectF(point - size, point + size)
         for i in range(len(self.handles)):
             if self.handles[i].geometry().intersects(area):
                 return i
@@ -476,7 +476,7 @@ class AbstractResizableNode(AbstractNode):
     def resize(self, mousePos):
         """
         Perform interactive resize of the node.
-        :type mousePos: QPointF
+        :type mousePos: QtCore.QPointF
         """
         pass
 
@@ -490,41 +490,41 @@ class AbstractResizableNode(AbstractNode):
         """
         # RESIZE HANDLES (GEOMETRY)
         b = self.boundingRect()
-        self.handles[self.HandleTL].setGeometry(QRectF(b.left(), b.top(), 8, 8))
-        self.handles[self.HandleTM].setGeometry(QRectF(b.center().x() - 4, b.top(), 8, 8))
-        self.handles[self.HandleTR].setGeometry(QRectF(b.right() - 8, b.top(), 8, 8))
-        self.handles[self.HandleML].setGeometry(QRectF(b.left(), b.center().y() - 4, 8, 8))
-        self.handles[self.HandleMR].setGeometry(QRectF(b.right() - 8, b.center().y() - 4, 8, 8))
-        self.handles[self.HandleBL].setGeometry(QRectF(b.left(), b.bottom() - 8, 8, 8))
-        self.handles[self.HandleBM].setGeometry(QRectF(b.center().x() - 4, b.bottom() - 8, 8, 8))
-        self.handles[self.HandleBR].setGeometry(QRectF(b.right() - 8, b.bottom() - 8, 8, 8))
+        self.handles[self.HandleTL].setGeometry(QtCore.QRectF(b.left(), b.top(), 8, 8))
+        self.handles[self.HandleTM].setGeometry(QtCore.QRectF(b.center().x() - 4, b.top(), 8, 8))
+        self.handles[self.HandleTR].setGeometry(QtCore.QRectF(b.right() - 8, b.top(), 8, 8))
+        self.handles[self.HandleML].setGeometry(QtCore.QRectF(b.left(), b.center().y() - 4, 8, 8))
+        self.handles[self.HandleMR].setGeometry(QtCore.QRectF(b.right() - 8, b.center().y() - 4, 8, 8))
+        self.handles[self.HandleBL].setGeometry(QtCore.QRectF(b.left(), b.bottom() - 8, 8, 8))
+        self.handles[self.HandleBM].setGeometry(QtCore.QRectF(b.center().x() - 4, b.bottom() - 8, 8, 8))
+        self.handles[self.HandleBR].setGeometry(QtCore.QRectF(b.right() - 8, b.bottom() - 8, 8, 8))
 
         # RESIZE HANDLES (PEN + BRUSH)
-        brush = [QBrush(Qt.NoBrush)] * 8
-        pen = [QPen(Qt.NoPen)] * 8
+        brush = [QtGui.QBrush(QtCore.Qt.NoBrush)] * 8
+        pen = [QtGui.QPen(QtCore.Qt.NoPen)] * 8
         if selected:
             if handle is None:
-                brush = [QBrush(QColor(66, 165, 245, 255))] * 8
-                pen = [QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)] * 8
+                brush = [QtGui.QBrush(QtGui.QColor(66, 165, 245, 255))] * 8
+                pen = [QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)] * 8
             else:
                 for i in range(8):
                     if i == handle:
-                        brush[i] = QBrush(QColor(66, 165, 245, 255))
-                        pen[i] = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+                        brush[i] = QtGui.QBrush(QtGui.QColor(66, 165, 245, 255))
+                        pen[i] = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
         for i in range(8):
             self.handles[i].setBrush(brush[i])
             self.handles[i].setPen(pen[i])
 
         # ITEM SELECTION (PEN)
-        pen = QPen(Qt.NoPen)
+        pen = QtGui.QPen(QtCore.Qt.NoPen)
         if selected and handle is None:
-            pen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.DashLine)
+            pen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.DashLine)
         self.selection.setPen(pen)
 
         # SYNTAX VALIDATION (BACKGROUND BRUSH)
-        brush = QBrush(Qt.NoBrush)
+        brush = QtGui.QBrush(QtCore.Qt.NoBrush)
         if valid is not None:
-            brush = QBrush(QColor(43, 173, 63, 160)) if valid else QBrush(QColor(179, 12, 12, 160))
+            brush = QtGui.QBrush(QtGui.QColor(43, 173, 63, 160)) if valid else QtGui.QBrush(QtGui.QColor(179, 12, 12, 160))
         self.background.setBrush(brush)
 
         # ANCHOR POINTS (POSITION) -> NB: SHAPE IS IN THE EDGES
@@ -535,7 +535,7 @@ class AbstractResizableNode(AbstractNode):
                 newPos = pos + diff * 0.5
                 painterPath = self.painterPath()
                 if not painterPath.contains(self.mapFromScene(newPos)):
-                    newPos = self.intersection(QLineF(newPos, self.pos()))
+                    newPos = self.intersection(QtCore.QLineF(newPos, self.pos()))
                 self.setAnchor(edge, newPos)
 
         # FORCE CACHE REGENERATION
@@ -564,7 +564,7 @@ class AbstractResizableNode(AbstractNode):
         Executed when the mouse leaves the shape (NOT PRESSED).
         :type hoverEvent: QGraphicsSceneHoverEvent
         """
-        self.setCursor(Qt.ArrowCursor)
+        self.setCursor(QtCore.Qt.ArrowCursor)
         super().hoverLeaveEvent(hoverEvent)
 
     def itemChange(self, change, value):

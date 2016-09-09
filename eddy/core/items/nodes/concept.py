@@ -32,10 +32,8 @@
 #                                                                        #
 ##########################################################################
 
-
-from PyQt5.QtCore import QRectF, QPointF, Qt
-from PyQt5.QtGui import QPainterPath, QPainter
-from PyQt5.QtGui import QBrush, QColor, QPen
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.functions.misc import snapF
@@ -48,8 +46,8 @@ class ConceptNode(AbstractResizableNode):
     """
     This class implements the 'Concept' node.
     """
-    DefaultBrush = QBrush(QColor(252, 252, 252, 255))
-    DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+    DefaultBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
+    DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
     Identities = {Identity.Concept}
     Type = Item.ConceptNode
 
@@ -65,11 +63,11 @@ class ConceptNode(AbstractResizableNode):
         h = max(height, 50)
         brush = brush or ConceptNode.DefaultBrush
         pen = ConceptNode.DefaultPen
-        self.background = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
-        self.selection = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
-        self.polygon = Polygon(QRectF(-w / 2, -h / 2, w, h), brush, pen)
+        self.background = Polygon(QtCore.QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
+        self.selection = Polygon(QtCore.QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
+        self.polygon = Polygon(QtCore.QRectF(-w / 2, -h / 2, w, h), brush, pen)
         self.label = NodeLabel(template='concept', pos=self.center, parent=self)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
         self.updateTextPos()
 
@@ -80,7 +78,7 @@ class ConceptNode(AbstractResizableNode):
     def boundingRect(self):
         """
         Returns the shape bounding rectangle.
-        :rtype: QRectF
+        :rtype: QtCore.QRectF
         """
         return self.selection.geometry()
 
@@ -136,7 +134,7 @@ class ConceptNode(AbstractResizableNode):
         painter.setBrush(self.polygon.brush())
         painter.drawRect(self.polygon.geometry())
         # RESIZE HANDLES
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
         for polygon in self.handles:
             painter.setPen(polygon.pen())
             painter.setBrush(polygon.brush())
@@ -144,17 +142,17 @@ class ConceptNode(AbstractResizableNode):
 
     def painterPath(self):
         """
-        Returns the current shape as QPainterPath (used for collision detection).
+        Returns the current shape as QtGui.QPainterPath (used for collision detection).
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addRect(self.polygon.geometry())
         return path
 
     def resize(self, mousePos):
         """
         Handle the interactive resize of the shape.
-        :type mousePos: QPointF
+        :type mousePos: QtCore.QPointF
         """
         snap = self.session.action('toggle_grid').isChecked()
         size = self.diagram.GridSize
@@ -163,8 +161,8 @@ class ConceptNode(AbstractResizableNode):
         selection = self.selection.geometry()
         polygon = self.polygon.geometry()
 
-        R = QRectF(self.boundingRect())
-        D = QPointF(0, 0)
+        R = QtCore.QRectF(self.boundingRect())
+        D = QtCore.QPointF(0, 0)
 
         mbrh = 58
         mbrw = 118
@@ -371,21 +369,21 @@ class ConceptNode(AbstractResizableNode):
         :type text: str
         """
         self.label.setText(text)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
 
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         self.label.setPos(pos)
 
     def shape(self):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
+        Returns the shape of this item as a QtGui.QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addRect(self.polygon.geometry())
         for polygon in self.handles:
             path.addEllipse(polygon.geometry())

@@ -33,9 +33,8 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QPointF, QRectF
-from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
-from PyQt5.QtGui import QPen, QBrush, QColor
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.owl import Facet
@@ -56,10 +55,10 @@ class FacetNode(AbstractNode):
     IndexBL = 3
     IndexEE = 4
 
-    DefaultBrushA = QBrush(QColor(222, 222, 222, 255))
-    DefaultBrushB = QBrush(QColor(252, 252, 252, 255))
-    DefaultPenA = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-    DefaultPenB = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+    DefaultBrushA = QtGui.QBrush(QtGui.QColor(222, 222, 222, 255))
+    DefaultBrushB = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
+    DefaultPenA = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
+    DefaultPenB = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
     Identities = {Identity.Facet}
     Type = Item.FacetNode
 
@@ -72,7 +71,7 @@ class FacetNode(AbstractNode):
         """
         super(FacetNode, self).__init__(**kwargs)
         self.background = Polygon(self.createPolygon(88, 48))
-        self.selection = Polygon(QRectF(-44, -24, 88, 48))
+        self.selection = Polygon(QtCore.QRectF(-44, -24, 88, 48))
         self.polygon = Polygon(self.createPolygon(80, 40))
         self.polygonA = Polygon(self.createPolygonA(80, 40), FacetNode.DefaultBrushA, FacetNode.DefaultPenA)
         self.polygonB = Polygon(self.createPolygonA(80, 40), FacetNode.DefaultBrushB, FacetNode.DefaultPenB)
@@ -124,21 +123,21 @@ class FacetNode(AbstractNode):
     def boundingRect(self):
         """
         Returns the shape bounding rectangle.
-        :rtype: QRectF
+        :rtype: QtCore.QRectF
         """
         return self.selection.geometry()
 
     def brushA(self):
         """
         Returns the brush used to paint the shape A of this node.
-        :rtype: QBrush
+        :rtype: QtGui.QBrush
         """
         return self.polygonA.brush()
 
     def brushB(self):
         """
         Returns the brush used to paint the shape B of this node.
-        :rtype: QBrush
+        :rtype: QtGui.QBrush
         """
         return self.polygonB.brush()
 
@@ -147,14 +146,14 @@ class FacetNode(AbstractNode):
         Returns the center point of polygon A.
         :rtype: QPointF
         """
-        return self.boundingRect().center() - QPointF(0, 40 / 4)
+        return self.boundingRect().center() - QtCore.QPointF(0, 40 / 4)
 
     def centerB(self):
         """
         Returns the center point of polygon A.
         :rtype: QPointF
         """
-        return self.boundingRect().center() + QPointF(0, 40 / 4)
+        return self.boundingRect().center() + QtCore.QPointF(0, 40 / 4)
 
     @staticmethod
     def compose(facet, value):
@@ -195,14 +194,14 @@ class FacetNode(AbstractNode):
         Returns the initialized polygon according to the given width/height.
         :type w: int
         :type h: int
-        :rtype: QPolygonF
+        :rtype: QtGui.QPolygonF
         """
-        return QPolygonF([
-            QPointF(-w / 2 + 10, -h / 2),
-            QPointF(+w / 2, -h / 2),
-            QPointF(+w / 2 - 10, +h / 2),
-            QPointF(-w / 2, +h / 2),
-            QPointF(-w / 2 + 10, -h / 2),
+        return QtGui.QPolygonF([
+            QtCore.QPointF(-w / 2 + 10, -h / 2),
+            QtCore.QPointF(+w / 2, -h / 2),
+            QtCore.QPointF(+w / 2 - 10, +h / 2),
+            QtCore.QPointF(-w / 2, +h / 2),
+            QtCore.QPointF(-w / 2 + 10, -h / 2),
         ])
 
     @staticmethod
@@ -211,14 +210,14 @@ class FacetNode(AbstractNode):
         Returns the initialized top-half polygon according to the given width/height.
         :type w: int
         :type h: int
-        :rtype: QPolygonF
+        :rtype: QtGui.QPolygonF
         """
-        return QPolygonF([
-            QPointF(-w / 2 + 10, -h / 2),
-            QPointF(+w / 2, -h / 2),
-            QPointF(+w / 2 - 10 / 2, 0),
-            QPointF(-w / 2 + 10 / 2, 0),
-            QPointF(-w / 2 + 10, -h / 2),
+        return QtGui.QPolygonF([
+            QtCore.QPointF(-w / 2 + 10, -h / 2),
+            QtCore.QPointF(+w / 2, -h / 2),
+            QtCore.QPointF(+w / 2 - 10 / 2, 0),
+            QtCore.QPointF(-w / 2 + 10 / 2, 0),
+            QtCore.QPointF(-w / 2 + 10, -h / 2),
         ])
 
     @staticmethod
@@ -227,27 +226,27 @@ class FacetNode(AbstractNode):
         Returns the initialized bottom-half polygon according to the given width/height.
         :type w: int
         :type h: int
-        :rtype: QPolygonF
+        :rtype: QtGui.QPolygonF
         """
-        return QPolygonF([
-            QPointF(-w / 2 + 10 / 2, 0),
-            QPointF(+w / 2 - 10 / 2, 0),
-            QPointF(+w / 2 - 10, +h / 2),
-            QPointF(-w / 2, +h / 2),
-            QPointF(-w / 2 + 10 / 2, 0),
+        return QtGui.QPolygonF([
+            QtCore.QPointF(-w / 2 + 10 / 2, 0),
+            QtCore.QPointF(+w / 2 - 10 / 2, 0),
+            QtCore.QPointF(+w / 2 - 10, +h / 2),
+            QtCore.QPointF(-w / 2, +h / 2),
+            QtCore.QPointF(-w / 2 + 10 / 2, 0),
         ])
 
     def geometryA(self):
         """
         Returns the geometry of the shape A of this node.
-        :rtype: QPolygonF
+        :rtype: QtGui.QPolygonF
         """
         return self.polygonA.geometry()
 
     def geometryB(self):
         """
         Returns the geometry of the shape B of this node.
-        :rtype: QPolygonF
+        :rtype: QtGui.QPolygonF
         """
         return self.polygonB.geometry()
 
@@ -281,7 +280,7 @@ class FacetNode(AbstractNode):
         painter.setBrush(self.selection.brush())
         painter.drawRect(self.selection.geometry())
         # SYNTAX VALIDATION
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(self.background.pen())
         painter.setBrush(self.background.brush())
         painter.drawPolygon(self.background.geometry())
@@ -295,24 +294,24 @@ class FacetNode(AbstractNode):
 
     def painterPath(self):
         """
-        Returns the current shape as QPainterPath (used for collision detection).
+        Returns the current shape as QtGui.QPainterPath (used for collision detection).
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPolygon(self.polygon.geometry())
         return path
 
     def penA(self):
         """
         Returns the pen used to paint the shape A of this node.
-        :rtype: QPen
+        :rtype: QtGui.QPen
         """
         return self.polygonA.pen()
 
     def penB(self):
         """
         Returns the pen used to paint the shape B of this node.
-        :rtype: QPen
+        :rtype: QtGui.QPen
         """
         return self.polygonB.pen()
 
@@ -344,16 +343,16 @@ class FacetNode(AbstractNode):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         pass
 
     def shape(self):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
+        Returns the shape of this item as a QtGui.QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPolygon(self.polygon.geometry())
         return path
 
@@ -378,7 +377,7 @@ class FacetNode(AbstractNode):
         # POLYGONS + BACKGROUND + SELECTION (GEOMETRY)
         width = max(self.labelA.width() + 16, self.labelB.width() + 16, 80)
         self.background.setGeometry(self.createPolygon(width + 8, 48))
-        self.selection.setGeometry(QRectF(-(width + 8) / 2, -24, width + 8, 48))
+        self.selection.setGeometry(QtCore.QRectF(-(width + 8) / 2, -24, width + 8, 48))
         self.polygon.setGeometry(self.createPolygon(width, 40))
         self.polygonA.setGeometry(self.createPolygonA(width, 40))
         self.polygonB.setGeometry(self.createPolygonB(width, 40))

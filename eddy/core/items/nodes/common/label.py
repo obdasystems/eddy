@@ -33,7 +33,7 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QPointF
+from PyQt5 import QtCore
 
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.misc import DiagramMode
@@ -54,7 +54,7 @@ class NodeLabel(AbstractLabel):
         :type editable: bool
         :type parent: QObject
         """
-        defaultPos = lambda: QPointF(0, 0)
+        defaultPos = lambda: QtCore.QPointF(0, 0)
         self.defaultPos = pos or defaultPos
         super().__init__(template, movable, editable, parent=parent)
         self.setPos(self.defaultPos())
@@ -134,7 +134,7 @@ class FacetQuotedLabel(NodeLabel):
         # text: this will exclude any other type of focus action (dunno why
         # but sometime the label gets the focus when hovering the mouse cursor
         # on the text: mostly happens when loading a diagram from file)
-        if focusEvent.reason() == Qt.OtherFocusReason:
+        if focusEvent.reason() == QtCore.Qt.OtherFocusReason:
             node = self.parentItem()
             self.focusInData = self.text()
             self.focusInFacet = node.facet
@@ -181,7 +181,7 @@ class FacetQuotedLabel(NodeLabel):
             self.focusInFacet = None
             self.setSelectedText(False)
             self.setAlignment(self.alignment())
-            self.setTextInteractionFlags(Qt.NoTextInteraction)
+            self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
             self.diagram.setMode(DiagramMode.Idle)
             self.diagram.sgnUpdated.emit()
 

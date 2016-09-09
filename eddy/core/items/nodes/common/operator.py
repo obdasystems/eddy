@@ -35,9 +35,8 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import Qt, QPointF, QRectF
-from PyQt5.QtGui import QPainter, QPainterPath, QPolygonF
-from PyQt5.QtGui import QPen, QColor, QBrush
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.items.nodes.common.base import AbstractNode
@@ -50,8 +49,8 @@ class OperatorNode(AbstractNode):
     """
     __metaclass__ = ABCMeta
 
-    DefaultBrush = QBrush(QColor(252, 252, 252, 255))
-    DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+    DefaultBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
+    DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
 
     IndexML = 0
     IndexBL = 1
@@ -70,18 +69,18 @@ class OperatorNode(AbstractNode):
         """
         super().__init__(**kwargs)
 
-        createPolygon = lambda x, y: QPolygonF([
-            QPointF(-x / 2, 0),
-            QPointF(-x / 2 + 6, +y / 2),
-            QPointF(+x / 2 - 6, +y / 2),
-            QPointF(+x / 2, 0),
-            QPointF(+x / 2 - 6, -y / 2),
-            QPointF(-x / 2 + 6, -y / 2),
-            QPointF(-x / 2, 0),
+        createPolygon = lambda x, y: QtGui.QPolygonF([
+            QtCore.QPointF(-x / 2, 0),
+            QtCore.QPointF(-x / 2 + 6, +y / 2),
+            QtCore.QPointF(+x / 2 - 6, +y / 2),
+            QtCore.QPointF(+x / 2, 0),
+            QtCore.QPointF(+x / 2 - 6, -y / 2),
+            QtCore.QPointF(-x / 2 + 6, -y / 2),
+            QtCore.QPointF(-x / 2, 0),
         ])
 
         self.background = Polygon(createPolygon(58, 38))
-        self.selection = Polygon(QRectF(-29, -19, 58, 38))
+        self.selection = Polygon(QtCore.QRectF(-29, -19, 58, 38))
         self.polygon = Polygon(createPolygon(50, 30), brush or OperatorNode.DefaultBrush, OperatorNode.DefaultPen)
 
     #############################################
@@ -91,7 +90,7 @@ class OperatorNode(AbstractNode):
     def boundingRect(self):
         """
         Returns the shape bounding rectangle.
-        :rtype: QRectF
+        :rtype: QtCore.QRectF
         """
         return self.selection.geometry()
 
@@ -132,7 +131,7 @@ class OperatorNode(AbstractNode):
         painter.setBrush(self.selection.brush())
         painter.drawRect(self.selection.geometry())
         # SYNTAX VALIDATION
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(self.background.pen())
         painter.setBrush(self.background.brush())
         painter.drawPolygon(self.background.geometry())
@@ -143,10 +142,10 @@ class OperatorNode(AbstractNode):
 
     def painterPath(self):
         """
-        Returns the current shape as QPainterPath (used for collision detection).
+        Returns the current shape as QtGui.QPainterPath (used for collision detection).
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPolygon(self.polygon.geometry())
         return path
 
@@ -160,16 +159,16 @@ class OperatorNode(AbstractNode):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         pass
 
     def shape(self):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
+        Returns the shape of this item as a QtGui.QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPolygon(self.polygon.geometry())
         return path
 

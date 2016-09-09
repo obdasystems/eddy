@@ -33,9 +33,8 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPainterPath, QPainter
-from PyQt5.QtGui import QBrush, QColor, QPen
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
@@ -47,8 +46,8 @@ class PropertyAssertionNode(AbstractNode):
     """
     This class implements the 'Property Assertion' node.
     """
-    DefaultBrush = QBrush(QColor(252, 252, 252, 255))
-    DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+    DefaultBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
+    DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
     Identities = {Identity.RoleInstance, Identity.AttributeInstance, Identity.Neutral}
     Type = Item.PropertyAssertionNode
 
@@ -64,9 +63,9 @@ class PropertyAssertionNode(AbstractNode):
         brush = PropertyAssertionNode.DefaultBrush
         pen = PropertyAssertionNode.DefaultPen
         self.inputs = inputs or DistinctList()
-        self.background = Polygon(QRectF(-34, -19, 68, 38))
-        self.selection = Polygon(QRectF(-34, -19, 68, 38))
-        self.polygon = Polygon(QRectF(-26, -15, 52, 30), brush, pen)
+        self.background = Polygon(QtCore.QRectF(-34, -19, 68, 38))
+        self.selection = Polygon(QtCore.QRectF(-34, -19, 68, 38))
+        self.polygon = Polygon(QtCore.QRectF(-26, -15, 52, 30), brush, pen)
 
     #############################################
     #   INTERFACE
@@ -85,7 +84,7 @@ class PropertyAssertionNode(AbstractNode):
     def boundingRect(self):
         """
         Returns the shape bounding rectangle.
-        :rtype: QRectF
+        :rtype: QtCore.QRectF
         """
         return self.selection.geometry()
 
@@ -127,7 +126,7 @@ class PropertyAssertionNode(AbstractNode):
         painter.setBrush(self.selection.brush())
         painter.drawRect(self.selection.geometry())
         # SYNTAX VALIDATION
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(self.background.pen())
         painter.setBrush(self.background.brush())
         painter.drawRoundedRect(self.background.geometry(), 16, 16)
@@ -138,19 +137,19 @@ class PropertyAssertionNode(AbstractNode):
 
     def painterPath(self):
         """
-        Returns the current shape as QPainterPath (used for collision detection).
+        Returns the current shape as QtGui.QPainterPath (used for collision detection).
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addRoundedRect(self.polygon.geometry(), 16, 16)
         return path
 
     def shape(self):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
+        Returns the shape of this item as a QtGui.QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addRoundedRect(self.polygon.geometry(), 16, 16)
         return path
 

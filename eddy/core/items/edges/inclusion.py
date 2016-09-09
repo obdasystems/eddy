@@ -35,9 +35,8 @@
 
 from math import sin, cos, radians, pi as M_PI
 
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QPainter, QPolygonF
-from PyQt5.QtGui import QPainterPath, QBrush, QColor, QPen
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.functions.geometry import createArea
@@ -58,7 +57,7 @@ class InclusionEdge(AbstractEdge):
         """
         super().__init__(**kwargs)
         self.equivalence = equivalence
-        self.tail = Polygon(QPolygonF())
+        self.tail = Polygon(QtGui.QPolygonF())
 
     #############################################
     #   INTERFACE
@@ -69,7 +68,7 @@ class InclusionEdge(AbstractEdge):
         Returns the shape bounding rect.
         :rtype: QRectF
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPath(self.selection.geometry())
         path.addPolygon(self.head.geometry())
         path.addPolygon(self.tail.geometry())
@@ -112,7 +111,7 @@ class InclusionEdge(AbstractEdge):
         # SET THE RECT THAT NEEDS TO BE REPAINTED
         painter.setClipRect(option.exposedRect)
         # SELECTION AREA
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.fillPath(self.selection.geometry(), self.selection.brush())
         # EDGE LINE
         painter.setPen(self.path.pen())
@@ -138,10 +137,10 @@ class InclusionEdge(AbstractEdge):
 
     def painterPath(self):
         """
-        Returns the current shape as QPainterPath (used for collision detection).
+        Returns the current shape as QtGui.QPainterPath (used for collision detection).
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPath(self.path.geometry())
         path.addPolygon(self.head.geometry())
         path.addPolygon(self.tail.geometry())
@@ -157,16 +156,16 @@ class InclusionEdge(AbstractEdge):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         pass
 
     def shape(self):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
+        Returns the shape of this item as a QtGui.QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPath(self.selection.geometry())
         path.addPolygon(self.head.geometry())
         path.addPolygon(self.tail.geometry())
@@ -200,33 +199,33 @@ class InclusionEdge(AbstractEdge):
         :type visible: bool
         :type breakpoint: int
         :type anchor: AbstractNode
-        :type target: QPointF
+        :type target: QtCore.QPointF
         """
         def createHead(point1, angle, size):
             """
             Create the head polygon.
-            :type point1: QPointF
+            :type point1: QtCore.QPointF
             :type angle: float
             :type size: int
-            :rtype: QPolygonF
+            :rtype: QtGui.QPolygonF
             """
             rad = radians(angle)
-            point2 = point1 - QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-            point3 = point1 - QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-            return QPolygonF([point1, point2, point3])
+            point2 = point1 - QtCore.QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+            point3 = point1 - QtCore.QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+            return QtGui.QPolygonF([point1, point2, point3])
 
         def createTail(point1, angle, size):
             """
             Create the tail polygon.
-            :type point1: QPointF
+            :type point1: QtCore.QPointF
             :type angle: float
             :type size: int
-            :rtype: QPolygonF
+            :rtype: QtGui.QPolygonF
             """
             rad = radians(angle)
-            point2 = point1 + QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-            point3 = point1 + QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-            return QPolygonF([point1, point2, point3])
+            point2 = point1 + QtCore.QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+            point3 = point1 + QtCore.QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+            return QtGui.QPolygonF([point1, point2, point3])
 
         if visible is None:
             visible = self.canDraw()
@@ -244,10 +243,10 @@ class InclusionEdge(AbstractEdge):
 
         collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
 
-        selection = QPainterPath()
-        path = QPainterPath()
-        head = QPolygonF()
-        tail = QPolygonF()
+        selection = QtGui.QPainterPath()
+        path = QtGui.QPainterPath()
+        head = QtGui.QPolygonF()
+        tail = QtGui.QPolygonF()
 
         if len(collection) == 1:
             subpath = collection[0]
@@ -293,18 +292,18 @@ class InclusionEdge(AbstractEdge):
         # PATH, HEAD, TAIL (BRUSH)
         #################################
 
-        headBrush = QBrush(Qt.NoBrush)
-        headPen = QPen(Qt.NoPen)
-        pathPen = QPen(Qt.NoPen)
-        tailBrush = QBrush(Qt.NoBrush)
-        tailPen = QPen(Qt.NoPen)
+        headBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
+        headPen = QtGui.QPen(QtCore.Qt.NoPen)
+        pathPen = QtGui.QPen(QtCore.Qt.NoPen)
+        tailBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
+        tailPen = QtGui.QPen(QtCore.Qt.NoPen)
 
         if visible:
-            headBrush = QBrush(QColor(0, 0, 0, 255))
-            headPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-            pathPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-            tailBrush = QBrush(QColor(0, 0, 0, 255))
-            tailPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            headBrush = QtGui.QBrush(QtGui.QColor(0, 0, 0, 255))
+            headPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
+            pathPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
+            tailBrush = QtGui.QBrush(QtGui.QColor(0, 0, 0, 255))
+            tailPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
 
         self.head.setBrush(headBrush)
         self.head.setPen(headPen)

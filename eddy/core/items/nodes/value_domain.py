@@ -33,9 +33,8 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPainter, QPainterPath
-from PyQt5.QtGui import QPen, QBrush, QColor
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Datatype
@@ -48,8 +47,8 @@ class ValueDomainNode(AbstractNode):
     """
     This class implements the 'Value-Domain' node.
     """
-    DefaultBrush = QBrush(QColor(252, 252, 252, 255))
-    DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+    DefaultBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
+    DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
     Identities = {Identity.ValueDomain}
     Type = Item.ValueDomainNode
 
@@ -63,9 +62,9 @@ class ValueDomainNode(AbstractNode):
         super(ValueDomainNode, self).__init__(**kwargs)
         brush = brush or ValueDomainNode.DefaultBrush
         pen = ValueDomainNode.DefaultPen
-        self.background = Polygon(QRectF(-49, -24, 98, 48))
-        self.selection = Polygon(QRectF(-49, -24, 98, 48))
-        self.polygon = Polygon(QRectF(-45, -20, 90, 40), brush, pen)
+        self.background = Polygon(QtCore.QRectF(-49, -24, 98, 48))
+        self.selection = Polygon(QtCore.QRectF(-49, -24, 98, 48))
+        self.polygon = Polygon(QtCore.QRectF(-45, -20, 90, 40), brush, pen)
         self.label = NodeLabel(Datatype.string.value, pos=self.center, editable=False, movable=False, parent=self)
         self.updateNode()
         self.updateTextPos()
@@ -89,7 +88,7 @@ class ValueDomainNode(AbstractNode):
     def boundingRect(self):
         """
         Returns the shape bounding rectangle.
-        :rtype: QRectF
+        :rtype: QtCore.QRectF
         """
         return self.selection.geometry()
 
@@ -137,7 +136,7 @@ class ValueDomainNode(AbstractNode):
         painter.setBrush(self.selection.brush())
         painter.drawRect(self.selection.geometry())
         # SYNTAX VALIDATION
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(self.background.pen())
         painter.setBrush(self.background.brush())
         painter.drawRoundedRect(self.background.geometry(), 8, 8)
@@ -148,10 +147,10 @@ class ValueDomainNode(AbstractNode):
 
     def painterPath(self):
         """
-        Returns the current shape as QPainterPath (used for collision detection).
+        Returns the current shape as QtGui.QPainterPath (used for collision detection).
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addRoundedRect(self.polygon.geometry(), 8, 8)
         return path
 
@@ -180,10 +179,10 @@ class ValueDomainNode(AbstractNode):
 
     def shape(self):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
+        Returns the shape of this item as a QtGui.QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addRoundedRect(self.polygon.geometry(), 8, 8)
         return path
 
@@ -213,9 +212,9 @@ class ValueDomainNode(AbstractNode):
         """
         # POLYGON + BACKGROUND + SELECTION (GEOMETRY)
         width = max(self.label.width() + 16, 90)
-        self.polygon.setGeometry(QRectF(-width / 2, -20, width, 40))
-        self.background.setGeometry(QRectF(-(width + 8) / 2, -24, width + 8, 48))
-        self.selection.setGeometry(QRectF(-(width + 8) / 2, -24, width + 8, 48))
+        self.polygon.setGeometry(QtCore.QRectF(-width / 2, -20, width, 40))
+        self.background.setGeometry(QtCore.QRectF(-(width + 8) / 2, -24, width + 8, 48))
+        self.selection.setGeometry(QtCore.QRectF(-(width + 8) / 2, -24, width + 8, 48))
         self.updateTextPos()
         self.updateEdges()
 

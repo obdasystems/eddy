@@ -35,8 +35,8 @@
 
 from abc import ABCMeta
 
-from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QPainterPath, QPen, QBrush, QColor
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Restriction, Item, Identity
 from eddy.core.items.nodes.common.base import AbstractNode
@@ -51,8 +51,8 @@ class RestrictionNode(AbstractNode):
     """
     __metaclass__ = ABCMeta
 
-    DefaultBrush = QBrush(QColor(252, 252, 252, 255))
-    DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+    DefaultBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
+    DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
 
     def __init__(self, width=20, height=20, brush=None, **kwargs):
         """
@@ -64,11 +64,11 @@ class RestrictionNode(AbstractNode):
         super().__init__(**kwargs)
         brush = brush or RestrictionNode.DefaultBrush
         pen = RestrictionNode.DefaultPen
-        self.background = Polygon(QRectF(-14, -14, 28, 28))
-        self.selection = Polygon(QRectF(-14, -14, 28, 28))
-        self.polygon = Polygon(QRectF(-10, -10, 20, 20), brush, pen)
+        self.background = Polygon(QtCore.QRectF(-14, -14, 28, 28))
+        self.selection = Polygon(QtCore.QRectF(-14, -14, 28, 28))
+        self.polygon = Polygon(QtCore.QRectF(-10, -10, 20, 20), brush, pen)
         self.label = NodeLabel(Restriction.Exists.toString(),
-           pos=lambda: self.center() - QPointF(0, 22),
+           pos=lambda: self.center() - QtCore.QPointF(0, 22),
            editable=False, parent=self)
 
     #############################################
@@ -105,7 +105,7 @@ class RestrictionNode(AbstractNode):
     def boundingRect(self):
         """
         Returns the shape bounding rectangle.
-        :rtype: QRectF
+        :rtype: QtCore.QRectF
         """
         return self.selection.geometry()
 
@@ -172,10 +172,10 @@ class RestrictionNode(AbstractNode):
 
     def painterPath(self):
         """
-        Returns the current shape as QPainterPath (used for collision detection).
+        Returns the current shape as QtGui.QPainterPath (used for collision detection).
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addRect(self.polygon.geometry())
         return path
 
@@ -193,16 +193,16 @@ class RestrictionNode(AbstractNode):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         self.label.setPos(pos)
 
     def shape(self, *args, **kwargs):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
+        Returns the shape of this item as a QtGui.QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addRect(self.polygon.geometry())
         return path
 

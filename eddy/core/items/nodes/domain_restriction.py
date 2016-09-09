@@ -33,9 +33,9 @@
 ##########################################################################
 
 
-from PyQt5.QtGui import QBrush, QColor
+from PyQt5 import QtGui
 
-from eddy.core.datatypes.graphol import Item, Identity, Restriction
+from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.restriction import RestrictionNode
 
 
@@ -51,7 +51,7 @@ class DomainRestrictionNode(RestrictionNode):
         Initialize the node.
         :type brush: QBrush
         """
-        super(DomainRestrictionNode, self).__init__(brush=QBrush(QColor(252, 252, 252, 255)), **kwargs)
+        super(DomainRestrictionNode, self).__init__(brush=QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)), **kwargs)
 
     #############################################
     #   INTERFACE

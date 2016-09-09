@@ -35,9 +35,8 @@
 
 import math
 
-from PyQt5.QtCore import QPointF, QRectF, Qt
-from PyQt5.QtGui import QBrush, QColor, QPen
-from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.owl import Datatype
@@ -62,8 +61,8 @@ class IndividualNode(AbstractResizableNode):
     IndexTL = 7
     IndexEE = 8
 
-    DefaultBrush = QBrush(QColor(252, 252, 252, 255))
-    DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.0, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+    DefaultBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
+    DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
     Identities = {Identity.Individual, Identity.Value}
     Type = Item.IndividualNode
 
@@ -81,24 +80,24 @@ class IndividualNode(AbstractResizableNode):
         brush = brush or IndividualNode.DefaultBrush
         pen = IndividualNode.DefaultPen
 
-        createPolygon = lambda x, y: QPolygonF([
-            QPointF(-(x / 2), -((y / (1 + math.sqrt(2))) / 2)),
-            QPointF(-(x / 2), +((y / (1 + math.sqrt(2))) / 2)),
-            QPointF(-((x / (1 + math.sqrt(2))) / 2), +(y / 2)),
-            QPointF(+((x / (1 + math.sqrt(2))) / 2), +(y / 2)),
-            QPointF(+(x / 2), +((y / (1 + math.sqrt(2))) / 2)),
-            QPointF(+(x / 2), -((y / (1 + math.sqrt(2))) / 2)),
-            QPointF(+((x / (1 + math.sqrt(2))) / 2), -(y / 2)),
-            QPointF(-((x / (1 + math.sqrt(2))) / 2), -(y / 2)),
-            QPointF(-(x / 2), -((y / (1 + math.sqrt(2))) / 2)),
+        createPolygon = lambda x, y: QtGui.QPolygonF([
+            QtCore.QPointF(-(x / 2), -((y / (1 + math.sqrt(2))) / 2)),
+            QtCore.QPointF(-(x / 2), +((y / (1 + math.sqrt(2))) / 2)),
+            QtCore.QPointF(-((x / (1 + math.sqrt(2))) / 2), +(y / 2)),
+            QtCore.QPointF(+((x / (1 + math.sqrt(2))) / 2), +(y / 2)),
+            QtCore.QPointF(+(x / 2), +((y / (1 + math.sqrt(2))) / 2)),
+            QtCore.QPointF(+(x / 2), -((y / (1 + math.sqrt(2))) / 2)),
+            QtCore.QPointF(+((x / (1 + math.sqrt(2))) / 2), -(y / 2)),
+            QtCore.QPointF(-((x / (1 + math.sqrt(2))) / 2), -(y / 2)),
+            QtCore.QPointF(-(x / 2), -((y / (1 + math.sqrt(2))) / 2)),
         ])
 
 
         self.background = Polygon(createPolygon(w + 8, h + 8))
-        self.selection = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
+        self.selection = Polygon(QtCore.QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
         self.label = NodeLabel(template='individual', pos=self.center, parent=self)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
         self.updateTextPos()
 
@@ -135,7 +134,7 @@ class IndividualNode(AbstractResizableNode):
     def boundingRect(self):
         """
         Returns the shape bounding rectangle.
-        :rtype: QRectF
+        :rtype: QtCore.QRectF
         """
         return self.selection.geometry()
 
@@ -197,7 +196,7 @@ class IndividualNode(AbstractResizableNode):
         painter.setBrush(self.selection.brush())
         painter.drawRect(self.selection.geometry())
         # SYNTAX VALIDATION
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(self.background.pen())
         painter.setBrush(self.background.brush())
         painter.drawPolygon(self.background.geometry())
@@ -206,7 +205,7 @@ class IndividualNode(AbstractResizableNode):
         painter.setBrush(self.polygon.brush())
         painter.drawPolygon(self.polygon.geometry())
         # RESIZE HANDLES
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
         for polygon in self.handles:
             painter.setPen(polygon.pen())
             painter.setBrush(polygon.brush())
@@ -214,17 +213,17 @@ class IndividualNode(AbstractResizableNode):
 
     def painterPath(self):
         """
-        Returns the current shape as QPainterPath (used for collision detection).
+        Returns the current shape as QtGui.QPainterPath (used for collision detection).
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPolygon(self.polygon.geometry())
         return path
 
     def resize(self, mousePos):
         """
         Handle the interactive resize of the shape.
-        :type mousePos: QPointF
+        :type mousePos: QtCore.QPointF
         """
         snap = self.session.action('toggle_grid').isChecked()
         size = self.diagram.GridSize
@@ -234,8 +233,8 @@ class IndividualNode(AbstractResizableNode):
         selection = self.selection.geometry()
         polygon = self.polygon.geometry()
         
-        R = QRectF(self.boundingRect())
-        D = QPointF(0, 0)
+        R = QtCore.QRectF(self.boundingRect())
+        D = QtCore.QPointF(0, 0)
 
         mbrh = 68
         mbrw = 68
@@ -273,25 +272,25 @@ class IndividualNode(AbstractResizableNode):
             selection.setLeft(R.left())
             selection.setTop(R.top())
             
-            background[self.IndexLT] = QPointF(R.left(), newLeftRightTopY)
-            background[self.IndexLB] = QPointF(R.left(), newLeftRightBottomY)
-            background[self.IndexRT] = QPointF(R.right(), newLeftRightTopY)
-            background[self.IndexRB] = QPointF(R.right(), newLeftRightBottomY)
-            background[self.IndexTL] = QPointF(newTopBottomLeftX, R.top())
-            background[self.IndexTR] = QPointF(newTopBottomRightX, R.top())
-            background[self.IndexBL] = QPointF(newTopBottomLeftX, R.bottom())
-            background[self.IndexBR] = QPointF(newTopBottomRightX, R.bottom())
-            background[self.IndexEE] = QPointF(R.left(), newLeftRightTopY)
+            background[self.IndexLT] = QtCore.QPointF(R.left(), newLeftRightTopY)
+            background[self.IndexLB] = QtCore.QPointF(R.left(), newLeftRightBottomY)
+            background[self.IndexRT] = QtCore.QPointF(R.right(), newLeftRightTopY)
+            background[self.IndexRB] = QtCore.QPointF(R.right(), newLeftRightBottomY)
+            background[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, R.top())
+            background[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, R.top())
+            background[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom())
+            background[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom())
+            background[self.IndexEE] = QtCore.QPointF(R.left(), newLeftRightTopY)
 
-            polygon[self.IndexLT] = QPointF(R.left() + 4, newLeftRightTopY)
-            polygon[self.IndexLB] = QPointF(R.left() + 4, newLeftRightBottomY)
-            polygon[self.IndexRT] = QPointF(R.right() - 4, newLeftRightTopY)
-            polygon[self.IndexRB] = QPointF(R.right() - 4, newLeftRightBottomY)
-            polygon[self.IndexTL] = QPointF(newTopBottomLeftX, R.top() + 4)
-            polygon[self.IndexTR] = QPointF(newTopBottomRightX, R.top() + 4)
-            polygon[self.IndexBL] = QPointF(newTopBottomLeftX, R.bottom() - 4)
-            polygon[self.IndexBR] = QPointF(newTopBottomRightX, R.bottom() - 4)
-            polygon[self.IndexEE] = QPointF(R.left() + 4, newLeftRightTopY)
+            polygon[self.IndexLT] = QtCore.QPointF(R.left() + 4, newLeftRightTopY)
+            polygon[self.IndexLB] = QtCore.QPointF(R.left() + 4, newLeftRightBottomY)
+            polygon[self.IndexRT] = QtCore.QPointF(R.right() - 4, newLeftRightTopY)
+            polygon[self.IndexRB] = QtCore.QPointF(R.right() - 4, newLeftRightBottomY)
+            polygon[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, R.top() + 4)
+            polygon[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, R.top() + 4)
+            polygon[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom() - 4)
+            polygon[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom() - 4)
+            polygon[self.IndexEE] = QtCore.QPointF(R.left() + 4, newLeftRightTopY)
 
         elif self.mp_Handle == self.HandleTM:
 
@@ -312,21 +311,21 @@ class IndividualNode(AbstractResizableNode):
             
             selection.setTop(R.top())
             
-            background[self.IndexTL] = QPointF(background[self.IndexTL].x(), R.top())
-            background[self.IndexTR] = QPointF(background[self.IndexTR].x(), R.top())
-            background[self.IndexLB] = QPointF(background[self.IndexLB].x(), newLeftRightBottomY)
-            background[self.IndexRB] = QPointF(background[self.IndexRB].x(), newLeftRightBottomY)
-            background[self.IndexLT] = QPointF(background[self.IndexLT].x(), newLeftRightTopY)
-            background[self.IndexRT] = QPointF(background[self.IndexRT].x(), newLeftRightTopY)
-            background[self.IndexEE] = QPointF(background[self.IndexEE].x(), newLeftRightTopY)
+            background[self.IndexTL] = QtCore.QPointF(background[self.IndexTL].x(), R.top())
+            background[self.IndexTR] = QtCore.QPointF(background[self.IndexTR].x(), R.top())
+            background[self.IndexLB] = QtCore.QPointF(background[self.IndexLB].x(), newLeftRightBottomY)
+            background[self.IndexRB] = QtCore.QPointF(background[self.IndexRB].x(), newLeftRightBottomY)
+            background[self.IndexLT] = QtCore.QPointF(background[self.IndexLT].x(), newLeftRightTopY)
+            background[self.IndexRT] = QtCore.QPointF(background[self.IndexRT].x(), newLeftRightTopY)
+            background[self.IndexEE] = QtCore.QPointF(background[self.IndexEE].x(), newLeftRightTopY)
             
-            polygon[self.IndexTL] = QPointF(polygon[self.IndexTL].x(), R.top() + 4)
-            polygon[self.IndexTR] = QPointF(polygon[self.IndexTR].x(), R.top() + 4)
-            polygon[self.IndexLB] = QPointF(polygon[self.IndexLB].x(), newLeftRightBottomY)
-            polygon[self.IndexRB] = QPointF(polygon[self.IndexRB].x(), newLeftRightBottomY)
-            polygon[self.IndexLT] = QPointF(polygon[self.IndexLT].x(), newLeftRightTopY)
-            polygon[self.IndexRT] = QPointF(polygon[self.IndexRT].x(), newLeftRightTopY)
-            polygon[self.IndexEE] = QPointF(polygon[self.IndexEE].x(), newLeftRightTopY)
+            polygon[self.IndexTL] = QtCore.QPointF(polygon[self.IndexTL].x(), R.top() + 4)
+            polygon[self.IndexTR] = QtCore.QPointF(polygon[self.IndexTR].x(), R.top() + 4)
+            polygon[self.IndexLB] = QtCore.QPointF(polygon[self.IndexLB].x(), newLeftRightBottomY)
+            polygon[self.IndexRB] = QtCore.QPointF(polygon[self.IndexRB].x(), newLeftRightBottomY)
+            polygon[self.IndexLT] = QtCore.QPointF(polygon[self.IndexLT].x(), newLeftRightTopY)
+            polygon[self.IndexRT] = QtCore.QPointF(polygon[self.IndexRT].x(), newLeftRightTopY)
+            polygon[self.IndexEE] = QtCore.QPointF(polygon[self.IndexEE].x(), newLeftRightTopY)
 
         elif self.mp_Handle == self.HandleTR:
 
@@ -359,25 +358,25 @@ class IndividualNode(AbstractResizableNode):
             selection.setRight(R.right())
             selection.setTop(R.top())
             
-            background[self.IndexLT] = QPointF(R.left(), newLeftRightTopY)
-            background[self.IndexLB] = QPointF(R.left(), newLeftRightBottomY)
-            background[self.IndexRT] = QPointF(R.right(), newLeftRightTopY)
-            background[self.IndexRB] = QPointF(R.right(), newLeftRightBottomY)
-            background[self.IndexTL] = QPointF(newTopBottomLeftX, R.top())
-            background[self.IndexTR] = QPointF(newTopBottomRightX, R.top())
-            background[self.IndexBL] = QPointF(newTopBottomLeftX, R.bottom())
-            background[self.IndexBR] = QPointF(newTopBottomRightX, R.bottom())
-            background[self.IndexEE] = QPointF(R.left(), newLeftRightTopY)
+            background[self.IndexLT] = QtCore.QPointF(R.left(), newLeftRightTopY)
+            background[self.IndexLB] = QtCore.QPointF(R.left(), newLeftRightBottomY)
+            background[self.IndexRT] = QtCore.QPointF(R.right(), newLeftRightTopY)
+            background[self.IndexRB] = QtCore.QPointF(R.right(), newLeftRightBottomY)
+            background[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, R.top())
+            background[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, R.top())
+            background[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom())
+            background[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom())
+            background[self.IndexEE] = QtCore.QPointF(R.left(), newLeftRightTopY)
             
-            polygon[self.IndexLT] = QPointF(R.left() + 4, newLeftRightTopY)
-            polygon[self.IndexLB] = QPointF(R.left() + 4, newLeftRightBottomY)
-            polygon[self.IndexRT] = QPointF(R.right() - 4, newLeftRightTopY)
-            polygon[self.IndexRB] = QPointF(R.right() - 4, newLeftRightBottomY)
-            polygon[self.IndexTL] = QPointF(newTopBottomLeftX, R.top() + 4)
-            polygon[self.IndexTR] = QPointF(newTopBottomRightX, R.top() + 4)
-            polygon[self.IndexBL] = QPointF(newTopBottomLeftX, R.bottom() - 4)
-            polygon[self.IndexBR] = QPointF(newTopBottomRightX, R.bottom() - 4)
-            polygon[self.IndexEE] = QPointF(R.left() + 4, newLeftRightTopY)
+            polygon[self.IndexLT] = QtCore.QPointF(R.left() + 4, newLeftRightTopY)
+            polygon[self.IndexLB] = QtCore.QPointF(R.left() + 4, newLeftRightBottomY)
+            polygon[self.IndexRT] = QtCore.QPointF(R.right() - 4, newLeftRightTopY)
+            polygon[self.IndexRB] = QtCore.QPointF(R.right() - 4, newLeftRightBottomY)
+            polygon[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, R.top() + 4)
+            polygon[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, R.top() + 4)
+            polygon[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom() - 4)
+            polygon[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom() - 4)
+            polygon[self.IndexEE] = QtCore.QPointF(R.left() + 4, newLeftRightTopY)
 
         elif self.mp_Handle == self.HandleML:
 
@@ -398,21 +397,21 @@ class IndividualNode(AbstractResizableNode):
 
             selection.setLeft(R.left())
             
-            background[self.IndexLT] = QPointF(R.left(), background[self.IndexLT].y())
-            background[self.IndexLB] = QPointF(R.left(), background[self.IndexLB].y())
-            background[self.IndexEE] = QPointF(R.left(), background[self.IndexEE].y())
-            background[self.IndexTL] = QPointF(newTopBottomLeftX, background[self.IndexTL].y())
-            background[self.IndexTR] = QPointF(newTopBottomRightX, background[self.IndexTR].y())
-            background[self.IndexBL] = QPointF(newTopBottomLeftX, background[self.IndexBL].y())
-            background[self.IndexBR] = QPointF(newTopBottomRightX, background[self.IndexBR].y())
+            background[self.IndexLT] = QtCore.QPointF(R.left(), background[self.IndexLT].y())
+            background[self.IndexLB] = QtCore.QPointF(R.left(), background[self.IndexLB].y())
+            background[self.IndexEE] = QtCore.QPointF(R.left(), background[self.IndexEE].y())
+            background[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, background[self.IndexTL].y())
+            background[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, background[self.IndexTR].y())
+            background[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, background[self.IndexBL].y())
+            background[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, background[self.IndexBR].y())
             
-            polygon[self.IndexLT] = QPointF(R.left() + 4, polygon[self.IndexLT].y())
-            polygon[self.IndexLB] = QPointF(R.left() + 4, polygon[self.IndexLB].y())
-            polygon[self.IndexEE] = QPointF(R.left() + 4, polygon[self.IndexEE].y())
-            polygon[self.IndexTL] = QPointF(newTopBottomLeftX, polygon[self.IndexTL].y())
-            polygon[self.IndexTR] = QPointF(newTopBottomRightX, polygon[self.IndexTR].y())
-            polygon[self.IndexBL] = QPointF(newTopBottomLeftX, polygon[self.IndexBL].y())
-            polygon[self.IndexBR] = QPointF(newTopBottomRightX, polygon[self.IndexBR].y())
+            polygon[self.IndexLT] = QtCore.QPointF(R.left() + 4, polygon[self.IndexLT].y())
+            polygon[self.IndexLB] = QtCore.QPointF(R.left() + 4, polygon[self.IndexLB].y())
+            polygon[self.IndexEE] = QtCore.QPointF(R.left() + 4, polygon[self.IndexEE].y())
+            polygon[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, polygon[self.IndexTL].y())
+            polygon[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, polygon[self.IndexTR].y())
+            polygon[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, polygon[self.IndexBL].y())
+            polygon[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, polygon[self.IndexBR].y())
 
         elif self.mp_Handle == self.HandleMR:
 
@@ -433,19 +432,19 @@ class IndividualNode(AbstractResizableNode):
             
             selection.setRight(R.right())
             
-            background[self.IndexRT] = QPointF(R.right(), background[self.IndexRT].y())
-            background[self.IndexRB] = QPointF(R.right(), background[self.IndexRB].y())
-            background[self.IndexTL] = QPointF(newTopBottomLeftX, background[self.IndexTL].y())
-            background[self.IndexTR] = QPointF(newTopBottomRightX, background[self.IndexTR].y())
-            background[self.IndexBL] = QPointF(newTopBottomLeftX, background[self.IndexBL].y())
-            background[self.IndexBR] = QPointF(newTopBottomRightX, background[self.IndexBR].y())
+            background[self.IndexRT] = QtCore.QPointF(R.right(), background[self.IndexRT].y())
+            background[self.IndexRB] = QtCore.QPointF(R.right(), background[self.IndexRB].y())
+            background[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, background[self.IndexTL].y())
+            background[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, background[self.IndexTR].y())
+            background[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, background[self.IndexBL].y())
+            background[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, background[self.IndexBR].y())
             
-            polygon[self.IndexRT] = QPointF(R.right() - 4, polygon[self.IndexRT].y())
-            polygon[self.IndexRB] = QPointF(R.right() - 4, polygon[self.IndexRB].y())
-            polygon[self.IndexTL] = QPointF(newTopBottomLeftX, polygon[self.IndexTL].y())
-            polygon[self.IndexTR] = QPointF(newTopBottomRightX, polygon[self.IndexTR].y())
-            polygon[self.IndexBL] = QPointF(newTopBottomLeftX, polygon[self.IndexBL].y())
-            polygon[self.IndexBR] = QPointF(newTopBottomRightX, polygon[self.IndexBR].y())
+            polygon[self.IndexRT] = QtCore.QPointF(R.right() - 4, polygon[self.IndexRT].y())
+            polygon[self.IndexRB] = QtCore.QPointF(R.right() - 4, polygon[self.IndexRB].y())
+            polygon[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, polygon[self.IndexTL].y())
+            polygon[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, polygon[self.IndexTR].y())
+            polygon[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, polygon[self.IndexBL].y())
+            polygon[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, polygon[self.IndexBR].y())
 
         elif self.mp_Handle == self.HandleBL:
 
@@ -478,25 +477,25 @@ class IndividualNode(AbstractResizableNode):
             selection.setLeft(R.left())
             selection.setBottom(R.bottom())
             
-            background[self.IndexLT] = QPointF(R.left(), newLeftRightTopY)
-            background[self.IndexLB] = QPointF(R.left(), newLeftRightBottomY)
-            background[self.IndexRT] = QPointF(R.right(), newLeftRightTopY)
-            background[self.IndexRB] = QPointF(R.right(), newLeftRightBottomY)
-            background[self.IndexTL] = QPointF(newTopBottomLeftX, R.top())
-            background[self.IndexTR] = QPointF(newTopBottomRightX, R.top())
-            background[self.IndexBL] = QPointF(newTopBottomLeftX, R.bottom())
-            background[self.IndexBR] = QPointF(newTopBottomRightX, R.bottom())
-            background[self.IndexEE] = QPointF(R.left(), newLeftRightTopY)
+            background[self.IndexLT] = QtCore.QPointF(R.left(), newLeftRightTopY)
+            background[self.IndexLB] = QtCore.QPointF(R.left(), newLeftRightBottomY)
+            background[self.IndexRT] = QtCore.QPointF(R.right(), newLeftRightTopY)
+            background[self.IndexRB] = QtCore.QPointF(R.right(), newLeftRightBottomY)
+            background[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, R.top())
+            background[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, R.top())
+            background[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom())
+            background[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom())
+            background[self.IndexEE] = QtCore.QPointF(R.left(), newLeftRightTopY)
             
-            polygon[self.IndexLT] = QPointF(R.left() + 4, newLeftRightTopY)
-            polygon[self.IndexLB] = QPointF(R.left() + 4, newLeftRightBottomY)
-            polygon[self.IndexRT] = QPointF(R.right() - 4, newLeftRightTopY)
-            polygon[self.IndexRB] = QPointF(R.right() - 4, newLeftRightBottomY)
-            polygon[self.IndexTL] = QPointF(newTopBottomLeftX, R.top() + 4)
-            polygon[self.IndexTR] = QPointF(newTopBottomRightX, R.top() + 4)
-            polygon[self.IndexBL] = QPointF(newTopBottomLeftX, R.bottom() - 4)
-            polygon[self.IndexBR] = QPointF(newTopBottomRightX, R.bottom() - 4)
-            polygon[self.IndexEE] = QPointF(R.left() + 4, newLeftRightTopY)
+            polygon[self.IndexLT] = QtCore.QPointF(R.left() + 4, newLeftRightTopY)
+            polygon[self.IndexLB] = QtCore.QPointF(R.left() + 4, newLeftRightBottomY)
+            polygon[self.IndexRT] = QtCore.QPointF(R.right() - 4, newLeftRightTopY)
+            polygon[self.IndexRB] = QtCore.QPointF(R.right() - 4, newLeftRightBottomY)
+            polygon[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, R.top() + 4)
+            polygon[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, R.top() + 4)
+            polygon[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom() - 4)
+            polygon[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom() - 4)
+            polygon[self.IndexEE] = QtCore.QPointF(R.left() + 4, newLeftRightTopY)
 
         elif self.mp_Handle == self.HandleBM:
 
@@ -517,21 +516,21 @@ class IndividualNode(AbstractResizableNode):
             
             selection.setBottom(R.bottom())
             
-            background[self.IndexBL] = QPointF(background[self.IndexBL].x(), R.bottom())
-            background[self.IndexBR] = QPointF(background[self.IndexBR].x(), R.bottom())
-            background[self.IndexLB] = QPointF(background[self.IndexLB].x(), newLeftRightBottomY)
-            background[self.IndexRB] = QPointF(background[self.IndexRB].x(), newLeftRightBottomY)
-            background[self.IndexLT] = QPointF(background[self.IndexLT].x(), newLeftRightTopY)
-            background[self.IndexRT] = QPointF(background[self.IndexRT].x(), newLeftRightTopY)
-            background[self.IndexEE] = QPointF(background[self.IndexEE].x(), newLeftRightTopY)
+            background[self.IndexBL] = QtCore.QPointF(background[self.IndexBL].x(), R.bottom())
+            background[self.IndexBR] = QtCore.QPointF(background[self.IndexBR].x(), R.bottom())
+            background[self.IndexLB] = QtCore.QPointF(background[self.IndexLB].x(), newLeftRightBottomY)
+            background[self.IndexRB] = QtCore.QPointF(background[self.IndexRB].x(), newLeftRightBottomY)
+            background[self.IndexLT] = QtCore.QPointF(background[self.IndexLT].x(), newLeftRightTopY)
+            background[self.IndexRT] = QtCore.QPointF(background[self.IndexRT].x(), newLeftRightTopY)
+            background[self.IndexEE] = QtCore.QPointF(background[self.IndexEE].x(), newLeftRightTopY)
             
-            polygon[self.IndexBL] = QPointF(polygon[self.IndexBL].x(), R.bottom() - 4)
-            polygon[self.IndexBR] = QPointF(polygon[self.IndexBR].x(), R.bottom() - 4)
-            polygon[self.IndexLB] = QPointF(polygon[self.IndexLB].x(), newLeftRightBottomY)
-            polygon[self.IndexRB] = QPointF(polygon[self.IndexRB].x(), newLeftRightBottomY)
-            polygon[self.IndexLT] = QPointF(polygon[self.IndexLT].x(), newLeftRightTopY)
-            polygon[self.IndexRT] = QPointF(polygon[self.IndexRT].x(), newLeftRightTopY)
-            polygon[self.IndexEE] = QPointF(polygon[self.IndexEE].x(), newLeftRightTopY)
+            polygon[self.IndexBL] = QtCore.QPointF(polygon[self.IndexBL].x(), R.bottom() - 4)
+            polygon[self.IndexBR] = QtCore.QPointF(polygon[self.IndexBR].x(), R.bottom() - 4)
+            polygon[self.IndexLB] = QtCore.QPointF(polygon[self.IndexLB].x(), newLeftRightBottomY)
+            polygon[self.IndexRB] = QtCore.QPointF(polygon[self.IndexRB].x(), newLeftRightBottomY)
+            polygon[self.IndexLT] = QtCore.QPointF(polygon[self.IndexLT].x(), newLeftRightTopY)
+            polygon[self.IndexRT] = QtCore.QPointF(polygon[self.IndexRT].x(), newLeftRightTopY)
+            polygon[self.IndexEE] = QtCore.QPointF(polygon[self.IndexEE].x(), newLeftRightTopY)
 
         elif self.mp_Handle == self.HandleBR:
 
@@ -564,25 +563,25 @@ class IndividualNode(AbstractResizableNode):
             selection.setRight(R.right())
             selection.setBottom(R.bottom())
 
-            background[self.IndexLT] = QPointF(R.left(), newLeftRightTopY)
-            background[self.IndexLB] = QPointF(R.left(), newLeftRightBottomY)
-            background[self.IndexRT] = QPointF(R.right(), newLeftRightTopY)
-            background[self.IndexRB] = QPointF(R.right(), newLeftRightBottomY)
-            background[self.IndexTL] = QPointF(newTopBottomLeftX, R.top())
-            background[self.IndexTR] = QPointF(newTopBottomRightX, R.top())
-            background[self.IndexBL] = QPointF(newTopBottomLeftX, R.bottom())
-            background[self.IndexBR] = QPointF(newTopBottomRightX, R.bottom())
-            background[self.IndexEE] = QPointF(R.left(), newLeftRightTopY)
+            background[self.IndexLT] = QtCore.QPointF(R.left(), newLeftRightTopY)
+            background[self.IndexLB] = QtCore.QPointF(R.left(), newLeftRightBottomY)
+            background[self.IndexRT] = QtCore.QPointF(R.right(), newLeftRightTopY)
+            background[self.IndexRB] = QtCore.QPointF(R.right(), newLeftRightBottomY)
+            background[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, R.top())
+            background[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, R.top())
+            background[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom())
+            background[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom())
+            background[self.IndexEE] = QtCore.QPointF(R.left(), newLeftRightTopY)
             
-            polygon[self.IndexLT] = QPointF(R.left() + 4, newLeftRightTopY)
-            polygon[self.IndexLB] = QPointF(R.left() + 4, newLeftRightBottomY)
-            polygon[self.IndexRT] = QPointF(R.right() - 4, newLeftRightTopY)
-            polygon[self.IndexRB] = QPointF(R.right() - 4, newLeftRightBottomY)
-            polygon[self.IndexTL] = QPointF(newTopBottomLeftX, R.top() + 4)
-            polygon[self.IndexTR] = QPointF(newTopBottomRightX, R.top() + 4)
-            polygon[self.IndexBL] = QPointF(newTopBottomLeftX, R.bottom() - 4)
-            polygon[self.IndexBR] = QPointF(newTopBottomRightX, R.bottom() - 4)
-            polygon[self.IndexEE] = QPointF(R.left() + 4, newLeftRightTopY)
+            polygon[self.IndexLT] = QtCore.QPointF(R.left() + 4, newLeftRightTopY)
+            polygon[self.IndexLB] = QtCore.QPointF(R.left() + 4, newLeftRightBottomY)
+            polygon[self.IndexRT] = QtCore.QPointF(R.right() - 4, newLeftRightTopY)
+            polygon[self.IndexRB] = QtCore.QPointF(R.right() - 4, newLeftRightBottomY)
+            polygon[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, R.top() + 4)
+            polygon[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, R.top() + 4)
+            polygon[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom() - 4)
+            polygon[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom() - 4)
+            polygon[self.IndexEE] = QtCore.QPointF(R.left() + 4, newLeftRightTopY)
 
         self.background.setGeometry(background)
         self.selection.setGeometry(selection)
@@ -605,21 +604,21 @@ class IndividualNode(AbstractResizableNode):
         """
         self.label.setEditable(RE_VALUE.match(text) is None)
         self.label.setText(text)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
 
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         self.label.setPos(pos)
 
     def shape(self):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
+        Returns the shape of this item as a QtGui.QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPolygon(self.polygon.geometry())
         for polygon in self.handles:
             path.addEllipse(polygon.geometry())

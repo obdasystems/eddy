@@ -35,9 +35,8 @@
 
 from math import sin, cos, radians, pi as M_PI
 
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QPainter, QPolygonF
-from PyQt5.QtGui import QPainterPath, QBrush, QColor, QPen
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.geometry import createArea
@@ -67,7 +66,7 @@ class MembershipEdge(AbstractEdge):
         Returns the shape bounding rect.
         :rtype: QRectF
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPath(self.selection.geometry())
         path.addPolygon(self.head.geometry())
         for polygon in self.handles:
@@ -92,15 +91,15 @@ class MembershipEdge(AbstractEdge):
     def createHead(p1, angle, size):
         """
         Create the head polygon.
-        :type p1: QPointF
+        :type p1: QtCore.QPointF
         :type angle: float
         :type size: int
-        :rtype: QPolygonF
+        :rtype: QtGui.QPolygonF
         """
         rad = radians(angle)
-        p2 = p1 - QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-        p3 = p1 - QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-        return QPolygonF([p1, p2, p3])
+        p2 = p1 - QtCore.QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+        p3 = p1 - QtCore.QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+        return QtGui.QPolygonF([p1, p2, p3])
 
     def paint(self, painter, option, widget=None):
         """
@@ -112,7 +111,7 @@ class MembershipEdge(AbstractEdge):
         # SET THE RECT THAT NEEDS TO BE REPAINTED
         painter.setClipRect(option.exposedRect)
         # SELECTION AREA
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.fillPath(self.selection.geometry(), self.selection.brush())
         # EDGE LINE
         painter.setPen(self.path.pen())
@@ -134,10 +133,10 @@ class MembershipEdge(AbstractEdge):
 
     def painterPath(self):
         """
-        Returns the current shape as QPainterPath (used for collision detection).
+        Returns the current shape as QtGui.QPainterPath (used for collision detection).
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPath(self.path.geometry())
         path.addPolygon(self.head.geometry())
         return path
@@ -152,16 +151,16 @@ class MembershipEdge(AbstractEdge):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         self.label.setPos(pos)
 
     def shape(self):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
+        Returns the shape of this item as a QtGui.QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPath(self.selection.geometry())
         path.addPolygon(self.head.geometry())
 
@@ -194,20 +193,20 @@ class MembershipEdge(AbstractEdge):
         :type visible: bool
         :type breakpoint: int
         :type anchor: AbstractNode
-        :type target: QPointF
+        :type target: QtCore.QPointF
         """
         def createHead(point1, angle, size):
             """
             Create the head polygon.
-            :type point1: QPointF
+            :type point1: QtCore.QPointF
             :type angle: float
             :type size: int
-            :rtype: QPolygonF
+            :rtype: QtGui.QPolygonF
             """
             rad = radians(angle)
-            point2 = point1 - QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-            point3 = point1 - QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-            return QPolygonF([point1, point2, point3])
+            point2 = point1 - QtCore.QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+            point3 = point1 - QtCore.QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+            return QtGui.QPolygonF([point1, point2, point3])
 
         if visible is None:
             visible = self.canDraw()
@@ -225,9 +224,9 @@ class MembershipEdge(AbstractEdge):
 
         collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
 
-        selection = QPainterPath()
-        path = QPainterPath()
-        head = QPolygonF()
+        selection = QtGui.QPainterPath()
+        path = QtGui.QPainterPath()
+        head = QtGui.QPolygonF()
 
         points = []
         append = points.append
@@ -282,14 +281,14 @@ class MembershipEdge(AbstractEdge):
         # PATH, HEAD, TAIL (BRUSH)
         #################################
 
-        headBrush = QBrush(Qt.NoBrush)
-        headPen = QPen(Qt.NoPen)
-        pathPen = QPen(Qt.NoPen)
+        headBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
+        headPen = QtGui.QPen(QtCore.Qt.NoPen)
+        pathPen = QtGui.QPen(QtCore.Qt.NoPen)
 
         if visible:
-            headBrush = QBrush(QColor(0, 0, 0, 255))
-            headPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-            pathPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+            headBrush = QtGui.QBrush(QtGui.QColor(0, 0, 0, 255))
+            headPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
+            pathPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
 
         self.head.setBrush(headBrush)
         self.head.setPen(headPen)

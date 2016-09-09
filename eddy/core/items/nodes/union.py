@@ -33,8 +33,8 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QPointF
-from PyQt5.QtGui import QBrush, QColor
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.items.nodes.common.operator import OperatorNode
@@ -53,7 +53,7 @@ class UnionNode(OperatorNode):
         Initialize the node.
         :type brush: QBrush
         """
-        super(UnionNode, self).__init__(brush=QBrush(QColor(252, 252, 252, 255)), **kwargs)
+        super(UnionNode, self).__init__(brush=QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)), **kwargs)
         self.label = NodeLabel('or', pos=self.center, editable=False, movable=False, parent=self)
 
     #############################################
@@ -85,7 +85,7 @@ class UnionNode(OperatorNode):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         self.label.setPos(pos)
 

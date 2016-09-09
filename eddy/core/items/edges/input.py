@@ -35,9 +35,8 @@
 
 from math import sin, cos, radians, pi as M_PI
 
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QPainter, QPolygonF, QPainterPath
-from PyQt5.QtGui import QPen, QColor, QBrush
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.geometry import createArea
@@ -67,7 +66,7 @@ class InputEdge(AbstractEdge):
         Returns the shape bounding rect.
         :rtype: QRectF
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPath(self.selection.geometry())
         path.addPolygon(self.head.geometry())
         for polygon in self.handles:
@@ -98,7 +97,7 @@ class InputEdge(AbstractEdge):
         # SET THE RECT THAT NEEDS TO BE REPAINTED
         painter.setClipRect(option.exposedRect)
         # SELECTION AREA
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.fillPath(self.selection.geometry(), self.selection.brush())
         # EDGE LINE
         painter.setPen(self.path.pen())
@@ -120,10 +119,10 @@ class InputEdge(AbstractEdge):
 
     def painterPath(self):
         """
-        Returns the current shape as QPainterPath (used for collision detection).
+        Returns the current shape as QtGui.QPainterPath (used for collision detection).
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPath(self.path.geometry())
         path.addPolygon(self.head.geometry())
         return path
@@ -138,16 +137,16 @@ class InputEdge(AbstractEdge):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         self.label.setPos(pos)
 
     def shape(self):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
+        Returns the shape of this item as a QtGui.QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPath(self.selection.geometry())
         path.addPolygon(self.head.geometry())
 
@@ -180,21 +179,21 @@ class InputEdge(AbstractEdge):
         :type visible: bool
         :type breakpoint: int
         :type anchor: AbstractNode
-        :type target: QPointF
+        :type target: QtCore.QPointF
         """
         def createHead(point1, angle, size):
             """
             Create the head polygon.
-            :type point1: QPointF
+            :type point1: QtCore.QPointF
             :type angle: float
             :type size: int
-            :rtype: QPolygonF
+            :rtype: QtGui.QPolygonF
             """
             rad = radians(angle)
-            point2 = point1 - QPointF(sin(rad + M_PI / 4.0) * size, cos(rad + M_PI / 4.0) * size)
-            point3 = point2 - QPointF(sin(rad + 3.0 / 4.0 * M_PI) * size, cos(rad + 3.0 / 4.0 * M_PI) * size)
-            point4 = point3 - QPointF(sin(rad - 3.0 / 4.0 * M_PI) * size, cos(rad - 3.0 / 4.0 * M_PI) * size)
-            return QPolygonF([point1, point2, point3, point4])
+            point2 = point1 - QtCore.QPointF(sin(rad + M_PI / 4.0) * size, cos(rad + M_PI / 4.0) * size)
+            point3 = point2 - QtCore.QPointF(sin(rad + 3.0 / 4.0 * M_PI) * size, cos(rad + 3.0 / 4.0 * M_PI) * size)
+            point4 = point3 - QtCore.QPointF(sin(rad - 3.0 / 4.0 * M_PI) * size, cos(rad - 3.0 / 4.0 * M_PI) * size)
+            return QtGui.QPolygonF([point1, point2, point3, point4])
 
         if visible is None:
             visible = self.canDraw()
@@ -212,9 +211,9 @@ class InputEdge(AbstractEdge):
 
         collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
 
-        selection = QPainterPath()
-        path = QPainterPath()
-        head = QPolygonF()
+        selection = QtGui.QPainterPath()
+        path = QtGui.QPainterPath()
+        head = QtGui.QPolygonF()
 
         points = []
         append = points.append
@@ -263,14 +262,14 @@ class InputEdge(AbstractEdge):
         # PATH, HEAD (BRUSH)
         #################################
 
-        headBrush = QBrush(Qt.NoBrush)
-        headPen = QPen(Qt.NoPen)
-        pathPen = QPen(Qt.NoPen)
+        headBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
+        headPen = QtGui.QPen(QtCore.Qt.NoPen)
+        pathPen = QtGui.QPen(QtCore.Qt.NoPen)
 
         if visible:
-            headBrush = QBrush(QColor(252, 252, 252, 255))
-            headPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-            pathPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.CustomDashLine, Qt.RoundCap, Qt.RoundJoin)
+            headBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
+            headPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
+            pathPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.CustomDashLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
             pathPen.setDashPattern([5, 5])
 
         self.head.setBrush(headBrush)

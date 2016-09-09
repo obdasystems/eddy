@@ -54,7 +54,7 @@ class Polygon(object):
         """
         Initialize the polygon.
         :type geometry: T <= QRectF|QtGui.QPolygonF|QPainterPath
-        :type brush: QtGui.QBrush
+        :type brush: QBrush
         :type pen: QtGui.QPen
         """
         self._geometry = geometry
@@ -89,7 +89,7 @@ class Polygon(object):
     def setBrush(self, brush):
         """
         Set the brush used to draw the shape.
-        :type brush: QtGui.QBrush
+        :type brush: QBrush
         """
         self._brush = brush
 

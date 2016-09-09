@@ -35,7 +35,7 @@
 
 from math import sin, cos, pi as M_PI
 
-from PyQt5.QtCore import QPointF
+from PyQt5 import QtCore
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.geometry import angle, midpoint
@@ -102,7 +102,7 @@ class EdgeLabel(AbstractLabel):
                 rad = angle(p1, p2)
                 spaceX = -40
                 spaceY = -16
-                self.setPos(QPointF(mid.x() + spaceX * sin(rad), mid.y() + spaceY * cos(rad)))
+                self.setPos(QtCore.QPointF(mid.x() + spaceX * sin(rad), mid.y() + spaceY * cos(rad)))
             else:
                 # If we have an odd number of points compute the position
                 # of the label according the point in the middle of the edge.
@@ -117,7 +117,7 @@ class EdgeLabel(AbstractLabel):
                     spaceX1 = -80 * sin(rad1)
                     spaceX2 = -80 * sin(rad2)
                     spaceY += spaceY * sin(diff) * 1.8
-                self.setPos(QPointF(mid.x() + spaceX1 + spaceX2, mid.y() + spaceY))
+                self.setPos(QtCore.QPointF(mid.x() + spaceX1 + spaceX2, mid.y() + spaceY))
         else:
             # Here instead we will place the label near the intersection with
             # the target shape: this is mostly used for input edges connecting
@@ -125,5 +125,5 @@ class EdgeLabel(AbstractLabel):
             # visually the partecipation order of connected nodes without having
             # to scroll the diagram.
             rad = angle(points[-2], points[-1])
-            pos = points[-1] - QPointF(sin(rad + M_PI / 3.0) * 20, cos(rad + M_PI / 3.0) * 20)
+            pos = points[-1] - QtCore.QPointF(sin(rad + M_PI / 3.0) * 20, cos(rad + M_PI / 3.0) * 20)
             self.setPos(pos)

@@ -33,9 +33,8 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QPainter, QPainterPath
-from PyQt5.QtGui import QBrush, QColor, QPen
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.items.nodes.common.base import AbstractNode
@@ -47,8 +46,8 @@ class AttributeNode(AbstractNode):
     """
     This class implements the 'Attribute' node.
     """
-    DefaultBrush = QBrush(QColor(252, 252, 252, 255))
-    DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+    DefaultBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
+    DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
     Identities = {Identity.Attribute}
     Type = Item.AttributeNode
 
@@ -62,12 +61,12 @@ class AttributeNode(AbstractNode):
         super(AttributeNode, self).__init__(**kwargs)
         brush = brush or AttributeNode.DefaultBrush
         pen = AttributeNode.DefaultPen
-        self.fpolygon = Polygon(QPainterPath())
-        self.background = Polygon(QRectF(-14, -14, 28, 28))
-        self.selection = Polygon(QRectF(-14, -14, 28, 28))
-        self.polygon = Polygon(QRectF(-10, -10, 20, 20), brush, pen)
-        self.label = NodeLabel(template='attribute', pos=lambda: self.center() - QPointF(0, 22), parent=self)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.fpolygon = Polygon(QtGui.QPainterPath())
+        self.background = Polygon(QtCore.QRectF(-14, -14, 28, 28))
+        self.selection = Polygon(QtCore.QRectF(-14, -14, 28, 28))
+        self.polygon = Polygon(QtCore.QRectF(-10, -10, 20, 20), brush, pen)
+        self.label = NodeLabel(template='attribute', pos=lambda: self.center() - QtCore.QPointF(0, 22), parent=self)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
 
     #############################################
     #   INTERFACE
@@ -76,7 +75,7 @@ class AttributeNode(AbstractNode):
     def boundingRect(self):
         """
         Returns the shape bounding rectangle.
-        :rtype: QRectF
+        :rtype: QtCore.QRectF
         """
         return self.selection.geometry()
 
@@ -143,7 +142,7 @@ class AttributeNode(AbstractNode):
         painter.setBrush(self.selection.brush())
         painter.drawRect(self.selection.geometry())
         # SYNTAX VALIDATION
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(self.background.pen())
         painter.setBrush(self.background.brush())
         painter.drawEllipse(self.background.geometry())
@@ -158,16 +157,16 @@ class AttributeNode(AbstractNode):
 
     def painterPath(self):
         """
-        Returns the current shape as QPainterPath (used for collision detection).
+        Returns the current shape as QtGui.QPainterPath (used for collision detection).
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addEllipse(self.polygon.geometry())
         return path
 
     def setFunctional(self, functional):
         """
-        Set the functional property of the predicated represented by this node.
+        Set the functional property of the predicate represented by this node.
         :type functional: bool
         """
         meta = self.project.meta(self.type(), self.text())
@@ -189,21 +188,21 @@ class AttributeNode(AbstractNode):
         :type text: str
         """
         self.label.setText(text)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
 
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         self.label.setPos(pos)
 
     def shape(self):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
+        Returns the shape of this item as a QtGui.QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addEllipse(self.polygon.geometry())
         return path
 
@@ -237,18 +236,18 @@ class AttributeNode(AbstractNode):
             functional = self.isFunctional()
 
         # FUNCTIONAL POLYGON (SHAPE)
-        path1 = QPainterPath()
+        path1 = QtGui.QPainterPath()
         path1.addEllipse(self.polygon.geometry())
-        path2 = QPainterPath()
-        path2.addEllipse(QRectF(-7, -7, 14, 14))
+        path2 = QtGui.QPainterPath()
+        path2.addEllipse(QtCore.QRectF(-7, -7, 14, 14))
         self.fpolygon.setGeometry(path1.subtracted(path2))
 
         # FUNCTIONAL POLYGON (PEN & BRUSH)
-        pen = QPen(Qt.NoPen)
-        brush = QBrush(Qt.NoBrush)
+        pen = QtGui.QPen(QtCore.Qt.NoPen)
+        brush = QtGui.QBrush(QtCore.Qt.NoBrush)
         if functional:
-            pen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-            brush = QBrush(QColor(252, 252, 252, 255))
+            pen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
+            brush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
         self.fpolygon.setPen(pen)
         self.fpolygon.setBrush(brush)
 

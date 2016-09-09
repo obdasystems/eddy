@@ -33,9 +33,8 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QPointF, QRectF, Qt
-from PyQt5.QtGui import QColor, QBrush, QPen
-from PyQt5.QtGui import QPolygonF, QPainterPath, QPainter
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item, Special, Identity
 from eddy.core.functions.misc import snapF
@@ -54,8 +53,8 @@ class RoleNode(AbstractResizableNode):
     IndexT = 3
     IndexE = 4
 
-    DefaultBrush = QBrush(QColor(252, 252, 252, 255))
-    DefaultPen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+    DefaultBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
+    DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
     Identities = {Identity.Role}
     Type = Item.RoleNode
 
@@ -73,21 +72,21 @@ class RoleNode(AbstractResizableNode):
         brush = brush or RoleNode.DefaultBrush
         pen = RoleNode.DefaultPen
 
-        createPolygon = lambda x, y: QPolygonF([
-            QPointF(-x / 2, 0),
-            QPointF(0, +y / 2),
-            QPointF(+x / 2, 0),
-            QPointF(0, -y / 2),
-            QPointF(-x / 2, 0)
+        createPolygon = lambda x, y: QtGui.QPolygonF([
+            QtCore.QPointF(-x / 2, 0),
+            QtCore.QPointF(0, +y / 2),
+            QtCore.QPointF(+x / 2, 0),
+            QtCore.QPointF(0, -y / 2),
+            QtCore.QPointF(-x / 2, 0)
         ])
 
-        self.fpolygon = Polygon(QPainterPath())
-        self.ipolygon = Polygon(QPainterPath())
+        self.fpolygon = Polygon(QtGui.QPainterPath())
+        self.ipolygon = Polygon(QtGui.QPainterPath())
         self.background = Polygon(createPolygon(w + 8, h + 8))
-        self.selection = Polygon(QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
+        self.selection = Polygon(QtCore.QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
         self.label = NodeLabel(template='role', pos=self.center, parent=self)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
         self.updateTextPos()
 
@@ -98,7 +97,7 @@ class RoleNode(AbstractResizableNode):
     def boundingRect(self):
         """
         Returns the shape bounding rectangle.
-        :rtype: QRectF
+        :rtype: QtCore.QRectF
         """
         return self.selection.geometry()
 
@@ -226,7 +225,7 @@ class RoleNode(AbstractResizableNode):
         painter.setBrush(self.selection.brush())
         painter.drawRect(self.selection.geometry())
         # SYNTAX VALIDATION
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(self.background.pen())
         painter.setBrush(self.background.brush())
         painter.drawPolygon(self.background.geometry())
@@ -243,7 +242,7 @@ class RoleNode(AbstractResizableNode):
         painter.setBrush(self.ipolygon.brush())
         painter.drawPath(self.ipolygon.geometry())
         # RESIZE HANDLES
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
         for polygon in self.handles:
             painter.setPen(polygon.pen())
             painter.setBrush(polygon.brush())
@@ -251,17 +250,17 @@ class RoleNode(AbstractResizableNode):
 
     def painterPath(self):
         """
-        Returns the current shape as QPainterPath (used for collision detection).
+        Returns the current shape as QtGui.QPainterPath (used for collision detection).
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPolygon(self.polygon.geometry())
         return path
 
     def resize(self, mousePos):
         """
         Handle the interactive resize of the shape.
-        :type mousePos: QPointF
+        :type mousePos: QtCore.QPointF
         """
         snap = self.session.action('toggle_grid').isChecked()
         size = self.diagram.GridSize
@@ -271,8 +270,8 @@ class RoleNode(AbstractResizableNode):
         selection = self.selection.geometry()
         polygon = self.polygon.geometry()
         
-        R = QRectF(self.boundingRect())
-        D = QPointF(0, 0)
+        R = QtCore.QRectF(self.boundingRect())
+        D = QtCore.QPointF(0, 0)
 
         mbrh = 58
         mbrw = 78
@@ -303,17 +302,17 @@ class RoleNode(AbstractResizableNode):
             selection.setLeft(R.left())
             selection.setTop(R.top())
             
-            background[self.IndexT] = QPointF(R.left() + R.width() / 2, R.top())
-            background[self.IndexB] = QPointF(R.left() + R.width() / 2, background[self.IndexB].y())
-            background[self.IndexL] = QPointF(R.left(), R.top() + R.height() / 2)
-            background[self.IndexE] = QPointF(R.left(), R.top() + R.height() / 2)
-            background[self.IndexR] = QPointF(background[self.IndexR].x(), R.top() + R.height() / 2)
+            background[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, R.top())
+            background[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, background[self.IndexB].y())
+            background[self.IndexL] = QtCore.QPointF(R.left(), R.top() + R.height() / 2)
+            background[self.IndexE] = QtCore.QPointF(R.left(), R.top() + R.height() / 2)
+            background[self.IndexR] = QtCore.QPointF(background[self.IndexR].x(), R.top() + R.height() / 2)
             
-            polygon[self.IndexT] = QPointF(R.left() + R.width() / 2, R.top() + 4)
-            polygon[self.IndexB] = QPointF(R.left() + R.width() / 2, polygon[self.IndexB].y())
-            polygon[self.IndexL] = QPointF(R.left() + 4, R.top() + R.height() / 2)
-            polygon[self.IndexE] = QPointF(R.left() + 4, R.top() + R.height() / 2)
-            polygon[self.IndexR] = QPointF(polygon[self.IndexR].x(), R.top() + R.height() / 2)
+            polygon[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, R.top() + 4)
+            polygon[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, polygon[self.IndexB].y())
+            polygon[self.IndexL] = QtCore.QPointF(R.left() + 4, R.top() + R.height() / 2)
+            polygon[self.IndexE] = QtCore.QPointF(R.left() + 4, R.top() + R.height() / 2)
+            polygon[self.IndexR] = QtCore.QPointF(polygon[self.IndexR].x(), R.top() + R.height() / 2)
 
         elif self.mp_Handle == self.HandleTM:
 
@@ -330,15 +329,15 @@ class RoleNode(AbstractResizableNode):
             
             selection.setTop(R.top())
             
-            background[self.IndexT] = QPointF(background[self.IndexT].x(), R.top())
-            background[self.IndexL] = QPointF(background[self.IndexL].x(), R.top() + R.height() / 2)
-            background[self.IndexE] = QPointF(background[self.IndexE].x(), R.top() + R.height() / 2)
-            background[self.IndexR] = QPointF(background[self.IndexR].x(), R.top() + R.height() / 2)
+            background[self.IndexT] = QtCore.QPointF(background[self.IndexT].x(), R.top())
+            background[self.IndexL] = QtCore.QPointF(background[self.IndexL].x(), R.top() + R.height() / 2)
+            background[self.IndexE] = QtCore.QPointF(background[self.IndexE].x(), R.top() + R.height() / 2)
+            background[self.IndexR] = QtCore.QPointF(background[self.IndexR].x(), R.top() + R.height() / 2)
             
-            polygon[self.IndexT] = QPointF(polygon[self.IndexT].x(), R.top() + 4)
-            polygon[self.IndexL] = QPointF(polygon[self.IndexL].x(), R.top() + R.height() / 2)
-            polygon[self.IndexE] = QPointF(polygon[self.IndexE].x(), R.top() + R.height() / 2)
-            polygon[self.IndexR] = QPointF(polygon[self.IndexR].x(), R.top() + R.height() / 2)
+            polygon[self.IndexT] = QtCore.QPointF(polygon[self.IndexT].x(), R.top() + 4)
+            polygon[self.IndexL] = QtCore.QPointF(polygon[self.IndexL].x(), R.top() + R.height() / 2)
+            polygon[self.IndexE] = QtCore.QPointF(polygon[self.IndexE].x(), R.top() + R.height() / 2)
+            polygon[self.IndexR] = QtCore.QPointF(polygon[self.IndexR].x(), R.top() + R.height() / 2)
 
         elif self.mp_Handle == self.HandleTR:
 
@@ -364,17 +363,17 @@ class RoleNode(AbstractResizableNode):
             selection.setRight(R.right())
             selection.setTop(R.top())
             
-            background[self.IndexT] = QPointF(R.right() - R.width() / 2, R.top())
-            background[self.IndexB] = QPointF(R.right() - R.width() / 2, background[self.IndexB].y())
-            background[self.IndexL] = QPointF(background[self.IndexL].x(), R.top() + R.height() / 2)
-            background[self.IndexE] = QPointF(background[self.IndexE].x(), R.top() + R.height() / 2)
-            background[self.IndexR] = QPointF(R.right(), R.top() + R.height() / 2)
+            background[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, R.top())
+            background[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, background[self.IndexB].y())
+            background[self.IndexL] = QtCore.QPointF(background[self.IndexL].x(), R.top() + R.height() / 2)
+            background[self.IndexE] = QtCore.QPointF(background[self.IndexE].x(), R.top() + R.height() / 2)
+            background[self.IndexR] = QtCore.QPointF(R.right(), R.top() + R.height() / 2)
             
-            polygon[self.IndexT] = QPointF(R.right() - R.width() / 2, R.top() + 4)
-            polygon[self.IndexB] = QPointF(R.right() - R.width() / 2, polygon[self.IndexB].y())
-            polygon[self.IndexL] = QPointF(polygon[self.IndexL].x(), R.top() + R.height() / 2)
-            polygon[self.IndexE] = QPointF(polygon[self.IndexE].x(), R.top() + R.height() / 2)
-            polygon[self.IndexR] = QPointF(R.right() - 4, R.top() + R.height() / 2)
+            polygon[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, R.top() + 4)
+            polygon[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, polygon[self.IndexB].y())
+            polygon[self.IndexL] = QtCore.QPointF(polygon[self.IndexL].x(), R.top() + R.height() / 2)
+            polygon[self.IndexE] = QtCore.QPointF(polygon[self.IndexE].x(), R.top() + R.height() / 2)
+            polygon[self.IndexR] = QtCore.QPointF(R.right() - 4, R.top() + R.height() / 2)
 
         elif self.mp_Handle == self.HandleML:
 
@@ -391,15 +390,15 @@ class RoleNode(AbstractResizableNode):
             
             selection.setLeft(R.left())
             
-            background[self.IndexL] = QPointF(R.left(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
-            background[self.IndexE] = QPointF(R.left(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
-            background[self.IndexT] = QPointF(R.left() + R.width() / 2, background[self.IndexT].y())
-            background[self.IndexB] = QPointF(R.left() + R.width() / 2, background[self.IndexB].y())
+            background[self.IndexL] = QtCore.QPointF(R.left(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
+            background[self.IndexE] = QtCore.QPointF(R.left(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
+            background[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, background[self.IndexT].y())
+            background[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, background[self.IndexB].y())
             
-            polygon[self.IndexL] = QPointF(R.left() + 4, self.mp_Bound.top() + self.mp_Bound.height() / 2)
-            polygon[self.IndexE] = QPointF(R.left() + 4, self.mp_Bound.top() + self.mp_Bound.height() / 2)
-            polygon[self.IndexT] = QPointF(R.left() + R.width() / 2, polygon[self.IndexT].y())
-            polygon[self.IndexB] = QPointF(R.left() + R.width() / 2, polygon[self.IndexB].y())
+            polygon[self.IndexL] = QtCore.QPointF(R.left() + 4, self.mp_Bound.top() + self.mp_Bound.height() / 2)
+            polygon[self.IndexE] = QtCore.QPointF(R.left() + 4, self.mp_Bound.top() + self.mp_Bound.height() / 2)
+            polygon[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, polygon[self.IndexT].y())
+            polygon[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, polygon[self.IndexB].y())
 
         elif self.mp_Handle == self.HandleMR:
 
@@ -416,13 +415,13 @@ class RoleNode(AbstractResizableNode):
             
             selection.setRight(R.right())
             
-            background[self.IndexR] = QPointF(R.right(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
-            background[self.IndexT] = QPointF(R.right() - R.width() / 2, background[self.IndexT].y())
-            background[self.IndexB] = QPointF(R.right() - R.width() / 2, background[self.IndexB].y())
+            background[self.IndexR] = QtCore.QPointF(R.right(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
+            background[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, background[self.IndexT].y())
+            background[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, background[self.IndexB].y())
             
-            polygon[self.IndexR] = QPointF(R.right() - 4, self.mp_Bound.top() + self.mp_Bound.height() / 2)
-            polygon[self.IndexT] = QPointF(R.right() - R.width() / 2, polygon[self.IndexT].y())
-            polygon[self.IndexB] = QPointF(R.right() - R.width() / 2, polygon[self.IndexB].y())
+            polygon[self.IndexR] = QtCore.QPointF(R.right() - 4, self.mp_Bound.top() + self.mp_Bound.height() / 2)
+            polygon[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, polygon[self.IndexT].y())
+            polygon[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, polygon[self.IndexB].y())
 
         elif self.mp_Handle == self.HandleBL:
 
@@ -448,17 +447,17 @@ class RoleNode(AbstractResizableNode):
             selection.setLeft(R.left())
             selection.setBottom(R.bottom())
             
-            background[self.IndexT] = QPointF(R.left() + R.width() / 2, background[self.IndexT].y())
-            background[self.IndexB] = QPointF(R.left() + R.width() / 2, R.bottom())
-            background[self.IndexL] = QPointF(R.left(), R.bottom() - R.height() / 2)
-            background[self.IndexE] = QPointF(R.left(), R.bottom() - R.height() / 2)
-            background[self.IndexR] = QPointF(background[self.IndexR].x(), R.bottom() - R.height() / 2)
+            background[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, background[self.IndexT].y())
+            background[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, R.bottom())
+            background[self.IndexL] = QtCore.QPointF(R.left(), R.bottom() - R.height() / 2)
+            background[self.IndexE] = QtCore.QPointF(R.left(), R.bottom() - R.height() / 2)
+            background[self.IndexR] = QtCore.QPointF(background[self.IndexR].x(), R.bottom() - R.height() / 2)
             
-            polygon[self.IndexT] = QPointF(R.left() + R.width() / 2, polygon[self.IndexT].y())
-            polygon[self.IndexB] = QPointF(R.left() + R.width() / 2, R.bottom() - 4)
-            polygon[self.IndexL] = QPointF(R.left() + 4, R.bottom() - R.height() / 2)
-            polygon[self.IndexE] = QPointF(R.left() + 4, R.bottom() - R.height() / 2)
-            polygon[self.IndexR] = QPointF(polygon[self.IndexR].x(), R.bottom() - R.height() / 2)
+            polygon[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, polygon[self.IndexT].y())
+            polygon[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, R.bottom() - 4)
+            polygon[self.IndexL] = QtCore.QPointF(R.left() + 4, R.bottom() - R.height() / 2)
+            polygon[self.IndexE] = QtCore.QPointF(R.left() + 4, R.bottom() - R.height() / 2)
+            polygon[self.IndexR] = QtCore.QPointF(polygon[self.IndexR].x(), R.bottom() - R.height() / 2)
 
         elif self.mp_Handle == self.HandleBM:
 
@@ -475,15 +474,15 @@ class RoleNode(AbstractResizableNode):
             
             selection.setBottom(R.bottom())
             
-            background[self.IndexB] = QPointF(background[self.IndexB].x(), R.bottom())
-            background[self.IndexL] = QPointF(background[self.IndexL].x(), R.top() + R.height() / 2)
-            background[self.IndexE] = QPointF(background[self.IndexE].x(), R.top() + R.height() / 2)
-            background[self.IndexR] = QPointF(background[self.IndexR].x(), R.top() + R.height() / 2)
+            background[self.IndexB] = QtCore.QPointF(background[self.IndexB].x(), R.bottom())
+            background[self.IndexL] = QtCore.QPointF(background[self.IndexL].x(), R.top() + R.height() / 2)
+            background[self.IndexE] = QtCore.QPointF(background[self.IndexE].x(), R.top() + R.height() / 2)
+            background[self.IndexR] = QtCore.QPointF(background[self.IndexR].x(), R.top() + R.height() / 2)
             
-            polygon[self.IndexB] = QPointF(polygon[self.IndexB].x(), R.bottom() - 4)
-            polygon[self.IndexL] = QPointF(polygon[self.IndexL].x(), R.top() + R.height() / 2)
-            polygon[self.IndexE] = QPointF(polygon[self.IndexE].x(), R.top() + R.height() / 2)
-            polygon[self.IndexR] = QPointF(polygon[self.IndexR].x(), R.top() + R.height() / 2)
+            polygon[self.IndexB] = QtCore.QPointF(polygon[self.IndexB].x(), R.bottom() - 4)
+            polygon[self.IndexL] = QtCore.QPointF(polygon[self.IndexL].x(), R.top() + R.height() / 2)
+            polygon[self.IndexE] = QtCore.QPointF(polygon[self.IndexE].x(), R.top() + R.height() / 2)
+            polygon[self.IndexR] = QtCore.QPointF(polygon[self.IndexR].x(), R.top() + R.height() / 2)
 
         elif self.mp_Handle == self.HandleBR:
 
@@ -509,17 +508,17 @@ class RoleNode(AbstractResizableNode):
             selection.setRight(R.right())
             selection.setBottom(R.bottom())
 
-            background[self.IndexT] = QPointF(R.right() - R.width() / 2, background[self.IndexT].y())
-            background[self.IndexB] = QPointF(R.right() - R.width() / 2, R.bottom())
-            background[self.IndexL] = QPointF(background[self.IndexL].x(), R.bottom() - R.height() / 2)
-            background[self.IndexE] = QPointF(background[self.IndexE].x(), R.bottom() - R.height() / 2)
-            background[self.IndexR] = QPointF(R.right(), R.bottom() - R.height() / 2)
+            background[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, background[self.IndexT].y())
+            background[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, R.bottom())
+            background[self.IndexL] = QtCore.QPointF(background[self.IndexL].x(), R.bottom() - R.height() / 2)
+            background[self.IndexE] = QtCore.QPointF(background[self.IndexE].x(), R.bottom() - R.height() / 2)
+            background[self.IndexR] = QtCore.QPointF(R.right(), R.bottom() - R.height() / 2)
             
-            polygon[self.IndexT] = QPointF(R.right() - R.width() / 2, polygon[self.IndexT].y())
-            polygon[self.IndexB] = QPointF(R.right() - R.width() / 2, R.bottom() - 4)
-            polygon[self.IndexL] = QPointF(polygon[self.IndexL].x(), R.bottom() - R.height() / 2)
-            polygon[self.IndexE] = QPointF(polygon[self.IndexE].x(), R.bottom() - R.height() / 2)
-            polygon[self.IndexR] = QPointF(R.right() - 4, R.bottom() - R.height() / 2)
+            polygon[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, polygon[self.IndexT].y())
+            polygon[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, R.bottom() - 4)
+            polygon[self.IndexL] = QtCore.QPointF(polygon[self.IndexL].x(), R.bottom() - R.height() / 2)
+            polygon[self.IndexE] = QtCore.QPointF(polygon[self.IndexE].x(), R.bottom() - R.height() / 2)
+            polygon[self.IndexR] = QtCore.QPointF(R.right() - 4, R.bottom() - R.height() / 2)
 
         self.background.setGeometry(background)
         self.selection.setGeometry(selection)
@@ -539,7 +538,7 @@ class RoleNode(AbstractResizableNode):
 
     def setFunctional(self, functional):
         """
-        Set the functional property of the predicated represented by this node.
+        Set the functional property of the predicate represented by this node.
         :type functional: bool
         """
         meta = self.project.meta(self.type(), self.text())
@@ -557,7 +556,7 @@ class RoleNode(AbstractResizableNode):
 
     def setInverseFunctional(self, inverseFunctional):
         """
-        Set the inverse functional property of the predicated represented by this node.
+        Set the inverse functional property of the predicate represented by this node.
         :type inverseFunctional: bool
         """
         meta = self.project.meta(self.type(), self.text())
@@ -612,17 +611,17 @@ class RoleNode(AbstractResizableNode):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QPointF
+        :type pos: QtCore.QPointF
         """
         self.label.setPos(pos)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
 
     def shape(self):
         """
-        Returns the shape of this item as a QPainterPath in local coordinates.
+        Returns the shape of this item as a QtGui.QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
-        path = QPainterPath()
+        path = QtGui.QPainterPath()
         path.addPolygon(self.polygon.geometry())
         for polygon in self.handles:
             path.addEllipse(polygon.geometry())
@@ -663,54 +662,54 @@ class RoleNode(AbstractResizableNode):
         polygon = self.polygon.geometry()
 
         # FUNCTIONAL POLYGON (SHAPE)
-        fpolygon = QPainterPath()
+        fpolygon = QtGui.QPainterPath()
         if functional and not inverseFunctional:
-            path = QPainterPath()
-            path.addPolygon(QPolygonF([
-                polygon[self.IndexL] + QPointF(+5, 0),
-                polygon[self.IndexB] + QPointF(0, -4),
-                polygon[self.IndexR] + QPointF(-5, 0),
-                polygon[self.IndexT] + QPointF(0, +4),
-                polygon[self.IndexL] + QPointF(+5, 0),
+            path = QtGui.QPainterPath()
+            path.addPolygon(QtGui.QPolygonF([
+                polygon[self.IndexL] + QtCore.QPointF(+5, 0),
+                polygon[self.IndexB] + QtCore.QPointF(0, -4),
+                polygon[self.IndexR] + QtCore.QPointF(-5, 0),
+                polygon[self.IndexT] + QtCore.QPointF(0, +4),
+                polygon[self.IndexL] + QtCore.QPointF(+5, 0),
             ]))
             fpolygon.addPolygon(polygon)
             fpolygon = fpolygon.subtracted(path)
 
         # INVERSE FUNCTIONAL POLYGON (SHAPE)
-        ipolygon = QPainterPath()
+        ipolygon = QtGui.QPainterPath()
         if not functional and inverseFunctional:
-            path = QPainterPath()
-            path.addPolygon(QPolygonF([
-                polygon[self.IndexL] + QPointF(+5, 0),
-                polygon[self.IndexB] + QPointF(0, -4),
-                polygon[self.IndexR] + QPointF(-5, 0),
-                polygon[self.IndexT] + QPointF(0, +4),
-                polygon[self.IndexL] + QPointF(+5, 0),
+            path = QtGui.QPainterPath()
+            path.addPolygon(QtGui.QPolygonF([
+                polygon[self.IndexL] + QtCore.QPointF(+5, 0),
+                polygon[self.IndexB] + QtCore.QPointF(0, -4),
+                polygon[self.IndexR] + QtCore.QPointF(-5, 0),
+                polygon[self.IndexT] + QtCore.QPointF(0, +4),
+                polygon[self.IndexL] + QtCore.QPointF(+5, 0),
             ]))
             ipolygon.addPolygon(polygon)
             ipolygon = ipolygon.subtracted(path)
 
         # FUNCTIONAL + INVERSE FUNCTIONAL POLYGONS (SHAPE)
         if functional and inverseFunctional:
-            path = QPainterPath()
-            path.addPolygon(QPolygonF([
-                polygon[self.IndexL] + QPointF(+5, 0),
-                polygon[self.IndexB] + QPointF(0, -4),
+            path = QtGui.QPainterPath()
+            path.addPolygon(QtGui.QPolygonF([
+                polygon[self.IndexL] + QtCore.QPointF(+5, 0),
+                polygon[self.IndexB] + QtCore.QPointF(0, -4),
                 polygon[self.IndexB],
                 polygon[self.IndexR],
                 polygon[self.IndexT],
-                polygon[self.IndexT] + QPointF(0, +4),
-                polygon[self.IndexL] + QPointF(+5, 0),
+                polygon[self.IndexT] + QtCore.QPointF(0, +4),
+                polygon[self.IndexL] + QtCore.QPointF(+5, 0),
             ]))
             fpolygon.addPolygon(polygon)
             fpolygon = fpolygon.subtracted(path)
-            path = QPainterPath()
-            path.addPolygon(QPolygonF([
+            path = QtGui.QPainterPath()
+            path.addPolygon(QtGui.QPolygonF([
                 polygon[self.IndexL],
                 polygon[self.IndexB],
-                polygon[self.IndexB] + QPointF(0, -4),
-                polygon[self.IndexR] + QPointF(-5, 0),
-                polygon[self.IndexT] + QPointF(0, +4),
+                polygon[self.IndexB] + QtCore.QPointF(0, -4),
+                polygon[self.IndexR] + QtCore.QPointF(-5, 0),
+                polygon[self.IndexT] + QtCore.QPointF(0, +4),
                 polygon[self.IndexT],
                 polygon[self.IndexL],
             ]))
@@ -718,18 +717,18 @@ class RoleNode(AbstractResizableNode):
             ipolygon = ipolygon.subtracted(path)
 
         # FUNCTIONAL POLYGON (PEN + BRUSH)
-        fpen = QPen(Qt.NoPen)
-        fbrush = QBrush(Qt.NoBrush)
+        fpen = QtGui.QPen(QtCore.Qt.NoPen)
+        fbrush = QtGui.QBrush(QtCore.Qt.NoBrush)
         if functional:
-            fpen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-            fbrush = QBrush(QColor(252, 252, 252, 255))
+            fpen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
+            fbrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
 
         # INVERSE FUNCTIONAL POLYGON (PEN + BRUSH)
-        ipen = QPen(Qt.NoPen)
-        ibrush = QBrush(Qt.NoBrush)
+        ipen = QtGui.QPen(QtCore.Qt.NoPen)
+        ibrush = QtGui.QBrush(QtCore.Qt.NoBrush)
         if inverseFunctional:
-            ipen = QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-            ibrush = QBrush(QColor(0, 0, 0, 255))
+            ipen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
+            ibrush = QtGui.QBrush(QtGui.QColor(0, 0, 0, 255))
 
         self.fpolygon.setPen(fpen)
         self.fpolygon.setBrush(fbrush)
