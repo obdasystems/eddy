@@ -143,47 +143,6 @@ class MenuFactory(QtCore.QObject):
             menu.addAction(action)
         else:
             menu.addAction(self.session.action('delete'))
-            menu.addAction(self.session.action('purge'))
-            menu.addAction(self.session.action('swap_edge'))
-            self.session.action('swap_edge').setVisible(edge.isSwapAllowed())
-        return menu
-
-    def buildInclusionEdgeMenu(self, diagram, edge, pos):
-        """
-        Build and return a QtWidgets.QMenu instance for Inclusion edges.
-        :type diagram: Diagram
-        :type edge: InclusionEdge
-        :type pos: QPointF
-        :rtype: QtWidgets.QMenu
-        """
-        menu = QtWidgets.QMenu()
-        breakpoint = edge.breakPointAt(pos)
-        if breakpoint is not None:
-            action = self.session.actions('remove_breakpoint')
-            action.setData((edge, breakpoint))
-            menu.addAction(action)
-        else:
-            menu.addAction(self.session.action('delete'))
-            menu.addAction(self.session.action('swap_edge'))
-            self.session.action('swap_edge').setVisible(edge.isSwapAllowed())
-        return menu
-
-    def buildInputEdgeMenu(self, diagram, edge, pos):
-        """
-        Build and return a QtWidgets.QMenu instance for Input edges.
-        :type diagram: Diagram
-        :type edge: InputEdge
-        :type pos: QPointF
-        :rtype: QtWidgets.QMenu
-        """
-        menu = QtWidgets.QMenu()
-        breakpoint = edge.breakPointAt(pos)
-        if breakpoint is not None:
-            action = self.session.actions('remove_breakpoint')
-            action.setData((edge, breakpoint))
-            menu.addAction(action)
-        else:
-            menu.addAction(self.session.action('delete'))
             menu.addAction(self.session.action('swap_edge'))
             self.session.action('swap_edge').setVisible(edge.isSwapAllowed())
         return menu
@@ -669,11 +628,13 @@ class MenuFactory(QtCore.QObject):
 
         ## EDGES
         if item.type() is Item.InclusionEdge:
-            return self.buildInclusionEdgeMenu(diagram, item, pos)
+            return self.buildGenericEdgeMenu(diagram, item, pos)
         if item.type() is Item.InputEdge:
-            return self.buildInputEdgeMenu(diagram, item, pos)
+            return self.buildGenericEdgeMenu(diagram, item, pos)
         if item.type() is Item.MembershipEdge:
             return self.buildMembershipEdgeMenu(diagram, item, pos)
+        if item.type() is Item.EquivalenceEdge:
+            return self.buildGenericEdgeMenu(diagram, item, pos)
 
         ## GENERIC
         if item.isNode():
