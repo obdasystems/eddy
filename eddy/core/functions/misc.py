@@ -35,8 +35,9 @@
 
 import itertools
 
-from PyQt5.QtCore import QPointF
+from PyQt5 import QtCore
 from traceback import format_exception as f_exc
+
 from eddy.core.regex import RE_QUOTED
 
 
@@ -186,15 +187,15 @@ def rangeF(start, stop, step):
 def snap(point, size, perform=True):
     """
     Snap each component of the given point according to the given size.
-    :type point: QPointF
+    :type point: QtCore.QPointF
     :type size: float
     :type perform: bool
-    :rtype: QPointF
+    :rtype: QtCore.QPointF
     """
     if perform:
         x = snapF(point.x(), size, 0, perform)
         y = snapF(point.y(), size, 0, perform)
-        return QPointF(x, y)
+        return QtCore.QPointF(x, y)
     return point
 
 

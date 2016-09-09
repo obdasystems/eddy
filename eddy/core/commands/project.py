@@ -33,10 +33,10 @@
 ##########################################################################
 
 
-from PyQt5.QtWidgets import QUndoCommand
+from PyQt5 import QtWidgets
 
 
-class CommandProjectSetIRI(QUndoCommand):
+class CommandProjectSetIRI(QtWidgets.QUndoCommand):
     """
     This command is used to set the IRI of a project.
     """
@@ -62,7 +62,7 @@ class CommandProjectSetIRI(QUndoCommand):
         self.project.sgnUpdated.emit()
 
 
-class CommandProjectSetPrefix(QUndoCommand):
+class CommandProjectSetPrefix(QtWidgets.QUndoCommand):
     """
     This command is used to set the prefix of a project.
     """
@@ -88,7 +88,7 @@ class CommandProjectSetPrefix(QUndoCommand):
         self.project.sgnUpdated.emit()
 
 
-class CommandProjectSetProfile(QUndoCommand):
+class CommandProjectSetProfile(QtWidgets.QUndoCommand):
     """
     This command is used to set the profile of a project.
     """

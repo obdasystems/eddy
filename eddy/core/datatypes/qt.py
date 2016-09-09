@@ -35,10 +35,9 @@
 
 import sys
 
-from PyQt5.QtCore import QRectF, QPointF, Qt
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPainterPath
-from PyQt5.QtGui import QColor, QBrush, QPen, QFont
-from PyQt5.QtWidgets import QPushButton, QToolButton
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 
 LINUX = sys.platform.startswith('linux')
@@ -46,9 +45,9 @@ MACOS = sys.platform.startswith('darwin')
 WIN32 = sys.platform.startswith('win32')
 
 
-class Font(QFont):
+class Font(QtGui.QFont):
     """
-    This class extends QFont providing better font rendering on different platforms.
+    This class extends QtGui.QFont providing better font rendering on different platforms.
     """
     def __init__(self, family, size=12, weight=-1, italic=False):
         """
@@ -63,9 +62,9 @@ class Font(QFont):
         super(Font, self).__init__(family, size, weight, italic)
 
 
-class BrushIcon(QIcon):
+class BrushIcon(QtGui.QIcon):
     """
-    This class extends QIcon and automatically creates an icon filled with the given color.
+    This class extends QtGui.QIcon and automatically creates an icon filled with the given color.
     """
     def __init__(self, width, height, color, border=None):
         """
@@ -75,22 +74,22 @@ class BrushIcon(QIcon):
         :type color: str
         :type border: str
         """
-        pixmap = QPixmap(width, height)
-        painter = QPainter(pixmap)
-        painter.setRenderHint(QPainter.Antialiasing)
-        path = QPainterPath()
-        path.addRect(QRectF(QPointF(0, 0), QPointF(width, height)))
-        painter.fillPath(path, QBrush(QColor(color)))
+        pixmap = QtGui.QPixmap(width, height)
+        painter = QtGui.QPainter(pixmap)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
+        path = QtGui.QPainterPath()
+        path.addRect(QtCore.QRectF(QtCore.QPointF(0, 0), QtCore.QPointF(width, height)))
+        painter.fillPath(path, QtGui.QBrush(QtGui.QColor(color)))
         if border:
-            painter.setPen(QPen(QColor(border), 0, Qt.SolidLine))
+            painter.setPen(QtGui.QPen(QtGui.QColor(border), 0, QtCore.Qt.SolidLine))
             painter.drawPath(path)
         painter.end()
         super().__init__(pixmap)
 
 
-class PHCQPushButton(QPushButton):
+class PHCQPushButton(QtWidgets.QPushButton):
     """
-    This class extends QPushButton providing mouse cursor change then the mour pointer hover the button area.
+    This class extends QtWidgets.QPushButton providing mouse cursor change then the mour pointer hover the button area.
     """
     def __init__(self, parent=None):
         """
@@ -107,7 +106,7 @@ class PHCQPushButton(QPushButton):
         Executed when the mouse enter the widget.
         :type event: QEvent
         """
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(QtCore.Qt.PointingHandCursor)
 
     def leaveEvent(self, event):
         """
@@ -117,9 +116,9 @@ class PHCQPushButton(QPushButton):
         self.unsetCursor()
 
 
-class PHCQToolButton(QToolButton):
+class PHCQToolButton(QtWidgets.QToolButton):
     """
-    This class extends QToolButton providing mouse cursor change then the mour pointer hover the button area.
+    This class extends QtWidgets.QToolButton providing mouse cursor change then the mour pointer hover the button area.
     """
     def __init__(self, parent=None):
         """
@@ -136,7 +135,7 @@ class PHCQToolButton(QToolButton):
         Executed when the mouse enter the widget.
         :type event: QEvent
         """
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(QtCore.Qt.PointingHandCursor)
 
     def leaveEvent(self, event):
         """

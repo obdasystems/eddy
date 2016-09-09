@@ -33,13 +33,13 @@
 ##########################################################################
 
 
-from PyQt5.QtWidgets import QUndoCommand
+from PyQt5 import QtWidgets
 
 from eddy.core.functions.misc import first
 from eddy.core.items.common import AbstractItem
 
 
-class CommandNodeAdd(QUndoCommand):
+class CommandNodeAdd(QtWidgets.QUndoCommand):
     """
     This command is used to add a node to a diagram.
     """
@@ -66,7 +66,7 @@ class CommandNodeAdd(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandNodeSetDepth(QUndoCommand):
+class CommandNodeSetDepth(QtWidgets.QUndoCommand):
     """
     This command is used to change the Z value of diagram nodes.
     """
@@ -95,7 +95,7 @@ class CommandNodeSetDepth(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandNodeRezize(QUndoCommand):
+class CommandNodeRezize(QtWidgets.QUndoCommand):
     """
     This command is used to resize nodes.
     """
@@ -160,7 +160,7 @@ class CommandNodeRezize(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandNodeMove(QUndoCommand):
+class CommandNodeMove(QtWidgets.QUndoCommand):
     """
     This command is used to move nodes (1 or more).
     """
@@ -233,7 +233,7 @@ class CommandNodeMove(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandNodeSwitchTo(QUndoCommand):
+class CommandNodeSwitchTo(QtWidgets.QUndoCommand):
     """
     This command is used to swap between 2 nodes.
     """
@@ -321,7 +321,7 @@ class CommandNodeSwitchTo(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandNodeChangeMeta(QUndoCommand):
+class CommandNodeChangeMeta(QtWidgets.QUndoCommand):
     """
     This command is used to change predicate nodes metadata.
     """
@@ -352,7 +352,7 @@ class CommandNodeChangeMeta(QUndoCommand):
             node.updateNode(selected=node.isSelected())
 
 
-class CommandNodeChangeInputsOrder(QUndoCommand):
+class CommandNodeChangeInputsOrder(QtWidgets.QUndoCommand):
     """
     This command is used to change the order of Role chain and Property assertion inputs.
     """
@@ -381,7 +381,7 @@ class CommandNodeChangeInputsOrder(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandNodeSetBrush(QUndoCommand):
+class CommandNodeSetBrush(QtWidgets.QUndoCommand):
     """
     This command is used to change the brush of predicate nodes.
     """

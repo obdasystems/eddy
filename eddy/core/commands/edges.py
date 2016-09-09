@@ -33,13 +33,13 @@
 ##########################################################################
 
 
-from PyQt5.QtWidgets import QUndoCommand
+from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.misc import first
 
 
-class CommandEdgeAdd(QUndoCommand):
+class CommandEdgeAdd(QtWidgets.QUndoCommand):
     """
     This command is used to add an edge to a diagram.
     """
@@ -96,7 +96,7 @@ class CommandEdgeAdd(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandEdgeBreakpointAdd(QUndoCommand):
+class CommandEdgeBreakpointAdd(QtWidgets.QUndoCommand):
     """
     This command is used to add a breakpoint on the given edge.
     """
@@ -127,7 +127,7 @@ class CommandEdgeBreakpointAdd(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandEdgeAnchorMove(QUndoCommand):
+class CommandEdgeAnchorMove(QtWidgets.QUndoCommand):
     """
     This command is used to move edge anchor points.
     """
@@ -158,7 +158,7 @@ class CommandEdgeAnchorMove(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandEdgeBreakpointMove(QUndoCommand):
+class CommandEdgeBreakpointMove(QtWidgets.QUndoCommand):
     """
     This command is used to move edge breakpoints.
     """
@@ -189,7 +189,7 @@ class CommandEdgeBreakpointMove(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandEdgeBreakpointRemove(QUndoCommand):
+class CommandEdgeBreakpointRemove(QtWidgets.QUndoCommand):
     """
     This command is used to delete edge breakpoints.
     """
@@ -219,7 +219,7 @@ class CommandEdgeBreakpointRemove(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandEdgeSwap(QUndoCommand):
+class CommandEdgeSwap(QtWidgets.QUndoCommand):
     """
     This command is used to swap the endpoints of edges.
     """

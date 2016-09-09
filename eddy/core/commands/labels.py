@@ -33,12 +33,12 @@
 ##########################################################################
 
 
-from PyQt5.QtWidgets import QUndoCommand
+from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item
 
 
-class CommandLabelChange(QUndoCommand):
+class CommandLabelChange(QtWidgets.QUndoCommand):
     """
     This command is used to edit items' labels.
     """
@@ -126,7 +126,7 @@ class CommandLabelChange(QUndoCommand):
                 self.diagram.identify(node)
 
 
-class CommandLabelMove(QUndoCommand):
+class CommandLabelMove(QtWidgets.QUndoCommand):
     """
     This command is used to move items' labels.
     """

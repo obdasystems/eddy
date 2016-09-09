@@ -33,10 +33,10 @@
 ##########################################################################
 
 
-from PyQt5.QtWidgets import QUndoCommand
+from PyQt5 import QtWidgets
 
 
-class CommandDiagramResize(QUndoCommand):
+class CommandDiagramResize(QtWidgets.QUndoCommand):
     """
     This command is used to resize the size of a diagram.
     """

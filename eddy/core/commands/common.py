@@ -33,13 +33,13 @@
 ##########################################################################
 
 
-from PyQt5.QtWidgets import QUndoCommand
+from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.misc import first
 
 
-class CommandItemsAdd(QUndoCommand):
+class CommandItemsAdd(QtWidgets.QUndoCommand):
     """
     This command is used to add a collection of items to a diagram.
     """
@@ -86,7 +86,7 @@ class CommandItemsAdd(QUndoCommand):
 
 
 # TODO: restore selection
-class CommandItemsRemove(QUndoCommand):
+class CommandItemsRemove(QtWidgets.QUndoCommand):
     """
     This command is used to remove multiple items from a diagram.
     """
@@ -162,7 +162,7 @@ class CommandItemsRemove(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandComposeAxiom(QUndoCommand):
+class CommandComposeAxiom(QtWidgets.QUndoCommand):
     """
     This command is used to compose axioms.
     """
@@ -211,7 +211,7 @@ class CommandComposeAxiom(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandItemsTranslate(QUndoCommand):
+class CommandItemsTranslate(QtWidgets.QUndoCommand):
     """
     This command is used to translate items.
     """
@@ -253,7 +253,7 @@ class CommandItemsTranslate(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandSnapItemsToGrid(QUndoCommand):
+class CommandSnapItemsToGrid(QtWidgets.QUndoCommand):
     """
     This command is used to snap diagram elements to the grid.
     """

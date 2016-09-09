@@ -35,15 +35,15 @@
 
 import math
 
-from PyQt5.QtCore import QPointF
-from PyQt5.QtGui import QPolygonF
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 
 def angle(p1, p2):
     """
     Returns the angle of the line connecting the given points.
-    :type p1: QPointF
-    :type p2: QPointF
+    :type p1: QtCore.QPointF
+    :type p2: QtCore.QPointF
     :rtype: float
     """
     return math.atan2(p1.y() - p2.y(), p2.x() - p1.x())
@@ -52,8 +52,8 @@ def angle(p1, p2):
 def distance(p1, p2):
     """
     Calculate the distance between the given points.
-    :type p1: QPointF
-    :type p2: QPointF
+    :type p1: QtCore.QPointF
+    :type p2: QtCore.QPointF
     :rtype: float
     """
     return math.sqrt(math.pow(p2.x() - p1.x(), 2) + math.pow(p2.y() - p1.y(), 2))
@@ -65,42 +65,42 @@ def intersection(l1, l2):
     Will return None if there is no intersection point.
     :type l1: QLineF
     :type l2: QLineF
-    :rtype: QPointF
+    :rtype: QtCore.QPointF
     """
     L = max(min(l1.p1().x(), l1.p2().x()), min(l2.p1().x(), l2.p2().x()))
     R = min(max(l1.p1().x(), l1.p2().x()), max(l2.p1().x(), l2.p2().x()))
     T = max(min(l1.p1().y(), l1.p2().y()), min(l2.p1().y(), l2.p2().y()))
     B = min(max(l1.p1().y(), l1.p2().y()), max(l2.p1().y(), l2.p2().y()))
     if (T, L) == (B, R):
-        return QPointF(L, T)
+        return QtCore.QPointF(L, T)
     return None
 
 
 def createArea(p1, p2, degrees, size):
     """
-    Creates an area between the given QPointF and according to the given angle and size.
-    :type p1: QPointF
-    :type p2: QPointF
+    Creates an area between the given QtCore.QPointF and according to the given angle and size.
+    :type p1: QtCore.QPointF
+    :type p2: QtCore.QPointF
     :type degrees: float
     :type size: int
-    :rtype: QPolygonF
+    :rtype: QtGui.QPolygonF
     """
     rad = math.radians(degrees)
     x = size / 2 * math.sin(rad)
     y = size / 2 * math.cos(rad)
-    a = QPointF(+x, +y)
-    b = QPointF(-x, -y)
-    return QPolygonF([p1 + a, p1 + b, p2 + b, p2 + a])
+    a = QtCore.QPointF(+x, +y)
+    b = QtCore.QPointF(-x, -y)
+    return QtGui.QPolygonF([p1 + a, p1 + b, p2 + b, p2 + a])
 
 
 def midpoint(p1, p2):
     """
     Calculate the midpoint between the given points.
-    :type p1: QPointF
-    :type p2: QPointF
-    :rtype: QPointF
+    :type p1: QtCore.QPointF
+    :type p2: QtCore.QPointF
+    :rtype: QtCore.QPointF
     """
-    return QPointF(((p1.x() + p2.x()) / 2), ((p1.y() + p2.y()) / 2))
+    return QtCore.QPointF(((p1.x() + p2.x()) / 2), ((p1.y() + p2.y()) / 2))
 
 
 def projection(line, p):
@@ -109,7 +109,7 @@ def projection(line, p):
     Will return a tuple containing the length of the segment connecting the
     original point with its projection, and the coordinate of the projected point.
     :type line: QLineF
-    :type p: QPointF
+    :type p: QtCore.QPointF
     :rtype: tuple
     """
     x1 = line.x1()
@@ -123,7 +123,7 @@ def projection(line, p):
     x4 = x3 - kk * (y2 - y1)
     y4 = y3 + kk * (x2 - x1)
 
-    p1 = QPointF(x3, y3)
-    p2 = QPointF(x4, y4)
+    p1 = QtCore.QPointF(x3, y3)
+    p2 = QtCore.QPointF(x4, y4)
 
     return distance(p1, p2), p2
