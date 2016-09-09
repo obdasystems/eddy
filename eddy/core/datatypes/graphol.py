@@ -85,12 +85,13 @@ class Item(IntEnum):
 
     # EDGES
     InclusionEdge = 65554
-    InputEdge = 65555
-    MembershipEdge = 65556
+    EquivalenceEdge = 65555
+    InputEdge = 65556
+    MembershipEdge = 65557
 
     # EXTRA
-    Label = 65557
-    Undefined = 65558
+    Label = 65558
+    Undefined = 65559
 
     @classmethod
     def forValue(cls, value):

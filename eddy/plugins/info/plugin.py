@@ -259,7 +259,6 @@ class InfoWidget(QScrollArea):
         self.infoEmpty = QWidget(self.stacked)
         self.infoProject = ProjectInfo(self.session, self.stacked)
         self.infoEdge = EdgeInfo(self.session, self.stacked)
-        self.infoInclusionEdge = InclusionEdgeInfo(self.session, self.stacked)
         self.infoNode = NodeInfo(self.session, self.stacked)
         self.infoPredicateNode = PredicateNodeInfo(self.session, self.stacked)
         self.infoAttributeNode = AttributeNodeInfo(self.session, self.stacked)
@@ -269,7 +268,6 @@ class InfoWidget(QScrollArea):
         self.infoFacet = FacetNodeInfo(self.session, self.stacked)
         self.stacked.addWidget(self.infoProject)
         self.stacked.addWidget(self.infoEdge)
-        self.stacked.addWidget(self.infoInclusionEdge)
         self.stacked.addWidget(self.infoNode)
         self.stacked.addWidget(self.infoPredicateNode)
         self.stacked.addWidget(self.infoAttributeNode)
@@ -423,10 +421,7 @@ class InfoWidget(QScrollArea):
                         else:
                             show = self.infoNode
                 else:
-                    if item.type() is Item.InclusionEdge:
-                        show = self.infoInclusionEdge
-                    else:
-                        show = self.infoEdge
+                    show = self.infoEdge
                 show.updateData(item)
         elif self.project:
             show = self.infoProject
@@ -818,43 +813,6 @@ class EdgeInfo(AbstractInfo):
         self.typeField.setValue(edge.shortName.capitalize())
         self.typeField.home(True)
         self.typeField.deselect()
-
-
-class InclusionEdgeInfo(EdgeInfo):
-    """
-    This class implements the information box for inclusion edges.
-    """
-    def __init__(self, session, parent=None):
-        """
-        Initialize the inclusion edge information box.
-        :type session: Session
-        :type parent: QWidget
-        """
-        super().__init__(session, parent)
-
-        arial12r = Font('Arial', 12)
-
-        self.equivalenceKey = Key('Equivalence', self)
-        self.equivalenceKey.setFont(arial12r)
-        parent = Parent(self)
-        self.equivalenceBox = CheckBox(parent)
-        self.equivalenceBox.setFont(arial12r)
-        self.equivalenceBox.setCheckable(True)
-        connect(self.equivalenceBox.clicked, self.session.doToggleEdgeEquivalence)
-
-        self.generalLayout.addRow(self.equivalenceKey, parent)
-
-    #############################################
-    #   INTERFACE
-    #################################
-
-    def updateData(self, edge):
-        """
-        Fetch new information and fill the widget with data.
-        :type edge: InclusionEdge
-        """
-        super().updateData(edge)
-        self.equivalenceBox.setChecked(edge.equivalence)
 
 
 class NodeInfo(AbstractInfo):

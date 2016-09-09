@@ -1319,39 +1319,37 @@ class OWLProjectExporterWorker(QObject):
 
                 if e.type() is Item.InclusionEdge:
 
-                    if not e.equivalence:
-
-                        if e.source.identity() is Identity.Concept and e.target.identity() is Identity.Concept:
-                            self.axiomSubclassOf(e)
-                        elif e.source.identity() is Identity.Role and e.target.identity() is Identity.Role:
-                            if e.source.type() is Item.RoleChainNode:
-                                self.axiomSubPropertyChainOf(e)
-                            elif e.source.type() in {Item.RoleNode, Item.RoleInverseNode}:
-                                if e.target.type() is Item.ComplementNode:
-                                    self.axiomDisjointObjectProperties(e)
-                                elif e.target.type() in {Item.RoleNode, Item.RoleInverseNode}:
-                                    self.axiomSubObjectPropertyOf(e)
-                        elif e.source.identity() is Identity.Attribute and e.target.identity() is Identity.Attribute:
-                            if e.source.type() is Item.AttributeNode:
-                                if e.target.type() is Item.ComplementNode:
-                                    self.axiomDisjointDataProperties(e)
-                                elif e.target.type() is Item.AttributeNode:
-                                    self.axiomSubDataPropertyOfAxiom(e)
-                        elif e.source.type() is Item.RangeRestrictionNode and e.target.identity() is Identity.ValueDomain:
-                            self.axiomDataPropertyRange(e)
-                        else:
-                            raise MalformedDiagramError(e, 'type mismatch in inclusion assertion')
-
+                    if e.source.identity() is Identity.Concept and e.target.identity() is Identity.Concept:
+                        self.axiomSubclassOf(e)
+                    elif e.source.identity() is Identity.Role and e.target.identity() is Identity.Role:
+                        if e.source.type() is Item.RoleChainNode:
+                            self.axiomSubPropertyChainOf(e)
+                        elif e.source.type() in {Item.RoleNode, Item.RoleInverseNode}:
+                            if e.target.type() is Item.ComplementNode:
+                                self.axiomDisjointObjectProperties(e)
+                            elif e.target.type() in {Item.RoleNode, Item.RoleInverseNode}:
+                                self.axiomSubObjectPropertyOf(e)
+                    elif e.source.identity() is Identity.Attribute and e.target.identity() is Identity.Attribute:
+                        if e.source.type() is Item.AttributeNode:
+                            if e.target.type() is Item.ComplementNode:
+                                self.axiomDisjointDataProperties(e)
+                            elif e.target.type() is Item.AttributeNode:
+                                self.axiomSubDataPropertyOfAxiom(e)
+                    elif e.source.type() is Item.RangeRestrictionNode and e.target.identity() is Identity.ValueDomain:
+                        self.axiomDataPropertyRange(e)
                     else:
+                        raise MalformedDiagramError(e, 'type mismatch in inclusion assertion')
 
-                        if e.source.identity() is Identity.Concept and e.target.identity() is Identity.Concept:
-                            self.axiomEquivalentClasses(e)
-                        elif e.source.identity() is Identity.Role and e.target.identity() is Identity.Role:
-                            self.axiomEquivalentObjectProperties(e)
-                        elif e.source.identity() is Identity.Attribute and e.target.identity() is Identity.Attribute:
-                            self.axiomEquivalentDataProperties(e)
-                        else:
-                            raise MalformedDiagramError(e, 'type mismatch in equivalence assertion')
+                elif e.type() is Item.EquivalenceEdge:
+
+                    if e.source.identity() is Identity.Concept and e.target.identity() is Identity.Concept:
+                        self.axiomEquivalentClasses(e)
+                    elif e.source.identity() is Identity.Role and e.target.identity() is Identity.Role:
+                        self.axiomEquivalentObjectProperties(e)
+                    elif e.source.identity() is Identity.Attribute and e.target.identity() is Identity.Attribute:
+                        self.axiomEquivalentDataProperties(e)
+                    else:
+                        raise MalformedDiagramError(e, 'type mismatch in equivalence assertion')
 
                 elif e.type() is Item.MembershipEdge:
 

@@ -82,6 +82,7 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
             Item.UnionNode: self.exportUnionNode,
             Item.ValueDomainNode: self.exportValueDomainNode,
             Item.InclusionEdge: self.exportInclusionEdge,
+            Item.EquivalenceEdge: self.exportEquivalenceEdge,
             Item.InputEdge: self.exportInputEdge,
             Item.MembershipEdge: self.exportMembershipEdge,
         }
@@ -238,7 +239,15 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :type edge: InclusionEdge
         :rtype: QDomElement
         """
-        return self.exportGenericEdge(edge, 'line', 'standard' if edge.equivalence else '', 'standard')
+        return self.exportGenericEdge(edge, 'line', 'standard', '')
+
+    def exportEquivalenceEdge(self, edge):
+        """
+        Export the given edge into a QDomElement.
+        :type edge: EquivalenceEdge
+        :rtype: QDomElement
+        """
+        return self.exportGenericEdge(edge, 'line', 'standard', 'standard')
 
     def exportInputEdge(self, edge):
         """

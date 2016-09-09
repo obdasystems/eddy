@@ -55,7 +55,6 @@ from eddy.core.commands.common import CommandItemsTranslate
 from eddy.core.commands.common import CommandSnapItemsToGrid
 from eddy.core.commands.edges import CommandEdgeBreakpointRemove
 from eddy.core.commands.edges import CommandEdgeSwap
-from eddy.core.commands.edges import CommandEdgeToggleEquivalence
 from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.nodes import CommandNodeSwitchTo
@@ -440,12 +439,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             triggered=self.doRemoveBreakpoint))
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_equivalence_black'), 'Toggle edge equivalence', self,
-            objectName='toggle_edge_equivalence', shortcut='ALT+C', enabled=False,
-            statusTip='Toggle the equivalence for all the selected inclusion edges',
-            triggered=self.doToggleEdgeEquivalence))
-
-        self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_swap_horiz_black'), 'Swap edge', self,
             objectName='swap_edge', shortcut='ALT+S', enabled=False,
             statusTip='Swap the direction of all the selected edges',
@@ -666,7 +659,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu.addAction(self.action('send_to_back'))
         menu.addSeparator()
         menu.addAction(self.action('swap_edge'))
-        menu.addAction(self.action('toggle_edge_equivalence'))
         menu.addSeparator()
         menu.addAction(self.action('select_all'))
         menu.addAction(self.action('snap_to_grid'))
@@ -998,8 +990,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         toolbar.addAction(self.action('send_to_back'))
         toolbar.addSeparator()
         toolbar.addAction(self.action('swap_edge'))
-        toolbar.addAction(self.action('toggle_edge_equivalence'))
-        toolbar.addSeparator()
         toolbar.addWidget(self.widget('button_set_brush'))
 
         toolbar = self.widget('view_toolbar')
@@ -1832,21 +1822,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog.exec_()
 
     @QtCore.pyqtSlot()
-    def doToggleEdgeEquivalence(self):
-        """
-        Set/unset the 'equivalence' attribute for all the selected Inclusion edges.
-        """
-        diagram = self.mdi.activeDiagram()
-        if diagram:
-            diagram.setMode(DiagramMode.Idle)
-            fe = lambda x: x.type() is Item.InclusionEdge and x.isEquivalenceAllowed()
-            selected = diagram.selectedEdges(filter_on_edges=fe)
-            if selected:
-                comp = sum(edge.equivalence for edge in selected) <= len(selected) / 2
-                data = {edge: {'from': edge.equivalence, 'to': comp} for edge in selected}
-                self.undostack.push(CommandEdgeToggleEquivalence(diagram, data))
-
-    @QtCore.pyqtSlot()
     def doToggleGrid(self):
         """
         Toggle snap to grid setting.
@@ -1871,7 +1846,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         isProjectEmpty = self.project.isEmpty()
         isUndoStackClean = self.undostack.isClean()
         isEdgeSwapEnabled = False
-        isEdgeToggleEnabled = False
 
         if self.mdi.subWindowList():
             diagram = self.mdi.activeDiagram()
@@ -1886,12 +1860,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 isPredicateSelected = any([i.type() in predicates for i in nodes])
                 if isEdgeSelected:
                     for edge in edges:
-                        if not isEdgeSwapEnabled:
-                            isEdgeSwapEnabled = edge.isSwapAllowed()
-                        if not isEdgeToggleEnabled:
-                            if edge.type() is Item.InclusionEdge:
-                                isEdgeToggleEnabled = edge.isEquivalenceAllowed()
-                        if isEdgeSwapEnabled and isEdgeToggleEnabled:
+                        isEdgeSwapEnabled = edge.isSwapAllowed()
+                        if isEdgeSwapEnabled:
                             break
 
         self.action('bring_to_front').setEnabled(isNodeSelected)
@@ -1909,7 +1879,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.action('snap_to_grid').setEnabled(isDiagramActive)
         self.action('syntax_check').setEnabled(not isProjectEmpty)
         self.action('swap_edge').setEnabled(isEdgeSelected and isEdgeSwapEnabled)
-        self.action('toggle_edge_equivalence').setEnabled(isEdgeSelected and isEdgeToggleEnabled)
         self.action('toggle_grid').setEnabled(isDiagramActive)
         self.widget('button_set_brush').setEnabled(isPredicateSelected)
         self.widget('profile_switch').setCurrentText(self.project.profile.name())

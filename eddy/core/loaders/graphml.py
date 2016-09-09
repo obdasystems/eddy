@@ -93,6 +93,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
             Item.UnionNode: self.buildUnionNode,
             Item.ValueDomainNode: self.buildValueDomainNode,
             Item.InclusionEdge: self.buildInclusionEdge,
+            Item.EquivalenceEdge: self.buildEquivalenceEdge,
             Item.InputEdge: self.buildInputEdge,
             Item.MembershipEdge: self.buildMembershipEdge,
         }
@@ -250,22 +251,32 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
     #   NODES
     #################################
 
+    def buildEquivalenceEdge(self, element):
+        """
+        Build an Equivalence edge using the given QDomElement.
+        :type element: QDomElement
+        :rtype: EquivalenceEdge
+        """
+        edge = self.buildEdgeFromGenericEdge(Item.EquivalenceEdge, element)
+        if edge:
+            edge.updateEdge()
+        return edge
+
     def buildInclusionEdge(self, element):
         """
         Build an Inclusion edge using the given QDomElement.
         :type element: QDomElement
         :rtype: InclusionEdge
         """
+        data = element.firstChildElement('data')
+        while not data.isNull():
+            if data.attribute('key', '') == self.keys['edge_key']:
+                polyLineEdge = data.firstChildElement('y:PolyLineEdge')
+                arrows = polyLineEdge.firstChildElement('y:Arrows')
+                if arrows.attribute('source', '') == 'standard' and arrows.attribute('target', '') == 'standard':
+                    return self.buildEquivalenceEdge(element)
         edge = self.buildEdgeFromGenericEdge(Item.InclusionEdge, element)
         if edge:
-            data = element.firstChildElement('data')
-            while not data.isNull():
-                if data.attribute('key', '') == self.keys['edge_key']:
-                    polyLineEdge = data.firstChildElement('y:PolyLineEdge')
-                    arrows = polyLineEdge.firstChildElement('y:Arrows')
-                    if arrows.attribute('source', '') == 'standard' and arrows.attribute('target', '') == 'standard':
-                        edge.equivalence = True
-                data = data.nextSiblingElement('data')
             edge.updateEdge()
         return edge
 

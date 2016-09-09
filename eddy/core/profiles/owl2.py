@@ -67,10 +67,10 @@ class OWL2Profile(AbstractProfile):
         try:
 
             #############################################
-            # EDGE = INCLUSION
+            # EDGE = INCLUSION | EQUIVALENCE
             #################################
 
-            if edge.type() is Item.InclusionEdge:
+            if edge.type() in {Item.InclusionEdge, Item.EquivalenceEdge}:
 
                 if source is target:
                     # Self connection is forbidden.
@@ -88,13 +88,13 @@ class OWL2Profile(AbstractProfile):
                 if remaining - supported:
                     # Inclusion assertions can be specified only between graphol expressions: Concept
                     # expressions, Role expressions, Value-Domain expressions, Attribute expressions.
-                    raise SyntaxError('Type mismatch: inclusion must involve two graphol expressions')
+                    raise SyntaxError('Type mismatch: {0} must involve two graphol expressions', edge.shortName)
 
                 if Identity.Neutral not in {source.identity(), target.identity()} and source.identity() is not target.identity():
                     # If both nodes are not NEUTRAL and they have a different identity we can't create an inclusion.
                     idA = source.identity().value
                     idB = target.identity().value
-                    raise SyntaxError('Type mismatch: inclusion between {0} and {1}'.format(idA, idB))
+                    raise SyntaxError('Type mismatch: {0} between {1} and {2}'.format(edge.shortName, idA, idB))
 
                 if not remaining:
                     # If source and target nodes do not share a common identity then we can't create an inclusion.
@@ -109,7 +109,7 @@ class OWL2Profile(AbstractProfile):
                         # attribute node, and therefor its identity is set to value-domain) and targeting
                         # a value-domain expression, either complex or atomic, eventually excluding the
                         # attribute range restriction as target.
-                        raise SyntaxError('Type mismatch: inclusion between value-domain expressions')
+                        raise SyntaxError('Type mismatch: {0} between value-domain expressions', edge.shortName)
 
                 #############################################
                 # INCLUSION WITH ROLE/ATTRIBUTE COMPLEMENT
@@ -117,19 +117,21 @@ class OWL2Profile(AbstractProfile):
 
                 if {Identity.Attribute, Identity.Role} & {source.identity(), target.identity()}:
 
-                    if source.type() is Item.ComplementNode:
-                        # Complement nodes can only be the target of Role and Attribute inclusions since they
-                        # are used to generate OWLDisjointObjectPropertiesAxiom and OWLDisjointDataPropertiesAxiom.
-                        # Differently we allow inclusions targeting concept nodes to source from complement nodes.
-                        identity = first({source.identity(), target.identity()} - {Identity.Neutral}).value.lower()
-                        raise SyntaxError('Invalid source for {0} inclusion: {1}'.format(identity, source.name))
+                    if edge.type() is Item.InclusionEdge:
 
-                    if target.type() is Item.ComplementNode and edge.equivalence:
-                        # Complement nodes can only be the target of Role and Attribute inclusions since they
-                        # are used to generate OWLDisjointObjectPropertiesAxiom and OWLDisjointDataPropertiesAxiom.
-                        # Differently we allow inclusions targeting concept nodes to source from complement nodes.
-                        identity = first({source.identity(), target.identity()} - {Identity.Neutral}).value.lower()
-                        raise SyntaxError('Equivalence is forbidden when expressing {0} disjointness'.format(identity))
+                        if source.type() is Item.ComplementNode:
+                            # Complement nodes can only be the target of Role and Attribute inclusions since they
+                            # are used to generate OWLDisjointObjectPropertiesAxiom and OWLDisjointDataPropertiesAxiom.
+                            # Differently we allow inclusions targeting concept nodes to source from complement nodes.
+                            identity = first({source.identity(), target.identity()} - {Identity.Neutral}).value.lower()
+                            raise SyntaxError('Invalid source for {0} inclusion: {1}'.format(identity, source.name))
+
+                    if edge.type() is Item.EquivalenceEdge:
+
+                        if Item.ComplementNode in {source.type(), target.type()}:
+                            # Equivalence edges cannot be attached to complement nodes with Attribute or Role as inputs.
+                            identity = first({source.identity(), target.identity()} - {Identity.Neutral}).value.lower()
+                            raise SyntaxError('Equivalence is forbidden when expressing {0} disjointness'.format(identity))
 
                 #############################################
                 # INCLUSION WITH ROLE CHAIN
@@ -140,11 +142,14 @@ class OWL2Profile(AbstractProfile):
                     # in basic role expressions, that are either Role nodes or RoleInverse
                     # nodes with one input Role node (this check is done elsewhere).
                     if target.type() not in {Item.RoleNode, Item.RoleInverseNode}:
-                        raise SyntaxError('Inclusion between {0} and {0} is forbidden'.format(source.name, target.name))
+                        name = edge.shortName.title()
+                        idA = source.name
+                        idB = target.name
+                        raise SyntaxError('{0} between {0} and {0} is forbidden'.format(name, idA, idB))
 
                 if target.type() is Item.RoleChainNode:
                     # Role expressions constructed with chain nodes cannot be the target of any inclusion edge.
-                    raise SyntaxError('Role chain nodes cannot be target of a Role inclusion')
+                    raise SyntaxError('Role chain nodes cannot be target of a Role {0}', edge.shortName)
 
             #############################################
             # EDGE = INPUT

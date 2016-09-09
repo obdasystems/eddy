@@ -41,19 +41,21 @@ from PyQt5 import QtGui
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.geometry import createArea
 from eddy.core.items.edges.common.base import AbstractEdge
+from eddy.core.polygon import Polygon
 
 
-class InclusionEdge(AbstractEdge):
+class EquivalenceEdge(AbstractEdge):
     """
-    This class implements the 'Inclusion' edge.
+    This class implements the 'Equivalence' edge.
     """
-    Type = Item.InclusionEdge
+    Type = Item.EquivalenceEdge
 
     def __init__(self, **kwargs):
         """
         Initialize the edge.
         """
         super().__init__(**kwargs)
+        self.tail = Polygon(QtGui.QPolygonF())
 
     #############################################
     #   INTERFACE
@@ -67,6 +69,7 @@ class InclusionEdge(AbstractEdge):
         path = QtGui.QPainterPath()
         path.addPath(self.selection.geometry())
         path.addPolygon(self.head.geometry())
+        path.addPolygon(self.tail.geometry())
         for polygon in self.handles:
             path.addEllipse(polygon.geometry())
         for polygon in self.anchors.values():
@@ -104,6 +107,10 @@ class InclusionEdge(AbstractEdge):
         painter.setPen(self.head.pen())
         painter.setBrush(self.head.brush())
         painter.drawPolygon(self.head.geometry())
+        # TAIL POLYGON
+        painter.setPen(self.tail.pen())
+        painter.setBrush(self.tail.brush())
+        painter.drawPolygon(self.tail.geometry())
         # BREAKPOINTS
         for polygon in self.handles:
             painter.setPen(polygon.pen())
@@ -123,6 +130,7 @@ class InclusionEdge(AbstractEdge):
         path = QtGui.QPainterPath()
         path.addPath(self.path.geometry())
         path.addPolygon(self.head.geometry())
+        path.addPolygon(self.tail.geometry())
         return path
 
     def setText(self, text):
@@ -147,11 +155,14 @@ class InclusionEdge(AbstractEdge):
         path = QtGui.QPainterPath()
         path.addPath(self.selection.geometry())
         path.addPolygon(self.head.geometry())
+        path.addPolygon(self.tail.geometry())
+
         if self.isSelected():
             for polygon in self.handles:
                 path.addEllipse(polygon.geometry())
             for polygon in self.anchors.values():
                 path.addEllipse(polygon.geometry())
+
         return path
 
     def text(self):
@@ -190,6 +201,19 @@ class InclusionEdge(AbstractEdge):
             point3 = point1 - QtCore.QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
             return QtGui.QPolygonF([point1, point2, point3])
 
+        def createTail(point1, angle, size):
+            """
+            Create the tail polygon.
+            :type point1: QtCore.QPointF
+            :type angle: float
+            :type size: int
+            :rtype: QtGui.QPolygonF
+            """
+            rad = radians(angle)
+            point2 = point1 + QtCore.QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+            point3 = point1 + QtCore.QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+            return QtGui.QPolygonF([point1, point2, point3])
+
         if visible is None:
             visible = self.canDraw()
 
@@ -209,6 +233,7 @@ class InclusionEdge(AbstractEdge):
         selection = QtGui.QPainterPath()
         path = QtGui.QPainterPath()
         head = QtGui.QPolygonF()
+        tail = QtGui.QPolygonF()
 
         if len(collection) == 1:
             subpath = collection[0]
@@ -219,6 +244,7 @@ class InclusionEdge(AbstractEdge):
                 path.lineTo(p2)
                 selection.addPolygon(createArea(p1, p2, subpath.angle(), 8))
                 head = createHead(p2, subpath.angle(), 12)
+                tail = createTail(p1, subpath.angle(), 12)
         elif len(collection) > 1:
             subpath1 = collection[0]
             subpathN = collection[-1]
@@ -240,10 +266,12 @@ class InclusionEdge(AbstractEdge):
                 path.lineTo(p22)
                 selection.addPolygon(createArea(p21, p22, subpathN.angle(), 8))
                 head = createHead(p22, subpathN.angle(), 12)
+                tail = createTail(p11, subpath1.angle(), 12)
 
         self.selection.setGeometry(selection)
         self.path.setGeometry(path)
         self.head.setGeometry(head)
+        self.tail.setGeometry(tail)
 
         ##########################################
         # PATH, HEAD, TAIL (BRUSH)
@@ -252,14 +280,20 @@ class InclusionEdge(AbstractEdge):
         headBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
         headPen = QtGui.QPen(QtCore.Qt.NoPen)
         pathPen = QtGui.QPen(QtCore.Qt.NoPen)
+        tailBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
+        tailPen = QtGui.QPen(QtCore.Qt.NoPen)
 
         if visible:
             headBrush = QtGui.QBrush(QtGui.QColor(0, 0, 0, 255))
             headPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
             pathPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
+            tailBrush = QtGui.QBrush(QtGui.QColor(0, 0, 0, 255))
+            tailPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
 
         self.head.setBrush(headBrush)
         self.head.setPen(headPen)
         self.path.setPen(pathPen)
+        self.tail.setBrush(tailBrush)
+        self.tail.setPen(tailPen)
 
-        super(InclusionEdge, self).updateEdge(selected, visible, breakpoint, anchor, **kwargs)
+        super(EquivalenceEdge, self).updateEdge(selected, visible, breakpoint, anchor, **kwargs)

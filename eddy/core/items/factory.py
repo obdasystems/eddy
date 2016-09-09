@@ -37,6 +37,7 @@ from PyQt5 import QtCore
 
 from eddy.core.datatypes.graphol import Item
 
+from eddy.core.items.edges.equivalence import EquivalenceEdge
 from eddy.core.items.edges.inclusion import InclusionEdge
 from eddy.core.items.edges.input import InputEdge
 from eddy.core.items.edges.membership import MembershipEdge
@@ -130,6 +131,8 @@ class ItemFactory(QtCore.QObject):
             return ValueDomainNode
         if item is Item.InclusionEdge:
             return InclusionEdge
+        if item is Item.EquivalenceEdge:
+            return EquivalenceEdge
         if item is Item.InputEdge:
             return InputEdge
         if item is Item.MembershipEdge:

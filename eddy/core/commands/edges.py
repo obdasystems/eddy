@@ -219,43 +219,6 @@ class CommandEdgeBreakpointRemove(QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandEdgeToggleEquivalence(QUndoCommand):
-    """
-    This command is used to toggle the 'equivalence' attribute of Inclusion edges.
-    """
-    def __init__(self, diagram, data):
-        """
-        Initialize the command.
-        :type diagram: Diagram
-        :type data: dict
-        """
-        self.diagram = diagram
-        self.data = data
-        if len(data) == 1:
-            name = 'toggle inclusion edge equivalence'
-        else:
-            name = 'toggle equivalence for {0} inclusion edges'.format(len(data))
-        super().__init__(name)
-
-    def redo(self):
-        """redo the command"""
-        # Set the equivalence flag.
-        for edge in self.data:
-            edge.equivalence = self.data[edge]['to']
-            edge.updateEdge()
-        # Emit updated signal.
-        self.diagram.sgnUpdated.emit()
-
-    def undo(self):
-        """undo the command"""
-        # Un-set the equivalence flag.
-        for edge in self.data:
-            edge.equivalence = self.data[edge]['from']
-            edge.updateEdge()
-        # Emit updated signal.
-        self.diagram.sgnUpdated.emit()
-
-
 class CommandEdgeSwap(QUndoCommand):
     """
     This command is used to swap the endpoints of edges.

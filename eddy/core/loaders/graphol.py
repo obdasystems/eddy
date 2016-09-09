@@ -98,6 +98,7 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
             Item.UnionNode: self.buildUnionNode,
             Item.ValueDomainNode: self.buildValueDomainNode,
             Item.InclusionEdge: self.buildInclusionEdge,
+            Item.EquivalenceEdge: self.buildEquivalenceEdge,
             Item.InputEdge: self.buildInputEdge,
             Item.MembershipEdge: self.buildMembershipEdge,
         }
@@ -122,6 +123,7 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
             'value-domain': Item.ValueDomainNode,
             'value-restriction': Item.FacetNode,
             'inclusion': Item.InclusionEdge,
+            'equivalence': Item.EquivalenceEdge,
             'input': Item.InputEdge,
             'instance-of': Item.MembershipEdge,
             'membership': Item.MembershipEdge,
@@ -313,15 +315,23 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
     #   EDGES
     #################################
 
+    def buildEquivalenceEdge(self, element):
+        """
+        Build an Equivalence edge using the given QDomElement.
+        :type element: QDomElement
+        :rtype: EquivalenceEdge
+        """
+        return self.buildGenericEdge(Item.EquivalenceEdge, element)
+
     def buildInclusionEdge(self, element):
         """
         Build an Inclusion edge using the given QDomElement.
         :type element: QDomElement
         :rtype: InclusionEdge
         """
-        edge = self.buildGenericEdge(Item.InclusionEdge, element)
-        edge.equivalence = self.getEdgeEquivalenceFromElement(element)
-        return edge
+        if self.getEdgeEquivalenceFromElement(element):
+            return self.buildEquivalenceEdge(element)
+        return self.buildGenericEdge(Item.InclusionEdge, element)
 
     def buildInputEdge(self, element):
         """

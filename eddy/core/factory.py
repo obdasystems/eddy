@@ -165,9 +165,6 @@ class MenuFactory(QtCore.QObject):
         else:
             menu.addAction(self.session.action('delete'))
             menu.addAction(self.session.action('swap_edge'))
-            menu.addSeparator()
-            menu.addAction(self.session.action('toggle_edge_equivalence'))
-            self.session.action('toggle_edge_equivalence').setVisible(edge.isEquivalenceAllowed())
             self.session.action('swap_edge').setVisible(edge.isSwapAllowed())
         return menu
 

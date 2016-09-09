@@ -179,7 +179,7 @@ class AbstractNode(AbstractItem):
         f1 = filter_on_edges or f0
         f2 = filter_on_nodes or f0
         return {x for x in [e.other(self) for e in self.edges \
-                    if (e.target is self or e.type() is Item.InclusionEdge and e.equivalence) \
+                    if (e.target is self or e.type() is Item.EquivalenceEdge) \
                         and f1(e)] if f2(x)}
 
     def intersection(self, line):
@@ -232,7 +232,7 @@ class AbstractNode(AbstractItem):
         f1 = filter_on_edges or f0
         f2 = filter_on_nodes or f0
         return {x for x in [e.other(self) for e in self.edges \
-                    if (e.source is self or e.type() is Item.InclusionEdge and e.equivalence) \
+                    if (e.source is self or e.type() is Item.EquivalenceEdge) \
                         and f1(e)] if f2(x)}
 
     @abstractmethod

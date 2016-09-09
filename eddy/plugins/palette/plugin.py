@@ -280,6 +280,7 @@ class PaletteWidget(QWidget):
             Item.DisjointUnionNode,
             Item.PropertyAssertionNode,
             Item.InclusionEdge,
+            Item.EquivalenceEdge,
             Item.InputEdge,
             Item.MembershipEdge,
         ]
@@ -802,7 +803,7 @@ class PaletteButton(QToolButton):
                     QPointF(-23, 0),
                 ]))
                 painter.setFont(Font('Arial', 11, Font.Light))
-                painter.drawText(QRectF(-23, -15, 46, 30), Qt.AlignCenter, 'inv')
+                painter.drawText(QRectF(-23, -15, 46, 30), Qt.AlignCenter, 'not')
                 painter.end()
 
             #############################################
@@ -910,6 +911,34 @@ class PaletteButton(QToolButton):
                 painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
                 painter.setBrush(QBrush(QColor(0, 0, 0, 255)))
                 painter.drawPolygon(H1)
+                painter.end()
+
+            #############################################
+            # EQUIVALENCE EDGE
+            #################################
+
+            elif item is Item.EquivalenceEdge:
+
+                P1 = QPointF(3, 22)
+                P2 = QPointF(55, 22)
+                L1 = QLineF(P1, P2)
+                A1 = L1.angle()
+                P1 = QPointF(L1.p2().x(), L1.p2().y())
+                P2 = P1 - QPointF(sin(A1 + M_PI / 3.0) * 8, cos(A1 + M_PI / 3.0) * 8)
+                P3 = P1 - QPointF(sin(A1 + M_PI - M_PI / 3.0) * 8, cos(A1 + M_PI - M_PI / 3.0) * 8)
+                H1 = QPolygonF([P1, P2, P3])
+                P1 = QPointF(L1.p1().x(), L1.p1().y())
+                P2 = P1 + QPointF(sin(A1 + M_PI / 3.0) * 8, cos(A1 + M_PI / 3.0) * 8)
+                P3 = P1 + QPointF(sin(A1 + M_PI - M_PI / 3.0) * 8, cos(A1 + M_PI - M_PI / 3.0) * 8)
+                T1 = QPolygonF([P1, P2, P3])
+                painter = QPainter(pixmap)
+                painter.setRenderHint(QPainter.Antialiasing)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.drawLine(L1)
+                painter.setPen(QPen(QBrush(QColor(0, 0, 0, 255)), 1.1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.setBrush(QBrush(QColor(0, 0, 0, 255)))
+                painter.drawPolygon(H1)
+                painter.drawPolygon(T1)
                 painter.end()
 
             #############################################

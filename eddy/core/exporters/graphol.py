@@ -79,6 +79,7 @@ class GrapholDiagramExporter(AbstractDiagramExporter):
             Item.UnionNode: self.exportUnionNode,
             Item.ValueDomainNode: self.exportValueDomainNode,
             Item.InclusionEdge: self.exportInclusionEdge,
+            Item.EquivalenceEdge: self.exportEquivalenceEdge,
             Item.InputEdge: self.exportInputEdge,
             Item.MembershipEdge: self.exportMembershipEdge,
         }
@@ -102,6 +103,7 @@ class GrapholDiagramExporter(AbstractDiagramExporter):
             Item.UnionNode: 'union',
             Item.ValueDomainNode: 'value-domain',
             Item.InclusionEdge: 'inclusion',
+            Item.EquivalenceEdge: 'equivalence',
             Item.InputEdge: 'input',
             Item.MembershipEdge: 'membership',
         }
@@ -269,9 +271,15 @@ class GrapholDiagramExporter(AbstractDiagramExporter):
         :type edge: InclusionEdge
         :rtype: QDomElement
         """
-        element = self.exportGenericEdge(edge)
-        element.setAttribute('equivalence', int(edge.equivalence))
-        return element
+        return self.exportGenericEdge(edge)
+
+    def exportEquivalenceEdge(self, edge):
+        """
+        Export the given edge into a QDomElement.
+        :type edge: EquivalenceEdge
+        :rtype: QDomElement
+        """
+        return self.exportGenericEdge(edge)
 
     def exportInputEdge(self, edge):
         """

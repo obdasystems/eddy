@@ -199,7 +199,7 @@ class RestrictionNode(AbstractNode):
 
     def shape(self, *args, **kwargs):
         """
-        Returns the shape of this item as a QtGui.QPainterPath in local coordinates.
+        Returns the shape of this item as a QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
         path = QtGui.QPainterPath()

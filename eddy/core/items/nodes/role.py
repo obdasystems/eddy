@@ -618,7 +618,7 @@ class RoleNode(AbstractResizableNode):
 
     def shape(self):
         """
-        Returns the shape of this item as a QtGui.QPainterPath in local coordinates.
+        Returns the shape of this item as a QPainterPath in local coordinates.
         :rtype: QPainterPath
         """
         path = QtGui.QPainterPath()
