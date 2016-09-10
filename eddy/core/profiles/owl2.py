@@ -88,7 +88,7 @@ class OWL2Profile(AbstractProfile):
                 if remaining - supported:
                     # Inclusion assertions can be specified only between graphol expressions: Concept
                     # expressions, Role expressions, Value-Domain expressions, Attribute expressions.
-                    raise SyntaxError('Type mismatch: {0} must involve two graphol expressions', edge.shortName)
+                    raise SyntaxError('Type mismatch: {0} must involve two graphol expressions'.format(edge.shortName))
 
                 if Identity.Neutral not in {source.identity(), target.identity()} and source.identity() is not target.identity():
                     # If both nodes are not NEUTRAL and they have a different identity we can't create an inclusion.
@@ -109,7 +109,7 @@ class OWL2Profile(AbstractProfile):
                         # attribute node, and therefor its identity is set to value-domain) and targeting
                         # a value-domain expression, either complex or atomic, eventually excluding the
                         # attribute range restriction as target.
-                        raise SyntaxError('Type mismatch: {0} between value-domain expressions', edge.shortName)
+                        raise SyntaxError('Type mismatch: {0} between value-domain expressions'.format(edge.shortName))
 
                 #############################################
                 # INCLUSION WITH ROLE/ATTRIBUTE COMPLEMENT
@@ -149,7 +149,7 @@ class OWL2Profile(AbstractProfile):
 
                 if target.type() is Item.RoleChainNode:
                     # Role expressions constructed with chain nodes cannot be the target of any inclusion edge.
-                    raise SyntaxError('Role chain nodes cannot be target of a Role {0}', edge.shortName)
+                    raise SyntaxError('Role chain nodes cannot be target of a Role {0}'.format(edge.shortName))
 
             #############################################
             # EDGE = INPUT
