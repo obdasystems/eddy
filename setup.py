@@ -190,8 +190,6 @@ class BuildExe(cx_Freeze.build_exe):
                                 for filename in files:
                                     path = expandPath(os.path.join(root, filename))
                                     if path.endswith('.py'):
-                                        # Make sure to package a compiled version of a python script
-                                        # so we will not include any source file in the distributed app.
                                         new_path = '%s.pyc' % path.rstrip('.py')
                                         py_compile.compile(path, new_path)
                                         arcname = os.path.join(file_or_directory, os.path.relpath(new_path, plugin))
@@ -621,7 +619,7 @@ cx_Freeze.setup(
     name=APPNAME,
     version=VERSION,
     author="Daniele Pantaleone",
-    author_email="danielepantaleone@me.com",
+    author_email="pantaleone@dis.uniroma1.it",
     description="Eddy is a graphical editor for the specification and visualization of Graphol ontologies.",
     keywords = "eddy graphol sapienza",
     license=LICENSE,
