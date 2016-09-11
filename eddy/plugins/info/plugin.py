@@ -36,12 +36,9 @@
 from abc import ABCMeta, abstractmethod
 from verlib import NormalizedVersion
 
-from PyQt5.QtCore import Qt, QEvent, QSize, pyqtSlot
-from PyQt5.QtGui import QIcon, QPainter, QBrush, QColor
-from PyQt5.QtWidgets import QScrollArea, QStackedWidget, QWidget
-from PyQt5.QtWidgets import QStyleOption, QPushButton, QLabel
-from PyQt5.QtWidgets import QFormLayout, QVBoxLayout, QMenu
-from PyQt5.QtWidgets import QMdiSubWindow, QSizePolicy, QStyle
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.nodes import CommandNodeChangeMeta
@@ -81,10 +78,10 @@ class Info(AbstractPlugin):
         """
         Filters events if this object has been installed as an event filter for the watched object.
         :type source: QObject
-        :type event: QEvent
+        :type event: QtCore.QEvent
         :rtype: bool
         """
-        if event.type() == QEvent.Resize:
+        if event.type() == QtCore.QEvent.Resize:
             widget = source.widget()
             widget.redraw()
         return super().eventFilter(source, event)
@@ -93,42 +90,42 @@ class Info(AbstractPlugin):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def onDiagramItemAdded(self):
         """
         Executed whenever a new element is added to the active diagram.
         """
         self.widget('info').stack()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def onDiagramItemRemoved(self):
         """
         Executed whenever a new element is removed from the active diagram.
         """
         self.widget('info').stack()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def onDiagramSelectionChanged(self):
         """
         Executed whenever the selection of the active diagram changes.
         """
         self.widget('info').stack()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def onDiagramUpdated(self):
         """
         Executed whenever the active diagram is updated.
         """
         self.widget('info').stack()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def onProjectUpdated(self):
         """
         Executed whenever the current project is updated.
         """
         self.widget('info').stack()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def onSessionReady(self):
         """
         Executed whenever the main session completes the startup sequence.
@@ -137,7 +134,7 @@ class Info(AbstractPlugin):
         connect(self.project.sgnUpdated, self.onProjectUpdated)
         self.widget('info').stack()
 
-    @pyqtSlot(QMdiSubWindow)
+    @QtCore.pyqtSlot(QtWidgets.QMdiSubWindow)
     def onSubWindowActivated(self, subwindow):
         """
         Executed when the active subwindow changes.
@@ -210,9 +207,9 @@ class Info(AbstractPlugin):
 
         # CREATE DOCKING AREA WIDGET
         self.debug('Creating docking area widget')
-        widget = DockWidget('Info', QIcon(':/icons/18/ic_info_outline_black'), self.session)
+        widget = DockWidget('Info', QtGui.QIcon(':/icons/18/ic_info_outline_black'), self.session)
         widget.installEventFilter(self)
-        widget.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
         widget.setObjectName('info_dock')
         widget.setWidget(self.widget('info'))
         self.addWidget(widget)
@@ -229,7 +226,7 @@ class Info(AbstractPlugin):
 
         # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
-        self.session.addDockWidget(Qt.RightDockWidgetArea, self.widget('info_dock'))
+        self.session.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.widget('info_dock'))
 
     @classmethod
     def version(cls):
@@ -240,7 +237,7 @@ class Info(AbstractPlugin):
         return NormalizedVersion('0.1')
 
 
-class InfoWidget(QScrollArea):
+class InfoWidget(QtWidgets.QScrollArea):
     """
     This class implements the information box widget.
     """
@@ -254,9 +251,9 @@ class InfoWidget(QScrollArea):
         self.diagram = None
         self.plugin = plugin
 
-        self.stacked = QStackedWidget(self)
+        self.stacked = QtWidgets.QStackedWidget(self)
         self.stacked.setContentsMargins(0, 0, 0, 0)
-        self.infoEmpty = QWidget(self.stacked)
+        self.infoEmpty = QtWidgets.QWidget(self.stacked)
         self.infoProject = ProjectInfo(self.session, self.stacked)
         self.infoEdge = EdgeInfo(self.session, self.stacked)
         self.infoNode = NodeInfo(self.session, self.stacked)
@@ -277,9 +274,9 @@ class InfoWidget(QScrollArea):
         self.stacked.addWidget(self.infoFacet)
 
         self.setContentsMargins(0, 0, 0, 0)
-        self.setMinimumSize(QSize(216, 120))
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.setMinimumSize(QtCore.QSize(216, 120))
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.setWidget(self.stacked)
         self.setWidgetResizable(True)
 
@@ -359,10 +356,10 @@ class InfoWidget(QScrollArea):
         """
         Filter incoming events.
         :type source: QObject
-        :type event: QEvent
+        :type event: QtCore.QEvent
         """
         if source is self.verticalScrollBar():
-            if event.type() in {QEvent.Show, QEvent.Hide}:
+            if event.type() in {QtCore.QEvent.Show, QtCore.QEvent.Hide}:
                 self.redraw()
         return super().eventFilter(source, event)
 
@@ -442,7 +439,7 @@ class InfoWidget(QScrollArea):
 #################################
 
 
-class Header(QLabel):
+class Header(QtWidgets.QLabel):
     """
     This class implements the header of properties section.
     """
@@ -451,11 +448,11 @@ class Header(QLabel):
         Initialize the header.
         """
         super().__init__(*args)
-        self.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
+        self.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.setFixedHeight(24)
 
 
-class Key(QLabel):
+class Key(QtWidgets.QLabel):
     """
     This class implements the key of an info field.
     """
@@ -467,9 +464,9 @@ class Key(QLabel):
         self.setFixedSize(88, 20)
 
 
-class Button(QPushButton):
+class Button(QtWidgets.QPushButton):
     """
-    This class implements the button to which associate a QMenu instance of an info field.
+    This class implements the button to which associate a QtWidgets.QMenu instance of an info field.
     """
     def __init__(self,  *args):
         """
@@ -511,12 +508,12 @@ class Select(ComboBox):
         Initialize the field.
         """
         super().__init__(*args)
-        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setScrollEnabled(False)
 
 
-class Parent(QWidget):
+class Parent(QtWidgets.QWidget):
     """
     This class implements the parent placeholder to be used to store checkbox and radio button value fields.
     """
@@ -532,11 +529,11 @@ class Parent(QWidget):
         This is needed for the widget to pick the stylesheet.
         :type paintEvent: QPaintEvent
         """
-        option = QStyleOption()
+        option = QtWidgets.QStyleOption()
         option.initFrom(self)
-        painter = QPainter(self)
+        painter = QtGui.QPainter(self)
         style = self.style()
-        style.drawPrimitive(QStyle.PE_Widget, option, painter, self)
+        style.drawPrimitive(QtWidgets.QStyle.PE_Widget, option, painter, self)
 
 
 #############################################
@@ -544,7 +541,7 @@ class Parent(QWidget):
 #################################
 
 
-class AbstractInfo(QWidget):
+class AbstractInfo(QtWidgets.QWidget):
     """
     This class implements the base information box.
     """
@@ -554,7 +551,7 @@ class AbstractInfo(QWidget):
         """
         Initialize the base information box.
         :type session: Session
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(parent)
         self.session = session
@@ -592,7 +589,7 @@ class ProjectInfo(AbstractInfo):
         """
         Initialize the project information box.
         :type session: Session
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
@@ -622,7 +619,7 @@ class ProjectInfo(AbstractInfo):
         self.ontologyPropHeader = Header('Ontology properties', self)
         self.ontologyPropHeader.setFont(arial12r)
 
-        self.ontologyPropLayout = QFormLayout()
+        self.ontologyPropLayout = QtWidgets.QFormLayout()
         self.ontologyPropLayout.setSpacing(0)
         self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
         self.ontologyPropLayout.addRow(self.iriKey, self.iriField)
@@ -661,7 +658,7 @@ class ProjectInfo(AbstractInfo):
         self.atomicPredHeader = Header('Atomic predicates', self)
         self.atomicPredHeader.setFont(arial12r)
 
-        self.atomicPredLayout = QFormLayout()
+        self.atomicPredLayout = QtWidgets.QFormLayout()
         self.atomicPredLayout.setSpacing(0)
         self.atomicPredLayout.addRow(self.conceptsKey, self.conceptsField)
         self.atomicPredLayout.addRow(self.rolesKey, self.rolesField)
@@ -670,13 +667,13 @@ class ProjectInfo(AbstractInfo):
         self.assertionsHeader = Header('Assertions', self)
         self.assertionsHeader.setFont(arial12r)
 
-        self.assertionsLayout = QFormLayout()
+        self.assertionsLayout = QtWidgets.QFormLayout()
         self.assertionsLayout.setSpacing(0)
         self.assertionsLayout.addRow(self.inclusionsKey, self.inclusionsField)
         self.assertionsLayout.addRow(self.membershipKey, self.membershipField)
 
-        self.mainLayout = QVBoxLayout(self)
-        self.mainLayout.setAlignment(Qt.AlignTop)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
         self.mainLayout.addWidget(self.ontologyPropHeader)
@@ -690,7 +687,7 @@ class ProjectInfo(AbstractInfo):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def iriEditingFinished(self):
         """
         Executed whenever we finish to edit the ontology prefix
@@ -700,7 +697,7 @@ class ProjectInfo(AbstractInfo):
             self.session.undostack.push(CommandProjectSetIRI(self.project, self.project.iri, iri))
         self.iriField.clearFocus()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def prefixEditingFinished(self):
         """
         Executed whenever we finish to edit the ontology prefix
@@ -710,7 +707,7 @@ class ProjectInfo(AbstractInfo):
             self.session.undostack.push(CommandProjectSetPrefix(self.project, self.project.prefix, prefix))
         self.prefixField.clearFocus()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def profileChanged(self):
         """
         Executed when we need to change the project profile.
@@ -759,7 +756,7 @@ class EdgeInfo(AbstractInfo):
         """
         Initialize the generic edge information box.
         :type session: Session
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
@@ -786,14 +783,14 @@ class EdgeInfo(AbstractInfo):
         self.targetField.setFont(arial12r)
         self.targetField.setReadOnly(True)
 
-        self.generalLayout = QFormLayout()
+        self.generalLayout = QtWidgets.QFormLayout()
         self.generalLayout.setSpacing(0)
         self.generalLayout.addRow(self.typeKey, self.typeField)
         self.generalLayout.addRow(self.sourceKey, self.sourceField)
         self.generalLayout.addRow(self.targetKey, self.targetField)
 
-        self.mainLayout = QVBoxLayout(self)
-        self.mainLayout.setAlignment(Qt.AlignTop)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
         self.mainLayout.addWidget(self.h1)
@@ -823,7 +820,7 @@ class NodeInfo(AbstractInfo):
         """
         Initialize the generic node information box.
         :type session: Session
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
@@ -845,13 +842,13 @@ class NodeInfo(AbstractInfo):
 
         self.nodePropHeader = Header('Node properties', self)
         self.nodePropHeader.setFont(arial12r)
-        self.nodePropLayout = QFormLayout()
+        self.nodePropLayout = QtWidgets.QFormLayout()
         self.nodePropLayout.setSpacing(0)
         self.nodePropLayout.addRow(self.idKey, self.idField)
         self.nodePropLayout.addRow(self.identityKey, self.identityField)
 
-        self.mainLayout = QVBoxLayout(self)
-        self.mainLayout.setAlignment(Qt.AlignTop)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
         self.mainLayout.addWidget(self.nodePropHeader)
@@ -879,7 +876,7 @@ class PredicateNodeInfo(NodeInfo):
         """
         Initialize the predicate node information box.
         :type session: Session
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
@@ -894,11 +891,11 @@ class PredicateNodeInfo(NodeInfo):
 
         self.brushKey = Key('Color', self)
         self.brushKey.setFont(arial12r)
-        self.brushMenu = QMenu(self)
+        self.brushMenu = QtWidgets.QMenu(self)
         self.brushButton = Button()
         self.brushButton.setFont(arial12r)
         self.brushButton.setMenu(self.brushMenu)
-        self.brushButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.brushButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
 
         self.nodePropLayout.addRow(self.brushKey, self.brushButton)
         self.nodePropLayout.addRow(self.textKey, self.textField)
@@ -912,7 +909,7 @@ class PredicateNodeInfo(NodeInfo):
 
         self.predPropHeader = Header('Predicate properties', self)
         self.predPropHeader.setFont(arial12r)
-        self.predPropLayout = QFormLayout()
+        self.predPropLayout = QtWidgets.QFormLayout()
         self.predPropLayout.setSpacing(0)
         self.predPropLayout.addRow(self.nameKey, self.nameField)
 
@@ -923,7 +920,7 @@ class PredicateNodeInfo(NodeInfo):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def editingFinished(self):
         """
         Executed whenever we finish to edit the predicate/node name.
@@ -970,7 +967,7 @@ class PredicateNodeInfo(NodeInfo):
             self.brushMenu.addActions(self.session.action('brush').actions())
         for action in self.session.action('brush').actions():
             color = action.data()
-            brush = QBrush(QColor(color.value))
+            brush = QtGui.QBrush(QtGui.QColor(color.value))
             if node.brush() == brush:
                 self.brushButton.setIcon(BrushIcon(12, 12, color.value, '#000000'))
                 self.brushButton.setText(color.value)
@@ -1002,7 +999,7 @@ class AttributeNodeInfo(PredicateNodeInfo):
         """
         Initialize the Attribute node information box.
         :type session: Session
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
@@ -1023,7 +1020,7 @@ class AttributeNodeInfo(PredicateNodeInfo):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def flagChanged(self):
         """
         Executed whenever one of the property fields changes.
@@ -1060,7 +1057,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         """
         Initialize the Role node information box.
         :type session: Session
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
@@ -1141,7 +1138,7 @@ class RoleNodeInfo(PredicateNodeInfo):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def flagChanged(self):
         """
         Executed whenever one of the property fields changes.
@@ -1184,7 +1181,7 @@ class ValueDomainNodeInfo(NodeInfo):
         """
         Initialize the Value Domain node information box.
         :type session: Session
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
@@ -1205,7 +1202,7 @@ class ValueDomainNodeInfo(NodeInfo):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def datatypeChanged(self):
         """
         Executed when we need to change the datatype.
@@ -1246,7 +1243,7 @@ class ValueNodeInfo(PredicateNodeInfo):
         """
         Initialize the Value node information box.
         :type session: Session
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
@@ -1276,7 +1273,7 @@ class ValueNodeInfo(PredicateNodeInfo):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def valueChanged(self):
         """
         Executed when we need to recompute the Value.
@@ -1334,7 +1331,7 @@ class FacetNodeInfo(NodeInfo):
         """
         Initialize the Value Restriction node information box.
         :type session: Session
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
@@ -1360,7 +1357,7 @@ class FacetNodeInfo(NodeInfo):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def facetChanged(self):
         """
         Executed when we need to recompute the value of the node.

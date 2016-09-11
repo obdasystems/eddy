@@ -33,13 +33,9 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QSize, QSortFilterProxyModel
-from PyQt5.QtCore import pyqtSlot, pyqtSignal
-from PyQt5.QtGui import QIcon, QPainter
-from PyQt5.QtGui import QStandardItem, QStandardItemModel
-from PyQt5.QtWidgets import QApplication, QHeaderView, QTreeView
-from PyQt5.QtWidgets import QVBoxLayout, QWidget, QStyleOption
-from PyQt5.QtWidgets import QStyle, QMenu
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from verlib import NormalizedVersion
 
@@ -66,7 +62,7 @@ class ProjectExplorer(AbstractPlugin):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def onSessionReady(self):
         """
         Executed whenever the main session completes the startup sequence.
@@ -108,8 +104,8 @@ class ProjectExplorer(AbstractPlugin):
 
         # CREATE DOCKING AREA WIDGET
         self.debug('Creating docking area widget')
-        widget = DockWidget('Project Explorer', QIcon(':icons/18/ic_storage_black'), self.session)
-        widget.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        widget = DockWidget('Project Explorer', QtGui.QIcon(':icons/18/ic_storage_black'), self.session)
+        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
         widget.setObjectName('project_explorer_dock')
         widget.setWidget(self.widget('project_explorer'))
         self.addWidget(widget)
@@ -125,7 +121,7 @@ class ProjectExplorer(AbstractPlugin):
 
         # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
-        self.session.addDockWidget(Qt.LeftDockWidgetArea, self.widget('project_explorer_dock'))
+        self.session.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.widget('project_explorer_dock'))
 
     @classmethod
     def version(cls):
@@ -136,13 +132,13 @@ class ProjectExplorer(AbstractPlugin):
         return NormalizedVersion('0.1')
 
 
-class ProjectExplorerWidget(QWidget):
+class ProjectExplorerWidget(QtWidgets.QWidget):
     """
     This class implements the project explorer used to display the project structure.
     """
-    sgnFakeDiagramAdded = pyqtSignal('QGraphicsScene')
-    sgnItemClicked = pyqtSignal('QGraphicsScene')
-    sgnItemDoubleClicked = pyqtSignal('QGraphicsScene')
+    sgnFakeDiagramAdded = QtCore.pyqtSignal('QGraphicsScene')
+    sgnItemClicked = QtCore.pyqtSignal('QGraphicsScene')
+    sgnItemDoubleClicked = QtCore.pyqtSignal('QGraphicsScene')
 
     def __init__(self, plugin):
         """
@@ -158,25 +154,25 @@ class ProjectExplorerWidget(QWidget):
         self.arial12b = Font('Arial', 12)
         self.arial12b.setBold(True)
 
-        self.iconRoot = QIcon(':/icons/18/ic_folder_open_black')
-        self.iconBlank = QIcon(':/icons/18/ic_document_blank')
-        self.iconGraphol = QIcon(':/icons/18/ic_document_graphol')
-        self.iconOwl = QIcon(':/icons/18/ic_document_owl')
+        self.iconRoot = QtGui.QIcon(':/icons/18/ic_folder_open_black')
+        self.iconBlank = QtGui.QIcon(':/icons/18/ic_document_blank')
+        self.iconGraphol = QtGui.QIcon(':/icons/18/ic_document_graphol')
+        self.iconOwl = QtGui.QIcon(':/icons/18/ic_document_owl')
 
-        self.root = QStandardItem()
-        self.root.setFlags(self.root.flags() & ~Qt.ItemIsEditable)
+        self.root = QtGui.QStandardItem()
+        self.root.setFlags(self.root.flags() & ~QtCore.Qt.ItemIsEditable)
         self.root.setFont(self.arial12b)
         self.root.setIcon(self.iconRoot)
 
-        self.model = QStandardItemModel(self)
-        self.proxy = QSortFilterProxyModel(self)
+        self.model = QtGui.QStandardItemModel(self)
+        self.proxy = QtCore.QSortFilterProxyModel(self)
         self.proxy.setDynamicSortFilter(False)
-        self.proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        self.proxy.setSortCaseSensitivity(Qt.CaseSensitive)
+        self.proxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        self.proxy.setSortCaseSensitivity(QtCore.Qt.CaseSensitive)
         self.proxy.setSourceModel(self.model)
         self.projectview = ProjectExplorerView(self)
         self.projectview.setModel(self.proxy)
-        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.projectview)
 
@@ -185,7 +181,7 @@ class ProjectExplorerWidget(QWidget):
 
         header = self.projectview.header()
         header.setStretchLastSection(False)
-        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
 
         connect(self.projectview.doubleClicked, self.onItemDoubleClicked)
         connect(self.projectview.pressed, self.onItemPressed)
@@ -207,22 +203,22 @@ class ProjectExplorerWidget(QWidget):
     #   WIDGET INTERNAL SLOTS
     #################################
 
-    @pyqtSlot('QGraphicsScene')
+    @QtCore.pyqtSlot('QGraphicsScene')
     def doAddDiagram(self, diagram):
         """
         Add a diagram in the treeview.
         :type diagram: Diagram
         """
         if not self.findItem(diagram.name):
-            item = QStandardItem(diagram.name)
+            item = QtGui.QStandardItem(diagram.name)
             item.setData(diagram)
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
             item.setFont(self.arial12r)
             item.setIcon(self.iconGraphol)
             self.root.appendRow(item)
-            self.proxy.sort(0, Qt.AscendingOrder)
+            self.proxy.sort(0, QtCore.Qt.AscendingOrder)
 
-    @pyqtSlot('QGraphicsScene')
+    @QtCore.pyqtSlot('QGraphicsScene')
     def doRemoveDiagram(self, diagram):
         """
         Remove a diagram from the treeview.
@@ -232,26 +228,26 @@ class ProjectExplorerWidget(QWidget):
         if item:
             self.root.removeRow(item.index().row())
 
-    @pyqtSlot('QModelIndex')
+    @QtCore.pyqtSlot('QModelIndex')
     def onItemDoubleClicked(self, index):
         """
         Executed when an item in the treeview is double clicked.
         :type index: QModelIndex
         """
         # noinspection PyArgumentList
-        if QApplication.mouseButtons() & Qt.LeftButton:
+        if QtWidgets.QApplication.mouseButtons() & QtCore.Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
             if item and item.data():
                 self.sgnItemDoubleClicked.emit(item.data())
 
-    @pyqtSlot('QModelIndex')
+    @QtCore.pyqtSlot('QModelIndex')
     def onItemPressed(self, index):
         """
         Executed when an item in the treeview is clicked.
         :type index: QModelIndex
         """
         # noinspection PyArgumentList
-        if QApplication.mouseButtons() & Qt.LeftButton:
+        if QtWidgets.QApplication.mouseButtons() & QtCore.Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
             if item and item.data():
                 self.sgnItemClicked.emit(item.data())
@@ -265,11 +261,11 @@ class ProjectExplorerWidget(QWidget):
         This is needed for the widget to pick the stylesheet.
         :type paintEvent: QPaintEvent
         """
-        option = QStyleOption()
+        option = QtWidgets.QStyleOption()
         option.initFrom(self)
-        painter = QPainter(self)
+        painter = QtGui.QPainter(self)
         style = self.style()
-        style.drawPrimitive(QStyle.PE_Widget, option, painter, self)
+        style.drawPrimitive(QtWidgets.QStyle.PE_Widget, option, painter, self)
 
     #############################################
     #   INTERFACE
@@ -305,12 +301,12 @@ class ProjectExplorerWidget(QWidget):
     def sizeHint(self):
         """
         Returns the recommended size for this widget.
-        :rtype: QSize
+        :rtype: QtCore.QSize
         """
-        return QSize(216, 266)
+        return QtCore.QSize(216, 266)
 
 
-class ProjectExplorerView(QTreeView):
+class ProjectExplorerView(QtWidgets.QTreeView):
     """
     This class implements the project explorer tree view.
     """
@@ -320,13 +316,13 @@ class ProjectExplorerView(QTreeView):
         :type widget: ProjectExplorerWidget
         """
         super().__init__(widget)
-        self.setContextMenuPolicy(Qt.PreventContextMenu)
-        self.setEditTriggers(QTreeView.NoEditTriggers)
-        self.setFocusPolicy(Qt.NoFocus)
+        self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
+        self.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
+        self.setFocusPolicy(QtCore.Qt.NoFocus)
         self.setHeaderHidden(True)
-        self.setHorizontalScrollMode(QTreeView.ScrollPerPixel)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.setSelectionMode(QTreeView.SingleSelection)
+        self.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.setSelectionMode(QtWidgets.QTreeView.SingleSelection)
         self.setSortingEnabled(True)
         self.setWordWrap(True)
 
@@ -367,7 +363,7 @@ class ProjectExplorerView(QTreeView):
         Executed when the mouse is released from the tree view.
         :type mouseEvent: QMouseEvent
         """
-        if mouseEvent.button() == Qt.RightButton:
+        if mouseEvent.button() == QtCore.Qt.RightButton:
             index = first(self.selectedIndexes())
             if index:
                 model = self.model().sourceModel()
@@ -375,7 +371,7 @@ class ProjectExplorerView(QTreeView):
                 item = model.itemFromIndex(index)
                 diagram = item.data()
                 if diagram:
-                    menu = QMenu()
+                    menu = QtWidgets.QMenu()
                     menu.addAction(self.session.action('new_diagram'))
                     menu.addSeparator()
                     menu.addAction(self.session.action('rename_diagram'))

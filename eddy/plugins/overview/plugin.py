@@ -33,9 +33,9 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QEvent, QSize, pyqtSlot
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QGraphicsView, QMdiSubWindow
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from verlib import NormalizedVersion
 
@@ -64,10 +64,10 @@ class Overview(AbstractPlugin):
         """
         Filters events if this object has been installed as an event filter for the watched object.
         :type source: QObject
-        :type event: QEvent
+        :type event: QtCore.QEvent
         :rtype: bool
         """
-        if event.type() == QEvent.Resize:
+        if event.type() == QtCore.QEvent.Resize:
             widget = source.widget()
             widget.redraw()
         return super().eventFilter(source, event)
@@ -76,21 +76,21 @@ class Overview(AbstractPlugin):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def onDiagramSelectionChanged(self):
         """
         Executed whenever the selection of the active diagram changes.
         """
         self.widget('overview').redraw()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def onDiagramUpdated(self):
         """
         Executed whenever the active diagram is updated.
         """
         self.widget('overview').redraw()
 
-    @pyqtSlot(QMdiSubWindow)
+    @QtCore.pyqtSlot(QtWidgets.QMdiSubWindow)
     def onSubWindowActivated(self, subwindow):
         """
         Executed when the active subwindow changes.
@@ -159,9 +159,9 @@ class Overview(AbstractPlugin):
 
         # CREATE DOCKING AREA WIDGET
         self.debug('Creating docking area widget')
-        widget = DockWidget('Overview', QIcon(':/icons/18/ic_zoom_black'), self.session)
+        widget = DockWidget('Overview', QtGui.QIcon(':/icons/18/ic_zoom_black'), self.session)
         widget.installEventFilter(self)
-        widget.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
         widget.setObjectName('overview_dock')
         widget.setWidget(self.widget('overview'))
         self.addWidget(widget)
@@ -177,7 +177,7 @@ class Overview(AbstractPlugin):
 
         # CREATE DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
-        self.session.addDockWidget(Qt.RightDockWidgetArea, self.widget('overview_dock'))
+        self.session.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.widget('overview_dock'))
 
     @classmethod
     def version(cls):
@@ -188,7 +188,7 @@ class Overview(AbstractPlugin):
         return NormalizedVersion('0.1')
 
 
-class OverviewWidget(QGraphicsView):
+class OverviewWidget(QtWidgets.QGraphicsView):
     """
     This class is used to display the active diagram overview.
     """
@@ -198,13 +198,13 @@ class OverviewWidget(QGraphicsView):
         :type plugin: Overview
         """
         super().__init__(plugin.parent())
-        self.setContextMenuPolicy(Qt.PreventContextMenu)
-        self.setMinimumSize(QSize(216, 216))
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setOptimizationFlags(QGraphicsView.DontAdjustForAntialiasing)
-        self.setOptimizationFlags(QGraphicsView.DontSavePainterState)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setViewportUpdateMode(QGraphicsView.NoViewportUpdate)
+        self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
+        self.setMinimumSize(QtCore.QSize(216, 216))
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setOptimizationFlags(QtWidgets.QGraphicsView.DontAdjustForAntialiasing)
+        self.setOptimizationFlags(QtWidgets.QGraphicsView.DontSavePainterState)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setViewportUpdateMode(QtWidgets.QGraphicsView.NoViewportUpdate)
         self._mousePressed = False
         self._view = None
 
@@ -238,7 +238,7 @@ class OverviewWidget(QGraphicsView):
         Executed when the mouse is pressed on the view.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        if mouseEvent.buttons() & Qt.LeftButton:
+        if mouseEvent.buttons() & QtCore.Qt.LeftButton:
             if self._view:
                 self._mousePressed = True
                 self._view.centerOn(self.mapToScene(mouseEvent.pos()))
@@ -248,7 +248,7 @@ class OverviewWidget(QGraphicsView):
         Executed when the mouse is moved on the view.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        if mouseEvent.buttons() & Qt.LeftButton:
+        if mouseEvent.buttons() & QtCore.Qt.LeftButton:
             if self._view and self._mousePressed:
                 self._view.centerOn(self.mapToScene(mouseEvent.pos()))
 
@@ -257,7 +257,7 @@ class OverviewWidget(QGraphicsView):
         Executed when the mouse is released from the view.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        if mouseEvent.buttons() & Qt.LeftButton:
+        if mouseEvent.buttons() & QtCore.Qt.LeftButton:
             if self._view:
                 self._mousePressed = False
 
@@ -279,7 +279,7 @@ class OverviewWidget(QGraphicsView):
         if self._view:
             polygon = self.diagram.visibleRect(margin=10)
             if polygon:
-                self.fitInView(polygon, Qt.KeepAspectRatio)
+                self.fitInView(polygon, QtCore.Qt.KeepAspectRatio)
         viewport = self.viewport()
         viewport.update()
 
@@ -293,9 +293,9 @@ class OverviewWidget(QGraphicsView):
     def sizeHint(self):
         """
         Returns the recommended size for this widget.
-        :rtype: QSize
+        :rtype: QtCore.QSize
         """
-        return QSize(216, 216)
+        return QtCore.QSize(216, 216)
     
     def view(self):
         """

@@ -33,10 +33,9 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QSize, QSortFilterProxyModel, pyqtSlot, pyqtSignal
-from PyQt5.QtGui import QIcon, QPainter, QStandardItem, QStandardItemModel
-from PyQt5.QtWidgets import QApplication, QHeaderView, QTreeView, QVBoxLayout
-from PyQt5.QtWidgets import QWidget, QStyleOption, QStyle
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from verlib import NormalizedVersion
 
@@ -55,7 +54,7 @@ class OntologyExplorer(AbstractPlugin):
     """
     This plugin provides the Ontology Explorer widget.
     """
-    sgnFakeItemAdded = pyqtSignal('QGraphicsScene', 'QGraphicsItem')
+    sgnFakeItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
 
     def __init__(self, session):
         """
@@ -68,7 +67,7 @@ class OntologyExplorer(AbstractPlugin):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def onSessionReady(self):
         """
         Executed whenever the main session completes the startup sequence.
@@ -115,8 +114,8 @@ class OntologyExplorer(AbstractPlugin):
 
         # CREATE DOCKING AREA WIDGET
         self.debug('Creating docking area widget')
-        widget = DockWidget('Ontology Explorer', QIcon(':icons/18/ic_explore_black'), self.session)
-        widget.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        widget = DockWidget('Ontology Explorer', QtGui.QIcon(':icons/18/ic_explore_black'), self.session)
+        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
         widget.setObjectName('ontology_explorer_dock')
         widget.setWidget(self.widget('ontology_explorer'))
         self.addWidget(widget)
@@ -132,7 +131,7 @@ class OntologyExplorer(AbstractPlugin):
 
         # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
-        self.session.addDockWidget(Qt.RightDockWidgetArea, self.widget('ontology_explorer_dock'))
+        self.session.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.widget('ontology_explorer_dock'))
 
     @classmethod
     def version(cls):
@@ -143,13 +142,13 @@ class OntologyExplorer(AbstractPlugin):
         return NormalizedVersion('0.1')
 
 
-class OntologyExplorerWidget(QWidget):
+class OntologyExplorerWidget(QtWidgets.QWidget):
     """
     This class implements the ontology explorer used to list ontology predicates.
     """
-    sgnItemClicked = pyqtSignal('QGraphicsItem')
-    sgnItemDoubleClicked = pyqtSignal('QGraphicsItem')
-    sgnItemRightClicked = pyqtSignal('QGraphicsItem')
+    sgnItemClicked = QtCore.pyqtSignal('QGraphicsItem')
+    sgnItemDoubleClicked = QtCore.pyqtSignal('QGraphicsItem')
+    sgnItemRightClicked = QtCore.pyqtSignal('QGraphicsItem')
 
     def __init__(self, plugin):
         """
@@ -160,26 +159,26 @@ class OntologyExplorerWidget(QWidget):
 
         self.plugin = plugin
 
-        self.iconAttribute = QIcon(':/icons/18/ic_treeview_attribute')
-        self.iconCconcept = QIcon(':/icons/18/ic_treeview_concept')
-        self.iconInstance = QIcon(':/icons/18/ic_treeview_instance')
-        self.iconRole = QIcon(':/icons/18/ic_treeview_role')
-        self.iconValue = QIcon(':/icons/18/ic_treeview_value')
+        self.iconAttribute = QtGui.QIcon(':/icons/18/ic_treeview_attribute')
+        self.iconCconcept = QtGui.QIcon(':/icons/18/ic_treeview_concept')
+        self.iconInstance = QtGui.QIcon(':/icons/18/ic_treeview_instance')
+        self.iconRole = QtGui.QIcon(':/icons/18/ic_treeview_role')
+        self.iconValue = QtGui.QIcon(':/icons/18/ic_treeview_value')
 
         self.search = StringField(self)
         self.search.setAcceptDrops(False)
         self.search.setClearButtonEnabled(True)
         self.search.setPlaceholderText('Search...')
         self.search.setFixedHeight(30)
-        self.model = QStandardItemModel(self)
-        self.proxy = QSortFilterProxyModel(self)
+        self.model = QtGui.QStandardItemModel(self)
+        self.proxy = QtCore.QSortFilterProxyModel(self)
         self.proxy.setDynamicSortFilter(False)
-        self.proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        self.proxy.setSortCaseSensitivity(Qt.CaseSensitive)
+        self.proxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        self.proxy.setSortCaseSensitivity(QtCore.Qt.CaseSensitive)
         self.proxy.setSourceModel(self.model)
         self.ontoview = OntologyExplorerView(self)
         self.ontoview.setModel(self.proxy)
-        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.search)
         self.mainLayout.addWidget(self.ontoview)
@@ -189,7 +188,7 @@ class OntologyExplorerWidget(QWidget):
 
         header = self.ontoview.header()
         header.setStretchLastSection(False)
-        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
 
         connect(self.ontoview.doubleClicked, self.onItemDoubleClicked)
         connect(self.ontoview.pressed, self.onItemPressed)
@@ -226,17 +225,17 @@ class OntologyExplorerWidget(QWidget):
         This is needed for the widget to pick the stylesheet.
         :type paintEvent: QPaintEvent
         """
-        option = QStyleOption()
+        option = QtWidgets.QStyleOption()
         option.initFrom(self)
-        painter = QPainter(self)
+        painter = QtGui.QPainter(self)
         style = self.style()
-        style.drawPrimitive(QStyle.PE_Widget, option, painter, self)
+        style.drawPrimitive(QtWidgets.QStyle.PE_Widget, option, painter, self)
 
     #############################################
     #   SLOTS
     #################################
 
-    @pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def doAddNode(self, diagram, node):
         """
         Add a node in the tree view.
@@ -246,25 +245,25 @@ class OntologyExplorerWidget(QWidget):
         if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
             parent = self.parentFor(node)
             if not parent:
-                parent = QStandardItem(self.parentKey(node))
+                parent = QtGui.QStandardItem(self.parentKey(node))
                 parent.setIcon(self.iconFor(node))
                 self.model.appendRow(parent)
-                self.proxy.sort(0, Qt.AscendingOrder)
-            child = QStandardItem(self.childKey(diagram, node))
+                self.proxy.sort(0, QtCore.Qt.AscendingOrder)
+            child = QtGui.QStandardItem(self.childKey(diagram, node))
             child.setData(node)
             parent.appendRow(child)
-            self.proxy.sort(0, Qt.AscendingOrder)
+            self.proxy.sort(0, QtCore.Qt.AscendingOrder)
 
-    @pyqtSlot(str)
+    @QtCore.pyqtSlot(str)
     def doFilterItem(self, key):
         """
         Executed when the search box is filled with data.
         :type key: str
         """
         self.proxy.setFilterFixedString(key)
-        self.proxy.sort(Qt.AscendingOrder)
+        self.proxy.sort(QtCore.Qt.AscendingOrder)
 
-    @pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def doRemoveNode(self, diagram, node):
         """
         Remove a node from the tree view.
@@ -280,26 +279,26 @@ class OntologyExplorerWidget(QWidget):
                 if not parent.rowCount():
                     self.model.removeRow(parent.index().row())
 
-    @pyqtSlot('QModelIndex')
+    @QtCore.pyqtSlot('QModelIndex')
     def onItemDoubleClicked(self, index):
         """
         Executed when an item in the treeview is double clicked.
         :type index: QModelIndex
         """
         # noinspection PyArgumentList
-        if QApplication.mouseButtons() & Qt.LeftButton:
+        if QtWidgets.QApplication.mouseButtons() & QtCore.Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
             if item and item.data():
                 self.sgnItemDoubleClicked.emit(item.data())
 
-    @pyqtSlot('QModelIndex')
+    @QtCore.pyqtSlot('QModelIndex')
     def onItemPressed(self, index):
         """
         Executed when an item in the treeview is clicked.
         :type index: QModelIndex
         """
         # noinspection PyArgumentList
-        if QApplication.mouseButtons() & Qt.LeftButton:
+        if QtWidgets.QApplication.mouseButtons() & QtCore.Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
             if item and item.data():
                 self.sgnItemClicked.emit(item.data())
@@ -311,7 +310,7 @@ class OntologyExplorerWidget(QWidget):
     def childFor(self, parent, diagram, node):
         """
         Search the item representing this node among parent children.
-        :type parent: QStandardItem
+        :type parent: QtGui.QStandardItem
         :type diagram: Diagram
         :type node: AbstractNode
         """
@@ -355,9 +354,9 @@ class OntologyExplorerWidget(QWidget):
         """
         Search the parent element of the given node.
         :type node: AbstractNode
-        :rtype: QStandardItem
+        :rtype: QtGui.QStandardItem
         """
-        for i in self.model.findItems(self.parentKey(node), Qt.MatchExactly):
+        for i in self.model.findItems(self.parentKey(node), QtCore.Qt.MatchExactly):
             n = i.child(0).data()
             if node.type() is n.type():
                 return i
@@ -375,12 +374,12 @@ class OntologyExplorerWidget(QWidget):
     def sizeHint(self):
         """
         Returns the recommended size for this widget.
-        :rtype: QSize
+        :rtype: QtCore.QSize
         """
-        return QSize(216, 266)
+        return QtCore.QSize(216, 266)
 
 
-class OntologyExplorerView(QTreeView):
+class OntologyExplorerView(QtWidgets.QTreeView):
     """
     This class implements the ontology explorer tree view.
     """
@@ -390,14 +389,14 @@ class OntologyExplorerView(QTreeView):
         :type widget: OntologyExplorerWidget
         """
         super().__init__(widget)
-        self.setContextMenuPolicy(Qt.PreventContextMenu)
-        self.setEditTriggers(QTreeView.NoEditTriggers)
+        self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
+        self.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.setFont(Font('Arial', 12))
-        self.setFocusPolicy(Qt.NoFocus)
+        self.setFocusPolicy(QtCore.Qt.NoFocus)
         self.setHeaderHidden(True)
-        self.setHorizontalScrollMode(QTreeView.ScrollPerPixel)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.setSelectionMode(QTreeView.SingleSelection)
+        self.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.setSelectionMode(QtWidgets.QTreeView.SingleSelection)
         self.setSortingEnabled(True)
         self.setWordWrap(True)
 
@@ -438,7 +437,7 @@ class OntologyExplorerView(QTreeView):
         Executed when the mouse is released from the tree view.
         :type mouseEvent: QMouseEvent
         """
-        if mouseEvent.button() == Qt.RightButton:
+        if mouseEvent.button() == QtCore.Qt.RightButton:
             index = first(self.selectedIndexes())
             if index:
                 model = self.model().sourceModel()

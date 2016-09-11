@@ -33,9 +33,9 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QToolButton, QMdiSubWindow
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from verlib import NormalizedVersion
 
@@ -50,7 +50,7 @@ class Zoom(AbstractPlugin):
     """
     This plugin provides the Zoom control used to scale the MDI area.
     """
-    sgnChanged = pyqtSignal(float)
+    sgnChanged = QtCore.pyqtSignal(float)
 
     def __init__(self, session):
         """
@@ -66,14 +66,14 @@ class Zoom(AbstractPlugin):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doUpdateState(self):
         """
         Update the state of the zoom controls according to the active diagram.
         """
         self.refresh(enabled=self.session.mdi.activeDiagram() is not None)
 
-    @pyqtSlot(bool)
+    @QtCore.pyqtSlot(bool)
     def doZoomIn(self, _=False):
         """
         Increase the main view zoom level.
@@ -81,7 +81,7 @@ class Zoom(AbstractPlugin):
         """
         self.setLevel(self.level + DiagramView.ZoomStep)
 
-    @pyqtSlot(bool)
+    @QtCore.pyqtSlot(bool)
     def doZoomOut(self, _=False):
         """
         Decrese the main view zoom level.
@@ -89,7 +89,7 @@ class Zoom(AbstractPlugin):
         """
         self.setLevel(self.level - DiagramView.ZoomStep)
 
-    @pyqtSlot(bool)
+    @QtCore.pyqtSlot(bool)
     def doZoomReset(self, _=False):
         """
         Reset the zoom control to the default index.
@@ -97,7 +97,7 @@ class Zoom(AbstractPlugin):
         """
         self.setLevel(DiagramView.ZoomDefault)
 
-    @pyqtSlot(float)
+    @QtCore.pyqtSlot(float)
     def onScaleChanged(self, level):
         """
         Executed when the main view changes the zoom value.
@@ -105,7 +105,7 @@ class Zoom(AbstractPlugin):
         """
         self.adjust(level)
 
-    @pyqtSlot(QMdiSubWindow)
+    @QtCore.pyqtSlot(QtWidgets.QMdiSubWindow)
     def onSubWindowActivated(self, subwindow):
         """
         Executed when the active subwindow changes.
@@ -198,16 +198,16 @@ class Zoom(AbstractPlugin):
         # INITIALIZE THE WIDGETS
         self.debug('Creating zoom control widgets')
 
-        self.addWidget(QToolButton(
-            icon=QIcon(':/icons/24/ic_zoom_in_black'),
+        self.addWidget(QtWidgets.QToolButton(
+            icon=QtGui.QIcon(':/icons/24/ic_zoom_in_black'),
             enabled=False, checkable=False, clicked=self.doZoomIn,
             objectName='button_zoom_in'))
-        self.addWidget(QToolButton(
-            icon=QIcon(':/icons/24/ic_zoom_out_black'),
+        self.addWidget(QtWidgets.QToolButton(
+            icon=QtGui.QIcon(':/icons/24/ic_zoom_out_black'),
             enabled=False, checkable=False, clicked=self.doZoomOut,
             objectName='button_zoom_out'))
-        self.addWidget(QToolButton(
-            icon=QIcon(':/icons/24/ic_zoom_reset_black'),
+        self.addWidget(QtWidgets.QToolButton(
+            icon=QtGui.QIcon(':/icons/24/ic_zoom_reset_black'),
             enabled=False, checkable=False, clicked=self.doZoomReset,
             objectName='button_zoom_reset'))
 
