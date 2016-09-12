@@ -41,22 +41,22 @@ def bfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None
     Perform a customized BFS returning a list of visited nodes.
     The function accepts 3 callable parameters:
 
-        * filter_on_edges: a callable which takes as input an edge and returns True
-                           iff the search has to proceed along the edge; if instead
-                           the callable returns False, the given edge is excluded
-                           from the search.
-        * filter_on_nodes: a callable which takes as input a node and returns True iff
-                           the search has to take the node into consideration; else the
-                           callable MUST return False (NOTE: the node is not included
-                           in the returned set of visited nodes, nor its neighbours are
-                           being visited, unless they are connected through some other
-                           nodes for which the callable returns True).
-        * filter_on_visit: a callable which takes as input a node and returns True iff
-                           the search algoritm should visit the given node neighbours;
-                           else the callable MUST return False (NOTE: the node IS included
-                           in the returned set of visited nodes, but its neighbours are not
-                           being visited, unless they are connected through some other nodes
-                           for which the callable returns True).
+        * filter_on_edges: a callable which takes as input an edge and returns
+           True iff the search has to proceed along the edge; if instead
+           the callable returns False, the given edge is excluded
+           from the search.
+        * filter_on_nodes: a callable which takes as input a node and returns
+           True iff the search has to take the node into consideration; else
+           the callable MUST return False (NOTE: the node is not included
+           in the returned set of visited nodes, nor its neighbours are
+           being visited, unless they are connected through some other
+           nodes for which the callable returns True).
+        * filter_on_visit: a callable which takes as input a node and returns
+           True iff the search algoritm should visit the given node neighbours;
+           else the callable MUST return False (NOTE: the node IS included
+           in the returned set of visited nodes, but its neighbours are not
+           being visited, unless they are connected through some other nodes
+           for which the callable returns True).
 
     :type source: AbstractNode
     :type filter_on_edges: callable
@@ -86,22 +86,22 @@ def dfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None
     Perform a customized DFS returning a list of visited nodes.
     The function accepts 3 callable parameters:
 
-        * filter_on_edges: a callable which takes as input an edge and returns True
-                           iff the search has to proceed along the edge; if instead
-                           the callable returns False, the given edge is excluded
-                           from the search.
-        * filter_on_nodes: a callable which takes as input a node and returns True iff
-                           the search has to take the node into consideration; else the
-                           callable MUST return False (NOTE: the node is not included
-                           in the returned set of visited nodes, nor its neighbours are
-                           being visited, unless they are connected through some other
-                           nodes for which the callable returns True).
-        * filter_on_visit: a callable which takes as input a node and returns True iff
-                           the search algoritm should visit the given node neighbours;
-                           else the callable MUST return False (NOTE: the node IS included
-                           in the returned set of visited nodes, but its neighbours are not
-                           being visited, unless they are connected through some other nodes
-                           for which the callable returns True).
+        * filter_on_edges: a callable which takes as input an edge and returns
+           True iff the search has to proceed along the edge; if instead
+           the callable returns False, the given edge is excluded
+           from the search.
+        * filter_on_nodes: a callable which takes as input a node and returns
+           True iff the search has to take the node into consideration; else
+           the callable MUST return False (NOTE: the node is not included
+           in the returned set of visited nodes, nor its neighbours are
+           being visited, unless they are connected through some other
+           nodes for which the callable returns True).
+        * filter_on_visit: a callable which takes as input a node and returns
+           True iff the search algoritm should visit the given node neighbours;
+           else the callable MUST return False (NOTE: the node IS included
+           in the returned set of visited nodes, but its neighbours are not
+           being visited, unless they are connected through some other nodes
+           for which the callable returns True).
 
     :type source: AbstractNode
     :type filter_on_edges: callable

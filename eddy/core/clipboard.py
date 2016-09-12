@@ -101,7 +101,7 @@ class Clipboard(QtCore.QObject):
         """
         Paste currently copied items in the given diagram.
         :type diagram: Diagram
-        :type pos: QtCore.QPointF
+        :type pos: QPointF
         """
         def ncopy(node):
             """
@@ -212,4 +212,4 @@ class Clipboard(QtCore.QObject):
         """
         Return repr(self).
         """
-        return 'Clipboard<nodes:{},edges:{}>'.format(len(self.nodes), len(self.edges))
+        return 'Clipboard<nodes:{0},edges:{1}>'.format(len(self.nodes), len(self.edges))

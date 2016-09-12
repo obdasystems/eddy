@@ -37,12 +37,29 @@ import errno
 import os
 import sys
 
-from eddy.core.functions.misc import cutR, clamp
+
+__LINUX = sys.platform.startswith('linux')
+__MACOS = sys.platform.startswith('darwin')
+__WIN32 = sys.platform.startswith('win32')
 
 
-LINUX = sys.platform.startswith('linux')
-MACOS = sys.platform.startswith('darwin')
-WIN32 = sys.platform.startswith('win32')
+if hasattr(sys, 'frozen'):
+    __MODULE_PATH = os.path.normpath(os.path.expanduser(os.path.dirname(sys.executable)))
+    __ROOT_PATH = __MODULE_PATH
+else:
+    __MODULE_PATH = os.path.normpath(os.path.expanduser(os.path.dirname(sys.modules['eddy'].__file__)))
+    __ROOT_PATH = os.path.join(__MODULE_PATH, '..')
+
+
+__EXAMPLES_PATH = os.path.join(__ROOT_PATH, 'examples')
+__HOME_PATH = os.path.normpath(os.path.expanduser('~/.eddy'))
+__PLUGINS_PATH = os.path.join(__MODULE_PATH, 'plugins')
+__RESOURCES_PATH = os.path.join(__ROOT_PATH, 'resources')
+__SUPPORT_PATH = os.path.join(__ROOT_PATH, 'support')
+
+
+if not os.path.isdir(__HOME_PATH):
+    os.mkdir(__HOME_PATH)
 
 
 def compressPath(path, maxchars, dots=3):
@@ -53,21 +70,12 @@ def compressPath(path, maxchars, dots=3):
     :type dots: int
     """
     if len(path) > maxchars:
-        dots = clamp(dots, 2)
         index = path.rfind(os.path.sep)
         if index > 0:
             suffix = path[index-1:]
             prefix = path[:maxchars-dots-len(suffix)]
             path = ''.join([prefix] + ['.' for _ in range(dots)] + [suffix])
     return path
-
-
-def examplesPath():
-    """
-    Returns the path to the examples directory.
-    :rtype: str
-    """
-    return os.path.join(rootPath(), 'examples')
 
 
 def expandPath(path):
@@ -88,66 +96,47 @@ def expandPath(path):
     :rtype: str
     """
     if path.startswith('@eddy/') or path.startswith('@eddy\\'):
-        path = os.path.join(modulePath(), path[6:])
+        path = os.path.join(__MODULE_PATH, path[6:])
     elif path.startswith('@home/') or path.startswith('@home\\'):
-        path = os.path.join(homePath(), path[6:])
+        path = os.path.join(__HOME_PATH, path[6:])
     elif path.startswith('@root/') or path.startswith('@root\\'):
-        path = os.path.join(rootPath(), path[6:])
+        path = os.path.join(__ROOT_PATH, path[6:])
     elif path.startswith('@resources/') or path.startswith('@resources\\'):
-        path = os.path.join(resourcesPath(), path[11:])
+        path = os.path.join(__RESOURCES_PATH, path[11:])
     elif path.startswith('@examples/') or path.startswith('@examples\\'):
-        path = os.path.join(examplesPath(), path[10:])
+        path = os.path.join(__EXAMPLES_PATH, path[10:])
     elif path.startswith('@plugins/') or path.startswith('@plugins\\'):
-        path = os.path.join(pluginsPath(), path[9:])
+        path = os.path.join(__PLUGINS_PATH, path[9:])
     elif path.startswith('@support/') or path.startswith('@support\\'):
-        path = os.path.join(supportPath(), path[9:])
+        path = os.path.join(__SUPPORT_PATH, path[9:])
     return os.path.normpath(os.path.expanduser(path))
-
-
-def homePath():
-    """
-    Returns the path to Eddy's home directory.
-    :rtype: str
-    """
-    homepath = os.path.normpath(os.path.expanduser('~/.eddy'))
-    if not os.path.isdir(homepath):
-        os.mkdir(homepath)
-    return homepath
 
 
 def isPathValid(path):
     """
-    Returns True if the given path is valid for the current, False otherwise.
+    Returns True if the given path is valid, False otherwise.
     :type path: str
     :rtype: bool
     """
     try:
-
         if not path or not isinstance(path, str):
             return False
-
         path = expandPath(path)
         path = os.path.splitdrive(path)[1]
-
         root = os.path.sep
-        if WIN32:
+        if __WIN32:
             root = os.environ.get('HOMEDRIVE', 'C:')
-        root = '{0}{1}'.format(cutR(root, os.path.sep), os.path.sep)
-
+        root = '{0}{1}'.format(root.rstrip(os.path.sep), os.path.sep)
         assert os.path.isdir(root)
-
         for part in path.split(os.path.sep):
-
             try:
                 os.lstat(os.path.join(root, part))
             except OSError as exc:
                 if hasattr(exc, 'winerror'):
-                    # ERROR_INVALID_NAME = 123
                     if exc.winerror == 123:
                         return False
                 if exc.errno in {errno.ENAMETOOLONG, errno.ERANGE}:
                     return False
-
     except TypeError:
         return False
     else:
@@ -164,18 +153,6 @@ def isSubPath(path1, path2):
     return expandPath(path2).startswith(expandPath(path1))
 
 
-def modulePath():
-    """
-    Returns the path to Eddy's directory.
-    :rtype: str
-    """
-    if hasattr(sys, 'frozen'):
-        path = os.path.dirname(sys.executable)
-    else:
-        path = os.path.dirname(sys.modules['eddy'].__file__)
-    return os.path.normpath(os.path.expanduser(path))
-
-
 def openPath(path):
     """
     Open the given path using the OS default program.
@@ -183,39 +160,12 @@ def openPath(path):
     """
     path = expandPath(path)
     if os.path.isfile(path) or os.path.isdir(path):
-        if WIN32:
+        if __WIN32:
             os.system('start {0}'.format(path))
-        elif MACOS:
+        elif __MACOS:
             os.system('open "{0}"'.format(path))
-        elif LINUX:
+        elif __LINUX:
             os.system('xdg-open "{0}"'.format(path))
-
-
-def pluginsPath():
-    """
-    Returns the path to the plugins directory.
-    :rtype: str
-    """
-    return os.path.join(modulePath(), 'plugins')
-
-
-def resourcesPath():
-    """
-    Returns the path to the resources directory.
-    :rtype: str
-    """
-    return os.path.join(rootPath(), 'resources')
-
-
-def rootPath():
-    """
-    Returns the path to Eddy's root directory.
-    :rtype: str
-    """
-    path = modulePath()
-    if not hasattr(sys, 'frozen'):
-        path = os.path.join(path, '..')
-    return os.path.normpath(os.path.expanduser(path))
 
 
 def shortPath(path):
@@ -233,14 +183,6 @@ def shortPath(path):
         if path.startswith(absprefix):
             return path.replace(absprefix, prefix)
     return path
-
-
-def supportPath():
-    """
-    Returns the path to the support directory.
-    :rtype: str
-    """
-    return os.path.join(rootPath(), 'support')
 
 
 def uniquePath(base, name, extension):

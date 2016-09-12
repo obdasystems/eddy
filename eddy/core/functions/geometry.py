@@ -41,9 +41,9 @@ from PyQt5 import QtGui
 
 def angle(p1, p2):
     """
-    Returns the angle of the line connecting the given points.
-    :type p1: QtCore.QPointF
-    :type p2: QtCore.QPointF
+    Returns the angle (measured in radians) of the line connecting the given points.
+    :type p1: QPointF
+    :type p2: QPointF
     :rtype: float
     """
     return math.atan2(p1.y() - p2.y(), p2.x() - p1.x())
@@ -52,8 +52,8 @@ def angle(p1, p2):
 def distance(p1, p2):
     """
     Calculate the distance between the given points.
-    :type p1: QtCore.QPointF
-    :type p2: QtCore.QPointF
+    :type p1: QPointF
+    :type p2: QPointF
     :rtype: float
     """
     return math.sqrt(math.pow(p2.x() - p1.x(), 2) + math.pow(p2.y() - p1.y(), 2))
@@ -65,7 +65,7 @@ def intersection(l1, l2):
     Will return None if there is no intersection point.
     :type l1: QLineF
     :type l2: QLineF
-    :rtype: QtCore.QPointF
+    :rtype: QPointF
     """
     L = max(min(l1.p1().x(), l1.p2().x()), min(l2.p1().x(), l2.p2().x()))
     R = min(max(l1.p1().x(), l1.p2().x()), max(l2.p1().x(), l2.p2().x()))
@@ -78,12 +78,12 @@ def intersection(l1, l2):
 
 def createArea(p1, p2, degrees, size):
     """
-    Creates an area between the given QtCore.QPointF and according to the given angle and size.
-    :type p1: QtCore.QPointF
-    :type p2: QtCore.QPointF
+    Creates an area between the given QPointF and according to the given angle and size.
+    :type p1: QPointF
+    :type p2: QPointF
     :type degrees: float
     :type size: int
-    :rtype: QtGui.QPolygonF
+    :rtype: QPolygonF
     """
     rad = math.radians(degrees)
     x = size / 2 * math.sin(rad)
@@ -96,9 +96,9 @@ def createArea(p1, p2, degrees, size):
 def midpoint(p1, p2):
     """
     Calculate the midpoint between the given points.
-    :type p1: QtCore.QPointF
-    :type p2: QtCore.QPointF
-    :rtype: QtCore.QPointF
+    :type p1: QQPointF
+    :type p2: QPointF
+    :rtype: QPointF
     """
     return QtCore.QPointF(((p1.x() + p2.x()) / 2), ((p1.y() + p2.y()) / 2))
 
@@ -109,7 +109,7 @@ def projection(line, p):
     Will return a tuple containing the length of the segment connecting the
     original point with its projection, and the coordinate of the projected point.
     :type line: QLineF
-    :type p: QtCore.QPointF
+    :type p: QPointF
     :rtype: tuple
     """
     x1 = line.x1()

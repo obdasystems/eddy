@@ -87,7 +87,7 @@ def cutR(text, *args):
 def first(iterable, default=None):
     """
     Returns the first element in 'iterable' if it exists, otherwise it returns the given default.
-    :type iterable: T <= list | tuple | set | generator
+    :type iterable: T <= list|tuple|set|generator
     :type default: any
     :rtype: mixed
     """
@@ -109,7 +109,7 @@ def format_exception(e):
 def isEmpty(string):
     """
     Safely detect whether the given string is empty.
-    :type string: str | float | None
+    :type string: str|float|None
     :rtype: bool
     """
     return not string or str(string).strip() == ''
@@ -127,7 +127,7 @@ def isQuoted(string):
 def last(iterable, default=None):
     """
     Returns the last element in 'iterable' if it exists, otherwise it returns the given default.
-    :type iterable: T <= list | tuple | set | generator
+    :type iterable: T <= list|tuple|set|generator
     :type default: any
     :rtype: mixed
     """
@@ -172,8 +172,9 @@ def prefix(string, value):
 
 def rangeF(start, stop, step):
     """
-    Generator which can be used to generate lists of float values. Floats are rounded up to 4 decimals.
-    It works like the python built-in range function but accepts a floating point number as incremental step.
+    Generator which can be used to generate lists of float values.
+    Floats are rounded up to 4 decimals. It works like the python built-in
+    range function but accepts a floating point number as incremental step.
     :type start: float
     :type stop: float
     :type step: float
@@ -187,10 +188,10 @@ def rangeF(start, stop, step):
 def snap(point, size, perform=True):
     """
     Snap each component of the given point according to the given size.
-    :type point: QtCore.QPointF
+    :type point: QPointF
     :type size: float
     :type perform: bool
-    :rtype: QtCore.QPointF
+    :rtype: QPointF
     """
     if perform:
         x = snapF(point.x(), size, 0, perform)
