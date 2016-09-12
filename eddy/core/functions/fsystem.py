@@ -43,7 +43,8 @@ from eddy.core.functions.path import expandPath
 def fcopy(src, dst):
     """
     Copy the contents of the file named src to a file named dst.
-    If dst specifies a directory, the file will be copied into dst using the base filename from src.
+    If dst specifies a directory, the file will be copied into
+    dst using the base filename from src.
     :type src: str
     :type dst: str
     :rtype: str
@@ -80,6 +81,15 @@ def fremove(path):
         os.remove(expandPath(path))
 
 
+def frename(src, dst):
+    """
+    Rename a file or director
+    :type src: str
+    :type dst: str
+    """
+    os.rename(expandPath(src), expandPath(dst))
+
+
 def fwrite(content, path):
     """
     Safely write the given 'content' in the file identified by the given 'path'.
@@ -88,14 +98,12 @@ def fwrite(content, path):
     :type content: T <= bytes|str|unicode
     :type path: str
     """
-    path = expandPath(path)
-    components = os.path.split(path)
+    components = os.path.split(expandPath(path))
     stage = os.path.join(components[0], '.{0}'.format(components[1]))
     with io.open(stage, 'w', encoding='utf8') as ptr:
         ptr.write(content)
-    if os.path.isfile(path):
-        os.remove(path)
-    os.rename(stage, path)
+    fremove(path)
+    frename(stage, path)
 
 
 def is_dir(path):
