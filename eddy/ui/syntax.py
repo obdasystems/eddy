@@ -33,23 +33,20 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QObject, QThread
-from PyQt5.QtCore import pyqtSlot, pyqtSignal
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QDialog, QProgressBar, QMessageBox
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTextEdit
-from PyQt5.QtWidgets import QDesktopWidget, QHBoxLayout, QPushButton
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
 
 
-class SyntaxValidationDialog(QDialog):
+class SyntaxValidationDialog(QtWidgets.QDialog):
     """
-    Extends QDialog with facilities to perform manual syntax validation.
+    Extends QtWidgets.QDialog with facilities to perform manual syntax validation.
     """
-    sgnWork = pyqtSignal(int)
+    sgnWork = QtCore.pyqtSignal(int)
 
     def __init__(self, project, session):
         """
@@ -71,14 +68,14 @@ class SyntaxValidationDialog(QDialog):
         # TOP AREA
         #################################
 
-        self.progressBar = QProgressBar(self)
-        self.progressBar.setAlignment(Qt.AlignHCenter)
+        self.progressBar = QtWidgets.QProgressBar(self)
+        self.progressBar.setAlignment(QtCore.Qt.AlignHCenter)
         self.progressBar.setRange(self.i, len(self.items) - 1)
         self.progressBar.setFixedSize(400, 30)
         self.progressBar.setValue(self.i)
 
-        self.progressBox = QWidget(self)
-        self.progressBoxLayout = QVBoxLayout(self.progressBox)
+        self.progressBox = QtWidgets.QWidget(self)
+        self.progressBoxLayout = QtWidgets.QVBoxLayout(self.progressBox)
         self.progressBoxLayout.setContentsMargins(10, 10, 10, 10)
         self.progressBoxLayout.addWidget(self.progressBar)
 
@@ -86,35 +83,35 @@ class SyntaxValidationDialog(QDialog):
         # CONTROLS AREA
         #################################
 
-        self.buttonAbort = QPushButton('Abort', self)
+        self.buttonAbort = QtWidgets.QPushButton('Abort', self)
         self.buttonAbort.setFont(arial12r)
-        self.buttonIgnore = QPushButton('Ignore', self)
+        self.buttonIgnore = QtWidgets.QPushButton('Ignore', self)
         self.buttonIgnore.setFont(arial12r)
-        self.buttonShow = QPushButton('Show', self)
+        self.buttonShow = QtWidgets.QPushButton('Show', self)
         self.buttonShow.setFont(arial12r)
 
-        self.buttonBox = QWidget(self)
+        self.buttonBox = QtWidgets.QWidget(self)
         self.buttonBox.setVisible(False)
-        self.buttonBoxLayout = QHBoxLayout(self.buttonBox)
+        self.buttonBoxLayout = QtWidgets.QHBoxLayout(self.buttonBox)
         self.buttonBoxLayout.setContentsMargins(10, 0, 10, 10)
-        self.buttonBoxLayout.addWidget(self.buttonAbort, 0, Qt.AlignRight)
-        self.buttonBoxLayout.addWidget(self.buttonIgnore, 0, Qt.AlignRight)
-        self.buttonBoxLayout.addWidget(self.buttonShow, 0, Qt.AlignRight)
+        self.buttonBoxLayout.addWidget(self.buttonAbort, 0, QtCore.Qt.AlignRight)
+        self.buttonBoxLayout.addWidget(self.buttonIgnore, 0, QtCore.Qt.AlignRight)
+        self.buttonBoxLayout.addWidget(self.buttonShow, 0, QtCore.Qt.AlignRight)
 
         #############################################
         # MESSAGE AREA
         #################################
 
-        self.messageField = QTextEdit(self)
+        self.messageField = QtWidgets.QTextEdit(self)
         self.messageField.setAcceptRichText(True)
-        self.messageField.setAttribute(Qt.WA_MacShowFocusRect, 0)
+        self.messageField.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
         self.messageField.setFixedSize(400, 100)
         self.messageField.setFont(arial12r)
         self.messageField.setReadOnly(True)
 
-        self.messageBox = QWidget(self)
+        self.messageBox = QtWidgets.QWidget(self)
         self.messageBox.setVisible(False)
-        self.messageBoxLayout = QVBoxLayout(self.messageBox)
+        self.messageBoxLayout = QtWidgets.QVBoxLayout(self.messageBox)
         self.messageBoxLayout.setContentsMargins(10, 0, 10, 10)
         self.messageBoxLayout.addWidget(self.messageField)
 
@@ -122,10 +119,10 @@ class SyntaxValidationDialog(QDialog):
         # CONFIGURE LAYOUT
         #################################
 
-        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.progressBox)
-        self.mainLayout.addWidget(self.buttonBox, 0, Qt.AlignRight)
+        self.mainLayout.addWidget(self.buttonBox, 0, QtCore.Qt.AlignRight)
         self.mainLayout.addWidget(self.messageBox)
 
         connect(self.buttonAbort.clicked, self.doAbort)
@@ -133,12 +130,12 @@ class SyntaxValidationDialog(QDialog):
         connect(self.buttonShow.clicked, self.doShow)
         connect(self.sgnWork, self.doWork)
 
-        self.setAttribute(Qt.WA_DeleteOnClose, True)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self.setFixedSize(self.sizeHint())
         self.setWindowTitle('Running syntax validation...')
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
 
-        desktop = QDesktopWidget()
+        desktop = QtWidgets.QDesktopWidget()
         screen = desktop.screenGeometry()
         widget = self.geometry()
         x = (screen.width() - widget.width()) / 2
@@ -193,7 +190,7 @@ class SyntaxValidationDialog(QDialog):
     #   SLOTS
     #################################
 
-    @pyqtSlot(bool)
+    @QtCore.pyqtSlot(bool)
     def doAbort(self, _=False):
         """
         Executed when the abort button is pressed.
@@ -201,7 +198,7 @@ class SyntaxValidationDialog(QDialog):
         """
         self.close()
 
-    @pyqtSlot(bool)
+    @QtCore.pyqtSlot(bool)
     def doIgnore(self, _=False):
         """
         Executed when the ignore button is pressed.
@@ -209,7 +206,7 @@ class SyntaxValidationDialog(QDialog):
         """
         self.sgnWork.emit(self.i + 1)
 
-    @pyqtSlot(bool)
+    @QtCore.pyqtSlot(bool)
     def doShow(self, _=False):
         """
         Executed when the show button is pressed.
@@ -229,7 +226,7 @@ class SyntaxValidationDialog(QDialog):
             item.setSelected(True)
         self.close()
 
-    @pyqtSlot(int)
+    @QtCore.pyqtSlot(int)
     def doWork(self, i):
         """
         Perform on or more advancements step in the validation procedure.
@@ -243,7 +240,7 @@ class SyntaxValidationDialog(QDialog):
         # MAKE SURE WE ARE CLEAR
         self.dispose()
         # RUN THE WORKER
-        self.workerThread = QThread()
+        self.workerThread = QtCore.QThread()
         self.worker = SyntaxValidationWorker(i, self.items, self.project)
         self.worker.moveToThread(self.workerThread)
         connect(self.worker.sgnCompleted, self.onCompleted)
@@ -252,22 +249,22 @@ class SyntaxValidationDialog(QDialog):
         connect(self.workerThread.started, self.worker.run)
         self.workerThread.start()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def onCompleted(self):
         """
         Executed when the syntax validation procedure is completed.
         """
-        msgbox = QMessageBox(self)
-        msgbox.setIconPixmap(QIcon(':/icons/48/ic_done_black').pixmap(48))
-        msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        msgbox = QtWidgets.QMessageBox(self)
+        msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
+        msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         msgbox.setWindowTitle('Done!')
-        msgbox.setStandardButtons(QMessageBox.Close)
+        msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
         msgbox.setText('Syntax validation completed!')
-        msgbox.setTextFormat(Qt.RichText)
+        msgbox.setTextFormat(QtCore.Qt.RichText)
         msgbox.exec_()
         self.close()
 
-    @pyqtSlot(int)
+    @QtCore.pyqtSlot(int)
     def onProgress(self, i):
         """
         Adjust the value of the progress bar.
@@ -277,7 +274,7 @@ class SyntaxValidationDialog(QDialog):
             self.i = i
             self.progressBar.setValue(self.i)
 
-    @pyqtSlot(str)
+    @QtCore.pyqtSlot(str)
     def onSyntaxError(self, message):
         """
         Executed when a syntax error is detected.
@@ -289,13 +286,13 @@ class SyntaxValidationDialog(QDialog):
         self.setFixedSize(self.sizeHint())
 
 
-class SyntaxValidationWorker(QObject):
+class SyntaxValidationWorker(QtCore.QObject):
     """
-    Extends QObject providing a worker thread that will perform the project syntax validation.
+    Extends QtCore.QObject providing a worker thread that will perform the project syntax validation.
     """
-    sgnCompleted = pyqtSignal()
-    sgnProgress = pyqtSignal(int)
-    sgnSyntaxError = pyqtSignal(str)
+    sgnCompleted = QtCore.pyqtSignal()
+    sgnProgress = QtCore.pyqtSignal(int)
+    sgnSyntaxError = QtCore.pyqtSignal(str)
 
     def __init__(self, current, items, project):
         """
@@ -309,7 +306,7 @@ class SyntaxValidationWorker(QObject):
         self.items = items
         self.i = current
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def run(self):
         """
         Main worker.

@@ -37,10 +37,9 @@ import os
 
 from abc import ABCMeta
 
-from PyQt5.QtCore import Qt, pyqtSlot, QRectF, QSettings
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QDialog, QWidget, QVBoxLayout, QFormLayout
-from PyQt5.QtWidgets import QDialogButtonBox, QMessageBox, QLabel, QFrame
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from eddy import ORGANIZATION, APPNAME
 from eddy.core.datatypes.qt import Font
@@ -55,7 +54,7 @@ from eddy.core.functions.signals import connect
 from eddy.ui.fields import StringField
 
 
-class AbstractDiagramDialog(QDialog):
+class AbstractDiagramDialog(QtWidgets.QDialog):
     """
     Base class for diagram dialogs.
     """
@@ -65,7 +64,7 @@ class AbstractDiagramDialog(QDialog):
         """
         Initialize the dialog.
         :type project: Project
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(parent)
 
@@ -79,7 +78,7 @@ class AbstractDiagramDialog(QDialog):
         self.projectPath = shortPath(project.path)
         self.projectPath = '{0}{1}'.format(self.projectPath.rstrip(os.path.sep), os.path.sep)
 
-        self.nameLabel = QLabel(self)
+        self.nameLabel = QtWidgets.QLabel(self)
         self.nameLabel.setFont(arial12r)
         self.nameLabel.setText('Name')
         self.nameField = StringField(self)
@@ -89,22 +88,22 @@ class AbstractDiagramDialog(QDialog):
         connect(self.nameField.textChanged, self.onNameFieldChanged)
         connect(self.nameField.textChanged, self.doPathValidate)
 
-        self.pathLabel = QLabel(self)
+        self.pathLabel = QtWidgets.QLabel(self)
         self.pathLabel.setFont(arial12r)
         self.pathLabel.setText('Location')
         self.pathField = StringField(self)
         self.pathField.setFont(arial12r)
         self.pathField.setMinimumWidth(400)
         self.pathField.setReadOnly(True)
-        self.pathField.setFocusPolicy(Qt.NoFocus)
+        self.pathField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pathField.setValue(self.projectPath)
 
-        spacer = QFrame()
-        spacer.setFrameShape(QFrame.HLine)
-        spacer.setFrameShadow(QFrame.Sunken)
+        spacer = QtWidgets.QFrame()
+        spacer.setFrameShape(QtWidgets.QFrame.HLine)
+        spacer.setFrameShadow(QtWidgets.QFrame.Sunken)
 
-        self.formWidget = QWidget(self)
-        self.formLayout = QFormLayout(self.formWidget)
+        self.formWidget = QtWidgets.QWidget(self)
+        self.formLayout = QtWidgets.QFormLayout(self.formWidget)
         self.formLayout.addRow(self.nameLabel, self.nameField)
         self.formLayout.addWidget(spacer)
         self.formLayout.addRow(self.pathLabel, self.pathField)
@@ -113,28 +112,28 @@ class AbstractDiagramDialog(QDialog):
         # CONFIRMATION AREA
         #################################
 
-        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok|QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(arial12r)
-        self.confirmationBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
 
         #############################################
         # SETUP DIALOG LAYOUT
         #################################
 
-        self.caption = QLabel(self)
+        self.caption = QtWidgets.QLabel(self)
         self.caption.setContentsMargins(8, 0, 8, 0)
         self.caption.setProperty('class', 'invalid')
         self.caption.setVisible(False)
 
-        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.formWidget)
         self.mainLayout.addWidget(self.caption)
-        self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
+        self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
 
         connect(self.confirmationBox.accepted, self.accept)
         connect(self.confirmationBox.rejected, self.reject)
@@ -143,7 +142,7 @@ class AbstractDiagramDialog(QDialog):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doPathValidate(self):
         """
         Validate diagram path settings.
@@ -171,10 +170,10 @@ class AbstractDiagramDialog(QDialog):
 
         self.caption.setText(caption)
         self.caption.setVisible(not isEmpty(caption))
-        self.confirmationBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
+        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enabled)
         self.setFixedSize(self.sizeHint())
 
-    @pyqtSlot(str)
+    @QtCore.pyqtSlot(str)
     def onNameFieldChanged(self, name):
         """
         Update the diagram location field to reflect the new diagram name.
@@ -194,7 +193,7 @@ class NewDiagramDialog(AbstractDiagramDialog):
         """
         Initialize the new diagram dialog.
         :type project: Project
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(project, parent)
         self.setWindowTitle('New diagram')
@@ -214,27 +213,27 @@ class NewDiagramDialog(AbstractDiagramDialog):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def accept(self):
         """
         Accept the diagram form and creates a new empty diagram.
         """
-        settings = QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         size = settings.value('diagram/size', 5000, int)
 
         try:
             diagram = Diagram(self.path(), self.project)
-            diagram.setSceneRect(QRectF(-size / 2, -size / 2, size, size))
+            diagram.setSceneRect(QtCore.QRectF(-size / 2, -size / 2, size, size))
             diagram.setItemIndexMethod(Diagram.NoIndex)
             exporter = GrapholDiagramExporter(diagram)
             exporter.export()
         except Exception as e:
-            msgbox = QMessageBox(self)
+            msgbox = QtWidgets.QMessageBox(self)
             msgbox.setDetailedText(format_exception(e))
-            msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-            msgbox.setStandardButtons(QMessageBox.Close)
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
             msgbox.setText('Eddy could not create the specified diagram: {0}!'.format(self.path()))
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Diagram creation failed!')
             msgbox.exec_()
             super().reject()
@@ -251,7 +250,7 @@ class RenameDiagramDialog(AbstractDiagramDialog):
         Initialize the new diagram dialog.
         :type project: Project
         :type diagram: Diagram
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(project, parent)
         self.diagram = diagram
@@ -262,7 +261,7 @@ class RenameDiagramDialog(AbstractDiagramDialog):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def accept(self):
         """
         Accept the form and renames the diagram.
@@ -274,7 +273,7 @@ class RenameDiagramDialog(AbstractDiagramDialog):
         self.project.addDiagram(self.diagram)
         super().accept()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doPathValidate(self):
         """
         Validate diagram path settings.
@@ -307,5 +306,5 @@ class RenameDiagramDialog(AbstractDiagramDialog):
 
         self.caption.setText(caption)
         self.caption.setVisible(not isEmpty(caption))
-        self.confirmationBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
+        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enabled)
         self.setFixedSize(self.sizeHint())

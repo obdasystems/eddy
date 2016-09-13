@@ -35,14 +35,15 @@
 
 from time import sleep, time
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import  QIcon
-from PyQt5.QtWidgets import QDialog, QProgressBar, QVBoxLayout, QApplication
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
+
 
 from eddy.core.functions.misc import rangeF
 
 
-class BusyProgressDialog(QDialog):
+class BusyProgressDialog(QtWidgets.QDialog):
     """
     This class implements a dialog showing a busy progress bar.
     """
@@ -55,15 +56,15 @@ class BusyProgressDialog(QDialog):
         """
         super().__init__(parent)
         self.mtime = time() + mtime
-        self.progressBar = QProgressBar(self)
-        self.progressBar.setAlignment(Qt.AlignHCenter)
+        self.progressBar = QtWidgets.QProgressBar(self)
+        self.progressBar.setAlignment(QtCore.Qt.AlignHCenter)
         self.progressBar.setRange(0, 0)
         self.progressBar.setFixedSize(300, 30)
         self.progressBar.setTextVisible(True)
         self.progressBar.setFormat(title or 'Busy ...')
-        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.addWidget(self.progressBar)
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(title or 'Busy ...')
         self.setFixedSize(self.sizeHint())
 
@@ -79,7 +80,7 @@ class BusyProgressDialog(QDialog):
         if now < self.mtime:
             for _ in rangeF(start=0, stop=self.mtime - now, step=0.1):
                 # noinspection PyArgumentList
-                QApplication.processEvents()
+                QtWidgets.QApplication.processEvents()
                 sleep(0.1)
 
     #############################################

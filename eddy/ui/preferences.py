@@ -33,10 +33,9 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, QSettings, pyqtSlot
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QDialog, QVBoxLayout, QLabel
-from PyQt5.QtWidgets import QDialogButtonBox, QTabWidget, QFormLayout
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from eddy import ORGANIZATION, APPNAME
 from eddy.core.datatypes.qt import Font
@@ -46,25 +45,25 @@ from eddy.core.functions.signals import connect
 from eddy.ui.fields import SpinBox
 
 
-class PreferencesDialog(QDialog):
+class PreferencesDialog(QtWidgets.QDialog):
     """
     This class implements the 'Preferences' dialog.
     """
     def __init__(self, parent=None):
         """
         Initialize the Preferences dialog.
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(parent)
 
         arial12r = Font('Arial', 12)
-        settings = QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
 
         #############################################
         # EDITOR TAB
         #################################
 
-        self.diagramSizeLabel = QLabel(self)
+        self.diagramSizeLabel = QtWidgets.QLabel(self)
         self.diagramSizeLabel.setFont(arial12r)
         self.diagramSizeLabel.setText('Diagram size')
         self.diagramSizeField = SpinBox(self)
@@ -74,15 +73,15 @@ class PreferencesDialog(QDialog):
         self.diagramSizeField.setToolTip('This setting changes the default size of all the new created diagrams.')
         self.diagramSizeField.setValue(settings.value('diagram/size', 5000, int))
 
-        self.editorWidget = QWidget()
-        self.editorLayout = QFormLayout(self.editorWidget)
+        self.editorWidget = QtWidgets.QWidget()
+        self.editorLayout = QtWidgets.QFormLayout(self.editorWidget)
         self.editorLayout.addRow(self.diagramSizeLabel, self.diagramSizeField)
 
         #############################################
         # CONFIRMATION BOX
         #################################
 
-        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(arial12r)
 
@@ -90,15 +89,15 @@ class PreferencesDialog(QDialog):
         # MAIN WIDGET
         #################################
 
-        self.mainWidget = QTabWidget(self)
+        self.mainWidget = QtWidgets.QTabWidget(self)
         self.mainWidget.addTab(self.editorWidget, 'Editor')
-        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.mainWidget)
-        self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
+        self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Preferences')
 
         connect(self.confirmationBox.accepted, self.accept)
@@ -108,12 +107,12 @@ class PreferencesDialog(QDialog):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def accept(self):
         """
         Executed when the dialog is accepted.
         """
-        settings = QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         settings.setValue('diagram/size', self.diagramSizeField.value())
         settings.sync()
         super().accept()

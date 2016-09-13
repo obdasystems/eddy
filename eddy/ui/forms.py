@@ -33,10 +33,9 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QDialog, QFormLayout, QLabel, QVBoxLayout
-from PyQt5.QtWidgets import QMessageBox, QDialogButtonBox, QWidget
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.graphol import Identity
@@ -50,14 +49,14 @@ from eddy.ui.fields import IntegerField
 from eddy.ui.fields import StringField
 
 
-class CardinalityRestrictionForm(QDialog):
+class CardinalityRestrictionForm(QtWidgets.QDialog):
     """
     This class implements the form used to input domain/range restriction cardinalities.
     """
     def __init__(self, parent=None):
         """
         Initialize the form dialog.
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(parent)
 
@@ -67,22 +66,22 @@ class CardinalityRestrictionForm(QDialog):
         # FORM AREA
         #################################
 
-        self.minLabel = QLabel(self)
+        self.minLabel = QtWidgets.QLabel(self)
         self.minLabel.setFont(arial12r)
         self.minLabel.setText('Min. cardinality')
         self.minField = IntegerField(self)
         self.minField.setFont(arial12r)
         self.minField.setFixedWidth(80)
 
-        self.maxLabel = QLabel(self)
+        self.maxLabel = QtWidgets.QLabel(self)
         self.maxLabel.setFont(arial12r)
         self.maxLabel.setText('Max. cardinality')
         self.maxField = IntegerField(self)
         self.maxField.setFont(arial12r)
         self.maxField.setFixedWidth(80)
 
-        self.formWidget = QWidget(self)
-        self.formLayout = QFormLayout(self.formWidget)
+        self.formWidget = QtWidgets.QWidget(self)
+        self.formLayout = QtWidgets.QFormLayout(self.formWidget)
         self.formLayout.addRow(self.minLabel, self.minField)
         self.formLayout.addRow(self.maxLabel, self.maxField)
 
@@ -90,7 +89,7 @@ class CardinalityRestrictionForm(QDialog):
         # CONFIRMATION AREA
         #################################
 
-        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(arial12r)
 
@@ -98,13 +97,13 @@ class CardinalityRestrictionForm(QDialog):
         # SETUP DIALOG LAYOUT
         #################################
 
-        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.formWidget)
-        self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
+        self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Insert cardinality')
 
         connect(self.confirmationBox.accepted, self.accept)
@@ -114,7 +113,7 @@ class CardinalityRestrictionForm(QDialog):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def accept(self):
         """
         Validate the form and trigger accept() if the form is valid.
@@ -123,13 +122,13 @@ class CardinalityRestrictionForm(QDialog):
         v2 = self.max()
         if v1 is not None and v2 is not None:
             if v1 > v2:
-                msgbox = QMessageBox(self)
-                msgbox.setIconPixmap(QIcon(':/icons/48/ic_warning_black').pixmap(48))
-                msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+                msgbox = QtWidgets.QMessageBox(self)
+                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
                 msgbox.setWindowTitle('Invalid range specified')
                 msgbox.setText('Min. cardinality <b>{0}</b> must be <= than Max. cardinality <b>{1}</b>'.format(v1, v2))
-                msgbox.setTextFormat(Qt.RichText)
-                msgbox.setStandardButtons(QMessageBox.Ok)
+                msgbox.setTextFormat(QtCore.Qt.RichText)
+                msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
                 msgbox.exec_()
                 return
 
@@ -160,7 +159,7 @@ class CardinalityRestrictionForm(QDialog):
             return None
 
 
-class RefactorNameForm(QDialog):
+class RefactorNameForm(QtWidgets.QDialog):
     """
     This class implements the form used to rename nodes during refactor operations.
     """
@@ -180,7 +179,7 @@ class RefactorNameForm(QDialog):
         # FORM AREA
         #################################
 
-        self.renameLabel = QLabel(self)
+        self.renameLabel = QtWidgets.QLabel(self)
         self.renameLabel.setFont(arial12r)
         self.renameLabel.setText('Name')
         self.renameField = StringField(self)
@@ -189,15 +188,15 @@ class RefactorNameForm(QDialog):
         self.renameField.setValue(self.node.text())
         connect(self.renameField.textChanged, self.nameChanged)
 
-        self.formWidget = QWidget(self)
-        self.formLayout = QFormLayout(self.formWidget)
+        self.formWidget = QtWidgets.QWidget(self)
+        self.formLayout = QtWidgets.QFormLayout(self.formWidget)
         self.formLayout.addRow(self.renameLabel, self.renameField)
 
         #############################################
         # CONFIRMATION AREA
         #################################
 
-        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(arial12r)
 
@@ -205,20 +204,20 @@ class RefactorNameForm(QDialog):
         # SETUP DIALOG LAYOUT
         #################################
 
-        self.caption = QLabel(self)
+        self.caption = QtWidgets.QLabel(self)
         self.caption.setFont(arial12r)
         self.caption.setContentsMargins(8, 0, 8, 0)
         self.caption.setProperty('class', 'invalid')
         self.caption.setVisible(False)
 
-        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.formWidget)
         self.mainLayout.addWidget(self.caption)
-        self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
+        self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Rename')
 
         connect(self.confirmationBox.accepted, self.accept)
@@ -248,7 +247,7 @@ class RefactorNameForm(QDialog):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def accept(self):
         """
         Accepts the rename form and perform refactoring.
@@ -261,7 +260,7 @@ class RefactorNameForm(QDialog):
         self.session.undostack.endMacro()
         super().accept()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def nameChanged(self):
         """
         Executed whenever the text in the rename field changes.
@@ -275,11 +274,11 @@ class RefactorNameForm(QDialog):
 
         self.caption.setText(caption)
         self.caption.setVisible(not isEmpty(caption))
-        self.confirmationBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
+        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enabled)
         self.setFixedSize(self.sizeHint())
 
 
-class ValueForm(QDialog):
+class ValueForm(QtWidgets.QDialog):
     """
     This class implements the form used to select the Value of an Individual node.
     """
@@ -299,7 +298,7 @@ class ValueForm(QDialog):
         # FORM AREA
         #################################
 
-        self.datatypeLabel = QLabel(self)
+        self.datatypeLabel = QtWidgets.QLabel(self)
         self.datatypeLabel.setFont(arial12r)
         self.datatypeLabel.setText('Datatype')
         self.datatypeField = ComboBox(self)
@@ -308,7 +307,7 @@ class ValueForm(QDialog):
         for datatype in Datatype:
             self.datatypeField.addItem(datatype.value, datatype)
 
-        self.valueLabel = QLabel(self)
+        self.valueLabel = QtWidgets.QLabel(self)
         self.valueLabel.setFont(arial12r)
         self.valueLabel.setText('Value')
         self.valueField = StringField(self)
@@ -325,8 +324,8 @@ class ValueForm(QDialog):
             self.valueField.setValue('')
             self.datatypeField.setCurrentIndex(0)
 
-        self.formWidget = QWidget(self)
-        self.formLayout = QFormLayout(self.formWidget)
+        self.formWidget = QtWidgets.QWidget(self)
+        self.formLayout = QtWidgets.QFormLayout(self.formWidget)
         self.formLayout.addRow(self.datatypeLabel, self.datatypeField)
         self.formLayout.addRow(self.valueLabel, self.valueField)
 
@@ -334,7 +333,7 @@ class ValueForm(QDialog):
         # CONFIRMATION AREA
         #################################
 
-        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(arial12r)
 
@@ -342,13 +341,13 @@ class ValueForm(QDialog):
         # SETUP DIALOG LAYOUT
         #################################
 
-        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.formWidget)
-        self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
+        self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Compose value')
 
         connect(self.confirmationBox.accepted, self.accept)
@@ -378,7 +377,7 @@ class ValueForm(QDialog):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def accept(self):
         """
         Accepts the form and set the new value.

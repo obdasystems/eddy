@@ -35,10 +35,9 @@
 
 import os
 
-from PyQt5.QtCore import Qt, QSettings, pyqtSlot
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QFormLayout, QFrame
-from PyQt5.QtWidgets import QWidget, QDialogButtonBox, QLabel
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from eddy import ORGANIZATION, APPNAME, WORKSPACE
 from eddy.core.datatypes.qt import Font
@@ -53,14 +52,14 @@ from eddy.core.project import Project
 from eddy.ui.fields import StringField
 
 
-class ProjectDialog(QDialog):
+class ProjectDialog(QtWidgets.QDialog):
     """
     This class is used to display a modal window to enter project specific data.
     """
     def __init__(self, parent=None):
         """
         Initialize the project dialog.
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(parent)
 
@@ -70,12 +69,12 @@ class ProjectDialog(QDialog):
         # FORM AREA
         #################################
 
-        settings = QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
 
         self.workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
         self.workspace = '{0}{1}'.format(self.workspace.rstrip(os.path.sep), os.path.sep)
 
-        self.nameLabel = QLabel(self)
+        self.nameLabel = QtWidgets.QLabel(self)
         self.nameLabel.setFont(arial12r)
         self.nameLabel.setText('Name')
         self.nameField = StringField(self)
@@ -84,14 +83,14 @@ class ProjectDialog(QDialog):
         self.nameField.setMaxLength(64)
         connect(self.nameField.textChanged, self.onNameFieldChanged)
 
-        self.prefixLabel = QLabel(self)
+        self.prefixLabel = QtWidgets.QLabel(self)
         self.prefixLabel.setFont(arial12r)
         self.prefixLabel.setText('Prefix')
         self.prefixField = StringField(self)
         self.prefixField.setFont(arial12r)
         self.prefixField.setMinimumWidth(400)
 
-        self.iriLabel = QLabel(self)
+        self.iriLabel = QtWidgets.QLabel(self)
         self.iriLabel.setFont(arial12r)
         self.iriLabel.setText('IRI')
         self.iriField = StringField(self)
@@ -102,22 +101,22 @@ class ProjectDialog(QDialog):
         connect(self.nameField.textChanged, self.doProjectPathValidate)
         connect(self.prefixField.textChanged, self.doProjectPathValidate)
 
-        self.pathLabel = QLabel(self)
+        self.pathLabel = QtWidgets.QLabel(self)
         self.pathLabel.setFont(arial12r)
         self.pathLabel.setText('Location')
         self.pathField = StringField(self)
         self.pathField.setFont(arial12r)
         self.pathField.setMinimumWidth(400)
         self.pathField.setReadOnly(True)
-        self.pathField.setFocusPolicy(Qt.NoFocus)
+        self.pathField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pathField.setValue(self.workspace)
 
-        spacer = QFrame()
-        spacer.setFrameShape(QFrame.HLine)
-        spacer.setFrameShadow(QFrame.Sunken)
+        spacer = QtWidgets.QFrame()
+        spacer.setFrameShape(QtWidgets.QFrame.HLine)
+        spacer.setFrameShadow(QtWidgets.QFrame.Sunken)
 
-        self.formWidget = QWidget(self)
-        self.formLayout = QFormLayout(self.formWidget)
+        self.formWidget = QtWidgets.QWidget(self)
+        self.formLayout = QtWidgets.QFormLayout(self.formWidget)
         self.formLayout.addRow(self.nameLabel, self.nameField)
         self.formLayout.addRow(self.prefixLabel, self.prefixField)
         self.formLayout.addRow(self.iriLabel, self.iriField)
@@ -128,29 +127,29 @@ class ProjectDialog(QDialog):
         # CONFIRMATION AREA
         #################################
 
-        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(arial12r)
-        self.confirmationBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
 
         #############################################
         # SETUP DIALOG LAYOUT
         #################################
 
-        self.caption = QLabel(self)
+        self.caption = QtWidgets.QLabel(self)
         self.caption.setFont(arial12r)
         self.caption.setContentsMargins(8, 0, 8, 0)
         self.caption.setProperty('class', 'invalid')
         self.caption.setVisible(False)
 
-        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.formWidget)
         self.mainLayout.addWidget(self.caption)
-        self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
+        self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('New project')
 
         connect(self.confirmationBox.accepted, self.accept)
@@ -185,7 +184,7 @@ class ProjectDialog(QDialog):
     # SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def accept(self):
         """
         Accept the project form and creates a new empty project.
@@ -195,7 +194,7 @@ class ProjectDialog(QDialog):
         exporter.export()
         super().accept()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doProjectPathValidate(self):
         """
         Validate project settings.
@@ -241,10 +240,10 @@ class ProjectDialog(QDialog):
 
         self.caption.setText(caption)
         self.caption.setVisible(not isEmpty(caption))
-        self.confirmationBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
+        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enabled)
         self.setFixedSize(self.sizeHint())
 
-    @pyqtSlot(str)
+    @QtCore.pyqtSlot(str)
     def onNameFieldChanged(self, name):
         """
         Update the project location field to reflect the new project name.

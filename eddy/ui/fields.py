@@ -33,12 +33,12 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIntValidator, QDoubleValidator
-from PyQt5.QtWidgets import QLineEdit, QPlainTextEdit, QSpinBox, QComboBox, QCheckBox
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 
-class ComboBox(QComboBox):
+class ComboBox(QtWidgets.QComboBox):
     """
     This class implements a multi selection box.
     """
@@ -47,7 +47,7 @@ class ComboBox(QComboBox):
         Initialize the spin box.
         """
         super().__init__(*args, **kwargs)
-        self.setAttribute(Qt.WA_MacShowFocusRect, 0)
+        self.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
         self._scrollEnabled = True
 
     def value(self):
@@ -80,7 +80,7 @@ class ComboBox(QComboBox):
             super().wheelEvent(wheelEvent)
 
 
-class CheckBox(QCheckBox):
+class CheckBox(QtWidgets.QCheckBox):
     """
     This class implements a check box.
     """
@@ -89,10 +89,10 @@ class CheckBox(QCheckBox):
         Initialize the check box.
         """
         super().__init__(parent)
-        self.setAttribute(Qt.WA_MacShowFocusRect, 0)
+        self.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
 
 
-class DoubleField(QLineEdit):
+class DoubleField(QtWidgets.QLineEdit):
     """
     This class implements an input field where the user can enter float values.
     """
@@ -101,8 +101,8 @@ class DoubleField(QLineEdit):
         Initialize the float input field.
         """
         super().__init__(parent)
-        self.setAttribute(Qt.WA_MacShowFocusRect, 0)
-        self.setValidator(QDoubleValidator(self))
+        self.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
+        self.setValidator(QtGui.QDoubleValidator(self))
 
     def setValue(self, value):
         """
@@ -119,7 +119,7 @@ class DoubleField(QLineEdit):
         return float(self.text())
 
 
-class IntegerField(QLineEdit):
+class IntegerField(QtWidgets.QLineEdit):
     """
     This class implements an input field where the user can enter only integer values.
     """
@@ -128,8 +128,8 @@ class IntegerField(QLineEdit):
         Initialize the integer input field.
         """
         super().__init__(parent)
-        self.setAttribute(Qt.WA_MacShowFocusRect, 0)
-        self.setValidator(QIntValidator(self))
+        self.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
+        self.setValidator(QtGui.QIntValidator(self))
 
     def setValue(self, value):
         """
@@ -146,7 +146,7 @@ class IntegerField(QLineEdit):
         return int(self.text())
 
 
-class StringField(QLineEdit):
+class StringField(QtWidgets.QLineEdit):
     """
     This class implements an input field where the user can enter strings.
     """
@@ -155,7 +155,7 @@ class StringField(QLineEdit):
         Initialize the string input field.
         """
         super().__init__(parent)
-        self.setAttribute(Qt.WA_MacShowFocusRect, 0)
+        self.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
 
     def setValue(self, value):
         """
@@ -172,7 +172,7 @@ class StringField(QLineEdit):
         return self.text().strip()
 
 
-class TextField(QPlainTextEdit):
+class TextField(QtWidgets.QPlainTextEdit):
     """
     This class implements a textarea field where the user can enter strings.
     """
@@ -181,7 +181,7 @@ class TextField(QPlainTextEdit):
         Initialize the string input field.
         """
         super().__init__(parent)
-        self.setAttribute(Qt.WA_MacShowFocusRect, 0)
+        self.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
 
     def setValue(self, value):
         """
@@ -198,7 +198,7 @@ class TextField(QPlainTextEdit):
         return self.toPlainText().strip()
 
 
-class SpinBox(QSpinBox):
+class SpinBox(QtWidgets.QSpinBox):
     """
     This class implements a SpinBox.
     """
@@ -207,4 +207,4 @@ class SpinBox(QSpinBox):
         Initialize the spin box.
         """
         super().__init__(parent)
-        self.setAttribute(Qt.WA_MacShowFocusRect, 0)
+        self.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)

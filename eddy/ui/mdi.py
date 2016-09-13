@@ -33,17 +33,16 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtWidgets import QMdiArea, QMdiSubWindow
-from PyQt5.QtWidgets import QTabWidget, QAction, QTabBar
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.signals import connect
 
 
-class MdiArea(QMdiArea):
+class MdiArea(QtWidgets.QMdiArea):
     """
-    Extends QMdiArea providing a widget where to render Graphol diagrams.
+    Extends QtWidgets.QMdiArea providing a widget where to render Graphol diagrams.
     """
     def __init__(self, session, **kwargs):
         """
@@ -55,13 +54,13 @@ class MdiArea(QMdiArea):
         # CONFIGURE WIDGET
         self.setContentsMargins(0, 0, 0, 0)
         self.setViewMode(MdiArea.TabbedView)
-        self.setTabPosition(QTabWidget.North)
+        self.setTabPosition(QtWidgets.QTabWidget.North)
         self.setTabsClosable(True)
         self.setTabsMovable(True)
 
         # DO NOT EXPAND MDI AREA TABS
         for child in self.children():
-            if isinstance(child, QTabBar):
+            if isinstance(child, QtWidgets.QTabBar):
                 child.setExpanding(False)
                 break
 
@@ -84,7 +83,7 @@ class MdiArea(QMdiArea):
     #   SLOTS
     #################################
 
-    @pyqtSlot(QMdiSubWindow)
+    @QtCore.pyqtSlot(QtWidgets.QMdiSubWindow)
     def onSubWindowActivated(self, subwindow):
         """
         Executed when the active subwindow changes.
@@ -131,7 +130,7 @@ class MdiArea(QMdiArea):
         :type flags: int
         """
         menu = subwindow.systemMenu()
-        action = QAction('Close All', menu)
+        action = QtWidgets.QAction('Close All', menu)
         action.setIcon(menu.actions()[7].icon())
         connect(action.triggered, self.closeAllSubWindows)
         menu.addAction(action)
@@ -149,7 +148,7 @@ class MdiArea(QMdiArea):
         return None
 
 
-class MdiSubWindow(QMdiSubWindow):
+class MdiSubWindow(QtWidgets.QMdiSubWindow):
     """
     This class implements the MDI area subwindow.
     """
@@ -160,7 +159,7 @@ class MdiSubWindow(QMdiSubWindow):
         :type parent: QWidget
         """
         super().__init__(parent)
-        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWidget(view)
         self.setWindowTitle(self.diagram.name)
     

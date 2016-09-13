@@ -33,10 +33,9 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import pyqtSignal, pyqtSlot
-from PyQt5.QtCore import Qt, QRectF, QLineF, QPointF, QTimer, QEvent
-from PyQt5.QtGui import QPainterPath, QPen, QColor, QBrush
-from PyQt5.QtWidgets import QGraphicsView, QApplication, QRubberBand
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.diagram import Diagram
@@ -45,7 +44,7 @@ from eddy.core.functions.misc import clamp, rangeF, snapF
 from eddy.core.functions.signals import disconnect, connect
 
 
-class DiagramView(QGraphicsView):
+class DiagramView(QtWidgets.QGraphicsView):
     """
     This class implements the main view used to display diagrams within the MDI area.
     """
@@ -58,7 +57,7 @@ class DiagramView(QGraphicsView):
     ZoomMax = 5.00
     ZoomStep = 0.10
 
-    sgnScaled = pyqtSignal(float)
+    sgnScaled = QtCore.pyqtSignal(float)
 
     def __init__(self, diagram, session):
         """
@@ -73,13 +72,13 @@ class DiagramView(QGraphicsView):
         self.mv_Timer = None
 
         self.rubberBandOrigin = None
-        self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
+        self.rubberBand = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle, self)
         self.rubberBand.hide()
         self.pinchFactor = 1.0
         self.session = session
         self.zoom = 1.0
 
-        self.setContextMenuPolicy(Qt.PreventContextMenu)
+        self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.setDragMode(DiagramView.NoDrag)
         self.setOptimizationFlags(DiagramView.DontAdjustForAntialiasing)
         self.setOptimizationFlags(DiagramView.DontSavePainterState)
@@ -102,7 +101,7 @@ class DiagramView(QGraphicsView):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def doUpdateView(self):
         """
         Perform the redraw of the currently displayed diagram.
@@ -110,7 +109,7 @@ class DiagramView(QGraphicsView):
         viewport = self.viewport()
         viewport.update()
 
-    @pyqtSlot(float)
+    @QtCore.pyqtSlot(float)
     def onZoomChanged(self, zoom):
         """
         Executed when the zoom factor changes (triggered by the Zoom widget).
@@ -131,13 +130,13 @@ class DiagramView(QGraphicsView):
         modifiers = keyEvent.modifiers()
 
         if self.diagram.mode is DiagramMode.Idle and \
-            modifiers & Qt.ControlModifier and \
-                key in {Qt.Key_Minus, Qt.Key_Plus, Qt.Key_0}:
+            modifiers & QtCore.Qt.ControlModifier and \
+                key in {QtCore.Qt.Key_Minus, QtCore.Qt.Key_Plus, QtCore.Qt.Key_0}:
 
             zoom = DiagramView.ZoomDefault
-            if key in {Qt.Key_Minus, Qt.Key_Plus}:
+            if key in {QtCore.Qt.Key_Minus, QtCore.Qt.Key_Plus}:
                 zoom = self.zoom
-                zoom += +DiagramView.ZoomStep if key == Qt.Key_Plus else -DiagramView.ZoomStep
+                zoom += +DiagramView.ZoomStep if key == QtCore.Qt.Key_Plus else -DiagramView.ZoomStep
                 zoom = clamp(zoom, DiagramView.ZoomMin, DiagramView.ZoomMax)
 
             if zoom != self.zoom:
@@ -154,7 +153,7 @@ class DiagramView(QGraphicsView):
         mouseButtons = mouseEvent.buttons()
         mousePos = mouseEvent.pos()
 
-        if mouseButtons & Qt.RightButton:
+        if mouseButtons & QtCore.Qt.RightButton:
 
             #############################################
             # SCENE DRAG
@@ -166,7 +165,7 @@ class DiagramView(QGraphicsView):
 
         else:
 
-            if mouseButtons & Qt.LeftButton:
+            if mouseButtons & QtCore.Qt.LeftButton:
 
                 #############################################
                 # RUBBERBAND SELECTION
@@ -175,7 +174,7 @@ class DiagramView(QGraphicsView):
                 if self.diagram.mode is DiagramMode.Idle and not self.itemAt(mousePos):
                     self.diagram.setMode(DiagramMode.RubberBandDrag)
                     self.rubberBandOrigin = self.mapToScene(mousePos)
-                    self.rubberBand.setGeometry(QRectF(mousePos, mousePos).toRect())
+                    self.rubberBand.setGeometry(QtCore.QRectF(mousePos, mousePos).toRect())
                     self.rubberBand.show()
 
             super().mousePressEvent(mouseEvent)
@@ -190,9 +189,9 @@ class DiagramView(QGraphicsView):
         mouseButtons = mouseEvent.buttons()
         viewport = self.viewport()
 
-        if mouseButtons & Qt.RightButton:
+        if mouseButtons & QtCore.Qt.RightButton:
 
-            if (mouseEvent.pos() - self.mp_Pos).manhattanLength() >= QApplication.startDragDistance():
+            if (mouseEvent.pos() - self.mp_Pos).manhattanLength() >= QtWidgets.QApplication.startDragDistance():
 
                 #############################################
                 # SCENE DRAG
@@ -200,7 +199,7 @@ class DiagramView(QGraphicsView):
 
                 if self.diagram.mode is not DiagramMode.SceneDrag:
                     self.diagram.setMode(DiagramMode.SceneDrag)
-                    viewport.setCursor(Qt.ClosedHandCursor)
+                    viewport.setCursor(QtCore.Qt.ClosedHandCursor)
 
                 mousePos /= self.zoom
                 mousePressPos = self.mp_Pos / self.zoom
@@ -210,7 +209,7 @@ class DiagramView(QGraphicsView):
 
             super().mouseMoveEvent(mouseEvent)
 
-            if mouseButtons & Qt.LeftButton:
+            if mouseButtons & QtCore.Qt.LeftButton:
                 
                 self.stopMove()
 
@@ -220,8 +219,8 @@ class DiagramView(QGraphicsView):
                     # RUBBERBAND SELECTION
                     #################################
 
-                    area = QRectF(self.mapFromScene(self.rubberBandOrigin), mousePos).normalized()
-                    path = QPainterPath()
+                    area = QtCore.QRectF(self.mapFromScene(self.rubberBandOrigin), mousePos).normalized()
+                    path = QtGui.QPainterPath()
                     path.addRect(area)
                     self.diagram.setSelectionArea(self.mapToScene(path))
                     self.rubberBand.setGeometry(area.toRect())
@@ -240,7 +239,7 @@ class DiagramView(QGraphicsView):
                     R = viewport.rect()
                     if not R.contains(mousePos):
 
-                        move = QPointF(0, 0)
+                        move = QtCore.QPointF(0, 0)
 
                         if mousePos.x() < R.left():
                             move.setX(mousePos.x() - R.left())
@@ -270,7 +269,7 @@ class DiagramView(QGraphicsView):
         self.stopMove()
 
         viewport = self.viewport()
-        viewport.setCursor(Qt.ArrowCursor)
+        viewport.setCursor(QtCore.Qt.ArrowCursor)
         viewport.update()
 
         super().mouseReleaseEvent(mouseEvent)
@@ -283,7 +282,7 @@ class DiagramView(QGraphicsView):
         Executed when the mouse wheel is rotated on the diagram.
         :type wheelEvent: QWheelEvent
         """
-        if wheelEvent.modifiers() & Qt.ControlModifier:
+        if wheelEvent.modifiers() & QtCore.Qt.ControlModifier:
 
             wheelPos = wheelEvent.pos()
             wheelAngle = wheelEvent.angleDelta()
@@ -303,9 +302,9 @@ class DiagramView(QGraphicsView):
         Perform pinch to zoom feature to scale the viewport.
         :type viewportEvent: QTouchEvent
         """
-        if viewportEvent.type() in {QEvent.TouchBegin, QEvent.TouchUpdate, QEvent.TouchEnd}:
+        if viewportEvent.type() in {QtCore.QEvent.TouchBegin, QtCore.QEvent.TouchUpdate, QtCore.QEvent.TouchEnd}:
 
-            if viewportEvent.type() in {QEvent.TouchBegin, QEvent.TouchEnd}:
+            if viewportEvent.type() in {QtCore.QEvent.TouchBegin, QtCore.QEvent.TouchEnd}:
                 self.pinchFactor = 1.0
 
             pts = viewportEvent.touchPoints()
@@ -313,7 +312,7 @@ class DiagramView(QGraphicsView):
                 p0 = pts[0]
                 p1 = pts[1]
                 p2 = midpoint(p0.pos(), p1.pos())
-                pinchFactor = QLineF(p0.pos(), p1.pos()).length() / QLineF(p0.startPos(), p1.startPos()).length()
+                pinchFactor = QtCore.QLineF(p0.pos(), p1.pos()).length() / QtCore.QLineF(p0.startPos(), p1.startPos()).length()
                 pinchFactor = snapF(pinchFactor, DiagramView.PinchSize)
                 if pinchFactor < DiagramView.PinchGuard[0] or pinchFactor > DiagramView.PinchGuard[1]:
                     if pinchFactor != self.pinchFactor:
@@ -334,14 +333,14 @@ class DiagramView(QGraphicsView):
         """
         Draw the diagram background (grid).
         :type painter: QPainter
-        :type rect: QRectF
+        :type rect: QtCore.QRectF
         """
         if self.session.action('toggle_grid').isChecked():
             s = Diagram.GridSize
             x = int(rect.left()) - (int(rect.left()) % s)
             y = int(rect.top()) - (int(rect.top()) % s)
-            points = (QPointF(i, j) for i in rangeF(x, rect.right(), s) for j in rangeF(y, rect.bottom(), s))
-            painter.setPen(QPen(QBrush(QColor(80, 80, 80, 255)), 1, Qt.SolidLine))
+            points = (QtCore.QPointF(i, j) for i in rangeF(x, rect.right(), s) for j in rangeF(y, rect.bottom(), s))
+            painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(80, 80, 80, 255)), 1, QtCore.Qt.SolidLine))
             painter.drawPoints(*points)
 
     def moveBy(self, *__args):
@@ -351,7 +350,7 @@ class DiagramView(QGraphicsView):
         if len(__args) == 1:
             delta = __args[0]
         elif len(__args) == 2:
-            delta = QPointF(__args[0], __args[1])
+            delta = QtCore.QPointF(__args[0], __args[1])
         else:
             raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
         self.centerOn(self.visibleRect().center() + delta)
@@ -361,8 +360,8 @@ class DiagramView(QGraphicsView):
         Scale the view according to the given zoom.
         :type zoom: float
         """
-        self.setTransformationAnchor(QGraphicsView.NoAnchor)
-        self.setResizeAnchor(QGraphicsView.NoAnchor)
+        self.setTransformationAnchor(QtWidgets.QGraphicsView.NoAnchor)
+        self.setResizeAnchor(QtWidgets.QGraphicsView.NoAnchor)
         self.resetTransform()
         self.translate(self.transform().dx(), self.transform().dy())
         self.scale(zoom, zoom)
@@ -384,7 +383,7 @@ class DiagramView(QGraphicsView):
     def startMove(self, delta, rate):
         """
         Start the view movement.
-        :type delta: QPointF
+        :type delta: QtCore.QPointF
         :type rate: float
         """
         if self.mv_Timer:
@@ -399,7 +398,7 @@ class DiagramView(QGraphicsView):
         # Setup a timer for future move, so the view keeps moving
         # also if we are not moving the mouse anymore but we are
         # holding the position outside the viewport rect.
-        self.mv_Timer = QTimer()
+        self.mv_Timer = QtCore.QTimer()
         connect(self.mv_Timer.timeout, self.moveBy, delta)
         self.mv_Timer.start(rate)
 
@@ -415,6 +414,6 @@ class DiagramView(QGraphicsView):
     def visibleRect(self):
         """
         Returns the visible area in scene coordinates.
-        :rtype: QRectF
+        :rtype: QtCore.QRectF
         """
         return self.mapToScene(self.viewport().rect()).boundingRect()

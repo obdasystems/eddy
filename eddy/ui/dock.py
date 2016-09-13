@@ -33,16 +33,15 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPainter, QIcon
-from PyQt5.QtWidgets import QWidget, QStyleOption, QStyle, QHBoxLayout
-from PyQt5.QtWidgets import QLabel, QDockWidget, QPushButton
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
 
 
-class DockWidget(QDockWidget):
+class DockWidget(QtWidgets.QDockWidget):
     """
     This class implements the container for docking area widgets.
     """
@@ -53,7 +52,7 @@ class DockWidget(QDockWidget):
         :type icon: QIcon
         :type session: Session
         """
-        super().__init__(title, session, Qt.Widget)
+        super().__init__(title, session, QtCore.Qt.Widget)
         self.setTitleBarWidget(DockTitleWidget(title, icon, self))
 
     def addTitleBarButton(self, button):
@@ -66,7 +65,7 @@ class DockWidget(QDockWidget):
         widget.updateLayout()
 
 
-class DockTitleWidget(QWidget):
+class DockTitleWidget(QtWidgets.QWidget):
     """
     This class implements the title area of docking area widgets.
     """
@@ -79,27 +78,27 @@ class DockTitleWidget(QWidget):
         """
         super().__init__(parent)
         # CREATE TITLEBAR ICON AND TITLE
-        self.imageLabel = QLabel(self)
+        self.imageLabel = QtWidgets.QLabel(self)
         self.imageLabel.setPixmap(icon.pixmap(18))
-        self.imageLabel.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
+        self.imageLabel.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.imageLabel.setContentsMargins(0, 0, 0, 0)
         self.imageLabel.setFixedSize(18, 18)
-        self.titleLabel = QLabel(title, self)
-        self.titleLabel.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
+        self.titleLabel = QtWidgets.QLabel(title, self)
+        self.titleLabel.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.titleLabel.setContentsMargins(4, 0, 0, 0)
         self.titleLabel.setFont(Font('Arial', 13))
         # CREATE STANDARD BUTTONS
-        close = QPushButton(self)
-        close.setIcon(QIcon(':/icons/18/ic_close_black'))
+        close = QtWidgets.QPushButton(self)
+        close.setIcon(QtGui.QIcon(':/icons/18/ic_close_black'))
         close.setFixedSize(18, 18)
         connect(close.clicked, parent.close)
         self.buttons = [close]
         # CONFIGURE LAYOUT
-        self.mainLayout = QHBoxLayout(self)
+        self.mainLayout = QtWidgets.QHBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
         self.setContentsMargins(6, 4, 6, 4)
-        self.setContextMenuPolicy(Qt.PreventContextMenu)
+        self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.setFont(Font('Arial', 13))
         self.updateLayout()
 
@@ -123,10 +122,10 @@ class DockTitleWidget(QWidget):
             item = self.mainLayout.itemAt(i)
             self.mainLayout.removeItem(item)
         # DISPOSE NEW ELEMENTS
-        self.mainLayout.addWidget(self.imageLabel, 0, Qt.AlignLeft|Qt.AlignVCenter)
-        self.mainLayout.addWidget(self.titleLabel, 1, Qt.AlignLeft|Qt.AlignVCenter)
+        self.mainLayout.addWidget(self.imageLabel, 0, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.mainLayout.addWidget(self.titleLabel, 1, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         for button in self.buttons:
-            self.mainLayout.addWidget(button, 0, Qt.AlignRight|Qt.AlignVCenter)
+            self.mainLayout.addWidget(button, 0, QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
 
     #############################################
     #   EVENTS
@@ -144,8 +143,8 @@ class DockTitleWidget(QWidget):
         This is needed for the widget to pick the stylesheet.
         :type paintEvent: QPaintEvent
         """
-        option = QStyleOption()
+        option = QtWidgets.QStyleOption()
         option.initFrom(self)
-        painter = QPainter(self)
+        painter = QtGui.QPainter(self)
         style = self.style()
-        style.drawPrimitive(QStyle.PE_Widget, option, painter, self)
+        style.drawPrimitive(QtWidgets.QStyle.PE_Widget, option, painter, self)

@@ -35,10 +35,9 @@
 
 from textwrap import dedent
 
-from PyQt5.QtCore import Qt, QSettings, pyqtSlot
-from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QWidget
-from PyQt5.QtWidgets import QDialogButtonBox, QFileDialog, QPushButton, QMessageBox
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from eddy import ORGANIZATION, APPNAME, WORKSPACE
 from eddy.core.datatypes.qt import Font
@@ -50,14 +49,14 @@ from eddy.core.functions.signals import connect
 from eddy.ui.fields import StringField
 
 
-class WorkspaceDialog(QDialog):
+class WorkspaceDialog(QtWidgets.QDialog):
     """
     This class can be used to setup the workspace path.
     """
     def __init__(self, parent=None):
         """
         Initialize the workspace dialog.
-        :type parent: QWidget
+        :type parent: QtWidgets.QWidget
         """
         super().__init__(parent)
 
@@ -69,28 +68,28 @@ class WorkspaceDialog(QDialog):
         # HEAD AREA
         #################################
 
-        self.headTitle = QLabel('Select a workspace', self)
+        self.headTitle = QtWidgets.QLabel('Select a workspace', self)
         self.headTitle.setFont(arial12b)
-        self.headDescription = QLabel(dedent("""
+        self.headDescription = QtWidgets.QLabel(dedent("""
         Eddy stores your projects in a directory called workspace.\n'
         Please choose a workspace directory to use.""", self))
         self.headDescription.setFont(arial12r)
-        self.headPix = QLabel(self)
-        self.headPix.setPixmap(QPixmap(':/images/eddy-smile-small-noframe'))
+        self.headPix = QtWidgets.QLabel(self)
+        self.headPix.setPixmap(QtGui.QPixmap(':/images/eddy-smile-small-noframe'))
         self.headPix.setContentsMargins(0, 0, 0, 0)
 
-        self.headWidget = QWidget(self)
+        self.headWidget = QtWidgets.QWidget(self)
         self.headWidget.setProperty('class', 'head')
         self.headWidget.setContentsMargins(0, 0, 0, 0)
 
-        self.headLayoutL = QVBoxLayout()
+        self.headLayoutL = QtWidgets.QVBoxLayout()
         self.headLayoutL.addWidget(self.headTitle)
         self.headLayoutL.addWidget(self.headDescription)
         self.headLayoutL.setContentsMargins(10, 10, 10, 10)
-        self.headLayoutR = QVBoxLayout()
-        self.headLayoutR.addWidget(self.headPix, 0, Qt.AlignRight)
+        self.headLayoutR = QtWidgets.QVBoxLayout()
+        self.headLayoutR.addWidget(self.headPix, 0, QtCore.Qt.AlignRight)
         self.headLayoutR.setContentsMargins(0, 0, 0, 0)
-        self.headLayoutM = QHBoxLayout(self.headWidget)
+        self.headLayoutM = QtWidgets.QHBoxLayout(self.headWidget)
         self.headLayoutM.addLayout(self.headLayoutL)
         self.headLayoutM.addLayout(self.headLayoutR)
         self.headLayoutM.setContentsMargins(0, 0, 0, 0)
@@ -99,7 +98,7 @@ class WorkspaceDialog(QDialog):
         # EDIT AREA
         #################################
 
-        self.workspacePrefix = QLabel('Workspace', self)
+        self.workspacePrefix = QtWidgets.QLabel('Workspace', self)
         self.workspacePrefix.setFont(arial12r)
 
         self.workspaceField = StringField(self)
@@ -108,12 +107,12 @@ class WorkspaceDialog(QDialog):
         self.workspaceField.setReadOnly(True)
         self.workspaceField.setText(expandPath(WORKSPACE))
 
-        self.btnBrowse = QPushButton(self)
+        self.btnBrowse = QtWidgets.QPushButton(self)
         self.btnBrowse.setFont(arial12r)
         self.btnBrowse.setFixedWidth(30)
         self.btnBrowse.setText('...')
 
-        self.editLayout = QHBoxLayout()
+        self.editLayout = QtWidgets.QHBoxLayout()
         self.editLayout.setContentsMargins(10, 10, 10, 10)
         self.editLayout.addWidget(self.workspacePrefix)
         self.editLayout.addWidget(self.workspaceField)
@@ -123,7 +122,7 @@ class WorkspaceDialog(QDialog):
         # CONFIRMATION AREA
         #################################
 
-        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok, self)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(arial12r)
 
@@ -131,14 +130,14 @@ class WorkspaceDialog(QDialog):
         # SETUP DIALOG LAYOUT
         #################################
 
-        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.headWidget)
         self.mainLayout.addLayout(self.editLayout)
-        self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
+        self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Configure workspace')
 
         connect(self.btnBrowse.clicked, self.choosePath)
@@ -148,7 +147,7 @@ class WorkspaceDialog(QDialog):
     #   SLOTS
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def accept(self):
         """
         Create Eddy workspace (if necessary).
@@ -158,22 +157,22 @@ class WorkspaceDialog(QDialog):
         try:
             mkdir(path)
         except Exception as e:
-            msgbox = QMessageBox(self)
+            msgbox = QtWidgets.QMessageBox(self)
             msgbox.setDetailedText(format_exception(e))
-            msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-            msgbox.setStandardButtons(QMessageBox.Close)
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
             msgbox.setText('Eddy could not create the specified workspace: {0}!'.format(path))
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Workspace setup failed!')
             msgbox.exec_()
             super().reject()
         else:
-            settings = QSettings(ORGANIZATION, APPNAME)
+            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
             settings.setValue('workspace/home', path)
             settings.sync()
             super().accept()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def choosePath(self):
         """
         Bring up a modal window that allows the user to choose a valid workspace path.
@@ -182,12 +181,12 @@ class WorkspaceDialog(QDialog):
         if not isPathValid(path):
             path = expandPath('~')
 
-        dialog = QFileDialog(self)
-        dialog.setAcceptMode(QFileDialog.AcceptOpen)
+        dialog = QtWidgets.QFileDialog(self)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setDirectory(path)
-        dialog.setFileMode(QFileDialog.Directory)
-        dialog.setOption(QFileDialog.ShowDirsOnly, True)
-        dialog.setViewMode(QFileDialog.Detail)
+        dialog.setFileMode(QtWidgets.QFileDialog.Directory)
+        dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly, True)
+        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
 
-        if dialog.exec_() == QFileDialog.Accepted:
+        if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             self.workspaceField.setValue(first(dialog.selectedFiles()))

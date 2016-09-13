@@ -33,20 +33,20 @@
 ##########################################################################
 
 
-from PyQt5.QtWidgets import QStyle, QProxyStyle
+from PyQt5 import QtWidgets
 
 from eddy.core.functions.fsystem import fread
 from eddy.core.functions.path import expandPath
 
 
-class Clean(QProxyStyle):
+class Clean(QtWidgets.QProxyStyle):
     """
     Eddy clean style.
     """
     PM = {
-        QStyle.PM_SmallIconSize: 18,
-        QStyle.PM_TabBarIconSize: 14,
-        QStyle.PM_ToolBarIconSize: 24,
+        QtWidgets.QStyle.PM_SmallIconSize: 18,
+        QtWidgets.QStyle.PM_TabBarIconSize: 14,
+        QtWidgets.QStyle.PM_ToolBarIconSize: 24,
     }
 
     def __init__(self, base):
