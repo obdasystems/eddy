@@ -106,6 +106,7 @@ from eddy.ui.fields import ComboBox
 from eddy.ui.forms import CardinalityRestrictionForm
 from eddy.ui.forms import RefactorNameForm
 from eddy.ui.forms import ValueForm
+from eddy.ui.log import LogDialog
 from eddy.ui.mdi import MdiArea
 from eddy.ui.mdi import MdiSubWindow
 from eddy.ui.preferences import PreferencesDialog
@@ -267,6 +268,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             objectName='graphol_web', statusTip='Visit Graphol website',
             triggered=self.doOpenURL)
         action.setData(GRAPHOL_HOME)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_message_black'), 'Show log...',
+            self, objectName='show_log', statusTip='Show application log',
+            triggered=self.doOpenDialog)
+        action.setData(LogDialog)
         self.addAction(action)
 
         if MACOS:
@@ -676,6 +684,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         menu = QtWidgets.QMenu('\u200CView', objectName='view')
         menu.addAction(self.action('toggle_grid'))
+        menu.addSeparator()
+        menu.addAction(self.action('show_log'))
         menu.addSeparator()
         menu.addMenu(self.menu('toolbars'))
         menu.addSeparator()

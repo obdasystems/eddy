@@ -97,6 +97,8 @@
   <file alias="ic_flip_to_front_black@2x">../../resources/icons/24/ic_flip_to_front_black_24dp_2x.png</file>
   <file alias="ic_folder_open_black">../../resources/icons/24/ic_folder_open_black_24dp_1x.png</file>
   <file alias="ic_folder_open_black@2x">../../resources/icons/24/ic_folder_open_black_24dp_2x.png</file>
+  <file alias="ic_message_black">../../resources/icons/24/ic_message_black_24dp_1x.png</file>
+  <file alias="ic_message_black@2x">../../resources/icons/24/ic_message_black_24dp_2x.png</file>
   <file alias="ic_palette_black">../../resources/icons/24/ic_palette_black_24dp_1x.png</file>
   <file alias="ic_palette_black@2x">../../resources/icons/24/ic_palette_black_24dp_2x.png</file>
   <file alias="ic_content_paste_black">../../resources/icons/24/ic_content_paste_black_24dp_1x.png</file>

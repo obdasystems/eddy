@@ -42,6 +42,7 @@ RE_DIGIT = re.compile("""\d""") # identify strings composed of only digits
 RE_FILE_EXTENSION = re.compile(""".*\(\*(?P<extension>\.\w+)\)""") # to extract the extension from the File enum
 RE_FACET = re.compile("""^(?P<facet>[\w:]*)[\s\^]*"(?P<value>.*)"$""") # tokenize facet restriction
 RE_ITEM_PREFIX = re.compile("""^(?P<prefix>[^\d])(?P<value>\d+)$""") # split items prefix/id
+RE_LOG_MESSAGE = re.compile("""^(?P<date>.{10})\s(?P<time>.{8})\s(?P<level>\w+)\s+(?P<message>.*)$""") # tokenize log messages
 RE_QUOTED = re.compile("""^".*"$""") # identify strings fully embraced into quotes
 RE_OWL_INVALID_CHAR = re.compile("""[\W]""") # identify OWL invalid characters
 RE_OWL_ONTOLOGY_FUNCTIONAL_TAG = re.compile("""^Ontology\s*\(.*$""") # identify OWL ontology tag in Functional OWL

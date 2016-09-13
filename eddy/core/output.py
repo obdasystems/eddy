@@ -33,6 +33,7 @@
 ##########################################################################
 
 
+import io
 import sys
 import logging
 
@@ -45,6 +46,23 @@ class OutputHandler(logging.Logger):
     Custom logging output handler class.
     """
     HeadLength = 92
+    Stream = io.StringIO()
+
+    #############################################
+    #   AUXILIARY METHODS
+    #################################
+
+    @classmethod
+    def getDefaultStream(cls):
+        """
+        Returns the default stream for this logger class.
+        :rtype: StringIO
+        """
+        return OutputHandler.Stream
+
+    #############################################
+    #   LOGGING METHODS
+    #################################
 
     def frame(self, msg, *args, **kwargs):
         """
@@ -99,14 +117,21 @@ def getLogger(name=APPNAME):
     """
     global __output
     if not name in __output:
-
+        # CREATE A FORMATTER
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%Y/%m/%d %H:%M:%S')
+        # IN-MEMORY STREAM HANDLER
+        handler = logging.StreamHandler(OutputHandler.getDefaultStream())
+        handler.setFormatter(formatter)
+        logger = logging.getLogger(name)
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+        # CONSOLE HANDLER
         handler = logging.StreamHandler(sys.stderr)
         handler.setFormatter(formatter)
         logger = logging.getLogger(name)
         logger.setLevel(logging.DEBUG)
         logger.addHandler(handler)
-
+        # STORE THE LOGGER INSTANCE
         __output[name] = logger
 
     return __output.get(name)
