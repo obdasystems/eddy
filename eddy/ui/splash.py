@@ -35,9 +35,9 @@
 
 from time import time, sleep
 
-from PyQt5.QtCore import Qt, QRect
-from PyQt5.QtGui import QPainter, QColor, QPen, QIcon
-from PyQt5.QtWidgets import QSplashScreen, QApplication
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from eddy import APPNAME, COPYRIGHT, VERSION
 
@@ -45,35 +45,63 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import rangeF
 
 
-class Splash(QSplashScreen):
+LICENSE = 'Licensed under the GNU General Public License v3'
+CREDITS = 'Eddy is developed by the DASI Lab group of the\n' \
+          '"Dipartimento di Ingegneria Informatica, Automatica e\n' \
+          'Gestionale A. Ruberti" at Sapienza University of Rome"'
+
+
+class Splash(QtWidgets.QSplashScreen):
     """
     This class implements Eddy's splash screen.
     It can be used with the context manager, i.e:
 
     >>> import sys
-    >>> from PyQt5.QtWidgets import QApplication
-    >>> app = QApplication(sys.argv)
-    >>> with Splash(app, 5):
+    >>> from PyQt5 import QtWidgets
+    >>> app = QtWidgets.QApplication(sys.argv)
+    >>> with Splash(mtime=5):
     >>>     app.do_something_heavy()
 
     will draw a 5 seconds (at least) splash screen on the screen.
     The with statement body can be used to initialize the application and process heavy stuff.
     """
-    def __init__(self, eddy, mtime=2):
+    def __init__(self, parent=None, mtime=2):
         """
         Initialize Eddy's splash screen.
-        :type eddy: QApplication
+        :type parent: QWidget
         :type mtime: float
         """
-        pixmap = QIcon(':/images/im_eddy_splash').pixmap(380 * eddy.devicePixelRatio())
-        pixmap.setDevicePixelRatio(eddy.devicePixelRatio())
-        super().__init__(pixmap, Qt.WindowStaysOnTopHint)
-        self.setAttribute(Qt.WA_DeleteOnClose)
+        super().__init__(parent, QtGui.QPixmap(), QtCore.Qt.WindowStaysOnTopHint)
+        pixmap = QtGui.QIcon(':/images/im_eddy_splash').pixmap(380 * self.devicePixelRatio())
+        pixmap.setDevicePixelRatio(self.devicePixelRatio())
+        self.setPixmap(pixmap)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.mtime = time() + mtime
+        self.font1 = Font('Arial', 40, Font.Light)
+        self.font1.setCapitalization(Font.SmallCaps)
+        self.font2 = Font('Arial', 18, Font.Light)
+        self.font2.setCapitalization(Font.SmallCaps)
+        self.font3 = Font('Arial', 12, Font.Light)
+        self.__spaceX = 0
+        self.__spaceY = 0
 
     #############################################
     #   INTERFACE
     #################################
+
+    def setSpaceX(self, spaceX):
+        """
+        Set the text horizontal spacing.
+        :type spaceX: int
+        """
+        self.__spaceX = spaceX
+
+    def setSpaceY(self, spaceY):
+        """
+        Set the text vertical spacing.
+        :type spaceY: int
+        """
+        self.__spaceY = spaceY
 
     def sleep(self):
         """
@@ -83,7 +111,7 @@ class Splash(QSplashScreen):
         if now < self.mtime:
             for _ in rangeF(start=0, stop=self.mtime - now, step=0.1):
                 # noinspection PyArgumentList
-                QApplication.processEvents()
+                QtWidgets.QApplication.processEvents()
                 sleep(0.1)
 
     #############################################
@@ -112,37 +140,24 @@ class Splash(QSplashScreen):
         Executed when the splashscreen needs to be painted.
         :type paintEvent: QPaintEvent
         """
-        super().paintEvent(paintEvent)
-        painter = QPainter(self)
-
-        font1 = Font('Arial', 40, Font.Light)
-        font1.setCapitalization(Font.SmallCaps)
-        font2 = Font('Arial', 18, Font.Light)
-        font2.setCapitalization(Font.SmallCaps)
-        font3 = Font('Arial', 12, Font.Light)
-
-        LICENSE = 'Licensed under the GNU General Public License v3'
-        CREDITS = 'Eddy is developed by the DASI Lab group of the\n' \
-                  '"Dipartimento di Ingegneria Informatica, Automatica e\n' \
-                  'Gestionale A. Ruberti" at Sapienza University of Rome"'
-
+        painter = QtGui.QPainter(self)
         # APPNAME
-        painter.setFont(font1)
-        painter.setPen(QPen(QColor(255, 255, 255), 1.0, Qt.SolidLine))
-        painter.drawText(QRect(31, 160, 380, 400), Qt.AlignTop | Qt.AlignLeft, APPNAME)
+        painter.setFont(self.font1)
+        painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255), 1.0, QtCore.Qt.SolidLine))
+        painter.drawText(QtCore.QRect(31 + self.__spaceX, 160 + self.__spaceY, 380, 400), QtCore.Qt.AlignTop|QtCore.Qt.AlignLeft, APPNAME)
         # VERSION
-        painter.setFont(font2)
-        painter.setPen(QPen(QColor(255, 255, 255), 1.0, Qt.SolidLine))
-        painter.drawText(QRect(34, 204, 380, 400), Qt.AlignTop | Qt.AlignLeft, 'Version {0}'.format(VERSION))
+        painter.setFont(self.font2)
+        painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255), 1.0, QtCore.Qt.SolidLine))
+        painter.drawText(QtCore.QRect(34 + self.__spaceX, 204 + self.__spaceY, 380, 400), QtCore.Qt.AlignTop|QtCore.Qt.AlignLeft, 'Version {0}'.format(VERSION))
         # COPYRIGHT
-        painter.setFont(font3)
-        painter.setPen(QPen(QColor(122, 101, 104), 1.0, Qt.SolidLine))
-        painter.drawText(QRect(0, 254, 360, 40), Qt.AlignTop | Qt.AlignHCenter, COPYRIGHT)
+        painter.setFont(self.font3)
+        painter.setPen(QtGui.QPen(QtGui.QColor(122, 101, 104), 1.0, QtCore.Qt.SolidLine))
+        painter.drawText(QtCore.QRect(0 + self.__spaceX, 254 + self.__spaceY, 360, 40), QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter, COPYRIGHT)
         # CREDITS
-        painter.setFont(font3)
-        painter.setPen(QPen(QColor(122, 101, 104), 1.0, Qt.SolidLine))
-        painter.drawText(QRect(0, 278, 360, 80), Qt.AlignTop | Qt.AlignHCenter, CREDITS)
+        painter.setFont(self.font3)
+        painter.setPen(QtGui.QPen(QtGui.QColor(122, 101, 104), 1.0, QtCore.Qt.SolidLine))
+        painter.drawText(QtCore.QRect(0 + self.__spaceX, 278 + self.__spaceY, 360, 80), QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter, CREDITS)
         # LICENSE
-        painter.setFont(font3)
-        painter.setPen(QPen(QColor(122, 101, 104), 1.0, Qt.SolidLine))
-        painter.drawText(QRect(0, 332, 360, 40), Qt.AlignTop | Qt.AlignHCenter, LICENSE)
+        painter.setFont(self.font3)
+        painter.setPen(QtGui.QPen(QtGui.QColor(122, 101, 104), 1.0, QtCore.Qt.SolidLine))
+        painter.drawText(QtCore.QRect(0 + self.__spaceX, 332 + self.__spaceY, 360, 40), QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter, LICENSE)

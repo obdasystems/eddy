@@ -134,7 +134,7 @@ class Eddy(QtWidgets.QApplication):
 
         splash = None
         if not options.nosplash:
-            splash = Splash(self, mtime=4)
+            splash = Splash(mtime=4)
             splash.show()
 
         #############################################

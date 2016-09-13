@@ -33,17 +33,12 @@
 ##########################################################################
 
 
-from textwrap import dedent
+from PyQt5 import QtCore
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout, QHBoxLayout
-
-from eddy import APPNAME, AUTHOR, VERSION, LICENSE, PROJECT_HOME
-from eddy.core.datatypes.qt import Font
+from eddy.ui.splash import Splash
 
 
-class AboutDialog(QDialog):
+class AboutDialog(Splash):
     """
     This class is used to display the 'About' dialog.
     """
@@ -52,43 +47,13 @@ class AboutDialog(QDialog):
         Initialize the dialog.
         :type parent: QWidget
         """
-        super().__init__(parent)
+        super(AboutDialog, self).__init__(parent)
+        self.setSpaceX(8)
+        self.setSpaceY(12)
+        self.setWindowFlags(QtCore.Qt.Popup)
 
-        message = dedent("""{TITLE}<br/>
-        Version: {VERSION}<br/>
-        Author: {AUTHOR}<br/>
-        Copyright: © 2015 {AUTHOR}<br/>
-        License: {LICENSE}<br/>
-        Homepage: <a href="{HOMEPAGE}">{HOMEPAGE}</a>""" \
-            .format(TITLE=APPNAME, VERSION=VERSION,
-                    AUTHOR=AUTHOR, LICENSE=LICENSE,
-                    HOMEPAGE=PROJECT_HOME))
-
-        self.icon = QLabel(self)
-        self.icon.setPixmap(QPixmap(':/images/eddy-smile'))
-
-        self.text = QLabel(message, self)
-        self.text.setWordWrap(True)
-        self.text.setOpenExternalLinks(True)
-        self.text.setAlignment(Qt.AlignLeft)
-        self.text.setFixedWidth(340)
-        self.text.setFont(Font('Arial', 13))
-
-        leftLayout = QVBoxLayout()
-        leftLayout.addWidget(self.icon)
-        leftLayout.setAlignment(Qt.AlignTop|Qt.AlignLeft)
-        leftLayout.setContentsMargins(0, 0, 0, 0)
-
-        rightLayout = QVBoxLayout()
-        rightLayout.addWidget(self.text)
-        rightLayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        rightLayout.setContentsMargins(0, 0, 0, 0)
-
-        self.mainLayout = QHBoxLayout(self)
-        self.mainLayout.addLayout(leftLayout)
-        self.mainLayout.addLayout(rightLayout)
-
-        self.setFixedWidth(520)
-        self.setFixedHeight(self.sizeHint().height())
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
-        self.setWindowTitle('About {0}'.format(APPNAME))
+    def exec_(self):
+        """
+        Alias AboutDialog.show() so that the screen can be shown using Session.doOpenDialog.
+        """
+        self.show()
