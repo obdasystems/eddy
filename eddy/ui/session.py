@@ -87,7 +87,7 @@ from eddy.core.factory import MenuFactory, PropertyFactory
 from eddy.core.functions.fsystem import fcopy, fremove, is_dir
 from eddy.core.functions.fsystem import is_package, fexists
 from eddy.core.functions.misc import first, format_exception
-from eddy.core.functions.misc import snap, snapF, cutR
+from eddy.core.functions.misc import snap, snapF
 from eddy.core.functions.path import expandPath, isSubPath
 from eddy.core.functions.path import uniquePath, shortPath
 from eddy.core.functions.signals import connect
@@ -1560,7 +1560,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
             dialog.setNameFilters(self.diagramExporterNameFilters())
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-            dialog.selectFile(cutR(diagram.name, File.Graphol.extension))
+            dialog.selectFile(diagram.name.rstrip(File.Graphol.extension))
             if dialog.exec_():
                 filetype = File.forValue(dialog.selectedNameFilter())
                 path = first(dialog.selectedFiles())
@@ -2040,7 +2040,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 raise IOError('file not found: {0}'.format(path))
 
             if not isSubPath(self.project.path, path):
-                name = cutR(os.path.basename(path), File.Graphol.extension)
+                name = os.path.basename(path).rstrip(File.Graphol.extension)
                 dest = uniquePath(self.project.path, name, File.Graphol.extension)
                 path = fcopy(path, dest)
 

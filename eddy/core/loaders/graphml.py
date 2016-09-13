@@ -47,7 +47,7 @@ from eddy.core.exceptions import DiagramNotValidError
 from eddy.core.exceptions import ParseError
 from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.fsystem import fread
-from eddy.core.functions.misc import snapF, cutR, isEmpty, snap
+from eddy.core.functions.misc import snapF, isEmpty, snap
 from eddy.core.functions.path import uniquePath
 from eddy.core.functions.signals import connect
 from eddy.core.loaders.common import AbstractDiagramLoader
@@ -607,8 +607,8 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         # CREATE AN EMPTY DIAGRAM
         #################################
 
-        name = cutR(os.path.basename(self.path), File.GraphML.extension)
-        path = uniquePath(self.project.path, name, File.Graphol.extension)
+        name = os.path.basename(self.path).rstrip(File.GraphML.extension)
+        path = uniquePath(self.project.path, name, File.GraphML.extension)
         self.diagram = Diagram(path, self.project)
         self.diagram.setSceneRect(QRectF(-Diagram.MaxSize / 2, -Diagram.MaxSize / 2, Diagram.MaxSize, Diagram.MaxSize))
         self.diagram.setItemIndexMethod(Diagram.NoIndex)

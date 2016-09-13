@@ -58,32 +58,6 @@ def clamp(val, minval=None, maxval=None):
     return val
 
 
-def cutL(text, *args):
-    """
-    Removes from 'text' all the given starting prefixes.
-    :type text: str
-    :type args: list
-    :rtype: str
-    """
-    for token in args:
-        if token and text.startswith(token):
-            text = text[len(token):]
-    return text
-
-
-def cutR(text, *args):
-    """
-    Removes from 'text' all the given ending suffixes.
-    :type text: str
-    :type args: list
-    :rtype: str
-    """
-    for token in args:
-        if token and text.endswith(token):
-            text = text[:-len(token)]
-    return text
-
-
 def first(iterable, default=None):
     """
     Returns the first element in 'iterable' if it exists, otherwise it returns the given default.

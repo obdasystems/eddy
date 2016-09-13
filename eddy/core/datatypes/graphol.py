@@ -35,7 +35,6 @@
 
 from enum import unique, IntEnum, Enum
 
-from eddy.core.functions.misc import cutR
 from eddy.core.regex import RE_CARDINALITY, RE_CAMEL_SPACE
 
 
@@ -123,7 +122,7 @@ class Item(IntEnum):
         Returns the item short name, i.e: attribute, concept.
         :rtype: str
         """
-        return cutR(self.realName, ' node', ' edge')
+        return self.realName.rstrip(' node').rstrip(' edge')
     
 
 @unique

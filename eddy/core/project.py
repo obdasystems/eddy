@@ -38,7 +38,6 @@ import os
 from PyQt5 import QtCore
 
 from eddy.core.datatypes.graphol import Item
-from eddy.core.functions.misc import cutR
 
 
 K_DIAGRAM = 'diagrams'
@@ -113,7 +112,7 @@ class Project(QtCore.QObject):
         Returns the name of the project.
         :rtype: str
         """
-        return os.path.basename(cutR(self.path, os.path.sep, os.path.altsep))
+        return os.path.basename(self.path.rstrip(os.path.sep).rstrip(os.path.altsep))
 
     @property
     def session(self):

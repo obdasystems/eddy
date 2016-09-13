@@ -48,7 +48,7 @@ from eddy.core.datatypes.system import File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphol import GrapholDiagramExporter
 from eddy.core.functions.fsystem import fexists
-from eddy.core.functions.misc import cutR, format_exception, isEmpty
+from eddy.core.functions.misc import format_exception, isEmpty
 from eddy.core.functions.path import isPathValid, shortPath, expandPath
 from eddy.core.functions.signals import connect
 
@@ -77,7 +77,7 @@ class AbstractDiagramDialog(QDialog):
 
         self.project = project
         self.projectPath = shortPath(project.path)
-        self.projectPath = '{0}{1}'.format(cutR(self.projectPath, os.path.sep), os.path.sep)
+        self.projectPath = '{0}{1}'.format(self.projectPath.rstrip(os.path.sep), os.path.sep)
 
         self.nameLabel = QLabel(self)
         self.nameLabel.setFont(arial12r)
@@ -182,7 +182,7 @@ class AbstractDiagramDialog(QDialog):
         """
         if not isEmpty(name):
             name = name.strip()
-            name = '{0}{1}'.format(cutR(name, File.Graphol.extension), File.Graphol.extension)
+            name = '{0}{1}'.format(name.rstrip(File.Graphol.extension), File.Graphol.extension)
         self.pathField.setValue('{0}{1}'.format(self.projectPath, name))
 
 
@@ -255,7 +255,7 @@ class RenameDiagramDialog(AbstractDiagramDialog):
         """
         super().__init__(project, parent)
         self.diagram = diagram
-        self.nameField.setText(cutR(self.diagram.name, File.Graphol.extension))
+        self.nameField.setText(self.diagram.name.rstrip(File.Graphol.extension))
         self.setWindowTitle('Rename diagram')
 
     #############################################

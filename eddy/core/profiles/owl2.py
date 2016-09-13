@@ -36,7 +36,7 @@
 from eddy.core.datatypes.graphol import Identity, Item, Restriction
 from eddy.core.datatypes.owl import Facet
 from eddy.core.functions.graph import bfs
-from eddy.core.functions.misc import cutR, first
+from eddy.core.functions.misc import first
 from eddy.core.profiles.common import AbstractProfile
 from eddy.core.profiles.common import ProfileValidationResult
 
@@ -226,7 +226,7 @@ class OWL2Profile(AbstractProfile):
                                 # Union/Intersection between different type of graphol expressions.
                                 idA = source.identity().value
                                 idB = target.identity().value
-                                cmp = cutR(target.name, ' node')
+                                cmp = target.shortName
                                 raise SyntaxError('Type mismatch: {0} between {1} and {2}'.format(cmp, idA, idB))
 
                         if Identity.ValueDomain in {source.identity(), target.identity()}:
