@@ -58,6 +58,7 @@ __HOME_PATH = os.path.normpath(os.path.expanduser('~/.eddy'))
 __PLUGINS_PATH = os.path.join(__MODULE_PATH, 'plugins')
 __RESOURCES_PATH = os.path.join(__ROOT_PATH, 'resources')
 __SUPPORT_PATH = os.path.join(__ROOT_PATH, 'support')
+__TESTS_PATH = os.path.join(__ROOT_PATH, 'tests')
 
 
 if not os.path.isdir(__HOME_PATH):
@@ -92,6 +93,7 @@ def expandPath(path):
         - @examples => Eddy's examples directory
         - @plugins => Eddy's plugins directory
         - @support => Eddy's support directory
+        - @tests => Eddy's tests directory
         - ~ => will be expanded to the user home directory ($HOME)
 
     :type path: str
@@ -111,6 +113,8 @@ def expandPath(path):
         path = os.path.join(__PLUGINS_PATH, path[9:])
     elif path.startswith('@support/') or path.startswith('@support\\'):
         path = os.path.join(__SUPPORT_PATH, path[9:])
+    elif path.startswith('@tests/') or path.startswith('@tests\\'):
+        path = os.path.join(__SUPPORT_PATH, path[7:])
     return os.path.normpath(os.path.expanduser(path))
 
 
