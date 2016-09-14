@@ -64,6 +64,7 @@ class Eddy(QtWidgets.QApplication):
     """
     This class implements the main QtCore.Qt application.
     """
+    sgnCreateSession = QtCore.pyqtSignal(str)
     sgnMessageReceived = QtCore.pyqtSignal(str)
 
     def __init__(self, options, argv):
@@ -104,6 +105,7 @@ class Eddy(QtWidgets.QApplication):
 
             connect(self.localServer.newConnection, self.doAcceptConnection)
             connect(self.sgnMessageReceived, self.doReadMessage)
+            connect(self.sgnCreateSession, self.doCreateSession)
 
     #############################################
     #   EVENTS
@@ -233,7 +235,7 @@ class Eddy(QtWidgets.QApplication):
         self.welcome = Welcome(self)
         self.welcome.show()
         if options.open and is_dir(options.open):
-            self.doCreateSession(options.open)
+            self.sgnCreateSession.emit(options.open)
 
     #############################################
     #   SLOTS
@@ -308,7 +310,6 @@ class Eddy(QtWidgets.QApplication):
                 if self.welcome:
                     self.welcome.close()
                 self.session.show()
-
     
     @QtCore.pyqtSlot()
     def doQuit(self):
