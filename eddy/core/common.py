@@ -905,7 +905,8 @@ class HasProfileSystem(object):
         """
         profile = self.profile(name)
         if not profile:
-            raise ValueError("missing ontology profile: %s", name)
+            LOGGER.warning("Missing profile %s: defaulting to OWL 2", name)
+            profile = self.profile("OWL 2")
         return profile(project)
 
     def insertProfile(self, profile, before):

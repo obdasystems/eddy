@@ -52,10 +52,10 @@ class OWL2Profile(AbstractProfile):
     @classmethod
     def name(cls):
         """
-        Returns the name of the profile, i.e: OWL2, OWL2QL.
+        Returns the name of the profile, i.e: OWL 2, OWL 2 QL.
         :rtype: str
         """
-        return 'OWL2'
+        return 'OWL 2'
 
     def validate(self, source, edge, target):
         """

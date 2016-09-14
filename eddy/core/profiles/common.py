@@ -92,7 +92,7 @@ class AbstractProfile(QObject):
     @abstractmethod
     def name(cls):
         """
-        Returns the name of the profile, i.e: OWL2, OWL2EL, OWL2QL, OWL2RL.
+        Returns the name of the profile, i.e: OWL 2, OWL 2 EL, OWL 2 QL, OWL 2 RL.
         :rtype: str
         """
         pass
