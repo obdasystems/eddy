@@ -114,7 +114,7 @@ def expandPath(path):
     elif path.startswith('@support/') or path.startswith('@support\\'):
         path = os.path.join(__SUPPORT_PATH, path[9:])
     elif path.startswith('@tests/') or path.startswith('@tests\\'):
-        path = os.path.join(__SUPPORT_PATH, path[7:])
+        path = os.path.join(__TESTS_PATH, path[7:])
     return os.path.normpath(os.path.expanduser(path))
 
 
