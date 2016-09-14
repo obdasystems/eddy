@@ -37,6 +37,8 @@ import errno
 import os
 import sys
 
+from eddy.core.functions.misc import rstrip
+
 
 __LINUX = sys.platform.startswith('linux')
 __MACOS = sys.platform.startswith('darwin')
@@ -126,7 +128,7 @@ def isPathValid(path):
         root = os.path.sep
         if __WIN32:
             root = os.environ.get('HOMEDRIVE', 'C:')
-        root = '{0}{1}'.format(root.rstrip(os.path.sep), os.path.sep)
+        root = '{0}{1}'.format(rstrip(root, os.path.sep), os.path.sep)
         assert os.path.isdir(root)
         for part in path.split(os.path.sep):
             try:

@@ -43,7 +43,7 @@ from eddy import ORGANIZATION, APPNAME, WORKSPACE
 from eddy.core.datatypes.qt import Font
 from eddy.core.exporters.graphol import GrapholProjectExporter
 from eddy.core.functions.fsystem import is_dir
-from eddy.core.functions.misc import isEmpty
+from eddy.core.functions.misc import isEmpty, rstrip
 from eddy.core.functions.path import expandPath, isPathValid
 from eddy.core.functions.signals import connect
 from eddy.core.profiles.owl2 import OWL2Profile
@@ -72,7 +72,7 @@ class ProjectDialog(QtWidgets.QDialog):
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
 
         self.workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
-        self.workspace = '{0}{1}'.format(self.workspace.rstrip(os.path.sep), os.path.sep)
+        self.workspace = '{0}{1}'.format(rstrip(self.workspace, os.path.sep), os.path.sep)
 
         self.nameLabel = QtWidgets.QLabel(self)
         self.nameLabel.setFont(arial12r)

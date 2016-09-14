@@ -42,7 +42,7 @@ from verlib import NormalizedVersion
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
-from eddy.core.functions.misc import first
+from eddy.core.functions.misc import first, rstrip
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
 
@@ -330,7 +330,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         :rtype: str
         """
         predicate = node.text().replace('\n', '')
-        diagram = diagram.name.rstrip(File.Graphol.extension)
+        diagram = rstrip(diagram.name, File.Graphol.extension)
         return '{0} ({1} - {2})'.format(predicate, diagram, node.id)
 
     def iconFor(self, node):

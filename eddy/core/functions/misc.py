@@ -111,6 +111,19 @@ def last(iterable, default=None):
     return default
 
 
+def lstrip(text, *args):
+    """
+    Removes from 'text' all the given starting prefixes.
+    :type text: str
+    :type args: list
+    :rtype: str
+    """
+    for token in args:
+        if token and text.startswith(token):
+            text = text[len(token):]
+    return text
+
+
 def partition(predicate, iterable):
     """
     Uses the given predicate to partition entries from the given iterable.
@@ -157,6 +170,19 @@ def rangeF(start, stop, step):
     while x < stop:
         yield x
         x = round(x + step, 4)
+
+
+def rstrip(text, *args):
+    """
+    Removes from 'text' all the given ending suffixes.
+    :type text: str
+    :type args: list
+    :rtype: str
+    """
+    for token in args:
+        if token and text.endswith(token):
+            text = text[:-len(token)]
+    return text
 
 
 def snap(point, size, perform=True):

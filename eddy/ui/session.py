@@ -86,7 +86,7 @@ from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import MenuFactory, PropertyFactory
 from eddy.core.functions.fsystem import fcopy, fremove, is_dir
 from eddy.core.functions.fsystem import is_package, fexists
-from eddy.core.functions.misc import first, format_exception
+from eddy.core.functions.misc import first, format_exception, rstrip
 from eddy.core.functions.misc import snap, snapF
 from eddy.core.functions.path import expandPath, isSubPath
 from eddy.core.functions.path import uniquePath, shortPath
@@ -829,7 +829,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 importer = zipimport.zipimporter(archive)
                 if importer:
                     try:
-                        importer.load_module(os.path.basename(archive).rstrip(File.Zip.extension))
+                        importer.load_module(rstrip(os.path.basename(archive), File.Zip.extension))
                     except Exception:
                         LOGGER.error('Failed to load python module (ZIP): %s', archive, exc_info=True)
                     else:
@@ -1570,7 +1570,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
             dialog.setNameFilters(self.diagramExporterNameFilters())
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-            dialog.selectFile(diagram.name.rstrip(File.Graphol.extension))
+            dialog.selectFile(rstrip(diagram.name, File.Graphol.extension))
             if dialog.exec_():
                 filetype = File.forValue(dialog.selectedNameFilter())
                 path = first(dialog.selectedFiles())
@@ -2050,7 +2050,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 raise IOError('file not found: {0}'.format(path))
 
             if not isSubPath(self.project.path, path):
-                name = os.path.basename(path).rstrip(File.Graphol.extension)
+                name = rstrip(os.path.basename(path), File.Graphol.extension)
                 dest = uniquePath(self.project.path, name, File.Graphol.extension)
                 path = fcopy(path, dest)
 
