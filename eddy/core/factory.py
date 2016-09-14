@@ -138,7 +138,7 @@ class MenuFactory(QtCore.QObject):
         menu = QtWidgets.QMenu()
         breakpoint = edge.breakPointAt(pos)
         if breakpoint is not None:
-            action = self.session.actions('remove_breakpoint')
+            action = self.session.action('remove_breakpoint')
             action.setData((edge, breakpoint))
             menu.addAction(action)
         else:
