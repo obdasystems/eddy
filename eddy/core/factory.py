@@ -87,9 +87,9 @@ class MenuFactory(QtCore.QObject):
 
     def buildDiagramMenu(self, diagram):
         """
-        Build and return a QtWidgets.QMenu instance for the given diagram.
+        Build and return a QMenu instance for the given diagram.
         :type diagram: Diagram
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = QtWidgets.QMenu()
         if not self.session.clipboard.empty():
@@ -106,10 +106,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildCompoundItemMenu(self, diagram, items):
         """
-        Build and return a QtWidgets.QMenu instance for the selection of items.
+        Build and return a QMenu instance for the selection of items.
         :type diagram: Diagram
         :type items: T <= list|tuple
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = QtWidgets.QMenu()
         menu.addAction(self.session.action('delete'))
@@ -129,11 +129,11 @@ class MenuFactory(QtCore.QObject):
 
     def buildGenericEdgeMenu(self, diagram, edge, pos):
         """
-        Build and return a QtWidgets.QMenu instance for a generic edge.
+        Build and return a QMenu instance for a generic edge.
         :type diagram: Diagram
         :type edge: AbstractEdge
         :type pos: QPointF
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = QtWidgets.QMenu()
         breakpoint = edge.breakPointAt(pos)
@@ -149,11 +149,11 @@ class MenuFactory(QtCore.QObject):
 
     def buildMembershipEdgeMenu(self, diagram, edge, pos):
         """
-        Build and return a QtWidgets.QMenu instance for InstanceOf edges.
+        Build and return a QMenu instance for InstanceOf edges.
         :type diagram: Diagram
         :type edge: InstanceOfEdge
         :type pos: QPointF
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = QtWidgets.QMenu()
         breakpoint = edge.breakPointAt(pos)
@@ -171,10 +171,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildGenericNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for a generic node.
+        Build and return a QMenu instance for a generic node.
         :type diagram: Diagram
         :type node: AbstractNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = QtWidgets.QMenu()
         menu.addAction(self.session.action('delete'))
@@ -192,10 +192,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildAttributeNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for attribute nodes.
+        Build and return a QMenu instance for attribute nodes.
         :type diagram: Diagram
         :type node: AttributeNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
@@ -209,10 +209,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildComplementNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for complement nodes.
+        Build and return a QMenu instance for complement nodes.
         :type diagram: Diagram
         :type node: ComplementNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildOperatorNodeMenu(diagram, node)
         if node.edges:
@@ -238,10 +238,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildConceptNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for concept nodes.
+        Build and return a QMenu instance for concept nodes.
         :type diagram: Diagram
         :type node: ConceptNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
@@ -254,19 +254,19 @@ class MenuFactory(QtCore.QObject):
 
     def buildDatatypeRestrictionNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for datatype restriction nodes.
+        Build and return a QMenu instance for datatype restriction nodes.
         :type diagram: Diagram
         :type node: DatatypeRestrictionNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         return self.buildOperatorNodeMenu(diagram, node)
 
     def buildDisjointUnionNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for disjoint union nodes.
+        Build and return a QMenu instance for disjoint union nodes.
         :type diagram: Diagram
         :type node: DisjointUnionNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildOperatorNodeMenu(diagram, node)
         if node.edges:
@@ -277,10 +277,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildDomainRestrictionNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for domain restriction nodes.
+        Build and return a QMenu instance for domain restriction nodes.
         :type diagram: Diagram
         :type node: DomainRestrictionNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
         menu.addSeparator()
@@ -303,10 +303,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildEnumerationNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for enumeration nodes.
+        Build and return a QMenu instance for enumeration nodes.
         :type diagram: Diagram
         :type node: EnumerationNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildOperatorNodeMenu(diagram, node)
         if node.edges:
@@ -326,10 +326,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildFacetNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for facet nodes.
+        Build and return a QMenu instance for facet nodes.
         :type diagram: Diagram
         :type node: FacetNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('facet'))
@@ -361,10 +361,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildIndividualNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for individual nodes.
+        Build and return a QMenu instance for individual nodes.
         :type diagram: Diagram
         :type node: IndividualNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
@@ -416,10 +416,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildIntersectionNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for intersection nodes.
+        Build and return a QMenu instance for intersection nodes.
         :type diagram: Diagram
         :type node: IntersectionNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildOperatorNodeMenu(diagram, node)
         if node.edges:
@@ -430,10 +430,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildOperatorNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for operator nodes.
+        Build and return a QMenu instance for operator nodes.
         :type diagram: Diagram
         :type node: OperatorNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('switch_operator'))
@@ -445,19 +445,19 @@ class MenuFactory(QtCore.QObject):
 
     def buildPropertyAssertionNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for property assertion nodes.
+        Build and return a QMenu instance for property assertion nodes.
         :type diagram: Diagram
         :type node: PropertyAssertionNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         return self.buildGenericNodeMenu(diagram, node)
 
     def buildRangeRestrictionNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for range restriction nodes.
+        Build and return a QMenu instance for range restriction nodes.
         :type diagram: Diagram
         :type node: RangeRestrictionNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
         menu.addSeparator()
@@ -480,10 +480,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildRoleNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for role nodes.
+        Build and return a QMenu instance for role nodes.
         :type diagram: Diagram
         :type node: RoleNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
@@ -498,10 +498,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildRoleInverseNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for role inverse nodes.
+        Build and return a QMenu instance for role inverse nodes.
         :type diagram: Diagram
         :type node: RoleInverseNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildOperatorNodeMenu(diagram, node)
         if node.edges:
@@ -512,10 +512,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildRoleChainNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for role chain nodes.
+        Build and return a QMenu instance for role chain nodes.
         :type diagram: Diagram
         :type node: RoleChainNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildOperatorNodeMenu(diagram, node)
         if node.edges:
@@ -529,10 +529,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildUnionNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for union nodes.
+        Build and return a QMenu instance for union nodes.
         :type diagram: Diagram
         :type node: UnionNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildOperatorNodeMenu(diagram, node)
         if node.edges:
@@ -543,10 +543,10 @@ class MenuFactory(QtCore.QObject):
 
     def buildValueDomainNodeMenu(self, diagram, node):
         """
-        Build and return a QtWidgets.QMenu instance for value domain nodes.
+        Build and return a QMenu instance for value domain nodes.
         :type diagram: Diagram
         :type node: ValueDomainNode
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('datatype'))
@@ -574,11 +574,11 @@ class MenuFactory(QtCore.QObject):
 
     def create(self, diagram, items, pos=None):
         """
-        Build and return a QtWidgets.QMenu instance according to the given parameters.
+        Build and return a QMenu instance according to the given parameters.
         :type diagram: Diagram
         :type items: T <= list|tuple
         :type pos: QPointF
-        :rtype: QtWidgets.QMenu
+        :rtype: QMenu
         """
         ## NO ITEM
         if not items:
