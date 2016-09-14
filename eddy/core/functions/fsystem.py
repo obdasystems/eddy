@@ -40,6 +40,15 @@ import shutil
 from eddy.core.functions.path import expandPath
 
 
+def cpdir(src, dst):
+    """
+    Recursively copy a directory tree.
+    :type src: str
+    :type dst: str
+    """
+    shutil.copytree(expandPath(src), expandPath(dst), copy_function=shutil.copy)
+
+
 def fcopy(src, dst):
     """
     Copy the contents of the file named src to a file named dst.
