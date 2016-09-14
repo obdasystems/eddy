@@ -37,9 +37,10 @@ import math
 import os
 import unittest
 
-from PyQt5.QtCore import QPointF, QLineF
+from PyQt5 import QtCore
 
-from eddy.core.functions.misc import clamp, isEmpty, rangeF, snapF
+from eddy.core.functions.misc import isEmpty, rangeF, snapF
+from eddy.core.functions.misc import clamp, lstrip, rstrip
 from eddy.core.functions.geometry import angle, distance, projection
 from eddy.core.functions.geometry import intersection, midpoint
 from eddy.core.functions.path import compressPath
@@ -48,11 +49,11 @@ from eddy.core.functions.path import compressPath
 class Test_Functions(unittest.TestCase):
 
     def test_angle(self):
-        self.assertEqual(0.0, angle(QPointF(0, 0), QPointF(+1, 0)))
-        self.assertEqual(+math.pi / 2, angle(QPointF(0, 0), QPointF(0, -1)))
-        self.assertEqual(-math.pi / 2, angle(QPointF(0, 0), QPointF(0, +1)))
-        self.assertEqual(math.pi, angle(QPointF(0, 0), QPointF(-1, 0)))
-        self.assertEqual(+math.pi / 4, angle(QPointF(0, 0), QPointF(1, -1)))
+        self.assertEqual(0.0, angle(QtCore.QPointF(0, 0), QtCore.QPointF(+1, 0)))
+        self.assertEqual(+math.pi / 2, angle(QtCore.QPointF(0, 0), QtCore.QPointF(0, -1)))
+        self.assertEqual(-math.pi / 2, angle(QtCore.QPointF(0, 0), QtCore.QPointF(0, +1)))
+        self.assertEqual(math.pi, angle(QtCore.QPointF(0, 0), QtCore.QPointF(-1, 0)))
+        self.assertEqual(+math.pi / 4, angle(QtCore.QPointF(0, 0), QtCore.QPointF(1, -1)))
 
     def test_clamp(self):
         self.assertEqual(0.0, clamp(val=-4.0, minval=0.0))
@@ -69,26 +70,37 @@ class Test_Functions(unittest.TestCase):
         self.assertEqual(10, len(compressPath(os.path.join('this', 'is', 'a', 'very', 'long', 'path'), 10)))
 
     def test_distance(self):
-        self.assertEqual(0.0, distance(QPointF(0, 0), QPointF(0, 0)))
-        self.assertEqual(10.0, distance(QPointF(0, 0), QPointF(10, 0)))
-        self.assertEqual(10.0, distance(QPointF(0, 0), QPointF(0, 10)))
-        self.assertEqual(14.0, distance(QPointF(-4, 0), QPointF(10, 0)))
-        self.assertEqual(14.0, distance(QPointF(0, -4), QPointF(0, 10)))
-        self.assertEqual(10.0, distance(QPointF(0, 8), QPointF(6, 0)))
-        self.assertEqual(10.0, distance(QPointF(0, -8), QPointF(-6, 0)))
+        self.assertEqual(0.0, distance(QtCore.QPointF(0, 0), QtCore.QPointF(0, 0)))
+        self.assertEqual(10.0, distance(QtCore.QPointF(0, 0), QtCore.QPointF(10, 0)))
+        self.assertEqual(10.0, distance(QtCore.QPointF(0, 0), QtCore.QPointF(0, 10)))
+        self.assertEqual(14.0, distance(QtCore.QPointF(-4, 0), QtCore.QPointF(10, 0)))
+        self.assertEqual(14.0, distance(QtCore.QPointF(0, -4), QtCore.QPointF(0, 10)))
+        self.assertEqual(10.0, distance(QtCore.QPointF(0, 8), QtCore.QPointF(6, 0)))
+        self.assertEqual(10.0, distance(QtCore.QPointF(0, -8), QtCore.QPointF(-6, 0)))
+
+    def test_lstrip(self):
+        self.assertEqual('.graphol', lstrip('Pizza.graphol', 'Pizza'))
+        self.assertEqual('graphol', lstrip('Family.graphol', 'Family', '.'))
+        self.assertEqual('Message', lstrip('ThisIsATestMessage', 'This', 'Is', 'A', 'Test'))
+
+    def test_rstrip(self):
+        self.assertEqual('Pizza', rstrip('Pizza.graphol', '.graphol'))
+        self.assertEqual('Pizza.graphol', rstrip('Pizza.graphol', 'random_string'))
+        self.assertEqual('Family', rstrip('Family.graphol', 'graphol', '.'))
+        self.assertEqual('ThisIs', rstrip('ThisIsATestMessage', 'Message', 'Test', 'A'))
 
     def test_projection(self):
-        P = QPointF(2, 8)
-        L = QLineF(QPointF(0, 0), QPointF(10, 0))
+        P = QtCore.QPointF(2, 8)
+        L = QtCore.QLineF(QtCore.QPointF(0, 0), QtCore.QPointF(10, 0))
         D = projection(L, P)
         self.assertIsInstance(D, tuple)
         self.assertEqual(D[0], 8.0)
-        self.assertEqual(D[1], QPointF(2, 0))
+        self.assertEqual(D[1], QtCore.QPointF(2, 0))
 
     def test_intersection(self):
-        self.assertEqual(QPointF(0, 0), intersection(QLineF(QPointF(-1, 0), QPointF(1, 0)), QLineF(QPointF(0, -1), QPointF(0, 1))))
-        self.assertEqual(QPointF(-4, 0), intersection(QLineF(QPointF(-10, 0), QPointF(10, 0)), QLineF(QPointF(-4, -12), QPointF(-4, 14))))
-        self.assertIsNone(intersection(QLineF(QPointF(-1, 0), QPointF(1, 0)), QLineF(QPointF(-1, 2), QPointF(1, 2))))
+        self.assertEqual(QtCore.QPointF(0, 0), intersection(QtCore.QLineF(QtCore.QPointF(-1, 0), QtCore.QPointF(1, 0)), QtCore.QLineF(QtCore.QPointF(0, -1), QtCore.QPointF(0, 1))))
+        self.assertEqual(QtCore.QPointF(-4, 0), intersection(QtCore.QLineF(QtCore.QPointF(-10, 0), QtCore.QPointF(10, 0)), QtCore.QLineF(QtCore.QPointF(-4, -12), QtCore.QPointF(-4, 14))))
+        self.assertIsNone(intersection(QtCore.QLineF(QtCore.QPointF(-1, 0), QtCore.QPointF(1, 0)), QtCore.QLineF(QtCore.QPointF(-1, 2), QtCore.QPointF(1, 2))))
 
     def test_empty(self):
         self.assertTrue(isEmpty(None))
@@ -98,9 +110,9 @@ class Test_Functions(unittest.TestCase):
         self.assertFalse(isEmpty(4))
 
     def test_midpoint(self):
-        self.assertEqual(QPointF(5, 0), midpoint(QPointF(0, 0), QPointF(10, 0)))
-        self.assertEqual(QPointF(0, 5), midpoint(QPointF(0, 0), QPointF(0, 10)))
-        self.assertEqual(QPointF(5, 5), midpoint(QPointF(0, 0), QPointF(10, 10)))
+        self.assertEqual(QtCore.QPointF(5, 0), midpoint(QtCore.QPointF(0, 0), QtCore.QPointF(10, 0)))
+        self.assertEqual(QtCore.QPointF(0, 5), midpoint(QtCore.QPointF(0, 0), QtCore.QPointF(0, 10)))
+        self.assertEqual(QtCore.QPointF(5, 5), midpoint(QtCore.QPointF(0, 0), QtCore.QPointF(10, 10)))
 
     def test_generator(self):
         self.assertEqual([0.0, 1.0, 2.0, 3.0], list(rangeF(0.0, 4.0, 1.0)))
