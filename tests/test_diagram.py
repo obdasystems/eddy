@@ -56,13 +56,18 @@ class DiagramTestCase(EddyTestCase):
         view = self.session.mdi.activeView()
         diagram = self.session.mdi.activeDiagram()
         diagram.setMode(DiagramMode.NodeAdd, Item.ConceptNode)
-        num_nodes = len(diagram.nodes())
+        num_nodes_in_diagram = len(diagram.nodes())
+        num_items_in_project = len(self.project.items())
+        num_nodes_in_project = len(self.project.nodes())
         node = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
         position = view.mapFromScene(node.pos() - QtCore.QPointF(-200, 0))
         # WHEN
         QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, position)
         # THEN
-        self.assertEqual(num_nodes, len(diagram.nodes()) - 1)
+        self.assertEqual(num_nodes_in_diagram, len(diagram.nodes()) - 1)
+        self.assertEqual(num_items_in_project, len(self.project.items()) - 1)
+        self.assertEqual(num_nodes_in_project, len(self.project.nodes()) - 1)
+        self.assertLen(1, self.project.predicates(Item.ConceptNode, 'concept'))
         self.assertIs(diagram.mode, DiagramMode.Idle)
 
     def test_insert_single_concept_node_with_control_modifier(self):
@@ -70,13 +75,18 @@ class DiagramTestCase(EddyTestCase):
         view = self.session.mdi.activeView()
         diagram = self.session.mdi.activeDiagram()
         diagram.setMode(DiagramMode.NodeAdd, Item.ConceptNode)
-        num_nodes = len(diagram.nodes())
+        num_nodes_in_diagram = len(diagram.nodes())
+        num_items_in_project = len(self.project.items())
+        num_nodes_in_project = len(self.project.nodes())
         node = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
         position = view.mapFromScene(node.pos() - QtCore.QPointF(-200, 0))
         # WHEN
         QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, position)
         # THEN
-        self.assertEqual(num_nodes, len(diagram.nodes()) - 1)
+        self.assertEqual(num_nodes_in_diagram, len(diagram.nodes()) - 1)
+        self.assertEqual(num_items_in_project, len(self.project.items()) - 1)
+        self.assertEqual(num_nodes_in_project, len(self.project.nodes()) - 1)
+        self.assertLen(1, self.project.predicates(Item.ConceptNode, 'concept'))
         self.assertIs(diagram.mode, DiagramMode.NodeAdd)
 
     def test_insert_multiple_concept_nodes_with_control_modifier(self):
@@ -84,7 +94,9 @@ class DiagramTestCase(EddyTestCase):
         view = self.session.mdi.activeView()
         diagram = self.session.mdi.activeDiagram()
         diagram.setMode(DiagramMode.NodeAdd, Item.ConceptNode)
-        num_nodes = len(diagram.nodes())
+        num_nodes_in_diagram = len(diagram.nodes())
+        num_items_in_project = len(self.project.items())
+        num_nodes_in_project = len(self.project.nodes())
         node = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
         positions = [
             view.mapFromScene(node.pos() - QtCore.QPointF(-300, 0)),
@@ -95,7 +107,10 @@ class DiagramTestCase(EddyTestCase):
         for position in positions:
             QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, position)
         # THEN
-        self.assertEqual(num_nodes, len(diagram.nodes()) - 3)
+        self.assertEqual(num_nodes_in_diagram, len(diagram.nodes()) - 3)
+        self.assertEqual(num_items_in_project, len(self.project.items()) - 3)
+        self.assertEqual(num_nodes_in_project, len(self.project.nodes()) - 3)
+        self.assertLen(3, self.project.predicates(Item.ConceptNode, 'concept'))
         self.assertIs(diagram.mode, DiagramMode.NodeAdd)
 
     def test_insert_multiple_concept_nodes_with_control_modifier_released_after_insertion(self):
@@ -103,7 +118,9 @@ class DiagramTestCase(EddyTestCase):
         view = self.session.mdi.activeView()
         diagram = self.session.mdi.activeDiagram()
         diagram.setMode(DiagramMode.NodeAdd, Item.ConceptNode)
-        num_nodes = len(diagram.nodes())
+        num_nodes_in_diagram = len(diagram.nodes())
+        num_items_in_project = len(self.project.items())
+        num_nodes_in_project = len(self.project.nodes())
         node = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
         positions = [
             view.mapFromScene(node.pos() - QtCore.QPointF(-300, 0)),
@@ -115,5 +132,8 @@ class DiagramTestCase(EddyTestCase):
             QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, position)
         QtTest.QTest.keyRelease(self.session, QtCore.Qt.Key_Control)
         # THEN
-        self.assertEqual(num_nodes, len(diagram.nodes()) - 3)
+        self.assertEqual(num_nodes_in_diagram, len(diagram.nodes()) - 3)
+        self.assertEqual(num_items_in_project, len(self.project.items()) - 3)
+        self.assertEqual(num_nodes_in_project, len(self.project.nodes()) - 3)
+        self.assertLen(3, self.project.predicates(Item.ConceptNode, 'concept'))
         self.assertIs(diagram.mode, DiagramMode.Idle)
