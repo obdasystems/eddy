@@ -197,7 +197,7 @@ class Clipboard(QtCore.QObject):
             self.nodes = {node.id: node.copy(diagram) for node in nodes}
             for node in nodes:
                 for edge in node.edges:
-                    if edge.id not in self.edges and edge.other(node).isSelected():
+                    if edge.id not in self.edges and edge.isSelected() and edge.other(node).isSelected():
                         copy = edge.copy(diagram)
                         copy.source = self.nodes[edge.source.id]
                         copy.source.setAnchor(copy, edge.source.anchor(edge))
