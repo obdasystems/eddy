@@ -33,7 +33,6 @@
 ##########################################################################
 
 
-import logging
 import jnius_config
 import os
 import sys
