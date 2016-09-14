@@ -152,4 +152,4 @@ def rmdir(path):
     :type path: str
     """
     if is_dir(path):
-        shutil.rmtree(path)
+        shutil.rmtree(expandPath(path))
