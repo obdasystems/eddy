@@ -2,6 +2,10 @@
 sudo:
   required
 
+# Test on Trusty
+dist:
+  trusty
+
 ## Cache PIP installs across jobs
 cache:
   - pip
