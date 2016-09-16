@@ -72,7 +72,7 @@ class WorkspaceDialog(QtWidgets.QDialog):
         self.headTitle.setFont(arial12b)
         self.headDescription = QtWidgets.QLabel(dedent("""
         Eddy stores your projects in a directory called workspace.\n'
-        Please choose a workspace directory to use.""", self))
+        Please choose a workspace directory to use."""), self)
         self.headDescription.setFont(arial12r)
         self.headPix = QtWidgets.QLabel(self)
         self.headPix.setPixmap(QtGui.QPixmap(':/images/eddy-smile-small-noframe'))
