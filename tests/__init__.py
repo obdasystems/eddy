@@ -75,8 +75,10 @@ from argparse import ArgumentParser
 from unittest import TestCase
 from unittest.util import safe_repr
 
+from PyQt5 import QtCore
 from PyQt5 import QtTest
 
+from eddy import APPNAME, ORGANIZATION, WORKSPACE
 from eddy.core.application import Eddy
 # noinspection PyUnresolvedReferences
 from eddy.ui import images_rc
@@ -90,12 +92,29 @@ class EddyTestCase(TestCase):
         """
         Initialize test case environment.
         """
+        # MAKE SURE TO HAVE AN INITIALIZED (USELESS) WORKSPACE
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings.setValue('workspace/home', WORKSPACE)
+        settings.sync()
+        # MAKE SURE THE WORKSPACE DIRECTORY EXISTS
+        mkdir(expandPath(WORKSPACE))
+        # MAKE SURE TO HAVE A CLEAN TEST ENVIRONMENT
+        rmdir('@tests/.tests/')
+        mkdir('@tests/.tests/')
+        # INITIALIZED VARIABLES
+        self.eddy = None
+        self.project = None
+        self.session = None
+
+    def init(self, project):
+        """
+        Create a new instance of Eddy loading the given project from the '@resources' directory.
+        :type project: str
+        """
         # COPY TEST PROJECT OVER
-        rmdir('@tests/.test_project/')
-        mkdir('@tests/.test_project/')
-        cpdir('@resources/test_project/', '@tests/.test_project/test_project')
+        cpdir('@resources/%s/' % project, '@tests/.tests/%s' % project)
         # CREATE AN INSTANCE OF EDDY
-        arguments = ['--nosplash', '--tests', '--open', '@tests/.test_project/test_project']
+        arguments = ['--nosplash', '--tests', '--open', '@tests/.tests/%s' % project]
         parser = ArgumentParser()
         parser.add_argument('--nosplash', dest='nosplash', action='store_true')
         parser.add_argument('--tests', dest='tests', action='store_true')
@@ -106,11 +125,9 @@ class EddyTestCase(TestCase):
         self.eddy.start(options)
         # WAIT FOR THE SESSION TO BE COMPLETELY INITIALIZED
         QtTest.QTest.qWaitForWindowActive(self.eddy.session)
-        # CREATE SOME USEFUL SHORTCUTS
-        self.session = self.eddy.session
+        # SET SHORTCUTS
         self.project = self.eddy.session.project
-        # GIVE FOCUS TO THE TEST DIAGRAM
-        self.session.sgnDiagramFocus.emit(self.project.diagram(expandPath('@tests/.test_project/test_project/diagram.graphol')))
+        self.session = self.eddy.session
 
     def tearDown(self):
         """
@@ -119,7 +136,7 @@ class EddyTestCase(TestCase):
         # SHUTDOWN EDDY
         self.eddy.quit()
         # REMOVE TEST DIRECTORY
-        rmdir('@tests/.test_project/')
+        rmdir('@tests/.tests/')
 
     #############################################
     #   CUSTOM ASSERTIONS

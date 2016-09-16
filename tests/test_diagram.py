@@ -41,12 +41,22 @@ from tests import EddyTestCase
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.misc import first
+from eddy.core.functions.path import expandPath
 
 
 class DiagramTestCase(EddyTestCase):
     """
     Tests for eddy's diagram operations.
     """
+    def setUp(self):
+        """
+        Initialize test case environment.
+        """
+        super(DiagramTestCase, self).setUp()
+        self.init('test_project_1')
+        self.session.sgnDiagramFocus.emit(
+            self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))
+
     #############################################
     #   NODE INSERTION
     #################################

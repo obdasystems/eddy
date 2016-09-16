@@ -33,13 +33,20 @@
 ##########################################################################
 
 
+from eddy.core.functions.path import expandPath
+
 from tests import EddyTestCase
 
 
-class BuiltInActionsTestCase(EddyTestCase):
+class PaletteTestCase(EddyTestCase):
     """
     Tests for the palette plugin.
     """
-    #############################################
-    #   CUT / COPY / PASTE
-    #################################
+    def setUp(self):
+        """
+        Initialize test case environment.
+        """
+        super(PaletteTestCase, self).setUp()
+        self.init('test_project_1')
+        self.session.sgnDiagramFocus.emit(
+            self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))
