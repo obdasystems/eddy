@@ -140,7 +140,36 @@ class DiagramTestCase(EddyTestCase):
     #   EDGE INSERTION
     #################################
 
-    def test_insert_inclusion_edge(self):
+    def test_insert_edge(self):
+        # GIVEN
+        view = self.session.mdi.activeView()
+        diagram = self.session.mdi.activeDiagram()
+        diagram.setMode(DiagramMode.EdgeAdd, Item.InclusionEdge)
+        num_edges_in_diagram = len(diagram.edges())
+        num_items_in_project = len(self.project.items())
+        num_edges_in_project = len(self.project.edges())
+        node1 = first(self.project.predicates(Item.ConceptNode, 'Male', diagram))
+        node2 = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
+        num_edges_in_node1 = len(node1.edges)
+        num_edges_in_node2 = len(node2.edges)
+        pos1 = view.mapFromScene(node1.pos())
+        pos2 = view.mapFromScene(node2.pos())
+        # WHEN
+        QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos1)
+        QtTest.QTest.mouseMove(view.viewport(), pos2)
+        # THEN
+        self.assertTrue(diagram.isEdgeAddInProgress())
+        # WHEN
+        QtTest.QTest.mouseRelease(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos2)
+        # THEN
+        self.assertFalse(diagram.isEdgeAddInProgress())
+        self.assertEqual(num_edges_in_diagram, len(diagram.edges()) - 1)
+        self.assertEqual(num_items_in_project, len(self.project.items()) - 1)
+        self.assertEqual(num_edges_in_project, len(self.project.edges()) - 1)
+        self.assertEqual(num_edges_in_node1, len(node1.edges) - 1)
+        self.assertEqual(num_edges_in_node2, len(node2.edges) - 1)
+
+    def test_insert_edge_with_missing_endpoint(self):
         # GIVEN
         view = self.session.mdi.activeView()
         diagram = self.session.mdi.activeDiagram()
@@ -151,7 +180,7 @@ class DiagramTestCase(EddyTestCase):
         node1 = first(self.project.predicates(Item.ConceptNode, 'Male', diagram))
         node2 = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
         pos1 = view.mapFromScene(node1.pos())
-        pos2 = view.mapFromScene(node2.pos())
+        pos2 = view.mapFromScene(node2.pos() - QtCore.QPointF(-200, 0))
         # WHEN
         QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos1)
         QtTest.QTest.mouseMove(view.viewport(), pos2)
@@ -161,56 +190,6 @@ class DiagramTestCase(EddyTestCase):
         QtTest.QTest.mouseRelease(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos2)
         # THEN
         self.assertFalse(diagram.isEdgeAddInProgress())
-        self.assertEqual(num_edges_in_diagram, len(diagram.edges()) - 1)
-        self.assertEqual(num_items_in_project, len(self.project.items()) - 1)
-        self.assertEqual(num_edges_in_project, len(self.project.edges()) - 1)
-
-    def test_insert_equivalence_edge(self):
-        # GIVEN
-        view = self.session.mdi.activeView()
-        diagram = self.session.mdi.activeDiagram()
-        diagram.setMode(DiagramMode.EdgeAdd, Item.EquivalenceEdge)
-        num_edges_in_diagram = len(diagram.edges())
-        num_items_in_project = len(self.project.items())
-        num_edges_in_project = len(self.project.edges())
-        node1 = first(self.project.predicates(Item.ConceptNode, 'Male', diagram))
-        node2 = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
-        pos1 = view.mapFromScene(node1.pos())
-        pos2 = view.mapFromScene(node2.pos())
-        # WHEN
-        QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos1)
-        QtTest.QTest.mouseMove(view.viewport(), pos2)
-        # THEN
-        self.assertTrue(diagram.isEdgeAddInProgress())
-        # WHEN
-        QtTest.QTest.mouseRelease(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos2)
-        # THEN
-        self.assertFalse(diagram.isEdgeAddInProgress())
-        self.assertEqual(num_edges_in_diagram, len(diagram.edges()) - 1)
-        self.assertEqual(num_items_in_project, len(self.project.items()) - 1)
-        self.assertEqual(num_edges_in_project, len(self.project.edges()) - 1)
-
-    def test_insert_input_edge(self):
-        # GIVEN
-        view = self.session.mdi.activeView()
-        diagram = self.session.mdi.activeDiagram()
-        diagram.setMode(DiagramMode.EdgeAdd, Item.EquivalenceEdge)
-        num_edges_in_diagram = len(diagram.edges())
-        num_items_in_project = len(self.project.items())
-        num_edges_in_project = len(self.project.edges())
-        node1 = first(self.project.predicates(Item.ConceptNode, 'Father', diagram))
-        node2 = first([x for x in diagram.nodes() if x.type() is Item.DisjointUnionNode])
-        pos1 = view.mapFromScene(node1.pos())
-        pos2 = view.mapFromScene(node2.pos())
-        # WHEN
-        QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos1)
-        QtTest.QTest.mouseMove(view.viewport(), pos2)
-        # THEN
-        self.assertTrue(diagram.isEdgeAddInProgress())
-        # WHEN
-        QtTest.QTest.mouseRelease(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos2)
-        # THEN
-        self.assertFalse(diagram.isEdgeAddInProgress())
-        self.assertEqual(num_edges_in_diagram, len(diagram.edges()) - 1)
-        self.assertEqual(num_items_in_project, len(self.project.items()) - 1)
-        self.assertEqual(num_edges_in_project, len(self.project.edges()) - 1)
+        self.assertEqual(num_edges_in_diagram, len(diagram.edges()))
+        self.assertEqual(num_items_in_project, len(self.project.items()))
+        self.assertEqual(num_edges_in_project, len(self.project.edges()))
