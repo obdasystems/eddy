@@ -115,9 +115,9 @@ from eddy.ui.syntax import SyntaxValidationDialog
 from eddy.ui.view import DiagramView
 
 
-LINUX = sys.platform.startswith('linux')
-MACOS = sys.platform.startswith('darwin')
-WIN32 = sys.platform.startswith('win32')
+_LINUX = sys.platform.startswith('linux')
+_MACOS = sys.platform.startswith('darwin')
+_WIN32 = sys.platform.startswith('win32')
 
 LOGGER = getLogger(__name__)
 
@@ -277,7 +277,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         action.setData(LogDialog)
         self.addAction(action)
 
-        if MACOS:
+        if _MACOS:
             self.action('about').setIcon(QtGui.QIcon())
             self.action('open_preferences').setIcon(QtGui.QIcon())
             self.action('quit').setIcon(QtGui.QIcon())
@@ -1972,7 +1972,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dropEvent.setDropAction(QtCore.Qt.CopyAction)
             for url in dropEvent.mimeData().urls():
                 path = url.path()
-                if WIN32:
+                if _WIN32:
                     # On Windows the absolute path returned for each URL has a
                     # leading slash: this obviously is not correct on windows
                     # platform when absolute url have the form C:\\Programs\\... (QtCore.Qt bug?)
@@ -1988,7 +1988,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Executed when a keyboard button is pressed
         :type keyEvent: QKeyEvent
         """
-        if MACOS:
+        if _MACOS:
             if keyEvent.key() == QtCore.Qt.Key_Backspace:
                 action = self.action('delete')
                 action.trigger()
