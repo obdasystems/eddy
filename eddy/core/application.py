@@ -256,7 +256,7 @@ class Eddy(QtWidgets.QApplication):
             # If we have a connection, setup the stream to accept packets.
             self.inputStream = QtCore.QTextStream(self.inputSocket)
             self.inputStream.setCodec('UTF-8')
-            connect(self.inputSocket.onReadyRead, self.onReadyRead)
+            connect(self.inputSocket.readyRead, self.onReadyRead)
 
     @QtCore.pyqtSlot(str)
     def doCreateSession(self, path):
