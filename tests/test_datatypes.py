@@ -39,7 +39,7 @@ import unittest
 from eddy.core.datatypes.collections import DistinctList
 
 
-class Test_DistinctList(unittest.TestCase):
+class DistinctListTestCase(unittest.TestCase):
 
     def test_constructor_with_list(self):
         D1 = DistinctList([1, 2, 3, 3, 4, 1, 4, 5, 6, 7, 7, 8, 2])

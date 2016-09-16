@@ -38,7 +38,7 @@ import unittest
 from eddy.core.guid import GUID
 
 
-class Test_GUID(unittest.TestCase):
+class GUIDTestCase(unittest.TestCase):
 
     def test_unique_id_generation(self):
         guid = GUID()

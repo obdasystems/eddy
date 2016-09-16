@@ -40,13 +40,13 @@ import unittest
 from PyQt5 import QtCore
 
 from eddy.core.functions.misc import isEmpty, rangeF, snapF
-from eddy.core.functions.misc import clamp, lstrip, rstrip
+from eddy.core.functions.misc import clamp, first, last, lstrip, rstrip
 from eddy.core.functions.geometry import angle, distance, projection
 from eddy.core.functions.geometry import intersection, midpoint
 from eddy.core.functions.path import compressPath
 
 
-class Test_Functions(unittest.TestCase):
+class FunctionsTestCase(unittest.TestCase):
 
     def test_angle(self):
         self.assertEqual(0.0, angle(QtCore.QPointF(0, 0), QtCore.QPointF(+1, 0)))
@@ -77,6 +77,20 @@ class Test_Functions(unittest.TestCase):
         self.assertEqual(14.0, distance(QtCore.QPointF(0, -4), QtCore.QPointF(0, 10)))
         self.assertEqual(10.0, distance(QtCore.QPointF(0, 8), QtCore.QPointF(6, 0)))
         self.assertEqual(10.0, distance(QtCore.QPointF(0, -8), QtCore.QPointF(-6, 0)))
+
+    def test_first(self):
+        self.assertEqual(5, first([5, 7, 9, 11, 97, 4, 7, 3]))
+        self.assertEqual(5, first((5, 7, 9, 11, 97, 4, 7, 3)))
+        self.assertEqual(5, first([5, 7, 9, 11, 97, 4, 7, 3]))
+        self.assertEqual(1, first([], default=1))
+        self.assertIsNone(first([]))
+
+    def test_last(self):
+        self.assertEqual(3, last([5, 7, 9, 11, 97, 4, 7, 3]))
+        self.assertEqual(3, last((5, 7, 9, 11, 97, 4, 7, 3)))
+        self.assertEqual(3, last([5, 7, 9, 11, 97, 4, 7, 3]))
+        self.assertEqual(1, last([], default=1))
+        self.assertIsNone(last([]))
 
     def test_lstrip(self):
         self.assertEqual('.graphol', lstrip('Pizza.graphol', 'Pizza'))
