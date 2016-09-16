@@ -49,6 +49,7 @@ import zipfile
 from eddy import APPNAME, APPID, BUG_TRACKER, COPYRIGHT
 from eddy import DIAG_HOME, GRAPHOL_HOME, LICENSE
 from eddy import ORGANIZATION, PROJECT_HOME, VERSION
+from eddy.core.functions.misc import rstrip
 from eddy.core.functions.fsystem import fexists, fremove, is_dir
 from eddy.core.functions.fsystem import is_package, mkdir, rmdir
 from eddy.core.functions.path import expandPath
@@ -190,7 +191,7 @@ class BuildExe(cx_Freeze.build_exe):
                                 for filename in files:
                                     path = expandPath(os.path.join(root, filename))
                                     if path.endswith('.py'):
-                                        new_path = '%s.pyc' % path.rstrip('.py')
+                                        new_path = '%s.pyc' % rstrip(path, '.py')
                                         py_compile.compile(path, new_path)
                                         arcname = os.path.join(file_or_directory, os.path.relpath(new_path, plugin))
                                         zipf.write(new_path, arcname)
