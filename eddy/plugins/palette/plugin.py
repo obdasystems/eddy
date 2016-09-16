@@ -53,9 +53,9 @@ from eddy.core.plugin import AbstractPlugin
 from eddy.ui.dock import DockWidget
 
 
-LINUX = sys.platform.startswith('linux')
-MACOS = sys.platform.startswith('darwin')
-WIN32 = sys.platform.startswith('win32')
+_LINUX = sys.platform.startswith('linux')
+_MACOS = sys.platform.startswith('darwin')
+_WIN32 = sys.platform.startswith('win32')
 
 
 class Palette(AbstractPlugin):
@@ -67,7 +67,7 @@ class Palette(AbstractPlugin):
         Initialize the plugin.
         :type session: session
         """
-        super().__init__(session)
+        super(Palette, self).__init__(session)
 
     #############################################
     #   EVENTS
@@ -83,7 +83,7 @@ class Palette(AbstractPlugin):
         if event.type() == QtCore.QEvent.Resize:
             widget = source.widget()
             widget.redraw()
-        return super().eventFilter(source, event)
+        return super(Palette, self).eventFilter(source, event)
 
     #############################################
     #   SLOTS
@@ -252,7 +252,7 @@ class PaletteWidget(QtWidgets.QWidget):
         Initialize the palette widget.
         :type plugin: Palette
         """
-        super().__init__(plugin.parent())
+        super(PaletteWidget, self).__init__(plugin.parent())
         self.columns = -1
         self.buttons = {}
         self.display = {}
@@ -374,7 +374,7 @@ class PaletteWidget(QtWidgets.QWidget):
             if isinstance(source, PaletteButton):
                 if not self.isEnabled():
                     return True
-        return super().eventFilter(source, event)
+        return super(PaletteWidget, self).eventFilter(source, event)
 
     def paintEvent(self, paintEvent):
         """
@@ -417,14 +417,11 @@ class PaletteWidget(QtWidgets.QWidget):
         rows = ceil(len(items) / columns)
         if self.columns != columns or mandatory:
             self.columns = columns
-            # COMPUTE NEW BUTTONS LOCATION
             zipped = list(zip([x for x in range(rows) for _ in range(columns)], list(range(columns)) * rows))
             zipped = zipped[:len(items)]
-            # CLEAR CURRENTY LAYOUT
             for i in reversed(range(self.mainLayout.count())):
                 item = self.mainLayout.itemAt(i)
                 self.mainLayout.removeItem(item)
-            # DISPOSE NEW BUTTONS
             for i in range(len(zipped)):
                 self.mainLayout.addWidget(self.button(items[i]), zipped[i][0], zipped[i][1])
 
@@ -454,7 +451,7 @@ class PaletteButton(QtWidgets.QToolButton):
         Initialize the palette button.
         :type item: Item
         """
-        super().__init__()
+        super(PaletteButton, self).__init__()
         self.item = item
         self.startPos = None
         self.setCheckable(True)
@@ -473,9 +470,8 @@ class PaletteButton(QtWidgets.QToolButton):
         """
         if mouseEvent.buttons() & QtCore.Qt.LeftButton:
             self.startPos = mouseEvent.pos()
-        super().mousePressEvent(mouseEvent)
+        super(PaletteButton, self).mousePressEvent(mouseEvent)
 
-    # noinspection PyArgumentList
     def mouseMoveEvent(self, mouseEvent):
         """
         Executed when the mouse if moved while a button is being pressed.
@@ -493,14 +489,14 @@ class PaletteButton(QtWidgets.QToolButton):
                     drag.setHotSpot(self.startPos - self.rect().topLeft())
                     drag.exec_(QtCore.Qt.CopyAction)
 
-        super().mouseMoveEvent(mouseEvent)
+        super(PaletteButton, self).mouseMoveEvent(mouseEvent)
 
     def mouseReleaseEvent(self, mouseEvent):
         """
         Executed when a mouse button is released.
         :type mouseEvent: QMouseEvent
         """
-        super().mouseReleaseEvent(mouseEvent)
+        super(PaletteButton, self).mouseReleaseEvent(mouseEvent)
 
     #############################################
     #   INTERFACE
@@ -977,7 +973,7 @@ class PaletteButton(QtWidgets.QToolButton):
                 P2 = P1 - QtCore.QPointF(sin(A1 + M_PI / 3.0) * 8, cos(A1 + M_PI / 3.0) * 8)
                 P3 = P1 - QtCore.QPointF(sin(A1 + M_PI - M_PI / 3.0) * 8, cos(A1 + M_PI - M_PI / 3.0) * 8)
                 H1 = QtGui.QPolygonF([P1, P2, P3])
-                S1 = 2 if MACOS else 0
+                S1 = 2 if _MACOS else 0
                 painter = QtGui.QPainter(pixmap)
                 painter.setRenderHint(QtGui.QPainter.Antialiasing)
                 painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
