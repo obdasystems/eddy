@@ -874,9 +874,8 @@ class Diagram(QtWidgets.QGraphicsScene):
             x = set()
             y = set()
             for item in items:
-                if item.isEdge() or item.isNode():
-                    b = item.mapRectToScene(item.boundingRect())
-                    x.update({b.left(), b.right()})
-                    y.update({b.top(), b.bottom()})
+                b = item.mapRectToScene(item.boundingRect())
+                x.update({b.left(), b.right()})
+                y.update({b.top(), b.bottom()})
             return QtCore.QRectF(QtCore.QPointF(min(x) - margin, min(y) - margin), QtCore.QPointF(max(x) + margin, max(y) + margin))
         return QtCore.QRectF()
