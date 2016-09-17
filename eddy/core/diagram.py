@@ -34,7 +34,6 @@
 
 
 import os
-import sys
 
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
@@ -46,7 +45,7 @@ from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.graph import bfs
-from eddy.core.functions.misc import snap, snapF, partition, first
+from eddy.core.functions.misc import snap, partition, first
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.guid import GUID
