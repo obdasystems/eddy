@@ -792,41 +792,6 @@ class Diagram(QtWidgets.QGraphicsScene):
         """
         return self.project.node(self, nid)
 
-    def propertyComposition(self, source, item):
-        """
-        Returns a collection of items to be added to the given source node to compose a property expression.
-        :type source: AbstractNode
-        :type item: Item
-        :rtype: set
-        """
-        restriction = self.factory.create(item)
-        edge = self.factory.create(Item.InputEdge, source=source, target=restriction)
-        size = Diagram.GridSize
-
-        offsets = (
-            QtCore.QPointF(snapF(+source.width() / 2 + 70, size), 0),
-            QtCore.QPointF(snapF(-source.width() / 2 - 70, size), 0),
-            QtCore.QPointF(0, snapF(-source.height() / 2 - 70, size)),
-            QtCore.QPointF(0, snapF(+source.height() / 2 + 70, size)),
-            QtCore.QPointF(snapF(+source.width() / 2 + 70, size), snapF(-source.height() / 2 - 70, size)),
-            QtCore.QPointF(snapF(-source.width() / 2 - 70, size), snapF(-source.height() / 2 - 70, size)),
-            QtCore.QPointF(snapF(+source.width() / 2 + 70, size), snapF(+source.height() / 2 + 70, size)),
-            QtCore.QPointF(snapF(-source.width() / 2 - 70, size), snapF(+source.height() / 2 + 70, size)),
-        )
-
-        pos = None
-        num = sys.maxsize
-        rad = QtCore.QPointF(restriction.width() / 2, restriction.height() / 2)
-
-        for o in offsets:
-            count = len(self.items(QtCore.QRectF(source.pos() + o - rad, source.pos() + o + rad)))
-            if count < num:
-                num = count
-                pos = source.pos() + o
-
-        restriction.setPos(pos)
-        return {restriction, edge}
-
     def selectedEdges(self, filter_on_edges=lambda x: True):
         """
         Returns the edges selected in the diagram.

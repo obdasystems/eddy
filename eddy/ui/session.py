@@ -1103,6 +1103,38 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Compose a property domain using the selected role/attribute node.
         """
+        def compose(_diagram, _source, _item):
+            """
+            Returns a collection of items to be added to the given source node to compose a property expression.
+            :type _diagram: Diagram
+            :type _source: AbstractNode
+            :type _item: Item
+            :rtype: set
+            """
+            restriction = _diagram.factory.create(_item)
+            edge = _diagram.factory.create(Item.InputEdge, source=_source, target=restriction)
+            size = Diagram.GridSize
+            offsets = (
+                QtCore.QPointF(snapF(+_source.width() / 2 + 70, size), 0),
+                QtCore.QPointF(snapF(-_source.width() / 2 - 70, size), 0),
+                QtCore.QPointF(0, snapF(-_source.height() / 2 - 70, size)),
+                QtCore.QPointF(0, snapF(+_source.height() / 2 + 70, size)),
+                QtCore.QPointF(snapF(+_source.width() / 2 + 70, size), snapF(-_source.height() / 2 - 70, size)),
+                QtCore.QPointF(snapF(-_source.width() / 2 - 70, size), snapF(-_source.height() / 2 - 70, size)),
+                QtCore.QPointF(snapF(+_source.width() / 2 + 70, size), snapF(+_source.height() / 2 + 70, size)),
+                QtCore.QPointF(snapF(-_source.width() / 2 - 70, size), snapF(+_source.height() / 2 + 70, size)),
+            )
+            pos = None
+            num = sys.maxsize
+            rad = QtCore.QPointF(restriction.width() / 2, restriction.height() / 2)
+            for o in offsets:
+                count = len(_diagram.items(QtCore.QRectF(_source.pos() + o - rad, _source.pos() + o + rad)))
+                if count < num:
+                    num = count
+                    pos = _source.pos() + o
+            restriction.setPos(pos)
+            return {restriction, edge}
+
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -1112,7 +1144,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 action = self.sender()
                 item = action.data()
                 name = 'compose {0} {1}'.format(node.shortName, item.shortName)
-                items = diagram.propertyComposition(node, item)
+                items = compose(diagram, node, item)
                 nodes = {x for x in items if x.isNode()}
                 edges = {x for x in items if x.isEdge()}
                 self.undostack.push(CommandComposeAxiom(name, diagram, node, nodes, edges))
