@@ -37,25 +37,16 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from verlib import NormalizedVersion
-
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
 
 from eddy.ui.dock import DockWidget
 
 
-class Overview(AbstractPlugin):
+class OverviewPlugin(AbstractPlugin):
     """
     This plugin provides the Overview widget.
     """
-    def __init__(self, session):
-        """
-        Initialize the plugin.
-        :type session: session
-        """
-        super().__init__(session)
-
     #############################################
     #   EVENTS
     #################################
@@ -129,25 +120,10 @@ class Overview(AbstractPlugin):
                 widget.redraw()
 
     #############################################
-    #   INTERFACE
+    #   HOOKS
     #################################
 
-    @classmethod
-    def name(cls):
-        """
-        Returns the readable name of the plugin.
-        :rtype: str
-        """
-        return 'Overview'
-
-    def objectName(self):
-        """
-        Returns the system name of the plugin.
-        :rtype: str
-        """
-        return 'overview'
-
-    def startup(self):
+    def start(self):
         """
         Perform initialization tasks for the plugin.
         """
@@ -178,14 +154,6 @@ class Overview(AbstractPlugin):
         # CREATE DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
         self.session.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.widget('overview_dock'))
-
-    @classmethod
-    def version(cls):
-        """
-        Returns the version of the plugin.
-        :rtype: NormalizedVersion
-        """
-        return NormalizedVersion('0.1')
 
 
 class OverviewWidget(QtWidgets.QGraphicsView):

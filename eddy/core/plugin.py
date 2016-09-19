@@ -33,11 +33,24 @@
 ##########################################################################
 
 
-from abc import ABCMeta, abstractmethod
+import io
+import os
+import re
+
+from abc import ABCMeta
+from configparser import ConfigParser, NoOptionError
+from importlib.machinery import SourceFileLoader
+from zipfile import ZipFile
+from zipimport import zipimporter, ZipImportError
+from verlib import NormalizedVersion
 
 from PyQt5 import QtCore
 
 from eddy.core.common import HasActionSystem, HasMenuSystem, HasWidgetSystem
+from eddy.core.datatypes.system import File
+from eddy.core.functions.misc import rstrip
+from eddy.core.functions.fsystem import fexists, is_dir
+from eddy.core.functions.path import expandPath
 from eddy.core.output import getLogger
 
 
@@ -50,12 +63,14 @@ class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasWidgetSy
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, session):
+    def __init__(self, spec, session):
         """
         Initialize the plugin.
+        :type spec: PluginSpec
         :type session: session
         """
-        super().__init__(session)
+        super(AbstractPlugin, self).__init__(session)
+        self.spec = spec
 
     #############################################
     #   PROPERTIES
@@ -81,46 +96,40 @@ class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasWidgetSy
     #   INTERFACE
     #################################
 
-    def dispose(self):
+    def author(self):
         """
-        Executed whenever the plugin is going to be destroyed.
-        """
-        pass
-
-    @classmethod
-    @abstractmethod
-    def name(cls):
-        """
-        Returns the readable name of the plugin.
+        Returns the author of the plugin.
         :rtype: str
         """
-        pass
+        return self.spec.get('plugin', 'author', None)
 
-    @abstractmethod
+    def contact(self):
+        """
+        Returns the contact address for this plugin.
+        :rtype: str
+        """
+        return self.spec.get('plugin', 'contact', None)
+
+    def id(self):
+        """
+        Returns the plugin identifier.
+        :rtype: str
+        """
+        return self.spec.get('plugin', 'id')
+
+    def name(self):
+        """
+        Returns the name of the plugin.
+        :rtype: str
+        """
+        return self.spec.get('plugin', 'name')
+
     def objectName(self):
         """
         Returns the system name of the plugin.
         :rtype: str
         """
-        pass
-
-    def startup(self):
-        """
-        Executed whenever the plugin is to be started, after all the plugins have been loaded.
-        NOTE: this method is executed before the project is loaded in the main session, so any
-        attempt to refer to self.project from within this method will raise an exception.
-        To setup project specific signals/slots, it's possible to make use of the sgnReady
-        signal emitted by the main session when the startup sequence completes.
-        """
-        pass
-
-    @classmethod
-    def requirements(cls):
-        """
-        Returns a list of plugins that are required by this one in order to work.
-        :rtype: list
-        """
-        return []
+        return self.spec.get('plugin', 'id')
 
     @classmethod
     def subclasses(cls):
@@ -130,17 +139,35 @@ class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasWidgetSy
         """
         return cls.__subclasses__() + [c for i in cls.__subclasses__() for c in i.subclasses()]
 
-    @classmethod
-    @abstractmethod
-    def version(cls):
+    def version(self):
         """
         Returns the version of the plugin.
         :rtype: NormalizedVersion
         """
+        return NormalizedVersion(self.spec.get('plugin', 'version'))
+
+    #############################################
+    #   HOOKS
+    #################################
+
+    def dispose(self):
+        """
+        Executed whenever the plugin is going to be destroyed.
+        """
+        pass
+
+    def start(self):
+        """
+        Executed whenever the plugin is to be started, after all the plugins have been loaded.
+        NOTE: this method is executed before the project is loaded in the main session, so any
+        attempt to refer to self.project from within this method will raise an exception.
+        To setup project specific signals/slots, it's possible to make use of the sgnReady
+        signal emitted by the main session when the startup sequence completes.
+        """
         pass
 
     #############################################
-    #   LOGGING CAPABILITIES
+    #   LOGGING UTILITIES
     #################################
 
     def critical(self, message, *args, **kwargs):
@@ -182,3 +209,242 @@ class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasWidgetSy
         :type message: str
         """
         LOGGER.warning('{0}: {1}'.format(self.name(), message), *args, **kwargs)
+
+
+class PluginSpec(ConfigParser):
+    """
+    Plugin .spec configuration file instance.
+    """
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the plugin .spec configuration.
+        """
+        super(PluginSpec, self).__init__(*args, **kwargs)
+
+    def getList(self, section, option):
+        """
+        Get the content of the given section/option combination returning it as a list.
+        :type section: str
+        :type option: str
+        :rtype: list
+        """
+        return list(filter(None, re.split("[,\s\-]+", self.get(section, option))))
+
+    def getPath(self, section, option):
+        """
+        Get the content of the given section/option performing path expansion.
+        :type section: str
+        :type option: str
+        :rtype: str
+        """
+        return expandPath(self.get(section, option))
+
+
+class PluginManager(QtCore.QObject):
+    """
+    Plugin manager class which takes case of performing some specific operations on plugins.
+    """
+    def __init__(self, session):
+        """
+        Initialize the plugin manager.
+        :type session: Session
+        """
+        super(PluginManager, self).__init__(session)
+        self.info = []
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def session(self):
+        """
+        Returns the reference to the main session (alias for PluginManager.parent()).
+        :rtype: Session
+        """
+        return self.parent()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def create(self, clazz, spec):
+        """
+        Create an instance of the given plugin.
+        :type clazz: class
+        :type spec: PluginSpec
+        :rtype: AbstractPlugin
+        """
+        return clazz(spec, self.session)
+
+    def dispose(self, plugin):
+        """
+        Dispose the given plugin.
+        Will return True if the plugin has been disposed successfully, False otherwise.
+        :type plugin: AbstractPlugin
+        :rtype: bool
+        """
+        LOGGER.debug('Disposing plugin: %s v%s', plugin.name(), plugin.version())
+        try:
+            plugin.dispose()
+        except Exception:
+            LOGGER.exception('An error occurred while disposing plugin: %s v%s', plugin.name(), plugin.version())
+            return False
+        else:
+            self.session.sgnPluginDisposed.emit(plugin.id())
+            return True
+
+    @classmethod
+    def find_class(cls, module, name):
+        """
+        Find and returns the reference to the plugin class in the given module.
+        :type module: module
+        :type name: str
+        :rtype: class
+        """
+        return getattr(module, '%sPlugin' % ''.join(i.title() for i in list(filter(None, re.split("[_\-]+", name)))))
+
+    def import_plugin_from_directory(self, directory):
+        """
+        Import a plugin from the given directory (directory MUST be expanded):
+        * Lookup for the plugin .spec configuration file.
+        * Search for the module where the plugin is implemented.
+        * Search for the class implementing the plugin.
+        * Import the plugin module.
+        :type directory: str
+        """
+        if is_dir(directory):
+            plugin_spec_path = os.path.join(directory, 'plugin.spec')
+            if fexists(plugin_spec_path):
+                try:
+                    LOGGER.debug('Found plugin .spec: %s', plugin_spec_path)
+                    plugin_spec = self.spec(plugin_spec_path)
+                    plugin_name = plugin_spec.get('plugin', 'id')
+                    for extension in ('pyc', 'pyo', 'pyd', 'py'):
+                        plugin_path = os.path.join(directory, '%s.%s' % (plugin_name, extension))
+                        if fexists(plugin_path):
+                            LOGGER.debug('Found plugin module: %s', plugin_path)
+                            plugin_module = SourceFileLoader(plugin_name, plugin_path).load_module()
+                            plugin_class = self.find_class(plugin_module, plugin_name)
+                            self.info.append((plugin_spec, plugin_class))
+                            break
+                    else:
+                        raise OSError('missing plugin module: %s.py(c|o|d)' % os.path.join(directory, plugin_name))
+                except Exception as e:
+                    LOGGER.exception('Failed to import plugin: %s', e)
+
+    def import_plugin_from_zip(self, archive):
+        """
+        Import a plugin from the given zip archive (archive MUST be expanded):
+        * Lookup for the plugin .spec configuration file.
+        * Search for the module where the plugin is implemented.
+        * Search for the class implementing the plugin.
+        * Import the plugin module.
+        :type archive: str
+        """
+        if fexists(archive) and File.forPath(archive) is File.Zip:
+            zf = ZipFile(archive)
+            zf_name_list = zf.namelist()
+            for file_or_directory in zf_name_list:
+                if file_or_directory.endswith('plugin.spec'):
+                    try:
+                        LOGGER.debug('Found plugin .spec: %s', os.path.join(archive, file_or_directory))
+                        plugin_spec_file = zf.open(file_or_directory)
+                        plugin_spec_path = io.StringIO(plugin_spec_file)
+                        plugin_spec = self.spec(plugin_spec_path)
+                        plugin_name = plugin_spec.get('plugin', 'id')
+                        plugin_base_path = '%s%s' % (rstrip(file_or_directory, 'plugin.spec'), plugin_name)
+                        for extension in ('pyc', 'pyo', 'pyd', 'py'):
+                            plugin_path = '%s.%s' % (plugin_base_path, extension)
+                            if plugin_path in zf_name_list:
+                                LOGGER.debug('Found plugin module: %s', os.path.join(archive, plugin_path))
+                                plugin_module = zipimporter(archive).load_module()
+                                plugin_class = self.find_class(plugin_module, plugin_name)
+                                self.info.append((plugin_spec, plugin_class))
+                                break
+                        else:
+                            raise ZipImportError('missing plugin module: %s.py(c|o|d)' % os.path.join(archive, plugin_base_path))
+                    except Exception as e:
+                        LOGGER.exception('Failed to import plugin: %s', e)
+
+    def init(self):
+        """
+        Initialize previously looked up plugins returning the list of successfully initialized plugins.
+        :rtype: list
+        """
+        if not self.info:
+            LOGGER.info('No plugin to be initialized')
+            return []
+
+        LOGGER.info('Loading %s plugin(s):', len(self.info))
+        LOGGER.separator(' ')
+        for entry in self.info:
+            author = entry[0].get('plugin', 'author')
+            contact = entry[0].get('plugin', 'contact')
+            name = entry[0].get('plugin', 'name')
+            version = entry[0].get('plugin', 'version')
+            LOGGER.info('   * %s v%s (%s - %s)', name, version, author, contact)
+        LOGGER.separator(' ')
+
+        pluginList = []
+        for entry in self.info:
+            name = entry[0].get('plugin', 'name')
+            version = entry[0].get('plugin', 'version')
+            try:
+                LOGGER.info('Loading plugin: %s v%s', name, version)
+                plugin = self.create(entry[1], entry[0])
+            except Exception:
+                LOGGER.exception('Failed to load plugin: %s v%s', name, version)
+            else:
+                pluginList.append(plugin)
+
+        started = []
+        for plugin in pluginList:
+            if self.start(plugin):
+                started.append(plugin)
+
+        return started
+
+    def lookup(self, base):
+        """
+        Lookup for a plugin in the given base path (path MUST be expanded).
+        :type base: str
+        """
+        if is_dir(base):
+            LOGGER.info('Looking for plugins in %s', base)
+            for file_or_directory in os.listdir(base):
+                file_or_directory_path = os.path.join(base, file_or_directory)
+                self.import_plugin_from_directory(file_or_directory_path)
+                self.import_plugin_from_zip(file_or_directory_path)
+
+    @classmethod
+    def spec(cls, path):
+        """
+        Parse and validate a plugin configuration file (.spec).
+        :type path: str
+        :rtype: PluginSpec
+        """
+        path = expandPath(path)
+        spec = PluginSpec()
+        spec.read(path)
+        for key in ('id', 'name', 'version'):
+            if not spec.has_option('plugin', key):
+                raise NoOptionError('missing mandatory configuration entry (plugin:%s) in %s' % (key, path))
+        return spec
+
+    def start(self, plugin):
+        """
+        Start the given plugin.
+        Will return True if the plugin has been started successfully, False otherwise.
+        :type plugin: AbstractPlugin
+        :rtype: bool
+        """
+        LOGGER.debug('Starting plugin: %s v%s', plugin.name(), plugin.version())
+        try:
+            plugin.start()
+        except Exception:
+            LOGGER.exception('An error occurred while starting plugin: %s v%s', plugin.name(), plugin.version())
+            return False
+        else:
+            self.session.sgnPluginStarted.emit(plugin.id())
+            return True

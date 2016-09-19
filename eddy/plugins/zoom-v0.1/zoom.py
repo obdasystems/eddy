@@ -37,8 +37,6 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from verlib import NormalizedVersion
-
 from eddy.core.functions.misc import clamp, rangeF
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
@@ -46,18 +44,19 @@ from eddy.core.plugin import AbstractPlugin
 from eddy.ui.view import DiagramView
 
 
-class Zoom(AbstractPlugin):
+class ZoomPlugin(AbstractPlugin):
     """
     This plugin provides the Zoom control used to scale the MDI area.
     """
     sgnChanged = QtCore.pyqtSignal(float)
 
-    def __init__(self, session):
+    def __init__(self, spec, session):
         """
         Initialize the plugin.
+        :type spec: PluginSpec
         :type session: session
         """
-        super().__init__(session)
+        super().__init__(spec, session)
         self.level = DiagramView.ZoomDefault
         self.levels = [x for x in rangeF(DiagramView.ZoomMin, DiagramView.ZoomMax + DiagramView.ZoomStep, DiagramView.ZoomStep)]
         self.view = None
@@ -148,21 +147,6 @@ class Zoom(AbstractPlugin):
         self.level = level
         self.refresh(enabled=True)
 
-    @classmethod
-    def name(cls):
-        """
-        Returns the readable name of the plugin.
-        :rtype: str
-        """
-        return 'Zoom'
-
-    def objectName(self):
-        """
-        Returns the system name of the plugin.
-        :rtype: str
-        """
-        return 'zoom'
-
     def refresh(self, enabled):
         """
         Refresh the status of the Zoom controls
@@ -191,7 +175,11 @@ class Zoom(AbstractPlugin):
         self.view = view
         self.refresh(enabled=view is not None)
 
-    def startup(self):
+    #############################################
+    #   HOOKS
+    #################################
+
+    def start(self):
         """
         Perform initialization tasks for the plugin.
         """
@@ -222,11 +210,3 @@ class Zoom(AbstractPlugin):
         self.session.widget('view_toolbar').addWidget(self.widget('button_zoom_out'))
         self.session.widget('view_toolbar').addWidget(self.widget('button_zoom_in'))
         self.session.widget('view_toolbar').addWidget(self.widget('button_zoom_reset'))
-
-    @classmethod
-    def version(cls):
-        """
-        Returns the version of the plugin.
-        :rtype: NormalizedVersion
-        """
-        return NormalizedVersion('0.1')

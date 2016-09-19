@@ -34,7 +34,6 @@
 
 
 from abc import ABCMeta, abstractmethod
-from verlib import NormalizedVersion
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -59,17 +58,10 @@ from eddy.ui.fields import IntegerField, StringField
 from eddy.ui.fields import CheckBox, ComboBox
 
 
-class Info(AbstractPlugin):
+class InfoPlugin(AbstractPlugin):
     """
-    This plugin provides the Info widget.
+    This plugin provides the Information widget.
     """
-    def __init__(self, session):
-        """
-        Initialize the plugin.
-        :type session: session
-        """
-        super().__init__(session)
-
     #############################################
     #   EVENTS
     #################################
@@ -177,25 +169,10 @@ class Info(AbstractPlugin):
                 widget.stack()
 
     #############################################
-    #   INTERFACE
+    #   HOOKS
     #################################
 
-    @classmethod
-    def name(cls):
-        """
-        Returns the readable name of the plugin.
-        :rtype: str
-        """
-        return 'Info'
-
-    def objectName(self):
-        """
-        Returns the system name of the plugin.
-        :rtype: str
-        """
-        return 'info'
-
-    def startup(self):
+    def start(self):
         """
         Perform initialization tasks for the plugin.
         """
@@ -227,14 +204,6 @@ class Info(AbstractPlugin):
         # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
         self.session.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.widget('info_dock'))
-
-    @classmethod
-    def version(cls):
-        """
-        Returns the version of the plugin.
-        :rtype: NormalizedVersion
-        """
-        return NormalizedVersion('0.1')
 
 
 class InfoWidget(QtWidgets.QScrollArea):

@@ -33,13 +33,10 @@
 ##########################################################################
 
 
-import importlib
-import importlib.util
 import os
 import sys
 import textwrap
 import webbrowser
-import zipimport
 
 from collections import OrderedDict
 
@@ -84,8 +81,7 @@ from eddy.core.exporters.owl import OWLProjectExporter
 from eddy.core.exporters.pdf import PdfDiagramExporter
 from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import MenuFactory, PropertyFactory
-from eddy.core.functions.fsystem import fcopy, fremove, is_dir
-from eddy.core.functions.fsystem import is_package, fexists
+from eddy.core.functions.fsystem import fcopy, fremove, fexists
 from eddy.core.functions.misc import first, format_exception, rstrip
 from eddy.core.functions.misc import snap, snapF
 from eddy.core.functions.path import expandPath, isSubPath
@@ -96,7 +92,7 @@ from eddy.core.loaders.graphml import GraphMLDiagramLoader
 from eddy.core.loaders.graphol import GrapholDiagramLoader
 from eddy.core.loaders.graphol import GrapholProjectLoader
 from eddy.core.output import getLogger
-from eddy.core.plugin import AbstractPlugin
+from eddy.core.plugin import PluginManager
 from eddy.core.profiles.owl2 import OWL2Profile
 
 from eddy.ui.about import AboutDialog
@@ -134,7 +130,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     * sgnDiagramLoad: whenever a diagram is to be loaded.
     * sgnDiagramLoaded: to notify that a diagram has been loaded.
     * sgnPluginDisposed: to notify that a plugin has been destroyed.
-    * sgnPluginLoaded: to notify that a plugin has been loaded.
     * sgnPluginStarted: to notify that a plugin startup sequence has been completed.
     * sgnProjectSave: whenever the current project is to be saved.
     * sgnProjectSaved: to notify that the current project has been saved.
@@ -148,7 +143,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnDiagramLoad = QtCore.pyqtSignal(str)
     sgnDiagramLoaded = QtCore.pyqtSignal('QGraphicsScene')
     sgnPluginDisposed = QtCore.pyqtSignal(str)
-    sgnPluginLoaded = QtCore.pyqtSignal(str)
     sgnPluginStarted = QtCore.pyqtSignal(str)
     sgnProjectSave = QtCore.pyqtSignal()
     sgnProjectSaved = QtCore.pyqtSignal()
@@ -173,6 +167,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.mdi = MdiArea(self)
         self.mf = MenuFactory(self)
         self.pf = PropertyFactory(self)
+        self.pmanager = PluginManager(self)
 
         # ------------------------------------------------------- #
         # Because toolbars are needed both by built-in widgets    #
@@ -803,142 +798,20 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Load and initialize application plugins.
         """
-        def import_module_from_directory(directory):
-            """
-            Import a module from the given directory.
-            If the directory does not idenfity a module, no import is performed.
-            :type directory: str
-            """
-            if is_package(directory):
-                spec = importlib.util.find_spec(os.path.basename(directory), directory)
-                if spec:
-                    try:
-                        spec.loader.load_module()
-                    except Exception:
-                        LOGGER.error('Failed to load python module (directory): %s', directory, exc_info=True)
-                    else:
-                        LOGGER.debug('Added plugin search path (directory): %s', directory)
-
-        def import_module_from_zip(archive):
-            """
-            Import a module from the given ZIP archive.
-            If the given path does not identify a ZIP archive, no import is performed.
-            :type archive: str
-            """
-            if fexists(archive) and File.forPath(archive) is File.Zip:
-                importer = zipimport.zipimporter(archive)
-                if importer:
-                    try:
-                        importer.load_module(rstrip(os.path.basename(archive), File.Zip.extension))
-                    except Exception:
-                        LOGGER.error('Failed to load python module (ZIP): %s', archive, exc_info=True)
-                    else:
-                        LOGGER.debug('Added plugin search path (ZIP): %s', archive)
-
-        def plugins_topological_sort(source):
-            """
-            Perform topological sort on the plugin subclass list yielding the result.
-            :type source: list
-            """
-            pending = [(s.name(), set(s.requirements())) for s in source]
-            emitted = []
-            while pending:
-                next_pending = []
-                next_emitted = []
-                for entry in pending:
-                    name, deps = entry
-                    deps.difference_update(emitted)
-                    if deps:
-                        next_pending.append(entry)
-                    else:
-                        yield name
-                        emitted.append(name)
-                        next_emitted.append(name)
-                if not next_emitted:
-                    raise RuntimeError("cyclic or missing dependancy detected: %r" % (next_pending,))
-                pending = next_pending
-                emitted = next_emitted
-
         LOGGER.header('Loading plugins')
 
         #############################################
         # SEARCH PLUGINS
         #################################
 
-        if not is_dir('@plugins/'):
-            LOGGER.error('Could not find plugins directory: %s', expandPath('@plugins/'))
-            return
+        for path in ('@plugins/', '@home/plugins/'):
+            self.pmanager.lookup(expandPath(path))
 
-        for file_or_directory in os.listdir(expandPath('@plugins/')):
-            import_module_from_directory(os.path.join(expandPath('@plugins/'), file_or_directory))
-            import_module_from_zip(os.path.join(expandPath('@plugins/'), file_or_directory))
+        #############################################
+        # INITIALIZE PLUGINS
+        #################################
 
-        subclasses = AbstractPlugin.subclasses()
-        if subclasses:
-
-            LOGGER.info('Found %s plugin(s): %s', len(subclasses), ', '.join(s.name() for s in subclasses))
-
-            #############################################
-            # FILTER PLUGINS WITH MISSING REQUIREMENTS
-            #################################
-
-            subclassList = []
-            for subclass in subclasses:
-                if subclass.requirements():
-                    missing = [r for r in subclass.requirements() if r not in {s.name() for s in subclasses}]
-                    if missing:
-                        LOGGER.warning('Plugin %s has unmet dependencies: %s', subclass.name(), ', '.join(missing))
-                        continue
-
-                subclassList.append(subclass)
-
-            if subclassList:
-
-                #############################################
-                # SORT PLUGINS BASED ON REQUIREMENTS
-                #################################
-
-                subclassDict = {subclass.name(): subclass for subclass in subclassList}
-                subclassList = [subclassDict[i] for i in plugins_topological_sort(subclassList)]
-
-                LOGGER.info('Loading %s plugin(s): %s', len(subclasses), ', '.join(s.name() for s in subclassList))
-
-                #############################################
-                # LOAD PLUGINS
-                #################################
-
-                pluginList = []
-                for subclass in subclasses:
-                    try:
-                        plugin = subclass(self)
-                    except Exception:
-                        LOGGER.exception('Failed to load plugin: %s v%s', subclass.name(), subclass.version())
-                    else:
-                        pluginList.append(plugin)
-                        LOGGER.info('Plugin loaded: %s v%s', subclass.name(), subclass.version())
-                        self.sgnPluginLoaded.emit(plugin.objectName())
-
-                if pluginList:
-
-                    LOGGER.info('Starting %s plugin(s): %s', len(pluginList), ', '.join(p.name() for p in pluginList))
-
-                    #############################################
-                    # STARTUP PLUGINS
-                    #################################
-
-                    for p in pluginList:
-                        try:
-                            p.startup()
-                        except Exception:
-                            LOGGER.exception('Failed to start plugin: %s v%s', p.name(), p.version())
-                        else:
-                            self.addPlugin(p)
-                            LOGGER.info('Plugin started: %s v%s', p.name(), p.version())
-                            self.sgnPluginStarted.emit(p.objectName())
-
-                    pluginList = self.plugins()
-                    if pluginList:
-                        LOGGER.info('%s plugin(s) started: %s', len(pluginList), ', '.join(p.name() for p in pluginList))
+        self.addPlugins(self.pmanager.init())
 
     def initProfiles(self):
         """
@@ -1959,9 +1832,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 self.sgnProjectSave.emit()
             # DISPOSE ALL THE PLUGINS
             for plugin in self.plugins():
-                LOGGER.debug('Disposing plugin: %s', plugin.name())
-                plugin.dispose()
-                self.sgnPluginDisposed.emit(plugin.objectName())
+                self.pmanager.dispose(plugin)
             # SHUTDOWN THE ACTIVE SESSION
             self.sgnClosed.emit()
             closeEvent.accept()

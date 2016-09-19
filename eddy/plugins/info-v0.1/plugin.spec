@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 ##########################################################################
 #                                                                        #
 #  Eddy: a graphical editor for the specification of Graphol ontologies  #
@@ -32,5 +30,9 @@
 #                                                                        #
 ##########################################################################
 
-
-from csv_exporter.plugin import Csv
+[plugin]
+author: Daniele Pantaleone
+contact: pantaleone@dis.uniroma1.it
+id: info
+name: Information
+version: 0.1

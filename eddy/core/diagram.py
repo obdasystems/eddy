@@ -40,7 +40,8 @@ from PyQt5 import QtWidgets
 
 from eddy.core.clipboard import Clipboard
 from eddy.core.commands.edges import CommandEdgeAdd
-from eddy.core.commands.nodes import CommandNodeAdd, CommandNodeMove
+from eddy.core.commands.nodes import CommandNodeAdd
+from eddy.core.commands.nodes import CommandNodeMove
 from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import DiagramMode

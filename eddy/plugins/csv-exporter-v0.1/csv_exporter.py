@@ -37,7 +37,6 @@ import csv
 import io
 
 from operator import itemgetter
-from verlib import NormalizedVersion
 
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item
@@ -48,50 +47,20 @@ from eddy.core.functions.path import openPath
 from eddy.core.plugin import AbstractPlugin
 
 
-class Csv(AbstractPlugin):
+class CsvExporterPlugin(AbstractPlugin):
     """
     Extends AbstractPlugin providing a Csv file format project exporter.
     """
-    def __init__(self, session):
-        """
-        Initialize the plugin.
-        :type session: session
-        """
-        super().__init__(session)
-
     #############################################
-    #   INTERFACE
+    #   HOOKS
     #################################
 
-    @classmethod
-    def name(cls):
-        """
-        Returns the readable name of the plugin.
-        :rtype: str
-        """
-        return 'CSV Exporter'
-
-    def objectName(self):
-        """
-        Returns the system name of the plugin.
-        :rtype: str
-        """
-        return 'csv_exporter'
-
-    def startup(self):
+    def start(self):
         """
         Perform initialization tasks for the plugin.
         """
         self.debug('Installing CSV file format exporter')
         self.session.addProjectExporter(CsvExporter)
-
-    @classmethod
-    def version(cls):
-        """
-        Returns the version of the plugin.
-        :rtype: NormalizedVersion
-        """
-        return NormalizedVersion('0.1')
 
 
 class CsvExporter(AbstractProjectExporter):

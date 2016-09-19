@@ -41,7 +41,7 @@ from eddy.core.regex import RE_FILE_EXTENSION
 @unique
 class File(Enum):
     """
-    This class defines supported filetypes.
+    Enum implementation to deal with file types.
     """
     Bmp = 'Bitmap (*.bmp)'
     Csv = 'Comma-separated values (*.csv)'
@@ -52,6 +52,7 @@ class File(Enum):
     Owl = 'Web Ontology Language (*.owl)'
     Pdf = 'Portable Document Format (*.pdf)'
     Png = 'PNG (*.png)'
+    Spec = 'Plugin SPEC (*.spec)'
     Zip = 'ZIP (*.zip)'
     Xml = 'XML (*.xml)'
 

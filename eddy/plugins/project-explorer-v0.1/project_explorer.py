@@ -37,8 +37,6 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from verlib import NormalizedVersion
-
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import first
 from eddy.core.functions.signals import connect, disconnect
@@ -47,17 +45,10 @@ from eddy.core.plugin import AbstractPlugin
 from eddy.ui.dock import DockWidget
 
 
-class ProjectExplorer(AbstractPlugin):
+class ProjectExplorerPlugin(AbstractPlugin):
     """
     This plugin provides the Project Explorer widget.
     """
-    def __init__(self, session):
-        """
-        Initialize the plugin.
-        :type session: session
-        """
-        super().__init__(session)
-
     #############################################
     #   SLOTS
     #################################
@@ -74,25 +65,10 @@ class ProjectExplorer(AbstractPlugin):
         widget.setProject(self.project)
 
     #############################################
-    #   INTERFACE
+    #   HOOKS
     #################################
 
-    @classmethod
-    def name(cls):
-        """
-        Returns the readable name of the plugin.
-        :rtype: str
-        """
-        return 'Project Explorer'
-
-    def objectName(self):
-        """
-        Returns the system name of the plugin.
-        :rtype: str
-        """
-        return 'project_explorer'
-
-    def startup(self):
+    def start(self):
         """
         Perform initialization tasks for the plugin.
         """
@@ -122,14 +98,6 @@ class ProjectExplorer(AbstractPlugin):
         # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
         self.session.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.widget('project_explorer_dock'))
-
-    @classmethod
-    def version(cls):
-        """
-        Returns the version of the plugin.
-        :rtype: NormalizedVersion
-        """
-        return NormalizedVersion('0.1')
 
 
 class ProjectExplorerWidget(QtWidgets.QWidget):

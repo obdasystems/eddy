@@ -40,7 +40,6 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from math import ceil, sin, cos, pi as M_PI, sqrt
-from verlib import NormalizedVersion
 
 from eddy import APPNAME, ORGANIZATION
 from eddy.core.datatypes.misc import DiagramMode
@@ -58,17 +57,10 @@ _MACOS = sys.platform.startswith('darwin')
 _WIN32 = sys.platform.startswith('win32')
 
 
-class Palette(AbstractPlugin):
+class PalettePlugin(AbstractPlugin):
     """
     This plugin provides the Graphol palette for Eddy.
     """
-    def __init__(self, session):
-        """
-        Initialize the plugin.
-        :type session: session
-        """
-        super(Palette, self).__init__(session)
-
     #############################################
     #   EVENTS
     #################################
@@ -83,7 +75,7 @@ class Palette(AbstractPlugin):
         if event.type() == QtCore.QEvent.Resize:
             widget = source.widget()
             widget.redraw()
-        return super(Palette, self).eventFilter(source, event)
+        return super().eventFilter(source, event)
 
     #############################################
     #   SLOTS
@@ -153,25 +145,10 @@ class Palette(AbstractPlugin):
             connect(diagram.sgnModeChanged, self.onDiagramModeChanged)
 
     #############################################
-    #   INTERFACE
+    #   HOOKS
     #################################
 
-    @classmethod
-    def name(cls):
-        """
-        Returns the readable name of the plugin.
-        :rtype: str
-        """
-        return 'Palette'
-
-    def objectName(self):
-        """
-        Returns the system name of the plugin.
-        :rtype: str
-        """
-        return 'palette'
-
-    def startup(self):
+    def start(self):
         """
         Perform initialization tasks for the plugin.
         """
@@ -232,14 +209,6 @@ class Palette(AbstractPlugin):
         # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
         self.session.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.widget('palette_dock'))
-
-    @classmethod
-    def version(cls):
-        """
-        Returns the version of the plugin.
-        :rtype: NormalizedVersion
-        """
-        return NormalizedVersion('0.1')
 
 
 class PaletteWidget(QtWidgets.QWidget):
@@ -374,7 +343,7 @@ class PaletteWidget(QtWidgets.QWidget):
             if isinstance(source, PaletteButton):
                 if not self.isEnabled():
                     return True
-        return super(PaletteWidget, self).eventFilter(source, event)
+        return super().eventFilter(source, event)
 
     def paintEvent(self, paintEvent):
         """

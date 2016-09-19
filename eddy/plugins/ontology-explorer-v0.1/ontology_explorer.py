@@ -37,8 +37,6 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from verlib import NormalizedVersion
-
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
@@ -50,18 +48,11 @@ from eddy.ui.dock import DockWidget
 from eddy.ui.fields import StringField
 
 
-class OntologyExplorer(AbstractPlugin):
+class OntologyExplorerPlugin(AbstractPlugin):
     """
     This plugin provides the Ontology Explorer widget.
     """
     sgnFakeItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
-
-    def __init__(self, session):
-        """
-        Initialize the plugin.
-        :type session: session
-        """
-        super().__init__(session)
 
     #############################################
     #   SLOTS
@@ -84,25 +75,10 @@ class OntologyExplorer(AbstractPlugin):
         disconnect(self.sgnFakeItemAdded, widget.doAddNode)
 
     #############################################
-    #   INTERFACE
+    #   HOOKS
     #################################
 
-    @classmethod
-    def name(cls):
-        """
-        Returns the readable name of the plugin.
-        :rtype: str
-        """
-        return 'Ontology Explorer'
-
-    def objectName(self):
-        """
-        Returns the system name of the plugin.
-        :rtype: str
-        """
-        return 'ontology_explorer'
-
-    def startup(self):
+    def start(self):
         """
         Perform initialization tasks for the plugin.
         """
@@ -132,14 +108,6 @@ class OntologyExplorer(AbstractPlugin):
         # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
         self.session.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.widget('ontology_explorer_dock'))
-
-    @classmethod
-    def version(cls):
-        """
-        Returns the version of the plugin.
-        :rtype: NormalizedVersion
-        """
-        return NormalizedVersion('0.1')
 
 
 class OntologyExplorerWidget(QtWidgets.QWidget):
