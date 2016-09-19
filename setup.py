@@ -51,7 +51,7 @@ from eddy import DIAG_HOME, GRAPHOL_HOME, LICENSE
 from eddy import ORGANIZATION, PROJECT_HOME, VERSION
 from eddy.core.functions.misc import rstrip
 from eddy.core.functions.fsystem import fexists, fremove, is_dir
-from eddy.core.functions.fsystem import is_package, mkdir, rmdir
+from eddy.core.functions.fsystem import mkdir, rmdir
 from eddy.core.functions.path import expandPath
 
 from PyQt5 import QtCore
@@ -182,7 +182,7 @@ class BuildExe(cx_Freeze.build_exe):
             mkdir(os.path.join(self.build_exe, 'plugins'))
             for file_or_directory in os.listdir(expandPath('@plugins/')):
                 plugin = os.path.join(expandPath('@plugins/'), file_or_directory)
-                if is_package(plugin):
+                if is_dir(plugin):
                     distutils.log.info('packaging plugin: %s', file_or_directory)
                     zippath = os.path.join(self.build_exe, 'plugins', '%s.zip' % file_or_directory)
                     with zipfile.ZipFile(zippath, 'w', zipfile.ZIP_STORED) as zipf:
