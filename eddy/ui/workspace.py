@@ -71,21 +71,19 @@ class WorkspaceDialog(QtWidgets.QDialog):
         self.headTitle = QtWidgets.QLabel('Select a workspace', self)
         self.headTitle.setFont(arial12b)
         self.headDescription = QtWidgets.QLabel(dedent("""
-        Eddy stores your projects in a directory called workspace.\n'
+        Eddy stores your projects in a directory called workspace.<br/>
         Please choose a workspace directory to use."""), self)
         self.headDescription.setFont(arial12r)
         self.headPix = QtWidgets.QLabel(self)
-        self.headPix.setPixmap(QtGui.QPixmap(':/images/eddy-smile-small-noframe'))
+        self.headPix.setPixmap(QtGui.QIcon(':/icons/128/ic_eddy').pixmap(48))
         self.headPix.setContentsMargins(0, 0, 0, 0)
-
         self.headWidget = QtWidgets.QWidget(self)
         self.headWidget.setProperty('class', 'head')
-        self.headWidget.setContentsMargins(0, 0, 0, 0)
-
+        self.headWidget.setContentsMargins(10, 10, 10, 10)
         self.headLayoutL = QtWidgets.QVBoxLayout()
         self.headLayoutL.addWidget(self.headTitle)
         self.headLayoutL.addWidget(self.headDescription)
-        self.headLayoutL.setContentsMargins(10, 10, 10, 10)
+        self.headLayoutL.setContentsMargins(0, 0, 0, 0)
         self.headLayoutR = QtWidgets.QVBoxLayout()
         self.headLayoutR.addWidget(self.headPix, 0, QtCore.Qt.AlignRight)
         self.headLayoutR.setContentsMargins(0, 0, 0, 0)
@@ -97,9 +95,6 @@ class WorkspaceDialog(QtWidgets.QDialog):
         #############################################
         # EDIT AREA
         #################################
-
-        self.workspacePrefix = QtWidgets.QLabel('Workspace', self)
-        self.workspacePrefix.setFont(arial12r)
 
         self.workspaceField = StringField(self)
         self.workspaceField.setFont(arial12r)
@@ -114,7 +109,6 @@ class WorkspaceDialog(QtWidgets.QDialog):
 
         self.editLayout = QtWidgets.QHBoxLayout()
         self.editLayout.setContentsMargins(10, 10, 10, 10)
-        self.editLayout.addWidget(self.workspacePrefix)
         self.editLayout.addWidget(self.workspaceField)
         self.editLayout.addWidget(self.btnBrowse)
 
