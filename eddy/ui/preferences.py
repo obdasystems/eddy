@@ -49,12 +49,12 @@ class PreferencesDialog(QtWidgets.QDialog):
     """
     This class implements the 'Preferences' dialog.
     """
-    def __init__(self, parent=None):
+    def __init__(self, session):
         """
         Initialize the Preferences dialog.
-        :type parent: QtWidgets.QWidget
+        :type session: Session
         """
-        super().__init__(parent)
+        super().__init__(session)
 
         arial12r = Font('Arial', 12)
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
@@ -63,9 +63,9 @@ class PreferencesDialog(QtWidgets.QDialog):
         # EDITOR TAB
         #################################
 
-        self.diagramSizeLabel = QtWidgets.QLabel(self)
-        self.diagramSizeLabel.setFont(arial12r)
-        self.diagramSizeLabel.setText('Diagram size')
+        self.diagramSizePrefix = QtWidgets.QLabel(self)
+        self.diagramSizePrefix.setFont(arial12r)
+        self.diagramSizePrefix.setText('Diagram size')
         self.diagramSizeField = SpinBox(self)
         self.diagramSizeField.setFont(arial12r)
         self.diagramSizeField.setRange(Diagram.MinSize, Diagram.MaxSize)
@@ -75,7 +75,43 @@ class PreferencesDialog(QtWidgets.QDialog):
 
         self.editorWidget = QtWidgets.QWidget()
         self.editorLayout = QtWidgets.QFormLayout(self.editorWidget)
-        self.editorLayout.addRow(self.diagramSizeLabel, self.diagramSizeField)
+        self.editorLayout.addRow(self.diagramSizePrefix, self.diagramSizeField)
+
+        #############################################
+        # PLUGINS TAB
+        #################################
+
+        self.pluginsTable = QtWidgets.QTableWidget(len(self.session.plugins()), 4, self)
+        self.pluginsTable.setHorizontalHeaderLabels(['Name', 'Version', 'Author', 'Contact'])
+        self.pluginsTable.setFont(arial12r)
+        self.pluginsTable.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        header = self.pluginsTable.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Fixed)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+        header.setSectionsClickable(False)
+        header.setSectionsMovable(False)
+        header = self.pluginsTable.verticalHeader()
+        header.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
+
+        for row, plugin in enumerate(sorted(self.session.plugins(), key=lambda x: x.name())):
+            item = QtWidgets.QTableWidgetItem(plugin.name())
+            item.setTextAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+            self.pluginsTable.setItem(row, 0, item)
+            item = QtWidgets.QTableWidgetItem('v{0}'.format(plugin.version()))
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.pluginsTable.setItem(row, 1, item)
+            item = QtWidgets.QTableWidgetItem(plugin.author())
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.pluginsTable.setItem(row, 2, item)
+            item = QtWidgets.QTableWidgetItem(plugin.contact())
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.pluginsTable.setItem(row, 3, item)
+
+        self.pluginsWidget = QtWidgets.QWidget()
+        self.pluginsLayout = QtWidgets.QHBoxLayout(self.pluginsWidget)
+        self.pluginsLayout.addWidget(self.pluginsTable, 1)
 
         #############################################
         # CONFIRMATION BOX
@@ -90,18 +126,31 @@ class PreferencesDialog(QtWidgets.QDialog):
         #################################
 
         self.mainWidget = QtWidgets.QTabWidget(self)
-        self.mainWidget.addTab(self.editorWidget, 'Editor')
+        self.mainWidget.addTab(self.editorWidget, QtGui.QIcon(':/icons/48/ic_edit_black'), 'Editor')
+        self.mainWidget.addTab(self.pluginsWidget, QtGui.QIcon(':/icons/48/ic_extension_black'), 'Plugins')
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.mainWidget)
         self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
 
-        self.setFixedSize(self.sizeHint())
+        self.setMinimumSize(740, 420)
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Preferences')
 
         connect(self.confirmationBox.accepted, self.accept)
         connect(self.confirmationBox.rejected, self.reject)
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def session(self):
+        """
+        Returns the reference to the main session (alias for PreferencesDialog.parent()).
+        :rtype: Session
+        """
+        return self.parent()
 
     #############################################
     #   SLOTS

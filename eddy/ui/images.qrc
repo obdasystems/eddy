@@ -149,6 +149,8 @@
   <file alias="ic_zoom_reset_black@2x">../../resources/icons/24/ic_zoom_reset_black_24dp_2x.png</file>
 </qresource>
 <qresource prefix="/icons/48">
+  <file alias="ic_edit_black">../../resources/icons/48/ic_edit_black_48dp_1x.png</file>
+  <file alias="ic_edit_black@2x">../../resources/icons/48/ic_edit_black_48dp_2x.png</file>
   <file alias="ic_extension_black">../../resources/icons/48/ic_extension_black_48dp_1x.png</file>
   <file alias="ic_extension_black@2x">../../resources/icons/48/ic_extension_black_48dp_2x.png</file>
   <file alias="ic_done_black">../../resources/icons/48/ic_done_black_48dp_1x.png</file>

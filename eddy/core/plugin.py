@@ -100,14 +100,14 @@ class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasWidgetSy
         Returns the author of the plugin.
         :rtype: str
         """
-        return self.spec.get('plugin', 'author', None)
+        return self.spec.get('plugin', 'author', fallback='<unknown>')
 
     def contact(self):
         """
         Returns the contact address for this plugin.
         :rtype: str
         """
-        return self.spec.get('plugin', 'contact', None)
+        return self.spec.get('plugin', 'contact', fallback='<unknown>')
 
     def id(self):
         """
