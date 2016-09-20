@@ -46,7 +46,7 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
 from eddy.core.datatypes.owl import OWLSyntax, Datatype, Facet
 from eddy.core.datatypes.system import File
-from eddy.core.exceptions import MalformedDiagramError
+from eddy.core.diagram import DiagramMalformedError
 from eddy.core.exporters.common import AbstractProjectExporter
 from eddy.core.functions.fsystem import fwrite
 from eddy.core.functions.misc import first, clamp, isEmpty, postfix, format_exception
@@ -203,7 +203,7 @@ class OWLProjectExporterDialog(QDialog):
         """
         self.workerThread.quit()
 
-        if isinstance(exception, MalformedDiagramError):
+        if isinstance(exception, DiagramMalformedError):
             msgbox = QMessageBox(self)
             msgbox.setIconPixmap(QIcon(':/icons/48/ic_warning_black').pixmap(48))
             msgbox.setInformativeText('Do you want to see the error in the diagram?')
@@ -483,9 +483,9 @@ class OWLProjectExporterWorker(QObject):
 
             incoming = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
             if not incoming:
-                raise MalformedDiagramError(node, 'missing operand(s)')
+                raise DiagramMalformedError(node, 'missing operand(s)')
             if len(incoming) > 1:
-                raise MalformedDiagramError(node, 'too many operands')
+                raise DiagramMalformedError(node, 'too many operands')
 
             operand = first(incoming)
 
@@ -506,7 +506,7 @@ class OWLProjectExporterWorker(QObject):
                 elif operand.type() is Item.RangeRestrictionNode:
                     self.conv[node] = self.df.getOWLObjectComplementOf(self.buildRangeRestriction(operand))
                 else:
-                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
+                    raise DiagramMalformedError(node, 'unsupported operand ({0})'.format(operand))
 
             elif operand.identity() is Identity.ValueDomain:
 
@@ -525,7 +525,7 @@ class OWLProjectExporterWorker(QObject):
                 elif operand.type() is Item.RangeRestrictionNode:
                     self.conv[node] = self.df.getOWLObjectComplementOf(self.buildRangeRestriction(operand))
                 else:
-                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
+                    raise DiagramMalformedError(node, 'unsupported operand ({0})'.format(operand))
 
             elif operand.identity() is Identity.Role:
 
@@ -535,7 +535,7 @@ class OWLProjectExporterWorker(QObject):
                 elif operand.type() is Item.RoleInverseNode:
                     self.conv[node] = self.buildRoleInverse(operand)
                 else:
-                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
+                    raise DiagramMalformedError(node, 'unsupported operand ({0})'.format(operand))
 
             elif operand.identity() is Identity.Attribute:
 
@@ -543,7 +543,7 @@ class OWLProjectExporterWorker(QObject):
                 if operand.type() is Item.AttributeNode:
                     self.conv[node] = self.buildAttribute(operand)
                 else:
-                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
+                    raise DiagramMalformedError(node, 'unsupported operand ({0})'.format(operand))
 
         return self.conv[node]
 
@@ -580,7 +580,7 @@ class OWLProjectExporterWorker(QObject):
 
             operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
             if not operand:
-                raise MalformedDiagramError(node, 'missing value domain node')
+                raise DiagramMalformedError(node, 'missing value domain node')
 
             datatypeEx = self.buildValueDomain(operand)
 
@@ -590,7 +590,7 @@ class OWLProjectExporterWorker(QObject):
 
             incoming = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)
             if not incoming:
-                raise MalformedDiagramError(node, 'missing facet node(s)')
+                raise DiagramMalformedError(node, 'missing facet node(s)')
 
             collection = self.HashSet()
             for i in incoming:
@@ -620,7 +620,7 @@ class OWLProjectExporterWorker(QObject):
 
             operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
             if not operand:
-                raise MalformedDiagramError(node, 'missing operand(s)')
+                raise DiagramMalformedError(node, 'missing operand(s)')
 
             if operand.identity() is Identity.Attribute:
 
@@ -652,7 +652,7 @@ class OWLProjectExporterWorker(QObject):
                 elif filler.type() is Item.RangeRestrictionNode:
                     dataRangeEx = self.buildRangeRestriction(filler)
                 else:
-                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(filler))
+                    raise DiagramMalformedError(node, 'unsupported operand ({0})'.format(filler))
 
                 if node.restriction is Restriction.Exists:
                     self.conv[node] = self.df.getOWLDataSomeValuesFrom(dataPropEx, dataRangeEx)
@@ -667,14 +667,14 @@ class OWLProjectExporterWorker(QObject):
                     if max_c is not None:
                         cardinalities.add(self.df.getOWLDataMinCardinality(max_c, dataPropEx, dataRangeEx))
                     if cardinalities.isEmpty():
-                        raise MalformedDiagramError(node, 'missing cardinality')
+                        raise DiagramMalformedError(node, 'missing cardinality')
                     elif cardinalities.size() >= 1:
                         cardinalities = cast(self.Set, cardinalities)
                         self.conv[node] = self.df.getOWLDataIntersectionOf(cardinalities)
                     else:
                         self.conv[node] = cardinalities.iterator().next()
                 else:
-                    raise MalformedDiagramError(node, 'unsupported restriction')
+                    raise DiagramMalformedError(node, 'unsupported restriction')
 
             elif operand.identity() is Identity.Role:
 
@@ -687,7 +687,7 @@ class OWLProjectExporterWorker(QObject):
                 elif operand.type() is Item.RoleInverseNode:
                     objectPropertyEx = self.buildRoleInverse(operand)
                 else:
-                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
+                    raise DiagramMalformedError(node, 'unsupported operand ({0})'.format(operand))
 
                 #############################################
                 # BUILD FILLER
@@ -711,7 +711,7 @@ class OWLProjectExporterWorker(QObject):
                 elif filler.type() is Item.RangeRestrictionNode:
                     classEx = self.buildRangeRestriction(filler)
                 else:
-                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(filler))
+                    raise DiagramMalformedError(node, 'unsupported operand ({0})'.format(filler))
 
                 if node.restriction is Restriction.Self:
                     self.conv[node] = self.df.getOWLObjectHasSelf(objectPropertyEx)
@@ -728,7 +728,7 @@ class OWLProjectExporterWorker(QObject):
                     if max_c is not None:
                         cardinalities.add(self.df.getOWLObjectMaxCardinality(max_c, objectPropertyEx, classEx))
                     if cardinalities.isEmpty():
-                        raise MalformedDiagramError(node, 'missing cardinality')
+                        raise DiagramMalformedError(node, 'missing cardinality')
                     elif cardinalities.size() >= 1:
                         cardinalities = cast(self.Set, cardinalities)
                         self.conv[node] = self.df.getOWLObjectIntersectionOf(cardinalities)
@@ -750,7 +750,7 @@ class OWLProjectExporterWorker(QObject):
             for i in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
                 individuals.add(self.buildIndividual(i))
             if individuals.isEmpty():
-                raise MalformedDiagramError(node, 'missing operand(s)')
+                raise DiagramMalformedError(node, 'missing operand(s)')
             individuals = cast(self.Set, individuals)
             self.conv[node] = self.df.getOWLObjectOneOf(individuals)
         return self.conv[node]
@@ -764,7 +764,7 @@ class OWLProjectExporterWorker(QObject):
         if node not in self.conv:
             datatype = node.datatype
             if not datatype:
-                raise MalformedDiagramError(node, 'disconnected facet node')
+                raise DiagramMalformedError(node, 'disconnected facet node')
             literal = self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(datatype))
             facet = self.getOWLApiFacet(node.facet)
             self.conv[node] = self.df.getOWLFacetRestriction(facet, literal)
@@ -817,10 +817,10 @@ class OWLProjectExporterWorker(QObject):
                 elif operand.type() is Item.DatatypeRestrictionNode:
                     collection.add(self.buildDatatypeRestriction(operand))
                 else:
-                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
+                    raise DiagramMalformedError(node, 'unsupported operand ({0})'.format(operand))
 
             if collection.isEmpty():
-                raise MalformedDiagramError(node, 'missing operand(s)')
+                raise DiagramMalformedError(node, 'missing operand(s)')
 
             collection = cast(self.Set, collection)
 
@@ -840,14 +840,14 @@ class OWLProjectExporterWorker(QObject):
         if node not in self.conv:
 
             if len(node.inputs) < 2:
-                raise MalformedDiagramError(node, 'missing operand(s)')
+                raise DiagramMalformedError(node, 'missing operand(s)')
             elif len(node.inputs) > 2:
-                raise MalformedDiagramError(node, 'too many operands')
+                raise DiagramMalformedError(node, 'too many operands')
 
             collection = []
             for n in [node.diagram.edge(i).other(node) for i in node.inputs]:
                 if n.type() is not Item.IndividualNode:
-                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(n))
+                    raise DiagramMalformedError(node, 'unsupported operand ({0})'.format(n))
                 collection.append(self.buildIndividual(n))
 
             self.conv[node] = collection
@@ -868,7 +868,7 @@ class OWLProjectExporterWorker(QObject):
 
             operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
             if not operand:
-                raise MalformedDiagramError(node, 'missing operand(s)')
+                raise DiagramMalformedError(node, 'missing operand(s)')
 
             if operand.identity() is Identity.Attribute:
 
@@ -893,7 +893,7 @@ class OWLProjectExporterWorker(QObject):
                 elif operand.type() is Item.RoleInverseNode:
                     objectPropertyEx = self.buildRoleInverse(operand).getInverseProperty()
                 else:
-                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(operand))
+                    raise DiagramMalformedError(node, 'unsupported operand ({0})'.format(operand))
 
                 #############################################
                 # BUILD FILLER
@@ -913,7 +913,7 @@ class OWLProjectExporterWorker(QObject):
                 elif filler.type() in {Item.UnionNode, Item.DisjointUnionNode}:
                     classEx = self.buildUnion(filler)
                 else:
-                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(filler))
+                    raise DiagramMalformedError(node, 'unsupported operand ({0})'.format(filler))
 
                 if node.restriction is Restriction.Self:
                     self.conv[node] = self.df.getOWLObjectHasSelf(objectPropertyEx)
@@ -930,7 +930,7 @@ class OWLProjectExporterWorker(QObject):
                     if max_c is not None:
                         cardinalities.add(self.df.getOWLObjectMaxCardinality(max_c, objectPropertyEx, classEx))
                     if cardinalities.isEmpty():
-                        raise MalformedDiagramError(node, 'missing cardinality')
+                        raise DiagramMalformedError(node, 'missing cardinality')
                     if cardinalities.size() >= 1:
                         cardinalities = cast(self.Set, cardinalities)
                         self.conv[node] = self.df.getOWLObjectIntersectionOf(cardinalities)
@@ -962,11 +962,11 @@ class OWLProjectExporterWorker(QObject):
         """
         if node not in self.conv:
             if not node.inputs:
-                raise MalformedDiagramError(node, 'missing operand(s)')
+                raise DiagramMalformedError(node, 'missing operand(s)')
             collection = self.LinkedList()
             for n in [node.diagram.edge(i).other(node) for i in node.inputs]:
                 if n.type() not in {Item.RoleNode, Item.RoleInverseNode}:
-                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(n))
+                    raise DiagramMalformedError(node, 'unsupported operand ({0})'.format(n))
                 elif n.type() is Item.RoleNode:
                     collection.add(self.buildRole(n))
                 elif n.type() is Item.RoleInverseNode:
@@ -986,7 +986,7 @@ class OWLProjectExporterWorker(QObject):
             f2 = lambda x: x.type() is Item.RoleNode
             operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
             if not operand:
-                raise MalformedDiagramError(node, 'missing operand(s)')
+                raise DiagramMalformedError(node, 'missing operand(s)')
             self.conv[node] = self.buildRole(operand).getInverseProperty()
         return self.conv[node]
 
@@ -1024,10 +1024,10 @@ class OWLProjectExporterWorker(QObject):
                 elif item.type() is Item.DatatypeRestrictionNode:
                     collection.add(self.buildDatatypeRestriction(item))
                 else:
-                    raise MalformedDiagramError(node, 'unsupported operand ({0})'.format(item))
+                    raise DiagramMalformedError(node, 'unsupported operand ({0})'.format(item))
 
             if not collection.size():
-                raise MalformedDiagramError(node, 'missing operand(s)')
+                raise DiagramMalformedError(node, 'missing operand(s)')
 
             collection = cast(self.Set, collection)
 
@@ -1338,7 +1338,7 @@ class OWLProjectExporterWorker(QObject):
                     elif e.source.type() is Item.RangeRestrictionNode and e.target.identity() is Identity.ValueDomain:
                         self.axiomDataPropertyRange(e)
                     else:
-                        raise MalformedDiagramError(e, 'type mismatch in inclusion assertion')
+                        raise DiagramMalformedError(e, 'type mismatch in inclusion assertion')
 
                 elif e.type() is Item.EquivalenceEdge:
 
@@ -1349,7 +1349,7 @@ class OWLProjectExporterWorker(QObject):
                     elif e.source.identity() is Identity.Attribute and e.target.identity() is Identity.Attribute:
                         self.axiomEquivalentDataProperties(e)
                     else:
-                        raise MalformedDiagramError(e, 'type mismatch in equivalence assertion')
+                        raise DiagramMalformedError(e, 'type mismatch in equivalence assertion')
 
                 elif e.type() is Item.MembershipEdge:
 
@@ -1360,7 +1360,7 @@ class OWLProjectExporterWorker(QObject):
                     elif e.source.identity() is Identity.AttributeInstance:
                         self.axiomDataPropertyAssertion(e)
                     else:
-                        raise MalformedDiagramError(e, 'type mismatch in membership assertion')
+                        raise DiagramMalformedError(e, 'type mismatch in membership assertion')
 
                 self.step(+1)
 

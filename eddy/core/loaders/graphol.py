@@ -44,10 +44,8 @@ from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import Diagram
-from eddy.core.exceptions import ProjectNotFoundError
-from eddy.core.exceptions import ProjectNotValidError
-from eddy.core.exceptions import DiagramNotFoundError
-from eddy.core.exceptions import DiagramNotValidError
+from eddy.core.diagram import DiagramNotFoundError
+from eddy.core.diagram import DiagramNotValidError
 from eddy.core.functions.fsystem import fread, fexists, is_dir
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
@@ -55,6 +53,8 @@ from eddy.core.loaders.common import AbstractDiagramLoader
 from eddy.core.loaders.common import AbstractProjectLoader
 from eddy.core.output import getLogger
 from eddy.core.project import Project
+from eddy.core.project import ProjectNotFoundError
+from eddy.core.project import ProjectNotValidError
 
 
 LOGGER = getLogger(__name__)

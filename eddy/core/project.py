@@ -484,3 +484,17 @@ class Project(QtCore.QObject):
                             del self.index[K_EDGE][diagram.id]
             # SIGNAL
             self.sgnItemRemoved.emit(diagram, item)
+
+
+class ProjectNotFoundError(RuntimeError):
+    """
+    Raised whenever we are not able to find a project given its path.
+    """
+    pass
+
+
+class ProjectNotValidError(RuntimeError):
+    """
+    Raised whenever a found project has an invalid structure.
+    """
+    pass

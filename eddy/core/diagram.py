@@ -844,3 +844,39 @@ class Diagram(QtWidgets.QGraphicsScene):
                 y.update({b.top(), b.bottom()})
             return QtCore.QRectF(QtCore.QPointF(min(x) - margin, min(y) - margin), QtCore.QPointF(max(x) + margin, max(y) + margin))
         return QtCore.QRectF()
+
+
+class DiagramMalformedError(RuntimeError):
+    """
+    Raised whenever we encounter a problem while exporting a diagram.
+    """
+    def __init__(self, item, *args, **kwargs):
+        """
+        Initialize the exception.
+        :type item: AbstractItem
+        :type args: list
+        :type kwargs: dict
+        """
+        super(DiagramMalformedError, self).__init__(*args, **kwargs)
+        self.item = item
+
+
+class DiagramNotFoundError(RuntimeError):
+    """
+    Raised whenever we are not able to find a diagram given its path.
+    """
+    pass
+
+
+class DiagramNotValidError(RuntimeError):
+    """
+    Raised whenever a diagram appear to have an invalid structure.
+    """
+    pass
+
+
+class DiagramParseError(RuntimeError):
+    """
+    Raised whenever it's not possible parse a Diagram out of a document.
+    """
+    pass

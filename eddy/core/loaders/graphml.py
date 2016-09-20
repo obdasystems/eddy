@@ -42,9 +42,9 @@ from PyQt5.QtXml import QDomDocument
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import Diagram
-from eddy.core.exceptions import DiagramNotFoundError
-from eddy.core.exceptions import DiagramNotValidError
-from eddy.core.exceptions import ParseError
+from eddy.core.diagram import DiagramNotFoundError
+from eddy.core.diagram import DiagramNotValidError
+from eddy.core.diagram import DiagramParseError
 from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.fsystem import fread
 from eddy.core.functions.misc import snapF, isEmpty, rstrip, snap
@@ -311,7 +311,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         Build an edge using the given item type and QDomElement.
         :type item: Item
         :type element: QDomElement
-        raise ParseError: If one of the endpoints of the edge is not available.
+        raise DiagramParseError: If one of the endpoints of the edge is not available.
         :rtype: AbstractEdge
         """
         data = element.firstChildElement('data')
@@ -320,9 +320,9 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
             if data.attribute('key', '') == self.keys['edge_key']:
 
                 if not element.attribute('source') in self.nodes:
-                    raise ParseError('missing source node ({0})'.format(element.attribute('source')))
+                    raise DiagramParseError('missing source node ({0})'.format(element.attribute('source')))
                 if not element.attribute('target') in self.nodes:
-                    raise ParseError('missing target node ({0})'.format(element.attribute('target')))
+                    raise DiagramParseError('missing target node ({0})'.format(element.attribute('target')))
 
                 points = []
                 polyLineEdge = data.firstChildElement('y:PolyLineEdge')
@@ -627,12 +627,12 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
             try:
                 item = self.itemFromXmlNode(element)
                 if not item:
-                    raise ParseError('could not identify item for XML node')
+                    raise DiagramParseError('could not identify item for XML node')
                 func = self.importFuncForItem[item]
                 node = func(element)
                 if not node:
-                    raise ParseError('could not generate item for XML node')
-            except ParseError as e:
+                    raise DiagramParseError('could not generate item for XML node')
+            except DiagramParseError as e:
                 LOGGER.warning('Failed to create node %s: %s', element.attribute('id'), e)
             except Exception:
                 LOGGER.exception('Failed to create node %s', element.attribute('id'))
@@ -657,12 +657,12 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
             try:
                 item = self.itemFromXmlNode(element)
                 if not item:
-                    raise ParseError('could not identify item for XML node')
+                    raise DiagramParseError('could not identify item for XML node')
                 func = self.importFuncForItem[item]
                 edge = func(element)
                 if not edge:
-                    raise ParseError('could not generate item for XML node')
-            except ParseError as e:
+                    raise DiagramParseError('could not generate item for XML node')
+            except DiagramParseError as e:
                 LOGGER.warning('Failed to create edge %s: %s', element.attribute('id'), e)
             except Exception:
                 LOGGER.exception('Failed to create edge %s', element.attribute('id'))

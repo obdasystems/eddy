@@ -41,13 +41,13 @@ from PyQt5 import QtNetwork
 from PyQt5 import QtWidgets
 
 from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE
-from eddy.core.exceptions import ProjectNotFoundError
-from eddy.core.exceptions import ProjectNotValidError
 from eddy.core.functions.fsystem import is_dir
 from eddy.core.functions.misc import isEmpty, format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.output import getLogger
+from eddy.core.project import ProjectNotFoundError
+from eddy.core.project import ProjectNotValidError
 
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.session import Session
