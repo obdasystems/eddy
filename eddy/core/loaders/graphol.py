@@ -722,7 +722,7 @@ class GrapholProjectLoader(AbstractProjectLoader):
         LOGGER.debug('Loaded ontology IRI: %s', iri)
         profileName = ontology.firstChildElement('profile').text()
         if not profileName:
-            profileName = 'OWL2'
+            profileName = 'OWL 2'
             LOGGER.warning('Missing ontology profile, using default: %s', profileName)
         profile = self.session.createProfile(profileName)
         LOGGER.debug('Loaded ontology profile: %s', profile.name())

@@ -804,14 +804,15 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # SEARCH PLUGINS
         #################################
 
+        info = []
         for path in ('@plugins/', '@home/plugins/'):
-            self.pmanager.lookup(expandPath(path))
+            info.extend(self.pmanager.lookup(expandPath(path)))
 
         #############################################
         # INITIALIZE PLUGINS
         #################################
 
-        self.addPlugins(self.pmanager.init())
+        self.addPlugins(self.pmanager.init(info))
 
     def initProfiles(self):
         """
