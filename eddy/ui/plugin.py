@@ -178,7 +178,7 @@ class PluginInstallDialog(QtWidgets.QDialog):
         else:
             plugin_name = spec.get('plugin', 'name')
             plugin_version = spec.get('plugin', 'version')
-            plugin_author = spec.get('plugin', 'author', '<unknown>')
+            plugin_author = spec.get('plugin', 'author', fallback='<unknown>')
             message = dedent("""Successfully installed plugin <b>{0} v{1}</b> by <b>{2}</b>.
             Please reboot {0} for the plugin to work.""".format(plugin_name, plugin_version, plugin_author, APPNAME))
             msgbox = QtWidgets.QMessageBox(self)
