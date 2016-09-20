@@ -128,7 +128,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         self.plugin = plugin
 
         self.iconAttribute = QtGui.QIcon(':/icons/18/ic_treeview_attribute')
-        self.iconCconcept = QtGui.QIcon(':/icons/18/ic_treeview_concept')
+        self.iconConcept = QtGui.QIcon(':/icons/18/ic_treeview_concept')
         self.iconInstance = QtGui.QIcon(':/icons/18/ic_treeview_instance')
         self.iconRole = QtGui.QIcon(':/icons/18/ic_treeview_role')
         self.iconValue = QtGui.QIcon(':/icons/18/ic_treeview_value')
@@ -309,7 +309,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         if node.type() is Item.AttributeNode:
             return self.iconAttribute
         if node.type() is Item.ConceptNode:
-            return self.iconCconcept
+            return self.iconConcept
         if node.type() is Item.IndividualNode:
             if node.identity() is Identity.Individual:
                 return self.iconInstance
