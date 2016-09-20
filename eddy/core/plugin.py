@@ -382,26 +382,32 @@ class PluginManager(QtCore.QObject):
 
         LOGGER.info('Loading %s plugin(s):', len(info))
         for entry in info:
-            author = entry[0].get('plugin', 'author')
-            contact = entry[0].get('plugin', 'contact')
-            name = entry[0].get('plugin', 'name')
-            version = entry[0].get('plugin', 'version')
-            LOGGER.info('* %s v%s (%s - %s)', name, version, author, contact)
+            plugin_author = entry[0].get('plugin', 'author', fallback='<unknown>')
+            plugin_contact = entry[0].get('plugin', 'contact', fallback='<unknown>')
+            plugin_name = entry[0].get('plugin', 'name')
+            plugin_version = entry[0].get('plugin', 'version')
+            LOGGER.info('* %s v%s (%s - %s)', plugin_name, plugin_version, plugin_author, plugin_contact)
 
-        pluginList = []
+        pluginsList = []
+        pluginsLoadedSet = set()
         for entry in info:
-            name = entry[0].get('plugin', 'name')
-            version = entry[0].get('plugin', 'version')
-            try:
-                LOGGER.info('Loading plugin: %s v%s', name, version)
-                plugin = self.create(entry[1], entry[0])
-            except Exception:
-                LOGGER.exception('Failed to load plugin: %s v%s', name, version)
+            plugin_id = entry[0].get('plugin', 'id')
+            plugin_name = entry[0].get('plugin', 'name')
+            plugin_version = entry[0].get('plugin', 'version')
+            if plugin_id not in pluginsLoadedSet:
+                try:
+                    LOGGER.info('Loading plugin: %s v%s', plugin_name, plugin_version)
+                    plugin = self.create(entry[1], entry[0])
+                except Exception:
+                    LOGGER.exception('Failed to load plugin: %s v%s', plugin_name, plugin_version)
+                else:
+                    pluginsList.append(plugin)
+                    pluginsLoadedSet.add(plugin.id())
             else:
-                pluginList.append(plugin)
+                LOGGER.warning('Loading plugin: %s v%s -> skipped: plugin already loaded', plugin_name, plugin_version)
 
         started = []
-        for plugin in pluginList:
+        for plugin in pluginsList:
             if self.start(plugin):
                 started.append(plugin)
 
