@@ -40,7 +40,7 @@ from abc import ABCMeta
 from configparser import ConfigParser, NoOptionError
 from importlib.machinery import SourceFileLoader
 from zipfile import ZipFile
-from zipimport import zipimporter, ZipImportError
+from zipimport import zipimporter
 from verlib import NormalizedVersion
 
 from PyQt5 import QtCore
@@ -48,7 +48,7 @@ from PyQt5 import QtCore
 from eddy.core.common import HasActionSystem, HasMenuSystem, HasWidgetSystem
 from eddy.core.datatypes.system import File
 from eddy.core.functions.misc import rstrip
-from eddy.core.functions.fsystem import fexists, fread, is_dir
+from eddy.core.functions.fsystem import fcopy, fexists, fread, is_dir, mkdir
 from eddy.core.functions.path import expandPath
 from eddy.core.output import getLogger
 
@@ -331,7 +331,7 @@ class PluginManager(QtCore.QObject):
                             plugin_class = self.find_class(plugin_module, plugin_name)
                             return plugin_spec, plugin_class
                     else:
-                        raise OSError('missing plugin module: %s.py(c|o)' % os.path.join(directory, plugin_name))
+                        raise PluginError('missing plugin module: %s.py(c|o)' % os.path.join(directory, plugin_name))
                 except Exception as e:
                     LOGGER.exception('Failed to import plugin: %s', e)
 
@@ -366,7 +366,7 @@ class PluginManager(QtCore.QObject):
                                 plugin_class = self.find_class(plugin_module, plugin_name)
                                 return plugin_spec, plugin_class
                         else:
-                            raise ZipImportError('missing plugin module: %s.py(c|o)' % plugin_abs_module_base_path)
+                            raise PluginError('missing plugin module: %s.py(c|o)' % plugin_abs_module_base_path)
                     except Exception as e:
                         LOGGER.exception('Failed to import plugin: %s', e)
 
@@ -406,6 +406,63 @@ class PluginManager(QtCore.QObject):
                 started.append(plugin)
 
         return started
+
+    def install(self, archive):
+        """
+        Install the given plugin archive.
+        During the installation process we'll check for a correct plugin structure,
+        i.e. for the .spec file and the plugin module to be available. We won't check if
+        the plugin actually runs since this will be handle by the application statt sequence.
+        :type archive: str
+        :rtype: PluginSpec
+        """
+        try:
+
+            ## CHECK FOR CORRECT PLUGIN ARCHIVE
+            if not fexists(archive):
+                raise PluginError('file not found: %s' % archive)
+            if not File.forPath(archive) is File.Zip:
+                raise PluginError('%s is not a valid plugin' % archive)
+
+            ## LOOKUP THE SPEC FILE
+            zf = ZipFile(archive)
+            zf_name_list = zf.namelist()
+            for file_or_directory in zf_name_list:
+                if file_or_directory.endswith('plugin.spec'):
+                    LOGGER.debug('Found plugin .spec: %s', os.path.join(archive, file_or_directory))
+                    plugin_spec_content = zf.read(file_or_directory).decode('utf8')
+                    plugin_spec = self.spec(plugin_spec_content)
+                    break
+            else:
+                raise PluginError('missing plugin.spec in %s' % archive)
+
+            ## LOOKUP THE PLUGIN MODULE
+            plugin_name = plugin_spec.get('plugin', 'id')
+            plugin_zip_base_path = rstrip(file_or_directory, 'plugin.spec')
+            plugin_zip_module_base_path = os.path.join(plugin_zip_base_path, plugin_name)
+            for extension in ('.pyc', '.pyo', '.py'):
+                plugin_zip_module_path = '%s%s' % (plugin_zip_module_base_path, extension)
+                if plugin_zip_module_path in zf_name_list:
+                    LOGGER.debug('Found plugin module: %s', os.path.join(archive, plugin_zip_module_path))
+                    break
+            else:
+                raise PluginError('missing plugin module: %s.py(c|o) in %s' % (plugin_zip_module_base_path, archive))
+
+            # CHECK FOR THE PLUGIN TO BE ALREADY INSTALLED
+            plugin_id = plugin_spec.get('plugin', 'id')
+            plugin_name = plugin_spec.get('plugin', 'name')
+            if self.session.plugin(plugin_spec.get('plugin', 'id')):
+                raise PluginError('plugin %s (id: %s) is already installed' % (plugin_name, plugin_id))
+
+            # COPY THE PLUGIN
+            mkdir('@home/plugins/')
+            fcopy(archive, '@home/plugins/')
+
+        except Exception as e:
+            LOGGER.error('Failed to install plugin: %s', e, exc_info=not isinstance(e, PluginError))
+            raise e
+        else:
+            return plugin_spec
 
     def lookup(self, base):
         """
@@ -452,3 +509,10 @@ class PluginManager(QtCore.QObject):
         else:
             self.session.sgnPluginStarted.emit(plugin.id())
             return True
+
+
+class PluginError(RuntimeError):
+    """
+    Raised whenever a given plugin doesn't have a correct plugin structure.
+    """
+    pass

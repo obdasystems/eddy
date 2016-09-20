@@ -105,6 +105,7 @@ from eddy.ui.forms import ValueForm
 from eddy.ui.log import LogDialog
 from eddy.ui.mdi import MdiArea
 from eddy.ui.mdi import MdiSubWindow
+from eddy.ui.plugin import PluginInstallDialog
 from eddy.ui.preferences import PreferencesDialog
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationDialog
@@ -270,6 +271,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self, objectName='show_log', statusTip='Show application log',
             triggered=self.doOpenDialog)
         action.setData(LogDialog)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_extension_black'), 'Install plugin...',
+            self, objectName='install_plugin', statusTip='Install a plugin',
+            triggered=self.doOpenDialog)
+        action.setData(PluginInstallDialog)
         self.addAction(action)
 
         if _MACOS:
@@ -687,6 +695,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('Tools', objectName='tools')
+        menu.addAction(self.action('install_plugin'))
+        menu.addSeparator()
         menu.addAction(self.action('syntax_check'))
         self.addMenu(menu)
 

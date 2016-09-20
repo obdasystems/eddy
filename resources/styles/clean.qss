@@ -32,9 +32,10 @@
 
 
 /**************************************************************************/
-/*                           WORKSPACE DIALOG                             */
+/*                   WORKSPACE / PLUGIN INSTALL DIALOG                    */
 /**************************************************************************/
-WorkspaceDialog QWidget[class=head] {
+WorkspaceDialog QWidget[class=head],
+PluginInstallDialog QWidget[class=head] {
 background: #FFFFFF;
 border-bottom: 1px solid #BABABA;
 }

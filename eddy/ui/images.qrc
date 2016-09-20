@@ -73,6 +73,8 @@
   <file alias="ic_delete_forever_black@2x">../../resources/icons/24/ic_delete_forever_black_24dp_2x.png</file>
   <file alias="ic_equivalence_black">../../resources/icons/24/ic_equivalence_black_24dp_1x.png</file>
   <file alias="ic_equivalence_black@2x">../../resources/icons/24/ic_equivalence_black_24dp_2x.png</file>
+  <file alias="ic_extension_black">../../resources/icons/24/ic_extension_black_24dp_1x.png</file>
+  <file alias="ic_extension_black@2x">../../resources/icons/24/ic_extension_black_24dp_2x.png</file>
   <file alias="ic_format_color_fill_black">../../resources/icons/24/ic_format_color_fill_black_24dp_1x.png</file>
   <file alias="ic_format_color_fill_black@2x">../../resources/icons/24/ic_format_color_fill_black_24dp_2x.png</file>
   <file alias="ic_format_shapes_black">../../resources/icons/24/ic_format_shapes_black_24dp_1x.png</file>
@@ -147,6 +149,8 @@
   <file alias="ic_zoom_reset_black@2x">../../resources/icons/24/ic_zoom_reset_black_24dp_2x.png</file>
 </qresource>
 <qresource prefix="/icons/48">
+  <file alias="ic_extension_black">../../resources/icons/48/ic_extension_black_48dp_1x.png</file>
+  <file alias="ic_extension_black@2x">../../resources/icons/48/ic_extension_black_48dp_2x.png</file>
   <file alias="ic_done_black">../../resources/icons/48/ic_done_black_48dp_1x.png</file>
   <file alias="ic_done_black@2x">../../resources/icons/48/ic_done_black_48dp_2x.png</file>
   <file alias="ic_error_outline_black">../../resources/icons/48/ic_error_outline_black_48dp_1x.png</file>

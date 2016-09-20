@@ -33,32 +33,37 @@
 ##########################################################################
 
 
+import os
+
 from textwrap import dedent
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy import ORGANIZATION, APPNAME, WORKSPACE
-from eddy.core.datatypes.qt import Font
-from eddy.core.functions.fsystem import mkdir
-from eddy.core.functions.misc import first, format_exception
-from eddy.core.functions.path import isPathValid, expandPath
+from eddy import APPNAME
+from eddy.core.functions.misc import first, format_exception, isEmpty
+from eddy.core.functions.path import expandPath, isPathValid
 from eddy.core.functions.signals import connect
+from eddy.core.output import getLogger
+from eddy.core.datatypes.system import File
+from eddy.core.datatypes.qt import Font
 
 from eddy.ui.fields import StringField
 
+LOGGER = getLogger(__name__)
 
-class WorkspaceDialog(QtWidgets.QDialog):
+
+class PluginInstallDialog(QtWidgets.QDialog):
     """
-    This class can be used to setup the workspace path.
+    Extends QtWidgets.QDialog providing an interface to install plugins.
     """
-    def __init__(self, parent=None):
+    def __init__(self, session):
         """
-        Initialize the workspace dialog.
-        :type parent: QtWidgets.QWidget
+        Initialize the plugin install dialog.
+        :type session: Session
         """
-        super().__init__(parent)
+        super(PluginInstallDialog, self).__init__(session)
 
         arial12b = Font('Arial', 12)
         arial12b.setBold(True)
@@ -68,18 +73,19 @@ class WorkspaceDialog(QtWidgets.QDialog):
         # HEAD AREA
         #################################
 
-        self.headTitle = QtWidgets.QLabel('Select a workspace', self)
+        self.headTitle = QtWidgets.QLabel('Install a plugin', self)
         self.headTitle.setFont(arial12b)
         self.headDescription = QtWidgets.QLabel(dedent("""
-        {0} stores your projects in a directory called workspace.<br/>
-        Please choose a workspace directory to use.""".format(APPNAME)), self)
+        Plugins are software components that add specific features to {0}.<br/>
+        Please select the plugin you wish to install.""".format(APPNAME)), self)
         self.headDescription.setFont(arial12r)
         self.headPix = QtWidgets.QLabel(self)
-        self.headPix.setPixmap(QtGui.QIcon(':/icons/128/ic_eddy').pixmap(48))
+        self.headPix.setPixmap(QtGui.QIcon(':/icons/48/ic_extension_black').pixmap(48))
         self.headPix.setContentsMargins(0, 0, 0, 0)
         self.headWidget = QtWidgets.QWidget(self)
         self.headWidget.setProperty('class', 'head')
         self.headWidget.setContentsMargins(10, 10, 10, 10)
+
         self.headLayoutL = QtWidgets.QVBoxLayout()
         self.headLayoutL.addWidget(self.headTitle)
         self.headLayoutL.addWidget(self.headDescription)
@@ -93,14 +99,13 @@ class WorkspaceDialog(QtWidgets.QDialog):
         self.headLayoutM.setContentsMargins(0, 0, 0, 0)
 
         #############################################
-        # EDIT AREA
+        # SELECTION AREA
         #################################
 
-        self.workspaceField = StringField(self)
-        self.workspaceField.setFont(arial12r)
-        self.workspaceField.setFixedWidth(400)
-        self.workspaceField.setReadOnly(True)
-        self.workspaceField.setText(expandPath(WORKSPACE))
+        self.pluginField = StringField(self)
+        self.pluginField.setFont(arial12r)
+        self.pluginField.setFixedWidth(400)
+        self.pluginField.setReadOnly(True)
 
         self.btnBrowse = QtWidgets.QPushButton(self)
         self.btnBrowse.setFont(arial12r)
@@ -109,7 +114,7 @@ class WorkspaceDialog(QtWidgets.QDialog):
 
         self.editLayout = QtWidgets.QHBoxLayout()
         self.editLayout.setContentsMargins(10, 10, 10, 10)
-        self.editLayout.addWidget(self.workspaceField)
+        self.editLayout.addWidget(self.pluginField)
         self.editLayout.addWidget(self.btnBrowse)
 
         #############################################
@@ -118,6 +123,7 @@ class WorkspaceDialog(QtWidgets.QDialog):
 
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
+        self.confirmationBox.setEnabled(False)
         self.confirmationBox.setFont(arial12r)
 
         #############################################
@@ -132,10 +138,22 @@ class WorkspaceDialog(QtWidgets.QDialog):
 
         self.setFixedSize(self.sizeHint())
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        self.setWindowTitle('Configure workspace')
+        self.setWindowTitle('Install a plugin')
 
-        connect(self.btnBrowse.clicked, self.choosePath)
+        connect(self.btnBrowse.clicked, self.selectPlugin)
         connect(self.confirmationBox.accepted, self.accept)
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def session(self):
+        """
+        Returns the reference to the main session (alias for PluginInstallDialog.parent()).
+        :rtype: Session
+        """
+        return self.parent()
 
     #############################################
     #   SLOTS
@@ -144,43 +162,51 @@ class WorkspaceDialog(QtWidgets.QDialog):
     @QtCore.pyqtSlot()
     def accept(self):
         """
-        Create Eddy workspace (if necessary).
+        Trigger the install of the selected plugin.
         """
-        path = self.workspaceField.value()
-
         try:
-            mkdir(path)
+            spec = self.session.pmanager.install(self.pluginField.value())
         except Exception as e:
             msgbox = QtWidgets.QMessageBox(self)
-            msgbox.setDetailedText(format_exception(e))
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
             msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
-            msgbox.setText('{0} could not create the specified workspace: {1}!'.format(APPNAME, path))
+            msgbox.setText('{0} could not install plugin archive <b>{1}</b>: {2}'.format(APPNAME, self.pluginField.value(), e))
+            msgbox.setDetailedText(format_exception(e))
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle('Workspace setup failed!')
+            msgbox.setWindowTitle('Plugin install failed!')
             msgbox.exec_()
-            super().reject()
         else:
-            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-            settings.setValue('workspace/home', path)
-            settings.sync()
-            super().accept()
+            plugin_name = spec.get('plugin', 'name')
+            plugin_version = spec.get('plugin', 'version')
+            plugin_author = spec.get('plugin', 'author', '<unknown>')
+            message = dedent("""Successfully installed plugin <b>{0} v{1}</b> by <b>{2}</b>.
+            Please reboot {0} for the plugin to work.""".format(plugin_name, plugin_version, plugin_author, APPNAME))
+            msgbox = QtWidgets.QMessageBox(self)
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
+            msgbox.setText(message)
+            msgbox.setTextFormat(QtCore.Qt.RichText)
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Plugin installed!')
+            msgbox.exec_()
+            super(PluginInstallDialog, self).accept()
 
     @QtCore.pyqtSlot()
-    def choosePath(self):
+    def selectPlugin(self):
         """
-        Bring up a modal window that allows the user to choose a valid workspace path.
+        Bring up a modal window that allows the user to choose a valid plugin archive.
         """
-        path = self.workspaceField.value()
+        path = os.path.dirname(self.pluginField.value())
         if not isPathValid(path):
             path = expandPath('~')
 
         dialog = QtWidgets.QFileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setDirectory(path)
-        dialog.setFileMode(QtWidgets.QFileDialog.Directory)
-        dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly, True)
+        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+        dialog.setNameFilters([File.Zip.value])
 
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
-            self.workspaceField.setValue(first(dialog.selectedFiles()))
+            self.pluginField.setValue(first(dialog.selectedFiles()))
+            self.confirmationBox.setEnabled(not isEmpty(self.pluginField.value()))
