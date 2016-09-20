@@ -180,7 +180,7 @@ class PluginInstallDialog(QtWidgets.QDialog):
             plugin_version = spec.get('plugin', 'version')
             plugin_author = spec.get('plugin', 'author', fallback='<unknown>')
             message = dedent("""Successfully installed plugin <b>{0} v{1}</b> by <b>{2}</b>.
-            Please reboot {0} for the plugin to work.""".format(plugin_name, plugin_version, plugin_author, APPNAME))
+            Please reboot {3} for the plugin to work.""".format(plugin_name, plugin_version, plugin_author, APPNAME))
             msgbox = QtWidgets.QMessageBox(self)
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
             msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
