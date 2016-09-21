@@ -712,7 +712,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         if nodes:
             LOGGER.debug('Running identification algorithm for %s nodes', len(nodes))
             for node in nodes:
-                self.diagram.identify(node)
+                self.diagram.sgnNodeIdentification.emit(node)
 
         #############################################
         # CONFIGURE DIAGRAM SIGNALS

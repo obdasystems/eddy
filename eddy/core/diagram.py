@@ -76,6 +76,7 @@ class Diagram(QtWidgets.QGraphicsScene):
     sgnItemInsertionCompleted = QtCore.pyqtSignal('QGraphicsItem', int)
     sgnItemRemoved = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
     sgnModeChanged = QtCore.pyqtSignal(DiagramMode)
+    sgnNodeIdentification = QtCore.pyqtSignal('QGraphicsItem')
     sgnUpdated = QtCore.pyqtSignal()
 
     def __init__(self, path, parent):
@@ -105,6 +106,7 @@ class Diagram(QtWidgets.QGraphicsScene):
 
         connect(self.sgnItemAdded, self.onConnectionChanged)
         connect(self.sgnItemRemoved, self.onConnectionChanged)
+        connect(self.sgnNodeIdentification, self.doNodeIdentification)
 
     #############################################
     #   PROPERTIES
@@ -535,47 +537,8 @@ class Diagram(QtWidgets.QGraphicsScene):
     #   SLOTS
     #################################
 
-    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
-    def onConnectionChanged(self, _, item):
-        """
-        Executed whenever a connection is created/removed.
-        :type _: Diagram
-        :type item: AbstractItem
-        """
-        if item.isEdge():
-            for node in (item.source, item.target):
-                self.identify(node)
-
-    #############################################
-    #   INTERFACE
-    #################################
-
-    def addItem(self, item):
-        """
-        Add an item to the Diagram (will redraw the item to reflect its status).
-        :type item: AbstractItem
-        """
-        super(Diagram, self).addItem(item)
-        if item.isNode():
-            item.updateNode()
-
-    def edge(self, eid):
-        """
-        Returns the edge matching the given id or None if no edge is found.
-        :type eid: str
-        :rtype: AbstractEdge
-        """
-        return self.project.edge(self, eid)
-
-    def edges(self):
-        """
-        Returns a collection with all the edges in the diagram.
-        :rtype: set
-        """
-        return self.project.edges(self)
-
-    @staticmethod
-    def identify(node):
+    @QtCore.pyqtSlot('QGraphicsItem')
+    def doNodeIdentification(self, node):
         """
         Perform node identification.
         :type node: AbstractNode
@@ -721,6 +684,45 @@ class Diagram(QtWidgets.QGraphicsScene):
 
             for node in weak - strong - excluded:
                 node.setIdentity(computed)
+
+    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    def onConnectionChanged(self, _, item):
+        """
+        Executed whenever a connection is created/removed.
+        :type _: Diagram
+        :type item: AbstractItem
+        """
+        if item.isEdge():
+            for node in (item.source, item.target):
+                self.sgnNodeIdentification.emit(node)
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def addItem(self, item):
+        """
+        Add an item to the Diagram (will redraw the item to reflect its status).
+        :type item: AbstractItem
+        """
+        super(Diagram, self).addItem(item)
+        if item.isNode():
+            item.updateNode()
+
+    def edge(self, eid):
+        """
+        Returns the edge matching the given id or None if no edge is found.
+        :type eid: str
+        :rtype: AbstractEdge
+        """
+        return self.project.edge(self, eid)
+
+    def edges(self):
+        """
+        Returns a collection with all the edges in the diagram.
+        :rtype: set
+        """
+        return self.project.edges(self)
 
     def isEdgeAddInProgress(self):
         """

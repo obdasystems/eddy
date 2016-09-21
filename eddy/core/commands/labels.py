@@ -75,11 +75,23 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
         if self.item.isNode():
             self.project.doAddItem(self.diagram, self.item)
 
-        # # RESTORE METADATA
+        # RESTORE METADATA
         if meta:
             self.project.addMeta(self.item.type(), self.data['redo'], meta)
 
-        self.updateNodes()
+        # UPDATE PREDICATE NODE STATE TO REFLECT THE CHANGES
+        for key in ('undo', 'redo'):
+            for node in self.project.predicates(self.item.type(), self.data[key]):
+                node.updateNode()
+
+        # IDENTITFY ENUMERATION NODES
+        if self.item.type() is Item.IndividualNode:
+            f1 = lambda x: x.type() is Item.InputEdge
+            f2 = lambda x: x.type() is Item.EnumerationNode
+            for node in self.item.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                self.diagram.sgnNodeIdentification.emit(node)
+
+        # EMIT UPDATED SIGNAL
         self.diagram.sgnUpdated.emit()
 
     def undo(self):
@@ -98,21 +110,10 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
         if self.item.isNode():
             self.project.doAddItem(self.diagram, self.item)
 
-        # # RESTORE METADATA
+        # RESTORE METADATA
         if meta:
             self.project.addMeta(self.item.type(), self.data['undo'], meta)
 
-        self.updateNodes()
-        self.diagram.sgnUpdated.emit()
-
-    #############################################
-    # AUXILIARY METHODS
-    #################################
-
-    def updateNodes(self):
-        """
-        Perform node updates.
-        """
         # UPDATE PREDICATE NODE STATE TO REFLECT THE CHANGES
         for key in ('undo', 'redo'):
             for node in self.project.predicates(self.item.type(), self.data[key]):
@@ -123,7 +124,10 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
             f1 = lambda x: x.type() is Item.InputEdge
             f2 = lambda x: x.type() is Item.EnumerationNode
             for node in self.item.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-                self.diagram.identify(node)
+                self.diagram.sgnNodeIdentification.emit(node)
+
+        # EMIT UPDATED SIGNAL
+        self.diagram.sgnUpdated.emit()
 
 
 class CommandLabelMove(QtWidgets.QUndoCommand):

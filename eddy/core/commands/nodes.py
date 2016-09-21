@@ -273,7 +273,7 @@ class CommandNodeSwitchTo(QtWidgets.QUndoCommand):
             edge.updateEdge()
 
         # Identify the new node.
-        self.diagram.identify(self.node['redo'])
+        self.diagram.sgnNodeIdentification.emit(self.node['redo'])
 
         # Clear edge and anchor references from node1.
         self.node['undo'].anchors.clear()
@@ -309,7 +309,7 @@ class CommandNodeSwitchTo(QtWidgets.QUndoCommand):
             edge.updateEdge()
 
         # Identify the old node.
-        self.diagram.identify(self.node['undo'])
+        self.diagram.sgnNodeIdentification.emit(self.node['undo'])
 
         # Clear edge and anchor references from node2.
         self.node['redo'].anchors.clear()
