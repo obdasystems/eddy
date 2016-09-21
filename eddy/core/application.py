@@ -164,7 +164,7 @@ class Eddy(QtWidgets.QApplication):
             # filesystem. If they do not exists we remove them from our recent list.
             recentList = []
             for path in map(expandPath, settings.value('project/recent')):
-                if is_dir(path):
+                if is_dir(path) and path not in recentList:
                     recentList.append(path)
 
             settings.setValue('project/recent', recentList or examples)
@@ -235,7 +235,7 @@ class Eddy(QtWidgets.QApplication):
         self.welcome = Welcome(self)
         self.welcome.show()
         if options.open and is_dir(options.open):
-            self.sgnCreateSession.emit(options.open)
+            self.sgnCreateSession.emit(expandPath(options.open))
 
     #############################################
     #   SLOTS
@@ -295,16 +295,16 @@ class Eddy(QtWidgets.QApplication):
                 connect(self.session.sgnClosed, self.onSessionClosed)
 
                 settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-                projects = settings.value('project/recent', None, str) or []
+                recentList = settings.value('project/recent', None, str) or []
 
                 try:
-                    projects.remove(path)
+                    recentList.remove(path)
                 except ValueError:
                     pass
                 finally:
-                    projects.insert(0, path)
-                    projects = projects[:8]
-                    settings.setValue('project/recent', projects)
+                    recentList.insert(0, path)
+                    recentList = recentList[:8]
+                    settings.setValue('project/recent', recentList)
                     settings.sync()
 
                 if self.welcome:

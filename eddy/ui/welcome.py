@@ -282,8 +282,7 @@ class Welcome(QtWidgets.QWidget):
         """
         form = ProjectDialog(self)
         if form.exec_() == ProjectDialog.Accepted:
-            path = form.pathField.value()
-            self.sgnCreateSession.emit(path)
+            self.sgnCreateSession.emit(expandPath(form.pathField.value()))
 
     @QtCore.pyqtSlot()
     def doOpenProject(self):
@@ -298,8 +297,7 @@ class Welcome(QtWidgets.QWidget):
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
 
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
-            path = first(dialog.selectedFiles())
-            self.sgnCreateSession.emit(path)
+            self.sgnCreateSession.emit(expandPath(first(dialog.selectedFiles())))
 
     @QtCore.pyqtSlot(str)
     def doOpenRecentProject(self, path):
@@ -307,7 +305,7 @@ class Welcome(QtWidgets.QWidget):
         Open a recent project in a new session of Eddy.
         :type path: str
         """
-        self.sgnCreateSession.emit(path)
+        self.sgnCreateSession.emit(expandPath(path))
 
     @QtCore.pyqtSlot()
     def doOpenURL(self):
