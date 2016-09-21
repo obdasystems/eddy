@@ -359,7 +359,7 @@ class OntologyExplorerView(QtWidgets.QTreeView):
         super().__init__(widget)
         self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
-        self.setFont(Font('Arial', 12))
+        self.setFont(Font('Roboto', 12))
         self.setFocusPolicy(QtCore.Qt.NoFocus)
         self.setHeaderHidden(True)
         self.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)

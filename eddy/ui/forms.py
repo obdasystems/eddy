@@ -60,24 +60,22 @@ class CardinalityRestrictionForm(QtWidgets.QDialog):
         """
         super().__init__(parent)
 
-        arial12r = Font('Arial', 12)
-
         #############################################
         # FORM AREA
         #################################
 
         self.minLabel = QtWidgets.QLabel(self)
-        self.minLabel.setFont(arial12r)
+        self.minLabel.setFont(Font('Roboto', 12))
         self.minLabel.setText('Min. cardinality')
         self.minField = IntegerField(self)
-        self.minField.setFont(arial12r)
+        self.minField.setFont(Font('Roboto', 12))
         self.minField.setFixedWidth(80)
 
         self.maxLabel = QtWidgets.QLabel(self)
-        self.maxLabel.setFont(arial12r)
+        self.maxLabel.setFont(Font('Roboto', 12))
         self.maxLabel.setText('Max. cardinality')
         self.maxField = IntegerField(self)
-        self.maxField.setFont(arial12r)
+        self.maxField.setFont(Font('Roboto', 12))
         self.maxField.setFixedWidth(80)
 
         self.formWidget = QtWidgets.QWidget(self)
@@ -91,7 +89,7 @@ class CardinalityRestrictionForm(QtWidgets.QDialog):
 
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(arial12r)
+        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # SETUP DIALOG LAYOUT
@@ -173,18 +171,16 @@ class RefactorNameForm(QtWidgets.QDialog):
 
         self.node = node
 
-        arial12r = Font('Arial', 12)
-
         #############################################
         # FORM AREA
         #################################
 
         self.renameLabel = QtWidgets.QLabel(self)
-        self.renameLabel.setFont(arial12r)
+        self.renameLabel.setFont(Font('Roboto', 12))
         self.renameLabel.setText('Name')
         self.renameField = StringField(self)
         self.renameField.setFixedWidth(200)
-        self.renameField.setFont(arial12r)
+        self.renameField.setFont(Font('Roboto', 12))
         self.renameField.setValue(self.node.text())
         connect(self.renameField.textChanged, self.nameChanged)
 
@@ -198,14 +194,14 @@ class RefactorNameForm(QtWidgets.QDialog):
 
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(arial12r)
+        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # SETUP DIALOG LAYOUT
         #################################
 
         self.caption = QtWidgets.QLabel(self)
-        self.caption.setFont(arial12r)
+        self.caption.setFont(Font('Roboto', 12))
         self.caption.setContentsMargins(8, 0, 8, 0)
         self.caption.setProperty('class', 'invalid')
         self.caption.setVisible(False)
@@ -292,23 +288,21 @@ class ValueForm(QtWidgets.QDialog):
 
         self.node = node
 
-        arial12r = Font('Arial', 12)
-
         #############################################
         # FORM AREA
         #################################
 
         self.datatypeLabel = QtWidgets.QLabel(self)
-        self.datatypeLabel.setFont(arial12r)
+        self.datatypeLabel.setFont(Font('Roboto', 12))
         self.datatypeLabel.setText('Datatype')
         self.datatypeField = ComboBox(self)
-        self.datatypeField.setFont(arial12r)
+        self.datatypeField.setFont(Font('Roboto', 12))
         self.datatypeField.setFixedWidth(300)
         for datatype in Datatype:
             self.datatypeField.addItem(datatype.value, datatype)
 
         self.valueLabel = QtWidgets.QLabel(self)
-        self.valueLabel.setFont(arial12r)
+        self.valueLabel.setFont(Font('Roboto', 12))
         self.valueLabel.setText('Value')
         self.valueField = StringField(self)
         self.valueField.setFixedWidth(300)
@@ -335,7 +329,7 @@ class ValueForm(QtWidgets.QDialog):
 
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(arial12r)
+        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # SETUP DIALOG LAYOUT

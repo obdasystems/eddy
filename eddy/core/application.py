@@ -41,6 +41,7 @@ from PyQt5 import QtNetwork
 from PyQt5 import QtWidgets
 
 from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE
+from eddy.core.datatypes.qt import Font
 from eddy.core.functions.fsystem import is_dir
 from eddy.core.functions.misc import isEmpty, format_exception
 from eddy.core.functions.path import expandPath
@@ -140,7 +141,7 @@ class Eddy(QtWidgets.QApplication):
             splash.show()
 
         #############################################
-        # CONFIGURE DEFAULTS
+        # CONFIGURE RECENT PROJECTS
         #################################
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
@@ -169,6 +170,32 @@ class Eddy(QtWidgets.QApplication):
 
             settings.setValue('project/recent', recentList or examples)
             settings.sync()
+
+        #############################################
+        # CONFIGURE FONTS
+        #################################
+
+        fontDB = QtGui.QFontDatabase()
+        fontDB.addApplicationFont(':/fonts/Roboto-Black')
+        fontDB.addApplicationFont(':/fonts/Roboto-BlackItalic')
+        fontDB.addApplicationFont(':/fonts/Roboto-Bold')
+        fontDB.addApplicationFont(':/fonts/Roboto-BoldItalic')
+        fontDB.addApplicationFont(':/fonts/Roboto-Italic')
+        fontDB.addApplicationFont(':/fonts/Roboto-Light')
+        fontDB.addApplicationFont(':/fonts/Roboto-LightItalic')
+        fontDB.addApplicationFont(':/fonts/Roboto-Medium')
+        fontDB.addApplicationFont(':/fonts/Roboto-MediumItalic')
+        fontDB.addApplicationFont(':/fonts/Roboto-Regular')
+        fontDB.addApplicationFont(':/fonts/Roboto-Thin')
+        fontDB.addApplicationFont(':/fonts/Roboto-ThinItalic')
+        fontDB.addApplicationFont(':/fonts/RobotoCondensed-Bold')
+        fontDB.addApplicationFont(':/fonts/RobotoCondensed-BoldItalic')
+        fontDB.addApplicationFont(':/fonts/RobotoCondensed-Italic')
+        fontDB.addApplicationFont(':/fonts/RobotoCondensed-Light')
+        fontDB.addApplicationFont(':/fonts/RobotoCondensed-LightItalic')
+        fontDB.addApplicationFont(':/fonts/RobotoCondensed-Regular')
+
+        self.setFont(Font('Roboto', 12))
 
         #############################################
         # CONFIGURE LAYOUT

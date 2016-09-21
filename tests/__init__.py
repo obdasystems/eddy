@@ -80,7 +80,7 @@ from PyQt5 import QtTest
 
 from eddy import APPNAME, ORGANIZATION, WORKSPACE
 from eddy.core.application import Eddy
-# noinspection PyUnresolvedReferences
+from eddy.ui import fonts_rc
 from eddy.ui import images_rc
 
 

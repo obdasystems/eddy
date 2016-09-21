@@ -86,7 +86,7 @@ class DockTitleWidget(QtWidgets.QWidget):
         self.titleLabel = QtWidgets.QLabel(title, self)
         self.titleLabel.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.titleLabel.setContentsMargins(4, 0, 0, 0)
-        self.titleLabel.setFont(Font('Arial', 13))
+        self.titleLabel.setFont(Font('Roboto', 13))
         # CREATE STANDARD BUTTONS
         close = QtWidgets.QPushButton(self)
         close.setIcon(QtGui.QIcon(':/icons/18/ic_close_black'))
@@ -99,7 +99,7 @@ class DockTitleWidget(QtWidgets.QWidget):
         self.mainLayout.setSpacing(0)
         self.setContentsMargins(6, 4, 6, 4)
         self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
-        self.setFont(Font('Arial', 13))
+        self.setFont(Font('Roboto', 13))
         self.updateLayout()
 
     #############################################

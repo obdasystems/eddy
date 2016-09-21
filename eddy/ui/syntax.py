@@ -54,9 +54,7 @@ class SyntaxValidationDialog(QtWidgets.QDialog):
         :type project: Project
         :type session: Session
         """
-        super().__init__(session)
-
-        arial12r = Font('Arial', 12)
+        super(SyntaxValidationDialog, self).__init__(session)
 
         self.i = 0
         self.items = list(project.edges()) + list(project.nodes())
@@ -84,11 +82,11 @@ class SyntaxValidationDialog(QtWidgets.QDialog):
         #################################
 
         self.buttonAbort = QtWidgets.QPushButton('Abort', self)
-        self.buttonAbort.setFont(arial12r)
+        self.buttonAbort.setFont(Font('Roboto', 12))
         self.buttonIgnore = QtWidgets.QPushButton('Ignore', self)
-        self.buttonIgnore.setFont(arial12r)
+        self.buttonIgnore.setFont(Font('Roboto', 12))
         self.buttonShow = QtWidgets.QPushButton('Show', self)
-        self.buttonShow.setFont(arial12r)
+        self.buttonShow.setFont(Font('Roboto', 12))
 
         self.buttonBox = QtWidgets.QWidget(self)
         self.buttonBox.setVisible(False)
@@ -106,7 +104,7 @@ class SyntaxValidationDialog(QtWidgets.QDialog):
         self.messageField.setAcceptRichText(True)
         self.messageField.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
         self.messageField.setFixedSize(400, 100)
-        self.messageField.setFont(arial12r)
+        self.messageField.setFont(Font('Roboto', 12))
         self.messageField.setReadOnly(True)
 
         self.messageBox = QtWidgets.QWidget(self)

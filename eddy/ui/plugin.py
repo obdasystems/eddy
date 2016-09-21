@@ -65,20 +65,16 @@ class PluginInstallDialog(QtWidgets.QDialog):
         """
         super(PluginInstallDialog, self).__init__(session)
 
-        arial12b = Font('Arial', 12)
-        arial12b.setBold(True)
-        arial12r = Font('Arial', 12)
-
         #############################################
         # HEAD AREA
         #################################
 
         self.headTitle = QtWidgets.QLabel('Install a plugin', self)
-        self.headTitle.setFont(arial12b)
+        self.headTitle.setFont(Font('Roboto', 12, bold=True))
         self.headDescription = QtWidgets.QLabel(dedent("""
         Plugins are software components that add specific features to {0}.<br/>
         Please select the plugin you wish to install.""".format(APPNAME)), self)
-        self.headDescription.setFont(arial12r)
+        self.headDescription.setFont(Font('Roboto', 12))
         self.headPix = QtWidgets.QLabel(self)
         self.headPix.setPixmap(QtGui.QIcon(':/icons/48/ic_extension_black').pixmap(48))
         self.headPix.setContentsMargins(0, 0, 0, 0)
@@ -103,12 +99,12 @@ class PluginInstallDialog(QtWidgets.QDialog):
         #################################
 
         self.pluginField = StringField(self)
-        self.pluginField.setFont(arial12r)
+        self.pluginField.setFont(Font('Roboto', 12))
         self.pluginField.setFixedWidth(400)
         self.pluginField.setReadOnly(True)
 
         self.btnBrowse = QtWidgets.QPushButton(self)
-        self.btnBrowse.setFont(arial12r)
+        self.btnBrowse.setFont(Font('Roboto', 12))
         self.btnBrowse.setFixedWidth(30)
         self.btnBrowse.setText('...')
 
@@ -124,7 +120,7 @@ class PluginInstallDialog(QtWidgets.QDialog):
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setEnabled(False)
-        self.confirmationBox.setFont(arial12r)
+        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # SETUP DIALOG LAYOUT

@@ -118,10 +118,6 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
         self.plugin = plugin
         self.project = None
 
-        self.arial12r = Font('Arial', 12)
-        self.arial12b = Font('Arial', 12)
-        self.arial12b.setBold(True)
-
         self.iconRoot = QtGui.QIcon(':/icons/18/ic_folder_open_black')
         self.iconBlank = QtGui.QIcon(':/icons/18/ic_document_blank')
         self.iconGraphol = QtGui.QIcon(':/icons/18/ic_document_graphol')
@@ -129,7 +125,7 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
 
         self.root = QtGui.QStandardItem()
         self.root.setFlags(self.root.flags() & ~QtCore.Qt.ItemIsEditable)
-        self.root.setFont(self.arial12b)
+        self.root.setFont(Font('Roboto', 12, bold=True))
         self.root.setIcon(self.iconRoot)
 
         self.model = QtGui.QStandardItemModel(self)
@@ -181,7 +177,7 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
             item = QtGui.QStandardItem(diagram.name)
             item.setData(diagram)
             item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
-            item.setFont(self.arial12r)
+            item.setFont(Font('Roboto', 12))
             item.setIcon(self.iconGraphol)
             self.root.appendRow(item)
             self.proxy.sort(0, QtCore.Qt.AscendingOrder)

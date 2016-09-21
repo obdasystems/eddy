@@ -166,7 +166,7 @@ class PalettePlugin(AbstractPlugin):
             action = QtWidgets.QAction(item.realName.title(), group, objectName=item.name, checkable=True)
             action.setChecked(widget.display[item])
             action.setData(item)
-            action.setFont(Font('Arial', 11))
+            action.setFont(Font('Roboto', 11))
             connect(action.triggered, widget.onMenuButtonClicked)
             connect(action.triggered, self.onMenuButtonClicked)
             group.addAction(action)
@@ -496,7 +496,7 @@ class PaletteButton(QtWidgets.QToolButton):
                 painter.setBrush(QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
                 painter.drawRect(QtCore.QRectF(-27, -17, 54, 34))
-                painter.setFont(Font('Arial', 11, Font.Light))
+                painter.setFont(Font('Roboto', 11, Font.Light))
                 painter.drawText(QtCore.QRectF(-27, -17, 54, 34), QtCore.Qt.AlignCenter, 'concept')
                 painter.end()
 
@@ -518,7 +518,7 @@ class PaletteButton(QtWidgets.QToolButton):
                     QtCore.QPointF(0, -17),
                     QtCore.QPointF(-23, 0),
                 ]))
-                painter.setFont(Font('Arial', 11, Font.Light))
+                painter.setFont(Font('Roboto', 11, Font.Light))
                 painter.drawText(QtCore.QRectF(-23, -17, 46, 34), QtCore.Qt.AlignCenter, 'role')
                 painter.end()
 
@@ -529,7 +529,7 @@ class PaletteButton(QtWidgets.QToolButton):
             elif item is Item.AttributeNode:
 
                 painter = QtGui.QPainter(pixmap)
-                painter.setFont(Font('Arial', 9, Font.Light))
+                painter.setFont(Font('Roboto', 9, Font.Light))
                 painter.translate(0, 0)
                 painter.drawText(QtCore.QRectF(0, 0, 60, 22), QtCore.Qt.AlignCenter, 'attribute')
                 painter.setRenderHint(QtGui.QPainter.Antialiasing)
@@ -551,7 +551,7 @@ class PaletteButton(QtWidgets.QToolButton):
                 painter.setBrush(QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)))
                 painter.translate(30, 22)
                 painter.drawRoundedRect(QtCore.QRectF(-27, -17, 54, 34), 6, 6)
-                painter.setFont(Font('Arial', 10, Font.Light))
+                painter.setFont(Font('Roboto', 10, Font.Light))
                 painter.drawText(QtCore.QRectF(-27, -17, 54, 34), QtCore.Qt.AlignCenter, 'xsd:string')
                 painter.end()
 
@@ -577,7 +577,7 @@ class PaletteButton(QtWidgets.QToolButton):
                     QtCore.QPointF(-((40 / (1 + sqrt(2))) / 2), -20),
                     QtCore.QPointF(-20, -((40 / (1 + sqrt(2))) / 2)),
                 ]))
-                painter.setFont(Font('Arial', 8, Font.Light))
+                painter.setFont(Font('Roboto', 8, Font.Light))
                 painter.drawText(-16, 4, 'individual')
                 painter.end()
 
@@ -610,7 +610,7 @@ class PaletteButton(QtWidgets.QToolButton):
                 painter.drawPolygon(polygonA)
                 painter.setBrush(QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)))
                 painter.drawPolygon(polygonB)
-                painter.setFont(Font('Arial', 9, Font.Light))
+                painter.setFont(Font('Roboto', 9, Font.Light))
                 painter.drawText(QtCore.QPointF(-19, -5), Facet.length.value)
                 painter.drawText(QtCore.QPointF(-8, 12), '"32"')
                 painter.end()
@@ -622,7 +622,7 @@ class PaletteButton(QtWidgets.QToolButton):
             elif item is Item.DomainRestrictionNode:
 
                 painter = QtGui.QPainter(pixmap)
-                painter.setFont(Font('Arial', 9, Font.Light))
+                painter.setFont(Font('Roboto', 9, Font.Light))
                 painter.translate(0, 0)
                 painter.drawText(QtCore.QRectF(0, 0, 60, 22), QtCore.Qt.AlignCenter, 'restriction')
                 painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
@@ -638,7 +638,7 @@ class PaletteButton(QtWidgets.QToolButton):
             elif item is Item.RangeRestrictionNode:
 
                 painter = QtGui.QPainter(pixmap)
-                painter.setFont(Font('Arial', 9, Font.Light))
+                painter.setFont(Font('Roboto', 9, Font.Light))
                 painter.translate(0, 0)
                 painter.drawText(QtCore.QRectF(0, 0, 60, 22), QtCore.Qt.AlignCenter, 'restriction')
                 painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
@@ -667,7 +667,7 @@ class PaletteButton(QtWidgets.QToolButton):
                     QtCore.QPointF(-23 + 6, -15),
                     QtCore.QPointF(-23, 0),
                 ]))
-                painter.setFont(Font('Arial', 11, Font.Light))
+                painter.setFont(Font('Roboto', 11, Font.Light))
                 painter.drawText(QtCore.QRectF(-23, -15, 46, 30), QtCore.Qt.AlignCenter, 'and')
                 painter.end()
 
@@ -691,7 +691,7 @@ class PaletteButton(QtWidgets.QToolButton):
                     QtCore.QPointF(-23 + 6, -15),
                     QtCore.QPointF(-23, 0),
                 ]))
-                painter.setFont(Font('Arial', 11, Font.Light))
+                painter.setFont(Font('Roboto', 11, Font.Light))
                 painter.drawText(QtCore.QRectF(-23, -15, 46, 30), QtCore.Qt.AlignCenter, 'chain')
                 painter.end()
 
@@ -715,7 +715,7 @@ class PaletteButton(QtWidgets.QToolButton):
                     QtCore.QPointF(-23 + 6, -15),
                     QtCore.QPointF(-23, 0),
                 ]))
-                painter.setFont(Font('Arial', 11, Font.Light))
+                painter.setFont(Font('Roboto', 11, Font.Light))
                 painter.drawText(QtCore.QRectF(-23, -15, 46, 30), QtCore.Qt.AlignCenter, 'data')
                 painter.end()
 
@@ -739,7 +739,7 @@ class PaletteButton(QtWidgets.QToolButton):
                     QtCore.QPointF(-23 + 6, -15),
                     QtCore.QPointF(-23, 0),
                 ]))
-                painter.setFont(Font('Arial', 11, Font.Light))
+                painter.setFont(Font('Roboto', 11, Font.Light))
                 painter.drawText(QtCore.QRectF(-23, -15, 46, 30), QtCore.Qt.AlignCenter, 'inv')
                 painter.end()
 
@@ -763,7 +763,7 @@ class PaletteButton(QtWidgets.QToolButton):
                     QtCore.QPointF(-23 + 6, -15),
                     QtCore.QPointF(-23, 0),
                 ]))
-                painter.setFont(Font('Arial', 11, Font.Light))
+                painter.setFont(Font('Roboto', 11, Font.Light))
                 painter.drawText(QtCore.QRectF(-23, -15, 46, 30), QtCore.Qt.AlignCenter, 'not')
                 painter.end()
 
@@ -787,7 +787,7 @@ class PaletteButton(QtWidgets.QToolButton):
                     QtCore.QPointF(-23 + 6, -15),
                     QtCore.QPointF(-23, 0),
                 ]))
-                painter.setFont(Font('Arial', 11, Font.Light))
+                painter.setFont(Font('Roboto', 11, Font.Light))
                 painter.drawText(QtCore.QRectF(-23, -15, 46, 30), QtCore.Qt.AlignCenter, 'oneOf')
                 painter.end()
 
@@ -811,7 +811,7 @@ class PaletteButton(QtWidgets.QToolButton):
                     QtCore.QPointF(-23 + 6, -15),
                     QtCore.QPointF(-23, 0),
                 ]))
-                painter.setFont(Font('Arial', 11, Font.Light))
+                painter.setFont(Font('Roboto', 11, Font.Light))
                 painter.drawText(QtCore.QRectF(-23, -15, 46, 30), QtCore.Qt.AlignCenter, 'or')
                 painter.end()
 
@@ -950,7 +950,7 @@ class PaletteButton(QtWidgets.QToolButton):
                 painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
                 painter.setBrush(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)))
                 painter.drawPolygon(H1)
-                painter.setFont(Font('Arial', 9, Font.Light))
+                painter.setFont(Font('Roboto', 9, Font.Light))
                 painter.drawText(PP1.x() + S1, 18, 'instanceOf')
                 painter.end()
 

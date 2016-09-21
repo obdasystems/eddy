@@ -56,7 +56,6 @@ class PreferencesDialog(QtWidgets.QDialog):
         """
         super().__init__(session)
 
-        arial12r = Font('Arial', 12)
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
 
         #############################################
@@ -64,10 +63,10 @@ class PreferencesDialog(QtWidgets.QDialog):
         #################################
 
         self.diagramSizePrefix = QtWidgets.QLabel(self)
-        self.diagramSizePrefix.setFont(arial12r)
+        self.diagramSizePrefix.setFont(Font('Roboto', 12))
         self.diagramSizePrefix.setText('Diagram size')
         self.diagramSizeField = SpinBox(self)
-        self.diagramSizeField.setFont(arial12r)
+        self.diagramSizeField.setFont(Font('Roboto', 12))
         self.diagramSizeField.setRange(Diagram.MinSize, Diagram.MaxSize)
         self.diagramSizeField.setSingleStep(100)
         self.diagramSizeField.setToolTip('This setting changes the default size of all the new created diagrams.')
@@ -83,7 +82,7 @@ class PreferencesDialog(QtWidgets.QDialog):
 
         self.pluginsTable = QtWidgets.QTableWidget(len(self.session.plugins()), 4, self)
         self.pluginsTable.setHorizontalHeaderLabels(['Name', 'Version', 'Author', 'Contact'])
-        self.pluginsTable.setFont(arial12r)
+        self.pluginsTable.setFont(Font('Roboto', 12))
         self.pluginsTable.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         header = self.pluginsTable.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
@@ -119,7 +118,7 @@ class PreferencesDialog(QtWidgets.QDialog):
 
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(arial12r)
+        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # MAIN WIDGET

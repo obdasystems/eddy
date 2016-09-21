@@ -67,13 +67,6 @@ class Welcome(QtWidgets.QWidget):
         """
         super(Welcome, self).__init__(parent)
 
-        arial12b = Font('Arial', 12)
-        arial12b.setBold(True)
-        arial13r = Font('Arial', 13)
-        arial14r = Font('Arial', 14)
-        arial28rsc = Font('Arial', 28)
-        arial28rsc.setCapitalization(Font.SmallCaps)
-
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
 
         self.workspace = settings.value('workspace/home', WORKSPACE, str)
@@ -123,27 +116,27 @@ class Welcome(QtWidgets.QWidget):
         self.appPix.setPixmap(QtGui.QIcon(':/icons/128/ic_eddy').pixmap(128))
         self.appPix.setContentsMargins(0, 0, 0, 0)
         self.appName = QtWidgets.QLabel(APPNAME, self)
-        self.appName.setFont(arial28rsc)
+        self.appName.setFont(Font('Roboto', 30, capitalization=Font.SmallCaps))
         self.appName.setProperty('class', 'appname')
         self.appVersion = QtWidgets.QLabel('Version: {0}'.format(VERSION), self)
-        self.appVersion.setFont(arial14r)
+        self.appVersion.setFont(Font('Roboto', 18))
         self.appVersion.setProperty('class', 'version')
 
         self.buttonNewProject = PHCQPushButton(self)
-        self.buttonNewProject.setFont(arial13r)
+        self.buttonNewProject.setFont(Font('Roboto', 12))
         self.buttonNewProject.setIcon(QtGui.QIcon(':/icons/24/ic_add_document_black'))
         self.buttonNewProject.setIconSize(QtCore.QSize(24, 24))
         self.buttonNewProject.setText('Create new project')
         connect(self.buttonNewProject.clicked, self.doNewProject)
         self.buttonOpenProject = PHCQPushButton(self)
-        self.buttonOpenProject.setFont(arial13r)
+        self.buttonOpenProject.setFont(Font('Roboto', 12))
         self.buttonOpenProject.setIcon(QtGui.QIcon(':/icons/24/ic_folder_open_black'))
         self.buttonOpenProject.setIconSize(QtCore.QSize(24, 24))
         self.buttonOpenProject.setText('Open project')
         connect(self.buttonOpenProject.clicked, self.doOpenProject)
-        
+
         self.buttonHelp = PHCQToolButton(self)
-        self.buttonHelp.setFont(arial13r)
+        self.buttonHelp.setFont(Font('Roboto', 12))
         self.buttonHelp.setIcon(QtGui.QIcon(':/icons/24/ic_help_outline_black'))
         self.buttonHelp.setIconSize(QtCore.QSize(24, 24))
         self.buttonHelp.setText('Help')
@@ -159,7 +152,7 @@ class Welcome(QtWidgets.QWidget):
         self.buttonLayoutRB = QtWidgets.QHBoxLayout()
         self.buttonLayoutRB.addWidget(self.buttonHelp)
         self.buttonLayoutRB.setAlignment(QtCore.Qt.AlignBottom|QtCore.Qt.AlignRight)
-        self.buttonLayoutRB.setContentsMargins(0, 38, 8, 0)
+        self.buttonLayoutRB.setContentsMargins(0, 30, 8, 0)
 
         self.innerLayoutR = QtWidgets.QVBoxLayout(self.innerWidgetR)
         self.innerLayoutR.setContentsMargins(0, 0, 0, 0)
@@ -232,7 +225,7 @@ class Welcome(QtWidgets.QWidget):
         :type path: str
         """
         msgbox = QtWidgets.QMessageBox(self)
-        msgbox.setFont(Font('Arial', 10))
+        msgbox.setFont(Font('Roboto', 11))
         msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
         msgbox.setInformativeText('<b>NOTE: This action is not reversible!</b>')
         msgbox.setStandardButtons(QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
@@ -331,20 +324,16 @@ class ProjectBlock(QtWidgets.QWidget):
         :type project: str
         :type parent: QtWidgets.QWidget
         """
-        super().__init__(parent)
-
-        arial12b = Font('Arial', 12)
-        arial12b.setBold(True)
-        arial12r = Font('Arial', 12)
+        super(ProjectBlock, self).__init__(parent)
 
         self.nameLabel = QtWidgets.QLabel(os.path.basename(project), self)
         self.nameLabel.setContentsMargins(20, 0, 20, 0)
         self.nameLabel.setProperty('class', 'name')
-        self.nameLabel.setFont(arial12b)
+        self.nameLabel.setFont(Font('Roboto', 12, bold=True))
         self.pathLabel = QtWidgets.QLabel(compressPath(shortPath(project), 34), self)
         self.pathLabel.setContentsMargins(20, 0, 20, 0)
         self.pathLabel.setProperty('class', 'path')
-        self.pathLabel.setFont(arial12r)
+        self.pathLabel.setFont(Font('Roboto', 12))
         self.deleteBtn = PHCQPushButton(self)
         self.deleteBtn.setIcon(QtGui.QIcon(':/icons/24/ic_delete_black'))
         self.deleteBtn.setVisible(not isSubPath(expandPath('@examples/'), project))

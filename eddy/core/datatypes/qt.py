@@ -49,17 +49,22 @@ class Font(QtGui.QFont):
     """
     This class extends QtGui.QFont providing better font rendering on different platforms.
     """
-    def __init__(self, family, size=12, weight=-1, italic=False):
+    def __init__(self, family, size=12, weight=-1, italic=False, bold=False, capitalization=QtGui.QFont.MixedCase):
         """
         Contruct a new Font instance using the given parameters.
         :type family: str
         :type size: float
         :type weight: float
         :type italic: bool
+        :type bold: bool
+        :type capitalization: int
         """
         if not MACOS:
             size = int(round(size * 0.75))
-        super(Font, self).__init__(family, size, weight, italic)
+        super(Font, self).__init__(family, size, weight)
+        self.setBold(bold)
+        self.setItalic(italic)
+        self.setCapitalization(capitalization)
 
 
 class BrushIcon(QtGui.QIcon):

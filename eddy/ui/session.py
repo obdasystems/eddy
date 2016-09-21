@@ -916,7 +916,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         combobox = ComboBox(objectName='profile_switch')
         combobox.setEditable(False)
-        combobox.setFont(Font('Arial', 12))
+        combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(False)
         combobox.setStatusTip('Change the profile of the active project')

@@ -110,8 +110,6 @@ class OWLProjectExporterDialog(QDialog):
         """
         super(OWLProjectExporterDialog, self).__init__(session)
 
-        arial12r = Font('Arial', 12)
-
         self.path = expandPath(path)
         self.project = project
         self.worker = None
@@ -126,7 +124,7 @@ class OWLProjectExporterDialog(QDialog):
             self.syntaxField.addItem(syntax.value, syntax)
         self.syntaxField.setCurrentIndex(0)
         self.syntaxField.setFixedWidth(300)
-        self.syntaxField.setFont(arial12r)
+        self.syntaxField.setFont(Font('Roboto', 12))
 
         spacer = QFrame()
         spacer.setFrameShape(QFrame.HLine)
@@ -149,7 +147,7 @@ class OWLProjectExporterDialog(QDialog):
 
         self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(arial12r)
+        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # CONFIGURE LAYOUT

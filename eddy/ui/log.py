@@ -56,9 +56,6 @@ class LogDialog(QtWidgets.QDialog):
         """
         super(LogDialog, self).__init__(parent)
 
-        arial12r = Font('Arial', 12)
-        monospaced12r = Font('Courier New', 12)
-
         stream = LOGGER.getDefaultStream()
 
         #############################################
@@ -68,7 +65,7 @@ class LogDialog(QtWidgets.QDialog):
         self.messageArea = QtWidgets.QPlainTextEdit(self)
         self.messageArea.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
         self.messageArea.setContentsMargins(10, 0, 0, 0)
-        self.messageArea.setFont(monospaced12r)
+        self.messageArea.setFont(Font('Courier New', 12))
         self.messageArea.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
         self.messageArea.setMinimumSize(800, 500)
         self.highlighter = LogHighlighter(self.messageArea.document())
@@ -81,7 +78,7 @@ class LogDialog(QtWidgets.QDialog):
 
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 0, 0)
-        self.confirmationBox.setFont(arial12r)
+        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # SETUP DIALOG LAYOUT

@@ -90,7 +90,7 @@ from eddy.core.functions.misc import format_exception
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 
-# noinspection PyUnresolvedReferences
+from eddy.ui import fonts_rc
 from eddy.ui import images_rc
 
 

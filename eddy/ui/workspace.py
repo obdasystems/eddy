@@ -60,20 +60,16 @@ class WorkspaceDialog(QtWidgets.QDialog):
         """
         super().__init__(parent)
 
-        arial12b = Font('Arial', 12)
-        arial12b.setBold(True)
-        arial12r = Font('Arial', 12)
-
         #############################################
         # HEAD AREA
         #################################
 
         self.headTitle = QtWidgets.QLabel('Select a workspace', self)
-        self.headTitle.setFont(arial12b)
+        self.headTitle.setFont(Font('Roboto', 12, bold=True))
         self.headDescription = QtWidgets.QLabel(dedent("""
         {0} stores your projects in a directory called workspace.<br/>
         Please choose a workspace directory to use.""".format(APPNAME)), self)
-        self.headDescription.setFont(arial12r)
+        self.headDescription.setFont(Font('Roboto', 12))
         self.headPix = QtWidgets.QLabel(self)
         self.headPix.setPixmap(QtGui.QIcon(':/icons/128/ic_eddy').pixmap(48))
         self.headPix.setContentsMargins(0, 0, 0, 0)
@@ -97,13 +93,13 @@ class WorkspaceDialog(QtWidgets.QDialog):
         #################################
 
         self.workspaceField = StringField(self)
-        self.workspaceField.setFont(arial12r)
+        self.workspaceField.setFont(Font('Roboto', 12))
         self.workspaceField.setFixedWidth(400)
         self.workspaceField.setReadOnly(True)
         self.workspaceField.setText(expandPath(WORKSPACE))
 
         self.btnBrowse = QtWidgets.QPushButton(self)
-        self.btnBrowse.setFont(arial12r)
+        self.btnBrowse.setFont(Font('Roboto', 12))
         self.btnBrowse.setFixedWidth(30)
         self.btnBrowse.setText('...')
 
@@ -118,7 +114,7 @@ class WorkspaceDialog(QtWidgets.QDialog):
 
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(arial12r)
+        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # SETUP DIALOG LAYOUT

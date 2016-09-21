@@ -68,8 +68,6 @@ class AbstractDiagramDialog(QtWidgets.QDialog):
         """
         super().__init__(parent)
 
-        arial12r = Font('Arial', 12)
-
         #############################################
         # FORM AREA
         #################################
@@ -79,20 +77,20 @@ class AbstractDiagramDialog(QtWidgets.QDialog):
         self.projectPath = '{0}{1}'.format(rstrip(self.projectPath, os.path.sep), os.path.sep)
 
         self.nameLabel = QtWidgets.QLabel(self)
-        self.nameLabel.setFont(arial12r)
+        self.nameLabel.setFont(Font('Roboto', 12))
         self.nameLabel.setText('Name')
         self.nameField = StringField(self)
-        self.nameField.setFont(arial12r)
+        self.nameField.setFont(Font('Roboto', 12))
         self.nameField.setMinimumWidth(400)
         self.nameField.setMaxLength(64)
         connect(self.nameField.textChanged, self.onNameFieldChanged)
         connect(self.nameField.textChanged, self.doPathValidate)
 
         self.pathLabel = QtWidgets.QLabel(self)
-        self.pathLabel.setFont(arial12r)
+        self.pathLabel.setFont(Font('Roboto', 12))
         self.pathLabel.setText('Location')
         self.pathField = StringField(self)
-        self.pathField.setFont(arial12r)
+        self.pathField.setFont(Font('Roboto', 12))
         self.pathField.setMinimumWidth(400)
         self.pathField.setReadOnly(True)
         self.pathField.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -114,7 +112,7 @@ class AbstractDiagramDialog(QtWidgets.QDialog):
 
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok|QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(arial12r)
+        self.confirmationBox.setFont(Font('Roboto', 12))
         self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
 
         #############################################

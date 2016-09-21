@@ -104,27 +104,25 @@ class DiagramProperty(PropertyDialog):
 
         self.diagram = diagram
 
-        arial12r = Font('Arial', 12)
-
         #############################################
         # GENERAL TAB
         #################################
 
         self.nodesLabel = QtWidgets.QLabel(self)
-        self.nodesLabel.setFont(arial12r)
+        self.nodesLabel.setFont(Font('Roboto', 12))
         self.nodesLabel.setText('N° nodes')
         self.nodesField = IntegerField(self)
         self.nodesField.setFixedWidth(300)
-        self.nodesField.setFont(arial12r)
+        self.nodesField.setFont(Font('Roboto', 12))
         self.nodesField.setReadOnly(True)
         self.nodesField.setValue(len(self.diagram.nodes()))
 
         self.edgesLabel = QtWidgets.QLabel(self)
-        self.edgesLabel.setFont(arial12r)
+        self.edgesLabel.setFont(Font('Roboto', 12))
         self.edgesLabel.setText('N° edges')
         self.edgesField = IntegerField(self)
         self.edgesField.setFixedWidth(300)
-        self.edgesField.setFont(arial12r)
+        self.edgesField.setFont(Font('Roboto', 12))
         self.edgesField.setReadOnly(True)
         self.edgesField.setValue(len(self.diagram.edges()))
 
@@ -140,10 +138,10 @@ class DiagramProperty(PropertyDialog):
         sceneRect = self.diagram.sceneRect()
 
         self.diagramSizeLabel = QtWidgets.QLabel(self)
-        self.diagramSizeLabel.setFont(arial12r)
+        self.diagramSizeLabel.setFont(Font('Roboto', 12))
         self.diagramSizeLabel.setText('Size')
         self.diagramSizeField = SpinBox(self)
-        self.diagramSizeField.setFont(arial12r)
+        self.diagramSizeField.setFont(Font('Roboto', 12))
         self.diagramSizeField.setRange(Diagram.MinSize, Diagram.MaxSize)
         self.diagramSizeField.setSingleStep(100)
         self.diagramSizeField.setValue(max(sceneRect.width(), sceneRect.height()))
@@ -158,7 +156,7 @@ class DiagramProperty(PropertyDialog):
 
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(arial12r)
+        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # MAIN WIDGET
@@ -239,44 +237,42 @@ class NodeProperty(PropertyDialog):
         self.diagram = diagram
         self.node = node
 
-        arial12r = Font('Arial', 12)
-
         #############################################
         # GENERAL TAB
         #################################
 
         self.idLabel = QtWidgets.QLabel(self)
-        self.idLabel.setFont(arial12r)
+        self.idLabel.setFont(Font('Roboto', 12))
         self.idLabel.setText('ID')
         self.idField = StringField(self)
-        self.idField.setFont(arial12r)
+        self.idField.setFont(Font('Roboto', 12))
         self.idField.setReadOnly(True)
         self.idField.setFixedWidth(300)
         self.idField.setValue(self.node.id)
 
         self.typeLabel = QtWidgets.QLabel(self)
-        self.typeLabel.setFont(arial12r)
+        self.typeLabel.setFont(Font('Roboto', 12))
         self.typeLabel.setText('Type')
         self.typeField = StringField(self)
-        self.typeField.setFont(arial12r)
+        self.typeField.setFont(Font('Roboto', 12))
         self.typeField.setReadOnly(True)
         self.typeField.setFixedWidth(300)
         self.typeField.setValue(node.shortName.capitalize())
 
         self.identityLabel = QtWidgets.QLabel(self)
-        self.identityLabel.setFont(arial12r)
+        self.identityLabel.setFont(Font('Roboto', 12))
         self.identityLabel.setText('Identity')
         self.identityField = StringField(self)
-        self.identityField.setFont(arial12r)
+        self.identityField.setFont(Font('Roboto', 12))
         self.identityField.setReadOnly(True)
         self.identityField.setFixedWidth(300)
         self.identityField.setValue(self.node.identity().value)
 
         self.neighboursLabel = QtWidgets.QLabel(self)
-        self.neighboursLabel.setFont(arial12r)
+        self.neighboursLabel.setFont(Font('Roboto', 12))
         self.neighboursLabel.setText('Neighbours')
         self.neighboursField = IntegerField(self)
-        self.neighboursField.setFont(arial12r)
+        self.neighboursField.setFont(Font('Roboto', 12))
         self.neighboursField.setReadOnly(True)
         self.neighboursField.setFixedWidth(300)
         self.neighboursField.setValue(len(self.node.adjacentNodes()))
@@ -296,39 +292,39 @@ class NodeProperty(PropertyDialog):
         sceneRect = self.diagram.sceneRect()
 
         self.xLabel = QtWidgets.QLabel(self)
-        self.xLabel.setFont(arial12r)
+        self.xLabel.setFont(Font('Roboto', 12))
         self.xLabel.setText('X')
         self.xField = SpinBox(self)
         self.xField.setFixedWidth(60)
-        self.xField.setFont(arial12r)
+        self.xField.setFont(Font('Roboto', 12))
         self.xField.setRange(sceneRect.left(), sceneRect.right())
         self.xField.setValue(int(nodePos.x()))
 
         self.yLabel = QtWidgets.QLabel(self)
-        self.yLabel.setFont(arial12r)
+        self.yLabel.setFont(Font('Roboto', 12))
         self.yLabel.setText('Y')
         self.yField = SpinBox(self)
         self.yField.setFixedWidth(60)
-        self.yField.setFont(arial12r)
+        self.yField.setFont(Font('Roboto', 12))
         self.yField.setRange(sceneRect.top(), sceneRect.bottom())
         self.yField.setValue(int(nodePos.y()))
 
         self.widthLabel = QtWidgets.QLabel(self)
-        self.widthLabel.setFont(arial12r)
+        self.widthLabel.setFont(Font('Roboto', 12))
         self.widthLabel.setText('Width')
         self.widthField = SpinBox(self)
         self.widthField.setFixedWidth(60)
-        self.widthField.setFont(arial12r)
+        self.widthField.setFont(Font('Roboto', 12))
         self.widthField.setRange(20, sceneRect.width())
         self.widthField.setReadOnly(True)
         self.widthField.setValue(int(self.node.width()))
 
         self.heightLabel = QtWidgets.QLabel(self)
-        self.heightLabel.setFont(arial12r)
+        self.heightLabel.setFont(Font('Roboto', 12))
         self.heightLabel.setText('Height')
         self.heightField = SpinBox(self)
         self.heightField.setFixedWidth(60)
-        self.heightField.setFont(arial12r)
+        self.heightField.setFont(Font('Roboto', 12))
         self.heightField.setRange(20, sceneRect.height())
         self.heightField.setReadOnly(True)
         self.heightField.setValue(int(self.node.height()))
@@ -346,7 +342,7 @@ class NodeProperty(PropertyDialog):
 
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(arial12r)
+        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # MAIN WIDGET
@@ -432,24 +428,22 @@ class PredicateNodeProperty(NodeProperty):
         """
         super().__init__(diagram, node, session)
 
-        arial12r = Font('Arial', 12)
-
         meta = diagram.project.meta(node.type(), node.text())
 
         self.urlLabel = QtWidgets.QLabel(self)
-        self.urlLabel.setFont(arial12r)
+        self.urlLabel.setFont(Font('Roboto', 12))
         self.urlLabel.setText('URL')
         self.urlField = StringField(self)
         self.urlField.setFixedWidth(300)
-        self.urlField.setFont(arial12r)
+        self.urlField.setFont(Font('Roboto', 12))
         self.urlField.setValue(meta.get('url', ''))
 
         self.descriptionLabel = QtWidgets.QLabel(self)
-        self.descriptionLabel.setFont(arial12r)
+        self.descriptionLabel.setFont(Font('Roboto', 12))
         self.descriptionLabel.setText('Description')
         self.descriptionField = TextField(self)
         self.descriptionField.setFixedSize(300, 160)
-        self.descriptionField.setFont(arial12r)
+        self.descriptionField.setFont(Font('Roboto', 12))
         self.descriptionField.setValue(meta.get('description', ''))
 
         self.generalLayout.addRow(self.urlLabel, self.urlField)
@@ -460,18 +454,18 @@ class PredicateNodeProperty(NodeProperty):
         #################################
 
         self.textLabel = QtWidgets.QLabel(self)
-        self.textLabel.setFont(arial12r)
+        self.textLabel.setFont(Font('Roboto', 12))
         self.textLabel.setText('Text')
         self.textField = StringField(self)
         self.textField.setFixedWidth(300)
-        self.textField.setFont(arial12r)
+        self.textField.setFont(Font('Roboto', 12))
         self.textField.setValue(self.node.text())
 
         self.refactorLabel = QtWidgets.QLabel(self)
-        self.refactorLabel.setFont(arial12r)
+        self.refactorLabel.setFont(Font('Roboto', 12))
         self.refactorLabel.setText('Refactor')
         self.refactorField = CheckBox(self)
-        self.refactorField.setFont(arial12r)
+        self.refactorField.setFont(Font('Roboto', 12))
         self.refactorField.setChecked(False)
 
         if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
@@ -558,10 +552,8 @@ class OrderedInputNodeProperty(NodeProperty):
 
         if self.node.inputs:
 
-            arial12r = Font('Arial', 12)
-
             self.sortLabel = QtWidgets.QLabel(self)
-            self.sortLabel.setFont(arial12r)
+            self.sortLabel.setFont(Font('Roboto', 12))
             self.sortLabel.setText('Sort')
             self.list = QtWidgets.QListWidget(self)
             for i in self.node.inputs:
@@ -668,8 +660,6 @@ class FacetNodeProperty(NodeProperty):
         """
         super().__init__(diagram, node, session)
 
-        arial12r = Font('Arial', 12)
-
         #############################################
         # FACET TAB
         #################################
@@ -685,12 +675,12 @@ class FacetNodeProperty(NodeProperty):
                 admissible = Facet.forDatatype(valuedomain.datatype)
 
         self.facetLabel = QtWidgets.QLabel(self)
-        self.facetLabel.setFont(arial12r)
+        self.facetLabel.setFont(Font('Roboto', 12))
         self.facetLabel.setText('Facet')
         self.facetField = ComboBox(self)
         self.facetField.setFixedWidth(200)
         self.facetField.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.facetField.setFont(arial12r)
+        self.facetField.setFont(Font('Roboto', 12))
         for facet in admissible:
             self.facetField.addItem(facet.value, facet)
         facet = self.node.facet
@@ -702,11 +692,11 @@ class FacetNodeProperty(NodeProperty):
             self.facetField.setCurrentIndex(0)
 
         self.valueLabel = QtWidgets.QLabel(self)
-        self.valueLabel.setFont(arial12r)
+        self.valueLabel.setFont(Font('Roboto', 12))
         self.valueLabel.setText('Value')
         self.valueField = StringField(self)
         self.valueField.setFixedWidth(200)
-        self.valueField.setFont(arial12r)
+        self.valueField.setFont(Font('Roboto', 12))
         self.valueField.setValue(self.node.value)
 
         self.facetWidget = QtWidgets.QWidget()
@@ -762,19 +752,17 @@ class ValueDomainNodeProperty(NodeProperty):
         """
         super().__init__(diagram, node, session)
 
-        arial12r = Font('Arial', 12)
-
         #############################################
         # DATATYPE TAB
         #################################
 
         self.datatypeLabel = QtWidgets.QLabel(self)
-        self.datatypeLabel.setFont(arial12r)
+        self.datatypeLabel.setFont(Font('Roboto', 12))
         self.datatypeLabel.setText('Datatype')
         self.datatypeField = ComboBox(self)
         self.datatypeField.setFixedWidth(200)
         self.datatypeField.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.datatypeField.setFont(arial12r)
+        self.datatypeField.setFont(Font('Roboto', 12))
 
         for datatype in Datatype:
             self.datatypeField.addItem(datatype.value, datatype)
@@ -839,19 +827,17 @@ class ValueNodeProperty(NodeProperty):
         """
         super().__init__(diagram, node, session)
 
-        arial12r = Font('Arial', 12)
-
         #############################################
         # VALUE TAB
         #################################
 
         self.datatypeLabel = QtWidgets.QLabel(self)
-        self.datatypeLabel.setFont(arial12r)
+        self.datatypeLabel.setFont(Font('Roboto', 12))
         self.datatypeLabel.setText('Datatype')
         self.datatypeField = ComboBox(self)
         self.datatypeField.setFixedWidth(200)
         self.datatypeField.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.datatypeField.setFont(arial12r)
+        self.datatypeField.setFont(Font('Roboto', 12))
 
         for datatype in Datatype:
             self.datatypeField.addItem(datatype.value, datatype)
@@ -864,11 +850,11 @@ class ValueNodeProperty(NodeProperty):
             self.datatypeField.setCurrentIndex(0)
 
         self.valueLabel = QtWidgets.QLabel(self)
-        self.valueLabel.setFont(arial12r)
+        self.valueLabel.setFont(Font('Roboto', 12))
         self.valueLabel.setText('Value')
         self.valueField = StringField(self)
         self.valueField.setFixedWidth(200)
-        self.valueField.setFont(arial12r)
+        self.valueField.setFont(Font('Roboto', 12))
         self.valueField.setValue(self.node.value)
 
         self.valueWidget = QtWidgets.QWidget()
