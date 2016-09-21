@@ -50,7 +50,7 @@ class AbstractLoader(QtCore.QObject):
         :type path: str
         :type session: Session
         """
-        super(QObject, self).__init__(session)
+        super(AbstractLoader, self).__init__(session)
         self.path = path
 
     #############################################
