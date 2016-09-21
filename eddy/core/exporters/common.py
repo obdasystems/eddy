@@ -49,7 +49,7 @@ class AbstractExporter(QtCore.QObject):
         Initialize the AbstractExporter.
         :type session: Session
         """
-        super(QObject, self).__init__(session)
+        super(AbstractExporter, self).__init__(session)
 
     #############################################
     #   PROPERTIES

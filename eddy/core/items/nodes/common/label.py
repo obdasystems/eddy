@@ -142,7 +142,7 @@ class FacetQuotedLabel(NodeLabel):
             self.diagram.clearSelection()
             self.diagram.setMode(DiagramMode.LabelEdit)
             self.setSelectedText(True)
-            super(NodeLabel, self).focusInEvent(focusEvent)
+            super(AbstractLabel, self).focusInEvent(focusEvent)
         else:
             self.clearFocus()
 
@@ -185,4 +185,4 @@ class FacetQuotedLabel(NodeLabel):
             self.diagram.setMode(DiagramMode.Idle)
             self.diagram.sgnUpdated.emit()
 
-        super(NodeLabel, self).focusOutEvent(focusEvent)
+        super(AbstractLabel, self).focusOutEvent(focusEvent)
