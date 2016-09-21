@@ -115,7 +115,6 @@ def getLogger(name=APPNAME):
     :type name: str
     :rtype: logging.Logger
     """
-    global __output
     if not name in __output:
         # CREATE A FORMATTER
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%Y/%m/%d %H:%M:%S')

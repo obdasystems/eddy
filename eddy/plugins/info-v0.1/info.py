@@ -50,7 +50,6 @@ from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.functions.misc import first, clamp, isEmpty
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
-from eddy.core.project import Project
 from eddy.core.regex import RE_CAMEL_SPACE
 
 from eddy.ui.dock import DockWidget

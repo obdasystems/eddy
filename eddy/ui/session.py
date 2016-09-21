@@ -87,7 +87,6 @@ from eddy.core.functions.misc import snap, snapF
 from eddy.core.functions.path import expandPath, isSubPath
 from eddy.core.functions.path import uniquePath, shortPath
 from eddy.core.functions.signals import connect
-from eddy.core.items.common import AbstractItem
 from eddy.core.loaders.graphml import GraphMLDiagramLoader
 from eddy.core.loaders.graphol import GrapholDiagramLoader
 from eddy.core.loaders.graphol import GrapholProjectLoader

@@ -145,7 +145,7 @@ class OWL2Profile(AbstractProfile):
                         name = edge.shortName.title()
                         idA = source.name
                         idB = target.name
-                        raise SyntaxError('{0} between {0} and {0} is forbidden'.format(name, idA, idB))
+                        raise SyntaxError('{0} between {1} and {2} is forbidden'.format(name, idA, idB))
 
                 if target.type() is Item.RoleChainNode:
                     # Role expressions constructed with chain nodes cannot be the target of any inclusion edge.

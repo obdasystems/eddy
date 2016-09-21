@@ -33,7 +33,6 @@
 ##########################################################################
 
 
-from PyQt5 import QtCore
 from PyQt5 import QtGui
 
 from eddy.core.datatypes.collections import DistinctList
