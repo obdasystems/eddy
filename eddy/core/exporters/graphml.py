@@ -33,8 +33,8 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QPointF
-from PyQt5.QtXml import QDomDocument
+from PyQt5 import QtCore
+from PyQt5 import QtXml
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
@@ -654,7 +654,7 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         Translate the the anchor point of the given edge in the given node in yEd coordinates.
         :type edge: AbstractEdge
         :type node: AbstractNode
-        :rtype: QPointF
+        :rtype: QtCore.QPointF
         """
         return node.mapFromScene(node.anchor(edge))
 
@@ -663,24 +663,24 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         """
         Translate the given label position in yEd coordinates.
         :type node: AbstractNode
-        :rtype: QPointF
+        :rtype: QtCore.QPointF
         """
         return node.label.pos() + \
-               QPointF(node.width() / 2, node.height() / 2) - \
-               QPointF(node.label.width() / 2, node.label.height() / 2) + \
-               QPointF(2.0, 2.0)
+               QtCore.QPointF(node.width() / 2, node.height() / 2) - \
+               QtCore.QPointF(node.label.width() / 2, node.label.height() / 2) + \
+               QtCore.QPointF(2.0, 2.0)
 
     @staticmethod
     def translatePos(node):
         """
         Translate the given position in yEd coordinates.
         :type node: AbstractNode
-        :rtype: QPointF
+        :rtype: QtCore.QPointF
         """
         # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
         # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
         # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
-        return node.pos() - QPointF(node.width() / 2, node.height() / 2)
+        return node.pos() - QtCore.QPointF(node.width() / 2, node.height() / 2)
 
     #############################################
     #   DOCUMENT GENERATION
@@ -692,7 +692,7 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :type path: str
         """
         # 1) CREATE THE DOCUMENT
-        self.document = QDomDocument()
+        self.document = QtXml.QDomDocument()
         instruction = self.document.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"')
         self.document.appendChild(instruction)
 

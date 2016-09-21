@@ -35,11 +35,9 @@
 
 from jnius import autoclass, cast, detach
 
-from PyQt5.QtCore import Qt, QObject, QThread
-from PyQt5.QtCore import pyqtSlot, pyqtSignal
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QMessageBox
-from PyQt5.QtWidgets import QFrame, QProgressBar, QVBoxLayout, QWidget
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from eddy import BUG_TRACKER
 from eddy.core.datatypes.qt import Font
@@ -96,9 +94,9 @@ class OWLProjectExporter(AbstractProjectExporter):
         return File.Owl
 
 
-class OWLProjectExporterDialog(QDialog):
+class OWLProjectExporterDialog(QtWidgets.QDialog):
     """
-    Extends QDialog providing
+    Extends QtWidgets.QDialog providing
     This class implements the form used to perform Graphol -> OWL ontology translation.
     """
     def __init__(self, project, path, session):
@@ -126,17 +124,17 @@ class OWLProjectExporterDialog(QDialog):
         self.syntaxField.setFixedWidth(300)
         self.syntaxField.setFont(Font('Roboto', 12))
 
-        spacer = QFrame()
-        spacer.setFrameShape(QFrame.HLine)
-        spacer.setFrameShadow(QFrame.Sunken)
+        spacer = QtWidgets.QFrame()
+        spacer.setFrameShape(QtWidgets.QFrame.HLine)
+        spacer.setFrameShadow(QtWidgets.QFrame.Sunken)
 
-        self.progressBar = QProgressBar(self)
-        self.progressBar.setAlignment(Qt.AlignHCenter)
+        self.progressBar = QtWidgets.QProgressBar(self)
+        self.progressBar.setAlignment(QtCore.Qt.AlignHCenter)
         self.progressBar.setRange(0, 100)
         self.progressBar.setValue(0)
 
-        self.formWidget = QWidget(self)
-        self.formLayout = QFormLayout(self.formWidget)
+        self.formWidget = QtWidgets.QWidget(self)
+        self.formLayout = QtWidgets.QFormLayout(self.formWidget)
         self.formLayout.addRow('Syntax', self.syntaxField)
         self.formLayout.addRow(spacer)
         self.formLayout.addRow(self.progressBar)
@@ -145,7 +143,7 @@ class OWLProjectExporterDialog(QDialog):
         # CONFIRMATION AREA
         #################################
 
-        self.confirmationBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(Font('Roboto', 12))
 
@@ -153,13 +151,13 @@ class OWLProjectExporterDialog(QDialog):
         # CONFIGURE LAYOUT
         #################################
 
-        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.formWidget)
-        self.mainLayout.addWidget(self.confirmationBox, 0, Qt.AlignRight)
+        self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
 
         self.setWindowTitle('OWL Export')
-        self.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setFixedSize(self.sizeHint())
 
         connect(self.confirmationBox.accepted, self.run)
@@ -193,7 +191,7 @@ class OWLProjectExporterDialog(QDialog):
     #   SLOTS
     #################################
 
-    @pyqtSlot(Exception)
+    @QtCore.pyqtSlot(Exception)
     def onErrored(self, exception):
         """
         Executed whenever the translation errors.
@@ -202,52 +200,52 @@ class OWLProjectExporterDialog(QDialog):
         self.workerThread.quit()
 
         if isinstance(exception, DiagramMalformedError):
-            msgbox = QMessageBox(self)
-            msgbox.setIconPixmap(QIcon(':/icons/48/ic_warning_black').pixmap(48))
+            msgbox = QtWidgets.QMessageBox(self)
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
             msgbox.setInformativeText('Do you want to see the error in the diagram?')
             msgbox.setText('Malformed expression detected on {0}: {1}'.format(exception.item, exception))
-            msgbox.setStandardButtons(QMessageBox.Yes|QMessageBox.No)
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes|QtWidgets.QMessageBox.No)
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Malformed expression')
             msgbox.exec_()
-            if msgbox.result() == QMessageBox.Yes:
+            if msgbox.result() == QtWidgets.QMessageBox.Yes:
                 self.session.doFocusItem(exception.item)
         else:
             # LOG INTO CONSOLE
             LOGGER.error('OWL2 translation could not be completed', exc_info=1)
             # SHOW A POPUP WITH THE ERROR MESSAGE
-            msgbox = QMessageBox(self)
+            msgbox = QtWidgets.QMessageBox(self)
             msgbox.setDetailedText(format_exception(exception))
-            msgbox.setIconPixmap(QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
             msgbox.setInformativeText('Please <a href="{0}">submit a bug report</a>.'.format(BUG_TRACKER))
-            msgbox.setStandardButtons(QMessageBox.Close)
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
             msgbox.setText('Diagram translation could not be completed!')
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Unhandled exception!')
             msgbox.exec_()
 
         self.reject()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def onCompleted(self):
         """
         Executed whenever the translation completes.
         """
         self.workerThread.quit()
 
-        msgbox = QMessageBox(self)
-        msgbox.setIconPixmap(QIcon(':/icons/48/ic_done_black').pixmap(48))
+        msgbox = QtWidgets.QMessageBox(self)
+        msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
         msgbox.setInformativeText('Do you want to open the OWL ontology?')
-        msgbox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         msgbox.setText('Translation completed!')
-        msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+        msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         msgbox.exec_()
-        if msgbox.result() == QMessageBox.Yes:
+        if msgbox.result() == QtWidgets.QMessageBox.Yes:
             openPath(self.path)
 
         self.accept()
 
-    @pyqtSlot(int, int)
+    @QtCore.pyqtSlot(int, int)
     def onProgress(self, current, total):
         """
         Update the progress bar showing the translation advancement.
@@ -257,19 +255,19 @@ class OWLProjectExporterDialog(QDialog):
         self.progressBar.setRange(0, total)
         self.progressBar.setValue(current)
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def onStarted(self):
         """
         Executed whenever the translation starts.
         """
         self.confirmationBox.setEnabled(False)
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def run(self):
         """
         Perform the Graphol -> OWL translation in a separate thread.
         """
-        self.workerThread = QThread()
+        self.workerThread = QtCore.QThread()
         self.worker = OWLProjectExporterWorker(self.project, self.path, self.syntax())
         self.worker.moveToThread(self.workerThread)
         connect(self.worker.sgnStarted, self.onStarted)
@@ -280,15 +278,15 @@ class OWLProjectExporterDialog(QDialog):
         self.workerThread.start()
 
 
-class OWLProjectExporterWorker(QObject):
+class OWLProjectExporterWorker(QtCore.QObject):
     """
-    Extends QObject providing a worker thread that will perform the OWL ontology generation.
+    Extends QtCore.QObject providing a worker thread that will perform the OWL ontology generation.
     """
-    sgnCompleted = pyqtSignal()
-    sgnErrored = pyqtSignal(Exception)
-    sgnFinished = pyqtSignal()
-    sgnProgress = pyqtSignal(int, int)
-    sgnStarted = pyqtSignal()
+    sgnCompleted = QtCore.pyqtSignal()
+    sgnErrored = QtCore.pyqtSignal(Exception)
+    sgnFinished = QtCore.pyqtSignal()
+    sgnProgress = QtCore.pyqtSignal(int, int)
+    sgnStarted = QtCore.pyqtSignal()
 
     def __init__(self, project, path, syntax):
         """
@@ -1228,7 +1226,7 @@ class OWLProjectExporterWorker(QObject):
     #   MAIN WORKER
     #################################
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def run(self):
         """
         Main worker.

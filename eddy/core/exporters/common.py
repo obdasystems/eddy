@@ -35,10 +35,10 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import QObject
+from PyQt5 import QtCore
 
 
-class AbstractExporter(QObject):
+class AbstractExporter(QtCore.QObject):
     """
     Extends QObject providing the base class for all the exporters.
     """

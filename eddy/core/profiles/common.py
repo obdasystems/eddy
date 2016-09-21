@@ -35,10 +35,10 @@
 
 from abc import ABCMeta, abstractmethod
 
-from PyQt5.QtCore import QObject
+from PyQt5 import QtCore
 
 
-class AbstractProfile(QObject):
+class AbstractProfile(QtCore.QObject):
     """
     Extends QObject providing the base class for all the ontology profiles.
     """

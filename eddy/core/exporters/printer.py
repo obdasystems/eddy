@@ -33,8 +33,8 @@
 ##########################################################################
 
 
-from PyQt5.QtGui import QPainter
-from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
+from PyQt5 import QtGui
+from PyQt5 import QtPrintSupport
 
 from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.items.common import AbstractItem
@@ -61,11 +61,11 @@ class PrinterDiagramExporter(AbstractDiagramExporter):
         """
         shape = self.diagram.visibleRect(margin=20)
         if shape:
-            printer = QPrinter(QPrinter.HighResolution)
-            printer.setOutputFormat(QPrinter.NativeFormat)
-            dialog = QPrintDialog(printer)
-            if dialog.exec_() == QPrintDialog.Accepted:
-                painter = QPainter()
+            printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
+            printer.setOutputFormat(QtPrintSupport.QPrinter.NativeFormat)
+            dialog = QtPrintSupport.QPrintDialog(printer)
+            if dialog.exec_() == QtPrintSupport.QPrintDialog.Accepted:
+                painter = QtGui.QPainter()
                 if painter.begin(printer):
                     # TURN CACHING OFF
                     for item in self.diagram.items():

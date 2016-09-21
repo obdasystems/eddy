@@ -35,9 +35,9 @@
 
 import os
 
-from PyQt5.QtCore import QPointF, QRectF
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtXml import QDomDocument
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
+from PyQt5 import QtXml
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.system import File
@@ -330,8 +330,8 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
                 collection = path.elementsByTagName('y:Point')
                 for i in range(0, collection.count()):
                     point = collection.at(i).toElement()
-                    pos = QPointF(float(point.attribute('x')), float(point.attribute('y')))
-                    pos = QPointF(snapF(pos.x(), Diagram.GridSize), snapF(pos.y(), Diagram.GridSize))
+                    pos = QtCore.QPointF(float(point.attribute('x')), float(point.attribute('y')))
+                    pos = QtCore.QPointF(snapF(pos.x(), Diagram.GridSize), snapF(pos.y(), Diagram.GridSize))
                     points.append(pos)
 
                 source = self.nodes[element.attribute('source')]
@@ -519,10 +519,10 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         :type node: AbstractNode
         :type x: str
         :type y: str
-        :rtype: QPointF
+        :rtype: QtCore.QPointF
         """
         path = node.painterPath()
-        pos = QPointF(float(x), float(y))
+        pos = QtCore.QPointF(float(x), float(y))
         if path.contains(pos):
             return snap(node.mapToScene(pos), Diagram.GridSize)
         return node.anchor(edge)
@@ -533,25 +533,25 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         Parse the node label position properly translating it from yEd coordinate system.
         :type geometry: QDomElement
         :type nodeLabel: QDomElement
-        :rtype: QPointF
+        :rtype: QtCore.QPointF
         """
-        return QPointF(float(nodeLabel.attribute('x')), float(nodeLabel.attribute('y'))) - \
-               QPointF(float(geometry.attribute('width')) / 2, float(geometry.attribute('height')) / 2) + \
-               QPointF(float(nodeLabel.attribute('width')) / 2, float(nodeLabel.attribute('height')) / 2)
+        return QtCore.QPointF(float(nodeLabel.attribute('x')), float(nodeLabel.attribute('y'))) - \
+               QtCore.QPointF(float(geometry.attribute('width')) / 2, float(geometry.attribute('height')) / 2) + \
+               QtCore.QPointF(float(nodeLabel.attribute('width')) / 2, float(nodeLabel.attribute('height')) / 2)
 
     @staticmethod
     def parsePos(geometry):
         """
         Parse the position of the node properly translating it from yEd coordinate system.
         :type geometry: QDomElement
-        :rtype: QPointF
+        :rtype: QtCore.QPointF
         """
         # yEd uses the TOP-LEFT corner as (0,0) coordinate => we need to translate our
         # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
         # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
         # We additionally snap the position to the grid so that items stay perfectly aligned.
-        return snap(QPointF(float(geometry.attribute('x')), float(geometry.attribute('y'))) + \
-                    QPointF(float(geometry.attribute('width')) / 2, float(geometry.attribute('height')) / 2), Diagram.GridSize)
+        return snap(QtCore.QPointF(float(geometry.attribute('x')), float(geometry.attribute('y'))) + \
+                    QtCore.QPointF(float(geometry.attribute('width')) / 2, float(geometry.attribute('height')) / 2), Diagram.GridSize)
 
     #############################################
     #   INTERFACE
@@ -576,7 +576,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         if not fexists(self.path):
             raise DiagramNotFoundError('diagram not found: {0}'.format(self.path))
 
-        document = QDomDocument()
+        document = QtXml.QDomDocument()
         if not document.setContent(fread(self.path)):
             raise DiagramNotValidError('could not parse diagram from {0}'.format(self.path))
 
@@ -610,7 +610,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         name = rstrip(os.path.basename(self.path), File.GraphML.extension)
         path = uniquePath(self.project.path, name, File.GraphML.extension)
         self.diagram = Diagram(path, self.project)
-        self.diagram.setSceneRect(QRectF(-Diagram.MaxSize / 2, -Diagram.MaxSize / 2, Diagram.MaxSize, Diagram.MaxSize))
+        self.diagram.setSceneRect(QtCore.QRectF(-Diagram.MaxSize / 2, -Diagram.MaxSize / 2, Diagram.MaxSize, Diagram.MaxSize))
         self.diagram.setItemIndexMethod(Diagram.NoIndex)
 
         LOGGER.debug('Initialzing empty diagram with size: %s', Diagram.MaxSize)
@@ -622,7 +622,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         element = graph.firstChildElement('node')
         while not element.isNull():
 
-            QApplication.processEvents()
+            QtWidgets.QApplication.processEvents()
 
             try:
                 item = self.itemFromXmlNode(element)
@@ -652,7 +652,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         element = graph.firstChildElement('edge')
         while not element.isNull():
 
-            QApplication.processEvents()
+            QtWidgets.QApplication.processEvents()
 
             try:
                 item = self.itemFromXmlNode(element)
@@ -687,10 +687,10 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         if moveX or moveY:
             collection = [x for x in self.diagram.items() if x.isNode() or x.isEdge()]
             for item in collection:
-                QApplication.processEvents()
+                QtWidgets.QApplication.processEvents()
                 item.moveBy(moveX, moveY)
             for item in collection:
-                QApplication.processEvents()
+                QtWidgets.QApplication.processEvents()
                 if item.isEdge():
                     item.updateEdge()
 
@@ -700,7 +700,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
 
         R3 = self.diagram.visibleRect(margin=20)
         size = int(max(R3.width(), R3.height(), Diagram.MinSize))
-        self.diagram.setSceneRect(QRectF(-size / 2, -size / 2, size, size))
+        self.diagram.setSceneRect(QtCore.QRectF(-size / 2, -size / 2, size, size))
 
         LOGGER.debug('Diagram resized: %s -> %s', Diagram.MaxSize, size)
 

@@ -33,9 +33,9 @@
 ##########################################################################
 
 
-from PyQt5.QtCore import QSizeF
-from PyQt5.QtGui import QPainter, QPageSize
-from PyQt5.QtPrintSupport import QPrinter
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtPrintSupport
 
 from eddy.core.datatypes.system import File
 from eddy.core.exporters.common import AbstractDiagramExporter
@@ -65,12 +65,12 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         """
         shape = self.diagram.visibleRect(margin=20)
         if shape:
-            printer = QPrinter(QPrinter.HighResolution)
-            printer.setOutputFormat(QPrinter.PdfFormat)
+            printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
+            printer.setOutputFormat(QtPrintSupport.QPrinter.PdfFormat)
             printer.setOutputFileName(path)
-            printer.setPaperSize(QPrinter.Custom)
-            printer.setPageSize(QPageSize(QSizeF(shape.width(), shape.height()), QPageSize.Point))
-            painter = QPainter()
+            printer.setPaperSize(QtPrintSupport.QPrinter.Custom)
+            printer.setPageSize(QtGui.QPageSize(QtCore.QSizeF(shape.width(), shape.height()), QtGui.QPageSize.Point))
+            painter = QtGui.QPainter()
             if painter.begin(printer):
                 # TURN CACHING OFF
                 for item in self.diagram.items():

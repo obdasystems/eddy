@@ -35,10 +35,10 @@
 
 import os
 
-from PyQt5.QtCore import QPointF, QRectF
-from PyQt5.QtGui import QBrush, QColor
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtXml import QDomDocument
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
+from PyQt5 import QtXml
 
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
@@ -141,9 +141,9 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         """
         label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.AttributeNode, element)
-        node.setBrush(QBrush(QColor(element.attribute('color', '#fcfcfc'))))
+        node.setBrush(QtGui.QBrush(QtGui.QColor(element.attribute('color', '#fcfcfc'))))
         node.setText(label.text())
-        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return node
 
     def buildComplementNode(self, element):
@@ -162,9 +162,9 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         """
         label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.ConceptNode, element)
-        node.setBrush(QBrush(QColor(element.attribute('color', '#fcfcfc'))))
+        node.setBrush(QtGui.QBrush(QtGui.QColor(element.attribute('color', '#fcfcfc'))))
         node.setText(label.text())
-        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return node
 
     def buildDatatypeRestrictionNode(self, element):
@@ -192,7 +192,7 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.DomainRestrictionNode, element)
         node.setText(label.text())
-        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return node
 
     def buildEnumerationNode(self, element):
@@ -222,9 +222,9 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         """
         label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.IndividualNode, element)
-        node.setBrush(QBrush(QColor(element.attribute('color', '#fcfcfc'))))
+        node.setBrush(QtGui.QBrush(QtGui.QColor(element.attribute('color', '#fcfcfc'))))
         node.setText(label.text())
-        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return node
 
     def buildIntersectionNode(self, element):
@@ -255,7 +255,7 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.RangeRestrictionNode, element)
         node.setText(label.text())
-        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return node
 
     def buildRoleNode(self, element):
@@ -266,9 +266,9 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         """
         label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.RoleNode, element)
-        node.setBrush(QBrush(QColor(element.attribute('color', '#fcfcfc'))))
+        node.setBrush(QtGui.QBrush(QtGui.QColor(element.attribute('color', '#fcfcfc'))))
         node.setText(label.text())
-        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return node
 
     def buildRoleChainNode(self, element):
@@ -298,9 +298,9 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         """
         label = self.getLabelFromElement(element)
         node = self.buildGenericNode(Item.ValueDomainNode, element)
-        node.setBrush(QBrush(QColor(element.attribute('color', '#fcfcfc'))))
+        node.setBrush(QtGui.QBrush(QtGui.QColor(element.attribute('color', '#fcfcfc'))))
         node.setText(label.text())
-        node.setTextPos(node.mapFromScene(QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
         return node
 
     def buildUnionNode(self, element):
@@ -363,7 +363,7 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         points = []
         point = self.getPointInsideElement(element)
         while not point.isNull():
-            points.append(QPointF(int(point.attribute('x')), int(point.attribute('y'))))
+            points.append(QtCore.QPointF(int(point.attribute('x')), int(point.attribute('y'))))
             point = self.getPointBesideElement(point)
 
         edge = self.diagram.factory.create(item, **{
@@ -399,7 +399,7 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
             'width': int(geometry.attribute('width'))
         })
 
-        node.setPos(QPointF(int(geometry.attribute('x')), int(geometry.attribute('y'))))
+        node.setPos(QtCore.QPointF(int(geometry.attribute('x')), int(geometry.attribute('y'))))
         return node
 
     @staticmethod
@@ -496,7 +496,7 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         if not fexists(self.path):
             raise DiagramNotFoundError('diagram not found: {0}'.format(self.path))
 
-        document = QDomDocument()
+        document = QtXml.QDomDocument()
         if not document.setContent(fread(self.path)):
             raise DiagramNotValidError('could not parse diagram from {0}'.format(self.path))
 
@@ -509,7 +509,7 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         #################################
 
         self.diagram = Diagram(self.path, self.project)
-        self.diagram.setSceneRect(QRectF(-size / 2, -size / 2, size, size))
+        self.diagram.setSceneRect(QtCore.QRectF(-size / 2, -size / 2, size, size))
         self.diagram.setItemIndexMethod(Diagram.NoIndex)
 
         LOGGER.debug('Initialzing empty diagram with size: %s', size)
@@ -521,7 +521,7 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         element = graph.firstChildElement('node')
         while not element.isNull():
 
-            QApplication.processEvents()
+            QtWidgets.QApplication.processEvents()
 
             try:
                 item = self.itemFromGrapholNode(element)
@@ -545,7 +545,7 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         element = graph.firstChildElement('edge')
         while not element.isNull():
 
-            QApplication.processEvents()
+            QtWidgets.QApplication.processEvents()
 
             try:
                 item = self.itemFromGrapholNode(element)
@@ -702,14 +702,14 @@ class GrapholProjectLoader(AbstractProjectLoader):
         Initialize the project instance by reading project metadata from XML file.
         :raise ProjectNotValidError: If the project metadata file is missing or not readable.
         """
-        QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
         LOGGER.info('Loading project metadata from %s', self.projectMetaDataPath)
 
         if not fexists(self.projectMetaDataPath):
             raise ProjectNotValidError('missing project metadata: {0}'.format(self.projectMetaDataPath))
 
-        self.metaDocument = QDomDocument()
+        self.metaDocument = QtXml.QDomDocument()
         if not self.metaDocument.setContent(fread(self.projectMetaDataPath)):
             raise ProjectNotValidError('could read project metadata from {0}'.format(self.projectMetaDataPath))
 
@@ -732,7 +732,7 @@ class GrapholProjectLoader(AbstractProjectLoader):
         """
         Import predicate metadata from XML file.
         """
-        QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
         #############################################
         # LOAD PREDICATE METADATA
@@ -746,7 +746,7 @@ class GrapholProjectLoader(AbstractProjectLoader):
         predicate = predicates.firstChildElement('predicate')
         while not predicate.isNull():
 
-            QApplication.processEvents()
+            QtWidgets.QApplication.processEvents()
 
             try:
                 item = self.itemFromXml[predicate.attribute('type')]
@@ -772,14 +772,14 @@ class GrapholProjectLoader(AbstractProjectLoader):
         Import project modules from XML file.
         :raise ProjectNotValidError: If the project structure file is missing or not readable.
         """
-        QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
         LOGGER.info('Loading project structure from %s', self.projectModulesDataPath)
 
         if not fexists(self.projectModulesDataPath):
             raise ProjectNotValidError('missing project structure: {0}'.format(self.projectModulesDataPath))
 
-        self.modulesDocument = QDomDocument()
+        self.modulesDocument = QtXml.QDomDocument()
         if not self.modulesDocument.setContent(fread(self.projectModulesDataPath)):
             raise ProjectNotValidError('could read project structure from {0}'.format(self.projectModulesDataPath))
 
@@ -789,7 +789,7 @@ class GrapholProjectLoader(AbstractProjectLoader):
         module = modules.firstChildElement('module')
         while not module.isNull():
 
-            QApplication.processEvents()
+            QtWidgets.QApplication.processEvents()
 
             name = module.text()
             path = os.path.join(self.project.path, name)

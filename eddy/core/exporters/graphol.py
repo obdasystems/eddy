@@ -32,9 +32,10 @@
 #                                                                        #
 ##########################################################################
 
+
 import os
 
-from PyQt5.QtXml import QDomDocument
+from PyQt5 import QtXml
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
@@ -366,7 +367,7 @@ class GrapholDiagramExporter(AbstractDiagramExporter):
         :type path: str
         """
         # 1) CREATE THE DOCUMENT
-        self.document = QDomDocument()
+        self.document = QtXml.QDomDocument()
         instruction = self.document.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"')
         self.document.appendChild(instruction)
         
@@ -545,7 +546,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
         Export project items' matadata to XML file.
         """
         # 1) CREATE DOCUMENT
-        self.metaDocument = QDomDocument()
+        self.metaDocument = QtXml.QDomDocument()
         instruction = self.metaDocument.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"')
         self.metaDocument.appendChild(instruction)
 
@@ -583,7 +584,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
         Export the list of diagrams in this project to XML file.
         """
         # 1) CREATE DOCUMENT
-        self.modulesDocument = QDomDocument()
+        self.modulesDocument = QtXml.QDomDocument()
         instruction = self.modulesDocument.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"')
         self.modulesDocument.appendChild(instruction)
 
