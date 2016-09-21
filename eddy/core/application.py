@@ -194,6 +194,16 @@ class Eddy(QtWidgets.QApplication):
         fontDB.addApplicationFont(':/fonts/RobotoCondensed-Light')
         fontDB.addApplicationFont(':/fonts/RobotoCondensed-LightItalic')
         fontDB.addApplicationFont(':/fonts/RobotoCondensed-Regular')
+        fontDB.addApplicationFont(':/fonts/RobotoMono-Bold')
+        fontDB.addApplicationFont(':/fonts/RobotoMono-BoldItalic')
+        fontDB.addApplicationFont(':/fonts/RobotoMono-Italic')
+        fontDB.addApplicationFont(':/fonts/RobotoMono-Light')
+        fontDB.addApplicationFont(':/fonts/RobotoMono-LightItalic')
+        fontDB.addApplicationFont(':/fonts/RobotoMono-Medium')
+        fontDB.addApplicationFont(':/fonts/RobotoMono-MediumItalic')
+        fontDB.addApplicationFont(':/fonts/RobotoMono-Regular')
+        fontDB.addApplicationFont(':/fonts/RobotoMono-Thin')
+        fontDB.addApplicationFont(':/fonts/RobotoMono-ThinItalic')
 
         self.setFont(Font('Roboto', 12))
 

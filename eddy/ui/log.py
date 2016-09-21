@@ -65,7 +65,7 @@ class LogDialog(QtWidgets.QDialog):
         self.messageArea = QtWidgets.QPlainTextEdit(self)
         self.messageArea.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
         self.messageArea.setContentsMargins(10, 0, 0, 0)
-        self.messageArea.setFont(Font('Courier New', 12))
+        self.messageArea.setFont(Font('Roboto Mono', 11))
         self.messageArea.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
         self.messageArea.setMinimumSize(800, 500)
         self.highlighter = LogHighlighter(self.messageArea.document())
