@@ -119,7 +119,7 @@ class Welcome(QtWidgets.QWidget):
         self.appName.setFont(Font('Roboto', 30, capitalization=Font.SmallCaps))
         self.appName.setProperty('class', 'appname')
         self.appVersion = QtWidgets.QLabel('Version: {0}'.format(VERSION), self)
-        self.appVersion.setFont(Font('Roboto', 18))
+        self.appVersion.setFont(Font('Roboto', 16))
         self.appVersion.setProperty('class', 'version')
 
         self.buttonNewProject = PHCQPushButton(self)
