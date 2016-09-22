@@ -1843,6 +1843,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             # DISPOSE ALL THE PLUGINS
             for plugin in self.plugins():
                 self.pmanager.dispose(plugin)
+            self.pmanager.clear()
             # SHUTDOWN THE ACTIVE SESSION
             self.sgnClosed.emit()
             closeEvent.accept()

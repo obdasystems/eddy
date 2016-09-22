@@ -171,6 +171,28 @@ class InfoPlugin(AbstractPlugin):
     #   HOOKS
     #################################
 
+    def dispose(self):
+        """
+        Executed whenever the plugin is going to be destroyed.
+        """
+        # DISCONNECT FROM CURRENT PROJECT
+        self.debug('Disconnecting from project: %s', self.project.name)
+        disconnect(self.project.sgnUpdated, self.onProjectUpdated)
+
+        # DISCONNECT FROM ACTIVE SESSION
+        self.debug('Disconnecting from active session')
+        disconnect(self.session.sgnReady, self.onSessionReady)
+        disconnect(self.session.mdi.subWindowActivated, self.onSubWindowActivated)
+
+        # REMOVE DOCKING AREA WIDGET MENU ENTRY
+        self.debug('Removing docking area widget toggle from "view" menu')
+        menu = self.session.menu('view')
+        menu.removeAction(self.widget('info_dock').toggleViewAction())
+
+        # UNINSTALL THE PALETTE DOCK WIDGET
+        self.debug('Uninstalling docking area widget')
+        self.session.removeDockWidget(self.widget('info_dock'))
+
     def start(self):
         """
         Perform initialization tasks for the plugin.
@@ -195,14 +217,14 @@ class InfoPlugin(AbstractPlugin):
         menu = self.session.menu('view')
         menu.addAction(self.widget('info_dock').toggleViewAction())
 
-        # CONFIGURE SIGNAL/SLOTS
-        self.debug('Configuring session and MDI area specific signals')
-        connect(self.session.sgnReady, self.onSessionReady)
-        connect(self.session.mdi.subWindowActivated, self.onSubWindowActivated)
-
         # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
         self.session.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.widget('info_dock'))
+
+        # CONFIGURE SIGNAL/SLOTS
+        self.debug('Connecting to active session')
+        connect(self.session.sgnReady, self.onSessionReady)
+        connect(self.session.mdi.subWindowActivated, self.onSubWindowActivated)
 
 
 class InfoWidget(QtWidgets.QScrollArea):

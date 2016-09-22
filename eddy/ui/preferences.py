@@ -33,6 +33,8 @@
 ##########################################################################
 
 
+import textwrap
+
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
@@ -42,7 +44,7 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.signals import connect
 
-from eddy.ui.fields import SpinBox
+from eddy.ui.fields import CheckBox, SpinBox
 
 
 class PreferencesDialog(QtWidgets.QDialog):
@@ -54,7 +56,7 @@ class PreferencesDialog(QtWidgets.QDialog):
         Initialize the Preferences dialog.
         :type session: Session
         """
-        super().__init__(session)
+        super(PreferencesDialog, self).__init__(session)
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
 
@@ -69,7 +71,7 @@ class PreferencesDialog(QtWidgets.QDialog):
         self.diagramSizeField.setFont(Font('Roboto', 12))
         self.diagramSizeField.setRange(Diagram.MinSize, Diagram.MaxSize)
         self.diagramSizeField.setSingleStep(100)
-        self.diagramSizeField.setToolTip('This setting changes the default size of all the new created diagrams.')
+        self.diagramSizeField.setToolTip('Default size of all the new created diagrams.')
         self.diagramSizeField.setValue(settings.value('diagram/size', 5000, int))
 
         self.editorWidget = QtWidgets.QWidget()
@@ -80,15 +82,18 @@ class PreferencesDialog(QtWidgets.QDialog):
         # PLUGINS TAB
         #################################
 
-        self.pluginsTable = QtWidgets.QTableWidget(len(self.session.plugins()), 4, self)
-        self.pluginsTable.setHorizontalHeaderLabels(['Name', 'Version', 'Author', 'Contact'])
+        self.pluginsUninstall = dict()
+        self.pluginsTable = QtWidgets.QTableWidget(len(self.session.plugins()), 5, self)
+        self.pluginsTable.setHorizontalHeaderLabels(['Name', 'Version', 'Author', 'Contact', 'Uninstall'])
         self.pluginsTable.setFont(Font('Roboto', 12))
         self.pluginsTable.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+
         header = self.pluginsTable.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Fixed)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Fixed)
         header.setSectionsClickable(False)
         header.setSectionsMovable(False)
         header = self.pluginsTable.verticalHeader()
@@ -107,6 +112,15 @@ class PreferencesDialog(QtWidgets.QDialog):
             item = QtWidgets.QTableWidgetItem(plugin.contact())
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             self.pluginsTable.setItem(row, 3, item)
+            p_widget = QtWidgets.QWidget()
+            p_checkbox = CheckBox()
+            p_checkbox.setEnabled(not plugin.isBuiltIn())
+            p_layout = QtWidgets.QHBoxLayout(p_widget)
+            p_layout.addWidget(p_checkbox)
+            p_layout.setAlignment(QtCore.Qt.AlignCenter)
+            p_layout.setContentsMargins(0, 0, 0, 0)
+            self.pluginsTable.setCellWidget(row, 4, p_widget)
+            self.pluginsUninstall[plugin] = p_checkbox
 
         self.pluginsWidget = QtWidgets.QWidget()
         self.pluginsLayout = QtWidgets.QHBoxLayout(self.pluginsWidget)
@@ -116,7 +130,7 @@ class PreferencesDialog(QtWidgets.QDialog):
         # CONFIRMATION BOX
         #################################
 
-        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Save | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(Font('Roboto', 12))
 
@@ -160,7 +174,36 @@ class PreferencesDialog(QtWidgets.QDialog):
         """
         Executed when the dialog is accepted.
         """
+        #############################################
+        # PLUGINS TAB
+        #################################
+
+        plugins_to_uninstall = [plugin for plugin, checkbox in self.pluginsUninstall.items() if checkbox.isChecked()]
+        if plugins_to_uninstall:
+            plugins_to_uninstall_fmt = []
+            for plugin in plugins_to_uninstall:
+                plugins_to_uninstall_fmt.append('&nbsp;&nbsp;&nbsp;&nbsp;- {0} v{1}'.format(plugin.name(), plugin.version()))
+            msgbox = QtWidgets.QMessageBox(self)
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
+            msgbox.setInformativeText('<b>NOTE: This action is not reversible!</b>')
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.No|QtWidgets.QMessageBox.Yes)
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Are you sure?')
+            msgbox.setText(textwrap.dedent("""You marked the following plugins for uninstall:<br/><br/>
+            {0}<br/><br/>Are you sure you want to continue?""".format('<br/>'.join(plugins_to_uninstall_fmt))))
+            msgbox.exec_()
+            if msgbox.result() == QtWidgets.QMessageBox.No:
+                return
+
+        for plugin in plugins_to_uninstall:
+            self.session.pmanager.uninstall(plugin)
+
+        #############################################
+        # EDITOR TAB
+        #################################
+
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         settings.setValue('diagram/size', self.diagramSizeField.value())
         settings.sync()
-        super().accept()
+
+        super(PreferencesDialog, self).accept()

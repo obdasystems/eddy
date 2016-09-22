@@ -68,6 +68,29 @@ class ProjectExplorerPlugin(AbstractPlugin):
     #   HOOKS
     #################################
 
+    def dispose(self):
+        """
+        Executed whenever the plugin is going to be destroyed.
+        """
+        # DISCONNECT FROM CURRENT PROJECT
+        widget = self.widget('project_explorer')
+        self.debug('Disconnecting from project: %s', self.project.name)
+        disconnect(self.project.sgnDiagramAdded, widget.doAddDiagram)
+        disconnect(self.project.sgnDiagramRemoved, widget.doRemoveDiagram)
+
+        # DISCONNECT FROM ACTIVE SESSION
+        self.debug('Disconnecting from active session')
+        disconnect(self.session.sgnReady, self.onSessionReady)
+
+        # REMOVE DOCKING AREA WIDGET MENU ENTRY
+        self.debug('Removing docking area widget toggle from "view" menu')
+        menu = self.session.menu('view')
+        menu.removeAction(self.widget('project_explorer_dock').toggleViewAction())
+
+        # UNINSTALL THE PALETTE DOCK WIDGET
+        self.debug('Uninstalling docking area widget')
+        self.session.removeDockWidget(self.widget('project_explorer_dock'))
+
     def start(self):
         """
         Perform initialization tasks for the plugin.
@@ -92,7 +115,7 @@ class ProjectExplorerPlugin(AbstractPlugin):
         menu.addAction(self.widget('project_explorer_dock').toggleViewAction())
 
         # CONFIGURE SIGNALS/SLOTS
-        self.debug('Configuring session specific signals')
+        self.debug('Connecting to active session')
         connect(self.session.sgnReady, self.onSessionReady)
 
         # INSTALL DOCKING AREA WIDGET

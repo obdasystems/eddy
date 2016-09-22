@@ -123,6 +123,30 @@ class OverviewPlugin(AbstractPlugin):
     #   HOOKS
     #################################
 
+    def dispose(self):
+        """
+        Executed whenever the plugin is going to be destroyed.
+        """
+        # DISCONNECT FROM THE ACTIVE DIAGRAM
+        widget = self.widget('overview')
+        if widget.view():
+            self.debug('Disconnecting from diagram: %s', widget.diagram.name)
+            disconnect(widget.diagram.selectionChanged, self.onDiagramSelectionChanged)
+            disconnect(widget.diagram.sgnUpdated, self.onDiagramUpdated)
+
+        # DISCONNECT FROM ACTIVE SESSION
+        self.debug('Disconnecting to active session')
+        disconnect(self.session.mdi.subWindowActivated, self.onSubWindowActivated)
+
+        # REMOVE DOCKING AREA WIDGET MENU ENTRY
+        self.debug('Removing docking area widget toggle from "view" menu')
+        menu = self.session.menu('view')
+        menu.removeAction(self.widget('overview_dock').toggleViewAction())
+
+        # UNINSTALL THE PALETTE DOCK WIDGET
+        self.debug('Uninstalling docking area widget')
+        self.session.removeDockWidget(self.widget('overview_dock'))
+
     def start(self):
         """
         Perform initialization tasks for the plugin.
@@ -148,7 +172,7 @@ class OverviewPlugin(AbstractPlugin):
         menu.addAction(self.widget('overview_dock').toggleViewAction())
 
         # CONFIGURE SIGNALS/SLOTS
-        self.debug('Configuring MDI area specific signals')
+        self.debug('Connecting to active session')
         connect(self.session.mdi.subWindowActivated, self.onSubWindowActivated)
 
         # CREATE DOCKING AREA WIDGET

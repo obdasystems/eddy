@@ -78,6 +78,29 @@ class OntologyExplorerPlugin(AbstractPlugin):
     #   HOOKS
     #################################
 
+    def dispose(self):
+        """
+        Executed whenever the plugin is going to be destroyed.
+        """
+        # DISCONNECT FROM CURRENT PROJECT
+        widget = self.widget('ontology_explorer')
+        self.debug('Disconnecting from project: %s', self.project.name)
+        disconnect(self.project.sgnItemAdded, widget.doAddNode)
+        disconnect(self.project.sgnItemRemoved, widget.doRemoveNode)
+
+        # DISCONNECT FROM ACTIVE SESSION
+        self.debug('Disconnecting from active session')
+        disconnect(self.session.sgnReady, self.onSessionReady)
+
+        # REMOVE DOCKING AREA WIDGET MENU ENTRY
+        self.debug('Removing docking area widget toggle from "view" menu')
+        menu = self.session.menu('view')
+        menu.removeAction(self.widget('ontology_explorer_dock').toggleViewAction())
+
+        # UNINSTALL THE PALETTE DOCK WIDGET
+        self.debug('Uninstalling docking area widget')
+        self.session.removeDockWidget(self.widget('ontology_explorer_dock'))
+
     def start(self):
         """
         Perform initialization tasks for the plugin.

@@ -148,6 +148,34 @@ class PalettePlugin(AbstractPlugin):
     #   HOOKS
     #################################
 
+    def dispose(self):
+        """
+        Executed whenever the plugin is going to be destroyed.
+        """
+        # DISCONNECT FROM ALL THE DIAGRAMS
+        for diagram in self.project.diagrams():
+            self.debug('Disconnecting from diagrams: %s', diagram.name)
+            disconnect(diagram.sgnItemInsertionCompleted, self.onDiagramItemInsertionCompleted)
+            disconnect(diagram.sgnModeChanged, self.onDiagramModeChanged)
+
+        # DISCONNECT FROM CURRENT PROJECT
+        self.debug('Disconnecting from project: %s', self.project.name)
+        disconnect(self.project.sgnDiagramAdded, self.onDiagramAdded)
+        disconnect(self.project.sgnDiagramRemoved, self.onDiagramRemoved)
+
+        # DISCONNECT FROM ACTIVE SESSION
+        self.debug('Disconnecting from active session')
+        disconnect(self.session.sgnReady, self.onSessionReady)
+
+        # REMOVE DOCKING AREA WIDGET MENU ENTRY
+        self.debug('Removing docking area widget toggle from "view" menu')
+        menu = self.session.menu('view')
+        menu.removeAction(self.widget('palette_dock').toggleViewAction())
+
+        # UNINSTALL THE PALETTE DOCK WIDGET
+        self.debug('Uninstalling docking area widget')
+        self.session.removeDockWidget(self.widget('palette_dock'))
+
     def start(self):
         """
         Perform initialization tasks for the plugin.
@@ -199,16 +227,17 @@ class PalettePlugin(AbstractPlugin):
         self.addWidget(widget)
 
         # CREATE ENTRY IN VIEW MENU
-        self.debug('Creating docking area toggle in "view" menu')
+        self.debug('Creating docking area widget toggle in "view" menu')
         menu = self.session.menu('view')
         menu.addAction(self.widget('palette_dock').toggleViewAction())
-
-        self.debug('Configuring session specific signals')
-        connect(self.session.sgnReady, self.onSessionReady)
 
         # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
         self.session.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.widget('palette_dock'))
+
+        # LISTEN FOR SESSION READY SIGNAL
+        self.debug('Connecting to active session')
+        connect(self.session.sgnReady, self.onSessionReady)
 
 
 class PaletteWidget(QtWidgets.QWidget):

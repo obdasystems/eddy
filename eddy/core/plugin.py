@@ -33,6 +33,7 @@
 ##########################################################################
 
 
+import inspect
 import os
 import re
 
@@ -47,9 +48,10 @@ from PyQt5 import QtCore
 
 from eddy.core.common import HasActionSystem, HasMenuSystem, HasWidgetSystem
 from eddy.core.datatypes.system import File
-from eddy.core.functions.misc import rstrip
-from eddy.core.functions.fsystem import fcopy, fexists, fread, is_dir, mkdir
-from eddy.core.functions.path import expandPath
+from eddy.core.functions.misc import first, lstrip, rstrip
+from eddy.core.functions.fsystem import fcopy, fexists, fread, fremove
+from eddy.core.functions.fsystem import is_dir, mkdir, rmdir
+from eddy.core.functions.path import expandPath, isSubPath
 from eddy.core.output import getLogger
 
 
@@ -116,6 +118,13 @@ class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasWidgetSy
         """
         return self.spec.get('plugin', 'id')
 
+    def isBuiltIn(self):
+        """
+        Returns True if this plugin is a built-in one, False otherwise.
+        :rtype: bool
+        """
+        return isSubPath('@plugins/', inspect.getfile(self.__class__))
+
     def name(self):
         """
         Returns the name of the plugin.
@@ -129,6 +138,16 @@ class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasWidgetSy
         :rtype: str
         """
         return self.spec.get('plugin', 'id')
+
+    def path(self):
+        """
+        Returns the path to the the plugin (either a directory of a ZIP file).
+        :rtype: str
+        """
+        path = lstrip(inspect.getfile(self.__class__), expandPath('@plugins/'), expandPath('@home/plugins/'))
+        home = first(filter(None, path.split(os.path.sep)))
+        root = expandPath('@plugins/' if self.isBuiltIn() else '@home/plugins/')
+        return os.path.join(root, home)
 
     @classmethod
     def subclasses(cls):
@@ -270,6 +289,12 @@ class PluginManager(QtCore.QObject):
     #   INTERFACE
     #################################
 
+    def clear(self):
+        """
+        Remove all the plugins from the active Session.
+        """
+        self.session.clearPlugins()
+
     def create(self, clazz, spec):
         """
         Create an instance of the given plugin.
@@ -286,7 +311,7 @@ class PluginManager(QtCore.QObject):
         :type plugin: AbstractPlugin
         :rtype: bool
         """
-        LOGGER.debug('Disposing plugin: %s v%s', plugin.name(), plugin.version())
+        LOGGER.info('Disposing plugin: %s v%s', plugin.name(), plugin.version())
         try:
             plugin.dispose()
         except Exception:
@@ -515,6 +540,19 @@ class PluginManager(QtCore.QObject):
         else:
             self.session.sgnPluginStarted.emit(plugin.id())
             return True
+
+    def uninstall(self, plugin):
+        """
+        Uninstall the given plugin.
+        :type plugin: AbstractPlugin
+        """
+        if self.dispose(plugin):
+            self.session.removePlugin(plugin)
+            path = plugin.path()
+            if is_dir(path):
+                rmdir(path)
+            elif fexists(path):
+                fremove(path)
 
 
 class PluginError(RuntimeError):

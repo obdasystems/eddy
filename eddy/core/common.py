@@ -96,6 +96,13 @@ class HasActionSystem(object):
         for action in actions:
             self.addAction(action)
 
+    def clearActions(self):
+        """
+        Remove all the actions.
+        """
+        self._actionDict.clear()
+        self._actionList.clear()
+
     def insertAction(self, action, before):
         """
         Insert the given QAction or QActionGroup before the given one.
@@ -169,6 +176,13 @@ class HasMenuSystem(object):
         """
         for menu in menus:
             self.addMenu(menu)
+
+    def clearMenus(self):
+        """
+        Remove all the menus.
+        """
+        self._menuDict.clear()
+        self._menuList.clear()
 
     def insertMenu(self, menu, before):
         """
@@ -259,6 +273,13 @@ class HasPluginSystem(object):
         for plugin in plugins:
             self.addPlugin(plugin)
 
+    def clearPlugins(self):
+        """
+        Remove all the plugins.
+        """
+        self._pluginDict.clear()
+        self._pluginList.clear()
+
     def insertPlugin(self, widget, before):
         """
         Insert the given plugin before the given one.
@@ -348,6 +369,13 @@ class HasWidgetSystem(object):
         for widget in widgets:
             self.addWidget(widget)
 
+    def clearWidgets(self):
+        """
+        Remove all the widgets.
+        """
+        self._widgetDict.clear()
+        self._widgetList.clear()
+
     def insertWidget(self, widget, before):
         """
         Insert the given QWidget before the given one.
@@ -435,6 +463,13 @@ class HasDiagramExportSystem(object):
         """
         for exporter in exporters:
             self.addDiagramExporter(exporter)
+
+    def clearDiagramExporters(self):
+        """
+        Remove all the diagram exporters.
+        """
+        self._diagramExporterDict.clear()
+        self._diagramExporterList.clear()
 
     def createDiagramExporter(self, filetype, diagram, session=None):
         """
@@ -551,6 +586,13 @@ class HasProjectExportSystem(object):
         for exporter in exporters:
             self.addProjectExporter(exporter)
 
+    def clearProjectExporters(self):
+        """
+        Remove all the project exporters.
+        """
+        self._projectExporterDict.clear()
+        self._projectExporterList.clear()
+
     def createProjectExporter(self, filetype, project, session=None):
         """
         Creates an instance of a project exporter for the given filetype.
@@ -665,6 +707,13 @@ class HasDiagramLoadSystem(object):
         """
         for loader in loaders:
             self.addDiagramLoader(loader)
+
+    def clearDiagramLoaders(self):
+        """
+        Remove all the diagram loaders.
+        """
+        self._diagramLoaderDict.clear()
+        self._diagramLoaderList.clear()
 
     def createDiagramLoader(self, filetype, path, project, session=None):
         """
@@ -782,6 +831,13 @@ class HasProjectLoadSystem(object):
         for loader in loaders:
             self.addProjectLoader(loader)
 
+    def clearProjectLoaders(self):
+        """
+        Remove all the project loaders.
+        """
+        self._projectLoaderDict.clear()
+        self._projectLoaderList.clear()
+
     def createProjectLoader(self, filetype, path, session=None):
         """
         Creates an instance of a diagram loader for the given filetype.
@@ -895,6 +951,13 @@ class HasProfileSystem(object):
         """
         for profile in profiles:
             self.addProfile(profile)
+
+    def clearProfiles(self):
+        """
+        Remove all the profiles.
+        """
+        self._profileDict.clear()
+        self._profileList.clear()
 
     def createProfile(self, name, project=None):
         """

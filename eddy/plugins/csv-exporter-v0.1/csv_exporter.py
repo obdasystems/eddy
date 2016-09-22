@@ -55,10 +55,19 @@ class CsvExporterPlugin(AbstractPlugin):
     #   HOOKS
     #################################
 
+    def dispose(self):
+        """
+        Executed whenever the plugin is going to be destroyed.
+        """
+        # UNINSTALL THE EXPORTER
+        self.debug('Uninstalling CSV file format exporter')
+        self.session.removeProjectExporter(CsvExporter)
+
     def start(self):
         """
         Perform initialization tasks for the plugin.
         """
+        # INSTALL THE EXPORTER
         self.debug('Installing CSV file format exporter')
         self.session.addProjectExporter(CsvExporter)
 

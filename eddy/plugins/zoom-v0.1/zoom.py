@@ -57,6 +57,7 @@ class ZoomPlugin(AbstractPlugin):
         :type session: session
         """
         super().__init__(spec, session)
+        self.afwset = set()
         self.level = DiagramView.ZoomDefault
         self.levels = [x for x in rangeF(DiagramView.ZoomMin, DiagramView.ZoomMax + DiagramView.ZoomStep, DiagramView.ZoomStep)]
         self.view = None
@@ -179,6 +180,26 @@ class ZoomPlugin(AbstractPlugin):
     #   HOOKS
     #################################
 
+    def dispose(self):
+        """
+        Executed whenever the plugin is going to be destroyed.
+        """
+        # DISCONNECT FROM THE ACTIVE DIAGRAM
+        if self.view:
+            self.debug('Disconnecting from diagram: %s', self.view.diagram.name)
+            disconnect(self.sgnChanged, self.view.onZoomChanged)
+            disconnect(self.view.sgnScaled, self.onScaleChanged)
+
+        # DISCONNECT FROM ACTIVE SESSION
+        self.debug('Disconnecting to active session')
+        disconnect(self.session.mdi.subWindowActivated, self.onSubWindowActivated)
+        disconnect(self.session.sgnUpdateState, self.doUpdateState)
+
+        # UNINSTALL THE PALETTE DOCK WIDGET
+        self.debug('Uninstalling zoom controls from "view" toolbar')
+        for action in self.afwset:
+            self.session.widget('view_toolbar').removeAction(action)
+
     def start(self):
         """
         Perform initialization tasks for the plugin.
@@ -206,7 +227,7 @@ class ZoomPlugin(AbstractPlugin):
 
         # CREATE VIEW TOOLBAR BUTTONS
         self.debug('Installing zoom controls in "view" toolbar')
-        self.session.widget('view_toolbar').addSeparator()
-        self.session.widget('view_toolbar').addWidget(self.widget('button_zoom_out'))
-        self.session.widget('view_toolbar').addWidget(self.widget('button_zoom_in'))
-        self.session.widget('view_toolbar').addWidget(self.widget('button_zoom_reset'))
+        self.afwset.add(self.session.widget('view_toolbar').addSeparator())
+        self.afwset.add(self.session.widget('view_toolbar').addWidget(self.widget('button_zoom_out')))
+        self.afwset.add(self.session.widget('view_toolbar').addWidget(self.widget('button_zoom_in')))
+        self.afwset.add(self.session.widget('view_toolbar').addWidget(self.widget('button_zoom_reset')))
