@@ -192,8 +192,8 @@ class PreferencesDialog(QtWidgets.QDialog):
         plugins_to_uninstall = [plugin for plugin, checkbox in self.pluginsUninstall.items() if checkbox.isChecked()]
         if plugins_to_uninstall:
             plugins_to_uninstall_fmt = []
-            for plugin in plugins_to_uninstall:
-                plugins_to_uninstall_fmt.append('&nbsp;&nbsp;&nbsp;&nbsp;- {0} v{1}'.format(plugin.name(), plugin.version()))
+            for p in plugins_to_uninstall:
+                plugins_to_uninstall_fmt.append('&nbsp;&nbsp;&nbsp;&nbsp;- {0} v{1}'.format(p.name(), p.version()))
             msgbox = QtWidgets.QMessageBox(self)
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
             msgbox.setInformativeText('<b>NOTE: This action is not reversible!</b>')
