@@ -437,7 +437,7 @@ class OntologyExplorerView(QtWidgets.QTreeView):
                 node = item.data()
                 if node:
                     self.widget.sgnItemRightClicked.emit(node)
-                    menu = self.session.mf.create(node.diagram, node)
+                    menu = self.session.mf.create(node.diagram, [node])
                     menu.exec_(mouseEvent.screenPos().toPoint())
 
         super().mouseReleaseEvent(mouseEvent)
