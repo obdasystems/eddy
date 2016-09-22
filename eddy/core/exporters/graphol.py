@@ -42,7 +42,11 @@ from eddy.core.datatypes.system import File
 from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.exporters.common import AbstractProjectExporter
 from eddy.core.functions.fsystem import fwrite, mkdir
+from eddy.core.output import getLogger
 from eddy.core.project import Project
+
+
+LOGGER = getLogger(__name__)
 
 
 class GrapholDiagramExporter(AbstractDiagramExporter):
@@ -366,6 +370,8 @@ class GrapholDiagramExporter(AbstractDiagramExporter):
         Perform Graphol document generation.
         :type path: str
         """
+        LOGGER.info('Exporting diagram %s in PDF format: %s', self.diagram.name, path)
+
         # 1) CREATE THE DOCUMENT
         self.document = QtXml.QDomDocument()
         instruction = self.document.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"')

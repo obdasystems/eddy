@@ -50,7 +50,7 @@ from eddy import APPNAME, APPID, BUG_TRACKER, COPYRIGHT
 from eddy import DIAG_HOME, GRAPHOL_HOME, LICENSE
 from eddy import ORGANIZATION, PROJECT_HOME, VERSION
 from eddy.core.functions.misc import rstrip
-from eddy.core.functions.fsystem import fexists, fremove, is_dir
+from eddy.core.functions.fsystem import fexists, fremove, isdir
 from eddy.core.functions.fsystem import mkdir, rmdir
 from eddy.core.functions.path import expandPath
 
@@ -178,11 +178,11 @@ class BuildExe(cx_Freeze.build_exe):
         """
         Package built-in plugins into ZIP archives.
         """
-        if is_dir('@plugins/'):
+        if isdir('@plugins/'):
             mkdir(os.path.join(self.build_exe, 'plugins'))
             for file_or_directory in os.listdir(expandPath('@plugins/')):
                 plugin = os.path.join(expandPath('@plugins/'), file_or_directory)
-                if is_dir(plugin):
+                if isdir(plugin):
                     distutils.log.info('packaging plugin: %s', file_or_directory)
                     zippath = os.path.join(self.build_exe, 'plugins', '%s.zip' % file_or_directory)
                     with zipfile.ZipFile(zippath, 'w', zipfile.ZIP_STORED) as zipf:
@@ -267,7 +267,7 @@ class BuildExe(cx_Freeze.build_exe):
             for root, dirs, files in os.walk(self.build_exe):
                 for filename in files:
                     path = expandPath(os.path.join(root, filename))
-                    if not is_dir(path) and path.rsplit('.', 1)[-1] in ('txt', 'md'):
+                    if not isdir(path) and path.rsplit('.', 1)[-1] in ('txt', 'md'):
                         with open(path, mode='rb') as f:
                             data = f.read()
                         new_data = re.sub("\r?\n", "\r\n", data.decode(encoding='UTF-8'))
@@ -495,14 +495,14 @@ if MACOS:
             """
             Build the DMG image.
             """
-            if not is_dir('@support/createdmg') or not fexists('@support/createdmg/create-dmg'):
+            if not isdir('@support/createdmg') or not fexists('@support/createdmg/create-dmg'):
                 raise OSError('unable to find create-dmg utility: please clone Eddy with all its submodules' )
 
             if fexists(self.dmgName):
                 os.unlink(self.dmgName)
 
             stagingDir = os.path.join(self.buildDir, 'tmp')
-            if is_dir(stagingDir):
+            if isdir(stagingDir):
                 rmdir(stagingDir)
 
             self.mkpath(stagingDir)

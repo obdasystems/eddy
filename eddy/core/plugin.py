@@ -50,7 +50,7 @@ from eddy.core.common import HasActionSystem, HasMenuSystem, HasWidgetSystem
 from eddy.core.datatypes.system import File
 from eddy.core.functions.misc import first, lstrip, rstrip
 from eddy.core.functions.fsystem import fcopy, fexists, fread, fremove
-from eddy.core.functions.fsystem import is_dir, mkdir, rmdir
+from eddy.core.functions.fsystem import isdir, mkdir, rmdir
 from eddy.core.functions.path import expandPath, isSubPath
 from eddy.core.output import getLogger
 
@@ -341,7 +341,7 @@ class PluginManager(QtCore.QObject):
         :type directory: str
         :rtype: tuple
         """
-        if is_dir(directory):
+        if isdir(directory):
             plugin_spec_path = os.path.join(directory, 'plugin.spec')
             if fexists(plugin_spec_path):
                 try:
@@ -509,7 +509,7 @@ class PluginManager(QtCore.QObject):
         :rtype: list
         """
         info = []
-        if is_dir(base):
+        if isdir(base):
             LOGGER.info('Looking for plugins in %s', base)
             for file_or_directory in os.listdir(base):
                 file_or_directory_path = os.path.join(base, file_or_directory)
@@ -556,7 +556,7 @@ class PluginManager(QtCore.QObject):
         if self.dispose(plugin):
             self.session.removePlugin(plugin)
             path = plugin.path()
-            if is_dir(path):
+            if isdir(path):
                 rmdir(path)
             elif fexists(path):
                 fremove(path)

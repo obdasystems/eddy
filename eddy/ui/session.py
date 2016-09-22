@@ -115,6 +115,7 @@ _LINUX = sys.platform.startswith('linux')
 _MACOS = sys.platform.startswith('darwin')
 _WIN32 = sys.platform.startswith('win32')
 
+
 LOGGER = getLogger(__name__)
 
 
@@ -1090,9 +1091,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.selectFile(self.project.name)
             if dialog.exec_():
                 filetype = File.forValue(dialog.selectedNameFilter())
-                path = first(dialog.selectedFiles())
                 exporter = self.createProjectExporter(filetype, self.project, self)
-                exporter.export(path)
+                exporter.export(expandPath(first(dialog.selectedFiles())))
 
     @QtCore.pyqtSlot('QGraphicsScene')
     def doFocusDiagram(self, diagram):
@@ -1488,9 +1488,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.selectFile(rstrip(diagram.name, File.Graphol.extension))
             if dialog.exec_():
                 filetype = File.forValue(dialog.selectedNameFilter())
-                path = first(dialog.selectedFiles())
                 exporter = self.createDiagramExporter(filetype, diagram, self)
-                exporter.export(path)
+                exporter.export(expandPath(first(dialog.selectedFiles())))
 
     @QtCore.pyqtSlot()
     def doSelectAll(self):

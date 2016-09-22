@@ -174,7 +174,6 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         """
         return self.syntaxField.currentData()
 
-
     #############################################
     #   PROPERTIES
     #################################
@@ -267,6 +266,7 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         """
         Perform the Graphol -> OWL translation in a separate thread.
         """
+        LOGGER.info('Exporting project %s in OWL 2 format: %s', self.project.name, self.path)
         self.workerThread = QtCore.QThread()
         self.worker = OWLProjectExporterWorker(self.project, self.path, self.syntax())
         self.worker.moveToThread(self.workerThread)

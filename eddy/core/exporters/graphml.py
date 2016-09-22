@@ -41,6 +41,10 @@ from eddy.core.datatypes.system import File
 from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.functions.fsystem import fwrite
 from eddy.core.functions.misc import isEmpty
+from eddy.core.output import getLogger
+
+
+LOGGER = getLogger(__name__)
 
 
 class GraphMLDiagramExporter(AbstractDiagramExporter):
@@ -364,8 +368,8 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
 
         meta = self.diagram.project.meta(node.type(), node.text())
         wikiURL = '../wiki/{0}'.format(node.text())
-        if not isEmpty(meta.url):
-            wikiURL = meta.url
+        if not isEmpty(meta.get('url', '')):
+            wikiURL = meta.get('url', '')
 
         dataURL = self.document.createElement('data')
         dataURL.setAttribute('key', GraphMLDiagramExporter.KeyUrl)
@@ -377,7 +381,7 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
 
         dataWIKI = self.document.createElement('data')
         dataWIKI.setAttribute('key', GraphMLDiagramExporter.KeyDescription)
-        dataWIKI.appendChild(self.document.createTextNode(meta.description))
+        dataWIKI.appendChild(self.document.createTextNode(meta.get('description', '')))
 
         #############################################
         # NODE
@@ -691,6 +695,8 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         Perform Graphml document generation.
         :type path: str
         """
+        LOGGER.info('Exporting diagram %s in PDF format: %s', self.diagram.name, path)
+
         # 1) CREATE THE DOCUMENT
         self.document = QtXml.QDomDocument()
         instruction = self.document.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"')

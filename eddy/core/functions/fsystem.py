@@ -115,7 +115,7 @@ def fwrite(content, path):
     frename(stage, path)
 
 
-def is_dir(path):
+def isdir(path):
     """
     Returns True if the given path identifies a directory, False otherwise.
     :type path: str
@@ -124,25 +124,12 @@ def is_dir(path):
     return os.path.isdir(expandPath(path))
 
 
-def is_package(path):
-    """
-    Returns True if the given path identifies a python package, False otherwise.
-    :type path: str
-    :rtype: bool
-    """
-    if is_dir(path):
-        return fexists(os.path.join(path, '__init__.py')) or \
-            fexists(os.path.join(path, '__init__.pyc')) or \
-            fexists(os.path.join(path, '__init__.pyo'))
-    return False
-
-
 def mkdir(path):
     """
     Create the directory identified by the given path if it doesn't exists.
     :type path: str
     """
-    if not is_dir(path):
+    if not isdir(path):
         os.mkdir(expandPath(path))
 
 
@@ -151,5 +138,5 @@ def rmdir(path):
     Removes the directory identified by given path if it exists.
     :type path: str
     """
-    if is_dir(path):
+    if isdir(path):
         shutil.rmtree(expandPath(path))

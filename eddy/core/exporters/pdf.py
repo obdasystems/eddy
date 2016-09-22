@@ -41,6 +41,10 @@ from eddy.core.datatypes.system import File
 from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.items.common import AbstractItem
 from eddy.core.functions.path import openPath
+from eddy.core.output import getLogger
+
+
+LOGGER = getLogger(__name__)
 
 
 class PdfDiagramExporter(AbstractDiagramExporter):
@@ -65,6 +69,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         """
         shape = self.diagram.visibleRect(margin=20)
         if shape:
+            LOGGER.info('Exporting diagram %s in PDF format: %s', self.diagram.name, path)
             printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
             printer.setOutputFormat(QtPrintSupport.QPrinter.PdfFormat)
             printer.setOutputFileName(path)

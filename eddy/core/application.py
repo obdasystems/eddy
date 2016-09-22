@@ -42,7 +42,7 @@ from PyQt5 import QtWidgets
 
 from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE
 from eddy.core.datatypes.qt import Font
-from eddy.core.functions.fsystem import is_dir
+from eddy.core.functions.fsystem import isdir
 from eddy.core.functions.misc import isEmpty, format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
@@ -165,7 +165,7 @@ class Eddy(QtWidgets.QApplication):
             # filesystem. If they do not exists we remove them from our recent list.
             recentList = []
             for path in map(expandPath, settings.value('project/recent')):
-                if is_dir(path) and path not in recentList:
+                if isdir(path) and path not in recentList:
                     recentList.append(path)
 
             settings.setValue('project/recent', recentList or examples)
@@ -230,7 +230,7 @@ class Eddy(QtWidgets.QApplication):
         #################################
 
         workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
-        if not is_dir(workspace):
+        if not isdir(workspace):
             window = WorkspaceDialog()
             if window.exec_() == WorkspaceDialog.Rejected:
                 raise SystemExit
@@ -271,7 +271,7 @@ class Eddy(QtWidgets.QApplication):
         """
         self.welcome = Welcome(self)
         self.welcome.show()
-        if options.open and is_dir(options.open):
+        if options.open and isdir(options.open):
             self.sgnCreateSession.emit(expandPath(options.open))
 
     #############################################

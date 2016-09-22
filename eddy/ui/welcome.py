@@ -43,7 +43,7 @@ from PyQt5 import QtWidgets
 from eddy import APPNAME, ORGANIZATION, VERSION
 from eddy import PROJECT_HOME, BUG_TRACKER
 from eddy import GRAPHOL_HOME, WORKSPACE
-from eddy.core.functions.fsystem import is_dir, rmdir
+from eddy.core.functions.fsystem import isdir, rmdir
 from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.path import expandPath, shortPath
 from eddy.core.functions.path import compressPath, isSubPath
@@ -253,7 +253,7 @@ class Welcome(QtWidgets.QWidget):
                 recentList = []
                 settings = QtCore.QSettings(ORGANIZATION, APPNAME)
                 for path in map(expandPath, settings.value('project/recent')):
-                    if is_dir(path):
+                    if isdir(path):
                         recentList.append(path)
                 settings.setValue('project/recent', recentList)
                 settings.sync()

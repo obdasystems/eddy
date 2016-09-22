@@ -38,7 +38,7 @@ import os
 import sys
 
 from eddy.core.functions.path import expandPath
-from eddy.core.functions.fsystem import cpdir, mkdir, rmdir
+from eddy.core.functions.fsystem import cpdir, isdir, mkdir, rmdir, fexists
 
 LINUX = sys.platform.startswith('linux')
 MACOS = sys.platform.startswith('darwin')
@@ -88,6 +88,10 @@ class EddyTestCase(TestCase):
     """
     Base class for all Eddy test cases.
     """
+    #############################################
+    #   HOOKS
+    #################################
+
     def setUp(self):
         """
         Initialize test case environment.
@@ -105,6 +109,19 @@ class EddyTestCase(TestCase):
         self.eddy = None
         self.project = None
         self.session = None
+
+    def tearDown(self):
+        """
+        Perform operation on test end.
+        """
+        # SHUTDOWN EDDY
+        self.eddy.quit()
+        # REMOVE TEST DIRECTORY
+        rmdir('@tests/.tests/')
+
+    #############################################
+    #   INTERFACE
+    #################################
 
     def init(self, project):
         """
@@ -128,15 +145,6 @@ class EddyTestCase(TestCase):
         # SET SHORTCUTS
         self.project = self.eddy.session.project
         self.session = self.eddy.session
-
-    def tearDown(self):
-        """
-        Perform operation on test end.
-        """
-        # SHUTDOWN EDDY
-        self.eddy.quit()
-        # REMOVE TEST DIRECTORY
-        rmdir('@tests/.tests/')
 
     #############################################
     #   CUSTOM ASSERTIONS
@@ -170,6 +178,18 @@ class EddyTestCase(TestCase):
         """Assert for a given container to be empty."""
         if len(container) != 0:
             standardMsg = '{0} is not empty: found {1} elements'.format(safe_repr(container), len(container))
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def assertDirectoryExists(self, path, msg=None):
+        """Assert for the given path to represent a file"""
+        if not isdir(path):
+            standardMsg = '{0} is not a directory'.format(safe_repr(expandPath(path)))
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def assertFileExists(self, path, msg=None):
+        """Assert for the given path to represent a file"""
+        if not fexists(path):
+            standardMsg = '{0} is not a file'.format(safe_repr(expandPath(path)))
             self.fail(self._formatMessage(msg, standardMsg))
 
     def assertLen(self, count, container, msg=None):
