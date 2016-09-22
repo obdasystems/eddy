@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="1">
+  <graph width="5000" height="5000">
+    <node color="#fcfcfc" id="n11" type="intersection">
+      <geometry width="50" x="140" height="30" y="-120"/>
+      <label width="27" x="140" height="23" y="-120">and</label>
+    </node>
+    <node color="#fcfcfc" id="n5" type="attribute">
+      <geometry width="20" x="-120" height="20" y="100"/>
+      <label width="22" x="-120" height="23" y="78">A1</label>
+    </node>
+    <node color="#fcfcfc" id="n2" type="concept">
+      <geometry width="110" x="-120" height="50" y="20"/>
+      <label width="22" x="-120" height="23" y="20">C1</label>
+    </node>
+    <node color="#fcfcfc" id="n15" type="role-chain" inputs="">
+      <geometry width="50" x="140" height="30" y="120"/>
+      <label width="36" x="140" height="23" y="120">chain</label>
+    </node>
+    <node color="#fcfcfc" id="n12" type="union">
+      <geometry width="50" x="140" height="30" y="-60"/>
+      <label width="18" x="140" height="23" y="-60">or</label>
+    </node>
+    <node color="#fcfcfc" id="n9" type="attribute">
+      <geometry width="20" x="20" height="20" y="100"/>
+      <label width="22" x="20" height="23" y="78">A2</label>
+    </node>
+    <node color="#fcfcfc" id="n13" type="complement">
+      <geometry width="50" x="140" height="30" y="0"/>
+      <label width="25" x="140" height="23" y="0">not</label>
+    </node>
+    <node color="#fcfcfc" id="n16" type="enumeration">
+      <geometry width="50" x="140" height="30" y="-180"/>
+      <label width="40" x="140" height="23" y="-180">oneOf</label>
+    </node>
+    <node color="#fcfcfc" id="n8" type="concept">
+      <geometry width="110" x="20" height="50" y="20"/>
+      <label width="22" x="20" height="23" y="20">C2</label>
+    </node>
+    <node color="#fcfcfc" id="n10" type="value-domain">
+      <geometry width="90" x="-120" height="40" y="160"/>
+      <label width="60" x="-120" height="23" y="160">xsd:string</label>
+    </node>
+    <node color="#fcfcfc" id="n3" type="role">
+      <geometry width="70" x="-120" height="50" y="-60"/>
+      <label width="22" x="-120" height="23" y="-60">R1</label>
+    </node>
+    <node color="#fcfcfc" id="n14" type="role-inverse">
+      <geometry width="50" x="140" height="30" y="60"/>
+      <label width="23" x="140" height="23" y="60">inv</label>
+    </node>
+    <node color="#fcfcfc" id="n1" type="individual">
+      <geometry width="60" x="20" height="-60" y="-140"/>
+      <label width="17" x="20" height="23" y="-140">I2</label>
+    </node>
+    <node color="#fcfcfc" id="n6" type="value-domain">
+      <geometry width="90" x="20" height="40" y="160"/>
+      <label width="60" x="20" height="23" y="160">xsd:string</label>
+    </node>
+    <node color="#fcfcfc" id="n7" type="role">
+      <geometry width="70" x="20" height="50" y="-60"/>
+      <label width="22" x="20" height="23" y="-60">R2</label>
+    </node>
+    <node color="#000000" id="n17" type="disjoint-union">
+      <geometry width="50" x="140" height="30" y="180"/>
+    </node>
+    <node color="#fcfcfc" id="n0" type="individual">
+      <geometry width="60" x="-120" height="-60" y="-140"/>
+      <label width="17" x="-120" height="23" y="-140">I1</label>
+    </node>
+  </graph>
+</graphol>
