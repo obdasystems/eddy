@@ -479,11 +479,18 @@ class PluginManager(QtCore.QObject):
             else:
                 raise PluginError('missing plugin module: %s.py(c|o) in %s' % (plugin_zip_module_base_path, archive))
 
-            # CHECK FOR THE PLUGIN TO BE ALREADY INSTALLED
+            # CHECK FOR THE PLUGIN TO BE ALREADY RUNNING
             plugin_id = plugin_spec.get('plugin', 'id')
             plugin_name = plugin_spec.get('plugin', 'name')
             if self.session.plugin(plugin_spec.get('plugin', 'id')):
                 raise PluginError('plugin %s (id: %s) is already installed' % (plugin_name, plugin_id))
+
+            # CHECK FOR THE PLUGIN NAMESPACE TO BE UNIQUE
+            plugin_module_base_path = rstrip(first(filter(None, plugin_zip_module_path.split(os.path.sep))), File.Zip.extension)
+            for path in (expandPath('@plugins/'), expandPath('@home/plugins/')):
+                for entry in os.listdir(path):
+                    if plugin_module_base_path == rstrip(entry, File.Zip.extension):
+                        raise PluginError('plugin %s (id: %s) is already installed' % (plugin_name, plugin_id))
 
             # COPY THE PLUGIN
             mkdir('@home/plugins/')
