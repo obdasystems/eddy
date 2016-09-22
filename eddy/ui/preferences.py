@@ -87,6 +87,7 @@ class PreferencesDialog(QtWidgets.QDialog):
         self.pluginsTable.setHorizontalHeaderLabels(['Name', 'Version', 'Author', 'Contact', 'Uninstall'])
         self.pluginsTable.setFont(Font('Roboto', 12))
         self.pluginsTable.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        self.pluginsTable.setFocusPolicy(QtCore.Qt.NoFocus)
 
         header = self.pluginsTable.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
@@ -102,15 +103,19 @@ class PreferencesDialog(QtWidgets.QDialog):
         for row, plugin in enumerate(sorted(self.session.plugins(), key=lambda x: x.name())):
             item = QtWidgets.QTableWidgetItem(plugin.name())
             item.setTextAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+            item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
             self.pluginsTable.setItem(row, 0, item)
             item = QtWidgets.QTableWidgetItem('v{0}'.format(plugin.version()))
             item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
             self.pluginsTable.setItem(row, 1, item)
             item = QtWidgets.QTableWidgetItem(plugin.author())
             item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
             self.pluginsTable.setItem(row, 2, item)
             item = QtWidgets.QTableWidgetItem(plugin.contact())
             item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
             self.pluginsTable.setItem(row, 3, item)
             p_widget = QtWidgets.QWidget()
             p_checkbox = CheckBox()
@@ -122,9 +127,15 @@ class PreferencesDialog(QtWidgets.QDialog):
             self.pluginsTable.setCellWidget(row, 4, p_widget)
             self.pluginsUninstall[plugin] = p_checkbox
 
+        self.pluginInstallButton = QtWidgets.QToolButton(self)
+        self.pluginInstallButton.setDefaultAction(self.session.action('install_plugin'))
+        self.pluginInstallButton.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
+        self.pluginInstallButton.setFont(Font('Roboto', 13))
+
         self.pluginsWidget = QtWidgets.QWidget()
-        self.pluginsLayout = QtWidgets.QHBoxLayout(self.pluginsWidget)
+        self.pluginsLayout = QtWidgets.QVBoxLayout(self.pluginsWidget)
         self.pluginsLayout.addWidget(self.pluginsTable, 1)
+        self.pluginsLayout.addWidget(self.pluginInstallButton, 0, QtCore.Qt.AlignRight)
 
         #############################################
         # CONFIRMATION BOX
