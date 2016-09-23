@@ -338,7 +338,7 @@ class OWL2Profile(AbstractProfile):
                             if node.facet not in Facet.forDatatype(source.datatype):
                                 nA = source.datatype.value
                                 nB = node.facet.value
-                                raise SyntaxError('Type mismatch: datatype {0} is not supported by facet {1}'.format(nA, nB))
+                                raise SyntaxError('Type mismatch: datatype {0} is not compatible by facet {1}'.format(nA, nB))
 
                     if source.type() is Item.FacetNode:
 
@@ -352,7 +352,7 @@ class OWL2Profile(AbstractProfile):
                             if source.facet not in Facet.forDatatype(node.datatype):
                                 nA = source.facet.value
                                 nB = node.datatype.value
-                                raise SyntaxError('Type mismatch: facet {0} is not supported by datatype {1}'.format(nA, nB))
+                                raise SyntaxError('Type mismatch: facet {0} is not compatible by datatype {1}'.format(nA, nB))
 
                 elif target.type() is Item.PropertyAssertionNode:
 
