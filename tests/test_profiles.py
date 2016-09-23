@@ -32,6 +32,7 @@
 #                                                                        #
 ##########################################################################
 
+
 from mock import Mock
 
 from PyQt5 import QtCore
@@ -172,10 +173,131 @@ class ProfilesTestCase(EddyTestCase):
         # GIVEN
         self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
         num_edges_in_project = len(self.project.edges())
-        node = first(filter(lambda x: x.type() is Item.UnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        target = first(filter(lambda x: x.type() is Item.UnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'R1'), node)
+        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'R1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: role node and union node are not compatible')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_inclusion_between_role_and_disjoint_union_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'R1'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: role node and disjoint union node are not compatible')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_inclusion_between_role_and_intersection_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.IntersectionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'R1'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: role node and intersection node are not compatible')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_inclusion_between_attribute_and_union_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.UnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InclusionEdge, (Item.AttributeNode, 'A1'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: attribute node and union node are not compatible')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_inclusion_between_attribute_and_disjoint_union_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InclusionEdge, (Item.AttributeNode, 'A1'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: attribute node and disjoint union node are not compatible')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_inclusion_between_attribute_and_intersection_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.IntersectionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InclusionEdge, (Item.AttributeNode, 'A1'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: attribute node and intersection node are not compatible')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_inclusion_between_value_domain_expressions(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InclusionEdge, (Item.ValueDomainNode, 'xsd:string'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: inclusion between value-domain expressions')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_inclusion_between_complement_node_and_role(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InclusionEdge, source, (Item.RoleNode, 'R1'))
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid source for role inclusion: complement node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_inclusion_between_complement_node_and_attribute(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InclusionEdge, source, (Item.AttributeNode, 'A1'))
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid source for attribute inclusion: complement node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_inclusion_between_role_chain_node_and_role_chain_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.RoleChainNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        target = first(filter(lambda x: x.type() is Item.RoleChainNode and x is not source, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InclusionEdge, source, target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Inclusion between role chain node and role chain node is forbidden')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_inclusion_between_role_and_role_chain_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.RoleChainNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'R1'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Role chain nodes cannot be target of a Role inclusion')
         self.assertFalse(self.project.profile.pvr().isValid())
