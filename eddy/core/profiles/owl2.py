@@ -217,8 +217,8 @@ class OWL2Profile(AbstractProfile):
                             # supported expression are NegativeObjectPropertyAssertion (R1 ISA NOT R2) and
                             # NegativeDataPropertyAssertion (A1 ISA NOT A2). This prevents the connection of
                             # Role expressions to Complement nodes that are given as inputs to Enumeration,
-                            # Union and Disjoint Union operatore nodes.
-                            if len(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x.source is target)) > 0:
+                            # Union and Disjoint Union operator nodes.
+                            if len(target.outgoingNodes(lambda x: x.type() in {Item.InputEdge, Item.InclusionEdge})) > 0:
                                 raise SyntaxError('Invalid negative {0} expression'.format(source.identity().value))
 
                     else:
