@@ -68,6 +68,7 @@ pip install -U pip
 pip install -U cython==0.23.4
 pip install -U verlib==0.1
 pip install -U mockito-without-hardcoded-distribute-version==0.5.4
+pip install -U mock==2.0.0
 pip install -U nose==1.3.7
 pip install -U nose-cov==1.6
 pip install -e hg+https://danielepantaleone@bitbucket.org/danielepantaleone/cx_freeze/@ubuntu#egg=cx_Freeze
