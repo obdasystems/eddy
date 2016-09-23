@@ -134,22 +134,29 @@ class OWL2Profile(AbstractProfile):
                             raise SyntaxError('Equivalence is forbidden when expressing {0} disjointness'.format(identity))
 
                 #############################################
-                # INCLUSION WITH ROLE CHAIN
+                # INCLUSION / EQUIVALENCE WITH ROLE CHAIN
                 #################################
 
-                if source.type() is Item.RoleChainNode:
-                    # Role expressions constructed with chain nodes can be included only
-                    # in basic role expressions, that are either Role nodes or RoleInverse
-                    # nodes with one input Role node (this check is done elsewhere).
-                    if target.type() not in {Item.RoleNode, Item.RoleInverseNode}:
-                        name = edge.shortName.title()
-                        idA = source.name
-                        idB = target.name
-                        raise SyntaxError('{0} between {1} and {2} is forbidden'.format(name, idA, idB))
+                if edge.type() is Item.EquivalenceEdge:
+                    # When connecting a Role chain node, the equivalence edge cannot be used
+                    # since it's not possible to target the Role chain node with an inclusion
+                    # edge, and the Equivalence edge express such an inclusion.
+                    raise SyntaxError('Equivalence is forbidden in presence of a role chain node')
 
-                if target.type() is Item.RoleChainNode:
-                    # Role expressions constructed with chain nodes cannot be the target of any inclusion edge.
-                    raise SyntaxError('Role chain nodes cannot be target of a Role {0}'.format(edge.shortName))
+                if edge.type() is Item.InclusionEdge:
+
+                    if source.type() is Item.RoleChainNode:
+                        # Role expressions constructed with chain nodes can be included only
+                        # in basic role expressions, that are either Role nodes or RoleInverse
+                        # nodes with one input Role node (this check is done elsewhere).
+                        if target.type() not in {Item.RoleNode, Item.RoleInverseNode}:
+                            idA = source.name
+                            idB = target.name
+                            raise SyntaxError('Inclusion between {0} and {1} is forbidden'.format(idA, idB))
+
+                    if target.type() is Item.RoleChainNode:
+                        # Role expressions constructed with chain nodes cannot be the target of any inclusion edge.
+                        raise SyntaxError('Role chain nodes cannot be target of a Role inclusion')
 
             #############################################
             # EDGE = INPUT
