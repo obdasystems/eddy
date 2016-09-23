@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="1">
   <modules>
+    <module>diagram7.graphol</module>
+    <module>diagramC.graphol</module>
+    <module>diagramD.graphol</module>
+    <module>diagram4.graphol</module>
     <module>diagram1.graphol</module>
+    <module>diagram8.graphol</module>
+    <module>diagramA.graphol</module>
+    <module>diagram2.graphol</module>
+    <module>diagram3.graphol</module>
+    <module>diagram9.graphol</module>
+    <module>diagram5.graphol</module>
+    <module>diagramB.graphol</module>
   </modules>
 </project>

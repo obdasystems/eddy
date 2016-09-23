@@ -515,3 +515,456 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Equivalence is forbidden in presence of a role chain node')
         self.assertFalse(self.project.profile.pvr().isValid())
+
+    #############################################
+    #   INPUT
+    #################################
+
+    def test_input_between_concept_node_and_concept_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
+        num_edges_in_project = len(self.project.edges())
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C1'), (Item.ConceptNode, 'C2'))
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Input edges can only target constructor nodes')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_role_node_and_role_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
+        num_edges_in_project = len(self.project.edges())
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'R1'), (Item.RoleNode, 'R1'))
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Input edges can only target constructor nodes')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_individual_node_and_complement_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'I1'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to complement node: Individual')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_individual_node_and_union_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.UnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'I1'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to union node: Individual')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_individual_node_and_intersection_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.IntersectionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'I1'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to intersection node: Individual')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_value_domain_node_and_chain_of_inclusion_connected_neutral_operators(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram3.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.UnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ValueDomainNode, 'xsd:string'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: inclusion between value-domain expressions')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_concept_node_and_complement_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram2.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C2'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Too many inputs to complement node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_role_node_and_complement_node_with_outgoing_edge(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram3.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'R1'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid negative Role expression')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_value_domain_node_and_non_neutral_union_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram2.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.UnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ValueDomainNode, 'xsd:string'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: union between Value Domain and Concept')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_value_domain_node_and_non_neutral_disjoint_union_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram2.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ValueDomainNode, 'xsd:string'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: disjoint union between Value Domain and Concept')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_value_domain_node_and_non_neutral_intersection_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram2.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.IntersectionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ValueDomainNode, 'xsd:string'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: intersection between Value Domain and Concept')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_range_restriction_node_and_union_of_value_domain_nodes(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram4.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        target = first(filter(lambda x: x.type() is Item.UnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, source, target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to union node: range restriction node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_concept_node_and_enumeration_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram4.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.EnumerationNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C5'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to enumeration node: Concept')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_value_node_and_enumeration_node_with_individuals(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram4.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.EnumerationNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, '"32"^^xsd:string'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to enumeration node: Value')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_role_chain_node_and_role_inverse_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram3.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.RoleChainNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        target = first(filter(lambda x: x.type() is Item.RoleInverseNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, source, target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to role inverse node: role chain node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_role_inverse_node_and_role_inverse_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram3.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.RoleInverseNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        target = first(filter(lambda x: x.type() is Item.RoleInverseNode and x is not source, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, source, target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to role inverse node: role inverse node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_role_chain_node_and_role_chain_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram3.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.RoleChainNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        target = first(filter(lambda x: x.type() is Item.RoleChainNode and x is not source, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, source, target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to role chain node: role chain node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_concept_node_and_datatype_restriction_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram5.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C6'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to datatype restriction node: concept node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_value_domain_node_and_datatype_restriction_node_with_datatype_connected(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram5.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ValueDomainNode, 'xsd:integer'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Too many value-domain nodes in input to datatype restriction node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_value_domain_node_and_datatype_restriction_node_with_incompatible_facet_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram7.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ValueDomainNode, 'xsd:string'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: datatype xsd:string is not compatible by facet xsd:maxExclusive')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_facet_node_and_datatype_restriction_node_with_incompatible_datatype(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram8.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.FacetNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, source, target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: facet xsd:maxExclusive is not compatible by datatype xsd:string')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_concept_node_and_property_assertion_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram7.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C1'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to property assertion node: concept node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_individual_node_and_property_assertion_node_with_already_two_inputs(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram7.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'I3'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Too many inputs to property assertion node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_value_node_and_property_assertion_node_set_as_role_instance(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram8.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, '"12"^^xsd:integer'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to Role Instance: Value')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_individual_node_and_property_assertion_node_set_as_attribute_instance(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram9.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'I2'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Too many individuals in input to Attribute Instance')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_value_node_and_property_assertion_node_set_as_attribute_instance(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagramA.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, '"32"^^xsd:integer'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Too many values in input to Attribute Instance')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_concept_node_and_domain_restriction_node_with_filler(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagramB.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C2'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Too many inputs to domain restriction node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_individual_node_and_domain_restriction_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagramA.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'I4'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to domain restriction node: Individual')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_role_chain_node_and_domain_restriction_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagramA.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.RoleChainNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, source, target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to domain restriction node: role chain node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_property_assertion_node_and_domain_restriction_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram5.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, source, target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to domain restriction node: property assertion node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_concept_node_and_domain_restriction_node_with_self_restriction(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagramC.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C1'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid restriction type for qualified restriction: self')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_concept_node_and_domain_restriction_node_with_attribute_in_input(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram3.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C7'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified restriction: Concept + Attribute')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_role_node_and_domain_restriction_node_with_value_domain_in_input(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram2.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'R5'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified restriction: Role + Value Domain')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_attribute_node_and_domain_restriction_node_with_self_restriction(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram8.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.AttributeNode, 'A4'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Attributes do not have self')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_attribute_node_and_domain_restriction_node_with_concept_in_input(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram9.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.AttributeNode, 'A4'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified restriction: Attribute + Concept')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_value_domain_node_and_domain_restriction_node_with_self_restriction(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram8.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ValueDomainNode, 'xsd:string'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid restriction type for qualified restriction: self')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_value_domain_node_and_domain_restriction_node_with_role_in_input(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagramD.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ValueDomainNode, 'xsd:string'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified restriction: Value Domain + Role')
+        self.assertFalse(self.project.profile.pvr().isValid())

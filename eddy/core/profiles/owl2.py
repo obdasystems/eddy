@@ -363,7 +363,7 @@ class OWL2Profile(AbstractProfile):
                     if source.type() is not Item.IndividualNode:
                         # Property Assertion operators accepts only Individual nodes as input: they are
                         # used to construct ObjectPropertyAssertion and DataPropertyAssertion axioms.
-                        raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.identity().value))
+                        raise SyntaxError('Invalid input to {0}: {1}'.format(target.name, source.name))
 
                     if len(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge)) >= 2:
                         # At most 2 Individual nodes can be connected to a PropertyAssertion node. As an example
@@ -388,7 +388,7 @@ class OWL2Profile(AbstractProfile):
                             f2 = lambda x: x.identity() is Identity.Individual
                             if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
                                 # We are constructing a DataPropertyAssertion and so we can't have more than 1 instance.
-                                raise SyntaxError('Too many instances in input to {0}'.format(target.identity().value))
+                                raise SyntaxError('Too many individuals in input to {0}'.format(target.identity().value))
 
                         if source.identity() is Identity.Value:
 
