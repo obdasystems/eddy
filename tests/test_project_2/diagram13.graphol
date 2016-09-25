@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="1">
+  <graph height="5000" width="5000">
+    <node id="n2" type="value-domain" color="#fcfcfc">
+      <geometry height="40" width="90" x="40" y="40"/>
+      <label height="23" width="60" x="40" y="40">xsd:string</label>
+    </node>
+    <node id="n1" type="domain-restriction" color="#fcfcfc">
+      <geometry height="20" width="20" x="40" y="-60"/>
+      <label height="23" width="39" x="40" y="-82">exists</label>
+    </node>
+    <node id="n0" type="role" color="#fcfcfc">
+      <geometry height="50" width="70" x="-60" y="-60"/>
+      <label height="23" width="22" x="-60" y="-60">R6</label>
+    </node>
+    <edge target="n1" id="e0" type="input" source="n0">
+      <point x="-60" y="-60"/>
+      <point x="40" y="-60"/>
+    </edge>
+  </graph>
+</graphol>

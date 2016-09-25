@@ -33,6 +33,8 @@
 ##########################################################################
 
 
+import natsort
+
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
@@ -152,7 +154,7 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
         self.root.setIcon(self.iconRoot)
 
         self.model = QtGui.QStandardItemModel(self)
-        self.proxy = QtCore.QSortFilterProxyModel(self)
+        self.proxy = ProjectExplorerSortedProxyModel(self)
         self.proxy.setDynamicSortFilter(False)
         self.proxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.proxy.setSortCaseSensitivity(QtCore.Qt.CaseSensitive)
@@ -384,3 +386,29 @@ class ProjectExplorerView(QtWidgets.QTreeView):
         :rtype: int
         """
         return max(super().sizeHintForColumn(column), self.viewport().width())
+
+
+class ProjectExplorerSortedProxyModel(QtCore.QSortFilterProxyModel):
+    """
+    This class implements the proxy model used to sort elements in the Project Explorer widget.
+    """
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the model.
+        """
+        super(ProjectExplorerSortedProxyModel, self).__init__(*args, **kwargs)
+
+    def lessThan(self, index1, index2):
+        """
+        Implements < operator.
+        :type index1: QModelIndex
+        :type index2: QModelIndex
+        :rtype: bool
+        """
+        data1 = self.sourceModel().data(index1)
+        data2 = self.sourceModel().data(index2)
+        items = natsort.natsorted([data1, data2])
+        try:
+            return items.index(data1) < items.index(data2)
+        except IndexError:
+            return data1 < data2
