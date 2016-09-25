@@ -97,6 +97,17 @@ class MdiArea(QtWidgets.QMdiArea):
             if not self.subWindowList():
                 self.session.setWindowTitle(self.session.project)
 
+    @QtCore.pyqtSlot()
+    def doCloseOtherSubWindows(self):
+        """
+        Closes all the subwindows except the one from which the action has been triggered.
+        """
+        action = self.sender()
+        window = action.parent()
+        for subwindow in self.subWindowList():
+            if subwindow is not window:
+                subwindow.close()
+
     #############################################
     #   INTERFACE
     #################################
@@ -130,9 +141,13 @@ class MdiArea(QtWidgets.QMdiArea):
         :type flags: int
         """
         menu = subwindow.systemMenu()
-        action = QtWidgets.QAction('Close All', menu)
+        action = QtWidgets.QAction('Close All', subwindow)
         action.setIcon(menu.actions()[7].icon())
         connect(action.triggered, self.closeAllSubWindows)
+        menu.addAction(action)
+        action = QtWidgets.QAction('Close Others', subwindow)
+        action.setIcon(menu.actions()[7].icon())
+        connect(action.triggered, self.doCloseOtherSubWindows)
         menu.addAction(action)
         return super().addSubWindow(subwindow)
 
