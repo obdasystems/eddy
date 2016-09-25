@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph height="5000" width="5000">
-    <node id="n0" type="complement" color="#fcfcfc">
-      <geometry height="30" width="50" x="0" y="10"/>
-      <label height="23" width="25" x="0" y="10">not</label>
+    <node type="intersection" id="n1" color="#fcfcfc">
+      <geometry x="0" y="-110" height="30" width="50"/>
+      <label x="0" y="-110" height="23" width="27">and</label>
     </node>
-    <node id="n2" type="role" color="#fcfcfc">
-      <geometry height="50" width="70" x="0" y="110"/>
-      <label height="23" width="22" x="0" y="110">R1</label>
+    <node type="complement" id="n0" color="#fcfcfc">
+      <geometry x="0" y="10" height="30" width="50"/>
+      <label x="0" y="10" height="23" width="25">not</label>
     </node>
-    <node id="n1" type="intersection" color="#fcfcfc">
-      <geometry height="30" width="50" x="0" y="-110"/>
-      <label height="23" width="27" x="0" y="-110">and</label>
+    <node type="role" id="n2" color="#fcfcfc">
+      <geometry x="0" y="110" height="50" width="70"/>
+      <label x="0" y="110" height="23" width="22">R1</label>
     </node>
-    <edge target="n1" id="e0" type="inclusion" source="n0">
+    <edge type="inclusion" target="n1" id="e0" source="n0">
       <point x="0" y="10"/>
       <point x="0" y="-110"/>
     </edge>

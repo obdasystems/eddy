@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="1">
+  <graph height="5000" width="5000">
+    <node type="range-restriction" id="n2" color="#000000">
+      <geometry x="80" y="10" height="20" width="20"/>
+      <label x="80" y="-12" height="23" width="39">exists</label>
+    </node>
+    <node type="individual" id="n1" color="#fcfcfc">
+      <geometry x="-20" y="10" height="-60" width="60"/>
+      <label x="-20" y="10" height="23" width="17">I4</label>
+    </node>
+  </graph>
+</graphol>

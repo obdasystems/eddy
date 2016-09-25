@@ -968,3 +968,101 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified restriction: Value Domain + Role')
         self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_concept_node_and_range_restriction_node_with_filler(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram34.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C2'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Too many inputs to range restriction node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_value_domain_node_and_range_restriction_node_with_attribute_as_input(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram35.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ValueDomainNode, 'xsd:string'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Too many inputs to attribute range restriction')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_individual_node_and_range_restriction_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram36.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'I4'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to range restriction node: Individual')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_role_chain_node_and_range_restriction_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram37.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.RoleChainNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, source, target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to range restriction node: role chain node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_property_assertion_node_and_range_restriction_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram38.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, source, target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to range restriction node: property assertion node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_role_node_and_range_restriction_node_with_role_node_in_input(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram39.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'R5'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified restriction: Role + Role')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_attribute_node_and_range_restriction_node_with_self_restriction(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram40.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.AttributeNode, 'A4'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Attributes do not have self')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_input_between_value_domain_node_and_facet_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram41.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.FacetNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InputEdge, (Item.ValueDomainNode, 'xsd:string'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Facet node cannot be target of any input')
+        self.assertFalse(self.project.profile.pvr().isValid())

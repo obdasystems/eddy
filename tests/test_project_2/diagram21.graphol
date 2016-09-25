@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph height="5000" width="5000">
-    <node id="n0" type="role-inverse" color="#fcfcfc">
-      <geometry height="30" width="50" x="0" y="30"/>
-      <label height="23" width="23" x="0" y="30">inv</label>
+    <node type="role-inverse" id="n0" color="#fcfcfc">
+      <geometry x="0" y="30" height="30" width="50"/>
+      <label x="0" y="30" height="23" width="23">inv</label>
     </node>
-    <node id="n1" type="role-inverse" color="#fcfcfc">
-      <geometry height="30" width="50" x="0" y="-30"/>
-      <label height="23" width="23" x="0" y="-30">inv</label>
+    <node type="role-inverse" id="n1" color="#fcfcfc">
+      <geometry x="0" y="-30" height="30" width="50"/>
+      <label x="0" y="-30" height="23" width="23">inv</label>
     </node>
   </graph>
 </graphol>

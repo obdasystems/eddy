@@ -1,38 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph height="5000" width="5000">
-    <node id="n6" type="value-domain" color="#fcfcfc">
-      <geometry height="40" width="90" x="-60" y="170"/>
-      <label height="23" width="60" x="-60" y="170">xsd:string</label>
+    <node type="value-domain" id="n6" color="#fcfcfc">
+      <geometry x="-60" y="170" height="40" width="90"/>
+      <label x="-60" y="170" height="23" width="60">xsd:string</label>
     </node>
-    <node id="n9" type="intersection" color="#fcfcfc">
-      <geometry height="30" width="50" x="100" y="50"/>
-      <label height="23" width="27" x="100" y="50">and</label>
+    <node type="intersection" id="n9" color="#fcfcfc">
+      <geometry x="100" y="50" height="30" width="50"/>
+      <label x="100" y="50" height="23" width="27">and</label>
     </node>
-    <node id="n7" type="intersection" color="#fcfcfc">
-      <geometry height="30" width="50" x="20" y="-50"/>
-      <label height="23" width="27" x="20" y="-50">and</label>
+    <node type="intersection" id="n10" color="#fcfcfc">
+      <geometry x="20" y="-170" height="30" width="50"/>
+      <label x="20" y="-170" height="23" width="27">and</label>
     </node>
-    <node id="n8" type="union" color="#fcfcfc">
-      <geometry height="30" width="50" x="-60" y="50"/>
-      <label height="23" width="18" x="-60" y="50">or</label>
+    <node type="intersection" id="n7" color="#fcfcfc">
+      <geometry x="20" y="-50" height="30" width="50"/>
+      <label x="20" y="-50" height="23" width="27">and</label>
     </node>
-    <node id="n10" type="intersection" color="#fcfcfc">
-      <geometry height="30" width="50" x="20" y="-170"/>
-      <label height="23" width="27" x="20" y="-170">and</label>
+    <node type="union" id="n8" color="#fcfcfc">
+      <geometry x="-60" y="50" height="30" width="50"/>
+      <label x="-60" y="50" height="23" width="18">or</label>
     </node>
-    <edge target="n10" id="e3" type="inclusion" source="n7">
+    <edge type="input" target="n7" id="e5" source="n9">
+      <point x="100" y="50"/>
+      <point x="100" y="-50"/>
+      <point x="20" y="-50"/>
+    </edge>
+    <edge type="inclusion" target="n10" id="e3" source="n7">
       <point x="20" y="-50"/>
       <point x="20" y="-170"/>
     </edge>
-    <edge target="n7" id="e4" type="input" source="n8">
+    <edge type="input" target="n7" id="e4" source="n8">
       <point x="-60" y="50"/>
       <point x="-60" y="-50"/>
-      <point x="20" y="-50"/>
-    </edge>
-    <edge target="n7" id="e5" type="input" source="n9">
-      <point x="100" y="50"/>
-      <point x="100" y="-50"/>
       <point x="20" y="-50"/>
     </edge>
   </graph>

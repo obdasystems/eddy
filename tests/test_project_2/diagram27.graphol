@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph height="5000" width="5000">
-    <node inputs="e0" id="n3" type="property-assertion" color="#fcfcfc">
-      <geometry height="30" width="52" x="-20" y="-70"/>
+    <node type="property-assertion" inputs="e0" id="n3" color="#fcfcfc">
+      <geometry x="-20" y="-70" height="30" width="52"/>
     </node>
-    <node id="n1" type="individual" color="#fcfcfc">
-      <geometry height="-60" width="60" x="-80" y="40"/>
-      <label height="23" width="17" x="-80" y="40">I1</label>
+    <node type="individual" id="n1" color="#fcfcfc">
+      <geometry x="-80" y="40" height="-60" width="60"/>
+      <label x="-80" y="40" height="23" width="17">I1</label>
     </node>
-    <node id="n0" type="concept" color="#fcfcfc">
-      <geometry height="50" width="110" x="40" y="40"/>
-      <label height="23" width="22" x="40" y="40">C1</label>
+    <node type="concept" id="n0" color="#fcfcfc">
+      <geometry x="40" y="40" height="50" width="110"/>
+      <label x="40" y="40" height="23" width="22">C1</label>
     </node>
-    <edge target="n3" id="e0" type="input" source="n1">
+    <edge type="input" target="n3" id="e0" source="n1">
       <point x="-80" y="40"/>
       <point x="-20" y="-70"/>
     </edge>

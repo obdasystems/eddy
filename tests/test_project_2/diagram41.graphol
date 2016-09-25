@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="1">
+  <graph height="5000" width="5000">
+    <node type="facet" id="n0" color="#000000">
+      <geometry x="60" y="-20" height="0" width="80"/>
+      <label x="60" y="-20" height="23" width="92">xsd:length^^"32"</label>
+    </node>
+    <node type="value-domain" id="n1" color="#fcfcfc">
+      <geometry x="60" y="100" height="40" width="90"/>
+      <label x="60" y="100" height="23" width="60">xsd:string</label>
+    </node>
+  </graph>
+</graphol>
