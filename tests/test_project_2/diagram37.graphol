@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
-  <graph height="5000" width="5000">
-    <node type="range-restriction" id="n2" color="#000000">
-      <geometry x="60" y="10" height="20" width="20"/>
-      <label x="60" y="-12" height="23" width="39">exists</label>
+  <graph width="5000" height="5000">
+    <node color="#fcfcfc" inputs="" type="role-chain" id="n0">
+      <geometry width="50" x="-40" height="30" y="10"/>
+      <label width="36" x="-40" height="23" y="10">chain</label>
     </node>
-    <node type="role-chain" inputs="" id="n0" color="#fcfcfc">
-      <geometry x="-40" y="10" height="30" width="50"/>
-      <label x="-40" y="10" height="23" width="36">chain</label>
+    <node color="#000000" type="range-restriction" id="n2">
+      <geometry width="20" x="60" height="20" y="10"/>
+      <label width="39" x="60" height="23" y="-12">exists</label>
     </node>
   </graph>
 </graphol>

@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
-  <graph height="5000" width="5000">
-    <node type="property-assertion" inputs="e0" id="n2" color="#fcfcfc">
-      <geometry x="0" y="0" height="30" width="52"/>
+  <graph width="5000" height="5000">
+    <node color="#fcfcfc" inputs="e0" type="property-assertion" id="n2">
+      <geometry width="52" x="0" height="30" y="0"/>
     </node>
-    <node type="individual" id="n3" color="#fcfcfc">
-      <geometry x="60" y="80" height="-60" width="60"/>
-      <label x="60" y="80" height="23" width="97">"12"^^xsd:integer</label>
+    <node color="#fcfcfc" type="individual" id="n3">
+      <geometry width="60" x="60" height="-60" y="80"/>
+      <label width="97" x="60" height="23" y="80">"12"^^xsd:integer</label>
     </node>
-    <node type="individual" id="n1" color="#fcfcfc">
-      <geometry x="-60" y="80" height="-60" width="60"/>
-      <label x="-60" y="80" height="23" width="17">I1</label>
+    <node color="#fcfcfc" type="individual" id="n1">
+      <geometry width="60" x="-60" height="-60" y="80"/>
+      <label width="17" x="-60" height="23" y="80">I1</label>
     </node>
-    <node type="role" id="n0" color="#fcfcfc">
-      <geometry x="0" y="-80" height="50" width="70"/>
-      <label x="0" y="-80" height="23" width="22">R2</label>
+    <node color="#fcfcfc" type="role" id="n0">
+      <geometry width="70" x="0" height="50" y="-80"/>
+      <label width="22" x="0" height="23" y="-80">R2</label>
     </node>
-    <edge type="membership" target="n0" id="e1" source="n2">
+    <edge source="n2" target="n0" type="membership" id="e1">
       <point x="0" y="0"/>
       <point x="0" y="-80"/>
     </edge>
-    <edge type="input" target="n2" id="e0" source="n1">
+    <edge source="n1" target="n2" type="input" id="e0">
       <point x="-60" y="80"/>
       <point x="0" y="0"/>
     </edge>

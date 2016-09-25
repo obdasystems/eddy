@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
-  <graph height="5000" width="5000">
-    <node type="facet" id="n0" color="#000000">
-      <geometry x="-60" y="40" height="0" width="118"/>
-      <label x="-60" y="40" height="23" width="131">xsd:maxExclusive^^"32"</label>
+  <graph width="5000" height="5000">
+    <node color="#000000" type="facet" id="n0">
+      <geometry width="118" x="-60" height="0" y="40"/>
+      <label width="131" x="-60" height="23" y="40">xsd:maxExclusive^^"32"</label>
     </node>
-    <node type="datatype-restriction" id="n1" color="#fcfcfc">
-      <geometry x="-60" y="-60" height="30" width="50"/>
-      <label x="-60" y="-60" height="23" width="31">data</label>
+    <node color="#fcfcfc" type="datatype-restriction" id="n1">
+      <geometry width="50" x="-60" height="30" y="-60"/>
+      <label width="31" x="-60" height="23" y="-60">data</label>
     </node>
-    <node type="value-domain" id="n2" color="#fcfcfc">
-      <geometry x="80" y="40" height="40" width="90"/>
-      <label x="80" y="40" height="23" width="60">xsd:string</label>
+    <node color="#fcfcfc" type="value-domain" id="n2">
+      <geometry width="90" x="80" height="40" y="40"/>
+      <label width="60" x="80" height="23" y="40">xsd:string</label>
     </node>
-    <edge type="input" target="n1" id="e0" source="n0">
+    <edge source="n0" target="n1" type="input" id="e0">
       <point x="-60" y="40"/>
       <point x="-60" y="-60"/>
     </edge>

@@ -1066,3 +1066,54 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Facet node cannot be target of any input')
         self.assertFalse(self.project.profile.pvr().isValid())
+
+    #############################################
+    #   MEMBERSHIP
+    #################################
+
+    def test_membership_between_concept_and_concept(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram42.graphol')
+        num_edges_in_project = len(self.project.edges())
+        # WHEN
+        self.__insert_edge_between(Item.MembershipEdge, (Item.ConceptNode, 'C1'), (Item.ConceptNode, 'C2'))
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid source for membership edge: Concept')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_membership_between_individual_and_role(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram44.graphol')
+        num_edges_in_project = len(self.project.edges())
+        # WHEN
+        self.__insert_edge_between(Item.MembershipEdge, (Item.IndividualNode, 'I1'), (Item.RoleNode, 'R4'))
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid target for Concept assertion: Role')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_membership_between_role_instance_and_role_chain_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram43.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        target = first(filter(lambda x: x.type() is Item.RoleChainNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.MembershipEdge, source, target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid target for Role assertion: role chain node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_membership_between_attribute_instance_and_role_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram45.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.MembershipEdge, source, (Item.RoleNode, 'R1'))
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid target for Attribute assertion: role node')
+        self.assertFalse(self.project.profile.pvr().isValid())

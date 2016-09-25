@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="1">
+  <graph width="5000" height="5000">
+    <node color="#fcfcfc" inputs="" type="role-chain" id="n0">
+      <geometry width="50" x="160" height="30" y="20"/>
+      <label width="36" x="160" height="23" y="20">chain</label>
+    </node>
+    <node color="#fcfcfc" type="individual" id="n4">
+      <geometry width="60" x="-60" height="-60" y="-20"/>
+      <label width="17" x="-60" height="23" y="-20">I1</label>
+    </node>
+    <node color="#fcfcfc" type="individual" id="n5">
+      <geometry width="60" x="-60" height="-60" y="60"/>
+      <label width="17" x="-60" height="23" y="60">I2</label>
+    </node>
+    <node color="#fcfcfc" inputs="e2,e3" type="property-assertion" id="n1">
+      <geometry width="52" x="60" height="30" y="20"/>
+    </node>
+    <edge source="n5" target="n1" type="input" id="e3">
+      <point x="-60" y="60"/>
+      <point x="60" y="20"/>
+    </edge>
+    <edge source="n4" target="n1" type="input" id="e2">
+      <point x="-60" y="-20"/>
+      <point x="60" y="20"/>
+    </edge>
+  </graph>
+</graphol>

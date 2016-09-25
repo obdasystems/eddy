@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
-  <graph height="5000" width="5000">
-    <node type="individual" id="n7" color="#fcfcfc">
-      <geometry x="-20" y="-40" height="-60" width="60"/>
-      <label x="-20" y="-40" height="23" width="17">I1</label>
+  <graph width="5000" height="5000">
+    <node color="#fcfcfc" type="individual" id="n7">
+      <geometry width="60" x="-20" height="-60" y="-40"/>
+      <label width="17" x="-20" height="23" y="-40">I1</label>
     </node>
-    <node type="individual" id="n8" color="#fcfcfc">
-      <geometry x="100" y="-40" height="-60" width="60"/>
-      <label x="100" y="-40" height="23" width="17">I2</label>
+    <node color="#fcfcfc" type="individual" id="n8">
+      <geometry width="60" x="100" height="-60" y="-40"/>
+      <label width="17" x="100" height="23" y="-40">I2</label>
     </node>
-    <node type="enumeration" id="n6" color="#fcfcfc">
-      <geometry x="40" y="-140" height="30" width="50"/>
-      <label x="40" y="-140" height="23" width="40">oneOf</label>
+    <node color="#fcfcfc" type="enumeration" id="n6">
+      <geometry width="50" x="40" height="30" y="-140"/>
+      <label width="40" x="40" height="23" y="-140">oneOf</label>
     </node>
-    <node type="individual" id="n9" color="#fcfcfc">
-      <geometry x="40" y="80" height="-60" width="115"/>
-      <label x="40" y="80" height="23" width="91">"32"^^xsd:string</label>
+    <node color="#fcfcfc" type="individual" id="n9">
+      <geometry width="115" x="40" height="-60" y="80"/>
+      <label width="91" x="40" height="23" y="80">"32"^^xsd:string</label>
     </node>
-    <edge type="input" target="n6" id="e4" source="n8">
+    <edge source="n8" target="n6" type="input" id="e4">
       <point x="100" y="-40"/>
       <point x="40" y="-140"/>
     </edge>
-    <edge type="input" target="n6" id="e3" source="n7">
+    <edge source="n7" target="n6" type="input" id="e3">
       <point x="-20" y="-40"/>
       <point x="40" y="-140"/>
     </edge>

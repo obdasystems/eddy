@@ -629,14 +629,9 @@ class OWL2Profile(AbstractProfile):
                     # The source of the edge must be one of Instance or a Property Assertion node.
                     raise SyntaxError('Invalid source for membership edge: {0}'.format(source.identity().value))
 
-                supported = {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
-                if target.identity() is not Identity.Concept and target.type() not in supported:
-                    # The target of the edge must be a ClassExpression, ObjectPropertyExpression or DataPropertyExpression.
-                    raise SyntaxError('Invalid target for membership edge: {0}'.format(target.name))
-
                 if source.identity() is Identity.Individual:
 
-                    if target.identity() is not Identity.Concept:
+                    if Identity.Concept not in target.identities():
                         # If the source of the edge is an Individual it means that we are trying to construct a
                         # ClassAssertion and so the target of the edge MUST be a class expression.
                         # OWL 2: ClassAssertion(axiomAnnotations ClassExpression Individual)

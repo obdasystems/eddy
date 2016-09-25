@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="1">
+  <graph width="5000" height="5000">
+    <node color="#fcfcfc" type="concept" id="n1">
+      <geometry width="110" x="100" height="50" y="0"/>
+      <label width="22" x="100" height="23" y="0">C2</label>
+    </node>
+    <node color="#fcfcfc" type="concept" id="n0">
+      <geometry width="110" x="-120" height="50" y="0"/>
+      <label width="22" x="-120" height="23" y="0">C1</label>
+    </node>
+  </graph>
+</graphol>
