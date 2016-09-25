@@ -138,10 +138,12 @@ class OWL2Profile(AbstractProfile):
                 #################################
 
                 if edge.type() is Item.EquivalenceEdge:
-                    # When connecting a Role chain node, the equivalence edge cannot be used
-                    # since it's not possible to target the Role chain node with an inclusion
-                    # edge, and the Equivalence edge express such an inclusion.
-                    raise SyntaxError('Equivalence is forbidden in presence of a role chain node')
+
+                    if Item.RoleChainNode in {source.type(), target.type()}:
+                        # When connecting a Role chain node, the equivalence edge cannot be used
+                        # since it's not possible to target the Role chain node with an inclusion
+                        # edge, and the Equivalence edge express such an inclusion.
+                        raise SyntaxError('Equivalence is forbidden in presence of a role chain node')
 
                 if edge.type() is Item.InclusionEdge:
 
