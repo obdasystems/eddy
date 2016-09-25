@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="1">
+  <graph height="5000" width="5000">
+    <node id="n6" type="individual" color="#fcfcfc">
+      <geometry height="-60" width="60" x="60" y="0"/>
+      <label height="23" width="17" x="60" y="0">I2</label>
+    </node>
+    <node id="n7" type="individual" color="#fcfcfc">
+      <geometry height="-60" width="60" x="0" y="80"/>
+      <label height="23" width="17" x="0" y="80">I3</label>
+    </node>
+    <node id="n5" type="individual" color="#fcfcfc">
+      <geometry height="-60" width="60" x="-60" y="0"/>
+      <label height="23" width="17" x="-60" y="0">I1</label>
+    </node>
+    <node inputs="e1,e2" id="n4" type="property-assertion" color="#fcfcfc">
+      <geometry height="30" width="52" x="0" y="-80"/>
+    </node>
+    <edge target="n4" id="e2" type="input" source="n6">
+      <point x="60" y="0"/>
+      <point x="0" y="-80"/>
+    </edge>
+    <edge target="n4" id="e1" type="input" source="n5">
+      <point x="-60" y="0"/>
+      <point x="0" y="-80"/>
+    </edge>
+  </graph>
+</graphol>

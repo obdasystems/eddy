@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="1">
+  <graph height="5000" width="5000">
+    <node id="n6" type="attribute" color="#fcfcfc">
+      <geometry height="20" width="20" x="100" y="-40"/>
+      <label height="23" width="22" x="100" y="-62">A4</label>
+    </node>
+    <node id="n4" type="domain-restriction" color="#fcfcfc">
+      <geometry height="20" width="20" x="20" y="-40"/>
+      <label height="23" width="39" x="20" y="-62">exists</label>
+    </node>
+    <node id="n5" type="concept" color="#fcfcfc">
+      <geometry height="50" width="110" x="20" y="60"/>
+      <label height="23" width="22" x="20" y="60">C8</label>
+    </node>
+    <edge target="n4" id="e3" type="input" source="n5">
+      <point x="20" y="60"/>
+      <point x="20" y="-40"/>
+    </edge>
+  </graph>
+</graphol>

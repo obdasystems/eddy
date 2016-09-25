@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="1">
+  <graph height="5000" width="5000">
+    <node id="n0" type="facet" color="#000000">
+      <geometry height="0" width="118" x="-60" y="40"/>
+      <label height="23" width="131" x="-60" y="40">xsd:maxExclusive^^"32"</label>
+    </node>
+    <node id="n2" type="value-domain" color="#fcfcfc">
+      <geometry height="40" width="90" x="80" y="40"/>
+      <label height="23" width="60" x="80" y="40">xsd:string</label>
+    </node>
+    <node id="n1" type="datatype-restriction" color="#fcfcfc">
+      <geometry height="30" width="50" x="-60" y="-60"/>
+      <label height="23" width="31" x="-60" y="-60">data</label>
+    </node>
+    <edge target="n1" id="e0" type="input" source="n0">
+      <point x="-60" y="40"/>
+      <point x="-60" y="-60"/>
+    </edge>
+  </graph>
+</graphol>

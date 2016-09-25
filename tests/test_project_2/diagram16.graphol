@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="1">
+  <graph height="5000" width="5000">
+    <node id="n1" type="union" color="#fcfcfc">
+      <geometry height="30" width="50" x="-80" y="-60"/>
+      <label height="23" width="18" x="-80" y="-60">or</label>
+    </node>
+    <node id="n0" type="concept" color="#fcfcfc">
+      <geometry height="50" width="110" x="-80" y="60"/>
+      <label height="23" width="22" x="-80" y="60">C2</label>
+    </node>
+    <node id="n2" type="value-domain" color="#fcfcfc">
+      <geometry height="40" width="90" x="80" y="-60"/>
+      <label height="23" width="60" x="80" y="-60">xsd:string</label>
+    </node>
+    <edge target="n1" id="e0" type="input" source="n0">
+      <point x="-80" y="60"/>
+      <point x="-80" y="-60"/>
+    </edge>
+  </graph>
+</graphol>

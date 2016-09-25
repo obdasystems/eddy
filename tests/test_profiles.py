@@ -536,7 +536,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram1.graphol')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'R1'), (Item.RoleNode, 'R1'))
+        self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'R1'), (Item.RoleNode, 'R2'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Input edges can only target constructor nodes')
@@ -580,7 +580,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_value_domain_node_and_chain_of_inclusion_connected_neutral_operators(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram3.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram18.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.UnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -590,9 +590,9 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: inclusion between value-domain expressions')
         self.assertFalse(self.project.profile.pvr().isValid())
 
-    def test_input_between_concept_node_and_complement_node(self):
+    def test_input_between_concept_node_and_complement_node_with_already_an_input(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram2.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram15.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -604,7 +604,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_role_node_and_complement_node_with_outgoing_edge(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram3.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram19.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -616,7 +616,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_value_domain_node_and_non_neutral_union_node(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram2.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram16.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.UnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -628,7 +628,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_value_domain_node_and_non_neutral_disjoint_union_node(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram2.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram17.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -652,7 +652,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_range_restriction_node_and_union_of_value_domain_nodes(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram4.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram23.graphol')
         num_edges_in_project = len(self.project.edges())
         source = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         target = first(filter(lambda x: x.type() is Item.UnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
@@ -665,7 +665,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_concept_node_and_enumeration_node(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram4.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram24.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.EnumerationNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -689,7 +689,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_role_chain_node_and_role_inverse_node(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram3.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram20.graphol')
         num_edges_in_project = len(self.project.edges())
         source = first(filter(lambda x: x.type() is Item.RoleChainNode, self.project.nodes(self.session.mdi.activeDiagram())))
         target = first(filter(lambda x: x.type() is Item.RoleInverseNode, self.project.nodes(self.session.mdi.activeDiagram())))
@@ -702,7 +702,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_role_inverse_node_and_role_inverse_node(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram3.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram21.graphol')
         num_edges_in_project = len(self.project.edges())
         source = first(filter(lambda x: x.type() is Item.RoleInverseNode, self.project.nodes(self.session.mdi.activeDiagram())))
         target = first(filter(lambda x: x.type() is Item.RoleInverseNode and x is not source, self.project.nodes(self.session.mdi.activeDiagram())))
@@ -715,7 +715,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_role_chain_node_and_role_chain_node(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram3.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram22.graphol')
         num_edges_in_project = len(self.project.edges())
         source = first(filter(lambda x: x.type() is Item.RoleChainNode, self.project.nodes(self.session.mdi.activeDiagram())))
         target = first(filter(lambda x: x.type() is Item.RoleChainNode and x is not source, self.project.nodes(self.session.mdi.activeDiagram())))
@@ -728,7 +728,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_concept_node_and_datatype_restriction_node(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram5.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram25.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -740,7 +740,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_value_domain_node_and_datatype_restriction_node_with_datatype_connected(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram5.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram26.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -752,7 +752,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_value_domain_node_and_datatype_restriction_node_with_incompatible_facet_node(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram7.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram6.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -764,7 +764,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_facet_node_and_datatype_restriction_node_with_incompatible_datatype(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram8.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram29.graphol')
         num_edges_in_project = len(self.project.edges())
         source = first(filter(lambda x: x.type() is Item.FacetNode, self.project.nodes(self.session.mdi.activeDiagram())))
         target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
@@ -777,7 +777,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_concept_node_and_property_assertion_node(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram7.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram27.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -801,7 +801,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_value_node_and_property_assertion_node_set_as_role_instance(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram8.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram28.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -813,7 +813,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_individual_node_and_property_assertion_node_set_as_attribute_instance(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram9.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram31.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -825,7 +825,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_value_node_and_property_assertion_node_set_as_attribute_instance(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagramA.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram32.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -837,7 +837,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_concept_node_and_domain_restriction_node_with_filler(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagramB.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram11.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -849,7 +849,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_individual_node_and_domain_restriction_node(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagramA.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram33.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -861,7 +861,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_role_chain_node_and_domain_restriction_node(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagramA.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram10.graphol')
         num_edges_in_project = len(self.project.edges())
         source = first(filter(lambda x: x.type() is Item.RoleChainNode, self.project.nodes(self.session.mdi.activeDiagram())))
         target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
@@ -887,7 +887,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_concept_node_and_domain_restriction_node_with_self_restriction(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagramC.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram12.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -911,7 +911,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_role_node_and_domain_restriction_node_with_value_domain_in_input(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram2.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram14.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -923,7 +923,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_attribute_node_and_domain_restriction_node_with_self_restriction(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram8.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram30.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
@@ -959,7 +959,7 @@ class OWL2ProfileTestCase(EddyTestCase):
 
     def test_input_between_value_domain_node_and_domain_restriction_node_with_role_in_input(self):
         # GIVEN
-        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagramD.graphol')
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram13.graphol')
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN

@@ -129,7 +129,7 @@ class EddyTestCase(TestCase):
         :type project: str
         """
         # COPY TEST PROJECT OVER
-        cpdir('@resources/%s/' % project, '@tests/.tests/%s' % project)
+        cpdir('@tests/%s/' % project, '@tests/.tests/%s' % project)
         # CREATE AN INSTANCE OF EDDY
         arguments = ['--nosplash', '--tests', '--open', '@tests/.tests/%s' % project]
         parser = ArgumentParser()

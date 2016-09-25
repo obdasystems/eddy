@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="1">
+  <graph height="5000" width="5000">
+    <node id="n1" type="value-domain" color="#fcfcfc">
+      <geometry height="40" width="90" x="80" y="90"/>
+      <label height="23" width="60" x="80" y="90">xsd:string</label>
+    </node>
+    <node id="n4" type="attribute" color="#fcfcfc">
+      <geometry height="20" width="20" x="60" y="-90"/>
+      <label height="23" width="22" x="60" y="-112">A3</label>
+    </node>
+    <node id="n0" type="range-restriction" color="#000000">
+      <geometry height="20" width="20" x="0" y="-90"/>
+      <label height="23" width="39" x="0" y="-112">exists</label>
+    </node>
+    <node id="n2" type="value-domain" color="#fcfcfc">
+      <geometry height="40" width="90" x="-80" y="90"/>
+      <label height="23" width="60" x="-80" y="90">xsd:string</label>
+    </node>
+    <node id="n3" type="union" color="#fcfcfc">
+      <geometry height="30" width="50" x="0" y="-10"/>
+      <label height="23" width="18" x="0" y="-10">or</label>
+    </node>
+    <edge target="n3" id="e0" type="input" source="n2">
+      <point x="-80" y="90"/>
+      <point x="-80" y="-10"/>
+      <point x="0" y="-10"/>
+    </edge>
+    <edge target="n3" id="e1" type="input" source="n1">
+      <point x="80" y="90"/>
+      <point x="80" y="-10"/>
+      <point x="0" y="-10"/>
+    </edge>
+    <edge target="n0" id="e2" type="input" source="n4">
+      <point x="60" y="-90"/>
+      <point x="0" y="-90"/>
+    </edge>
+  </graph>
+</graphol>

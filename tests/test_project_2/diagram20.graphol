@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="1">
+  <graph height="5000" width="5000">
+    <node id="n1" type="role-inverse" color="#fcfcfc">
+      <geometry height="30" width="50" x="0" y="30"/>
+      <label height="23" width="23" x="0" y="30">inv</label>
+    </node>
+    <node inputs="" id="n0" type="role-chain" color="#fcfcfc">
+      <geometry height="30" width="50" x="0" y="-30"/>
+      <label height="23" width="36" x="0" y="-30">chain</label>
+    </node>
+  </graph>
+</graphol>
