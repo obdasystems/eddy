@@ -35,7 +35,7 @@
 
 from PyQt5 import QtWidgets
 
-from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.graphol import Identity, Item
 
 
 class CommandLabelChange(QtWidgets.QUndoCommand):
@@ -84,11 +84,15 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
             for node in self.project.predicates(self.item.type(), self.data[key]):
                 node.updateNode()
 
-        # IDENTITFY ENUMERATION NODES
+        # IDENTITFY NEIGHBOURS
         if self.item.type() is Item.IndividualNode:
             f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.type() is Item.EnumerationNode
+            f2 = lambda x: x.type() in {Item.EnumerationNode, Item.PropertyAssertionNode}
             for node in self.item.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                self.diagram.sgnNodeIdentification.emit(node)
+            f3 = lambda x: x.type() is Item.MembershipEdge
+            f4 = lambda x: Identity.Neutral in x.identities()
+            for node in self.item.outgoingNodes(filter_on_edges=f3, filter_on_nodes=f4):
                 self.diagram.sgnNodeIdentification.emit(node)
 
         # EMIT UPDATED SIGNAL
@@ -119,11 +123,15 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
             for node in self.project.predicates(self.item.type(), self.data[key]):
                 node.updateNode()
 
-        # IDENTITFY ENUMERATION NODES
+        # IDENTITFY NEIGHBOURS
         if self.item.type() is Item.IndividualNode:
             f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.type() is Item.EnumerationNode
+            f2 = lambda x: x.type() in {Item.EnumerationNode, Item.PropertyAssertionNode}
             for node in self.item.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                self.diagram.sgnNodeIdentification.emit(node)
+            f3 = lambda x: x.type() is Item.MembershipEdge
+            f4 = lambda x: Identity.Neutral in x.identities()
+            for node in self.item.outgoingNodes(filter_on_edges=f3, filter_on_nodes=f4):
                 self.diagram.sgnNodeIdentification.emit(node)
 
         # EMIT UPDATED SIGNAL
