@@ -563,6 +563,7 @@ class Diagram(QtWidgets.QGraphicsScene):
             f4 = lambda x: x.identity() in {Identity.Role, Identity.Attribute, Identity.Concept} and Identity.Neutral not in x.identities()
             f5 = lambda x: x.type() in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
             f6 = lambda x: x.type() is Item.IndividualNode
+            f7 = lambda x: x.type() in {Item.InclusionEdge, Item.EquivalenceEdge, Item.InputEdge}
 
             # CONVERTERS
             c1 = lambda x: Identity.Concept if x.identity() is Identity.Individual else Identity.ValueDomain
@@ -670,6 +671,28 @@ class Diagram(QtWidgets.QGraphicsScene):
 
                     for k in incoming:
                         strong.discard(k)
+
+                elif node.type() in {Item.DisjointUnionNode, Item.UnionNode, Item.IntersectionNode, Item.ComplementNode}:
+
+                    if not node.adjacentNodes(filter_on_edges=f7):
+
+                        incoming = node.incomingNodes(filter_on_edges=f3)
+                        if incoming:
+
+                            # OPERATORS WITH POSSIBLE CONCEPT IDENTITY
+                            #
+                            # The operator nodes specified here above can assume a Concept identity
+                            # and thus can be target of Membership edges to compose a ClassAssertion
+                            # axiom. We always evaluate Inputs, Inclusion and Equivalence edges, but
+                            # if no edge of this type is found, we'll use the Membership edge to
+                            # compute the identity of this very node, moving it in the strong set.
+                            computed = Identity.Unknown
+                            identities = set(x.identity() for x in incoming)
+                            if len(identities) == 1 and first(identities) is Identity.Individual:
+                                computed = Identity.Concept
+
+                            node.setIdentity(computed)
+                            excluded.add(node)
 
             #############################################
             # FINAL COMPUTATION
