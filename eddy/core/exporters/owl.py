@@ -199,6 +199,9 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         self.workerThread.quit()
 
         if isinstance(exception, DiagramMalformedError):
+            # LOG INTO CONSOLE
+            LOGGER.warning('Malformed expression detected on {0}: {1} ... aborting!'.format(exception.item, exception))
+            # SHOW A POPUP WITH THE WARNING MESSAGE
             msgbox = QtWidgets.QMessageBox(self)
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
             msgbox.setInformativeText('Do you want to see the error in the diagram?')
@@ -211,7 +214,7 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
                 self.session.doFocusItem(exception.item)
         else:
             # LOG INTO CONSOLE
-            LOGGER.error('OWL2 translation could not be completed', exc_info=1)
+            LOGGER.error('OWL 2 export could not be completed', exc_info=1)
             # SHOW A POPUP WITH THE ERROR MESSAGE
             msgbox = QtWidgets.QMessageBox(self)
             msgbox.setDetailedText(format_exception(exception))
@@ -908,6 +911,10 @@ class OWLProjectExporterWorker(QtCore.QObject):
                     classEx = self.buildIntersection(filler)
                 elif filler.type() in {Item.UnionNode, Item.DisjointUnionNode}:
                     classEx = self.buildUnion(filler)
+                elif filler.type() is Item.DomainRestrictionNode:
+                    classEx = self.buildDomainRestriction(filler)
+                elif filler.type() is Item.RangeRestrictionNode:
+                    classEx = self.buildRangeRestriction(filler)
                 else:
                     raise DiagramMalformedError(node, 'unsupported operand ({0})'.format(filler))
 
