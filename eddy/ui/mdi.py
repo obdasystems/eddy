@@ -49,23 +49,24 @@ class MdiArea(QtWidgets.QMdiArea):
         Initialize the MDI area.
         :type session: Session
         """
-        super().__init__(session, **kwargs)
+        super(MdiArea, self).__init__(session, **kwargs)
 
-        # CONFIGURE WIDGET
+        # Configure widget.
         self.setContentsMargins(0, 0, 0, 0)
         self.setViewMode(MdiArea.TabbedView)
         self.setTabPosition(QtWidgets.QTabWidget.North)
         self.setTabsClosable(True)
         self.setTabsMovable(True)
 
-        # DO NOT EXPAND MDI AREA TABS
+        # Do not expand MDI area tabs.
         for child in self.children():
             if isinstance(child, QtWidgets.QTabBar):
                 child.setExpanding(False)
                 break
 
-        # CONNECT SUBWINDOW ACTIVATED SIGNAL
+        # Connect signals.
         connect(self.subWindowActivated, self.onSubWindowActivated)
+        connect(self.session.sgnDiagramRenamed, self.onDiagramRenamed)
 
     #############################################
     #   PROPERTIES
@@ -82,6 +83,20 @@ class MdiArea(QtWidgets.QMdiArea):
     #############################################
     #   SLOTS
     #################################
+
+    @QtCore.pyqtSlot('QGraphicsScene')
+    def onDiagramRenamed(self, diagram):
+        """
+        Executed when a diagram is renamed.
+        :type diagram: Diagram
+        """
+        # Make sure to always update the name in tab.
+        for subwindow in self.subWindowList():
+            if subwindow.diagram is diagram:
+                subwindow.setWindowTitle(diagram.name)
+        # If the diagram is the active one, update also the session title.
+        if self.activeDiagram() is diagram:
+            self.session.setWindowTitle(self.session.project, diagram)
 
     @QtCore.pyqtSlot(QtWidgets.QMdiSubWindow)
     def onSubWindowActivated(self, subwindow):
@@ -149,7 +164,7 @@ class MdiArea(QtWidgets.QMdiArea):
         action.setIcon(menu.actions()[7].icon())
         connect(action.triggered, self.doCloseOtherSubWindows)
         menu.addAction(action)
-        return super().addSubWindow(subwindow)
+        return super(MdiArea, self).addSubWindow(subwindow)
 
     def subWindowForDiagram(self, diagram):
         """
@@ -173,7 +188,7 @@ class MdiSubWindow(QtWidgets.QMdiSubWindow):
         :type view: DiagramView
         :type parent: QWidget
         """
-        super().__init__(parent)
+        super(MdiSubWindow, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWidget(view)
         self.setWindowTitle(self.diagram.name)

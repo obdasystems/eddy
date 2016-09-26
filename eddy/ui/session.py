@@ -130,6 +130,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     * sgnDiagramFocus: whenever a diagram is to be focused.
     * sgnDiagramLoad: whenever a diagram is to be loaded.
     * sgnDiagramLoaded: to notify that a diagram has been loaded.
+    * sgnDiagramRenamed: to notify that a diagram has been renamed.
     * sgnPluginDisposed: to notify that a plugin has been destroyed.
     * sgnPluginStarted: to notify that a plugin startup sequence has been completed.
     * sgnProjectSave: whenever the current project is to be saved.
@@ -143,6 +144,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnDiagramFocused = QtCore.pyqtSignal('QGraphicsScene')
     sgnDiagramLoad = QtCore.pyqtSignal(str)
     sgnDiagramLoaded = QtCore.pyqtSignal('QGraphicsScene')
+    sgnDiagramRenamed = QtCore.pyqtSignal('QGraphicsScene')
     sgnPluginDisposed = QtCore.pyqtSignal(str)
     sgnPluginStarted = QtCore.pyqtSignal(str)
     sgnProjectSave = QtCore.pyqtSignal()
@@ -1450,6 +1452,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             form = RenameDiagramDialog(self.project, diagram, self)
             if form.exec_() == RenameDiagramDialog.Accepted:
                 self.sgnProjectSave.emit()
+                self.sgnDiagramRenamed.emit(diagram)
 
     @QtCore.pyqtSlot()
     def doSave(self):
