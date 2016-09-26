@@ -734,7 +734,9 @@ class Diagram(QtWidgets.QGraphicsScene):
 
 class DiagramMalformedError(RuntimeError):
     """
-    Raised whenever we encounter a problem while exporting a diagram.
+    Raised whenever a given diagram is detected as malformed.
+    This is not meant to be used as Syntax Error, but more to
+    detect malformation problems like operator nodes with no input, etc.
     """
     def __init__(self, item, *args, **kwargs):
         """
