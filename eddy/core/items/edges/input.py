@@ -201,7 +201,9 @@ class InputEdge(AbstractEdge):
         sourceNode = self.source
         targetNode = self.target
         sourcePos = sourceNode.anchor(self)
-        targetPos = target or targetNode.anchor(self)
+        targetPos = target
+        if targetPos is None:
+            targetPos = targetNode.anchor(self)
 
         self.prepareGeometryChange()
 
