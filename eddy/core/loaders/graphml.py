@@ -609,7 +609,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         #################################
 
         name = rstrip(os.path.basename(self.path), File.GraphML.extension)
-        path = uniquePath(self.project.path, name, File.GraphML.extension)
+        path = uniquePath(self.project.path, name, File.Graphol.extension)
         self.diagram = Diagram(path, self.project)
         self.diagram.setSceneRect(QtCore.QRectF(-Diagram.MaxSize / 2, -Diagram.MaxSize / 2, Diagram.MaxSize, Diagram.MaxSize))
         self.diagram.setItemIndexMethod(Diagram.NoIndex)
