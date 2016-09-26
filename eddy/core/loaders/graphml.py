@@ -275,6 +275,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
                 arrows = polyLineEdge.firstChildElement('y:Arrows')
                 if arrows.attribute('source', '') == 'standard' and arrows.attribute('target', '') == 'standard':
                     return self.buildEquivalenceEdge(element)
+            data = data.nextSiblingElement('data')
         edge = self.buildEdgeFromGenericEdge(Item.InclusionEdge, element)
         if edge:
             edge.updateEdge()
