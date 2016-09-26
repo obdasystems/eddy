@@ -36,6 +36,7 @@
 from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.functions.misc import first
 from eddy.core.items.nodes.common.operator import OperatorNode
 from eddy.core.items.nodes.common.label import NodeLabel
 
@@ -73,6 +74,30 @@ class UnionNode(OperatorNode):
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
+
+    def identify(self):
+        """
+        Perform the node identification step for this Union node.
+        Because this node can assume a Concept identity, whenever this node
+        is being targeted by an Individual node using a Membership edge, we
+        set the identity and move this node in the STRONG set. We'll also make
+        sure to remove from the STRONG set the individual node used to compute
+        the identity of this very node since Individual nodes do not contribute
+        with inheritance to the computation of the final identity for all the
+        WEAK nodes being examined during the identification process.
+        :rtype: tuple
+        """
+        f1 = lambda x: x.type() is Item.MembershipEdge
+        f2 = lambda x: x.identity() is Identity.Individual
+        incoming = self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+        if incoming:
+            computed = Identity.Unknown
+            identities = set(x.identity() for x in incoming)
+            if len(identities) == 1 and first(identities) is Identity.Individual:
+                computed = Identity.Concept
+            self.setIdentity(computed)
+            return {self}, incoming, set()
+        return None
 
     def setText(self, text):
         """

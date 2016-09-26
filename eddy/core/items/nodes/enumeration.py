@@ -36,6 +36,7 @@
 from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.functions.misc import first
 from eddy.core.items.nodes.common.operator import OperatorNode
 from eddy.core.items.nodes.common.label import NodeLabel
 
@@ -73,6 +74,37 @@ class EnumerationNode(OperatorNode):
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
+
+    def identify(self):
+        """
+        Perform the node identification step for this Enumeration node.
+        The identity of the node is calculated as follows:
+
+        * If the node has Individuals as inputs => Identity == Concept
+        * If the node has Values as inputs => Identity == ValueDomain
+
+        After establishing the identity for this node, we remove all the
+        nodes we used to compute such identity from the STRONG set and make
+        sure this enumeration node is added to the STRONG set, so it will
+        contribute to the computation of the final identity for all the
+        WEAK nodes being examined during the identification process.
+        :rtype: tuple
+        """
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.type() is Item.IndividualNode
+        f3 = lambda x: Identity.Concept if x.identity() is Identity.Individual else Identity.ValueDomain
+        inputs = self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+        identities = set(map(f3, inputs))
+        computed = Identity.Neutral
+        if identities:
+            computed = first(identities)
+            if len(identities) > 1:
+                computed = Identity.Unknown
+        self.setIdentity(computed)
+        strong_add = set()
+        if self.identity() is not Identity.Neutral:
+            strong_add.add(self)
+        return strong_add, inputs, set()
 
     def setText(self, text):
         """

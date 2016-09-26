@@ -545,158 +545,22 @@ class Diagram(QtWidgets.QGraphicsScene):
         """
         if Identity.Neutral in node.identities():
 
-            predicate = lambda n1: Identity.Neutral in n1.identities()
-            collection = bfs(source=node, filter_on_visit=predicate)
-            generators = partition(predicate, collection)
+            func = lambda x: Identity.Neutral in x.identities()
+            collection = bfs(source=node, filter_on_visit=func)
+            generators = partition(func, collection)
             excluded = set()
             strong = set(generators[1])
             weak = set(generators[0])
 
-            #############################################
-            # SPECIAL CASES
-            #################################
-
-            # FILTERS
-            f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.type() is Item.IndividualNode
-            f3 = lambda x: x.type() is Item.MembershipEdge
-            f4 = lambda x: x.identity() in {Identity.Role, Identity.Attribute, Identity.Concept} and Identity.Neutral not in x.identities()
-            f5 = lambda x: x.type() in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
-            f6 = lambda x: x.type() is Item.IndividualNode
-
-            # CONVERTERS
-            c1 = lambda x: Identity.Concept if x.identity() is Identity.Individual else Identity.ValueDomain
-            c2 = lambda x: Identity.Concept if x.identity() in {Identity.Role, Identity.Concept} else Identity.ValueDomain
-            c3 = lambda x: Identity.RoleInstance if x.identity() is Identity.Role else Identity.AttributeInstance
-
-            # AUXILIARY FUNCTIONS
-            a1 = lambda x: x.identity() is Identity.Value
-
             for node in weak:
-
-                if node.type() is Item.EnumerationNode:
-
-                    # ENUMERATION:
-                    #
-                    #   - If it has INSTANCE as inputs => Identity is CONCEPT
-                    #   - If it has VALUE as inputs => Identity is VALUE-DOMAIN
-                    #
-                    # After establishing the identity for this node, we discard all the
-                    # nodes we used to compute such identity and also move the enumeration
-                    # node from the WEAK set to the STRONG set, so it will contribute to the
-                    # computation of the final identity for all the remaining WEAK nodes.
-
-                    collection = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
-                    identities = set(map(c1, collection))
-                    computed = Identity.Neutral
-
-                    if identities:
-                        computed = first(identities)
-                        if len(identities) > 1:
-                            computed = Identity.Unknown
-
-                    node.setIdentity(computed)
-                    if node.identity() is not Identity.Neutral:
-                        strong.add(node)
-                    for k in collection:
-                        strong.discard(k)
-
-                elif node.type() is Item.RangeRestrictionNode:
-
-                    # RANGE RESTRICTION:
-                    #
-                    #   - If it has ATTRIBUTE as input => Identity is VALUE-DOMAIN
-                    #   - If it has ROLE|CONCEPT as inputs => Identity is CONCEPT
-                    #
-                    # After establishing the identity for this node, we discard all the
-                    # nodes we used to compute such identity and also moVe the range restriction
-                    # node from the WEAK set to the STRONG set, so it will contribute to the
-                    # computation of the final identity for all the remaining WEAK nodes.
-
-                    collection = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f4)
-                    identities = set(map(c2, collection))
-                    computed = Identity.Neutral
-
-                    if identities:
-                        computed = first(identities)
-                        if len(identities) > 1:
-                            computed = Identity.Unknown
-
-                    node.setIdentity(computed)
-                    if node.identity() is not Identity.Neutral:
-                        strong.add(node)
-                    for k in collection:
-                        strong.discard(k)
-
-                elif node.type() is Item.PropertyAssertionNode:
-
-                    # PROPERTY ASSERTION:
-                    #
-                    #   - If it is targeting a ROLE using a Membership edge => Identity is ROLE INSTANCE
-                    #   - If it is targeting an ATTRIBUTE using a Membership edge => Identity is ATTRIBUTE INSTANCE
-                    #
-                    #   OR
-                    #
-                    #   - If it has 2 INSTANCE as inputs => Identity is ROLE INSTANCE
-                    #   - If it has 1 INSTANCE and 1 VALUE as inputs => Identity is ATTRIBUTE INSTANCE
-                    #
-                    # In both the cases, whether we establish or not an idendity for this node,
-                    # we exclude it from both the WEAK and the STRONG sets. This is due to the fact
-                    # that the PropertyAssertion node is used to perform assertions at ABox level
-                    # while every other node in the graph is used at TBox level. Additionally we
-                    # discard the inputs of the node from the STRONG set since they are either INSTANCE
-                    # or VALUE nodes since they are not needed to compute the final identity for
-                    # the remaining nodes in the WEAK set (see Enumeration node).
-
-                    outgoing = node.outgoingNodes(filter_on_edges=f3, filter_on_nodes=f5)
-                    incoming = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f6)
-                    computed = Identity.Neutral
-
-                    # 1) USE MEMBERSHIP EDGE
-                    identities = set(map(c3, outgoing))
-                    if identities:
-                        computed = first(identities)
-                        if len(identities) > 1:
-                            computed = Identity.Unknown
-
-                    # 2) USE INPUT EDGES
-                    if computed is Identity.Neutral and len(incoming) >= 2:
-                        computed = Identity.RoleInstance
-                        if sum(map(a1, incoming)):
-                            computed = Identity.AttributeInstance
-
-                    node.setIdentity(computed)
-                    excluded.add(node)
-
-                    for k in incoming:
-                        strong.discard(k)
-
-                elif node.type() in {Item.DisjointUnionNode, Item.UnionNode, Item.IntersectionNode, Item.ComplementNode}:
-
-                    incoming = node.incomingNodes(filter_on_edges=f3)
-                    if incoming:
-
-                        # OPERATORS WITH POSSIBLE CONCEPT IDENTITY
-                        #
-                        # The operator nodes specified here above can assume a Concept identity
-                        # and thus can be target of Membership edges to compose a ClassAssertion
-                        # axiom. We always evaluate Inputs, Inclusion and Equivalence edges, but
-                        # if no edge of this type is found, we'll use the Membership edge to
-                        # compute the identity of this very node, moving it in the strong set.
-                        computed = Identity.Unknown
-                        identities = set(x.identity() for x in incoming)
-                        if len(identities) == 1 and first(identities) is Identity.Individual:
-                            computed = Identity.Concept
-
-                        node.setIdentity(computed)
-                        excluded.add(node)
-
-            #############################################
-            # FINAL COMPUTATION
-            #################################
+                identification = node.identify()
+                if identification:
+                    strong = set.union(strong, identification[0])
+                    strong = set.difference(strong, identification[1])
+                    excluded = set.union(excluded, identification[2])
 
             computed = Identity.Neutral
-            identities = {x.identity() for x in strong}
+            identities = set(x.identity() for x in strong)
             if identities:
                 computed = first(identities)
                 if len(identities) > 1:

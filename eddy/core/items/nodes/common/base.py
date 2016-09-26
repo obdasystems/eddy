@@ -161,6 +161,26 @@ class AbstractNode(AbstractItem):
         """
         return cls.Identities
 
+    def identify(self):
+        """
+        Perform the node identification step for the current node.
+        Nodes who compute their identify without inheriting if from their inputs
+        or inclusion, MUST provide an implementation of this method, which MUST be
+        invoked only during the process which aims to identify a set of connected nodes.
+        Any attempt to call this method from outside this process may cause inconsistencies.
+        This method will compute the identity of the node according to it's configuration,
+        and will return a tuple composed of 3 elements, whose purpose is to dynamically adapt
+        the node identification algorithm behaviour according to the specific diagram configuration:
+
+        * 1) A set of nodes to be added to the STRONG set (usually the node itself, when identified correctly).
+        * 2) A set of nodes to be removed from the STRONG set (nodes that contribute only to the identity of this node)
+        * 3) A set of nodes to be added to the EXCLUDED set (nodes that to not partecipate with inheritance in the identification step)
+
+        If no identification is performed, the method MUST return None.
+        :rtype: tuple
+        """
+        return None
+
     def identity(self):
         """
         Returns the identity of the current node.

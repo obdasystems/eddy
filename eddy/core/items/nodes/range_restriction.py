@@ -36,6 +36,7 @@
 from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
+from eddy.core.functions.misc import first
 from eddy.core.items.nodes.common.restriction import RestrictionNode
 
 
@@ -56,6 +57,38 @@ class RangeRestrictionNode(RestrictionNode):
     #############################################
     #   INTERFACE
     #################################
+
+    def identify(self):
+        """
+        Perform the node identification step for this RangeRestriction node.
+        The identity of the node is calculated as follows:
+
+        * If the node has an Attribute as input => Identity == ValueDomain
+        * If the node has a Role or a Concept as input => Identity == Concept
+
+        After establishing the identity for this node, we remove all the
+        nodes we used to compute such identity from the STRONG set and make
+        sure this enumeration node is added to the STRONG set, so it will
+        contribute to the computation of the final identity for all the
+        WEAK nodes being examined during the identification process.
+        :rtype: tuple
+        """
+        supported = {Identity.Role, Identity.Attribute, Identity.Concept}
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.identity() in supported and Identity.Neutral not in x.identities()
+        f3 = lambda x: Identity.Concept if x.identity() in {Identity.Role, Identity.Concept} else Identity.ValueDomain
+        inputs = self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+        identities = set(map(f3, inputs))
+        computed = Identity.Neutral
+        if identities:
+            computed = first(identities)
+            if len(identities) > 1:
+                computed = Identity.Unknown
+        self.setIdentity(computed)
+        strong_add = set()
+        if self.identity() is not Identity.Neutral:
+            strong_add.add(self)
+        return strong_add, inputs, set()
 
     def setText(self, text):
         """

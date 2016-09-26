@@ -38,6 +38,7 @@ from PyQt5 import QtGui
 
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.functions.misc import first
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.polygon import Polygon
 
@@ -59,7 +60,7 @@ class PropertyAssertionNode(AbstractNode):
         :type brush: QBrush
         :type inputs: DistinctList
         """
-        super().__init__(**kwargs)
+        super(PropertyAssertionNode, self).__init__(**kwargs)
         brush = PropertyAssertionNode.DefaultBrush
         pen = PropertyAssertionNode.DefaultPen
         self.inputs = inputs or DistinctList()
@@ -76,7 +77,7 @@ class PropertyAssertionNode(AbstractNode):
         Add the given edge to the current node.
         :type edge: AbstractEdge
         """
-        super().addEdge(edge)
+        super(PropertyAssertionNode, self).addEdge(edge)
         if edge.type() is Item.InputEdge and edge.target is self:
             self.inputs.append(edge.id)
             edge.updateEdge()
@@ -111,6 +112,51 @@ class PropertyAssertionNode(AbstractNode):
         :rtype: int
         """
         return self.polygon.geometry().height()
+
+    def identify(self):
+        """
+        Perform the node identification step for this PropertyAssertion node.
+        The identity of the node is calculated as follows:
+
+        * If the node is targeting a Role with a membership edge => Identity == RoleInstance
+        * If the node is targeting an Attribute with a membership edge => Identity == AttributeInstance
+
+        else
+
+        * If the node has 2 individuals as inputs => Identity == RoleInstance
+        * If the node has 1 individual and 1 value as inputs => Identity == AttributeInstance
+
+        In both the cases, whether we establish or not an idendity for this node,
+        we mark it for EXCLUSION from the STRONG and WEAK sets. This is due to the
+        PropertyAssertion node being used to perform assertions at ABox level
+        while every other node in the graph is used at TBox level. Additionally we
+        discard the inputs of this node from the STRONG set because they are either
+        Individual or Value nodes and they are not needed to compute the final identity
+        for all the WEAK nodes being examined during the identification process.
+        :rtype: tuple
+        """
+        f1 = lambda x: x.type() is Item.MembershipEdge
+        f2 = lambda x: x.type() in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
+        f3 = lambda x: x.type() is Item.InputEdge
+        f4 = lambda x: x.type() is Item.IndividualNode
+        f5 = lambda x: Identity.RoleInstance if x.identity() is Identity.Role else Identity.AttributeInstance
+        f6 = lambda x: x.identity() is Identity.Value
+        outgoing = self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+        incoming = self.incomingNodes(filter_on_edges=f3, filter_on_nodes=f4)
+        computed = Identity.Neutral
+        # 1) USE MEMBERSHIP EDGE
+        identities = set(map(f5, outgoing))
+        if identities:
+            computed = first(identities)
+            if len(identities) > 1:
+                computed = Identity.Unknown
+        # 2) USE INPUT EDGES
+        if computed is Identity.Neutral and len(incoming) >= 2:
+            computed = Identity.RoleInstance
+            if sum(map(f6, incoming)):
+                computed = Identity.AttributeInstance
+        self.setIdentity(computed)
+        return set(), incoming, {self}
 
     def paint(self, painter, option, widget=None):
         """
@@ -158,7 +204,7 @@ class PropertyAssertionNode(AbstractNode):
         Remove the given edge from the current node.
         :type edge: AbstractEdge
         """
-        super().removeEdge(edge)
+        super(PropertyAssertionNode, self).removeEdge(edge)
         self.inputs.remove(edge.id)
         for i in self.inputs:
             try:
