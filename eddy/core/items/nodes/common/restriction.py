@@ -39,6 +39,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Restriction, Item, Identity
+from eddy.core.functions.misc import first
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.polygon import Polygon
@@ -75,29 +76,6 @@ class RestrictionNode(AbstractNode):
     #   PROPERTIES
     #################################
 
-    @property
-    def cardinality(self):
-        """
-        Returns the cardinality of the node.
-        :rtype: dict
-        """
-        cardinality = {'min': None, 'max': None}
-        match = RE_CARDINALITY.match(self.text())
-        if match:
-            if match.group('min') != '-':
-                cardinality['min'] = int(match.group('min'))
-            if match.group('max') != '-':
-                cardinality['max'] = int(match.group('max'))
-        return cardinality
-
-    @property
-    def restriction(self):
-        """
-        Returns the restriction type of the node.
-        :rtype: Restriction
-        """
-        return Restriction.forLabel(self.text())
-
     #############################################
     #   INTERFACE
     #################################
@@ -108,6 +86,24 @@ class RestrictionNode(AbstractNode):
         :rtype: QtCore.QRectF
         """
         return self.selection.geometry()
+
+    def cardinality(self, *args):
+        """
+        Returns the cardinality of the node.
+        :rtype: T <= int|dict
+        """
+        cardinality = {'min': None, 'max': None}
+        match = RE_CARDINALITY.match(self.text())
+        if match:
+            if match.group('min') != '-':
+                cardinality['min'] = int(match.group('min'))
+            if match.group('max') != '-':
+                cardinality['max'] = int(match.group('max'))
+        if args:
+            cardinality = {k:v for k, v in cardinality.items() if k in args}
+            if len(cardinality) == 1:
+                cardinality = first(cardinality.values())
+        return cardinality
 
     def copy(self, diagram):
         """
@@ -131,10 +127,6 @@ class RestrictionNode(AbstractNode):
         """
         return self.polygon.geometry().height()
 
-    #############################################
-    #   INTERFACE
-    #################################
-
     def isQualifiedRestriction(self):
         """
         Tells whether this node expresses a qualified restriction.
@@ -143,7 +135,7 @@ class RestrictionNode(AbstractNode):
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() in {Identity.Concept, Identity.Role}
         f3 = lambda x: x.identity() in {Identity.Attribute, Identity.ValueDomain}
-        if self.restriction in {Restriction.Cardinality, Restriction.Exists, Restriction.Forall}:
+        if self.restriction() in {Restriction.Cardinality, Restriction.Exists, Restriction.Forall}:
             return len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) >= 2 or \
                    len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) >= 2
         return False
@@ -178,6 +170,13 @@ class RestrictionNode(AbstractNode):
         path = QtGui.QPainterPath()
         path.addRect(self.polygon.geometry())
         return path
+
+    def restriction(self):
+        """
+        Returns the restriction type of the node.
+        :rtype: Restriction
+        """
+        return Restriction.forLabel(self.text())
 
     def setText(self, text):
         """

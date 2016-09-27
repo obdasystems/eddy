@@ -460,9 +460,9 @@ class OWL2Profile(AbstractProfile):
 
                     elif source.identity() is Identity.Concept:
 
-                        if target.restriction is Restriction.Self:
+                        if target.restriction() is Restriction.Self:
                             # Not a Qualified Restriction.
-                            name = target.restriction.toString()
+                            name = target.restriction().toString()
                             raise SyntaxError('Invalid restriction type for qualified restriction: {0}'.format(name))
 
                         # A Concept can be given as input only if there is no input or if the other input is a Role.
@@ -489,7 +489,7 @@ class OWL2Profile(AbstractProfile):
 
                     elif source.identity() is Identity.Attribute:
 
-                        if target.restriction is Restriction.Self:
+                        if target.restriction() is Restriction.Self:
                             # Attributes don't have self.
                             raise SyntaxError('Attributes do not have self')
 
@@ -505,9 +505,9 @@ class OWL2Profile(AbstractProfile):
 
                     elif source.identity() is Identity.ValueDomain:
 
-                        if target.restriction is Restriction.Self:
+                        if target.restriction() is Restriction.Self:
                             # Not a Qualified Restriction.
-                            name = target.restriction.toString()
+                            name = target.restriction().toString()
                             raise SyntaxError('Invalid restriction type for qualified restriction: {0}'.format(name))
 
                         # We can connect a ValueDomain only if there is no other input or if the other input is an Attribute.
@@ -598,7 +598,7 @@ class OWL2Profile(AbstractProfile):
 
                     elif source.identity() is Identity.Attribute:
 
-                        if target.restriction is Restriction.Self:
+                        if target.restriction() is Restriction.Self:
                             # Attributes don't have self.
                             raise SyntaxError('Attributes do not have self')
 

@@ -40,7 +40,7 @@ from tests import EddyTestCase
 from eddy.core.datatypes.owl import OWLSyntax
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.graphol import GrapholDiagramExporter
-from eddy.core.exporters.owl import OWLProjectExporterWorker
+from eddy.core.exporters.owl2 import OWLProjectExporterWorker
 from eddy.core.exporters.pdf import PdfDiagramExporter
 from eddy.core.functions.fsystem import fread
 from eddy.core.functions.path import expandPath

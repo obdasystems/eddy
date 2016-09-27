@@ -77,7 +77,7 @@ from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.graphol import GrapholDiagramExporter
 from eddy.core.exporters.graphol import GrapholProjectExporter
-from eddy.core.exporters.owl import OWLProjectExporter
+from eddy.core.exporters.owl2 import OWLProjectExporter
 from eddy.core.exporters.pdf import PdfDiagramExporter
 from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import MenuFactory, PropertyFactory
