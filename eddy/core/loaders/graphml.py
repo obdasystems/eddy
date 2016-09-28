@@ -33,13 +33,14 @@
 ##########################################################################
 
 
+import itertools
 import os
 
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from PyQt5 import QtXml
 
-from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.datatypes.graphol import Item, Identity, Restriction
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import Diagram
 from eddy.core.diagram import DiagramNotFoundError
@@ -321,15 +322,15 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
             if data.attribute('key', '') == self.keys['edge_key']:
 
                 if not element.attribute('source') in self.nodes:
-                    raise DiagramParseError('missing source node ({0})'.format(element.attribute('source')))
+                    raise DiagramParseError('missing source node (%s)' % element.attribute('source'))
                 if not element.attribute('target') in self.nodes:
-                    raise DiagramParseError('missing target node ({0})'.format(element.attribute('target')))
+                    raise DiagramParseError('missing target node (%s)' % element.attribute('target'))
 
                 source = self.nodes[element.attribute('source')]
                 target = self.nodes[element.attribute('target')]
 
                 if source is target:
-                    raise DiagramParseError('detected loop between nodes %s and %s', source.id, target.id)
+                    raise DiagramParseError('detected loop between nodes %s and %s' % (source.id, target.id))
 
                 points = []
                 polyLineEdge = data.firstChildElement('y:PolyLineEdge')
@@ -467,11 +468,9 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
 
             # NODE
             if data.attribute('key', '') == self.keys['node_key']:
-
                 # GENERIC NODE
                 genericNode = data.firstChildElement('y:GenericNode')
                 if not genericNode.isNull():
-
                     configuration = genericNode.attribute('configuration', '')
                     if configuration == 'com.yworks.entityRelationship.small_entity':
                         return Item.ConceptNode
@@ -483,18 +482,14 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
                 # SHAPE NODE
                 shapeNode = data.firstChildElement('y:ShapeNode')
                 if not shapeNode.isNull():
-
                     shape = shapeNode.firstChildElement('y:Shape')
                     if not shape.isNull():
-
                         shapeType = shape.attribute('type', '')
                         if shapeType == 'octagon':
                             return Item.IndividualNode
                         if shapeType == 'roundrectangle':
                             return Item.ValueDomainNode
-
                         if shapeType == 'hexagon':
-
                             # We need to identify DisjointUnion from the color and not by
                             # checking the empty label because in some ontologies created
                             # under yEd another operator node has been copied over and the
@@ -504,7 +499,6 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
                                 color = fill.attribute('color', '')
                                 if color == '#000000':
                                     return Item.DisjointUnionNode
-
                             nodeLabel = shapeNode.firstChildElement('y:NodeLabel')
                             if not nodeLabel.isNull():
                                 nodeText = nodeLabel.text().strip()
@@ -538,7 +532,6 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
 
             # EDGE
             if data.attribute('key', '') == self.keys['edge_key']:
-
                 polyLineEdge = data.firstChildElement('y:PolyLineEdge')
                 if not polyLineEdge.isNull():
                     lineStyle = polyLineEdge.firstChildElement('y:LineStyle')
@@ -606,7 +599,29 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         w = float(geometry.attribute('width'))
         h = float(geometry.attribute('height'))
         return snap(QtCore.QPointF(x, y) + QtCore.QPointF(w / 2, h / 2), Diagram.GridSize)
-    
+
+    @staticmethod
+    def optimizeLabelPos(node):
+        """
+        Perform updates on the position of the label of the given Domain o Range restriction node.
+        This is due to yEd not using the label to denote the 'exists' restriction and because Eddy
+        adds the label automatically, it may overlap some other elements hence we try to give it
+        some more visibility by moving it around the node till it overlaps less stuff.
+        :type node: T <= DomainRestrictionNode|RangeRestrictionNode
+        """
+        if node.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
+            if node.restriction() is Restriction.Exists:
+                if not node.label.isMoved() and node.label.collidingItems():
+                    x = [-30, -15, 0, 15, 30]
+                    y = [0, 12, 22, 32, 44]
+                    pos = node.label.pos()
+                    for offset_x, offset_y in itertools.product(x, y):
+                        node.label.setPos(pos + QtCore.QPointF(offset_x, offset_y))
+                        if not node.label.collidingItems():
+                            break
+                    else:
+                        node.label.setPos(pos)
+
     #############################################
     #   INTERFACE
     #################################
@@ -798,10 +813,20 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         LOGGER.debug('Loaded predicate metadata from original diagram: %s', self.path)
 
         #############################################
+        # PERFORM GEOMETRIC OPTIMIZATIONS
+        #################################
+
+        for node in self.diagram.nodes():
+            QtWidgets.QApplication.processEvents()
+            self.optimizeLabelPos(node)
+
+        LOGGER.debug('Performed geometrical optimization')
+
+        #############################################
         # UPDATE GEOMETRY OF ALL THE SHAPES
         #################################
 
-        for item in self.diagram.nodes()|self.diagram.edges():
+        for item in self.diagram.nodes() | self.diagram.edges():
             item.updateEdgeOrNode()
 
         LOGGER.debug('Refreshing diagram "%s" elements state', self.diagram.name)
