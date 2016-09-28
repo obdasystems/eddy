@@ -1036,6 +1036,30 @@ class OWLProjectExporterWorker(QtCore.QObject):
             inverse = first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
         self.addAxiom(self.df.getOWLInverseObjectPropertiesAxiom(self.convert(forward), self.convert(inverse)))
 
+    def createNegativeDataPropertyAssertionAxiom(self, edge):
+        """
+        Generate a OWL 2 NegativeObjectPropertyAssertion axiom.
+        :type edge: MembershipEdge
+        """
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.identity() is Identity.Attribute
+        operand1 = self.convert(first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)))
+        operand2 = self.convert(edge.source)[0]
+        operand3 = self.convert(edge.source)[1]
+        self.addAxiom(self.df.getOWLNegativeDataPropertyAssertionAxiom(operand1, operand2, operand3))
+
+    def createNegativeObjectPropertyAssertionAxiom(self, edge):
+        """
+        Generate a OWL 2 NegativeObjectPropertyAssertion axiom.
+        :type edge: MembershipEdge
+        """
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.identity() is Identity.Role
+        operand1 = self.convert(first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)))
+        operand2 = self.convert(edge.source)[0]
+        operand3 = self.convert(edge.source)[1]
+        self.addAxiom(self.df.getOWLNegativeObjectPropertyAssertionAxiom(operand1, operand2, operand3))
+
     def createObjectPropertyAxiom(self, node):
         """
         Generate OWL 2 ObjectProperty specific axioms.
@@ -1274,10 +1298,16 @@ class OWLProjectExporterWorker(QtCore.QObject):
                         self.createClassAssertionAxiom(edge)
                     # ROLES
                     elif edge.source.identity() is Identity.RoleInstance:
-                        self.createObjectPropertyAssertionAxiom(edge)
+                        if edge.target.type() is Item.ComplementNode:
+                            self.createNegativeObjectPropertyAssertionAxiom(edge)
+                        else:
+                            self.createObjectPropertyAssertionAxiom(edge)
                     # ATTRIBUTES
                     elif edge.source.identity() is Identity.AttributeInstance:
-                        self.createDataPropertyAssertionAxiom(edge)
+                        if edge.target.type() is Item.ComplementNode:
+                            self.createNegativeDataPropertyAssertionAxiom(edge)
+                        else:
+                            self.createDataPropertyAssertionAxiom(edge)
                     else:
                         raise DiagramMalformedError(edge, 'invalid membership assertion')
 
