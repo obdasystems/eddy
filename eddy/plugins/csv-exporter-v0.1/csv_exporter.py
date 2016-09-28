@@ -111,9 +111,9 @@ class CsvExporter(AbstractProjectExporter):
                 if not node.text() in csvdata[node.type()]:
                     meta = self.project.meta(node.type(), node.text())
                     csvdata[node.type()][node.text()] = {
-                        self.KeyName: meta.predicate,
-                        self.KeyType: meta.item.shortName,
-                        self.KeyDescription: meta.description,
+                        self.KeyName: node.text(),
+                        self.KeyType: node.shortName,
+                        self.KeyDescription: meta.get('description', ''),
                         self.KeyDiagrams: DistinctList(),
                     }
                 # Append the name of the diagram to the diagram list.
