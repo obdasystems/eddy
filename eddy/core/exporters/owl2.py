@@ -882,7 +882,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         f2 = lambda x: x.type() is Item.RoleNode
         operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
         if not operand:
-            raise DiagramMalformedError(node, 'missing operand(s)')
+            raise DiagramMalformedError(node, 'missing operand')
         return self.convert(operand).getInverseProperty()
 
     def getUnion(self, node):
@@ -1020,6 +1020,21 @@ class OWLProjectExporterWorker(QtCore.QObject):
         collection.add(self.convert(edge.target))
         collection = cast(Set, collection)
         self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(collection))
+
+    def createInverseObjectPropertiesAxiom(self, edge):
+        """
+        Generate a OWL 2 InverseObjectProperties axiom.
+        :type edge: InclusionEdge
+        """
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.type() is Item.RoleNode
+        if edge.source.type() is Item.RoleInverseNode:
+            forward = edge.target
+            inverse = first(edge.source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+        else:
+            forward = edge.source
+            inverse = first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+        self.addAxiom(self.df.getOWLInverseObjectPropertiesAxiom(self.convert(forward), self.convert(inverse)))
 
     def createObjectPropertyAxiom(self, node):
         """
@@ -1195,6 +1210,10 @@ class OWLProjectExporterWorker(QtCore.QObject):
 
             for edge in self.project.edges():
 
+                #############################################
+                # INCLUSION
+                #################################
+
                 if edge.type() is Item.InclusionEdge:
 
                     # CONCEPTS
@@ -1223,6 +1242,10 @@ class OWLProjectExporterWorker(QtCore.QObject):
                     else:
                         raise DiagramMalformedError(edge, 'invalid inclusion assertion')
 
+                #############################################
+                # EQUIVALENCE
+                #################################
+
                 elif edge.type() is Item.EquivalenceEdge:
 
                     # CONCEPTS
@@ -1230,12 +1253,19 @@ class OWLProjectExporterWorker(QtCore.QObject):
                         self.createEquivalentClassesAxiom(edge)
                     # ROLES
                     elif edge.source.identity() is Identity.Role and edge.target.identity() is Identity.Role:
-                        self.createEquivalentObjectPropertiesAxiom(edge)
+                        if Item.RoleInverseNode in {edge.source.type(), edge.target.type()}:
+                            self.createInverseObjectPropertiesAxiom(edge)
+                        else:
+                            self.createEquivalentObjectPropertiesAxiom(edge)
                     # ATTRIBUTES
                     elif edge.source.identity() is Identity.Attribute and edge.target.identity() is Identity.Attribute:
                         self.createEquivalentDataPropertiesAxiom(edge)
                     else:
                         raise DiagramMalformedError(edge, 'invalid equivalence assertion')
+
+                #############################################
+                # MEMBERSHIP
+                #################################
 
                 elif edge.type() is Item.MembershipEdge:
 
