@@ -284,7 +284,7 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
 
 class OWLProjectExporterWorker(QtCore.QObject):
     """
-    Extends QtCore.QObject providing a worker thread that will perform the OWL ontology generation.
+    Extends QtCore.QObject providing a worker thread that will perform the OWL 2 ontology generation.
     """
     sgnCompleted = QtCore.pyqtSignal()
     sgnErrored = QtCore.pyqtSignal(Exception)
@@ -294,7 +294,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
 
     def __init__(self, project, path, **kwargs):
         """
-        Initialize the OWL Exporter worker.
+        Initialize the OWL 2 Exporter worker.
         :type project: Project
         :type path: str
         """
@@ -303,14 +303,14 @@ class OWLProjectExporterWorker(QtCore.QObject):
         self.path = path
         self.project = project
         self.syntax = kwargs.get('syntax', OWLSyntax.Functional)
-        
+
         self._axioms = set()
-        self._nodes = dict()
-        
+        self._converted = dict()
+
         self.df = None
         self.man = None
         self.num = 0
-        self.max = len(self.project.nodes()) + len(self.project.edges())
+        self.max = len(self.project.nodes()) * 2 + len(self.project.edges())
         self.ontology = None
         self.pm = None
 
@@ -349,51 +349,56 @@ class OWLProjectExporterWorker(QtCore.QObject):
         :rtype: set
         """
         return self._axioms
-    
-    def get(self, node):
+
+    def convert(self, node):
         """
-        Returns the OWL 2 conversion of the given node.
+        Build and returns the OWL 2 conversion of the given node.
         :type node: AbstractNode
         :rtype: OWLObject
         """
-        try:
-            return self._nodes[node]
-        except KeyError:
+        if node not in self._converted:
             if node.type() is Item.ConceptNode:
-                self._nodes[node] = self.getConcept(node)
+                self._converted[node] = self.getConcept(node)
             elif node.type() is Item.AttributeNode:
-                self._nodes[node] = self.getAttribute(node)
+                self._converted[node] = self.getAttribute(node)
             elif node.type() is Item.RoleNode:
-                self._nodes[node] = self.getRole(node)
+                self._converted[node] = self.getRole(node)
             elif node.type() is Item.ValueDomainNode:
-                self._nodes[node] = self.getValueDomain(node)
+                self._converted[node] = self.getValueDomain(node)
             elif node.type() is Item.IndividualNode:
-                self._nodes[node] = self.getIndividual(node)
+                self._converted[node] = self.getIndividual(node)
             elif node.type() is Item.FacetNode:
-                self._nodes[node] = self.getFacet(node)
+                self._converted[node] = self.getFacet(node)
             elif node.type() is Item.RoleInverseNode:
-                self._nodes[node] = self.getRoleInverse(node)
+                self._converted[node] = self.getRoleInverse(node)
             elif node.type() is Item.RoleChainNode:
-                self._nodes[node] = self.getRoleChain(node)
+                self._converted[node] = self.getRoleChain(node)
             elif node.type() is Item.ComplementNode:
-                self._nodes[node] = self.getComplement(node)
+                self._converted[node] = self.getComplement(node)
             elif node.type() is Item.EnumerationNode:
-                self._nodes[node] = self.getEnumeration(node)
+                self._converted[node] = self.getEnumeration(node)
             elif node.type() is Item.IntersectionNode:
-                self._nodes[node] = self.getIntersection(node)
+                self._converted[node] = self.getIntersection(node)
             elif node.type() in {Item.UnionNode, Item.DisjointUnionNode}:
-                self._nodes[node] = self.getUnion(node)
+                self._converted[node] = self.getUnion(node)
             elif node.type() is Item.DatatypeRestrictionNode:
-                self._nodes[node] = self.getDatatypeRestriction(node)
+                self._converted[node] = self.getDatatypeRestriction(node)
             elif node.type() is Item.PropertyAssertionNode:
-                self._nodes[node] = self.getPropertyAssertion(node)
+                self._converted[node] = self.getPropertyAssertion(node)
             elif node.type() is Item.DomainRestrictionNode:
-                self._nodes[node] = self.getDomainRestriction(node)
+                self._converted[node] = self.getDomainRestriction(node)
             elif node.type() is Item.RangeRestrictionNode:
-                self._nodes[node] = self.getRangeRestriction(node)
+                self._converted[node] = self.getRangeRestriction(node)
             else:
                 raise ValueError('no conversion available for node %s' % node)
-            return self._nodes[node]
+        return self._converted[node]
+
+    def converted(self):
+        """
+        Returns the dictionary of converted nodes.
+        :rtype: dict
+        """
+        return self._converted
 
     def step(self, num, increase=0):
         """
@@ -490,7 +495,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         """
         Returns the OWLFacet matching the given Facet.
         :type facet: Facet
-        :rtype: OWLFacet 
+        :rtype: OWLFacet
         """
         if facet is Facet.maxExclusive:
             return self.OWLFacet.valueOf('MAX_EXCLUSIVE')
@@ -511,7 +516,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         if facet is Facet.pattern:
             return self.OWLFacet.valueOf('PATTERN')
         raise ValueError('invalid facet supplied: %s' % facet)
-         
+
     #############################################
     #   NODES PROCESSING
     #################################
@@ -545,13 +550,13 @@ class OWLProjectExporterWorker(QtCore.QObject):
             raise DiagramMalformedError(node, 'too many operands')
         operand = first(incoming)
         if operand.identity() is Identity.Concept:
-            return self.df.getOWLObjectComplementOf(self.get(operand))
+            return self.df.getOWLObjectComplementOf(self.convert(operand))
         if operand.identity() is Identity.ValueDomain:
-            return self.df.getOWLDataComplementOf(self.get(operand))
+            return self.df.getOWLDataComplementOf(self.convert(operand))
         if operand.identity() is Identity.Role:
-            return self.get(operand)
+            return self.convert(operand)
         if operand.identity() is Identity.Attribute:
-            return self.get(operand)
+            return self.convert(operand)
         raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
 
     def getConcept(self, node):
@@ -584,7 +589,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         if not operand:
             raise DiagramMalformedError(node, 'missing value domain node')
 
-        de = self.get(operand)
+        de = self.convert(operand)
 
         #############################################
         # BUILD FACETS
@@ -596,7 +601,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
 
         collection = self.HashSet()
         for i in incoming:
-            collection.add(self.get(i))
+            collection.add(self.convert(i))
 
         #############################################
         # BUILD DATATYPE RESTRICTION
@@ -625,7 +630,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
             # BUILD OPERAND
             #################################
 
-            dpe = self.get(operand)
+            dpe = self.convert(operand)
 
             #############################################
             # BUILD FILLER
@@ -635,7 +640,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
             if not filler:
                 dre = self.df.getTopDatatype()
             else:
-                dre = self.get(filler)
+                dre = self.convert(filler)
 
             if node.restriction() is Restriction.Exists:
                 return self.df.getOWLDataSomeValuesFrom(dpe, dre)
@@ -662,7 +667,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
             # BUILD OPERAND
             #################################
 
-            ope = self.get(operand)
+            ope = self.convert(operand)
 
             #############################################
             # BUILD FILLER
@@ -672,7 +677,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
             if not filler:
                 ce = self.df.getOWLThing()
             else:
-                ce = self.get(filler)
+                ce = self.convert(filler)
 
             if node.restriction() is Restriction.Self:
                 return self.df.getOWLObjectHasSelf(ope)
@@ -707,7 +712,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         f2 = lambda x: x.type() is Item.IndividualNode
         individuals = self.HashSet()
         for i in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-            individuals.add(self.get(i))
+            individuals.add(self.convert(i))
         if individuals.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
         return self.df.getOWLObjectOneOf(cast(self.Set, individuals))
@@ -749,7 +754,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() is node.identity()
         for operand in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-            collection.add(self.get(operand))
+            collection.add(self.convert(operand))
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
         if node.identity() is Identity.Concept:
@@ -768,7 +773,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         for operand in [node.diagram.edge(i).other(node) for i in node.inputs]:
             if operand.type() is not Item.IndividualNode:
                 raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
-            collection.append(self.get(operand))
+            collection.append(self.convert(operand))
         if len(collection) < 2:
             raise DiagramMalformedError(node, 'missing operand(s)')
         if len(collection) > 2:
@@ -782,7 +787,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         :rtype: T <= OWLClassExpression|OWLDataProperty
         """
         f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.identity() is Identity.Role
+        f2 = lambda x: x.identity() in {Identity.Role, Identity.Attribute}
         f3 = lambda x: x.identity() is Identity.Concept
 
         # We discard Attribute's range restriction. The idea is that the
@@ -790,49 +795,51 @@ class OWLProjectExporterWorker(QtCore.QObject):
         # to compose the DataPropertyRange axiom and thus should never be
         # given in input to any other type of node, nor it should have
         # another input itself. If one of the above mentioned things happens
-        # we'll see a KeyError added in the application log which will
+        # we'll see an AttributeError added in the application log which will
         # highlight an expression composition problem.
 
         operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
         if not operand:
             raise DiagramMalformedError(node, 'missing operand(s)')
 
-        #############################################
-        # BUILD OPERAND
-        #################################
+        if operand.identity() is Identity.Role:
 
-        ope = self.get(operand).getInverseProperty()
+            #############################################
+            # BUILD OPERAND
+            #################################
 
-        #############################################
-        # BUILD FILLER
-        #################################
+            ope = self.convert(operand).getInverseProperty()
 
-        filler = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
-        if not filler:
-            ce = self.df.getOWLThing()
-        else:
-            ce = self.get(filler)
+            #############################################
+            # BUILD FILLER
+            #################################
 
-        if node.restriction() is Restriction.Self:
-            return self.df.getOWLObjectHasSelf(ope)
-        if node.restriction() is Restriction.Exists:
-            return self.df.getOWLObjectSomeValuesFrom(ope, ce)
-        if node.restriction() is Restriction.Forall:
-            return self.df.getOWLObjectAllValuesFrom(ope, ce)
-        if node.restriction() is Restriction.Cardinality:
-            cardinalities = self.HashSet()
-            min_cardinality = node.cardinality('min')
-            max_cardinality = node.cardinality('max')
-            if min_cardinality is not None:
-                cardinalities.add(self.df.getOWLObjectMinCardinality(min_cardinality, ope, ce))
-            if max_cardinality is not None:
-                cardinalities.add(self.df.getOWLObjectMaxCardinality(max_cardinality, ope, ce))
-            if cardinalities.isEmpty():
-                raise DiagramMalformedError(node, 'missing cardinality')
-            if cardinalities.size() >= 1:
-                return self.df.getOWLObjectIntersectionOf(cast(self.Set, cardinalities))
-            return cardinalities.iterator().next()
-        raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
+            filler = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
+            if not filler:
+                ce = self.df.getOWLThing()
+            else:
+                ce = self.convert(filler)
+
+            if node.restriction() is Restriction.Self:
+                return self.df.getOWLObjectHasSelf(ope)
+            if node.restriction() is Restriction.Exists:
+                return self.df.getOWLObjectSomeValuesFrom(ope, ce)
+            if node.restriction() is Restriction.Forall:
+                return self.df.getOWLObjectAllValuesFrom(ope, ce)
+            if node.restriction() is Restriction.Cardinality:
+                cardinalities = self.HashSet()
+                min_cardinality = node.cardinality('min')
+                max_cardinality = node.cardinality('max')
+                if min_cardinality is not None:
+                    cardinalities.add(self.df.getOWLObjectMinCardinality(min_cardinality, ope, ce))
+                if max_cardinality is not None:
+                    cardinalities.add(self.df.getOWLObjectMaxCardinality(max_cardinality, ope, ce))
+                if cardinalities.isEmpty():
+                    raise DiagramMalformedError(node, 'missing cardinality')
+                if cardinalities.size() >= 1:
+                    return self.df.getOWLObjectIntersectionOf(cast(self.Set, cardinalities))
+                return cardinalities.iterator().next()
+            raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
     def getRole(self, node):
         """
@@ -858,7 +865,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         for operand in [node.diagram.edge(i).other(node) for i in node.inputs]:
             if operand.type() not in {Item.RoleNode, Item.RoleInverseNode}:
                 raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
-            collection.add(self.get(operand))
+            collection.add(self.convert(operand))
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
         return cast(self.List, collection)
@@ -874,7 +881,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
         if not operand:
             raise DiagramMalformedError(node, 'missing operand(s)')
-        return self.get(operand).getInverseProperty()
+        return self.convert(operand).getInverseProperty()
 
     def getUnion(self, node):
         """
@@ -888,7 +895,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() is node.identity()
         for operand in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-            collection.add(self.get(operand))
+            collection.add(self.convert(operand))
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
         if node.identity() is Identity.Concept:
@@ -918,38 +925,38 @@ class OWLProjectExporterWorker(QtCore.QObject):
             value = self.df.getOWLLiteral(OWLAnnotationText(meta['description']))
             value = cast(self.OWLAnnotationValue, value)
             annotation = self.df.getOWLAnnotation(props, value)
-            self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(self.get(node).getIRI(), annotation))
-    
+            self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(self.convert(node).getIRI(), annotation))
+
     def createClassAssertionAxiom(self, edge):
         """
         Generate a OWL 2 ClassAssertion axiom.
         :type edge: MembershipEdge
         """
-        self.addAxiom(self.df.getOWLClassAssertionAxiom(self.get(edge.target), self.get(edge.source)))
+        self.addAxiom(self.df.getOWLClassAssertionAxiom(self.convert(edge.target), self.convert(edge.source)))
 
     def createDataPropertyAssertionAxiom(self, edge):
         """
         Generate a OWL 2 DataPropertyAssertion axiom.
         :type edge: MembershipEdge
         """
-        operand1 = self.get(edge.source)[0]
-        operand2 = self.get(edge.source)[1]
-        self.addAxiom(self.df.getOWLDataPropertyAssertionAxiom(self.get(edge.target), operand1, operand2))
-    
+        operand1 = self.convert(edge.source)[0]
+        operand2 = self.convert(edge.source)[1]
+        self.addAxiom(self.df.getOWLDataPropertyAssertionAxiom(self.convert(edge.target), operand1, operand2))
+
     def createDataPropertyAxiom(self, node):
         """
         Generate OWL 2 Data Property specific axioms.
         :type node: AttributeNode
         """
         if node.isFunctional():
-            self.addAxiom(self.df.getOWLFunctionalDataPropertyAxiom(self.get(node)))
+            self.addAxiom(self.df.getOWLFunctionalDataPropertyAxiom(self.convert(node)))
 
     def createDeclarationAxiom(self, node):
         """
         Generate a OWL 2 Declaration axiom.
         :type node: AbstractNode
         """
-        self.addAxiom(self.df.getOWLDeclarationAxiom(self.get(node)))
+        self.addAxiom(self.df.getOWLDeclarationAxiom(self.convert(node)))
 
     def createDisjointClassesAxiom(self, node):
         """
@@ -958,7 +965,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         """
         collection = self.HashSet()
         for operand in node.incomingNodes(lambda x: x.type() is Item.InputEdge):
-            collection.add(self.get(operand))
+            collection.add(self.convert(operand))
         self.addAxiom(self.df.getOWLDisjointClassesAxiom(cast(self.Set, collection)))
 
     def createDisjointDataPropertiesAxiom(self, edge):
@@ -967,8 +974,8 @@ class OWLProjectExporterWorker(QtCore.QObject):
         :type edge: InclusionEdge
         """
         collection = self.HashSet()
-        collection.add(self.get(edge.source))
-        collection.add(self.get(edge.target))
+        collection.add(self.convert(edge.source))
+        collection.add(self.convert(edge.target))
         self.addAxiom(self.df.getOWLDisjointDataPropertiesAxiom(cast(self.Set, collection)))
 
     def createDisjointObjectPropertiesAxiom(self, edge):
@@ -977,8 +984,8 @@ class OWLProjectExporterWorker(QtCore.QObject):
         :type edge: InclusionEdge
         """
         collection = self.HashSet()
-        collection.add(self.get(edge.source))
-        collection.add(self.get(edge.target))
+        collection.add(self.convert(edge.source))
+        collection.add(self.convert(edge.target))
         self.addAxiom(self.df.getOWLDisjointObjectPropertiesAxiom(cast(self.Set, collection)))
 
     def createEquivalentClassesAxiom(self, edge):
@@ -987,8 +994,8 @@ class OWLProjectExporterWorker(QtCore.QObject):
         :type edge: InclusionEdge
         """
         collection = self.HashSet()
-        collection.add(self.get(edge.source))
-        collection.add(self.get(edge.target))
+        collection.add(self.convert(edge.source))
+        collection.add(self.convert(edge.target))
         self.addAxiom(self.df.getOWLEquivalentClassesAxiom(cast(self.Set, collection)))
 
     def createEquivalentDataPropertiesAxiom(self, edge):
@@ -997,8 +1004,8 @@ class OWLProjectExporterWorker(QtCore.QObject):
         :type edge: InclusionEdge
         """
         collection = self.HashSet()
-        collection.add(self.get(edge.source))
-        collection.add(self.get(edge.target))
+        collection.add(self.convert(edge.source))
+        collection.add(self.convert(edge.target))
         self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(cast(self.Set, collection)))
 
     def createEquivalentObjectPropertiesAxiom(self, edge):
@@ -1007,8 +1014,8 @@ class OWLProjectExporterWorker(QtCore.QObject):
         :type edge: InclusionEdge
         """
         collection = self.HashSet()
-        collection.add(self.get(edge.source))
-        collection.add(self.get(edge.target))
+        collection.add(self.convert(edge.source))
+        collection.add(self.convert(edge.target))
         collection = cast(self.Set, collection)
         self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(collection))
 
@@ -1018,28 +1025,28 @@ class OWLProjectExporterWorker(QtCore.QObject):
         :type node: RoleNode
         """
         if node.isFunctional():
-            self.addAxiom(self.df.getOWLFunctionalObjectPropertyAxiom(self.get(node)))
+            self.addAxiom(self.df.getOWLFunctionalObjectPropertyAxiom(self.convert(node)))
         if node.isInverseFunctional():
-            self.addAxiom(self.df.getOWLInverseFunctionalObjectPropertyAxiom(self.get(node)))
+            self.addAxiom(self.df.getOWLInverseFunctionalObjectPropertyAxiom(self.convert(node)))
         if node.isAsymmetric():
-            self.addAxiom(self.df.getOWLAsymmetricObjectPropertyAxiom(self.get(node)))
+            self.addAxiom(self.df.getOWLAsymmetricObjectPropertyAxiom(self.convert(node)))
         if node.isIrreflexive():
-            self.addAxiom(self.df.getOWLIrreflexiveObjectPropertyAxiom(self.get(node)))
+            self.addAxiom(self.df.getOWLIrreflexiveObjectPropertyAxiom(self.convert(node)))
         if node.isReflexive():
-            self.addAxiom(self.df.getOWLReflexiveObjectPropertyAxiom(self.get(node)))
+            self.addAxiom(self.df.getOWLReflexiveObjectPropertyAxiom(self.convert(node)))
         if node.isSymmetric():
-            self.addAxiom(self.df.getOWLSymmetricObjectPropertyAxiom(self.get(node)))
+            self.addAxiom(self.df.getOWLSymmetricObjectPropertyAxiom(self.convert(node)))
         if node.isTransitive():
-            self.addAxiom(self.df.getOWLTransitiveObjectPropertyAxiom(self.get(node)))
+            self.addAxiom(self.df.getOWLTransitiveObjectPropertyAxiom(self.convert(node)))
 
     def createObjectPropertyAssertionAxiom(self, edge):
         """
         Generate a OWL 2 ObjectPropertyAssertion axiom.
         :type edge: MembershipEdge
         """
-        operand1 = self.get(edge.source)[0]
-        operand2 = self.get(edge.source)[1]
-        self.addAxiom(self.df.getOWLObjectPropertyAssertionAxiom(self.get(edge.target), operand1, operand2))
+        operand1 = self.convert(edge.source)[0]
+        operand2 = self.convert(edge.source)[1]
+        self.addAxiom(self.df.getOWLObjectPropertyAssertionAxiom(self.convert(edge.target), operand1, operand2))
 
     def createPropertyDomainAxiom(self, node):
         """
@@ -1054,7 +1061,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
             f3 = lambda x: x.type() in {Item.InclusionEdge, Item.EquivalenceEdge}
             f4 = lambda x: x.identity() is Identity.Concept
             for concept in node.outgoingNodes(filter_on_edges=f3, filter_on_nodes=f4):
-                self.addAxiom(self.df.getOWLObjectPropertyDomainAxiom(self.get(role), self.get(concept)))
+                self.addAxiom(self.df.getOWLObjectPropertyDomainAxiom(self.convert(role), self.convert(concept)))
         # DataPropertyDomain
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() is Identity.Attribute
@@ -1063,7 +1070,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
             f3 = lambda x: x.type() in {Item.InclusionEdge, Item.EquivalenceEdge}
             f4 = lambda x: x.identity() is Identity.Concept
             for concept in node.outgoingNodes(filter_on_edges=f3, filter_on_nodes=f4):
-                self.addAxiom(self.df.getOWLDataPropertyDomainAxiom(self.get(attribute), self.get(concept)))
+                self.addAxiom(self.df.getOWLDataPropertyDomainAxiom(self.convert(attribute), self.convert(concept)))
 
     def createPropertyRangeAxiom(self, node):
         """
@@ -1078,7 +1085,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
             f3 = lambda x: x.type() in {Item.InclusionEdge, Item.EquivalenceEdge}
             f4 = lambda x: x.identity() is Identity.Concept
             for concept in node.outgoingNodes(filter_on_edges=f3, filter_on_nodes=f4):
-                self.addAxiom(self.df.getOWLObjectPropertyRangeAxiom(self.get(role), self.get(concept)))
+                self.addAxiom(self.df.getOWLObjectPropertyRangeAxiom(self.convert(role), self.convert(concept)))
         # DataPropertyRangeAxiom
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() is Identity.Attribute
@@ -1087,35 +1094,35 @@ class OWLProjectExporterWorker(QtCore.QObject):
             f3 = lambda x: x.type() in {Item.InclusionEdge, Item.EquivalenceEdge}
             f4 = lambda x: x.identity() is Identity.ValueDomain
             for concept in node.outgoingNodes(filter_on_edges=f3, filter_on_nodes=f4):
-                self.addAxiom(self.df.getOWLDataPropertyRangeAxiom(self.get(attribute), self.get(concept)))
+                self.addAxiom(self.df.getOWLDataPropertyRangeAxiom(self.convert(attribute), self.convert(concept)))
 
     def createSubclassOfAxiom(self, edge):
         """
         Generate a OWL 2 SubclassOf axiom.
         :type edge: InclusionEdge
         """
-        self.addAxiom(self.df.getOWLSubClassOfAxiom(self.get(edge.source), self.get(edge.target)))
+        self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(edge.source), self.convert(edge.target)))
 
     def createSubDataPropertyOfAxiom(self, edge):
         """
         Generate a OWL 2 SubDataPropertyOf axiom.
         :type edge: InclusionEdge
         """
-        self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(self.get(edge.source), self.get(edge.target)))
+        self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(self.convert(edge.source), self.convert(edge.target)))
 
     def createSubObjectPropertyOfAxiom(self, edge):
         """
         Generate a OWL 2 SubObjectPropertyOf axiom.
         :type edge: InclusionEdge
         """
-        self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(self.get(edge.source), self.get(edge.target)))
+        self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(self.convert(edge.source), self.convert(edge.target)))
 
     def createSubPropertyChainOfAxiom(self, edge):
         """
         Generate a OWL 2 SubPropertyChainOf axiom.
         :type edge: InclusionEdge
         """
-        self._axioms.add(self.df.getOWLSubPropertyChainOfAxiom(self.get(edge.source), self.get(edge.target)))
+        self.addAxiom(self.df.getOWLSubPropertyChainOfAxiom(self.convert(edge.source), self.convert(edge.target)))
 
     #############################################
     #   MAIN WORKER
@@ -1141,7 +1148,19 @@ class OWLProjectExporterWorker(QtCore.QObject):
             self.pm.setPrefix(self.project.prefix, postfix(self.project.iri, '#'))
 
             cast(self.PrefixManager, self.pm)
-            
+
+            LOGGER.debug('Initialized OWL 2 Ontology: %s', rstrip(self.project.iri, '#'))
+
+            #############################################
+            # NODES PRE-PROCESSING
+            #################################
+
+            for node in self.project.nodes():
+                self.convert(node)
+                self.step(+1)
+
+            LOGGER.debug('Pre-processed %s nodes into OWL 2 expressions', len(self.converted()))
+
             #############################################
             # AXIOMS FROM NODES
             #################################
@@ -1165,6 +1184,8 @@ class OWLProjectExporterWorker(QtCore.QObject):
                     self.createAnnotationAssertionAxiom(node)
 
                 self.step(+1)
+
+            LOGGER.debug('Generated OWL 2 axioms from nodes (axioms = %s)', len(self.axioms()))
 
             #############################################
             # AXIOMS FROM EDGES
@@ -1193,6 +1214,10 @@ class OWLProjectExporterWorker(QtCore.QObject):
                                 self.createDisjointDataPropertiesAxiom(edge)
                             elif edge.target.type() is Item.AttributeNode:
                                 self.createSubDataPropertyOfAxiom(edge)
+                    # VALUE DOMAIN (ONLY DATA PROPERTY RANGE)
+                    elif edge.source.type() is Item.RangeRestrictionNode and edge.target.identity() is Identity.ValueDomain:
+                        # This is being handled already in createPropertyRangeAxiom.
+                        pass
                     else:
                         raise DiagramMalformedError(edge, 'invalid inclusion assertion')
 
@@ -1226,9 +1251,13 @@ class OWLProjectExporterWorker(QtCore.QObject):
 
                 self.step(+1)
 
+            LOGGER.debug('Generated OWL 2 axioms from edges (axioms = %s)', len(self.axioms()))
+
             #############################################
             # APPLY GENERATED AXIOMS
             #################################
+
+            LOGGER.debug('Applying OWL 2 axioms on the OWL 2 Ontology')
 
             for axiom in self.axioms():
                 self.man.addAxiom(self.ontology, axiom)
@@ -1252,6 +1281,8 @@ class OWLProjectExporterWorker(QtCore.QObject):
             else:
                 raise TypeError('unsupported syntax (%s)' % self.syntax)
 
+            LOGGER.debug('Serializing the OWL 2 Ontology in %s', self.syntax.value)
+
             # COPY PREFIXES
             ontoFormat = DocumentFormat()
             ontoFormat.copyPrefixesFrom(self.pm)
@@ -1264,9 +1295,10 @@ class OWLProjectExporterWorker(QtCore.QObject):
             stream = cast(self.StringDocumentTarget, stream)
             string = DocumentFilter(stream.toString())
             fwrite(string, self.path)
-            
+
         except Exception as e:
             self.sgnErrored.emit(e)
+            LOGGER.exception(e)
         else:
             self.sgnCompleted.emit()
         finally:
