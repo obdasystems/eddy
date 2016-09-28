@@ -641,13 +641,20 @@ class OWL2Profile(AbstractProfile):
 
                 if source.type() is Item.PropertyAssertionNode:
 
-                    if source.identity() is Identity.RoleInstance and target.type() not in {Item.RoleNode, Item.RoleInverseNode}:
-                        # If the source of the edge is a Role Instance then we MUST target a Role expression.
-                        raise SyntaxError('Invalid target for Role assertion: {0}'.format(target.name))
+                    if source.identity() is Identity.RoleInstance:
 
-                    if source.identity() is Identity.AttributeInstance and target.type() is not Item.AttributeNode:
-                        # If the source of the edge is an Attribute Instance then we MUST target an Attribute.
-                        raise SyntaxError('Invalid target for Attribute assertion: {0}'.format(target.name))
+                        if Identity.Role not in target.identities():
+                            # If the source of the edge is a Role Instance we MUST target a Role Expression.
+                            raise SyntaxError('Invalid target for Role assertion: {0}'.format(target.identity().value))
+
+                        if target.type() is Item.RoleChainNode:
+                            raise SyntaxError('Invalid target for Role assertion: {0}'.format(target.name))
+
+                    elif source.identity() is Identity.AttributeInstance:
+
+                        if Identity.Attribute not in target.identities():
+                            # If the source of the edge is a Attribute Instance we MUST target an Attribute Expression.
+                            raise SyntaxError('Invalid target for Attribute assertion: {0}'.format(target.identity().value))
 
         except SyntaxError as e:
             pvr = ProfileValidationResult(source, edge, target, False)

@@ -84,17 +84,28 @@ class ComplementNode(OperatorNode):
         sure to remove from the STRONG set the individual node used to compute
         the identity of this very node since Individual nodes do not contribute
         with inheritance to the computation of the final identity for all the
-        WEAK nodes being examined during the identification process.
+        WEAK nodes being examined during the identification process. Similarly
+        we do the same if the node is targeted by a RoleInstance or an AttributeInstance
         :rtype: tuple
         """
         f1 = lambda x: x.type() is Item.MembershipEdge
         f2 = lambda x: x.identity() is Identity.Individual
+        f3 = lambda x: x.identity() in {Identity.RoleInstance, Identity.AttributeInstance}
+        f4 = lambda x: Identity.Role if x.identity() is Identity.RoleInstance else Identity.Attribute
         incoming = self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
         if incoming:
             computed = Identity.Unknown
             identities = set(x.identity() for x in incoming)
             if len(identities) == 1 and first(identities) is Identity.Individual:
                 computed = Identity.Concept
+            self.setIdentity(computed)
+            return {self}, incoming, set()
+        incoming = self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)
+        if incoming:
+            computed = Identity.Unknown
+            identities = set(map(f4, incoming))
+            if len(identities) == 1:
+                computed = first(identities)
             self.setIdentity(computed)
             return {self}, incoming, set()
         return None
