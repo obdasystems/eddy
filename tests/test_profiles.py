@@ -1115,5 +1115,5 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__insert_edge_between(Item.MembershipEdge, source, (Item.RoleNode, 'R1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
-        self.assertEqual(self.project.profile.pvr().message(), 'Invalid target for Attribute assertion: role node')
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid target for Attribute assertion: Role')
         self.assertFalse(self.project.profile.pvr().isValid())
