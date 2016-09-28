@@ -81,17 +81,17 @@ class InfoPlugin(AbstractPlugin):
     #   SLOTS
     #################################
 
-    @QtCore.pyqtSlot()
-    def onDiagramItemAdded(self):
+    @QtCore.pyqtSlot('QGraphicsScene')
+    def onDiagramAdded(self, diagram):
         """
-        Executed whenever a new element is added to the active diagram.
+        Executed whenever a diagram is added to the active project.
         """
         self.widget('info').stack()
 
-    @QtCore.pyqtSlot()
-    def onDiagramItemRemoved(self):
+    @QtCore.pyqtSlot('QGraphicsScene')
+    def onDiagramRemoved(self, diagram):
         """
-        Executed whenever a new element is removed from the active diagram.
+        Executed whenever a diagram is removed from the active project.
         """
         self.widget('info').stack()
 
@@ -109,6 +109,20 @@ class InfoPlugin(AbstractPlugin):
         """
         self.widget('info').stack()
 
+    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    def onProjectItemAdded(self, diagram, item):
+        """
+        Executed whenever a new element is added to the active project.
+        """
+        self.widget('info').stack()
+
+    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    def onProjectItemRemoved(self, diagram, item):
+        """
+        Executed whenever a new element is removed from the active project.
+        """
+        self.widget('info').stack()
+
     @QtCore.pyqtSlot()
     def onProjectUpdated(self):
         """
@@ -123,6 +137,10 @@ class InfoPlugin(AbstractPlugin):
         """
         self.debug('Connecting to project: %s', self.project.name)
         connect(self.project.sgnUpdated, self.onProjectUpdated)
+        connect(self.project.sgnDiagramAdded, self.onDiagramAdded)
+        connect(self.project.sgnDiagramRemoved, self.onDiagramRemoved)
+        connect(self.project.sgnItemAdded, self.onProjectItemAdded)
+        connect(self.project.sgnItemRemoved, self.onProjectItemRemoved)
         self.widget('info').stack()
 
     @QtCore.pyqtSlot(QtWidgets.QMdiSubWindow)
@@ -141,14 +159,10 @@ class InfoPlugin(AbstractPlugin):
                 # is going out of focus, before connecting new ones.
                 self.debug('Disconnecting from diagram: %s', widget.diagram.name)
                 disconnect(widget.diagram.selectionChanged, self.onDiagramSelectionChanged)
-                disconnect(widget.diagram.sgnItemAdded, self.onDiagramItemAdded)
-                disconnect(widget.diagram.sgnItemRemoved, self.onDiagramItemRemoved)
                 disconnect(widget.diagram.sgnUpdated, self.onDiagramUpdated)
             # Attach the new view/diagram to the info widget.
             self.debug('Connecting to diagram: %s', subwindow.diagram.name)
             connect(subwindow.diagram.selectionChanged, self.onDiagramSelectionChanged)
-            connect(subwindow.diagram.sgnItemAdded, self.onDiagramItemAdded)
-            connect(subwindow.diagram.sgnItemRemoved, self.onDiagramItemRemoved)
             connect(subwindow.diagram.sgnUpdated, self.onDiagramUpdated)
             widget.setDiagram(subwindow.diagram)
             widget.stack()
@@ -161,8 +175,6 @@ class InfoPlugin(AbstractPlugin):
                 if widget.diagram:
                     self.debug('Disconnecting from diagram: %s', widget.diagram.name)
                     disconnect(widget.diagram.selectionChanged, self.onDiagramSelectionChanged)
-                    disconnect(widget.diagram.sgnItemAdded, self.onDiagramItemAdded)
-                    disconnect(widget.diagram.sgnItemRemoved, self.onDiagramItemRemoved)
                     disconnect(widget.diagram.sgnUpdated, self.onDiagramUpdated)
                 widget.setDiagram(None)
                 widget.stack()
@@ -178,6 +190,10 @@ class InfoPlugin(AbstractPlugin):
         # DISCONNECT FROM CURRENT PROJECT
         self.debug('Disconnecting from project: %s', self.project.name)
         disconnect(self.project.sgnUpdated, self.onProjectUpdated)
+        disconnect(self.project.sgnDiagramAdded, self.onDiagramAdded)
+        disconnect(self.project.sgnDiagramRemoved, self.onDiagramRemoved)
+        disconnect(self.project.sgnItemAdded, self.onProjectItemAdded)
+        disconnect(self.project.sgnItemRemoved, self.onProjectItemRemoved)
 
         # DISCONNECT FROM ACTIVE SESSION
         self.debug('Disconnecting from active session')
