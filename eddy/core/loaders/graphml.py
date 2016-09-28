@@ -410,6 +410,48 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
 
         return None
 
+    def importPredicateMetaFromElement(self, element):
+        """
+        Import predicate metadata from the given element.
+        :type element: QDomElement
+        """
+        if self.itemFromXmlNode(element) is Item.InputEdge:
+
+            try:
+                edge = self.edges[element.attribute('id')]
+            except KeyError:
+                LOGGER.warning('Failed to import (inverse) functionality due to missing edge: %s', element.attribute('id'))
+            else:
+                data = element.firstChildElement('data')
+                while not data.isNull():
+                    if data.attribute('key', '') == self.keys['edge_key']:
+                        polyLineEdge = data.firstChildElement('y:PolyLineEdge')
+                        arrows = polyLineEdge.firstChildElement('y:Arrows')
+                        if 't_shape' in {arrows.attribute('source', ''), arrows.attribute('target', '')}:
+                            # When we detect a t_shape source or target arrow on an input edge
+                            # we set the functionality on the connected predicate node. We should
+                            # be setting the functionality only on the predicate identified in the
+                            # source node, however in the graphol palette for yEd there is a bugged
+                            # functionality edge, in which the target arrow is a t_shape, a and the
+                            # source is a white_diamond. Because the input edge on one of the endpoints
+                            # has a domain/range restriction node, we can easily establish on which
+                            # endpoint we have to check the functionality attribute, since only one of the
+                            # endpoints can be a predicate node (because inputs target only constructors).
+                            if edge.source.type() in {Item.AttributeNode, Item.RoleNode}:
+                                pnode = edge.source
+                                cnode = edge.target
+                            else:
+                                pnode = edge.target
+                                cnode = edge.source
+                            # Functionality is for both Role and Attribute nodes.
+                            if cnode.type() is Item.DomainRestrictionNode:
+                                pnode.setFunctional(True)
+                            # Inverse functionality is just for Role nodes.
+                            if pnode.type() is Item.RoleNode:
+                                if cnode.type() is Item.RangeRestrictionNode:
+                                    pnode.setInverseFunctional(True)
+                    data = data.nextSiblingElement('data')
+
     def itemFromXmlNode(self, element):
         """
         Returns the item matching the given Graphml node.
@@ -486,8 +528,8 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
                                 return Item.DomainRestrictionNode
 
                 # UML NOTE NODE
-                nodeNode = data.firstChildElement('y:UMLNoteNode')
-                if not nodeNode.isNull():
+                noteNode = data.firstChildElement('y:UMLNoteNode')
+                if not noteNode.isNull():
                     return Item.FacetNode
 
             # EDGE
@@ -502,7 +544,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
                             edgeLabel = polyLineEdge.firstChildElement('y:EdgeLabel')
                             if not edgeLabel.isNull():
                                 edgeText = edgeLabel.text().strip()
-                                if  edgeText == 'instanceOf':
+                                if edgeText == 'instanceOf':
                                     return Item.MembershipEdge
                             return Item.InclusionEdge
                         if lineType == 'dashed':
@@ -529,16 +571,20 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         return node.anchor(edge)
 
     @staticmethod
-    def parseLabelPos(geometry, nodeLabel):
+    def parseLabelPos(geometry, label):
         """
         Parse the node label position properly translating it from yEd coordinate system.
         :type geometry: QDomElement
-        :type nodeLabel: QDomElement
+        :type label: QDomElement
         :rtype: QtCore.QPointF
         """
-        return QtCore.QPointF(float(nodeLabel.attribute('x')), float(nodeLabel.attribute('y'))) - \
-               QtCore.QPointF(float(geometry.attribute('width')) / 2, float(geometry.attribute('height')) / 2) + \
-               QtCore.QPointF(float(nodeLabel.attribute('width')) / 2, float(nodeLabel.attribute('height')) / 2)
+        x1 = float(label.attribute('x'))
+        y1 = float(label.attribute('y'))
+        w1 = float(label.attribute('width'))
+        h1 = float(label.attribute('height'))
+        w2 = float(geometry.attribute('width'))
+        h2 = float(geometry.attribute('height'))
+        return QtCore.QPointF(x1, y1) - QtCore.QPointF(w2 / 2, h2 / 2) + QtCore.QPointF(w1 / 2, h1 / 2)
 
     @staticmethod
     def parsePos(geometry):
@@ -551,9 +597,12 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         # position (0,0), which is instead at the center of the shape, so that the TOP-LEFT
         # corner of the shape in yEd matches the TOP-LEFT corner of the shape in Eddy.
         # We additionally snap the position to the grid so that items stay perfectly aligned.
-        return snap(QtCore.QPointF(float(geometry.attribute('x')), float(geometry.attribute('y'))) + \
-                    QtCore.QPointF(float(geometry.attribute('width')) / 2, float(geometry.attribute('height')) / 2), Diagram.GridSize)
-
+        x = float(geometry.attribute('x'))
+        y = float(geometry.attribute('y'))
+        w = float(geometry.attribute('width'))
+        h = float(geometry.attribute('height'))
+        return snap(QtCore.QPointF(x, y) + QtCore.QPointF(w / 2, h / 2), Diagram.GridSize)
+    
     #############################################
     #   INTERFACE
     #################################
@@ -568,7 +617,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
 
     def load(self):
         """
-        Perform diagram import from .graphml file format.
+        Perform diagram import from .graphml file format and add the new generated diagram to the project
         :raise DiagramNotFoundError: If the given path does not identify a .graphml module.
         :raise DiagramNotValidError: If the given path identifies an invalid .graphml module.
         """
@@ -671,7 +720,6 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
                 self.diagram.addItem(edge)
                 self.diagram.guid.update(edge.id)
                 self.edges[edge.id] = edge
-                edge.updateEdge()
             finally:
                 element = element.nextSiblingElement('edge')
 
@@ -724,5 +772,40 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         connect(self.diagram.selectionChanged, self.session.doUpdateState)
 
         LOGGER.debug('Diagram created: %s', self.diagram.name)
+
+        #############################################
+        # ADD THE DIAGRAM TO THE PROJECT
+        #################################
+
+        self.project.addDiagram(self.diagram)
+
+        LOGGER.debug('Diagram "%s" added to project "%s"', self.diagram.name, self.project.name)
+
+        #############################################
+        # IMPORT PREDICATE METADATA
+        #################################
+
+        element = graph.firstChildElement('edge')
+        while not element.isNull():
+            QtWidgets.QApplication.processEvents()
+            self.importPredicateMetaFromElement(element)
+            element = element.nextSiblingElement('edge')
+
+        LOGGER.debug('Loaded predicate metadata from original diagram: %s', self.path)
+
+        #############################################
+        # UPDATE GEOMETRY OF ALL THE SHAPES
+        #################################
+
+        for item in self.diagram.nodes()|self.diagram.edges():
+            item.updateEdgeOrNode()
+
+        LOGGER.debug('Refreshing diagram "%s" elements state', self.diagram.name)
+
+        #############################################
+        # NOTIFY THAT THE DIAGRAM HAS BEEN LOADED
+        #################################
+
+        self.session.sgnDiagramLoaded.emit(self.diagram)
 
         return self.diagram

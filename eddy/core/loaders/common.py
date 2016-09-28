@@ -118,7 +118,7 @@ class AbstractDiagramLoader(AbstractLoader):
     @abstractmethod
     def load(self):
         """
-        Perform the load.
+        Perform the load of the diagram and add it to the project.
         :rtype: Diagram
         """
         pass

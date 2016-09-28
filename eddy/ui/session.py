@@ -1142,9 +1142,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                         for path in selected:
                             progress.setWindowTitle('Importing {0}...'.format(os.path.basename(path)))
                             loader = self.createDiagramLoader(filetype, path, self.project, self)
-                            diagram = loader.load()
-                            self.project.addDiagram(diagram)
-                            self.sgnDiagramFocus.emit(diagram)
+                            loader.load()
+                            self.sgnDiagramFocus.emit(loader.diagram)
                 except Exception as e:
                     msgbox = QtWidgets.QMessageBox(self)
                     msgbox.setDetailedText(format_exception(e))
@@ -1212,10 +1211,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
             if File.forPath(path) is File.Graphol:
 
-                loader = self.createDiagramLoader(File.Graphol, path, self.project, self)
-
                 try:
-                    diagram = loader.load()
+                    loader = self.createDiagramLoader(File.Graphol, path, self.project, self)
+                    loader.load()
                 except Exception as e:
                     msgbox = QtWidgets.QMessageBox(self)
                     msgbox.setDetailedText(format_exception(e))
@@ -1225,9 +1223,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
                     msgbox.setWindowTitle('Diagram load failed!')
                     msgbox.exec_()
-                else:
-                    self.project.addDiagram(diagram)
-                    self.sgnDiagramLoaded.emit(diagram)
 
     @QtCore.pyqtSlot()
     def doNewDiagram(self):

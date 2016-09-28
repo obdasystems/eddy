@@ -47,7 +47,7 @@ class BusyProgressDialog(QtWidgets.QDialog):
     """
     This class implements a dialog showing a busy progress bar.
     """
-    def __init__(self, title='', mtime=2, parent=None):
+    def __init__(self, title='', mtime=1, parent=None):
         """
         Initialize the form dialog.
         :type title: str

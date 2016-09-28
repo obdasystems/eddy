@@ -486,7 +486,7 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
 
     def load(self):
         """
-        Perform diagram import from Graphol file format.
+        Perform diagram import from Graphol file format and add it to the project.
         :raise DiagramNotFoundError: If the given path does not identify a Graphol module.
         :raise DiagramNotValidError: If the given path identifies an invalid Graphol module.
         :rtype: Diagram
@@ -582,6 +582,20 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         connect(self.diagram.selectionChanged, self.session.doUpdateState)
 
         LOGGER.debug('Diagram created: %s', self.diagram.name)
+
+        #############################################
+        # ADD THE DIAGRAM TO THE PROJECT
+        #################################
+
+        self.project.addDiagram(self.diagram)
+
+        LOGGER.debug('Diagram "%s" added to project "%s"', self.diagram.name, self.project.name)
+
+        #############################################
+        # NOTIFY THAT THE DIAGRAM HAS BEEN LOADED
+        #################################
+
+        self.session.sgnDiagramLoaded.emit(self.diagram)
 
         return self.diagram
 
@@ -796,12 +810,11 @@ class GrapholProjectLoader(AbstractProjectLoader):
 
             try:
                 loader = GrapholDiagramLoader(path, self.project, self.session)
+                loader.load()
             except (DiagramNotFoundError, DiagramNotValidError) as e:
-                LOGGER.warning('Failed to load project module %s: %s', name, e)
+                LOGGER.warning('Failed to load project diagram %s: %s', name, e)
             except Exception:
-                LOGGER.exception('Failed to load project module %s', name)
-            else:
-                self.project.addDiagram(loader.load())
+                LOGGER.exception('Failed to load diagram module %s', name)
             finally:
                 module = module.nextSiblingElement('module')
 
