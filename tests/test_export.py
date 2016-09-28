@@ -103,14 +103,13 @@ class ExportTestCase(EddyTestCase):
 
     def test_export_project_to_owl(self):
         # WHEN
-        worker = OWLProjectExporterWorker(self.project, '@tests/.tests/test_project_1.owl', OWLSyntax.Functional)
+        worker = OWLProjectExporterWorker(self.project, '@tests/.tests/test_project_1.owl', syntax=OWLSyntax.Functional)
         worker.run()
         # THEN
         self.assertFileExists('@tests/.tests/test_project_1.owl')
         # WHEN
         content = list(filter(None, fread('@tests/.tests/test_project_1.owl').split('\n')))
         # THEN
-        self.assertLen(35, content)
         self.assertIn('Prefix(:=<http://www.dis.uniroma1.it/~graphol/test_project#>)', content)
         self.assertIn('Prefix(owl:=<http://www.w3.org/2002/07/owl#>)', content)
         self.assertIn('Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)', content)
@@ -142,16 +141,12 @@ class ExportTestCase(EddyTestCase):
         self.assertIn('FunctionalObjectProperty(test:hasFather)', content)
         self.assertIn('FunctionalObjectProperty(test:hasMother)', content)
         self.assertIn('DataPropertyRange(test:name xsd:string)', content)
+        self.assertIn('DataPropertyDomain(test:name test:Person)', content)
+        self.assertIn('ObjectPropertyRange(test:hasAncestor test:Person)', content)
+        self.assertIn('ObjectPropertyRange(test:hasFather test:Father)', content)
+        self.assertIn('ObjectPropertyRange(test:hasMother test:Mother)', content)
+        self.assertAnyIn(['EquivalentClasses(test:Person DataSomeValuesFrom(test:name rdfs:Literal))', 'EquivalentClasses(DataSomeValuesFrom(test:name rdfs:Literal) test:Person)'], content)
+        self.assertAnyIn(['EquivalentClasses(test:Person ObjectUnionOf(test:Female test:Male))', 'EquivalentClasses(ObjectUnionOf(test:Female test:Male) test:Person)'], content)
+        self.assertAnyIn(['DisjointClasses(test:Female test:Male)', 'DisjointClasses(test:Male test:Female)'], content)
         self.assertIn(')', content)
-        self.assertAny([
-            'EquivalentClasses(test:Person DataSomeValuesFrom(test:name rdfs:Literal))' in content,
-            'EquivalentClasses(DataSomeValuesFrom(test:name rdfs:Literal) test:Person)' in content,
-        ])
-        self.assertAny([
-            'EquivalentClasses(test:Person ObjectUnionOf(test:Female test:Male))' in content,
-            'EquivalentClasses(ObjectUnionOf(test:Female test:Male) test:Person)' in content,
-        ])
-        self.assertAny([
-            'DisjointClasses(test:Female test:Male)' in content,
-            'DisjointClasses(test:Male test:Female)' in content,
-        ])
+        self.assertLen(39, content)

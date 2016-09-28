@@ -153,53 +153,70 @@ class EddyTestCase(TestCase):
     def assertAll(self, iterable, msg=None):
         """Check for all the value in the given iterable to be True"""
         if not all(iterable):
-            standardMsg = 'found false value in {0}'.format(safe_repr(iterable))
+            standardMsg = 'found false value in %s' % safe_repr(iterable)
             self.fail(self._formatMessage(msg, standardMsg))
+
+    def assertAllIn(self, iterable, container, msg=None):
+        """Check for all the item in iterable to be in the given container"""
+        for member in iterable:
+            if member not in container:
+                if member not in container:
+                    standardMsg = '%s not found in %s' % (safe_repr(member), safe_repr(container))
+                    self.fail(self._formatMessage(msg, standardMsg))
 
     def assertAny(self, iterable, msg=None):
         """Check for at least a True value in the given iterable"""
         if not any(iterable):
-            standardMsg = 'true value not found in {0}'.format(safe_repr(iterable))
+            standardMsg = 'true value not found in %s' % safe_repr(iterable)
+            self.fail(self._formatMessage(msg, standardMsg))
+
+    def assertAnyIn(self, iterable, container, msg=None):
+        """Check for at least a one of the item in iterable to be in the given container"""
+        for member in iterable:
+            if member in container:
+                break
+        else:
+            standardMsg = 'no item of %s found in %s' % (safe_repr(iterable), safe_repr(container))
             self.fail(self._formatMessage(msg, standardMsg))
 
     def assertDictHasKey(self, key, container, msg=None):
         """Check for a given key to be in the given dictionary."""
         if key not in container.keys():
-            standardMsg = '{0} not found in {1}'.format(safe_repr(key), safe_repr(container))
+            standardMsg = '%s not found in %s' % (safe_repr(key), safe_repr(container))
             self.fail(self._formatMessage(msg, standardMsg))
 
     def assertDictHasValue(self, value, container, msg=None):
         """Check for a given value to be in the given dictionary."""
         if value not in container.value():
-            standardMsg = '{0} not found in {1}'.format(safe_repr(value), safe_repr(container))
+            standardMsg = '%s not found in %s' % (safe_repr(value), safe_repr(container))
             self.fail(self._formatMessage(msg, standardMsg))
 
     def assertEmpty(self, container, msg=None):
         """Assert for a given container to be empty."""
         if len(container) != 0:
-            standardMsg = '{0} is not empty: found {1} elements'.format(safe_repr(container), len(container))
+            standardMsg = '%s is not empty: found %s elements' % (safe_repr(container), len(container))
             self.fail(self._formatMessage(msg, standardMsg))
 
-    def assertDirectoryExists(self, path, msg=None):
+    def assertDirectoryExists(self, dirpath, msg=None):
         """Assert for the given path to represent a file"""
-        if not isdir(path):
-            standardMsg = '{0} is not a directory'.format(safe_repr(expandPath(path)))
+        if not isdir(dirpath):
+            standardMsg = '%s is not a directory' % safe_repr(expandPath(dirpath))
             self.fail(self._formatMessage(msg, standardMsg))
 
-    def assertFileExists(self, path, msg=None):
+    def assertFileExists(self, filepath, msg=None):
         """Assert for the given path to represent a file"""
-        if not fexists(path):
-            standardMsg = '{0} is not a file'.format(safe_repr(expandPath(path)))
+        if not fexists(filepath):
+            standardMsg = '%s is not a file' % safe_repr(expandPath(filepath))
             self.fail(self._formatMessage(msg, standardMsg))
 
     def assertLen(self, count, container, msg=None):
         """Check for a given container to have the specified length."""
         if len(container) != count:
-            standardMsg = 'found {0} elements in {1}: expecting {2}'.format(len(container), safe_repr(container), count)
+            standardMsg = 'found %s elements in %s: expecting %s' % (len(container), safe_repr(container), count)
             self.fail(self._formatMessage(msg, standardMsg))
 
     def assertNotEmpty(self, container, msg=None):
         """Assert for a given container to be empty."""
         if len(container) == 0:
-            standardMsg = '{0} unexpectedly empty: found {1} elements'.format(safe_repr(container), len(container))
+            standardMsg = '%s unexpectedly empty: found %s elements' % (safe_repr(container), len(container))
             self.fail(self._formatMessage(msg, standardMsg))
