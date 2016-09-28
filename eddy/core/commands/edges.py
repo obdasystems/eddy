@@ -265,6 +265,10 @@ class CommandEdgeSwap(QtWidgets.QUndoCommand):
                 if node in self.inputs:
                     node.inputs = self.inputs[node]['redo'][:]
             edge.updateEdge()
+        # Identify all the endpoints.
+        for edge in self.edges:
+            for node in {edge.source, edge.target}:
+                self.diagram.sgnNodeIdentification.emit(node)
         # Emit updated signal.
         self.diagram.sgnUpdated.emit()
 
@@ -278,5 +282,9 @@ class CommandEdgeSwap(QtWidgets.QUndoCommand):
                 if node in self.inputs:
                     node.inputs = self.inputs[node]['undo'][:]
             edge.updateEdge()
+        # Identify all the endpoints.
+        for edge in self.edges:
+            for node in {edge.source, edge.target}:
+                self.diagram.sgnNodeIdentification.emit(node)
         # Emit updated signal.
         self.diagram.sgnUpdated.emit()
