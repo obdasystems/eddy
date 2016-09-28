@@ -61,6 +61,25 @@ from eddy.ui.fields import ComboBox
 LOGGER = getLogger(__name__)
 
 
+DefaultPrefixManager = autoclass('org.semanticweb.owlapi.util.DefaultPrefixManager')
+FunctionalSyntaxDocumentFormat = autoclass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
+HashSet = autoclass('java.util.HashSet')
+IRI = autoclass('org.semanticweb.owlapi.model.IRI')
+LinkedList = autoclass('java.util.LinkedList')
+List = autoclass('java.util.List')
+ManchesterSyntaxDocumentFormat = autoclass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
+OWLAnnotationValue = autoclass('org.semanticweb.owlapi.model.OWLAnnotationValue')
+OWLFacet = autoclass('org.semanticweb.owlapi.vocab.OWLFacet')
+OWL2Datatype = autoclass('org.semanticweb.owlapi.vocab.OWL2Datatype')
+OWLManager = autoclass('org.semanticweb.owlapi.apibinding.OWLManager')
+OWLOntologyDocumentTarget = autoclass('org.semanticweb.owlapi.io.OWLOntologyDocumentTarget')
+RDFXMLDocumentFormat = autoclass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
+PrefixManager = autoclass('org.semanticweb.owlapi.model.PrefixManager')
+Set = autoclass('java.util.Set')
+StringDocumentTarget = autoclass('org.semanticweb.owlapi.io.StringDocumentTarget')
+TurtleDocumentFormat = autoclass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
+
+        
 class OWLProjectExporter(AbstractProjectExporter):
     """
     Extends AbstractProjectExporter with facilities to export a Graphol project into an OWL ontology.
@@ -314,24 +333,6 @@ class OWLProjectExporterWorker(QtCore.QObject):
         self.ontology = None
         self.pm = None
 
-        self.DefaultPrefixManager = autoclass('org.semanticweb.owlapi.util.DefaultPrefixManager')
-        self.FunctionalSyntaxDocumentFormat = autoclass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
-        self.HashSet = autoclass('java.util.HashSet')
-        self.IRI = autoclass('org.semanticweb.owlapi.model.IRI')
-        self.LinkedList = autoclass('java.util.LinkedList')
-        self.List = autoclass('java.util.List')
-        self.ManchesterSyntaxDocumentFormat = autoclass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
-        self.OWLAnnotationValue = autoclass('org.semanticweb.owlapi.model.OWLAnnotationValue')
-        self.OWLFacet = autoclass('org.semanticweb.owlapi.vocab.OWLFacet')
-        self.OWL2Datatype = autoclass('org.semanticweb.owlapi.vocab.OWL2Datatype')
-        self.OWLManager = autoclass('org.semanticweb.owlapi.apibinding.OWLManager')
-        self.OWLOntologyDocumentTarget = autoclass('org.semanticweb.owlapi.io.OWLOntologyDocumentTarget')
-        self.RDFXMLDocumentFormat = autoclass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
-        self.PrefixManager = autoclass('org.semanticweb.owlapi.model.PrefixManager')
-        self.Set = autoclass('java.util.Set')
-        self.StringDocumentTarget = autoclass('org.semanticweb.owlapi.io.StringDocumentTarget')
-        self.TurtleDocumentFormat = autoclass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
-
     #############################################
     #   INTERFACE
     #################################
@@ -422,99 +423,100 @@ class OWLProjectExporterWorker(QtCore.QObject):
         :rtype: OWLDatatype
         """
         if datatype is Datatype.anyURI:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_ANY_URI').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_ANY_URI').getIRI())
         if datatype is Datatype.base64Binary:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BASE_64_BINARY').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_BASE_64_BINARY').getIRI())
         if datatype is Datatype.boolean:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BOOLEAN').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_BOOLEAN').getIRI())
         if datatype is Datatype.byte:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BYTE').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_BYTE').getIRI())
         if datatype is Datatype.dateTime:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DATE_TIME').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_DATE_TIME').getIRI())
         if datatype is Datatype.dateTimeStamp:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DATE_TIME_STAMP').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_DATE_TIME_STAMP').getIRI())
         if datatype is Datatype.decimal:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DECIMAL').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_DECIMAL').getIRI())
         if datatype is Datatype.double:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DOUBLE').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_DOUBLE').getIRI())
         if datatype is Datatype.float:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_FLOAT').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_FLOAT').getIRI())
         if datatype is Datatype.hexBinary:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_HEX_BINARY').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_HEX_BINARY').getIRI())
         if datatype is Datatype.int:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_INT').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_INT').getIRI())
         if datatype is Datatype.integer:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_INTEGER').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_INTEGER').getIRI())
         if datatype is Datatype.language:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_LANGUAGE').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_LANGUAGE').getIRI())
         if datatype is Datatype.literal:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('RDFS_LITERAL').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('RDFS_LITERAL').getIRI())
         if datatype is Datatype.long:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_LONG').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_LONG').getIRI())
         if datatype is Datatype.Name:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NAME').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NAME').getIRI())
         if datatype is Datatype.NCName:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NCNAME').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NCNAME').getIRI())
         if datatype is Datatype.negativeInteger:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NEGATIVE_INTEGER').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NEGATIVE_INTEGER').getIRI())
         if datatype is Datatype.NMTOKEN:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NMTOKEN').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NMTOKEN').getIRI())
         if datatype is Datatype.nonNegativeInteger:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NON_NEGATIVE_INTEGER').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NON_NEGATIVE_INTEGER').getIRI())
         if datatype is Datatype.nonPositiveInteger:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NON_POSITIVE_INTEGER').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NON_POSITIVE_INTEGER').getIRI())
         if datatype is Datatype.normalizedString:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NORMALIZED_STRING').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NORMALIZED_STRING').getIRI())
         if datatype is Datatype.plainLiteral:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('RDF_PLAIN_LITERAL').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('RDF_PLAIN_LITERAL').getIRI())
         if datatype is Datatype.positiveInteger:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_POSITIVE_INTEGER').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_POSITIVE_INTEGER').getIRI())
         if datatype is Datatype.rational:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('OWL_RATIONAL').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('OWL_RATIONAL').getIRI())
         if datatype is Datatype.real:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('OWL_REAL').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('OWL_REAL').getIRI())
         if datatype is Datatype.short:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_SHORT').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_SHORT').getIRI())
         if datatype is Datatype.string:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_STRING').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_STRING').getIRI())
         if datatype is Datatype.token:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_TOKEN').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_TOKEN').getIRI())
         if datatype is Datatype.unsignedByte:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_BYTE').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_UNSIGNED_BYTE').getIRI())
         if datatype is Datatype.unsignedInt:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_INT').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_UNSIGNED_INT').getIRI())
         if datatype is Datatype.unsignedLong:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_LONG').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_UNSIGNED_LONG').getIRI())
         if datatype is Datatype.unsignedShort:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_SHORT').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_UNSIGNED_SHORT').getIRI())
         if datatype is Datatype.xmlLiteral:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('RDF_XML_LITERAL').getIRI())
+            return self.df.getOWLDatatype(OWL2Datatype.valueOf('RDF_XML_LITERAL').getIRI())
         raise ValueError('invalid datatype supplied: %s' % datatype)
-
-    def getOWLApiFacet(self, facet):
+    
+    @staticmethod
+    def getOWLApiFacet(facet):
         """
         Returns the OWLFacet matching the given Facet.
         :type facet: Facet
         :rtype: OWLFacet
         """
         if facet is Facet.maxExclusive:
-            return self.OWLFacet.valueOf('MAX_EXCLUSIVE')
+            return OWLFacet.valueOf('MAX_EXCLUSIVE')
         if facet is Facet.maxInclusive:
-            return self.OWLFacet.valueOf('MAX_INCLUSIVE')
+            return OWLFacet.valueOf('MAX_INCLUSIVE')
         if facet is Facet.minExclusive:
-            return self.OWLFacet.valueOf('MIN_EXCLUSIVE')
+            return OWLFacet.valueOf('MIN_EXCLUSIVE')
         if facet is Facet.minInclusive:
-            return self.OWLFacet.valueOf('MIN_INCLUSIVE')
+            return OWLFacet.valueOf('MIN_INCLUSIVE')
         if facet is Facet.langRange:
-            return self.OWLFacet.valueOf('LANG_RANGE')
+            return OWLFacet.valueOf('LANG_RANGE')
         if facet is Facet.length:
-            return self.OWLFacet.valueOf('LENGTH')
+            return OWLFacet.valueOf('LENGTH')
         if facet is Facet.maxLength:
-            return self.OWLFacet.valueOf('MIN_LENGTH')
+            return OWLFacet.valueOf('MIN_LENGTH')
         if facet is Facet.minLength:
-            return self.OWLFacet.valueOf('MIN_LENGTH')
+            return OWLFacet.valueOf('MIN_LENGTH')
         if facet is Facet.pattern:
-            return self.OWLFacet.valueOf('PATTERN')
+            return OWLFacet.valueOf('PATTERN')
         raise ValueError('invalid facet supplied: %s' % facet)
 
     #############################################
@@ -599,7 +601,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         if not incoming:
             raise DiagramMalformedError(node, 'missing facet node(s)')
 
-        collection = self.HashSet()
+        collection = HashSet()
         for i in incoming:
             collection.add(self.convert(i))
 
@@ -607,7 +609,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         # BUILD DATATYPE RESTRICTION
         #################################
 
-        return self.df.getOWLDatatypeRestriction(de, cast(self.Set, collection))
+        return self.df.getOWLDatatypeRestriction(de, cast(Set, collection))
 
     def getDomainRestriction(self, node):
         """
@@ -647,7 +649,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
             if node.restriction() is Restriction.Forall:
                 return self.df.getOWLDataAllValuesFrom(dpe, dre)
             if node.restriction() is Restriction.Cardinality:
-                cardinalities = self.HashSet()
+                cardinalities = HashSet()
                 min_cardinality = node.cardinality('min')
                 max_cardinality = node.cardinality('max')
                 if min_cardinality is not None:
@@ -657,7 +659,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() >= 1:
-                    return self.df.getOWLDataIntersectionOf(cast(self.Set, cardinalities))
+                    return self.df.getOWLDataIntersectionOf(cast(Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
@@ -686,7 +688,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
             if node.restriction() is Restriction.Forall:
                 return self.df.getOWLObjectAllValuesFrom(ope, ce)
             if node.restriction() is Restriction.Cardinality:
-                cardinalities = self.HashSet()
+                cardinalities = HashSet()
                 min_cardinality = node.cardinality('min')
                 max_cardinality = node.cardinality('max')
                 if min_cardinality is not None:
@@ -696,7 +698,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() >= 1:
-                    return self.df.getOWLObjectIntersectionOf(cast(self.Set, cardinalities))
+                    return self.df.getOWLObjectIntersectionOf(cast(Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
@@ -710,12 +712,12 @@ class OWLProjectExporterWorker(QtCore.QObject):
             raise DiagramMalformedError(node, 'unsupported operand(s)')
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.type() is Item.IndividualNode
-        individuals = self.HashSet()
+        individuals = HashSet()
         for i in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
             individuals.add(self.convert(i))
         if individuals.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
-        return self.df.getOWLObjectOneOf(cast(self.Set, individuals))
+        return self.df.getOWLObjectOneOf(cast(Set, individuals))
 
     def getFacet(self, node):
         """
@@ -750,7 +752,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         """
         if node.identity() is Identity.Unknown:
             raise DiagramMalformedError(node, 'unsupported operand(s)')
-        collection = self.HashSet()
+        collection = HashSet()
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() is node.identity()
         for operand in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
@@ -758,8 +760,8 @@ class OWLProjectExporterWorker(QtCore.QObject):
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
         if node.identity() is Identity.Concept:
-            return self.df.getOWLObjectIntersectionOf(cast(self.Set, collection))
-        return self.df.getOWLDataIntersectionOf(cast(self.Set, collection))
+            return self.df.getOWLObjectIntersectionOf(cast(Set, collection))
+        return self.df.getOWLDataIntersectionOf(cast(Set, collection))
 
     def getPropertyAssertion(self, node):
         """
@@ -827,7 +829,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
             if node.restriction() is Restriction.Forall:
                 return self.df.getOWLObjectAllValuesFrom(ope, ce)
             if node.restriction() is Restriction.Cardinality:
-                cardinalities = self.HashSet()
+                cardinalities = HashSet()
                 min_cardinality = node.cardinality('min')
                 max_cardinality = node.cardinality('max')
                 if min_cardinality is not None:
@@ -837,7 +839,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() >= 1:
-                    return self.df.getOWLObjectIntersectionOf(cast(self.Set, cardinalities))
+                    return self.df.getOWLObjectIntersectionOf(cast(Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
@@ -861,14 +863,14 @@ class OWLProjectExporterWorker(QtCore.QObject):
         """
         if not node.inputs:
             raise DiagramMalformedError(node, 'missing operand(s)')
-        collection = self.LinkedList()
+        collection = LinkedList()
         for operand in [node.diagram.edge(i).other(node) for i in node.inputs]:
             if operand.type() not in {Item.RoleNode, Item.RoleInverseNode}:
                 raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
             collection.add(self.convert(operand))
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
-        return cast(self.List, collection)
+        return cast(List, collection)
 
     def getRoleInverse(self, node):
         """
@@ -891,7 +893,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
         """
         if node.identity() is Identity.Unknown:
             raise DiagramMalformedError(node, 'unsupported operand(s)')
-        collection = self.HashSet()
+        collection = HashSet()
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() is node.identity()
         for operand in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
@@ -899,8 +901,8 @@ class OWLProjectExporterWorker(QtCore.QObject):
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
         if node.identity() is Identity.Concept:
-            return self.df.getOWLObjectUnionOf(cast(self.Set, collection))
-        return self.df.getOWLDataUnionOf(cast(self.Set, collection))
+            return self.df.getOWLObjectUnionOf(cast(Set, collection))
+        return self.df.getOWLDataUnionOf(cast(Set, collection))
 
     def getValueDomain(self, node):
         """
@@ -921,9 +923,9 @@ class OWLProjectExporterWorker(QtCore.QObject):
         """
         meta = self.project.meta(node.type(), node.text())
         if meta and not isEmpty(meta['description']):
-            props = self.df.getOWLAnnotationProperty(self.IRI.create("Description"))
+            props = self.df.getOWLAnnotationProperty(IRI.create("Description"))
             value = self.df.getOWLLiteral(OWLAnnotationText(meta['description']))
-            value = cast(self.OWLAnnotationValue, value)
+            value = cast(OWLAnnotationValue, value)
             annotation = self.df.getOWLAnnotation(props, value)
             self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(self.convert(node).getIRI(), annotation))
 
@@ -963,60 +965,60 @@ class OWLProjectExporterWorker(QtCore.QObject):
         Generate a OWL 2 DisjointClasses axiom.
         :type node: DisjointUnionNode
         """
-        collection = self.HashSet()
+        collection = HashSet()
         for operand in node.incomingNodes(lambda x: x.type() is Item.InputEdge):
             collection.add(self.convert(operand))
-        self.addAxiom(self.df.getOWLDisjointClassesAxiom(cast(self.Set, collection)))
+        self.addAxiom(self.df.getOWLDisjointClassesAxiom(cast(Set, collection)))
 
     def createDisjointDataPropertiesAxiom(self, edge):
         """
         Generate a OWL 2 DisjointDataProperties axiom.
         :type edge: InclusionEdge
         """
-        collection = self.HashSet()
+        collection = HashSet()
         collection.add(self.convert(edge.source))
         collection.add(self.convert(edge.target))
-        self.addAxiom(self.df.getOWLDisjointDataPropertiesAxiom(cast(self.Set, collection)))
+        self.addAxiom(self.df.getOWLDisjointDataPropertiesAxiom(cast(Set, collection)))
 
     def createDisjointObjectPropertiesAxiom(self, edge):
         """
         Generate a OWL 2 DisjointObjectProperties axiom.
         :type edge: InclusionEdge
         """
-        collection = self.HashSet()
+        collection = HashSet()
         collection.add(self.convert(edge.source))
         collection.add(self.convert(edge.target))
-        self.addAxiom(self.df.getOWLDisjointObjectPropertiesAxiom(cast(self.Set, collection)))
+        self.addAxiom(self.df.getOWLDisjointObjectPropertiesAxiom(cast(Set, collection)))
 
     def createEquivalentClassesAxiom(self, edge):
         """
         Generate a OWL 2 EquivalentClasses axiom.
         :type edge: InclusionEdge
         """
-        collection = self.HashSet()
+        collection = HashSet()
         collection.add(self.convert(edge.source))
         collection.add(self.convert(edge.target))
-        self.addAxiom(self.df.getOWLEquivalentClassesAxiom(cast(self.Set, collection)))
+        self.addAxiom(self.df.getOWLEquivalentClassesAxiom(cast(Set, collection)))
 
     def createEquivalentDataPropertiesAxiom(self, edge):
         """
         Generate a OWL 2 EquivalentDataProperties axiom.
         :type edge: InclusionEdge
         """
-        collection = self.HashSet()
+        collection = HashSet()
         collection.add(self.convert(edge.source))
         collection.add(self.convert(edge.target))
-        self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(cast(self.Set, collection)))
+        self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(cast(Set, collection)))
 
     def createEquivalentObjectPropertiesAxiom(self, edge):
         """
         Generate a OWL 2 EquivalentObjectProperties axiom.
         :type edge: InclusionEdge
         """
-        collection = self.HashSet()
+        collection = HashSet()
         collection.add(self.convert(edge.source))
         collection.add(self.convert(edge.target))
-        collection = cast(self.Set, collection)
+        collection = cast(Set, collection)
         self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(collection))
 
     def createObjectPropertyAxiom(self, node):
@@ -1141,13 +1143,13 @@ class OWLProjectExporterWorker(QtCore.QObject):
             # INITIALIZE ONTOLOGY
             #################################
 
-            self.man = self.OWLManager.createOWLOntologyManager()
+            self.man = OWLManager.createOWLOntologyManager()
             self.df = self.man.getOWLDataFactory()
-            self.ontology = self.man.createOntology(self.IRI.create(rstrip(self.project.iri, '#')))
-            self.pm = self.DefaultPrefixManager()
+            self.ontology = self.man.createOntology(IRI.create(rstrip(self.project.iri, '#')))
+            self.pm = DefaultPrefixManager()
             self.pm.setPrefix(self.project.prefix, postfix(self.project.iri, '#'))
 
-            cast(self.PrefixManager, self.pm)
+            cast(PrefixManager, self.pm)
 
             LOGGER.debug('Initialized OWL 2 Ontology: %s', rstrip(self.project.iri, '#'))
 
@@ -1267,16 +1269,16 @@ class OWLProjectExporterWorker(QtCore.QObject):
             #################################
 
             if self.syntax is OWLSyntax.Functional:
-                DocumentFormat = self.FunctionalSyntaxDocumentFormat
+                DocumentFormat = FunctionalSyntaxDocumentFormat
                 DocumentFilter = OWLFunctionalDocumentFilter
             elif self.syntax is OWLSyntax.Manchester:
-                DocumentFormat = self.ManchesterSyntaxDocumentFormat
+                DocumentFormat = ManchesterSyntaxDocumentFormat
                 DocumentFilter = lambda x: x
             elif self.syntax is OWLSyntax.RDF:
-                DocumentFormat = self.RDFXMLDocumentFormat
+                DocumentFormat = RDFXMLDocumentFormat
                 DocumentFilter = lambda x: x
             elif self.syntax is OWLSyntax.Turtle:
-                DocumentFormat = self.TurtleDocumentFormat
+                DocumentFormat = TurtleDocumentFormat
                 DocumentFilter = lambda x: x
             else:
                 raise TypeError('unsupported syntax (%s)' % self.syntax)
@@ -1287,12 +1289,12 @@ class OWLProjectExporterWorker(QtCore.QObject):
             ontoFormat = DocumentFormat()
             ontoFormat.copyPrefixesFrom(self.pm)
             # CREARE TARGET STREAM
-            stream = self.StringDocumentTarget()
-            stream = cast(self.OWLOntologyDocumentTarget, stream)
+            stream = StringDocumentTarget()
+            stream = cast(OWLOntologyDocumentTarget, stream)
             # SAVE THE ONTOLOGY TO DISK
             self.man.setOntologyFormat(self.ontology, ontoFormat)
             self.man.saveOntology(self.ontology, stream)
-            stream = cast(self.StringDocumentTarget, stream)
+            stream = cast(StringDocumentTarget, stream)
             string = DocumentFilter(stream.toString())
             fwrite(string, self.path)
 
