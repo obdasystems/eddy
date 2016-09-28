@@ -137,7 +137,7 @@ class Project(QtCore.QObject):
             self.sgnDiagramAdded.emit(diagram)
             for item in diagram.items():
                 if item.isNode() or item.isEdge():
-                    self.doAddItem(diagram, item)
+                    diagram.sgnItemAdded.emit(diagram, item)
 
     def addMeta(self, item, name, metadata):
         """
@@ -369,7 +369,7 @@ class Project(QtCore.QObject):
         """
         if diagram.id in self.index[K_DIAGRAM]:
             for item in self.items(diagram):
-                self.doRemoveItem(diagram, item)
+                diagram.sgnItemRemoved.emit(diagram, item)
             del self.index[K_DIAGRAM][diagram.id]
             self.sgnDiagramRemoved.emit(diagram)
 
