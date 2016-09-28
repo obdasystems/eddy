@@ -325,6 +325,12 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
                 if not element.attribute('target') in self.nodes:
                     raise DiagramParseError('missing target node ({0})'.format(element.attribute('target')))
 
+                source = self.nodes[element.attribute('source')]
+                target = self.nodes[element.attribute('target')]
+
+                if source is target:
+                    raise DiagramParseError('detected loop between nodes %s and %s', source.id, target.id)
+
                 points = []
                 polyLineEdge = data.firstChildElement('y:PolyLineEdge')
                 path = polyLineEdge.firstChildElement('y:Path')
@@ -335,8 +341,6 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
                     pos = QtCore.QPointF(snapF(pos.x(), Diagram.GridSize), snapF(pos.y(), Diagram.GridSize))
                     points.append(pos)
 
-                source = self.nodes[element.attribute('source')]
-                target = self.nodes[element.attribute('target')]
                 kwargs = {'id': element.attribute('id'), 'source': source, 'target': target, 'breakpoints': points}
                 edge = self.diagram.factory.create(item, **kwargs)
                 edge.source.setAnchor(edge, self.parseAnchorPos(edge, edge.source, path.attribute('sx'), path.attribute('sy')))
