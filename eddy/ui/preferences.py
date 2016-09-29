@@ -72,7 +72,7 @@ class PreferencesDialog(QtWidgets.QDialog):
         self.diagramSizeField.setFont(Font('Roboto', 12))
         self.diagramSizeField.setRange(Diagram.MinSize, Diagram.MaxSize)
         self.diagramSizeField.setSingleStep(100)
-        self.diagramSizeField.setToolTip('Default size of all the new created diagrams.')
+        self.diagramSizeField.setToolTip('Default size of all the new created diagrams')
         self.diagramSizeField.setValue(settings.value('diagram/size', 5000, int))
 
         self.editorWidget = QtWidgets.QWidget()
@@ -142,8 +142,7 @@ class PreferencesDialog(QtWidgets.QDialog):
         self.axiomsMainLayout = QtWidgets.QVBoxLayout()
         self.axiomsMainLayout.addWidget(self.axiomsNonLogicalGroup)
         self.axiomsMainLayout.addWidget(self.axiomsLogicalWidget)
-        self.axiomsGroup = QtWidgets.QGroupBox('OWL 2 Axioms', self)
-        self.axiomsGroup.setToolTip('List of OWL 2 axioms for which exporting is enabled.')
+        self.axiomsGroup = QtWidgets.QGroupBox('OWL 2 Axioms for which exporting is enabled', self)
         self.axiomsGroup.setLayout(self.axiomsMainLayout)
         self.axiomsLayout = QtWidgets.QVBoxLayout()
         self.axiomsLayout.setContentsMargins(10, 10, 10, 10)

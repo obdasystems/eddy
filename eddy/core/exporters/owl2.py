@@ -221,7 +221,7 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         self.axiomsLayout = QtWidgets.QVBoxLayout()
         self.axiomsLayout.addLayout(self.axiomsTopLayout)
         self.axiomsLayout.addLayout(self.axiomsBottomLayout)
-        self.axiomsGroup = QtWidgets.QGroupBox('Axioms', self)
+        self.axiomsGroup = QtWidgets.QGroupBox('OWL 2 Axioms To Export', self)
         self.axiomsGroup.setLayout(self.axiomsLayout)
 
         # SPACER
