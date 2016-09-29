@@ -37,7 +37,7 @@ from mock import patch
 
 from tests import EddyTestCase
 
-from eddy.core.datatypes.owl import OWLSyntax
+from eddy.core.datatypes.owl import OWLSyntax, OWLAxiom
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.graphol import GrapholDiagramExporter
 from eddy.core.exporters.owl2 import OWLProjectExporterWorker
@@ -103,7 +103,7 @@ class ExportTestCase(EddyTestCase):
 
     def test_export_project_to_owl(self):
         # WHEN
-        worker = OWLProjectExporterWorker(self.project, '@tests/.tests/test_project_1.owl', syntax=OWLSyntax.Functional)
+        worker = OWLProjectExporterWorker(self.project, '@tests/.tests/test_project_1.owl', axioms={x for x in OWLAxiom}, syntax=OWLSyntax.Functional)
         worker.run()
         # THEN
         self.assertFileExists('@tests/.tests/test_project_1.owl')
