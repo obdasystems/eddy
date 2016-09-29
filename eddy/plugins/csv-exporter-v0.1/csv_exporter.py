@@ -42,7 +42,9 @@ from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
 from eddy.core.exporters.common import AbstractProjectExporter
+from eddy.core.functions.misc import lstrip
 from eddy.core.functions.fsystem import fwrite
+from eddy.core.functions.owl import OWLShortIRI
 from eddy.core.functions.path import openPath
 from eddy.core.plugin import AbstractPlugin
 
@@ -103,32 +105,31 @@ class CsvExporter(AbstractProjectExporter):
         Perform CSV file generation.
         :type path: str
         """
-        csvdata = {x: {} for x in self.Types}
+        collection = {x: {} for x in self.Types}
 
         for node in self.project.predicates():
-            if node.type() in csvdata:
+            if node.type() in collection:
                 # If there is no data for this predicate node, create a new entry.
-                if not node.text() in csvdata[node.type()]:
+                if not node.text() in collection[node.type()]:
                     meta = self.project.meta(node.type(), node.text())
-                    csvdata[node.type()][node.text()] = {
-                        self.KeyName: node.text(),
-                        self.KeyType: node.shortName,
-                        self.KeyDescription: meta.get('description', ''),
-                        self.KeyDiagrams: DistinctList(),
-                    }
+                    collection[node.type()][node.text()] = {
+                        CsvExporter.KeyName: lstrip(OWLShortIRI('', node.text()), ':'),
+                        CsvExporter.KeyType: node.shortName,
+                        CsvExporter.KeyDescription: meta.get('description', ''),
+                        CsvExporter.KeyDiagrams: DistinctList()}
                 # Append the name of the diagram to the diagram list.
-                csvdata[node.type()][node.text()][self.KeyDiagrams] += [node.diagram.name]
+                collection[node.type()][node.text()][self.KeyDiagrams] += [node.diagram.name]
 
         # Collect data in a buffer.
         buffer = io.StringIO()
         writer = csv.writer(buffer)
         writer.writerow((self.KeyName, self.KeyType, self.KeyDescription, self.KeyDiagrams))
-        for i, j in sorted(((v, k) for k in csvdata for v in csvdata[k]), key=itemgetter(0)):
+        for i, j in sorted(((v, k) for k in collection for v in collection[k]), key=itemgetter(0)):
             writer.writerow((
-                csvdata[j][i][self.KeyName],
-                csvdata[j][i][self.KeyType],
-                csvdata[j][i][self.KeyDescription],
-                sorted(csvdata[j][i][self.KeyDiagrams]),
+                collection[j][i][self.KeyName],
+                collection[j][i][self.KeyType],
+                collection[j][i][self.KeyDescription],
+                sorted(collection[j][i][self.KeyDiagrams]),
             ))
 
         # Write to disk.
