@@ -213,7 +213,9 @@ class PreferencesDialog(QtWidgets.QDialog):
         # CONFIRMATION BOX
         #################################
 
-        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Save | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Save)
+        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(Font('Roboto', 12))
 

@@ -239,7 +239,9 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         # CONFIRMATION AREA
         #################################
 
-        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok|QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Ok)
+        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
         self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
