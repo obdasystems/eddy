@@ -161,6 +161,8 @@
   <file alias="ic_info_outline_black@2x">../../resources/icons/48/ic_info_outline_black_48dp_2x.png</file>
   <file alias="ic_question_outline_black">../../resources/icons/48/ic_question_outline_black_48dp_1x.png</file>
   <file alias="ic_question_outline_black@2x">../../resources/icons/48/ic_question_outline_black_48dp_2x.png</file>
+  <file alias="ic_save_black">../../resources/icons/48/ic_save_black_48dp_1x.png</file>
+  <file alias="ic_save_black@2x">../../resources/icons/48/ic_save_black_48dp_2x.png</file>
   <file alias="ic_warning_black">../../resources/icons/48/ic_warning_black_48dp_1x.png</file>
   <file alias="ic_warning_black@2x">../../resources/icons/48/ic_warning_black_48dp_2x.png</file>
 </qresource>

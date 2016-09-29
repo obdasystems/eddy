@@ -40,6 +40,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy import ORGANIZATION, APPNAME
+from eddy.core.datatypes.owl import OWLAxiom
 from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.signals import connect
@@ -77,6 +78,78 @@ class PreferencesDialog(QtWidgets.QDialog):
         self.editorWidget = QtWidgets.QWidget()
         self.editorLayout = QtWidgets.QFormLayout(self.editorWidget)
         self.editorLayout.addRow(self.diagramSizePrefix, self.diagramSizeField)
+
+        #############################################
+        # EXPORT TAB
+        #################################
+
+        self.axiomsChecks = {x: CheckBox(x.value, self) for x in OWLAxiom}
+        for axiom, checkbox in self.axiomsChecks.items():
+            checkbox.setChecked(settings.value('export/axiom/{0}'.format(axiom.value), True, bool))
+        self.axiomsNonLogicalLayout = QtWidgets.QGridLayout()
+        self.axiomsNonLogicalLayout.setColumnMinimumWidth(0, 230)
+        self.axiomsNonLogicalLayout.setColumnMinimumWidth(1, 230)
+        self.axiomsNonLogicalLayout.setColumnMinimumWidth(2, 230)
+        self.axiomsNonLogicalLayout.addWidget(self.axiomsChecks[OWLAxiom.Annotation], 0, 0)
+        self.axiomsNonLogicalLayout.addWidget(self.axiomsChecks[OWLAxiom.Declaration], 0, 1)
+        self.axiomsNonLogicalLayout.addWidget(QtWidgets.QWidget(self), 0, 2)
+        self.axiomsNonLogicalGroup = QtWidgets.QGroupBox('Non-Logical', self)
+        self.axiomsNonLogicalGroup.setLayout(self.axiomsNonLogicalLayout)
+        self.axiomsIntensionalLayout = QtWidgets.QGridLayout()
+        self.axiomsIntensionalLayout.setColumnMinimumWidth(0, 230)
+        self.axiomsIntensionalLayout.setColumnMinimumWidth(1, 230)
+        self.axiomsIntensionalLayout.setColumnMinimumWidth(2, 230)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.AsymmetricObjectProperty], 0, 0)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DataPropertyDomain], 0, 1)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DataPropertyRange], 0, 2)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DisjointClasses], 1, 0)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DisjointDataProperties], 1, 1)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DisjointObjectProperties], 1, 2)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.EquivalentClasses], 2, 0)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.EquivalentDataProperties], 2, 1)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.EquivalentObjectProperties], 2, 2)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.FunctionalDataProperty], 3, 0)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.FunctionalObjectProperty], 3, 1)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.InverseFunctionalObjectProperty], 3, 2)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.InverseObjectProperties], 4, 0)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.IrreflexiveObjectProperty], 4, 1)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.ObjectPropertyDomain], 4, 2)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.ObjectPropertyRange], 5, 0)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.ReflexiveObjectProperty], 5, 1)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.SubClassOf], 5, 2)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.SubDataPropertyOf], 6, 0)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.SubObjectPropertyOf], 6, 1)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.SymmetricObjectProperty], 6, 2)
+        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.TransitiveObjectProperty], 7, 0)
+        self.axiomsIntensionalGroup = QtWidgets.QGroupBox('Intensional', self)
+        self.axiomsIntensionalGroup.setLayout(self.axiomsIntensionalLayout)
+        self.axiomsExtensionalLayout = QtWidgets.QGridLayout()
+        self.axiomsExtensionalLayout.setColumnMinimumWidth(0, 230)
+        self.axiomsExtensionalLayout.setColumnMinimumWidth(1, 230)
+        self.axiomsExtensionalLayout.setColumnMinimumWidth(2, 230)
+        self.axiomsExtensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.ClassAssertion], 0, 0)
+        self.axiomsExtensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DataPropertyAssertion], 0, 1)
+        self.axiomsExtensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.NegativeDataPropertyAssertion], 0, 2)
+        self.axiomsExtensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.NegativeObjectPropertyAssertion], 1, 0)
+        self.axiomsExtensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.ObjectPropertyAssertion], 1, 1)
+        self.axiomsExtensionalGroup = QtWidgets.QGroupBox('Extensional', self)
+        self.axiomsExtensionalGroup.setLayout(self.axiomsExtensionalLayout)
+        self.axiomsLogicalLayout = QtWidgets.QVBoxLayout()
+        self.axiomsLogicalLayout.addWidget(self.axiomsIntensionalGroup)
+        self.axiomsLogicalLayout.addWidget(self.axiomsExtensionalGroup)
+        self.axiomsLogicalWidget = QtWidgets.QGroupBox('Logical', self)
+        self.axiomsLogicalWidget.setLayout(self.axiomsLogicalLayout)
+        self.axiomsMainLayout = QtWidgets.QVBoxLayout()
+        self.axiomsMainLayout.addWidget(self.axiomsNonLogicalGroup)
+        self.axiomsMainLayout.addWidget(self.axiomsLogicalWidget)
+        self.axiomsGroup = QtWidgets.QGroupBox('OWL 2 Axioms', self)
+        self.axiomsGroup.setToolTip('List of OWL 2 axioms for which exporting is enabled.')
+        self.axiomsGroup.setLayout(self.axiomsMainLayout)
+        self.axiomsLayout = QtWidgets.QVBoxLayout()
+        self.axiomsLayout.setContentsMargins(10, 10, 10, 10)
+        self.axiomsLayout.addWidget(self.axiomsGroup)
+        self.axiomsWidget = QtWidgets.QWidget(self)
+        self.axiomsWidget.setLayout(self.axiomsLayout)
 
         #############################################
         # PLUGINS TAB
@@ -136,7 +209,7 @@ class PreferencesDialog(QtWidgets.QDialog):
         self.pluginsLayout = QtWidgets.QVBoxLayout(self.pluginsWidget)
         self.pluginsLayout.addWidget(self.pluginsTable, 1)
         self.pluginsLayout.addWidget(self.pluginInstallButton, 0, QtCore.Qt.AlignRight)
-
+        
         #############################################
         # CONFIRMATION BOX
         #################################
@@ -151,6 +224,7 @@ class PreferencesDialog(QtWidgets.QDialog):
 
         self.mainWidget = QtWidgets.QTabWidget(self)
         self.mainWidget.addTab(self.editorWidget, QtGui.QIcon(':/icons/48/ic_edit_black'), 'Editor')
+        self.mainWidget.addTab(self.axiomsWidget, QtGui.QIcon(':/icons/48/ic_save_black'), 'Export')
         self.mainWidget.addTab(self.pluginsWidget, QtGui.QIcon(':/icons/48/ic_extension_black'), 'Plugins')
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
@@ -209,12 +283,25 @@ class PreferencesDialog(QtWidgets.QDialog):
         for plugin in plugins_to_uninstall:
             self.session.pmanager.uninstall(plugin)
 
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+
+        #############################################
+        # EXPORT TAB
+        #################################
+
+        for axiom, checkbox in self.axiomsChecks.items():
+            settings.setValue('export/axiom/{0}'.format(axiom.value), checkbox.isChecked())
+
         #############################################
         # EDITOR TAB
         #################################
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         settings.setValue('diagram/size', self.diagramSizeField.value())
+
+        #############################################
+        # SAVE & EXIT
+        #################################
+
         settings.sync()
 
         super(PreferencesDialog, self).accept()

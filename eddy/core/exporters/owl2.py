@@ -39,7 +39,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy import BUG_TRACKER
+from eddy import APPNAME, BUG_TRACKER, ORGANIZATION
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
 from eddy.core.datatypes.owl import Datatype, Facet, OWLAxiom, OWLSyntax
@@ -56,6 +56,7 @@ from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 
 from eddy.ui.fields import ComboBox, CheckBox
+
 
 LOGGER = getLogger(__name__)
 
@@ -132,6 +133,8 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         self.worker = None
         self.workerThread = None
 
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+
         #############################################
         # FORM AREA
         #################################
@@ -149,7 +152,9 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         self.syntaxGroup.setLayout(self.syntaxLayout)
 
         # AXIOMS
-        self.axiomsChecks = {x: CheckBox(x.value, self, checked=True) for x in OWLAxiom}
+        self.axiomsChecks = {x: CheckBox(x.value, self) for x in OWLAxiom}
+        for axiom, checkbox in self.axiomsChecks.items():
+            checkbox.setChecked(settings.value('export/axiom/{0}'.format(axiom.value), True, bool))
         self.axiomsCheckBtn = QtWidgets.QPushButton('All', self, clicked=self.doCheckAxiomMarks)
         self.axiomsClearBtn = QtWidgets.QPushButton('Clear', self, clicked=self.doCheckAxiomMarks)
         self.axiomsNonLogicalLayout = QtWidgets.QGridLayout()
@@ -266,7 +271,7 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         Returns the set of axioms that needs to be exported.
         :rtype: set
         """
-        return {axiom for axiom, checbox in self.axiomsChecks.items() if checbox.isChecked()}
+        return {axiom for axiom, checkbox in self.axiomsChecks.items() if checkbox.isChecked()}
 
     def syntax(self):
         """
