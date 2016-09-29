@@ -46,7 +46,7 @@ class ComboBox(QtWidgets.QComboBox):
         """
         Initialize the spin box.
         """
-        super().__init__(*args, **kwargs)
+        super(ComboBox, self).__init__(*args, **kwargs)
         self.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
         self._scrollEnabled = True
 
@@ -84,11 +84,11 @@ class CheckBox(QtWidgets.QCheckBox):
     """
     This class implements a check box.
     """
-    def __init__(self, parent=None):
+    def __init__(self, *args, **kwargs):
         """
         Initialize the check box.
         """
-        super().__init__(parent)
+        super(CheckBox, self).__init__(*args, **kwargs)
         self.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
 
 

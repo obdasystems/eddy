@@ -39,7 +39,7 @@ from enum import unique, Enum
 @unique
 class Datatype(Enum):
     """
-    This class defines all the available datatypes for the value-domain node.
+    Extends Enum providing all the available datatypes.
     """
     anyURI = 'xsd:anyURI'
     base64Binary = 'xsd:base64Binary'
@@ -92,7 +92,7 @@ class Datatype(Enum):
 @unique
 class Facet(Enum):
     """
-    This class defines available Facet restrictions for the value-restriction node.
+    Extends Enum providing all the availables Facet restrictions.
     """
     maxExclusive = 'xsd:maxExclusive'
     maxInclusive = 'xsd:maxInclusive'
@@ -168,9 +168,45 @@ class Facet(Enum):
 
 
 @unique
+class OWLAxiom(Enum):
+    """
+    Extends Enum providing the set of supported OWL Axiom.
+    """
+    Annotation = 'Annotation'
+    AsymmetricObjectProperty = 'AsymmetricObjectProperty'
+    ClassAssertion = 'ClassAssertion'
+    DataPropertyAssertion = 'DataPropertyAssertion'
+    DataPropertyDomain = 'DataPropertyDomain'
+    DataPropertyRange = 'DataPropertyRange'
+    Declaration = 'Declaration'
+    DisjointClasses = 'DisjointClasses'
+    DisjointDataProperties = 'DisjointDataProperties'
+    DisjointObjectProperties = 'DisjointObjectProperties'
+    EquivalentClasses = 'EquivalentClasses'
+    EquivalentDataProperties = 'EquivalentDataProperties'
+    EquivalentObjectProperties = 'EquivalentObjectProperties'
+    FunctionalDataProperty = 'FunctionalDataProperty'
+    FunctionalObjectProperty = 'FunctionalObjectProperty'
+    InverseFunctionalObjectProperty = 'InverseFunctionalObjectProperty'
+    InverseObjectProperties = 'InverseObjectProperties'
+    IrreflexiveObjectProperty = 'IrreflexiveObjectProperty'
+    NegativeDataPropertyAssertion = 'NegativeDataPropertyAssertion'
+    NegativeObjectPropertyAssertion = 'NegativeObjectPropertyAssertion'
+    ObjectPropertyAssertion = 'ObjectPropertyAssertion'
+    ObjectPropertyDomain = 'ObjectPropertyDomain'
+    ObjectPropertyRange = 'ObjectPropertyRange'
+    ReflexiveObjectProperty = 'ReflexiveObjectProperty'
+    SubClassOf = 'SubClassOf'
+    SubDataPropertyOf = 'SubDataPropertyOf'
+    SubObjectPropertyOf = 'SubObjectPropertyOf'
+    SymmetricObjectProperty = 'SymmetricObjectProperty'
+    TransitiveObjectProperty = 'TransitiveObjectProperty'
+
+
+@unique
 class OWLSyntax(Enum):
     """
-    This class defines available OWL syntax for exporting ontologies.
+    Extends Enum providing all the available OWL 2 syntax for ontology serialization.
     """
     Functional = 'Functional-style syntax'
     Manchester = 'Manchester OWL syntax'
