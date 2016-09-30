@@ -214,3 +214,10 @@ class ProfileValidationResult(object):
             return self._source is item[0] and self._edge is item[1] and self._target is item[2]
         except IndexError:
             return False
+
+
+class ProfileError(SyntaxError):
+    """
+    Extends SyntaxError and denotes Profile constraint violations.
+    """
+    pass
