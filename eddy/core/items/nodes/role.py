@@ -778,3 +778,9 @@ class RoleNode(AbstractResizableNode):
         """
         polygon = self.polygon.geometry()
         return polygon[self.IndexR].x() - polygon[self.IndexL].x()
+
+    def __repr__(self):
+        """
+        Returns repr(self).
+        """
+        return '{0}:{1}:{2}'.format(self.__class__.__name__, self.text(), self.id)

@@ -704,3 +704,9 @@ class IndividualNode(AbstractResizableNode):
         """
         polygon = self.polygon.geometry()
         return polygon[self.IndexRT].x() - polygon[self.IndexLT].x()
+
+    def __repr__(self):
+        """
+        Returns repr(self).
+        """
+        return '{0}:{1}:{2}'.format(self.__class__.__name__, self.text(), self.id)
