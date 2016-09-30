@@ -134,7 +134,7 @@ class ValueDomainNode(AbstractNode):
         # SELECTION AREA
         painter.setPen(self.selection.pen())
         painter.setBrush(self.selection.brush())
-        painter.drawRect(self.selection.geometry())
+        painter.drawRoundedRect(self.selection.geometry(), 8, 8)
         # SYNTAX VALIDATION
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(self.background.pen())

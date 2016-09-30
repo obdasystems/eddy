@@ -1,16 +1,17 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project version="1">
   <ontology>
-    <iri>http://www.dis.uniroma1.it/~graphol/family</iri>
     <prefix>family</prefix>
+    <iri>http://www.dis.uniroma1.it/~graphol/family</iri>
+    <profile>OWL2</profile>
   </ontology>
   <predicates>
-    <predicate type="attribute" name="name">
+    <predicate name="name" type="attribute">
       <url></url>
       <description></description>
       <functional>1</functional>
     </predicate>
-    <predicate type="role" name="hasFather">
+    <predicate name="hasFather" type="role">
       <url></url>
       <description></description>
       <functional>1</functional>
@@ -21,7 +22,7 @@
       <symmetric>0</symmetric>
       <transitive>0</transitive>
     </predicate>
-    <predicate type="role" name="hasMother">
+    <predicate name="hasMother" type="role">
       <url></url>
       <description></description>
       <functional>1</functional>

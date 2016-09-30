@@ -349,11 +349,11 @@ class AbstractNode(AbstractItem):
         :type selected: bool
         :type valid: bool
         """
-        # ITEM SELECTION (PEN)
-        pen = QtGui.QPen(QtCore.Qt.NoPen)
+        # ITEM SELECTION (BRUSH)
+        brush = QtGui.QBrush(QtCore.Qt.NoBrush)
         if selected:
-            pen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.DashLine)
-        self.selection.setPen(pen)
+            brush = QtGui.QBrush(QtGui.QColor(248, 255, 72, 255))
+        self.selection.setBrush(brush)
 
         # SYNTAX VALIDATION (BACKGROUND BRUSH)
         brush = QtGui.QBrush(QtCore.Qt.NoBrush)
@@ -535,11 +535,11 @@ class AbstractResizableNode(AbstractNode):
             self.handles[i].setBrush(brush[i])
             self.handles[i].setPen(pen[i])
 
-        # ITEM SELECTION (PEN)
-        pen = QtGui.QPen(QtCore.Qt.NoPen)
+        # ITEM SELECTION (BRUSH)
+        brush = QtGui.QBrush(QtCore.Qt.NoBrush)
         if selected and handle is None:
-            pen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.DashLine)
-        self.selection.setPen(pen)
+            brush = QtGui.QBrush(QtGui.QColor(248, 255, 72, 255))
+        self.selection.setBrush(brush)
 
         # SYNTAX VALIDATION (BACKGROUND BRUSH)
         brush = QtGui.QBrush(QtCore.Qt.NoBrush)

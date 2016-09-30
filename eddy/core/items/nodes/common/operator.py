@@ -67,7 +67,7 @@ class OperatorNode(AbstractNode):
         :type height: int
         :type brush: QBrush
         """
-        super().__init__(**kwargs)
+        super(OperatorNode, self).__init__(**kwargs)
 
         createPolygon = lambda x, y: QtGui.QPolygonF([
             QtCore.QPointF(-x / 2, 0),
@@ -80,7 +80,7 @@ class OperatorNode(AbstractNode):
         ])
 
         self.background = Polygon(createPolygon(58, 38))
-        self.selection = Polygon(QtCore.QRectF(-29, -19, 58, 38))
+        self.selection = Polygon(createPolygon(58, 38))
         self.polygon = Polygon(createPolygon(50, 30), brush or OperatorNode.DefaultBrush, OperatorNode.DefaultPen)
 
     #############################################
@@ -92,7 +92,9 @@ class OperatorNode(AbstractNode):
         Returns the shape bounding rectangle.
         :rtype: QtCore.QRectF
         """
-        return self.selection.geometry()
+        path = QtGui.QPainterPath()
+        path.addPolygon(self.selection.geometry())
+        return path.boundingRect()
 
     @abstractmethod
     def copy(self, diagram):
@@ -129,7 +131,7 @@ class OperatorNode(AbstractNode):
         # SELECTION AREA
         painter.setPen(self.selection.pen())
         painter.setBrush(self.selection.brush())
-        painter.drawRect(self.selection.geometry())
+        painter.drawPolygon(self.selection.geometry())
         # SYNTAX VALIDATION
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(self.background.pen())

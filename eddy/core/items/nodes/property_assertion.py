@@ -170,7 +170,7 @@ class PropertyAssertionNode(AbstractNode):
         # SELECTION AREA
         painter.setPen(self.selection.pen())
         painter.setBrush(self.selection.brush())
-        painter.drawRect(self.selection.geometry())
+        painter.drawRect(self.selection.geometry(), 16, 16)
         # SYNTAX VALIDATION
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(self.background.pen())

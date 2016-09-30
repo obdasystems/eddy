@@ -94,7 +94,7 @@ class IndividualNode(AbstractResizableNode):
 
 
         self.background = Polygon(createPolygon(w + 8, h + 8))
-        self.selection = Polygon(QtCore.QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
+        self.selection = Polygon(createPolygon(w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
         self.label = NodeLabel(template='individual', pos=self.center, parent=self)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
@@ -136,7 +136,9 @@ class IndividualNode(AbstractResizableNode):
         Returns the shape bounding rectangle.
         :rtype: QtCore.QRectF
         """
-        return self.selection.geometry()
+        path = QtGui.QPainterPath()
+        path.addPolygon(self.selection.geometry())
+        return path.boundingRect()
 
     @staticmethod
     def compose(value, datatype):
@@ -194,7 +196,7 @@ class IndividualNode(AbstractResizableNode):
         # SELECTION AREA
         painter.setPen(self.selection.pen())
         painter.setBrush(self.selection.brush())
-        painter.drawRect(self.selection.geometry())
+        painter.drawPolygon(self.selection.geometry())
         # SYNTAX VALIDATION
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(self.background.pen())
@@ -269,8 +271,15 @@ class IndividualNode(AbstractResizableNode):
             newTopBottomLeftX = (R.x() + R.width() / 2) - newSideX / 2
             newTopBottomRightX = (R.x() + R.width() / 2) + newSideX / 2
 
-            selection.setLeft(R.left())
-            selection.setTop(R.top())
+            selection[self.IndexLT] = QtCore.QPointF(R.left(), newLeftRightTopY)
+            selection[self.IndexLB] = QtCore.QPointF(R.left(), newLeftRightBottomY)
+            selection[self.IndexRT] = QtCore.QPointF(R.right(), newLeftRightTopY)
+            selection[self.IndexRB] = QtCore.QPointF(R.right(), newLeftRightBottomY)
+            selection[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, R.top())
+            selection[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, R.top())
+            selection[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom())
+            selection[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom())
+            selection[self.IndexEE] = QtCore.QPointF(R.left(), newLeftRightTopY)
             
             background[self.IndexLT] = QtCore.QPointF(R.left(), newLeftRightTopY)
             background[self.IndexLB] = QtCore.QPointF(R.left(), newLeftRightBottomY)
@@ -309,7 +318,13 @@ class IndividualNode(AbstractResizableNode):
             newLeftRightBottomY = (R.y() + R.height() / 2) + newSide / 2
             newLeftRightTopY = (R.y() + R.height() / 2) - newSide / 2
             
-            selection.setTop(R.top())
+            selection[self.IndexTL] = QtCore.QPointF(background[self.IndexTL].x(), R.top())
+            selection[self.IndexTR] = QtCore.QPointF(background[self.IndexTR].x(), R.top())
+            selection[self.IndexLB] = QtCore.QPointF(background[self.IndexLB].x(), newLeftRightBottomY)
+            selection[self.IndexRB] = QtCore.QPointF(background[self.IndexRB].x(), newLeftRightBottomY)
+            selection[self.IndexLT] = QtCore.QPointF(background[self.IndexLT].x(), newLeftRightTopY)
+            selection[self.IndexRT] = QtCore.QPointF(background[self.IndexRT].x(), newLeftRightTopY)
+            selection[self.IndexEE] = QtCore.QPointF(background[self.IndexEE].x(), newLeftRightTopY)
             
             background[self.IndexTL] = QtCore.QPointF(background[self.IndexTL].x(), R.top())
             background[self.IndexTR] = QtCore.QPointF(background[self.IndexTR].x(), R.top())
@@ -355,8 +370,15 @@ class IndividualNode(AbstractResizableNode):
             newTopBottomLeftX = (R.x() + R.width() / 2) - newSideX / 2
             newTopBottomRightX = (R.x() + R.width() / 2) + newSideX / 2
             
-            selection.setRight(R.right())
-            selection.setTop(R.top())
+            selection[self.IndexLT] = QtCore.QPointF(R.left(), newLeftRightTopY)
+            selection[self.IndexLB] = QtCore.QPointF(R.left(), newLeftRightBottomY)
+            selection[self.IndexRT] = QtCore.QPointF(R.right(), newLeftRightTopY)
+            selection[self.IndexRB] = QtCore.QPointF(R.right(), newLeftRightBottomY)
+            selection[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, R.top())
+            selection[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, R.top())
+            selection[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom())
+            selection[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom())
+            selection[self.IndexEE] = QtCore.QPointF(R.left(), newLeftRightTopY)
             
             background[self.IndexLT] = QtCore.QPointF(R.left(), newLeftRightTopY)
             background[self.IndexLB] = QtCore.QPointF(R.left(), newLeftRightBottomY)
@@ -395,7 +417,13 @@ class IndividualNode(AbstractResizableNode):
             newTopBottomLeftX = (R.x() + R.width() / 2) - newSide / 2
             newTopBottomRightX = (R.x() + R.width() / 2) + newSide / 2
 
-            selection.setLeft(R.left())
+            selection[self.IndexLT] = QtCore.QPointF(R.left(), selection[self.IndexLT].y())
+            selection[self.IndexLB] = QtCore.QPointF(R.left(), selection[self.IndexLB].y())
+            selection[self.IndexEE] = QtCore.QPointF(R.left(), selection[self.IndexEE].y())
+            selection[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, selection[self.IndexTL].y())
+            selection[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, selection[self.IndexTR].y())
+            selection[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, selection[self.IndexBL].y())
+            selection[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, selection[self.IndexBR].y())
             
             background[self.IndexLT] = QtCore.QPointF(R.left(), background[self.IndexLT].y())
             background[self.IndexLB] = QtCore.QPointF(R.left(), background[self.IndexLB].y())
@@ -429,8 +457,13 @@ class IndividualNode(AbstractResizableNode):
             newSide = (R.width() - 4 * 2) / (1 + math.sqrt(2))
             newTopBottomRightX = (R.x() + R.width() / 2) + newSide / 2
             newTopBottomLeftX = (R.x() + R.width() / 2) - newSide / 2
-            
-            selection.setRight(R.right())
+
+            selection[self.IndexRT] = QtCore.QPointF(R.right(), selection[self.IndexRT].y())
+            selection[self.IndexRB] = QtCore.QPointF(R.right(), selection[self.IndexRB].y())
+            selection[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, selection[self.IndexTL].y())
+            selection[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, selection[self.IndexTR].y())
+            selection[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, selection[self.IndexBL].y())
+            selection[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, selection[self.IndexBR].y())
             
             background[self.IndexRT] = QtCore.QPointF(R.right(), background[self.IndexRT].y())
             background[self.IndexRB] = QtCore.QPointF(R.right(), background[self.IndexRB].y())
@@ -473,10 +506,17 @@ class IndividualNode(AbstractResizableNode):
             newLeftRightTopY = (R.y() + R.height() / 2) - newSideY / 2
             newTopBottomLeftX = (R.x() + R.width() / 2) - newSideX / 2
             newTopBottomRightX = (R.x() + R.width() / 2) + newSideX / 2
-            
-            selection.setLeft(R.left())
-            selection.setBottom(R.bottom())
-            
+
+            selection[self.IndexLT] = QtCore.QPointF(R.left(), newLeftRightTopY)
+            selection[self.IndexLB] = QtCore.QPointF(R.left(), newLeftRightBottomY)
+            selection[self.IndexRT] = QtCore.QPointF(R.right(), newLeftRightTopY)
+            selection[self.IndexRB] = QtCore.QPointF(R.right(), newLeftRightBottomY)
+            selection[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, R.top())
+            selection[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, R.top())
+            selection[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom())
+            selection[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom())
+            selection[self.IndexEE] = QtCore.QPointF(R.left(), newLeftRightTopY)
+
             background[self.IndexLT] = QtCore.QPointF(R.left(), newLeftRightTopY)
             background[self.IndexLB] = QtCore.QPointF(R.left(), newLeftRightBottomY)
             background[self.IndexRT] = QtCore.QPointF(R.right(), newLeftRightTopY)
@@ -513,8 +553,14 @@ class IndividualNode(AbstractResizableNode):
             newSide = (R.height() - 4 * 2) / (1 + math.sqrt(2))
             newLeftRightTopY = (R.y() + R.height() / 2) - newSide / 2
             newLeftRightBottomY = (R.y() + R.height() / 2) + newSide / 2
-            
-            selection.setBottom(R.bottom())
+
+            selection[self.IndexBL] = QtCore.QPointF(selection[self.IndexBL].x(), R.bottom())
+            selection[self.IndexBR] = QtCore.QPointF(selection[self.IndexBR].x(), R.bottom())
+            selection[self.IndexLB] = QtCore.QPointF(selection[self.IndexLB].x(), newLeftRightBottomY)
+            selection[self.IndexRB] = QtCore.QPointF(selection[self.IndexRB].x(), newLeftRightBottomY)
+            selection[self.IndexLT] = QtCore.QPointF(selection[self.IndexLT].x(), newLeftRightTopY)
+            selection[self.IndexRT] = QtCore.QPointF(selection[self.IndexRT].x(), newLeftRightTopY)
+            selection[self.IndexEE] = QtCore.QPointF(selection[self.IndexEE].x(), newLeftRightTopY)
             
             background[self.IndexBL] = QtCore.QPointF(background[self.IndexBL].x(), R.bottom())
             background[self.IndexBR] = QtCore.QPointF(background[self.IndexBR].x(), R.bottom())
@@ -560,8 +606,15 @@ class IndividualNode(AbstractResizableNode):
             newTopBottomLeftX = (R.x() + R.width() / 2) - newSideX / 2
             newTopBottomRightX = (R.x() + R.width() / 2) + newSideX / 2
 
-            selection.setRight(R.right())
-            selection.setBottom(R.bottom())
+            selection[self.IndexLT] = QtCore.QPointF(R.left(), newLeftRightTopY)
+            selection[self.IndexLB] = QtCore.QPointF(R.left(), newLeftRightBottomY)
+            selection[self.IndexRT] = QtCore.QPointF(R.right(), newLeftRightTopY)
+            selection[self.IndexRB] = QtCore.QPointF(R.right(), newLeftRightBottomY)
+            selection[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, R.top())
+            selection[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, R.top())
+            selection[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom())
+            selection[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom())
+            selection[self.IndexEE] = QtCore.QPointF(R.left(), newLeftRightTopY)
 
             background[self.IndexLT] = QtCore.QPointF(R.left(), newLeftRightTopY)
             background[self.IndexLB] = QtCore.QPointF(R.left(), newLeftRightBottomY)

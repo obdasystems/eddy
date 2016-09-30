@@ -71,7 +71,7 @@ class FacetNode(AbstractNode):
         """
         super(FacetNode, self).__init__(**kwargs)
         self.background = Polygon(self.createPolygon(88, 48))
-        self.selection = Polygon(QtCore.QRectF(-44, -24, 88, 48))
+        self.selection = Polygon(self.createPolygon(88, 48))
         self.polygon = Polygon(self.createPolygon(80, 40))
         self.polygonA = Polygon(self.createPolygonA(80, 40), FacetNode.DefaultBrushA, FacetNode.DefaultPenA)
         self.polygonB = Polygon(self.createPolygonA(80, 40), FacetNode.DefaultBrushB, FacetNode.DefaultPenB)
@@ -125,7 +125,9 @@ class FacetNode(AbstractNode):
         Returns the shape bounding rectangle.
         :rtype: QtCore.QRectF
         """
-        return self.selection.geometry()
+        path = QtGui.QPainterPath()
+        path.addPolygon(self.selection.geometry())
+        return path.boundingRect()
 
     def brushA(self):
         """
@@ -278,7 +280,7 @@ class FacetNode(AbstractNode):
         # SELECTION AREA
         painter.setPen(self.selection.pen())
         painter.setBrush(self.selection.brush())
-        painter.drawRect(self.selection.geometry())
+        painter.drawPolygon(self.selection.geometry())
         # SYNTAX VALIDATION
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(self.background.pen())
@@ -377,7 +379,7 @@ class FacetNode(AbstractNode):
         # POLYGONS + BACKGROUND + SELECTION (GEOMETRY)
         width = max(self.labelA.width() + 16, self.labelB.width() + 16, 80)
         self.background.setGeometry(self.createPolygon(width + 8, 48))
-        self.selection.setGeometry(QtCore.QRectF(-(width + 8) / 2, -24, width + 8, 48))
+        self.selection.setGeometry(self.createPolygon(width + 8, 48))
         self.polygon.setGeometry(self.createPolygon(width, 40))
         self.polygonA.setGeometry(self.createPolygonA(width, 40))
         self.polygonB.setGeometry(self.createPolygonB(width, 40))

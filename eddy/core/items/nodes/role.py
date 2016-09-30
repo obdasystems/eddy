@@ -83,7 +83,7 @@ class RoleNode(AbstractResizableNode):
         self.fpolygon = Polygon(QtGui.QPainterPath())
         self.ipolygon = Polygon(QtGui.QPainterPath())
         self.background = Polygon(createPolygon(w + 8, h + 8))
-        self.selection = Polygon(QtCore.QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
+        self.selection = Polygon(createPolygon(w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
         self.label = NodeLabel(template='role', pos=self.center, parent=self)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
@@ -99,7 +99,9 @@ class RoleNode(AbstractResizableNode):
         Returns the shape bounding rectangle.
         :rtype: QtCore.QRectF
         """
-        return self.selection.geometry()
+        path = QtGui.QPainterPath()
+        path.addPolygon(self.selection.geometry())
+        return path.boundingRect()
 
     def copy(self, diagram):
         """
@@ -223,7 +225,7 @@ class RoleNode(AbstractResizableNode):
         # SELECTION AREA
         painter.setPen(self.selection.pen())
         painter.setBrush(self.selection.brush())
-        painter.drawRect(self.selection.geometry())
+        painter.drawPolygon(self.selection.geometry())
         # SYNTAX VALIDATION
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(self.background.pen())
@@ -298,10 +300,13 @@ class RoleNode(AbstractResizableNode):
             if R.height() < mbrh:
                 D.setY(D.y() - mbrh + R.height())
                 R.setTop(R.top() - mbrh + R.height())
-            
-            selection.setLeft(R.left())
-            selection.setTop(R.top())
-            
+
+            selection[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, R.top())
+            selection[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, selection[self.IndexB].y())
+            selection[self.IndexL] = QtCore.QPointF(R.left(), R.top() + R.height() / 2)
+            selection[self.IndexE] = QtCore.QPointF(R.left(), R.top() + R.height() / 2)
+            selection[self.IndexR] = QtCore.QPointF(selection[self.IndexR].x(), R.top() + R.height() / 2)
+
             background[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, R.top())
             background[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, background[self.IndexB].y())
             background[self.IndexL] = QtCore.QPointF(R.left(), R.top() + R.height() / 2)
@@ -326,9 +331,12 @@ class RoleNode(AbstractResizableNode):
             if R.height() < mbrh:
                 D.setY(D.y() - mbrh + R.height())
                 R.setTop(R.top() - mbrh + R.height())
-            
-            selection.setTop(R.top())
-            
+
+            selection[self.IndexT] = QtCore.QPointF(selection[self.IndexT].x(), R.top())
+            selection[self.IndexL] = QtCore.QPointF(selection[self.IndexL].x(), R.top() + R.height() / 2)
+            selection[self.IndexE] = QtCore.QPointF(selection[self.IndexE].x(), R.top() + R.height() / 2)
+            selection[self.IndexR] = QtCore.QPointF(selection[self.IndexR].x(), R.top() + R.height() / 2)
+
             background[self.IndexT] = QtCore.QPointF(background[self.IndexT].x(), R.top())
             background[self.IndexL] = QtCore.QPointF(background[self.IndexL].x(), R.top() + R.height() / 2)
             background[self.IndexE] = QtCore.QPointF(background[self.IndexE].x(), R.top() + R.height() / 2)
@@ -359,10 +367,13 @@ class RoleNode(AbstractResizableNode):
             if R.height() < mbrh:
                 D.setY(D.y() - mbrh + R.height())
                 R.setTop(R.top() - mbrh + R.height())
-            
-            selection.setRight(R.right())
-            selection.setTop(R.top())
-            
+
+            selection[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, R.top())
+            selection[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, selection[self.IndexB].y())
+            selection[self.IndexL] = QtCore.QPointF(selection[self.IndexL].x(), R.top() + R.height() / 2)
+            selection[self.IndexE] = QtCore.QPointF(selection[self.IndexE].x(), R.top() + R.height() / 2)
+            selection[self.IndexR] = QtCore.QPointF(R.right(), R.top() + R.height() / 2)
+
             background[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, R.top())
             background[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, background[self.IndexB].y())
             background[self.IndexL] = QtCore.QPointF(background[self.IndexL].x(), R.top() + R.height() / 2)
@@ -387,8 +398,11 @@ class RoleNode(AbstractResizableNode):
             if R.width() < mbrw:
                 D.setX(D.x() - mbrw + R.width())
                 R.setLeft(R.left() - mbrw + R.width())
-            
-            selection.setLeft(R.left())
+
+            selection[self.IndexL] = QtCore.QPointF(R.left(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
+            selection[self.IndexE] = QtCore.QPointF(R.left(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
+            selection[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, selection[self.IndexT].y())
+            selection[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, selection[self.IndexB].y())
             
             background[self.IndexL] = QtCore.QPointF(R.left(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
             background[self.IndexE] = QtCore.QPointF(R.left(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
@@ -412,8 +426,10 @@ class RoleNode(AbstractResizableNode):
             if R.width() < mbrw:
                 D.setX(D.x() + mbrw - R.width())
                 R.setRight(R.right() + mbrw - R.width())
-            
-            selection.setRight(R.right())
+
+            selection[self.IndexR] = QtCore.QPointF(R.right(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
+            selection[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, selection[self.IndexT].y())
+            selection[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, selection[self.IndexB].y())
             
             background[self.IndexR] = QtCore.QPointF(R.right(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
             background[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, background[self.IndexT].y())
@@ -443,9 +459,12 @@ class RoleNode(AbstractResizableNode):
             if R.height() < mbrh:
                 D.setY(D.y() + mbrh - R.height())
                 R.setBottom(R.bottom() + mbrh - R.height())
-            
-            selection.setLeft(R.left())
-            selection.setBottom(R.bottom())
+
+            selection[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, selection[self.IndexT].y())
+            selection[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, R.bottom())
+            selection[self.IndexL] = QtCore.QPointF(R.left(), R.bottom() - R.height() / 2)
+            selection[self.IndexE] = QtCore.QPointF(R.left(), R.bottom() - R.height() / 2)
+            selection[self.IndexR] = QtCore.QPointF(selection[self.IndexR].x(), R.bottom() - R.height() / 2)
             
             background[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, background[self.IndexT].y())
             background[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, R.bottom())
@@ -471,9 +490,12 @@ class RoleNode(AbstractResizableNode):
             if R.height() < mbrh:
                 D.setY(D.y() + mbrh - R.height())
                 R.setBottom(R.bottom() + mbrh - R.height())
-            
-            selection.setBottom(R.bottom())
-            
+
+            selection[self.IndexB] = QtCore.QPointF(selection[self.IndexB].x(), R.bottom())
+            selection[self.IndexL] = QtCore.QPointF(selection[self.IndexL].x(), R.top() + R.height() / 2)
+            selection[self.IndexE] = QtCore.QPointF(selection[self.IndexE].x(), R.top() + R.height() / 2)
+            selection[self.IndexR] = QtCore.QPointF(selection[self.IndexR].x(), R.top() + R.height() / 2)
+
             background[self.IndexB] = QtCore.QPointF(background[self.IndexB].x(), R.bottom())
             background[self.IndexL] = QtCore.QPointF(background[self.IndexL].x(), R.top() + R.height() / 2)
             background[self.IndexE] = QtCore.QPointF(background[self.IndexE].x(), R.top() + R.height() / 2)
@@ -505,8 +527,11 @@ class RoleNode(AbstractResizableNode):
                 D.setY(D.y() + mbrh - R.height())
                 R.setBottom(R.bottom() + mbrh - R.height())
 
-            selection.setRight(R.right())
-            selection.setBottom(R.bottom())
+            selection[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, selection[self.IndexT].y())
+            selection[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, R.bottom())
+            selection[self.IndexL] = QtCore.QPointF(selection[self.IndexL].x(), R.bottom() - R.height() / 2)
+            selection[self.IndexE] = QtCore.QPointF(selection[self.IndexE].x(), R.bottom() - R.height() / 2)
+            selection[self.IndexR] = QtCore.QPointF(R.right(), R.bottom() - R.height() / 2)
 
             background[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, background[self.IndexT].y())
             background[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, R.bottom())
