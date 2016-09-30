@@ -33,11 +33,13 @@
 ##########################################################################
 
 
-from enum import Enum, unique, IntEnum
+from enum import unique
+
+from eddy.core.datatypes.common import Enum_, IntEnum_
 
 
 @unique
-class Color(Enum):
+class Color(Enum_):
     """
     This class defines predicate nodes available colors.
     """
@@ -55,21 +57,9 @@ class Color(Enum):
     Brown = '#6f4f28'
     Beige = '#c2b078'
 
-    @classmethod
-    def forValue(cls, value):
-        """
-        Returns the color matching the given HEX code.
-        :type value: str
-        :rtype: Color
-        """
-        for x in cls:
-            if x.value == value.lower():
-                return x
-        return None
-
 
 @unique
-class DiagramMode(IntEnum):
+class DiagramMode(IntEnum_):
     """
     This class defines the diagram operational modes.
     """

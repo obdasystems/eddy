@@ -33,11 +33,13 @@
 ##########################################################################
 
 
-from enum import unique, Enum
+from enum import unique
+
+from eddy.core.datatypes.common import Enum_
 
 
 @unique
-class Datatype(Enum):
+class Datatype(Enum_):
     """
     Extends Enum providing all the available datatypes.
     """
@@ -76,21 +78,9 @@ class Datatype(Enum):
     unsignedShort = 'xsd:unsignedShort'
     xmlLiteral = 'rdf:XMLLiteral'
 
-    @classmethod
-    def forValue(cls, value):
-        """
-        Returns the Datatype matching the given value.
-        :type value: str
-        :rtype: Datatype
-        """
-        for x in cls:
-            if x.value.lower() == value.lower().strip():
-                return x
-        return None
-
 
 @unique
-class Facet(Enum):
+class Facet(Enum_):
     """
     Extends Enum providing all the availables Facet restrictions.
     """
@@ -154,21 +144,9 @@ class Facet(Enum):
             Datatype.xmlLiteral: []
         }[value]
 
-    @classmethod
-    def forValue(cls, value):
-        """
-        Returns the Facet matching the given value.
-        :type value: str
-        :rtype: Datatype
-        """
-        for x in cls:
-            if x.value.lower() == value.lower().strip():
-                return x
-        return None
-
 
 @unique
-class OWLAxiom(Enum):
+class OWLAxiom(Enum_):
     """
     Extends Enum providing the set of supported OWL Axiom.
     """
@@ -204,7 +182,18 @@ class OWLAxiom(Enum):
 
 
 @unique
-class OWLSyntax(Enum):
+class OWLProfile(Enum_):
+    """
+    Extends Enum providing all the available OWL 2 profiles.
+    """
+    OWL2 = 'OWL 2'
+    OWL2EL = 'OWL 2 EL'
+    OWL2QL = 'OWL 2 QL'
+    OWL2RL = 'OWL 2 RL'
+
+
+@unique
+class OWLSyntax(Enum_):
     """
     Extends Enum providing all the available OWL 2 syntax for ontology serialization.
     """

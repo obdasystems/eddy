@@ -211,7 +211,7 @@ class AttributeNode(AbstractNode):
         Returns the special type of this node.
         :rtype: Special
         """
-        return Special.forLabel(self.text())
+        return Special.forValue(self.text())
 
     def text(self):
         """

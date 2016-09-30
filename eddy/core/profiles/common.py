@@ -89,13 +89,13 @@ class AbstractProfile(QtCore.QObject):
         return self.pvr()
 
     @classmethod
-    @abstractmethod
     def name(cls):
         """
         Returns the name of the profile, i.e: OWL 2, OWL 2 EL, OWL 2 QL, OWL 2 RL.
         :rtype: str
         """
-        pass
+        profile = cls.type()
+        return profile.value
 
     def objectName(self):
         """
@@ -123,6 +123,15 @@ class AbstractProfile(QtCore.QObject):
         :type pvr: ProfileValidationResult
         """
         self._pvr = pvr
+
+    @classmethod
+    @abstractmethod
+    def type(cls):
+        """
+        Returns the profile type.
+        :rtype: OWLProfile
+        """
+        pass
 
     @abstractmethod
     def validate(self, source, edge, target):

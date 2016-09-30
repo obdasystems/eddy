@@ -96,8 +96,8 @@ class CommandProjectSetProfile(QtWidgets.QUndoCommand):
         """
         Initialize the command.
         :type project: Project
-        :type undo: str
-        :type redo: str
+        :type undo: OWLProfile
+        :type redo: OWLProfile
         """
         super().__init__("set project profile to '{0}'".format(redo))
         self.project = project

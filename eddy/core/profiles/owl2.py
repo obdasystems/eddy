@@ -34,7 +34,7 @@
 
 
 from eddy.core.datatypes.graphol import Identity, Item, Restriction
-from eddy.core.datatypes.owl import Facet
+from eddy.core.datatypes.owl import Facet, OWLProfile
 from eddy.core.functions.graph import bfs
 from eddy.core.functions.misc import first
 from eddy.core.profiles.common import AbstractProfile
@@ -50,12 +50,12 @@ class OWL2Profile(AbstractProfile):
     #################################
 
     @classmethod
-    def name(cls):
+    def type(cls):
         """
-        Returns the name of the profile, i.e: OWL 2, OWL 2 QL.
-        :rtype: str
+        Returns the profile type.
+        :rtype: OWLProfile
         """
-        return 'OWL 2'
+        return OWLProfile.OWL2
 
     def validate(self, source, edge, target):
         """

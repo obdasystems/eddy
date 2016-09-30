@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 ##########################################################################
 #                                                                        #
@@ -33,65 +32,61 @@
 ##########################################################################
 
 
-from enum import unique
+from abc import ABCMeta
 
-from eddy.core.datatypes.common import Enum_
-from eddy.core.regex import RE_FILE_EXTENSION
+from enum import IntEnum, Enum
 
 
-@unique
-class File(Enum_):
+class Enum_(Enum):
     """
-    Enum implementation to deal with file types.
+    Extends Enum class providing some additional methods.
     """
-    Bmp = 'Bitmap (*.bmp)'
-    Csv = 'Comma-separated values (*.csv)'
-    GraphML = 'GraphML (*.graphml)'
-    Graphol = 'Graphol (*.graphol)'
-    Html = 'Hyper-Text Markup Language (*.html)'
-    Jpeg = 'JPEG (*.jpg)'
-    Owl = 'Web Ontology Language (*.owl)'
-    Pdf = 'Portable Document Format (*.pdf)'
-    Png = 'PNG (*.png)'
-    Spec = 'Plugin SPEC (*.spec)'
-    Zip = 'ZIP (*.zip)'
-    Xml = 'XML (*.xml)'
+    __metaclass__  = ABCMeta
 
     @classmethod
-    def forPath(cls, path):
+    def forValue(cls, value):
         """
-        Returns the File matching the given path.
-        :type path: str
-        :rtype: File
+        Returns the Enum_ entry matching the given value.
+        :type value: str
+        :rtype: Enum_
         """
+        if isinstance(value, Enum_):
+            return value
         for x in cls:
-            if path.endswith(x.extension):
+            if x.value.strip() == value.strip():
                 return x
         return None
 
-    @property
-    def extension(self):
+
+class IntEnum_(IntEnum):
+    """
+    Extends IntEnum class providing some additional methods.
+    """
+    __metaclass__  = ABCMeta
+
+    @classmethod
+    def forValue(cls, value):
         """
-        The extension associated with the Enum member.
-        :rtype: str
+        Returns the IntEnum_ entry matching the given value.
+        :type value: str
+        :rtype: IntEnum_
         """
-        match = RE_FILE_EXTENSION.match(self.value)
-        if match:
-            return match.group('extension')
+        for x in cls:
+            if x.value == value:
+                return x
         return None
 
-    def __lt__(self, other):
+    @classmethod
+    def forValue(cls, value):
         """
-        Returns True if the current File is "lower" than the given other one.
-        :type other: File
-        :rtype: bool
+        Returns the IntEnum_ entry matching the given value.
+        :type value: T <= int | str | Item
+        :rtype: IntEnum_
         """
-        return self.value < other.value
-
-    def __gt__(self, other):
-        """
-        Returns True if the current File is "greater" than the given other one.
-        :type other: File
-        :rtype: bool
-        """
-        return self.value > other.value
+        if isinstance(value, IntEnum_):
+            return value
+        value = int(value)
+        for x in cls:
+            if x.value == value:
+                return x
+        return None

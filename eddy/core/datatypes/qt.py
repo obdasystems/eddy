@@ -40,9 +40,9 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 
-LINUX = sys.platform.startswith('linux')
-MACOS = sys.platform.startswith('darwin')
-WIN32 = sys.platform.startswith('win32')
+_LINUX = sys.platform.startswith('linux')
+_MACOS = sys.platform.startswith('darwin')
+_WIN32 = sys.platform.startswith('win32')
 
 
 class Font(QtGui.QFont):
@@ -56,7 +56,7 @@ class Font(QtGui.QFont):
         :type size: float
         :type weight: float
         """
-        if not MACOS:
+        if not _MACOS:
             size = int(round(size * 0.75))
         super(Font, self).__init__(family, size, weight)
         self.setBold(kwargs.get('bold', False))

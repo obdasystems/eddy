@@ -33,6 +33,7 @@
 ##########################################################################
 
 
+from eddy.core.datatypes.owl import OWLProfile
 from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.exporters.common import AbstractProjectExporter
 from eddy.core.loaders.common import AbstractDiagramLoader
@@ -938,10 +939,10 @@ class HasProfileSystem(object):
         """
         if not issubclass(profile, AbstractProfile):
             raise ValueError("ontology profile must be subclass of eddy.core.profiles.common.AbstractProfile")
-        if profile.name() in self._profileDict:
+        if profile.type() in self._profileDict:
             raise ValueError("duplicate ontology profile found: %s" % profile.name())
         self._profileList.append(profile)
-        self._profileDict[profile.name()] = profile
+        self._profileDict[profile.type()] = profile
         # LOGGER.debug("Added ontology profile: %s", profile.name())
 
     def addProfiles(self, profiles):
@@ -959,17 +960,17 @@ class HasProfileSystem(object):
         self._profileDict.clear()
         self._profileList.clear()
 
-    def createProfile(self, name, project=None):
+    def createProfile(self, name_or_type, project=None):
         """
         Creates an instance of an ontology profile for the given name.
-        :type name: str
+        :type name_or_type: T <= OWLProfile|str
         :type project: Project
         :rtype: AbstractProfile
         """
-        profile = self.profile(name)
+        profile = self.profile(OWLProfile.forValue(name_or_type))
         if not profile:
-            LOGGER.warning("Missing profile %s: defaulting to OWL 2", name)
-            profile = self.profile("OWL 2")
+            LOGGER.warning("Missing profile %s: defaulting to OWL 2", name_or_type)
+            profile = self.profile(OWLProfile.OWL2)
         return profile(project)
 
     def insertProfile(self, profile, before):
@@ -980,10 +981,10 @@ class HasProfileSystem(object):
         """
         if not issubclass(profile, AbstractProfile):
             raise ValueError("ontology profile must be subclass of eddy.core.profiles.common.AbstractProfile")
-        if profile.name() in self._profileDict:
+        if profile.type() in self._profileDict:
             raise ValueError("duplicate ontology profile found: %s" % profile.name())
         self._profileList.insert(self._profileList.index(before), profile)
-        self._profileDict[profile.name()] = profile
+        self._profileDict[profile.type()] = profile
         # LOGGER.debug("Added ontology profile %s before project loader %s", profile.name(), before.name())
 
     def insertProfiles(self, profiles, before):
@@ -995,13 +996,13 @@ class HasProfileSystem(object):
         for profile in profiles:
             self.insertProfile(profile, before)
 
-    def profile(self, name):
+    def profile(self, name_or_type):
         """
         Returns the reference to an ontology profile class given it's name.
-        :type name: str
+        :type name_or_type: T <= OWLProfile|str
         :rtype: class
         """
-        return self._profileDict.get(name, None)
+        return self._profileDict.get(OWLProfile.forValue(name_or_type), None)
 
     def profiles(self):
         """
@@ -1017,12 +1018,12 @@ class HasProfileSystem(object):
         """
         return [x.name() for x in self.profiles()]
 
-    def removeProfiles(self, profile):
+    def removeProfile(self, profile):
         """
         Removes the given ontology profile class from the set.
         :type profile: class
         :rtype: class
         """
         self._profileList.remove(profile)
-        del self._profileDict[profile.name()]
+        del self._profileDict[profile.type()]
         return profile

@@ -33,14 +33,15 @@
 ##########################################################################
 
 
-from enum import unique, IntEnum, Enum
+from enum import unique
 
+from eddy.core.datatypes.common import Enum_, IntEnum_
 from eddy.core.functions.misc import rstrip
 from eddy.core.regex import RE_CARDINALITY, RE_CAMEL_SPACE
 
 
 @unique
-class Identity(Enum):
+class Identity(Enum_):
     """
     This class defines graphol expression identities.
     """
@@ -58,7 +59,7 @@ class Identity(Enum):
 
 
 @unique
-class Item(IntEnum):
+class Item(IntEnum_):
     """
     This class defines all the available elements for graphol diagrams.
     """
@@ -93,22 +94,6 @@ class Item(IntEnum):
     Label = 65558
     Undefined = 65559
 
-    @classmethod
-    def forValue(cls, value):
-        """
-        Returns the item type matching the given value.
-        :type value: T <= int | str | Item
-        :rtype: Item
-        """
-        if isinstance(value, Item):
-            return value
-        else:
-            value = int(value)
-            for x in cls:
-                if x.value == value:
-                    return x
-        return None
-
     @property
     def realName(self):
         """
@@ -127,7 +112,7 @@ class Item(IntEnum):
 
 
 @unique
-class Restriction(Enum):
+class Restriction(Enum_):
     """
     This class defines all the available restrictions for domain and range restriction nodes.
     """
@@ -166,21 +151,9 @@ class Restriction(Enum):
 
 
 @unique
-class Special(Enum):
+class Special(Enum_):
     """
     This class defines special nodes types.
     """
     Top = 'TOP'
     Bottom = 'BOTTOM'
-
-    @classmethod
-    def forLabel(cls, value):
-        """
-        Returns the special type matching the given label.
-        :type value: str
-        :rtype: Special
-        """
-        for x in cls:
-            if x.value == value.upper().strip():
-                return x
-        return None
