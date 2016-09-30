@@ -68,7 +68,7 @@ class IntEnum_(IntEnum):
     def forValue(cls, value):
         """
         Returns the IntEnum_ entry matching the given value.
-        :type value: str
+        :type value: T <= int|str
         :rtype: IntEnum_
         """
         for x in cls:
