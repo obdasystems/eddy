@@ -104,8 +104,8 @@ class Diagram(QtWidgets.QGraphicsScene):
         self.mp_NodePos = None
         self.mp_Pos = None
 
-        connect(self.sgnItemAdded, self.onConnectionChanged)
-        connect(self.sgnItemRemoved, self.onConnectionChanged)
+        connect(self.sgnItemAdded, self.onItemAdded)
+        connect(self.sgnItemRemoved, self.onItemRemoved)
         connect(self.sgnNodeIdentification, self.doNodeIdentification)
 
     #############################################
@@ -570,13 +570,30 @@ class Diagram(QtWidgets.QGraphicsScene):
                 node.setIdentity(computed)
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
-    def onConnectionChanged(self, _, item):
+    def onItemAdded(self, _, item):
         """
         Executed whenever a connection is created/removed.
         :type _: Diagram
         :type item: AbstractItem
         """
         if item.isEdge():
+            # Execute the node identification procedure only if at least one of
+            # the endpoints we are connecting is currently identified as NEUTRAL.
+            if Identity.Neutral in {item.source.identity(), item.target.identity()}:
+                for node in (item.source, item.target):
+                    self.sgnNodeIdentification.emit(node)
+
+    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    def onItemRemoved(self, _, item):
+        """
+        Executed whenever a connection is created/removed.
+        :type _: Diagram
+        :type item: AbstractItem
+        """
+        if item.isEdge():
+            # When an edge is removed we may be in the case where
+            # the ontology is split into 2 subgraphs, hence we need
+            # to run the identification procedure on the 2 subgraphs.
             for node in (item.source, item.target):
                 self.sgnNodeIdentification.emit(node)
 
