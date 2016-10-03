@@ -75,6 +75,19 @@ class AbstractNode(AbstractItem):
         self.setFlag(AbstractItem.ItemIsSelectable, True)
 
     #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def identityName(self):
+        """
+        Returns the name of the identity of this item (i.e: Concept, Role, ...).
+        :rtype: str
+        """
+        identity = self.identity()
+        return identity.value
+
+    #############################################
     #   INTERFACE
     #################################
 
