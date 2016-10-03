@@ -79,6 +79,9 @@ class CommandEdgeAdd(QtWidgets.QUndoCommand):
             self.edge.target.inputs = self.inputs['redo'][:]
         # Add the edge to the diagram.
         self.diagram.addItem(self.edge)
+        # Update edge geometry.
+        self.edge.updateEdge()
+        # Emit diagram specific signals.
         self.diagram.sgnItemAdded.emit(self.diagram, self.edge)
         self.diagram.sgnUpdated.emit()
 
