@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#fcfcfc" type="value-domain" id="n7">
-      <geometry width="90" x="0" height="40" y="60"/>
-      <label width="60" x="0" height="23" y="60">xsd:string</label>
+    <node type="value-domain" color="#fcfcfc" id="n7">
+      <geometry x="0" y="60" width="90" height="40"/>
+      <label x="0" y="60" width="60" height="23">xsd:string</label>
     </node>
-    <node color="#fcfcfc" type="domain-restriction" id="n15">
-      <geometry width="20" x="0" height="20" y="-40"/>
-      <label width="27" x="0" height="23" y="-62">self</label>
+    <node type="domain-restriction" color="#fcfcfc" id="n15">
+      <geometry x="0" y="-40" width="20" height="20"/>
+      <label x="0" y="-62" width="27" height="23">self</label>
     </node>
   </graph>
 </graphol>

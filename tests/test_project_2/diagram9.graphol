@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#fcfcfc" type="attribute" id="n6">
-      <geometry width="20" x="100" height="20" y="-40"/>
-      <label width="22" x="100" height="23" y="-62">A4</label>
+    <node type="domain-restriction" color="#fcfcfc" id="n4">
+      <geometry x="20" y="-40" width="20" height="20"/>
+      <label x="20" y="-62" width="39" height="23">exists</label>
     </node>
-    <node color="#fcfcfc" type="domain-restriction" id="n4">
-      <geometry width="20" x="20" height="20" y="-40"/>
-      <label width="39" x="20" height="23" y="-62">exists</label>
+    <node type="concept" color="#fcfcfc" id="n5">
+      <geometry x="20" y="60" width="110" height="50"/>
+      <label x="20" y="60" width="22" height="23">C8</label>
     </node>
-    <node color="#fcfcfc" type="concept" id="n5">
-      <geometry width="110" x="20" height="50" y="60"/>
-      <label width="22" x="20" height="23" y="60">C8</label>
+    <node type="attribute" color="#fcfcfc" id="n6">
+      <geometry x="100" y="-40" width="20" height="20"/>
+      <label x="100" y="-62" width="22" height="23">A4</label>
     </node>
-    <edge source="n5" target="n4" type="input" id="e3">
+    <edge source="n5" type="input" target="n4" id="e3">
       <point x="20" y="60"/>
       <point x="20" y="-40"/>
     </edge>

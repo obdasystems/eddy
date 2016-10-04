@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#fcfcfc" type="individual" id="n0">
-      <geometry width="60" x="-60" height="-60" y="80"/>
-      <label width="17" x="-60" height="23" y="80">I1</label>
+    <node type="property-assertion" color="#fcfcfc" inputs="e1" id="n1">
+      <geometry x="0" y="0" width="52" height="30"/>
     </node>
-    <node color="#fcfcfc" inputs="e1" type="property-assertion" id="n1">
-      <geometry width="52" x="0" height="30" y="0"/>
+    <node type="individual" color="#fcfcfc" id="n3">
+      <geometry x="60" y="80" width="60" height="-60"/>
+      <label x="60" y="80" width="17" height="23">I2</label>
     </node>
-    <node color="#fcfcfc" type="individual" id="n3">
-      <geometry width="60" x="60" height="-60" y="80"/>
-      <label width="17" x="60" height="23" y="80">I2</label>
+    <node type="attribute" color="#fcfcfc" id="n2">
+      <geometry x="0" y="-100" width="20" height="20"/>
+      <label x="0" y="-122" width="22" height="23">A4</label>
     </node>
-    <node color="#fcfcfc" type="attribute" id="n2">
-      <geometry width="20" x="0" height="20" y="-100"/>
-      <label width="22" x="0" height="23" y="-122">A4</label>
+    <node type="individual" color="#fcfcfc" id="n0">
+      <geometry x="-60" y="80" width="60" height="-60"/>
+      <label x="-60" y="80" width="17" height="23">I1</label>
     </node>
-    <edge source="n1" target="n2" type="membership" id="e0">
-      <point x="0" y="0"/>
-      <point x="0" y="-100"/>
-    </edge>
-    <edge source="n0" target="n1" type="input" id="e1">
+    <edge source="n0" type="input" target="n1" id="e1">
       <point x="-60" y="80"/>
       <point x="0" y="0"/>
+    </edge>
+    <edge source="n1" type="membership" target="n2" id="e0">
+      <point x="0" y="0"/>
+      <point x="0" y="-100"/>
     </edge>
   </graph>
 </graphol>

@@ -1,107 +1,107 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#fcfcfc" type="role-inverse" id="n14">
-      <geometry width="50" x="100" height="30" y="20"/>
-      <label width="23" x="100" height="23" y="20">inv</label>
+    <node type="role-inverse" color="#fcfcfc" id="n20">
+      <geometry x="200" y="20" width="50" height="30"/>
+      <label x="200" y="20" width="23" height="23">inv</label>
     </node>
-    <node color="#fcfcfc" type="intersection" id="n11">
-      <geometry width="50" x="100" height="30" y="-160"/>
-      <label width="27" x="100" height="23" y="-160">and</label>
+    <node type="value-domain" color="#fcfcfc" id="n6">
+      <geometry x="-20" y="120" width="90" height="40"/>
+      <label x="-20" y="120" width="60" height="23">xsd:string</label>
     </node>
-    <node color="#fcfcfc" type="attribute" id="n5">
-      <geometry width="20" x="-160" height="20" y="60"/>
-      <label width="22" x="-160" height="23" y="38">A1</label>
+    <node type="role" color="#fcfcfc" id="n7">
+      <geometry x="-20" y="-100" width="70" height="50"/>
+      <label x="-20" y="-100" width="22" height="23">R2</label>
     </node>
-    <node color="#fcfcfc" type="datatype-restriction" id="n18">
-      <geometry width="50" x="100" height="30" y="140"/>
-      <label width="31" x="100" height="23" y="140">data</label>
+    <node type="individual" color="#fcfcfc" id="n1">
+      <geometry x="-20" y="-180" width="60" height="-60"/>
+      <label x="-20" y="-180" width="17" height="23">I2</label>
     </node>
-    <node color="#fcfcfc" type="role" id="n7">
-      <geometry width="70" x="-20" height="50" y="-100"/>
-      <label width="22" x="-20" height="23" y="-100">R2</label>
+    <node type="role-chain" color="#fcfcfc" inputs="" id="n19">
+      <geometry x="200" y="80" width="50" height="30"/>
+      <label x="200" y="80" width="36" height="23">chain</label>
     </node>
-    <node color="#fcfcfc" type="datatype-restriction" id="n25">
-      <geometry width="50" x="200" height="30" y="140"/>
-      <label width="31" x="200" height="23" y="140">data</label>
+    <node type="datatype-restriction" color="#fcfcfc" id="n25">
+      <geometry x="200" y="140" width="50" height="30"/>
+      <label x="200" y="140" width="31" height="23">data</label>
     </node>
-    <node color="#fcfcfc" type="complement" id="n21">
-      <geometry width="50" x="200" height="30" y="-40"/>
-      <label width="25" x="200" height="23" y="-40">not</label>
+    <node type="disjoint-union" color="#000000" id="n26">
+      <geometry x="200" y="200" width="50" height="30"/>
     </node>
-    <node color="#fcfcfc" type="union" id="n22">
-      <geometry width="50" x="200" height="30" y="-100"/>
-      <label width="18" x="200" height="23" y="-100">or</label>
+    <node type="disjoint-union" color="#000000" id="n17">
+      <geometry x="100" y="200" width="50" height="30"/>
     </node>
-    <node color="#fcfcfc" type="attribute" id="n9">
-      <geometry width="20" x="-20" height="20" y="60"/>
-      <label width="22" x="-20" height="23" y="38">A2</label>
+    <node type="complement" color="#fcfcfc" id="n21">
+      <geometry x="200" y="-40" width="50" height="30"/>
+      <label x="200" y="-40" width="25" height="23">not</label>
     </node>
-    <node color="#fcfcfc" inputs="" type="role-chain" id="n15">
-      <geometry width="50" x="100" height="30" y="80"/>
-      <label width="36" x="100" height="23" y="80">chain</label>
+    <node type="enumeration" color="#fcfcfc" id="n24">
+      <geometry x="200" y="-220" width="50" height="30"/>
+      <label x="200" y="-220" width="40" height="23">oneOf</label>
     </node>
-    <node color="#fcfcfc" type="value-domain" id="n10">
-      <geometry width="90" x="-160" height="40" y="120"/>
-      <label width="60" x="-160" height="23" y="120">xsd:string</label>
+    <node type="role" color="#fcfcfc" id="n3">
+      <geometry x="-160" y="-100" width="70" height="50"/>
+      <label x="-160" y="-100" width="22" height="23">R1</label>
     </node>
-    <node color="#fcfcfc" type="value-domain" id="n6">
-      <geometry width="90" x="-20" height="40" y="120"/>
-      <label width="60" x="-20" height="23" y="120">xsd:string</label>
+    <node type="role-inverse" color="#fcfcfc" id="n14">
+      <geometry x="100" y="20" width="50" height="30"/>
+      <label x="100" y="20" width="23" height="23">inv</label>
     </node>
-    <node color="#fcfcfc" inputs="" type="role-chain" id="n19">
-      <geometry width="50" x="200" height="30" y="80"/>
-      <label width="36" x="200" height="23" y="80">chain</label>
+    <node type="union" color="#fcfcfc" id="n22">
+      <geometry x="200" y="-100" width="50" height="30"/>
+      <label x="200" y="-100" width="18" height="23">or</label>
     </node>
-    <node color="#000000" type="disjoint-union" id="n17">
-      <geometry width="50" x="100" height="30" y="200"/>
+    <node type="complement" color="#fcfcfc" id="n13">
+      <geometry x="100" y="-40" width="50" height="30"/>
+      <label x="100" y="-40" width="25" height="23">not</label>
     </node>
-    <node color="#fcfcfc" type="role" id="n3">
-      <geometry width="70" x="-160" height="50" y="-100"/>
-      <label width="22" x="-160" height="23" y="-100">R1</label>
+    <node type="enumeration" color="#fcfcfc" id="n16">
+      <geometry x="100" y="-220" width="50" height="30"/>
+      <label x="100" y="-220" width="40" height="23">oneOf</label>
     </node>
-    <node color="#fcfcfc" type="enumeration" id="n16">
-      <geometry width="50" x="100" height="30" y="-220"/>
-      <label width="40" x="100" height="23" y="-220">oneOf</label>
+    <node type="intersection" color="#fcfcfc" id="n11">
+      <geometry x="100" y="-160" width="50" height="30"/>
+      <label x="100" y="-160" width="27" height="23">and</label>
     </node>
-    <node color="#fcfcfc" type="intersection" id="n23">
-      <geometry width="50" x="200" height="30" y="-160"/>
-      <label width="27" x="200" height="23" y="-160">and</label>
+    <node type="union" color="#fcfcfc" id="n12">
+      <geometry x="100" y="-100" width="50" height="30"/>
+      <label x="100" y="-100" width="18" height="23">or</label>
     </node>
-    <node color="#fcfcfc" type="concept" id="n2">
-      <geometry width="110" x="-160" height="50" y="-20"/>
-      <label width="22" x="-160" height="23" y="-20">C1</label>
+    <node type="attribute" color="#fcfcfc" id="n9">
+      <geometry x="-20" y="60" width="20" height="20"/>
+      <label x="-20" y="38" width="22" height="23">A2</label>
     </node>
-    <node color="#fcfcfc" type="role-inverse" id="n20">
-      <geometry width="50" x="200" height="30" y="20"/>
-      <label width="23" x="200" height="23" y="20">inv</label>
+    <node type="intersection" color="#fcfcfc" id="n23">
+      <geometry x="200" y="-160" width="50" height="30"/>
+      <label x="200" y="-160" width="27" height="23">and</label>
     </node>
-    <node color="#fcfcfc" type="individual" id="n1">
-      <geometry width="60" x="-20" height="-60" y="-180"/>
-      <label width="17" x="-20" height="23" y="-180">I2</label>
+    <node type="attribute" color="#fcfcfc" id="n5">
+      <geometry x="-160" y="60" width="20" height="20"/>
+      <label x="-160" y="38" width="22" height="23">A1</label>
     </node>
-    <node color="#000000" type="disjoint-union" id="n26">
-      <geometry width="50" x="200" height="30" y="200"/>
+    <node type="role-chain" color="#fcfcfc" inputs="" id="n15">
+      <geometry x="100" y="80" width="50" height="30"/>
+      <label x="100" y="80" width="36" height="23">chain</label>
     </node>
-    <node color="#fcfcfc" type="enumeration" id="n24">
-      <geometry width="50" x="200" height="30" y="-220"/>
-      <label width="40" x="200" height="23" y="-220">oneOf</label>
+    <node type="individual" color="#fcfcfc" id="n0">
+      <geometry x="-160" y="-180" width="60" height="-60"/>
+      <label x="-160" y="-180" width="17" height="23">I1</label>
     </node>
-    <node color="#fcfcfc" type="complement" id="n13">
-      <geometry width="50" x="100" height="30" y="-40"/>
-      <label width="25" x="100" height="23" y="-40">not</label>
+    <node type="concept" color="#fcfcfc" id="n2">
+      <geometry x="-160" y="-20" width="110" height="50"/>
+      <label x="-160" y="-20" width="22" height="23">C1</label>
     </node>
-    <node color="#fcfcfc" type="union" id="n12">
-      <geometry width="50" x="100" height="30" y="-100"/>
-      <label width="18" x="100" height="23" y="-100">or</label>
+    <node type="datatype-restriction" color="#fcfcfc" id="n18">
+      <geometry x="100" y="140" width="50" height="30"/>
+      <label x="100" y="140" width="31" height="23">data</label>
     </node>
-    <node color="#fcfcfc" type="individual" id="n0">
-      <geometry width="60" x="-160" height="-60" y="-180"/>
-      <label width="17" x="-160" height="23" y="-180">I1</label>
+    <node type="concept" color="#fcfcfc" id="n8">
+      <geometry x="-20" y="-20" width="110" height="50"/>
+      <label x="-20" y="-20" width="22" height="23">C2</label>
     </node>
-    <node color="#fcfcfc" type="concept" id="n8">
-      <geometry width="110" x="-20" height="50" y="-20"/>
-      <label width="22" x="-20" height="23" y="-20">C2</label>
+    <node type="value-domain" color="#fcfcfc" id="n10">
+      <geometry x="-160" y="120" width="90" height="40"/>
+      <label x="-160" y="120" width="60" height="23">xsd:string</label>
     </node>
   </graph>
 </graphol>

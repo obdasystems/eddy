@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#000000" type="facet" id="n3">
-      <geometry width="80" x="-20" height="0" y="40"/>
-      <label width="92" x="-20" height="23" y="40">xsd:length^^"32"</label>
+    <node type="datatype-restriction" color="#fcfcfc" id="n2">
+      <geometry x="-20" y="-60" width="50" height="30"/>
+      <label x="-20" y="-60" width="31" height="23">data</label>
     </node>
-    <node color="#fcfcfc" type="value-domain" id="n1">
-      <geometry width="90" x="-140" height="40" y="40"/>
-      <label width="60" x="-140" height="23" y="40">xsd:string</label>
+    <node type="facet" color="#000000" id="n3">
+      <geometry x="-20" y="40" width="80" height="0"/>
+      <label x="-20" y="40" width="92" height="23">xsd:length^^"32"</label>
     </node>
-    <node color="#fcfcfc" type="datatype-restriction" id="n2">
-      <geometry width="50" x="-20" height="30" y="-60"/>
-      <label width="31" x="-20" height="23" y="-60">data</label>
+    <node type="value-domain" color="#fcfcfc" id="n1">
+      <geometry x="-140" y="40" width="90" height="40"/>
+      <label x="-140" y="40" width="60" height="23">xsd:string</label>
     </node>
-    <node color="#fcfcfc" type="value-domain" id="n0">
-      <geometry width="90" x="120" height="40" y="-60"/>
-      <label width="66" x="120" height="23" y="-60">xsd:integer</label>
+    <node type="value-domain" color="#fcfcfc" id="n0">
+      <geometry x="120" y="-60" width="90" height="40"/>
+      <label x="120" y="-60" width="66" height="23">xsd:integer</label>
     </node>
-    <edge source="n3" target="n2" type="input" id="e1">
-      <point x="-20" y="40"/>
-      <point x="-20" y="-60"/>
-    </edge>
-    <edge source="n1" target="n2" type="input" id="e0">
+    <edge source="n1" type="input" target="n2" id="e0">
       <point x="-140" y="40"/>
       <point x="-140" y="-60"/>
+      <point x="-20" y="-60"/>
+    </edge>
+    <edge source="n3" type="input" target="n2" id="e1">
+      <point x="-20" y="40"/>
       <point x="-20" y="-60"/>
     </edge>
   </graph>

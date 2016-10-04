@@ -1106,6 +1106,19 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid target for Role assertion: role chain node')
         self.assertFalse(self.project.profile.pvr().isValid())
 
+    def test_membership_between_role_instance_and_neutral_chained_complement_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram46.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        target = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.MembershipEdge, source, target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Detected unsupported operator sequence on intersection node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
     def test_membership_between_attribute_instance_and_role_node(self):
         # GIVEN
         self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram45.graphol')
@@ -1116,4 +1129,30 @@ class OWL2ProfileTestCase(EddyTestCase):
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid target for Attribute assertion: Role')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_membership_between_attribute_instance_and_neutral_chained_complement_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram47.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        target = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.MembershipEdge, source, target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Detected unsupported operator sequence on intersection node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_membership_between_neutral_property_assertion_node_and_neutral_chained_complement_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram48.graphol')
+        num_edges_in_project = len(self.project.edges())
+        source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        target = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.MembershipEdge, source, target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Detected unsupported operator sequence on intersection node')
         self.assertFalse(self.project.profile.pvr().isValid())

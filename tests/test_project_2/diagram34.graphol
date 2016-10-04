@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#000000" type="range-restriction" id="n4">
-      <geometry width="20" x="-20" height="20" y="-50"/>
-      <label width="39" x="-20" height="23" y="-72">exists</label>
+    <node type="range-restriction" color="#000000" id="n4">
+      <geometry x="-20" y="-50" width="20" height="20"/>
+      <label x="-20" y="-72" width="39" height="23">exists</label>
     </node>
-    <node color="#fcfcfc" type="concept" id="n1">
-      <geometry width="110" x="120" height="50" y="50"/>
-      <label width="22" x="120" height="23" y="50">C2</label>
+    <node type="concept" color="#fcfcfc" id="n1">
+      <geometry x="120" y="50" width="110" height="50"/>
+      <label x="120" y="50" width="22" height="23">C2</label>
     </node>
-    <node color="#fcfcfc" type="role" id="n0">
-      <geometry width="70" x="-120" height="50" y="-50"/>
-      <label width="22" x="-120" height="23" y="-50">R1</label>
+    <node type="role" color="#fcfcfc" id="n0">
+      <geometry x="-120" y="-50" width="70" height="50"/>
+      <label x="-120" y="-50" width="22" height="23">R1</label>
     </node>
-    <node color="#fcfcfc" type="concept" id="n3">
-      <geometry width="110" x="-20" height="50" y="50"/>
-      <label width="22" x="-20" height="23" y="50">C1</label>
+    <node type="concept" color="#fcfcfc" id="n3">
+      <geometry x="-20" y="50" width="110" height="50"/>
+      <label x="-20" y="50" width="22" height="23">C1</label>
     </node>
-    <edge source="n3" target="n4" type="input" id="e1">
-      <point x="-20" y="50"/>
+    <edge source="n0" type="input" target="n4" id="e0">
+      <point x="-120" y="-50"/>
       <point x="-20" y="-50"/>
     </edge>
-    <edge source="n0" target="n4" type="input" id="e0">
-      <point x="-120" y="-50"/>
+    <edge source="n3" type="input" target="n4" id="e1">
+      <point x="-20" y="50"/>
       <point x="-20" y="-50"/>
     </edge>
   </graph>

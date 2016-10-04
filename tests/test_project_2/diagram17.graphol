@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#fcfcfc" type="value-domain" id="n2">
-      <geometry width="90" x="80" height="40" y="-70"/>
-      <label width="60" x="80" height="23" y="-70">xsd:string</label>
+    <node type="value-domain" color="#fcfcfc" id="n2">
+      <geometry x="80" y="-70" width="90" height="40"/>
+      <label x="80" y="-70" width="60" height="23">xsd:string</label>
     </node>
-    <node color="#000000" type="disjoint-union" id="n3">
-      <geometry width="50" x="-80" height="30" y="-70"/>
+    <node type="disjoint-union" color="#000000" id="n3">
+      <geometry x="-80" y="-70" width="50" height="30"/>
     </node>
-    <node color="#fcfcfc" type="concept" id="n1">
-      <geometry width="110" x="-80" height="50" y="50"/>
-      <label width="22" x="-80" height="23" y="50">C2</label>
+    <node type="concept" color="#fcfcfc" id="n1">
+      <geometry x="-80" y="50" width="110" height="50"/>
+      <label x="-80" y="50" width="22" height="23">C2</label>
     </node>
-    <edge source="n1" target="n3" type="input" id="e0">
+    <edge source="n1" type="input" target="n3" id="e0">
       <point x="-80" y="50"/>
       <point x="-80" y="-70"/>
     </edge>

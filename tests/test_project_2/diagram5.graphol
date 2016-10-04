@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#fcfcfc" type="domain-restriction" id="n6">
-      <geometry width="20" x="-60" height="20" y="0"/>
-      <label width="39" x="-60" height="23" y="-22">exists</label>
+    <node type="domain-restriction" color="#fcfcfc" id="n6">
+      <geometry x="-60" y="0" width="20" height="20"/>
+      <label x="-60" y="-22" width="39" height="23">exists</label>
     </node>
-    <node color="#fcfcfc" inputs="" type="property-assertion" id="n5">
-      <geometry width="52" x="40" height="30" y="0"/>
+    <node type="property-assertion" color="#fcfcfc" inputs="" id="n5">
+      <geometry x="40" y="0" width="52" height="30"/>
     </node>
   </graph>
 </graphol>

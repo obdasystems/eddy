@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#fcfcfc" type="domain-restriction" id="n1">
-      <geometry width="20" x="-64" height="20" y="-26"/>
-      <label width="39" x="-64" height="23" y="-48">exists</label>
+    <node type="value-domain" color="#fcfcfc" id="n2">
+      <geometry x="-64" y="54" width="90" height="40"/>
+      <label x="-64" y="54" width="60" height="23">xsd:string</label>
     </node>
-    <node color="#fcfcfc" type="value-domain" id="n2">
-      <geometry width="90" x="-64" height="40" y="54"/>
-      <label width="60" x="-64" height="23" y="54">xsd:string</label>
+    <node type="domain-restriction" color="#fcfcfc" id="n1">
+      <geometry x="-64" y="-26" width="20" height="20"/>
+      <label x="-64" y="-48" width="39" height="23">exists</label>
     </node>
-    <node color="#fcfcfc" type="role" id="n0">
-      <geometry width="70" x="56" height="50" y="-26"/>
-      <label width="22" x="56" height="23" y="-26">R5</label>
+    <node type="role" color="#fcfcfc" id="n0">
+      <geometry x="56" y="-26" width="70" height="50"/>
+      <label x="56" y="-26" width="22" height="23">R5</label>
     </node>
-    <edge source="n2" target="n1" type="input" id="e0">
+    <edge source="n2" type="input" target="n1" id="e0">
       <point x="-64" y="54"/>
       <point x="-64" y="-26"/>
     </edge>

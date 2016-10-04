@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#fcfcfc" type="concept" id="n18">
-      <geometry width="110" x="60" height="50" y="100"/>
-      <label width="22" x="60" height="23" y="100">C7</label>
+    <node type="attribute" color="#fcfcfc" id="n16">
+      <geometry x="-20" y="20" width="20" height="20"/>
+      <label x="-20" y="-2" width="22" height="23">A1</label>
     </node>
-    <node color="#fcfcfc" type="attribute" id="n16">
-      <geometry width="20" x="-20" height="20" y="20"/>
-      <label width="22" x="-20" height="23" y="-2">A1</label>
+    <node type="concept" color="#fcfcfc" id="n18">
+      <geometry x="60" y="100" width="110" height="50"/>
+      <label x="60" y="100" width="22" height="23">C7</label>
     </node>
-    <node color="#fcfcfc" type="domain-restriction" id="n17">
-      <geometry width="20" x="60" height="20" y="20"/>
-      <label width="39" x="60" height="23" y="-2">exists</label>
+    <node type="domain-restriction" color="#fcfcfc" id="n17">
+      <geometry x="60" y="20" width="20" height="20"/>
+      <label x="60" y="-2" width="39" height="23">exists</label>
     </node>
-    <edge source="n16" target="n17" type="input" id="e8">
+    <edge source="n16" type="input" target="n17" id="e8">
       <point x="-20" y="20"/>
       <point x="60" y="20"/>
     </edge>

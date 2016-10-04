@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#fcfcfc" type="concept" id="n0">
-      <geometry width="110" x="-80" height="50" y="60"/>
-      <label width="22" x="-80" height="23" y="60">C1</label>
+    <node type="complement" color="#fcfcfc" id="n1">
+      <geometry x="-80" y="-60" width="50" height="30"/>
+      <label x="-80" y="-60" width="25" height="23">not</label>
     </node>
-    <node color="#fcfcfc" type="complement" id="n1">
-      <geometry width="50" x="-80" height="30" y="-60"/>
-      <label width="25" x="-80" height="23" y="-60">not</label>
+    <node type="concept" color="#fcfcfc" id="n2">
+      <geometry x="80" y="-60" width="110" height="50"/>
+      <label x="80" y="-60" width="22" height="23">C2</label>
     </node>
-    <node color="#fcfcfc" type="concept" id="n2">
-      <geometry width="110" x="80" height="50" y="-60"/>
-      <label width="22" x="80" height="23" y="-60">C2</label>
+    <node type="concept" color="#fcfcfc" id="n0">
+      <geometry x="-80" y="60" width="110" height="50"/>
+      <label x="-80" y="60" width="22" height="23">C1</label>
     </node>
-    <edge source="n0" target="n1" type="input" id="e0">
+    <edge source="n0" type="input" target="n1" id="e0">
       <point x="-80" y="60"/>
       <point x="-80" y="-60"/>
     </edge>

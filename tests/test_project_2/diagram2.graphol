@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#fcfcfc" type="value-domain" id="n18">
-      <geometry width="90" x="80" height="40" y="-70"/>
-      <label width="60" x="80" height="23" y="-70">xsd:string</label>
+    <node type="intersection" color="#fcfcfc" id="n19">
+      <geometry x="-80" y="-70" width="50" height="30"/>
+      <label x="-80" y="-70" width="27" height="23">and</label>
     </node>
-    <node color="#fcfcfc" type="concept" id="n17">
-      <geometry width="110" x="-80" height="50" y="50"/>
-      <label width="22" x="-80" height="23" y="50">C2</label>
+    <node type="concept" color="#fcfcfc" id="n17">
+      <geometry x="-80" y="50" width="110" height="50"/>
+      <label x="-80" y="50" width="22" height="23">C2</label>
     </node>
-    <node color="#fcfcfc" type="intersection" id="n19">
-      <geometry width="50" x="-80" height="30" y="-70"/>
-      <label width="27" x="-80" height="23" y="-70">and</label>
+    <node type="value-domain" color="#fcfcfc" id="n18">
+      <geometry x="80" y="-70" width="90" height="40"/>
+      <label x="80" y="-70" width="60" height="23">xsd:string</label>
     </node>
-    <edge source="n17" target="n19" type="input" id="e9">
+    <edge source="n17" type="input" target="n19" id="e9">
       <point x="-80" y="50"/>
       <point x="-80" y="-70"/>
     </edge>

@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#000000" type="facet" id="n0">
-      <geometry width="118" x="80" height="0" y="160"/>
-      <label width="131" x="80" height="23" y="160">xsd:maxExclusive^^"32"</label>
+    <node type="facet" color="#000000" id="n0">
+      <geometry x="80" y="160" width="118" height="0"/>
+      <label x="80" y="160" width="131" height="23">xsd:maxExclusive^^"32"</label>
     </node>
-    <node color="#fcfcfc" type="datatype-restriction" id="n2">
-      <geometry width="50" x="80" height="30" y="60"/>
-      <label width="31" x="80" height="23" y="60">data</label>
+    <node type="datatype-restriction" color="#fcfcfc" id="n2">
+      <geometry x="80" y="60" width="50" height="30"/>
+      <label x="80" y="60" width="31" height="23">data</label>
     </node>
-    <node color="#fcfcfc" type="value-domain" id="n1">
-      <geometry width="90" x="220" height="40" y="160"/>
-      <label width="60" x="220" height="23" y="160">xsd:string</label>
+    <node type="value-domain" color="#fcfcfc" id="n1">
+      <geometry x="220" y="160" width="90" height="40"/>
+      <label x="220" y="160" width="60" height="23">xsd:string</label>
     </node>
-    <edge source="n1" target="n2" type="input" id="e0">
+    <edge source="n1" type="input" target="n2" id="e0">
       <point x="220" y="160"/>
       <point x="80" y="60"/>
     </edge>

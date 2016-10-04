@@ -93,8 +93,8 @@ class OWL2Profile(AbstractProfile):
 
                 if Identity.Neutral not in {source.identity(), target.identity()} and source.identity() is not target.identity():
                     # If both nodes are not NEUTRAL and they have a different identity we can't create an inclusion.
-                    idA = source.identity().value
-                    idB = target.identity().value
+                    idA = source.identityName
+                    idB = target.identityName
                     raise ProfileError('Type mismatch: {0} between {1} and {2}'.format(edge.shortName, idA, idB))
 
                 if not remaining:
@@ -183,7 +183,7 @@ class OWL2Profile(AbstractProfile):
 
                     if source.identity() not in target.identities():
                         # Source node identity is not supported by this target node.
-                        raise ProfileError('Invalid input to {0}: {1}'.format(target.name, source.identity().value))
+                        raise ProfileError('Invalid input to {0}: {1}'.format(target.name, source.identityName))
 
                     if source.identity() is Identity.ValueDomain and target.identity() is Identity.Neutral:
                         # We are here connecting a Value-Domain node in input to an operator node whose
@@ -222,7 +222,7 @@ class OWL2Profile(AbstractProfile):
                             # Role expressions to Complement nodes that are given as inputs to Enumeration,
                             # Union and Disjoint Union operator nodes.
                             if len(target.outgoingNodes(lambda x: x.type() in {Item.InputEdge, Item.InclusionEdge})) > 0:
-                                raise ProfileError('Invalid negative {0} expression'.format(source.identity().value))
+                                raise ProfileError('Invalid negative {0} expression'.format(source.identityName))
 
                     else:
 
@@ -234,8 +234,8 @@ class OWL2Profile(AbstractProfile):
 
                             if source.identity() is not target.identity():
                                 # Union/Intersection between different type of graphol expressions.
-                                idA = source.identity().value
-                                idB = target.identity().value
+                                idA = source.identityName
+                                idB = target.identityName
                                 cmp = target.shortName
                                 raise ProfileError('Type mismatch: {0} between {1} and {2}'.format(cmp, idA, idB))
 
@@ -257,19 +257,19 @@ class OWL2Profile(AbstractProfile):
                         # Enumeration operator (oneOf) takes as inputs instances or values, both
                         # represented by the Individual node, and has the job of composing a set
                         # if individuals (either Concept or ValueDomain, but not both together).
-                        name = source.identity().value if source.identity() is not Identity.Neutral else source.name
+                        name = source.identityName if source.identity() is not Identity.Neutral else source.name
                         raise ProfileError('Invalid input to {0}: {1}'.format(target.name, name))
 
                     if target.identity() is Identity.Unknown:
                         # Target node has an unkown identity: we do not allow the connection => the
                         # user MUST fix the error first and then try to create again the connection
                         # (this most likely never happens).
-                        raise ProfileError('Target node has an invalid identity: {0}'.format(target.identity().value))
+                        raise ProfileError('Target node has an invalid identity: {0}'.format(target.identityName))
 
                     if target.identity() is not Identity.Neutral:
 
                         nameA = target.name
-                        nameB = source.identity().value
+                        nameB = source.identityName
 
                         if source.identity() is Identity.Individual and target.identity() is Identity.ValueDomain:
                             raise ProfileError('Invalid input to {0}: {1}'.format(nameA, nameB))
@@ -379,9 +379,7 @@ class OWL2Profile(AbstractProfile):
 
                         if source.identity() is Identity.Value:
                             # We are constructing an ObjectPropertyAssertion expression so we can't connect a Value.
-                            idA = target.identity().value
-                            idB = source.identity().value
-                            raise ProfileError('Invalid input to {0}: {1}'.format(idA, idB))
+                            raise ProfileError('Invalid input to {0}: {1}'.format(target.identityName, source.identityName))
 
                     if target.identity() is Identity.AttributeInstance:
 
@@ -391,7 +389,7 @@ class OWL2Profile(AbstractProfile):
                             f2 = lambda x: x.identity() is Identity.Individual
                             if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
                                 # We are constructing a DataPropertyAssertion and so we can't have more than 1 instance.
-                                raise ProfileError('Too many individuals in input to {0}'.format(target.identity().value))
+                                raise ProfileError('Too many individuals in input to {0}'.format(target.identityName))
 
                         if source.identity() is Identity.Value:
 
@@ -399,7 +397,7 @@ class OWL2Profile(AbstractProfile):
                             f2 = lambda x: x.identity() is Identity.Value
                             if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
                                 # At most one value can be given as input (2 instance | 1 instance + 1 value)
-                                raise ProfileError('Too many values in input to {0}'.format(target.identity().value))
+                                raise ProfileError('Too many values in input to {0}'.format(target.identityName))
 
                 elif target.type() is Item.DomainRestrictionNode:
 
@@ -418,7 +416,7 @@ class OWL2Profile(AbstractProfile):
                         #  - Attribute => OWL 2 DataPropertyExpression
                         #  - Concept => Qualified Existential/Universal Role Restriction
                         #  - ValueDomain => Qualified Existential Data Restriction
-                        raise ProfileError('Invalid input to {0}: {1}'.format(target.name, source.identity().value))
+                        raise ProfileError('Invalid input to {0}: {1}'.format(target.name, source.identityName))
 
                     if source.type() is Item.RoleChainNode:
                         # Exclude incompatible sources: note that while RoleChain has a correct identity
@@ -470,8 +468,8 @@ class OWL2Profile(AbstractProfile):
                         node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
                         if node and node.identity() is not Identity.Role:
                             # Not a Qualified Restriction.
-                            idA = source.identity().value
-                            idB = node.identity().value
+                            idA = source.identityName
+                            idB = node.identityName
                             raise ProfileError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
 
                     # SOURCE => ROLE EXPRESSION
@@ -482,8 +480,8 @@ class OWL2Profile(AbstractProfile):
                         node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
                         if node and node.identity() is not Identity.Concept:
                             # Not a Qualified Restriction.
-                            idA = source.identity().value
-                            idB = node.identity().value
+                            idA = source.identityName
+                            idB = node.identityName
                             raise ProfileError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
 
                     # SOURCE => ATTRIBUTE
@@ -498,8 +496,8 @@ class OWL2Profile(AbstractProfile):
                         node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
                         if node and node.identity() is not Identity.ValueDomain:
                             # Not a Qualified Restriction.
-                            idA = source.identity().value
-                            idB = node.identity().value
+                            idA = source.identityName
+                            idB = node.identityName
                             raise ProfileError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
 
                     # SOURCE => VALUE-DOMAIN
@@ -515,8 +513,8 @@ class OWL2Profile(AbstractProfile):
                         node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
                         if node and node.identity() is not Identity.Attribute:
                             # Not a Qualified Restriction.
-                            idA = source.identity().value
-                            idB = node.identity().value
+                            idA = source.identityName
+                            idB = node.identityName
                             raise ProfileError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
 
                 elif target.type() is Item.RangeRestrictionNode:
@@ -540,7 +538,7 @@ class OWL2Profile(AbstractProfile):
                         #  - Role => OWL 2 ObjectPropertyExpression
                         #  - Attribute => OWL 2 DataPropertyExpression
                         #  - Concept => Qualified Existential/Universal Role Restriction
-                        raise ProfileError('Invalid input to {0}: {1}'.format(target.name, source.identity().value))
+                        raise ProfileError('Invalid input to {0}: {1}'.format(target.name, source.identityName))
 
                     if source.type() is Item.RoleChainNode:
                         # Exclude incompatible sources: not that while RoleChain has a correct identity
@@ -578,8 +576,8 @@ class OWL2Profile(AbstractProfile):
                         node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
                         if node and Identity.Role not in node.identities():
                             # Not a Qualified Restriction.
-                            idA = source.identity().value
-                            idB = node.identity().value
+                            idA = source.identityName
+                            idB = node.identityName
                             raise ProfileError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
 
                     # SOURCE => ROLE EXPRESSION
@@ -591,8 +589,8 @@ class OWL2Profile(AbstractProfile):
                         node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
                         if node and Identity.Concept not in node.identities():
                             # Not a Qualified Restriction.
-                            idA = source.identity().value
-                            idB = node.identity().value
+                            idA = source.identityName
+                            idB = node.identityName
                             raise ProfileError('Invalid qualified restriction: {0} + {1}'.format(idA, idB))
 
                     # SOURCE => ATTRIBUTE NODE
@@ -630,7 +628,11 @@ class OWL2Profile(AbstractProfile):
 
                 if source.identity() is not Identity.Individual and source.type() is not Item.PropertyAssertionNode:
                     # The source of the edge must be one of Instance or a Property Assertion node.
-                    raise ProfileError('Invalid source for membership edge: {0}'.format(source.identity().value))
+                    raise ProfileError('Invalid source for membership edge: {0}'.format(source.identityName))
+
+                #############################################
+                # SOURCE = INDIVIDUAL NODE
+                #################################
 
                 if source.identity() is Identity.Individual:
 
@@ -638,24 +640,107 @@ class OWL2Profile(AbstractProfile):
                         # If the source of the edge is an Individual it means that we are trying to construct a
                         # ClassAssertion and so the target of the edge MUST be a class expression.
                         # OWL 2: ClassAssertion(axiomAnnotations ClassExpression Individual)
-                        raise ProfileError('Invalid target for Concept assertion: {0}'.format(target.identity().value))
+                        raise ProfileError('Invalid target for Concept assertion: {0}'.format(target.identityName))
+
+                #############################################
+                # SOURCE = PROPERTY ASSERTION NODE
+                #################################
 
                 if source.type() is Item.PropertyAssertionNode:
 
+                    # SOURCE = ROLE INSTANCE
+
                     if source.identity() is Identity.RoleInstance:
 
-                        if Identity.Role not in target.identities():
-                            # If the source of the edge is a Role Instance we MUST target a Role Expression.
-                            raise ProfileError('Invalid target for Role assertion: {0}'.format(target.identity().value))
+                        if target.identity() not in {Identity.Role, Identity.Neutral}:
+                            # Role instance can only target a Role expression or a Neutral node which may turn into
+                            # a Role (the only practical case is the Complement node).
+                            raise ProfileError('Invalid target for Role assertion: {0}'.format(target.identityName))
 
-                        if target.type() is Item.RoleChainNode:
-                            raise ProfileError('Invalid target for Role assertion: {0}'.format(target.name))
+                        # TARGET = ROLE
+
+                        if target.identity() is Identity.Role:
+
+                            if target.type() is Item.RoleChainNode:
+                                # Exclude Role chain nodes since they do no match OWL 2 ObjectPropertyExpression.
+                                raise ProfileError('Invalid target for Role assertion: {0}'.format(target.name))
+
+                        # TARGET = NEUTRAL
+
+                        if target.identity() is Identity.Neutral:
+
+                            if Identity.Role not in target.identities():
+                                # Here we target an incompatible node (i.e. a node which cannot express a Role).
+                                raise ProfileError('Invalid target for Role assertion: {0}'.format(target.name))
+
+                            if target.adjacentNodes(filter_on_edges=lambda x: x is not edge):
+                                # Here we target a Neutral node which is attached to something (either with
+                                # inputs or outputs), therefore we must inspect all the nodes attached to this
+                                # target node which are still Neutral and see if they admits the Role identity.
+                                f1 = lambda x: x is not edge and x.type() is not Item.MembershipEdge
+                                f2 = lambda x: x.identity() is Identity.Neutral
+                                for node in bfs(source=target, filter_on_edges=f1, filter_on_nodes=f2):
+                                    if Identity.Role not in node.identities():
+                                        raise ProfileError('Detected unsupported operator sequence on {0}'.format(node.name))
+
+                    # SOURCE = ATTRIBUTE INSTANCE
 
                     elif source.identity() is Identity.AttributeInstance:
 
-                        if Identity.Attribute not in target.identities():
-                            # If the source of the edge is a Attribute Instance we MUST target an Attribute Expression.
-                            raise ProfileError('Invalid target for Attribute assertion: {0}'.format(target.identity().value))
+                        if target.identity() not in {Identity.Attribute, Identity.Neutral}:
+                            # Attribute instance can only target an Attribute expression or a Neutral node which may
+                            # turn into an Attribute (the only practical case is the Complement node).
+                            raise ProfileError('Invalid target for Attribute assertion: {0}'.format(target.identityName))
+
+                        # TARGET = NEUTRAL
+
+                        if target.identity() is Identity.Neutral:
+
+                            if Identity.Attribute not in target.identities():
+                                # Here we target an incompatible node (i.e. a node which cannot express an Attribute).
+                                raise ProfileError('Invalid target for Attribute assertion: {0}'.format(target.name))
+
+                            if target.adjacentNodes(filter_on_edges=lambda x: x is not edge):
+                                # Here we target a Neutral node which is attached to something (either with
+                                # inputs or outputs), therefore we must inspect all the nodes attached to this
+                                # target node which are still Neutral and see if they admits the Attribute identity.
+                                f1 = lambda x: x is not edge and x.type() is not Item.MembershipEdge
+                                f2 = lambda x: x.identity() is Identity.Neutral
+                                for node in bfs(source=target, filter_on_edges=f1, filter_on_nodes=f2):
+                                    if Identity.Attribute not in node.identities():
+                                        raise ProfileError('Detected unsupported operator sequence on {0}'.format(node.name))
+
+                    # SOURCE = NEUTRAL
+
+                    elif source.identity() is Identity.Neutral:
+
+                        if target.identity() not in {Identity.Attribute, Identity.Role, Identity.Neutral}:
+                            # PropertyAssertion nodes can only target Attributes, Roles or Neutral node
+                            # which supports either Attribute or Role identity (i.e: the complement node).
+                            raise ProfileError('Invalid target for property assertion node: {0}'.format(target.name))
+
+                        if target.type() is Item.RoleChainNode:
+                            # Exclude Role chain nodes since since they can never be target of a membership assertion.
+                            raise ProfileError('Invalid target for property assertion node: {0}'.format(target.name))
+
+                        # TARGET = NEUTRAL
+
+                        if target.identity() is Identity.Neutral:
+
+                            if not {Identity.Attribute, Identity.Role} & target.identities():
+                                # Here we target an incompatible node (i.e. a node which cannot express an Attribute or a Role).
+                                raise ProfileError('Invalid target for property assertion node: {0}'.format(target.name))
+
+                            if target.adjacentNodes(filter_on_edges=lambda x: x is not edge):
+                                # Here we target a Neutral node which is attached to something (either with
+                                # inputs or outputs), therefore we must inspect all the nodes attached to this
+                                # target node which are still Neutral and see if they all share an identity among
+                                # Role and Attribute.
+                                f1 = lambda x: x is not edge and x.type() is not Item.MembershipEdge
+                                f2 = lambda x: x.identity() is Identity.Neutral
+                                for node in bfs(source=target, filter_on_edges=f1, filter_on_nodes=f2):
+                                    if not {Identity.Attribute, Identity.Role} & node.identities():
+                                        raise ProfileError('Detected unsupported operator sequence on {0}'.format(node.name))
 
         except ProfileError as e:
             pvr = ProfileValidationResult(source, edge, target, False)

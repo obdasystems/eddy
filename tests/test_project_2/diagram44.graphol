@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#fcfcfc" type="individual" id="n0">
-      <geometry width="60" x="-100" height="-60" y="0"/>
-      <label width="17" x="-100" height="23" y="0">I1</label>
+    <node type="individual" color="#fcfcfc" id="n0">
+      <geometry x="-100" y="0" width="60" height="-60"/>
+      <label x="-100" y="0" width="17" height="23">I1</label>
     </node>
-    <node color="#fcfcfc" type="role" id="n1">
-      <geometry width="70" x="80" height="50" y="0"/>
-      <label width="22" x="80" height="23" y="0">R4</label>
+    <node type="role" color="#fcfcfc" id="n1">
+      <geometry x="80" y="0" width="70" height="50"/>
+      <label x="80" y="0" width="22" height="23">R4</label>
     </node>
   </graph>
 </graphol>

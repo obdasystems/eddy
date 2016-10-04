@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#fcfcfc" type="attribute" id="n0">
-      <geometry width="20" x="-60" height="20" y="10"/>
-      <label width="22" x="-60" height="23" y="-12">A4</label>
+    <node type="attribute" color="#fcfcfc" id="n0">
+      <geometry x="-60" y="10" width="20" height="20"/>
+      <label x="-60" y="-12" width="22" height="23">A4</label>
     </node>
-    <node color="#000000" type="range-restriction" id="n2">
-      <geometry width="20" x="40" height="20" y="10"/>
-      <label width="27" x="40" height="23" y="-12">self</label>
+    <node type="range-restriction" color="#000000" id="n2">
+      <geometry x="40" y="10" width="20" height="20"/>
+      <label x="40" y="-12" width="27" height="23">self</label>
     </node>
   </graph>
 </graphol>

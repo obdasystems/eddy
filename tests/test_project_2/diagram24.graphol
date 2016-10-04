@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
   <graph width="5000" height="5000">
-    <node color="#fcfcfc" type="concept" id="n2">
-      <geometry width="110" x="0" height="50" y="-100"/>
-      <label width="22" x="0" height="23" y="-100">C5</label>
+    <node type="individual" color="#fcfcfc" id="n0">
+      <geometry x="60" y="80" width="60" height="-60"/>
+      <label x="60" y="80" width="17" height="23">I2</label>
     </node>
-    <node color="#fcfcfc" type="individual" id="n1">
-      <geometry width="60" x="-60" height="-60" y="80"/>
-      <label width="17" x="-60" height="23" y="80">I1</label>
+    <node type="individual" color="#fcfcfc" id="n1">
+      <geometry x="-60" y="80" width="60" height="-60"/>
+      <label x="-60" y="80" width="17" height="23">I1</label>
     </node>
-    <node color="#fcfcfc" type="individual" id="n0">
-      <geometry width="60" x="60" height="-60" y="80"/>
-      <label width="17" x="60" height="23" y="80">I2</label>
+    <node type="concept" color="#fcfcfc" id="n2">
+      <geometry x="0" y="-100" width="110" height="50"/>
+      <label x="0" y="-100" width="22" height="23">C5</label>
     </node>
-    <node color="#fcfcfc" type="enumeration" id="n3">
-      <geometry width="50" x="0" height="30" y="0"/>
-      <label width="40" x="0" height="23" y="0">oneOf</label>
+    <node type="enumeration" color="#fcfcfc" id="n3">
+      <geometry x="0" y="0" width="50" height="30"/>
+      <label x="0" y="0" width="40" height="23">oneOf</label>
     </node>
-    <edge source="n0" target="n3" type="input" id="e0">
+    <edge source="n0" type="input" target="n3" id="e0">
       <point x="60" y="80"/>
       <point x="0" y="0"/>
     </edge>
-    <edge source="n1" target="n3" type="input" id="e1">
+    <edge source="n1" type="input" target="n3" id="e1">
       <point x="-60" y="80"/>
       <point x="0" y="0"/>
     </edge>

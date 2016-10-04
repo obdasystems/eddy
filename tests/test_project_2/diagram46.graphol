@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="1">
+  <graph width="5000" height="5000">
+    <node type="property-assertion" color="#fcfcfc" inputs="e3,e4" id="n4">
+      <geometry x="-40" y="60" width="52" height="30"/>
+    </node>
+    <node type="complement" color="#fcfcfc" id="n0">
+      <geometry x="100" y="60" width="50" height="30"/>
+      <label x="100" y="60" width="25" height="23">not</label>
+    </node>
+    <node type="individual" color="#fcfcfc" id="n6">
+      <geometry x="-160" y="100" width="60" height="-60"/>
+      <label x="-160" y="100" width="17" height="23">I2</label>
+    </node>
+    <node type="individual" color="#fcfcfc" id="n5">
+      <geometry x="-160" y="20" width="60" height="-60"/>
+      <label x="-160" y="20" width="17" height="23">I1</label>
+    </node>
+    <node type="union" color="#fcfcfc" id="n3">
+      <geometry x="340" y="60" width="50" height="30"/>
+      <label x="340" y="60" width="18" height="23">or</label>
+    </node>
+    <node type="intersection" color="#fcfcfc" id="n1">
+      <geometry x="220" y="60" width="50" height="30"/>
+      <label x="220" y="60" width="27" height="23">and</label>
+    </node>
+    <node type="union" color="#fcfcfc" id="n2">
+      <geometry x="280" y="-20" width="50" height="30"/>
+      <label x="280" y="-20" width="18" height="23">or</label>
+    </node>
+    <edge source="n1" type="input" target="n2" id="e0">
+      <point x="220" y="60"/>
+      <point x="280" y="-20"/>
+    </edge>
+    <edge source="n5" type="input" target="n4" id="e4">
+      <point x="-160" y="20"/>
+      <point x="-40" y="60"/>
+    </edge>
+    <edge source="n0" type="input" target="n1" id="e2">
+      <point x="100" y="60"/>
+      <point x="220" y="60"/>
+    </edge>
+    <edge source="n3" type="input" target="n2" id="e1">
+      <point x="340" y="60"/>
+      <point x="280" y="-20"/>
+    </edge>
+    <edge source="n6" type="input" target="n4" id="e3">
+      <point x="-160" y="100"/>
+      <point x="-40" y="60"/>
+    </edge>
+  </graph>
+</graphol>
