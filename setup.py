@@ -584,7 +584,6 @@ excludes = [
 includes = [
     # QT MODULES
     'PyQt5.QtCore',
-    'PyQt5.QtDBus',
     'PyQt5.QtGui',
     'PyQt5.QtPrintSupport',
     'PyQt5.QtNetwork',
@@ -612,6 +611,11 @@ if LINUX:
     include_files.extend([
         (os.path.join(QT_LIB_PATH, 'libQt5DBus.so.5'), 'libQt5DBus.so.5'),
         (os.path.join(QT_LIB_PATH, 'libQt5XcbQpa.so.5'), 'libQt5XcbQpa.so.5'),
+    ])
+
+if LINUX or MACOS:
+    includes.extend([
+        'PyQt5.QtDBus',
     ])
 
 
