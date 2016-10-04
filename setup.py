@@ -607,6 +607,7 @@ includes = [
     'PyQt5.QtXml',
     # REQUIRED + 3RD PARTY MODULES
     'jnius',
+    'natsort',
     'verlib',
 ]
 
