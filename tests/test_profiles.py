@@ -262,7 +262,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__insert_edge_between(Item.InclusionEdge, source, (Item.RoleNode, 'R1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
-        self.assertEqual(self.project.profile.pvr().message(), 'Invalid source for role inclusion: complement node')
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid source for Role inclusion: complement node')
         self.assertFalse(self.project.profile.pvr().isValid())
 
     def test_inclusion_between_complement_node_and_attribute(self):
@@ -274,7 +274,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__insert_edge_between(Item.InclusionEdge, source, (Item.AttributeNode, 'A1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
-        self.assertEqual(self.project.profile.pvr().message(), 'Invalid source for attribute inclusion: complement node')
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid source for Attribute inclusion: complement node')
         self.assertFalse(self.project.profile.pvr().isValid())
 
     def test_inclusion_between_role_chain_node_and_role_chain_node(self):
@@ -476,7 +476,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__insert_edge_between(Item.EquivalenceEdge, source, (Item.RoleNode, 'R1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
-        self.assertEqual(self.project.profile.pvr().message(), 'Equivalence is forbidden when expressing role disjointness')
+        self.assertEqual(self.project.profile.pvr().message(), 'Equivalence is forbidden when expressing Role disjointness')
         self.assertFalse(self.project.profile.pvr().isValid())
 
     def test_equivalence_between_complement_node_and_attribute(self):
@@ -488,7 +488,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__insert_edge_between(Item.EquivalenceEdge, source, (Item.AttributeNode, 'A1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
-        self.assertEqual(self.project.profile.pvr().message(), 'Equivalence is forbidden when expressing attribute disjointness')
+        self.assertEqual(self.project.profile.pvr().message(), 'Equivalence is forbidden when expressing Attribute disjointness')
         self.assertFalse(self.project.profile.pvr().isValid())
 
     def test_equivalence_between_role_chain_node_and_role_chain_node(self):
