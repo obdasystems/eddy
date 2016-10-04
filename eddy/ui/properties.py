@@ -268,7 +268,7 @@ class NodeProperty(PropertyDialog):
         self.identityField.setFont(Font('Roboto', 12))
         self.identityField.setReadOnly(True)
         self.identityField.setFixedWidth(300)
-        self.identityField.setValue(self.node.identity().value)
+        self.identityField.setValue(self.node.identityName)
 
         self.neighboursLabel = QtWidgets.QLabel(self)
         self.neighboursLabel.setFont(Font('Roboto', 12))

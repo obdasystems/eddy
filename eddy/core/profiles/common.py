@@ -51,6 +51,7 @@ class AbstractProfile(QtCore.QObject):
         """
         super().__init__(project)
         self._pvr = None
+        self._rules = []
 
     #############################################
     #   PROPERTIES
@@ -75,6 +76,13 @@ class AbstractProfile(QtCore.QObject):
     #############################################
     #   INTERFACE
     #################################
+
+    def addRule(self, rule, *args, **kwargs):
+        """
+        Add a profile rule to this Profile.
+        :type rule: class
+        """
+        self._rules.append(rule(*args, **kwargs))
 
     def check(self, source, edge, target):
         """
@@ -117,6 +125,13 @@ class AbstractProfile(QtCore.QObject):
         """
         self._pvr = None
 
+    def rules(self):
+        """
+        Returns the list of Profile rules in this Profile.
+        :rtype: list
+        """
+        return self._rules
+
     def setPvr(self, pvr):
         """
         Set the profile validation result.
@@ -133,15 +148,22 @@ class AbstractProfile(QtCore.QObject):
         """
         pass
 
-    @abstractmethod
     def validate(self, source, edge, target):
         """
-        Perform the validation of the given triple and generate the ProfileValidationResult.
-        :param source: AbstractNode
-        :param edge: AbstractEdge
-        :param target: AbstractNode
+        Perform the validation of the given triple and generate the profile validation result.
+        :type source: AbstractNode
+        :type edge: AbstractEdge
+        :type target: AbstractNode
         """
-        pass
+        try:
+            for r in self.rules():
+                r(source, edge, target)
+        except ProfileError as e:
+            pvr = ProfileValidationResult(source, edge, target, False)
+            pvr.setMessage(e.msg)
+            self.setPvr(pvr)
+        else:
+            self.setPvr(ProfileValidationResult(source, edge, target, True))
 
 
 class ProfileValidationResult(object):
@@ -214,6 +236,23 @@ class ProfileValidationResult(object):
             return self._source is item[0] and self._edge is item[1] and self._target is item[2]
         except IndexError:
             return False
+
+
+class ProfileRule(object):
+    """
+    Extends built-in object providing the base class for all the validation rules.
+    """
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def __call__(self, source, edge, target):
+        """
+        Run the validation rule on the given triple.
+        :type source: AbstractNode
+        :type edge: AbstractEdge
+        :type target: AbstractNode
+        """
+        pass
 
 
 class ProfileError(SyntaxError):
