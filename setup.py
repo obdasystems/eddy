@@ -70,9 +70,24 @@ BUILD_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'build')
 DIST_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'dist')
 DIST_NAME = '%s-%s-%s_%s' % (APPNAME, VERSION, platform.system().lower(), platform.machine())
 DIST_PATH = os.path.join(BUILD_DIR, DIST_NAME)
-EXEC_BASE = 'Win32GUI' if WIN32 else None
-EXEC_ICON = expandPath('@resources/images/eddy%s' % '.icns' if MACOS else '.ico' if WIN32 else '.png')
-EXEC_NAME = '%s%s' % (APPNAME, '.exe' if WIN32 else '')
+EXEC_BASE = None
+EXEC_ICON = None
+EXEC_NAME = None
+
+if LINUX:
+    EXEC_BASE = None
+    EXEC_ICON = expandPath('@resources/images/eddy.png')
+    EXEC_NAME = APPNAME
+
+if MACOS:
+    EXEC_BASE = None
+    EXEC_ICON = expandPath('@resources/images/eddy.icns')
+    EXEC_NAME = APPNAME
+
+if WIN32:
+    EXEC_BASE = 'Win32GUI'
+    EXEC_ICON = expandPath('@resources/images/eddy.ico')
+    EXEC_NAME = '%s.exe' % APPNAME
 
 QT_BASE_PATH = os.path.join(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PrefixPath), '..')
 QT_LIB_PATH = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.LibrariesPath),
