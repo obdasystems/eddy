@@ -35,26 +35,25 @@
 
 
 import platform
+import PyQt5
 import os
 import sys
 import jnius_config
 
 from eddy.core.functions.path import expandPath
 
-
-LINUX = sys.platform.startswith('linux')
-MACOS = sys.platform.startswith('darwin')
-WIN32 = sys.platform.startswith('win32')
-
+_LINUX = sys.platform.startswith('linux')
+_MACOS = sys.platform.startswith('darwin')
+_WIN32 = sys.platform.startswith('win32')
 
 #############################################
-# BEGIN JAVA VIRTUAL MACHINE SETUP
+# BEGIN JVM SETUP
 #################################
 
 if os.path.isdir(expandPath('@resources/java/')):
     os.environ['JAVA_HOME'] = expandPath('@resources/java/')
 
-if WIN32:
+if _WIN32:
     path = os.getenv('Path', '')
     path = path.split(os.pathsep)
     path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'bin', 'client'))
@@ -71,17 +70,26 @@ jnius_config.add_options('-ea', '-Xmx512m')
 jnius_config.set_classpath(*classpath)
 
 #############################################
-# END JAVA VIRTUAL MACHINE SETUP
+# END JVM SETUP / BEGIN QT PLUGINS PATH SETUP
 #################################
 
+from PyQt5 import Qt
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
+
+if hasattr(sys, 'frozen'):
+    # noinspection PyTypeChecker,PyCallByClass
+    QtWidgets.QApplication.addLibraryPath(expandPath('@root/platforms/plugins'))
+else:
+    # noinspection PyTypeChecker
+    QtWidgets.QApplication.addLibraryPath(os.path.join(os.path.dirname(PyQt5.__file__), 'plugins'))
+
+#############################################
+# END STARTUP SEQUENCE SETUP
+#################################
 
 from argparse import ArgumentParser
-
-from PyQt5.Qt import PYQT_VERSION_STR
-from PyQt5.QtCore import QT_VERSION_STR
-from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QMessageBox, QApplication
-
 from sip import SIP_VERSION_STR
 
 from eddy import APPNAME, COPYRIGHT, VERSION, BUG_TRACKER
@@ -114,9 +122,9 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
         global msgbox
         if not msgbox:
             LOGGER.critical(format_exception(exc_value))
-            msgbox = QMessageBox()
-            msgbox.setIconPixmap(QPixmap(':/images/eddy-sad'))
-            msgbox.setWindowIcon(QIcon(':/icons/128/ic_eddy'))
+            msgbox = QtWidgets.QMessageBox()
+            msgbox.setIconPixmap(QtGui.QPixmap(':/images/eddy-sad'))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Fatal error!')
             msgbox.setText('This is embarrassing ...\n\n' \
             'A critical error has just occurred. {0} will continue to work, ' \
@@ -124,15 +132,15 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
             msgbox.setInformativeText('If the problem persists you can '
             '<a href="{0}">submit a bug report</a>.'.format(BUG_TRACKER))
             msgbox.setDetailedText(format_exception(exc_value))
-            msgbox.setStandardButtons(QMessageBox.Close | QMessageBox.Ok)
-            buttonOk = msgbox.button(QMessageBox.Ok)
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Close | QtWidgets.QMessageBox.Ok)
+            buttonOk = msgbox.button(QtWidgets.QMessageBox.Ok)
             buttonOk.setText('Close')
-            buttonQuit = msgbox.button(QMessageBox.Close)
+            buttonQuit = msgbox.button(QtWidgets.QMessageBox.Close)
             buttonQuit.setText('Quit {0}'.format(APPNAME))
             connect(buttonOk.clicked, msgbox.close)
             connect(buttonQuit.clicked, app.quit)
             # noinspection PyArgumentList
-            QApplication.beep()
+            QtWidgets.QApplication.beep()
             msgbox.exec_()
             msgbox = None
 
@@ -161,8 +169,8 @@ def main():
     LOGGER.frame(COPYRIGHT, separator='|')
     LOGGER.separator(separator='-')
     LOGGER.frame('Python version: %s', platform.python_version(), separator='|')
-    LOGGER.frame('Qt version: %s', QT_VERSION_STR, separator='|')
-    LOGGER.frame('PyQt version: %s', PYQT_VERSION_STR, separator='|')
+    LOGGER.frame('Qt version: %s', QtCore.QT_VERSION_STR, separator='|')
+    LOGGER.frame('PyQt version: %s', Qt.PYQT_VERSION_STR, separator='|')
     LOGGER.frame('SIP version: %s', SIP_VERSION_STR, separator='|')
     LOGGER.separator(separator='-')
 
