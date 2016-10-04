@@ -257,7 +257,7 @@ class BuildExe(cx_Freeze.build_exe):
                         '/O{0}'.format(DIST_DIR),
                         '/dEDDY_APPID={0}'.format(APPID),
                         '/dEDDY_APPNAME={0}'.format(APPNAME),
-                        '/dEDDY_PLATFORM_ARCHITECTURE={0}'.format(platform.architecture()[0][:-3]),
+                        '/dEDDY_ARCHITECTURE={0}'.format(platform.machine()),
                         '/dEDDY_BUGTRACKER={0}'.format(BUG_TRACKER),
                         '/dEDDY_BUILD_PATH={0}'.format(self.build_exe),
                         '/dEDDY_COPYRIGHT={0}'.format(COPYRIGHT),
