@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
-  <graph width="5000" height="5000">
-    <node type="value-domain" color="#fcfcfc" id="n2">
-      <geometry x="80" y="-60" width="90" height="40"/>
-      <label x="80" y="-60" width="60" height="23">xsd:string</label>
+  <graph height="5000" width="5000">
+    <node color="#fcfcfc" id="n0" type="concept">
+      <geometry x="-80" y="60" height="50" width="110"/>
+      <label x="-80" y="60" height="23" width="22">C2</label>
     </node>
-    <node type="union" color="#fcfcfc" id="n1">
-      <geometry x="-80" y="-60" width="50" height="30"/>
-      <label x="-80" y="-60" width="18" height="23">or</label>
+    <node color="#fcfcfc" id="n2" type="value-domain">
+      <geometry x="80" y="-60" height="40" width="90"/>
+      <label x="80" y="-60" height="23" width="60">xsd:string</label>
     </node>
-    <node type="concept" color="#fcfcfc" id="n0">
-      <geometry x="-80" y="60" width="110" height="50"/>
-      <label x="-80" y="60" width="22" height="23">C2</label>
+    <node color="#fcfcfc" id="n1" type="union">
+      <geometry x="-80" y="-60" height="30" width="50"/>
+      <label x="-80" y="-60" height="23" width="18">or</label>
     </node>
-    <edge source="n0" type="input" target="n1" id="e0">
+    <edge source="n0" id="e0" type="input" target="n1">
       <point x="-80" y="60"/>
       <point x="-80" y="-60"/>
     </edge>

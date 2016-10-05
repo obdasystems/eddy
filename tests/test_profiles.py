@@ -302,6 +302,30 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.assertEqual(self.project.profile.pvr().message(), 'Role chain nodes cannot be target of a Role inclusion')
         self.assertFalse(self.project.profile.pvr().isValid())
 
+    def test_inclusion_between_role_and_complement_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram49.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'R9'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Detected unsupported operator sequence on intersection node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
+    def test_inclusion_between_attribute_and_complement_node(self):
+        # GIVEN
+        self.__give_focus_to_diagram('@tests/.tests/test_project_2/diagram50.graphol')
+        num_edges_in_project = len(self.project.edges())
+        target = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
+        # WHEN
+        self.__insert_edge_between(Item.InclusionEdge, (Item.AttributeNode, 'A1'), target)
+        # THEN
+        self.assertEqual(len(self.project.edges()), num_edges_in_project)
+        self.assertEqual(self.project.profile.pvr().message(), 'Detected unsupported operator sequence on intersection node')
+        self.assertFalse(self.project.profile.pvr().isValid())
+
     #############################################
     #   EQUIVALENCE
     #################################

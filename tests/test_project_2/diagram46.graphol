@@ -1,52 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
-  <graph width="5000" height="5000">
-    <node type="property-assertion" color="#fcfcfc" inputs="e3,e4" id="n4">
-      <geometry x="-40" y="60" width="52" height="30"/>
+  <graph height="5000" width="5000">
+    <node color="#fcfcfc" id="n6" type="individual">
+      <geometry x="-160" y="100" height="-60" width="60"/>
+      <label x="-160" y="100" height="23" width="17">I2</label>
     </node>
-    <node type="complement" color="#fcfcfc" id="n0">
-      <geometry x="100" y="60" width="50" height="30"/>
-      <label x="100" y="60" width="25" height="23">not</label>
+    <node color="#fcfcfc" id="n3" type="union">
+      <geometry x="340" y="60" height="30" width="50"/>
+      <label x="340" y="60" height="23" width="18">or</label>
     </node>
-    <node type="individual" color="#fcfcfc" id="n6">
-      <geometry x="-160" y="100" width="60" height="-60"/>
-      <label x="-160" y="100" width="17" height="23">I2</label>
+    <node inputs="e3,e4" color="#fcfcfc" id="n4" type="property-assertion">
+      <geometry x="-40" y="60" height="30" width="52"/>
     </node>
-    <node type="individual" color="#fcfcfc" id="n5">
-      <geometry x="-160" y="20" width="60" height="-60"/>
-      <label x="-160" y="20" width="17" height="23">I1</label>
+    <node color="#fcfcfc" id="n2" type="union">
+      <geometry x="280" y="-20" height="30" width="50"/>
+      <label x="280" y="-20" height="23" width="18">or</label>
     </node>
-    <node type="union" color="#fcfcfc" id="n3">
-      <geometry x="340" y="60" width="50" height="30"/>
-      <label x="340" y="60" width="18" height="23">or</label>
+    <node color="#fcfcfc" id="n0" type="complement">
+      <geometry x="100" y="60" height="30" width="50"/>
+      <label x="100" y="60" height="23" width="25">not</label>
     </node>
-    <node type="intersection" color="#fcfcfc" id="n1">
-      <geometry x="220" y="60" width="50" height="30"/>
-      <label x="220" y="60" width="27" height="23">and</label>
+    <node color="#fcfcfc" id="n5" type="individual">
+      <geometry x="-160" y="20" height="-60" width="60"/>
+      <label x="-160" y="20" height="23" width="17">I1</label>
     </node>
-    <node type="union" color="#fcfcfc" id="n2">
-      <geometry x="280" y="-20" width="50" height="30"/>
-      <label x="280" y="-20" width="18" height="23">or</label>
+    <node color="#fcfcfc" id="n1" type="intersection">
+      <geometry x="220" y="60" height="30" width="50"/>
+      <label x="220" y="60" height="23" width="27">and</label>
     </node>
-    <edge source="n1" type="input" target="n2" id="e0">
+    <edge source="n1" id="e0" type="input" target="n2">
       <point x="220" y="60"/>
       <point x="280" y="-20"/>
     </edge>
-    <edge source="n5" type="input" target="n4" id="e4">
+    <edge source="n5" id="e4" type="input" target="n4">
       <point x="-160" y="20"/>
       <point x="-40" y="60"/>
     </edge>
-    <edge source="n0" type="input" target="n1" id="e2">
+    <edge source="n6" id="e3" type="input" target="n4">
+      <point x="-160" y="100"/>
+      <point x="-40" y="60"/>
+    </edge>
+    <edge source="n0" id="e2" type="input" target="n1">
       <point x="100" y="60"/>
       <point x="220" y="60"/>
     </edge>
-    <edge source="n3" type="input" target="n2" id="e1">
+    <edge source="n3" id="e1" type="input" target="n2">
       <point x="340" y="60"/>
       <point x="280" y="-20"/>
-    </edge>
-    <edge source="n6" type="input" target="n4" id="e3">
-      <point x="-160" y="100"/>
-      <point x="-40" y="60"/>
     </edge>
   </graph>
 </graphol>

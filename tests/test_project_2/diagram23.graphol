@@ -1,38 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="1">
-  <graph width="5000" height="5000">
-    <node type="value-domain" color="#fcfcfc" id="n2">
-      <geometry x="-80" y="90" width="90" height="40"/>
-      <label x="-80" y="90" width="60" height="23">xsd:string</label>
+  <graph height="5000" width="5000">
+    <node color="#fcfcfc" id="n4" type="attribute">
+      <geometry x="60" y="-90" height="20" width="20"/>
+      <label x="60" y="-112" height="23" width="22">A3</label>
     </node>
-    <node type="union" color="#fcfcfc" id="n3">
-      <geometry x="0" y="-10" width="50" height="30"/>
-      <label x="0" y="-10" width="18" height="23">or</label>
+    <node color="#fcfcfc" id="n2" type="value-domain">
+      <geometry x="-80" y="90" height="40" width="90"/>
+      <label x="-80" y="90" height="23" width="60">xsd:string</label>
     </node>
-    <node type="value-domain" color="#fcfcfc" id="n1">
-      <geometry x="80" y="90" width="90" height="40"/>
-      <label x="80" y="90" width="60" height="23">xsd:string</label>
+    <node color="#000000" id="n0" type="range-restriction">
+      <geometry x="0" y="-90" height="20" width="20"/>
+      <label x="0" y="-112" height="23" width="39">exists</label>
     </node>
-    <node type="attribute" color="#fcfcfc" id="n4">
-      <geometry x="60" y="-90" width="20" height="20"/>
-      <label x="60" y="-112" width="22" height="23">A3</label>
+    <node color="#fcfcfc" id="n3" type="union">
+      <geometry x="0" y="-10" height="30" width="50"/>
+      <label x="0" y="-10" height="23" width="18">or</label>
     </node>
-    <node type="range-restriction" color="#000000" id="n0">
-      <geometry x="0" y="-90" width="20" height="20"/>
-      <label x="0" y="-112" width="39" height="23">exists</label>
+    <node color="#fcfcfc" id="n1" type="value-domain">
+      <geometry x="80" y="90" height="40" width="90"/>
+      <label x="80" y="90" height="23" width="60">xsd:string</label>
     </node>
-    <edge source="n4" type="input" target="n0" id="e2">
+    <edge source="n1" id="e1" type="input" target="n3">
+      <point x="80" y="90"/>
+      <point x="80" y="-10"/>
+      <point x="0" y="-10"/>
+    </edge>
+    <edge source="n4" id="e2" type="input" target="n0">
       <point x="60" y="-90"/>
       <point x="0" y="-90"/>
     </edge>
-    <edge source="n2" type="input" target="n3" id="e0">
+    <edge source="n2" id="e0" type="input" target="n3">
       <point x="-80" y="90"/>
       <point x="-80" y="-10"/>
-      <point x="0" y="-10"/>
-    </edge>
-    <edge source="n1" type="input" target="n3" id="e1">
-      <point x="80" y="90"/>
-      <point x="80" y="-10"/>
       <point x="0" y="-10"/>
     </edge>
   </graph>
