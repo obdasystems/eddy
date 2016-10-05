@@ -33,9 +33,16 @@
 ##########################################################################
 
 
+import sys
+
 from PyQt5 import QtCore
 
 from eddy.ui.splash import Splash
+
+
+_LINUX = sys.platform.startswith('linux')
+_MACOS = sys.platform.startswith('darwin')
+_WIN32 = sys.platform.startswith('win32')
 
 
 class AboutDialog(Splash):
@@ -48,8 +55,8 @@ class AboutDialog(Splash):
         :type parent: QWidget
         """
         super(AboutDialog, self).__init__(parent)
-        self.setSpaceX(8)
-        self.setSpaceY(12)
+        self.setSpaceX(8 if _MACOS else 0)
+        self.setSpaceY(12 if _MACOS else 0)
         self.setWindowFlags(QtCore.Qt.Popup)
 
     def exec_(self):

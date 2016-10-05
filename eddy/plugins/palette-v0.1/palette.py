@@ -606,8 +606,8 @@ class PaletteButton(QtWidgets.QToolButton):
                     QtCore.QPointF(-((40 / (1 + sqrt(2))) / 2), -20),
                     QtCore.QPointF(-20, -((40 / (1 + sqrt(2))) / 2)),
                 ]))
-                painter.setFont(Font('Roboto', 8, Font.Light))
-                painter.drawText(-16, 4, 'individual')
+                painter.setFont(Font('Roboto', 8 if _MACOS else 9, Font.Light))
+                painter.drawText(-16 if _MACOS else -19, 4, 'individual')
                 painter.end()
 
             #############################################
@@ -640,7 +640,7 @@ class PaletteButton(QtWidgets.QToolButton):
                 painter.setBrush(QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)))
                 painter.drawPolygon(polygonB)
                 painter.setFont(Font('Roboto', 9, Font.Light))
-                painter.drawText(QtCore.QPointF(-19, -5), Facet.length.value)
+                painter.drawText(QtCore.QPointF(-19 if _MACOS else -20, -5), Facet.length.value)
                 painter.drawText(QtCore.QPointF(-8, 12), '"32"')
                 painter.end()
 
