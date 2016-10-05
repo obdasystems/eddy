@@ -68,7 +68,7 @@ WIN32 = sys.platform.startswith('win32')
 
 BUILD_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'build')
 DIST_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'dist')
-DIST_NAME = '%s-%s-%s_%s' % (APPNAME, VERSION, platform.system().lower(), platform.machine())
+DIST_NAME = '%s-%s-%s_%s' % (APPNAME, VERSION, platform.system().lower(), platform.machine().lower())
 DIST_PATH = os.path.join(BUILD_DIR, DIST_NAME)
 EXEC_BASE = None
 EXEC_ICON = None
@@ -257,7 +257,7 @@ class BuildExe(cx_Freeze.build_exe):
                         '/O{0}'.format(DIST_DIR),
                         '/dEDDY_APPID={0}'.format(APPID),
                         '/dEDDY_APPNAME={0}'.format(APPNAME),
-                        '/dEDDY_ARCHITECTURE={0}'.format(platform.machine()),
+                        '/dEDDY_ARCHITECTURE={0}'.format(platform.machine().lower()),
                         '/dEDDY_BUGTRACKER={0}'.format(BUG_TRACKER),
                         '/dEDDY_BUILD_PATH={0}'.format(self.build_exe),
                         '/dEDDY_COPYRIGHT={0}'.format(COPYRIGHT),
@@ -599,6 +599,7 @@ excludes = [
 includes = [
     # QT MODULES
     'PyQt5.QtCore',
+    'PyQt5.QtDBus',
     'PyQt5.QtGui',
     'PyQt5.QtPrintSupport',
     'PyQt5.QtNetwork',
@@ -627,11 +628,6 @@ if LINUX:
     include_files.extend([
         (os.path.join(QT_LIB_PATH, 'libQt5DBus.so.5'), 'libQt5DBus.so.5'),
         (os.path.join(QT_LIB_PATH, 'libQt5XcbQpa.so.5'), 'libQt5XcbQpa.so.5'),
-    ])
-
-if LINUX or MACOS:
-    includes.extend([
-        'PyQt5.QtDBus',
     ])
 
 

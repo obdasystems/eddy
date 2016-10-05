@@ -35,7 +35,6 @@
 
 
 import platform
-import PyQt5
 import os
 import sys
 import jnius_config
@@ -70,7 +69,7 @@ jnius_config.add_options('-ea', '-Xmx512m')
 jnius_config.set_classpath(*classpath)
 
 #############################################
-# END JVM SETUP / BEGIN QT PLUGINS PATH SETUP
+# END JVM SETUP
 #################################
 
 from PyQt5 import Qt
@@ -78,12 +77,12 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-if hasattr(sys, 'frozen'):
-    # noinspection PyTypeChecker,PyCallByClass
-    QtWidgets.QApplication.addLibraryPath(expandPath('@root/platforms/plugins'))
-else:
-    # noinspection PyTypeChecker
-    QtWidgets.QApplication.addLibraryPath(os.path.join(os.path.dirname(PyQt5.__file__), 'plugins'))
+# if hasattr(sys, 'frozen'):
+#     # noinspection PyTypeChecker,PyCallByClass
+#     QtWidgets.QApplication.addLibraryPath(expandPath('@root/platforms/plugins'))
+# else:
+#     # noinspection PyTypeChecker
+#     QtWidgets.QApplication.addLibraryPath(os.path.join(os.path.dirname(PyQt5.__file__), 'plugins'))
 
 #############################################
 # END STARTUP SEQUENCE SETUP
