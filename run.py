@@ -77,17 +77,6 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-# if hasattr(sys, 'frozen'):
-#     # noinspection PyTypeChecker,PyCallByClass
-#     QtWidgets.QApplication.addLibraryPath(expandPath('@root/platforms/plugins'))
-# else:
-#     # noinspection PyTypeChecker
-#     QtWidgets.QApplication.addLibraryPath(os.path.join(os.path.dirname(PyQt5.__file__), 'plugins'))
-
-#############################################
-# END STARTUP SEQUENCE SETUP
-#################################
-
 from argparse import ArgumentParser
 from sip import SIP_VERSION_STR
 
