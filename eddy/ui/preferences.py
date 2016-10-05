@@ -225,7 +225,7 @@ class PreferencesDialog(QtWidgets.QDialog):
 
         self.mainWidget = QtWidgets.QTabWidget(self)
         self.mainWidget.addTab(self.editorWidget, QtGui.QIcon(':/icons/48/ic_edit_black'), 'Editor')
-        self.mainWidget.addTab(self.axiomsWidget, QtGui.QIcon(':/icons/48/ic_save_black'), 'Export')
+        self.mainWidget.addTab(self.axiomsWidget, QtGui.QIcon(':/icons/48/ic_export_black'), 'Export')
         self.mainWidget.addTab(self.pluginsWidget, QtGui.QIcon(':/icons/48/ic_extension_black'), 'Plugins')
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)

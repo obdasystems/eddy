@@ -330,14 +330,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             enabled=False, triggered=self.doSaveAs))
 
         self.addAction(QtWidgets.QAction(
-            'Import...', self, objectName='import',
+            QtGui.QIcon(':/icons/24/ic_import_black'), 'Import...', self,
             statusTip='Import a document in the current project',
-            triggered=self.doImport))
+            objectName='import', triggered=self.doImport))
 
         self.addAction(QtWidgets.QAction(
-            'Export...', self, objectName='export',
+            QtGui.QIcon(':/icons/24/ic_export_black'), 'Export...', self,
             statusTip='Export the current project in a different format',
-            enabled=False, triggered=self.doExport))
+            objectName='export', enabled=False, triggered=self.doExport))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_print_black'), 'Print...', self,

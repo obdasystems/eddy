@@ -93,6 +93,10 @@
   <file alias="ic_bookmark_black@2x">../../resources/icons/24/ic_bookmark_black_24dp_2x.png</file>
   <file alias="ic_link_black">../../resources/icons/24/ic_link_black_24dp_1x.png</file>
   <file alias="ic_link_black@2x">../../resources/icons/24/ic_link_black_24dp_2x.png</file>
+  <file alias="ic_export_black">../../resources/icons/24/ic_export_black_24dp_1x.png</file>
+  <file alias="ic_export_black@2x">../../resources/icons/24/ic_export_black_24dp_2x.png</file>
+  <file alias="ic_import_black">../../resources/icons/24/ic_import_black_24dp_1x.png</file>
+  <file alias="ic_import_black@2x">../../resources/icons/24/ic_import_black_24dp_2x.png</file>
   <file alias="ic_flip_to_back_black">../../resources/icons/24/ic_flip_to_back_black_24dp_1x.png</file>
   <file alias="ic_flip_to_back_black@2x">../../resources/icons/24/ic_flip_to_back_black_24dp_2x.png</file>
   <file alias="ic_flip_to_front_black">../../resources/icons/24/ic_flip_to_front_black_24dp_1x.png</file>
@@ -157,6 +161,10 @@
   <file alias="ic_done_black@2x">../../resources/icons/48/ic_done_black_48dp_2x.png</file>
   <file alias="ic_error_outline_black">../../resources/icons/48/ic_error_outline_black_48dp_1x.png</file>
   <file alias="ic_error_outline_black@2x">../../resources/icons/48/ic_error_outline_black_48dp_2x.png</file>
+  <file alias="ic_export_black">../../resources/icons/48/ic_export_black_48dp_1x.png</file>
+  <file alias="ic_export_black@2x">../../resources/icons/48/ic_export_black_48dp_2x.png</file>
+  <file alias="ic_import_black">../../resources/icons/48/ic_import_black_48dp_1x.png</file>
+  <file alias="ic_import_black@2x">../../resources/icons/48/ic_import_black_48dp_2x.png</file>
   <file alias="ic_info_outline_black">../../resources/icons/48/ic_info_outline_black_48dp_1x.png</file>
   <file alias="ic_info_outline_black@2x">../../resources/icons/48/ic_info_outline_black_48dp_2x.png</file>
   <file alias="ic_question_outline_black">../../resources/icons/48/ic_question_outline_black_48dp_1x.png</file>
