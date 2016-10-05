@@ -46,9 +46,9 @@ from eddy.core.profiles.rules.owl2 import EquivalenceBetweenRoleExpressionAndRol
 from eddy.core.profiles.rules.owl2 import InclusionBetweenExpressionsRule
 from eddy.core.profiles.rules.owl2 import InclusionBetweenCompatibleExpressionsRule
 from eddy.core.profiles.rules.owl2 import InclusionBetweenValueDomainExpressionsRule
-from eddy.core.profiles.rules.owl2 import InclusionBetweenRoleExpressionAndComplementRule
-from eddy.core.profiles.rules.owl2 import InclusionBetweenAttributeExpressionAndComplementRule
-from eddy.core.profiles.rules.owl2 import InclusionBetweenRoleExpressionAndRoleChainRule
+from eddy.core.profiles.rules.owl2 import InclusionBetweenRoleExpressionAndComplementNodeRule
+from eddy.core.profiles.rules.owl2 import InclusionBetweenAttributeExpressionAndComplementNodeRule
+from eddy.core.profiles.rules.owl2 import InclusionBetweenRoleExpressionAndRoleChainNodeRule
 from eddy.core.profiles.rules.owl2 import InputToConstructorNodeRule
 from eddy.core.profiles.rules.owl2 import InputToComplementNodeRule
 from eddy.core.profiles.rules.owl2 import InputToIntersectionOrUnionNodeRule
@@ -76,7 +76,7 @@ class OWL2Profile(AbstractProfile):
         Initialize the profile.
         :type project: Project
         """
-        super().__init__(project)
+        super(OWL2Profile, self).__init__(project)
         self.addRule(SelfConnectionRule)
         self.addRule(EquivalenceBetweenExpressionsRule)
         self.addRule(EquivalenceBetweenCompatibleExpressionsRule)
@@ -87,9 +87,9 @@ class OWL2Profile(AbstractProfile):
         self.addRule(InclusionBetweenExpressionsRule)
         self.addRule(InclusionBetweenCompatibleExpressionsRule)
         self.addRule(InclusionBetweenValueDomainExpressionsRule)
-        self.addRule(InclusionBetweenRoleExpressionAndComplementRule)
-        self.addRule(InclusionBetweenAttributeExpressionAndComplementRule)
-        self.addRule(InclusionBetweenRoleExpressionAndRoleChainRule)
+        self.addRule(InclusionBetweenRoleExpressionAndComplementNodeRule)
+        self.addRule(InclusionBetweenAttributeExpressionAndComplementNodeRule)
+        self.addRule(InclusionBetweenRoleExpressionAndRoleChainNodeRule)
         self.addRule(InputToConstructorNodeRule)
         self.addRule(InputToComplementNodeRule)
         self.addRule(InputToIntersectionOrUnionNodeRule)

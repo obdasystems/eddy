@@ -187,33 +187,67 @@ class InclusionBetweenValueDomainExpressionsRule(ProfileRule):
                     raise ProfileError('Type mismatch: inclusion between value-domain expressions')
 
 
-class InclusionBetweenRoleExpressionAndComplementRule(ProfileRule):
+class InclusionBetweenRoleExpressionAndComplementNodeRule(ProfileRule):
     """
     Prevents inclusion edges sourcing from Complement nodes to target Role expressions.
     """
     def __call__(self, source, edge, target):
+
         if edge.type() is Item.InclusionEdge:
+
             if Identity.Role in {source.identity(), target.identity()}:
+
                 if source.type() is Item.ComplementNode:
                     # Complement nodes can only be the target of Role inclusions
                     # since they generate the OWLDisjointObjectProperties axiom.
                     raise ProfileError('Invalid source for Role inclusion: {}'.format(source.name))
 
+                if target.identity() is Identity.Neutral:
 
-class InclusionBetweenAttributeExpressionAndComplementRule(ProfileRule):
+                    if target.type() is Item.ComplementNode:
+
+                        if target.adjacentNodes(filter_on_edges=lambda x: x is not edge):
+                            # Here we target a Complement node which is still Neutral, but it may be connected
+                            # to many other Neutral nodes (operators), therefore we must inspect all the nodes
+                            # attached to this target node and see if they admits the Role identity.
+                            f1 = lambda x: x is not edge and x.type() is not Item.MembershipEdge
+                            f2 = lambda x: x.identity() is Identity.Neutral
+                            for node in bfs(source=target, filter_on_edges=f1, filter_on_nodes=f2):
+                                if Identity.Role not in node.identities():
+                                    raise ProfileError('Detected unsupported operator sequence on {}'.format(node.name))
+
+
+class InclusionBetweenAttributeExpressionAndComplementNodeRule(ProfileRule):
     """
     Prevents inclusion edges sourcing from Complement nodes to target Attribute expressions.
     """
     def __call__(self, source, edge, target):
+
         if edge.type() is Item.InclusionEdge:
+
             if Identity.Attribute in {source.identity(), target.identity()}:
+
                 if source.type() is Item.ComplementNode:
                     # Complement nodes can only be the target of Attribute inclusions
                     # since they generate the OWLDisjointDataProperties axiom.
                     raise ProfileError('Invalid source for Attribute inclusion: {}'.format(source.name))
 
+                if target.identity() is Identity.Neutral:
 
-class InclusionBetweenRoleExpressionAndRoleChainRule(ProfileRule):
+                    if target.type() is Item.ComplementNode:
+
+                        if target.adjacentNodes(filter_on_edges=lambda x: x is not edge):
+                            # Here we target a Complement node which is still Neutral, but it may be connected
+                            # to many other Neutral nodes (operators), therefore we must inspect all the nodes
+                            # attached to this target node and see if they admits the Attribute identity.
+                            f1 = lambda x: x is not edge and x.type() is not Item.MembershipEdge
+                            f2 = lambda x: x.identity() is Identity.Neutral
+                            for node in bfs(source=target, filter_on_edges=f1, filter_on_nodes=f2):
+                                if Identity.Attribute not in node.identities():
+                                    raise ProfileError('Detected unsupported operator sequence on {}'.format(node.name))
+
+
+class InclusionBetweenRoleExpressionAndRoleChainNodeRule(ProfileRule):
     """
     Make sure that inclusion edges sourcing from Role chain nodes target only Role expressions.
     """
