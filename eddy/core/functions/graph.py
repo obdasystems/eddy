@@ -36,7 +36,7 @@
 from collections import deque
 
 
-def bfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None):
+def bfs(source, filter_on_edges=lambda x: True, filter_on_nodes=lambda x: True, filter_on_visit=lambda x: True):
     """
     Perform a customized BFS returning a list of visited nodes.
     The function accepts 3 callable parameters:
@@ -64,10 +64,6 @@ def bfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None
     :type filter_on_visit: callable
     :type: list
     """
-    f0 = lambda x: True
-    f1 = filter_on_edges or f0
-    f2 = filter_on_nodes or f0
-    f3 = filter_on_visit or f0
     queue = deque([source])
     extend = queue.extend
     ordered = []
@@ -76,12 +72,12 @@ def bfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None
         node = queue.popleft()
         ordered.append(node)
         visited.add(node)
-        if f3(node):
-            extend([n for n in [e.other(node) for e in node.edges if f1(e)] if n not in visited and f2(n)])
+        if filter_on_visit(node):
+            extend([n for n in [e.other(node) for e in node.edges if filter_on_edges(e)] if n not in visited and filter_on_nodes(n)])
     return ordered
 
 
-def dfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None):
+def dfs(source, filter_on_edges=lambda x: True, filter_on_nodes=lambda x: True, filter_on_visit=lambda x: True):
     """
     Perform a customized DFS returning a list of visited nodes.
     The function accepts 3 callable parameters:
@@ -109,10 +105,6 @@ def dfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None
     :type filter_on_visit: callable
     :type: list
     """
-    f0 = lambda x: True
-    f1 = filter_on_edges or f0
-    f2 = filter_on_nodes or f0
-    f3 = filter_on_visit or f0
     stack = [source]
     extend = stack.extend
     ordered = []
@@ -122,6 +114,6 @@ def dfs(source, filter_on_edges=None, filter_on_nodes=None, filter_on_visit=None
         if node not in visited:
             ordered.append(node)
             visited.add(node)
-            if f3(node):
-                extend([n for n in [e.other(node) for e in node.edges if f1(e)] if n not in visited and f2(n)])
+            if filter_on_visit(node):
+                extend([n for n in [e.other(node) for e in node.edges if filter_on_edges(e)] if n not in visited and filter_on_nodes(n)])
     return visited

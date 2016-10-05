@@ -98,17 +98,14 @@ class AbstractNode(AbstractItem):
         """
         self.edges.add(edge)
 
-    def adjacentNodes(self, filter_on_edges=None, filter_on_nodes=None):
+    def adjacentNodes(self, filter_on_edges=lambda x: True, filter_on_nodes=lambda x: True):
         """
         Returns the set of adjacent nodes.
         :type filter_on_edges: callable
         :type filter_on_nodes: callable
         :rtype: set
         """
-        f0 = lambda x: True
-        f1 = filter_on_edges or f0
-        f2 = filter_on_nodes or f0
-        return {x for x in [e.other(self) for e in self.edges if f1(e)] if f2(x)}
+        return {x for x in [e.other(self) for e in self.edges if filter_on_edges(e)] if filter_on_nodes(x)}
 
     def anchor(self, edge):
         """
@@ -201,19 +198,16 @@ class AbstractNode(AbstractItem):
         """
         return self._identity
 
-    def incomingNodes(self, filter_on_edges=None, filter_on_nodes=None):
+    def incomingNodes(self, filter_on_edges=lambda x: True, filter_on_nodes=lambda x: True):
         """
         Returns the set of incoming nodes.
         :type filter_on_edges: callable
         :type filter_on_nodes: callable
         :rtype: set
         """
-        f0 = lambda x: True
-        f1 = filter_on_edges or f0
-        f2 = filter_on_nodes or f0
         return {x for x in [e.other(self) for e in self.edges \
                     if (e.target is self or e.type() is Item.EquivalenceEdge) \
-                        and f1(e)] if f2(x)}
+                        and filter_on_edges(e)] if filter_on_nodes(x)}
 
     def intersection(self, line):
         """
@@ -254,19 +248,16 @@ class AbstractNode(AbstractItem):
         self.setPos(self.pos() + move)
         self.anchors = {edge: pos + move for edge, pos in self.anchors.items()}
 
-    def outgoingNodes(self, filter_on_edges=None, filter_on_nodes=None):
+    def outgoingNodes(self, filter_on_edges=lambda x: True, filter_on_nodes=lambda x: True):
         """
         Returns the set of outgoing nodes.
         :type filter_on_edges: callable
         :type filter_on_nodes: callable
         :rtype: set
         """
-        f0 = lambda x: True
-        f1 = filter_on_edges or f0
-        f2 = filter_on_nodes or f0
         return {x for x in [e.other(self) for e in self.edges \
                     if (e.source is self or e.type() is Item.EquivalenceEdge) \
-                        and f1(e)] if f2(x)}
+                        and filter_on_edges(e)] if filter_on_nodes(x)}
 
     @abstractmethod
     def painterPath(self):
