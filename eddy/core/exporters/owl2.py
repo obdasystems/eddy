@@ -575,7 +575,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
             return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_INTEGER').getIRI())
         if datatype is Datatype.language:
             return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_LANGUAGE').getIRI())
-        if datatype is Datatype.literal:
+        if datatype is Datatype.Literal:
             return self.df.getOWLDatatype(OWL2Datatype.valueOf('RDFS_LITERAL').getIRI())
         if datatype is Datatype.long:
             return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_LONG').getIRI())
@@ -593,7 +593,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
             return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NON_POSITIVE_INTEGER').getIRI())
         if datatype is Datatype.normalizedString:
             return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NORMALIZED_STRING').getIRI())
-        if datatype is Datatype.plainLiteral:
+        if datatype is Datatype.PlainLiteral:
             return self.df.getOWLDatatype(OWL2Datatype.valueOf('RDF_PLAIN_LITERAL').getIRI())
         if datatype is Datatype.positiveInteger:
             return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_POSITIVE_INTEGER').getIRI())
@@ -615,7 +615,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
             return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_UNSIGNED_LONG').getIRI())
         if datatype is Datatype.unsignedShort:
             return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_UNSIGNED_SHORT').getIRI())
-        if datatype is Datatype.xmlLiteral:
+        if datatype is Datatype.XMLLiteral:
             return self.df.getOWLDatatype(OWL2Datatype.valueOf('RDF_XML_LITERAL').getIRI())
         raise ValueError('invalid datatype supplied: %s' % datatype)
     

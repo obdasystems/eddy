@@ -43,6 +43,11 @@ class Datatype(Enum_):
     """
     Extends Enum providing all the available datatypes.
     """
+    rational = 'owl:rational'
+    real = 'owl:real'
+    PlainLiteral = 'rdf:PlainLiteral'
+    XMLLiteral = 'rdf:XMLLiteral'
+    Literal = 'rdfs:Literal'
     anyURI = 'xsd:anyURI'
     base64Binary = 'xsd:base64Binary'
     boolean = 'xsd:boolean'
@@ -56,7 +61,6 @@ class Datatype(Enum_):
     int = 'xsd:int'
     integer = 'xsd:integer'
     language = 'xsd:language'
-    literal = 'rdfs:Literal'
     long = 'xsd:long'
     Name = 'xsd:Name'
     NCName = 'xsd:NCName'
@@ -65,10 +69,7 @@ class Datatype(Enum_):
     nonNegativeInteger = 'xsd:nonNegativeInteger'
     nonPositiveInteger = 'xsd:nonPositiveInteger'
     normalizedString = 'xsd:normalizedString'
-    plainLiteral = 'rdf:PlainLiteral'
     positiveInteger = 'xsd:positiveInteger'
-    rational = 'owl:rational'
-    real = 'owl:real'
     short = 'xsd:short'
     string = 'xsd:string'
     token = 'xsd:token'
@@ -76,13 +77,29 @@ class Datatype(Enum_):
     unsignedInt = 'xsd:unsignedInt'
     unsignedLong = 'xsd:unsignedLong'
     unsignedShort = 'xsd:unsignedShort'
-    xmlLiteral = 'rdf:XMLLiteral'
+
+    @classmethod
+    def forProfile(cls, profile):
+        """
+        Returns the list of supported datatypes for the given OWL 2 profile.
+        :type profile: OWLProfile
+        :rtype: list
+        """
+        if profile is OWLProfile.OWL2:
+            return [x for x in Datatype]
+        elif profile is OWLProfile.OWL2QL:
+            return [Datatype.rational, Datatype.real, Datatype.PlainLiteral, Datatype.XMLLiteral,
+                Datatype.Literal, Datatype.anyURI, Datatype.base64Binary, Datatype.dateTime,
+                Datatype.dateTimeStamp, Datatype.decimal, Datatype.hexBinary, Datatype.integer,
+                Datatype.Name, Datatype.NCName, Datatype.NMTOKEN, Datatype.nonNegativeInteger,
+                Datatype.normalizedString, Datatype.string, Datatype.token]
+        raise ValueError('unsupported profile: %s' % profile)
 
 
 @unique
 class Facet(Enum_):
     """
-    Extends Enum providing all the availables Facet restrictions.
+    Extends Enum providing all the available Facet restrictions.
     """
     maxExclusive = 'xsd:maxExclusive'
     maxInclusive = 'xsd:maxInclusive'
@@ -121,7 +138,7 @@ class Facet(Enum_):
             Datatype.int: numbers,
             Datatype.integer: numbers,
             Datatype.language: strings,
-            Datatype.literal: allvalues,
+            Datatype.Literal: allvalues,
             Datatype.long: numbers,
             Datatype.Name: strings,
             Datatype.NCName: strings,
@@ -130,7 +147,7 @@ class Facet(Enum_):
             Datatype.nonNegativeInteger: numbers,
             Datatype.nonPositiveInteger: numbers,
             Datatype.normalizedString: strings,
-            Datatype.plainLiteral: strings,
+            Datatype.PlainLiteral: strings,
             Datatype.positiveInteger: numbers,
             Datatype.rational: numbers,
             Datatype.real: numbers,
@@ -141,7 +158,7 @@ class Facet(Enum_):
             Datatype.unsignedInt: numbers,
             Datatype.unsignedLong: numbers,
             Datatype.unsignedShort: numbers,
-            Datatype.xmlLiteral: []
+            Datatype.XMLLiteral: []
         }[value]
 
 
