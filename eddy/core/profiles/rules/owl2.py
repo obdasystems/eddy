@@ -275,7 +275,11 @@ class InputToConstructorNodeRule(ProfileRule):
     def __call__(self, source, edge, target):
         if edge.type() is Item.InputEdge:
             if not target.isConstructor():
+                # Input edges MUST target constructor nodes only.
                 raise ProfileError('Input edges can only target constructor nodes')
+            if source.type() is Item.PropertyAssertionNode:
+                # Property assertion node cannot be given in input to anything.
+                raise ProfileError('Invalid input to {}: {}'.format(target.name, source.name))
 
 
 class InputToComplementNodeRule(ProfileRule):
@@ -287,7 +291,7 @@ class InputToComplementNodeRule(ProfileRule):
         if edge.type() is Item.InputEdge:
             
             if target.type() is Item.ComplementNode:
-                
+
                 if source.identity() not in target.identities():
                     # Source node identity is not supported by the target node.
                     raise ProfileError('Invalid input to {}: {}'.format(target.name, source.identityName))
