@@ -454,7 +454,7 @@ class PaletteButton(QtWidgets.QToolButton):
         self.startPos = None
         self.setCheckable(True)
         self.setContentsMargins(0, 0, 0, 0)
-        self.setIcon(PaletteButton.iconFor(item))
+        self.setIcon(self.iconFor(item))
         self.setIconSize(QtCore.QSize(60, 44))
 
     #############################################
@@ -500,8 +500,7 @@ class PaletteButton(QtWidgets.QToolButton):
     #   INTERFACE
     #################################
 
-    @classmethod
-    def iconFor(cls, item):
+    def iconFor(self, item):
         """
         Returns the appropriate icon for the given item.
         :type item: Item
@@ -606,8 +605,8 @@ class PaletteButton(QtWidgets.QToolButton):
                     QtCore.QPointF(-((40 / (1 + sqrt(2))) / 2), -20),
                     QtCore.QPointF(-20, -((40 / (1 + sqrt(2))) / 2)),
                 ]))
-                painter.setFont(Font('Roboto', 8 if _MACOS else 9, Font.Light))
-                painter.drawText(-16 if _MACOS else -19, 4, 'individual')
+                painter.setFont(Font('Roboto', 8 if self.isHDPI() else 9, Font.Light))
+                painter.drawText(-16 if self.isHDPI() else -18, 4, 'individual')
                 painter.end()
 
             #############################################
@@ -990,3 +989,14 @@ class PaletteButton(QtWidgets.QToolButton):
             icon.addPixmap(pixmap)
 
         return icon
+
+    @classmethod
+    def isHDPI(cls):
+        """
+        Checks whether HDPI support is enabled on all the connected desktop screens.
+        :rtype: bool
+        """
+        for screen in QtWidgets.QApplication.screens():
+            if screen.devicePixelRatio() < 2:
+                return False
+        return True

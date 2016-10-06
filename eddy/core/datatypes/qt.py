@@ -58,6 +58,7 @@ class Font(QtGui.QFont):
         """
         if not _MACOS:
             size = int(round(size * 0.75))
+        if not self.isHDPI():
             if family == 'Roboto':
                 family = 'Arial'
         super(Font, self).__init__(family, size, weight)
@@ -65,6 +66,17 @@ class Font(QtGui.QFont):
         self.setItalic(kwargs.get('italic', False))
         self.setCapitalization(kwargs.get('capitalization', QtGui.QFont.MixedCase))
         self.setStyleHint(kwargs.get('style', QtGui.QFont.AnyStyle))
+
+    @classmethod
+    def isHDPI(cls):
+        """
+        Checks whether HDPI support is enabled on all the connected desktop screens.
+        :rtype: bool
+        """
+        for screen in QtWidgets.QApplication.screens():
+            if screen.devicePixelRatio() < 2:
+                return False
+        return True
 
 
 class BrushIcon(QtGui.QIcon):
