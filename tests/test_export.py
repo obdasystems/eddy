@@ -101,9 +101,11 @@ class ExportTestCase(EddyTestCase):
     #   OWL EXPORT
     #################################
 
-    def test_export_project_to_owl(self):
+    def test_export_project_to_owl_without_normalization(self):
         # WHEN
-        worker = OWLProjectExporterWorker(self.project, '@tests/.tests/test_project_1.owl', axioms={x for x in OWLAxiom}, syntax=OWLSyntax.Functional)
+        worker = OWLProjectExporterWorker(self.project, '@tests/.tests/test_project_1.owl',
+                    axioms={x for x in OWLAxiom}, normalize=False,
+                    syntax=OWLSyntax.Functional)
         worker.run()
         # THEN
         self.assertFileExists('@tests/.tests/test_project_1.owl')
@@ -157,3 +159,65 @@ class ExportTestCase(EddyTestCase):
         self.assertAnyIn(['DisjointClasses(test:Female test:Male)', 'DisjointClasses(test:Male test:Female)'], content)
         self.assertIn(')', content)
         self.assertLen(46, content)
+
+    def test_export_project_to_owl_with_normalization(self):
+        # WHEN
+        worker = OWLProjectExporterWorker(self.project, '@tests/.tests/test_project_1.owl',
+                    axioms={x for x in OWLAxiom}, normalize=True,
+                    syntax=OWLSyntax.Functional)
+        worker.run()
+        # THEN
+        self.assertFileExists('@tests/.tests/test_project_1.owl')
+        # WHEN
+        content = list(filter(None, fread('@tests/.tests/test_project_1.owl').split('\n')))
+        # THEN
+        self.assertIn('Prefix(:=<http://www.dis.uniroma1.it/~graphol/test_project#>)', content)
+        self.assertIn('Prefix(owl:=<http://www.w3.org/2002/07/owl#>)', content)
+        self.assertIn('Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)', content)
+        self.assertIn('Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)', content)
+        self.assertIn('Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)', content)
+        self.assertIn('Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)', content)
+        self.assertIn('Prefix(test:=<http://www.dis.uniroma1.it/~graphol/test_project#>)', content)
+        self.assertIn('Ontology(<http://www.dis.uniroma1.it/~graphol/test_project>', content)
+        self.assertIn('Declaration(Class(test:Person))', content)
+        self.assertIn('Declaration(Class(test:Male))', content)
+        self.assertIn('Declaration(Class(test:Female))', content)
+        self.assertIn('Declaration(Class(test:Mother))', content)
+        self.assertIn('Declaration(Class(test:Father))', content)
+        self.assertIn('Declaration(NamedIndividual(test:Bob))', content)
+        self.assertIn('Declaration(NamedIndividual(test:Alice))', content)
+        self.assertIn('Declaration(NamedIndividual(test:Trudy))', content)
+        self.assertIn('Declaration(ObjectProperty(test:hasAncestor))', content)
+        self.assertIn('Declaration(ObjectProperty(test:hasParent))', content)
+        self.assertIn('Declaration(ObjectProperty(test:hasFather))', content)
+        self.assertIn('Declaration(ObjectProperty(test:hasMother))', content)
+        self.assertIn('Declaration(ObjectProperty(test:isAncestorOf))', content)
+        self.assertIn('Declaration(DataProperty(test:name))', content)
+        self.assertIn('Declaration(Datatype(xsd:string))', content)
+        self.assertIn('SubClassOf(test:Person ObjectSomeValuesFrom(test:hasAncestor owl:Thing))', content)
+        self.assertIn('SubClassOf(test:Father test:Male)', content)
+        self.assertIn('SubClassOf(test:Mother test:Female)', content)
+        self.assertIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasAncestor) owl:Thing) test:Person)', content)
+        self.assertIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasMother) owl:Thing) test:Mother)', content)
+        self.assertIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasFather) owl:Thing) test:Father)', content)
+        self.assertIn('SubClassOf(test:Person DataSomeValuesFrom(test:name rdfs:Literal))', content)
+        self.assertIn('SubClassOf(DataSomeValuesFrom(test:name rdfs:Literal) test:Person)', content)
+        self.assertIn('SubClassOf(test:Person ObjectUnionOf(test:Female test:Male))', content)
+        self.assertIn('SubClassOf(test:Female test:Person)', content)
+        self.assertIn('SubClassOf(test:Male test:Person)', content)
+        self.assertIn('SubObjectPropertyOf(test:hasParent test:hasAncestor)', content)
+        self.assertIn('SubObjectPropertyOf(test:hasFather test:hasParent)', content)
+        self.assertIn('SubObjectPropertyOf(test:hasMother test:hasParent)', content)
+        self.assertIn('FunctionalObjectProperty(test:hasFather)', content)
+        self.assertIn('FunctionalObjectProperty(test:hasMother)', content)
+        self.assertIn('DataPropertyRange(test:name xsd:string)', content)
+        self.assertIn('DataPropertyDomain(test:name test:Person)', content)
+        self.assertIn('InverseObjectProperties(test:hasAncestor test:isAncestorOf)', content)
+        self.assertIn('ObjectPropertyAssertion(test:isAncestorOf test:Bob test:Alice)', content)
+        self.assertIn('ObjectPropertyRange(test:hasAncestor test:Person)', content)
+        self.assertIn('ObjectPropertyRange(test:hasFather test:Father)', content)
+        self.assertIn('ObjectPropertyRange(test:hasMother test:Mother)', content)
+        self.assertIn('NegativeObjectPropertyAssertion(test:isAncestorOf test:Bob test:Trudy)', content)
+        self.assertAnyIn(['DisjointClasses(test:Female test:Male)', 'DisjointClasses(test:Male test:Female)'], content)
+        self.assertIn(')', content)
+        self.assertLen(49, content)

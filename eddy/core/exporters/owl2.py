@@ -136,7 +136,7 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
 
         #############################################
-        # FORM AREA
+        # MAIN FORM AREA
         #################################
 
         # SYNTAX
@@ -154,6 +154,7 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         # AXIOMS
         self.axiomsChecks = {x: CheckBox(x.value, self) for x in OWLAxiom}
         for axiom, checkbox in self.axiomsChecks.items():
+            checkbox.clicked.connect(self.onAxiomCheckClicked)
             checkbox.setChecked(settings.value('export/axiom/{0}'.format(axiom.value), True, bool))
         self.axiomsCheckBtn = QtWidgets.QPushButton('All', self, clicked=self.doCheckAxiomMarks)
         self.axiomsClearBtn = QtWidgets.QPushButton('Clear', self, clicked=self.doCheckAxiomMarks)
@@ -236,13 +237,24 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         self.progressBar.setValue(0)
 
         #############################################
-        # CONFIRMATION AREA
+        # BOTTOM AREA
         #################################
+
+        self.normalizationCheckBox = CheckBox('Normalize', self)
+        self.normalizationCheckBox.setChecked(False)
+        self.normalizationCheckBox.setFont(Font('Roboto', 12))
 
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
         self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Ok)
         self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
         self.confirmationBox.setFont(Font('Roboto', 12))
+
+        self.confirmationLayout = QtWidgets.QHBoxLayout()
+        self.confirmationLayout.setContentsMargins(0, 0, 0, 0)
+        self.confirmationLayout.addWidget(self.normalizationCheckBox, 0 , QtCore.Qt.AlignLeft)
+        self.confirmationLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
+        self.confirmationArea = QtWidgets.QWidget()
+        self.confirmationArea.setLayout(self.confirmationLayout)
 
         #############################################
         # CONFIGURE LAYOUT
@@ -254,7 +266,7 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         self.mainLayout.addWidget(self.axiomsGroup)
         self.mainLayout.addWidget(spacer)
         self.mainLayout.addWidget(self.progressBar)
-        self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
+        self.mainLayout.addWidget(self.confirmationArea)
 
         self.setFixedSize(self.sizeHint())
         self.setFont(Font('Roboto', 12))
@@ -274,6 +286,13 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         :rtype: set
         """
         return {axiom for axiom, checkbox in self.axiomsChecks.items() if checkbox.isChecked()}
+
+    def normalize(self):
+        """
+        Returns whether the current ontolofy needs to be normalized, or not.
+        :rtype: bool
+        """
+        return self.normalizationCheckBox.isChecked()
 
     def syntax(self):
         """
@@ -299,6 +318,13 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
     #################################
 
     @QtCore.pyqtSlot()
+    def onAxiomCheckClicked(self):
+        """
+        Executed when an axiom checkbox is clicked.
+        """
+        self.confirmationBox.setEnabled(any(x.isChecked() for x in self.axiomsChecks.values()))
+
+    @QtCore.pyqtSlot()
     def doCheckAxiomMarks(self):
         """
         Check axioms marks according to the action that triggered the slot.
@@ -307,6 +333,7 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         for axiom in OWLAxiom:
             checkbox = self.axiomsChecks[axiom]
             checkbox.setChecked(checked)
+        self.confirmationBox.setEnabled(checked)
 
     @QtCore.pyqtSlot(Exception)
     def onErrored(self, exception):
@@ -387,7 +414,9 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         """
         LOGGER.info('Exporting project %s in OWL 2 format: %s', self.project.name, self.path)
         self.workerThread = QtCore.QThread()
-        self.worker = OWLProjectExporterWorker(self.project, self.path, axioms=self.axioms(), syntax=self.syntax())
+        self.worker = OWLProjectExporterWorker(self.project, self.path,
+                    axioms=self.axioms(), normalize=self.normalize(),
+                    syntax=self.syntax())
         self.worker.moveToThread(self.workerThread)
         connect(self.worker.sgnStarted, self.onStarted)
         connect(self.worker.sgnCompleted, self.onCompleted)
@@ -417,8 +446,9 @@ class OWLProjectExporterWorker(QtCore.QObject):
 
         self.path = path
         self.project = project
-        self.syntax = kwargs.get('syntax', OWLSyntax.Functional)
         self.axiomsList = kwargs.get('axioms', set())
+        self.normalize = kwargs.get('normalize', False)
+        self.syntax = kwargs.get('syntax', OWLSyntax.Functional)
 
         self._axioms = set()
         self._converted = dict()
@@ -1101,10 +1131,27 @@ class OWLProjectExporterWorker(QtCore.QObject):
         :type edge: InclusionEdge
         """
         if OWLAxiom.EquivalentClasses in self.axiomsList:
-            collection = HashSet()
-            collection.add(self.convert(edge.source))
-            collection.add(self.convert(edge.target))
-            self.addAxiom(self.df.getOWLEquivalentClassesAxiom(cast(Set, collection)))
+            if self.normalize:
+                for source, target in ((edge.source, edge.target), (edge.target, edge.source)):
+                    if source.type() in {Item.DisjointUnionNode, Item.UnionNode}:
+                        # (A OR B) ISA C needs to be normalized to (A ISA C) && (B ISA C)
+                        f1 = lambda x: x.type() is Item.InputEdge
+                        f2 = lambda x: x.identity() is Identity.Concept
+                        for operand in source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                            self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(operand), self.convert(target)))
+                    elif edge.target.type() is Item.IntersectionNode and self.normalize:
+                        # A ISA (B AND C) needs to be normalized to A ISA B && A ISA C
+                        f1 = lambda x: x.type() is Item.InputEdge
+                        f2 = lambda x: x.identity() is Identity.Concept
+                        for operand in target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                            self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(source), self.convert(operand)))
+                    else:
+                        self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(source), self.convert(target)))
+            else:
+                collection = HashSet()
+                collection.add(self.convert(edge.source))
+                collection.add(self.convert(edge.target))
+                self.addAxiom(self.df.getOWLEquivalentClassesAxiom(cast(Set, collection)))
 
     def createEquivalentDataPropertiesAxiom(self, edge):
         """
@@ -1112,10 +1159,14 @@ class OWLProjectExporterWorker(QtCore.QObject):
         :type edge: InclusionEdge
         """
         if OWLAxiom.EquivalentDataProperties in self.axiomsList:
-            collection = HashSet()
-            collection.add(self.convert(edge.source))
-            collection.add(self.convert(edge.target))
-            self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(cast(Set, collection)))
+            if self.normalize:
+                for source, target in ((edge.source, edge.target), (edge.target, edge.source)):
+                    self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(self.convert(source), self.convert(target)))
+            else:
+                collection = HashSet()
+                collection.add(self.convert(edge.source))
+                collection.add(self.convert(edge.target))
+                self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(cast(Set, collection)))
 
     def createEquivalentObjectPropertiesAxiom(self, edge):
         """
@@ -1123,11 +1174,14 @@ class OWLProjectExporterWorker(QtCore.QObject):
         :type edge: InclusionEdge
         """
         if OWLAxiom.EquivalentObjectProperties in self.axiomsList:
-            collection = HashSet()
-            collection.add(self.convert(edge.source))
-            collection.add(self.convert(edge.target))
-            collection = cast(Set, collection)
-            self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(collection))
+            if self.normalize:
+                for source, target in ((edge.source, edge.target), (edge.target, edge.source)):
+                    self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(self.convert(source), self.convert(target)))
+            else:
+                collection = HashSet()
+                collection.add(self.convert(edge.source))
+                collection.add(self.convert(edge.target))
+                self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(cast(Set, collection)))
 
     def createInverseObjectPropertiesAxiom(self, edge):
         """
@@ -1262,7 +1316,23 @@ class OWLProjectExporterWorker(QtCore.QObject):
         :type edge: InclusionEdge
         """
         if OWLAxiom.SubClassOf in self.axiomsList:
-            self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(edge.source), self.convert(edge.target)))
+            # Here we can't be in the situation where we have Value-Domain as inputs to
+            # the (Disjoint)Union node because OWL 2 (and thus Graphol) does not admit
+            # inclusion between value domain expressions.
+            if edge.source.type() in {Item.DisjointUnionNode, Item.UnionNode} and self.normalize:
+                # (A OR B) ISA C needs to be normalized to (A ISA C) && (B ISA C)
+                f1 = lambda x: x.type() is Item.InputEdge
+                f2 = lambda x: x.identity() is Identity.Concept
+                for operand in edge.source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                    self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(operand), self.convert(edge.target)))
+            elif edge.target.type() is Item.IntersectionNode and self.normalize:
+                # A ISA (B AND C) needs to be normalized to A ISA B && A ISA C
+                f1 = lambda x: x.type() is Item.InputEdge
+                f2 = lambda x: x.identity() is Identity.Concept
+                for operand in edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                    self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(edge.source), self.convert(operand)))
+            else:
+                self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(edge.source), self.convert(edge.target)))
 
     def createSubDataPropertyOfAxiom(self, edge):
         """
