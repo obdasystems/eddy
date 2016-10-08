@@ -33,6 +33,8 @@
 ##########################################################################
 
 
+from operator import attrgetter
+
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
@@ -58,7 +60,7 @@ class CardinalityRestrictionForm(QtWidgets.QDialog):
         Initialize the form dialog.
         :type parent: QtWidgets.QWidget
         """
-        super().__init__(parent)
+        super(CardinalityRestrictionForm, self).__init__(parent)
 
         #############################################
         # FORM AREA
@@ -169,7 +171,7 @@ class RefactorNameForm(QtWidgets.QDialog):
         :type node: AbstractNode
         :type session: Session
         """
-        super().__init__(session)
+        super(RefactorNameForm, self).__init__(session)
 
         self.node = node
 
@@ -288,7 +290,7 @@ class ValueForm(QtWidgets.QDialog):
         :type node: IndividualNode
         :type session: Session
         """
-        super().__init__(session)
+        super(ValueForm, self).__init__(session)
 
         self.node = node
 
@@ -302,7 +304,7 @@ class ValueForm(QtWidgets.QDialog):
         self.datatypeField = ComboBox(self)
         self.datatypeField.setFont(Font('Roboto', 12))
         self.datatypeField.setFixedWidth(300)
-        for datatype in Datatype:
+        for datatype in sorted(Datatype.forProfile(self.project.profile.type()), key=attrgetter('value')):
             self.datatypeField.addItem(datatype.value, datatype)
 
         self.valueLabel = QtWidgets.QLabel(self)

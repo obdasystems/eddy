@@ -34,6 +34,7 @@
 
 
 from abc import ABCMeta, abstractmethod
+from operator import attrgetter
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -1177,17 +1178,12 @@ class ValueDomainNodeInfo(NodeInfo):
         :type session: Session
         :type parent: QtWidgets.QWidget
         """
-        super().__init__(session, parent)
-
+        super(ValueDomainNodeInfo, self).__init__(session, parent)
         self.datatypeKey = Key('Datatype', self)
         self.datatypeKey.setFont(Font('Roboto', 12))
         self.datatypeField = Select(self)
         self.datatypeField.setFont(Font('Roboto', 12))
         connect(self.datatypeField.activated, self.datatypeChanged)
-
-        for datatype in Datatype:
-            self.datatypeField.addItem(datatype.value, datatype)
-
         self.nodePropLayout.addRow(self.datatypeKey, self.datatypeField)
 
     #############################################
@@ -1218,8 +1214,11 @@ class ValueDomainNodeInfo(NodeInfo):
         Fetch new information and fill the widget with data.
         :type node: AbstractNode
         """
-        super().updateData(node)
-
+        super(ValueDomainNodeInfo, self).updateData(node)
+        self.datatypeField.clear()
+        for datatype in sorted(Datatype.forProfile(self.project.profile.type()), key=attrgetter('value')):
+            self.datatypeField.addItem(datatype.value, datatype)
+        # FIXME: if current datatype is not supported by the active profile this will show an invalid entry
         datatype = node.datatype
         for i in range(self.datatypeField.count()):
             if self.datatypeField.itemData(i) is datatype:
@@ -1227,7 +1226,7 @@ class ValueDomainNodeInfo(NodeInfo):
                 break
 
 
-class ValueNodeInfo(PredicateNodeInfo):
+class ValueNodeInfo(NodeInfo):
     """
     This class implements the information box for the Individual node with identity 'Value'.
     """
@@ -1237,25 +1236,18 @@ class ValueNodeInfo(PredicateNodeInfo):
         :type session: Session
         :type parent: QtWidgets.QWidget
         """
-        super().__init__(session, parent)
-
+        super(ValueNodeInfo, self).__init__(session, parent)
         self.datatypeKey = Key('Datatype', self)
         self.datatypeKey.setFont(Font('Roboto', 12))
         self.datatypeField = Select(self)
         self.datatypeField.setFont(Font('Roboto', 12))
         connect(self.datatypeField.activated, self.valueChanged)
-
         self.valueKey = Key('Value', self)
         self.valueKey.setFont(Font('Roboto', 12))
         self.valueField = String(self)
         self.valueField.setFont(Font('Roboto', 12))
         self.valueField.setReadOnly(False)
         connect(self.valueField.editingFinished, self.valueChanged)
-
-        for datatype in Datatype:
-            if Facet.forDatatype(datatype):
-                self.datatypeField.addItem(datatype.value, datatype)
-
         self.nodePropLayout.addRow(self.datatypeKey, self.datatypeField)
         self.nodePropLayout.addRow(self.valueKey, self.valueField)
 
@@ -1300,6 +1292,10 @@ class ValueNodeInfo(PredicateNodeInfo):
         # DATATYPE FIELD
         #################################
 
+        self.datatypeField.clear()
+        for datatype in sorted(Datatype.forProfile(self.project.profile.type()), key=attrgetter('value')):
+            self.datatypeField.addItem(datatype.value, datatype)
+        # FIXME: if current datatype is not supported by the active profile this will show an invalid entry
         datatype = node.datatype
         for i in range(self.datatypeField.count()):
             if self.datatypeField.itemData(i) is datatype:
@@ -1323,7 +1319,7 @@ class FacetNodeInfo(NodeInfo):
         :type session: Session
         :type parent: QtWidgets.QWidget
         """
-        super().__init__(session, parent)
+        super(FacetNodeInfo, self).__init__(session, parent)
 
         self.facetKey = Key('Facet', self)
         self.facetKey.setFont(Font('Roboto', 12))
@@ -1370,7 +1366,7 @@ class FacetNodeInfo(NodeInfo):
         Fetch new information and fill the widget with data.
         :type node: AbstractNode
         """
-        super().updateData(node)
+        super(FacetNodeInfo, self).updateData(node)
 
         #############################################
         # FACET FIELD

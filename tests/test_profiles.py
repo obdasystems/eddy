@@ -33,8 +33,6 @@
 ##########################################################################
 
 
-from mock import Mock
-
 from PyQt5 import QtCore
 from PyQt5 import QtTest
 
@@ -56,7 +54,6 @@ class OWL2ProfileTestCase(EddyTestCase):
         """
         super(OWL2ProfileTestCase, self).setUp()
         self.init('test_project_2')
-        self.session.project.profile.reset = Mock()
 
     #############################################
     #   UTILITY METHODS

@@ -37,6 +37,9 @@ from abc import ABCMeta, abstractmethod
 
 from PyQt5 import QtCore
 
+from eddy.core.profiles.rules.common import ProfileEdgeRule
+from eddy.core.profiles.rules.common import ProfileNodeRule
+
 
 class AbstractProfile(QtCore.QObject):
     """
@@ -49,9 +52,10 @@ class AbstractProfile(QtCore.QObject):
         Initialize the profile.
         :type project: Project
         """
-        super().__init__(project)
+        super(AbstractProfile, self).__init__(project)
+        self._edgeRules = []
+        self._nodeRules = []
         self._pvr = None
-        self._rules = []
 
     #############################################
     #   PROPERTIES
@@ -77,24 +81,68 @@ class AbstractProfile(QtCore.QObject):
     #   INTERFACE
     #################################
 
-    def addRule(self, rule, *args, **kwargs):
+    def addEdgeRule(self, rule, *args, **kwargs):
         """
-        Add a profile rule to this Profile.
+        Add an edge validation rule to this Profile.
         :type rule: class
         """
-        self._rules.append(rule(*args, **kwargs))
+        if issubclass(rule, ProfileEdgeRule):
+            self._edgeRules.append(rule(*args, **kwargs))
 
-    def check(self, source, edge, target):
+    def addNodeRule(self, rule, *args, **kwargs):
         """
-        Perform the validation of the given triple according to the current profile (if necessary).
-        :param source: AbstractNode
-        :param edge: AbstractEdge
-        :param target: AbstractNode
+        Add a node validation rule to this Profile.
+        :type rule: class
+        """
+        if issubclass(rule, ProfileNodeRule):
+            self._nodeRules.append(rule(*args, **kwargs))
+
+    def checkEdge(self, source, edge, target):
+        """
+        Perform the validation of the given triple (source -> edge -> target):
+        *   1) Perform the validation on the source node.
+        *   2) Perform the validation on the target node.
+        *   3) Perform the validation on the given edge.
+        :type source: AbstractNode
+        :type edge: AbstractEdge
+        :type target: AbstractNode
+        :rtype: AbstractProfileValidationResult
+        """
+        try:
+            for node in (source, target):
+                for r in self.nodeRules():
+                    r(node)
+            for r in self.edgeRules():
+                r(source, edge, target)
+        except ProfileError as e:
+            self._pvr = ProfileValidationResult(False, e.msg)
+        else:
+            self._pvr = ProfileValidationResult(True)
+        finally:
+            return self._pvr
+
+    def checkNode(self, node):
+        """
+        Perform the validation of the given node.
+        :type node: AbstractNode
         :rtype: ProfileValidationResult
         """
-        if not self.pvr() or (source, edge, target) not in self.pvr():
-            self.validate(source, edge, target)
-        return self.pvr()
+        try:
+            for r in self.nodeRules():
+                r(node)
+        except ProfileError as e:
+            self._pvr = ProfileValidationResult(False, e.msg)
+        else:
+            self._pvr = ProfileValidationResult(True)
+        finally:
+            return self._pvr
+
+    def edgeRules(self):
+        """
+        Returns the list of edge rules in this Profile.
+        :rtype: list
+        """
+        return self._edgeRules
 
     @classmethod
     def name(cls):
@@ -105,9 +153,16 @@ class AbstractProfile(QtCore.QObject):
         profile = cls.type()
         return profile.value
 
+    def nodeRules(self):
+        """
+        Returns the list of node rules in this Profile.
+        :rtype: list
+        """
+        return self._nodeRules
+
     def objectName(self):
         """
-        Returns the system name of the plugin.
+        Returns the system name of the profile.
         :rtype: str
         """
         return self.name()
@@ -121,16 +176,9 @@ class AbstractProfile(QtCore.QObject):
 
     def reset(self):
         """
-        Resets the profile in all its aspects.
+        Reset the profile by removing the latest validation result.
         """
         self._pvr = None
-
-    def rules(self):
-        """
-        Returns the list of Profile rules in this Profile.
-        :rtype: list
-        """
-        return self._rules
 
     def setPvr(self, pvr):
         """
@@ -148,48 +196,18 @@ class AbstractProfile(QtCore.QObject):
         """
         pass
 
-    def validate(self, source, edge, target):
-        """
-        Perform the validation of the given triple and generate the profile validation result.
-        :type source: AbstractNode
-        :type edge: AbstractEdge
-        :type target: AbstractNode
-        """
-        try:
-            for r in self.rules():
-                r(source, edge, target)
-        except ProfileError as e:
-            pvr = ProfileValidationResult(source, edge, target, False)
-            pvr.setMessage(e.msg)
-            self.setPvr(pvr)
-        else:
-            self.setPvr(ProfileValidationResult(source, edge, target, True))
-
 
 class ProfileValidationResult(object):
     """
     This class can be used to store profile validation results.
     """
-    def __init__(self, source, edge, target, valid):
+    def __init__(self, valid, message=''):
         """
         Initialize the profile validation result.
-        :type source: AbstractNode
-        :type edge: AbstractEdge
-        :type target: AbstractNode
         :type valid: bool
         """
-        self._edge = edge
-        self._source = source
-        self._target = target
         self._valid = valid
-        self._message = ''
-
-    def edge(self):
-        """
-        Returns the edge of the validated triple.
-        :rtype: AbstractEdge
-        """
-        return self._edge
+        self._message = message
 
     def isValid(self):
         """
@@ -211,48 +229,6 @@ class ProfileValidationResult(object):
         :type: str
         """
         self._message = message
-
-    def source(self):
-        """
-        Returns the source node of the validated triple.
-        :rtype: AbstractNode
-        """
-        return self._source
-
-    def target(self):
-        """
-        Returns the target node of the validated triple.
-        :rtype: AbstractNode
-        """
-        return self._target
-
-    def __contains__(self, item):
-        """
-        Implement membership operator 'in'.
-        :type item: tuple
-        :rtype: bool
-        """
-        try:
-            return self._source is item[0] and self._edge is item[1] and self._target is item[2]
-        except IndexError:
-            return False
-
-
-class ProfileRule(object):
-    """
-    Extends built-in object providing the base class for all the validation rules.
-    """
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def __call__(self, source, edge, target):
-        """
-        Run the validation rule on the given triple.
-        :type source: AbstractNode
-        :type edge: AbstractEdge
-        :type target: AbstractNode
-        """
-        pass
 
 
 class ProfileError(SyntaxError):

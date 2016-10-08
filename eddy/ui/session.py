@@ -93,6 +93,7 @@ from eddy.core.loaders.graphol import GrapholProjectLoader
 from eddy.core.output import getLogger
 from eddy.core.plugin import PluginManager
 from eddy.core.profiles.owl2 import OWL2Profile
+from eddy.core.profiles.owl2ql import OWL2QLProfile
 
 from eddy.ui.about import AboutDialog
 from eddy.ui.diagram import NewDiagramDialog
@@ -831,6 +832,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Initialize the ontology profiles.
         """
         self.addProfile(OWL2Profile)
+        self.addProfile(OWL2QLProfile)
 
     def initSignals(self):
         """

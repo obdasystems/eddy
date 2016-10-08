@@ -33,11 +33,13 @@
 ##########################################################################
 
 
+from operator import attrgetter
+
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
-from eddy.core.datatypes.owl import Facet
+from eddy.core.datatypes.owl import Datatype, Facet
 from eddy.core.functions.misc import first
 
 from eddy.ui.properties import DiagramProperty
@@ -60,6 +62,8 @@ class MenuFactory(QtCore.QObject):
         :type session: Session
         """
         super().__init__(session)
+        self.customAction = {}
+        self.customMenu = {}
 
     #############################################
     #   PROPERTIES
@@ -549,9 +553,20 @@ class MenuFactory(QtCore.QObject):
         :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
-        menu.insertMenu(self.session.action('node_properties'), self.session.menu('datatype'))
+        # CREATE A NEW MENU FOR DATATYPE SELECTION NOT TO OVERWRITE THE PRE-DEFINED ONE
+        self.customMenu['datatype'] = QtWidgets.QMenu('Select type')
+        self.customMenu['datatype'].setIcon(self.session.menu('datatype').icon())
+        # CREATE NEW CUSTOM ACTION SET FOR THE DATATYPES SUPPORTED BY THE CURRENT PROFILE
+        self.customAction['datatype'] = []
+        for datatype in sorted(Datatype.forProfile(self.project.profile.type()), key=attrgetter('value')):
+            action = QtWidgets.QAction(datatype.value, checkable=True, triggered=self.session.doSetDatatype)
+            action.setData(datatype)
+            self.customAction['datatype'].append(action)
+            self.customMenu['datatype'].addAction(action)
+        # INSERT THE CUSTOM MENU IN THE NODE CONTEXTUAL MENU
+        menu.insertMenu(self.session.action('node_properties'), self.customMenu['datatype'])
         menu.insertSeparator(self.session.action('node_properties'))
-        for action in self.session.action('datatype').actions():
+        for action in self.customAction['datatype']:
             action.setChecked(node.datatype == action.data())
         return menu
 

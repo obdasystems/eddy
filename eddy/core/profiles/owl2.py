@@ -36,7 +36,6 @@
 from eddy.core.datatypes.owl import OWLProfile
 from eddy.core.profiles.common import AbstractProfile
 
-from eddy.core.profiles.rules.owl2 import SelfConnectionRule
 from eddy.core.profiles.rules.owl2 import EquivalenceBetweenExpressionsRule
 from eddy.core.profiles.rules.owl2 import EquivalenceBetweenCompatibleExpressionsRule
 from eddy.core.profiles.rules.owl2 import EquivalenceBetweenValueDomainExpressionsRule
@@ -65,11 +64,13 @@ from eddy.core.profiles.rules.owl2 import MembershipFromIndividualRule
 from eddy.core.profiles.rules.owl2 import MembershipFromRoleInstanceRule
 from eddy.core.profiles.rules.owl2 import MembershipFromAttributeInstanceRule
 from eddy.core.profiles.rules.owl2 import MembershipFromNeutralPropertyAssertionRule
+from eddy.core.profiles.rules.owl2 import SelfConnectionRule
+from eddy.core.profiles.rules.owl2 import UnknownIdentityNodeRule
 
 
 class OWL2Profile(AbstractProfile):
     """
-    Extends AbstractProfile implementing the OWL2 (full) profile.
+    Extends AbstractProfile implementing the OWL 2 (full) profile.
     """
     def __init__(self, project=None):
         """
@@ -77,35 +78,36 @@ class OWL2Profile(AbstractProfile):
         :type project: Project
         """
         super(OWL2Profile, self).__init__(project)
-        self.addRule(SelfConnectionRule)
-        self.addRule(EquivalenceBetweenExpressionsRule)
-        self.addRule(EquivalenceBetweenCompatibleExpressionsRule)
-        self.addRule(EquivalenceBetweenValueDomainExpressionsRule)
-        self.addRule(EquivalenceBetweenRoleExpressionAndComplementRule)
-        self.addRule(EquivalenceBetweenAttributeExpressionAndComplementRule)
-        self.addRule(EquivalenceBetweenRoleExpressionAndRoleChainRule)
-        self.addRule(InclusionBetweenExpressionsRule)
-        self.addRule(InclusionBetweenCompatibleExpressionsRule)
-        self.addRule(InclusionBetweenValueDomainExpressionsRule)
-        self.addRule(InclusionBetweenRoleExpressionAndComplementNodeRule)
-        self.addRule(InclusionBetweenAttributeExpressionAndComplementNodeRule)
-        self.addRule(InclusionBetweenRoleExpressionAndRoleChainNodeRule)
-        self.addRule(InputToConstructorNodeRule)
-        self.addRule(InputToComplementNodeRule)
-        self.addRule(InputToIntersectionOrUnionNodeRule)
-        self.addRule(InputToEnumerationNodeRule)
-        self.addRule(InputToRoleInverseNodeRule)
-        self.addRule(InputToRoleChainNodeRule)
-        self.addRule(InputToDatatypeRestrictionNodeRule)
-        self.addRule(InputToPropertyAssertionNodeRule)
-        self.addRule(InputToDomainRestrictionNodeRule)
-        self.addRule(InputToRangeRestrictionNodeRule)
-        self.addRule(InputToFacetNodeRule)
-        self.addRule(MembershipFromAssertionCompatibleNodeRule)
-        self.addRule(MembershipFromIndividualRule)
-        self.addRule(MembershipFromRoleInstanceRule)
-        self.addRule(MembershipFromAttributeInstanceRule)
-        self.addRule(MembershipFromNeutralPropertyAssertionRule)
+        self.addNodeRule(UnknownIdentityNodeRule)
+        self.addEdgeRule(SelfConnectionRule)
+        self.addEdgeRule(EquivalenceBetweenExpressionsRule)
+        self.addEdgeRule(EquivalenceBetweenCompatibleExpressionsRule)
+        self.addEdgeRule(EquivalenceBetweenValueDomainExpressionsRule)
+        self.addEdgeRule(EquivalenceBetweenRoleExpressionAndComplementRule)
+        self.addEdgeRule(EquivalenceBetweenAttributeExpressionAndComplementRule)
+        self.addEdgeRule(EquivalenceBetweenRoleExpressionAndRoleChainRule)
+        self.addEdgeRule(InclusionBetweenExpressionsRule)
+        self.addEdgeRule(InclusionBetweenCompatibleExpressionsRule)
+        self.addEdgeRule(InclusionBetweenValueDomainExpressionsRule)
+        self.addEdgeRule(InclusionBetweenRoleExpressionAndComplementNodeRule)
+        self.addEdgeRule(InclusionBetweenAttributeExpressionAndComplementNodeRule)
+        self.addEdgeRule(InclusionBetweenRoleExpressionAndRoleChainNodeRule)
+        self.addEdgeRule(InputToConstructorNodeRule)
+        self.addEdgeRule(InputToComplementNodeRule)
+        self.addEdgeRule(InputToIntersectionOrUnionNodeRule)
+        self.addEdgeRule(InputToEnumerationNodeRule)
+        self.addEdgeRule(InputToRoleInverseNodeRule)
+        self.addEdgeRule(InputToRoleChainNodeRule)
+        self.addEdgeRule(InputToDatatypeRestrictionNodeRule)
+        self.addEdgeRule(InputToPropertyAssertionNodeRule)
+        self.addEdgeRule(InputToDomainRestrictionNodeRule)
+        self.addEdgeRule(InputToRangeRestrictionNodeRule)
+        self.addEdgeRule(InputToFacetNodeRule)
+        self.addEdgeRule(MembershipFromAssertionCompatibleNodeRule)
+        self.addEdgeRule(MembershipFromIndividualRule)
+        self.addEdgeRule(MembershipFromRoleInstanceRule)
+        self.addEdgeRule(MembershipFromAttributeInstanceRule)
+        self.addEdgeRule(MembershipFromNeutralPropertyAssertionRule)
 
     #############################################
     #   INTERFACE

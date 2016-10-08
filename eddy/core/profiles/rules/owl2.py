@@ -37,20 +37,12 @@ from eddy.core.datatypes.graphol import Identity, Item, Restriction
 from eddy.core.datatypes.owl import Facet
 from eddy.core.functions.graph import bfs
 from eddy.core.functions.misc import first
-from eddy.core.profiles.common import ProfileError, ProfileRule
+from eddy.core.profiles.common import ProfileError
+from eddy.core.profiles.rules.common import ProfileEdgeRule
+from eddy.core.profiles.rules.common import ProfileNodeRule
 
 
-class SelfConnectionRule(ProfileRule):
-    """
-    Prevents from generating self connections.
-    """
-    def __call__(self, source, edge, target):
-        if source is target:
-            # We never allow self connection, no matter the edge type.
-            raise ProfileError('Self connection detected on {}'.format(source))
-
-
-class EquivalenceBetweenExpressionsRule(ProfileRule):
+class EquivalenceBetweenExpressionsRule(ProfileEdgeRule):
     """
     Make sure that an equivalence edge is traced only between graphol expressions.
     """
@@ -68,7 +60,7 @@ class EquivalenceBetweenExpressionsRule(ProfileRule):
                 raise ProfileError('Type mismatch: equivalence must involve two graphol expressions')
 
 
-class EquivalenceBetweenCompatibleExpressionsRule(ProfileRule):
+class EquivalenceBetweenCompatibleExpressionsRule(ProfileEdgeRule):
     """
     Make sure that an equivalence edge is traced only between compatible Graphol expressions.
     """
@@ -85,7 +77,7 @@ class EquivalenceBetweenCompatibleExpressionsRule(ProfileRule):
                 raise ProfileError('Type mismatch: {} and {} are not compatible'.format(source.name, target.name))
 
 
-class EquivalenceBetweenValueDomainExpressionsRule(ProfileRule):
+class EquivalenceBetweenValueDomainExpressionsRule(ProfileEdgeRule):
     """
     Prevents equivalence edges from being traced between Value-domain expressions.
     """
@@ -96,7 +88,7 @@ class EquivalenceBetweenValueDomainExpressionsRule(ProfileRule):
                 raise ProfileError('Type mismatch: equivalence between value-domain expressions')
 
 
-class EquivalenceBetweenRoleExpressionAndComplementRule(ProfileRule):
+class EquivalenceBetweenRoleExpressionAndComplementRule(ProfileEdgeRule):
     """
     Prevents equivalence edges from being traced between a Role expression and a Complement node.
     """
@@ -108,7 +100,7 @@ class EquivalenceBetweenRoleExpressionAndComplementRule(ProfileRule):
                     raise ProfileError('Equivalence is forbidden when expressing Role disjointness')
 
 
-class EquivalenceBetweenAttributeExpressionAndComplementRule(ProfileRule):
+class EquivalenceBetweenAttributeExpressionAndComplementRule(ProfileEdgeRule):
     """
     Prevents equivalence edges from being traced between an Attribute expression and a Complement node.
     """
@@ -120,7 +112,7 @@ class EquivalenceBetweenAttributeExpressionAndComplementRule(ProfileRule):
                     raise ProfileError('Equivalence is forbidden when expressing Attribute disjointness')
 
 
-class EquivalenceBetweenRoleExpressionAndRoleChainRule(ProfileRule):
+class EquivalenceBetweenRoleExpressionAndRoleChainRule(ProfileEdgeRule):
     """
     Make sure that equivalence edges are never traced in presence of a Role chain node.
     """
@@ -133,7 +125,7 @@ class EquivalenceBetweenRoleExpressionAndRoleChainRule(ProfileRule):
                 raise ProfileError('Equivalence is forbidden in presence of a role chain node')
 
 
-class InclusionBetweenExpressionsRule(ProfileRule):
+class InclusionBetweenExpressionsRule(ProfileEdgeRule):
     """
     Make sure that an inclusion edge is traced only between graphol expressions.
     """
@@ -151,7 +143,7 @@ class InclusionBetweenExpressionsRule(ProfileRule):
                 raise ProfileError('Type mismatch: inclusion must involve two graphol expressions')
 
 
-class InclusionBetweenCompatibleExpressionsRule(ProfileRule):
+class InclusionBetweenCompatibleExpressionsRule(ProfileEdgeRule):
     """
     Make sure that an inclusion edge is traced only between compatible Graphol expressions.
     """
@@ -170,7 +162,7 @@ class InclusionBetweenCompatibleExpressionsRule(ProfileRule):
                 raise ProfileError('Type mismatch: {} and {} are not compatible'.format(source.name, target.name))
 
 
-class InclusionBetweenValueDomainExpressionsRule(ProfileRule):
+class InclusionBetweenValueDomainExpressionsRule(ProfileEdgeRule):
     """
     Prevents inclusion edged from being traced between Value-domain expressions.
     """
@@ -187,7 +179,7 @@ class InclusionBetweenValueDomainExpressionsRule(ProfileRule):
                     raise ProfileError('Type mismatch: inclusion between value-domain expressions')
 
 
-class InclusionBetweenRoleExpressionAndComplementNodeRule(ProfileRule):
+class InclusionBetweenRoleExpressionAndComplementNodeRule(ProfileEdgeRule):
     """
     Prevents inclusion edges sourcing from Complement nodes to target Role expressions.
     """
@@ -217,7 +209,7 @@ class InclusionBetweenRoleExpressionAndComplementNodeRule(ProfileRule):
                                     raise ProfileError('Detected unsupported operator sequence on {}'.format(node.name))
 
 
-class InclusionBetweenAttributeExpressionAndComplementNodeRule(ProfileRule):
+class InclusionBetweenAttributeExpressionAndComplementNodeRule(ProfileEdgeRule):
     """
     Prevents inclusion edges sourcing from Complement nodes to target Attribute expressions.
     """
@@ -247,7 +239,7 @@ class InclusionBetweenAttributeExpressionAndComplementNodeRule(ProfileRule):
                                     raise ProfileError('Detected unsupported operator sequence on {}'.format(node.name))
 
 
-class InclusionBetweenRoleExpressionAndRoleChainNodeRule(ProfileRule):
+class InclusionBetweenRoleExpressionAndRoleChainNodeRule(ProfileEdgeRule):
     """
     Make sure that inclusion edges sourcing from Role chain nodes target only Role expressions.
     """
@@ -268,7 +260,7 @@ class InclusionBetweenRoleExpressionAndRoleChainNodeRule(ProfileRule):
                 raise ProfileError('Role chain nodes cannot be target of a Role inclusion')
 
 
-class InputToConstructorNodeRule(ProfileRule):
+class InputToConstructorNodeRule(ProfileEdgeRule):
     """
     Make sure that input edges only target constructor nodes.
     """
@@ -282,7 +274,7 @@ class InputToConstructorNodeRule(ProfileRule):
                 raise ProfileError('Invalid input to {}: {}'.format(target.name, source.name))
 
 
-class InputToComplementNodeRule(ProfileRule):
+class InputToComplementNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Complement nodes.
     """
@@ -329,7 +321,7 @@ class InputToComplementNodeRule(ProfileRule):
                             raise ProfileError('Type mismatch: inclusion between value-domain expressions')
 
 
-class InputToIntersectionOrUnionNodeRule(ProfileRule):
+class InputToIntersectionOrUnionNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting either Intersection or (Disjoint)Union nodes.
     """
@@ -377,7 +369,7 @@ class InputToIntersectionOrUnionNodeRule(ProfileRule):
                             raise ProfileError('Type mismatch: inclusion between value-domain expressions')
 
 
-class InputToEnumerationNodeRule(ProfileRule):
+class InputToEnumerationNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Enumeration nodes.
     """
@@ -394,11 +386,6 @@ class InputToEnumerationNodeRule(ProfileRule):
                     name = source.identityName if source.identity() is not Identity.Neutral else source.name
                     raise ProfileError('Invalid input to {}: {}'.format(target.name, name))
 
-                if target.identity() is Identity.Unknown:
-                    # Target node has an unkown identity: we do not allow the connection => the
-                    # user MUST fix the error first and then try to create again the connection.
-                    raise ProfileError('Target node has an invalid identity: {}'.format(target.identityName))
-
                 if target.identity() is not Identity.Neutral:
                     # Exclude incompatible identities from being given in input to the Enumeration node.
                     if source.identity() is Identity.Individual and target.identity() is Identity.ValueDomain:
@@ -407,7 +394,7 @@ class InputToEnumerationNodeRule(ProfileRule):
                         raise ProfileError('Invalid input to {}: {}'.format(target.name, source.identityName))
                     
 
-class InputToRoleInverseNodeRule(ProfileRule):
+class InputToRoleInverseNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Role Inverse nodes.
     """
@@ -430,7 +417,7 @@ class InputToRoleInverseNodeRule(ProfileRule):
                     raise ProfileError('Too many inputs to {}'.format(target.name))
                 
                 
-class InputToRoleChainNodeRule(ProfileRule):
+class InputToRoleChainNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Role Chain nodes.
     """
@@ -451,7 +438,7 @@ class InputToRoleChainNodeRule(ProfileRule):
                     raise ProfileError('Invalid input to {}: {}'.format(target.name, source.name))
                 
 
-class InputToDatatypeRestrictionNodeRule(ProfileRule):
+class InputToDatatypeRestrictionNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Role Chain nodes.
     """
@@ -502,7 +489,7 @@ class InputToDatatypeRestrictionNodeRule(ProfileRule):
                             raise ProfileError('Type mismatch: facet {} is not compatible by datatype {}'.format(nA, nB))
                         
 
-class InputToPropertyAssertionNodeRule(ProfileRule):
+class InputToPropertyAssertionNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Property Assertion nodes.
     """
@@ -549,7 +536,7 @@ class InputToPropertyAssertionNodeRule(ProfileRule):
                             raise ProfileError('Too many values in input to {}'.format(target.identityName))
 
 
-class InputToDomainRestrictionNodeRule(ProfileRule):
+class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Domain Restriction nodes.
     """
@@ -668,7 +655,7 @@ class InputToDomainRestrictionNodeRule(ProfileRule):
                         raise ProfileError('Invalid qualified restriction: {} + {}'.format(idA, idB))
 
 
-class InputToRangeRestrictionNodeRule(ProfileRule):
+class InputToRangeRestrictionNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Range Restriction nodes.
     """
@@ -776,7 +763,7 @@ class InputToRangeRestrictionNodeRule(ProfileRule):
                         raise ProfileError('Too many inputs to attribute range restriction')
 
 
-class InputToFacetNodeRule(ProfileRule):
+class InputToFacetNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Facet nodes.
     """
@@ -786,7 +773,7 @@ class InputToFacetNodeRule(ProfileRule):
                 raise ProfileError('Facet node cannot be target of any input')
 
 
-class MembershipFromAssertionCompatibleNodeRule(ProfileRule):
+class MembershipFromAssertionCompatibleNodeRule(ProfileEdgeRule):
     """
     Make sure that membership assertion edges source from either Individual or Property Assertion nodes.
     """
@@ -797,7 +784,7 @@ class MembershipFromAssertionCompatibleNodeRule(ProfileRule):
                 raise ProfileError('Invalid source for membership edge: {}'.format(source.identityName))
 
 
-class MembershipFromIndividualRule(ProfileRule):
+class MembershipFromIndividualRule(ProfileEdgeRule):
     """
     Perform validation procedures on membership edges sourcing from Individuals.
     """
@@ -811,7 +798,7 @@ class MembershipFromIndividualRule(ProfileRule):
                     raise ProfileError('Invalid target for Concept assertion: {}'.format(target.identityName))
                 
 
-class MembershipFromRoleInstanceRule(ProfileRule):
+class MembershipFromRoleInstanceRule(ProfileEdgeRule):
     """
     Perform validation procedures on membership edges sourcing from a Role Instance.
     """
@@ -853,7 +840,7 @@ class MembershipFromRoleInstanceRule(ProfileRule):
                                 raise ProfileError('Detected unsupported operator sequence on {}'.format(node.name))
 
 
-class MembershipFromAttributeInstanceRule(ProfileRule):
+class MembershipFromAttributeInstanceRule(ProfileEdgeRule):
     """
     Perform validation procedures on membership edges sourcing from an Attribute Instance.
     """
@@ -867,8 +854,6 @@ class MembershipFromAttributeInstanceRule(ProfileRule):
                     # Attribute instance can only target an Attribute expression or a Neutral node which may
                     # turn into an Attribute (the only practical case is the Complement node).
                     raise ProfileError('Invalid target for Attribute assertion: {}'.format(target.identityName))
-
-                # TARGET = NEUTRAL
 
                 if target.identity() is Identity.Neutral:
 
@@ -887,7 +872,7 @@ class MembershipFromAttributeInstanceRule(ProfileRule):
                                 raise ProfileError('Detected unsupported operator sequence on {}'.format(node.name))
 
 
-class MembershipFromNeutralPropertyAssertionRule(ProfileRule):
+class MembershipFromNeutralPropertyAssertionRule(ProfileEdgeRule):
     """
     Perform validation procedures on membership edges sourcing from Neutral Property Assertion nodes.
     """
@@ -908,8 +893,6 @@ class MembershipFromNeutralPropertyAssertionRule(ProfileRule):
                         # Exclude Role chain nodes since since they can never be target of a membership assertion.
                         raise ProfileError('Invalid target for property assertion node: {}'.format(target.name))
 
-                    # TARGET = NEUTRAL
-
                     if target.identity() is Identity.Neutral:
 
                         if not {Identity.Attribute, Identity.Role} & target.identities():
@@ -926,3 +909,22 @@ class MembershipFromNeutralPropertyAssertionRule(ProfileRule):
                             for node in bfs(source=target, filter_on_edges=f1, filter_on_nodes=f2):
                                 if not {Identity.Attribute, Identity.Role} & node.identities():
                                     raise ProfileError('Detected unsupported operator sequence on {}'.format(node.name))
+
+
+class SelfConnectionRule(ProfileEdgeRule):
+    """
+    Prevents from generating self connections.
+    """
+    def __call__(self, source, edge, target):
+        if source is target:
+            # We never allow self connection, no matter the edge type.
+            raise ProfileError('Self connection detected on {}'.format(source))
+
+
+class UnknownIdentityNodeRule(ProfileNodeRule):
+    """
+    Make sure that the no node has an unknown identity.
+    """
+    def __call__(self, node):
+        if node.identity() is Identity.Unknown:
+            raise ProfileError('Unknown node identity detected on {}'.format(node))

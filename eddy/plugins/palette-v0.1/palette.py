@@ -44,7 +44,7 @@ from math import ceil, sin, cos, pi as M_PI, sqrt
 from eddy import APPNAME, ORGANIZATION
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.datatypes.graphol import Item
-from eddy.core.datatypes.owl import Facet
+from eddy.core.datatypes.owl import Facet, OWLProfile
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
@@ -80,6 +80,18 @@ class PalettePlugin(AbstractPlugin):
     #############################################
     #   SLOTS
     #################################
+
+    @QtCore.pyqtSlot()
+    def doActivatePalette(self):
+        """
+        Activate palette buttons.
+        """
+        profile = self.project.profile.type()
+        widget = self.widget('palette')
+        for item in (Item.UnionNode, Item.DisjointUnionNode,
+            Item.DatatypeRestrictionNode, Item.FacetNode, Item.EnumerationNode):
+            btn = widget.button(item)
+            btn.setEnabled(profile is not OWLProfile.OWL2QL)
 
     @QtCore.pyqtSlot('QGraphicsScene')
     def onDiagramAdded(self, diagram):
@@ -139,6 +151,7 @@ class PalettePlugin(AbstractPlugin):
         self.debug('Connecting to project: %s', self.project.name)
         connect(self.project.sgnDiagramAdded, self.onDiagramAdded)
         connect(self.project.sgnDiagramRemoved, self.onDiagramRemoved)
+        connect(self.project.sgnUpdated, self.doActivatePalette)
         for diagram in self.project.diagrams():
             self.debug('Connecting to diagram: %s', diagram.name)
             connect(diagram.sgnItemInsertionCompleted, self.onDiagramItemInsertionCompleted)
@@ -162,6 +175,7 @@ class PalettePlugin(AbstractPlugin):
         self.debug('Disconnecting from project: %s', self.project.name)
         disconnect(self.project.sgnDiagramAdded, self.onDiagramAdded)
         disconnect(self.project.sgnDiagramRemoved, self.onDiagramRemoved)
+        disconnect(self.project.sgnUpdated, self.doActivatePalette)
 
         # DISCONNECT FROM ACTIVE SESSION
         self.debug('Disconnecting from active session')
@@ -238,6 +252,7 @@ class PalettePlugin(AbstractPlugin):
         # LISTEN FOR SESSION READY SIGNAL
         self.debug('Connecting to active session')
         connect(self.session.sgnReady, self.onSessionReady)
+        connect(self.session.sgnReady, self.doActivatePalette)
 
 
 class PaletteWidget(QtWidgets.QWidget):
@@ -298,13 +313,9 @@ class PaletteWidget(QtWidgets.QWidget):
         self.mainLayout.setSpacing(0)
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumWidth(216)
-
         self.setStyleSheet("""
         QDockWidget PaletteWidget {
         background: #F0F0F0;
-        }
-        QDockWidget PaletteWidget PaletteButton:checked {
-        background: #42A5F5;
         }""")
 
     #############################################
@@ -495,6 +506,20 @@ class PaletteButton(QtWidgets.QToolButton):
         :type mouseEvent: QMouseEvent
         """
         super(PaletteButton, self).mouseReleaseEvent(mouseEvent)
+
+    def paintEvent(self, paintEvent):
+        """
+        Perform the painting of the button in the palette.
+        :type paintEvent: QPaintEvent
+        """
+        icon = self.icon()
+        painter = QtGui.QPainter(self)
+        if self.isChecked():
+            painter.setBrush(QtGui.QBrush(QtGui.QColor(66, 165, 245)))
+            painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(66, 165, 245)), 1.0))
+            painter.drawRect(0, 0, 60, 44)
+        painter.setOpacity(1.0 if self.isEnabled() else 0.33)
+        painter.drawPixmap(0, 0, icon.pixmap(QtCore.QSize(60, 44)))
 
     #############################################
     #   INTERFACE

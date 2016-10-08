@@ -83,16 +83,16 @@ class Datatype(Enum_):
         """
         Returns the list of supported datatypes for the given OWL 2 profile.
         :type profile: OWLProfile
-        :rtype: list
+        :rtype: set
         """
         if profile is OWLProfile.OWL2:
-            return [x for x in Datatype]
+            return {x for x in Datatype}
         elif profile is OWLProfile.OWL2QL:
-            return [Datatype.rational, Datatype.real, Datatype.PlainLiteral, Datatype.XMLLiteral,
+            return {Datatype.rational, Datatype.real, Datatype.PlainLiteral, Datatype.XMLLiteral,
                 Datatype.Literal, Datatype.anyURI, Datatype.base64Binary, Datatype.dateTime,
                 Datatype.dateTimeStamp, Datatype.decimal, Datatype.hexBinary, Datatype.integer,
                 Datatype.Name, Datatype.NCName, Datatype.NMTOKEN, Datatype.nonNegativeInteger,
-                Datatype.normalizedString, Datatype.string, Datatype.token]
+                Datatype.normalizedString, Datatype.string, Datatype.token}
         raise ValueError('unsupported profile: %s' % profile)
 
 

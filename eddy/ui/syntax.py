@@ -37,7 +37,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
 
@@ -56,11 +56,16 @@ class SyntaxValidationDialog(QtWidgets.QDialog):
         """
         super(SyntaxValidationDialog, self).__init__(session)
 
-        self.i = 0
-        self.items = list(project.edges()) + list(project.nodes())
+        # Here we perform the validation on all the edges in the project and the isolated nodes. This is
+        # due to the implementation of the checkEdge() function in the Profile class which validates the
+        # edge endpoints at first, and then (if no error is detected) will perform the validation on the
+        # edge itself. However, disconnected nodes won't be taken into account and thus we must perform
+        # an additional step to validate the isolated nodes separately.
+        self.items = list(project.edges()) + list(filter(lambda n: not n.adjacentNodes(), project.nodes()))
         self.project = project
         self.workerThread = None
         self.worker = None
+        self.i = 0
 
         #############################################
         # TOP AREA
@@ -321,25 +326,27 @@ class SyntaxValidationWorker(QtCore.QObject):
             if item.isEdge():
                 source = item.source
                 target = item.target
-                pvr = self.project.profile.check(source, item, target)
+                pvr = self.project.profile.checkEdge(source, item, target)
                 if not pvr.isValid():
-                    nA = '{0} <b>{1}</b>'.format(source.name, source.id)
-                    nB = '{0} <b>{1}</b>'.format(target.name, target.id)
-                    if source.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
-                        nA = '{0} <b>{1}:{2}</b>'.format(source.name, source.text(), source.id)
-                    if target.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
-                        nB = '{0} <b>{1}:{2}</b>'.format(target.name, target.text(), target.id)
-                    info = '{0}{1}'.format(pvr.message()[:1].lower(), pvr.message()[1:])
-                    errorMsg = 'Syntax error detected on {} from {} to {}: <i>{}</i>.'.format(item.name, nA, nB, info)
+                    s = '{} <b>({})</b>'.format(source.name, source.id)
+                    t = '{} <b>({})</b>'.format(target.name, target.id)
+                    if source.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.ValueDomainNode}:
+                        s = '{} <b>{} ({})</b>'.format(source.name, source.text(), source.id)
+                    if target.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.ValueDomainNode}:
+                        t = '{} <b>{} ({})</b>'.format(target.name, target.text(), target.id)
+                    i = '{}{}'.format(pvr.message()[:1].lower(), pvr.message()[1:])
+                    errorMsg = 'Syntax error detected on {} from {} to {}: <i>{}</i>.'.format(item.name, s, t, i)
                     break
 
-            # VALIDATE NODE
-            if item.isNode():
-                if item.identity() is Identity.Unknown:
-                    name = '{0} "{1}"'.format(item.name, item.id)
+            # VALIDATE NODE (ISOLATED)
+            elif item.isNode():
+                pvr = self.project.profile.checkNode(item)
+                if not pvr.isValid():
+                    name = '{} <b>({})</b>'.format(item.name, item.id)
                     if item.isPredicate():
-                        name = '{0} "{1}:{2}"'.format(item.name, item.text(), item.id)
-                    errorMsg = 'Unkown node identity detected on {0}.'.format(name)
+                        name = '{} <b>{} ({})</b>'.format(item.name, item.text(), item.id)
+                    i = '{}{}'.format(pvr.message()[:1].lower(), pvr.message()[1:])
+                    errorMsg = 'Syntax error detected on {}: <i>{}</i>.'.format(name, i)
                     break
 
             self.i += 1

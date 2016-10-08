@@ -347,7 +347,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                     currentNode = self.itemOnTopOf(mousePos, edges=False, skip={edge.source})
                     if currentNode:
                         self.mo_Node = currentNode
-                        pvr = self.project.profile.check(edge.source, edge, currentNode)
+                        pvr = self.project.profile.checkEdge(edge.source, edge, currentNode)
                         currentNode.updateNode(selected=False, valid=pvr.isValid())
                         if not pvr.isValid():
                             statusBar.showMessage(pvr.message())
@@ -433,7 +433,7 @@ class Diagram(QtWidgets.QGraphicsScene):
 
                     if currentNode:
                         currentNode.updateNode(selected=False)
-                        pvr = self.project.profile.check(edge.source, edge, currentNode)
+                        pvr = self.project.profile.checkEdge(edge.source, edge, currentNode)
                         if pvr.isValid():
                             edge.target = currentNode
                             insertEdge = True
