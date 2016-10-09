@@ -108,18 +108,20 @@ class AbstractProfile(QtCore.QObject):
         :type target: AbstractNode
         :rtype: AbstractProfileValidationResult
         """
-        try:
-            for node in (source, target):
-                for r in self.nodeRules():
-                    r(node)
-            for r in self.edgeRules():
-                r(source, edge, target)
-        except ProfileError as e:
-            self._pvr = ProfileValidationResult(False, e.msg)
-        else:
-            self._pvr = ProfileValidationResult(True)
-        finally:
-            return self._pvr
+        if not self.pvr() or (source, edge, target) not in self.pvr():
+
+            try:
+                for node in (source, target):
+                    for r in self.nodeRules():
+                        r(node)
+                for r in self.edgeRules():
+                    r(source, edge, target)
+            except ProfileError as e:
+                self.setPvr(ProfileValidationResult((source, edge, target), False, e.msg))
+            else:
+                self.setPvr(ProfileValidationResult((source, edge, target), True))
+
+        return self.pvr()
 
     def checkNode(self, node):
         """
@@ -127,15 +129,17 @@ class AbstractProfile(QtCore.QObject):
         :type node: AbstractNode
         :rtype: ProfileValidationResult
         """
-        try:
-            for r in self.nodeRules():
-                r(node)
-        except ProfileError as e:
-            self._pvr = ProfileValidationResult(False, e.msg)
-        else:
-            self._pvr = ProfileValidationResult(True)
-        finally:
-            return self._pvr
+        if not self.pvr() or node not in self.pvr():
+
+            try:
+                for r in self.nodeRules():
+                    r(node)
+            except ProfileError as e:
+                self.setPvr(ProfileValidationResult(node, False, e.msg))
+            else:
+                self.setPvr(ProfileValidationResult(node, True))
+
+        return self.pvr()
 
     def edgeRules(self):
         """
@@ -201,13 +205,23 @@ class ProfileValidationResult(object):
     """
     This class can be used to store profile validation results.
     """
-    def __init__(self, valid, message=''):
+    def __init__(self, item, valid, message=''):
         """
         Initialize the profile validation result.
+        :type item: T <= tuple|AbstractNode
         :type valid: bool
+        :type message: str
         """
+        self._item = item
         self._valid = valid
         self._message = message
+
+    def item(self):
+        """
+        Returns the item (or set of items) being validated.
+        :rtype: T <= tuple|AbstractNode
+        """
+        return self._item
 
     def isValid(self):
         """
@@ -229,6 +243,17 @@ class ProfileValidationResult(object):
         :type: str
         """
         self._message = message
+
+    def __contains__(self, item):
+        """
+        Implement membership operator 'in'.
+        :type item: T <= tuple|AbstractNode
+        :rtype: bool
+        """
+        try:
+            return self._item[0] is item[0] and self._item[1] is item[1] and self._item[2] is item[2]
+        except (TypeError, IndexError):
+            return self._item is item
 
 
 class ProfileError(SyntaxError):
