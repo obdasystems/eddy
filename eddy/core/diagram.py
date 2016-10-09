@@ -577,9 +577,9 @@ class Diagram(QtWidgets.QGraphicsScene):
         :type item: AbstractItem
         """
         if item.isEdge():
-            # Execute the node identification procedure only if at least one of
-            # the endpoints we are connecting is currently identified as NEUTRAL.
-            if Identity.Neutral in {item.source.identity(), item.target.identity()}:
+            # Execute the node identification procedure only if one of the
+            # endpoints we are connecting is currently identified as NEUTRAL.
+            if (item.source.identity() is Identity.Neutral) ^ (item.target.identity() is Identity.Neutral):
                 for node in (item.source, item.target):
                     self.sgnNodeIdentification.emit(node)
 
