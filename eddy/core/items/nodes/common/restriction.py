@@ -136,7 +136,6 @@ class RestrictionNode(AbstractNode):
         f2 = lambda x: x.identity() in {Identity.Concept, Identity.Role}
         f3 = lambda x: x.identity() in {Identity.Attribute, Identity.ValueDomain}
         f4 = lambda x: x.identity() is Identity.Concept
-        f5 = lambda x: x.identity() is Identity.ValueDomain
         if self.restriction() in {Restriction.Cardinality, Restriction.Exists, Restriction.Forall}:
             # CHECK FOR ROLE QUALIFIED RESTRICTION
             collection = self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
