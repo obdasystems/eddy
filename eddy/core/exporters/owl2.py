@@ -56,6 +56,8 @@ from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 
 from eddy.ui.fields import ComboBox, CheckBox
+from eddy.ui.progress import BusyProgressDialog
+from eddy.ui.syntax import SyntaxValidationWorker
 
 
 LOGGER = getLogger(__name__)
@@ -91,6 +93,42 @@ class OWLProjectExporter(AbstractProjectExporter):
         :type session: Session
         """
         super(OWLProjectExporter, self).__init__(project, session)
+        self.items = list(project.edges()) + list(filter(lambda n: not n.adjacentNodes(), project.nodes()))
+        self.path = None
+        self.progress = None
+        self.worker = None
+        self.workerThread = None
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot()
+    def onSyntaxCheckCompleted(self):
+        """
+        Executed when the syntax validation procedure is completed.
+        """
+        self.progress.sleep()
+        self.progress.close()
+        dialog = OWLProjectExporterDialog(self.project, self.path, self.session)
+        dialog.exec_()
+
+    @QtCore.pyqtSlot(str)
+    def onSyntaxCheckErrored(self, _):
+        """
+        Executed when a syntax error is detected.
+        :type _: str
+        """
+        self.progress.sleep()
+        self.progress.close()
+        msgbox = QtWidgets.QMessageBox(self.session)
+        msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+        msgbox.setText('One or more syntax errors have been detected. '
+        'Please run the syntax validation utility before exporting the OWL 2 ontology.')
+        msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        msgbox.setWindowTitle('Syntax error detected!')
+        msgbox.exec_()
 
     #############################################
     #   INTERFACE
@@ -102,8 +140,16 @@ class OWLProjectExporter(AbstractProjectExporter):
         :type path: str
         """
         if not self.project.isEmpty():
-            dialog = OWLProjectExporterDialog(self.project, path, self.session)
-            dialog.exec_()
+            self.path = path
+            self.progress = BusyProgressDialog('Performing syntax check...')
+            self.progress.show()
+            self.workerThread = QtCore.QThread()
+            self.worker = SyntaxValidationWorker(0, self.items, self.project)
+            self.worker.moveToThread(self.workerThread)
+            connect(self.worker.sgnCompleted, self.onSyntaxCheckCompleted)
+            connect(self.worker.sgnSyntaxError, self.onSyntaxCheckErrored)
+            connect(self.workerThread.started, self.worker.run)
+            self.workerThread.start()
 
     @classmethod
     def filetype(cls):
