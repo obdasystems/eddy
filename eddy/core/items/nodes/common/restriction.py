@@ -38,7 +38,7 @@ from abc import ABCMeta
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 
-from eddy.core.datatypes.graphol import Restriction, Item, Identity
+from eddy.core.datatypes.graphol import Item, Identity, Restriction, Special
 from eddy.core.functions.misc import first
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -127,17 +127,25 @@ class RestrictionNode(AbstractNode):
         """
         return self.polygon.geometry().height()
 
-    def isQualifiedRestriction(self):
+    def isRestrictionQualified(self):
         """
-        Tells whether this node expresses a qualified restriction.
+        Returna True if this node expresses a qualified restriction (exists R.C), False otherwise.
         :rtype: bool
         """
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() in {Identity.Concept, Identity.Role}
         f3 = lambda x: x.identity() in {Identity.Attribute, Identity.ValueDomain}
+        f4 = lambda x: x.identity() is Identity.Concept
+        f5 = lambda x: x.identity() is Identity.ValueDomain
         if self.restriction() in {Restriction.Cardinality, Restriction.Exists, Restriction.Forall}:
-            return len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) >= 2 or \
-                   len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) >= 2
+            # CHECK FOR ROLE QUALIFIED RESTRICTION
+            collection = self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+            if len(collection) >= 2:
+                node = first(collection, filter_on_item=f4)
+                if node and Special.forValue(node.text()) is not Special.Top:
+                    return True
+            # CHECK FOR ATTRIBUTE QUALIFIED RESTRICTION
+            return len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) >= 2
         return False
 
     def paint(self, painter, option, widget=None):
