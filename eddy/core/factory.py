@@ -295,7 +295,7 @@ class MenuFactory(QtCore.QObject):
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('property_restriction'))
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() is Identity.Attribute
-        qualified = node.isQualifiedRestriction()
+        qualified = node.isRestrictionQualified()
         attribute = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
         for action in self.session.action('restriction').actions():
             action.setChecked(node.restriction() is action.data())
@@ -472,7 +472,7 @@ class MenuFactory(QtCore.QObject):
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() is Identity.Attribute
         if not first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)):
-            qualified = node.isQualifiedRestriction()
+            qualified = node.isRestrictionQualified()
             menu.insertMenu(self.session.action('node_properties'), self.session.menu('property_restriction'))
             for action in self.session.action('restriction').actions():
                 action.setChecked(node.restriction() is action.data())
