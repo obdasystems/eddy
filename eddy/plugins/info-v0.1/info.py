@@ -330,8 +330,11 @@ class InfoWidget(QtWidgets.QScrollArea):
         spacing: 0;
         margin-left: 4px;
         margin-top: 2px;
-        }""")
-
+        }
+        InfoWidget QCheckBox::indicator:disabled {
+        background-color: #BABABA;
+        }
+        """)
         scrollbar = self.verticalScrollBar()
         scrollbar.installEventFilter(self)
 
@@ -1164,6 +1167,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.functBox.setChecked(node.isFunctional())
         self.functBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
         self.invFunctBox.setChecked(node.isInverseFunctional())
+        self.invFunctBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
         self.irreflexiveBox.setChecked(node.isIrreflexive())
         self.reflexiveBox.setChecked(node.isReflexive())
         self.symmetricBox.setChecked(node.isSymmetric())
