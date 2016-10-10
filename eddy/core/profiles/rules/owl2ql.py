@@ -156,3 +156,37 @@ class InputValueDomainToIntersectionNodeRule(ProfileEdgeRule):
                             # would cause the complement node to identify itself as a value-domain, but in OWL 2 QL
                             # it is not possible to construct complement of value domain expressions.
                             raise ProfileError('Complement of a value-domain expression is forbidden in OWL 2 QL')
+
+
+class MembershipFromAttributeInstanceToComplementNodeRule(ProfileEdgeRule):
+    """
+    Prevent the construction of NegativeDataPropertyAssertion axioms.
+    """
+    def __call__(self, source, edge, target):
+        if edge.type() is Item.MembershipEdge:
+            if source.identity() is Identity.AttributeInstance:
+                if target.type() is Item.ComplementNode:
+                    raise ProfileError('Negative attribute assertion is forbidden in OWL 2 QL')
+
+
+class MembershipFromRoleInstanceToComplementNodeRule(ProfileEdgeRule):
+    """
+    Prevent the construction of NegativeObjectPropertyAssertion axioms.
+    """
+    def __call__(self, source, edge, target):
+        if edge.type() is Item.MembershipEdge:
+            if source.identity() is Identity.RoleInstance:
+                if target.type() is Item.ComplementNode:
+                    raise ProfileError('Negative role assertion is forbidden in OWL 2 QL')
+
+
+class MembershipFromPropertyAssertionToComplementNodeRule(ProfileEdgeRule):
+    """
+    Prevent the construction of NegativeObjectPropertyAssertion and NegativeDataPropertyAssertion axioms.
+    """
+    def __call__(self, source, edge, target):
+        if edge.type() is Item.MembershipEdge:
+            if source.type() is Item.PropertyAssertionNode:
+                if source.identity() is Identity.Neutral:
+                    if target.type() is Item.ComplementNode:
+                        raise ProfileError('Negative attribute/role assertion is forbidden in OWL 2 QL')

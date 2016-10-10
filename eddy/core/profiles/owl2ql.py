@@ -41,6 +41,9 @@ from eddy.core.profiles.rules.owl2ql import InclusionBetweenConceptExpressionRul
 from eddy.core.profiles.rules.owl2ql import InputConceptToRestrictionNodeRule
 from eddy.core.profiles.rules.owl2ql import InputValueDomainToComplementNodeRule
 from eddy.core.profiles.rules.owl2ql import InputValueDomainToIntersectionNodeRule
+from eddy.core.profiles.rules.owl2ql import MembershipFromAttributeInstanceToComplementNodeRule
+from eddy.core.profiles.rules.owl2ql import MembershipFromRoleInstanceToComplementNodeRule
+from eddy.core.profiles.rules.owl2ql import MembershipFromPropertyAssertionToComplementNodeRule
 from eddy.core.profiles.rules.owl2ql import UnsupportedDatatypeRule
 from eddy.core.profiles.rules.owl2ql import UnsupportedOperatorRule
 
@@ -62,6 +65,9 @@ class OWL2QLProfile(OWL2Profile):
         self.addEdgeRule(InputConceptToRestrictionNodeRule)
         self.addEdgeRule(InputValueDomainToComplementNodeRule)
         self.addEdgeRule(InputValueDomainToIntersectionNodeRule)
+        self.addEdgeRule(MembershipFromAttributeInstanceToComplementNodeRule)
+        self.addEdgeRule(MembershipFromRoleInstanceToComplementNodeRule)
+        self.addEdgeRule(MembershipFromPropertyAssertionToComplementNodeRule)
 
     #############################################
     #   INTERFACE
