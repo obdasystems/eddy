@@ -45,7 +45,6 @@ from eddy.core.profiles.rules.owl2ql import UnsupportedDatatypeRule
 from eddy.core.profiles.rules.owl2ql import UnsupportedOperatorRule
 
 
-
 class OWL2QLProfile(OWL2Profile):
     """
     Extends OWL2Profile implementing the OWL 2 QL profile.

@@ -37,6 +37,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Identity, Item, Special
+from eddy.core.datatypes.owl import OWLProfile
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.polygon import Polygon
@@ -124,7 +125,8 @@ class AttributeNode(AbstractNode):
         :rtype: bool
         """
         try:
-            return self.project.meta(self.type(), self.text())['functional']
+            return self.project.meta(self.type(), self.text())['functional'] and \
+                   self.project.profile.type() is not OWLProfile.OWL2QL
         except (AttributeError, KeyError):
             return False
 

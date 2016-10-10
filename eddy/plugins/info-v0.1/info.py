@@ -46,7 +46,7 @@ from eddy.core.commands.project import CommandProjectSetIRI
 from eddy.core.commands.project import CommandProjectSetPrefix
 from eddy.core.commands.project import CommandProjectSetProfile
 from eddy.core.datatypes.graphol import Item, Identity
-from eddy.core.datatypes.owl import Facet, Datatype
+from eddy.core.datatypes.owl import Facet, Datatype, OWLProfile
 from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.functions.misc import first, clamp, isEmpty
 from eddy.core.functions.signals import connect, disconnect
@@ -1044,6 +1044,7 @@ class AttributeNodeInfo(PredicateNodeInfo):
         """
         super().updateData(node)
         self.functBox.setChecked(node.isFunctional())
+        self.functBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
 
 
 class RoleNodeInfo(PredicateNodeInfo):
@@ -1158,14 +1159,16 @@ class RoleNodeInfo(PredicateNodeInfo):
         Fetch new information and fill the widget with data.
         :type node: AbstractNode
         """
-        super().updateData(node)
+        super(RoleNodeInfo, self).updateData(node)
         self.asymmetricBox.setChecked(node.isAsymmetric())
         self.functBox.setChecked(node.isFunctional())
+        self.functBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
         self.invFunctBox.setChecked(node.isInverseFunctional())
         self.irreflexiveBox.setChecked(node.isIrreflexive())
         self.reflexiveBox.setChecked(node.isReflexive())
         self.symmetricBox.setChecked(node.isSymmetric())
         self.transitiveBox.setChecked(node.isTransitive())
+        self.transitiveBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
 
 
 class ValueDomainNodeInfo(NodeInfo):

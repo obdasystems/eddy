@@ -37,6 +37,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item, Special, Identity
+from eddy.core.datatypes.owl import OWLProfile
 from eddy.core.functions.misc import snapF
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -159,7 +160,8 @@ class RoleNode(AbstractResizableNode):
         :rtype: bool
         """
         try:
-            return self.project.meta(self.type(), self.text())['functional']
+            return self.project.meta(self.type(), self.text())['functional'] and \
+                   self.project.profile.type() is not OWLProfile.OWL2QL
         except (AttributeError, KeyError):
             return False
 
@@ -169,7 +171,8 @@ class RoleNode(AbstractResizableNode):
         :rtype: bool
         """
         try:
-            return self.project.meta(self.type(), self.text())['inverseFunctional']
+            return self.project.meta(self.type(), self.text())['inverseFunctional'] and \
+                   self.project.profile.type() is not OWLProfile.OWL2QL
         except (AttributeError, KeyError):
             return False
 
@@ -209,7 +212,8 @@ class RoleNode(AbstractResizableNode):
         :rtype: bool
         """
         try:
-            return self.project.meta(self.type(), self.text())['transitive']
+            return self.project.meta(self.type(), self.text())['transitive'] and \
+                   self.project.profile.type() is not OWLProfile.OWL2QL
         except (AttributeError, KeyError):
             return False
 
