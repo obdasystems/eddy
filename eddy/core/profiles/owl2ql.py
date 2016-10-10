@@ -36,7 +36,13 @@
 from eddy.core.datatypes.owl import OWLProfile
 from eddy.core.profiles.owl2 import OWL2Profile
 
+from eddy.core.profiles.rules.owl2ql import EquivalenceBetweenConceptExpressionRule
+from eddy.core.profiles.rules.owl2ql import InclusionBetweenConceptExpressionRule
+from eddy.core.profiles.rules.owl2ql import InputConceptToRestrictionNodeRule
+from eddy.core.profiles.rules.owl2ql import InputValueDomainToComplementNodeRule
+from eddy.core.profiles.rules.owl2ql import InputValueDomainToIntersectionNodeRule
 from eddy.core.profiles.rules.owl2ql import UnsupportedDatatypeRule
+from eddy.core.profiles.rules.owl2ql import UnsupportedOperatorRule
 
 
 
@@ -51,6 +57,12 @@ class OWL2QLProfile(OWL2Profile):
         """
         super(OWL2QLProfile, self).__init__(project)
         self.addNodeRule(UnsupportedDatatypeRule)
+        self.addNodeRule(UnsupportedOperatorRule)
+        self.addEdgeRule(EquivalenceBetweenConceptExpressionRule)
+        self.addEdgeRule(InclusionBetweenConceptExpressionRule)
+        self.addEdgeRule(InputConceptToRestrictionNodeRule)
+        self.addEdgeRule(InputValueDomainToComplementNodeRule)
+        self.addEdgeRule(InputValueDomainToIntersectionNodeRule)
 
     #############################################
     #   INTERFACE
