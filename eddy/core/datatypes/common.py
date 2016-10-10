@@ -52,9 +52,10 @@ class Enum_(Enum):
         """
         if isinstance(value, Enum_):
             return value
-        for x in cls:
-            if x.value.strip() == value.strip():
-                return x
+        if value:
+            for x in cls:
+                if x.value.strip() == value.strip():
+                    return x
         return None
 
 
