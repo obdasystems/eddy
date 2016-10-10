@@ -221,24 +221,24 @@ class MenuFactory(QtCore.QObject):
         """
         menu = self.buildOperatorNodeMenu(diagram, node)
         if node.edges:
-            switch = {
-                Identity.Attribute: {Item.ComplementNode},
-                Identity.Concept: {Item.ComplementNode, Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode},
-                Identity.Role: {Item.ComplementNode, Item.RoleChainNode, Item.RoleInverseNode},
-                Identity.ValueDomain: {Item.ComplementNode, Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode},
-                Identity.Unknown: {Item.ComplementNode},
-                Identity.Neutral: {
-                    Item.ComplementNode,
-                    Item.DisjointUnionNode,
-                    Item.EnumerationNode,
-                    Item.IntersectionNode,
-                    Item.RoleChainNode,
-                    Item.RoleInverseNode,
-                    Item.UnionNode,
-                },
-            }
+            switch = {Item.ComplementNode}
+            if node.identity() in {Identity.Concept, Identity.ValueDomain}:
+                switch.add(Item.DisjointUnionNode)
+                switch.add(Item.IntersectionNode)
+                switch.add(Item.UnionNode)
+            elif node.identity() is Identity.Role:
+                switch.add(Item.RoleInverseNode)
+                if not node.incomingNodes(filter_on_edges=lambda x: x.type() is Item.InclusionEdge):
+                    switch.add(Item.RoleChainNode)
+            elif node.identity() is Identity.Neutral:
+                switch.add(Item.DisjointUnionNode)
+                switch.add(Item.EnumerationNode)
+                switch.add(Item.IntersectionNode)
+                switch.add(Item.RoleChainNode)
+                switch.add(Item.RoleInverseNode)
+                switch.add(Item.UnionNode)
             for action in self.session.action('switch_operator').actions():
-                action.setVisible(action.data() in switch[node.identity()])
+                action.setVisible(action.isVisible() and action.data() in switch)
         return menu
 
     def buildConceptNodeMenu(self, diagram, node):
@@ -277,7 +277,7 @@ class MenuFactory(QtCore.QObject):
         if node.edges:
             switch = {Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode}
             for action in self.session.action('switch_operator').actions():
-                action.setVisible(action.data() in switch)
+                action.setVisible(action.isVisible() and action.data() in switch)
         return menu
 
     def buildDomainRestrictionNodeMenu(self, diagram, node):
@@ -320,13 +320,13 @@ class MenuFactory(QtCore.QObject):
                 # action active: individuals can be connected only to Enumeration nodes
                 # and Property Assertion ones, so switching to another operator is an error.
                 for action in self.session.action('switch_operator').actions():
-                    action.setVisible(action.data() is Item.EnumerationNode)
+                    action.setVisible(action.isVisible() and action.data() is Item.EnumerationNode)
             elif node.outgoingNodes(filter_on_edges=lambda x: x.type() is Item.InputEdge):
                 # We have inclusion edges attached to this edge but no input => allow
                 # switching to operators whose identities set intersects the one of this node.
                 switch = {Item.DisjointUnionNode, Item.EnumerationNode, Item.IntersectionNode, Item.UnionNode}
                 for action in self.session.action('switch_operator').actions():
-                    action.setVisible(action.data() in switch)
+                    action.setVisible(action.isVisible() and action.data() in switch)
         return menu
 
     def buildFacetNodeMenu(self, diagram, node):
@@ -430,7 +430,7 @@ class MenuFactory(QtCore.QObject):
         if node.edges:
             switch = {Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode}
             for action in self.session.action('switch_operator').actions():
-                action.setVisible(action.data() in switch)
+                action.setVisible(action.isVisible() and action.data() in switch)
         return menu
 
     def buildOperatorNodeMenu(self, diagram, node):
@@ -443,9 +443,21 @@ class MenuFactory(QtCore.QObject):
         menu = self.buildGenericNodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('switch_operator'))
         menu.insertSeparator(self.session.action('node_properties'))
+        # Initialize switch action set.
         for action in self.session.action('switch_operator').actions():
             action.setChecked(node.type() is action.data())
             action.setVisible(True)
+        # Add OWL 2 QL switch constraints.
+        if self.project.profile.type() is OWLProfile.OWL2QL:
+            for action in self.session.action('switch_operator').actions():
+                action.setVisible(action.data() not in {Item.DatatypeRestrictionNode,
+                    Item.DisjointUnionNode, Item.EnumerationNode, Item.RoleChainNode,
+                    Item.UnionNode})
+        # Add OWL 2 RL switch constraints.
+        if self.project.profile.type() is OWLProfile.OWL2RL:
+            for action in self.session.action('switch_operator').actions():
+                action.setVisible(action.data() is not Item.DatatypeRestrictionNode)
+
         return menu
 
     def buildPropertyAssertionNodeMenu(self, diagram, node):
@@ -511,9 +523,16 @@ class MenuFactory(QtCore.QObject):
         """
         menu = self.buildOperatorNodeMenu(diagram, node)
         if node.edges:
-            switch = {Item.ComplementNode, Item.RoleChainNode, Item.RoleInverseNode}
+            f1 = lambda x: x.type() is Item.InputEdge
+            f2 = lambda x: x.type() is Item.InclusionEdge
+            f3 = lambda x: x.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}
+            switch = {Item.RoleInverseNode}
+            if not node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f3):
+                switch.add(Item.ComplementNode)
+            if not node.outgoingNodes(filter_on_edges=f1) and not node.incomingNodes(filter_on_edges=f2):
+                switch.add(Item.RoleChainNode)
             for action in self.session.action('switch_operator').actions():
-                action.setVisible(action.data() in switch)
+                action.setVisible(action.isVisible() and action.data() in switch)
         return menu
 
     def buildRoleChainNodeMenu(self, diagram, node):
@@ -525,12 +544,12 @@ class MenuFactory(QtCore.QObject):
         """
         menu = self.buildOperatorNodeMenu(diagram, node)
         if node.edges:
-            f1 = lambda x: x.type() is Item.InputEdge
-            switch = {Item.ComplementNode, Item.RoleChainNode, Item.RoleInverseNode}
-            if len(node.incomingNodes(filter_on_edges=f1)) > 1:
-                switch = {Item.RoleChainNode}
+            switch = {Item.RoleChainNode}
+            if len(node.incomingNodes(filter_on_edges=lambda x: x.type() is Item.InputEdge)) <= 1:
+                switch.add(Item.ComplementNode)
+                switch.add(Item.RoleInverseNode)
             for action in self.session.action('switch_operator').actions():
-                action.setVisible(action.data() in switch)
+                action.setVisible(action.isVisible() and action.data() in switch)
         return menu
 
     def buildUnionNodeMenu(self, diagram, node):
@@ -544,7 +563,7 @@ class MenuFactory(QtCore.QObject):
         if node.edges:
             switch = {Item.DisjointUnionNode, Item.IntersectionNode, Item.UnionNode}
             for action in self.session.action('switch_operator').actions():
-                action.setVisible(action.data() in switch)
+                action.setVisible(action.isVisible() and action.data() in switch)
         return menu
 
     def buildValueDomainNodeMenu(self, diagram, node):
