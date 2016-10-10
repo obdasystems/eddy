@@ -111,20 +111,21 @@ class InputConceptToRestrictionNodeRule(ProfileEdgeRule):
         if edge.type() is Item.InputEdge:
             if target.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
                 # OWL 2 QL admits only atomic concepts for role qualified restriction.
-                if source.identity() is Identity.Concept and source.type() is not Item.ConceptNode:
-                    raise ProfileError('OWL 2 QL admits only an atomic concept as filler for a role qualified restriction')
-                # Given the fact that we are connecting an atomic concept in input to this
-                # restriction node, we need to see if the node is currently being used
-                # as source for a concept expression inclusion, and if so, deny the connection
-                # because OWL 2 QL admits concept inclusion sourcing only from unqualified role
-                # restrictions (we need to skip TOP though, since it won't be qualified then).
-                if Special.forValue(source.text()) is not Special.Top:
-                    # We found an outgoing inclusion edge and our restriction filler is not TOP.
-                    if target.outgoingNodes(filter_on_edges=lambda x: x.type() is Item.InclusionEdge):
-                        raise ProfileError('Inclusion sourcing from qualified role restriction is forbidden in OWL 2 QL')
-                    # Similarly we block the input in case of equivalence edges attached to the restriction node.
-                    if target.adjacentNodes(filter_on_edges=lambda x: x.type() is Item.EquivalenceEdge):
-                        raise ProfileError('Equivalence in presence of qualified role restriction is forbidden in OWL 2 QL')
+                if source.identity() is Identity.Concept:
+                    if source.type() is not Item.ConceptNode:
+                        raise ProfileError('OWL 2 QL admits only an atomic concept as filler for a role qualified restriction')
+                    # Given the fact that we are connecting an atomic concept in input to this
+                    # restriction node, we need to see if the node is currently being used
+                    # as source for a concept expression inclusion, and if so, deny the connection
+                    # because OWL 2 QL admits concept inclusion sourcing only from unqualified role
+                    # restrictions (we need to skip TOP though, since it won't be qualified then).
+                    if Special.forValue(source.text()) is not Special.Top:
+                        # We found an outgoing inclusion edge and our restriction filler is not TOP.
+                        if target.outgoingNodes(filter_on_edges=lambda x: x.type() is Item.InclusionEdge):
+                            raise ProfileError('Inclusion sourcing from qualified role restriction is forbidden in OWL 2 QL')
+                        # Similarly we block the input in case of equivalence edges attached to the restriction node.
+                        if target.adjacentNodes(filter_on_edges=lambda x: x.type() is Item.EquivalenceEdge):
+                            raise ProfileError('Equivalence in presence of qualified role restriction is forbidden in OWL 2 QL')
 
 
 class InputValueDomainToComplementNodeRule(ProfileEdgeRule):
