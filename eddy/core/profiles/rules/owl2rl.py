@@ -118,7 +118,7 @@ class InclusionBetweenConceptExpressionRule(ProfileEdgeRule):
                         raise ProfileError('Inclusion targeting existential {} is forbidden in OWL 2 RL'.format(target.shortName))
                     elif target.restriction() is Restriction.Cardinality:
                         if target.cardinality('min') != 0 or target.cardinality('max') != 1:
-                            raise ProfileError('Inclusion can only target cardinality {} with cardinality (0, 1)'.format(target.shortName))
+                            raise ProfileError('Inclusion can only target cardinality {} with cardinality (0, 1) in OWL 2 RL'.format(target.shortName))
 
 
 class InputValueToEnumerationNodeRule(ProfileEdgeRule):
