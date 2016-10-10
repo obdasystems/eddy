@@ -78,10 +78,9 @@ class BusyProgressDialog(QtWidgets.QDialog):
         """
         now = time()
         if now < self.mtime:
-            for _ in rangeF(start=0, stop=self.mtime - now, step=0.1):
-                # noinspection PyArgumentList
+            for _ in rangeF(start=0, stop=self.mtime - now, step=0.01):
                 QtWidgets.QApplication.processEvents()
-                sleep(0.1)
+                sleep(0.01)
 
     #############################################
     #   CONTEXT MANAGER
