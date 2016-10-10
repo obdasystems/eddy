@@ -1566,7 +1566,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 else:
                     form = CardinalityRestrictionForm(self)
                     if form.exec_() == CardinalityRestrictionForm.Accepted:
-                        data = restriction.toString(form.min() or '-', form.max() or '-')
+                        data = restriction.toString(form.min(), form.max())
                 if data and node.text() != data:
                     name = 'change {0} to {1}'.format(node.shortName, data)
                     self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))

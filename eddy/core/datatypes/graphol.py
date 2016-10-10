@@ -147,7 +147,7 @@ class Restriction(Enum_):
             Restriction.Forall: 'forall',
             Restriction.Self: 'self',
             Restriction.Cardinality: '({0},{1})',
-        }[self].format(*args)
+        }[self].format(*('-' if x is None else x for x in args))
 
 
 @unique

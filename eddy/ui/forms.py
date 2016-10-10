@@ -134,7 +134,7 @@ class CardinalityRestrictionForm(QtWidgets.QDialog):
                 msgbox.exec_()
                 return
 
-        super().accept()
+        super(CardinalityRestrictionForm, self).accept()
 
     #############################################
     #   INTERFACE
