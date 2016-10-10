@@ -314,6 +314,11 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
                 checkbox.setChecked(False)
                 checkbox.setEnabled(False)
 
+        if self.project.profile.type() is OWLProfile.OWL2RL:
+            checkbox = self.axiomsChecks[OWLAxiom.ReflexiveObjectProperty]
+            checkbox.setChecked(False)
+            checkbox.setEnabled(False)
+
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(10, 10, 10, 10)
         self.mainLayout.addWidget(self.syntaxGroup)

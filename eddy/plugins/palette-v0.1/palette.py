@@ -88,11 +88,12 @@ class PalettePlugin(AbstractPlugin):
         """
         profile = self.project.profile.type()
         widget = self.widget('palette')
-        for item in (Item.UnionNode, Item.DisjointUnionNode,
-            Item.DatatypeRestrictionNode, Item.FacetNode,
-            Item.EnumerationNode, Item.RoleChainNode):
-            btn = widget.button(item)
-            btn.setEnabled(profile is not OWLProfile.OWL2QL)
+        widget.button(Item.UnionNode).setEnabled(profile is not OWLProfile.OWL2QL)
+        widget.button(Item.DisjointUnionNode).setEnabled(profile is not OWLProfile.OWL2QL)
+        widget.button(Item.DatatypeRestrictionNode).setEnabled(profile not in {OWLProfile.OWL2QL, OWLProfile.OWL2RL})
+        widget.button(Item.FacetNode).setEnabled(profile not in {OWLProfile.OWL2QL, OWLProfile.OWL2RL})
+        widget.button(Item.EnumerationNode).setEnabled(profile is not OWLProfile.OWL2QL)
+        widget.button(Item.RoleChainNode).setEnabled(profile is not OWLProfile.OWL2QL)
 
     @QtCore.pyqtSlot('QGraphicsScene')
     def onDiagramAdded(self, diagram):

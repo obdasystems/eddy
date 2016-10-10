@@ -192,7 +192,8 @@ class RoleNode(AbstractResizableNode):
         :rtype: bool
         """
         try:
-            return self.project.meta(self.type(), self.text())['reflexive']
+            return self.project.meta(self.type(), self.text())['reflexive'] and \
+                   self.project.profile.type() is not OWLProfile.OWL2RL
         except (AttributeError, KeyError):
             return False
 

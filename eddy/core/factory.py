@@ -39,7 +39,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
-from eddy.core.datatypes.owl import Datatype, Facet
+from eddy.core.datatypes.owl import Datatype, Facet, OWLProfile
 from eddy.core.functions.misc import first
 
 from eddy.ui.properties import DiagramProperty
@@ -205,7 +205,8 @@ class MenuFactory(QtCore.QObject):
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('compose'))
-        menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
+        if self.project.profile.type() is not OWLProfile.OWL2RL:
+            menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
         self.insertLabelActions(menu, node)
         menu.insertSeparator(self.session.action('node_properties'))
         self.session.action('refactor_name').setEnabled(node.special() is None)
@@ -493,7 +494,8 @@ class MenuFactory(QtCore.QObject):
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('compose'))
-        menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
+        if self.project.profile.type() is not OWLProfile.OWL2RL:
+            menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
         menu.insertAction(self.session.action('node_properties'), self.session.action('invert_role'))
         self.insertLabelActions(menu, node)
         menu.insertSeparator(self.session.action('node_properties'))

@@ -1170,6 +1170,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.invFunctBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
         self.irreflexiveBox.setChecked(node.isIrreflexive())
         self.reflexiveBox.setChecked(node.isReflexive())
+        self.reflexiveBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2RL)
         self.symmetricBox.setChecked(node.isSymmetric())
         self.transitiveBox.setChecked(node.isTransitive())
         self.transitiveBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)

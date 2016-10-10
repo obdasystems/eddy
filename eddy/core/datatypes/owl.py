@@ -93,6 +93,15 @@ class Datatype(Enum_):
                 Datatype.dateTimeStamp, Datatype.decimal, Datatype.hexBinary, Datatype.integer,
                 Datatype.Name, Datatype.NCName, Datatype.NMTOKEN, Datatype.nonNegativeInteger,
                 Datatype.normalizedString, Datatype.string, Datatype.token}
+        elif profile is OWLProfile.OWL2RL:
+            return {Datatype.PlainLiteral, Datatype.XMLLiteral, Datatype.Literal, Datatype.anyURI,
+                Datatype.base64Binary, Datatype.boolean, Datatype.byte, Datatype.dateTime,
+                Datatype.dateTimeStamp, Datatype.decimal, Datatype.double, Datatype.float,
+                Datatype.hexBinary, Datatype.Name, Datatype.NCName, Datatype.negativeInteger,
+                Datatype.NMTOKEN, Datatype.nonNegativeInteger, Datatype.nonPositiveInteger,
+                Datatype.normalizedString, Datatype.positiveInteger, Datatype.short,
+                Datatype.string, Datatype.token, Datatype.unsignedByte, Datatype.unsignedInt,
+                Datatype.unsignedLong, Datatype.unsignedShort}
         raise ValueError('unsupported profile: %s' % profile)
 
 
