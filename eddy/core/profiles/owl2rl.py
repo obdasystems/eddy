@@ -38,6 +38,7 @@ from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.rules.owl2rl import UnsupportedDatatypeRule
 from eddy.core.profiles.rules.owl2rl import UnsupportedOperatorRule
 from eddy.core.profiles.rules.owl2rl import UnsupportedSpecialOnRoleAndAttributeNode
+from eddy.core.profiles.rules.owl2rl import InclusionBetweenConceptExpressionRule
 from eddy.core.profiles.rules.owl2rl import InputValueToEnumerationNodeRule
 from eddy.core.profiles.rules.owl2rl import InputValueDomainToUnionNodeRule
 
@@ -55,6 +56,7 @@ class OWL2RLProfile(OWL2Profile):
         self.addNodeRule(UnsupportedDatatypeRule)
         self.addNodeRule(UnsupportedOperatorRule)
         self.addNodeRule(UnsupportedSpecialOnRoleAndAttributeNode)
+        self.addEdgeRule(InclusionBetweenConceptExpressionRule)
         self.addEdgeRule(InputValueToEnumerationNodeRule)
         self.addEdgeRule(InputValueDomainToUnionNodeRule)
 
