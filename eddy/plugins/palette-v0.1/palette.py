@@ -89,7 +89,8 @@ class PalettePlugin(AbstractPlugin):
         profile = self.project.profile.type()
         widget = self.widget('palette')
         for item in (Item.UnionNode, Item.DisjointUnionNode,
-            Item.DatatypeRestrictionNode, Item.FacetNode, Item.EnumerationNode):
+            Item.DatatypeRestrictionNode, Item.FacetNode,
+            Item.EnumerationNode, Item.RoleChainNode):
             btn = widget.button(item)
             btn.setEnabled(profile is not OWLProfile.OWL2QL)
 
