@@ -49,6 +49,12 @@
   <file alias="ic_treeview_value@2x">../../resources/icons/18/ic_treeview_value_18dp_2x.png</file>
 </qresource>
 <qresource prefix="/icons/24">
+  <file alias="ic_check_box">../../resources/icons/24/ic_check_box_black_24dp_1x.png</file>
+  <file alias="ic_check_box@2x">../../resources/icons/24/ic_check_box_black_24dp_2x.png</file>
+  <file alias="ic_check_box_indeterminate">../../resources/icons/24/ic_indeterminate_check_box_black_24dp_1x.png</file>
+  <file alias="ic_check_box_indeterminate@2x">../../resources/icons/24/ic_indeterminate_check_box_black_24dp_2x.png</file>
+  <file alias="ic_check_box_outline">../../resources/icons/24/ic_check_box_outline_blank_black_24dp_1x.png</file>
+  <file alias="ic_check_box_outline@2x">../../resources/icons/24/ic_check_box_outline_blank_black_24dp_2x.png</file>
   <file alias="ic_add_document_black">../../resources/icons/24/ic_add_document_black_24dp_1x.png</file>
   <file alias="ic_add_document_black@2x">../../resources/icons/24/ic_add_document_black_24dp_2x.png</file>
   <file alias="ic_keyboard_arrow_down_black">../../resources/icons/24/ic_keyboard_arrow_down_black_24dp_1x.png</file>
