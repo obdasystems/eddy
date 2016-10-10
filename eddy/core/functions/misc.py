@@ -58,16 +58,19 @@ def clamp(val, minval=None, maxval=None):
     return val
 
 
-def first(iterable, default=None):
+def first(iterable, default=None, filter_on_item=lambda x: True):
     """
     Returns the first element in 'iterable' if it exists, otherwise it returns the given default.
+    Scanned items will be filtered according to the given callable.
     :type iterable: T <= list|tuple|set|generator
     :type default: any
+    :type filter_on_item: callable
     :rtype: mixed
     """
     if iterable:
         for item in iterable:
-            return item
+            if filter_on_item(item):
+                return item
     return default
 
 
