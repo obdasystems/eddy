@@ -42,7 +42,7 @@ from PyQt5 import QtWidgets
 from eddy import APPNAME, BUG_TRACKER, ORGANIZATION
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
-from eddy.core.datatypes.owl import Datatype, Facet, OWLAxiom, OWLSyntax
+from eddy.core.datatypes.owl import Datatype, Facet, OWLAxiom, OWLSyntax, OWLProfile
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import DiagramMalformedError
 from eddy.core.exporters.common import AbstractProjectExporter
@@ -305,6 +305,14 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         #############################################
         # CONFIGURE LAYOUT
         #################################
+
+        if self.project.profile.type() is OWLProfile.OWL2QL:
+            for axiom in OWLAxiom.FunctionalDataProperty, OWLAxiom.FunctionalObjectProperty, \
+                OWLAxiom.InverseFunctionalObjectProperty, OWLAxiom.TransitiveObjectProperty, \
+                OWLAxiom.NegativeDataPropertyAssertion, OWLAxiom.NegativeObjectPropertyAssertion:
+                checkbox = self.axiomsChecks[axiom]
+                checkbox.setChecked(False)
+                checkbox.setEnabled(False)
 
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(10, 10, 10, 10)
