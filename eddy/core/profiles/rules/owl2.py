@@ -947,6 +947,23 @@ class SelfConnectionRule(ProfileEdgeRule):
             raise ProfileError('Self connection detected on {}'.format(source))
 
 
+class CardinalityRestrictionNodeRule(ProfileNodeRule):
+    """
+    Make sure that the cardinality specified is consistent.
+    """
+    def __call__(self, node):
+        if node.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
+            if node.restriction() is Restriction.Cardinality:
+                minc = node.cardinality('min')
+                maxc = node.cardinality('max')
+                if minc is not None and minc < 0:
+                    raise ProfileError('Negative minimum cardinality detected on {}'.format(node))
+                if maxc is not None and maxc < 0:
+                    raise ProfileError('Negative maximum cardinality detected on {}'.format(node))
+                if minc > maxc:
+                    raise ProfileError('Invalid cardinality range ({},{}) detected on {}'.format(minc, maxc, node))
+
+
 class UnknownIdentityNodeRule(ProfileNodeRule):
     """
     Make sure that the no node has an unknown identity.

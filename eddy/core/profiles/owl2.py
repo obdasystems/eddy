@@ -65,6 +65,7 @@ from eddy.core.profiles.rules.owl2 import MembershipFromRoleInstanceRule
 from eddy.core.profiles.rules.owl2 import MembershipFromAttributeInstanceRule
 from eddy.core.profiles.rules.owl2 import MembershipFromNeutralPropertyAssertionRule
 from eddy.core.profiles.rules.owl2 import SelfConnectionRule
+from eddy.core.profiles.rules.owl2 import CardinalityRestrictionNodeRule
 from eddy.core.profiles.rules.owl2 import UnknownIdentityNodeRule
 
 
@@ -78,6 +79,7 @@ class OWL2Profile(AbstractProfile):
         :type project: Project
         """
         super(OWL2Profile, self).__init__(project)
+        self.addNodeRule(CardinalityRestrictionNodeRule)
         self.addNodeRule(UnknownIdentityNodeRule)
         self.addEdgeRule(SelfConnectionRule)
         self.addEdgeRule(EquivalenceBetweenExpressionsRule)
