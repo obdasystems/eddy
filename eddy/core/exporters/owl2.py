@@ -838,7 +838,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
                 cardinalities = HashSet()
                 min_cardinality = node.cardinality('min')
                 max_cardinality = node.cardinality('max')
-                if min_cardinality is not None:
+                if min_cardinality:
                     cardinalities.add(self.df.getOWLDataMinCardinality(min_cardinality, dpe, dre))
                 if max_cardinality is not None:
                     cardinalities.add(self.df.getOWLDataMinCardinality(max_cardinality, dpe, dre))
@@ -877,7 +877,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
                 cardinalities = HashSet()
                 min_cardinality = node.cardinality('min')
                 max_cardinality = node.cardinality('max')
-                if min_cardinality is not None:
+                if min_cardinality:
                     cardinalities.add(self.df.getOWLObjectMinCardinality(min_cardinality, ope, ce))
                 if max_cardinality is not None:
                     cardinalities.add(self.df.getOWLObjectMaxCardinality(max_cardinality, ope, ce))
@@ -1018,7 +1018,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
                 cardinalities = HashSet()
                 min_cardinality = node.cardinality('min')
                 max_cardinality = node.cardinality('max')
-                if min_cardinality is not None:
+                if min_cardinality:
                     cardinalities.add(self.df.getOWLObjectMinCardinality(min_cardinality, ope, ce))
                 if max_cardinality is not None:
                     cardinalities.add(self.df.getOWLObjectMaxCardinality(max_cardinality, ope, ce))
