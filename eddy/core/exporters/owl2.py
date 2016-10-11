@@ -330,7 +330,7 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         self.setFixedSize(self.sizeHint())
         self.setFont(Font('Roboto', 12))
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        self.setWindowTitle('OWL 2 Export')
+        self.setWindowTitle('{} Export'.format(self.project.profile.name()))
 
         connect(self.confirmationBox.accepted, self.run)
         connect(self.confirmationBox.rejected, self.reject)
@@ -844,7 +844,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
                     cardinalities.add(self.df.getOWLDataMinCardinality(max_cardinality, dpe, dre))
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
-                if cardinalities.size() >= 1:
+                if cardinalities.size() > 1:
                     return self.df.getOWLDataIntersectionOf(cast(Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
@@ -883,7 +883,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
                     cardinalities.add(self.df.getOWLObjectMaxCardinality(max_cardinality, ope, ce))
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
-                if cardinalities.size() >= 1:
+                if cardinalities.size() > 1:
                     return self.df.getOWLObjectIntersectionOf(cast(Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
@@ -1024,7 +1024,7 @@ class OWLProjectExporterWorker(QtCore.QObject):
                     cardinalities.add(self.df.getOWLObjectMaxCardinality(max_cardinality, ope, ce))
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
-                if cardinalities.size() >= 1:
+                if cardinalities.size() > 1:
                     return self.df.getOWLObjectIntersectionOf(cast(Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
