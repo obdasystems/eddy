@@ -960,7 +960,7 @@ class CardinalityRestrictionNodeRule(ProfileNodeRule):
                     raise ProfileError('Negative minimum cardinality detected on {}'.format(node))
                 if maxc is not None and maxc < 0:
                     raise ProfileError('Negative maximum cardinality detected on {}'.format(node))
-                if minc > maxc:
+                if minc is not None and maxc is not None and minc > maxc:
                     raise ProfileError('Invalid cardinality range ({},{}) detected on {}'.format(minc, maxc, node))
 
 
