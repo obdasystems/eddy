@@ -122,19 +122,23 @@ class CardinalityRestrictionForm(QtWidgets.QDialog):
         """
         v1 = self.min()
         v2 = self.max()
-        if v1 is not None and v2 is not None:
-            if v1 > v2:
-                msgbox = QtWidgets.QMessageBox(self)
-                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
-                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle('Invalid range specified')
-                msgbox.setText('Min. cardinality <b>{0}</b> must be <= than Max. cardinality <b>{1}</b>'.format(v1, v2))
-                msgbox.setTextFormat(QtCore.Qt.RichText)
-                msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msgbox.exec_()
-                return
 
-        super(CardinalityRestrictionForm, self).accept()
+        try:
+            if v1 is not None and v1 < 0 or v2 is not None and v2 < 0:
+                raise ValueError('Please enter only <b>positive</b> integers!')
+            if v1 is not None and v2 is not None and v1 > v2:
+                raise ValueError('Min. cardinality <b>{0}</b> must be <= than Max. cardinality <b>{1}</b>'.format(v1, v2))
+        except ValueError as e:
+            msgbox = QtWidgets.QMessageBox(self)
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Invalid range specified')
+            msgbox.setText(str(e))
+            msgbox.setTextFormat(QtCore.Qt.RichText)
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msgbox.exec_()
+        else:
+            super(CardinalityRestrictionForm, self).accept()
 
     #############################################
     #   INTERFACE
