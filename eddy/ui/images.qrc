@@ -117,6 +117,8 @@
   <file alias="ic_content_paste_black@2x">../../resources/icons/24/ic_content_paste_black_24dp_2x.png</file>
   <file alias="ic_not_interested_black">../../resources/icons/24/ic_not_interested_black_24dp_1x.png</file>
   <file alias="ic_not_interested_black@2x">../../resources/icons/24/ic_not_interested_black_24dp_2x.png</file>
+  <file alias="ic_settings_ethernet">../../resources/icons/24/ic_settings_ethernet_black_24dp_1x.png</file>
+  <file alias="ic_settings_ethernet@2x">../../resources/icons/24/ic_settings_ethernet_black_24dp_2x.png</file>
   <file alias="ic_square_black">../../resources/icons/24/ic_square_black_24dp_1x.png</file>
   <file alias="ic_square_black@2x">../../resources/icons/24/ic_square_black_24dp_2x.png</file>
   <file alias="ic_square_half_black">../../resources/icons/24/ic_square_half_black_24dp_1x.png</file>

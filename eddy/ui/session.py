@@ -770,7 +770,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #################################
 
         menu = QtWidgets.QMenu('Select restriction', objectName='property_restriction')
-        menu.setIcon(QtGui.QIcon(':/icons/24/ic_not_interested_black'))
+        menu.setIcon(QtGui.QIcon(':/icons/24/ic_settings_ethernet'))
         menu.addActions(self.action('restriction').actions())
         self.addMenu(menu)
 
