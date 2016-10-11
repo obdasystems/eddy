@@ -668,7 +668,7 @@ cx_Freeze.setup(
             'volume_icon': expandPath('@resources/images/macos_icon_dmg.icns'),
         },
         'build_exe': {
-            'append_script_to_exe': 1,
+            'append_script_to_exe': not MACOS,
             'build_exe': DIST_PATH,
             'dist_dir': DIST_DIR,
             'excludes': excludes,
