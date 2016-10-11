@@ -42,7 +42,7 @@ from PyQt5 import QtWidgets
 from eddy import APPNAME, BUG_TRACKER, ORGANIZATION
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
-from eddy.core.datatypes.owl import Datatype, Facet, OWLAxiom, OWLSyntax, OWLProfile
+from eddy.core.datatypes.owl import Datatype, Facet, OWLAxiom, OWLSyntax
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import DiagramMalformedError
 from eddy.core.exporters.common import AbstractProjectExporter
@@ -201,7 +201,8 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         self.axiomsChecks = {x: CheckBox(x.value, self) for x in OWLAxiom}
         for axiom, checkbox in self.axiomsChecks.items():
             checkbox.clicked.connect(self.onAxiomCheckClicked)
-            checkbox.setChecked(settings.value('export/axiom/{0}'.format(axiom.value), True, bool))
+            checkbox.setChecked(False)
+            checkbox.setEnabled(False)
         self.axiomsCheckBtn = QtWidgets.QPushButton('All', self, clicked=self.doCheckAxiomMarks)
         self.axiomsClearBtn = QtWidgets.QPushButton('Clear', self, clicked=self.doCheckAxiomMarks)
         self.axiomsNonLogicalLayout = QtWidgets.QGridLayout()
@@ -306,18 +307,10 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         # CONFIGURE LAYOUT
         #################################
 
-        if self.project.profile.type() is OWLProfile.OWL2QL:
-            for axiom in OWLAxiom.FunctionalDataProperty, OWLAxiom.FunctionalObjectProperty, \
-                OWLAxiom.InverseFunctionalObjectProperty, OWLAxiom.TransitiveObjectProperty, \
-                OWLAxiom.NegativeDataPropertyAssertion, OWLAxiom.NegativeObjectPropertyAssertion:
-                checkbox = self.axiomsChecks[axiom]
-                checkbox.setChecked(False)
-                checkbox.setEnabled(False)
-
-        if self.project.profile.type() is OWLProfile.OWL2RL:
-            checkbox = self.axiomsChecks[OWLAxiom.ReflexiveObjectProperty]
-            checkbox.setChecked(False)
-            checkbox.setEnabled(False)
+        for axiom in OWLAxiom.forProfile(self.project.profile.type()):
+            checkbox = self.axiomsChecks[axiom]
+            checkbox.setChecked(settings.value('export/axiom/{0}'.format(axiom.value), True, bool))
+            checkbox.setEnabled(True)
 
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(10, 10, 10, 10)
@@ -389,7 +382,7 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         Check axioms marks according to the action that triggered the slot.
         """
         checked = self.sender() is self.axiomsCheckBtn
-        for axiom in OWLAxiom:
+        for axiom in OWLAxiom.forProfile(self.project.profile.type()):
             checkbox = self.axiomsChecks[axiom]
             checkbox.setChecked(checked)
         self.confirmationBox.setEnabled(checked)

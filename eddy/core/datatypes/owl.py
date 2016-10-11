@@ -206,6 +206,24 @@ class OWLAxiom(Enum_):
     SymmetricObjectProperty = 'SymmetricObjectProperty'
     TransitiveObjectProperty = 'TransitiveObjectProperty'
 
+    @classmethod
+    def forProfile(cls, profile):
+        """
+        Returns the list of supported datatypes for the given OWL 2 profile.
+        :type profile: OWLProfile
+        :rtype: set
+        """
+        if profile is OWLProfile.OWL2:
+            return {x for x in OWLAxiom}
+        elif profile is OWLProfile.OWL2QL:
+            return {x for x in OWLAxiom} - {OWLAxiom.FunctionalDataProperty,
+                OWLAxiom.FunctionalObjectProperty, OWLAxiom.InverseFunctionalObjectProperty,
+                OWLAxiom.TransitiveObjectProperty, OWLAxiom.NegativeDataPropertyAssertion,
+                OWLAxiom.NegativeObjectPropertyAssertion}
+        elif profile is OWLProfile.OWL2RL:
+            return {x for x in OWLAxiom} - {OWLAxiom.ReflexiveObjectProperty}
+        raise ValueError('unsupported profile: %s' % profile)
+
 
 @unique
 class OWLProfile(Enum_):
