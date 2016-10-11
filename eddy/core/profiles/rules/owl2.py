@@ -392,7 +392,17 @@ class InputToEnumerationNodeRule(ProfileEdgeRule):
                         raise ProfileError('Invalid input to {}: {}'.format(target.name, source.identityName))
                     if source.identity() is Identity.Value and target.identity() is Identity.Concept:
                         raise ProfileError('Invalid input to {}: {}'.format(target.name, source.identityName))
-                    
+
+                f1 = lambda x: x.type() is Item.InputEdge
+                f2 = lambda x: x.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}
+                f3 = lambda x: x.type() is Item.InputEdge and x is not edge
+                node = first(target.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+                if node:
+                    # If this Enumeration node is acting as filler for a domain/range restriction
+                    # we need to check for the Enumeration node to have at most one input.
+                    if len(target.incomingNodes(filter_on_edges=f3)) > 0:
+                        raise ProfileError('Enumeration acting as filler for qualified {} can have at most one input'.format(node.shortName))
+
 
 class InputToRoleInverseNodeRule(ProfileEdgeRule):
     """
@@ -578,19 +588,19 @@ class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
                         if node.identity() is Identity.Role and Identity.Concept not in source.identities():
                             # If the target node has a Role in input, we can connect the source
                             # node iff it admits the Concept identity among the declared ones.
-                            raise ProfileError('Unsupported input for qualified restriction: {}'.format(source.name))
+                            raise ProfileError('Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
                         if node.identity() is Identity.Concept and Identity.Role not in source.identities():
                             # If the target node has a Concept in input, we can connect the source
                             # node iff it admits the Role identity among the declared ones.
-                            raise ProfileError('Unsupported input for qualified restriction: {}'.format(source.name))
+                            raise ProfileError('Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
                         if node.identity() is Identity.Attribute and Identity.ValueDomain not in source.identities():
                             # If the target node has a Attribute in input, we can connect the source
                             # node iff it admits the ValueDomain identity among the declared ones.
-                            raise ProfileError('Unsupported input for qualified restriction: {}'.format(source.name))
+                            raise ProfileError('Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
                         if node.identity() is Identity.ValueDomain and Identity.Attribute not in source.identities():
                             # If the target node has a Attribute in input, we can connect the source
                             # node iff it admits the ValueDomain identity among the declared ones.
-                            raise ProfileError('Unsupported input for qualified restriction: {}'.format(source.name))
+                            raise ProfileError('Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
 
                 # SOURCE => CONCEPT EXPRESSION
 
@@ -599,7 +609,7 @@ class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
                     if target.restriction() is Restriction.Self:
                         # Not a Qualified Restriction.
                         name = target.restriction().toString()
-                        raise ProfileError('Invalid restriction type for qualified restriction: {}'.format(name))
+                        raise ProfileError('Invalid restriction type for qualified {}: {}'.format(target.shortName, name))
 
                     # A Concept can be given as input only if there is no input or if the other input is a Role.
                     node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
@@ -607,7 +617,15 @@ class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
                         # Not a Qualified Restriction.
                         idA = source.identityName
                         idB = node.identityName
-                        raise ProfileError('Invalid qualified restriction: {} + {}'.format(idA, idB))
+                        raise ProfileError('Invalid qualified {}: {} + {}'.format(target.shortName, idA, idB))
+
+                    # If we have an Enumeration of individuals as input, we need to check for such a
+                    # node to have only one individual as input. This is the graphol syntax to express
+                    # a ObjectSomeValuesFrom(ObjectPropertyExpression ObjectOneOf(A)) which is the extended
+                    # version of ObjectHasValue(ObjectPropertyExpression A), where A is an individual.
+                    if source.type() is Item.EnumerationNode:
+                        if len(source.incomingNodes(lambda x: x.type() is Item.InputEdge)) > 1:
+                            raise ProfileError('Enumeration acting as filler for qualified {} can have at most one input'.format(target.shortName))
 
                 # SOURCE => ROLE EXPRESSION
 
@@ -619,7 +637,7 @@ class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
                         # Not a Qualified Restriction.
                         idA = source.identityName
                         idB = node.identityName
-                        raise ProfileError('Invalid qualified restriction: {} + {}'.format(idA, idB))
+                        raise ProfileError('Invalid qualified {}: {} + {}'.format(target.shortName, idA, idB))
 
                 # SOURCE => ATTRIBUTE
 
@@ -635,7 +653,7 @@ class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
                         # Not a Qualified Restriction.
                         idA = source.identityName
                         idB = node.identityName
-                        raise ProfileError('Invalid qualified restriction: {} + {}'.format(idA, idB))
+                        raise ProfileError('Invalid qualified {}: {} + {}'.format(target.shortName, idA, idB))
 
                 # SOURCE => VALUE-DOMAIN
 
@@ -644,7 +662,7 @@ class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
                     if target.restriction() is Restriction.Self:
                         # Not a Qualified Restriction.
                         name = target.restriction().toString()
-                        raise ProfileError('Invalid restriction type for qualified restriction: {}'.format(name))
+                        raise ProfileError('Invalid restriction type for qualified {}: {}'.format(target.shortName, name))
 
                     # We can connect a ValueDomain only if there is no other input or if the other input is an Attribute.
                     node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
@@ -652,7 +670,7 @@ class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
                         # Not a Qualified Restriction.
                         idA = source.identityName
                         idB = node.identityName
-                        raise ProfileError('Invalid qualified restriction: {} + {}'.format(idA, idB))
+                        raise ProfileError('Invalid qualified {}: {} + {}'.format(target.shortName, idA, idB))
 
 
 class InputToRangeRestrictionNodeRule(ProfileEdgeRule):
@@ -673,7 +691,7 @@ class InputToRangeRestrictionNodeRule(ProfileEdgeRule):
                 f2 = lambda x: x.type() is Item.AttributeNode
                 if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) >= 1:
                     # Range restriction node having an attribute as input can receive no other input.
-                    raise ProfileError('Too many inputs to attribute range restriction')
+                    raise ProfileError('Too many inputs to attribute {}'.format(target.shortName))
 
                 if source.identity() not in {Identity.Concept, Identity.Attribute, Identity.Role, Identity.Neutral}:
                     # Range Restriction node takes as input:
@@ -701,11 +719,11 @@ class InputToRangeRestrictionNodeRule(ProfileEdgeRule):
                         if node.identity() is Identity.Role and Identity.Concept not in source.identities():
                             # If the target node has a Role in input, we can connect the source
                             # node iff it admits the Concept identity among the declared ones.
-                            raise ProfileError('Unsupported input for qualified restriction: {}'.format(source.name))
+                            raise ProfileError('Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
                         if node.identity() is Identity.Concept and Identity.Role not in source.identities():
                             # If the target node has a Concept in input, we can connect the source
                             # node iff it admits the Role identity among the declared ones.
-                            raise ProfileError('Unsupported input for qualified restriction: {}'.format(source.name))
+                            raise ProfileError('Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
 
                 # SOURCE => CONCEPT EXPRESSION
 
@@ -723,7 +741,15 @@ class InputToRangeRestrictionNodeRule(ProfileEdgeRule):
                         # Not a Qualified Restriction.
                         idA = source.identityName
                         idB = node.identityName
-                        raise ProfileError('Invalid qualified restriction: {} + {}'.format(idA, idB))
+                        raise ProfileError('Invalid qualified {}: {} + {}'.format(target.shortName, idA, idB))
+
+                    # If we have an Enumeration of individuals as input, we need to check for such a
+                    # node to have only one individual as input. This is the graphol syntax to express
+                    # a ObjectSomeValuesFrom(ObjectPropertyExpression ObjectOneOf(A)) which is the extended
+                    # version of ObjectHasValue(ObjectPropertyExpression A), where A is an individual.
+                    if source.type() is Item.EnumerationNode:
+                        if len(source.incomingNodes(lambda x: x.type() is Item.InputEdge)) > 1:
+                            raise ProfileError('Enumeration acting as filler for qualified {} can have at most one input'.format(target.shortName))
 
                 # SOURCE => ROLE EXPRESSION
 
@@ -741,7 +767,7 @@ class InputToRangeRestrictionNodeRule(ProfileEdgeRule):
                         # Not a Qualified Restriction.
                         idA = source.identityName
                         idB = node.identityName
-                        raise ProfileError('Invalid qualified restriction: {} + {}'.format(idA, idB))
+                        raise ProfileError('Invalid qualified {}: {} + {}'.format(target.shortName, idA, idB))
 
                 # SOURCE => ATTRIBUTE NODE
 
@@ -760,7 +786,7 @@ class InputToRangeRestrictionNodeRule(ProfileEdgeRule):
                     if len(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge)) >= 1:
                         # Something else is connected to this range restriction node (either a Concept
                         # or a Role) so we cannot attach the Attribute node (no DataPropertyRange).
-                        raise ProfileError('Too many inputs to attribute range restriction')
+                        raise ProfileError('Too many inputs to attribute {}'.format(target.shortName))
 
 
 class InputToFacetNodeRule(ProfileEdgeRule):
