@@ -96,7 +96,11 @@ class EquivalenceBetweenConceptExpressionRule(ProfileEdgeRule):
                         raise ProfileError('Equivalence in presence of a union of concept expressions is forbidden in OWL 2 RL')
                     # Domain/range restriction cannot be part of concept equivalence in OWL 2 RL.
                     elif node.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
-                        raise ProfileError('Equivalence in presence of a {} is forbidden in OWL 2 RL'.format(node.name))
+                        f1 = lambda x: x.type() is Item.InputEdge
+                        f2 = lambda x: x.type() is Item.EnumerationNode
+                        if not node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                            raise ProfileError('Existential {} must specify an Enumeration as filler when involved '
+                                               'in an equivalence between concept expressions in OWL 2 RL'.format(target.shortName))
 
 
 class InclusionBetweenConceptExpressionRule(ProfileEdgeRule):
@@ -124,10 +128,11 @@ class InclusionBetweenConceptExpressionRule(ProfileEdgeRule):
                 # Complement nodes cannot be source of concept inclusion in OWL 2 RL.
                 elif source.type() is Item.ComplementNode:
                     raise ProfileError('Inclusion with a concept complement as source is forbidden in OWL 2 RL')
-                # Universal domain/range restriction cannot be source of concept inclusion in OWL 2 RL.
+                # OWL 2 RL admits only existential restriction as source for inclusion.
                 elif source.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
-                    if source.restriction() is Restriction.Forall:
-                        raise ProfileError('Inclusion with a universal {} as source is forbidden in OWL 2 RL'.format(source.shortName))
+                    if source.restriction() is not Restriction.Exists:
+                        r = source.restriction()
+                        raise ProfileError('Inclusion with a {} {} as source is forbidden in OWL 2 RL'.format(r.shortName, source.shortName))
 
                 #############################################
                 # EVALUATE INCLUSION TARGET
@@ -146,10 +151,16 @@ class InclusionBetweenConceptExpressionRule(ProfileEdgeRule):
                 # Existential domain/range restriction and cardinality check.
                 elif target.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
                     if target.restriction() is Restriction.Exists:
-                        raise ProfileError('Inclusion with an existential {} as target is forbidden in OWL 2 RL'.format(source.shortName))
+                        # We need to check for the restriction to have a an Enumeration as filler.
+                        f1 = lambda x: x.type() is Item.InputEdge
+                        f2 = lambda x: x.type() is Item.EnumerationNode
+                        if not target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                            raise ProfileError('Existential {} must specify an Enumeration as filler when acting as '
+                                               'target for a concept expression inclusion in OWL 2 RL'.format(target.shortName))
                     elif target.restriction() is Restriction.Cardinality:
-                        if target.cardinality('min') != 0 or target.cardinality('max') != 1:
-                            raise ProfileError('Inclusion can only target cardinality {} with cardinality (0, 1) in OWL 2 RL'.format(target.shortName))
+                        if target.cardinality('max') not in (0, 1):
+                            raise ProfileError('Cardinality {} must specify a max cardinality of 0 or 1 when acting as '
+                                               'target for a concept expression inclusion in OWL 2 RL'.format(target.shortName))
 
 
 class InputValueToEnumerationNodeRule(ProfileEdgeRule):

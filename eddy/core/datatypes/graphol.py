@@ -121,6 +121,14 @@ class Restriction(Enum_):
     Cardinality = 'Cardinality: (min, max)'
     Self = 'Self: self'
 
+    @property
+    def shortName(self):
+        """
+        Returns the restriction short name, i.e: existential, universal, cardinality, self.
+        :rtype: str
+        """
+        return self.value[:self.value.index(':')].lower()
+
     @classmethod
     def forLabel(cls, value):
         """
