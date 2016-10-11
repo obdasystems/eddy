@@ -95,12 +95,12 @@ class InclusionBetweenConceptExpressionRule(ProfileEdgeRule):
             # Neutral, or at least one of the 2 is identified as a Concept expression.
             if not {Identity.Role, Identity.Attribute, Identity.Unknown} & {source.identity(), target.identity()}:
                 if source.type() is Item.IntersectionNode:
-                    raise ProfileError('Inclusion edges with an intersection of concept expressions as source are forbidden in OWL 2 RL')
+                    raise ProfileError('Inclusion with an intersection of concept expressions as source is forbidden in OWL 2 RL')
                 if source.type() is Item.ComplementNode:
-                    raise ProfileError('Inclusion edges with a concept complement as source are forbidden in OWL 2 RL')
+                    raise ProfileError('Inclusion with a concept complement as source is forbidden in OWL 2 RL')
                 if source.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
                     if source.isRestrictionQualified():
-                        raise ProfileError('Inclusion edges with a qualified {} as source are forbidden in OWL 2 RL'.format(source.shortName))
+                        raise ProfileError('Inclusion with a qualified {} as source is forbidden in OWL 2 RL'.format(source.shortName))
 
 
 class InputConceptToRestrictionNodeRule(ProfileEdgeRule):
@@ -122,7 +122,7 @@ class InputConceptToRestrictionNodeRule(ProfileEdgeRule):
                     if Special.forValue(source.text()) is not Special.Top:
                         # We found an outgoing inclusion edge and our restriction filler is not TOP.
                         if target.outgoingNodes(filter_on_edges=lambda x: x.type() is Item.InclusionEdge):
-                            raise ProfileError('Inclusion edges with a qualified {} as source are forbidden in OWL 2 RL'.format(target.shortName))
+                            raise ProfileError('Inclusion with a qualified {} as source is forbidden in OWL 2 RL'.format(target.shortName))
                         # Similarly we block the input in case of equivalence edges attached to the restriction node.
                         if target.adjacentNodes(filter_on_edges=lambda x: x.type() is Item.EquivalenceEdge):
                             raise ProfileError('Equivalence in presence of qualified {} is forbidden in OWL 2 QL'.format(target.shortName))
@@ -166,7 +166,7 @@ class MembershipFromAttributeInstanceToComplementNodeRule(ProfileEdgeRule):
         if edge.type() is Item.MembershipEdge:
             if source.identity() is Identity.AttributeInstance:
                 if target.type() is Item.ComplementNode:
-                    raise ProfileError('Negative attribute assertions are forbidden in OWL 2 QL')
+                    raise ProfileError('Negative attribute assertion is forbidden in OWL 2 QL')
 
 
 class MembershipFromRoleInstanceToComplementNodeRule(ProfileEdgeRule):
@@ -177,7 +177,7 @@ class MembershipFromRoleInstanceToComplementNodeRule(ProfileEdgeRule):
         if edge.type() is Item.MembershipEdge:
             if source.identity() is Identity.RoleInstance:
                 if target.type() is Item.ComplementNode:
-                    raise ProfileError('Negative role assertiona are forbidden in OWL 2 QL')
+                    raise ProfileError('Negative role assertion is forbidden in OWL 2 QL')
 
 
 class MembershipFromPropertyAssertionToComplementNodeRule(ProfileEdgeRule):
@@ -189,4 +189,4 @@ class MembershipFromPropertyAssertionToComplementNodeRule(ProfileEdgeRule):
             if source.type() is Item.PropertyAssertionNode:
                 if source.identity() is Identity.Neutral:
                     if target.type() is Item.ComplementNode:
-                        raise ProfileError('Negative attribute/role assertions are forbidden in OWL 2 QL')
+                        raise ProfileError('Negative attribute/role assertion is forbidden in OWL 2 QL')
