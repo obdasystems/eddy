@@ -120,6 +120,7 @@ class ExportTestCase(EddyTestCase):
         self.assertIn('Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)', content)
         self.assertIn('Prefix(test:=<http://www.dis.uniroma1.it/~graphol/test_project#>)', content)
         self.assertIn('Ontology(<http://www.dis.uniroma1.it/~graphol/test_project>', content)
+        self.assertIn('Declaration(Class(test:Vegetable))', content)
         self.assertIn('Declaration(Class(test:Person))', content)
         self.assertIn('Declaration(Class(test:Male))', content)
         self.assertIn('Declaration(Class(test:Female))', content)
@@ -157,8 +158,9 @@ class ExportTestCase(EddyTestCase):
         self.assertAnyIn(['EquivalentClasses(test:Person DataSomeValuesFrom(test:name rdfs:Literal))', 'EquivalentClasses(DataSomeValuesFrom(test:name rdfs:Literal) test:Person)'], content)
         self.assertAnyIn(['EquivalentClasses(test:Person ObjectUnionOf(test:Female test:Male))', 'EquivalentClasses(ObjectUnionOf(test:Female test:Male) test:Person)'], content)
         self.assertAnyIn(['DisjointClasses(test:Female test:Male)', 'DisjointClasses(test:Male test:Female)'], content)
+        self.assertAnyIn(['DisjointClasses(test:Person test:Vegetable)', 'DisjointClasses(test:Vegetable test:Person)'], content)
         self.assertIn(')', content)
-        self.assertLen(46, content)
+        self.assertLen(48, content)
 
     def test_export_project_to_owl_with_normalization(self):
         # WHEN
@@ -179,6 +181,7 @@ class ExportTestCase(EddyTestCase):
         self.assertIn('Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)', content)
         self.assertIn('Prefix(test:=<http://www.dis.uniroma1.it/~graphol/test_project#>)', content)
         self.assertIn('Ontology(<http://www.dis.uniroma1.it/~graphol/test_project>', content)
+        self.assertIn('Declaration(Class(test:Vegetable))', content)
         self.assertIn('Declaration(Class(test:Person))', content)
         self.assertIn('Declaration(Class(test:Male))', content)
         self.assertIn('Declaration(Class(test:Female))', content)
@@ -219,5 +222,6 @@ class ExportTestCase(EddyTestCase):
         self.assertIn('ObjectPropertyRange(test:hasMother test:Mother)', content)
         self.assertIn('NegativeObjectPropertyAssertion(test:isAncestorOf test:Bob test:Trudy)', content)
         self.assertAnyIn(['DisjointClasses(test:Female test:Male)', 'DisjointClasses(test:Male test:Female)'], content)
+        self.assertAnyIn(['DisjointClasses(test:Person test:Vegetable)', 'DisjointClasses(test:Vegetable test:Person)'], content)
         self.assertIn(')', content)
-        self.assertLen(49, content)
+        self.assertLen(51, content)

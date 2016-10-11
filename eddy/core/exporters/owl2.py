@@ -1147,13 +1147,21 @@ class OWLProjectExporterWorker(QtCore.QObject):
     def createDisjointClassesAxiom(self, node):
         """
         Generate a OWL 2 DisjointClasses axiom.
-        :type node: DisjointUnionNode
+        :type node: T <= ComplementNode|DisjointUnionNode
         """
         if OWLAxiom.DisjointClasses in self.axiomsList:
-            collection = HashSet()
-            for operand in node.incomingNodes(lambda x: x.type() is Item.InputEdge):
-                collection.add(self.convert(operand))
-            self.addAxiom(self.df.getOWLDisjointClassesAxiom(cast(Set, collection)))
+            if node.type() is Item.DisjointUnionNode:
+                collection = HashSet()
+                for operand in node.incomingNodes(lambda x: x.type() is Item.InputEdge):
+                    collection.add(self.convert(operand))
+                self.addAxiom(self.df.getOWLDisjointClassesAxiom(cast(Set, collection)))
+            elif node.type() is Item.ComplementNode:
+                operand = first(node.incomingNodes(lambda x: x.type() is Item.InputEdge))
+                for included in node.adjacentNodes(lambda x: x.type() in {Item.InclusionEdge, Item.EquivalenceEdge}):
+                    collection = HashSet()
+                    collection.add(self.convert(operand))
+                    collection.add(self.convert(included))
+                    self.addAxiom(self.df.getOWLDisjointClassesAxiom(cast(Set, collection)))
 
     def createDisjointDataPropertiesAxiom(self, edge):
         """
@@ -1370,21 +1378,27 @@ class OWLProjectExporterWorker(QtCore.QObject):
         if OWLAxiom.SubClassOf in self.axiomsList:
             # Here we can't be in the situation where we have Value-Domain as inputs to
             # the (Disjoint)Union node because OWL 2 (and thus Graphol) does not admit
-            # inclusion between value domain expressions.
-            if edge.source.type() in {Item.DisjointUnionNode, Item.UnionNode} and self.normalize:
-                # (A OR B) ISA C needs to be normalized to (A ISA C) && (B ISA C)
-                f1 = lambda x: x.type() is Item.InputEdge
-                f2 = lambda x: x.identity() is Identity.Concept
-                for operand in edge.source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-                    self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(operand), self.convert(edge.target)))
-            elif edge.target.type() is Item.IntersectionNode and self.normalize:
-                # A ISA (B AND C) needs to be normalized to A ISA B && A ISA C
-                f1 = lambda x: x.type() is Item.InputEdge
-                f2 = lambda x: x.identity() is Identity.Concept
-                for operand in edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-                    self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(edge.source), self.convert(operand)))
-            else:
-                self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(edge.source), self.convert(edge.target)))
+            # inclusion between value domain expressions. NOTE: we need to discard the case
+            # where a complement node is involved in the axiom, since we changed the axiom
+            # SubClassOf(ClassExpression ObjectComplementOf(ClassExpression)) to be
+            # DisjointClasses(ClassExpression ...) so that it will be serialized similarly
+            # as for the Disjoint Union node.
+            if Item.ComplementNode not in {edge.source.type(), edge.target.type()}:
+
+                if edge.source.type() in {Item.DisjointUnionNode, Item.UnionNode} and self.normalize:
+                    # (A OR B) ISA C needs to be normalized to (A ISA C) && (B ISA C)
+                    f1 = lambda x: x.type() is Item.InputEdge
+                    f2 = lambda x: x.identity() is Identity.Concept
+                    for operand in edge.source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                        self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(operand), self.convert(edge.target)))
+                elif edge.target.type() is Item.IntersectionNode and self.normalize:
+                    # A ISA (B AND C) needs to be normalized to A ISA B && A ISA C
+                    f1 = lambda x: x.type() is Item.InputEdge
+                    f2 = lambda x: x.identity() is Identity.Concept
+                    for operand in edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                        self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(edge.source), self.convert(operand)))
+                else:
+                    self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(edge.source), self.convert(edge.target)))
 
     def createSubDataPropertyOfAxiom(self, edge):
         """
@@ -1461,6 +1475,9 @@ class OWLProjectExporterWorker(QtCore.QObject):
                         self.createObjectPropertyAxiom(node)
                 elif node.type() is Item.DisjointUnionNode:
                     self.createDisjointClassesAxiom(node)
+                elif node.type() is Item.ComplementNode:
+                    if node.identity() is Identity.Concept:
+                        self.createDisjointClassesAxiom(node)
                 elif node.type() is Item.DomainRestrictionNode:
                     self.createPropertyDomainAxiom(node)
                 elif node.type() is Item.RangeRestrictionNode:
