@@ -918,7 +918,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
-        self.assertEqual(self.project.profile.pvr().message(), 'Invalid restriction type for qualified restriction: self')
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid restriction type for qualified domain restriction: self')
         self.assertFalse(self.project.profile.pvr().isValid())
 
     def test_input_between_concept_node_and_domain_restriction_node_with_attribute_in_input(self):
@@ -930,7 +930,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C7'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
-        self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified restriction: Concept + Attribute')
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified domain restriction: Concept + Attribute')
         self.assertFalse(self.project.profile.pvr().isValid())
 
     def test_input_between_role_node_and_domain_restriction_node_with_value_domain_in_input(self):
@@ -942,7 +942,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'R5'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
-        self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified restriction: Role + Value Domain')
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified domain restriction: Role + Value Domain')
         self.assertFalse(self.project.profile.pvr().isValid())
 
     def test_input_between_attribute_node_and_domain_restriction_node_with_self_restriction(self):
@@ -966,7 +966,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__insert_edge_between(Item.InputEdge, (Item.AttributeNode, 'A4'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
-        self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified restriction: Attribute + Concept')
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified domain restriction: Attribute + Concept')
         self.assertFalse(self.project.profile.pvr().isValid())
 
     def test_input_between_value_domain_node_and_domain_restriction_node_with_self_restriction(self):
@@ -978,7 +978,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__insert_edge_between(Item.InputEdge, (Item.ValueDomainNode, 'xsd:string'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
-        self.assertEqual(self.project.profile.pvr().message(), 'Invalid restriction type for qualified restriction: self')
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid restriction type for qualified domain restriction: self')
         self.assertFalse(self.project.profile.pvr().isValid())
 
     def test_input_between_value_domain_node_and_domain_restriction_node_with_role_in_input(self):
@@ -990,7 +990,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__insert_edge_between(Item.InputEdge, (Item.ValueDomainNode, 'xsd:string'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
-        self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified restriction: Value Domain + Role')
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified domain restriction: Value Domain + Role')
         self.assertFalse(self.project.profile.pvr().isValid())
 
     def test_input_between_concept_node_and_range_restriction_node_with_filler(self):
@@ -1064,7 +1064,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'R5'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
-        self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified restriction: Role + Role')
+        self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified range restriction: Role + Role')
         self.assertFalse(self.project.profile.pvr().isValid())
 
     def test_input_between_attribute_node_and_range_restriction_node_with_self_restriction(self):
