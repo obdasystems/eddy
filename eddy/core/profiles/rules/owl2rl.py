@@ -71,10 +71,11 @@ class UnsupportedSpecialOnRoleAndAttributeNode(ProfileNodeRule):
 
 class InclusionBetweenConceptExpressionRule(ProfileEdgeRule):
     """
-    Make sure that inclusion edges are traced according to OWL 2 RL subClass
-    and superClass definition: https://www.w3.org/TR/owl2-profiles/
+    Make sure that inclusion edges are traced according to OWL 2 RL subClass and superClass definition.
+    More information: https://www.w3.org/TR/owl2-profiles/
     """
     def __call__(self, source, edge, target):
+
         if edge.type() is Item.InclusionEdge:
             # We need to provide rules for OWL 2 RL concept inclusion. Value-Domain inclusions
             # are already forbidden by OWL 2 rules, so here we just consider the case where we
@@ -89,14 +90,14 @@ class InclusionBetweenConceptExpressionRule(ProfileEdgeRule):
                 # TOP concept cannot be source of concept inclusion in OWL 2 RL.
                 if source.type() is Item.ConceptNode:
                     if Special.forValue(source.text()) is Special.Top:
-                        raise ProfileError('Inclusion sourcing from TOP concept is forbidden in OWL 2 RL')
+                        raise ProfileError('Inclusion edges with a TOP concept as source are forbidden in OWL 2 RL')
                 # Complement nodes cannot be source of concept inclusion in OWL 2 RL.
                 elif source.type() is Item.ComplementNode:
-                    raise ProfileError('Inclusion sourcing from concept complement is forbidden in OWL 2 RL')
+                    raise ProfileError('Inclusion edges with a concept complement as source are forbidden in OWL 2 RL')
                 # Universal domain/range restriction cannot be source of concept inclusion in OWL 2 RL.
                 elif source.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
                     if source.restriction() is Restriction.Forall:
-                        raise ProfileError('Inclusion sourcing from universal {} is forbidden in OWL 2 RL'.format(source.shortName))
+                        raise ProfileError('Inclusion edges with a universal {} as source are forbidden in OWL 2 RL'.format(source.shortName))
 
                 #############################################
                 # EVALUATE INCLUSION TARGET
@@ -105,20 +106,20 @@ class InclusionBetweenConceptExpressionRule(ProfileEdgeRule):
                 # TOP concept cannot be target of concept inclusion in OWL 2 RL.
                 if target.type() is Item.ConceptNode:
                     if Special.forValue(target.text()) is Special.Top:
-                        raise ProfileError('Inclusion targeting TOP concept is forbidden in OWL 2 RL')
+                        raise ProfileError('Inclusion edges with a TOP concept as target are forbidden in OWL 2 RL')
                 # Enumeration nodes cannot be target of concept inclusion in OWL 2 RL.
                 elif target.type() is Item.EnumerationNode:
-                    raise ProfileError('Inclusion targeting enumeration of individuals is forbidden in OWL 2 RL')
+                    raise ProfileError('Inclusion edges with an enumeration of individuals as target are forbidden in OWL 2 RL')
                 # Union of concept expressions cannot be target of concept inclusion in OWL 2 RL.
                 elif target.type() is Item.EnumerationNode:
-                    raise ProfileError('Inclusion targeting union of concept expressions is forbidden in OWL 2 RL')
+                    raise ProfileError('Inclusion edges with a union of concept expressions as target are forbidden in OWL 2 RL')
                 # Existential domain/range restriction and cardinality check.
                 elif target.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
                     if target.restriction() is Restriction.Exists:
-                        raise ProfileError('Inclusion targeting existential {} is forbidden in OWL 2 RL'.format(target.shortName))
+                        raise ProfileError('Inclusion edges with an existential {} as target are forbidden in OWL 2 RL'.format(source.shortName))
                     elif target.restriction() is Restriction.Cardinality:
                         if target.cardinality('min') != 0 or target.cardinality('max') != 1:
-                            raise ProfileError('Inclusion can only target cardinality {} with cardinality (0, 1) in OWL 2 RL'.format(target.shortName))
+                            raise ProfileError('Inclusion edges can only target cardinality {} with cardinality (0, 1) in OWL 2 RL'.format(target.shortName))
 
 
 class InputValueToEnumerationNodeRule(ProfileEdgeRule):
