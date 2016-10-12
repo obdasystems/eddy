@@ -157,15 +157,15 @@ class BuildExe(cx_Freeze.build_exe):
         Command execution.
         """
         super().run()
-        self.execute(self.package_plugins, ())
         self.execute(self.make_dist, ())
-        self.execute(self.unix_2_dos, ())
-        self.execute(self.unix_exec, ())
-        self.execute(self.clean_build, ())
+        self.execute(self.make_plugins, ())
+        self.execute(self.make_win32, ())
+        self.execute(self.make_linux, ())
+        self.execute(self.make_clean, ())
         self.execute(self.make_zip, ())
         self.execute(self.make_installer, ())
 
-    def clean_build(self):
+    def make_clean(self):
         """
         Cleanup the build directory from garbage files.
         """
@@ -189,7 +189,7 @@ class BuildExe(cx_Freeze.build_exe):
                     arcname = os.path.join(DIST_NAME, os.path.relpath(path, self.build_exe))
                     zipf.write(path, arcname)
 
-    def package_plugins(self):
+    def make_plugins(self):
         """
         Package built-in plugins into ZIP archives.
         """
@@ -274,7 +274,7 @@ class BuildExe(cx_Freeze.build_exe):
                 except Exception as e:
                     distutils.log.error('Failed to build {0}: {1}'.format(script_file, e))
 
-    def unix_2_dos(self):
+    def make_win32(self):
         """
         Makes sure text files from directory have 'Windows style' end of lines.
         """
@@ -290,7 +290,7 @@ class BuildExe(cx_Freeze.build_exe):
                             with open(path, mode='wb') as f:
                                 f.write(new_data.encode(encoding='UTF-8'))
 
-    def unix_exec(self):
+    def make_linux(self):
         """
         Properly create a Linux executable.
         """

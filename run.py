@@ -69,8 +69,12 @@ jnius_config.add_options('-ea', '-Xmx512m')
 jnius_config.set_classpath(*classpath)
 
 #############################################
-# END JVM SETUP
+# BEGIN LINUX SPECIFIC SETUP
 #################################
+
+if _LINUX:
+    os.environ['LD_LIBRARY_PATH'] = expandPath('@root/')
+
 
 from PyQt5 import Qt
 from PyQt5 import QtCore
