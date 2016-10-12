@@ -1048,6 +1048,7 @@ class AttributeNodeInfo(PredicateNodeInfo):
         super().updateData(node)
         self.functBox.setChecked(node.isFunctional())
         self.functBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
+        self.functKey.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
 
 
 class RoleNodeInfo(PredicateNodeInfo):
@@ -1166,14 +1167,18 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.asymmetricBox.setChecked(node.isAsymmetric())
         self.functBox.setChecked(node.isFunctional())
         self.functBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
+        self.functKey.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
         self.invFunctBox.setChecked(node.isInverseFunctional())
         self.invFunctBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
+        self.invFunctKey.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
         self.irreflexiveBox.setChecked(node.isIrreflexive())
         self.reflexiveBox.setChecked(node.isReflexive())
         self.reflexiveBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2RL)
+        self.reflexiveKey.setEnabled(self.project.profile.type() is not OWLProfile.OWL2RL)
         self.symmetricBox.setChecked(node.isSymmetric())
         self.transitiveBox.setChecked(node.isTransitive())
         self.transitiveBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
+        self.transitiveKey.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
 
 
 class ValueDomainNodeInfo(NodeInfo):
