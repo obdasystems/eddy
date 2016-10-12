@@ -104,8 +104,9 @@ class ExportTestCase(EddyTestCase):
     def test_export_project_to_owl_without_normalization(self):
         # WHEN
         worker = OWLProjectExporterWorker(self.project, '@tests/.tests/test_project_1.owl',
-                    axioms={x for x in OWLAxiom}, normalize=False,
-                    syntax=OWLSyntax.Functional)
+            axioms={x for x in OWLAxiom},
+            normalize=False,
+            syntax=OWLSyntax.Functional)
         worker.run()
         # THEN
         self.assertFileExists('@tests/.tests/test_project_1.owl')
@@ -126,6 +127,11 @@ class ExportTestCase(EddyTestCase):
         self.assertIn('Declaration(Class(test:Female))', content)
         self.assertIn('Declaration(Class(test:Mother))', content)
         self.assertIn('Declaration(Class(test:Father))', content)
+        self.assertIn('Declaration(Class(test:Underage))', content)
+        self.assertIn('Declaration(Class(test:Adult))', content)
+        self.assertIn('Declaration(Class(test:Vehicle))', content)
+        self.assertIn('Declaration(Class(test:Less_than_50_cc))', content)
+        self.assertIn('Declaration(Class(test:Over_50_cc))', content)
         self.assertIn('Declaration(NamedIndividual(test:Bob))', content)
         self.assertIn('Declaration(NamedIndividual(test:Alice))', content)
         self.assertIn('Declaration(NamedIndividual(test:Trudy))', content)
@@ -134,14 +140,13 @@ class ExportTestCase(EddyTestCase):
         self.assertIn('Declaration(ObjectProperty(test:hasFather))', content)
         self.assertIn('Declaration(ObjectProperty(test:hasMother))', content)
         self.assertIn('Declaration(ObjectProperty(test:isAncestorOf))', content)
+        self.assertIn('Declaration(ObjectProperty(test:drives))', content)
         self.assertIn('Declaration(DataProperty(test:name))', content)
         self.assertIn('Declaration(Datatype(xsd:string))', content)
         self.assertIn('SubClassOf(test:Person ObjectSomeValuesFrom(test:hasAncestor owl:Thing))', content)
         self.assertIn('SubClassOf(test:Father test:Male)', content)
         self.assertIn('SubClassOf(test:Mother test:Female)', content)
-        self.assertIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasAncestor) owl:Thing) test:Person)', content)
-        self.assertIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasMother) owl:Thing) test:Mother)', content)
-        self.assertIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasFather) owl:Thing) test:Father)', content)
+        self.assertIn('SubClassOf(test:Underage ObjectAllValuesFrom(test:drives test:Less_than_50_cc))', content)
         self.assertIn('SubObjectPropertyOf(test:hasParent test:hasAncestor)', content)
         self.assertIn('SubObjectPropertyOf(test:hasFather test:hasParent)', content)
         self.assertIn('SubObjectPropertyOf(test:hasMother test:hasParent)', content)
@@ -154,19 +159,47 @@ class ExportTestCase(EddyTestCase):
         self.assertIn('ObjectPropertyRange(test:hasAncestor test:Person)', content)
         self.assertIn('ObjectPropertyRange(test:hasFather test:Father)', content)
         self.assertIn('ObjectPropertyRange(test:hasMother test:Mother)', content)
+        self.assertIn('ObjectPropertyRange(test:drives test:Vehicle)', content)
         self.assertIn('NegativeObjectPropertyAssertion(test:isAncestorOf test:Bob test:Trudy)', content)
-        self.assertAnyIn(['EquivalentClasses(test:Person DataSomeValuesFrom(test:name rdfs:Literal))', 'EquivalentClasses(DataSomeValuesFrom(test:name rdfs:Literal) test:Person)'], content)
-        self.assertAnyIn(['EquivalentClasses(test:Person ObjectUnionOf(test:Female test:Male))', 'EquivalentClasses(ObjectUnionOf(test:Female test:Male) test:Person)'], content)
-        self.assertAnyIn(['DisjointClasses(test:Female test:Male)', 'DisjointClasses(test:Male test:Female)'], content)
-        self.assertAnyIn(['DisjointClasses(test:Person test:Vegetable)', 'DisjointClasses(test:Vegetable test:Person)'], content)
         self.assertIn(')', content)
-        self.assertLen(48, content)
+        # AND
+        self.assertNotIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasAncestor) owl:Thing) test:Person)', content)
+        self.assertNotIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasMother) owl:Thing) test:Mother)', content)
+        self.assertNotIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasFather) owl:Thing) test:Father)', content)
+        # AND
+        self.assertAnyIn(['EquivalentClasses(test:Person ObjectUnionOf(test:Underage test:Adult))',
+                          'EquivalentClasses(test:Person ObjectUnionOf(test:Adult test:Underage))',
+                          'EquivalentClasses(ObjectUnionOf(test:Underage test:Adult) test:Person)',
+                          'EquivalentClasses(ObjectUnionOf(test:Adult test:Person) test:Person)'], content)
+        self.assertAnyIn(['EquivalentClasses(test:Person DataSomeValuesFrom(test:name rdfs:Literal))',
+                          'EquivalentClasses(DataSomeValuesFrom(test:name rdfs:Literal) test:Person)'], content)
+        self.assertAnyIn(['EquivalentClasses(test:Person ObjectUnionOf(test:Female test:Male))',
+                          'EquivalentClasses(test:Person ObjectUnionOf(test:Male test:Female))',
+                          'EquivalentClasses(ObjectUnionOf(test:Female test:Male) test:Person)',
+                          'EquivalentClasses(ObjectUnionOf(test:Male test:Female) test:Person)'], content)
+        self.assertAnyIn(['EquivalentClasses(test:Vehicle ObjectUnionOf(test:Less_than_50_cc test:Over_50_cc))',
+                          'EquivalentClasses(test:Vehicle ObjectUnionOf(test:Over_50_cc test:Less_than_50_cc))',
+                          'EquivalentClasses(ObjectUnionOf(test:Less_than_50_cc test:Over_50_cc) test:Vehicle)',
+                          'EquivalentClasses(ObjectUnionOf(test:Over_50_cc test:Less_than_50_cc) test:Vehicle)'], content)
+        self.assertAnyIn(['EquivalentClasses(test:Person ObjectAllValuesFrom(test:drives owl:Thing))',
+                          'EquivalentClasses(ObjectAllValuesFrom(test:drives owl:Thing) test:Person)',], content)
+        self.assertAnyIn(['DisjointClasses(test:Female test:Male)',
+                          'DisjointClasses(test:Male test:Female)'], content)
+        self.assertAnyIn(['DisjointClasses(test:Person test:Vegetable)',
+                          'DisjointClasses(test:Vegetable test:Person)'], content)
+        self.assertAnyIn(['DisjointClasses(test:Underage test:Adult)',
+                          'DisjointClasses(test:Adult test:Underage)'], content)
+        self.assertAnyIn(['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
+                          'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)'], content)
+        # AND
+        self.assertLen(58, content)
 
     def test_export_project_to_owl_with_normalization(self):
         # WHEN
         worker = OWLProjectExporterWorker(self.project, '@tests/.tests/test_project_1.owl',
-                    axioms={x for x in OWLAxiom}, normalize=True,
-                    syntax=OWLSyntax.Functional)
+            axioms={x for x in OWLAxiom},
+            normalize=True,
+            syntax=OWLSyntax.Functional)
         worker.run()
         # THEN
         self.assertFileExists('@tests/.tests/test_project_1.owl')
@@ -187,6 +220,11 @@ class ExportTestCase(EddyTestCase):
         self.assertIn('Declaration(Class(test:Female))', content)
         self.assertIn('Declaration(Class(test:Mother))', content)
         self.assertIn('Declaration(Class(test:Father))', content)
+        self.assertIn('Declaration(Class(test:Underage))', content)
+        self.assertIn('Declaration(Class(test:Adult))', content)
+        self.assertIn('Declaration(Class(test:Vehicle))', content)
+        self.assertIn('Declaration(Class(test:Less_than_50_cc))', content)
+        self.assertIn('Declaration(Class(test:Over_50_cc))', content)
         self.assertIn('Declaration(NamedIndividual(test:Bob))', content)
         self.assertIn('Declaration(NamedIndividual(test:Alice))', content)
         self.assertIn('Declaration(NamedIndividual(test:Trudy))', content)
@@ -195,19 +233,22 @@ class ExportTestCase(EddyTestCase):
         self.assertIn('Declaration(ObjectProperty(test:hasFather))', content)
         self.assertIn('Declaration(ObjectProperty(test:hasMother))', content)
         self.assertIn('Declaration(ObjectProperty(test:isAncestorOf))', content)
+        self.assertIn('Declaration(ObjectProperty(test:drives))', content)
         self.assertIn('Declaration(DataProperty(test:name))', content)
         self.assertIn('Declaration(Datatype(xsd:string))', content)
         self.assertIn('SubClassOf(test:Person ObjectSomeValuesFrom(test:hasAncestor owl:Thing))', content)
         self.assertIn('SubClassOf(test:Father test:Male)', content)
         self.assertIn('SubClassOf(test:Mother test:Female)', content)
-        self.assertIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasAncestor) owl:Thing) test:Person)', content)
-        self.assertIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasMother) owl:Thing) test:Mother)', content)
-        self.assertIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasFather) owl:Thing) test:Father)', content)
         self.assertIn('SubClassOf(test:Person DataSomeValuesFrom(test:name rdfs:Literal))', content)
-        self.assertIn('SubClassOf(DataSomeValuesFrom(test:name rdfs:Literal) test:Person)', content)
-        self.assertIn('SubClassOf(test:Person ObjectUnionOf(test:Female test:Male))', content)
         self.assertIn('SubClassOf(test:Female test:Person)', content)
         self.assertIn('SubClassOf(test:Male test:Person)', content)
+        self.assertIn('SubClassOf(test:Underage test:Person)', content)
+        self.assertIn('SubClassOf(test:Adult test:Person)', content)
+        self.assertIn('SubClassOf(test:Less_than_50_cc test:Vehicle)', content)
+        self.assertIn('SubClassOf(test:Over_50_cc test:Vehicle)', content)
+        self.assertIn('SubClassOf(test:Underage ObjectAllValuesFrom(test:drives test:Less_than_50_cc))', content)
+        self.assertIn('SubClassOf(test:Person ObjectAllValuesFrom(test:drives owl:Thing))', content)
+        self.assertIn('SubClassOf(ObjectAllValuesFrom(test:drives owl:Thing) test:Person)', content)
         self.assertIn('SubObjectPropertyOf(test:hasParent test:hasAncestor)', content)
         self.assertIn('SubObjectPropertyOf(test:hasFather test:hasParent)', content)
         self.assertIn('SubObjectPropertyOf(test:hasMother test:hasParent)', content)
@@ -220,8 +261,28 @@ class ExportTestCase(EddyTestCase):
         self.assertIn('ObjectPropertyRange(test:hasAncestor test:Person)', content)
         self.assertIn('ObjectPropertyRange(test:hasFather test:Father)', content)
         self.assertIn('ObjectPropertyRange(test:hasMother test:Mother)', content)
+        self.assertIn('ObjectPropertyRange(test:drives test:Vehicle)', content)
         self.assertIn('NegativeObjectPropertyAssertion(test:isAncestorOf test:Bob test:Trudy)', content)
-        self.assertAnyIn(['DisjointClasses(test:Female test:Male)', 'DisjointClasses(test:Male test:Female)'], content)
-        self.assertAnyIn(['DisjointClasses(test:Person test:Vegetable)', 'DisjointClasses(test:Vegetable test:Person)'], content)
         self.assertIn(')', content)
-        self.assertLen(51, content)
+        # AND
+        self.assertNotIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasAncestor) owl:Thing) test:Person)', content)
+        self.assertNotIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasMother) owl:Thing) test:Mother)', content)
+        self.assertNotIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasFather) owl:Thing) test:Father)', content)
+        self.assertNotIn('SubClassOf(DataSomeValuesFrom(test:name rdfs:Literal) test:Person)', content)
+        # AND
+        self.assertAnyIn(['SubClassOf(test:Person ObjectUnionOf(test:Underage test:Adult))',
+                          'SubClassOf(test:Person ObjectUnionOf(test:Adult test:Underage))'], content)
+        self.assertAnyIn(['SubClassOf(test:Person ObjectUnionOf(test:Female test:Male))',
+                          'SubClassOf(ObjectUnionOf(test:Female test:Male) test:Person)'], content)
+        self.assertAnyIn(['SubClassOf(test:Vehicle ObjectUnionOf(test:Less_than_50_cc test:Over_50_cc))',
+                          'SubClassOf(test:Vehicle ObjectUnionOf(test:Over_50_cc test:Less_than_50_cc))'], content)
+        self.assertAnyIn(['DisjointClasses(test:Female test:Male)',
+                          'DisjointClasses(test:Male test:Female)'], content)
+        self.assertAnyIn(['DisjointClasses(test:Person test:Vegetable)',
+                          'DisjointClasses(test:Vegetable test:Person)'], content)
+        self.assertAnyIn(['DisjointClasses(test:Underage test:Adult)',
+                          'DisjointClasses(test:Adult test:Underage)'], content)
+        self.assertAnyIn(['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
+                          'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)'], content)
+        # AND
+        self.assertLen(65, content)

@@ -6,7 +6,7 @@
     <profile>OWL 2</profile>
   </ontology>
   <predicates>
-    <predicate type="role" name="hasMother">
+    <predicate type="role" name="hasFather">
       <url></url>
       <description></description>
       <functional>1</functional>
@@ -17,7 +17,7 @@
       <symmetric>0</symmetric>
       <transitive>0</transitive>
     </predicate>
-    <predicate type="role" name="hasFather">
+    <predicate type="role" name="hasMother">
       <url></url>
       <description></description>
       <functional>1</functional>
