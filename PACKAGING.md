@@ -2,11 +2,11 @@
 
 Eddy is distributed as different packages:
 
-* `Win32` installer (built with InnoSetup)
-* `Win32` zip package
-* `Mac OS` .dmg disk image
-* `Linux32` zip package
-* `Linux64` zip package
+* `Windows x86` installer (built with InnoSetup)
+* `Windows x86` standalone package
+* `macOS (Intel)` app bundle (distributed as `.dmg)
+* `Linux i386` standalone package
+* `Linux amd64` standalone package
 
 # Packaging
 
@@ -20,9 +20,10 @@ package(s) inside the *dist* directory.
 Install [Qt 5.5](http://download.qt.io/official_releases/qt/5.5/5.5.1/qt-opensource-windows-x86-mingw492-5.5.1.exe).    
 Install [cx_Freeze](https://pypi.python.org/pypi/cx_Freeze/4.3.4).  
 Install [InnoSetup](http://www.jrsoftware.org/isinfo.php).  
-Download and uncompress [SIP 4.18](https://sourceforge.net/projects/pyqt/files/sip/sip-4.18/sip-4.18.zip).  
-Download and uncompress [PyQt5.5](http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.zip).  
-Bring up command prompt window and navigate to the uncompressed SIP 4.17 directory:
+Install [Oracle JRE 1.8](http://download.oracle.com/otn-pub/java/jdk/8u102-b14/jdk-8u102-windows-i586.exe).  
+Download and uncompress [SIP 4.18.1](http://downloads.sourceforge.net/project/pyqt/sip/sip-4.18.1/sip-4.18.1.zip).  
+Download and uncompress [PyQt5.5.1](http://downloads.sourceforge.net/project/pyqt/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.zip).  
+Bring up command prompt window and navigate to the uncompressed SIP 4.18.1 directory:
 
     >>> PATH=C:\Qt\5.5\mingw492_32\bin;C:\Qt\Tools\mingw492_32\bin;%PATH%
     >>> python configure.py -p win32-g++
@@ -30,140 +31,57 @@ Bring up command prompt window and navigate to the uncompressed SIP 4.17 directo
     
 Navigate using the command prompt to the uncompressed PyQt5.5.1 directory:
 
-    >>> python configure.py --spec win32-g++
+    >>> python configure.py --spec win32-g++ --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
     >>> mingw32-make && mingw32-make install
 
 Install python required packages:
 
-    >>> pip install -r build-requirements.txt
-    >>> pip install -r requirements.txt
+    >>> pip install -U pip
+    >>> pip install -U cython
+    >>> pip install -U verlib
+    >>> pip install -U mockito-without-hardcoded-distribute-version
+    >>> pip install -U mock
+    >>> pip install -U nose
+    >>> pip install -U nose-cov
+    >>> pip install -U natsort
+    >>> pip install -U coveralls
+    >>> pip install -U pyyaml
+    >>> pip install -U Pillow
 
 Change the current active directory and type the following:
 
     >>> git clone https://github.com/danielepantaleone/eddy.git
+    
+Make sure to copy Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.
+Go back to the command prompt, and type the following: 
+
     >>> cd eddy
     >>> python setup.py build_exe
     
 ## Mac OS
 
-Make sure you have installed Xcode and Xcode command line tools.  
+Install Xcode and Xcode command line tools.  
 Install [homebrew](http://brew.sh/).  
-Install [Qt 5.5.1](http://download.qt.io/official_releases/qt/5.5/5.5.1/qt-opensource-mac-x64-clang-5.5.1.dmg).  
+Install [Python 3.4.4](https://www.python.org/ftp/python/3.4.4/python-3.4.4-macosx10.6.pkg).  
+Install [Oracle JRE 1.8](http://download.oracle.com/otn-pub/java/jdk/8u102-b14/jdk-8u102-macosx-x64.dmg).  
+Make use of the `configure-build-linux-macOS.sh` to configure the build environment.  
 Bring up a terminal window and type the following:
     
-    >>> brew install wget
-    >>> pip install virtualenv --upgrade
-    >>> cd ~
-    >>> virtualenv python34
-    >>> source python34/bin/activate
-    >>> pip install setuptools --upgrade
-    >>> pip install pip --upgrade
-    >>> pip install cx_Freeze --upgrade
-    >>> cd ~/Downloads
-    >>> wget http://downloads.sourceforge.net/project/pyqt/sip/sip-4.18/sip-4.18.tar.gz
-    >>> tar xf sip-4.18.tar.gz
-    >>> cd sip-4.17
-    >>> python configure.py
-    >>> make
-    >>> make install
-    >>> cd ~/Downloads
-    >>> wget http://downloads.sourceforge.net/project/pyqt/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
-    >>> tar xf PyQt-gpl-5.5.1.tar.gz
-    >>> cd PyQt-gpl-5.5.1
-    >>> python configure.py --qmake ~/Qt/5.5/clang_64/bin/qmake --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
-    >>> make
-    >>> make install
-    >>> cd ~/Downloads
-    >>> git clone https://github.com/danielepantaleone/eddy.git
     >>> cd ~/Downloads/eddy
-    >>> pip install -r build-requirements.txt
-    >>> pip install -r requirements.txt
     >>> python setup.py bdist_dmg
 
 ## Linux 32 (debian based distro)
 
+Make use of the `configure-build-linux-i386.sh` to configure the build environment.  
 Bring up a terminal window and type the following:
-
-    >>> sudo apt-get install -y build-essential libgl1-mesa-dev libx11-dev libxext-dev libxfixes-dev libxi-dev
-    >>> sudo apt-get install -y libxrender-dev libxcb1-dev libx11-xcb-dev libxcb-glx0-dev libfontconfig1-dev 
-    >>> sudo apt-get install -y libfreetype6-dev libcups2-dev git mercurial python3 python3-dev
-    >>> sudo pip3 install virtualenv --upgrade
-    >>> cd ~
-    >>> virtualenv python34
-    >>> source python34/bin/activate
-    >>> sudo pip3 install setuptools --upgrade
-    >>> sudo pip3 install pip --upgrade
-    >>> cd ~/Downloads
-    >>> wget wget http://download.qt.io/official_releases/qt/5.5/5.5.1/qt-opensource-linux-x86-5.5.1.run
-    >>> chmod +x qt-opensource-linux-x86-5.5.1.run
-    >>> ./ qt-opensource-linux-x86-5.5.1.run
-    >>> cd ~/Downloads
-    >>> wget http://downloads.sourceforge.net/project/pyqt/sip/sip-4.18/sip-4.18.tar.gz
-    >>> tar xf sip-4.18.tar.gz
-    >>> cd sip-4.17
-    >>> python configure.py
-    >>> make -j 3
-    >>> sudo make install
-    >>> cd ~/Downloads
-    >>> wget http://downloads.sourceforge.net/project/pyqt/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
-    >>> tar xf PyQt-gpl-5.5.1.tar.gz
-    >>> cd PyQt-gpl-5.5.1
-    >>> python configure.py --qmake ~/Qt5.5.1/5.5/gcc/bin/qmake --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
-    >>> make -j 3
-    >>> sudo make install
-    >>> cd ~/Downloads
-    >>> hg clone https://danielepantaleone@bitbucket.org/danielepantaleone/cx_freeze
-    >>> cd cx_freeze
-    >>> hg pull && hg update ubuntu
-    >>> python setup.py build
-    >>> python setup.py install
-    >>> cd ~/Downloads
-    >>> git clone https://github.com/danielepantaleone/eddy.git
-    >>> cd eddy
-    >>> pip install -r build-requirements.txt
-    >>> pip install -r requirements.txt
+    
+    >>> cd ~/Downloads/eddy
     >>> python setup.py build_exe
     
 ## Linux 64 (debian based distro)
 
+Make use of the `configure-build-linux-amd64.sh` to configure the build environment.  
 Bring up a terminal window and type the following:
     
-    >>> sudo apt-get install -y build-essential libgl1-mesa-dev libx11-dev libxext-dev libxfixes-dev libxi-dev
-    >>> sudo apt-get install -y libxrender-dev libxcb1-dev libx11-xcb-dev libxcb-glx0-dev libfontconfig1-dev 
-    >>> sudo apt-get install -y libfreetype6-dev libcups2-dev git mercurial python3 python3-dev
-    >>> sudo pip3 install virtualenv --upgrade
-    >>> cd ~
-    >>> virtualenv python34
-    >>> source python34/bin/activate
-    >>> sudo pip3 install setuptools --upgrade
-    >>> sudo pip3 install pip --upgrade
-    >>> cd ~/Downloads
-    >>> wget wget http://download.qt.io/official_releases/qt/5.5/5.5.1/qt-opensource-linux-x64-5.5.1.run
-    >>> chmod +x qt-opensource-linux-x64-5.5.1.run
-    >>> ./ qt-opensource-linux-x64-5.5.1.run
-    >>> cd ~/Downloads
-    >>> wget http://downloads.sourceforge.net/project/pyqt/sip/sip-4.18/sip-4.18.tar.gz
-    >>> tar xf sip-4.18.tar.gz
-    >>> cd sip-4.17
-    >>> python configure.py
-    >>> make -j 3
-    >>> sudo make install
-    >>> cd ~/Downloads
-    >>> wget http://downloads.sourceforge.net/project/pyqt/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.tar.gz
-    >>> tar xf PyQt-gpl-5.5.1.tar.gz
-    >>> cd PyQt-gpl-5.5.1
-    >>> python configure.py --qmake ~/Qt5.5.1/5.5/gcc_64/bin/qmake --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
-    >>> make -j 3
-    >>> sudo make install
-    >>> cd ~/Downloads
-    >>> hg clone https://danielepantaleone@bitbucket.org/danielepantaleone/cx_freeze
-    >>> cd cx_freeze
-    >>> hg pull && hg update ubuntu
-    >>> python setup.py build
-    >>> python setup.py install
-    >>> cd ~/Downloads
-    >>> git clone https://github.com/danielepantaleone/eddy.git
-    >>> cd eddy
-    >>> pip install -r build-requirements.txt
-    >>> pip install -r requirements.txt
+    >>> cd ~/Downloads/eddy
     >>> python setup.py build_exe
