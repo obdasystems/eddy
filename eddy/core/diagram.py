@@ -726,7 +726,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         :type param: Item
         """
         if self.mode != mode or self.modeParam != param:
-            LOGGER.debug('Diagram mode changed: mode=%s, param=%s', mode, param)
+            #LOGGER.debug('Diagram mode changed: mode=%s, param=%s', mode, param)
             self.mode = mode
             self.modeParam = param
             self.sgnModeChanged.emit(mode)

@@ -46,7 +46,11 @@ from eddy.core.functions.misc import lstrip
 from eddy.core.functions.fsystem import fwrite
 from eddy.core.functions.owl import OWLShortIRI
 from eddy.core.functions.path import openPath
+from eddy.core.output import getLogger
 from eddy.core.plugin import AbstractPlugin
+
+
+LOGGER = getLogger(__name__)
 
 
 class CsvExporterPlugin(AbstractPlugin):
@@ -105,6 +109,7 @@ class CsvExporter(AbstractProjectExporter):
         Perform CSV file generation.
         :type path: str
         """
+        LOGGER.info('Exporting project %s in CSV format: %s', self.project.name, path)
         collection = {x: {} for x in self.Types}
 
         for node in self.project.predicates():
