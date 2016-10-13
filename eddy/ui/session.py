@@ -1200,7 +1200,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     ynode.setTextPos(xnode.textPos())
                     collection[xnode] = ynode
                 if collection:
-                    self.undostack.beginMacro('swap {0} domain/range'.format(node.name))
+                    self.undostack.beginMacro("swap '{0}' domain & range".format(node.text()))
                     for xnode, ynode in collection.items():
                         self.undostack.push(CommandNodeSwitchTo(xnode.diagram, xnode, ynode))
                     self.undostack.endMacro()
