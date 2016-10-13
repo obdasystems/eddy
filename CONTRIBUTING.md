@@ -28,13 +28,13 @@ We prefer contributors to submit their code change throught GitHub [pull request
 * Make sure you have a [GitHub account](https://github.com/signup/free).
 * [Fork](https://github.com/danielepantaleone/eddy) this repository on GitHub.
 * Create a topic branch from where you want to base your work.
-    * This is **NOT** the `master` branch. You should push your changes to a `release` branch. 
+    * This is **NOT** the `master` branch. You should push your changes to the `dev` branch. 
     * Please avoid working directly on the `master` branch.
 * Make sure your code follows our [coding style](#coding-style).
 * Make commits of logical units.
 * Make sure your commit messages are in the **proper format** (example below): 
 ```
-   widgets: this commit is meant to fix an issue in a widget
+   core: this commit is meant to fix an issue in the core package
 
    You can put a description of the changes being carried by the commit in the body of the 
    commit message while keeping the first line of the commit message as short as possible. 
