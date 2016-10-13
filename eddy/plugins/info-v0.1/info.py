@@ -1033,7 +1033,7 @@ class AttributeNodeInfo(PredicateNodeInfo):
         copy[key] = checked
         if copy != meta:
             prop = RE_CAMEL_SPACE.sub('\g<1> \g<2>', key).lower()
-            name = '{0}set {1} {2} property'.format('' if checked else 'un', self.node.shortName, prop)
+            name = "{0}set '{1}' {2} property".format('' if checked else 'un', self.node.text(), prop)
             self.session.undostack.push(CommandNodeChangeMeta(self.node.diagram, self.node, meta, copy, name))
 
     #############################################
@@ -1151,7 +1151,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         copy[key] = checked
         if copy != meta:
             prop = RE_CAMEL_SPACE.sub('\g<1> \g<2>', key).lower()
-            name = '{0}set {1} {2} property'.format('' if checked else 'un', self.node.shortName, prop)
+            name = "{0}set '{1}' {2} property".format('' if checked else 'un', self.node.text(), prop)
             self.session.undostack.push(CommandNodeChangeMeta(self.node.diagram, self.node, meta, copy, name))
 
     #############################################
