@@ -97,8 +97,21 @@ pip install -U Pillow
 cd ${DOWNLOADS}
 pip install -e hg+https://danielepantaleone@bitbucket.org/danielepantaleone/cx_freeze/@ubuntu#egg=cx_Freeze
 pip install -e git+https://github.com/danielepantaleone/pyjnius.git@i386#egg=pyjnius --exists-action i
+## CLONE EDDY
+cd ${DOWNLOADS}
+rm -rf "${DOWNLOADS}/eddy"
+git clone https://github.com/danielepantaleone/eddy.git
+mkdir "${DOWNLOADS}/eddy/resources/java"
+## ADD JRE 1.8
+wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u102-b14/jdk-8u102-linux-x64.tar.gz
+tar xf jdk-8u102-linux-x64.tar.gz
+rm -rf jdk1.8.0_102/jre/plugin
+mv jdk1.8.0_102/jre/ "${DOWNLOADS}/eddy/resources/java"
+mv jdk1.8.0_102/COPYRIGHT "${DOWNLOADS}/eddy/resources/java"
+mv jdk1.8.0_102/LICENSE "${DOWNLOADS}/eddy/resources/java"
 ## CLEANUP
 cd ${DOWNLOADS}
 sudo rm -rf sip-4.18.1*
 sudo rm -rf PyQt5_gpl-5.7*
-sudo rm -rf qt5/
+sudo rm -rf jdk*
+sudo rm -rf qt5*
