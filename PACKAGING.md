@@ -52,7 +52,7 @@ Change the current active directory and type the following:
 
     >>> git clone https://github.com/danielepantaleone/eddy.git
     
-Make sure to copy Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.
+Make sure to copy Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.  
 Go back to the command prompt, and type the following: 
 
     >>> cd eddy
