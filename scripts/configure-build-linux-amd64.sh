@@ -60,6 +60,7 @@ source "${VIRTUALENV}/bin/activate"
 cd ${DOWNLOADS}
 git clone git://code.qt.io/qt/qt5.git
 cd "${DOWNLOADS}/qt5"
+git checkout 5.7
 ./init-repository --module-subset=default,-qtwebkit,-qtwebkit-examples,-qtwebengine
 ./configure -prefix "${QT_HOME}" -opensource -nomake examples -nomake tests -release -confirm-license
 make -j 5

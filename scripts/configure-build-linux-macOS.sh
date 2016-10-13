@@ -35,26 +35,12 @@
 
 ## CONFIGURATION
 DOWNLOADS="~/Downloads"
-QT_HOME="~/Qt/5.7/gcc"
+QT_HOME="~/Qt/5.7/clang_64"
 VIRTUALENV="~/python34"
 
-## INSTALL DEPENDENCIES
-sudo apt-get install -y build-essential libgl1-mesa-dev libx11-dev libxext-dev libxfixes-dev libxi-dev
-sudo apt-get install -y libxrender-dev libxcb1-dev libx11-xcb-dev libxcb-glx0-dev libfontconfig1-dev
-sudo apt-get install -y libfreetype6-dev libglu1-mesa-dev libssl-dev libcups2-dev python3-pip git mercurial
-sudo add-apt-repository -y ppa:webupd8team/java
-sudo apt-get update
-sudo apt-get install -y oracle-java8-installer oracle-java8-set-default
-## INSTALL PYTHON
-cd ${DOWNLOADS}
-wget https://www.python.org/ftp/python/3.4.4/Python-3.4.4.tar.xz
-tar xf Python-3.4.4.tar.xz
-cd Python-3.4.4
-./configure
-sudo make altinstall
 ## CREATE THE VIRTUALENV
-sudo pip3 install virtualenv
-virtualenv -p /usr/local/bin/python3.4 ${VIRTUALENV}
+cd /usr/local/bin/
+pyvenv-3.4 ${VIRTUALENV}
 source "${VIRTUALENV}/bin/activate"
 ## BUILD AND INSTALL QT5
 cd ${DOWNLOADS}
@@ -81,6 +67,9 @@ cd PyQt5_gpl-5.7
 python configure.py --qmake "${QT_HOME}/bin/qmake" --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
 make -j 5
 sudo make install
+## SOFTLINK QT5 LIB INSIDE PYTHON VIRTUAL ENVIRONMENT
+cd "${VIRTUALENV}/lib"
+ln -s "${QT_HOME}/lib/*" .
 ## INSTALL PYTHON DEPENDENCIES (FROM PYPI)
 cd ${DOWNLOADS}
 pip install -U pip
@@ -94,25 +83,21 @@ pip install -U natsort
 pip install -U coveralls
 pip install -U pyyaml
 pip install -U Pillow
-## INSTALL PYTHON DEPENDENCIES (FROM MERCURIAL AND GIT)
+pip install -U cx_Freeze
+## INSTALL PYTHON DEPENDENCIES (FROM GIT)
 cd ${DOWNLOADS}
-pip install -e hg+https://danielepantaleone@bitbucket.org/danielepantaleone/cx_freeze/@ubuntu#egg=cx_Freeze
 pip install -e git+https://github.com/danielepantaleone/pyjnius.git@i386#egg=pyjnius --exists-action i
 ## CLONE EDDY
 cd ${DOWNLOADS}
 rm -rf "${DOWNLOADS}/eddy"
 git clone https://github.com/danielepantaleone/eddy.git
+cd eddy
+git submodule update --init --recursive
 mkdir "${DOWNLOADS}/eddy/resources/java"
 ## ADD JRE 1.8
-wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u102-b14/jdk-8u102-linux-i586.tar.gz
-tar xf jdk-8u102-linux-i586.tar.gz
-rm -rf jdk1.8.0_102/jre/plugin
-mv jdk1.8.0_102/jre/ "${DOWNLOADS}/eddy/resources/java"
-mv jdk1.8.0_102/COPYRIGHT "${DOWNLOADS}/eddy/resources/java"
-mv jdk1.8.0_102/LICENSE "${DOWNLOADS}/eddy/resources/java"
+cp -R /Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/jre/ "${DOWNLOADS}/eddy/resources/java"
 ## CLEANUP
 cd ${DOWNLOADS}
 sudo rm -rf sip-4.18.1*
 sudo rm -rf PyQt5_gpl-5.7*
-sudo rm -rf jdk*
 sudo rm -rf qt5*
