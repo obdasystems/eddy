@@ -344,9 +344,12 @@ class Eddy(QtWidgets.QApplication):
                     settings.setValue('project/recent', recentList)
                     settings.sync()
 
-                if self.welcome:
+                try:
                     self.welcome.close()
-                self.session.show()
+                except (AttributeError, RuntimeError):
+                    pass
+                finally:
+                    self.session.show()
     
     @QtCore.pyqtSlot()
     def doQuit(self):
