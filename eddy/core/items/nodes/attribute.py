@@ -142,7 +142,7 @@ class AttributeNode(AbstractNode):
         # SELECTION AREA
         painter.setPen(self.selection.pen())
         painter.setBrush(self.selection.brush())
-        painter.drawRect(self.selection.geometry())
+        painter.drawEllipse(self.selection.geometry())
         # SYNTAX VALIDATION
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(self.background.pen())
