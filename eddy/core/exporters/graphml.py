@@ -259,7 +259,16 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :type edge: InputEdge
         :rtype: QDomElement
         """
-        return self.exportGenericEdge(edge, 'dashed', 'white_diamond')
+        source = ''
+        if edge.source.type() is Item.RoleNode:
+            if edge.target.type() is Item.DomainRestrictionNode and edge.source.isFunctional():
+                source = 't_shape'
+            if edge.target.type() is Item.RangeRestrictionNode and edge.source.isInverseFunctional():
+                source = 't_shape'
+        if edge.source.type() is Item.AttributeNode:
+            if edge.target.type() is Item.DomainRestrictionNode and edge.source.isFunctional():
+                source = 't_shape'
+        return self.exportGenericEdge(edge, 'dashed', 'white_diamond', source)
 
     def exportMembershipEdge(self, edge):
         """
