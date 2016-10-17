@@ -174,15 +174,15 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.pf = PropertyFactory(self)
         self.pmanager = PluginManager(self)
 
-        # ------------------------------------------------------- #
-        # Because toolbars are needed both by built-in widgets    #
-        # and built-in actions, they need to be initialized       #
-        # outside 'init' methods not to generate cycles:          #
-        # ------------------------------------------------------- #
-        # * TOOLBARS  -> WIDGETS && ACTIONS                       #
-        # * WIDGETS   -> MENUS                                    #
-        # * MENUS     -> ACTIONS && TOOLBARS                      #
-        # ------------------------------------------------------- #
+        ## ####################################################### ##
+        ## Because toolbars are needed both by built-in widgets    ##
+        ## and built-in actions, they need to be initialized       ##
+        ## outside 'init' methods not to generate cycles:          ##
+        ## ####################################################### ##
+        ## * TOOLBARS  -> WIDGETS && ACTIONS                       ##
+        ## * WIDGETS   -> MENUS                                    ##
+        ## * MENUS     -> ACTIONS && TOOLBARS                      ##
+        ## ####################################################### ##
 
         self.addWidget(QtWidgets.QToolBar('Document', objectName='document_toolbar'))
         self.addWidget(QtWidgets.QToolBar('Editor', objectName='editor_toolbar'))
@@ -692,16 +692,18 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu = QtWidgets.QMenu('\u200CView', objectName='view')
         menu.addAction(self.action('toggle_grid'))
         menu.addSeparator()
-        menu.addAction(self.action('show_log'))
-        menu.addSeparator()
         menu.addMenu(self.menu('toolbars'))
         menu.addSeparator()
+        self.addMenu(menu)
+
+        menu = QtWidgets.QMenu('Ontology', objectName='ontology')
+        menu.addAction(self.action('syntax_check'))
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('Tools', objectName='tools')
         menu.addAction(self.action('install_plugin'))
         menu.addSeparator()
-        menu.addAction(self.action('syntax_check'))
+        menu.addAction(self.action('show_log'))
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('Help', objectName='help')
@@ -805,6 +807,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menuBar.addMenu(self.menu('file'))
         menuBar.addMenu(self.menu('edit'))
         menuBar.addMenu(self.menu('view'))
+        menuBar.addMenu(self.menu('ontology'))
         menuBar.addMenu(self.menu('tools'))
         menuBar.addMenu(self.menu('help'))
 
