@@ -336,12 +336,19 @@ class DiagramView(QtWidgets.QGraphicsView):
         :type rect: QtCore.QRectF
         """
         if self.session.action('toggle_grid').isChecked():
-            s = Diagram.GridSize
-            x = int(rect.left()) - (int(rect.left()) % s)
-            y = int(rect.top()) - (int(rect.top()) % s)
-            points = (QtCore.QPointF(i, j) for i in rangeF(x, rect.right(), s) for j in rangeF(y, rect.bottom(), s))
-            painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(80, 80, 80, 255)), 1, QtCore.Qt.SolidLine))
-            painter.drawPoints(*points)
+
+            try:
+                s = Diagram.GridSize
+                x = int(rect.left()) - (int(rect.left()) % s)
+                y = int(rect.top()) - (int(rect.top()) % s)
+                points = (QtCore.QPointF(i, j) for i in rangeF(x, rect.right(), s) for j in rangeF(y, rect.bottom(), s))
+                painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(80, 80, 80, 255)), 1, QtCore.Qt.SolidLine))
+                painter.drawPoints(*points)
+            except TypeError:
+                # We enter the except branch whenever the system is not able
+                # to compute the generator of points which needs to be drawn
+                # on screen to visualize the editor grid.
+                pass
 
     def moveBy(self, *__args):
         """
