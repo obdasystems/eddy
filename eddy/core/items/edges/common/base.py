@@ -311,7 +311,18 @@ class AbstractEdge(AbstractItem):
         self.selection.setBrush(selectionBrush)
 
         # Z-VALUE (DEPTH)
-        self.setZValue(max(*(x.zValue() for x in self.collidingItems())) + 0.1)
+        try:
+            zValue = max(*(x.zValue() for x in self.collidingItems())) + 0.1
+        except TypeError:
+            zValue = source.zValue() + 0.1
+            if source.label:
+                zValue = max(zValue, source.label.zValue())
+            if target:
+                zValue = max(zValue, target.zValue())
+                if target.label:
+                    zValue = max(zValue, target.label.zValue())
+
+        self.setZValue(zValue)
 
         # FORCE CACHE REGENERATION
         self.setCacheMode(AbstractItem.NoCache)
