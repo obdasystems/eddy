@@ -218,7 +218,7 @@ class HasMenuSystem(object):
         """
         for menu in menus:
             self.insertMenu(menu, before)
-            
+
     def menu(self, objectName):
         """
         Returns the reference to a QMenu given it's objectName.
@@ -679,7 +679,7 @@ class HasProjectExportSystem(object):
         self._projectExporterList.remove(exporter)
         del self._projectExporterDict[exporter.filetype()]
         return exporter
-    
+
 
 class HasDiagramLoadSystem(object):
     """

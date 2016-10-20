@@ -40,6 +40,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy import APPNAME, BUG_TRACKER, ORGANIZATION
+from eddy.core.common import HasThreadingSystem
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
 from eddy.core.datatypes.owl import Datatype, Facet, OWLAxiom, OWLSyntax
@@ -54,6 +55,7 @@ from eddy.core.functions.owl import OWLFunctionalDocumentFilter
 from eddy.core.functions.path import expandPath, openPath
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
+from eddy.core.worker import AbstractWorker
 
 from eddy.ui.fields import ComboBox, CheckBox
 from eddy.ui.progress import BusyProgressDialog
@@ -82,7 +84,7 @@ StringDocumentTarget = autoclass('org.semanticweb.owlapi.io.StringDocumentTarget
 TurtleDocumentFormat = autoclass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
 
         
-class OWLProjectExporter(AbstractProjectExporter):
+class OWLProjectExporter(AbstractProjectExporter, HasThreadingSystem):
     """
     Extends AbstractProjectExporter with facilities to export a Graphol project into an OWL ontology.
     """
@@ -96,8 +98,6 @@ class OWLProjectExporter(AbstractProjectExporter):
         self.items = list(project.edges()) + list(filter(lambda n: not n.adjacentNodes(), project.nodes()))
         self.path = None
         self.progress = None
-        self.worker = None
-        self.workerThread = None
 
     #############################################
     #   SLOTS
@@ -143,13 +143,10 @@ class OWLProjectExporter(AbstractProjectExporter):
             self.path = path
             self.progress = BusyProgressDialog('Performing syntax check...')
             self.progress.show()
-            self.workerThread = QtCore.QThread()
-            self.worker = SyntaxValidationWorker(0, self.items, self.project)
-            self.worker.moveToThread(self.workerThread)
-            connect(self.worker.sgnCompleted, self.onSyntaxCheckCompleted)
-            connect(self.worker.sgnSyntaxError, self.onSyntaxCheckErrored)
-            connect(self.workerThread.started, self.worker.run)
-            self.workerThread.start()
+            worker = SyntaxValidationWorker(0, self.items, self.project)
+            connect(worker.sgnCompleted, self.onSyntaxCheckCompleted)
+            connect(worker.sgnSyntaxError, self.onSyntaxCheckErrored)
+            self.startThread('syntaxCheck', worker)
 
     @classmethod
     def filetype(cls):
@@ -160,10 +157,9 @@ class OWLProjectExporter(AbstractProjectExporter):
         return File.Owl
 
 
-class OWLProjectExporterDialog(QtWidgets.QDialog):
+class OWLProjectExporterDialog(QtWidgets.QDialog, HasThreadingSystem):
     """
-    Extends QtWidgets.QDialog providing
-    This class implements the form used to perform Graphol -> OWL ontology translation.
+    Extends QtWidgets.QDialog providing the form used to perform Graphol -> OWL ontology translation.
     """
     def __init__(self, project, path, session):
         """
@@ -176,8 +172,6 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
 
         self.path = expandPath(path)
         self.project = project
-        self.worker = None
-        self.workerThread = None
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
 
@@ -393,8 +387,6 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         Executed whenever the translation errors.
         :type exception: Exception
         """
-        self.workerThread.quit()
-
         if isinstance(exception, DiagramMalformedError):
             # SHOW A POPUP WITH THE WARNING MESSAGE
             msgbox = QtWidgets.QMessageBox(self)
@@ -426,7 +418,6 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         """
         Executed whenever the translation completes.
         """
-        self.workerThread.quit()
         msgbox = QtWidgets.QMessageBox(self)
         msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
         msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes|QtWidgets.QMessageBox.No)
@@ -465,26 +456,22 @@ class OWLProjectExporterDialog(QtWidgets.QDialog):
         Perform the Graphol -> OWL translation in a separate thread.
         """
         LOGGER.info('Exporting project %s in OWL 2 format: %s', self.project.name, self.path)
-        self.workerThread = QtCore.QThread()
-        self.worker = OWLProjectExporterWorker(self.project, self.path,
-                    axioms=self.axioms(), normalize=self.normalize(),
-                    syntax=self.syntax())
-        self.worker.moveToThread(self.workerThread)
-        connect(self.worker.sgnStarted, self.onStarted)
-        connect(self.worker.sgnCompleted, self.onCompleted)
-        connect(self.worker.sgnErrored, self.onErrored)
-        connect(self.worker.sgnProgress, self.onProgress)
-        connect(self.workerThread.started, self.worker.run)
-        self.workerThread.start()
+        worker = OWLProjectExporterWorker(self.project, self.path,
+            axioms=self.axioms(), normalize=self.normalize(),
+            syntax=self.syntax())
+        connect(worker.sgnStarted, self.onStarted)
+        connect(worker.sgnCompleted, self.onCompleted)
+        connect(worker.sgnErrored, self.onErrored)
+        connect(worker.sgnProgress, self.onProgress)
+        self.startThread('OWL2Export', worker)
 
 
-class OWLProjectExporterWorker(QtCore.QObject):
+class OWLProjectExporterWorker(AbstractWorker):
     """
     Extends QtCore.QObject providing a worker thread that will perform the OWL 2 ontology generation.
     """
     sgnCompleted = QtCore.pyqtSignal()
     sgnErrored = QtCore.pyqtSignal(Exception)
-    sgnFinished = QtCore.pyqtSignal()
     sgnProgress = QtCore.pyqtSignal(int, int)
     sgnStarted = QtCore.pyqtSignal()
 
@@ -1656,4 +1643,4 @@ class OWLProjectExporterWorker(QtCore.QObject):
             self.sgnCompleted.emit()
         finally:
             detach()
-            self.sgnFinished.emit()
+            self.finished.emit()

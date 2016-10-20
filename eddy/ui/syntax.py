@@ -37,12 +37,14 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
+from eddy.core.common import HasThreadingSystem
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
+from eddy.core.worker import AbstractWorker
 
 
-class SyntaxValidationDialog(QtWidgets.QDialog):
+class SyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
     """
     Extends QtWidgets.QDialog with facilities to perform manual syntax validation.
     """
@@ -243,14 +245,11 @@ class SyntaxValidationDialog(QtWidgets.QDialog):
         # MAKE SURE WE ARE CLEAR
         self.dispose()
         # RUN THE WORKER
-        self.workerThread = QtCore.QThread()
-        self.worker = SyntaxValidationWorker(i, self.items, self.project)
-        self.worker.moveToThread(self.workerThread)
-        connect(self.worker.sgnCompleted, self.onCompleted)
-        connect(self.worker.sgnProgress, self.onProgress)
-        connect(self.worker.sgnSyntaxError, self.onSyntaxError)
-        connect(self.workerThread.started, self.worker.run)
-        self.workerThread.start()
+        worker = SyntaxValidationWorker(i, self.items, self.project)
+        connect(worker.sgnCompleted, self.onCompleted)
+        connect(worker.sgnProgress, self.onProgress)
+        connect(worker.sgnSyntaxError, self.onSyntaxError)
+        self.startThread('syntaxCheck', worker)
 
     @QtCore.pyqtSlot()
     def onCompleted(self):
@@ -289,7 +288,7 @@ class SyntaxValidationDialog(QtWidgets.QDialog):
         self.setFixedSize(self.sizeHint())
 
 
-class SyntaxValidationWorker(QtCore.QObject):
+class SyntaxValidationWorker(AbstractWorker):
     """
     Extends QtCore.QObject providing a worker thread that will perform the project syntax validation.
     """
@@ -355,3 +354,5 @@ class SyntaxValidationWorker(QtCore.QObject):
             self.sgnSyntaxError.emit(errorMsg)
         else:
             self.sgnCompleted.emit()
+
+        self.finished.emit()
