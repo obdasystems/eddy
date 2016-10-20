@@ -311,14 +311,7 @@ class AbstractEdge(AbstractItem):
         self.selection.setBrush(selectionBrush)
 
         # Z-VALUE (DEPTH)
-        zValue = source.zValue() + 0.1
-        if source.label:
-            zValue = max(zValue, source.label.zValue())
-        if target:
-            zValue = max(zValue, target.zValue())
-            if target.label:
-                zValue = max(zValue, target.label.zValue())
-        self.setZValue(zValue)
+        self.setZValue(max(*(x.zValue() for x in self.collidingItems())) + 0.1)
 
         # FORCE CACHE REGENERATION
         self.setCacheMode(AbstractItem.NoCache)
@@ -378,8 +371,7 @@ class AbstractEdge(AbstractItem):
             # to evaluate anchor points first because we may be in the situation
             # where we are trying to select the anchor point, but if the code for
             # breakpoint retrieval is executed first, no breakpoint is found
-            # and hence a new one will be added upon mouseMoveEvent (even a small
-            # move will cause this).
+            # and hence a new one will be added upon mouseMoveEvent.
             anchorNode = self.anchorAt(self.mp_Pos)
             if anchorNode is not None:
                 self.diagram.clearSelection()
