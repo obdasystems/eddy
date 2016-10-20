@@ -34,7 +34,6 @@
 
 
 import os
-import webbrowser
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -308,7 +307,8 @@ class Welcome(QtWidgets.QWidget):
         action = self.sender()
         weburl = action.data()
         if weburl:
-            webbrowser.open(weburl)
+            # noinspection PyTypeChecker,PyCallByClass,PyCallByClass
+            QtGui.QDesktopServices.openUrl(QtCore.QUrl(weburl))
 
 
 class ProjectBlock(QtWidgets.QWidget):

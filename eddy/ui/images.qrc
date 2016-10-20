@@ -101,6 +101,8 @@
   <file alias="ic_link_black@2x">../../resources/icons/24/ic_link_black_24dp_2x.png</file>
   <file alias="ic_export_black">../../resources/icons/24/ic_export_black_24dp_1x.png</file>
   <file alias="ic_export_black@2x">../../resources/icons/24/ic_export_black_24dp_2x.png</file>
+  <file alias="ic_extension_black">../../resources/icons/24/ic_extension_black_24dp_1x.png</file>
+  <file alias="ic_extension_black@2x">../../resources/icons/24/ic_extension_black_24dp_2x.png</file>
   <file alias="ic_import_black">../../resources/icons/24/ic_import_black_24dp_1x.png</file>
   <file alias="ic_import_black@2x">../../resources/icons/24/ic_import_black_24dp_2x.png</file>
   <file alias="ic_flip_to_back_black">../../resources/icons/24/ic_flip_to_back_black_24dp_1x.png</file>
@@ -139,6 +141,8 @@
   <file alias="ic_select_all_black@2x">../../resources/icons/24/ic_select_all_black_24dp_2x.png</file>
   <file alias="ic_settings_black">../../resources/icons/24/ic_settings_black_24dp_1x.png</file>
   <file alias="ic_settings_black@2x">../../resources/icons/24/ic_settings_black_24dp_2x.png</file>
+  <file alias="ic_system_update">../../resources/icons/24/ic_system_update_alt_black_24dp_1x.png</file>
+  <file alias="ic_system_update@2x">../../resources/icons/24/ic_system_update_alt_black_24dp_2x.png</file>
   <file alias="ic_spellcheck_black">../../resources/icons/24/ic_spellcheck_black_24dp_1x.png</file>
   <file alias="ic_spellcheck_black@2x">../../resources/icons/24/ic_spellcheck_black_24dp_2x.png</file>
   <file alias="ic_star_black">../../resources/icons/24/ic_star_black_24dp_1x.png</file>
@@ -181,6 +185,8 @@
   <file alias="ic_save_black@2x">../../resources/icons/48/ic_save_black_48dp_2x.png</file>
   <file alias="ic_warning_black">../../resources/icons/48/ic_warning_black_48dp_1x.png</file>
   <file alias="ic_warning_black@2x">../../resources/icons/48/ic_warning_black_48dp_2x.png</file>
+  <file alias="ic_system_update">../../resources/icons/48/ic_system_update_alt_black_48dp_1x.png</file>
+  <file alias="ic_system_update@2x">../../resources/icons/48/ic_system_update_alt_black_48dp_2x.png</file>
 </qresource>
 <qresource prefix="/icons/128">
   <file alias="ic_eddy">../../resources/icons/128/ic_eddy_128dp_1x.png</file>

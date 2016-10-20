@@ -40,15 +40,19 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy import ORGANIZATION, APPNAME
+from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.owl import OWLAxiom
 from eddy.core.datatypes.qt import Font
+from eddy.core.datatypes.system import Channel
 from eddy.core.diagram import Diagram
 from eddy.core.functions.signals import connect
 
-from eddy.ui.fields import CheckBox, SpinBox
+from eddy.ui.fields import CheckBox
+from eddy.ui.fields import ComboBox
+from eddy.ui.fields import SpinBox
 
 
-class PreferencesDialog(QtWidgets.QDialog):
+class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
     """
     This class implements the 'Preferences' dialog.
     """
@@ -62,106 +66,179 @@ class PreferencesDialog(QtWidgets.QDialog):
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
 
         #############################################
-        # EDITOR TAB
+        # GENERAL TAB
         #################################
 
-        self.diagramSizePrefix = QtWidgets.QLabel(self)
-        self.diagramSizePrefix.setFont(Font('Roboto', 12))
-        self.diagramSizePrefix.setText('Diagram size')
-        self.diagramSizeField = SpinBox(self)
-        self.diagramSizeField.setFont(Font('Roboto', 12))
-        self.diagramSizeField.setRange(Diagram.MinSize, Diagram.MaxSize)
-        self.diagramSizeField.setSingleStep(100)
-        self.diagramSizeField.setToolTip('Default size of all the new created diagrams')
-        self.diagramSizeField.setValue(settings.value('diagram/size', 5000, int))
+        ## EDITOR GROUP
 
-        self.editorWidget = QtWidgets.QWidget()
-        self.editorLayout = QtWidgets.QFormLayout(self.editorWidget)
-        self.editorLayout.addRow(self.diagramSizePrefix, self.diagramSizeField)
+        prefix = QtWidgets.QLabel(self, objectName='diagram_size_prefix')
+        prefix.setFont(Font('Roboto', 12))
+        prefix.setText('Diagram size')
+        self.addWidget(prefix)
+
+        spinbox = SpinBox(self, objectName='diagram_size_field')
+        spinbox.setFont(Font('Roboto', 12))
+        spinbox.setRange(Diagram.MinSize, Diagram.MaxSize)
+        spinbox.setSingleStep(100)
+        spinbox.setToolTip('Default size of all the new created diagrams')
+        spinbox.setValue(settings.value('diagram/size', 5000, int))
+        self.addWidget(spinbox)
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('diagram_size_prefix'), self.widget('diagram_size_field'))
+        groupbox = QtWidgets.QGroupBox('Editor', self, objectName='editor_widget')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        ## UPDATE GROUP
+
+        prefix = QtWidgets.QLabel(self, objectName='update_startup_prefix')
+        prefix.setFont(Font('Roboto', 12))
+        prefix.setText('Check for updates on startup')
+        self.addWidget(prefix)
+
+        checkbox = CheckBox(self, objectName='update_startup_checkbox')
+        checkbox.setChecked(settings.value('update/check_on_startup', True, bool))
+        checkbox.setFont(Font('Roboto', 12))
+        checkbox.setToolTip('Whether or not application updates needs to be checked upon startup')
+        self.addWidget(checkbox)
+
+        prefix = QtWidgets.QLabel(self, objectName='update_channel_prefix')
+        prefix.setFont(Font('Roboto', 12))
+        prefix.setText('Update channel')
+        self.addWidget(prefix)
+
+        combobox = ComboBox(objectName='update_channel_switch')
+        combobox.setEditable(False)
+        combobox.setFont(Font('Roboto', 12))
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox.setScrollEnabled(False)
+        combobox.setToolTip('Update channel (current = %s)' % settings.value('update/channel', Channel.Stable.value, str))
+        combobox.addItems([x.value for x in Channel])
+        combobox.setCurrentText(settings.value('update/channel', Channel.Stable.value, str))
+        self.addWidget(combobox)
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('update_startup_prefix'), self.widget('update_startup_checkbox'))
+        formlayout.addRow(self.widget('update_channel_prefix'), self.widget('update_channel_switch'))
+        groupbox = QtWidgets.QGroupBox('Update', self, objectName='update_widget')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        ## GENERAL TAB LAYOUT CONFIGURATION
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setAlignment(QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('editor_widget'), 0, QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('update_widget'), 0, QtCore.Qt.AlignTop)
+        widget = QtWidgets.QWidget()
+        widget.setLayout(layout)
+        widget.setObjectName('general_widget')
+        self.addWidget(widget)
 
         #############################################
         # EXPORT TAB
         #################################
 
-        self.axiomsChecks = {x: CheckBox(x.value, self) for x in OWLAxiom}
-        for axiom, checkbox in self.axiomsChecks.items():
-            checkbox.setChecked(settings.value('export/axiom/{0}'.format(axiom.value), True, bool))
-        self.axiomsNonLogicalLayout = QtWidgets.QGridLayout()
-        self.axiomsNonLogicalLayout.setColumnMinimumWidth(0, 230)
-        self.axiomsNonLogicalLayout.setColumnMinimumWidth(1, 230)
-        self.axiomsNonLogicalLayout.setColumnMinimumWidth(2, 230)
-        self.axiomsNonLogicalLayout.addWidget(self.axiomsChecks[OWLAxiom.Annotation], 0, 0)
-        self.axiomsNonLogicalLayout.addWidget(self.axiomsChecks[OWLAxiom.Declaration], 0, 1)
-        self.axiomsNonLogicalLayout.addWidget(QtWidgets.QWidget(self), 0, 2)
-        self.axiomsNonLogicalGroup = QtWidgets.QGroupBox('Non-Logical', self)
-        self.axiomsNonLogicalGroup.setLayout(self.axiomsNonLogicalLayout)
-        self.axiomsIntensionalLayout = QtWidgets.QGridLayout()
-        self.axiomsIntensionalLayout.setColumnMinimumWidth(0, 230)
-        self.axiomsIntensionalLayout.setColumnMinimumWidth(1, 230)
-        self.axiomsIntensionalLayout.setColumnMinimumWidth(2, 230)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.AsymmetricObjectProperty], 0, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DataPropertyDomain], 1, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DataPropertyRange], 2, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DisjointClasses], 3, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DisjointDataProperties], 4, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DisjointObjectProperties], 5, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.EquivalentClasses], 6, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.EquivalentDataProperties], 7, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.EquivalentObjectProperties], 0, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.FunctionalDataProperty], 1, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.FunctionalObjectProperty], 2, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.InverseFunctionalObjectProperty], 3, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.InverseObjectProperties], 4, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.IrreflexiveObjectProperty], 5, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.ObjectPropertyDomain], 6, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.ObjectPropertyRange], 7, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.ReflexiveObjectProperty], 0, 2)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.SubClassOf], 1, 2)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.SubDataPropertyOf], 2, 2)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.SubObjectPropertyOf], 3, 2)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.SymmetricObjectProperty], 4, 2)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.TransitiveObjectProperty], 5, 2)
-        self.axiomsIntensionalGroup = QtWidgets.QGroupBox('Intensional', self)
-        self.axiomsIntensionalGroup.setLayout(self.axiomsIntensionalLayout)
-        self.axiomsExtensionalLayout = QtWidgets.QGridLayout()
-        self.axiomsExtensionalLayout.setColumnMinimumWidth(0, 230)
-        self.axiomsExtensionalLayout.setColumnMinimumWidth(1, 230)
-        self.axiomsExtensionalLayout.setColumnMinimumWidth(2, 230)
-        self.axiomsExtensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.ClassAssertion], 0, 0)
-        self.axiomsExtensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DataPropertyAssertion], 1, 0)
-        self.axiomsExtensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.NegativeDataPropertyAssertion], 0, 1)
-        self.axiomsExtensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.NegativeObjectPropertyAssertion], 1, 1)
-        self.axiomsExtensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.ObjectPropertyAssertion], 0, 2)
-        self.axiomsExtensionalGroup = QtWidgets.QGroupBox('Extensional', self)
-        self.axiomsExtensionalGroup.setLayout(self.axiomsExtensionalLayout)
-        self.axiomsLogicalLayout = QtWidgets.QVBoxLayout()
-        self.axiomsLogicalLayout.addWidget(self.axiomsIntensionalGroup)
-        self.axiomsLogicalLayout.addWidget(self.axiomsExtensionalGroup)
-        self.axiomsLogicalWidget = QtWidgets.QGroupBox('Logical', self)
-        self.axiomsLogicalWidget.setLayout(self.axiomsLogicalLayout)
-        self.axiomsMainLayout = QtWidgets.QVBoxLayout()
-        self.axiomsMainLayout.addWidget(self.axiomsNonLogicalGroup)
-        self.axiomsMainLayout.addWidget(self.axiomsLogicalWidget)
-        self.axiomsGroup = QtWidgets.QGroupBox('OWL 2 Axioms for which exporting is enabled', self)
-        self.axiomsGroup.setLayout(self.axiomsMainLayout)
-        self.axiomsLayout = QtWidgets.QVBoxLayout()
-        self.axiomsLayout.setContentsMargins(10, 10, 10, 10)
-        self.axiomsLayout.addWidget(self.axiomsGroup)
-        self.axiomsWidget = QtWidgets.QWidget(self)
-        self.axiomsWidget.setLayout(self.axiomsLayout)
+        self.checks = {x: CheckBox(x.value, self) for x in OWLAxiom}
+        for axiom, checkbox in self.checks.items():
+            checkbox.setChecked(settings.value('export/axiom/{}'.format(axiom.value), True, bool))
+
+        ## NON-LOGICAL GROUP
+
+        layout = QtWidgets.QGridLayout()
+        layout.setColumnMinimumWidth(0, 230)
+        layout.setColumnMinimumWidth(1, 230)
+        layout.setColumnMinimumWidth(2, 230)
+        layout.addWidget(self.checks[OWLAxiom.Annotation], 0, 0)
+        layout.addWidget(self.checks[OWLAxiom.Declaration], 0, 1)
+        layout.addWidget(QtWidgets.QWidget(self), 0, 2)
+        widget = QtWidgets.QGroupBox('Non-Logical', self, objectName='axioms_non_logical')
+        widget.setLayout(layout)
+        self.addWidget(widget)
+
+        ## INTENSIONAL GROUP
+
+        layout = QtWidgets.QGridLayout()
+        layout.setColumnMinimumWidth(0, 230)
+        layout.setColumnMinimumWidth(1, 230)
+        layout.setColumnMinimumWidth(2, 230)
+        layout.addWidget(self.checks[OWLAxiom.AsymmetricObjectProperty], 0, 0)
+        layout.addWidget(self.checks[OWLAxiom.DataPropertyDomain], 1, 0)
+        layout.addWidget(self.checks[OWLAxiom.DataPropertyRange], 2, 0)
+        layout.addWidget(self.checks[OWLAxiom.DisjointClasses], 3, 0)
+        layout.addWidget(self.checks[OWLAxiom.DisjointDataProperties], 4, 0)
+        layout.addWidget(self.checks[OWLAxiom.DisjointObjectProperties], 5, 0)
+        layout.addWidget(self.checks[OWLAxiom.EquivalentClasses], 6, 0)
+        layout.addWidget(self.checks[OWLAxiom.EquivalentDataProperties], 7, 0)
+        layout.addWidget(self.checks[OWLAxiom.EquivalentObjectProperties], 0, 1)
+        layout.addWidget(self.checks[OWLAxiom.FunctionalDataProperty], 1, 1)
+        layout.addWidget(self.checks[OWLAxiom.FunctionalObjectProperty], 2, 1)
+        layout.addWidget(self.checks[OWLAxiom.InverseFunctionalObjectProperty], 3, 1)
+        layout.addWidget(self.checks[OWLAxiom.InverseObjectProperties], 4, 1)
+        layout.addWidget(self.checks[OWLAxiom.IrreflexiveObjectProperty], 5, 1)
+        layout.addWidget(self.checks[OWLAxiom.ObjectPropertyDomain], 6, 1)
+        layout.addWidget(self.checks[OWLAxiom.ObjectPropertyRange], 7, 1)
+        layout.addWidget(self.checks[OWLAxiom.ReflexiveObjectProperty], 0, 2)
+        layout.addWidget(self.checks[OWLAxiom.SubClassOf], 1, 2)
+        layout.addWidget(self.checks[OWLAxiom.SubDataPropertyOf], 2, 2)
+        layout.addWidget(self.checks[OWLAxiom.SubObjectPropertyOf], 3, 2)
+        layout.addWidget(self.checks[OWLAxiom.SymmetricObjectProperty], 4, 2)
+        layout.addWidget(self.checks[OWLAxiom.TransitiveObjectProperty], 5, 2)
+        widget = QtWidgets.QGroupBox('Intensional', self, objectName='axioms_intensional')
+        widget.setLayout(layout)
+        self.addWidget(widget)
+
+        ## EXTENSIONAL GROUP
+
+        layout = QtWidgets.QGridLayout()
+        layout.setColumnMinimumWidth(0, 230)
+        layout.setColumnMinimumWidth(1, 230)
+        layout.setColumnMinimumWidth(2, 230)
+        layout.addWidget(self.checks[OWLAxiom.ClassAssertion], 0, 0)
+        layout.addWidget(self.checks[OWLAxiom.DataPropertyAssertion], 1, 0)
+        layout.addWidget(self.checks[OWLAxiom.NegativeDataPropertyAssertion], 0, 1)
+        layout.addWidget(self.checks[OWLAxiom.NegativeObjectPropertyAssertion], 1, 1)
+        layout.addWidget(self.checks[OWLAxiom.ObjectPropertyAssertion], 0, 2)
+        widget = QtWidgets.QGroupBox('Extensional', self, objectName='axioms_extensional')
+        widget.setLayout(layout)
+        self.addWidget(widget)
+
+        ## LOGICAL GROUP
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.widget('axioms_intensional'))
+        layout.addWidget(self.widget('axioms_extensional'))
+        widget = QtWidgets.QGroupBox('Logical', self, objectName='axioms_logical')
+        widget.setLayout(layout)
+        self.addWidget(widget)
+
+        ## EXPORT TAB LAYOUT CONFIGURATION
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.widget('axioms_non_logical'))
+        layout.addWidget(self.widget('axioms_logical'))
+        groupbox = QtWidgets.QGroupBox('OWL 2 Axioms for which exporting is enabled', self)
+        groupbox.setLayout(layout)
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.addWidget(groupbox)
+        widget = QtWidgets.QWidget(self, objectName='axioms_widget')
+        widget.setLayout(layout)
+        self.addWidget(widget)
 
         #############################################
         # PLUGINS TAB
         #################################
 
-        self.pluginsUninstall = dict()
-        self.pluginsTable = QtWidgets.QTableWidget(len(self.session.plugins()), 5, self)
-        self.pluginsTable.setHorizontalHeaderLabels(['Name', 'Version', 'Author', 'Contact', 'Uninstall'])
-        self.pluginsTable.setFont(Font('Roboto', 12))
-        self.pluginsTable.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
-        self.pluginsTable.setFocusPolicy(QtCore.Qt.NoFocus)
+        table = QtWidgets.QTableWidget(len(self.session.plugins()), 5, self, objectName='plugins_table')
+        table.setHorizontalHeaderLabels(['Name', 'Version', 'Author', 'Contact', 'Uninstall'])
+        table.setFont(Font('Roboto', 12))
+        table.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        table.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.addWidget(table)
 
-        header = self.pluginsTable.horizontalHeader()
+        header = table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Fixed)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
@@ -169,26 +246,27 @@ class PreferencesDialog(QtWidgets.QDialog):
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.Fixed)
         header.setSectionsClickable(False)
         header.setSectionsMovable(False)
-        header = self.pluginsTable.verticalHeader()
+        header = table.verticalHeader()
         header.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
 
+        self.uninstall = dict()
         for row, plugin in enumerate(sorted(self.session.plugins(), key=lambda x: x.name())):
             item = QtWidgets.QTableWidgetItem(plugin.name())
             item.setTextAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
             item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-            self.pluginsTable.setItem(row, 0, item)
+            table.setItem(row, 0, item)
             item = QtWidgets.QTableWidgetItem('v{0}'.format(plugin.version()))
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-            self.pluginsTable.setItem(row, 1, item)
+            table.setItem(row, 1, item)
             item = QtWidgets.QTableWidgetItem(plugin.author())
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-            self.pluginsTable.setItem(row, 2, item)
+            table.setItem(row, 2, item)
             item = QtWidgets.QTableWidgetItem(plugin.contact())
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-            self.pluginsTable.setItem(row, 3, item)
+            table.setItem(row, 3, item)
             p_widget = QtWidgets.QWidget()
             p_checkbox = CheckBox()
             p_checkbox.setEnabled(not plugin.isBuiltIn())
@@ -196,48 +274,53 @@ class PreferencesDialog(QtWidgets.QDialog):
             p_layout.addWidget(p_checkbox)
             p_layout.setAlignment(QtCore.Qt.AlignCenter)
             p_layout.setContentsMargins(0, 0, 0, 0)
-            self.pluginsTable.setCellWidget(row, 4, p_widget)
-            self.pluginsUninstall[plugin] = p_checkbox
+            table.setCellWidget(row, 4, p_widget)
+            self.uninstall[plugin] = p_checkbox
 
-        self.pluginInstallButton = QtWidgets.QToolButton(self)
-        self.pluginInstallButton.setDefaultAction(self.session.action('install_plugin'))
-        self.pluginInstallButton.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
-        self.pluginInstallButton.setFont(Font('Roboto', 13))
+        button = QtWidgets.QToolButton(self, objectName='plugins_install_button')
+        button.setDefaultAction(self.session.action('install_plugin'))
+        button.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
+        button.setFont(Font('Roboto', 13))
+        self.addWidget(button)
 
-        self.pluginsWidget = QtWidgets.QWidget()
-        self.pluginsLayout = QtWidgets.QVBoxLayout(self.pluginsWidget)
-        self.pluginsLayout.addWidget(self.pluginsTable, 1)
-        self.pluginsLayout.addWidget(self.pluginInstallButton, 0, QtCore.Qt.AlignRight)
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.widget('plugins_table'), 1)
+        layout.addWidget(self.widget('plugins_install_button'), 0, QtCore.Qt.AlignRight)
+        widget = QtWidgets.QWidget(objectName='plugins_widget')
+        widget.setLayout(layout)
+        self.addWidget(widget)
         
         #############################################
         # CONFIRMATION BOX
         #################################
 
-        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
-        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Save)
-        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
-        self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(Font('Roboto', 12))
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        confirmation.setContentsMargins(10, 0, 10, 10)
+        confirmation.setFont(Font('Roboto', 12))
+        self.addWidget(confirmation)
 
         #############################################
         # MAIN WIDGET
         #################################
 
-        self.mainWidget = QtWidgets.QTabWidget(self)
-        self.mainWidget.addTab(self.editorWidget, QtGui.QIcon(':/icons/48/ic_edit_black'), 'Editor')
-        self.mainWidget.addTab(self.axiomsWidget, QtGui.QIcon(':/icons/48/ic_export_black'), 'Export')
-        self.mainWidget.addTab(self.pluginsWidget, QtGui.QIcon(':/icons/48/ic_extension_black'), 'Plugins')
-        self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.mainLayout.setContentsMargins(0, 0, 0, 0)
-        self.mainLayout.addWidget(self.mainWidget)
-        self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
-
+        widget = QtWidgets.QTabWidget(self, objectName='main_widget')
+        widget.addTab(self.widget('general_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'), 'General')
+        widget.addTab(self.widget('axioms_widget'), QtGui.QIcon(':/icons/24/ic_export_black'), 'Export')
+        widget.addTab(self.widget('plugins_widget'), QtGui.QIcon(':/icons/24/ic_extension_black'), 'Plugins')
+        self.addWidget(widget)
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.widget('main_widget'))
+        layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
+        self.setLayout(layout)
         self.setMinimumSize(740, 420)
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Preferences')
 
-        connect(self.confirmationBox.accepted, self.accept)
-        connect(self.confirmationBox.rejected, self.reject)
+        connect(confirmation.accepted, self.accept)
+        connect(confirmation.rejected, self.reject)
 
     #############################################
     #   PROPERTIES
@@ -264,7 +347,7 @@ class PreferencesDialog(QtWidgets.QDialog):
         # PLUGINS TAB
         #################################
 
-        plugins_to_uninstall = [plugin for plugin, checkbox in self.pluginsUninstall.items() if checkbox.isChecked()]
+        plugins_to_uninstall = [plugin for plugin, checkbox in self.uninstall.items() if checkbox.isChecked()]
         if plugins_to_uninstall:
             plugins_to_uninstall_fmt = []
             for p in plugins_to_uninstall:
@@ -290,14 +373,16 @@ class PreferencesDialog(QtWidgets.QDialog):
         # EXPORT TAB
         #################################
 
-        for axiom, checkbox in self.axiomsChecks.items():
+        for axiom, checkbox in self.checks.items():
             settings.setValue('export/axiom/{0}'.format(axiom.value), checkbox.isChecked())
 
         #############################################
-        # EDITOR TAB
+        # GENERAL TAB
         #################################
 
-        settings.setValue('diagram/size', self.diagramSizeField.value())
+        settings.setValue('diagram/size', self.widget('diagram_size_field').value())
+        settings.setValue('update/channel', self.widget('update_channel_switch').currentText())
+        settings.setValue('update/check_on_startup', self.widget('update_startup_checkbox').isChecked())
 
         #############################################
         # SAVE & EXIT

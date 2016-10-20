@@ -33,15 +33,22 @@
 ##########################################################################
 
 
+import time
+
+from PyQt5 import QtCore
+
 from eddy.core.datatypes.owl import OWLProfile
 from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.exporters.common import AbstractProjectExporter
 from eddy.core.loaders.common import AbstractDiagramLoader
 from eddy.core.loaders.common import AbstractProjectLoader
 from eddy.core.functions.misc import isEmpty
+from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 from eddy.core.profiles.common import AbstractProfile
+from eddy.core.worker import AbstractWorker
 
+from eddy.ui.notification import NotificationPopup
 
 LOGGER = getLogger(__name__)
 
@@ -1027,3 +1034,149 @@ class HasProfileSystem(object):
         self._profileList.remove(profile)
         del self._profileDict[profile.type()]
         return profile
+
+
+class HasThreadingSystem(object):
+    """
+    Mixin which adds the ability to easily start and stop Qt threads.
+    """
+    def __init__(self, **kwargs):
+        """
+        Initialize the object with default parameters.
+        :type kwargs: dict
+        """
+        super().__init__(**kwargs)
+        self._threads = {}
+        self._started = {}
+        self._workers = {}
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot()
+    def onQThreadFinished(self):
+        """
+        Executed when a QThread finish it's job.
+        """
+        self.stopThread(self.sender())
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def startThread(self, name, worker):
+        """
+        Start a thread using the given worker.
+        :type name: str
+        :type worker: QtCore.QObject
+        """
+        if name in self._threads or name in self._workers:
+            raise RuntimeError('already running (%s)' % name)
+        if not isinstance(worker, AbstractWorker):
+            raise ValueError('worker class must be subclass of eddy.core.threading.AbstractWorker')
+        LOGGER.debug("Allocating new QThread '%s' for worker %s", name, worker.__class__.__name__)
+        # START THE WORKER THREAD
+        qthread = QtCore.QThread()
+        qthread.setObjectName(name)
+        worker.moveToThread(qthread)
+        connect(qthread.finished, self.onQThreadFinished)
+        connect(qthread.finished, qthread.deleteLater)
+        connect(worker.finished, qthread.quit)
+        connect(worker.finished, worker.deleteLater)
+        connect(qthread.started, worker.run)
+        qthread.start()
+        # STORE LOCALLY
+        self._started[name] = time.monotonic()
+        self._threads[name] = qthread
+        self._workers[name] = worker
+
+    def stopRunningThreads(self):
+        """
+        Stops all the running threads.
+        """
+        LOGGER.debug('Terminating running QThread(s)...')
+        for name in [name for name in self._threads.keys()]:
+            self.stopThread(name)
+
+    def stopThread(self, name_or_qthread):
+        """
+        Stop a running thread.
+        :type name_or_qthread: T <= str | QThread
+        """
+        name = name_or_qthread
+        if not isinstance(name, str):
+            name = name_or_qthread.objectName()
+        if name in self._threads:
+            LOGGER.debug("Terminating QThread '%s' (runtime=%.2fms)...", name, time.monotonic() - self._started[name])
+            qthread = self._threads[name]
+            qthread.quit()
+            if not qthread.wait(2000):
+                qthread.terminate()
+                qthread.wait()
+            del self._threads[name]
+        if name in self._workers:
+            del self._workers[name]
+
+    def thread(self, name):
+        """
+        Returns the reference to a running QThread.
+        :type name: str
+        :rtype: QtCore.QThread
+        """
+        return self._threads.get(name, None)
+
+    def threads(self):
+        """
+        Returns a list of QThread instances in the form (name, QThread).
+        :rtype: list
+        """
+        return [(name, qthread) for name, qthread in self._threads.items()]
+
+    def worker(self, name):
+        """
+        Returns the reference to a worker which is running in a QThread.
+        :type name: str
+        :rtype: AbstractWorker
+        """
+        return self._workers.get(name, None)
+
+    def workers(self):
+        """
+        Returns a list of AbstractWorker instances in the form (name, AbstractWorker).
+        :rtype: list
+        """
+        return [(name, worker) for name, worker in self._workers.items()]
+
+
+class HasNotificationSystem(object):
+    """
+    Mixin which adds the ability to display notification popups.
+    """
+    def __init__(self, **kwargs):
+        """
+        Initialize the object with default parameters.
+        :type kwargs: dict
+        """
+        super().__init__(**kwargs)
+        self._popupList = [NotificationPopup(i) for i in range(1, 9)]
+
+    def addNotification(self, message):
+        """
+        Add a notification popup.
+        :type message: str
+        """
+        for popup in self._popupList:
+            if not popup.isVisible():
+                popup.setText(message)
+                popup.show()
+                break
+        else:
+            LOGGER.warning('Missed notification (%s): no free notification popup available', message)
+
+    def hideNotifications(self):
+        """
+        Make sure to dismiss all the notification popups.
+        """
+        for popup in self._popupList:
+            popup.dismiss()

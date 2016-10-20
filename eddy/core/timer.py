@@ -33,74 +33,74 @@
 ##########################################################################
 
 
-from enum import unique
+from PyQt5 import QtCore
 
-from eddy.core.datatypes.common import Enum_
-from eddy.core.regex import RE_FILE_EXTENSION
+from eddy.core.functions.signals import connect
 
 
-@unique
-class Channel(Enum_):
+class PausableTimer(QtCore.QTimer):
     """
-    Update channel enum type definition
+    Extends QtCore.QTimer providing pause and resume functionalities.
     """
-    Beta = 'Beta'
-    Stable = 'Stable'
-
-
-@unique
-class File(Enum_):
-    """
-    Enum implementation to deal with file types.
-    """
-    Bmp = 'Bitmap (*.bmp)'
-    Csv = 'Comma-separated values (*.csv)'
-    GraphML = 'GraphML (*.graphml)'
-    Graphol = 'Graphol (*.graphol)'
-    Html = 'Hyper-Text Markup Language (*.html)'
-    Jpeg = 'JPEG (*.jpg)'
-    Owl = 'Web Ontology Language (*.owl)'
-    Pdf = 'Portable Document Format (*.pdf)'
-    Png = 'PNG (*.png)'
-    Spec = 'Plugin SPEC (*.spec)'
-    Zip = 'ZIP (*.zip)'
-    Xml = 'XML (*.xml)'
-
-    @classmethod
-    def forPath(cls, path):
+    def __init__(self, *args, **kwargs):
         """
-        Returns the File matching the given path.
-        :type path: str
-        :rtype: File
+        Initialize the timer.
         """
-        for x in cls:
-            if path.endswith(x.extension):
-                return x
-        return None
+        self._remaining = 0
+        self._paused = False
+        super(PausableTimer, self).__init__(*args, **kwargs)
+        connect(self.timeout, self.onTimeout)
 
-    @property
-    def extension(self):
-        """
-        The extension associated with the Enum member.
-        :rtype: str
-        """
-        match = RE_FILE_EXTENSION.match(self.value)
-        if match:
-            return match.group('extension')
-        return None
+    #############################################
+    #   SLOTS
+    #################################
 
-    def __lt__(self, other):
+    @QtCore.pyqtSlot()
+    def onTimeout(self):
         """
-        Returns True if the current File is "lower" than the given other one.
-        :type other: File
+        Executed when the timer expires.
+        """
+        self._paused = False
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def isPaused(self):
+        """
+        Tells whether is timer is paused.
         :rtype: bool
         """
-        return self.value < other.value
+        return self._paused
 
-    def __gt__(self, other):
+    def pause(self):
         """
-        Returns True if the current File is "greater" than the given other one.
-        :type other: File
-        :rtype: bool
+        Pause the timer.
         """
-        return self.value > other.value
+        if self.isActive():
+            self._paused = True
+            self._remaining = self.remainingTime()
+            self.stop()
+
+    def resume(self):
+        """
+        Resume a paused timer.
+        """
+        if not self.isActive():
+            self._paused = False
+            self.start(self._remaining)
+
+    def reset(self):
+        """
+        Reset the timer.
+        """
+        self._paused = False
+        self._remaining = 0
+        if self.isActive():
+            self.stop()
+
+    def start(self, *args, **kwargs):
+        """
+        Start the timer.
+        """
+        super(PausableTimer, self).start(*args, **kwargs)

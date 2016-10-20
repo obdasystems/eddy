@@ -96,11 +96,11 @@ class DoubleField(QtWidgets.QLineEdit):
     """
     This class implements an input field where the user can enter float values.
     """
-    def __init__(self, parent=None):
+    def __init__(self, *args, **kwargs):
         """
         Initialize the float input field.
         """
-        super().__init__(parent)
+        super().__init__(*args, **kwargs)
         self.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
         self.setValidator(QtGui.QDoubleValidator(self))
 
@@ -123,11 +123,11 @@ class IntegerField(QtWidgets.QLineEdit):
     """
     This class implements an input field where the user can enter only integer values.
     """
-    def __init__(self, parent=None):
+    def __init__(self, *args, **kwargs):
         """
         Initialize the integer input field.
         """
-        super().__init__(parent)
+        super().__init__(*args, **kwargs)
         self.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
         self.setValidator(QtGui.QIntValidator(self))
 
@@ -150,11 +150,11 @@ class StringField(QtWidgets.QLineEdit):
     """
     This class implements an input field where the user can enter strings.
     """
-    def __init__(self, parent=None):
+    def __init__(self, *args, **kwargs):
         """
         Initialize the string input field.
         """
-        super().__init__(parent)
+        super().__init__(*args, **kwargs)
         self.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
 
     def setValue(self, value):
@@ -176,11 +176,11 @@ class TextField(QtWidgets.QPlainTextEdit):
     """
     This class implements a textarea field where the user can enter strings.
     """
-    def __init__(self, parent=None):
+    def __init__(self, *args, **kwargs):
         """
         Initialize the string input field.
         """
-        super().__init__(parent)
+        super().__init__(*args, **kwargs)
         self.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
 
     def setValue(self, value):
@@ -202,9 +202,9 @@ class SpinBox(QtWidgets.QSpinBox):
     """
     This class implements a SpinBox.
     """
-    def __init__(self, parent=None):
+    def __init__(self, *args, **kwargs):
         """
         Initialize the spin box.
         """
-        super().__init__(parent)
+        super().__init__(*args, **kwargs)
         self.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)

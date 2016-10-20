@@ -36,7 +36,6 @@
 import os
 import sys
 import textwrap
-import webbrowser
 
 from collections import OrderedDict
 
@@ -59,20 +58,22 @@ from eddy.core.commands.nodes import CommandNodeSetBrush
 from eddy.core.commands.nodes import CommandNodeSetDepth
 from eddy.core.commands.project import CommandProjectSetProfile
 from eddy.core.common import HasActionSystem
-from eddy.core.common import HasMenuSystem
-from eddy.core.common import HasPluginSystem
-from eddy.core.common import HasWidgetSystem
 from eddy.core.common import HasDiagramExportSystem
-from eddy.core.common import HasProjectExportSystem
 from eddy.core.common import HasDiagramLoadSystem
-from eddy.core.common import HasProjectLoadSystem
+from eddy.core.common import HasMenuSystem
+from eddy.core.common import HasNotificationSystem
+from eddy.core.common import HasPluginSystem
 from eddy.core.common import HasProfileSystem
+from eddy.core.common import HasProjectExportSystem
+from eddy.core.common import HasProjectLoadSystem
+from eddy.core.common import HasThreadingSystem
+from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.graphol import Restriction, Special
 from eddy.core.datatypes.misc import Color, DiagramMode
 from eddy.core.datatypes.owl import Datatype, Facet
 from eddy.core.datatypes.qt import BrushIcon, Font
-from eddy.core.datatypes.system import File
+from eddy.core.datatypes.system import Channel, File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.graphol import GrapholDiagramExporter
@@ -95,6 +96,7 @@ from eddy.core.plugin import PluginManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
 from eddy.core.profiles.owl2rl import OWL2RLProfile
+from eddy.core.update import UpdateCheckWorker
 
 from eddy.ui.about import AboutDialog
 from eddy.ui.diagram import NewDiagramDialog
@@ -123,7 +125,8 @@ LOGGER = getLogger(__name__)
 
 class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
               HasDiagramExportSystem, HasProjectExportSystem, HasDiagramLoadSystem,
-              HasProjectLoadSystem, HasProfileSystem, QtWidgets.QMainWindow):
+              HasProjectLoadSystem, HasProfileSystem, HasThreadingSystem,
+              HasNotificationSystem, QtWidgets.QMainWindow):
     """
     Extends QtWidgets.QMainWindow and implements Eddy main working session.
     Additionally to built-in signals, this class emits:
@@ -142,6 +145,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     * sgnUpdateState: to notify that something in the session state changed.
     """
     sgnClosed = QtCore.pyqtSignal()
+    sgnCheckForUpdate = QtCore.pyqtSignal()
     sgnDiagramFocus = QtCore.pyqtSignal('QGraphicsScene')
     sgnDiagramFocused = QtCore.pyqtSignal('QGraphicsScene')
     sgnDiagramLoad = QtCore.pyqtSignal(str)
@@ -174,25 +178,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.pf = PropertyFactory(self)
         self.pmanager = PluginManager(self)
 
-        ## ####################################################### ##
-        ## Because toolbars are needed both by built-in widgets    ##
-        ## and built-in actions, they need to be initialized       ##
-        ## outside 'init' methods not to generate cycles:          ##
-        ## ####################################################### ##
-        ## * TOOLBARS  -> WIDGETS && ACTIONS                       ##
-        ## * WIDGETS   -> MENUS                                    ##
-        ## * MENUS     -> ACTIONS && TOOLBARS                      ##
-        ## ####################################################### ##
-
-        self.addWidget(QtWidgets.QToolBar('Document', objectName='document_toolbar'))
-        self.addWidget(QtWidgets.QToolBar('Editor', objectName='editor_toolbar'))
-        self.addWidget(QtWidgets.QToolBar('View', objectName='view_toolbar'))
-        self.addWidget(QtWidgets.QToolBar('Graphol', objectName='graphol_toolbar'))
-
         #############################################
         # CONFIGURE SESSION
         #################################
 
+        self.initPre()
         self.initActions()
         self.initMenus()
         self.initProfiles()
@@ -278,10 +268,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addAction(action)
 
         action = QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_extension_black'), 'Install plugin...',
+            QtGui.QIcon(':/icons/24/ic_extension_black'), 'Install Plugin...',
             self, objectName='install_plugin', statusTip='Install a plugin',
             triggered=self.doOpenDialog)
         action.setData(PluginInstallDialog)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_system_update'), 'Check for Updates...',
+            self, objectName='check_for_updates', statusTip='Checks for available updates.',
+            triggered=self.doCheckForUpdate)
         self.addAction(action)
 
         if _MACOS:
@@ -708,6 +704,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         menu = QtWidgets.QMenu('Help', objectName='help')
         menu.addAction(self.action('about'))
+        if not _MACOS:
+            menu.addSeparator()
+        menu.addAction(self.action('check_for_updates'))
         menu.addSeparator()
         menu.addAction(self.action('diag_web'))
         menu.addAction(self.action('graphol_web'))
@@ -811,6 +810,15 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menuBar.addMenu(self.menu('tools'))
         menuBar.addMenu(self.menu('help'))
 
+    def initPre(self):
+        """
+        Initialize stuff that are shared by actions, menus, widgets etc.
+        """
+        self.addWidget(QtWidgets.QToolBar('Document', objectName='document_toolbar'))
+        self.addWidget(QtWidgets.QToolBar('Editor', objectName='editor_toolbar'))
+        self.addWidget(QtWidgets.QToolBar('View', objectName='view_toolbar'))
+        self.addWidget(QtWidgets.QToolBar('Graphol', objectName='graphol_toolbar'))
+
     def initPlugins(self):
         """
         Load and initialize application plugins.
@@ -844,9 +852,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Connect session specific signals to their slots.
         """
         connect(self.undostack.cleanChanged, self.doUpdateState)
+        connect(self.sgnCheckForUpdate, self.doCheckForUpdate)
         connect(self.sgnDiagramFocus, self.doFocusDiagram)
         connect(self.sgnDiagramLoad, self.doLoadDiagram)
         connect(self.sgnReady, self.doUpdateState)
+        connect(self.sgnReady, self.onSessionReady)
         connect(self.sgnProjectSave, self.doSave)
         connect(self.sgnUpdateState, self.doUpdateState)
 
@@ -864,6 +874,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Configure the status bar.
         """
         statusbar = QtWidgets.QStatusBar(self)
+        statusbar.addPermanentWidget(self.widget('progress_bar'))
+        statusbar.addPermanentWidget(QtWidgets.QWidget())
         statusbar.setSizeGripEnabled(False)
         self.setStatusBar(statusbar)
 
@@ -933,6 +945,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         connect(combobox.activated, self.doSetProfile)
         self.addWidget(combobox)
 
+        progressBar = QtWidgets.QProgressBar(objectName='progress_bar')
+        progressBar.setContentsMargins(0, 0, 0, 0)
+        progressBar.setFixedSize(220, 20)
+        progressBar.setRange(0, 0)
+        progressBar.setVisible(False)
+        self.addWidget(progressBar)
+
     #############################################
     #   SLOTS
     #################################
@@ -981,6 +1000,24 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     command = CommandItemsTranslate(diagram, items, moveX, moveY, 'center diagram')
                     self.undostack.push(command)
                     self.mdi.activeView().centerOn(0, 0)
+
+    @QtCore.pyqtSlot()
+    def doCheckForUpdate(self):
+        """
+        Execute the update check routine.
+        """
+        # SHOW PROGRESS BAR
+        progressBar = self.widget('progress_bar')
+        progressBar.setToolTip('Checking for updates...')
+        progressBar.setVisible(True)
+        # RUN THE UPDATE CHECK WORKER IN A THREAD
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        channel = Channel.forValue(settings.value('update/channel', Channel.Stable.value, str))
+        worker = UpdateCheckWorker(channel, VERSION)
+        connect(worker.sgnNoUpdateAvailable, self.onNoUpdateAvailable)
+        connect(worker.sgnNoUpdateDataAvailable, self.onNoUpdateDataAvailable)
+        connect(worker.sgnUpdateAvailable, self.onUpdateAvailable)
+        self.startThread('updateCheck', worker)
 
     @QtCore.pyqtSlot()
     def doClose(self):
@@ -1274,7 +1311,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         action = self.sender()
         weburl = action.data()
         if weburl:
-            webbrowser.open(weburl)
+            # noinspection PyTypeChecker,PyCallByClass,PyCallByClass
+            QtGui.QDesktopServices.openUrl(QtCore.QUrl(weburl))
 
     @QtCore.pyqtSlot()
     def doOpenDiagramProperties(self):
@@ -1811,6 +1849,50 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.widget('button_set_brush').setEnabled(isPredicateSelected)
         self.widget('profile_switch').setCurrentText(self.project.profile.name())
 
+    @QtCore.pyqtSlot()
+    def onNoUpdateAvailable(self):
+        """
+        Executed when the update worker thread terminates and no software update is available.
+        """
+        progressBar = self.widget('progress_bar')
+        progressBar.setVisible(False)
+        self.addNotification('No update available.')
+
+    @QtCore.pyqtSlot()
+    def onNoUpdateDataAvailable(self):
+        """
+        Executed when the update worker thread terminates abnormally.
+        """
+        progressBar = self.widget('progress_bar')
+        progressBar.setVisible(False)
+        self.addNotification(textwrap.dedent("""
+            <b><font color="#7E0B17">ERROR</font></b>: Could not connect to update site:
+            unable to get update information.
+            """))
+
+    @QtCore.pyqtSlot()
+    def onSessionReady(self):
+        """
+        Executed when the session is initialized.
+        """
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        if settings.value('update/check_on_startup', True, bool):
+            action = self.action('check_for_updates')
+            action.trigger()
+
+    @QtCore.pyqtSlot(str, str)
+    def onUpdateAvailable(self, name, url):
+        """
+        Executed when the update worker thread terminates and a new software update is available.
+        :type name: str
+        :type url: str
+        """
+        progressBar = self.widget('progress_bar')
+        progressBar.setVisible(False)
+        self.addNotification(textwrap.dedent("""
+            A new version of {} is available for download: <b>{}</b><br/><br/>
+            [<a href="{}"><b>DOWNLOAD</b></a>]""".format(APPNAME, name, url)))
+
     #############################################
     #   EVENTS
     #################################
@@ -1840,14 +1922,38 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if not close:
             closeEvent.ignore()
         else:
+
+            #############################################
+            # SAVE THE CURRENT PROJECT IF NEEDED
+            #################################
+
             if save:
-                # SAVE THE CURRENT PROJECT IF NEEDED
                 self.sgnProjectSave.emit()
+
+            #############################################
             # DISPOSE ALL THE PLUGINS
+            #################################
+
             for plugin in self.plugins():
                 self.pmanager.dispose(plugin)
             self.pmanager.clear()
+
+            #############################################
+            # DISPOSE ALL THE RUNNING THREADS
+            #################################
+
+            self.stopRunningThreads()
+
+            #############################################
+            # HIDE ALL THE NOTIFICATION POPUPS
+            #################################
+
+            self.hideNotifications()
+
+            #############################################
             # SHUTDOWN THE ACTIVE SESSION
+            #################################
+
             self.sgnClosed.emit()
             closeEvent.accept()
 

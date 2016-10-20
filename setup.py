@@ -608,8 +608,10 @@ includes = [
     'PyQt5.QtXml',
     # REQUIRED + 3RD PARTY MODULES
     'csv',
+    'github3',
     'jnius',
     'natsort',
+    'requests',
     'verlib',
 ]
 

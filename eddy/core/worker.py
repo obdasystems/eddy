@@ -33,74 +33,24 @@
 ##########################################################################
 
 
-from enum import unique
+from abc import ABCMeta, abstractmethod
 
-from eddy.core.datatypes.common import Enum_
-from eddy.core.regex import RE_FILE_EXTENSION
+from PyQt5 import QtCore
 
 
-@unique
-class Channel(Enum_):
+class AbstractWorker(QtCore.QObject):
     """
-    Update channel enum type definition
+    Extends QtCore.QObject providing the base class for all the workers.
+    Note that classes inheriting from this one MUST emit the finished signal from
+    within the run() method, to properly notify that the worker terminated its job.
     """
-    Beta = 'Beta'
-    Stable = 'Stable'
+    __metaclass__  = ABCMeta
 
+    finished = QtCore.pyqtSignal()
 
-@unique
-class File(Enum_):
-    """
-    Enum implementation to deal with file types.
-    """
-    Bmp = 'Bitmap (*.bmp)'
-    Csv = 'Comma-separated values (*.csv)'
-    GraphML = 'GraphML (*.graphml)'
-    Graphol = 'Graphol (*.graphol)'
-    Html = 'Hyper-Text Markup Language (*.html)'
-    Jpeg = 'JPEG (*.jpg)'
-    Owl = 'Web Ontology Language (*.owl)'
-    Pdf = 'Portable Document Format (*.pdf)'
-    Png = 'PNG (*.png)'
-    Spec = 'Plugin SPEC (*.spec)'
-    Zip = 'ZIP (*.zip)'
-    Xml = 'XML (*.xml)'
-
-    @classmethod
-    def forPath(cls, path):
+    @abstractmethod
+    def run(self):
         """
-        Returns the File matching the given path.
-        :type path: str
-        :rtype: File
+        Run the worker.
         """
-        for x in cls:
-            if path.endswith(x.extension):
-                return x
-        return None
-
-    @property
-    def extension(self):
-        """
-        The extension associated with the Enum member.
-        :rtype: str
-        """
-        match = RE_FILE_EXTENSION.match(self.value)
-        if match:
-            return match.group('extension')
-        return None
-
-    def __lt__(self, other):
-        """
-        Returns True if the current File is "lower" than the given other one.
-        :type other: File
-        :rtype: bool
-        """
-        return self.value < other.value
-
-    def __gt__(self, other):
-        """
-        Returns True if the current File is "greater" than the given other one.
-        :type other: File
-        :rtype: bool
-        """
-        return self.value > other.value
+        pass
