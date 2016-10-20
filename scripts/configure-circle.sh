@@ -74,6 +74,7 @@ pip install -U nose-cov==1.6
 pip install -U natsort==5.0.1
 pip install -e hg+https://danielepantaleone@bitbucket.org/danielepantaleone/cx_freeze/@ubuntu#egg=cx_Freeze
 pip install -e git+https://github.com/danielepantaleone/pyjnius.git@i386#egg=pyjnius --exists-action i
+pip install --pre github3.py
 
 cd ~
 rm -rf "${BUILDS_DIR}"

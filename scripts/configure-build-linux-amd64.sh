@@ -94,6 +94,7 @@ pip install -U natsort
 pip install -U coveralls
 pip install -U pyyaml
 pip install -U Pillow
+pip install --pre github3.py
 ## INSTALL PYTHON DEPENDENCIES (FROM MERCURIAL AND GIT)
 cd ${DOWNLOADS}
 pip install -e hg+https://danielepantaleone@bitbucket.org/danielepantaleone/cx_freeze/@ubuntu#egg=cx_Freeze

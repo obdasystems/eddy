@@ -84,6 +84,7 @@ pip install -U coveralls
 pip install -U pyyaml
 pip install -U Pillow
 pip install -U cx_Freeze
+pip install --pre github3.py
 ## INSTALL PYTHON DEPENDENCIES (FROM GIT)
 cd ${DOWNLOADS}
 pip install -e git+https://github.com/danielepantaleone/pyjnius.git@i386#egg=pyjnius --exists-action i
