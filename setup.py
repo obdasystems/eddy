@@ -645,7 +645,7 @@ cx_Freeze.setup(
     license=LICENSE,
     url="https://github.com/danielepantaleone/eddy",
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: MacOS X :: Cocoa',
         'Environment :: Win32 (MS Windows)'
         'Environment :: X11 Applications :: Qt',

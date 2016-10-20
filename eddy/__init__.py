@@ -39,7 +39,7 @@ __copyright__ = 'Copyright © 2015 Daniele Pantaleone'
 __email__ = 'pantaleone@dis.uniroma1.it'
 __license__ = 'GPL'
 __organization__ = 'Sapienza University'
-__status__ = 'Alpha'
+__status__ = 'Beta'
 __version__ = '0.9.1'
 
 
