@@ -300,8 +300,7 @@ class AbstractEdge(AbstractItem):
             anchorPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
             handleBrush = QtGui.QBrush(QtGui.QColor(66, 165, 245, 255))
             handlePen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
-            if breakpoint is None and anchor is None:
-                selectionBrush = QtGui.QBrush(QtGui.QColor(248, 255, 72, 255))
+            selectionBrush = QtGui.QBrush(QtGui.QColor(248, 255, 72, 255))
         for polygon in self.anchors.values():
             polygon.setBrush(anchorBrush)
             polygon.setPen(anchorPen)
