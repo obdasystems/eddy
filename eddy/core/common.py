@@ -1075,7 +1075,7 @@ class HasThreadingSystem(object):
             raise RuntimeError('already running (%s)' % name)
         if not isinstance(worker, AbstractWorker):
             raise ValueError('worker class must be subclass of eddy.core.threading.AbstractWorker')
-        LOGGER.debug("Allocating new QThread '%s' for worker %s", name, worker.__class__.__name__)
+        LOGGER.debug("Moving worker '%s' in a new QThread '%s'", worker.__class__.__name__, name)
         # START THE WORKER THREAD
         qthread = QtCore.QThread()
         qthread.setObjectName(name)
@@ -1085,6 +1085,7 @@ class HasThreadingSystem(object):
         connect(worker.finished, qthread.quit)
         connect(worker.finished, worker.deleteLater)
         connect(qthread.started, worker.run)
+        LOGGER.debug("Starting QThread: %s", name)
         qthread.start()
         # STORE LOCALLY
         self._started[name] = time.monotonic()
@@ -1108,7 +1109,7 @@ class HasThreadingSystem(object):
         if not isinstance(name, str):
             name = name_or_qthread.objectName()
         if name in self._threads:
-            LOGGER.debug("Terminating QThread '%s' (runtime=%.2fms)...", name, time.monotonic() - self._started[name])
+            LOGGER.debug("Terminating QThread: %s (runtime=%.2fms)", name, time.monotonic() - self._started[name])
             qthread = self._threads[name]
             qthread.quit()
             if not qthread.wait(2000):
