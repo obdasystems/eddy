@@ -143,6 +143,8 @@ class ExportTestCase(EddyTestCase):
         self.assertIn('Declaration(ObjectProperty(test:drives))', content)
         self.assertIn('Declaration(DataProperty(test:name))', content)
         self.assertIn('Declaration(Datatype(xsd:string))', content)
+        self.assertIn('Declaration(AnnotationProperty(<rdfs:comment>))', content)
+        self.assertIn('AnnotationAssertion(<rdfs:comment> test:Person "a human being"^^xsd:string)', content)
         self.assertIn('SubClassOf(test:Person ObjectSomeValuesFrom(test:hasAncestor owl:Thing))', content)
         self.assertIn('SubClassOf(test:Father test:Male)', content)
         self.assertIn('SubClassOf(test:Mother test:Female)', content)
@@ -192,7 +194,7 @@ class ExportTestCase(EddyTestCase):
         self.assertAnyIn(['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
                           'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)'], content)
         # AND
-        self.assertLen(58, content)
+        self.assertLen(60, content)
 
     def test_export_project_to_owl_with_normalization(self):
         # WHEN
@@ -236,6 +238,8 @@ class ExportTestCase(EddyTestCase):
         self.assertIn('Declaration(ObjectProperty(test:drives))', content)
         self.assertIn('Declaration(DataProperty(test:name))', content)
         self.assertIn('Declaration(Datatype(xsd:string))', content)
+        self.assertIn('Declaration(AnnotationProperty(<rdfs:comment>))', content)
+        self.assertIn('AnnotationAssertion(<rdfs:comment> test:Person "a human being"^^xsd:string)', content)
         self.assertIn('SubClassOf(test:Person ObjectSomeValuesFrom(test:hasAncestor owl:Thing))', content)
         self.assertIn('SubClassOf(test:Father test:Male)', content)
         self.assertIn('SubClassOf(test:Mother test:Female)', content)
@@ -285,4 +289,4 @@ class ExportTestCase(EddyTestCase):
         self.assertAnyIn(['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
                           'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)'], content)
         # AND
-        self.assertLen(65, content)
+        self.assertLen(67, content)
