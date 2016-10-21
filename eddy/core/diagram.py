@@ -71,6 +71,7 @@ class Diagram(QtWidgets.QGraphicsScene):
     GridSize = 20
     MinSize = 2000
     MaxSize = 1000000
+    SelectionRadius = 4
 
     sgnItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
     sgnItemInsertionCompleted = QtCore.pyqtSignal('QGraphicsItem', int)
@@ -670,13 +671,17 @@ class Diagram(QtWidgets.QGraphicsScene):
         """
         if not pos:
             return super(Diagram, self).items()
+        x = pos.x() - (Diagram.SelectionRadius / 2)
+        y = pos.y() - (Diagram.SelectionRadius / 2)
+        w = Diagram.SelectionRadius
+        h = Diagram.SelectionRadius
         return sorted([
-            x for x in super(Diagram, self).items(pos, mode)
+            x for x in super(Diagram, self).items(QtCore.QRectF(x, y, w, h), mode)
                 if (kwargs.get('nodes', True) and x.isNode() or
                     kwargs.get('edges', True) and x.isEdge() or
                     kwargs.get('labels', False) and x.isLabel()) and
                     not x in kwargs.get('skip', set())
-        ], key=lambda x: x.zValue(), reverse=True)
+        ], key=lambda i: i.zValue(), reverse=True)
 
     def nodes(self):
         """
