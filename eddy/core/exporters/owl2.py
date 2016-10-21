@@ -1089,9 +1089,9 @@ class OWLProjectExporterWorker(AbstractWorker):
         """
         if OWLAxiom.Annotation in self.axiomsList:
             meta = self.project.meta(node.type(), node.text())
-            if meta and not isEmpty(meta['description']):
+            if meta and not isEmpty(meta.get('description', '')):
                 props = self.df.getOWLAnnotationProperty(IRI.create("Description"))
-                value = self.df.getOWLLiteral(OWLAnnotationText(meta['description']))
+                value = self.df.getOWLLiteral(OWLAnnotationText(meta.get('description', '')))
                 value = cast(OWLAnnotationValue, value)
                 annotation = self.df.getOWLAnnotation(props, value)
                 self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(self.convert(node).getIRI(), annotation))
