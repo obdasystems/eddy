@@ -218,7 +218,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 # EDGE INSERTION
                 #################################
 
-                node = self.itemOnTopOf(mousePos, edges=False)
+                node = first(self.items(mousePos, edges=False))
                 if node:
                     edge = self.factory.create(Item.forValue(self.modeParam), source=node)
                     edge.updateEdge(target=mousePos)
@@ -242,7 +242,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                         # LABEL MOVE
                         #################################
 
-                        item = self.itemOnTopOf(mousePos, nodes=False, edges=False, labels=True)
+                        item = first(self.items(mousePos, nodes=False, edges=False, labels=True))
                         if item and item.isMovable():
                             self.clearSelection()
                             self.mp_Label = item
@@ -256,7 +256,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                         # ITEM SELECTION
                         #################################
 
-                        item = self.itemOnTopOf(mousePos, labels=True)
+                        item = first(self.items(mousePos, labels=True))
                         if item:
 
                             if item.isLabel():
@@ -297,7 +297,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                                 # to compute delta  movements for each component in the selection.
                                 selected = self.selectedNodes()
                                 if selected:
-                                    self.mp_Node = self.itemOnTopOf(mousePos, edges=False)
+                                    self.mp_Node = first(self.items(mousePos, edges=False))
                                     if self.mp_Node:
                                         self.mp_NodePos = self.mp_Node.pos()
                                         self.mp_Pos = mousePos
@@ -344,7 +344,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                     if previousNode:
                         previousNode.updateNode(selected=False)
 
-                    currentNode = self.itemOnTopOf(mousePos, edges=False, skip={edge.source})
+                    currentNode = first(self.items(mousePos, edges=False, skip={edge.source}))
                     if currentNode:
                         self.mo_Node = currentNode
                         pvr = self.project.profile.checkEdge(edge.source, edge, currentNode)
@@ -428,7 +428,7 @@ class Diagram(QtWidgets.QGraphicsScene):
 
                     edge = self.mp_Edge
                     edge.source.updateNode(selected=False)
-                    currentNode = self.itemOnTopOf(mousePos, edges=False, skip={edge.source})
+                    currentNode = first(self.items(mousePos, edges=False, skip={edge.source}))
                     insertEdge = False
 
                     if currentNode:
@@ -507,7 +507,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 # CONTEXTUAL MENU
                 #################################
 
-                item = self.itemOnTopOf(mousePos)
+                item = first(self.items(mousePos))
                 if not item:
                     self.clearSelection()
                     items = []
@@ -660,25 +660,23 @@ class Diagram(QtWidgets.QGraphicsScene):
         """
         return len(self.project.items(self)) == 0
 
-    def itemOnTopOf(self, point, nodes=True, edges=True, labels=False, skip=None):
+    def items(self, pos=QtCore.QPointF(), mode=QtCore.Qt.IntersectsItemShape, **kwargs):
         """
-        Returns the item which is on top of the given point.
-        By default the method perform the search only on nodes and edges.
-        :type point: QtCore.QPointF
-        :type nodes: bool
-        :type edges: bool
-        :type labels: bool
-        :type skip: iterable
-        :rtype: AbstractItem
+        Returns a list of items which are intersecting the given point, ordered from TOP to BOTTOM.
+        If no position is supplied, an unordered list containing all the elements in the diagram is returned.
+        :type pos: QtCore.QPointF
+        :type mode: QtCore.Qt.ItemSelectionMode
+        :rtype: list
         """
-        skip = skip or {}
-        data = [x for x in self.items(point)
-            if (nodes and x.isNode() or
-                edges and x.isEdge() or
-                labels and x.isLabel()) and x not in skip]
-        if data:
-            return max(data, key=lambda x: x.zValue())
-        return None
+        if not pos:
+            return super(Diagram, self).items()
+        return sorted([
+            x for x in super(Diagram, self).items(pos, mode)
+                if (kwargs.get('nodes', True) and x.isNode() or
+                    kwargs.get('edges', True) and x.isEdge() or
+                    kwargs.get('labels', False) and x.isLabel()) and
+                    not x in kwargs.get('skip', set())
+        ], key=lambda x: x.zValue(), reverse=True)
 
     def nodes(self):
         """
