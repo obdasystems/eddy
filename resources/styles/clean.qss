@@ -533,9 +533,6 @@ image: url(:/icons/18/ic_treeview_branch_open);
 /**************************************************************************/
 /*                              NOTIFICATION                              */
 /**************************************************************************/
-NotificationPopup {
-backgrouund: #A0A0A0;
-}
 NotificationPopup QPushButton {
 border: 1px solid transparent;
 }
