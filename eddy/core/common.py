@@ -1162,7 +1162,7 @@ class HasNotificationSystem(object):
         :type kwargs: dict
         """
         super().__init__(**kwargs)
-        self._popupList = [NotificationPopup(i) for i in range(1, 9)]
+        self._popupList = [NotificationPopup(self, i) for i in range(0, 8)]
 
     def addNotification(self, message):
         """

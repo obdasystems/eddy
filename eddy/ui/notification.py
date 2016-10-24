@@ -48,12 +48,14 @@ class NotificationPopup(QtWidgets.QWidget):
     """
     popuphidden = QtCore.pyqtSignal()
 
-    def __init__(self, num):
+    def __init__(self, session, num):
         """
         Initialize the popup window.
         :type num: int
         """
-        super(NotificationPopup, self).__init__()
+        super(NotificationPopup, self).__init__(session)
+
+        self.num = num
 
         self.hideAnimation = QtCore.QPropertyAnimation(self, b'windowOpacity', self)
         self.hideAnimation.setDuration(400)
@@ -96,17 +98,22 @@ class NotificationPopup(QtWidgets.QWidget):
         self.setWindowOpacity(0)
         self.setWindowFlags(QtCore.Qt.SplashScreen | QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
 
-        screen_geometry = QtWidgets.QApplication.desktop().availableGeometry()
-        screen_size = (screen_geometry.width(), screen_geometry.height())
-        win_size = (self.frameSize().width(), self.frameSize().height())
-        x = screen_size[0] - (win_size[0] + 10)
-        y = screen_size[1] - (win_size[1] + 10) * num
-        self.move(x, y)
-
         connect(self.btnClose.clicked, self.onButtonCloseClicked)
         connect(self.hideAnimation.finished, self.onHideAnimationFinished)
         connect(self.showAnimation.finished, self.onShowAnimationFinished)
         connect(self.sleepTimer.timeout, self.onSleepTimerTimeout)
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def session(self):
+        """
+        Returns the reference to the active session (alias for NotificationPopup.parent()).
+        :rtype: Session
+        """
+        return self.parent()
 
     #############################################
     #   SLOTS
@@ -167,6 +174,7 @@ class NotificationPopup(QtWidgets.QWidget):
         Executed when the widget is shown.
         :type showEvent: QShowEvent
         """
+        self.setNotificationPos()
         self.showAnimation.start()
 
     #############################################
@@ -181,6 +189,20 @@ class NotificationPopup(QtWidgets.QWidget):
         self.showAnimation.stop()
         self.sleepTimer.reset()
         self.hide()
+
+    def setNotificationPos(self):
+        """
+        Set the position of the notification popup on the curret screen.
+        """
+        alignedRect = QtWidgets.QStyle.alignedRect(
+            QtCore.Qt.LeftToRight,
+            QtCore.Qt.AlignRight | QtCore.Qt.AlignTop,
+            self.size(),
+            QtWidgets.QDesktopWidget().availableGeometry(self.session))
+        # MOVE TO CORRECT LOCATION
+        alignedRect.translate(-10, (self.num * (self.height() + 10)) + 40)
+        # SET THE NOTIFICATION GEOMETRY
+        self.setGeometry(alignedRect)
 
     def setText(self, text):
         """

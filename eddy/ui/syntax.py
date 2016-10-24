@@ -140,13 +140,6 @@ class SyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.setWindowTitle('Running syntax validation...')
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
 
-        desktop = QtWidgets.QDesktopWidget()
-        screen = desktop.screenGeometry()
-        widget = self.geometry()
-        x = (screen.width() - widget.width()) / 2
-        y = (screen.height() - widget.height()) / 2
-        self.move(x, y)
-
     #############################################
     #   INTERFACE
     #################################
