@@ -69,11 +69,14 @@ jnius_config.add_options('-ea', '-Xmx512m')
 jnius_config.set_classpath(*classpath)
 
 #############################################
-# BEGIN LINUX SPECIFIC SETUP
+# BEGIN ENVIRONMENT SPECIFIC SETUP
 #################################
 
 if _LINUX:
     os.environ['LD_LIBRARY_PATH'] = expandPath('@root/')
+
+if hasattr(sys, 'frozen'):
+    os.environ['REQUESTS_CA_BUNDLE'] = expandPath('@root/cacert.pem')
 
 
 from PyQt5 import Qt

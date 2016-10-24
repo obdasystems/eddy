@@ -40,6 +40,7 @@ import os
 import platform
 import py_compile
 import re
+import requests.certs
 import stat
 import subprocess
 import sys
@@ -612,10 +613,12 @@ includes = [
     'jnius',
     'natsort',
     'requests',
+    'uritemplate',
     'verlib',
 ]
 
 include_files = [
+    (requests.certs.where(), 'cacert.pem'),
     (os.path.join(QT_PLUGINS_PATH, 'printsupport'), 'printsupport'),
     ('examples', 'examples'),
     ('resources/java', 'resources/java'),
