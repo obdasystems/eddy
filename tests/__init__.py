@@ -96,9 +96,10 @@ class EddyTestCase(TestCase):
         """
         Initialize test case environment.
         """
-        # MAKE SURE TO HAVE AN INITIALIZED (USELESS) WORKSPACE
+        # MAKE SURE TO USE CORRECT SETTINGS
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         settings.setValue('workspace/home', WORKSPACE)
+        settings.setValue('update/check_on_startup', False)
         settings.sync()
         # MAKE SURE THE WORKSPACE DIRECTORY EXISTS
         mkdir(expandPath(WORKSPACE))

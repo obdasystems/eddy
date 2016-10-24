@@ -661,7 +661,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         """
         return len(self.project.items(self)) == 0
 
-    def items(self, pos=QtCore.QPointF(), mode=QtCore.Qt.IntersectsItemShape, **kwargs):
+    def items(self, pos=None, mode=QtCore.Qt.IntersectsItemShape, **kwargs):
         """
         Returns a list of items which are intersecting the given point, ordered from TOP to BOTTOM.
         If no position is supplied, an unordered list containing all the elements in the diagram is returned.
@@ -669,7 +669,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         :type mode: QtCore.Qt.ItemSelectionMode
         :rtype: list
         """
-        if not pos:
+        if pos is None:
             return super(Diagram, self).items()
         x = pos.x() - (Diagram.SelectionRadius / 2)
         y = pos.y() - (Diagram.SelectionRadius / 2)
@@ -680,7 +680,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 if (kwargs.get('nodes', True) and x.isNode() or
                     kwargs.get('edges', True) and x.isEdge() or
                     kwargs.get('labels', False) and x.isLabel()) and
-                    not x in kwargs.get('skip', set())
+                    x not in kwargs.get('skip', set())
         ], key=lambda i: i.zValue(), reverse=True)
 
     def nodes(self):
