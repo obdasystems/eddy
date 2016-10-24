@@ -90,6 +90,7 @@ class UpdateCheckWorker(AbstractWorker):
             else:
                 LOGGER.info('No update available')
                 self.sgnNoUpdateAvailable.emit()
-        except Exception:
+        except Exception as e:
+            LOGGER.warning('Failed to retrieve update data: %s', e)
             self.sgnNoUpdateDataAvailable.emit()
         self.finished.emit()
