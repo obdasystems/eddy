@@ -46,8 +46,6 @@ class NotificationPopup(QtWidgets.QWidget):
     """
     Extends QtWidgets.QWidget providing a notification popup widget.
     """
-    popuphidden = QtCore.pyqtSignal()
-
     def __init__(self, session, num):
         """
         Initialize the popup window.
