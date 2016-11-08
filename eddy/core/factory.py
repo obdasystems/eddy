@@ -476,15 +476,19 @@ class MenuFactory(QtCore.QObject):
         :type node: RangeRestrictionNode
         :rtype: QMenu
         """
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.identity() is Identity.Attribute
+        f3 = lambda x: x.type() is Item.InclusionEdge
+        f4 = lambda x: x.identity() is Identity.ValueDomain
+        attribute_in_input = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+        valuedomain_in_isa = first(node.outgoingNodes(filter_on_edges=f3, filter_on_nodes=f4))
         menu = self.buildGenericNodeMenu(diagram, node)
         menu.addSeparator()
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('switch_restriction'))
         for action in self.session.action('switch_restriction').actions():
             action.setChecked(node.type() is action.data())
-            action.setVisible(True)
-        f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.identity() is Identity.Attribute
-        if not first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)):
+            action.setVisible(node.type() is action.data() or not attribute_in_input and not valuedomain_in_isa)
+        if not attribute_in_input and not valuedomain_in_isa:
             qualified = node.isRestrictionQualified()
             menu.insertMenu(self.session.action('node_properties'), self.session.menu('property_restriction'))
             for action in self.session.action('restriction').actions():
