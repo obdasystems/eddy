@@ -1231,12 +1231,7 @@ class ValueDomainNodeInfo(NodeInfo):
         self.datatypeField.clear()
         for datatype in sorted(Datatype.forProfile(self.project.profile.type()), key=attrgetter('value')):
             self.datatypeField.addItem(datatype.value, datatype)
-        # FIXME: if current datatype is not supported by the active profile this will show an invalid entry
-        datatype = node.datatype
-        for i in range(self.datatypeField.count()):
-            if self.datatypeField.itemData(i) is datatype:
-                self.datatypeField.setCurrentIndex(i)
-                break
+        self.datatypeField.setCurrentText(node.datatype.value)
 
 
 class ValueNodeInfo(NodeInfo):
@@ -1308,12 +1303,7 @@ class ValueNodeInfo(NodeInfo):
         self.datatypeField.clear()
         for datatype in sorted(Datatype.forProfile(self.project.profile.type()), key=attrgetter('value')):
             self.datatypeField.addItem(datatype.value, datatype)
-        # FIXME: if current datatype is not supported by the active profile this will show an invalid entry
-        datatype = node.datatype
-        for i in range(self.datatypeField.count()):
-            if self.datatypeField.itemData(i) is datatype:
-                self.datatypeField.setCurrentIndex(i)
-                break
+        self.datatypeField.setCurrentText(node.datatype.value)
 
         #############################################
         # VALUE FIELD
