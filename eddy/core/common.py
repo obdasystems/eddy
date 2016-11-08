@@ -50,6 +50,7 @@ from eddy.core.worker import AbstractWorker
 
 from eddy.ui.notification import NotificationPopup
 
+
 LOGGER = getLogger(__name__)
 
 
@@ -1071,28 +1072,26 @@ class HasThreadingSystem(object):
         :type name: str
         :type worker: QtCore.QObject
         """
-        #LOGGER.debug("Requested threaded execution of worker instance: %s", worker.__class__.__name__)
-        # SANITY CHECK
-        if name in self._threads or name in self._workers:
-            raise RuntimeError('already running (%s)' % name)
         if not isinstance(worker, AbstractWorker):
             raise ValueError('worker class must be subclass of eddy.core.threading.AbstractWorker')
-        # START THE WORKER THREAD
-        qthread = QtCore.QThread()
-        qthread.setObjectName(name)
-        #LOGGER.debug("Moving worker '%s' in a new thread '%s'", worker.__class__.__name__, name)
-        worker.moveToThread(qthread)
-        connect(qthread.finished, self.onQThreadFinished)
-        connect(qthread.finished, qthread.deleteLater)
-        connect(worker.finished, qthread.quit)
-        connect(worker.finished, worker.deleteLater)
-        connect(qthread.started, worker.run)
-        #LOGGER.debug("Starting thread: %s", name)
-        qthread.start()
-        # STORE LOCALLY
-        self._started[name] = time.monotonic()
-        self._threads[name] = qthread
-        self._workers[name] = worker
+        if name not in self._threads and name not in self._workers:
+            #LOGGER.debug("Requested threaded execution of worker instance: %s", worker.__class__.__name__)
+            # START THE WORKER THREAD
+            qthread = QtCore.QThread()
+            qthread.setObjectName(name)
+            #LOGGER.debug("Moving worker '%s' in a new thread '%s'", worker.__class__.__name__, name)
+            worker.moveToThread(qthread)
+            connect(qthread.finished, self.onQThreadFinished)
+            connect(qthread.finished, qthread.deleteLater)
+            connect(worker.finished, qthread.quit)
+            connect(worker.finished, worker.deleteLater)
+            connect(qthread.started, worker.run)
+            #LOGGER.debug("Starting thread: %s", name)
+            qthread.start()
+            # STORE LOCALLY
+            self._started[name] = time.monotonic()
+            self._threads[name] = qthread
+            self._workers[name] = worker
 
     def stopRunningThreads(self):
         """
@@ -1107,19 +1106,20 @@ class HasThreadingSystem(object):
         Stop a running thread.
         :type name_or_qthread: T <= str | QThread
         """
-        name = name_or_qthread
-        if not isinstance(name, str):
-            name = name_or_qthread.objectName()
-        if name in self._threads:
-            #LOGGER.debug("Terminating thread: %s (runtime=%.2fms)", name, time.monotonic() - self._started[name])
-            qthread = self._threads[name]
-            qthread.quit()
-            if not qthread.wait(2000):
-                qthread.terminate()
-                qthread.wait()
-            del self._threads[name]
-        if name in self._workers:
-            del self._workers[name]
+        if name_or_qthread:
+            name = name_or_qthread
+            if not isinstance(name, str):
+                name = name_or_qthread.objectName()
+            if name in self._threads:
+                #LOGGER.debug("Terminating thread: %s (runtime=%.2fms)", name, time.monotonic() - self._started[name])
+                qthread = self._threads[name]
+                qthread.quit()
+                if not qthread.wait(2000):
+                    qthread.terminate()
+                    qthread.wait()
+                del self._threads[name]
+            if name in self._workers:
+                del self._workers[name]
 
     def thread(self, name):
         """
