@@ -1012,7 +1012,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         progressBar.setVisible(True)
         # RUN THE UPDATE CHECK WORKER IN A THREAD
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-        channel = Channel.forValue(settings.value('update/channel', Channel.Stable.value, str))
+        channel = Channel.forValue(settings.value('update/channel', Channel.Stable, str))
         worker = UpdateCheckWorker(channel, VERSION)
         connect(worker.sgnNoUpdateAvailable, self.onNoUpdateAvailable)
         connect(worker.sgnNoUpdateDataAvailable, self.onNoUpdateDataAvailable)
@@ -1855,6 +1855,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Executed when the update worker thread terminates and no software update is available.
         """
         progressBar = self.widget('progress_bar')
+        progressBar.setToolTip('')
         progressBar.setVisible(False)
         self.addNotification('No update available.')
 
@@ -1864,6 +1865,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Executed when the update worker thread terminates abnormally.
         """
         progressBar = self.widget('progress_bar')
+        progressBar.setToolTip('')
         progressBar.setVisible(False)
         self.addNotification(textwrap.dedent("""
             <b><font color="#7E0B17">ERROR</font></b>: Could not connect to update site:
@@ -1888,6 +1890,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         :type url: str
         """
         progressBar = self.widget('progress_bar')
+        progressBar.setToolTip('')
         progressBar.setVisible(False)
         self.addNotification(textwrap.dedent("""
             A new version of {} is available for download: <b>{}</b><br/><br/>
