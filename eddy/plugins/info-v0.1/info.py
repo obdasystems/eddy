@@ -980,7 +980,11 @@ class PredicateNodeInfo(NodeInfo):
         #################################
 
         self.nameField.setValue(node.text())
+        self.nameField.home(True)
+        self.nameField.deselect()
         self.textField.setValue(node.text())
+        self.textField.home(True)
+        self.textField.deselect()
 
         #############################################
         # ENABLE / DISABLE REFACTORING
