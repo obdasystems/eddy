@@ -665,12 +665,14 @@ class Diagram(QtWidgets.QGraphicsScene):
         """
         Returns a list of items which are intersecting the given point, ordered from TOP to BOTTOM.
         If no position is supplied, an unordered list containing all the elements in the diagram is returned.
-        :type pos: QtCore.QPointF
+        :type pos: T <= QtCore.QPointF|QtCore.QRectF
         :type mode: QtCore.Qt.ItemSelectionMode
         :rtype: list
         """
         if pos is None:
             return super(Diagram, self).items()
+        if isinstance(pos, QtCore.QRectF):
+            return super(Diagram, self).items(pos, mode)
         x = pos.x() - (Diagram.SelectionRadius / 2)
         y = pos.y() - (Diagram.SelectionRadius / 2)
         w = Diagram.SelectionRadius
