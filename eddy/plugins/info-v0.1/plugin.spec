@@ -35,4 +35,4 @@ author: Daniele Pantaleone
 contact: pantaleone@dis.uniroma1.it
 id: info
 name: Information
-version: 0.1
+version: 0.2
