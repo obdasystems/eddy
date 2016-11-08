@@ -1071,7 +1071,7 @@ class HasThreadingSystem(object):
         :type name: str
         :type worker: QtCore.QObject
         """
-        LOGGER.debug("Requested threaded execution of worker instance: %s", worker.__class__.__name__)
+        #LOGGER.debug("Requested threaded execution of worker instance: %s", worker.__class__.__name__)
         # SANITY CHECK
         if name in self._threads or name in self._workers:
             raise RuntimeError('already running (%s)' % name)
@@ -1080,14 +1080,14 @@ class HasThreadingSystem(object):
         # START THE WORKER THREAD
         qthread = QtCore.QThread()
         qthread.setObjectName(name)
-        LOGGER.debug("Moving worker '%s' in a new thread '%s'", worker.__class__.__name__, name)
+        #LOGGER.debug("Moving worker '%s' in a new thread '%s'", worker.__class__.__name__, name)
         worker.moveToThread(qthread)
         connect(qthread.finished, self.onQThreadFinished)
         connect(qthread.finished, qthread.deleteLater)
         connect(worker.finished, qthread.quit)
         connect(worker.finished, worker.deleteLater)
         connect(qthread.started, worker.run)
-        LOGGER.debug("Starting thread: %s", name)
+        #LOGGER.debug("Starting thread: %s", name)
         qthread.start()
         # STORE LOCALLY
         self._started[name] = time.monotonic()
@@ -1111,7 +1111,7 @@ class HasThreadingSystem(object):
         if not isinstance(name, str):
             name = name_or_qthread.objectName()
         if name in self._threads:
-            LOGGER.debug("Terminating thread: %s (runtime=%.2fms)", name, time.monotonic() - self._started[name])
+            #LOGGER.debug("Terminating thread: %s (runtime=%.2fms)", name, time.monotonic() - self._started[name])
             qthread = self._threads[name]
             qthread.quit()
             if not qthread.wait(2000):
