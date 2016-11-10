@@ -68,7 +68,7 @@ class Diagram(QtWidgets.QGraphicsScene):
     * sgnModeChanged: whenever the Diagram operational mode (or its parameter) changes.
     * sgnUpdated: whenever the Diagram has been updated in any of its parts.
     """
-    GridSize = 20
+    GridSize = 10
     MinSize = 2000
     MaxSize = 1000000
     SelectionRadius = 4
@@ -369,7 +369,7 @@ class Diagram(QtWidgets.QGraphicsScene):
 
                     snapToGrid = self.session.action('toggle_grid').isChecked()
                     point = self.mp_LabelPos + mousePos - self.mp_Pos
-                    point = snap(point, Diagram.GridSize / 4, snapToGrid)
+                    point = snap(point, Diagram.GridSize / 2, snapToGrid)
                     delta = point - self.mp_LabelPos
                     self.mp_Label.setPos(self.mp_LabelPos + delta)
 
