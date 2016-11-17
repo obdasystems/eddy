@@ -40,7 +40,7 @@ from PyQt5 import QtWidgets
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.diagram import Diagram
 from eddy.core.functions.geometry import midpoint
-from eddy.core.functions.misc import clamp, rangeF, snapF
+from eddy.core.functions.misc import clamp, snapF
 from eddy.core.functions.signals import disconnect, connect
 
 
@@ -89,6 +89,7 @@ class DiagramView(QtWidgets.QGraphicsView):
 
         self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.setDragMode(DiagramView.NoDrag)
+        self.setGridSize(Diagram.GridSize)
         self.setOptimizationFlags(DiagramView.DontAdjustForAntialiasing)
         self.setOptimizationFlags(DiagramView.DontSavePainterState)
         self.setViewportUpdateMode(DiagramView.MinimalViewportUpdate)
@@ -351,27 +352,6 @@ class DiagramView(QtWidgets.QGraphicsView):
     #   INTERFACE
     #################################
 
-    def drawBackground(self, painter, rect):
-        """
-        Draw the diagram background (grid).
-        :type painter: QPainter
-        :type rect: QtCore.QRectF
-        """
-        if self.session.action('toggle_grid').isChecked():
-
-            try:
-                s = Diagram.GridSize
-                x = int(rect.left()) - (int(rect.left()) % s)
-                y = int(rect.top()) - (int(rect.top()) % s)
-                points = (QtCore.QPointF(i, j) for i in rangeF(x, rect.right(), s) for j in rangeF(y, rect.bottom(), s))
-                painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(80, 80, 80, 255)), 1, QtCore.Qt.SolidLine))
-                painter.drawPoints(*points)
-            except TypeError:
-                # We enter the except branch whenever the system is not able
-                # to compute the generator of points which needs to be drawn
-                # on screen to visualize the editor grid.
-                pass
-
     def moveBy(self, *__args):
         """
         Move the view by the given delta.
@@ -408,6 +388,24 @@ class DiagramView(QtWidgets.QGraphicsView):
         p1 = self.mapToScene(point)
         move = p1 - p0
         self.translate(move.x(), move.y())
+
+    def setGridSize(self, size):
+        """
+        Sets the grid size.
+        """
+        action = self.session.action('toggle_grid')
+        size = clamp(size, 0)
+        if size <= 0 or not action.isChecked():
+            brush = QtGui.QBrush(QtCore.Qt.NoBrush)
+        else:
+            image = QtGui.QImage(size, size, QtGui.QImage.Format_RGB32)
+            image.fill(QtCore.Qt.white)
+            painter = QtGui.QPainter(image)
+            painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(80, 80, 80, 255)), 1, QtCore.Qt.SolidLine))
+            painter.drawPoint(QtCore.QPointF(0, 0))
+            painter.end()
+            brush = QtGui.QBrush(image)
+        self.setBackgroundBrush(brush)
 
     def startMove(self, delta, rate):
         """

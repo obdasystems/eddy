@@ -1790,12 +1790,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     @QtCore.pyqtSlot()
     def doToggleGrid(self):
         """
-        Toggle snap to grid setting.
+        Toggle snap to grid setting and viewport display.
         """
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         settings.setValue('diagram/grid', self.action('toggle_grid').isChecked())
         settings.sync()
         for subwindow in self.mdi.subWindowList():
+            subwindow.view.setGridSize(Diagram.GridSize)
             viewport = subwindow.view.viewport()
             viewport.update()
 
