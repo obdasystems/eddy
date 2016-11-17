@@ -947,7 +947,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         progressBar = QtWidgets.QProgressBar(objectName='progress_bar')
         progressBar.setContentsMargins(0, 0, 0, 0)
-        progressBar.setFixedSize(220, 14)
+        progressBar.setFixedSize(222, 14)
         progressBar.setRange(0, 0)
         progressBar.setVisible(False)
         self.addWidget(progressBar)

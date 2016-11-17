@@ -306,15 +306,15 @@ class DiagramView(QtWidgets.QGraphicsView):
         """
         if wheelEvent.modifiers() & QtCore.Qt.ControlModifier:
 
-            wheelPos = wheelEvent.pos()
-            wheelAngle = wheelEvent.angleDelta()
+            pos = wheelEvent.pos()
+            angle = wheelEvent.angleDelta()
 
             zoom = self.zoom
-            zoom += +DiagramView.ZoomStep if wheelAngle.y() > 0 else -DiagramView.ZoomStep
+            zoom += +DiagramView.ZoomStep if angle.y() > 0 else -DiagramView.ZoomStep
             zoom = clamp(zoom, DiagramView.ZoomMin, DiagramView.ZoomMax)
 
             if zoom != self.zoom:
-                self.scaleViewOnPoint(zoom, wheelPos)
+                self.scaleViewOnPoint(zoom, pos)
 
         else:
             super(DiagramView, self).wheelEvent(wheelEvent)
