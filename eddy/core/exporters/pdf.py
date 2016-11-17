@@ -69,7 +69,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         """
         shape = self.diagram.visibleRect(margin=20)
         if shape:
-            LOGGER.info('Exporting diagram %s in PDF format: %s', self.diagram.name, path)
+            LOGGER.info('Exporting diagram %s to %s', self.diagram.name, path)
             printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
             printer.setOutputFormat(QtPrintSupport.QPrinter.PdfFormat)
             printer.setOutputFileName(path)

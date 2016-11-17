@@ -704,7 +704,7 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         Perform Graphml document generation.
         :type path: str
         """
-        LOGGER.info('Exporting diagram %s in PDF format: %s', self.diagram.name, path)
+        LOGGER.info('Exporting diagram %s to %s', self.diagram.name, path)
 
         # 1) CREATE THE DOCUMENT
         self.document = QtXml.QDomDocument()

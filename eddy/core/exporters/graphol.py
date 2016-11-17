@@ -370,7 +370,7 @@ class GrapholDiagramExporter(AbstractDiagramExporter):
         Perform Graphol document generation.
         :type path: str
         """
-        LOGGER.info('Exporting diagram %s in .graphol format: %s', self.diagram.name, path or self.diagram.path)
+        LOGGER.info('Exporting diagram %s to %s', self.diagram.name, path or self.diagram.path)
 
         # 1) CREATE THE DOCUMENT
         self.document = QtXml.QDomDocument()
