@@ -661,24 +661,26 @@ class Diagram(QtWidgets.QGraphicsScene):
         """
         return len(self.project.items(self)) == 0
 
-    def items(self, pos=None, mode=QtCore.Qt.IntersectsItemShape, **kwargs):
+    def items(self, mixed=None, mode=QtCore.Qt.IntersectsItemShape, **kwargs):
         """
-        Returns a list of items which are intersecting the given point, ordered from TOP to BOTTOM.
+        Returns a list of items ordered from TOP to BOTTOM.
         If no position is supplied, an unordered list containing all the elements in the diagram is returned.
-        :type pos: T <= QtCore.QPointF|QtCore.QRectF
-        :type mode: QtCore.Qt.ItemSelectionMode
+        :type mixed: T <= QPointF | QRectF | QPolygonF | QPainterPath
+        :type mode: ItemSelectionMode
         :rtype: list
         """
-        if pos is None:
-            return super(Diagram, self).items()
-        if isinstance(pos, QtCore.QRectF):
-            return super(Diagram, self).items(pos, mode)
-        x = pos.x() - (Diagram.SelectionRadius / 2)
-        y = pos.y() - (Diagram.SelectionRadius / 2)
-        w = Diagram.SelectionRadius
-        h = Diagram.SelectionRadius
+        if mixed is None:
+            items = super(Diagram, self).items()
+        elif isinstance(mixed, QtCore.QPointF):
+            x = mixed.x() - (Diagram.SelectionRadius / 2)
+            y = mixed.y() - (Diagram.SelectionRadius / 2)
+            w = Diagram.SelectionRadius
+            h = Diagram.SelectionRadius
+            items = super(Diagram, self).items(QtCore.QRectF(x, y, w, h), mode)
+        else:
+            items = super(Diagram, self).items(mixed, mode)
         return sorted([
-            x for x in super(Diagram, self).items(QtCore.QRectF(x, y, w, h), mode)
+            x for x in items
                 if (kwargs.get('nodes', True) and x.isNode() or
                     kwargs.get('edges', True) and x.isEdge() or
                     kwargs.get('labels', False) and x.isLabel()) and
