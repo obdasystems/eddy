@@ -105,6 +105,9 @@ class Diagram(QtWidgets.QGraphicsScene):
         self.mp_NodePos = None
         self.mp_Pos = None
 
+        # FIXME: THIS HAS BEEN REINTRODUCED EVEN IF IT'S IN CONTRAST WITH ISSUE #10
+        self.setItemIndexMethod(Diagram.BspTreeIndex)
+
         connect(self.sgnItemAdded, self.onItemAdded)
         connect(self.sgnItemRemoved, self.onItemRemoved)
         connect(self.sgnNodeIdentification, self.doNodeIdentification)

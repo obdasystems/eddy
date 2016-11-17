@@ -510,7 +510,6 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
 
         self.diagram = Diagram(self.path, self.project)
         self.diagram.setSceneRect(QtCore.QRectF(-size / 2, -size / 2, size, size))
-        self.diagram.setItemIndexMethod(Diagram.NoIndex)
 
         LOGGER.debug('Initialzing empty diagram with size: %s', size)
 

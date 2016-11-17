@@ -224,7 +224,6 @@ class NewDiagramDialog(AbstractDiagramDialog):
         try:
             diagram = Diagram(self.path(), self.project)
             diagram.setSceneRect(QtCore.QRectF(-size / 2, -size / 2, size, size))
-            diagram.setItemIndexMethod(Diagram.NoIndex)
             exporter = GrapholDiagramExporter(diagram)
             exporter.export()
         except Exception as e:
