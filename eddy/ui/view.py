@@ -50,6 +50,15 @@ class DiagramView(QtWidgets.QGraphicsView):
     """
     MoveRate = 40
     MoveBound = 10
+    MoveModes = {
+        DiagramMode.EdgeBreakPointMove,
+        DiagramMode.EdgeAdd,
+        DiagramMode.NodeMove,
+        DiagramMode.NodeResize,
+        DiagramMode.LabelMove,
+        DiagramMode.RubberBandDrag
+    }
+
     PinchGuard = (0.70, 1.50)
     PinchSize = 0.12
     ZoomDefault = 1.00
@@ -65,7 +74,7 @@ class DiagramView(QtWidgets.QGraphicsView):
         :type diagram: Diagram
         :type session: Session
         """
-        super().__init__(diagram)
+        super(DiagramView, self).__init__(diagram)
 
         self.mp_CenterPos = None
         self.mp_Pos = None
@@ -133,6 +142,10 @@ class DiagramView(QtWidgets.QGraphicsView):
             modifiers & QtCore.Qt.ControlModifier and \
                 key in {QtCore.Qt.Key_Minus, QtCore.Qt.Key_Plus, QtCore.Qt.Key_0}:
 
+            #############################################
+            # ZOOM SHORTCUT
+            #################################
+
             zoom = DiagramView.ZoomDefault
             if key in {QtCore.Qt.Key_Minus, QtCore.Qt.Key_Plus}:
                 zoom = self.zoom
@@ -143,7 +156,7 @@ class DiagramView(QtWidgets.QGraphicsView):
                 self.scaleView(zoom)
 
         else:
-            super().keyPressEvent(keyEvent)
+            super(DiagramView, self).keyPressEvent(keyEvent)
 
     def mousePressEvent(self, mouseEvent):
         """
@@ -177,9 +190,8 @@ class DiagramView(QtWidgets.QGraphicsView):
                     self.rubberBand.setGeometry(QtCore.QRectF(mousePos, mousePos).toRect())
                     self.rubberBand.show()
 
-            super().mousePressEvent(mouseEvent)
+            super(DiagramView, self).mousePressEvent(mouseEvent)
 
-    # noinspection PyArgumentList
     def mouseMoveEvent(self, mouseEvent):
         """
         Executed when then mouse is moved on the view.
@@ -207,7 +219,7 @@ class DiagramView(QtWidgets.QGraphicsView):
 
         else:
 
-            super().mouseMoveEvent(mouseEvent)
+            super(DiagramView, self).mouseMoveEvent(mouseEvent)
 
             if mouseButtons & QtCore.Qt.LeftButton:
                 
@@ -219,33 +231,24 @@ class DiagramView(QtWidgets.QGraphicsView):
                     # RUBBERBAND SELECTION
                     #################################
 
-                    area = QtCore.QRectF(self.mapFromScene(self.rubberBandOrigin), mousePos).normalized()
-                    path = QtGui.QPainterPath()
-                    path.addRect(area)
-                    self.diagram.setSelectionArea(self.mapToScene(path))
+                    originPos = self.mapFromScene(self.rubberBandOrigin)
+                    area = QtCore.QRectF(originPos, mousePos).normalized()
                     self.rubberBand.setGeometry(area.toRect())
 
-                if self.diagram.mode in { DiagramMode.EdgeBreakPointMove,
-                                          DiagramMode.EdgeAdd,
-                                          DiagramMode.NodeMove,
-                                          DiagramMode.NodeResize,
-                                          DiagramMode.LabelMove,
-                                          DiagramMode.RubberBandDrag }:
+                if self.diagram.mode in DiagramView.MoveModes:
 
                     #############################################
-                    # VIEW SCROLLING
+                    # VIEW MOVE
                     #################################
 
                     R = viewport.rect()
                     if not R.contains(mousePos):
 
                         move = QtCore.QPointF(0, 0)
-
                         if mousePos.x() < R.left():
                             move.setX(mousePos.x() - R.left())
                         elif mousePos.x() > R.right():
                             move.setX(mousePos.x() - R.right())
-
                         if mousePos.y() < R.top():
                             move.setY(mousePos.y() - R.top())
                         elif mousePos.y() > R.bottom():
@@ -261,18 +264,37 @@ class DiagramView(QtWidgets.QGraphicsView):
         Executed when the mouse is released from the view.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        self.mp_CenterPos = None
-        self.mp_Pos = None
-        self.rubberBandOrigin = None
-        self.rubberBand.hide()
+        mousePos = mouseEvent.pos()
+        mouseButton = mouseEvent.button()
 
         self.stopMove()
+
+        if mouseButton == QtCore.Qt.LeftButton:
+
+            if self.diagram.mode is DiagramMode.RubberBandDrag:
+
+                #############################################
+                # RUBBERBAND SELECTION
+                #################################
+
+                area = QtCore.QRectF(self.rubberBandOrigin, self.mapToScene(mousePos)).normalized()
+                for node in self.diagram.items(area, edges=False):
+                    node.setSelected(True)
+
+        #############################################
+        # RESET STATE
+        #################################
+
+        self.rubberBandOrigin = None
+        self.rubberBand.hide()
+        self.mp_CenterPos = None
+        self.mp_Pos = None
 
         viewport = self.viewport()
         viewport.setCursor(QtCore.Qt.ArrowCursor)
         viewport.update()
 
-        super().mouseReleaseEvent(mouseEvent)
+        super(DiagramView, self).mouseReleaseEvent(mouseEvent)
 
         if self.diagram.mode in {DiagramMode.RubberBandDrag, DiagramMode.SceneDrag}:
             self.diagram.setMode(DiagramMode.Idle)
@@ -295,7 +317,7 @@ class DiagramView(QtWidgets.QGraphicsView):
                 self.scaleViewOnPoint(zoom, wheelPos)
 
         else:
-            super().wheelEvent(wheelEvent)
+            super(DiagramView, self).wheelEvent(wheelEvent)
 
     def viewportEvent(self, viewportEvent):
         """
