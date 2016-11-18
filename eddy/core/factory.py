@@ -207,10 +207,11 @@ class MenuFactory(QtCore.QObject):
         # BUILD CUSTOM ACTIONS FOR PREDICATE OCCURRENCES
         self.customAction['occurrences'] = []
         for pnode in self.project.predicates(node.type(), node.text()):
-            action = QtWidgets.QAction('{} ({})'.format(rstrip(pnode.diagram.name, File.Graphol.extension), pnode.id))
+            action = QtWidgets.QAction()
             action.setCheckable(True)
             action.setChecked(pnode is node)
             action.setData(pnode)
+            action.setText('{} ({})'.format(rstrip(pnode.diagram.name, File.Graphol.extension), pnode.id))
             connect(action.triggered, self.session.doLookupOccurrence)
             self.customAction['occurrences'].append(action)
         # BUILD CUSTOM MENU FOR PREDICATE OCCURRENCES
@@ -611,8 +612,11 @@ class MenuFactory(QtCore.QObject):
         # CREATE NEW CUSTOM ACTION SET FOR THE DATATYPES SUPPORTED BY THE CURRENT PROFILE
         self.customAction['datatype'] = []
         for datatype in sorted(Datatype.forProfile(self.project.profile.type()), key=attrgetter('value')):
-            action = QtWidgets.QAction(datatype.value, checkable=True, triggered=self.session.doSetDatatype)
+            action = QtWidgets.QAction()
+            action.setCheckable(True)
             action.setData(datatype)
+            action.setText(datatype.value)
+            connect(action.triggered, self.session.doSetDatatype)
             self.customAction['datatype'].append(action)
             self.customMenu['datatype'].addAction(action)
         # INSERT THE CUSTOM MENU IN THE NODE CONTEXTUAL MENU
