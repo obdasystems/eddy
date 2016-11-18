@@ -551,14 +551,14 @@ background: qlineargradient(x1:0, y1 : 0, x2 : 0, y2 : 1,
 /**************************************************************************/
 QProgressBar {
 border: 1px solid #333333;
-background: #42A5F5;
+background: #333333;
 border-radius: 2px;
 color: #FFFFFF;
 padding: 2px;
 text-align: center;
 }
 QProgressBar::chunk {
-background: #333333;
+background: #42A5F5;
 width: 4px;
 }
 /**************************************************************************/
