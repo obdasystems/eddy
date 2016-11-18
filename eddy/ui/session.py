@@ -507,7 +507,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #################################
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_square_half_black'), 'Invert Role', self,
+            QtGui.QIcon(':/icons/24/ic_square_pair_black'), 'Invert Role', self,
             objectName='invert_role', triggered=self.doInvertRole,
             statusTip='Invert the selected role in all its occurrences'))
 
@@ -517,16 +517,23 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         action = QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_square_outline_black'), 'Domain',
-            self, objectName='property_domain',
+            self, objectName='property_domain', shortcut='CTRL+D',
             triggered=self.doComposePropertyExpression)
-        action.setData(Item.DomainRestrictionNode)
+        action.setData((Item.DomainRestrictionNode,))
         self.addAction(action)
 
         action = QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_square_black'), 'Range',
-            self, objectName='property_range',
+            self, objectName='property_range', shortcut='CTRL+R',
             triggered=self.doComposePropertyExpression)
-        action.setData(Item.RangeRestrictionNode)
+        action.setData((Item.RangeRestrictionNode,))
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_square_half_black'), 'Domain/Range',
+            self, objectName='property_domain_range',
+            triggered=self.doComposePropertyExpression)
+        action.setData((Item.DomainRestrictionNode, Item.RangeRestrictionNode))
         self.addAction(action)
 
         #############################################
@@ -748,6 +755,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
         menu.addAction(self.action('property_domain'))
         menu.addAction(self.action('property_range'))
+        menu.addSeparator()
+        menu.addAction(self.action('property_domain_range'))
         self.addMenu(menu)
 
         #############################################
@@ -1036,37 +1045,46 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Compose a property domain using the selected role/attribute node.
         """
-        def compose(_diagram, _source, _item):
+        def compose(scene, source, items):
             """
             Returns a collection of items to be added to the given source node to compose a property expression.
-            :type _diagram: Diagram
-            :type _source: AbstractNode
-            :type _item: Item
+            :type scene: Diagram
+            :type source: AbstractNode
+            :type items: tuple
             :rtype: set
             """
-            restriction = _diagram.factory.create(_item)
-            edge = _diagram.factory.create(Item.InputEdge, source=_source, target=restriction)
-            size = Diagram.GridSize
-            offsets = (
-                QtCore.QPointF(snapF(+_source.width() / 2 + 70, size), 0),
-                QtCore.QPointF(snapF(-_source.width() / 2 - 70, size), 0),
-                QtCore.QPointF(0, snapF(-_source.height() / 2 - 70, size)),
-                QtCore.QPointF(0, snapF(+_source.height() / 2 + 70, size)),
-                QtCore.QPointF(snapF(+_source.width() / 2 + 70, size), snapF(-_source.height() / 2 - 70, size)),
-                QtCore.QPointF(snapF(-_source.width() / 2 - 70, size), snapF(-_source.height() / 2 - 70, size)),
-                QtCore.QPointF(snapF(+_source.width() / 2 + 70, size), snapF(+_source.height() / 2 + 70, size)),
-                QtCore.QPointF(snapF(-_source.width() / 2 - 70, size), snapF(+_source.height() / 2 + 70, size)),
-            )
-            pos = None
-            num = sys.maxsize
-            rad = QtCore.QPointF(restriction.width() / 2, restriction.height() / 2)
-            for o in offsets:
-                count = len(_diagram.items(QtCore.QRectF(_source.pos() + o - rad, _source.pos() + o + rad)))
-                if count < num:
-                    num = count
-                    pos = _source.pos() + o
-            restriction.setPos(pos)
-            return {restriction, edge}
+            positions = [] # => QPointF IS NOT HASHABLE!
+            collection = set()
+            for item in items:
+                restriction = scene.factory.create(item)
+                edge = scene.factory.create(Item.InputEdge, source=source, target=restriction)
+                size = Diagram.GridSize
+                offsets = (
+                    QtCore.QPointF(snapF(+source.width() / 2 + 70, size), 0),
+                    QtCore.QPointF(snapF(-source.width() / 2 - 70, size), 0),
+                    QtCore.QPointF(0, snapF(-source.height() / 2 - 70, size)),
+                    QtCore.QPointF(0, snapF(+source.height() / 2 + 70, size)),
+                    QtCore.QPointF(snapF(+source.width() / 2 + 70, size), snapF(-source.height() / 2 - 70, size)),
+                    QtCore.QPointF(snapF(-source.width() / 2 - 70, size), snapF(-source.height() / 2 - 70, size)),
+                    QtCore.QPointF(snapF(+source.width() / 2 + 70, size), snapF(+source.height() / 2 + 70, size)),
+                    QtCore.QPointF(snapF(-source.width() / 2 - 70, size), snapF(+source.height() / 2 + 70, size)),
+                )
+                pos = None
+                num = sys.maxsize
+                rad = QtCore.QPointF(restriction.width() / 2, restriction.height() / 2)
+                for o in offsets:
+                    for position in positions:
+                        if source.pos() + o == position:
+                            break
+                    else:
+                        count = len(scene.items(QtCore.QRectF(source.pos() + o - rad, source.pos() + o + rad)))
+                        if count < num:
+                            num = count
+                            pos = source.pos() + o
+                restriction.setPos(pos)
+                collection.update({restriction, edge})
+                positions.append(pos)
+            return collection
 
         diagram = self.mdi.activeDiagram()
         if diagram:
@@ -1075,11 +1093,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             node = first(diagram.selectedNodes(lambda x: x.type() in supported))
             if node:
                 action = self.sender()
-                item = action.data()
-                name = 'compose {0} {1}'.format(node.shortName, item.shortName)
-                items = compose(diagram, node, item)
-                nodes = {x for x in items if x.isNode()}
-                edges = {x for x in items if x.isEdge()}
+                elements = action.data()
+                name = 'compose {0} restriction'.format(node.shortName)
+                addons = compose(diagram, node, elements)
+                nodes = {x for x in addons if x.isNode()}
+                edges = {x for x in addons if x.isEdge()}
                 self.undostack.push(CommandComposeAxiom(name, diagram, node, nodes, edges))
 
     @QtCore.pyqtSlot()

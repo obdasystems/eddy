@@ -127,6 +127,8 @@
   <file alias="ic_square_half_black@2x">../../resources/icons/24/ic_square_half_black_24dp_2x.png</file>
   <file alias="ic_square_outline_black">../../resources/icons/24/ic_square_outline_black_24dp_1x.png</file>
   <file alias="ic_square_outline_black@2x">../../resources/icons/24/ic_square_outline_black_24dp_2x.png</file>
+  <file alias="ic_square_pair_black">../../resources/icons/24/ic_square_pair_black_24dp_1x.png</file>
+  <file alias="ic_square_pair_black@2x">../../resources/icons/24/ic_square_pair_black_24dp_2x.png</file>
   <file alias="ic_print_black">../../resources/icons/24/ic_print_black_24dp_1x.png</file>
   <file alias="ic_print_black@2x">../../resources/icons/24/ic_print_black_24dp_2x.png</file>
   <file alias="ic_power_settings_new_black">../../resources/icons/24/ic_power_settings_new_black_24dp_1x.png</file>
