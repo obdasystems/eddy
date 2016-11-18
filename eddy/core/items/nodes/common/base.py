@@ -41,8 +41,7 @@ from PyQt5 import QtGui
 from eddy.core.commands.nodes import CommandNodeRezize
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import DiagramMode
-from eddy.core.items.common import AbstractItem
-from eddy.core.polygon import Polygon
+from eddy.core.items.common import AbstractItem, Polygon
 
 
 class AbstractNode(AbstractItem):
@@ -292,7 +291,7 @@ class AbstractNode(AbstractItem):
         """
         Set the given position as anchor for the given edge.
         :type edge: AbstractEdge
-        :type pos: QtCore.QPointF
+        :type pos: QPointF
         """
         self.anchors[edge] = pos
 

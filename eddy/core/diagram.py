@@ -338,7 +338,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 # EDGE INSERTION
                 #################################
 
-                if self.isEdgeAddInProgress():
+                if self.isEdgeAdd():
 
                     statusBar = self.session.statusBar()
                     edge = self.mp_Edge
@@ -368,7 +368,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 # LABEL MOVE
                 #################################
 
-                if self.isLabelMoveInProgress():
+                if self.isLabelMove():
 
                     snapToGrid = self.session.action('toggle_grid').isChecked()
                     point = self.mp_LabelPos + mousePos - self.mp_Pos
@@ -388,7 +388,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                     # ITEM MOVEMENT
                     #################################
 
-                    if self.isNodeMoveInProgress():
+                    if self.isNodeMove():
 
                         snapToGrid = self.session.action('toggle_grid').isChecked()
                         point = self.mp_NodePos + mousePos - self.mp_Pos
@@ -428,7 +428,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 # EDGE INSERTION
                 #################################
 
-                if self.isEdgeAddInProgress():
+                if self.isEdgeAdd():
 
                     edge = self.mp_Edge
                     edge.source.updateNode(selected=False)
@@ -468,7 +468,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 # LABEL MOVE
                 #################################
 
-                if self.isLabelMoveInProgress():
+                if self.isLabelMove():
 
                     pos = self.mp_Label.pos()
                     if self.mp_LabelPos != pos:
@@ -484,7 +484,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 # ITEM MOVEMENT
                 #################################
 
-                if self.isNodeMoveInProgress():
+                if self.isNodeMove():
 
                     pos = self.mp_Node.pos()
                     if self.mp_NodePos != pos:
@@ -629,14 +629,14 @@ class Diagram(QtWidgets.QGraphicsScene):
         """
         return self.project.edges(self)
 
-    def isEdgeAddInProgress(self):
+    def isEdgeAdd(self):
         """
         Returns True if an edge insertion is currently in progress, False otherwise.
         :rtype: bool
         """
         return self.mode is DiagramMode.EdgeAdd and self.mp_Edge is not None
 
-    def isLabelMoveInProgress(self):
+    def isLabelMove(self):
         """
         Returns True if a label is currently being moved, False otherwise.
         :rtype: bool
@@ -646,7 +646,7 @@ class Diagram(QtWidgets.QGraphicsScene):
            self.mp_LabelPos is not None and \
            self.mp_Pos is not None
 
-    def isNodeMoveInProgress(self):
+    def isNodeMove(self):
         """
         Returns True if a node(s) is currently being moved, False otherwise.
         :rtype: bool

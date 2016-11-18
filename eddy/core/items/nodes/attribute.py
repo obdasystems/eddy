@@ -38,9 +38,9 @@ from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.datatypes.owl import OWLProfile
+from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
-from eddy.core.polygon import Polygon
 
 
 class AttributeNode(AbstractNode):
@@ -76,7 +76,7 @@ class AttributeNode(AbstractNode):
     def boundingRect(self):
         """
         Returns the shape bounding rectangle.
-        :rtype: QtCore.QRectF
+        :rtype: QRectF
         """
         return self.selection.geometry()
 
@@ -159,7 +159,7 @@ class AttributeNode(AbstractNode):
 
     def painterPath(self):
         """
-        Returns the current shape as QtGui.QPainterPath (used for collision detection).
+        Returns the current shape as QPainterPath (used for collision detection).
         :rtype: QPainterPath
         """
         path = QtGui.QPainterPath()
@@ -195,7 +195,7 @@ class AttributeNode(AbstractNode):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QtCore.QPointF
+        :type pos: QPointF
         """
         self.label.setPos(pos)
 

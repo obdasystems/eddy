@@ -40,9 +40,9 @@ from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item, Identity, Restriction, Special
 from eddy.core.functions.misc import first
+from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
-from eddy.core.polygon import Polygon
 from eddy.core.regex import RE_CARDINALITY
 
 
@@ -71,10 +71,6 @@ class RestrictionNode(AbstractNode):
         self.label = NodeLabel(Restriction.Exists.toString(),
            pos=lambda: self.center() - QtCore.QPointF(0, 22),
            editable=False, parent=self)
-
-    #############################################
-    #   PROPERTIES
-    #################################
 
     #############################################
     #   INTERFACE
@@ -199,7 +195,7 @@ class RestrictionNode(AbstractNode):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QtCore.QPointF
+        :type pos: QPointF
         """
         self.label.setPos(pos)
 

@@ -46,7 +46,7 @@ from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.geometry import distance, projection
 from eddy.core.functions.misc import snap
 from eddy.core.items.common import AbstractItem
-from eddy.core.polygon import Polygon
+from eddy.core.items.common import Polygon
 
 
 class AbstractEdge(AbstractItem):
@@ -218,7 +218,7 @@ class AbstractEdge(AbstractItem):
         """
         pass
 
-    def computePath(self, source, target, points):
+    def createPath(self, source, target, points):
         """
         Returns a list of QtCore.QLineF instance representing all the visible edge pieces.
         Subpaths which are obscured by the source or target shape are excluded by this method.
@@ -228,12 +228,12 @@ class AbstractEdge(AbstractItem):
         :rtype: list
         """
         # Get the source node painter path (the source node is always available).
-        sp = self.mapFromItem(source, source.painterPath())
-        tp = self.mapFromItem(target, target.painterPath()) if target else None
+        A = self.mapFromItem(source, source.painterPath())
+        B = self.mapFromItem(target, target.painterPath()) if target else None
         # Exclude all the "subpaths" which are not visible (obscured by the shapes).
         return [x for x in (QtCore.QLineF(points[i], points[i + 1]) for i in range(len(points) - 1)) \
-                    if (not sp.contains(x.p1()) or not sp.contains(x.p2())) and \
-                        (not tp or (not tp.contains(x.p1()) or not tp.contains(x.p2())))]
+                    if (not A.contains(x.p1()) or not A.contains(x.p2())) and \
+                        (not B or (not B.contains(x.p1()) or not B.contains(x.p2())))]
 
     def isSwapAllowed(self):
         """
@@ -279,37 +279,38 @@ class AbstractEdge(AbstractItem):
         source = self.source
         target = self.target
 
-        # ANCHORS (GEOMETRY) --> NB: THE POINTS ARE IN THE ENDPOINTS
+        ## ANCHORS (GEOMETRY) --> NB: THE POINTS ARE IN THE ENDPOINTS
         if source and target:
             p = source.anchor(self)
             self.anchors[source] = Polygon(QtCore.QRectF(p.x() - 4, p.y() - 4, 8, 8))
             p = target.anchor(self)
             self.anchors[target] = Polygon(QtCore.QRectF(p.x() - 4, p.y() - 4, 8, 8))
 
-        # BREAKPOINTS (GEOMETRY)
+        ## BREAKPOINTS (GEOMETRY)
         self.handles = [Polygon(QtCore.QRectF(p.x() - 4, p.y() - 4, 8, 8)) for p in self.breakpoints]
 
-        # ANCHORS + BREAKPOINTS + SELECTION (BRUSH + PEN)
-        anchorBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
-        anchorPen = QtGui.QPen(QtCore.Qt.NoPen)
-        handleBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
-        handlePen = QtGui.QPen(QtCore.Qt.NoPen)
-        selectionBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
+        ## ANCHORS + BREAKPOINTS + SELECTION (BRUSH + PEN)
         if visible and selected:
-            anchorBrush = QtGui.QBrush(QtGui.QColor(66, 165, 245, 255))
-            anchorPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
-            handleBrush = QtGui.QBrush(QtGui.QColor(66, 165, 245, 255))
-            handlePen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
+            apBrush = QtGui.QBrush(QtGui.QColor(66, 165, 245, 255))
+            apPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
+            bpBrush = QtGui.QBrush(QtGui.QColor(66, 165, 245, 255))
+            bpPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
             selectionBrush = QtGui.QBrush(QtGui.QColor(248, 255, 72, 255))
+        else:
+            apBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
+            apPen = QtGui.QPen(QtCore.Qt.NoPen)
+            bpBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
+            bpPen = QtGui.QPen(QtCore.Qt.NoPen)
+            selectionBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
         for polygon in self.anchors.values():
-            polygon.setBrush(anchorBrush)
-            polygon.setPen(anchorPen)
+            polygon.setBrush(apBrush)
+            polygon.setPen(apPen)
         for polygon in self.handles:
-            polygon.setBrush(handleBrush)
-            polygon.setPen(handlePen)
+            polygon.setBrush(bpBrush)
+            polygon.setPen(bpPen)
         self.selection.setBrush(selectionBrush)
 
-        # Z-VALUE (DEPTH)
+        ## Z-VALUE (DEPTH)
         try:
             zValue = max(*(x.zValue() for x in self.collidingItems())) + 0.1
         except TypeError:
@@ -320,15 +321,11 @@ class AbstractEdge(AbstractItem):
                 zValue = max(zValue, target.zValue())
                 if target.label:
                     zValue = max(zValue, target.label.zValue())
-
         self.setZValue(zValue)
 
-        # FORCE CACHE REGENERATION
+        ## FORCE CACHE REGENERATION
         self.setCacheMode(AbstractItem.NoCache)
         self.setCacheMode(AbstractItem.DeviceCoordinateCache)
-
-        # SCHEDULE REPAINT
-        self.update(self.boundingRect())
 
     #############################################
     #   EVENTS

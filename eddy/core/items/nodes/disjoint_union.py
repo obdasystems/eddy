@@ -105,7 +105,7 @@ class DisjointUnionNode(OperatorNode):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QtCore.QPointF
+        :type pos: QPointF
         """
         pass
 

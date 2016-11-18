@@ -39,8 +39,8 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item
+from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractNode
-from eddy.core.polygon import Polygon
 
 
 class OperatorNode(AbstractNode):
@@ -161,7 +161,7 @@ class OperatorNode(AbstractNode):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QtCore.QPointF
+        :type pos: QPointF
         """
         pass
 

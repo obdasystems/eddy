@@ -53,7 +53,7 @@ class InclusionEdge(AbstractEdge):
         """
         Initialize the edge.
         """
-        super().__init__(**kwargs)
+        super(InclusionEdge, self).__init__(**kwargs)
 
     #############################################
     #   INTERFACE
@@ -84,6 +84,20 @@ class InclusionEdge(AbstractEdge):
             'target': self.target,
             'breakpoints': self.breakpoints[:],
         })
+
+    @staticmethod
+    def createHead(p1, angle, size):
+        """
+        Create the head polygon.
+        :type p1: QPointF
+        :type angle: float
+        :type size: int
+        :rtype: QPolygonF
+        """
+        rad = radians(angle)
+        p2 = p1 - QtCore.QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+        p3 = p1 - QtCore.QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+        return QtGui.QPolygonF([p1, p2, p3])
 
     def paint(self, painter, option, widget=None):
         """
@@ -135,7 +149,7 @@ class InclusionEdge(AbstractEdge):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QtCore.QPointF
+        :type pos: QPointF
         """
         pass
 
@@ -177,19 +191,6 @@ class InclusionEdge(AbstractEdge):
         :type anchor: AbstractNode
         :type target: QtCore.QPointF
         """
-        def createHead(point1, angle, size):
-            """
-            Create the head polygon.
-            :type point1: QtCore.QPointF
-            :type angle: float
-            :type size: int
-            :rtype: QtGui.QPolygonF
-            """
-            rad = radians(angle)
-            point2 = point1 - QtCore.QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-            point3 = point1 - QtCore.QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-            return QtGui.QPolygonF([point1, point2, point3])
-
         if visible is None:
             visible = self.canDraw()
 
@@ -206,7 +207,7 @@ class InclusionEdge(AbstractEdge):
         # PATH, SELECTION, HEAD, TAIL (GEOMETRY)
         #################################
 
-        collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
+        collection = self.createPath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
 
         selection = QtGui.QPainterPath()
         path = QtGui.QPainterPath()
@@ -220,7 +221,7 @@ class InclusionEdge(AbstractEdge):
                 path.moveTo(p1)
                 path.lineTo(p2)
                 selection.addPolygon(createArea(p1, p2, subpath.angle(), 8))
-                head = createHead(p2, subpath.angle(), 12)
+                head = self.createHead(p2, subpath.angle(), 12)
         elif len(collection) > 1:
             subpath1 = collection[0]
             subpathN = collection[-1]
@@ -241,7 +242,7 @@ class InclusionEdge(AbstractEdge):
                 path.moveTo(p21)
                 path.lineTo(p22)
                 selection.addPolygon(createArea(p21, p22, subpathN.angle(), 8))
-                head = createHead(p22, subpathN.angle(), 12)
+                head = self.createHead(p22, subpathN.angle(), 12)
 
         self.selection.setGeometry(selection)
         self.path.setGeometry(path)

@@ -40,8 +40,8 @@ from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.geometry import createArea
+from eddy.core.items.common import Polygon
 from eddy.core.items.edges.common.base import AbstractEdge
-from eddy.core.polygon import Polygon
 
 
 class EquivalenceEdge(AbstractEdge):
@@ -54,7 +54,7 @@ class EquivalenceEdge(AbstractEdge):
         """
         Initialize the edge.
         """
-        super().__init__(**kwargs)
+        super(EquivalenceEdge, self).__init__(**kwargs)
         self.tail = Polygon(QtGui.QPolygonF())
 
     #############################################
@@ -87,6 +87,34 @@ class EquivalenceEdge(AbstractEdge):
             'target': self.target,
             'breakpoints': self.breakpoints[:],
         })
+
+    @staticmethod
+    def createHead(p1, angle, size):
+        """
+        Create the head polygon.
+        :type p1: QPointF
+        :type angle: float
+        :type size: int
+        :rtype: QPolygonF
+        """
+        rad = radians(angle)
+        p2 = p1 - QtCore.QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+        p3 = p1 - QtCore.QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+        return QtGui.QPolygonF([p1, p2, p3])
+
+    @staticmethod
+    def createTail(p1, angle, size):
+        """
+        Create the tail polygon.
+        :type p1: QPointF
+        :type angle: float
+        :type size: int
+        :rtype: QPolygonF
+        """
+        rad = radians(angle)
+        p2 = p1 + QtCore.QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
+        p3 = p1 + QtCore.QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
+        return QtGui.QPolygonF([p1, p2, p3])
 
     def paint(self, painter, option, widget=None):
         """
@@ -143,7 +171,7 @@ class EquivalenceEdge(AbstractEdge):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QtCore.QPointF
+        :type pos: QPointF
         """
         pass
 
@@ -156,13 +184,11 @@ class EquivalenceEdge(AbstractEdge):
         path.addPath(self.selection.geometry())
         path.addPolygon(self.head.geometry())
         path.addPolygon(self.tail.geometry())
-
         if self.isSelected():
             for polygon in self.handles:
                 path.addEllipse(polygon.geometry())
             for polygon in self.anchors.values():
                 path.addEllipse(polygon.geometry())
-
         return path
 
     def text(self):
@@ -188,32 +214,6 @@ class EquivalenceEdge(AbstractEdge):
         :type anchor: AbstractNode
         :type target: QtCore.QPointF
         """
-        def createHead(point1, angle, size):
-            """
-            Create the head polygon.
-            :type point1: QtCore.QPointF
-            :type angle: float
-            :type size: int
-            :rtype: QtGui.QPolygonF
-            """
-            rad = radians(angle)
-            point2 = point1 - QtCore.QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-            point3 = point1 - QtCore.QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-            return QtGui.QPolygonF([point1, point2, point3])
-
-        def createTail(point1, angle, size):
-            """
-            Create the tail polygon.
-            :type point1: QtCore.QPointF
-            :type angle: float
-            :type size: int
-            :rtype: QtGui.QPolygonF
-            """
-            rad = radians(angle)
-            point2 = point1 + QtCore.QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-            point3 = point1 + QtCore.QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-            return QtGui.QPolygonF([point1, point2, point3])
-
         if visible is None:
             visible = self.canDraw()
 
@@ -230,7 +230,7 @@ class EquivalenceEdge(AbstractEdge):
         # PATH, SELECTION, HEAD, TAIL (GEOMETRY)
         #################################
 
-        collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
+        collection = self.createPath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
 
         selection = QtGui.QPainterPath()
         path = QtGui.QPainterPath()
@@ -245,8 +245,8 @@ class EquivalenceEdge(AbstractEdge):
                 path.moveTo(p1)
                 path.lineTo(p2)
                 selection.addPolygon(createArea(p1, p2, subpath.angle(), 8))
-                head = createHead(p2, subpath.angle(), 12)
-                tail = createTail(p1, subpath.angle(), 12)
+                head = self.createHead(p2, subpath.angle(), 12)
+                tail = self.createTail(p1, subpath.angle(), 12)
         elif len(collection) > 1:
             subpath1 = collection[0]
             subpathN = collection[-1]
@@ -267,8 +267,8 @@ class EquivalenceEdge(AbstractEdge):
                 path.moveTo(p21)
                 path.lineTo(p22)
                 selection.addPolygon(createArea(p21, p22, subpathN.angle(), 8))
-                head = createHead(p22, subpathN.angle(), 12)
-                tail = createTail(p11, subpath1.angle(), 12)
+                head = self.createHead(p22, subpathN.angle(), 12)
+                tail = self.createTail(p11, subpath1.angle(), 12)
 
         self.selection.setGeometry(selection)
         self.path.setGeometry(path)

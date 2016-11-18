@@ -39,8 +39,8 @@ from PyQt5 import QtGui
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.functions.misc import first
+from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractNode
-from eddy.core.polygon import Polygon
 
 
 class PropertyAssertionNode(AbstractNode):

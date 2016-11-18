@@ -39,9 +39,9 @@ from PyQt5 import QtGui
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.owl import Facet
 from eddy.core.functions.misc import first
+from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import FacetQuotedLabel, NodeLabel
-from eddy.core.polygon import Polygon
 from eddy.core.regex import RE_FACET, RE_VALUE_RESTRICTION
 
 
@@ -345,7 +345,7 @@ class FacetNode(AbstractNode):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QtCore.QPointF
+        :type pos: QPointF
         """
         pass
 

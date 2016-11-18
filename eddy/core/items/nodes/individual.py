@@ -41,9 +41,9 @@ from PyQt5 import QtGui
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.owl import Datatype
 from eddy.core.functions.misc import snapF
+from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
-from eddy.core.polygon import Polygon
 from eddy.core.regex import RE_VALUE
 
 
@@ -662,7 +662,7 @@ class IndividualNode(AbstractResizableNode):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QtCore.QPointF
+        :type pos: QPointF
         """
         self.label.setPos(pos)
 

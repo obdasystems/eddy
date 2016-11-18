@@ -87,6 +87,21 @@ class InputEdge(AbstractEdge):
             'breakpoints': self.breakpoints[:],
         })
 
+    @staticmethod
+    def createHead(p1, angle, size):
+        """
+        Create the head polygon.
+        :type p1: QPointF
+        :type angle: float
+        :type size: int
+        :rtype: QPolygonF
+        """
+        rad = radians(angle)
+        p2 = p1 - QtCore.QPointF(sin(rad + M_PI / 4.0) * size, cos(rad + M_PI / 4.0) * size)
+        p3 = p2 - QtCore.QPointF(sin(rad + 3.0 / 4.0 * M_PI) * size, cos(rad + 3.0 / 4.0 * M_PI) * size)
+        p4 = p3 - QtCore.QPointF(sin(rad - 3.0 / 4.0 * M_PI) * size, cos(rad - 3.0 / 4.0 * M_PI) * size)
+        return QtGui.QPolygonF([p1, p2, p3, p4])
+
     def paint(self, painter, option, widget=None):
         """
         Paint the edge in the diagram scene.
@@ -137,7 +152,7 @@ class InputEdge(AbstractEdge):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QtCore.QPointF
+        :type pos: QPointF
         """
         self.label.setPos(pos)
 
@@ -149,13 +164,11 @@ class InputEdge(AbstractEdge):
         path = QtGui.QPainterPath()
         path.addPath(self.selection.geometry())
         path.addPolygon(self.head.geometry())
-
         if self.isSelected():
             for polygon in self.handles:
                 path.addEllipse(polygon.geometry())
             for polygon in self.anchors.values():
                 path.addEllipse(polygon.geometry())
-
         return path
 
     def text(self):
@@ -179,22 +192,8 @@ class InputEdge(AbstractEdge):
         :type visible: bool
         :type breakpoint: int
         :type anchor: AbstractNode
-        :type target: QtCore.QPointF
+        :type target: QPointF
         """
-        def createHead(point1, angle, size):
-            """
-            Create the head polygon.
-            :type point1: QtCore.QPointF
-            :type angle: float
-            :type size: int
-            :rtype: QtGui.QPolygonF
-            """
-            rad = radians(angle)
-            point2 = point1 - QtCore.QPointF(sin(rad + M_PI / 4.0) * size, cos(rad + M_PI / 4.0) * size)
-            point3 = point2 - QtCore.QPointF(sin(rad + 3.0 / 4.0 * M_PI) * size, cos(rad + 3.0 / 4.0 * M_PI) * size)
-            point4 = point3 - QtCore.QPointF(sin(rad - 3.0 / 4.0 * M_PI) * size, cos(rad - 3.0 / 4.0 * M_PI) * size)
-            return QtGui.QPolygonF([point1, point2, point3, point4])
-
         if visible is None:
             visible = self.canDraw()
 
@@ -211,7 +210,7 @@ class InputEdge(AbstractEdge):
         # PATH, SELECTION, HEAD (GEOMETRY)
         #################################
 
-        collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
+        collection = self.createPath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
 
         selection = QtGui.QPainterPath()
         path = QtGui.QPainterPath()
@@ -229,7 +228,7 @@ class InputEdge(AbstractEdge):
                 path.moveTo(p1)
                 path.lineTo(p2)
                 selection.addPolygon(createArea(p1, p2, subpath.angle(), 8))
-                head = createHead(p2, subpath.angle(), 10)
+                head = self.createHead(p2, subpath.angle(), 10)
                 extend((p1, p2))
         elif len(collection) > 1:
             subpath1 = collection[0]
@@ -253,7 +252,7 @@ class InputEdge(AbstractEdge):
                 path.moveTo(p21)
                 path.lineTo(p22)
                 selection.addPolygon(createArea(p21, p22, subpathN.angle(), 8))
-                head = createHead(p22, subpathN.angle(), 10)
+                head = self.createHead(p22, subpathN.angle(), 10)
                 append(p22)
 
         self.path.setGeometry(path)

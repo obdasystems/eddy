@@ -42,6 +42,7 @@ from eddy.core.datatypes.system import Channel
 from eddy.core.output import getLogger
 from eddy.core.worker import AbstractWorker
 
+
 LOGGER = getLogger(__name__)
 
 

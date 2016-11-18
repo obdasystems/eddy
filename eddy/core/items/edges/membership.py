@@ -54,7 +54,7 @@ class MembershipEdge(AbstractEdge):
         """
         Initialize the edge.
         """
-        super().__init__(**kwargs)
+        super(MembershipEdge, self).__init__(**kwargs)
         self.label = EdgeLabel('instanceOf', centered=True, parent=self)
 
     #############################################
@@ -91,10 +91,10 @@ class MembershipEdge(AbstractEdge):
     def createHead(p1, angle, size):
         """
         Create the head polygon.
-        :type p1: QtCore.QPointF
+        :type p1: QPointF
         :type angle: float
         :type size: int
-        :rtype: QtGui.QPolygonF
+        :rtype: QPolygonF
         """
         rad = radians(angle)
         p2 = p1 - QtCore.QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
@@ -151,7 +151,7 @@ class MembershipEdge(AbstractEdge):
     def setTextPos(self, pos):
         """
         Set the label position.
-        :type pos: QtCore.QPointF
+        :type pos: QPointF
         """
         self.label.setPos(pos)
 
@@ -193,21 +193,8 @@ class MembershipEdge(AbstractEdge):
         :type visible: bool
         :type breakpoint: int
         :type anchor: AbstractNode
-        :type target: QtCore.QPointF
+        :type target: QPointF
         """
-        def createHead(point1, angle, size):
-            """
-            Create the head polygon.
-            :type point1: QtCore.QPointF
-            :type angle: float
-            :type size: int
-            :rtype: QtGui.QPolygonF
-            """
-            rad = radians(angle)
-            point2 = point1 - QtCore.QPointF(sin(rad + M_PI / 3.0) * size, cos(rad + M_PI / 3.0) * size)
-            point3 = point1 - QtCore.QPointF(sin(rad + M_PI - M_PI / 3.0) * size, cos(rad + M_PI - M_PI / 3.0) * size)
-            return QtGui.QPolygonF([point1, point2, point3])
-
         if visible is None:
             visible = self.canDraw()
 
@@ -224,7 +211,7 @@ class MembershipEdge(AbstractEdge):
         # PATH, SELECTION, HEAD, LABEL (GEOMETRY)
         #################################
 
-        collection = self.computePath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
+        collection = self.createPath(sourceNode, targetNode, [sourcePos] + self.breakpoints + [targetPos])
 
         selection = QtGui.QPainterPath()
         path = QtGui.QPainterPath()
@@ -242,7 +229,7 @@ class MembershipEdge(AbstractEdge):
                 path.moveTo(p1)
                 path.lineTo(p2)
                 selection.addPolygon(createArea(p1, p2, subpath.angle(), 8))
-                head = createHead(p2, subpath.angle(), 12)
+                head = self.createHead(p2, subpath.angle(), 12)
                 extend((p1, p2))
         elif len(collection) > 1:
             subpath1 = collection[0]
@@ -266,7 +253,7 @@ class MembershipEdge(AbstractEdge):
                 path.moveTo(p21)
                 path.lineTo(p22)
                 selection.addPolygon(createArea(p21, p22, subpathN.angle(), 8))
-                head = createHead(p22, subpathN.angle(), 12)
+                head = self.createHead(p22, subpathN.angle(), 12)
                 append(p22)
 
         self.selection.setGeometry(selection)

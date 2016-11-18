@@ -157,11 +157,11 @@ class DiagramTestCase(EddyTestCase):
         QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos1)
         QtTest.QTest.mouseMove(view.viewport(), pos2)
         # THEN
-        self.assertTrue(diagram.isEdgeAddInProgress())
+        self.assertTrue(diagram.isEdgeAdd())
         # WHEN
         QtTest.QTest.mouseRelease(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos2)
         # THEN
-        self.assertFalse(diagram.isEdgeAddInProgress())
+        self.assertFalse(diagram.isEdgeAdd())
         self.assertEqual(num_edges_in_diagram, len(diagram.edges()) - 1)
         self.assertEqual(num_items_in_project, len(self.project.items()) - 1)
         self.assertEqual(num_edges_in_project, len(self.project.edges()) - 1)
@@ -184,11 +184,11 @@ class DiagramTestCase(EddyTestCase):
         QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos1)
         QtTest.QTest.mouseMove(view.viewport(), pos2)
         # THEN
-        self.assertTrue(diagram.isEdgeAddInProgress())
+        self.assertTrue(diagram.isEdgeAdd())
         # WHEN
         QtTest.QTest.mouseRelease(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos2)
         # THEN
-        self.assertFalse(diagram.isEdgeAddInProgress())
+        self.assertFalse(diagram.isEdgeAdd())
         self.assertEqual(num_edges_in_diagram, len(diagram.edges()))
         self.assertEqual(num_items_in_project, len(self.project.items()))
         self.assertEqual(num_edges_in_project, len(self.project.edges()))

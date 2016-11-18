@@ -38,9 +38,9 @@ from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Datatype
+from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
-from eddy.core.polygon import Polygon
 
 
 class ValueDomainNode(AbstractNode):
