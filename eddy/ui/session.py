@@ -687,6 +687,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu.addAction(self.action('open_preferences'))
         self.addMenu(menu)
 
+        menu = QtWidgets.QMenu('Compose', objectName='compose')
+        menu.addAction(self.action('property_domain'))
+        menu.addAction(self.action('property_range'))
+        menu.addAction(self.action('property_domain_range'))
+        self.addMenu(menu)
+
         menu = QtWidgets.QMenu('Toolbars', objectName='toolbars')
         menu.addAction(self.widget('document_toolbar').toggleViewAction())
         menu.addAction(self.widget('editor_toolbar').toggleViewAction())
@@ -751,7 +757,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # ROLE / ATTRIBUTE SPECIFIC
         #################################
 
-        menu = QtWidgets.QMenu('Compose', objectName='compose')
+        menu = QtWidgets.QMenu('Compose', objectName='compose_domain_range')
         menu.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
         menu.addAction(self.action('property_domain'))
         menu.addAction(self.action('property_range'))
@@ -816,6 +822,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menuBar = self.menuBar()
         menuBar.addMenu(self.menu('file'))
         menuBar.addMenu(self.menu('edit'))
+        menuBar.addMenu(self.menu('compose'))
         menuBar.addMenu(self.menu('view'))
         menuBar.addMenu(self.menu('ontology'))
         menuBar.addMenu(self.menu('tools'))
@@ -1045,6 +1052,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Compose a property domain using the selected role/attribute node.
         """
+        positions = []
+
         def compose(scene, source, items):
             """
             Returns a collection of items to be added to the given source node to compose a property expression.
@@ -1053,7 +1062,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             :type items: tuple
             :rtype: set
             """
-            positions = [] # => QPointF IS NOT HASHABLE!
             collection = set()
             for item in items:
                 restriction = scene.factory.create(item)
@@ -1069,14 +1077,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     QtCore.QPointF(snapF(+source.width() / 2 + 70, size), snapF(+source.height() / 2 + 70, size)),
                     QtCore.QPointF(snapF(-source.width() / 2 - 70, size), snapF(+source.height() / 2 + 70, size)),
                 )
-                pos = None
+                pos = source.pos() + offsets[0]
                 num = sys.maxsize
                 rad = QtCore.QPointF(restriction.width() / 2, restriction.height() / 2)
                 for o in offsets:
-                    for position in positions:
-                        if source.pos() + o == position:
-                            break
-                    else:
+                    if source.pos() + o not in positions:
                         count = len(scene.items(QtCore.QRectF(source.pos() + o - rad, source.pos() + o + rad)))
                         if count < num:
                             num = count
@@ -1088,17 +1093,25 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         diagram = self.mdi.activeDiagram()
         if diagram:
+            commands = []
+            action = self.sender()
+            elements = action.data()
             diagram.setMode(DiagramMode.Idle)
             supported = {Item.RoleNode, Item.AttributeNode}
-            node = first(diagram.selectedNodes(lambda x: x.type() in supported))
-            if node:
-                action = self.sender()
-                elements = action.data()
-                name = 'compose {0} restriction'.format(node.shortName)
+            for node in diagram.selectedNodes(lambda x: x.type() in supported):
+                name = 'compose {0} restriction(s)'.format(node.shortName)
                 addons = compose(diagram, node, elements)
                 nodes = {x for x in addons if x.isNode()}
                 edges = {x for x in addons if x.isEdge()}
-                self.undostack.push(CommandComposeAxiom(name, diagram, node, nodes, edges))
+                commands.append(CommandComposeAxiom(name, diagram, node, nodes, edges))
+            if commands:
+                if len(commands) > 1:
+                    self.undostack.beginMacro('compose attribute/role restriction(s)')
+                    for command in commands:
+                        self.undostack.push(command)
+                    self.undostack.endMacro()
+                else:
+                    self.undostack.push(first(commands))
 
     @QtCore.pyqtSlot()
     def doCopy(self):
@@ -1824,19 +1837,21 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     @QtCore.pyqtSlot()
     def doUpdateState(self):
         """
-        Update actions enabling/disabling them when needed.
+        Update built-in actions according to the application state.
         """
+        isDomainRangeUsable = False
         isDiagramActive = False
         isClipboardEmpty = True
         isEdgeSelected = False
+        isEdgeSwapEnabled = False
         isNodeSelected = False
         isPredicateSelected = False
         isProjectEmpty = self.project.isEmpty()
         isUndoStackClean = self.undostack.isClean()
-        isEdgeSwapEnabled = False
 
         if self.mdi.subWindowList():
             diagram = self.mdi.activeDiagram()
+            restrictables = {Item.AttributeNode, Item.RoleNode}
             predicates = {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.IndividualNode}
             if diagram:
                 nodes = diagram.selectedNodes()
@@ -1845,7 +1860,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 isClipboardEmpty = self.clipboard.empty()
                 isEdgeSelected = first(edges) is not None
                 isNodeSelected = first(nodes) is not None
-                isPredicateSelected = any([i.type() in predicates for i in nodes])
+                isDomainRangeUsable = any([x.type() in restrictables for x in nodes])
+                isPredicateSelected = any([x.type() in predicates for x in nodes])
                 if isEdgeSelected:
                     for edge in edges:
                         isEdgeSwapEnabled = edge.isSwapAllowed()
@@ -1860,6 +1876,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.action('purge').setEnabled(isNodeSelected)
         self.action('export').setEnabled(not isProjectEmpty)
         self.action('paste').setEnabled(not isClipboardEmpty)
+        self.action('property_domain').setEnabled(isDomainRangeUsable)
+        self.action('property_domain_range').setEnabled(isDomainRangeUsable)
+        self.action('property_range').setEnabled(isDomainRangeUsable)
         self.action('save').setEnabled(not isUndoStackClean)
         self.action('save_as').setEnabled(isDiagramActive)
         self.action('select_all').setEnabled(isDiagramActive)
