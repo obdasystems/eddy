@@ -54,7 +54,7 @@ class DiagramTestCase(EddyTestCase):
         """
         super(DiagramTestCase, self).setUp()
         self.init('test_project_1')
-        self.session.sgnDiagramFocus.emit(self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))
+        self.session.sgnFocusDiagram.emit(self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))
 
     #############################################
     #   NODE INSERTION

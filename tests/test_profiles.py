@@ -67,7 +67,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         Gives focus to the given diagram.
         :type path: str
         """
-        self.session.sgnDiagramFocus.emit(self.project.diagram(expandPath(path)))
+        self.session.sgnFocusDiagram.emit(self.project.diagram(expandPath(path)))
 
     def __insert_edge_between(self, item, source, target):
         """

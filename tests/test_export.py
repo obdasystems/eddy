@@ -63,7 +63,7 @@ class ExportTestCase(EddyTestCase):
 
     def test_export_diagram_to_graphml(self):
         # GIVEN
-        self.session.sgnDiagramFocus.emit(self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))
+        self.session.sgnFocusDiagram.emit(self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))
         # WHEN
         worker = GraphMLDiagramExporter(self.session.mdi.activeDiagram(), self.session)
         worker.export('@tests/.tests/diagram.graphml')
@@ -76,7 +76,7 @@ class ExportTestCase(EddyTestCase):
 
     def test_export_diagram_to_graphol(self):
         # GIVEN
-        self.session.sgnDiagramFocus.emit(self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))
+        self.session.sgnFocusDiagram.emit(self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))
         # WHEN
         worker = GrapholDiagramExporter(self.session.mdi.activeDiagram(), self.session)
         worker.export('@tests/.tests/diagram.graphol')
@@ -90,7 +90,7 @@ class ExportTestCase(EddyTestCase):
     @patch('eddy.core.exporters.pdf.openPath')
     def test_export_diagram_to_pdf(self, _):
         # GIVEN
-        self.session.sgnDiagramFocus.emit(self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))
+        self.session.sgnFocusDiagram.emit(self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))
         # WHEN
         worker = PdfDiagramExporter(self.session.mdi.activeDiagram(), self.session)
         worker.export(expandPath('@tests/.tests/diagram.pdf'))

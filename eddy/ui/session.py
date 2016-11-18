@@ -132,31 +132,33 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     Additionally to built-in signals, this class emits:
 
     * sgnClosed: whenever the current session is closed.
-    * sgnDiagramFocus: whenever a diagram is to be focused.
-    * sgnDiagramLoad: whenever a diagram is to be loaded.
     * sgnDiagramLoaded: to notify that a diagram has been loaded.
     * sgnDiagramRenamed: to notify that a diagram has been renamed.
+    * sgnFocusDiagram: whenever a diagram is to be focused.
+    * sgnFocusItem: whenever an item is to be focused.
+    * sgnLoadDiagram: whenever a diagram is to be loaded.
     * sgnPluginDisposed: to notify that a plugin has been destroyed.
     * sgnPluginStarted: to notify that a plugin startup sequence has been completed.
-    * sgnProjectSave: whenever the current project is to be saved.
     * sgnProjectSaved: to notify that the current project has been saved.
     * sgnQuit: whenever the application is to be terminated.
     * sgnReady: after the session startup sequence completes.
+    * sgnSaveProject: whenever the current project is to be saved.
     * sgnUpdateState: to notify that something in the session state changed.
     """
     sgnClosed = QtCore.pyqtSignal()
     sgnCheckForUpdate = QtCore.pyqtSignal()
-    sgnDiagramFocus = QtCore.pyqtSignal('QGraphicsScene')
     sgnDiagramFocused = QtCore.pyqtSignal('QGraphicsScene')
-    sgnDiagramLoad = QtCore.pyqtSignal(str)
     sgnDiagramLoaded = QtCore.pyqtSignal('QGraphicsScene')
     sgnDiagramRenamed = QtCore.pyqtSignal('QGraphicsScene')
+    sgnFocusDiagram = QtCore.pyqtSignal('QGraphicsScene')
+    sgnFocusItem = QtCore.pyqtSignal('QGraphicsItem')
+    sgnLoadDiagram = QtCore.pyqtSignal(str)
     sgnPluginDisposed = QtCore.pyqtSignal(str)
     sgnPluginStarted = QtCore.pyqtSignal(str)
-    sgnProjectSave = QtCore.pyqtSignal()
     sgnProjectSaved = QtCore.pyqtSignal()
     sgnQuit = QtCore.pyqtSignal()
     sgnReady = QtCore.pyqtSignal()
+    sgnSaveProject = QtCore.pyqtSignal()
     sgnUpdateState = QtCore.pyqtSignal()
 
     def __init__(self, path, **kwargs):
@@ -853,11 +855,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         connect(self.undostack.cleanChanged, self.doUpdateState)
         connect(self.sgnCheckForUpdate, self.doCheckForUpdate)
-        connect(self.sgnDiagramFocus, self.doFocusDiagram)
-        connect(self.sgnDiagramLoad, self.doLoadDiagram)
+        connect(self.sgnFocusDiagram, self.doFocusDiagram)
+        connect(self.sgnFocusItem, self.doFocusItem)
+        connect(self.sgnLoadDiagram, self.doLoadDiagram)
         connect(self.sgnReady, self.doUpdateState)
         connect(self.sgnReady, self.onSessionReady)
-        connect(self.sgnProjectSave, self.doSave)
+        connect(self.sgnSaveProject, self.doSave)
         connect(self.sgnUpdateState, self.doUpdateState)
 
     def initState(self):
@@ -1024,7 +1027,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Close the currently active subwindow.
         """
-        self.sgnProjectSave.emit()
+        self.sgnSaveProject.emit()
         self.close()
         self.sgnClosed.emit()
 
@@ -1161,7 +1164,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Focus an item in its diagram.
         :type item: AbstractItem
         """
-        self.sgnDiagramFocus.emit(item.diagram)
+        self.sgnFocusDiagram.emit(item.diagram)
         self.mdi.activeDiagram().clearSelection()
         self.mdi.activeView().centerOn(item)
         item.setSelected(True)
@@ -1187,7 +1190,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                             progress.setWindowTitle('Importing {0}...'.format(os.path.basename(path)))
                             loader = self.createDiagramLoader(filetype, path, self.project, self)
                             loader.load()
-                            self.sgnDiagramFocus.emit(loader.diagram)
+                            self.sgnFocusDiagram.emit(loader.diagram)
                 except Exception as e:
                     msgbox = QtWidgets.QMessageBox(self)
                     msgbox.setDetailedText(format_exception(e))
@@ -1198,7 +1201,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     msgbox.setWindowTitle('Import failed!')
                     msgbox.exec_()
                 finally:
-                    self.sgnProjectSave.emit()
+                    self.sgnSaveProject.emit()
 
     @QtCore.pyqtSlot()
     def doInvertRole(self):
@@ -1275,9 +1278,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         form = NewDiagramDialog(self.project, self)
         if form.exec_() == NewDiagramDialog.Accepted:
             path = expandPath(form.pathField.value())
-            self.sgnDiagramLoad.emit(path)
-            self.sgnDiagramFocus.emit(self.project.diagram(path))
-            self.sgnProjectSave.emit()
+            self.sgnLoadDiagram.emit(path)
+            self.sgnFocusDiagram.emit(self.project.diagram(path))
+            self.sgnSaveProject.emit()
 
     @QtCore.pyqtSlot()
     def doOpen(self):
@@ -1392,7 +1395,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Quit Eddy.
         """
-        self.sgnProjectSave.emit()
+        self.sgnSaveProject.emit()
         self.sgnQuit.emit()
 
     @QtCore.pyqtSlot()
@@ -1478,7 +1481,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     subwindow.close()
                 self.project.removeDiagram(diagram)
                 fremove(diagram.path)
-                self.sgnProjectSave.emit()
+                self.sgnSaveProject.emit()
 
     @QtCore.pyqtSlot()
     def doRenameDiagram(self):
@@ -1490,7 +1493,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if diagram:
             form = RenameDiagramDialog(self.project, diagram, self)
             if form.exec_() == RenameDiagramDialog.Accepted:
-                self.sgnProjectSave.emit()
+                self.sgnSaveProject.emit()
                 self.sgnDiagramRenamed.emit(diagram)
 
     @QtCore.pyqtSlot()
@@ -1932,7 +1935,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             #################################
 
             if save:
-                self.sgnProjectSave.emit()
+                self.sgnSaveProject.emit()
 
             #############################################
             # DISPOSE ALL THE PLUGINS
@@ -2081,9 +2084,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 dest = uniquePath(self.project.path, name, File.Graphol.extension)
                 path = fcopy(path, dest)
 
-            self.sgnDiagramLoad.emit(path)
-            self.sgnDiagramFocus.emit(self.project.diagram(path))
-            self.sgnProjectSave.emit()
+            self.sgnLoadDiagram.emit(path)
+            self.sgnFocusDiagram.emit(self.project.diagram(path))
+            self.sgnSaveProject.emit()
 
     def setWindowTitle(self, project, diagram=None):
         """
