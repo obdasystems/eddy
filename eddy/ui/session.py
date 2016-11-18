@@ -1025,18 +1025,23 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Execute the update check routine.
         """
+        channel = Channel.Beta
         # SHOW PROGRESS BAR
         progressBar = self.widget('progress_bar')
         progressBar.setToolTip('Checking for updates...')
         progressBar.setVisible(True)
         # RUN THE UPDATE CHECK WORKER IN A THREAD
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-        channel = Channel.forValue(settings.value('update/channel', Channel.Stable, str))
-        worker = UpdateCheckWorker(channel, VERSION)
-        connect(worker.sgnNoUpdateAvailable, self.onNoUpdateAvailable)
-        connect(worker.sgnNoUpdateDataAvailable, self.onNoUpdateDataAvailable)
-        connect(worker.sgnUpdateAvailable, self.onUpdateAvailable)
-        self.startThread('updateCheck', worker)
+        try:
+            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+            channel = Channel.forValue(settings.value('update/channel', channel, str))
+        except TypeError:
+            pass
+        finally:
+            worker = UpdateCheckWorker(channel, VERSION)
+            connect(worker.sgnNoUpdateAvailable, self.onNoUpdateAvailable)
+            connect(worker.sgnNoUpdateDataAvailable, self.onNoUpdateDataAvailable)
+            connect(worker.sgnUpdateAvailable, self.onUpdateAvailable)
+            self.startThread('updateCheck', worker)
 
     @QtCore.pyqtSlot()
     def doClose(self):
