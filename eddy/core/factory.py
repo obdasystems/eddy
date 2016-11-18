@@ -208,6 +208,8 @@ class MenuFactory(QtCore.QObject):
         self.customAction['occurrences'] = []
         for pnode in self.project.predicates(node.type(), node.text()):
             action = QtWidgets.QAction('{} ({})'.format(rstrip(pnode.diagram.name, File.Graphol.extension), pnode.id))
+            action.setCheckable(True)
+            action.setChecked(pnode is node)
             action.setData(pnode)
             connect(action.triggered, self.session.doLookupOccurrence)
             self.customAction['occurrences'].append(action)
