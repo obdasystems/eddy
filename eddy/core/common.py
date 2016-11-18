@@ -1111,15 +1111,20 @@ class HasThreadingSystem(object):
             if not isinstance(name, str):
                 name = name_or_qthread.objectName()
             if name in self._threads:
-                #LOGGER.debug("Terminating thread: %s (runtime=%.2fms)", name, time.monotonic() - self._started[name])
-                qthread = self._threads[name]
-                qthread.quit()
-                if not qthread.wait(2000):
-                    qthread.terminate()
-                    qthread.wait()
+                try:
+                    #LOGGER.debug("Terminate thread: %s (runtime=%.2fms)", name, time.monotonic() - self._started[name])
+                    qthread = self._threads[name]
+                    qthread.quit()
+                    if not qthread.wait(2000):
+                        qthread.terminate()
+                        qthread.wait()
+                except Exception as e:
+                    LOGGER.exception('Thread shutdown could not be completed: %s', e)
                 del self._threads[name]
             if name in self._workers:
                 del self._workers[name]
+            if name in self._started:
+                del self._started[name]
 
     def thread(self, name):
         """
