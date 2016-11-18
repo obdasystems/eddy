@@ -666,8 +666,8 @@ class Diagram(QtWidgets.QGraphicsScene):
 
     def items(self, mixed=None, mode=QtCore.Qt.IntersectsItemShape, **kwargs):
         """
-        Returns a list of items ordered from TOP to BOTTOM.
-        If no position is supplied, an unordered list containing all the elements in the diagram is returned.
+        Returns a collection of items ordered from TOP to BOTTOM.
+        If no argument is supplied, an unordered list containing all the elements in the diagram is returned.
         :type mixed: T <= QPointF | QRectF | QPolygonF | QPainterPath
         :type mode: ItemSelectionMode
         :rtype: list

@@ -279,8 +279,12 @@ class DiagramView(QtWidgets.QGraphicsView):
                 #################################
 
                 area = QtCore.QRectF(self.rubberBandOrigin, self.mapToScene(mousePos)).normalized()
-                for node in self.diagram.items(area, edges=False):
+                collection = set(self.diagram.items(area, edges=False))
+                for node in collection:
                     node.setSelected(True)
+                    for edge in node.edges:
+                        if edge.other(node) in collection:
+                            edge.setSelected(True)
 
         #############################################
         # RESET STATE
@@ -306,17 +310,13 @@ class DiagramView(QtWidgets.QGraphicsView):
         :type wheelEvent: QWheelEvent
         """
         if wheelEvent.modifiers() & QtCore.Qt.ControlModifier:
-
             pos = wheelEvent.pos()
             angle = wheelEvent.angleDelta()
-
             zoom = self.zoom
             zoom += +DiagramView.ZoomStep if angle.y() > 0 else -DiagramView.ZoomStep
             zoom = clamp(zoom, DiagramView.ZoomMin, DiagramView.ZoomMax)
-
             if zoom != self.zoom:
                 self.scaleViewOnPoint(zoom, pos)
-
         else:
             super(DiagramView, self).wheelEvent(wheelEvent)
 
