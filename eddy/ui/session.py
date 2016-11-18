@@ -263,8 +263,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addAction(action)
 
         action = QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_message_black'), 'Show log...',
-            self, objectName='show_log', statusTip='Show application log',
+            QtGui.QIcon(':/icons/24/ic_message_black'), 'System log...',
+            self, objectName='system_log', statusTip='Show application system log',
             triggered=self.doOpenDialog)
         action.setData(LogDialog)
         self.addAction(action)
@@ -714,7 +714,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu = QtWidgets.QMenu('Tools', objectName='tools')
         menu.addAction(self.action('install_plugin'))
         menu.addSeparator()
-        menu.addAction(self.action('show_log'))
+        menu.addAction(self.action('system_log'))
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('Help', objectName='help')
