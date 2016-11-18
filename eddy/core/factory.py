@@ -36,11 +36,14 @@
 from operator import attrgetter
 
 from PyQt5 import QtCore
+from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
 from eddy.core.datatypes.owl import Datatype, Facet, OWLProfile
-from eddy.core.functions.misc import first
+from eddy.core.datatypes.system import File
+from eddy.core.functions.misc import first, rstrip
+from eddy.core.functions.signals import connect
 
 from eddy.ui.properties import DiagramProperty
 from eddy.ui.properties import FacetNodeProperty
@@ -55,7 +58,6 @@ class MenuFactory(QtCore.QObject):
     """
     This class can be used to produce diagram items contextual menus.
     """
-
     def __init__(self, session):
         """
         Initialize the factory.
@@ -194,6 +196,29 @@ class MenuFactory(QtCore.QObject):
         menu.addAction(self.session.action('node_properties'))
         return menu
 
+    def buildPredicateNodeMenu(self, diagram, node):
+        """
+        Build and return a QMenu instance for a predicate node (CONCEPT, ROLE, ATTRIBUTE).
+        :type diagram: Diagram
+        :type node: AbstractNode
+        :rtype: QMenu
+        """
+        menu = self.buildGenericNodeMenu(diagram, node)
+        # BUILD CUSTOM ACTIONS FOR PREDICATE OCCURRENCES
+        self.customAction['occurrences'] = []
+        for pnode in self.project.predicates(node.type(), node.text()):
+            action = QtWidgets.QAction('{} ({})'.format(rstrip(pnode.diagram.name, File.Graphol.extension), pnode.id))
+            action.setData(pnode)
+            connect(action.triggered, self.session.doLookupOccurrence)
+            self.customAction['occurrences'].append(action)
+        # BUILD CUSTOM MENU FOR PREDICATE OCCURRENCES
+        self.customMenu['occurrences'] = QtWidgets.QMenu('Occurrences')
+        self.customMenu['occurrences'].setIcon(QtGui.QIcon(':/icons/24/ic_visibility_black'))
+        for action in sorted(self.customAction['occurrences'], key=lambda x: x.text()):
+            self.customMenu['occurrences'].addAction(action)
+        menu.insertMenu(self.session.action('node_properties'), self.customMenu['occurrences'])
+        return menu
+
     def buildAttributeNodeMenu(self, diagram, node):
         """
         Build and return a QMenu instance for attribute nodes.
@@ -201,7 +226,7 @@ class MenuFactory(QtCore.QObject):
         :type node: AttributeNode
         :rtype: QMenu
         """
-        menu = self.buildGenericNodeMenu(diagram, node)
+        menu = self.buildPredicateNodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('compose_domain_range'))
@@ -248,7 +273,7 @@ class MenuFactory(QtCore.QObject):
         :type node: ConceptNode
         :rtype: QMenu
         """
-        menu = self.buildGenericNodeMenu(diagram, node)
+        menu = self.buildPredicateNodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
@@ -506,7 +531,7 @@ class MenuFactory(QtCore.QObject):
         :type node: RoleNode
         :rtype: QMenu
         """
-        menu = self.buildGenericNodeMenu(diagram, node)
+        menu = self.buildPredicateNodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('compose_domain_range'))

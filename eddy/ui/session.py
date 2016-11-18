@@ -1302,6 +1302,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     msgbox.exec_()
 
     @QtCore.pyqtSlot()
+    def doLookupOccurrence(self):
+        """
+        Focus the item which is being held by the supplying QAction.
+        """
+        self.sgnFocusItem.emit(self.sender().data())
+
+    @QtCore.pyqtSlot()
     def doNewDiagram(self):
         """
         Create a new diagram.

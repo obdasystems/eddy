@@ -159,6 +159,8 @@
   <file alias="ic_transform_black@2x">../../resources/icons/24/ic_transform_black_24dp_2x.png</file>
   <file alias="ic_undo_black">../../resources/icons/24/ic_undo_black_24dp_1x.png</file>
   <file alias="ic_undo_black@2x">../../resources/icons/24/ic_undo_black_24dp_2x.png</file>
+  <file alias="ic_visibility_black">../../resources/icons/24/ic_visibility_black_24dp_1x.png</file>
+  <file alias="ic_visibility_black@2x">../../resources/icons/24/ic_visibility_black_24dp_2x.png</file>
   <file alias="ic_zoom_in_black">../../resources/icons/24/ic_zoom_in_black_24dp_1x.png</file>
   <file alias="ic_zoom_in_black@2x">../../resources/icons/24/ic_zoom_in_black_24dp_2x.png</file>
   <file alias="ic_zoom_out_black">../../resources/icons/24/ic_zoom_out_black_24dp_1x.png</file>
