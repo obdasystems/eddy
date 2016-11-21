@@ -56,7 +56,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         Initialize the Pdf Exporter.
         :type session: Session
         """
-        super(PdfDiagramExporter, self).__init__(diagram, session)
+        super().__init__(diagram, session)
 
     #############################################
     #   INTERFACE

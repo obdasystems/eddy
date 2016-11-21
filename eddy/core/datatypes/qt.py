@@ -61,7 +61,7 @@ class Font(QtGui.QFont):
         if not self.isHDPI():
             if family == 'Roboto':
                 family = 'Arial'
-        super(Font, self).__init__(family, size, weight)
+        super().__init__(family, size, weight)
         self.setBold(kwargs.get('bold', False))
         self.setItalic(kwargs.get('italic', False))
         self.setCapitalization(kwargs.get('capitalization', QtGui.QFont.MixedCase))

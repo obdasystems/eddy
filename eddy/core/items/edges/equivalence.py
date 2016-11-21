@@ -54,7 +54,7 @@ class EquivalenceEdge(AbstractEdge):
         """
         Initialize the edge.
         """
-        super(EquivalenceEdge, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.tail = Polygon(QtGui.QPolygonF())
 
     #############################################
@@ -298,4 +298,4 @@ class EquivalenceEdge(AbstractEdge):
         self.tail.setBrush(tailBrush)
         self.tail.setPen(tailPen)
 
-        super(EquivalenceEdge, self).updateEdge(selected, visible, breakpoint, anchor, **kwargs)
+        super().updateEdge(selected, visible, breakpoint, anchor, **kwargs)

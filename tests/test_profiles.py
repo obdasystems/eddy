@@ -54,7 +54,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         """
         Initialize test case environment.
         """
-        super(OWL2ProfileTestCase, self).setUp()
+        super().setUp()
         self.init('test_project_2')
         self.session.project.profile.reset = Mock()
 

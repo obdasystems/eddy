@@ -64,7 +64,7 @@ class Welcome(QtWidgets.QWidget):
         :type application: QApplication
         :type parent: QtWidgets.QWidget
         """
-        super(Welcome, self).__init__(parent)
+        super().__init__(parent)
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
 
@@ -324,7 +324,7 @@ class ProjectBlock(QtWidgets.QWidget):
         :type project: str
         :type parent: QtWidgets.QWidget
         """
-        super(ProjectBlock, self).__init__(parent)
+        super().__init__(parent)
 
         self.nameLabel = QtWidgets.QLabel(os.path.basename(project), self)
         self.nameLabel.setContentsMargins(20, 0, 20, 0)

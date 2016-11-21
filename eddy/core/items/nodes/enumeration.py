@@ -53,7 +53,7 @@ class EnumerationNode(OperatorNode):
         Initialize the node.
         :type brush: QBrush
         """
-        super(EnumerationNode, self).__init__(brush=QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)), **kwargs)
+        super().__init__(brush=QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)), **kwargs)
         self.label = NodeLabel('oneOf', pos=self.center, editable=False, movable=False, parent=self)
 
     #############################################

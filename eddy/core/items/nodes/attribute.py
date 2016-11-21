@@ -59,7 +59,7 @@ class AttributeNode(AbstractNode):
         :type height: int
         :type brush: QBrush
         """
-        super(AttributeNode, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         brush = brush or AttributeNode.DefaultBrush
         pen = AttributeNode.DefaultPen
         self.fpolygon = Polygon(QtGui.QPainterPath())
@@ -254,7 +254,7 @@ class AttributeNode(AbstractNode):
         self.fpolygon.setBrush(brush)
 
         # SELECTION + BACKGROUND + CACHE REFRESH
-        super(AttributeNode, self).updateNode(**kwargs)
+        super().updateNode(**kwargs)
 
     def updateTextPos(self, *args, **kwargs):
         """

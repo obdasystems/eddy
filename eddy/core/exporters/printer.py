@@ -49,7 +49,7 @@ class PrinterDiagramExporter(AbstractDiagramExporter):
         Initialize the Printer Exporter.
         :type session: Session
         """
-        super(PrinterDiagramExporter, self).__init__(diagram, session)
+        super().__init__(diagram, session)
 
     #############################################
     #   INTERFACE

@@ -63,7 +63,7 @@ class PluginInstallDialog(QtWidgets.QDialog):
         Initialize the plugin install dialog.
         :type session: Session
         """
-        super(PluginInstallDialog, self).__init__(session)
+        super().__init__(session)
 
         #############################################
         # HEAD AREA
@@ -185,7 +185,7 @@ class PluginInstallDialog(QtWidgets.QDialog):
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Plugin installed!')
             msgbox.exec_()
-            super(PluginInstallDialog, self).accept()
+            super().accept()
 
     @QtCore.pyqtSlot()
     def selectPlugin(self):

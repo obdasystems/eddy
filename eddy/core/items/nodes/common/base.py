@@ -401,7 +401,7 @@ class AbstractNode(AbstractItem):
         """
         if change == AbstractNode.ItemSelectedHasChanged:
             self.updateNode(selected=value)
-        return super(AbstractNode, self).itemChange(change, value)
+        return super().itemChange(change, value)
 
     def mousePressEvent(self, mouseEvent):
         """

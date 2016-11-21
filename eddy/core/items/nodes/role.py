@@ -66,7 +66,7 @@ class RoleNode(AbstractResizableNode):
         :type height: int
         :type brush: QBrush
         """
-        super(RoleNode, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         
         w = max(width, 70)
         h = max(height, 50)
@@ -768,7 +768,7 @@ class RoleNode(AbstractResizableNode):
         self.ipolygon.setGeometry(ipolygon)
 
         # SELECTION + BACKGROUND + HANDLES + ANCHORS + CACHE REFRESH
-        super(RoleNode, self).updateNode(**kwargs)
+        super().updateNode(**kwargs)
 
     def updateTextPos(self, *args, **kwargs):
         """

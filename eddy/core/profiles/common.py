@@ -52,7 +52,7 @@ class AbstractProfile(QtCore.QObject):
         Initialize the profile.
         :type project: Project
         """
-        super(AbstractProfile, self).__init__(project)
+        super().__init__(project)
         self._edgeRules = []
         self._nodeRules = []
         self._pvr = None

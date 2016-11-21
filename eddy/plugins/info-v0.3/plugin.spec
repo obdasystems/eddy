@@ -33,6 +33,6 @@
 [plugin]
 author: Daniele Pantaleone
 contact: pantaleone@dis.uniroma1.it
-id: csv_exporter
-name: CSV Exporter
-version: 0.1
+id: info
+name: Information
+version: 0.3

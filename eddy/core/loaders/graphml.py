@@ -69,7 +69,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         :type project: Project
         :type session: Session
         """
-        super(GraphMLDiagramLoader, self).__init__(path, project, session)
+        super().__init__(path, project, session)
 
         self.diagram = None
         self.keys = dict()

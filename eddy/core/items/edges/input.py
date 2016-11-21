@@ -54,7 +54,7 @@ class InputEdge(AbstractEdge):
         """
         Initialize the edge.
         """
-        super(InputEdge, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.label = EdgeLabel('', centered=False, parent=self)
 
     #############################################
@@ -288,4 +288,4 @@ class InputEdge(AbstractEdge):
         else:
             self.label.setVisible(False)
 
-        super(InputEdge, self).updateEdge(selected, visible, breakpoint, anchor, **kwargs)
+        super().updateEdge(selected, visible, breakpoint, anchor, **kwargs)

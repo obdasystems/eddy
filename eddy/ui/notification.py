@@ -51,7 +51,7 @@ class NotificationPopup(QtWidgets.QWidget):
         Initialize the popup window.
         :type num: int
         """
-        super(NotificationPopup, self).__init__(session)
+        super().__init__(session)
 
         self.num = num
 
@@ -156,7 +156,7 @@ class NotificationPopup(QtWidgets.QWidget):
         """
         if self.sleepTimer.isActive() and not self.sleepTimer.isPaused():
             self.sleepTimer.pause()
-        return super(NotificationPopup, self).enterEvent(event)
+        return super().enterEvent(event)
 
     def leaveEvent(self, event):
         """
@@ -165,7 +165,7 @@ class NotificationPopup(QtWidgets.QWidget):
         """
         if self.sleepTimer.isPaused():
             self.sleepTimer.resume()
-        return super(NotificationPopup, self).leaveEvent(event)
+        return super().leaveEvent(event)
 
     def showEvent(self, showEvent):
         """

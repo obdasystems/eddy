@@ -51,7 +51,7 @@ class DomainRestrictionNode(RestrictionNode):
         Initialize the node.
         :type brush: QBrush
         """
-        super(DomainRestrictionNode, self).__init__(brush=QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)), **kwargs)
+        super().__init__(brush=QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)), **kwargs)
 
     #############################################
     #   INTERFACE

@@ -61,7 +61,7 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
         Initialize the Preferences dialog.
         :type session: Session
         """
-        super(PreferencesDialog, self).__init__(session)
+        super().__init__(session)
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
 
@@ -390,4 +390,4 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         settings.sync()
 
-        super(PreferencesDialog, self).accept()
+        super().accept()

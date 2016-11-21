@@ -69,7 +69,7 @@ class FacetNode(AbstractNode):
         :type height: int
         :type brush: QBrush
         """
-        super(FacetNode, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.background = Polygon(self.createPolygon(88, 48))
         self.selection = Polygon(self.createPolygon(88, 48))
         self.polygon = Polygon(self.createPolygon(80, 40))
@@ -387,7 +387,7 @@ class FacetNode(AbstractNode):
         self.updateEdges()
 
         # SELECTION + BACKGROUND + CACHE REFRESH
-        super(FacetNode, self).updateNode(**kwargs)
+        super().updateNode(**kwargs)
 
     def updateTextPos(self, *args, **kwargs):
         """

@@ -67,7 +67,7 @@ class OperatorNode(AbstractNode):
         :type height: int
         :type brush: QBrush
         """
-        super(OperatorNode, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         createPolygon = lambda x, y: QtGui.QPolygonF([
             QtCore.QPointF(-x / 2, 0),

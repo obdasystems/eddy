@@ -267,7 +267,7 @@ class PaletteWidget(QtWidgets.QWidget):
         Initialize the palette widget.
         :type plugin: Palette
         """
-        super(PaletteWidget, self).__init__(plugin.parent())
+        super().__init__(plugin.parent())
         self.columns = -1
         self.buttons = {}
         self.display = {}
@@ -462,7 +462,7 @@ class PaletteButton(QtWidgets.QToolButton):
         Initialize the palette button.
         :type item: Item
         """
-        super(PaletteButton, self).__init__()
+        super().__init__()
         self.item = item
         self.startPos = None
         self.setCheckable(True)
@@ -481,7 +481,7 @@ class PaletteButton(QtWidgets.QToolButton):
         """
         if mouseEvent.buttons() & QtCore.Qt.LeftButton:
             self.startPos = mouseEvent.pos()
-        super(PaletteButton, self).mousePressEvent(mouseEvent)
+        super().mousePressEvent(mouseEvent)
 
     def mouseMoveEvent(self, mouseEvent):
         """
@@ -500,14 +500,14 @@ class PaletteButton(QtWidgets.QToolButton):
                     drag.setHotSpot(self.startPos - self.rect().topLeft())
                     drag.exec_(QtCore.Qt.CopyAction)
 
-        super(PaletteButton, self).mouseMoveEvent(mouseEvent)
+        super().mouseMoveEvent(mouseEvent)
 
     def mouseReleaseEvent(self, mouseEvent):
         """
         Executed when a mouse button is released.
         :type mouseEvent: QMouseEvent
         """
-        super(PaletteButton, self).mouseReleaseEvent(mouseEvent)
+        super().mouseReleaseEvent(mouseEvent)
 
     def paintEvent(self, paintEvent):
         """

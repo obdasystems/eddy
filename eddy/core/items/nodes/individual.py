@@ -73,7 +73,7 @@ class IndividualNode(AbstractResizableNode):
         :type height: int
         :type brush: QBrush
         """
-        super(IndividualNode, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         w = max(width, 60)
         h = max(height, 60)

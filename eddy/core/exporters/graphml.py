@@ -62,7 +62,7 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :type diagram: Diagram
         :type session: Session
         """
-        super(GraphMLDiagramExporter, self).__init__(diagram, session)
+        super().__init__(diagram, session)
 
         self.document = None
         self.missing = {Item.FacetNode, Item.PropertyAssertionNode}

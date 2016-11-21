@@ -49,7 +49,7 @@ class MdiArea(QtWidgets.QMdiArea):
         Initialize the MDI area.
         :type session: Session
         """
-        super(MdiArea, self).__init__(session, **kwargs)
+        super().__init__(session, **kwargs)
 
         # Configure widget.
         self.setContentsMargins(0, 0, 0, 0)
@@ -164,7 +164,7 @@ class MdiArea(QtWidgets.QMdiArea):
         action.setIcon(menu.actions()[7].icon())
         connect(action.triggered, self.doCloseOtherSubWindows)
         menu.addAction(action)
-        return super(MdiArea, self).addSubWindow(subwindow)
+        return super().addSubWindow(subwindow)
 
     def subWindowForDiagram(self, diagram):
         """
@@ -188,7 +188,7 @@ class MdiSubWindow(QtWidgets.QMdiSubWindow):
         :type view: DiagramView
         :type parent: QWidget
         """
-        super(MdiSubWindow, self).__init__(parent)
+        super().__init__(parent)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWidget(view)
         self.setWindowTitle(self.diagram.name)

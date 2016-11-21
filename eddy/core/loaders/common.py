@@ -50,7 +50,7 @@ class AbstractLoader(QtCore.QObject):
         :type path: str
         :type session: Session
         """
-        super(AbstractLoader, self).__init__(session)
+        super().__init__(session)
         self.path = path
 
     #############################################
@@ -99,7 +99,7 @@ class AbstractDiagramLoader(AbstractLoader):
         :type project: Project
         :type session: Session
         """
-        super(AbstractDiagramLoader, self).__init__(path, session)
+        super().__init__(path, session)
         self.project = project
 
     #############################################
@@ -136,7 +136,7 @@ class AbstractProjectLoader(AbstractLoader):
         :type path: str
         :type session: Session
         """
-        super(AbstractProjectLoader, self).__init__(path, session)
+        super().__init__(path, session)
 
     #############################################
     #   INTERFACE

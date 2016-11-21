@@ -52,7 +52,7 @@ class DisjointUnionNode(OperatorNode):
         Initialize the node.
         :type brush: QBrush
         """
-        super(DisjointUnionNode, self).__init__(brush=QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), **kwargs)
+        super().__init__(brush=QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), **kwargs)
 
     #############################################
     #   INTERFACE

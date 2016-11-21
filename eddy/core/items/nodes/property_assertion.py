@@ -60,7 +60,7 @@ class PropertyAssertionNode(AbstractNode):
         :type brush: QBrush
         :type inputs: DistinctList
         """
-        super(PropertyAssertionNode, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         brush = PropertyAssertionNode.DefaultBrush
         pen = PropertyAssertionNode.DefaultPen
         self.inputs = inputs or DistinctList()
@@ -77,7 +77,7 @@ class PropertyAssertionNode(AbstractNode):
         Add the given edge to the current node.
         :type edge: AbstractEdge
         """
-        super(PropertyAssertionNode, self).addEdge(edge)
+        super().addEdge(edge)
         if edge.type() is Item.InputEdge and edge.target is self:
             self.inputs.append(edge.id)
             edge.updateEdge()
@@ -204,7 +204,7 @@ class PropertyAssertionNode(AbstractNode):
         Remove the given edge from the current node.
         :type edge: AbstractEdge
         """
-        super(PropertyAssertionNode, self).removeEdge(edge)
+        super().removeEdge(edge)
         self.inputs.remove(edge.id)
         for i in self.inputs:
             try:

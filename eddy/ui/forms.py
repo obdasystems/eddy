@@ -60,7 +60,7 @@ class CardinalityRestrictionForm(QtWidgets.QDialog):
         Initialize the form dialog.
         :type parent: QtWidgets.QWidget
         """
-        super(CardinalityRestrictionForm, self).__init__(parent)
+        super().__init__(parent)
 
         #############################################
         # FORM AREA
@@ -138,7 +138,7 @@ class CardinalityRestrictionForm(QtWidgets.QDialog):
             msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
             msgbox.exec_()
         else:
-            super(CardinalityRestrictionForm, self).accept()
+            super().accept()
 
     #############################################
     #   INTERFACE
@@ -175,7 +175,7 @@ class RefactorNameForm(QtWidgets.QDialog):
         :type node: AbstractNode
         :type session: Session
         """
-        super(RefactorNameForm, self).__init__(session)
+        super().__init__(session)
 
         self.node = node
 
@@ -294,7 +294,7 @@ class ValueForm(QtWidgets.QDialog):
         :type node: IndividualNode
         :type session: Session
         """
-        super(ValueForm, self).__init__(session)
+        super().__init__(session)
 
         self.node = node
 

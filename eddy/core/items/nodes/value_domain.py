@@ -59,7 +59,7 @@ class ValueDomainNode(AbstractNode):
         :type height: int
         :type brush: QBrush
         """
-        super(ValueDomainNode, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         brush = brush or ValueDomainNode.DefaultBrush
         pen = ValueDomainNode.DefaultPen
         self.background = Polygon(QtCore.QRectF(-49, -24, 98, 48))
@@ -219,7 +219,7 @@ class ValueDomainNode(AbstractNode):
         self.updateEdges()
 
         # SELECTION + BACKGROUND + CACHE REFRESH
-        super(ValueDomainNode, self).updateNode(**kwargs)
+        super().updateNode(**kwargs)
 
     def width(self):
         """

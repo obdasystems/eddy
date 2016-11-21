@@ -60,7 +60,7 @@ class UpdateCheckWorker(AbstractWorker):
         :type channel: Channel
         :type current: str
         """
-        super(UpdateCheckWorker, self).__init__()
+        super().__init__()
         self.channel = channel # Current update channel
         self.current = current # Eddy current version
 

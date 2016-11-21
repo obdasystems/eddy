@@ -53,7 +53,7 @@ class InclusionEdge(AbstractEdge):
         """
         Initialize the edge.
         """
-        super(InclusionEdge, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     #############################################
     #   INTERFACE
@@ -265,4 +265,4 @@ class InclusionEdge(AbstractEdge):
         self.head.setPen(headPen)
         self.path.setPen(pathPen)
 
-        super(InclusionEdge, self).updateEdge(selected, visible, breakpoint, anchor, **kwargs)
+        super().updateEdge(selected, visible, breakpoint, anchor, **kwargs)

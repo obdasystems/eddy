@@ -94,7 +94,7 @@ class OWLProjectExporter(AbstractProjectExporter, HasThreadingSystem):
         :type project: Project
         :type session: Session
         """
-        super(OWLProjectExporter, self).__init__(project, session)
+        super().__init__(project, session)
         self.items = list(project.edges()) + list(filter(lambda n: not n.adjacentNodes(), project.nodes()))
         self.path = None
         self.progress = None
@@ -168,7 +168,7 @@ class OWLProjectExporterDialog(QtWidgets.QDialog, HasThreadingSystem):
         :type path: str
         :type session: Session
         """
-        super(OWLProjectExporterDialog, self).__init__(session)
+        super().__init__(session)
 
         self.path = expandPath(path)
         self.project = project
@@ -481,7 +481,7 @@ class OWLProjectExporterWorker(AbstractWorker):
         :type project: Project
         :type path: str
         """
-        super(OWLProjectExporterWorker, self).__init__()
+        super().__init__()
 
         self.path = path
         self.project = project

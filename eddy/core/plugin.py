@@ -70,7 +70,7 @@ class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasWidgetSy
         :type spec: PluginSpec
         :type session: session
         """
-        super(AbstractPlugin, self).__init__(session)
+        super().__init__(session)
         self.spec = spec
 
     #############################################
@@ -237,7 +237,7 @@ class PluginSpec(ConfigParser):
         """
         Initialize the plugin .spec configuration.
         """
-        super(PluginSpec, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     #############################################
     #   INTERFACE
@@ -271,7 +271,7 @@ class PluginManager(QtCore.QObject):
         Initialize the plugin manager.
         :type session: Session
         """
-        super(PluginManager, self).__init__(session)
+        super().__init__(session)
 
     #############################################
     #   PROPERTIES

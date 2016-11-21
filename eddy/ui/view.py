@@ -74,7 +74,7 @@ class DiagramView(QtWidgets.QGraphicsView):
         :type diagram: Diagram
         :type session: Session
         """
-        super(DiagramView, self).__init__(diagram)
+        super().__init__(diagram)
 
         self.mp_CenterPos = None
         self.mp_Pos = None
@@ -157,7 +157,7 @@ class DiagramView(QtWidgets.QGraphicsView):
                 self.scaleView(zoom)
 
         else:
-            super(DiagramView, self).keyPressEvent(keyEvent)
+            super().keyPressEvent(keyEvent)
 
     def mousePressEvent(self, mouseEvent):
         """
@@ -191,7 +191,7 @@ class DiagramView(QtWidgets.QGraphicsView):
                     self.rubberBand.setGeometry(QtCore.QRectF(mousePos, mousePos).toRect())
                     self.rubberBand.show()
 
-            super(DiagramView, self).mousePressEvent(mouseEvent)
+            super().mousePressEvent(mouseEvent)
 
     def mouseMoveEvent(self, mouseEvent):
         """
@@ -220,7 +220,7 @@ class DiagramView(QtWidgets.QGraphicsView):
 
         else:
 
-            super(DiagramView, self).mouseMoveEvent(mouseEvent)
+            super().mouseMoveEvent(mouseEvent)
 
             if mouseButtons & QtCore.Qt.LeftButton:
                 
@@ -299,7 +299,7 @@ class DiagramView(QtWidgets.QGraphicsView):
         viewport.setCursor(QtCore.Qt.ArrowCursor)
         viewport.update()
 
-        super(DiagramView, self).mouseReleaseEvent(mouseEvent)
+        super().mouseReleaseEvent(mouseEvent)
 
         if self.diagram.mode in {DiagramMode.RubberBandDrag, DiagramMode.SceneDrag}:
             self.diagram.setMode(DiagramMode.Idle)
@@ -318,7 +318,7 @@ class DiagramView(QtWidgets.QGraphicsView):
             if zoom != self.zoom:
                 self.scaleViewOnPoint(zoom, pos)
         else:
-            super(DiagramView, self).wheelEvent(wheelEvent)
+            super().wheelEvent(wheelEvent)
 
     def viewportEvent(self, viewportEvent):
         """
@@ -346,7 +346,7 @@ class DiagramView(QtWidgets.QGraphicsView):
                         if zoom != self.zoom:
                             self.scaleViewOnPoint(zoom, p2.toPoint())
 
-        return super(DiagramView, self).viewportEvent(viewportEvent)
+        return super().viewportEvent(viewportEvent)
 
     #############################################
     #   INTERFACE

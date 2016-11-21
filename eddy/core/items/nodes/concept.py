@@ -58,7 +58,7 @@ class ConceptNode(AbstractResizableNode):
         :type height: int
         :type brush: QBrush
         """
-        super(ConceptNode, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         w = max(width, 110)
         h = max(height, 50)
         brush = brush or ConceptNode.DefaultBrush

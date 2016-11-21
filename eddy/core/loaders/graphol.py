@@ -73,7 +73,7 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         :type project: Project
         :type session: Session
         """
-        super(GrapholDiagramLoader, self).__init__(path, project, session)
+        super().__init__(path, project, session)
 
         self.diagram = None
         self.edges = dict()

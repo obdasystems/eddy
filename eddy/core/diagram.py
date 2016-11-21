@@ -86,7 +86,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         :type path: str
         :type parent: Project
         """
-        super(Diagram, self).__init__(parent)
+        super().__init__(parent)
 
         self.factory = ItemFactory(self)
         self.guid = GUID(self)
@@ -157,7 +157,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         Executed when a dragged element enters the scene area.
         :type dragEvent: QGraphicsSceneDragDropEvent
         """
-        super(Diagram, self).dragEnterEvent(dragEvent)
+        super().dragEnterEvent(dragEvent)
         if dragEvent.mimeData().hasFormat('text/plain'):
             dragEvent.setDropAction(QtCore.Qt.CopyAction)
             dragEvent.accept()
@@ -169,7 +169,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         Executed when an element is dragged over the scene.
         :type dragEvent: QGraphicsSceneDragDropEvent
         """
-        super(Diagram, self).dragMoveEvent(dragEvent)
+        super().dragMoveEvent(dragEvent)
         if dragEvent.mimeData().hasFormat('text/plain'):
             dragEvent.setDropAction(QtCore.Qt.CopyAction)
             dragEvent.accept()
@@ -181,7 +181,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         Executed when a dragged element is dropped on the diagram.
         :type dropEvent: QGraphicsSceneDragDropEvent
         """
-        super(Diagram, self).dropEvent(dropEvent)
+        super().dropEvent(dropEvent)
         if dropEvent.mimeData().hasFormat('text/plain'):
             snapToGrid = self.session.action('toggle_grid').isChecked()
             node = self.factory.create(Item.forValue(dropEvent.mimeData().text()))
@@ -236,7 +236,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 # (i.e: edge breakpoint move, edge anchor move, node shape
                 # resize) and we need to check whether any of them is being
                 # performed before handling the even locally.
-                super(Diagram, self).mousePressEvent(mouseEvent)
+                super().mousePressEvent(mouseEvent)
 
                 if self.mode is DiagramMode.Idle:
 
@@ -409,7 +409,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                         for edge in edges:
                             edge.updateEdge()
 
-        super(Diagram, self).mouseMoveEvent(mouseEvent)
+        super().mouseMoveEvent(mouseEvent)
 
     def mouseReleaseEvent(self, mouseEvent):
         """
@@ -526,7 +526,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 menu = self.session.mf.create(self, items, mousePos)
                 menu.exec_(mouseEvent.screenPos())
 
-        super(Diagram, self).mouseReleaseEvent(mouseEvent)
+        super().mouseReleaseEvent(mouseEvent)
 
         self.mo_Node = None
         self.mp_Data = None
@@ -610,7 +610,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         Add an item to the Diagram (will redraw the item to reflect its status).
         :type item: AbstractItem
         """
-        super(Diagram, self).addItem(item)
+        super().addItem(item)
         if item.isNode():
             item.updateNode()
 
@@ -673,15 +673,15 @@ class Diagram(QtWidgets.QGraphicsScene):
         :rtype: list
         """
         if mixed is None:
-            items = super(Diagram, self).items()
+            items = super().items()
         elif isinstance(mixed, QtCore.QPointF):
             x = mixed.x() - (Diagram.SelectionRadius / 2)
             y = mixed.y() - (Diagram.SelectionRadius / 2)
             w = Diagram.SelectionRadius
             h = Diagram.SelectionRadius
-            items = super(Diagram, self).items(QtCore.QRectF(x, y, w, h), mode)
+            items = super().items(QtCore.QRectF(x, y, w, h), mode)
         else:
-            items = super(Diagram, self).items(mixed, mode)
+            items = super().items(mixed, mode)
         return sorted([
             x for x in items
                 if (kwargs.get('nodes', True) and x.isNode() or
@@ -711,7 +711,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         :type filter_on_edges: callable
         :rtype: list
         """
-        return [x for x in super(Diagram, self).selectedItems() if x.isEdge() and filter_on_edges(x)]
+        return [x for x in super().selectedItems() if x.isEdge() and filter_on_edges(x)]
 
     def selectedItems(self, filter_on_items=lambda x: True):
         """
@@ -719,7 +719,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         :type filter_on_items: callable
         :rtype: list
         """
-        return [x for x in super(Diagram, self).selectedItems() if (x.isNode() or x.isEdge()) and filter_on_items(x)]
+        return [x for x in super().selectedItems() if (x.isNode() or x.isEdge()) and filter_on_items(x)]
 
     def selectedNodes(self, filter_on_nodes=lambda x: True):
         """
@@ -727,7 +727,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         :type filter_on_nodes: callable
         :rtype: list
         """
-        return [x for x in super(Diagram, self).selectedItems() if x.isNode() and filter_on_nodes(x)]
+        return [x for x in super().selectedItems() if x.isNode() and filter_on_nodes(x)]
 
     def setMode(self, mode, param=None):
         """
@@ -772,7 +772,7 @@ class DiagramMalformedError(RuntimeError):
         :type args: list
         :type kwargs: dict
         """
-        super(DiagramMalformedError, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.item = item
 
 

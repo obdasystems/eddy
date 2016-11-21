@@ -56,7 +56,7 @@ class SyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
         :type project: Project
         :type session: Session
         """
-        super(SyntaxValidationDialog, self).__init__(session)
+        super().__init__(session)
 
         # Here we perform the validation on all the edges in the project and the isolated nodes. This is
         # due to the implementation of the checkEdge() function in the Profile class which validates the
@@ -296,7 +296,7 @@ class SyntaxValidationWorker(AbstractWorker):
         :type items: list
         :type project: Project
         """
-        super(SyntaxValidationWorker, self).__init__()
+        super().__init__()
         self.project = project
         self.items = items
         self.i = current

@@ -167,7 +167,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         :type path: str
         :type kwargs: dict
         """
-        super(Session, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         #############################################
         # INITIALIZE MAIN STUFF
@@ -2071,7 +2071,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if keyEvent.key() == QtCore.Qt.Key_Backspace:
                 action = self.action('delete')
                 action.trigger()
-        super(Session, self).keyPressEvent(keyEvent)
+        super().keyPressEvent(keyEvent)
 
     def keyReleaseEvent(self, keyEvent):
         """
@@ -2082,7 +2082,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             diagram = self.mdi.activeDiagram()
             if diagram and not diagram.isEdgeAdd():
                 diagram.setMode(DiagramMode.Idle)
-        super(Session, self).keyReleaseEvent(keyEvent)
+        super().keyReleaseEvent(keyEvent)
 
     def showEvent(self, showEvent):
         """
@@ -2146,4 +2146,4 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         title = '{0} - [{1}]'.format(project.name, shortPath(project.path))
         if diagram:
             title = '{0} - {1}'.format(diagram.name, title)
-        super(Session, self).setWindowTitle(title)
+        super().setWindowTitle(title)

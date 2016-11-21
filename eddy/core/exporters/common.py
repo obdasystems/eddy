@@ -49,7 +49,7 @@ class AbstractExporter(QtCore.QObject):
         Initialize the AbstractExporter.
         :type session: Session
         """
-        super(AbstractExporter, self).__init__(session)
+        super().__init__(session)
 
     #############################################
     #   PROPERTIES
@@ -97,7 +97,7 @@ class AbstractDiagramExporter(AbstractExporter):
         :type diagram: Diagram
         :type session: Session
         """
-        super(AbstractDiagramExporter, self).__init__(session)
+        super().__init__(session)
         self.diagram = diagram
 
     #############################################
@@ -134,7 +134,7 @@ class AbstractProjectExporter(AbstractExporter):
         :type project: Project
         :type session: Session
         """
-        super(AbstractProjectExporter, self).__init__(session)
+        super().__init__(session)
         self.project = project
 
     #############################################

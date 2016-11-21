@@ -48,7 +48,7 @@ class PausableTimer(QtCore.QTimer):
         """
         self._remaining = 0
         self._paused = False
-        super(PausableTimer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         connect(self.timeout, self.onTimeout)
 
     #############################################
@@ -103,4 +103,4 @@ class PausableTimer(QtCore.QTimer):
         """
         Start the timer.
         """
-        super(PausableTimer, self).start(*args, **kwargs)
+        super().start(*args, **kwargs)

@@ -1167,7 +1167,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         Fetch new information and fill the widget with data.
         :type node: AbstractNode
         """
-        super(RoleNodeInfo, self).updateData(node)
+        super().updateData(node)
         self.asymmetricBox.setChecked(node.isAsymmetric())
         self.functBox.setChecked(node.isFunctional())
         self.functBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
@@ -1195,7 +1195,7 @@ class ValueDomainNodeInfo(NodeInfo):
         :type session: Session
         :type parent: QtWidgets.QWidget
         """
-        super(ValueDomainNodeInfo, self).__init__(session, parent)
+        super().__init__(session, parent)
         self.datatypeKey = Key('Datatype', self)
         self.datatypeKey.setFont(Font('Roboto', 12))
         self.datatypeField = Select(self)
@@ -1231,7 +1231,7 @@ class ValueDomainNodeInfo(NodeInfo):
         Fetch new information and fill the widget with data.
         :type node: AbstractNode
         """
-        super(ValueDomainNodeInfo, self).updateData(node)
+        super().updateData(node)
         self.datatypeField.clear()
         for datatype in sorted(Datatype.forProfile(self.project.profile.type()), key=attrgetter('value')):
             self.datatypeField.addItem(datatype.value, datatype)
@@ -1248,7 +1248,7 @@ class ValueNodeInfo(NodeInfo):
         :type session: Session
         :type parent: QtWidgets.QWidget
         """
-        super(ValueNodeInfo, self).__init__(session, parent)
+        super().__init__(session, parent)
         self.datatypeKey = Key('Datatype', self)
         self.datatypeKey.setFont(Font('Roboto', 12))
         self.datatypeField = Select(self)
@@ -1326,7 +1326,7 @@ class FacetNodeInfo(NodeInfo):
         :type session: Session
         :type parent: QtWidgets.QWidget
         """
-        super(FacetNodeInfo, self).__init__(session, parent)
+        super().__init__(session, parent)
 
         self.facetKey = Key('Facet', self)
         self.facetKey.setFont(Font('Roboto', 12))
@@ -1373,7 +1373,7 @@ class FacetNodeInfo(NodeInfo):
         Fetch new information and fill the widget with data.
         :type node: AbstractNode
         """
-        super(FacetNodeInfo, self).updateData(node)
+        super().updateData(node)
 
         #############################################
         # FACET FIELD

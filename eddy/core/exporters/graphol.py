@@ -61,7 +61,7 @@ class GrapholDiagramExporter(AbstractDiagramExporter):
         :type diagram: Diagram
         :type session: Session
         """
-        super(GrapholDiagramExporter, self).__init__(diagram, session)
+        super().__init__(diagram, session)
 
         self.document = None
 
@@ -435,7 +435,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
         :type project: Project
         :type session: Session
         """
-        super(GrapholProjectExporter, self).__init__(project, session)
+        super().__init__(project, session)
 
         self.projectMainPath = project.path
         self.projectDataPath = os.path.join(self.projectMainPath, Project.Home)

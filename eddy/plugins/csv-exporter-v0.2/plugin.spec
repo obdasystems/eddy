@@ -33,6 +33,6 @@
 [plugin]
 author: Daniele Pantaleone
 contact: pantaleone@dis.uniroma1.it
-id: palette
-name: Palette
-version: 0.1
+id: csv_exporter
+name: CSV Exporter
+version: 0.2

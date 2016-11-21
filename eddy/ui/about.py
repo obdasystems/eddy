@@ -54,7 +54,7 @@ class AboutDialog(Splash):
         Initialize the dialog.
         :type parent: QWidget
         """
-        super(AboutDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setSpaceX(8 if _MACOS else 0)
         self.setSpaceY(12 if _MACOS else 0)
         self.setWindowFlags(QtCore.Qt.Popup)

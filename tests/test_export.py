@@ -54,7 +54,7 @@ class ExportTestCase(EddyTestCase):
         """
         Initialize test case environment.
         """
-        super(ExportTestCase, self).setUp()
+        super().setUp()
         self.init('test_project_1')
 
     #############################################

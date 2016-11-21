@@ -61,7 +61,7 @@ class ProjectDialog(QtWidgets.QDialog):
         Initialize the project dialog.
         :type parent: QtWidgets.QWidget
         """
-        super(ProjectDialog, self).__init__(parent)
+        super().__init__(parent)
 
         #############################################
         # FORM AREA

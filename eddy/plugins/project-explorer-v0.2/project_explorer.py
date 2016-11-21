@@ -396,7 +396,7 @@ class ProjectExplorerSortedProxyModel(QtCore.QSortFilterProxyModel):
         """
         Initialize the model.
         """
-        super(ProjectExplorerSortedProxyModel, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def lessThan(self, index1, index2):
         """

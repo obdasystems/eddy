@@ -52,7 +52,7 @@ class OWL2RLProfile(OWL2Profile):
         Initialize the profile.
         :type project: Project
         """
-        super(OWL2RLProfile, self).__init__(project)
+        super().__init__(project)
         self.addNodeRule(UnsupportedDatatypeRule)
         self.addNodeRule(UnsupportedOperatorRule)
         self.addNodeRule(UnsupportedSpecialOnRoleAndAttributeNode)

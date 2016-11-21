@@ -54,7 +54,7 @@ class RoleChainNode(OperatorNode):
         :type brush: QBrush
         :type inputs: DistinctList
         """
-        super(RoleChainNode, self).__init__(brush=QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)), **kwargs)
+        super().__init__(brush=QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)), **kwargs)
         self.inputs = inputs or DistinctList()
         self.label = NodeLabel('chain', pos=self.center, editable=False, movable=False, parent=self)
 

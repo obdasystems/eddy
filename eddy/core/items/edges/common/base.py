@@ -364,7 +364,7 @@ class AbstractEdge(AbstractItem):
         """
         if change == AbstractEdge.ItemSelectedHasChanged:
             self.updateEdge(selected=value)
-        return super(AbstractEdge, self).itemChange(change, value)
+        return super().itemChange(change, value)
 
     def mousePressEvent(self, mouseEvent):
         """

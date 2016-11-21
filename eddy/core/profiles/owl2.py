@@ -78,7 +78,7 @@ class OWL2Profile(AbstractProfile):
         Initialize the profile.
         :type project: Project
         """
-        super(OWL2Profile, self).__init__(project)
+        super().__init__(project)
         self.addNodeRule(CardinalityRestrictionNodeRule)
         self.addNodeRule(UnknownIdentityNodeRule)
         self.addEdgeRule(SelfConnectionRule)

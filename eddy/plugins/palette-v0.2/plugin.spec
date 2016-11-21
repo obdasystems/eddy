@@ -33,6 +33,6 @@
 [plugin]
 author: Daniele Pantaleone
 contact: pantaleone@dis.uniroma1.it
-id: project_explorer
-name: Project Explorer
-version: 0.1
+id: palette
+name: Palette
+version: 0.2

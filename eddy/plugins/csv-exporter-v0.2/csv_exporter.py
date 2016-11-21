@@ -98,7 +98,7 @@ class CsvExporter(AbstractProjectExporter):
         :type project: Project
         :type session: Session
         """
-        super(CsvExporter, self).__init__(project, session)
+        super().__init__(project, session)
 
     #############################################
     #   INTERFACE

@@ -54,7 +54,7 @@ class LogDialog(QtWidgets.QDialog):
         Initialize the dialog.
         :type parent: QWidget
         """
-        super(LogDialog, self).__init__(parent)
+        super().__init__(parent)
 
         stream = LOGGER.getDefaultStream()
 
@@ -104,7 +104,7 @@ class LogHighlighter(QtGui.QSyntaxHighlighter):
         Initialize the syntax highlighter.
         :type document: QTextDocument
         """
-        super(LogHighlighter, self).__init__(document)
+        super().__init__(document)
         self.rules = [
             (QtCore.QRegExp(r'^(.{10})\s(.{8})\s+CRITICAL\s+(.*)$'), 0, self.fmt('#8000FF')),
             (QtCore.QRegExp(r'^(.{10})\s(.{8})\s+ERROR\s+(.*)$'), 0, self.fmt('#FF0000')),

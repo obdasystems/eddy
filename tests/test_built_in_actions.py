@@ -48,7 +48,7 @@ class BuiltInActionsTestCase(EddyTestCase):
         """
         Initialize test case environment.
         """
-        super(BuiltInActionsTestCase, self).setUp()
+        super().setUp()
         self.init('test_project_1')
         self.session.sgnFocusDiagram.emit(
             self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))

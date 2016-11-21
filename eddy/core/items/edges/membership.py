@@ -54,7 +54,7 @@ class MembershipEdge(AbstractEdge):
         """
         Initialize the edge.
         """
-        super(MembershipEdge, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.label = EdgeLabel('instanceOf', centered=True, parent=self)
 
     #############################################
@@ -283,4 +283,4 @@ class MembershipEdge(AbstractEdge):
         self.head.setPen(headPen)
         self.path.setPen(pathPen)
 
-        super(MembershipEdge, self).updateEdge(selected, visible, breakpoint, anchor, **kwargs)
+        super().updateEdge(selected, visible, breakpoint, anchor, **kwargs)
