@@ -66,7 +66,7 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
         if self.item.isNode() and self.refactor:
             meta = self.project.meta(self.item.type(), self.data['undo'])
             if meta:
-                self.project.removeMeta(self.item.type(), self.data['undo'])
+                self.project.unsetMeta(self.item.type(), self.data['undo'])
 
         # CHANGE THE CONTENT OF THE LABEL
         if self.item.isNode():
@@ -77,7 +77,7 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
 
         # RESTORE METADATA
         if meta:
-            self.project.addMeta(self.item.type(), self.data['redo'], meta)
+            self.project.setMeta(self.item.type(), self.data['redo'], meta)
 
         # UPDATE PREDICATE NODE STATE TO REFLECT THE CHANGES
         for key in ('undo', 'redo'):
@@ -105,7 +105,7 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
         if self.item.isNode() and self.refactor:
             meta = self.project.meta(self.item.type(), self.data['redo'])
             if meta:
-                self.project.removeMeta(self.item.type(), self.data['redo'])
+                self.project.unsetMeta(self.item.type(), self.data['redo'])
 
         # CHANGE THE CONTENT OF THE LABEL
         if self.item.isNode():
@@ -116,7 +116,7 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
 
         # RESTORE METADATA
         if meta:
-            self.project.addMeta(self.item.type(), self.data['undo'], meta)
+            self.project.setMeta(self.item.type(), self.data['undo'], meta)
 
         # UPDATE PREDICATE NODE STATE TO REFLECT THE CHANGES
         for key in ('undo', 'redo'):

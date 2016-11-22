@@ -765,7 +765,7 @@ class GrapholProjectLoader(AbstractProjectLoader):
                 item = self.itemFromXml[predicate.attribute('type')]
                 func = self.metaFuncForItem[item]
                 meta = func(predicate)
-                self.project.addMeta(item, predicate.attribute('name'), meta)
+                self.project.setMeta(item, predicate.attribute('name'), meta)
             except Exception:
                 LOGGER.exception('Failed to create metadata for predicate %s', predicate.attribute('name'))
             finally:

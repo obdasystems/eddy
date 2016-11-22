@@ -173,7 +173,7 @@ class AttributeNode(AbstractNode):
         """
         meta = self.project.meta(self.type(), self.text())
         meta['functional'] = bool(functional)
-        self.project.addMeta(self.type(), self.text(), meta)
+        self.project.setMeta(self.type(), self.text(), meta)
         for node in self.project.predicates(self.type(), self.text()):
             node.updateNode(functional=functional, selected=node.isSelected())
 

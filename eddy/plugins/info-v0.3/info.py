@@ -749,11 +749,11 @@ class ProjectInfo(AbstractInfo):
                 self.profileField.setCurrentIndex(i)
                 break
 
-        self.attributesField.setValue(project.count(predicate=Item.AttributeNode))
-        self.conceptsField.setValue(project.count(predicate=Item.ConceptNode))
-        self.rolesField.setValue(project.count(predicate=Item.RoleNode))
-        self.inclusionsField.setValue(project.count(item=Item.InclusionEdge))
-        self.membershipField.setValue(project.count(item=Item.MembershipEdge))
+        self.attributesField.setValue(project.predicateNum(Item.AttributeNode))
+        self.conceptsField.setValue(project.predicateNum(Item.ConceptNode))
+        self.rolesField.setValue(project.predicateNum(Item.RoleNode))
+        self.inclusionsField.setValue(project.itemNum(Item.InclusionEdge))
+        self.membershipField.setValue(project.itemNum(Item.MembershipEdge))
 
 
 class EdgeInfo(AbstractInfo):

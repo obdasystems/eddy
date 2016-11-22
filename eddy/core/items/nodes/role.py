@@ -564,7 +564,7 @@ class RoleNode(AbstractResizableNode):
         """
         meta = self.project.meta(self.type(), self.text())
         meta['asymmetric'] = bool(asymmetric)
-        self.project.addMeta(self.type(), self.text(), meta)
+        self.project.setMeta(self.type(), self.text(), meta)
 
     def setFunctional(self, functional):
         """
@@ -573,7 +573,7 @@ class RoleNode(AbstractResizableNode):
         """
         meta = self.project.meta(self.type(), self.text())
         meta['functional'] = bool(functional)
-        self.project.addMeta(self.type(), self.text(), meta)
+        self.project.setMeta(self.type(), self.text(), meta)
         for node in self.project.predicates(self.type(), self.text()):
             node.updateNode(functional=functional, selected=node.isSelected())
 
@@ -591,7 +591,7 @@ class RoleNode(AbstractResizableNode):
         """
         meta = self.project.meta(self.type(), self.text())
         meta['inverseFunctional'] = bool(inverseFunctional)
-        self.project.addMeta(self.type(), self.text(), meta)
+        self.project.setMeta(self.type(), self.text(), meta)
         for node in self.project.predicates(self.type(), self.text()):
             node.updateNode(inverseFunctional=inverseFunctional, selected=node.isSelected())
 
@@ -602,7 +602,7 @@ class RoleNode(AbstractResizableNode):
         """
         meta = self.project.meta(self.type(), self.text())
         meta['irreflexive'] = bool(irreflexive)
-        self.project.addMeta(self.type(), self.text(), meta)
+        self.project.setMeta(self.type(), self.text(), meta)
 
     def setReflexive(self, reflexive):
         """
@@ -611,7 +611,7 @@ class RoleNode(AbstractResizableNode):
         """
         meta = self.project.meta(self.type(), self.text())
         meta['reflexive'] = bool(reflexive)
-        self.project.addMeta(self.type(), self.text(), meta)
+        self.project.setMeta(self.type(), self.text(), meta)
 
     def setSymmetric(self, symmetric):
         """
@@ -620,7 +620,7 @@ class RoleNode(AbstractResizableNode):
         """
         meta = self.project.meta(self.type(), self.text())
         meta['symmetric'] = bool(symmetric)
-        self.project.addMeta(self.type(), self.text(), meta)
+        self.project.setMeta(self.type(), self.text(), meta)
 
     def setTransitive(self, transitive):
         """
@@ -629,7 +629,7 @@ class RoleNode(AbstractResizableNode):
         """
         meta = self.project.meta(self.type(), self.text())
         meta['transitive'] = bool(transitive)
-        self.project.addMeta(self.type(), self.text(), meta)
+        self.project.setMeta(self.type(), self.text(), meta)
 
     def setText(self, text):
         """
